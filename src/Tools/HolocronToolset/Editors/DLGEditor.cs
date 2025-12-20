@@ -142,6 +142,11 @@ namespace HolocronToolset.Editors
         // Original: QLineEdit listenerEdit
         private TextBox _listenerEdit;
 
+        // UI Controls - Script widgets
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
+        // Original: QComboBox script1ResrefEdit, script2ResrefEdit
+        private ComboBox _script1ResrefEdit;
+        private ComboBox _script2ResrefEdit;
 
         // UI Controls - Node timing widgets
         // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
@@ -161,6 +166,18 @@ namespace HolocronToolset.Editors
         private CheckBox _skippableCheckbox;
         private CheckBox _animatedCutCheckbox;
         private CheckBox _oldHitCheckbox;
+
+        // UI Controls - File-level properties (conversation type, computer type, delays, scripts, camera)
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
+        // Original: QComboBox conversationSelect, computerSelect, onAbortCombo, onEndEdit, ambientTrackCombo, cameraModelSelect
+        // Original: QSpinBox entryDelaySpin, replyDelaySpin
+        private ComboBox _conversationSelect;
+        private ComboBox _computerSelect;
+        private NumericUpDown _entryDelaySpin;
+        private NumericUpDown _replyDelaySpin;
+        private ComboBox _onAbortCombo;
+        private ComboBox _onEndEdit;
+        private ComboBox _cameraModelSelect;
 
         // Flag to track if node is loaded into UI (prevents updates during loading)
         private bool _nodeLoadedIntoUi = false;
@@ -246,6 +263,83 @@ namespace HolocronToolset.Editors
             ambientTrackPanel.Children.Add(new TextBlock { Text = "Ambient Track:", Width = 120 });
             ambientTrackPanel.Children.Add(_ambientTrackCombo);
             filePropertiesPanel.Children.Add(ambientTrackPanel);
+
+            // Initialize conversation type combo box
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
+            // Original: QComboBox conversationSelect
+            _conversationSelect = new ComboBox();
+            _conversationSelect.Items.Add("Human");
+            _conversationSelect.Items.Add("Computer");
+            _conversationSelect.Items.Add("Other");
+            _conversationSelect.SelectedIndex = 0;
+            _conversationSelect.SelectionChanged += (s, e) => OnFilePropertyChanged();
+            var conversationPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal };
+            conversationPanel.Children.Add(new TextBlock { Text = "Conversation Type:", Width = 120 });
+            conversationPanel.Children.Add(_conversationSelect);
+            filePropertiesPanel.Children.Add(conversationPanel);
+
+            // Initialize computer type combo box
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
+            // Original: QComboBox computerSelect
+            _computerSelect = new ComboBox();
+            _computerSelect.Items.Add("Modern");
+            _computerSelect.Items.Add("Ancient");
+            _computerSelect.SelectedIndex = 0;
+            _computerSelect.SelectionChanged += (s, e) => OnFilePropertyChanged();
+            var computerPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal };
+            computerPanel.Children.Add(new TextBlock { Text = "Computer Type:", Width = 120 });
+            computerPanel.Children.Add(_computerSelect);
+            filePropertiesPanel.Children.Add(computerPanel);
+
+            // Initialize entry delay spin box
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
+            // Original: QSpinBox entryDelaySpin
+            _entryDelaySpin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Width = 120 };
+            _entryDelaySpin.ValueChanged += (s, e) => OnFilePropertyChanged();
+            var entryDelayPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal };
+            entryDelayPanel.Children.Add(new TextBlock { Text = "Entry Delay:", Width = 120 });
+            entryDelayPanel.Children.Add(_entryDelaySpin);
+            filePropertiesPanel.Children.Add(entryDelayPanel);
+
+            // Initialize reply delay spin box
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
+            // Original: QSpinBox replyDelaySpin
+            _replyDelaySpin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Width = 120 };
+            _replyDelaySpin.ValueChanged += (s, e) => OnFilePropertyChanged();
+            var replyDelayPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal };
+            replyDelayPanel.Children.Add(new TextBlock { Text = "Reply Delay:", Width = 120 });
+            replyDelayPanel.Children.Add(_replyDelaySpin);
+            filePropertiesPanel.Children.Add(replyDelayPanel);
+
+            // Initialize on abort combo box (ResRef)
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
+            // Original: QComboBox onAbortCombo
+            _onAbortCombo = new ComboBox { IsEditable = true };
+            _onAbortCombo.LostFocus += (s, e) => OnFilePropertyChanged();
+            var onAbortPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal };
+            onAbortPanel.Children.Add(new TextBlock { Text = "On Abort Script:", Width = 120 });
+            onAbortPanel.Children.Add(_onAbortCombo);
+            filePropertiesPanel.Children.Add(onAbortPanel);
+
+            // Initialize on end combo box (ResRef)
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
+            // Original: QComboBox onEndEdit
+            _onEndEdit = new ComboBox { IsEditable = true };
+            _onEndEdit.LostFocus += (s, e) => OnFilePropertyChanged();
+            var onEndPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal };
+            onEndPanel.Children.Add(new TextBlock { Text = "On End Script:", Width = 120 });
+            onEndPanel.Children.Add(_onEndEdit);
+            filePropertiesPanel.Children.Add(onEndPanel);
+
+            // Initialize camera model combo box (ResRef)
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
+            // Original: QComboBox cameraModelSelect
+            _cameraModelSelect = new ComboBox { IsEditable = true };
+            _cameraModelSelect.LostFocus += (s, e) => OnFilePropertyChanged();
+            var cameraModelPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal };
+            cameraModelPanel.Children.Add(new TextBlock { Text = "Camera Model:", Width = 120 });
+            cameraModelPanel.Children.Add(_cameraModelSelect);
+            filePropertiesPanel.Children.Add(cameraModelPanel);
 
             // Initialize file-level checkboxes
             // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
@@ -425,6 +519,25 @@ namespace HolocronToolset.Editors
             listenerPanel.Children.Add(new TextBlock { Text = "Listener:" });
             listenerPanel.Children.Add(_listenerEdit);
             panel.Children.Add(listenerPanel);
+
+            // Initialize script1 and script2 combo boxes
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui:170, 374
+            // Original: QComboBox script1ResrefEdit, script2ResrefEdit
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:347
+            // Original: self.ui.script1ResrefEdit.currentTextChanged.connect(self.on_node_update), self.ui.script2ResrefEdit.currentTextChanged.connect(self.on_node_update)
+            _script1ResrefEdit = new ComboBox { IsEditable = true };
+            _script1ResrefEdit.LostFocus += (s, e) => OnNodeUpdate();
+            var script1Panel = new StackPanel();
+            script1Panel.Children.Add(new TextBlock { Text = "Script1 ResRef:" });
+            script1Panel.Children.Add(_script1ResrefEdit);
+            panel.Children.Add(script1Panel);
+
+            _script2ResrefEdit = new ComboBox { IsEditable = true };
+            _script2ResrefEdit.LostFocus += (s, e) => OnNodeUpdate();
+            var script2Panel = new StackPanel();
+            script2Panel.Children.Add(new TextBlock { Text = "Script2 ResRef:" });
+            script2Panel.Children.Add(_script2ResrefEdit);
+            panel.Children.Add(script2Panel);
 
             // Initialize animation UI controls
             // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui:966-992
@@ -845,6 +958,8 @@ namespace HolocronToolset.Editors
         // Matching PyKotor implementation: editor.ui.condition1ResrefEdit, etc.
         public ComboBox Condition1ResrefEdit => _condition1ResrefEdit;
         public ComboBox Condition2ResrefEdit => _condition2ResrefEdit;
+        public ComboBox Script1ResrefEdit => _script1ResrefEdit;
+        public ComboBox Script2ResrefEdit => _script2ResrefEdit;
         public NumericUpDown LogicSpin => _logicSpin;
         public TreeView DialogTree => _dialogTree;
 
@@ -885,6 +1000,57 @@ namespace HolocronToolset.Editors
 
         // Matching PyKotor implementation: editor.ui.listenerEdit
         public TextBox ListenerEdit => _listenerEdit;
+
+        // Expose find/search widgets for testing
+        // Matching PyKotor implementation: editor.find_input, editor.show_find_bar(), editor.handle_find()
+        public TextBox FindInput => _findInput;
+        public Button FindButton => _findButton;
+        public TextBlock ResultsLabel => _resultsLabel;
+
+        /// <summary>
+        /// Shows the find bar (public for testing).
+        /// Matching PyKotor implementation: self.show_find_bar()
+        /// </summary>
+        public void ShowFindBar()
+        {
+            // Matching PyKotor: self.find_bar.setVisible(True)
+            if (_findBar != null)
+            {
+                _findBar.IsVisible = true;
+            }
+
+            // Matching PyKotor: self.find_input.setFocus()
+            if (_findInput != null)
+            {
+                _findInput.Focus();
+            }
+        }
+
+        /// <summary>
+        /// Handles the find operation (public for testing).
+        /// Matching PyKotor implementation: self.handle_find()
+        /// </summary>
+        public void HandleFind()
+        {
+            HandleFind();
+        }
+
+        // File-level properties exposed for testing
+        // Matching PyKotor implementation - expose UI controls for testing
+        public ComboBox ConversationSelect => _conversationSelect;
+        public ComboBox ComputerSelect => _computerSelect;
+        public NumericUpDown EntryDelaySpin => _entryDelaySpin;
+        public NumericUpDown ReplyDelaySpin => _replyDelaySpin;
+        public ComboBox OnAbortCombo => _onAbortCombo;
+        public ComboBox OnEndEdit => _onEndEdit;
+        public ComboBox CameraModelSelect => _cameraModelSelect;
+        public TextBox VoIdEdit => _voIdEdit;
+        public ComboBox AmbientTrackCombo => _ambientTrackCombo;
+        public CheckBox SkippableCheckbox => _skippableCheckbox;
+        public CheckBox AnimatedCutCheckbox => _animatedCutCheckbox;
+        public CheckBox OldHitCheckbox => _oldHitCheckbox;
+        public CheckBox UnequipHandsCheckbox => _unequipHandsCheckbox;
+        public CheckBox UnequipAllCheckbox => _unequipAllCheckbox;
 
         // Expose left dock widget for testing
         // Matching PyKotor implementation: editor.left_dock_widget, editor.orphaned_nodes_list, editor.pinned_items_list
@@ -1158,6 +1324,18 @@ namespace HolocronToolset.Editors
             if (_questEntrySpin != null && node != null)
             {
                 _questEntrySpin.Value = node.QuestEntry ?? 0;
+            }
+
+            // Load script1 and script2 ResRefs
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2409, 2416
+            // Original: self.ui.script1ResrefEdit.set_combo_box_text(str(item.link.node.script1)), self.ui.script2ResrefEdit.set_combo_box_text(str(item.link.node.script2))
+            if (_script1ResrefEdit != null && node != null)
+            {
+                _script1ResrefEdit.Text = node.Script1?.ToString() ?? string.Empty;
+            }
+            if (_script2ResrefEdit != null && node != null)
+            {
+                _script2ResrefEdit.Text = node.Script2?.ToString() ?? string.Empty;
             }
 
             // Load script1 param1
@@ -2373,7 +2551,7 @@ namespace HolocronToolset.Editors
         /// Matching PyKotor implementation: self.show_find_bar()
         /// Original: def show_find_bar(self): self.find_bar.setVisible(True); self.find_input.setFocus()
         /// </summary>
-        private void ShowFindBar()
+        public void ShowFindBar()
         {
             // Matching PyKotor: self.find_bar.setVisible(True)
             if (_findBar != null)

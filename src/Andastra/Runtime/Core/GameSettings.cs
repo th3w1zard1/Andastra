@@ -208,53 +208,6 @@ namespace Andastra.Runtime.Core
             public bool PauseOnPlayerDeath { get; set; } = true;
         }
 
-        /// <summary>
-        /// Feedback settings configuration.
-        /// </summary>
-        /// <remarks>
-        /// Feedback Settings:
-        /// - Based on swkotor.exe and swkotor2.exe feedback system
-        /// - Controls visual and audio feedback during gameplay
-        /// - Settings stored in INI file (swkotor.ini for K1, swkotor2.ini for K2)
-        /// - Based on swkotor2.exe: CSWGuiOptionsMain::OnFeedbackOpt @ 0x006e2df0
-        /// </remarks>
-        public class FeedbackSettings
-        {
-            /// <summary>
-            /// Show damage numbers during combat.
-            /// </summary>
-            public bool ShowDamageNumbers { get; set; } = true;
-
-            /// <summary>
-            /// Show hit/miss feedback during combat.
-            /// </summary>
-            public bool ShowHitMissFeedback { get; set; } = true;
-
-            /// <summary>
-            /// Show subtitles for dialogue.
-            /// </summary>
-            public bool ShowSubtitles { get; set; } = true;
-
-            /// <summary>
-            /// Show action queue feedback.
-            /// </summary>
-            public bool ShowActionQueue { get; set; } = true;
-
-            /// <summary>
-            /// Show minimap.
-            /// </summary>
-            public bool ShowMinimap { get; set; } = true;
-
-            /// <summary>
-            /// Show party member health bars.
-            /// </summary>
-            public bool ShowPartyHealthBars { get; set; } = true;
-
-            /// <summary>
-            /// Show floating combat text.
-            /// </summary>
-            public bool ShowFloatingCombatText { get; set; } = true;
-        }
 
         /// <summary>
         /// Graphics settings configuration.
@@ -366,6 +319,13 @@ namespace Andastra.Runtime.Core
         /// <summary>
         /// Feedback settings configuration.
         /// </summary>
+        /// <remarks>
+        /// Feedback Settings:
+        /// - Based on swkotor.exe and swkotor2.exe feedback system
+        /// - Controls visual and audio feedback during gameplay
+        /// - Settings stored in INI file (swkotor.ini for K1, swkotor2.ini for K2)
+        /// - Based on swkotor2.exe: CSWGuiOptionsMain::OnFeedbackOpt @ 0x006e2df0
+        /// </remarks>
         public class FeedbackSettings
         {
             /// <summary>
@@ -379,14 +339,49 @@ namespace Andastra.Runtime.Core
             public int TooltipDelay { get; set; } = 500;
 
             /// <summary>
+            /// Show damage numbers during combat.
+            /// </summary>
+            public bool ShowDamageNumbers { get; set; } = true;
+
+            /// <summary>
             /// Whether to show combat damage numbers (floating damage text).
             /// </summary>
             public bool ShowCombatDamageNumbers { get; set; } = true;
 
             /// <summary>
+            /// Show hit/miss feedback during combat.
+            /// </summary>
+            public bool ShowHitMissFeedback { get; set; } = true;
+
+            /// <summary>
             /// Whether to show combat feedback text (hit/miss/critical messages).
             /// </summary>
             public bool ShowCombatFeedback { get; set; } = true;
+
+            /// <summary>
+            /// Show subtitles for dialogue.
+            /// </summary>
+            public bool ShowSubtitles { get; set; } = true;
+
+            /// <summary>
+            /// Show action queue feedback.
+            /// </summary>
+            public bool ShowActionQueue { get; set; } = true;
+
+            /// <summary>
+            /// Show minimap.
+            /// </summary>
+            public bool ShowMinimap { get; set; } = true;
+
+            /// <summary>
+            /// Show party member health bars.
+            /// </summary>
+            public bool ShowPartyHealthBars { get; set; } = true;
+
+            /// <summary>
+            /// Show floating combat text.
+            /// </summary>
+            public bool ShowFloatingCombatText { get; set; } = true;
 
             /// <summary>
             /// Whether to show floating text for experience gains.

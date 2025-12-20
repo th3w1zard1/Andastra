@@ -5,6 +5,7 @@ using Andastra.Runtime.Core.MDL;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Parsing.Resource;
 using Andastra.Runtime.Content.Interfaces;
+using Andastra.Runtime.Content.MDL;
 
 namespace Andastra.Runtime.Core.Camera
 {

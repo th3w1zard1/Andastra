@@ -3,7 +3,7 @@ using System.IO;
 using System.Text;
 using System.Linq;
 using System.Numerics;
-using Andastra.Parsing.Formats.LYT;
+using Andastra.Parsing.Resource.Formats.LYT;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Tests.Common;

@@ -10,6 +10,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\Andastra\Parsing\Andastra.Parsing.csproj" />
     <ProjectReference Include="..\Cache\Cache.csproj" />
+    <ProjectReference Include="..\Resolution\Resolution.csproj" />
   </ItemGroup>
 
   <ItemGroup>
