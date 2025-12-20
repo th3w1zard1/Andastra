@@ -6,7 +6,9 @@ using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Engines.Odyssey.Components;
+using Andastra.Runtime.Engines.Odyssey.Data;
 using Andastra.Runtime.Games.Common.Systems;
+using Andastra.Runtime.Games.Odyssey.Data;
 
 namespace Andastra.Runtime.Engines.Odyssey.Systems
 {
@@ -141,6 +143,9 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
         // Track last perceived entity per creature (for GetLastPerceived engine API)
         private readonly Dictionary<uint, IEntity> _lastPerceivedEntity;
         private readonly Dictionary<uint, bool> _lastPerceptionWasHeard;
+
+        // Cached feat ID for See Invisibility (looked up from feat.2da)
+        private int? _cachedSeeInvisibilityFeatId;
 
         /// <summary>
         /// Default sight range in meters (Odyssey-specific).
@@ -508,6 +513,56 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
         }
 
         /// <summary>
+        /// Gets the GameDataManager from the world's GameDataProvider.
+        /// </summary>
+        /// <returns>GameDataManager if available, null otherwise.</returns>
+        private GameDataManager GetGameDataManager()
+        {
+            if (_world?.GameDataProvider == null)
+            {
+                return null;
+            }
+
+            // GameDataProvider is OdysseyGameDataProvider for Odyssey engine
+            OdysseyGameDataProvider odysseyProvider = _world.GameDataProvider as OdysseyGameDataProvider;
+            return odysseyProvider?.GameDataManager;
+        }
+
+        /// <summary>
+        /// Gets the See Invisibility feat ID from feat.2da, with caching.
+        /// </summary>
+        /// <returns>Feat ID if found, -1 otherwise.</returns>
+        /// <remarks>
+        /// See Invisibility Feat Lookup:
+        /// - Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 (perception check function)
+        /// - Located via string references: "CSWClass::LoadFeatTable: Can't load feat.2da" @ 0x007c4720
+        /// - Original implementation: Looks up FEAT_SEE_INVISIBILITY from feat.2da table
+        /// - Caches the result to avoid repeated table lookups
+        /// - Falls back to -1 if feat table is unavailable or feat not found
+        /// </remarks>
+        private int GetSeeInvisibilityFeatId()
+        {
+            // Return cached value if available
+            if (_cachedSeeInvisibilityFeatId.HasValue)
+            {
+                return _cachedSeeInvisibilityFeatId.Value;
+            }
+
+            // Look up feat ID from game data
+            GameDataManager gameDataManager = GetGameDataManager();
+            if (gameDataManager != null)
+            {
+                int featId = gameDataManager.GetFeatIdByLabel("FEAT_SEE_INVISIBILITY");
+                _cachedSeeInvisibilityFeatId = featId;
+                return featId;
+            }
+
+            // Fallback: return -1 if game data unavailable
+            _cachedSeeInvisibilityFeatId = -1;
+            return -1;
+        }
+
+        /// <summary>
         /// Checks if creature can see target (internal Odyssey-specific implementation).
         /// </summary>
         private bool CanSeeInternal(IEntity creature, IEntity target, Vector3 creaturePos, Vector3 targetPos)
@@ -526,11 +581,14 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
                     CreatureComponent creatureComp = creature.GetComponent<CreatureComponent>();
                     if (creatureComp != null && creatureComp.FeatList != null)
                     {
-                        // See Invisibility feat ID (from feats.2da)
-                        // TODO: PLACEHOLDER - Note: Exact feat ID should be looked up from game data, using placeholder value
-                        // In KOTOR, See Invisibility is typically feat ID 42 (FEAT_SEE_INVISIBILITY)
-                        const int FEAT_SEE_INVISIBILITY = 42;
-                        canSeeInvisible = creatureComp.FeatList.Contains(FEAT_SEE_INVISIBILITY);
+                        // See Invisibility feat ID (looked up from feat.2da)
+                        // Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 (perception check function)
+                        // Original implementation: Checks for FEAT_SEE_INVISIBILITY from feat.2da table
+                        int featSeeInvisibilityId = GetSeeInvisibilityFeatId();
+                        if (featSeeInvisibilityId >= 0)
+                        {
+                            canSeeInvisible = creatureComp.FeatList.Contains(featSeeInvisibilityId);
+                        }
                     }
                 }
 

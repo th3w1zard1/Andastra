@@ -231,6 +231,81 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
             };
         }
 
+        /// <summary>
+        /// Gets feat data by label (row label in feat.2da).
+        /// </summary>
+        /// <param name="featLabel">The feat label (e.g., "FEAT_SEE_INVISIBILITY").</param>
+        /// <returns>Feat data if found, null otherwise.</returns>
+        /// <remarks>
+        /// Feat Lookup by Label:
+        /// - Based on swkotor2.exe: FUN_005edd20 @ 0x005edd20 (2DA table loading)
+        /// - Located via string references: "CSWClass::LoadFeatTable: Can't load feat.2da" @ 0x007c4720
+        /// - Original implementation: Looks up feat by row label in feat.2da table
+        /// - Row labels in feat.2da match feat constant names (e.g., "FEAT_SEE_INVISIBILITY")
+        /// - Uses FindRow to locate feat by label, then returns FeatData with row index as FeatId
+        /// </remarks>
+        [CanBeNull]
+        public FeatData GetFeatByLabel(string featLabel)
+        {
+            if (string.IsNullOrEmpty(featLabel))
+            {
+                return null;
+            }
+
+            TwoDA table = GetTable("feat");
+            if (table == null)
+            {
+                return null;
+            }
+
+            TwoDARow row = table.FindRow(featLabel);
+            if (row == null)
+            {
+                return null;
+            }
+
+            // Get row index for the found row
+            int? rowIndex = table.RowIndex(row);
+            if (!rowIndex.HasValue)
+            {
+                return null;
+            }
+
+            int? usesPerDay = row.GetInteger("usesperday");
+            return new FeatData
+            {
+                RowIndex = rowIndex.Value,
+                Label = row.Label(),
+                Name = row.GetString("name"),
+                Description = row.GetString("description"),
+                Icon = row.GetString("icon"),
+                PrereqFeat1 = row.GetInteger("prereqfeat1") ?? -1,
+                PrereqFeat2 = row.GetInteger("prereqfeat2") ?? -1,
+                MinLevel = row.GetInteger("minlevel") ?? 1,
+                MinLevelClass = row.GetInteger("minlevelclass") ?? -1,
+                Selectable = row.GetInteger("allclassescanuse") == 1 || row.GetInteger("selectable") == 1,
+                UsesPerDay = usesPerDay ?? -1 // -1 = unlimited or special handling, 0+ = daily limit
+            };
+        }
+
+        /// <summary>
+        /// Gets a feat ID by label (row label in feat.2da).
+        /// </summary>
+        /// <param name="featLabel">The feat label (e.g., "FEAT_SEE_INVISIBILITY").</param>
+        /// <returns>Feat ID (row index) if found, -1 otherwise.</returns>
+        /// <remarks>
+        /// Feat ID Lookup by Label:
+        /// - Based on swkotor2.exe: FUN_005edd20 @ 0x005edd20 (2DA table loading)
+        /// - Original implementation: Looks up feat ID by row label in feat.2da table
+        /// - Returns the row index as the feat ID, or -1 if not found
+        /// - More efficient than GetFeatByLabel when only the ID is needed
+        /// </remarks>
+        public int GetFeatIdByLabel(string featLabel)
+        {
+            FeatData feat = GetFeatByLabel(featLabel);
+            return feat != null ? feat.FeatId : -1;
+        }
+
         #endregion
 
         #region Surface Material Data
