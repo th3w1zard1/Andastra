@@ -54,6 +54,12 @@ namespace HolocronToolset.Dialogs
         // Dictionary to store full file paths for scripts (key: filename, value: full path)
         // This allows us to copy the actual files during generation
         private Dictionary<string, string> _scriptPaths = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        
+        // TLK StrRef controls
+        private TreeView _tlkStringTree;
+        // Dictionary to store TLK string entries (key: token name, value: TLKStringEntry)
+        private Dictionary<string, TLKStringEntry> _tlkStrings = new Dictionary<string, TLKStringEntry>(StringComparer.OrdinalIgnoreCase);
+        private int _nextTlkTokenId = 0;
 
         // Public parameterless constructor for XAML
         public TSLPatchDataEditorDialog() : this(null, null, null)
@@ -229,16 +235,60 @@ namespace HolocronToolset.Dialogs
             }
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:268-303
+        // Original: def _create_tlk_strref_tab(self):
         private void CreateTLKStrRefTab()
         {
             var tab = new TabItem { Header = "TLK StrRef" };
-            var content = new StackPanel();
-            // TODO: Add TLK StrRef controls
+            var content = new StackPanel { Spacing = 10, Margin = new Avalonia.Thickness(10) };
+
+            // Header
+            content.Children.Add(new TextBlock 
+            { 
+                Text = "TLK String References:", 
+                FontWeight = Avalonia.Media.FontWeight.Bold 
+            });
+            content.Children.Add(new TextBlock 
+            { 
+                Text = "Manage string references that will be added to dialog.tlk." 
+            });
+
+            // TLK string tree
+            _tlkStringTree = new TreeView();
+            // Note: Avalonia TreeView doesn't have built-in column headers like QTreeWidget
+            // We'll use a DataGrid or custom TreeViewItem with formatted content
+            // For now, we'll use TreeView with custom item templates
+            _tlkStringTree.MinHeight = 300;
+            content.Children.Add(_tlkStringTree);
+
+            // Buttons
+            var btnLayout = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5 };
+            var addStrBtn = new Button { Content = "Add TLK String" };
+            addStrBtn.Click += (s, e) => AddTlkString();
+            btnLayout.Children.Add(addStrBtn);
+            
+            var editStrBtn = new Button { Content = "Edit String" };
+            editStrBtn.Click += (s, e) => EditTlkString();
+            btnLayout.Children.Add(editStrBtn);
+            
+            var removeStrBtn = new Button { Content = "Remove String" };
+            removeStrBtn.Click += (s, e) => RemoveTlkString();
+            btnLayout.Children.Add(removeStrBtn);
+            
+            var openTlkEditorBtn = new Button { Content = "Open TLK Editor" };
+            openTlkEditorBtn.Click += (s, e) => OpenTlkEditor();
+            btnLayout.Children.Add(openTlkEditorBtn);
+            
+            btnLayout.Children.Add(new TextBlock()); // Spacer
+            content.Children.Add(btnLayout);
+
             tab.Content = content;
             if (_configTabs != null)
             {
                 _configTabs.Items.Add(tab);
             }
+            
+            RefreshTlkStringTree();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:305-348
@@ -298,6 +348,26 @@ namespace HolocronToolset.Dialogs
             }
         }
 
+        // Helper class for tree view items
+        private class GFFFieldItem
+        {
+            public string FieldPath { get; set; }
+            public string OldValue { get; set; }
+            public string NewValue { get; set; }
+            public string Type { get; set; }
+        }
+        
+        // Helper class for TLK string entries
+        private class TLKStringEntry
+        {
+            public string TokenName { get; set; }
+            public string Text { get; set; }
+            public string Sound { get; set; }
+            public int TokenId { get; set; }
+            public bool IsReplacement { get; set; }
+            public int ModIndex { get; set; } // For replacements, this is the StrRef to replace
+            public List<string> UsedBy { get; set; } = new List<string>(); // List of files/sections that use this token
+        }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:350-373
         // Original: def _create_scripts_tab(self):
@@ -606,6 +676,9 @@ namespace HolocronToolset.Dialogs
                         // This matches PyKotor behavior where only filenames are stored in INI
                     }
                 }
+
+                // Load TLK strings from INI
+                LoadTlkStringsFromIni(iniLines);
 
                 // Load other settings from INI using ConfigReader
                 try
@@ -969,6 +1042,222 @@ namespace HolocronToolset.Dialogs
             }
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:483-497
+        // Original: def _add_tlk_string(self):
+        private async void AddTlkString()
+        {
+            var dialog = new TLKStringEditDialog(this, null);
+            var result = await dialog.ShowDialog<bool>(this);
+            if (result)
+            {
+                var entry = dialog.TlkEntry;
+                if (entry != null && !string.IsNullOrWhiteSpace(entry.TokenName))
+                {
+                    // Check if token name already exists
+                    if (_tlkStrings.ContainsKey(entry.TokenName))
+                    {
+                        var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                            "Error",
+                            $"A TLK string with token name '{entry.TokenName}' already exists.",
+                            ButtonEnum.Ok,
+                            MsBox.Avalonia.Enums.Icon.Error);
+                        await errorBox.ShowAsync();
+                        return;
+                    }
+                    
+                    // Assign token ID if not set
+                    if (entry.TokenId == 0)
+                    {
+                        entry.TokenId = _nextTlkTokenId++;
+                    }
+                    
+                    _tlkStrings[entry.TokenName] = entry;
+                    RefreshTlkStringTree();
+                    UpdateIniPreview();
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:487-489
+        // Original: def _edit_tlk_string(self):
+        private async void EditTlkString()
+        {
+            var selectedItem = _tlkStringTree?.SelectedItem;
+            if (selectedItem == null)
+            {
+                var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                    "No Selection",
+                    "Please select a TLK string to edit.",
+                    ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Information);
+                await errorBox.ShowAsync();
+                return;
+            }
+            
+            // Get the token name from the selected item
+            string tokenName = null;
+            if (selectedItem is TreeViewItem treeItem)
+            {
+                tokenName = treeItem.Header?.ToString();
+            }
+            else if (selectedItem is string str)
+            {
+                tokenName = str;
+            }
+            
+            if (string.IsNullOrWhiteSpace(tokenName) || !_tlkStrings.ContainsKey(tokenName))
+            {
+                return;
+            }
+            
+            var existingEntry = _tlkStrings[tokenName];
+            var dialog = new TLKStringEditDialog(this, existingEntry);
+            var result = await dialog.ShowDialog<bool>(this);
+            if (result)
+            {
+                var entry = dialog.TlkEntry;
+                if (entry != null && !string.IsNullOrWhiteSpace(entry.TokenName))
+                {
+                    // If token name changed, remove old entry and add new one
+                    if (entry.TokenName != tokenName && _tlkStrings.ContainsKey(entry.TokenName))
+                    {
+                        var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                            "Error",
+                            $"A TLK string with token name '{entry.TokenName}' already exists.",
+                            ButtonEnum.Ok,
+                            MsBox.Avalonia.Enums.Icon.Error);
+                        await errorBox.ShowAsync();
+                        return;
+                    }
+                    
+                    if (entry.TokenName != tokenName)
+                    {
+                        _tlkStrings.Remove(tokenName);
+                    }
+                    
+                    // Preserve token ID and used by list
+                    entry.TokenId = existingEntry.TokenId;
+                    entry.UsedBy = existingEntry.UsedBy;
+                    
+                    _tlkStrings[entry.TokenName] = entry;
+                    RefreshTlkStringTree();
+                    UpdateIniPreview();
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:491-496
+        // Original: def _remove_tlk_string(self):
+        private void RemoveTlkString()
+        {
+            var selectedItem = _tlkStringTree?.SelectedItem;
+            if (selectedItem == null)
+            {
+                return;
+            }
+            
+            // Get the token name from the selected item
+            string tokenName = null;
+            if (selectedItem is TreeViewItem treeItem)
+            {
+                tokenName = treeItem.Header?.ToString();
+            }
+            else if (selectedItem is string str)
+            {
+                tokenName = str;
+            }
+            
+            if (!string.IsNullOrWhiteSpace(tokenName) && _tlkStrings.ContainsKey(tokenName))
+            {
+                _tlkStrings.Remove(tokenName);
+                RefreshTlkStringTree();
+                UpdateIniPreview();
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:498-519
+        // Original: def _open_tlk_editor(self):
+        private void OpenTlkEditor()
+        {
+            if (_installation == null)
+            {
+                var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                    "No Installation",
+                    "No installation loaded.",
+                    ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Warning);
+                errorBox.ShowAsync();
+                return;
+            }
+            
+            string tlkPath = Path.Combine(_installation.Path(), "dialog.tlk");
+            if (File.Exists(tlkPath))
+            {
+                try
+                {
+                    byte[] data = File.ReadAllBytes(tlkPath);
+                    WindowUtils.OpenResourceEditor(
+                        tlkPath,
+                        "dialog",
+                        ResourceType.TLK,
+                        data,
+                        _installation,
+                        this);
+                }
+                catch (Exception ex)
+                {
+                    var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                        "Error",
+                        $"Failed to open TLK editor:\n{ex.Message}",
+                        ButtonEnum.Ok,
+                        MsBox.Avalonia.Enums.Icon.Error);
+                    errorBox.ShowAsync();
+                }
+            }
+            else
+            {
+                var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Not Found",
+                    "dialog.tlk not found in installation.",
+                    ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Warning);
+                errorBox.ShowAsync();
+            }
+        }
+        
+        private void RefreshTlkStringTree()
+        {
+            if (_tlkStringTree == null)
+            {
+                return;
+            }
+            
+            _tlkStringTree.Items.Clear();
+            
+            foreach (var kvp in _tlkStrings.OrderBy(x => x.Key))
+            {
+                var entry = kvp.Value;
+                // Create a formatted string for display: "TokenName | Text Preview | Used By: file1, file2"
+                string textPreview = entry.Text ?? "";
+                if (textPreview.Length > 60)
+                {
+                    textPreview = textPreview.Substring(0, 57) + "...";
+                }
+                textPreview = textPreview.Replace("\n", "\\n").Replace("\r", "\\r");
+                
+                string usedByText = entry.UsedBy != null && entry.UsedBy.Count > 0 
+                    ? string.Join(", ", entry.UsedBy.Take(3))
+                    : "(not used)";
+                if (entry.UsedBy != null && entry.UsedBy.Count > 3)
+                {
+                    usedByText += $" (+{entry.UsedBy.Count - 3} more)";
+                }
+                
+                string displayText = $"{entry.TokenName} | {textPreview} | Used By: {usedByText}";
+                _tlkStringTree.Items.Add(displayText);
+            }
+        }
+
         private void GenerateTslpatchdata()
         {
             // TODO: Generate TSLPatchData files
@@ -1029,6 +1318,52 @@ namespace HolocronToolset.Dialogs
             // TLKList section
             previewLines.AppendLine("[TLKList]");
             previewLines.AppendLine("; TLK string additions");
+            if (_tlkStrings != null && _tlkStrings.Count > 0)
+            {
+                // Check if we have any replacements
+                bool hasReplacements = _tlkStrings.Values.Any(e => e.IsReplacement);
+                if (hasReplacements)
+                {
+                    previewLines.AppendLine("ReplaceFile0=replace.tlk");
+                }
+                
+                // Add append entries (non-replacements)
+                var appendEntries = _tlkStrings.Values.Where(e => !e.IsReplacement).OrderBy(e => e.TokenId).ToList();
+                foreach (var entry in appendEntries)
+                {
+                    // Truncate text for comment (max 60 chars)
+                    string textPreview = (entry.Text ?? "").Substring(0, Math.Min(60, (entry.Text ?? "").Length));
+                    textPreview = textPreview.Replace("\n", "\\n").Replace("\r", "\\r");
+                    
+                    // Build comment with text and sound (if present)
+                    var commentParts = new List<string>();
+                    if (!string.IsNullOrEmpty(textPreview))
+                    {
+                        commentParts.Add($"\"{textPreview}\"");
+                    }
+                    if (!string.IsNullOrEmpty(entry.Sound))
+                    {
+                        commentParts.Add($"sound={entry.Sound}");
+                    }
+                    
+                    string comment = commentParts.Count > 0 ? string.Join(" | ", commentParts) : "(empty entry)";
+                    
+                    // Add the line with comment: StrRef{modIndex}={tokenId}  ; comment
+                    previewLines.AppendLine($"StrRef{entry.ModIndex}={entry.TokenId}  ; {comment}");
+                }
+                
+                // Add replacement section if needed
+                if (hasReplacements)
+                {
+                    previewLines.AppendLine();
+                    previewLines.AppendLine("[replace.tlk]");
+                    var replacementEntries = _tlkStrings.Values.Where(e => e.IsReplacement).OrderBy(e => e.TokenId).ToList();
+                    foreach (var entry in replacementEntries)
+                    {
+                        previewLines.AppendLine($"{entry.TokenId}={entry.ModIndex}");
+                    }
+                }
+            }
             previewLines.AppendLine();
 
             // InstallList section
@@ -1123,6 +1458,301 @@ namespace HolocronToolset.Dialogs
                     MsBox.Avalonia.Enums.Icon.Error);
                 await errorBox.ShowAsync();
             }
+        }
+        
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:422-430
+        // Original: def _load_existing_config(self) - TLK loading part
+        private void LoadTlkStringsFromIni(string[] iniLines)
+        {
+            if (iniLines == null || iniLines.Length == 0)
+            {
+                return;
+            }
+            
+            _tlkStrings.Clear();
+            _nextTlkTokenId = 0;
+            
+            bool inTlkListSection = false;
+            bool inReplaceTlkSection = false;
+            Dictionary<int, int> replaceMappings = new Dictionary<int, int>(); // tokenId -> modIndex
+            
+            foreach (string line in iniLines)
+            {
+                string trimmedLine = line.Trim();
+                
+                // Check for section headers
+                if (trimmedLine.StartsWith("[") && trimmedLine.EndsWith("]"))
+                {
+                    string sectionName = trimmedLine.Substring(1, trimmedLine.Length - 2);
+                    inTlkListSection = sectionName.Equals("TLKList", StringComparison.OrdinalIgnoreCase);
+                    inReplaceTlkSection = sectionName.Equals("replace.tlk", StringComparison.OrdinalIgnoreCase);
+                    continue;
+                }
+                
+                // Skip empty lines and comments
+                if (string.IsNullOrWhiteSpace(trimmedLine) || trimmedLine.StartsWith(";") || trimmedLine.StartsWith("#"))
+                {
+                    continue;
+                }
+                
+                if (inReplaceTlkSection)
+                {
+                    // Parse replacement mappings: tokenId=modIndex
+                    int equalsIndex = trimmedLine.IndexOf('=');
+                    if (equalsIndex > 0)
+                    {
+                        string tokenIdStr = trimmedLine.Substring(0, equalsIndex).Trim();
+                        string modIndexStr = trimmedLine.Substring(equalsIndex + 1).Trim();
+                        if (int.TryParse(tokenIdStr, out int tokenId) && int.TryParse(modIndexStr, out int modIndex))
+                        {
+                            replaceMappings[tokenId] = modIndex;
+                        }
+                    }
+                }
+                else if (inTlkListSection)
+                {
+                    // Check for ReplaceFile directive
+                    if (trimmedLine.StartsWith("ReplaceFile", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // ReplaceFile0=replace.tlk - we'll handle this when processing [replace.tlk] section
+                        continue;
+                    }
+                    
+                    // Parse StrRef entries: StrRef{modIndex}={tokenId}  ; comment
+                    if (trimmedLine.StartsWith("StrRef", StringComparison.OrdinalIgnoreCase))
+                    {
+                        int equalsIndex = trimmedLine.IndexOf('=');
+                        if (equalsIndex > 0)
+                        {
+                            string leftPart = trimmedLine.Substring(0, equalsIndex).Trim();
+                            string rightPart = trimmedLine.Substring(equalsIndex + 1).Trim();
+                            
+                            // Extract modIndex from "StrRef{modIndex}"
+                            if (leftPart.StartsWith("StrRef", StringComparison.OrdinalIgnoreCase))
+                            {
+                                string modIndexStr = leftPart.Substring(6); // Skip "StrRef"
+                                if (int.TryParse(modIndexStr, out int modIndex))
+                                {
+                                    // Extract tokenId from right part (before comment)
+                                    int commentIndex = rightPart.IndexOf(';');
+                                    string tokenIdStr = commentIndex >= 0 
+                                        ? rightPart.Substring(0, commentIndex).Trim()
+                                        : rightPart.Trim();
+                                    
+                                    if (int.TryParse(tokenIdStr, out int tokenId))
+                                    {
+                                        // Extract text and sound from comment if present
+                                        string text = "";
+                                        string sound = "";
+                                        if (commentIndex >= 0)
+                                        {
+                                            string comment = rightPart.Substring(commentIndex + 1).Trim();
+                                            // Parse comment: "text" | sound=soundname
+                                            if (comment.StartsWith("\"") && comment.Contains("\""))
+                                            {
+                                                int endQuote = comment.IndexOf('"', 1);
+                                                if (endQuote > 0)
+                                                {
+                                                    text = comment.Substring(1, endQuote - 1);
+                                                    comment = comment.Substring(endQuote + 1).Trim();
+                                                }
+                                            }
+                                            if (comment.StartsWith("sound=", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                sound = comment.Substring(6).Trim();
+                                            }
+                                        }
+                                        
+                                        // Generate token name from tokenId
+                                        string tokenName = $"StrRef{tokenId}";
+                                        
+                                        var entry = new TLKStringEntry
+                                        {
+                                            TokenName = tokenName,
+                                            TokenId = tokenId,
+                                            ModIndex = modIndex,
+                                            Text = text,
+                                            Sound = sound,
+                                            IsReplacement = false
+                                        };
+                                        
+                                        _tlkStrings[tokenName] = entry;
+                                        if (tokenId >= _nextTlkTokenId)
+                                        {
+                                            _nextTlkTokenId = tokenId + 1;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Process replacement mappings
+            foreach (var kvp in replaceMappings)
+            {
+                int tokenId = kvp.Key;
+                int modIndex = kvp.Value;
+                string tokenName = $"StrRef{tokenId}";
+                
+                var entry = new TLKStringEntry
+                {
+                    TokenName = tokenName,
+                    TokenId = tokenId,
+                    ModIndex = modIndex,
+                    Text = "",
+                    Sound = "",
+                    IsReplacement = true
+                };
+                
+                _tlkStrings[tokenName] = entry;
+                if (tokenId >= _nextTlkTokenId)
+                {
+                    _nextTlkTokenId = tokenId + 1;
+                }
+            }
+            
+            RefreshTlkStringTree();
+        }
+    }
+    
+    // Dialog for adding/editing TLK strings
+    // Matching PyKotor implementation pattern for dialogs
+    internal class TLKStringEditDialog : Window
+    {
+        public TLKStringEntry TlkEntry { get; private set; }
+        private TextBox _tokenNameEdit;
+        private TextBox _textEdit;
+        private TextBox _soundEdit;
+        private CheckBox _isReplacementCheck;
+        private NumericUpDown _modIndexSpin;
+        private Button _okButton;
+        private Button _cancelButton;
+        private TLKStringEntry _originalEntry;
+        
+        public TLKStringEditDialog(Window parent, TLKStringEntry existingEntry = null)
+        {
+            Title = existingEntry == null ? "Add TLK String" : "Edit TLK String";
+            Width = 500;
+            Height = 400;
+            _originalEntry = existingEntry;
+            
+            InitializeComponent();
+        }
+        
+        private void InitializeComponent()
+        {
+            var mainPanel = new StackPanel { Spacing = 10, Margin = new Avalonia.Thickness(15) };
+            
+            // Token Name
+            var tokenNameLayout = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5 };
+            tokenNameLayout.Children.Add(new TextBlock { Text = "Token Name:", VerticalAlignment = VerticalAlignment.Center, MinWidth = 120 });
+            _tokenNameEdit = new TextBox { MinWidth = 300 };
+            if (_originalEntry != null)
+            {
+                _tokenNameEdit.Text = _originalEntry.TokenName;
+            }
+            else
+            {
+                _tokenNameEdit.Text = "StrRef0";
+            }
+            tokenNameLayout.Children.Add(_tokenNameEdit);
+            mainPanel.Children.Add(tokenNameLayout);
+            
+            // Text
+            mainPanel.Children.Add(new TextBlock { Text = "Text:" });
+            _textEdit = new TextBox 
+            { 
+                MinHeight = 100, 
+                AcceptsReturn = true, 
+                TextWrapping = Avalonia.Media.TextWrapping.Wrap 
+            };
+            if (_originalEntry != null)
+            {
+                _textEdit.Text = _originalEntry.Text ?? "";
+            }
+            mainPanel.Children.Add(_textEdit);
+            
+            // Sound ResRef
+            var soundLayout = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5 };
+            soundLayout.Children.Add(new TextBlock { Text = "Sound ResRef:", VerticalAlignment = VerticalAlignment.Center, MinWidth = 120 });
+            _soundEdit = new TextBox { MinWidth = 300, MaxLength = 16 };
+            if (_originalEntry != null)
+            {
+                _soundEdit.Text = _originalEntry.Sound ?? "";
+            }
+            soundLayout.Children.Add(_soundEdit);
+            mainPanel.Children.Add(soundLayout);
+            
+            // Is Replacement
+            _isReplacementCheck = new CheckBox { Content = "Replace existing StrRef (instead of append)" };
+            if (_originalEntry != null)
+            {
+                _isReplacementCheck.IsChecked = _originalEntry.IsReplacement;
+            }
+            mainPanel.Children.Add(_isReplacementCheck);
+            
+            // Mod Index (for replacements)
+            var modIndexLayout = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5 };
+            modIndexLayout.Children.Add(new TextBlock { Text = "StrRef to Replace:", VerticalAlignment = VerticalAlignment.Center, MinWidth = 120 });
+            _modIndexSpin = new NumericUpDown { Minimum = 0, Maximum = 999999, MinWidth = 300 };
+            if (_originalEntry != null && _originalEntry.IsReplacement)
+            {
+                _modIndexSpin.Value = _originalEntry.ModIndex;
+            }
+            modIndexLayout.Children.Add(_modIndexSpin);
+            mainPanel.Children.Add(modIndexLayout);
+            
+            // Update Mod Index visibility based on replacement checkbox
+            _isReplacementCheck.Checked += (s, e) => modIndexLayout.IsVisible = true;
+            _isReplacementCheck.Unchecked += (s, e) => modIndexLayout.IsVisible = false;
+            modIndexLayout.IsVisible = _originalEntry != null && _originalEntry.IsReplacement;
+            
+            // Buttons
+            var buttonLayout = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5, HorizontalAlignment = HorizontalAlignment.Right };
+            _okButton = new Button { Content = "OK", MinWidth = 80 };
+            _okButton.Click += (s, e) => OnOk();
+            _cancelButton = new Button { Content = "Cancel", MinWidth = 80 };
+            _cancelButton.Click += (s, e) => Close(false);
+            buttonLayout.Children.Add(_okButton);
+            buttonLayout.Children.Add(_cancelButton);
+            mainPanel.Children.Add(buttonLayout);
+            
+            Content = mainPanel;
+        }
+        
+        private void OnOk()
+        {
+            string tokenName = _tokenNameEdit?.Text?.Trim();
+            if (string.IsNullOrWhiteSpace(tokenName))
+            {
+                var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Error",
+                    "Token name cannot be empty.",
+                    ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Error);
+                errorBox.ShowAsync();
+                return;
+            }
+            
+            TlkEntry = new TLKStringEntry
+            {
+                TokenName = tokenName,
+                Text = _textEdit?.Text ?? "",
+                Sound = _soundEdit?.Text ?? "",
+                IsReplacement = _isReplacementCheck?.IsChecked == true,
+                ModIndex = _isReplacementCheck?.IsChecked == true ? (int)(_modIndexSpin?.Value ?? 0) : 0
+            };
+            
+            if (_originalEntry != null)
+            {
+                TlkEntry.TokenId = _originalEntry.TokenId;
+                TlkEntry.UsedBy = _originalEntry.UsedBy;
+            }
+            
+            // Close with true result for ShowDialog<bool> support
+            Close(true);
         }
     }
 }

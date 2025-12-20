@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Xna.Framework.Audio;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Audio;
@@ -60,6 +62,10 @@ namespace Andastra.Runtime.MonoGame.Audio
         private readonly Dictionary<uint, SoundEffectInstance> _playingSounds;
         private readonly Dictionary<uint, SoundEffect> _loadedSounds;
         private readonly Dictionary<uint, float> _instanceOriginalVolumes;
+        private readonly Dictionary<uint, string> _instanceResRefs;
+        private readonly Dictionary<string, SoundEffect> _soundEffectCache;
+        private readonly Dictionary<string, int> _cacheReferenceCounts;
+        private readonly object _cacheLock;
         private uint _nextSoundInstanceId;
         private float _masterVolume;
 
@@ -75,6 +81,10 @@ namespace Andastra.Runtime.MonoGame.Audio
             _playingSounds = new Dictionary<uint, SoundEffectInstance>();
             _loadedSounds = new Dictionary<uint, SoundEffect>();
             _instanceOriginalVolumes = new Dictionary<uint, float>();
+            _instanceResRefs = new Dictionary<uint, string>();
+            _soundEffectCache = new Dictionary<string, SoundEffect>();
+            _cacheReferenceCounts = new Dictionary<string, int>();
+            _cacheLock = new object();
             _nextSoundInstanceId = 1;
             _masterVolume = 1.0f;
         }
@@ -91,56 +101,50 @@ namespace Andastra.Runtime.MonoGame.Audio
 
             try
             {
-                // Load WAV resource (synchronously for now - TODO: make async)
-                var resourceId = new ResourceIdentifier(soundResRef, ResourceType.WAV);
-                byte[] wavData = _resourceProvider.GetResourceBytesAsync(resourceId, System.Threading.CancellationToken.None).GetAwaiter().GetResult();
-                if (wavData == null || wavData.Length == 0)
-                {
-                    Console.WriteLine($"[MonoGameSoundPlayer] Sound not found: {soundResRef}");
-                    return 0;
-                }
-
-                WAV wav = WAVAuto.ReadWav(wavData);
-                if (wav == null)
-                {
-                    Console.WriteLine($"[MonoGameSoundPlayer] Failed to parse WAV: {soundResRef}");
-                    return 0;
-                }
-
-                // Convert Andastra.Parsing WAV to MonoGame-compatible format
-                byte[] wavBytes = CreateMonoGameWavStream(wav);
-                if (wavBytes == null || wavBytes.Length == 0)
-                {
-                    Console.WriteLine($"[MonoGameSoundPlayer] Failed to convert WAV: {soundResRef}");
-                    return 0;
-                }
-
-                // Load SoundEffect from stream
+                // Check cache first (fast path for frequently used sounds)
                 SoundEffect soundEffect = null;
-                using (var stream = new MemoryStream(wavBytes))
+                lock (_cacheLock)
                 {
-                    try
+                    if (_soundEffectCache.TryGetValue(soundResRef, out SoundEffect cachedSound))
                     {
-                        soundEffect = SoundEffect.FromStream(stream);
-                        if (soundEffect == null)
-                        {
-                            Console.WriteLine($"[MonoGameSoundPlayer] Failed to load SoundEffect: {soundResRef}");
-                            return 0;
-                        }
+                        soundEffect = cachedSound;
+                        _cacheReferenceCounts[soundResRef] = _cacheReferenceCounts[soundResRef] + 1;
                     }
-                    catch (Exception ex)
+                }
+
+                // If not cached, load asynchronously
+                if (soundEffect == null)
+                {
+                    soundEffect = LoadSoundEffectAsync(soundResRef).Result;
+                    if (soundEffect == null)
                     {
-                        Console.WriteLine($"[MonoGameSoundPlayer] Exception loading SoundEffect: {ex.Message}");
+                        Console.WriteLine($"[MonoGameSoundPlayer] Failed to load sound: {soundResRef}");
                         return 0;
                     }
+
+                    // Cache the loaded sound effect
+                    lock (_cacheLock)
+                    {
+                        if (!_soundEffectCache.ContainsKey(soundResRef))
+                        {
+                            _soundEffectCache[soundResRef] = soundEffect;
+                            _cacheReferenceCounts[soundResRef] = 1;
+                        }
+                        else
+                        {
+                            // Another thread loaded it first, dispose our duplicate
+                            soundEffect.Dispose();
+                            soundEffect = _soundEffectCache[soundResRef];
+                            _cacheReferenceCounts[soundResRef] = _cacheReferenceCounts[soundResRef] + 1;
+                        }
+                    }
                 }
 
-                // Create instance
+                // Create instance from cached sound effect
                 SoundEffectInstance instance = soundEffect.CreateInstance();
                 if (instance == null)
                 {
                     Console.WriteLine($"[MonoGameSoundPlayer] Failed to create SoundEffectInstance: {soundResRef}");
-                    soundEffect.Dispose();
                     return 0;
                 }
 
@@ -169,6 +173,7 @@ namespace Andastra.Runtime.MonoGame.Audio
                 _playingSounds[instanceId] = instance;
                 _loadedSounds[instanceId] = soundEffect;
                 _instanceOriginalVolumes[instanceId] = originalVolume;
+                _instanceResRefs[instanceId] = soundResRef;
 
                 return instanceId;
             }
@@ -190,10 +195,20 @@ namespace Andastra.Runtime.MonoGame.Audio
                 instance.Dispose();
                 _playingSounds.Remove(soundInstanceId);
 
-                if (_loadedSounds.TryGetValue(soundInstanceId, out SoundEffect soundEffect))
+                // SoundEffect is cached, don't dispose it - just remove reference
+                _loadedSounds.Remove(soundInstanceId);
+
+                // Decrement cache reference count
+                if (_instanceResRefs.TryGetValue(soundInstanceId, out string resRef))
                 {
-                    soundEffect.Dispose();
-                    _loadedSounds.Remove(soundInstanceId);
+                    lock (_cacheLock)
+                    {
+                        if (_cacheReferenceCounts.TryGetValue(resRef, out int count))
+                        {
+                            _cacheReferenceCounts[resRef] = Math.Max(0, count - 1);
+                        }
+                    }
+                    _instanceResRefs.Remove(soundInstanceId);
                 }
 
                 // Clean up stored original volume
@@ -213,11 +228,23 @@ namespace Andastra.Runtime.MonoGame.Audio
             }
             _playingSounds.Clear();
 
-            foreach (var kvp in _loadedSounds)
-            {
-                kvp.Value.Dispose();
-            }
+            // SoundEffects are cached, don't dispose them - just clear references
             _loadedSounds.Clear();
+
+            // Reset cache reference counts for all sounds
+            lock (_cacheLock)
+            {
+                var resRefs = new List<string>(_instanceResRefs.Values);
+                foreach (string resRef in resRefs)
+                {
+                    if (_cacheReferenceCounts.TryGetValue(resRef, out int count))
+                    {
+                        _cacheReferenceCounts[resRef] = 0;
+                    }
+                }
+            }
+
+            _instanceResRefs.Clear();
 
             // Clean up all stored original volumes
             _instanceOriginalVolumes.Clear();
@@ -264,15 +291,98 @@ namespace Andastra.Runtime.MonoGame.Audio
                 _playingSounds[instanceId].Dispose();
                 _playingSounds.Remove(instanceId);
 
-                if (_loadedSounds.TryGetValue(instanceId, out SoundEffect soundEffect))
+                // SoundEffect is cached, don't dispose it - just remove reference
+                _loadedSounds.Remove(instanceId);
+
+                // Decrement cache reference count
+                if (_instanceResRefs.TryGetValue(instanceId, out string resRef))
                 {
-                    soundEffect.Dispose();
-                    _loadedSounds.Remove(instanceId);
+                    lock (_cacheLock)
+                    {
+                        if (_cacheReferenceCounts.TryGetValue(resRef, out int count))
+                        {
+                            _cacheReferenceCounts[resRef] = Math.Max(0, count - 1);
+                        }
+                    }
+                    _instanceResRefs.Remove(instanceId);
                 }
 
                 // Clean up stored original volume
                 _instanceOriginalVolumes.Remove(instanceId);
             }
+        }
+
+        /// <summary>
+        /// Loads a sound effect asynchronously from a ResRef.
+        /// 
+        /// Uses Task.Run to perform I/O operations on a background thread, preventing
+        /// blocking of the main thread during resource loading. This matches the pattern
+        /// used in MonoGameVoicePlayer for async resource loading.
+        /// 
+        /// Based on swkotor2.exe sound loading system - original engine loads WAV resources
+        /// asynchronously from disk/archive files to prevent audio playback stalls.
+        /// </summary>
+        /// <param name="soundResRef">The sound resource reference to load.</param>
+        /// <returns>Task that completes with the loaded SoundEffect, or null if loading failed.</returns>
+        private Task<SoundEffect> LoadSoundEffectAsync(string soundResRef)
+        {
+            return Task.Run(async () =>
+            {
+                try
+                {
+                    // Load WAV resource asynchronously
+                    var resourceId = new ResourceIdentifier(soundResRef, ResourceType.WAV);
+                    byte[] wavData = await _resourceProvider.GetResourceBytesAsync(resourceId, CancellationToken.None);
+                    if (wavData == null || wavData.Length == 0)
+                    {
+                        Console.WriteLine($"[MonoGameSoundPlayer] Sound not found: {soundResRef}");
+                        return null;
+                    }
+
+                    // Parse WAV file
+                    WAV wav = WAVAuto.ReadWav(wavData);
+                    if (wav == null)
+                    {
+                        Console.WriteLine($"[MonoGameSoundPlayer] Failed to parse WAV: {soundResRef}");
+                        return null;
+                    }
+
+                    // Convert Andastra.Parsing WAV to MonoGame-compatible format
+                    byte[] wavBytes = CreateMonoGameWavStream(wav);
+                    if (wavBytes == null || wavBytes.Length == 0)
+                    {
+                        Console.WriteLine($"[MonoGameSoundPlayer] Failed to convert WAV: {soundResRef}");
+                        return null;
+                    }
+
+                    // Load SoundEffect from stream
+                    SoundEffect soundEffect = null;
+                    using (var stream = new MemoryStream(wavBytes))
+                    {
+                        try
+                        {
+                            soundEffect = SoundEffect.FromStream(stream);
+                            if (soundEffect == null)
+                            {
+                                Console.WriteLine($"[MonoGameSoundPlayer] Failed to load SoundEffect: {soundResRef}");
+                                return null;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[MonoGameSoundPlayer] Exception loading SoundEffect: {ex.Message}");
+                            return null;
+                        }
+                    }
+
+                    return soundEffect;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[MonoGameSoundPlayer] Exception in LoadSoundEffectAsync: {ex.Message}");
+                    return null;
+                }
+            });
         }
 
         /// <summary>
