@@ -91,7 +91,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
         //      "B1F398C2F64F4ACF2F39C417E7C7EB6F5483369BB95853C63A009F925A2E257C",
         //      "ncsdis",
         //      LocalDate.of(2020, 8, 3),
-        //      "Unknown", // TODO: Identify original author
+        //      "Sven Hesse (DrMcCoy)", // Original author identified via research - xoreos project lead, ncsdis author
         //      new String[]{}, // ncsdis doesn't support compilation
         //      new String[]{"{source}", "{output}"} // ncsdis.exe <input.ncs> <output.pcode>
         //   );
