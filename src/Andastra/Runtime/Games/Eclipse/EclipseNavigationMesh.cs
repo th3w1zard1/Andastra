@@ -12,25 +12,29 @@ namespace Andastra.Runtime.Games.Eclipse
     /// Eclipse Engine navigation mesh with dynamic obstacle support.
     /// </summary>
     /// <remarks>
-    /// Eclipse Navigation Mesh Implementation:
+    /// Eclipse Navigation Mesh Implementation (Engine-Common):
+    /// - Common navigation functionality shared by both Dragon Age: Origins and Dragon Age 2
     /// - Most advanced navigation system of BioWare engines
     /// - Supports dynamic obstacles and destructible environments
     /// - Real-time pathfinding with cover and tactical positioning
     /// - Physics-aware navigation with collision avoidance
     ///
-    /// Based on reverse engineering of:
-    /// - daorigins.exe/DragonAge2.exe// navigation systems
-    /// - Dynamic obstacle avoidance algorithms
-    /// - Cover system implementations
-    /// - Tactical pathfinding with threat assessment
-    ///
-    /// Eclipse navigation features:
+    /// Engine-common functionality (shared by daorigins.exe and DragonAge2.exe):
     /// - Dynamic obstacle handling (movable objects, destruction)
     /// - Cover point identification and pathing
     /// - Tactical positioning for combat AI
     /// - Physics-based collision avoidance
     /// - Real-time mesh updates for environmental changes
     /// - Multi-level navigation (ground, elevated surfaces)
+    /// - Same navigation data structures and algorithms
+    ///
+    /// Game-specific implementations:
+    /// - DragonAgeOriginsNavigationMesh: daorigins.exe specific function addresses and behavior
+    /// - DragonAge2NavigationMesh: DragonAge2.exe specific function addresses and behavior
+    ///
+    /// Note: Function addresses and game-specific behavior differences are documented
+    /// in the game-specific subclasses (DragonAgeOriginsNavigationMesh, DragonAge2NavigationMesh).
+    /// This class contains only functionality that is identical between both games.
     /// </remarks>
     [PublicAPI]
     public class EclipseNavigationMesh : BaseNavigationMesh

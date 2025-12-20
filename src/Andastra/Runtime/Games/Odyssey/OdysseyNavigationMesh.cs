@@ -13,7 +13,8 @@ namespace Andastra.Runtime.Games.Odyssey
     /// Odyssey Engine walkmesh implementation for navigation and collision detection.
     /// </summary>
     /// <remarks>
-    /// Odyssey Navigation Mesh Implementation:
+    /// Odyssey Navigation Mesh Implementation (Engine-Common):
+    /// - Common walkmesh functionality shared by both KOTOR 1 and KOTOR 2
     /// - Based on walkmesh format used in KotOR/KotOR2
     /// - Provides pathfinding and collision detection
     /// - Supports point projection to walkable surfaces
@@ -27,9 +28,19 @@ namespace Andastra.Runtime.Games.Odyssey
     /// Walkmesh features:
     /// - Triangle-based mesh for walkable surfaces
     /// - Collision detection against unwalkable geometry
-    /// - Pathfinding support with A* algorithm
+    /// - Pathfinding support with A* algorithm on face adjacency graph
     /// - Point projection for accurate positioning
     /// - Raycast for line-of-sight and collision detection
+    /// - Surface material walkability based on surfacemat.2da
+    /// - Same walkmesh data structures and algorithms
+    ///
+    /// Game-specific implementations:
+    /// - Kotor1NavigationMesh: swkotor.exe specific function addresses and behavior
+    /// - Kotor2NavigationMesh: swkotor2.exe specific function addresses and behavior
+    ///
+    /// Note: Function addresses and game-specific behavior differences are documented
+    /// in the game-specific subclasses (Kotor1NavigationMesh, Kotor2NavigationMesh).
+    /// This class contains only functionality that is identical between both games.
     /// </remarks>
     [PublicAPI]
     public class OdysseyNavigationMesh : BaseNavigationMesh

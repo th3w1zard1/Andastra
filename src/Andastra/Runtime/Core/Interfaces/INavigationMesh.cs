@@ -23,11 +23,41 @@ namespace Andastra.Runtime.Core.Interfaces
     /// </summary>
     /// <remarks>
     /// Navigation Mesh Interface:
-    /// - TODO: lookup data from daorigins.exe/dragonage2.exe///swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
-    /// - TODO: this should NOT specify swkotor2.exe unless it specifies the other exes as well!!!
-    /// - Based on swkotor2.exe walkmesh/navigation system
-    /// - Located via string references: "BWM V1.0" @ 0x007c061c (BWM format signature), "BWM" (walkmesh format), walkmesh-related functions
-    /// - BWM format: Binary walkmesh format (WOK = area walkmesh, PWK = placeable walkmesh, DWK = door walkmesh)
+    /// - Common interface for all BioWare engine navigation systems
+    /// - Implemented through three-tier inheritance structure:
+    ///   1. Tier 1 (BaseNavigationMesh): Common functionality shared across ALL engines
+    ///      - Location: Andastra.Runtime.Games.Common.BaseNavigationMesh
+    ///      - Contains: Common line-of-sight algorithms, AABB helpers, abstract method contracts
+    ///   2. Tier 2 (Engine-specific): Common functionality within an engine family
+    ///      - OdysseyNavigationMesh: Common walkmesh functionality for swkotor.exe and swkotor2.exe
+    ///      - EclipseNavigationMesh: Common navigation functionality for daorigins.exe and DragonAge2.exe
+    ///      - AuroraNavigationMesh: Common navigation functionality for nwmain.exe and nwn2main.exe
+    ///   3. Tier 3 (Game-specific): Game-specific implementations
+    ///      - Kotor1NavigationMesh: swkotor.exe specific function addresses and behavior
+    ///      - Kotor2NavigationMesh: swkotor2.exe specific function addresses and behavior
+    ///      - DragonAgeOriginsNavigationMesh: daorigins.exe specific function addresses and behavior
+    ///      - DragonAge2NavigationMesh: DragonAge2.exe specific function addresses and behavior
+    /// 
+    /// Cross-engine navigation system overview:
+    /// - Odyssey Engine (swkotor.exe, swkotor2.exe): BWM walkmesh format
+    ///   - BWM format: Binary walkmesh format (WOK = area walkmesh, PWK = placeable walkmesh, DWK = door walkmesh)
+    ///   - Located via string references: "BWM V1.0" @ 0x007c061c (swkotor2.exe BWM format signature)
+    ///   - Triangle-based mesh for walkable surfaces
+    ///   - A* pathfinding algorithm on face adjacency graph
+    ///   - Surface material walkability based on surfacemat.2da
+    /// 
+    /// - Eclipse Engine (daorigins.exe, DragonAge2.exe): Advanced navigation system
+    ///   - Dynamic obstacle support (movable objects, destructible environments)
+    ///   - Real-time pathfinding with cover and tactical positioning
+    ///   - Physics-aware navigation with collision avoidance
+    ///   - Real-time mesh updates for environmental changes
+    ///   - Multi-level navigation (ground, elevated surfaces)
+    /// 
+    /// - Aurora Engine (nwmain.exe, nwn2main.exe): Tile-based navigation
+    ///   - Tile-based pathfinding system
+    ///   - Blocking tile checks for line of sight
+    /// 
+    /// Core navigation mesh operations:
     /// - FindPath: A* pathfinding algorithm from start to goal position
     /// - FindFaceAt: Finds walkmesh face index containing given position
     /// - GetFaceCenter: Returns center point of walkmesh face
@@ -37,7 +67,7 @@ namespace Andastra.Runtime.Core.Interfaces
     /// - Raycast: Line intersection test against walkmesh
     /// - TestLineOfSight: Determines if line between two points is unobstructed
     /// - ProjectToSurface: Projects point onto walkmesh surface (for height correction)
-    /// - Walkmesh projection: FUN_004f5070 @ 0x004f5070 projects positions to walkmesh surface after movement
+    /// - FindPathAroundObstacles: Finds path while avoiding dynamic obstacles
     /// </remarks>
     public interface INavigationMesh
     {
@@ -88,8 +118,15 @@ namespace Andastra.Runtime.Core.Interfaces
 
         /// <summary>
         /// Finds a path from start to goal while avoiding obstacles.
-        /// Based on swkotor2.exe: FUN_0054a1f0 @ 0x0054a1f0 - pathfinding around obstacles
         /// </summary>
+        /// <remarks>
+        /// Obstacle avoidance pathfinding:
+        /// - Odyssey Engine: FindPathAroundObstacle function
+        ///   - swkotor.exe: FindPathAroundObstacle @ 0x005d0840 (called from UpdateCreatureMovement @ 0x00516630, line 254)
+        ///   - swkotor2.exe: FindPathAroundObstacle @ 0x0061c390 (called from UpdateCreatureMovement @ 0x0054be70, line 183)
+        /// - Eclipse Engine: Dynamic obstacle-aware pathfinding with real-time updates
+        /// - Aurora Engine: Tile-based obstacle avoidance
+        /// </remarks>
         /// <param name="start">Start position.</param>
         /// <param name="goal">Goal position.</param>
         /// <param name="obstacles">List of obstacle positions to avoid (with optional radii).</param>
