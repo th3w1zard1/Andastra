@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using Andastra.Parsing.Resource;
+using Avalonia;
 using FluentAssertions;
 using HolocronToolset.Common.Widgets;
 using HolocronToolset.Data;
@@ -2476,14 +2477,115 @@ void helper() {
             throw new NotImplementedException("TestNssEditorFoldableRegionsDetection: Foldable regions detection test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_nss_editor_fold_region (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1288-1322)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1288-1322
         // Original: def test_nss_editor_fold_region(qtbot, installation: HTInstallation, foldable_nss_script: str): Test fold region
         [Fact]
         public void TestNssEditorFoldRegion()
         {
-            // TODO: STUB - Implement fold region test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1288-1322
-            throw new NotImplementedException("TestNssEditorFoldRegion: Fold region test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            // NSS script with multiple foldable regions (matching PyKotor fixture)
+            string foldableNssScript = @"// Global variable
+int g_var = 10;
+
+void main() {
+    int local = 5;
+
+    if (local > 0) {
+        int nested = 10;
+        if (nested > 5) {
+            // Nested block
+            local += nested;
+        }
+    }
+
+    for (int i = 0; i < 10; i++) {
+        local += i;
+    }
+}
+";
+
+            // Create editor and initialize
+            var editor = new NSSEditor(null, installation);
+            editor.New();
+
+            // Get the code editor using reflection (matching pattern used in other tests)
+            var codeEditField = typeof(NSSEditor).GetField("_codeEdit", BindingFlags.NonPublic | BindingFlags.Instance);
+            codeEditField.Should().NotBeNull("_codeEdit field should exist");
+            var codeEdit = codeEditField.GetValue(editor) as HolocronToolset.Widgets.CodeEditor;
+            codeEdit.Should().NotBeNull("Code editor should be initialized");
+
+            // Set the foldable NSS script content
+            codeEdit.Text = foldableNssScript;
+
+            // Manually trigger foldable regions update (matching Python test behavior)
+            // Access private method via reflection since it's internal to CodeEditor
+            var updateFoldableRegionsMethod = typeof(HolocronToolset.Widgets.CodeEditor)
+                .GetMethod("UpdateFoldableRegions", BindingFlags.NonPublic | BindingFlags.Instance);
+            updateFoldableRegionsMethod?.Invoke(codeEdit, null);
+
+            // Verify foldable regions were detected
+            var foldableRegionsField = typeof(HolocronToolset.Widgets.CodeEditor)
+                .GetField("_foldableRegions", BindingFlags.NonPublic | BindingFlags.Instance);
+            var foldableRegions = (Dictionary<int, int>)foldableRegionsField?.GetValue(codeEdit);
+            foldableRegions.Should().NotBeNull("Foldable regions dictionary should exist");
+            foldableRegions.Should().NotBeEmpty("Foldable regions should be detected");
+
+            // Move cursor to inside a function block (find "void main() {" line)
+            string[] lines = foldableNssScript.Split('\n');
+            int mainLine = -1;
+            for (int i = 0; i < lines.Length; i++)
+            {
+                if (lines[i].Contains("void main() {"))
+                {
+                    mainLine = i;
+                    break;
+                }
+            }
+            mainLine.Should().BeGreaterThan(-1, "Should find 'void main() {' line");
+
+            // Position cursor at the main function line
+            var getPositionFromLineMethod = typeof(HolocronToolset.Widgets.CodeEditor)
+                .GetMethod("GetPositionFromLine", BindingFlags.NonPublic | BindingFlags.Instance);
+            var position = (int?)getPositionFromLineMethod?.Invoke(codeEdit, new object[] { mainLine });
+            position.Should().NotBeNull("Should get valid position for main line");
+
+            codeEdit.SelectionStart = position.Value;
+            codeEdit.SelectionEnd = position.Value;
+
+            // Fold the region
+            codeEdit.FoldRegion();
+
+            // Check that blocks are folded
+            var foldedBlockNumbersField = typeof(HolocronToolset.Widgets.CodeEditor)
+                .GetField("_foldedBlockNumbers", BindingFlags.NonPublic | BindingFlags.Instance);
+            var foldedBlockNumbers = (HashSet<int>)foldedBlockNumbersField?.GetValue(codeEdit);
+            foldedBlockNumbers.Should().NotBeNull("Folded block numbers set should exist");
+            foldedBlockNumbers.Should().NotBeEmpty("Expected folded blocks, got empty set");
         }
 
         // TODO: STUB - Implement test_nss_editor_unfold_region (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1324-1361)
@@ -3790,14 +3892,56 @@ void func2() {
             throw new NotImplementedException("TestNssEditorFoldableRegionsLargeFile: Foldable regions large file test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_nsseditor_editor_help_dialog_opens_correct_file (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:2165-2191)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:2165-2191
         // Original: def test_nsseditor_editor_help_dialog_opens_correct_file(qtbot, installation: HTInstallation): Test editor help dialog opens correct file
         [Fact]
         public void TestNsseditorEditorHelpDialogOpensCorrectFile()
         {
-            // TODO: STUB - Implement editor help dialog opens correct file test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:2165-2191
-            throw new NotImplementedException("TestNsseditorEditorHelpDialogOpensCorrectFile: Editor help dialog opens correct file test not yet implemented");
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:2165-2191
+            // Original: Test that NSSEditor help dialog opens and displays the correct help file (not 'Help File Not Found').
+            var editor = new NSSEditor(null, null);
+
+            // Trigger help dialog with the correct file for NSSEditor
+            // Matching Python: editor._show_help_dialog("NSS-File-Format.md")
+            editor.ShowHelpDialog("NSS-File-Format.md");
+
+            // Find the help dialog from Application.Current.Windows
+            // Matching Python: dialogs = [child for child in editor.findChildren(EditorHelpDialog)]
+            HolocronToolset.Dialogs.EditorHelpDialog dialog = null;
+            if (Avalonia.Application.Current != null)
+            {
+                // Wait a moment for the dialog to be created (non-blocking Show() is async)
+                System.Threading.Thread.Sleep(100);
+
+                // Find EditorHelpDialog in open windows
+                foreach (var window in Avalonia.Application.Current.Windows)
+                {
+                    if (window is HolocronToolset.Dialogs.EditorHelpDialog helpDialog)
+                    {
+                        dialog = helpDialog;
+                        break;
+                    }
+                }
+            }
+
+            // Matching Python: assert len(dialogs) > 0, "Help dialog should be opened"
+            dialog.Should().NotBeNull("Help dialog should be opened");
+
+            // Get the HTML content
+            // Matching Python: html = dialog.text_browser.toHtml()
+            string html = dialog.HtmlContent;
+
+            // Assert that "Help File Not Found" error is NOT shown
+            // Matching Python: assert "Help File Not Found" not in html
+            html.Should().NotContain("Help File Not Found",
+                $"Help file 'NSS-File-Format.md' should be found, but error was shown. HTML: {(html.Length > 500 ? html.Substring(0, 500) : html)}");
+
+            // Assert that some content is present (file was loaded successfully)
+            // Matching Python: assert len(html) > 100, "Help dialog should contain content"
+            html.Length.Should().BeGreaterThan(100, "Help dialog should contain content");
+
+            // Clean up - close the dialog
+            dialog.Close();
         }
 
         // TODO: STUB - Implement test_nsseditor_breadcrumbs_update_performance (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:2193-2220)
