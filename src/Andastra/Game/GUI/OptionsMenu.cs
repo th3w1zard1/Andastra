@@ -318,6 +318,18 @@ namespace Andastra.Runtime.Game.GUI
             };
             options[OptionsCategory.Game] = gameOptions;
 
+            // Feedback options - based on swkotor2.exe interface/feedback options
+            var feedbackOptions = new List<OptionItem>
+            {
+                new OptionItem("Tooltips", OptionType.Boolean, () => settings.Tooltips ? 1 : 0, v => settings.Tooltips = v > 0, 0, 1),
+                new OptionItem("Minimap", OptionType.Boolean, () => settings.Minimap ? 1 : 0, v => settings.Minimap = v > 0, 0, 1),
+                new OptionItem("Damage Numbers", OptionType.Boolean, () => settings.DamageNumbers ? 1 : 0, v => settings.DamageNumbers = v > 0, 0, 1),
+                new OptionItem("Subtitles", OptionType.Boolean, () => settings.Subtitles ? 1 : 0, v => settings.Subtitles = v > 0, 0, 1),
+                new OptionItem("Party Health Bars", OptionType.Boolean, () => settings.PartyHealthBars ? 1 : 0, v => settings.PartyHealthBars = v > 0, 0, 1),
+                new OptionItem("Combat Feedback", OptionType.Boolean, () => settings.CombatFeedback ? 1 : 0, v => settings.CombatFeedback = v > 0, 0, 1)
+            };
+            options[OptionsCategory.Feedback] = feedbackOptions;
+
             // Autopause options - based on swkotor2.exe autopause system
             var autopauseOptions = new List<OptionItem>
             {
