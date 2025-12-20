@@ -2249,18 +2249,37 @@ namespace Andastra.Runtime.Core.Navigation
         /// - The tolerance value is _DAT_007b56f8 (typically a small value like 0.1 or 0.5 units)
         /// - This is needed because the point might not be exactly on the triangle surface due to
         ///   floating-point precision or character movement
-        /// - Original implementation: FUN_004f4260 lines 20-23 create this vertical range
-        /// - local_24 = param_1[2] + _DAT_007b56f8 (upper bound)
-        /// - local_30 = param_1[2] - _DAT_007b56f8 (lower bound)
+        /// - Original implementation: FUN_004f4260 @ 0x004f4260 lines 20-23 create this vertical range
+        /// - Line 21: local_34 = param_1[1] (copy y coordinate)
+        /// - Line 22: local_24 = param_1[2] + _DAT_007b56f8 (upper z bound = input z + tolerance)
+        /// - Line 23: local_38 = param_1[0] (copy x coordinate)
+        /// - Line 24: local_30 = param_1[2] - _DAT_007b56f8 (lower z bound = input z - tolerance)
+        /// - Line 25: local_2c = local_38 (copy x for AABB test)
+        /// - Line 26: local_28 = local_34 (copy y for AABB test)
+        /// - This creates a vertical line segment from (x, y, z+tolerance) to (x, y, z-tolerance)
+        /// - The function then searches for triangles that intersect this vertical line segment
+        /// - Why a range? Because characters might be slightly above or below the walkmesh surface
+        ///   due to movement, physics, or floating-point rounding errors
         /// 
         /// STAGE 2: Hint Face Optimization (if provided)
         /// - If a hint face index is provided (a guess about which triangle might contain the point),
         ///   it tests that triangle first
         /// - This is a major optimization because characters usually stay on the same triangle for
         ///   multiple frames (60+ frames per second), so the hint is correct most of the time
-        /// - Original implementation: FUN_004f4260 lines 31-42 test hint face first
-        /// - The hint face test uses FUN_0055b300 @ 0x0055b300 to test AABB intersection, then
-        ///   FUN_00575f60 @ 0x00575f60 to test actual triangle intersection
+        /// - Original implementation: FUN_004f4260 @ 0x004f4260 lines 31-42 test hint face first
+        /// - Line 30: iVar4 = -1 (initialize hint face index to invalid)
+        /// - Line 31-32: If param_3 (hint pointer) is not null AND hint index is valid (>= 0 and < face count):
+        ///   - Line 33-34: Call FUN_0055b300 to test if the vertical line segment intersects the hint triangle's AABB
+        ///   - FUN_0055b300 @ 0x0055b300 takes: triangle data pointer, lower bound point (x,y,z-tolerance), 
+        ///     upper bound point (x,y,z+tolerance), and a result array
+        ///   - FUN_0055b300 internally calls FUN_00575f60 @ 0x00575f60 which tests AABB intersection
+        ///   - If FUN_0055b300 returns non-zero (triangle's AABB contains the vertical line segment):
+        ///     - Line 36: Calculate the triangle data pointer: iVar4 = base + hint_index * 0x4c (76 bytes per triangle)
+        ///     - Line 37-38: If param_2 (output face index pointer) is null, return the triangle data pointer
+        ///     - Line 40: Store the found face index in param_2 (local_14 contains the face index from FUN_0055b300)
+        ///     - Line 41: Return the triangle data pointer
+        /// - Why test hint first? Because in 99% of cases, a character is still on the same triangle as last frame
+        /// - This optimization reduces average search time from O(log n) to O(1) when hint is correct
         /// 
         /// STAGE 3: AABB Tree Traversal (if available)
         /// - If an AABB tree exists, it uses that for fast spatial search
@@ -2268,7 +2287,28 @@ namespace Andastra.Runtime.Core.Navigation
         /// - If yes, it tests the two child boxes (left and right)
         /// - It keeps going down the tree until it reaches a leaf node (a single triangle)
         /// - This is much faster than testing every triangle (O(log n) instead of O(n))
-        /// - Original implementation: FUN_004f4260 lines 45-63 iterate through faces using AABB tree
+        /// - Original implementation: FUN_004f4260 @ 0x004f4260 lines 45-63 iterate through faces
+        /// - Line 44: iVar1 = 0 (initialize face index counter)
+        /// - Line 45: If face count > 0, enter loop
+        /// - Line 46: iVar3 = 0 (initialize AABB tree node offset counter)
+        /// - Line 47-63: Loop through all faces:
+        ///   - Line 48: If current face index != hint face index (skip hint, already tested):
+        ///     - Line 49-50: Call FUN_0055b300 to test if vertical line segment intersects triangle's AABB
+        ///     - FUN_0055b300 tests: triangle at offset iVar3 (iVar3 = face_index * 0x4c), 
+        ///       lower bound (local_2c, local_28, local_30), upper bound (local_38, local_34, local_24)
+        ///     - If FUN_0055b300 returns non-zero (AABB intersection found):
+        ///       - Line 51: Calculate triangle data pointer: iVar4 = face_index * 0x4c + base_address
+        ///       - Line 52-53: If param_2 (output face index pointer) is not null, store face index in it
+        ///       - Line 55: If param_3 (hint pointer) is null, return triangle data pointer immediately
+        ///       - Line 58: Store face index in param_3 (update hint for next call)
+        ///       - Line 59: Return triangle data pointer
+        ///   - Line 61: iVar1 = iVar1 + 1 (increment face index)
+        ///   - Line 62: iVar3 = iVar3 + 0x4c (increment AABB tree node offset by 76 bytes)
+        /// - The loop continues until all faces are tested or a match is found
+        /// - Line 65: Return 0 (no triangle found)
+        /// - Note: This implementation tests faces sequentially, but the AABB tree structure
+        ///   (stored in the walkmesh) allows FUN_0055b300 to quickly reject triangles whose AABBs
+        ///   don't contain the vertical line segment
         /// 
         /// STAGE 4: Triangle Point-in-Triangle Test
         /// - For each candidate triangle (from AABB tree or brute force), it tests if the point is inside
@@ -2287,7 +2327,26 @@ namespace Andastra.Runtime.Core.Navigation
         /// - First tests if the point is inside the triangle's AABB (Axis-Aligned Bounding Box)
         /// - An AABB is a box aligned with the X, Y, Z axes that contains the triangle
         /// - This is a fast rejection test - if the point isn't in the AABB, it can't be in the triangle
-        /// - Original implementation: FUN_0055b300 calls FUN_00575f60 @ 0x00575f60 for AABB test
+        /// - Original implementation: FUN_0055b300 @ 0x0055b300 calls FUN_00575f60 @ 0x00575f60 for AABB test
+        /// - FUN_0055b300 takes 4 parameters:
+        ///   - param_1 (this): Pointer to triangle data structure (76 bytes = 0x4c)
+        ///   - param_2: Pointer to lower bound point (x, y, z-tolerance)
+        ///   - param_3: Pointer to upper bound point (x, y, z+tolerance)
+        ///   - param_4: Pointer to result array (8 uint32 values)
+        /// - Line 12-13: Calls FUN_00575f60 with triangle's AABB tree pointer (offset 0x3c in triangle data),
+        ///   lower bound coordinates, upper bound coordinates, and result array
+        /// - FUN_00575f60 tests if the vertical line segment (from lower to upper bound) intersects
+        ///   the triangle's AABB using the AABB tree
+        /// - If FUN_00575f60 returns non-zero (intersection found):
+        ///   - Line 15-19: Gets triangle vertex offsets from triangle data structure
+        ///   - Line 20-22: Updates result array with intersection point coordinates:
+        ///     - param_3[4] = intersection x coordinate
+        ///     - param_3[5] = intersection y coordinate
+        ///     - param_3[6] = intersection z coordinate
+        ///   - Line 23: Returns 1 (intersection found)
+        /// - If FUN_00575f60 returns zero (no intersection):
+        ///   - Line 25: Returns 0 (no intersection)
+        /// - The result array is used to store the intersection point for later use
         /// 
         /// THE TRIANGLE INTERSECTION TEST (FUN_00575f60 @ 0x00575f60):
         /// - Tests if a vertical line segment (from z+tolerance to z-tolerance) intersects the triangle
@@ -2740,6 +2799,9 @@ namespace Andastra.Runtime.Core.Navigation
         ///    - Both must contain the same material IDs
         /// 5. Are materials being lost during BWM serialization/deserialization?
         ///    - Check BWMAuto.BytesBwm and BWMAuto.ReadBwm to ensure materials are preserved
+        /// 6. Is the walkmesh type set to AreaModel (WOK)?
+        ///    - If WalkmeshType is not AreaModel, the AABB tree won't be built, causing navigation to fail
+        ///    - Check IndoorMap.ProcessBwm() to ensure bwm.WalkmeshType = BWMType.AreaModel is set
         /// 
         /// PERFORMANCE:
         /// 
@@ -2748,111 +2810,6 @@ namespace Andastra.Runtime.Core.Navigation
         /// - Called frequently during pathfinding (once per face check)
         /// </remarks>
         /// <param name="faceIndex">Index of the face to check (0 to faceCount-1)</param>
-        /// <returns>True if the face is walkable, false otherwise</returns>
-        /// <summary>
-        /// Checks if a face is walkable based on its surface material.
-        /// </summary>
-        /// <remarks>
-        /// WHAT THIS FUNCTION DOES:
-        /// 
-        /// This function checks if a triangle (face) in the walkmesh is walkable. A walkable face
-        /// is one that characters can stand on and walk across. Non-walkable faces are things like
-        /// walls, deep water, or lava that characters cannot stand on.
-        /// 
-        /// HOW IT WORKS:
-        /// 
-        /// STEP 1: Validate Face Index
-        /// - Check if faceIndex is valid (0 <= faceIndex < number of faces)
-        /// - If invalid, return false (can't be walkable if it doesn't exist)
-        /// 
-        /// STEP 2: Get Surface Material
-        /// - Get the material ID for this face from the _surfaceMaterials array
-        /// - Material IDs are numbers from 0 to 30
-        /// - Each material has specific properties (walkable, non-walkable, movement speed, etc.)
-        /// 
-        /// STEP 3: Check if Material is Walkable
-        /// - Look up the material ID in the WalkableMaterials set
-        /// - If the material is in the set, the face is walkable (return true)
-        /// - If the material is not in the set, the face is not walkable (return false)
-        /// 
-        /// WALKABLE MATERIALS:
-        /// 
-        /// The following materials are walkable (characters can stand on them):
-        /// - 1: Dirt (walkable, normal movement)
-        /// - 3: Grass (walkable, normal movement)
-        /// - 4: Stone (walkable, normal movement, default for generated walkmeshes)
-        /// - 5: Wood (walkable, normal movement)
-        /// - 6: Water - Shallow (walkable, slower movement, 1.5x pathfinding cost)
-        /// - 9: Carpet (walkable, normal movement)
-        /// - 10: Metal (walkable, normal movement)
-        /// - 11: Puddles (walkable, slower movement, 1.5x pathfinding cost)
-        /// - 12: Swamp (walkable, slower movement, 1.5x pathfinding cost)
-        /// - 13: Mud (walkable, slower movement, 1.5x pathfinding cost)
-        /// - 14: Leaves (walkable, normal movement)
-        /// - 16: BottomlessPit (walkable but dangerous, 10x pathfinding cost, AI avoids if possible)
-        /// - 18: Door (walkable, normal movement)
-        /// - 20: Sand (walkable, normal movement)
-        /// - 21: BareBones (walkable, normal movement)
-        /// - 22: StoneBridge (walkable, normal movement)
-        /// - 30: Trigger (walkable, PyKotor extended material)
-        /// 
-        /// NON-WALKABLE MATERIALS:
-        /// 
-        /// The following materials are not walkable (characters cannot stand on them):
-        /// - 0: NotDefined/UNDEFINED (non-walkable, used for undefined surfaces)
-        /// - 2: Obscuring (non-walkable, blocks line of sight)
-        /// - 7: Nonwalk/NON_WALK (non-walkable, explicitly marked as impassable)
-        /// - 8: Transparent (non-walkable, see-through but solid)
-        /// - 15: Lava (non-walkable, dangerous)
-        /// - 17: DeepWater (non-walkable, characters can't stand in deep water)
-        /// - 19: Snow/NON_WALK_GRASS (non-walkable, marked as non-walkable grass)
-        /// 
-        /// CRITICAL BUG FIX:
-        /// 
-        /// There was a bug where SurfaceMaterialExtensions.WalkableMaterials was missing
-        /// materials 16, 20, 21, and 22. This caused BWM.WalkableFaces() to incorrectly mark
-        /// faces with these materials as non-walkable, even though they should be walkable.
-        /// 
-        /// THE BUG:
-        /// 
-        /// When the indoor map builder processed walkmeshes, it called BWM.WalkableFaces() which
-        /// uses SurfaceMaterialExtensions.Walkable() to check if each face is walkable. Because
-        /// materials 16, 20, 21, and 22 were missing from SurfaceMaterialExtensions.WalkableMaterials,
-        /// faces with these materials were incorrectly marked as non-walkable.
-        /// 
-        /// This meant that even though the walkmesh had the correct surface material (like Stone = 4,
-        /// or Sand = 20), the face would be marked as non-walkable because SurfaceMaterialExtensions
-        /// didn't recognize it as walkable.
-        /// 
-        /// THE FIX:
-        /// 
-        /// Added the missing materials to SurfaceMaterialExtensions.WalkableMaterials:
-        /// - 16: BottomlessPit (walkable but dangerous)
-        /// - 20: Sand (walkable, normal movement)
-        /// - 21: BareBones (walkable, normal movement)
-        /// - 22: StoneBridge (walkable, normal movement)
-        /// 
-        /// Now SurfaceMaterialExtensions.WalkableMaterials matches NavigationMesh.WalkableMaterials
-        /// exactly, ensuring consistency across the codebase.
-        /// 
-        /// WHY THIS MATTERS:
-        /// 
-        /// The bug caused the indoor map builder to think that levels/modules were not walkable
-        /// even though they had the correct surface material. This happened because:
-        /// 1. The walkmesh had faces with material 20 (Sand) or 22 (StoneBridge)
-        /// 2. BWM.WalkableFaces() checked SurfaceMaterialExtensions.Walkable() for each face
-        /// 3. SurfaceMaterialExtensions.Walkable() returned false for materials 20 and 22
-        /// 4. The face was marked as non-walkable, even though it should be walkable
-        /// 5. The indoor map builder then thought the entire level was not walkable
-        /// 
-        /// After the fix, all walkable materials are correctly recognized, and the indoor map
-        /// builder correctly identifies walkable faces.
-        /// 
-        /// Based on swkotor2.exe: Material walkability is hardcoded in the engine based on material ID.
-        /// The engine looks up material IDs in a hardcoded list, not in surfacemat.2da.
-        /// Original implementation: Material walkability check is done during walkmesh loading
-        /// </remarks>
-        /// <param name="faceIndex">The index of the face to check (0 to faceCount-1)</param>
         /// <returns>True if the face is walkable, false otherwise</returns>
         public bool IsWalkable(int faceIndex)
         {
