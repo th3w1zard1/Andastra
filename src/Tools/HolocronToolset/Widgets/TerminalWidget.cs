@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
+using Avalonia.Threading;
 
 namespace HolocronToolset.Widgets
 {
@@ -34,6 +36,13 @@ namespace HolocronToolset.Widgets
             _prompt = GetPrompt();
             SetupUI();
             SetupProcess();
+        }
+
+        // Cleanup resources when widget is disposed
+        protected override void OnDetachedFromVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
+        {
+            CleanupProcess();
+            base.OnDetachedFromVisualTree(e);
         }
 
         private void InitializeComponent()
@@ -108,7 +117,8 @@ namespace HolocronToolset.Widgets
         // Original: def _setup_process(self):
         private void SetupProcess()
         {
-            // TODO: Set up process for command execution when Process integration is available
+            // Initialize process - will be created when needed
+            _process = null;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/terminal_widget.py:116-121
@@ -364,10 +374,10 @@ namespace HolocronToolset.Widgets
                 return;
             }
 
-            // Execute external command (when process integration is available)
-            // TODO: Set up process for command execution when Process integration is available
-            WriteOutput($"Command not found: {command}\n");
-            WritePrompt();
+            // Execute external command
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/terminal_widget.py:274-285
+            // Original: Execute external command using QProcess
+            ExecuteExternalCommand(command);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/terminal_widget.py:328-355
@@ -512,6 +522,173 @@ You can also run any system command directly.
             // Hide the terminal widget itself as fallback
             // Parent widgets can override this behavior by handling ExitRequested event
             IsVisible = false;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/terminal_widget.py:274-285
+        // Original: def _execute_command - external command execution
+        private void ExecuteExternalCommand(string command)
+        {
+            try
+            {
+                // Clean up any existing process
+                if (_process != null && !_process.HasExited)
+                {
+                    try
+                    {
+                        _process.Kill();
+                        _process.WaitForExit(1000);
+                    }
+                    catch
+                    {
+                        // Ignore errors when cleaning up
+                    }
+                    finally
+                    {
+                        _process.Dispose();
+                        _process = null;
+                    }
+                }
+
+                // Create new process
+                _process = new Process();
+                _process.StartInfo.UseShellExecute = false;
+                _process.StartInfo.RedirectStandardOutput = true;
+                _process.StartInfo.RedirectStandardError = true;
+                _process.StartInfo.RedirectStandardInput = true;
+                _process.StartInfo.CreateNoWindow = true;
+                _process.StartInfo.WorkingDirectory = Directory.GetCurrentDirectory();
+
+                // Set up encoding
+                _process.StartInfo.StandardOutputEncoding = Encoding.UTF8;
+                _process.StartInfo.StandardErrorEncoding = Encoding.UTF8;
+
+                // Set up event handlers
+                _process.OutputDataReceived += OnProcessOutputDataReceived;
+                _process.ErrorDataReceived += OnProcessErrorDataReceived;
+                _process.Exited += OnProcessExited;
+                _process.EnableRaisingEvents = true;
+
+                // Determine shell and command based on platform
+                // Matching PyKotor: if sys.platform == "win32": shell = os.environ.get('COMSPEC', 'cmd.exe')
+                if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+                {
+                    string shell = Environment.GetEnvironmentVariable("COMSPEC") ?? "cmd.exe";
+                    _process.StartInfo.FileName = shell;
+                    _process.StartInfo.Arguments = $"/c {command}";
+                }
+                else
+                {
+                    // Use bash for Unix-like systems
+                    _process.StartInfo.FileName = "/bin/bash";
+                    _process.StartInfo.Arguments = $"-c \"{command.Replace("\"", "\\\"")}\"";
+                }
+
+                // Start the process
+                _process.Start();
+                _process.BeginOutputReadLine();
+                _process.BeginErrorReadLine();
+
+                // Wait a bit to see if process starts successfully
+                // Matching PyKotor: if not self.process.waitForStarted(3000):
+                if (_process.HasExited && _process.ExitCode != 0)
+                {
+                    WriteOutput("Error: Failed to start process\n");
+                    WritePrompt();
+                    CleanupProcess();
+                }
+            }
+            catch (Exception ex)
+            {
+                WriteOutput($"Error executing command: {ex.Message}\n");
+                WritePrompt();
+                CleanupProcess();
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/terminal_widget.py:287-299
+        // Original: def _handle_stdout(self):
+        private void OnProcessOutputDataReceived(object sender, DataReceivedEventArgs e)
+        {
+            if (e.Data != null)
+            {
+                // Dispatch to UI thread
+                Dispatcher.UIThread.Post(() =>
+                {
+                    WriteOutput(e.Data + "\n");
+                });
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/terminal_widget.py:301-313
+        // Original: def _handle_stderr(self):
+        private void OnProcessErrorDataReceived(object sender, DataReceivedEventArgs e)
+        {
+            if (e.Data != null)
+            {
+                // Dispatch to UI thread
+                Dispatcher.UIThread.Post(() =>
+                {
+                    // Write errors (could add color coding here if needed)
+                    WriteOutput(e.Data + "\n");
+                });
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/terminal_widget.py:316-326
+        // Original: def _handle_process_finished(self, exit_code: int, exit_status):
+        private void OnProcessExited(object sender, EventArgs e)
+        {
+            // Dispatch to UI thread
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (_process != null)
+                {
+                    int exitCode = _process.ExitCode;
+                    // Matching PyKotor: if exit_code != 0: write exit code message
+                    if (exitCode != 0)
+                    {
+                        WriteOutput($"\nProcess exited with code {exitCode}\n");
+                    }
+                }
+                // Write prompt after process finishes
+                WritePrompt();
+                CleanupProcess();
+            });
+        }
+
+        // Helper method to clean up process resources
+        private void CleanupProcess()
+        {
+            if (_process != null)
+            {
+                try
+                {
+                    if (!_process.HasExited)
+                    {
+                        _process.Kill();
+                        _process.WaitForExit(1000);
+                    }
+                }
+                catch
+                {
+                    // Ignore errors during cleanup
+                }
+                finally
+                {
+                    try
+                    {
+                        _process.OutputDataReceived -= OnProcessOutputDataReceived;
+                        _process.ErrorDataReceived -= OnProcessErrorDataReceived;
+                        _process.Exited -= OnProcessExited;
+                        _process.Dispose();
+                    }
+                    catch
+                    {
+                        // Ignore disposal errors
+                    }
+                    _process = null;
+                }
+            }
         }
 
     }
