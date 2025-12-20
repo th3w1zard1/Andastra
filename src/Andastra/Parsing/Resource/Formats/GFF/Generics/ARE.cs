@@ -10,10 +10,145 @@ namespace Andastra.Parsing.Resource.Generics
 {
     /// <summary>
     /// Stores static area data.
-    ///
-    /// ARE files are GFF-based format files that store static area information including
-    /// lighting, fog, grass, weather, script hooks, and map data.
     /// </summary>
+    /// <remarks>
+    /// WHAT IS AN ARE FILE?
+    /// 
+    /// An ARE file is an Area file that stores all the static (unchanging) information about a
+    /// game area. An area is a location within a module that the player can explore, like a room,
+    /// hallway, or outdoor space. The ARE file tells the game engine how to render the area,
+    /// what the lighting looks like, what the weather is, and what scripts to run.
+    /// 
+    /// WHAT DATA DOES IT STORE?
+    /// 
+    /// An ARE file contains:
+    /// 
+    /// 1. BASIC AREA PROPERTIES:
+    ///    - Tag: A tag identifier used by scripts to reference this area
+    ///    - Name: The display name of the area (shown in-game, can be in different languages)
+    ///    - AlphaTest: Alpha testing value for transparency rendering
+    ///    - CameraStyle: How the camera behaves in this area
+    ///    - DefaultEnvMap: The environment map texture used for reflections
+    ///    - DisableTransit: Whether area transitions are disabled
+    ///    - Unescapable: Whether the player can leave this area
+    /// 
+    /// 2. LIGHTING:
+    ///    - SunAmbient: The ambient (indirect) light color from the sun
+    ///    - SunDiffuse: The diffuse (direct) light color from the sun
+    ///    - DynamicLight: The color of dynamic lights in the area
+    ///    - DawnAmbient, DayAmbient, DuskAmbient, NightAmbient: Ambient light colors for different times of day
+    ///    - DawnColor1/2/3, DayColor1/2/3, DuskColor1/2/3, NightColor1/2/3: Light colors for different times of day
+    ///    - DawnDir1/2/3, DayDir1/2/3, DuskDir1/2/3, NightDir1/2/3: Light directions for different times of day
+    /// 
+    /// 3. FOG:
+    ///    - FogEnabled: Whether fog is enabled in this area
+    ///    - FogNear: The distance where fog starts (near clipping plane)
+    ///    - FogFar: The distance where fog is fully opaque (far clipping plane)
+    ///    - FogColor: The color of the fog
+    ///    - SunFogEnabled: Whether sun fog is enabled
+    ///    - SunFogNear, SunFogFar: Sun fog distance settings
+    ///    - SunFogColor: The color of the sun fog
+    /// 
+    /// 4. GRASS:
+    ///    - GrassTexture: The texture file used for grass
+    ///    - GrassDensity: How many grass objects per unit area
+    ///    - GrassSize: The size of grass objects
+    ///    - GrassProbLL/LR/UL/UR: Probability of grass in different quadrants (lower-left, lower-right, upper-left, upper-right)
+    ///    - GrassDiffuse: The diffuse color of grass
+    ///    - GrassAmbient: The ambient color of grass
+    ///    - GrassEmissive: The emissive (glowing) color of grass (KotOR 2 only)
+    /// 
+    /// 5. WEATHER:
+    ///    - Weather: The weather type (clear, rain, snow, etc.)
+    ///    - ChanceRain: Percent chance of rain (0-100, KotOR 2 only)
+    ///    - ChanceSnow: Percent chance of snow (0-100, KotOR 2 only)
+    ///    - ChanceLightning: Percent chance of lightning (0-100, KotOR 2 only)
+    ///    - WindPower: The strength of wind in the area
+    ///    - SkyBox: The skybox model to use
+    /// 
+    /// 6. STEALTH:
+    ///    - StealthXp: Whether stealth experience is enabled
+    ///    - StealthXpMax: Maximum stealth experience that can be gained
+    ///    - StealthXpLoss: Stealth experience lost when detected
+    /// 
+    /// 7. SCRIPT HOOKS:
+    ///    - OnEnter: Script that runs when a creature enters the area
+    ///    - OnExit: Script that runs when a creature exits the area
+    ///    - OnHeartbeat: Script that runs periodically while the area is loaded
+    ///    - OnUserDefined: Script that runs when triggered by other scripts
+    ///    - OnEnter2, OnExit2, OnHeartbeat2, OnUserDefined2: Additional script hooks (KotOR 2 only)
+    /// 
+    /// 8. MAP DATA:
+    ///    - MapList: List of map image files (TPC files) for the minimap
+    ///    - MapResX: Map resolution in X direction
+    ///    - MapZoom: Map zoom level
+    ///    - MapPoint1, MapPoint2: Image coordinates (normalized 0.0-1.0) for map calibration
+    ///    - WorldPoint1, WorldPoint2: World coordinates for map calibration
+    ///    - NorthAxis: Which axis points north on the map
+    /// 
+    /// 9. ROOMS:
+    ///    - Rooms: List of room definitions for audio zones and minimap regions
+    ///    - Each room defines audio properties, weather behavior, and force rating for a specific region
+    /// 
+    /// 10. DIRTY FORMULAS (KotOR 2 only):
+    ///     - DirtyFormula1, DirtyFormula2, DirtyFormula3: Formulas for calculating "dirtiness" of surfaces
+    /// 
+    /// HOW DOES THE GAME ENGINE USE ARE FILES?
+    /// 
+    /// STEP 1: Loading the Area
+    /// - When the player enters an area, the engine loads the ARE file
+    /// - It reads the basic properties to set up the area
+    /// - It reads the lighting settings to set up the sun and ambient light
+    /// 
+    /// STEP 2: Setting Up Rendering
+    /// - The engine uses the fog settings to render fog in the distance
+    /// - It uses the grass settings to render grass objects on the ground
+    /// - It uses the lighting settings to light the area correctly
+    /// 
+    /// STEP 3: Setting Up Weather
+    /// - The engine uses the weather settings to determine if it's raining, snowing, etc.
+    /// - It uses the chance values to randomly trigger weather effects
+    /// 
+    /// STEP 4: Setting Up Scripts
+    /// - The engine registers the script hooks so they run when events occur
+    /// - When a creature enters, the OnEnter script runs
+    /// - Periodically, the OnHeartbeat script runs
+    /// 
+    /// STEP 5: Setting Up the Map
+    /// - The engine loads the map images from MapList
+    /// - It uses the map calibration points to align the map with the world
+    /// - It displays the map in the minimap UI
+    /// 
+    /// WHY ARE ARE FILES NEEDED?
+    /// 
+    /// Without ARE files, the game engine wouldn't know:
+    /// - How to light the area
+    /// - What the weather should be
+    /// - What the fog should look like
+    /// - What scripts to run when events happen
+    /// - How to display the minimap
+    /// 
+    /// The ARE file acts as a configuration file that tells the engine everything about how to render and manage the area.
+    /// 
+    /// RELATIONSHIP TO OTHER FILES:
+    /// 
+    /// - LYT files: The layout files that define room positions
+    /// - GIT files: The game instance template files that contain creatures, placeables, etc.
+    /// - WOK files: The walkmesh files that define where characters can walk
+    /// - VIS files: The visibility files that define which rooms can see each other
+    /// - TPC files: The texture files used for grass, maps, etc.
+    /// - MDL files: The 3D model files for rooms
+    /// 
+    /// Together, these files define a complete game area that the player can explore.
+    /// 
+    /// ORIGINAL IMPLEMENTATION:
+    /// 
+    /// Based on swkotor2.exe: ARE files are loaded when an area is initialized. The engine reads
+    /// the lighting, fog, grass, and weather settings to set up the rendering environment. Script
+    /// hooks are registered for event handling, and map data is loaded for the minimap display.
+    /// 
+    /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:19-541
+    /// </remarks>
     [PublicAPI]
     public sealed class ARE
     {
@@ -243,6 +378,36 @@ namespace Andastra.Parsing.Resource.Generics
         /// Original: dirty_formula_3: "DirtyFormulaThre" field. KotOR 2 Only.
         /// </remarks>
         public int DirtyFormula3 { get; set; }
+
+        /// <summary>
+        /// Dirty size 1 (KotOR 2 Only).
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:77
+        /// Original: dirty_size_1: "DirtySizeOne" field. KotOR 2 Only.
+        /// Note: Stored as Float in GFF but treated as integer value.
+        /// </remarks>
+        public int DirtySize1 { get; set; }
+
+        /// <summary>
+        /// Dirty size 2 (KotOR 2 Only).
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:80
+        /// Original: dirty_size_2: "DirtySizeTwo" field. KotOR 2 Only.
+        /// Note: Stored as Float in GFF but treated as integer value.
+        /// </remarks>
+        public int DirtySize2 { get; set; }
+
+        /// <summary>
+        /// Dirty size 3 (KotOR 2 Only).
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:83
+        /// Original: dirty_size_3: "DirtySizeThree" field. KotOR 2 Only.
+        /// Note: Stored as Float in GFF but treated as integer value.
+        /// </remarks>
+        public int DirtySize3 { get; set; }
 
         /// <summary>
         /// Developer comments/notes (toolset only, not used by game engine).
