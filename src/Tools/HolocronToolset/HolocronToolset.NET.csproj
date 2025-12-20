@@ -11,6 +11,7 @@
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <IsPackable>false</IsPackable>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <TargetFrameworks></TargetFrameworks>
     <!-- Helper to append without duplicate semicolons -->
     <TargetFrameworks Condition="'$(TargetFrameworks)' != ''">

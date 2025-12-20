@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Andastra.Parsing;
 using JetBrains.Annotations;
@@ -10,7 +11,7 @@ namespace Andastra.Parsing.Resource.Generics.DLG
     /// Represents a directed edge from a source node to a target node (DLGNode).
     /// </summary>
     [PublicAPI]
-    public sealed class DLGLink : IEquatable<DLGLink>
+    public sealed class DLGLink : IEquatable<DLGLink>, IEnumerable<DLGLink>
     {
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/links.py:21
         // Original: class DLGLink(Generic[T_co]):
@@ -265,6 +266,43 @@ namespace Andastra.Parsing.Resource.Generics.DLG
             nodeMap[linkKey] = link;
 
             return link;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/links.py:128
+        // Original: def __iter__(self) -> Generator[DLGLink[T_co], Any, None]:
+        /// <summary>
+        /// Iterate over nested links without recursion.
+        /// </summary>
+        public IEnumerator<DLGLink> GetEnumerator()
+        {
+            Stack<DLGLink> stack = new Stack<DLGLink>();
+            stack.Push(this);
+            HashSet<DLGLink> seen = new HashSet<DLGLink>();
+
+            while (stack.Count > 0)
+            {
+                DLGLink current = stack.Pop();
+                if (seen.Contains(current))
+                {
+                    continue; // Avoid infinite loops in circular references
+                }
+                seen.Add(current);
+                yield return current;
+
+                if (current.Node != null && current.Node.Links != null)
+                {
+                    // Push links in reverse order to maintain order (stack is LIFO)
+                    for (int i = current.Node.Links.Count - 1; i >= 0; i--)
+                    {
+                        stack.Push(current.Node.Links[i]);
+                    }
+                }
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }

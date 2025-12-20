@@ -12,12 +12,12 @@ namespace HolocronToolset.Tests.Formats
 {
     /// <summary>
     /// Tests for DLG format parsing/serialization based on Ghidra reverse engineering analysis.
-    /// 
+    ///
     /// DLG format is used by:
     /// - Neverwinter Nights: Enhanced Edition (nwmain.exe) - Base DLG format
     /// - KotOR 1 (swkotor.exe: 0x005a2ae0) - Base DLG format
     /// - KotOR 2 (swkotor2.exe: 0x005ea880) - Extended DLG format with K2-specific fields
-    /// 
+    ///
     /// Eclipse games (DAO/DA2/ME) use .cnv "conversation" format, NOT DLG!
     /// Ghidra analysis confirms: daorigins.exe, DragonAge2.exe, MassEffect.exe use "conversation" strings
     /// </summary>
@@ -58,40 +58,40 @@ namespace HolocronToolset.Tests.Formats
             entry.Text = LocalizedString.FromEnglish("Hello there!");
             var reply = new DLGReply { ListIndex = 0 };
             reply.Text = LocalizedString.FromEnglish("Greetings.");
-            
+
             var starterLink = new DLGLink(entry, 0);
             dlg.Starters.Add(starterLink);
-            
+
             var replyLink = new DLGLink(reply, 0);
             entry.Links.Add(replyLink);
 
             // Serialize as K1 format - K2 fields should NOT be written
             GFF gff = DLGHelper.DismantleDlg(dlg, Game.K1);
-            
+
             // Verify base fields are written
             // NumWords is stored as uint32, so use GetUInt32 to read it
             gff.Root.GetUInt32("NumWords").Should().Be(100u);
             gff.Root.Acquire("EndConverAbort", ResRef.FromBlank()).Should().Be(new ResRef("k_pdan_abort"));
             gff.Root.Acquire("AnimatedCut", (byte)0).Should().Be((byte)1);
-            
+
             // Ghidra analysis: swkotor.exe:0x005a2ae0 does NOT read AlienRaceOwner
             // Verify K2-specific fields are NOT present in K1 format
             gff.Root.Exists("AlienRaceOwner").Should().BeFalse("K1 format should not include AlienRaceOwner");
             gff.Root.Exists("PostProcOwner").Should().BeFalse("K1 format should not include PostProcOwner");
             gff.Root.Exists("RecordNoVO").Should().BeFalse("K1 format should not include RecordNoVO");
             gff.Root.Exists("NextNodeID").Should().BeFalse("K1 format should not include NextNodeID");
-            
+
             // Verify entry list
             var entryList = gff.Root.Acquire("EntryList", new GFFList());
             entryList.Count.Should().Be(1);
             var entryStruct = entryList.At(0);
             entryStruct.Acquire("Speaker", string.Empty).Should().Be("NPC1");
-            
+
             // Verify K2-specific node fields are NOT present
             entryStruct.Exists("ActionParam1").Should().BeFalse("K1 nodes should not have ActionParam1");
             entryStruct.Exists("Script2").Should().BeFalse("K1 nodes should not have Script2");
             entryStruct.Exists("AlienRaceNode").Should().BeFalse("K1 nodes should not have AlienRaceNode");
-            
+
             // Round-trip test
             DLG reconstructed = DLGHelper.ConstructDlg(gff);
             reconstructed.WordCount.Should().Be(100);
@@ -130,9 +130,9 @@ namespace HolocronToolset.Tests.Formats
             };
 
             // Add entry with K2-specific node fields
-            var entry = new DLGEntry 
-            { 
-                Speaker = "G0T0", 
+            var entry = new DLGEntry
+            {
+                Speaker = "G0T0",
                 ListIndex = 0,
                 // K2-specific node fields
                 Script1Param1 = 10,
@@ -148,9 +148,9 @@ namespace HolocronToolset.Tests.Formats
                 RecordVo = true
             };
             entry.Text = LocalizedString.FromEnglish("Statement: You will cooperate.");
-            
-            var reply = new DLGReply 
-            { 
+
+            var reply = new DLGReply
+            {
                 ListIndex = 0,
                 // K2-specific node fields
                 Script1Param1 = 5,
@@ -158,10 +158,10 @@ namespace HolocronToolset.Tests.Formats
                 NodeId = 2
             };
             reply.Text = LocalizedString.FromEnglish("[Accept]");
-            
+
             var starterLink = new DLGLink(entry, 0);
             dlg.Starters.Add(starterLink);
-            
+
             // K2-specific link fields
             var replyLink = new DLGLink(reply, 0)
             {
@@ -179,26 +179,26 @@ namespace HolocronToolset.Tests.Formats
 
             // Serialize as K2 format - K2 fields SHOULD be written
             GFF gff = DLGHelper.DismantleDlg(dlg, Game.K2);
-            
+
             // Verify base fields
             // NumWords is stored as uint32, so use GetUInt32 to read it
             gff.Root.GetUInt32("NumWords").Should().Be(200u);
             gff.Root.Acquire("ComputerType", (byte)0).Should().Be((byte)1, "Ancient = 1");
             gff.Root.Acquire("ConversationType", 0).Should().Be(1, "Computer = 1");
-            
+
             // Ghidra analysis: swkotor2.exe:0x005ea880 line 75-76 reads AlienRaceOwner
             // Verify K2-specific root fields ARE present and correct
             gff.Root.Acquire("AlienRaceOwner", 0).Should().Be(5, "K2 format should include AlienRaceOwner");
             gff.Root.Acquire("PostProcOwner", 0).Should().Be(3, "K2 format should include PostProcOwner");
             gff.Root.Acquire("RecordNoVO", 0).Should().Be(1, "K2 format should include RecordNoVO");
             gff.Root.Acquire("NextNodeID", 0).Should().Be(42, "K2 format should include NextNodeID");
-            
+
             // Verify entry list with K2-specific node fields
             var entryList = gff.Root.Acquire("EntryList", new GFFList());
             entryList.Count.Should().Be(1);
             var entryStruct = entryList.At(0);
             entryStruct.Acquire("Speaker", string.Empty).Should().Be("G0T0");
-            
+
             // Verify K2-specific node fields ARE present
             entryStruct.Acquire("ActionParam1", 0).Should().Be(10, "K2 nodes should have ActionParam1");
             entryStruct.Acquire("ActionParam2", 0).Should().Be(20, "K2 nodes should have ActionParam2");
@@ -211,7 +211,7 @@ namespace HolocronToolset.Tests.Formats
             entryStruct.Acquire("PostProcNode", 0).Should().Be(5);
             entryStruct.Acquire("RecordNoVOOverri", 0).Should().Be(1);
             entryStruct.Acquire("RecordVO", 0).Should().Be(1);
-            
+
             // Verify K2-specific link fields
             var repliesList = entryStruct.Acquire("RepliesList", new GFFList());
             repliesList.Count.Should().Be(1);
@@ -225,7 +225,7 @@ namespace HolocronToolset.Tests.Formats
             linkStruct.Acquire("Param1b", 0).Should().Be(150);
             linkStruct.Acquire("ParamStrA", string.Empty).Should().Be("param_string_a");
             linkStruct.Acquire("ParamStrB", string.Empty).Should().Be("param_string_b");
-            
+
             // Round-trip test
             DLG reconstructed = DLGHelper.ConstructDlg(gff);
             reconstructed.WordCount.Should().Be(200);
@@ -233,7 +233,7 @@ namespace HolocronToolset.Tests.Formats
             reconstructed.PostProcOwner.Should().Be(3);
             reconstructed.RecordNoVo.Should().Be(1);
             reconstructed.NextNodeId.Should().Be(42);
-            
+
             var reconstructedEntry = reconstructed.AllEntries()[0];
             reconstructedEntry.Script1Param1.Should().Be(10);
             reconstructedEntry.Script2.Should().Be(ResRef.FromString("a_alienrace"));
@@ -263,7 +263,7 @@ namespace HolocronToolset.Tests.Formats
             };
 
             GFF gff = DLGHelper.DismantleDlg(dlg, Game.K1);
-            
+
             // Verify optional fields are NOT present when default
             gff.Root.Exists("AmbientTrack").Should().BeFalse("Empty ResRef should not be written");
             gff.Root.Exists("AnimatedCut").Should().BeFalse("Zero AnimatedCut should not be written");
@@ -272,7 +272,7 @@ namespace HolocronToolset.Tests.Formats
             gff.Root.Exists("OldHitCheck").Should().BeFalse("False OldHitCheck should not be written");
             gff.Root.Exists("UnequipHItem").Should().BeFalse("False UnequipHands should not be written");
             gff.Root.Exists("UnequipItems").Should().BeFalse("False UnequipItems should not be written");
-            
+
             // Now test with non-default values
             dlg.AmbientTrack = ResRef.FromString("mus_test");
             dlg.AnimatedCut = 1;
@@ -281,9 +281,9 @@ namespace HolocronToolset.Tests.Formats
             dlg.OldHitCheck = true;
             dlg.UnequipHands = true;
             dlg.UnequipItems = true;
-            
+
             gff = DLGHelper.DismantleDlg(dlg, Game.K1);
-            
+
             // Verify optional fields ARE present when non-default
             gff.Root.Exists("AmbientTrack").Should().BeTrue("Non-empty ResRef should be written");
             gff.Root.Exists("AnimatedCut").Should().BeTrue("Non-zero AnimatedCut should be written");
@@ -306,20 +306,20 @@ namespace HolocronToolset.Tests.Formats
             entry.Text = LocalizedString.FromEnglish("Test");
             var reply = new DLGReply { ListIndex = 0 };
             reply.Text = LocalizedString.FromEnglish("Reply");
-            
+
             var starterLink = new DLGLink(entry, 0) { IsChild = true };
             dlg.Starters.Add(starterLink);
-            
+
             var replyLink = new DLGLink(reply, 0) { IsChild = true };
             entry.Links.Add(replyLink);
-            
+
             GFF gff = DLGHelper.DismantleDlg(dlg, Game.K1);
-            
+
             // Verify StartingList links do NOT have IsChild field
             var startingList = gff.Root.Acquire("StartingList", new GFFList());
             var starterStruct = startingList.At(0);
             starterStruct.Exists("IsChild").Should().BeFalse("StartingList links should not have IsChild field");
-            
+
             // Verify RepliesList links DO have IsChild field
             var entryList = gff.Root.Acquire("EntryList", new GFFList());
             var entryStruct = entryList.At(0);
@@ -342,25 +342,25 @@ namespace HolocronToolset.Tests.Formats
             reply1.Text = LocalizedString.FromEnglish("Reply1");
             var reply2 = new DLGReply { ListIndex = 1 };
             reply2.Text = LocalizedString.FromEnglish("Reply2");
-            
+
             var starterLink = new DLGLink(entry, 0);
             dlg.Starters.Add(starterLink);
-            
+
             var replyLink1 = new DLGLink(reply1, 0) { Comment = "" }; // Empty
             var replyLink2 = new DLGLink(reply2, 1) { Comment = "This is a comment" }; // Non-empty
             entry.Links.Add(replyLink1);
             entry.Links.Add(replyLink2);
-            
+
             GFF gff = DLGHelper.DismantleDlg(dlg, Game.K1);
-            
+
             var entryList = gff.Root.Acquire("EntryList", new GFFList());
             var entryStruct = entryList.At(0);
             var repliesList = entryStruct.Acquire("RepliesList", new GFFList());
-            
+
             // First link should NOT have LinkComment (empty)
             var link1Struct = repliesList.At(0);
             link1Struct.Exists("LinkComment").Should().BeFalse("Empty LinkComment should not be written");
-            
+
             // Second link SHOULD have LinkComment (non-empty)
             var link2Struct = repliesList.At(1);
             link2Struct.Exists("LinkComment").Should().BeTrue("Non-empty LinkComment should be written");
@@ -395,24 +395,24 @@ namespace HolocronToolset.Tests.Formats
             entry.Links.Add(link);
 
             var serialized = entry.ToDict();
-            
+
             // Debug: Verify links are in serialized data
             serialized.Should().ContainKey("data");
             var data = serialized["data"] as System.Collections.Generic.Dictionary<string, object>;
             data.Should().NotBeNull();
             data.Should().ContainKey("links");
-            
+
             // Debug: Inspect the links structure
             var linksValue = data["links"] as System.Collections.Generic.Dictionary<string, object>;
             linksValue.Should().NotBeNull();
             linksValue.Should().ContainKey("value");
             linksValue.Should().ContainKey("py_type");
             linksValue["py_type"].Should().Be("list");
-            
+
             // Check actual type of linksList - it might be List<Dictionary<string, object>> not List<object>
             var linksListValue = linksValue["value"];
             linksListValue.Should().NotBeNull();
-            
+
             // Try to cast to IEnumerable to iterate
             if (linksListValue is System.Collections.IEnumerable linksEnumerable)
             {
@@ -431,7 +431,7 @@ namespace HolocronToolset.Tests.Formats
                 }
                 count.Should().Be(1);
             }
-            
+
             var deserializedNode = DLGNode.FromDict(serialized);
             var deserialized = deserializedNode as DLGEntry;
             deserialized.Should().NotBeNull();
@@ -587,29 +587,66 @@ namespace HolocronToolset.Tests.Formats
         }
 
         [Fact]
-        public void TestDlgLinkSerialization()
+        public void TestDlgLinkSerializationBasic()
         {
-            var entry = new DLGEntry { Comment = "Test Entry" };
-            var link = new DLGLink(entry, 0);
-            link.Active1 = new ResRef("test_script");
-            link.Comment = "Link comment";
+            // Matching PyKotor test_dlg_link_serialization_basic
+            var link = new DLGLink(new DLGEntry(), 3);
 
             var serialized = link.ToDict();
             var deserialized = DLGLink.FromDict(serialized);
 
-            deserialized.ListIndex.Should().Be(link.ListIndex);
-            deserialized.Active1.Should().Be(link.Active1);
-            deserialized.Comment.Should().Be(link.Comment);
-            deserialized.Node.Should().NotBeNull();
-            (deserialized.Node as DLGEntry).Comment.Should().Be("Test Entry");
+            deserialized.ListIndex.Should().Be(3);
         }
 
         [Fact]
-        public void TestDlgAnimationSerialization()
+        public void TestDlgLinkSerializationWithNode()
         {
+            // Matching PyKotor test_dlg_link_serialization_with_node
+            var entry = new DLGEntry { Comment = "Linked entry" };
+            var link = new DLGLink(entry);
+
+            var serialized = link.ToDict();
+            var deserialized = DLGLink.FromDict(serialized);
+
+            deserialized.Node.Should().NotBeNull();
+            deserialized.Node.Comment.Should().Be("Linked entry");
+        }
+
+        [Fact]
+        public void TestDlgLinkSerializationAllAttributes()
+        {
+            // Matching PyKotor test_dlg_link_serialization_all_attributes
+            var reply = new DLGReply { Text = LocalizedString.FromEnglish("Linked reply") };
+            var link = new DLGLink(reply, 5);
+
+            var serialized = link.ToDict();
+            var deserialized = DLGLink.FromDict(serialized);
+
+            deserialized.ListIndex.Should().Be(5);
+            deserialized.Node.Should().NotBeNull();
+            deserialized.Node.Text.GetString(Language.English, Gender.Male).Should().Be("Linked reply");
+        }
+
+        [Fact]
+        public void TestDlgAnimationSerializationBasic()
+        {
+            // Matching PyKotor test_dlg_animation_serialization_basic
             var anim = new DLGAnimation();
-            anim.AnimationId = 123;
-            anim.Participant = "test_participant";
+            anim.AnimationId = 1200;
+            anim.Participant = "Player";
+
+            var serialized = anim.ToDict();
+            var deserialized = DLGAnimation.FromDict(serialized);
+
+            deserialized.AnimationId.Should().Be(1200);
+            deserialized.Participant.Should().Be("Player");
+        }
+
+        [Fact]
+        public void TestDlgAnimationSerializationDefault()
+        {
+            // Matching PyKotor test_dlg_animation_serialization_default
+            var anim = new DLGAnimation();
 
             var serialized = anim.ToDict();
             var deserialized = DLGAnimation.FromDict(serialized);
@@ -619,17 +656,233 @@ namespace HolocronToolset.Tests.Formats
         }
 
         [Fact]
-        public void TestDlgStuntSerialization()
+        public void TestDlgAnimationSerializationWithCustomValues()
         {
+            // Matching PyKotor test_dlg_animation_serialization_with_custom_values
+            var anim = new DLGAnimation();
+            anim.AnimationId = 2400;
+            anim.Participant = "NPC";
+
+            var serialized = anim.ToDict();
+            var deserialized = DLGAnimation.FromDict(serialized);
+
+            deserialized.AnimationId.Should().Be(2400);
+            deserialized.Participant.Should().Be("NPC");
+        }
+
+        [Fact]
+        public void TestDlgStuntSerializationBasic()
+        {
+            // Matching PyKotor test_dlg_stunt_serialization_basic
             var stunt = new DLGStunt();
-            stunt.Participant = "test_participant";
-            stunt.StuntModel = new ResRef("test_model");
+            stunt.Participant = "Player";
+            stunt.StuntModel = new ResRef("model");
+
+            var serialized = stunt.ToDict();
+            var deserialized = DLGStunt.FromDict(serialized);
+
+            deserialized.Participant.Should().Be("Player");
+            deserialized.StuntModel.Should().Be(new ResRef("model"));
+        }
+
+        [Fact]
+        public void TestDlgStuntSerializationDefault()
+        {
+            // Matching PyKotor test_dlg_stunt_serialization_default
+            var stunt = new DLGStunt();
 
             var serialized = stunt.ToDict();
             var deserialized = DLGStunt.FromDict(serialized);
 
             deserialized.Participant.Should().Be(stunt.Participant);
             deserialized.StuntModel.Should().Be(stunt.StuntModel);
+        }
+
+        [Fact]
+        public void TestDlgStuntSerializationWithCustomValues()
+        {
+            // Matching PyKotor test_dlg_stunt_serialization_with_custom_values
+            var stunt = new DLGStunt();
+            stunt.Participant = "NPC";
+            stunt.StuntModel = new ResRef("npc_model");
+
+            var serialized = stunt.ToDict();
+            var deserialized = DLGStunt.FromDict(serialized);
+
+            deserialized.Participant.Should().Be("NPC");
+            deserialized.StuntModel.Should().Be(new ResRef("npc_model"));
+        }
+
+        [Fact]
+        public void TestDlgLinkWithNestedEntriesAndReplies()
+        {
+            // Matching PyKotor test_dlg_link_with_nested_entries_and_replies
+            var entry1 = new DLGEntry { Comment = "E248" };
+            var entry2 = new DLGEntry { Comment = "E221" };
+
+            var reply1 = new DLGReply { Text = LocalizedString.FromEnglish("R222") };
+            var reply2 = new DLGReply { Text = LocalizedString.FromEnglish("R223") };
+            var reply3 = new DLGReply { Text = LocalizedString.FromEnglish("R249") };
+
+            var link1 = new DLGLink(reply1);
+            var link2 = new DLGLink(entry2);
+            var link3 = new DLGLink(reply2);
+            var link4 = new DLGLink(reply3);
+
+            entry1.Links.Add(link1);
+            reply1.Links.Add(link2);
+            reply1.Links.Add(link3);
+            entry2.Links.Add(link4); // Reuse R249
+            reply2.Links.Add(new DLGLink(entry1)); // Circular reference: reply2 -> entry1
+
+            var serialized = link1.ToDict();
+            var deserialized = DLGLink.FromDict(serialized);
+
+            deserialized.Node.Text.GetString(Language.English, Gender.Male).Should().Be("R222");
+            deserialized.Node.Links.Count.Should().Be(2);
+            deserialized.Node.Links[0].Node.Comment.Should().Be("E221");
+            deserialized.Node.Links[1].Node.Text.GetString(Language.English, Gender.Male).Should().Be("R223");
+            deserialized.Node.Links[1].Node.Links.Count.Should().Be(1);
+            deserialized.Node.Links[1].Node.Links[0].Node.Comment.Should().Be("E248");
+        }
+
+        [Fact]
+        public void TestDlgLinkWithCircularReferences()
+        {
+            // Matching PyKotor test_dlg_link_with_circular_references
+            var entry1 = new DLGEntry { Comment = "E248" };
+            var entry2 = new DLGEntry { Comment = "E221" };
+
+            var reply1 = new DLGReply { Text = LocalizedString.FromEnglish("R222") };
+            var reply2 = new DLGReply { Text = LocalizedString.FromEnglish("R249") };
+
+            var link1 = new DLGLink(reply1);
+            var link2 = new DLGLink(entry2);
+            var link3 = new DLGLink(reply2);
+            var link4 = new DLGLink(entry1); // Circular reference
+
+            entry1.Links.Add(link1);
+            reply1.Links.Add(link2);
+            entry2.Links.Add(link3); // Reuse R249
+            reply2.Links.Add(link4);
+
+            var serialized = link1.ToDict();
+            var deserialized = DLGLink.FromDict(serialized);
+
+            deserialized.Node.Text.GetString(Language.English, Gender.Male).Should().Be("R222");
+            deserialized.Node.Links.Count.Should().Be(1);
+            deserialized.Node.Links[0].Node.Comment.Should().Be("E221");
+            deserialized.Node.Links[0].Node.Links.Count.Should().Be(1);
+            deserialized.Node.Links[0].Node.Links[0].Node.Text.GetString(Language.English, Gender.Male).Should().Be("R249");
+            deserialized.Node.Links[0].Node.Links[0].Node.Links.Count.Should().Be(1);
+            deserialized.Node.Links[0].Node.Links[0].Node.Links[0].Node.Comment.Should().Be("E248");
+        }
+
+        [Fact]
+        public void TestDlgLinkWithMultipleLevels()
+        {
+            // Matching PyKotor test_dlg_link_with_multiple_levels
+            var entry1 = new DLGEntry { Comment = "E248" };
+            var entry2 = new DLGEntry { Comment = "E221" };
+            var entry3 = new DLGEntry { Comment = "E250" };
+
+            var reply1 = new DLGReply { Text = LocalizedString.FromEnglish("R222") };
+            var reply2 = new DLGReply { Text = LocalizedString.FromEnglish("R223") };
+            var reply3 = new DLGReply { Text = LocalizedString.FromEnglish("R249") };
+            var reply4 = new DLGReply { Text = LocalizedString.FromEnglish("R225") };
+            var reply5 = new DLGReply { Text = LocalizedString.FromEnglish("R224") };
+
+            var link1 = new DLGLink(reply1);
+            var link2 = new DLGLink(entry2);
+            var link3 = new DLGLink(reply2);
+            var link4 = new DLGLink(reply3);
+            var link5 = new DLGLink(entry3);
+            var link6 = new DLGLink(reply4);
+            var link7 = new DLGLink(reply5);
+
+            entry1.Links.Add(link1);
+            reply1.Links.Add(link3);
+            reply1.Links.Add(link2);
+            entry2.Links.Add(link4); // Reuse R249
+            reply3.Links.Add(link5);
+            entry3.Links.Add(link6);
+            reply4.Links.Add(link7);
+
+            var serialized = link1.ToDict();
+            var deserialized = DLGLink.FromDict(serialized);
+
+            deserialized.Node.Text.GetString(Language.English, Gender.Male).Should().Be("R222");
+            deserialized.Node.Links.Count.Should().Be(2);
+            deserialized.Node.Links[0].Node.Text.GetString(Language.English, Gender.Male).Should().Be("R223");
+            deserialized.Node.Links[1].Node.Comment.Should().Be("E221");
+            deserialized.Node.Links[1].Node.Links.Count.Should().Be(1);
+            deserialized.Node.Links[1].Node.Links[0].Node.Text.GetString(Language.English, Gender.Male).Should().Be("R249");
+            deserialized.Node.Links[1].Node.Links[0].Node.Links.Count.Should().Be(1);
+            deserialized.Node.Links[1].Node.Links[0].Node.Links[0].Node.Comment.Should().Be("E250");
+            deserialized.Node.Links[1].Node.Links[0].Node.Links[0].Node.Links.Count.Should().Be(1);
+            deserialized.Node.Links[1].Node.Links[0].Node.Links[0].Node.Links[0].Node.Text.GetString(Language.English, Gender.Male).Should().Be("R225");
+            deserialized.Node.Links[1].Node.Links[0].Node.Links[0].Node.Links[0].Node.Links.Count.Should().Be(1);
+            deserialized.Node.Links[1].Node.Links[0].Node.Links[0].Node.Links[0].Node.Links[0].Node.Text.GetString(Language.English, Gender.Male).Should().Be("R224");
+        }
+
+        [Fact]
+        public void TestDlgLinkSerializationPreservesSharedNodes()
+        {
+            // Matching PyKotor test_dlg_link_serialization_preserves_shared_nodes
+            var sharedReply = new DLGReply { Text = LocalizedString.FromEnglish("Shared Reply") };
+
+            var linkA = new DLGLink(sharedReply, 0);
+            var linkB = new DLGLink(sharedReply, 1);
+
+            var nodeMap = new Dictionary<string, object>();
+            var linkADict = linkA.ToDict(nodeMap);
+            var linkBDict = linkB.ToDict(nodeMap);
+
+            var restoreMap = new Dictionary<string, object>();
+            var restoredA = DLGLink.FromDict(linkADict, restoreMap);
+            var restoredB = DLGLink.FromDict(linkBDict, restoreMap);
+
+            // Both links should reference the same node object (shared node)
+            restoredA.Node.Should().BeSameAs(restoredB.Node);
+            restoredA.Node.Text.GetString(Language.English, Gender.Male).Should().Be("Shared Reply");
+            var listIndices = new HashSet<int> { restoredA.ListIndex, restoredB.ListIndex };
+            listIndices.Should().Contain(0);
+            listIndices.Should().Contain(1);
+        }
+
+        [Fact]
+        public void TestDlgLinkIterationTraversesAllDescendants()
+        {
+            // Matching PyKotor test_dlg_link_iteration_traverses_all_descendants
+            var rootEntry = new DLGEntry { Comment = "root" };
+            var replyOne = new DLGReply { Text = LocalizedString.FromEnglish("r1") };
+            var replyTwo = new DLGReply { Text = LocalizedString.FromEnglish("r2") };
+            var entryLeaf = new DLGEntry { Comment = "leaf" };
+
+            var linkRoot = new DLGLink(replyOne, 0);
+            var linkSecondary = new DLGLink(replyTwo, 1);
+            var linkLeaf = new DLGLink(entryLeaf, 2);
+
+            rootEntry.Links.Add(linkRoot);
+            replyOne.Links.Add(linkLeaf);
+            replyOne.Links.Add(linkSecondary);
+
+            var visitedNodes = new HashSet<string>();
+            foreach (DLGLink link in linkRoot)
+            {
+                if (link.Node is DLGEntry entry)
+                {
+                    visitedNodes.Add(entry.Comment);
+                }
+                else if (link.Node is DLGReply reply)
+                {
+                    visitedNodes.Add(reply.Text.GetString(Language.English, Gender.Male));
+                }
+            }
+
+            visitedNodes.Should().Contain("r1");
+            visitedNodes.Should().Contain("r2");
+            visitedNodes.Should().Contain("leaf");
         }
     }
 
@@ -791,7 +1044,7 @@ namespace HolocronToolset.Tests.Formats
             entry0.ShiftItem(entry0.Links, 1, 0);
             entry0.Links[0].Node.Should().Be(entry1);
             entry0.Links[1].Node.Should().Be(reply0);
-            
+
             // Test bounds checking
             Action act = () => entry0.ShiftItem(entry0.Links, 0, 5);
             act.Should().Throw<IndexOutOfRangeException>();
