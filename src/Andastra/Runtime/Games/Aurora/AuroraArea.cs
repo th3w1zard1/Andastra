@@ -83,6 +83,9 @@ namespace Andastra.Runtime.Games.Aurora
         private int _height;
         private uint _flags;
 
+        // Tileset loader for querying tile surface materials
+        private TilesetLoader _tilesetLoader;
+
         // Weather simulation state
         private readonly System.Random _weatherRandom;
         private float _weatherCheckTimer;
@@ -107,14 +110,22 @@ namespace Andastra.Runtime.Games.Aurora
         /// <param name="resRef">The resource reference name of the area.</param>
         /// <param name="areData">ARE file data containing area properties.</param>
         /// <param name="gitData">GIT file data containing entity instances.</param>
+        /// <param name="resourceLoader">Optional function to load resource files by resref. If null, surface materials will use defaults.</param>
         /// <remarks>
         /// Based on area loading sequence in nwmain.exe.
         /// Aurora has more complex area initialization with tile-based construction.
         /// </remarks>
-        public AuroraArea(string resRef, byte[] areData, byte[] gitData)
+        public AuroraArea(string resRef, byte[] areData, byte[] gitData, Func<string, byte[]> resourceLoader = null)
         {
             _resRef = resRef ?? throw new ArgumentNullException(nameof(resRef));
             _tag = resRef; // Default tag to resref
+
+            // Initialize tileset loader if resource loader is provided
+            // Based on nwmain.exe: CNWTileSetManager::GetTileSet @ 0x1411d4f6a
+            if (resourceLoader != null)
+            {
+                _tilesetLoader = new TilesetLoader(resourceLoader);
+            }
 
             // Initialize weather simulation
             _weatherRandom = new System.Random();
@@ -1030,6 +1041,16 @@ namespace Andastra.Runtime.Games.Aurora
 
                 GFFStruct root = gff.Root;
 
+                // Read tileset resref from root struct (needed for surface material lookup)
+                // Based on ARE format: Tileset is CResRef
+                // We read this here so it's available for tile surface material lookup
+                ResRef tilesetResRef = ResRef.FromBlank();
+                if (root.Exists("Tileset"))
+                {
+                    tilesetResRef = root.GetResRef("Tileset");
+                }
+                _tileset = tilesetResRef; // Store for later use
+
                 // Read Width and Height from root struct
                 // Based on ARE format: Width and Height are INT (tile counts)
                 // Width: x-direction (west-east), Height: y-direction (north-south)
@@ -1153,17 +1174,49 @@ namespace Andastra.Runtime.Games.Aurora
                     // Based on nwmain.exe: CNWTileSet::GetTileData() validation
                     // Tiles with valid Tile_ID (>= 0) are considered loaded
                     // Walkability is determined by tileset data (not stored in ARE file)
-                    // For now, assume tiles with valid Tile_ID are walkable
-                    // A full implementation would query the tileset file to determine walkability
                     bool isLoaded = (tileId >= 0);
                     bool isWalkable = isLoaded; // Simplified: valid tiles are walkable
-                    // TODO: Query tileset file to determine actual walkability from tile model data
+                    // Note: Full walkability determination would require loading tile walkmesh,
+                    // which is expensive. For now, we assume valid tiles are walkable.
 
-                    // Create AuroraTile instance
-                    // Surface material would ideally be looked up from tileset data
-                    // For now, default to Stone (4) for walkable tiles, Undefined (0) for non-walkable
-                    // TODO: Query tileset file to determine actual surface material from tile model data
-                    int surfaceMaterial = isWalkable ? 4 : 0; // Stone (walkable) or Undefined (non-walkable)
+                    // Query tileset file to determine actual surface material from tile model data
+                    // Based on nwmain.exe: CNWTileSurfaceMesh::GetSurfaceMaterial @ 0x1402bedf0
+                    // - Gets tile model from tileset using Tile_ID
+                    // - Loads walkmesh (WOK file) for the tile model
+                    // - Extracts most common surface material from walkmesh faces
+                    // - Falls back to default (Stone for walkable, Undefined for non-walkable) if walkmesh can't be loaded
+                    int surfaceMaterial = 0; // Default: Undefined
+                    if (isLoaded && _tilesetLoader != null && !_tileset.IsBlank)
+                    {
+                        string tilesetResRef = _tileset.ToString();
+                        if (!string.IsNullOrEmpty(tilesetResRef))
+                        {
+                            try
+                            {
+                                // Get surface material from tileset and walkmesh
+                                // Based on nwmain.exe: CNWTileSet::GetTileData @ 0x1402c67d0
+                                // - Gets tile data from tileset using Tile_ID
+                                // - Loads walkmesh (WOK file) for tile model
+                                // - Extracts surface material from walkmesh
+                                surfaceMaterial = _tilesetLoader.GetTileSurfaceMaterial(tilesetResRef, tileId);
+                            }
+                            catch
+                            {
+                                // Failed to get surface material from tileset - use default
+                                surfaceMaterial = isWalkable ? 4 : 0; // Stone (walkable) or Undefined (non-walkable)
+                            }
+                        }
+                        else
+                        {
+                            // No tileset resref - use default
+                            surfaceMaterial = isWalkable ? 4 : 0; // Stone (walkable) or Undefined (non-walkable)
+                        }
+                    }
+                    else
+                    {
+                        // No tileset loader or tileset - use default
+                        surfaceMaterial = isWalkable ? 4 : 0; // Stone (walkable) or Undefined (non-walkable)
+                    }
                     
                     AuroraTile tile = new AuroraTile
                     {
