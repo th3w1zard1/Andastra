@@ -1410,14 +1410,80 @@ void helper() {
             throw new NotImplementedException("TestNssEditorMenuBarExists: Menu bar exists test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_nss_editor_goto_line (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1213-1259)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1213-1228
         // Original: def test_nss_editor_goto_line(qtbot, installation: HTInstallation, complex_nss_script: str): Test goto line
         [Fact]
         public void TestNssEditorGotoLine()
         {
-            // TODO: STUB - Implement goto line test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1213-1259
-            throw new NotImplementedException("TestNssEditorGotoLine: Goto line test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            // Complex NSS script matching Python fixture
+            string complexNssScript = @"// Global variable
+int g_globalVar = 10;
+
+// Main function
+void main() {
+    int localVar = 20;
+    
+    if (localVar > 10) {
+        SendMessageToPC(GetFirstPC(), ""Condition met"");
+    }
+    
+    for (int i = 0; i < 5; i++) {
+        localVar += i;
+    }
+}
+
+// Helper function
+void helper() {
+    int helperVar = 30;
+}";
+
+            var editor = new NSSEditor(null, installation);
+            editor.New();
+
+            // Get the code editor using reflection (matching Python: editor.ui.codeEdit)
+            var codeEditorField = typeof(NSSEditor).GetField("_codeEdit",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            codeEditorField.Should().NotBeNull("NSSEditor should have _codeEdit field");
+            
+            var codeEditor = codeEditorField.GetValue(editor) as HolocronToolset.Widgets.CodeEditor;
+            codeEditor.Should().NotBeNull("_codeEdit should be initialized");
+            
+            // Set the text (matching Python: editor.ui.codeEdit.setPlainText(complex_nss_script))
+            codeEditor.SetPlainText(complexNssScript);
+
+            // Go to line 5 (matching Python: editor._goto_line(5))
+            editor.GotoLine(5);
+
+            // Cursor should be at line 5 (matching Python: cursor.blockNumber() + 1 == 5)
+            int currentLine = editor.GetCurrentLine();
+            currentLine.Should().Be(5, "Cursor should be at line 5 after calling GotoLine(5)");
         }
 
         // TODO: STUB - Implement test_nss_editor_foldable_regions_detection (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1261-1286)

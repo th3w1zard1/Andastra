@@ -740,6 +740,19 @@ namespace HolocronToolset.Editors
             return lineNumber;
         }
 
+        // Public method to get current line number for testing
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py
+        // Original: cursor.blockNumber() + 1 in test_nss_editor_goto_line
+        /// <summary>
+        /// Gets the current line number (1-indexed) where the cursor is positioned.
+        /// Exposed for testing purposes to match Python test behavior.
+        /// </summary>
+        /// <returns>The current line number (1-indexed), or 1 if no text or cursor position is invalid.</returns>
+        public int GetCurrentLine()
+        {
+            return GetCurrentLineNumber();
+        }
+
         // Helper method to set cursor to a specific line number (for testing)
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:271-280
         // Original: def _goto_line(self, line_number: int):
