@@ -23,12 +23,9 @@ namespace Andastra.Runtime.Games.Common
     /// - Provides entity lookup by ID, tag, and type
     /// - Manages area-entity relationships
     ///
-    /// Based on reverse engineering of:
-    /// - swkotor.exe: Entity management and world systems
-    /// - swkotor2.exe: World management with ObjectId @ 0x007bce5c, AreaId @ 0x007bef48
-    /// - nwmain.exe: Aurora world management functions
-    /// - daorigins.exe: Eclipse world systems
-    /// - Common entity structure: ObjectId, Tag, ObjectType, AreaId
+    /// Based on reverse engineering of multiple BioWare engines.
+    /// Common entity and world management patterns identified across all engines.
+    /// Common entity structure: ObjectId, Tag, ObjectType, AreaId
     ///
     /// Common functionality across engines:
     /// - Entity registration and lookup by ObjectId (O(1))
@@ -50,7 +47,6 @@ namespace Andastra.Runtime.Games.Common
         protected readonly IEventBus _eventBus;
         
         // Area ID assignment: Areas get sequential IDs starting from 0x7F000010
-        // Based on swkotor2.exe: AreaId @ 0x007bef48, areas are objects with ObjectIds
         // Common across all engines: Areas assigned ObjectIds similar to entities
         // Area ObjectId range: 0x7F000010+ (special object ID range for areas)
         private static uint _nextAreaId = 0x7F000010;
@@ -231,8 +227,6 @@ namespace Andastra.Runtime.Games.Common
         /// O(1) lookup by AreaId.
         /// Returns null if area doesn't exist.
         /// Common across all engines.
-        /// Based on swkotor2.exe: GetArea function
-        /// Located via string references: "AreaId" @ 0x007bef48
         /// </remarks>
         public virtual IArea GetArea(uint areaId)
         {
@@ -245,8 +239,6 @@ namespace Andastra.Runtime.Games.Common
         /// <remarks>
         /// Assigns sequential AreaId starting from 0x7F000010.
         /// Common across all engines.
-        /// Based on swkotor2.exe: Area registration system
-        /// Located via string references: "AreaId" @ 0x007bef48
         /// </remarks>
         public virtual void RegisterArea(IArea area)
         {
@@ -392,10 +384,8 @@ namespace Andastra.Runtime.Games.Common
             entity.World = this;
             
             // Set entity's AreaId based on current area
-            // Based on swkotor2.exe: Entity AreaId assignment
-            // Located via string references: "AreaId" @ 0x007bef48
-            // Original implementation: Entities store AreaId of area they belong to
-            // Common across all engines: Entity AreaId is set when entity is registered to world
+            // Common across all engines: Entities store AreaId of area they belong to
+            // Entity AreaId is set when entity is registered to world
             if (CurrentArea != null)
             {
                 uint areaId = GetAreaId(CurrentArea);

@@ -15,10 +15,7 @@ namespace Andastra.Runtime.Games.Common
     ///   - Aurora (nwmain.exe): Uses C2DA class for 2DA table access via AuroraTwoDATableManager
     ///   - Eclipse (daorigins.exe, DragonAge2.exe): Uses 2DA tables via EclipseTwoDATableManager
     ///   - Infinity: Uses 2DA tables (similar to Eclipse)
-    /// - Based on reverse engineering:
-    ///   - swkotor2.exe: FUN_0041d2c0 @ 0x0041d2c0 (2DA table lookup), FUN_0065a380 @ 0x0065a380 (GetCreatureRadius)
-    ///   - swkotor.exe: Similar 2DA lookup system
-    ///   - nwmain.exe: C2DA::Load2DArray @ 0x1401a73a0 for 2DA loading
+    /// - Based on reverse engineering of multiple BioWare engines.
     /// - Common pattern: All engines store creature properties (radius, speed, etc.) in data tables indexed by appearance type
     /// 
     /// This interface extends Core.Interfaces.IGameDataProvider to maintain compatibility.
@@ -35,11 +32,8 @@ namespace Andastra.Runtime.Games.Common
         /// <param name="defaultRadius">Default radius to return if lookup fails.</param>
         /// <returns>The creature collision radius, or defaultRadius if lookup fails.</returns>
         /// <remarks>
-        /// Based on reverse engineering:
-        /// - swkotor2.exe: FUN_0065a380 @ 0x0065a380 (GetCreatureRadius) calls FUN_0041d2c0 to lookup "hitradius" from appearance.2da
-        /// - swkotor.exe: Similar implementation
-        /// - nwmain.exe: Uses C2DA class to lookup hitradius from appearance.2da
-        /// - Eclipse/Infinity: Uses EclipseTwoDATableManager to lookup hitradius from appearance.2da (same pattern as Odyssey/Aurora)
+        /// Common pattern across all engines:
+        /// - Looks up "hitradius" column from appearance.2da table using appearanceType as row index
         /// - Original implementation: Looks up "hitradius" column from appearance.2da table using appearanceType as row index
         /// - Falls back to size-based defaults if appearance data unavailable:
         ///   - Size 0 (Small): 0.3

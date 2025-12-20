@@ -108,8 +108,7 @@ namespace Andastra.Runtime.Games.Common
         /// Projects a point onto the walkmesh.
         /// </summary>
         /// <remarks>
-        /// Based on FUN_004f5070 @ 0x004f5070 in swkotor2.exe (and similar functions in other engines).
-        /// Projects points to walkable surfaces for pathfinding and collision detection.
+        /// Common pattern across all engines: Projects points to walkable surfaces for pathfinding and collision detection.
         /// </remarks>
         public abstract bool ProjectToWalkmesh(Vector3 point, out Vector3 result, out float height);
 
@@ -128,10 +127,8 @@ namespace Andastra.Runtime.Games.Common
         /// TRUE means stealth XP is enabled, FALSE means it is disabled.
         /// </summary>
         /// <remarks>
-        /// Odyssey Engine Specific:
-        /// - StealthXPEnabled stored in AreaProperties GFF nested struct
-        /// - swkotor2.exe: LoadAreaProperties @ 0x004e26d0 reads, SaveAreaProperties @ 0x004e11d0 writes
-        /// - swkotor2.exe: String reference "StealthXPEnabled" @ 0x007bd1b4
+        /// Common area property across engines.
+        /// Engine-specific implementations handle storage format differences.
         /// 
         /// Aurora/Eclipse Engines:
         /// - Not supported - implementations return false (no-op setter)
@@ -447,9 +444,7 @@ namespace Andastra.Runtime.Games.Common
             }
 
             // Fire OnEnter script for target area
-            // Based on swkotor2.exe: Area enter script execution
-            // Located via string references: "OnEnter" @ 0x007bee60 (area enter script)
-            // Original implementation: Fires when entity enters an area
+            // Common across all engines: Fires when entity enters an area
             if (targetArea is Core.Module.RuntimeArea targetRuntimeArea)
             {
                 string enterScript = targetRuntimeArea.GetScript(Core.Enums.ScriptEvent.OnEnter);

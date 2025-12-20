@@ -12,12 +12,8 @@ namespace Andastra.Runtime.Games.Common
     /// - Maps event IDs to string names for debugging and logging
     /// - Routes events to appropriate handlers based on event type
     ///
-    /// Based on reverse engineering of:
-    /// - swkotor.exe: Event dispatching functions
-    /// - swkotor2.exe: DispatchEvent @ 0x004dcfb0 with comprehensive event mapping
-    /// - nwmain.exe: Aurora event system
-    /// - daorigins.exe: Eclipse event system with additional events
-    /// - DragonAge2.exe//: Enhanced event systems
+    /// Based on reverse engineering of multiple BioWare engines.
+    /// Common event dispatching patterns identified across all engines.
     ///
     /// Common event types across engines:
     /// - Area events: AREA_TRANSITION, REMOVE_FROM_AREA
@@ -37,7 +33,7 @@ namespace Andastra.Runtime.Games.Common
         /// <param name="eventType">The type of event being dispatched.</param>
         /// <param name="eventSubtype">Additional event subtype information.</param>
         /// <remarks>
-        /// Based on DispatchEvent @ 0x004dcfb0 in swkotor2.exe and similar functions in other engines.
+        /// Common event dispatching pattern across all engines.
         /// Maps event IDs to string names and routes to appropriate handlers.
         /// Handles both area-wide events and entity-specific events.
         /// </remarks>
@@ -88,7 +84,7 @@ namespace Andastra.Runtime.Games.Common
         /// <remarks>
         /// ON_DAMAGED (4), ON_DEATH (10), ON_ATTACKED (0xf), etc.
         /// Triggers combat scripts and AI behaviors.
-        /// Based on swkotor2.exe: DispatchEvent @ 0x004dcfb0 handles combat events by firing appropriate script events.
+        /// Common pattern across all engines: combat events fire appropriate script events.
         /// </remarks>
         protected abstract void HandleCombatEvent(IEntity entity, int eventType, IEntity sourceEntity = null);
 

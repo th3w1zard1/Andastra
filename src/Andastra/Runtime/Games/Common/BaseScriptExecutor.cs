@@ -18,12 +18,8 @@ namespace Andastra.Runtime.Games.Common
     /// - Script event routing and hook management
     /// - Execution context management
     ///
-    /// Based on reverse engineering of:
-    /// - swkotor.exe: Script execution functions  
-    /// - swkotor2.exe: DispatchScriptEvent @ 0x004dd730, script budget tracking
-    /// - nwmain.exe: ExecuteCommandExecuteScript @ 0x14051d5c0, CNWSVirtualMachineCommands class
-    /// - daorigins.exe: Eclipse script execution enhancements
-    /// - DragonAge2.exe//: Advanced script systems
+    /// Based on reverse engineering of multiple BioWare engines.
+    /// Common NCS script execution patterns identified across all engines.
     ///
     /// Common script execution features:
     /// - NCS bytecode interpretation via NcsVm
@@ -46,7 +42,7 @@ namespace Andastra.Runtime.Games.Common
         /// Default instruction limit per script execution.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Script execution budget limits.
+        /// Common script execution budget limit across all engines.
         /// Prevents infinite loops and ensures fair frame time distribution.
         /// </remarks>
         protected const int DefaultMaxInstructions = 100000;
@@ -148,7 +144,7 @@ namespace Andastra.Runtime.Games.Common
         /// <param name="entity">The entity that executed the script.</param>
         /// <param name="instructionsExecuted">Number of instructions executed.</param>
         /// <remarks>
-        /// Based on swkotor2.exe: Script execution budget tracking.
+        /// Common script execution budget tracking across all engines.
         /// Accumulates instruction count to entity's action queue component.
         /// Game loop enforces per-frame script budget limits.
         /// </remarks>
@@ -161,9 +157,7 @@ namespace Andastra.Runtime.Games.Common
             if (actionQueue != null && instructionsExecuted > 0)
             {
                 // Accumulate instruction count for budget tracking
-                // Based on swkotor2.exe: Script execution budget tracking system
-                // Located via string references: Script execution budget limits per frame
-                // Original implementation: Accumulates instruction count to entity's action queue component
+                // Common across all engines: Accumulates instruction count to entity's action queue component
                 // Game loop checks total instructions per frame via GetLastInstructionCount() and may defer scripts
                 // if per-frame script budget limit (MaxScriptBudget) is exceeded
                 // This prevents script lockups and ensures fair frame time distribution across all entities
@@ -216,14 +210,7 @@ namespace Andastra.Runtime.Games.Common
         /// Uses STORE_STATE opcode to capture execution context.
         /// DelayScheduler manages timed execution.
         /// 
-        /// Common across all engines:
-        /// - swkotor.exe: DelayCommand implementation
-        /// - swkotor2.exe: DelayCommand @ 0x007be900
-        /// - nwmain.exe: DelayCommand implementation
-        /// - daorigins.exe: DelayCommand implementation
-        /// - DragonAge2.exe: DelayCommand implementation
-        /// - : DelayCommand implementation
-        /// - : DelayCommand implementation
+        /// Common across all engines: DelayCommand pattern for delayed script execution.
         /// 
         /// Implementation flow:
         /// 1. Create ActionDoCommand that executes the script with captured context
@@ -258,7 +245,7 @@ namespace Andastra.Runtime.Games.Common
             // Engine-specific subclasses can override to provide better context capture
             
             // Create ActionDoCommand that executes the script
-            // Based on swkotor2.exe: DelayCommand creates action that executes script with captured context
+            // Common across all engines: DelayCommand creates action that executes script with captured context
             // ActionDoCommand wraps the script execution in an action that can be scheduled
             var delayedAction = new ActionDoCommand((targetEntity) =>
             {
@@ -270,7 +257,6 @@ namespace Andastra.Runtime.Games.Common
 
             // Schedule action with DelayScheduler
             // Common across all engines: DelayScheduler manages timed execution of delayed actions
-            // Based on swkotor2.exe: DelayCommand @ 0x007be900 schedules action for execution after delay
             delayScheduler.ScheduleDelay(delay, delayedAction, entity);
         }
 
