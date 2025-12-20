@@ -4106,14 +4106,156 @@ void helper() {
             throw new NotImplementedException("TestNssEditorBracketMatching: Bracket matching test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_nss_editor_folding_and_breadcrumbs_together (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1932-1956)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1932-1956
         // Original: def test_nss_editor_folding_and_breadcrumbs_together(qtbot, installation: HTInstallation, foldable_nss_script: str): Test folding and breadcrumbs together
         [Fact]
         public void TestNssEditorFoldingAndBreadcrumbsTogether()
         {
-            // TODO: STUB - Implement folding and breadcrumbs together test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1932-1956
-            throw new NotImplementedException("TestNssEditorFoldingAndBreadcrumbsTogether: Folding and breadcrumbs together test not yet implemented");
+            // Matching PyKotor: foldable_nss_script fixture content
+            string foldableNssScript = @"// Global variable
+int g_var = 10;
+
+void main() {
+    int local = 5;
+    
+    if (local > 0) {
+        int nested = 10;
+        if (nested > 5) {
+            // Nested block
+            local += nested;
+        }
+    }
+    
+    for (int i = 0; i < 10; i++) {
+        local += i;
+    }
+}
+
+void helper() {
+    int helper_var = 20;
+}";
+
+            // Matching PyKotor: editor = NSSEditor(None, installation)
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = Environment.GetEnvironmentVariable("K1_PATH");
+            }
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor2";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Try K1 as fallback
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            var editor = new NSSEditor(null, installation);
+            editor.New();
+
+            // Get code editor via reflection (matching test pattern)
+            var codeEditField = typeof(NSSEditor).GetField("_codeEdit", BindingFlags.NonPublic | BindingFlags.Instance);
+            codeEditField.Should().NotBeNull("_codeEdit field should exist");
+            var codeEdit = codeEditField.GetValue(editor) as HolocronToolset.Widgets.CodeEditor;
+            codeEdit.Should().NotBeNull("Code editor should be initialized");
+
+            // Matching PyKotor: editor.ui.codeEdit.setPlainText(foldable_nss_script)
+            codeEdit.SetPlainText(foldableNssScript);
+            
+            // Matching PyKotor: qtbot.wait(300) - wait for processing
+            System.Threading.Thread.Sleep(300);
+
+            // Matching PyKotor: Fold a region
+            // Original: cursor = editor.ui.codeEdit.textCursor()
+            // Original: doc = editor.ui.codeEdit.document()
+            // Original: block = doc.findBlockByLineNumber(2)
+            // Original: if block.isValid(): cursor.setPosition(block.position()); editor.ui.codeEdit.setTextCursor(cursor); editor.ui.codeEdit.fold_region()
+            
+            // Calculate position for line 2 (0-indexed, so line 2 is the 3rd line)
+            // Line 0: "// Global variable"
+            // Line 1: "int g_var = 10;"
+            // Line 2: "" (empty line)
+            string[] lines = foldableNssScript.Split('\n');
+            if (lines.Length > 2)
+            {
+                // Calculate character position for line 2
+                int line2Position = 0;
+                for (int i = 0; i < 2 && i < lines.Length; i++)
+                {
+                    line2Position += lines[i].Length + 1; // +1 for newline
+                }
+                
+                // Set cursor to line 2 position
+                codeEdit.SelectionStart = line2Position;
+                codeEdit.SelectionEnd = line2Position;
+                
+                // Manually trigger foldable regions update (matching Python: editor.ui.codeEdit._update_foldable_regions())
+                codeEdit.UpdateFoldableRegionsForTesting();
+                
+                // Wait a bit for processing
+                System.Threading.Thread.Sleep(50);
+                
+                // Fold the region (matching Python: editor.ui.codeEdit.fold_region())
+                codeEdit.FoldRegion();
+                
+                // Wait for processing
+                System.Threading.Thread.Sleep(50);
+
+                // Matching PyKotor: Breadcrumbs should still work
+                // Original: editor._update_breadcrumbs()
+                editor.UpdateBreadcrumbs();
+                
+                // Matching PyKotor: assert editor._breadcrumbs is not None
+                editor.Breadcrumbs.Should().NotBeNull("Breadcrumbs should not be null after update");
+                
+                // Matching PyKotor: path = editor._breadcrumbs._path
+                // Original: assert len(path) >= 0
+                // Get breadcrumbs path via reflection or public property
+                var breadcrumbsPathProperty = typeof(BreadcrumbsWidget).GetProperty("Path", BindingFlags.Public | BindingFlags.Instance);
+                if (breadcrumbsPathProperty == null)
+                {
+                    // Try field instead
+                    var breadcrumbsPathField = typeof(BreadcrumbsWidget).GetField("_path", BindingFlags.NonPublic | BindingFlags.Instance);
+                    if (breadcrumbsPathField != null)
+                    {
+                        var path = breadcrumbsPathField.GetValue(editor.Breadcrumbs);
+                        path.Should().NotBeNull("Breadcrumbs path should not be null");
+                        
+                        // If path is a list/array, check its length
+                        if (path is System.Collections.ICollection pathCollection)
+                        {
+                            pathCollection.Count.Should().BeGreaterThanOrEqualTo(0, "Breadcrumbs path length should be >= 0");
+                        }
+                    }
+                }
+                else
+                {
+                    var path = breadcrumbsPathProperty.GetValue(editor.Breadcrumbs);
+                    path.Should().NotBeNull("Breadcrumbs path should not be null");
+                    
+                    // If path is a list/array, check its length
+                    if (path is System.Collections.ICollection pathCollection)
+                    {
+                        pathCollection.Count.Should().BeGreaterThanOrEqualTo(0, "Breadcrumbs path length should be >= 0");
+                    }
+                }
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1958-1991
