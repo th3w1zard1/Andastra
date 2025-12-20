@@ -661,11 +661,13 @@ namespace Andastra.Runtime.Games.Aurora
             // Based on nwmain.exe: CNWSModule::SaveModule @ 0x1404861e3 line 59 writes Mod_Entry_Area as CResRef
             // Based on vendor/xoreos/src/aurora/ifofile.cpp:203 - reads Mod_Entry_Area as string (ResRef converted to string)
             // Based on src/Andastra/Parsing/Resource/Formats/GFF/Generics/IFOHelpers.cs:173 - reads Mod_Entry_Area as ResRef
+            // GetResRef returns ResRef.FromBlank() if field doesn't exist (never returns null)
             ResRef entryAreaResRef = moduleInfo.GetResRef("Mod_Entry_Area");
 
-            // Check if ResRef is blank (empty or null)
+            // Check if ResRef is blank (empty or field doesn't exist)
             // Based on nwmain.exe: Blank ResRef means no entry area specified (module load will fail)
             // Based on vendor/xoreos/src/aurora/ifofile.cpp:203 - empty string means no entry area
+            // Based on src/Andastra/Runtime/Games/Odyssey/Loading/ModuleLoader.cs:215-218 - checks Exists first, then converts to string
             if (entryAreaResRef == null || entryAreaResRef.IsBlank())
             {
                 return null;
@@ -674,6 +676,7 @@ namespace Andastra.Runtime.Games.Aurora
             // Convert ResRef to string and return
             // Based on nwmain.exe: ResRef is converted to string for area resource lookup
             // Based on vendor/xoreos/src/aurora/ifofile.cpp:203 - ResRef stored as string
+            // Based on src/Andastra/Runtime/Games/Odyssey/Loading/ModuleLoader.cs:218 - entryAreaRef.ToString()
             return entryAreaResRef.ToString();
         }
 
