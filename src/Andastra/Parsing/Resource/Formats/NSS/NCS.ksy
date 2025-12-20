@@ -142,35 +142,30 @@ types:
         doc: |
           Instruction arguments. Format varies by instruction type.
           All multi-byte values are big-endian.
+          
+          Note: Due to Kaitai Struct limitations with dynamic field sizes based on parent values,
+          this structure provides a basic framework. The actual argument parsing must be handled
+          by application code based on bytecode and qualifier values.
+          
+          Common argument formats:
+          - No args (0 bytes): RSADDx, LOGANDxx, RETN, SAVEBP, RESTOREBP, NOP
+          - 4 bytes signed int: MOVSP, INCxSP, DECxSP, INCxBP, DECxBP, JMP, JSR, JZ, JNZ
+          - 4 bytes unsigned int: CONSTI (integer constant)
+          - 4 bytes float: CONSTF (float constant)
+          - 2 bytes length + string: CONSTS (string constant)
+          - 4 bytes signed int: CONSTO (object constant)
+          - 4 bytes offset + 2 bytes size: CPDOWNSP, CPTOPSP, CPDOWNBP, CPTOPBP
+          - 2 bytes routine + 1 byte argCount: ACTION
+          - 2 bytes size + 2 bytes offset + 2 bytes sizeNoDestroy: DESTRUCT
+          - 4 bytes size + 4 bytes sizeLocals: STORE_STATE
+          - 2 bytes size (if qualifier 0x24): EQUALxx, NEQUALxx (structure comparison)
 
   instruction_args:
     doc: |
-      Instruction arguments. The format depends on the instruction type
-      (determined by bytecode and qualifier combination).
-      
-      Note: Kaitai Struct doesn't support dynamic switching based on parent fields.
-      This structure reads raw argument bytes. The application must interpret
-      the arguments based on the bytecode and qualifier values.
-      
-      Common argument formats:
-      - No args (0 bytes): RSADDx, LOGANDxx, RETN, SAVEBP, RESTOREBP, NOP
-      - 4 bytes signed int: MOVSP, INCxSP, DECxSP, INCxBP, DECxBP, JMP, JSR, JZ, JNZ
-      - 4 bytes unsigned int: CONSTI (integer constant)
-      - 4 bytes float: CONSTF (float constant)
-      - 2 bytes length + string: CONSTS (string constant)
-      - 4 bytes signed int: CONSTO (object constant)
-      - 4 bytes offset + 2 bytes size: CPDOWNSP, CPTOPSP, CPDOWNBP, CPTOPBP
-      - 2 bytes routine + 1 byte argCount: ACTION
-      - 2 bytes size + 2 bytes offset + 2 bytes sizeNoDestroy: DESTRUCT
-      - 4 bytes size + 4 bytes sizeLocals: STORE_STATE
-      - 2 bytes size (if qualifier 0x24): EQUALxx, NEQUALxx (structure comparison)
-    seq:
-      - id: raw_args
-        type: str
-        size-eos: true
-        doc: |
-          Raw argument bytes. Size depends on instruction type.
-          Application code must parse based on bytecode and qualifier.
+      Instruction arguments placeholder.
+      Actual argument parsing must be done by application code based on bytecode and qualifier.
+      This type exists for structure documentation purposes.
+    seq: []
 
   instruction_arg_data:
     doc: Base type for instruction argument data.
