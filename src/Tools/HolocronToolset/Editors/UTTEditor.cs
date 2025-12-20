@@ -6,6 +6,7 @@ using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource;
 using HolocronToolset.Data;
@@ -149,15 +150,47 @@ namespace HolocronToolset.Editors
         // Original: def _setup_installation(self, installation: HTInstallation):
         private void SetupInstallation(HTInstallation installation)
         {
+            _installation = installation;
             if (_nameEdit != null)
             {
                 _nameEdit.SetInstallation(installation);
             }
 
-            // TODO: Setup 2DA combos when 2DA loading is available
-            // cursors: 2DA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_CURSORS)
-            // factions: 2DA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_FACTIONS)
-            // traps: 2DA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_TRAPS)
+            // Matching PyKotor implementation: cursors: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_CURSORS)
+            TwoDA cursors = installation.HtGetCache2DA(HTInstallation.TwoDACursors);
+            if (_cursorSelect != null)
+            {
+                if (cursors != null)
+                {
+                    _cursorSelect.SetContext(cursors, installation, HTInstallation.TwoDACursors);
+                    List<string> cursorLabels = cursors.GetColumn("label");
+                    _cursorSelect.SetItems(cursorLabels, sortAlphabetically: true);
+                }
+            }
+
+            // Matching PyKotor implementation: factions: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_FACTIONS)
+            TwoDA factions = installation.HtGetCache2DA(HTInstallation.TwoDAFactions);
+            if (_factionSelect != null)
+            {
+                if (factions != null)
+                {
+                    _factionSelect.SetContext(factions, installation, HTInstallation.TwoDAFactions);
+                    List<string> factionLabels = factions.GetColumn("label");
+                    _factionSelect.SetItems(factionLabels, sortAlphabetically: true);
+                }
+            }
+
+            // Matching PyKotor implementation: traps: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_TRAPS)
+            TwoDA traps = installation.HtGetCache2DA(HTInstallation.TwoDATraps);
+            if (_trapSelect != null)
+            {
+                if (traps != null)
+                {
+                    _trapSelect.SetContext(traps, installation, HTInstallation.TwoDATraps);
+                    List<string> trapLabels = traps.GetColumn("label");
+                    _trapSelect.SetItems(trapLabels, sortAlphabetically: true);
+                }
+            }
         }
 
         private void SetupProgrammaticUI()
