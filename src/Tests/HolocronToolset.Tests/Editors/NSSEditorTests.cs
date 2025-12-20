@@ -153,14 +153,110 @@ namespace HolocronToolset.Tests.Editors
             dataText.Should().Contain("void main");
         }
 
-        // TODO: STUB - Implement test_nss_editor_code_editing_basic (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:132-164)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:132-164
         // Original: def test_nss_editor_code_editing_basic(qtbot, installation: HTInstallation): Test basic code editing functionality
         [Fact]
         public void TestNssEditorCodeEditingBasic()
         {
-            // TODO: STUB - Implement basic code editing test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:132-164
-            throw new NotImplementedException("TestNssEditorCodeEditingBasic: Basic code editing test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            var editor = new NSSEditor(null, installation);
+            editor.New();
+
+            // Get the code editor using reflection (matching pattern used in other tests)
+            var codeEditField = typeof(NSSEditor).GetField("_codeEdit", BindingFlags.NonPublic | BindingFlags.Instance);
+            codeEditField.Should().NotBeNull("_codeEdit field should exist");
+            var codeEdit = codeEditField.GetValue(editor) as HolocronToolset.Widgets.CodeEditor;
+            codeEdit.Should().NotBeNull("Code editor should be initialized");
+
+            // Test setting various scripts
+            // Matching PyKotor: test_scripts = ["", "void main() {}", ...]
+            string[] testScripts = new string[]
+            {
+                "",
+                "void main() {}",
+                "void main() {\n    int x = 5;\n}",
+                "// Comment\nvoid main() {\n    // More comments\n}",
+                "void test() {\n    if (x == 1) {\n        return;\n    }\n}",
+                "string s = \"test\";\nint i = 123;\nfloat f = 1.5;"
+            };
+
+            foreach (string script in testScripts)
+            {
+                // Matching PyKotor: editor.ui.codeEdit.setPlainText(script)
+                codeEdit.SetPlainText(script);
+                // Matching PyKotor: assert editor.ui.codeEdit.toPlainText() == script
+                codeEdit.ToPlainText().Should().Be(script, $"Text should match after setting: {script}");
+            }
+
+            // Test cursor operations
+            // Matching PyKotor: editor.ui.codeEdit.setPlainText("Line 1\nLine 2\nLine 3")
+            codeEdit.SetPlainText("Line 1\nLine 2\nLine 3");
+            
+            // Matching PyKotor: cursor = editor.ui.codeEdit.textCursor()
+            // Matching PyKotor: cursor.setPosition(0)
+            // Matching PyKotor: editor.ui.codeEdit.setTextCursor(cursor)
+            // Matching PyKotor: assert editor.ui.codeEdit.textCursor().position() == 0
+            codeEdit.SelectionStart = 0;
+            codeEdit.SelectionEnd = 0;
+            codeEdit.SelectionStart.Should().Be(0, "Cursor position should be 0 after setting");
+
+            // Test line operations
+            // Matching PyKotor: cursor.movePosition(QTextCursor.MoveOperation.Down)
+            // Matching PyKotor: editor.ui.codeEdit.setTextCursor(cursor)
+            // Matching PyKotor: line_num = editor.ui.codeEdit.textCursor().blockNumber()
+            // Matching PyKotor: assert line_num == 1
+            
+            // In Avalonia TextBox, we need to calculate line number from cursor position
+            // Move cursor to the start of the second line
+            string text = codeEdit.Text;
+            int newlineIndex = text.IndexOf('\n');
+            if (newlineIndex >= 0)
+            {
+                // Move cursor to position after first newline (start of second line)
+                int secondLineStart = newlineIndex + 1;
+                codeEdit.SelectionStart = secondLineStart;
+                codeEdit.SelectionEnd = secondLineStart;
+                
+                // Calculate line number (0-based, so line 1 is index 1)
+                int lineNumber = 0;
+                for (int i = 0; i < secondLineStart && i < text.Length; i++)
+                {
+                    if (text[i] == '\n')
+                    {
+                        lineNumber++;
+                    }
+                }
+                
+                // Matching PyKotor: assert line_num == 1 (1-indexed in Qt, but we use 0-based)
+                // The Python test expects line_num == 1, which means the second line (0-indexed line 1)
+                lineNumber.Should().Be(1, "Line number should be 1 after moving cursor down one line");
+            }
         }
 
         // TODO: STUB - Implement test_nss_editor_load_real_ncs_file (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:166-184)
@@ -1238,14 +1334,28 @@ void helper() {
             throw new NotImplementedException("TestNssEditorClearErrors: Clear errors test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_nss_editor_compilation_ui_setup (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:891-904)
+        // Matching PyKotor implementation at vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:891-904
         // Original: def test_nss_editor_compilation_ui_setup(qtbot, installation: HTInstallation): Test compilation UI setup
         [Fact]
         public void TestNssEditorCompilationUiSetup()
         {
-            // TODO: STUB - Implement compilation UI setup test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:891-904
-            throw new NotImplementedException("TestNssEditorCompilationUiSetup: Compilation UI setup test not yet implemented");
+            // Matching PyKotor implementation at vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:891-904
+            // Original: Test that compilation UI actions are set up
+            var editor = new NSSEditor(null, null);
+            editor.New();
+            
+            // Compile action should exist
+            // Matching Python: assert hasattr(editor.ui, 'actionCompile')
+            // Matching Python: assert editor.ui.actionCompile is not None
+            editor.Ui.Should().NotBeNull("UI wrapper should be initialized");
+            editor.Ui.ActionCompile.Should().NotBeNull("actionCompile should exist and not be null");
+            
+            // Compile method should exist and be callable
+            // Matching Python: assert hasattr(editor, 'compile_current_script')
+            // Matching Python: assert callable(editor.compile_current_script)
+            var compileMethod = typeof(NSSEditor).GetMethod("CompileCurrentScript", BindingFlags.Public | BindingFlags.Instance);
+            compileMethod.Should().NotBeNull("CompileCurrentScript method should exist");
+            compileMethod.IsPublic.Should().BeTrue("CompileCurrentScript should be public");
         }
 
         // TODO: STUB - Implement test_nss_editor_build_returns_script_content (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:906-926)

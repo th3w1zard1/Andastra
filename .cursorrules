@@ -195,86 +195,49 @@ When working on Andastra Engine code (anything in `src/Andastra/`), AI agents MU
 
 1. **Use Ghidra MCP** for understanding original engine behavior:
    - Verify implementation faithfulness against original engine behavior
-   - **ARCHITECTURAL POLICY: Conditional Logic vs Inheritance**:
-     
-     **⚠️ CRITICAL: NEW CODE ONLY - NO REFACTORING EXISTING CODE ⚠️**
-     
-     **PREFERRED APPROACH: CONDITIONAL HANDLING (PRAGMATIC)**
-     - For ALL **new** features, classes, and systems, prefer conditional logic (`if/else` or `switch` statements) within the same class/file rather than creating new inheritance hierarchies.
-     - Use `GameType` (e.g., `K1`, `K2`, `NWN`) or `EngineType` identifiers to branch logic where behavior differs between games/engines.
-     - This approach is more pragmatic for reverse engineering, as it keeps related logic for different games in one place and avoids "class explosion".
-     - **Example pattern for new code**:
-       ```csharp
-       public void ProcessEvent(Event e)
-       {
-           // Common logic that works for all games...
-           
-           if (GameType == GameType.K2)
-           {
-               // KOTOR 2 specific behavior (swkotor2.exe: 0x004eb750)
-           }
-           else if (GameType == GameType.K1)
-           {
-               // KOTOR 1 specific behavior (swkotor.exe: 0x004af630)
-           }
-           // Common logic continues...
-       }
-       ```
+    - **ARCHITECTURAL POLICY: Conditional Handling over Inheritance**:
 
-     **🚫 ABSOLUTELY FORBIDDEN: REFACTORING EXISTING INHERITANCE STRUCTURES 🚫**
-     - **DO NOT** perform large, heavy refactors of existing three-tier inheritance structures.
-     - **DO NOT** convert existing inheritance hierarchies to conditional logic.
-     - **DO NOT** break existing class hierarchies, even if they use inheritance.
-     - **DO NOT** rename or restructure existing base classes, engine classes, or game-specific classes.
-     - **DO NOT** modify existing inheritance chains unless explicitly fixing a bug in that specific class.
-     - **WHY**: Existing inheritance structures have many references throughout the codebase. Refactoring them would break hundreds of files and references.
+      **⚠️ CRITICAL: NEW CODE ONLY - NO REFACTORING EXISTING CODE ⚠️**
 
-     **EXISTING CODE POLICY: MAINTAIN AS-IS**
-     - You will encounter a "Three-Tier Inheritance Structure" in many parts of the codebase:
-       - **Tier 1: Base Classes (`Runtime.Games.Common`)**: Functionality identical across ALL engines.
-       - **Tier 2: Engine Subclasses (`Runtime.Games.{Engine}`)**: Functionality shared within an engine family (e.g., Odyssey).
-       - **Tier 3: Game Subclasses (`Runtime.Games.{Engine}.{Game}`)**: Game-specific overrides (e.g., K1 vs K2).
-     - **For existing inheritance structures**:
-       1. **Maintain them as-is** - do not refactor or convert to conditionals.
-       2. **Work within the existing structure** - if you need to add game-specific behavior, add it to the appropriate tier level.
-       3. **If adding a small fix** to an existing class that's part of an inheritance chain, you can use conditional logic WITHIN that class method if it avoids creating a new subclass, but do NOT change the class hierarchy itself.
-       4. **NEVER** perform "mass refactors" to convert inheritance to conditionals.
-       5. **NEVER** break existing references or rename existing classes in inheritance chains.
+      **PREFERRED APPROACH: CONDITIONAL LOGIC (PRAGMATIC)**
+      - For ALL **new** features, classes, and systems, **STRONGLY PREFER** conditional logic (`if/else` or `switch` statements) within the same class/file to handle engine or game-specific behavior.
+      - **Inheritance was probably the worst idea for most of this codebase** - conditional handling is much more practical and pragmatic.
+      - **Goal**: Keep related logic for different games in one place to avoid "class explosion" and facilitate reverse engineering.
+      - Use `GameType` (e.g., `K1`, `K2`, `NWN`) or `EngineType` identifiers to branch logic where behavior differs between games/engines.
+      - **Example pattern for new code**:
+        ```csharp
+        public void ProcessEvent(Event e)
+        {
+            // Common logic...
+            if (GameType == GameType.K2) { /* KOTOR 2 behavior (swkotor2.exe: 0x004eb750) */ }
+            else if (GameType == GameType.K1) { /* KOTOR 1 behavior (swkotor.exe: 0x004af630) */ }
+        }
+        ```
 
-     **WHEN TO USE CONDITIONAL LOGIC:**
-     - ✅ Creating a **new** class or system from scratch
-     - ✅ Adding a **new** method to an existing class (use conditionals within the method)
-     - ✅ Implementing a **new** feature that doesn't exist yet
-     - ✅ Writing **new** code that needs to handle multiple games/engines
+      **🚫 ABSOLUTELY FORBIDDEN: REFACTORING EXISTING INHERITANCE 🚫**
+      - **DO NOT** perform large, heavy refactors of existing inheritance structures (like the Three-Tier Structure).
+      - **DO NOT** convert existing inheritance hierarchies to conditional logic.
+      - **DO NOT** break existing class references or rename existing base/engine/game classes.
+      - **DO NOT** attempt to "improve" or "modernize" existing inheritance-based code by converting it to conditionals.
+      - **DO NOT** suggest or attempt to refactor existing inheritance-based code "for consistency" or "to match new code style".
+      - **WHY**: Inheritance was used extensively in the past; refactoring it would break hundreds of references. **The risk of breaking things far outweighs any theoretical benefit.** Maintain existing structures as-is.
 
-     **WHEN TO MAINTAIN INHERITANCE:**
-     - ✅ Working with existing classes that already use inheritance
-     - ✅ Fixing bugs in existing inheritance-based classes
-     - ✅ Adding features to existing inheritance-based systems
-     - ✅ Any code that already exists in the codebase
+      **WHEN TO USE CONDITIONAL LOGIC:**
+      - ✅ Creating a **new** class, method, or system from scratch.
+      - ✅ Adding a **new** feature that doesn't exist yet.
+      - ✅ Implementing behavior that differs slightly between games/engines in a common class.
+      - ✅ **ALWAYS prefer conditionals for new code** - inheritance should only be used if there's a compelling reason.
 
-     **MANDATORY WORKFLOW FOR REVERSE ENGINEERING**:
-     - Regardless of whether using conditionals or inheritance, the following reverse engineering steps are MANDATORY:
-       1. Identify behavior by comparing across engines and games in Ghidra.
-       2. Document findings in Ghidra for ALL relevant executables before implementing.
-       3. In C# code, document the source of truth (e.g., `swkotor.exe: 0x...` or `swkotor2.exe: 0x...`) in comments near the conditional branch or method.
-     
-     **Example Conditional Logic (Preferred for New Code)**:
-     ```csharp
-     public void ProcessEvent(Event e)
-     {
-         // Common logic...
-         
-         if (GameType == GameType.K2)
-         {
-             // KOTOR 2 specific behavior (swkotor2.exe: 0x004eb750)
-         }
-         else if (GameType == GameType.K1)
-         {
-             // KOTOR 1 specific behavior (swkotor.exe: 0x004af630)
-         }
-     }
-     ```
+      **WHEN TO MAINTAIN INHERITANCE:**
+      - ✅ Working with existing classes that already use inheritance.
+      - ✅ Fixing bugs or adding features to existing inheritance-based systems.
+      - ✅ **If it already uses inheritance, leave it alone** - don't try to "fix" it.
+      - ✅ Any code that already exists in the codebase - maintain the existing pattern.
+
+      **MANDATORY WORKFLOW FOR REVERSE ENGINEERING**:
+      1. Identify behavior by comparing across engines/games in Ghidra.
+      2. Document findings in Ghidra for ALL relevant executables before implementing.
+      3. In C# code, document the source of truth (e.g., `swkotor.exe: 0x...`) in comments near the conditional branch.
 
      **MANDATORY: In-Ghidra Documentation**: AI agents MUST document findings directly within Ghidra
      - Every analyzed function should have:
