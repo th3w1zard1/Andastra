@@ -4160,6 +4160,44 @@ namespace HolocronToolset.Editors
                 _refreshFileExplorerButton.Content = "Refresh";
             }
 
+            // Create file explorer dock panel container
+            // Matching PyKotor implementation: self.ui.fileExplorerDock
+            if (_fileExplorerDock == null)
+            {
+                // Create a vertical stack panel to hold all file explorer components
+                var explorerPanel = new StackPanel
+                {
+                    Orientation = Orientation.Vertical,
+                    Name = "fileExplorerDock"
+                };
+
+                // Add address bar
+                explorerPanel.Children.Add(_fileExplorerAddressBar);
+
+                // Add search and refresh controls in a horizontal panel
+                var searchPanel = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal
+                };
+                searchPanel.Children.Add(_fileSearchEdit);
+                searchPanel.Children.Add(_refreshFileExplorerButton);
+                explorerPanel.Children.Add(searchPanel);
+
+                // Add file explorer TreeView (with scroll viewer for large directories)
+                var scrollViewer = new ScrollViewer
+                {
+                    Content = _fileExplorerView,
+                    VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
+                    HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto
+                };
+                explorerPanel.Children.Add(scrollViewer);
+
+                // Set minimum width for the panel
+                explorerPanel.MinWidth = 200;
+
+                _fileExplorerDock = explorerPanel;
+            }
+
             // Determine root path - start with current file's directory or home directory
             string rootPath;
             if (!string.IsNullOrEmpty(_filepath) && File.Exists(_filepath))
