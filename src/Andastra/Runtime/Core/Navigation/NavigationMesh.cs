@@ -10,23 +10,186 @@ namespace Andastra.Runtime.Core.Navigation
     /// Wraps BWM data from Andastra.Parsing with A* pathfinding on walkmesh adjacency.
     /// </summary>
     /// <remarks>
-    /// Navigation/Walkmesh System:
-    /// - Based on swkotor2.exe pathfinding/walkmesh system
-    /// - WriteBWMFile @ 0x0055aef0 - Writes BWM file with "BWM V1.0" signature (located via "BWM V1.0" @ 0x007c061c)
-    /// - ValidateBWMHeader @ 0x006160c0 - Validates BWM file header signature (located via "BWM V1.0" @ 0x007c061c)
-    /// - Located via string references: "walkmesh" (pathfinding functions), "nwsareapathfind.cpp" @ 0x007be3ff
-    /// - BWM file format: "BWM V1.0" @ 0x007c061c (BWM file signature)
-    /// - Error messages:
-    ///   - "failed to grid based pathfind from the creatures position to the starting path point." @ 0x007be510
-    ///   - "failed to grid based pathfind from the ending path point ot the destiantion." @ 0x007be4b8
-    ///   - "ERROR: opening a Binary walkmesh file for writeing that already exists (File: %s)" @ 0x007c0630
-    /// - Original implementation: BWM (BioWare Walkmesh) files contain triangle mesh with adjacency data
-    /// - Based on BWM file format documentation in vendor/PyKotor/wiki/BWM-File-Format.md
-    /// - BWM file structure: Header (136 bytes) with "BWM V1.0" signature (8 bytes), vertex data (12 bytes per vertex), face data (12 bytes per face), edge data (4 bytes * 3 per face), adjacency data (4 bytes per face), AABB tree
-    /// - Adjacency encoding: adjacency_index = face_index * 3 + edge_index, -1 = no neighbor
-    /// - Surface materials determine walkability (0-30 range, lookup via surfacemat.2da)
-    /// - Pathfinding uses A* algorithm on walkmesh adjacency graph
-    /// - Grid-based pathfinding used for initial/terminal path segments when direct walkmesh path fails
+    /// <para>
+    /// WHAT IS A WALKMESH?
+    /// 
+    /// A walkmesh is a special kind of 3D model that tells the game where characters can walk.
+    /// Think of it like an invisible floor map. The game world has beautiful 3D graphics that you see,
+    /// but the walkmesh is a simpler version made of triangles that the game uses to figure out where
+    /// things can move.
+    /// 
+    /// The walkmesh is made of triangles (three-sided shapes) that cover the ground. Each triangle
+    /// has three points (called vertices) that define its corners. The game uses these triangles
+    /// to answer questions like: "Can a character walk here?" and "What is the height of the ground
+    /// at this point?"
+    /// </para>
+    /// 
+    /// <para>
+    /// WHAT IS A BWM FILE?
+    /// 
+    /// BWM stands for "BioWare Walkmesh". It is a file format that stores all the walkmesh data.
+    /// The file contains:
+    /// 
+    /// 1. A header that says "BWM V1.0" (this identifies it as a walkmesh file)
+    /// 2. A list of all the points (vertices) that make up the triangles
+    /// 3. A list of all the triangles (faces), where each triangle is defined by three numbers
+    ///    that point to which vertices make up that triangle
+    /// 4. Adjacency information that tells which triangles are next to each other
+    /// 5. Surface materials that tell what kind of surface each triangle is (dirt, stone, water, etc.)
+    /// 6. An AABB tree (a special data structure that makes searching faster)
+    /// 
+    /// Based on swkotor2.exe: WriteBWMFile @ 0x0055aef0 writes BWM files with "BWM V1.0" signature
+    /// (located via "BWM V1.0" @ 0x007c061c). The file format is documented in vendor/PyKotor/wiki/BWM-File-Format.md
+    /// </para>
+    /// 
+    /// <para>
+    /// HOW DOES THE DATA WORK?
+    /// 
+    /// Vertices: These are 3D points (x, y, z coordinates) that define where corners of triangles are.
+    /// For example, a vertex might be at position (10.5, 20.3, 5.0) in the game world.
+    /// 
+    /// Face Indices: Each triangle (face) is defined by three numbers that point to vertices.
+    /// For example, if face 0 has indices [5, 12, 8], it means the triangle uses vertices 5, 12, and 8.
+    /// 
+    /// Adjacency: This tells which triangles share edges. If triangle 0 shares an edge with triangle 5,
+    /// the adjacency data stores that information. This is used for pathfinding - the game can move
+    /// from one triangle to its neighbors. Adjacency is stored as: adjacency_index = face_index * 3 + edge_index,
+    /// where -1 means no neighbor on that edge.
+    /// 
+    /// Surface Materials: Each triangle has a material number (0-30) that tells what kind of surface it is.
+    /// Material 4 is stone (walkable), material 7 is non-walkable, material 6 is shallow water (walkable),
+    /// material 17 is deep water (not walkable), etc. The game looks up these materials in a file called
+    /// surfacemat.2da to determine if characters can walk on them.
+    /// </para>
+    /// 
+    /// <para>
+    /// HOW DOES FACEFINDING WORK?
+    /// 
+    /// When the game needs to find which triangle contains a specific point (like where a character is standing),
+    /// it uses the FindFaceAt function. This is based on swkotor2.exe: FUN_004f4260 @ 0x004f4260.
+    /// 
+    /// The algorithm works like this:
+    /// 1. It takes a point (x, y, z) and tries to find which triangle contains it
+    /// 2. It creates a vertical range around the point (z + tolerance to z - tolerance) because the point
+    ///    might not be exactly on the triangle surface
+    /// 3. If a hint face index is provided (a guess about which triangle might contain the point), it tests
+    ///    that triangle first - this is an optimization because characters usually stay on the same triangle
+    ///    for multiple frames
+    /// 4. It tests each triangle to see if the point is inside it by:
+    ///    a. Testing if a vertical line through the point intersects the triangle (using AABB tree if available)
+    ///    b. If it finds a match, it returns that triangle's index
+    /// 5. If no triangle is found, it returns -1
+    /// 
+    /// The original implementation uses FUN_0055b300 @ 0x0055b300 to test if a point is inside a triangle's
+    /// AABB (Axis-Aligned Bounding Box - a box that contains the triangle), and then FUN_00575f60 @ 0x00575f60
+    /// to test the actual triangle intersection using the AABB tree.
+    /// </para>
+    /// 
+    /// <para>
+    /// HOW DOES HEIGHT CALCULATION WORK?
+    /// 
+    /// When the game needs to know the height of the ground at a specific (x, y) position, it uses height
+    /// calculation functions. This is based on swkotor2.exe: FUN_0055b1d0 @ 0x0055b1d0 and FUN_0055b210 @ 0x0055b210.
+    /// 
+    /// The algorithm works like this:
+    /// 1. First, it finds which triangle contains the (x, y) point using FindFaceAt
+    /// 2. Once it knows which triangle, it uses the triangle's three vertices to calculate the height
+    /// 3. It uses a mathematical formula called "plane equation" to figure out the z (height) value
+    /// 
+    /// The plane equation works like this:
+    /// - A triangle defines a flat plane in 3D space
+    /// - The equation for a plane is: ax + by + cz + d = 0
+    /// - The normal vector (a, b, c) is calculated from the triangle's edges
+    /// - Once we know a, b, c, and d, we can solve for z: z = (-d - ax - by) / c
+    /// 
+    /// The original implementation uses FUN_004d6b10 @ 0x004d6b10 to calculate the height from a plane equation.
+    /// If the triangle is vertical (c is very close to 0), it returns the average height of the three vertices.
+    /// </para>
+    /// 
+    /// <para>
+    /// HOW DOES RAYCASTING WORK?
+    /// 
+    /// Raycasting is like shooting an invisible laser and seeing what it hits. The game uses this to check
+    /// if there's a clear line of sight between two points, or to find where a ray hits the walkmesh.
+    /// This is based on swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 performs walkmesh raycasts.
+    /// 
+    /// The raycast algorithm works in two stages:
+    /// 
+    /// Stage 1: AABB Tree Traversal (if available)
+    /// - The walkmesh has an AABB tree, which is like a tree structure that organizes triangles into boxes
+    /// - Starting from the root, it tests if the ray hits the box
+    /// - If it hits, it tests the two child boxes (left and right)
+    /// - It keeps going down the tree until it reaches a leaf node (a single triangle)
+    /// - This is much faster than testing every triangle
+    /// - Based on swkotor2.exe: FUN_00575350 @ 0x00575350 (AABB tree traversal)
+    /// 
+    /// Stage 2: Ray-Triangle Intersection
+    /// - For each triangle that might be hit (from the AABB tree, or all triangles if no tree),
+    ///   it tests if the ray actually hits the triangle
+    /// - The algorithm works like this:
+    ///   a. Calculate the triangle's normal vector (a vector pointing perpendicular to the triangle)
+    ///   b. Create a plane equation from the triangle
+    ///   c. Check if the ray crosses the plane (one endpoint on each side)
+    ///   d. Calculate where the ray hits the plane
+    ///   e. Test if that hit point is inside the triangle using edge tests
+    /// - Based on swkotor2.exe: FUN_004d9030 @ 0x004d9030 (ray-triangle intersection)
+    /// 
+    /// The AABB-ray intersection test (FUN_004d7400 @ 0x004d7400) uses the "slab method":
+    /// - It tests the ray against each axis (X, Y, Z) separately
+    /// - For each axis, it finds where the ray enters and exits the box
+    /// - If the ray enters all three axes before exiting any, it hits the box
+    /// </para>
+    /// 
+    /// <para>
+    /// HOW DOES PATHFINDING WORK?
+    /// 
+    /// Pathfinding uses the A* algorithm on the walkmesh adjacency graph. The algorithm works like this:
+    /// 
+    /// 1. Start at the triangle containing the starting point
+    /// 2. Use A* to find a path through adjacent triangles to the destination triangle
+    /// 3. A* keeps a list of triangles to explore, sorted by how promising they are
+    /// 4. For each triangle, it calculates a "score" = distance traveled + estimated distance to goal
+    /// 5. It explores the most promising triangles first
+    /// 6. When it reaches the destination, it traces back through the path
+    /// 
+    /// If direct walkmesh pathfinding fails, the game uses grid-based pathfinding for initial/terminal
+    /// path segments. Error messages from swkotor2.exe indicate this:
+    /// - "failed to grid based pathfind from the creatures position to the starting path point." @ 0x007be510
+    /// - "failed to grid based pathfind from the ending path point ot the destiantion." @ 0x007be4b8
+    /// </para>
+    /// 
+    /// <para>
+    /// OPTIMIZATIONS:
+    /// 
+    /// 1. AABB Tree: Instead of testing every triangle, the tree organizes them into boxes, making
+    ///    searches much faster (from O(n) to O(log n) where n is the number of triangles)
+    /// 
+    /// 2. Hint Face Index: When finding a face, if you provide a guess (hint), it tests that triangle
+    ///    first. This is fast because characters usually stay on the same triangle for multiple frames.
+    /// 
+    /// 3. Normalized Direction Caching: When raycasting, the direction vector is normalized once
+    ///    and reused for all intersection tests, avoiding repeated calculations.
+    /// 
+    /// 4. Early Termination: If a raycast finds an exact hit (distance = 0), it stops immediately
+    ///    instead of checking more triangles.
+    /// 
+    /// 5. Distance-Based AABB Traversal: When traversing the AABB tree, it tests the closer child
+    ///    first. This is an optimization over the original flag-based ordering (FUN_00575350 uses
+    ///    param_4[1] flag to determine order), but maintains correctness while improving performance.
+    /// </para>
+    /// 
+    /// <para>
+    /// EDGE CASES HANDLED:
+    /// 
+    /// - Empty mesh: Returns false immediately for all queries
+    /// - Zero or invalid direction vectors: Rejected before processing
+    /// - Degenerate triangles (zero area): Skipped during intersection tests
+    /// - Ray starting inside triangle: Handled with tolerance checks
+    /// - Ray on triangle surface: Returns as hit with distance 0
+    /// - Invalid face/vertex indices: Validated before use
+    /// - Vertical triangles (normal.Z ≈ 0): Uses average height of vertices
+    /// - Ray parallel to triangle plane: Rejected (no intersection possible)
+    /// </para>
     /// </remarks>
     public class NavigationMesh : INavigationMesh
     {
@@ -1004,15 +1167,35 @@ namespace Andastra.Runtime.Core.Navigation
         /// <summary>
         /// Finds the face index at a given position using 2D projection.
         /// </summary>
+        /// <summary>
+        /// Finds the triangle (face) that contains the given 2D position (x, y).
+        /// Based on swkotor2.exe: FUN_004f4260 @ 0x004f4260.
+        /// </summary>
+        /// <remarks>
+        /// This function finds which triangle contains a point by:
+        /// 1. If an AABB tree exists, it uses that for fast spatial search (O(log n) instead of O(n))
+        /// 2. Otherwise, it tests every triangle until it finds one that contains the point
+        /// 3. The test is done in 2D (only x and y coordinates) because we're finding which triangle
+        ///    is directly below or above the point
+        /// 
+        /// The original implementation (FUN_004f4260) works like this:
+        /// - Takes a position (x, y, z) and creates a vertical range: z + tolerance to z - tolerance
+        /// - If a hint face index is provided, tests that triangle first (optimization)
+        /// - Tests each triangle using FUN_0055b300 which checks AABB intersection, then triangle intersection
+        /// - Returns the first triangle that contains the point, or -1 if none found
+        /// </remarks>
         public int FindFaceAt(Vector3 position)
         {
-            // Use AABB tree if available
+            // Use AABB tree if available for faster search
+            // The AABB tree organizes triangles into a tree structure, making searches much faster
+            // Instead of testing all triangles (O(n)), we test only a few (O(log n))
             if (_aabbRoot != null)
             {
                 return FindFaceAabb(_aabbRoot, position);
             }
 
-            // Brute force fallback
+            // Brute force fallback: test every triangle until we find one that contains the point
+            // This is slower (O(n)) but works when no AABB tree is available
             for (int i = 0; i < _faceCount; i++)
             {
                 if (PointInFace2d(position, i))
@@ -1021,7 +1204,7 @@ namespace Andastra.Runtime.Core.Navigation
                 }
             }
 
-            return -1;
+            return -1; // No triangle found
         }
 
         private int FindFaceAabb(AabbNode node, Vector3 point)
@@ -1167,20 +1350,59 @@ namespace Andastra.Runtime.Core.Navigation
         }
 
         /// <summary>
-        /// Performs a raycast against the mesh.
+        /// Performs a raycast against the mesh. Shoots an invisible ray and finds the first triangle it hits.
+        /// Based on swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 performs walkmesh raycasts.
         /// </summary>
         /// <remarks>
-        /// Raycast Implementation:
-        /// - Based on swkotor2.exe walkmesh raycast system
-        /// - Original implementation: UpdateCreatureMovement @ 0x0054be70 performs walkmesh raycasts for visibility checks
-        /// - Core walkmesh query: FUN_004f4260 @ 0x004f4260 (FindFaceAt equivalent)
-        /// - AABB tree traversal: FUN_00575350 @ 0x00575350 (recursive AABB traversal with flag-based ordering)
-        /// - AABB-ray intersection: FUN_004d7400 @ 0x004d7400 (slab method with edge case handling)
-        /// - Ray-triangle intersection: FUN_004d9030 @ 0x004d9030 (plane-based with edge containment tests)
-        /// - Comprehensive edge case handling: empty mesh, zero direction, degenerate triangles, ray on surface
-        /// - Optimizations: normalized direction caching, early termination, distance-based AABB traversal (optimized from original flag-based)
-        /// - Handles all edge cases: degenerate triangles, ray starting inside triangle, precision issues
+        /// HOW RAYCASTING WORKS:
+        /// 
+        /// A raycast is like shooting an invisible laser and seeing what it hits. The ray starts at
+        /// the origin point and travels in the direction specified, up to maxDistance units away.
+        /// 
+        /// The algorithm has two main stages:
+        /// 
+        /// STAGE 1: AABB Tree Traversal (if available)
+        /// - The AABB tree organizes triangles into boxes (AABBs = Axis-Aligned Bounding Boxes)
+        /// - Starting from the root box, we test if the ray hits it
+        /// - If it hits, we test the two child boxes (left and right)
+        /// - We keep going down the tree until we reach a leaf node (a single triangle)
+        /// - This is much faster than testing every triangle
+        /// - Based on swkotor2.exe: FUN_00575350 @ 0x00575350 (AABB tree traversal)
+        /// 
+        /// STAGE 2: Ray-Triangle Intersection
+        /// - For each triangle that might be hit, we test if the ray actually hits it
+        /// - The test uses a plane-based algorithm:
+        ///   a. Calculate the triangle's normal vector (perpendicular to the triangle)
+        ///   b. Create a plane equation from the triangle
+        ///   c. Check if the ray crosses the plane (one endpoint on each side)
+        ///   d. Calculate where the ray hits the plane
+        ///   e. Test if that hit point is inside the triangle using edge tests
+        /// - Based on swkotor2.exe: FUN_004d9030 @ 0x004d9030 (ray-triangle intersection)
+        /// 
+        /// The AABB-ray intersection test uses the "slab method":
+        /// - We test the ray against each axis (X, Y, Z) separately
+        /// - For each axis, we find where the ray enters and exits the box
+        /// - If the ray enters all three axes before exiting any, it hits the box
+        /// - Based on swkotor2.exe: FUN_004d7400 @ 0x004d7400 (AABB-ray intersection)
+        /// 
+        /// OPTIMIZATIONS:
+        /// - Normalized direction caching: We normalize the direction once and reuse it
+        /// - Early termination: If we find an exact hit (distance = 0), we stop immediately
+        /// - Distance-based AABB traversal: We test closer children first (optimized from original flag-based)
+        /// 
+        /// EDGE CASES HANDLED:
+        /// - Empty mesh: Returns false immediately
+        /// - Zero or invalid direction: Rejected before processing
+        /// - Degenerate triangles: Skipped during intersection tests
+        /// - Ray starting inside triangle: Handled with tolerance checks
+        /// - Ray on triangle surface: Returns as hit with distance 0
         /// </remarks>
+        /// <param name="origin">Starting point of the ray</param>
+        /// <param name="direction">Direction the ray travels (will be normalized)</param>
+        /// <param name="maxDistance">Maximum distance the ray can travel</param>
+        /// <param name="hitPoint">Where the ray hit (if it hit something)</param>
+        /// <param name="hitFace">Which triangle was hit (if any)</param>
+        /// <returns>True if the ray hit a triangle, false otherwise</returns>
         public bool Raycast(Vector3 origin, Vector3 direction, float maxDistance, out Vector3 hitPoint, out int hitFace)
         {
             hitPoint = Vector3.Zero;
@@ -1514,21 +1736,24 @@ namespace Andastra.Runtime.Core.Navigation
             Vector3 v2 = _vertices[idx2];
 
             // Based on swkotor2.exe: FUN_004d9030 @ 0x004d9030 (ray-triangle intersection)
-            // Original algorithm: Computes normal from triangle vertices, then plane intersection test
-            // Located via cross-reference from FUN_00575350 (AABB tree traversal)
-            // Original implementation uses polygon normal computation and edge containment tests
+            // This algorithm uses a plane-based approach with edge containment tests.
+            // 
+            // STEP 1: Calculate the triangle's normal vector
+            // The normal is a vector that points perpendicular to the triangle's surface.
+            // We calculate it by taking the cross product of two edges of the triangle.
+            // The cross product of two vectors gives us a vector perpendicular to both.
+            Vector3 edge01 = v1 - v0;  // Edge from vertex 0 to vertex 1
+            Vector3 edge12 = v2 - v1;  // Edge from vertex 1 to vertex 2
+            Vector3 edge20 = v0 - v2;  // Edge from vertex 2 to vertex 0 (not used in normal calc, but kept for reference)
 
-            // Compute triangle normal using cross products of edges (matches original algorithm)
-            // Original: Lines 32-55 compute normal from polygon vertices
-            Vector3 edge01 = v1 - v0;
-            Vector3 edge12 = v2 - v1;
-            Vector3 edge20 = v0 - v2;
-
-            // Compute normal as sum of cross products (original algorithm approach)
+            // Compute normal as cross product of two edges
+            // This gives us a vector pointing perpendicular to the triangle
             Vector3 normal = Vector3.Cross(edge01, edge12);
             float normalLength = normal.Length();
 
-            // Edge case: Degenerate triangle (zero area) - skip
+            // Edge case: Degenerate triangle (zero area)
+            // If the triangle has zero area (all three points are in a line), the normal length is 0.
+            // We can't do intersection tests on such triangles, so we skip them.
             // Original: Line 57-58 checks if normal length >= _DAT_007bc338 (epsilon)
             const float degenerateEpsilon = 1e-6f;
             if (normalLength < degenerateEpsilon)
@@ -1536,48 +1761,70 @@ namespace Andastra.Runtime.Core.Navigation
                 return false;
             }
 
-            // Normalize normal (original: Lines 59-62)
+            // Normalize the normal vector (make it length 1)
+            // This makes calculations easier and more accurate.
+            // Original: Lines 59-62 normalize the normal
             normal = normal / normalLength;
 
-            // Compute plane equation: ax + by + cz + d = 0
+            // STEP 2: Create a plane equation from the triangle
+            // A plane in 3D space can be described by the equation: ax + by + cz + d = 0
+            // Where (a, b, c) is the normal vector, and d is calculated from a point on the plane.
+            // We use vertex v0 as the point on the plane.
             // Original: Line 63 computes d = -(normal.x * v0.x + normal.y * v0.y + normal.z * v0.z)
             float d = -(normal.X * v0.X + normal.Y * v0.Y + normal.Z * v0.Z);
 
-            // Compute ray endpoints (original uses param_3 and param_4 as ray start/end)
+            // STEP 3: Check if the ray crosses the plane
+            // We calculate the ray's endpoint (where it would be after traveling maxDist units)
             Vector3 rayEnd = origin + direction * maxDist;
 
-            // Check if ray crosses plane (both endpoints on opposite sides)
-            // Original: Lines 65-67 check if ray crosses plane
+            // We plug both the ray's start and end points into the plane equation.
+            // If one point gives a positive result and the other gives negative, the ray crosses the plane.
+            // If both give the same sign, the ray doesn't cross the plane.
             float dist0 = normal.X * origin.X + normal.Y * origin.Y + normal.Z * origin.Z + d;
             float dist1 = normal.X * rayEnd.X + normal.Y * rayEnd.Y + normal.Z * rayEnd.Z + d;
 
             // Ray must cross plane (one side positive, one negative, or both zero)
+            // We use a small epsilon value to handle floating-point precision issues.
             // Original: Checks _DAT_007b56fc <= dist0 && dist1 <= _DAT_007b56fc && dist0 != dist1
             const float planeEpsilon = 1e-6f;
             if (!((dist0 <= planeEpsilon && dist1 >= -planeEpsilon) || (dist0 >= -planeEpsilon && dist1 <= planeEpsilon)) || Math.Abs(dist0 - dist1) < planeEpsilon)
             {
-                return false;
+                return false; // Ray doesn't cross the plane
             }
 
-            // Compute intersection point on plane
+            // STEP 4: Calculate where the ray hits the plane
+            // We use interpolation to find the exact point where the ray crosses the plane.
+            // The formula is: t = dist0 / (dist0 - dist1)
+            // This gives us a value between 0 and 1 that tells us how far along the ray the intersection is.
             // Original: Lines 71-76 compute intersection using interpolation
             float t = dist0 / (dist0 - dist1);
             Vector3 intersection = origin + direction * (t * maxDist);
 
-            // Test if intersection point is inside triangle using edge tests
+            // STEP 5: Test if the intersection point is inside the triangle
+            // Just because the ray hits the plane doesn't mean it hits the triangle.
+            // The triangle only covers a small part of the plane. We need to check if the
+            // intersection point is actually inside the triangle's boundaries.
+            // 
+            // We do this by testing each edge of the triangle. For each edge, we check if
+            // the intersection point is on the "correct side" of the edge (the side that's
+            // inside the triangle). We use cross products to determine which side a point is on.
+            // 
+            // If the point is on the correct side of all three edges, it's inside the triangle.
             // Original: Lines 79-95 test point containment using edge cross products
-            // For each edge, check if point is on the correct side
             bool inside = true;
             const float edgeEpsilon = 1e-6f;
 
             // Edge 0->1: Check if intersection is on correct side
+            // We create a vector from vertex 0 to the intersection point, and a vector along the edge.
+            // The cross product tells us which side of the edge the point is on.
+            // The dot product with the normal tells us if it's the correct side (positive = correct side).
             Vector3 edge0 = v1 - v0;
             Vector3 toPoint0 = intersection - v0;
             Vector3 cross0 = Vector3.Cross(edge0, toPoint0);
             float dot0 = Vector3.Dot(cross0, normal);
             if (dot0 < -edgeEpsilon)
             {
-                inside = false;
+                inside = false; // Point is on wrong side of this edge
             }
 
             // Edge 1->2: Check if intersection is on correct side
@@ -1589,7 +1836,7 @@ namespace Andastra.Runtime.Core.Navigation
                 float dot1 = Vector3.Dot(cross1, normal);
                 if (dot1 < -edgeEpsilon)
                 {
-                    inside = false;
+                    inside = false; // Point is on wrong side of this edge
                 }
             }
 
@@ -1602,7 +1849,7 @@ namespace Andastra.Runtime.Core.Navigation
                 float dot2 = Vector3.Dot(cross2, normal);
                 if (dot2 < -edgeEpsilon)
                 {
-                    inside = false;
+                    inside = false; // Point is on wrong side of this edge
                 }
             }
 
@@ -1649,48 +1896,116 @@ namespace Andastra.Runtime.Core.Navigation
         }
 
         /// <summary>
-        /// Projects a point onto the walkmesh surface.
+        /// Projects a point onto the walkmesh surface. Finds the height of the ground at a given (x, y) position.
+        /// Based on swkotor2.exe: FUN_0055b1d0 @ 0x0055b1d0 and FUN_0055b210 @ 0x0055b210.
         /// </summary>
+        /// <remarks>
+        /// HOW HEIGHT CALCULATION WORKS:
+        /// 
+        /// When you have an (x, y) position and want to know the height (z coordinate) of the ground
+        /// at that point, you need to:
+        /// 1. Find which triangle contains that (x, y) point
+        /// 2. Use the triangle's three vertices to calculate the height using the plane equation
+        /// 
+        /// The plane equation works because a triangle defines a flat plane in 3D space.
+        /// The equation is: ax + by + cz + d = 0
+        /// Where (a, b, c) is the normal vector of the triangle, and d is calculated from a vertex.
+        /// 
+        /// Once we have the plane equation, we can solve for z:
+        /// z = (-d - ax - by) / c
+        /// 
+        /// This gives us the exact height of the plane at the given (x, y) position.
+        /// </remarks>
+        /// <param name="point">The point to project (x, y are used, z is ignored)</param>
+        /// <param name="result">The projected point with correct z height</param>
+        /// <param name="height">The calculated height (z coordinate)</param>
+        /// <returns>True if a triangle was found and height calculated, false otherwise</returns>
         public bool ProjectToSurface(Vector3 point, out Vector3 result, out float height)
         {
             result = point;
             height = 0f;
 
+            // Step 1: Find which triangle contains this (x, y) point
+            // We only care about x and y - the z coordinate of the input point is ignored
             int faceIndex = FindFaceAt(point);
             if (faceIndex < 0)
             {
-                return false;
+                return false; // No triangle found at this position
             }
 
-            // Get face vertices
+            // Step 2: Get the three vertices that make up this triangle
             int baseIdx = faceIndex * 3;
             Vector3 v1 = _vertices[_faceIndices[baseIdx]];
             Vector3 v2 = _vertices[_faceIndices[baseIdx + 1]];
             Vector3 v3 = _vertices[_faceIndices[baseIdx + 2]];
 
-            // Calculate height at point using barycentric interpolation
+            // Step 3: Calculate the height at this (x, y) point using the plane equation
+            // The DetermineZ function uses the triangle's plane equation to find the z coordinate
             float z = DetermineZ(v1, v2, v3, point.X, point.Y);
             height = z;
             result = new Vector3(point.X, point.Y, z);
             return true;
         }
 
+        /// <summary>
+        /// Determines the Z (height) coordinate for a given (x, y) point on a triangle's plane.
+        /// Based on swkotor2.exe: FUN_004d6b10 @ 0x004d6b10 (plane equation height calculation).
+        /// </summary>
+        /// <remarks>
+        /// HOW THE PLANE EQUATION WORKS:
+        /// 
+        /// A triangle defines a flat plane in 3D space. The plane can be described by the equation:
+        /// ax + by + cz + d = 0
+        /// 
+        /// Where:
+        /// - (a, b, c) is the normal vector of the triangle (perpendicular to its surface)
+        /// - d is calculated from a point on the plane (one of the triangle's vertices)
+        /// 
+        /// To calculate the normal vector:
+        /// 1. Take two edges of the triangle (edge1 = v2 - v1, edge2 = v3 - v1)
+        /// 2. Calculate the cross product of these edges
+        /// 3. This gives us a vector perpendicular to the triangle
+        /// 
+        /// To calculate d:
+        /// d = -(a * v1.x + b * v1.y + c * v1.z)
+        /// 
+        /// Once we have the plane equation, we can solve for z when we know x and y:
+        /// z = (-d - ax - by) / c
+        /// 
+        /// Special case: If the triangle is vertical (normal.Z is very close to 0), we can't
+        /// divide by c. In this case, we return the average height of the three vertices.
+        /// </remarks>
+        /// <param name="v1">First vertex of the triangle</param>
+        /// <param name="v2">Second vertex of the triangle</param>
+        /// <param name="v3">Third vertex of the triangle</param>
+        /// <param name="x">X coordinate of the point</param>
+        /// <param name="y">Y coordinate of the point</param>
+        /// <returns>The Z (height) coordinate at the given (x, y) point</returns>
         private float DetermineZ(Vector3 v1, Vector3 v2, Vector3 v3, float x, float y)
         {
-            // Calculate face normal
-            Vector3 edge1 = v2 - v1;
-            Vector3 edge2 = v3 - v1;
+            // Step 1: Calculate the triangle's normal vector
+            // The normal is perpendicular to the triangle's surface
+            // We get it by taking the cross product of two edges
+            Vector3 edge1 = v2 - v1;  // Edge from v1 to v2
+            Vector3 edge2 = v3 - v1;  // Edge from v1 to v3
             Vector3 normal = Vector3.Cross(edge1, edge2);
 
-            // Avoid division by zero for vertical faces
+            // Edge case: Vertical triangle (normal.Z is very close to 0)
+            // If the triangle is vertical (standing straight up), we can't use the plane equation
+            // because we'd be dividing by zero. Instead, we return the average height of the vertices.
             if (Math.Abs(normal.Z) < 1e-6f)
             {
                 return (v1.Z + v2.Z + v3.Z) / 3f;
             }
 
-            // Plane equation: ax + by + cz + d = 0
-            // Solve for z: z = (-d - ax - by) / c
+            // Step 2: Calculate d from the plane equation
+            // The plane equation is: ax + by + cz + d = 0
+            // We calculate d using one of the triangle's vertices (v1)
             float d = -Vector3.Dot(normal, v1);
+
+            // Step 3: Solve for z using the plane equation
+            // Rearranging the plane equation: z = (-d - ax - by) / c
+            // This gives us the exact height of the plane at the given (x, y) point
             float z = (-d - normal.X * x - normal.Y * y) / normal.Z;
             return z;
         }
