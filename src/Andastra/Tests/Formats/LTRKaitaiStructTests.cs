@@ -426,6 +426,8 @@ namespace Andastra.Parsing.Tests.Formats
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".kaitai", "kaitai-struct-compiler.jar"),
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "kaitai-struct-compiler.jar"),
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "kaitai-struct-compiler.jar"),
+                // Check extracted compiler location (for CI/CD or manual extraction)
+                Path.Combine(Path.GetTempPath(), "kaitai-extract", "kaitai-struct-compiler-0.10", "lib", "io.kaitai.kaitai-struct-compiler-0.10.jar"),
             };
 
             foreach (var path in searchPaths)
