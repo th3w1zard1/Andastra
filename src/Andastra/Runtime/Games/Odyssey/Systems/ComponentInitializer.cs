@@ -54,7 +54,7 @@ namespace Andastra.Runtime.Games.Odyssey.Systems
             {
                 if (!entity.HasComponent<IRenderableComponent>())
                 {
-                    var renderable = new RenderableComponent();
+                    var renderable = new OdysseyRenderableComponent();
                     entity.AddComponent(renderable);
                 }
             }
