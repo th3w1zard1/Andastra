@@ -1279,11 +1279,29 @@ namespace HolocronToolset.Windows
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1457-1472
         // Original: def open_settings_dialog(self):
-        private void OpenSettingsDialog()
+        private async void OpenSettingsDialog()
         {
             var dialog = new Dialogs.SettingsDialog(this);
-            dialog.ShowDialog(this);
-            // TODO: Reload installations if settings were edited
+            bool? result = await dialog.ShowDialog<bool?>(this);
+            
+            // Matching PyKotor implementation: check if dialog was accepted (result == true) and installations were edited
+            if (result == true && dialog.InstallationEdited)
+            {
+                // Matching PyKotor implementation: show confirmation dialog
+                var messageBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Reload the installations?",
+                    "You appear to have made changes to your installations, would you like to reload?",
+                    ButtonEnum.YesNo,
+                    Icon.Question);
+                
+                var messageResult = await messageBox.ShowAsync();
+                
+                // Matching PyKotor implementation: reload settings if user confirms
+                if (messageResult == ButtonResult.Yes)
+                {
+                    ReloadSettings();
+                }
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py

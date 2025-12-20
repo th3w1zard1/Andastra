@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using HolocronToolset.Data;
+using HolocronToolset.Widgets.Settings;
 
 namespace HolocronToolset.Dialogs
 {
@@ -13,6 +14,11 @@ namespace HolocronToolset.Dialogs
         private bool _isResetting;
         private bool _installationEdited;
         private GlobalSettings _settings;
+        private InstallationsWidget _installationsWidget;
+        private MiscSettingsWidget _miscWidget;
+        private GITSettingsWidget _gitEditorWidget;
+        private ModuleDesignerSettingsWidget _moduleDesignerWidget;
+        private ApplicationSettingsWidget _applicationSettingsWidget;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:42-43
         // Original: self.ui = settings.Ui_Dialog(); self.ui.setupUi(self)
@@ -21,6 +27,10 @@ namespace HolocronToolset.Dialogs
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:38
         // Original: self._is_resetting: bool = False
         public bool IsResetting => _isResetting;
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:38
+        // Original: self.installation_edited: bool = False
+        public bool InstallationEdited => _installationEdited;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:19-125
         // Original: def __init__(self, parent):
@@ -100,29 +110,33 @@ namespace HolocronToolset.Dialogs
             Grid.SetColumn(cancelButton, 1);
             buttonGrid.Children.Add(cancelButton);
 
-            // Create placeholder pages
-            var installationsPage = new Control();
-            var gitEditorPage = new Control();
-            var miscPage = new Control();
-            var moduleDesignerPage = new Control();
-            var applicationSettingsPage = new Control();
+            // Create actual settings widgets (matching PyKotor implementation)
+            _installationsWidget = new InstallationsWidget();
+            _miscWidget = new MiscSettingsWidget();
+            _gitEditorWidget = new GITSettingsWidget();
+            _moduleDesignerWidget = new ModuleDesignerSettingsWidget();
+            _applicationSettingsWidget = new ApplicationSettingsWidget();
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:61
+            // Original: self.ui.installationsWidget.sig_settings_edited.connect(self.on_installation_edited)
+            _installationsWidget.SettingsEdited += OnInstallationEdited;
 
             Ui = new SettingsDialogUi
             {
                 SettingsTree = settingsTree,
                 SettingsStack = settingsStack,
-                InstallationsPage = installationsPage,
-                GitEditorPage = gitEditorPage,
-                MiscPage = miscPage,
-                ModuleDesignerPage = moduleDesignerPage,
-                ApplicationSettingsPage = applicationSettingsPage,
+                InstallationsPage = _installationsWidget,
+                GitEditorPage = _gitEditorWidget,
+                MiscPage = _miscWidget,
+                ModuleDesignerPage = _moduleDesignerWidget,
+                ApplicationSettingsPage = _applicationSettingsWidget,
                 OkButton = okButton,
                 CancelButton = cancelButton
             };
 
             // Set up signals
             okButton.Click += (s, e) => Accept();
-            cancelButton.Click += (s, e) => Close();
+            cancelButton.Click += (s, e) => Close(false);
 
             var pageDict = new Dictionary<string, Control>
             {
@@ -136,7 +150,7 @@ namespace HolocronToolset.Dialogs
             settingsTree.SelectionChanged += (s, e) => OnSettingsTreeSelectionChanged(pageDict);
 
             // Set initial page
-            settingsStack.Content = installationsPage;
+            settingsStack.Content = _installationsWidget;
 
             Content = mainGrid;
         }
@@ -164,23 +178,36 @@ namespace HolocronToolset.Dialogs
                 SetupProgrammaticUI();
                 return;
             }
+            
+            // Set up close handler to set result to false if closed without Accept
+            this.Closing += (s, e) =>
+            {
+                if (this.Result == null)
+                {
+                    this.Result = false;
+                }
+            };
 
-            // Create placeholder pages for testing
-            var installationsPage = new Control();
-            var gitEditorPage = new Control();
-            var miscPage = new Control();
-            var moduleDesignerPage = new Control();
-            var applicationSettingsPage = new Control();
+            // Create actual settings widgets (matching PyKotor implementation)
+            _installationsWidget = new InstallationsWidget();
+            _miscWidget = new MiscSettingsWidget();
+            _gitEditorWidget = new GITSettingsWidget();
+            _moduleDesignerWidget = new ModuleDesignerSettingsWidget();
+            _applicationSettingsWidget = new ApplicationSettingsWidget();
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:61
+            // Original: self.ui.installationsWidget.sig_settings_edited.connect(self.on_installation_edited)
+            _installationsWidget.SettingsEdited += OnInstallationEdited;
 
             Ui = new SettingsDialogUi
             {
                 SettingsTree = settingsTree,
                 SettingsStack = settingsStack,
-                InstallationsPage = installationsPage,
-                GitEditorPage = gitEditorPage,
-                MiscPage = miscPage,
-                ModuleDesignerPage = moduleDesignerPage,
-                ApplicationSettingsPage = applicationSettingsPage,
+                InstallationsPage = _installationsWidget,
+                GitEditorPage = _gitEditorWidget,
+                MiscPage = _miscWidget,
+                ModuleDesignerPage = _moduleDesignerWidget,
+                ApplicationSettingsPage = _applicationSettingsWidget,
                 OkButton = okButton,
                 CancelButton = cancelButton
             };
@@ -202,7 +229,7 @@ namespace HolocronToolset.Dialogs
             }
             if (Ui.CancelButton != null)
             {
-                Ui.CancelButton.Click += (s, e) => Close();
+                Ui.CancelButton.Click += (s, e) => Close(false);
             }
             if (Ui.SettingsTree != null)
             {
@@ -230,6 +257,13 @@ namespace HolocronToolset.Dialogs
             }
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:113-114
+        // Original: def on_installation_edited(self): self.installation_edited = True
+        private void OnInstallationEdited(object sender, EventArgs e)
+        {
+            _installationEdited = true;
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:116-125
         // Original: def accept(self):
         public void Accept()
@@ -237,25 +271,47 @@ namespace HolocronToolset.Dialogs
             // Save settings
             if (!_isResetting)
             {
-                // Save all settings widgets
-                // This will be implemented when settings widgets are available
+                // Matching PyKotor implementation: save all settings widgets
+                _miscWidget?.Save();
+                _gitEditorWidget?.Save();
+                _moduleDesignerWidget?.Save();
+                _installationsWidget?.Save();
+                _applicationSettingsWidget?.Save();
             }
-            Close();
+            // Set result to true (accepted) to match PyKotor's dialog.exec() behavior
+            Close(true);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:94-111
         // Original: def on_reset_all_settings(self):
-        public void OnResetAllSettings()
+        public async void OnResetAllSettings()
         {
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:95-111
             // Original: QMessageBox.question and QMessageBox.information
-            // In C#, we'll use a simple approach - clear settings and close
-            // For full implementation, would use Avalonia MessageBox
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:104
-            // Original: GlobalSettings().settings.clear()
-            _settings.Clear();
-            _isResetting = true;
-            Close();
+            var confirmBox = MessageBoxManager.GetMessageBoxStandard(
+                "Reset All Settings",
+                "Are you sure you want to reset all settings to their default values? This action cannot be undone.",
+                ButtonEnum.YesNo,
+                Icon.Question);
+            
+            var confirmResult = await confirmBox.ShowAsync();
+            
+            if (confirmResult == ButtonResult.Yes)
+            {
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/settings.py:104
+                // Original: GlobalSettings().settings.clear()
+                _settings.Clear();
+                
+                var infoBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Settings Reset",
+                    "All settings have been cleared and reset to their default values.",
+                    ButtonEnum.Ok,
+                    Icon.Info);
+                await infoBox.ShowAsync();
+                
+                _isResetting = true;
+                Close(true);
+            }
         }
     }
 
