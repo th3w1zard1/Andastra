@@ -11,7 +11,7 @@ meta:
 doc: |
   UTM (User Template Merchant) files are GFF-based format files that define merchant/store blueprints.
   UTM files use the GFF (Generic File Format) binary structure with file type signature "UTM ".
-  
+
   UTM files contain:
   - Root struct with merchant metadata:
     - ResRef: Merchant template ResRef (unique identifier, max 16 characters, ResRef type)
@@ -34,13 +34,13 @@ doc: |
       Note: Field name is "Dropable" (not "Droppable") in the binary format
     - Repos_PosX: X position in merchant inventory grid (UInt16 type, grid coordinate)
     - Repos_PosY: Y position in merchant inventory grid (UInt16 type, grid coordinate)
-  
+
   The BuySellFlag field encodes two boolean flags in a single byte:
   - Value 0: Cannot buy, cannot sell
   - Value 1: Can buy, cannot sell (bit 0 set)
   - Value 2: Cannot buy, can sell (bit 1 set)
   - Value 3: Can buy, can sell (bits 0 and 1 set)
-  
+
   References:
   - vendor/PyKotor/wiki/GFF-UTM.md
   - vendor/PyKotor/wiki/GFF-File-Format.md
@@ -52,37 +52,37 @@ seq:
   - id: gff_header
     type: gff_header
     doc: GFF file header (56 bytes)
-  
+
   - id: label_array
     type: label_array
     if: gff_header.label_count > 0
     pos: gff_header.label_array_offset
     doc: Array of field name labels (16-byte null-terminated strings)
-  
+
   - id: struct_array
     type: struct_array
     if: gff_header.struct_count > 0
     pos: gff_header.struct_array_offset
     doc: Array of struct entries (12 bytes each)
-  
+
   - id: field_array
     type: field_array
     if: gff_header.field_count > 0
     pos: gff_header.field_array_offset
     doc: Array of field entries (12 bytes each)
-  
+
   - id: field_data
     type: field_data_section
     if: gff_header.field_data_count > 0
     pos: gff_header.field_data_offset
     doc: Field data section for complex types (strings, ResRefs, LocalizedStrings, etc.)
-  
+
   - id: field_indices
     type: field_indices_array
     if: gff_header.field_indices_count > 0
     pos: gff_header.field_indices_offset
     doc: Field indices array (MultiMap) for structs with multiple fields
-  
+
   - id: list_indices
     type: list_indices_array
     if: gff_header.list_indices_count > 0
@@ -101,7 +101,7 @@ types:
           File type signature. Must be "UTM " for merchant template files.
           Other GFF types: "GFF ", "DLG ", "ARE ", "UTC ", "UTI ", "UTD ", "GIT ", etc.
         valid: "UTM "
-      
+
       - id: file_version
         type: str
         encoding: ASCII
@@ -110,55 +110,55 @@ types:
           File format version. Typically "V3.2" for KotOR.
           Other versions: "V3.3", "V4.0", "V4.1" for other BioWare games.
         valid: ["V3.2", "V3.3", "V4.0", "V4.1"]
-      
+
       - id: struct_array_offset
         type: u4
         doc: Byte offset to struct array from the beginning of the file
-      
+
       - id: struct_count
         type: u4
         doc: Number of structs in the struct array
-      
+
       - id: field_array_offset
         type: u4
         doc: Byte offset to field array from the beginning of the file
-      
+
       - id: field_count
         type: u4
         doc: Number of fields in the field array
-      
+
       - id: label_array_offset
         type: u4
         doc: Byte offset to label array from the beginning of the file
-      
+
       - id: label_count
         type: u4
         doc: Number of labels in the label array
-      
+
       - id: field_data_offset
         type: u4
         doc: Byte offset to field data section from the beginning of the file
-      
+
       - id: field_data_count
         type: u4
         doc: Size of field data section in bytes
-      
+
       - id: field_indices_offset
         type: u4
         doc: Byte offset to field indices array from the beginning of the file
-      
+
       - id: field_indices_count
         type: u4
         doc: Number of field indices (uint32 values) in the field indices array
-      
+
       - id: list_indices_offset
         type: u4
         doc: Byte offset to list indices array from the beginning of the file
-      
+
       - id: list_indices_count
         type: u4
         doc: Number of list indices (uint32 values) in the list indices array
-  
+
   # Label Array
   label_array:
     seq:
@@ -167,7 +167,7 @@ types:
         repeat: expr
         repeat-expr: _root.gff_header.label_count
         doc: Array of label entries (16 bytes each)
-  
+
   label_entry:
     seq:
       - id: name
@@ -184,7 +184,7 @@ types:
       name_trimmed:
         value: name.rstrip('\x00')
         doc: "Label name with trailing nulls removed"
-  
+
   # Struct Array
   struct_array:
     seq:
@@ -193,7 +193,7 @@ types:
         repeat: expr
         repeat-expr: _root.gff_header.struct_count
         doc: Array of struct entries (12 bytes each)
-  
+
   struct_entry:
     seq:
       - id: struct_id
@@ -205,14 +205,14 @@ types:
           - 0xFFFFFFFF (-1): Root struct containing merchant metadata
           - Typically 0 or custom IDs: ItemList entry structs (UTM_ItemList)
           Other structs have programmer-defined IDs.
-      
+
       - id: data_or_offset
         type: u4
         doc: |
           If field_count = 1: Direct field index into field_array.
           If field_count > 1: Byte offset into field_indices array.
           If field_count = 0: Unused (empty struct).
-      
+
       - id: field_count
         type: u4
         doc: Number of fields in this struct (0, 1, or >1)
@@ -231,7 +231,7 @@ types:
         value: data_or_offset
         if: has_multiple_fields
         doc: Byte offset into field_indices_array when struct has multiple fields
-  
+
   # Field Array
   field_array:
     seq:
@@ -240,7 +240,7 @@ types:
         repeat: expr
         repeat-expr: _root.gff_header.field_count
         doc: Array of field entries (12 bytes each)
-  
+
   field_entry:
     seq:
       - id: field_type
@@ -266,13 +266,13 @@ types:
           15 = List - Used for: ItemList
           16 = Vector4
           17 = Vector3
-      
+
       - id: label_index
         type: u4
         doc: |
           Index into label_array for field name.
           The label_array[label_index].name_trimmed gives the field name.
-      
+
       - id: data_or_offset
         type: u4
         doc: |
@@ -309,7 +309,7 @@ types:
         value: _root.gff_header.list_indices_offset + data_or_offset
         if: is_list_type
         doc: Absolute file offset to list indices for list type fields (e.g., ItemList)
-  
+
   # Field Data Section
   field_data_section:
     seq:
@@ -326,10 +326,10 @@ types:
           - Binary (Void): 4-byte length (u4) + binary bytes
           - Vector3: 12 bytes (3×f4, little-endian: X, Y, Z)
           - Vector4: 16 bytes (4×f4, little-endian: W, X, Y, Z)
-  
+
   # Helper types for parsing field_data section entries (documentation only)
   # Note: These types are conceptual - actual parsing accesses field_data via offsets
-  
+
   resref_data:
     seq:
       - id: length
@@ -338,7 +338,7 @@ types:
           Length of ResRef string (0-16). ResRef strings are limited to 16 characters.
           Common UTM ResRefs: merchant template names, item template names (UTI files),
           script names (NSS/NCS files) for OnOpenStore.
-      
+
       - id: name
         type: str
         size: 16
@@ -349,13 +349,13 @@ types:
           Trailing null bytes should be ignored. To extract the actual ResRef name,
           take the first 'length' characters from 'name' (trim trailing nulls).
           Note: This is a documentation type - actual parsing accesses field_data via offsets.
-  
+
   string_data:
     seq:
       - id: length
         type: u4
         doc: Length of string data in bytes (not including null terminator)
-      
+
       - id: data
         type: str
         size: length
@@ -369,7 +369,7 @@ types:
       data_trimmed:
         value: data.rstrip('\x00')
         doc: "String data with trailing nulls removed"
-  
+
   # Field Indices Array (MultiMap)
   field_indices_array:
     seq:
@@ -383,7 +383,7 @@ types:
           are the field indices for that struct.
           Example: Root struct with 10 fields stores offset to this array, then 10 consecutive
           u4 values here are the field indices for ResRef, LocName, Tag, MarkUp, MarkDown, etc.
-  
+
   # List Indices Array
   list_indices_array:
     seq:
@@ -397,7 +397,7 @@ types:
           Example: ItemList field stores offset to this array. At that offset:
           - First u4: count of items (number of struct indices)
           - Next N×u4: struct indices (N = count) pointing to ItemList entry structs
-      
+
       - id: entries
         type: list_entry
         repeat: until
@@ -407,7 +407,7 @@ types:
           stored in list-type field entries (field_entry.list_indices_offset_value),
           not as a sequential array. This is a simplified representation for documentation.
           For UTM, the ItemList field uses this to store array of ItemList entry struct indices.
-  
+
   list_entry:
     seq:
       - id: count
@@ -415,7 +415,7 @@ types:
         doc: |
           Number of struct indices in this list.
           For ItemList, this is the number of items in the merchant inventory.
-      
+
       - id: struct_indices
         type: u4
         repeat: expr
@@ -424,9 +424,9 @@ types:
           Array of struct indices (indices into struct_array).
           For ItemList, each struct index points to an ItemList entry struct containing
           InventoryRes, Infinite, Dropable, Repos_PosX, Repos_PosY fields.
-  
+
   # Complex field data types (used when accessing field_data section)
-  
+
   localized_string_data:
     seq:
       - id: total_size
@@ -436,7 +436,7 @@ types:
           Used for skipping over the structure, but can be calculated from the data.
           Format: total_size = 4 (string_ref) + 4 (string_count) + sum(substring sizes)
           Each substring: 4 (string_id) + 4 (string_length) + string_length (string_data)
-      
+
       - id: string_ref
         type: u4
         doc: |
@@ -445,13 +445,13 @@ types:
           If string_ref is valid (not -1), this is the primary string shown to the user.
           Language-specific substrings override this for specific languages/genders.
           For UTM, LocName uses this to reference dialog.tlk entries for merchant names.
-      
+
       - id: string_count
         type: u4
         doc: |
           Number of language-specific string substrings.
           Typically 0 if only using string_ref, or 1-10+ for multi-language support.
-      
+
       - id: substrings
         type: localized_substring
         repeat: expr
@@ -464,7 +464,7 @@ types:
       string_ref_value:
         value: string_ref == 0xFFFFFFFF ? -1 : string_ref
         doc: String reference as signed integer (-1 if none)
-  
+
   localized_substring:
     seq:
       - id: string_id
@@ -476,11 +476,11 @@ types:
           - Bits 16-31: Reserved/unused
           Common languages: 0 = English, 1 = French, 2 = German, 3 = Italian, 4 = Spanish,
           5 = Polish, 6 = Korean, 7 = Chinese (Traditional), 8 = Chinese (Simplified), 9 = Japanese
-      
+
       - id: string_length
         type: u4
         doc: Length of string data in bytes (UTF-8 encoded)
-      
+
       - id: string_data
         type: str
         size: string_length
