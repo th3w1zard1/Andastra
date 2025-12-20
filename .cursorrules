@@ -202,7 +202,7 @@ When working on Andastra Engine code (anything in `src/Andastra/`), AI agents MU
       **PREFERRED APPROACH: CONDITIONAL LOGIC (PRAGMATIC)**
       - For ALL **new** features, classes, and systems, **STRONGLY PREFER** conditional logic (`if/else` or `switch` statements) within the same class/file to handle engine or game-specific behavior.
       - **Inheritance was probably the worst idea for most of this codebase** - conditional handling is much more practical and pragmatic.
-      - **Goal**: Keep related logic for different games in one place to avoid "class explosion" and facilitate reverse engineering.
+      - **Goal**: Keep related logic for different games/engines in one place to avoid "class explosion" and facilitate reverse engineering.
       - Use `GameType` (e.g., `K1`, `K2`, `NWN`) or `EngineType` identifiers to branch logic where behavior differs between games/engines.
       - **Example pattern for new code**:
         ```csharp
@@ -220,19 +220,27 @@ When working on Andastra Engine code (anything in `src/Andastra/`), AI agents MU
       - **DO NOT** break existing class references or rename existing base/engine/game classes.
       - **DO NOT** attempt to "improve" or "modernize" existing inheritance-based code by converting it to conditionals.
       - **DO NOT** suggest or attempt to refactor existing inheritance-based code "for consistency" or "to match new code style".
+      - **DO NOT** refactor existing code "to use conditional logic instead of inheritance" - this is explicitly forbidden.
+      - **DO NOT** perform any refactoring that would require changing more than a few files or break existing references.
       - **WHY**: Inheritance was used extensively in the past; refactoring it would break hundreds of references. **The risk of breaking things far outweighs any theoretical benefit.** Maintain existing structures as-is.
+      - **CRITICAL**: If you see existing inheritance-based code, your job is to **work with it as-is**, not to "fix" it. Adding new features to existing inheritance hierarchies is fine, but converting them to conditionals is NOT.
+      - **CRITICAL**: This policy is **ONLY for new code**. Existing inheritance-based code must remain unchanged. Do not attempt to "migrate" or "update" existing code to use conditionals.
 
       **WHEN TO USE CONDITIONAL LOGIC:**
       - ✅ Creating a **new** class, method, or system from scratch.
       - ✅ Adding a **new** feature that doesn't exist yet.
       - ✅ Implementing behavior that differs slightly between games/engines in a common class.
       - ✅ **ALWAYS prefer conditionals for new code** - inheritance should only be used if there's a compelling reason.
+      - ✅ When writing **completely new** code that doesn't touch existing inheritance hierarchies.
+      - ✅ When creating **new** helper methods or utilities that need to handle multiple engines/games.
 
       **WHEN TO MAINTAIN INHERITANCE:**
       - ✅ Working with existing classes that already use inheritance.
       - ✅ Fixing bugs or adding features to existing inheritance-based systems.
       - ✅ **If it already uses inheritance, leave it alone** - don't try to "fix" it.
       - ✅ Any code that already exists in the codebase - maintain the existing pattern.
+      - ✅ When extending existing inheritance hierarchies - use inheritance to extend, not conditionals to replace.
+      - ✅ When modifying existing files - preserve the existing architecture pattern (inheritance or conditionals, whichever is already there).
 
       **MANDATORY WORKFLOW FOR REVERSE ENGINEERING**:
       1. Identify behavior by comparing across engines/games in Ghidra.

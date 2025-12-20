@@ -49,6 +49,7 @@ namespace Andastra.Runtime.MonoGame.Audio
         private bool _isPlaying;
         private float _currentTime;
         private Action _onCompleteCallback;
+        private float _volume = 1.0f;
 
         /// <summary>
         /// Gets whether voice-over is currently playing.
@@ -72,6 +73,35 @@ namespace Andastra.Runtime.MonoGame.Audio
                     return _currentTime;
                 }
                 return 0f;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the voice volume (0.0 to 1.0).
+        /// Based on swkotor.exe and swkotor2.exe: VoiceVolume setting from INI file
+        /// </summary>
+        public float Volume
+        {
+            get { return _volume; }
+            set
+            {
+                _volume = Math.Max(0.0f, Math.Min(1.0f, value));
+                // Apply to currently playing instance if any
+                if (_currentInstance != null)
+                {
+                    // If spatial audio is active, preserve the spatial volume calculation
+                    // Otherwise, apply the voice volume directly
+                    if (_spatialAudio == null || _currentSpeaker == null)
+                    {
+                        _currentInstance.Volume = _volume;
+                    }
+                    else
+                    {
+                        // Spatial audio will recalculate volume in Update, but we need to ensure
+                        // the base volume is applied. The spatial audio system should multiply by _volume.
+                        // For now, we'll let Update handle it, but we could also apply it here.
+                    }
+                }
             }
         }
 
@@ -166,7 +196,8 @@ namespace Andastra.Runtime.MonoGame.Audio
                             }
 
                             // Configure playback
-                            _currentInstance.Volume = 1.0f;
+                            // Apply voice volume setting (0.0 to 1.0)
+                            _currentInstance.Volume = _volume;
                             _currentInstance.IsLooped = false;
 
                             // Register with spatial audio if available
@@ -255,7 +286,8 @@ namespace Andastra.Runtime.MonoGame.Audio
                         Audio3DParameters audioParams = _spatialAudio.Calculate3DParameters(_currentEmitterId);
                         if (_currentInstance != null)
                         {
-                            _currentInstance.Volume = audioParams.Volume;
+                            // Apply voice volume setting multiplied by spatial audio volume
+                            _currentInstance.Volume = audioParams.Volume * _volume;
                             _currentInstance.Pan = audioParams.Pan;
                             _currentInstance.Pitch = audioParams.DopplerShift - 1.0f; // Convert to pitch range
                         }

@@ -29,6 +29,12 @@ namespace Andastra.Runtime.MonoGame.Graphics
 
         public IInputManager InputManager => _inputManager;
 
+        /// <summary>
+        /// Gets whether the graphics backend supports VSync (vertical synchronization).
+        /// MonoGame always supports VSync through GraphicsDeviceManager.
+        /// </summary>
+        public bool SupportsVSync => _isInitialized && _graphicsDeviceManager != null;
+
         public MonoGameGraphicsBackend()
         {
             _game = new Game();
@@ -173,6 +179,44 @@ namespace Andastra.Runtime.MonoGame.Graphics
                 return new Odyssey.MonoGame.Audio.MonoGameVoicePlayer(provider, spatialAudio);
             }
             throw new ArgumentException("Resource provider must be an IGameResourceProvider instance", nameof(resourceProvider));
+        }
+
+        /// <summary>
+        /// Sets the VSync (vertical synchronization) state.
+        /// </summary>
+        /// <param name="enabled">True to enable VSync, false to disable it.</param>
+        /// <remarks>
+        /// VSync Implementation:
+        /// - Based on MonoGame GraphicsDeviceManager.SynchronizeWithVerticalRetrace
+        /// - Original game: VSync controlled via DirectX Present parameters (swkotor2.exe: DirectX device presentation)
+        /// - MonoGame uses GraphicsDeviceManager to control VSync
+        /// - Changes are applied immediately via ApplyChanges()
+        /// - VSync synchronizes frame rendering with monitor refresh rate to prevent screen tearing
+        /// </remarks>
+        public void SetVSync(bool enabled)
+        {
+            if (!_isInitialized || _graphicsDeviceManager == null)
+            {
+                Console.WriteLine("[MonoGame] WARNING: Cannot set VSync - backend not initialized");
+                return;
+            }
+
+            try
+            {
+                // Set VSync state via GraphicsDeviceManager
+                // Based on MonoGame API: GraphicsDeviceManager.SynchronizeWithVerticalRetrace
+                _graphicsDeviceManager.SynchronizeWithVerticalRetrace = enabled;
+
+                // Apply changes immediately
+                // Based on MonoGame API: GraphicsDeviceManager.ApplyChanges() applies VSync setting
+                _graphicsDeviceManager.ApplyChanges();
+
+                Console.WriteLine($"[MonoGame] VSync {(enabled ? "enabled" : "disabled")}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MonoGame] ERROR: Failed to set VSync: {ex.Message}");
+            }
         }
 
         public void Dispose()

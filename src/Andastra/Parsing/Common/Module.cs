@@ -844,7 +844,7 @@ namespace Andastra.Parsing.Common
             }
             if (restype == ResourceType.LYT)
             {
-                return typeof(Formats.LYT.LYT);
+                return typeof(Andastra.Parsing.Resource.Formats.LYT.LYT);
             }
             if (restype == ResourceType.VIS)
             {
@@ -1466,7 +1466,7 @@ namespace Andastra.Parsing.Common
                             searchSet.Add(ident);
                         }
                     }
-                    else if (loadedResource is Resource.Formats.LYT.LYT lyt)
+                    else if (loadedResource is Andastra.Parsing.Resource.Formats.LYT.LYT lyt)
                     {
                         foreach (ResourceIdentifier ident in lyt.IterResourceIdentifiers())
                         {
@@ -1941,7 +1941,7 @@ namespace Andastra.Parsing.Common
                 }
                 else if (ResType == ResourceType.LYT)
                 {
-                    loaded = Formats.LYT.LYTAuto.ReadLyt(data);
+                    loaded = Andastra.Parsing.Resource.Formats.LYT.LYTAuto.ReadLyt(data);
                 }
                 else if (ResType == ResourceType.VIS)
                 {

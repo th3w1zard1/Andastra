@@ -10,7 +10,7 @@ using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.LIP;
 using Andastra.Parsing.Formats.LTR;
-using Andastra.Parsing.Formats.LYT;
+using Andastra.Parsing.Resource.Formats.LYT;
 using Andastra.Parsing.Formats.MDL;
 using Andastra.Parsing.Formats.MDLData;
 using Andastra.Parsing.Formats.NCS;
@@ -565,7 +565,7 @@ namespace Andastra.Parsing.Resource
                     try {
                         byte[] data = fileRes.GetData();
                         if (data == null) return null;
-                        LYT lyt = LYTAuto.ReadLyt(data);
+                        Andastra.Parsing.Resource.Formats.LYT.LYT lyt = LYTAuto.ReadLyt(data);
                         return LYTAuto.BytesLyt(lyt);
                     } catch { return null; }
                 }},

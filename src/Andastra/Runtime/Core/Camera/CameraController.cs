@@ -1,7 +1,7 @@
 using System;
 using System.Numerics;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Content.MDL;
+using Andastra.Runtime.Core.MDL;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Parsing.Resource;
 using Andastra.Runtime.Content.Interfaces;
@@ -729,10 +729,10 @@ namespace Andastra.Runtime.Core.Camera
             //   - Transforms node's local position to world space using entity's transform matrix
             //   - Returns world-space position of the camera hook node
             // Implementation: Full MDL node lookup with recursive search and world-space transform
-            
+
             // Construct camera hook node name (format: "camerahook{N}")
             string hookNodeName = string.Format("camerahook{0}", hookIndex);
-            
+
             // Try to get MDL model from entity
             MDLModel mdlModel = GetEntityMDLModel(entity);
             if (mdlModel != null && mdlModel.RootNode != null)
@@ -747,15 +747,15 @@ namespace Andastra.Runtime.Core.Camera
                         hookNode.Position.Y,
                         hookNode.Position.Z
                     );
-                    
+
                     // Get node's world-space transform by accumulating parent transforms
                     Vector3 nodeWorldPosition = TransformNodeToWorldSpace(hookNode, mdlModel.RootNode, transform);
-                    
+
                     hookPosition = nodeWorldPosition;
                     return true;
                 }
             }
-            
+
             // Fallback: Calculate approximate hook position based on entity facing
             // This is used when MDL model is not available or camera hook node is not found
             Vector3 entityPos = transform.Position;
@@ -932,7 +932,7 @@ namespace Andastra.Runtime.Core.Camera
             // Build transform chain from root to node
             MDLNodeData currentNode = node;
             var transformChain = new System.Collections.Generic.List<MDLNodeData>();
-            
+
             // Find path from root to node
             if (FindPathToNode(rootNode, node, transformChain))
             {
@@ -947,7 +947,7 @@ namespace Andastra.Runtime.Core.Camera
                             parentNode.Position.Y,
                             parentNode.Position.Z
                         );
-                        
+
                         Vector4 parentOrient = new Vector4(
                             parentNode.Orientation.X,
                             parentNode.Orientation.Y,

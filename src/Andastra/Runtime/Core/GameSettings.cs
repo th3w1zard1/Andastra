@@ -70,11 +70,6 @@ namespace Andastra.Runtime.Core
         public bool SkipIntro { get; set; } = true;
 
         /// <summary>
-        /// Invert mouse Y axis.
-        /// </summary>
-        public bool InvertMouseY { get; set; } = false;
-
-        /// <summary>
         /// Mouse sensitivity for camera controls.
         /// </summary>
         /// <remarks>
@@ -87,19 +82,6 @@ namespace Andastra.Runtime.Core
         /// - Based on swkotor2.exe: Mouse input scaling for camera control
         /// </remarks>
         public float MouseSensitivity { get; set; } = 0.5f;
-
-        /// <summary>
-        /// Invert mouse Y axis for camera movement.
-        /// </summary>
-        /// <remarks>
-        /// Mouse Invert Setting:
-        /// - Based on swkotor.exe and swkotor2.exe mouse configuration system
-        /// - Original implementation: Mouse invert option in options menu (Controls category)
-        /// - When enabled, mouse Y movement is inverted (moving mouse up moves camera down, and vice versa)
-        /// - Applied to camera look/rotation input processing
-        /// - Based on swkotor2.exe: Mouse input processing for camera control
-        /// </remarks>
-        public bool InvertMouseY { get; set; } = false;
 
         /// <summary>
         /// Applies mouse Y inversion to a mouse Y delta value if the setting is enabled.
@@ -117,11 +99,6 @@ namespace Andastra.Runtime.Core
         {
             return InvertMouseY ? -mouseYDelta : mouseYDelta;
         }
-
-        /// <summary>
-        /// Master volume (affects all audio).
-        /// </summary>
-        public float MasterVolume { get; set; } = 1.0f;
 
         /// <summary>
         /// Audio settings (volume levels for music, sound effects, and voice).
@@ -150,18 +127,6 @@ namespace Andastra.Runtime.Core
         /// - Based on swkotor2.exe: FUN_00631ff0 @ 0x00631ff0 (writes graphics settings to INI file)
         /// </remarks>
         public GraphicsSettings Graphics { get; set; } = new GraphicsSettings();
-
-        /// <summary>
-        /// Invert mouse Y axis for camera controls.
-        /// </summary>
-        /// <remarks>
-        /// Mouse Invert Setting:
-        /// - Based on swkotor.exe and swkotor2.exe: Mouse invert option in options menu
-        /// - When enabled, mouse Y movement is inverted (moving mouse up looks down, moving mouse down looks up)
-        /// - Original implementation: Stored in INI file as boolean value
-        /// - Applied to camera pitch control when using mouse for camera rotation
-        /// </remarks>
-        public bool InvertMouseY { get; set; } = false;
 
         /// <summary>
         /// Audio settings configuration.
@@ -384,15 +349,15 @@ namespace Andastra.Runtime.Core
         public AutopauseSettings Autopause { get; set; } = new AutopauseSettings();
 
         /// <summary>
-        /// Feedback settings configuration.
+        /// Feedback settings (visual and audio feedback options).
         /// </summary>
         /// <remarks>
         /// Feedback Settings:
-        /// - Based on swkotor2.exe feedback options system
-        /// - Located via string references: "BTN_FEEDBACK" (feedback button in options menu)
+        /// - Based on swkotor.exe and swkotor2.exe feedback system
+        /// - Located via string references: "Feedback" options in main menu, "BTN_FEEDBACK" (feedback button in options menu)
+        /// - Original implementation: Various visual/audio feedback options
+        /// - Settings stored in INI file (swkotor.ini for K1, swkotor2.ini for K2)
         /// - Based on swkotor2.exe: CSWGuiOptionsMain::OnFeedbackOpt @ 0x006e2df0 (feedback options handler)
-        /// - Original implementation: Feedback options control tooltip display, combat feedback, and other UI feedback elements
-        /// - Settings include: Tooltip display options, combat damage numbers, floating text, etc.
         /// - Based on swkotor2.exe: FUN_00631ff0 @ 0x00631ff0 (writes feedback settings to INI file)
         /// - Based on swkotor2.exe: FUN_00633270 @ 0x00633270 (loads feedback settings from INI file)
         /// </remarks>

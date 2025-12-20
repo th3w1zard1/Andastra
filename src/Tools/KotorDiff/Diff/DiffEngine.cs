@@ -14,6 +14,7 @@ using Andastra.Parsing.Formats.Capsule;
 using Andastra.Parsing.Resource;
 using KotorDiff.Cache;
 using CachedFileComparison = KotorDiff.Cache.CachedFileComparison;
+using KotorDiff.Resolution;
 
 namespace KotorDiff.Diff
 {
@@ -98,16 +99,15 @@ namespace KotorDiff.Diff
                 if (allInstallations.Count >= 2)
                 {
                     logFunc("Detected multiple installations - using resolution-aware comparison...");
-                    // TODO: Fix circular dependency - InstallationDiffWithResolution is in Resolution which references Diff
-                    // This needs to be restructured to avoid the circular dependency
-                    // For now, fall through to basic comparison
-                    // return Resolution.InstallationDiffWithResolution.DiffInstallationsWithResolution(
-                    //     filesAndFoldersAndInstallations,
-                    //     filters: filters,
-                    //     logFunc: logFunc,
-                    //     compareHashes: compareHashes,
-                    //     modificationsByType: modificationsByType,
-                    //     incrementalWriter: incrementalWriter);
+                    // Use resolution-aware comparison for installation-to-installation diffs
+                    // This respects the game's resource resolution order (Override > Modules > Chitin)
+                    return InstallationDiffWithResolution.DiffInstallationsWithResolution(
+                        filesAndFoldersAndInstallations,
+                        filters: filters,
+                        logFunc: logFunc,
+                        compareHashes: compareHashes,
+                        modificationsByType: modificationsByType,
+                        incrementalWriter: incrementalWriter);
                 }
 
                 // Mixed path types or non-Installation comparison

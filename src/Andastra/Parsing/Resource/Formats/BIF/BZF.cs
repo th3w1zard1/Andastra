@@ -422,10 +422,10 @@ namespace Andastra.Parsing.Extract
         }
 
         /// <summary>
-        /// Gets a fixed resource by index.
+        /// Gets the decompressed data of a fixed resource by index.
         /// Fixed resources are decompressed the same way as variable resources.
         /// </summary>
-        public byte[] GetFixedResource(int index)
+        public byte[] GetFixedResourceData(int index)
         {
             FixedResource res = GetFixedResource(index);
             _bzf.Seek(res.Offset, SeekOrigin.Begin);

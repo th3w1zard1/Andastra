@@ -290,6 +290,24 @@ namespace KotorDiff.App
             LogOutput($"Using --use-profiler={config.UseProfiler}");
         }
 
+        // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/app.py:197-202
+        // Original: def stop_profiler(profiler: cProfile.Profile): ...
+        /// <summary>
+        /// Stop and save profiler output.
+        /// </summary>
+        public static void StopProfiler(Profiler profiler)
+        {
+            if (profiler == null || !profiler.IsEnabled)
+            {
+                return;
+            }
+
+            profiler.Disable();
+            string profilerOutputFile = Path.Combine(Directory.GetCurrentDirectory(), "profiler_output.pstat");
+            profiler.DumpStats(profilerOutputFile);
+            LogOutput($"Profiler output saved to: {profilerOutputFile}");
+        }
+
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/application.py:227-237
         // Original: def _execute_diff(config: DiffConfig) -> tuple[bool | None, int | None]: ...
         /// <summary>

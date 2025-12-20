@@ -64,13 +64,13 @@ namespace Andastra.Runtime.Content.Loaders
     /// - Templates define base properties for entities (stats, appearance, scripts, etc.)
     /// - Template GFF fields: Tag, TemplateResRef, Appearance_Type, ScriptHeartbeat, ScriptOnNotice, etc.
     /// - UTC = Creature template (creature stats, appearance, classes, feats, scripts)
-    /// - UTP = Placeable template (placeable appearance, scripts, inventory flag, lock state)
     /// - UTD = Door template (door appearance, lock state, transition data, scripts)
-    /// - UTT = Trigger template (trigger geometry, trap flags, scripts)
-    /// - UTW = Waypoint template (waypoint appearance, map note data)
-    /// - UTS = Sound template (sound properties, volume, distance, looping)
     /// - UTE = Encounter template (spawn points, creature lists, difficulty)
     /// - UTM = Store template (merchant markup rates, item lists)
+    /// - UTP = Placeable template (placeable appearance, scripts, inventory flag, lock state)
+    /// - UTS = Sound template (sound properties, volume, distance, looping)
+    /// - UTT = Trigger template (trigger geometry, trap flags, scripts)
+    /// - UTW = Waypoint template (waypoint appearance, map note data)
     /// - Script fields in templates: ScriptHeartbeat, ScriptOnNotice, ScriptDamaged, ScriptDeath, etc. (mapped to ScriptEvent enum)
     /// - Based on template file format documentation in vendor/PyKotor/wiki/
     /// </remarks>

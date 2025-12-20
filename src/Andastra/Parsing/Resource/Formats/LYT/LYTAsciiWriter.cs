@@ -5,7 +5,7 @@ using Andastra.Parsing;
 using Andastra.Parsing.Formats.LYT;
 using Andastra.Parsing.Common;
 
-namespace Andastra.Parsing.Formats.LYT
+namespace Andastra.Parsing.Resource.Formats.LYT
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lyt/io_lyt.py:116-165
     // Original: class LYTAsciiWriter(ResourceWriter)
@@ -18,22 +18,22 @@ namespace Andastra.Parsing.Formats.LYT
         private const string ObstacleCountKey = "obstaclecount";
         private const string DoorhookCountKey = "doorhookcount";
 
-        private readonly LYT _lyt;
+        private readonly Andastra.Parsing.Resource.Formats.LYT.LYT _lyt;
         private readonly RawBinaryWriter _writer;
 
-        public LYTAsciiWriter(LYT lyt, string filepath)
+        public LYTAsciiWriter(Andastra.Parsing.Resource.Formats.LYT.LYT lyt, string filepath)
         {
             _lyt = lyt ?? throw new ArgumentNullException(nameof(lyt));
             _writer = RawBinaryWriter.ToFile(filepath);
         }
 
-        public LYTAsciiWriter(LYT lyt, Stream target)
+        public LYTAsciiWriter(Andastra.Parsing.Resource.Formats.LYT.LYT lyt, Stream target)
         {
             _lyt = lyt ?? throw new ArgumentNullException(nameof(lyt));
             _writer = RawBinaryWriter.ToStream(target);
         }
 
-        public LYTAsciiWriter(LYT lyt)
+        public LYTAsciiWriter(Andastra.Parsing.Resource.Formats.LYT.LYT lyt)
         {
             _lyt = lyt ?? throw new ArgumentNullException(nameof(lyt));
             _writer = RawBinaryWriter.ToByteArray();
@@ -48,7 +48,7 @@ namespace Andastra.Parsing.Formats.LYT
                 int roomcount = _lyt.Rooms.Count;
                 int trackcount = _lyt.Tracks.Count;
                 int obstaclecount = _lyt.Obstacles.Count;
-                int doorhookcount = _lyt.Doorhooks.Count;
+                int doorhookcount = _lyt.DoorHooks.Count;
 
                 _writer.WriteString($"beginlayout{LytLineSep}", Encoding.ASCII.WebName);
 
@@ -71,7 +71,7 @@ namespace Andastra.Parsing.Formats.LYT
                 }
 
                 _writer.WriteString($"{LytIndent}{DoorhookCountKey} {doorhookcount}{LytLineSep}", Encoding.ASCII.WebName);
-                foreach (var doorhook in _lyt.Doorhooks)
+                foreach (var doorhook in _lyt.DoorHooks)
                 {
                     _writer.WriteString($"{LytIndent}{LytIndent}{doorhook.Room} {doorhook.Door} 0 {doorhook.Position.X} {doorhook.Position.Y} {doorhook.Position.Z} {doorhook.Orientation.X} {doorhook.Orientation.Y} {doorhook.Orientation.Z} {doorhook.Orientation.W}{LytLineSep}", Encoding.ASCII.WebName);
                 }

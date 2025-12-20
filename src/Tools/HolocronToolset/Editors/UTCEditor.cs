@@ -1452,7 +1452,7 @@ namespace HolocronToolset.Editors
 
             // Open DLG editor
             // Matching PyKotor: open_resource_editor(filepath, resname, ResourceType.DLG, data, self._installation, self)
-            HolocronToolset.Utils.WindowUtils.OpenResourceEditor(
+            HolocronToolset.Editors.WindowUtils.OpenResourceEditor(
                 new ResourceResult(resname, ResourceType.DLG, filepath, data),
                 _installation,
                 this);

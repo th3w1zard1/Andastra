@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using Andastra.Parsing.Resource;
 
-namespace Andastra.Parsing.Formats.LYT
+namespace Andastra.Parsing.Resource.Formats.LYT
 {
     /// <summary>
     /// Automatic LYT (Layout) file loading and saving utilities.
@@ -116,7 +116,7 @@ namespace Andastra.Parsing.Formats.LYT
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lyt/lyt_auto.py:13-39
         /// Original: def read_lyt(source: SOURCE_TYPES, offset: int = 0, size: int | None = None) -> LYT
         /// </remarks>
-        public static LYT ReadLyt(object source, int offset = 0, int? size = null)
+        public static Andastra.Parsing.Resource.Formats.LYT.LYT ReadLyt(object source, int offset = 0, int? size = null)
         {
             int sizeValue = size ?? 0;
             if (source is string filepath)
@@ -144,7 +144,7 @@ namespace Andastra.Parsing.Formats.LYT
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lyt/lyt_auto.py:42-65
         /// Original: def write_lyt(lyt: LYT, target: TARGET_TYPES, file_format: ResourceType = ResourceType.LYT)
         /// </remarks>
-        public static void WriteLyt(LYT lyt, object target, ResourceType fileFormat = null)
+        public static void WriteLyt(Andastra.Parsing.Resource.Formats.LYT.LYT lyt, object target, ResourceType fileFormat = null)
         {
             ResourceType format = fileFormat ?? ResourceType.LYT;
             if (format != ResourceType.LYT)
@@ -176,7 +176,7 @@ namespace Andastra.Parsing.Formats.LYT
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lyt/lyt_auto.py:68-91
         /// Original: def bytes_lyt(lyt: LYT, file_format: ResourceType = ResourceType.LYT) -> bytes
         /// </remarks>
-        public static byte[] BytesLyt(LYT lyt, ResourceType fileFormat = null)
+        public static byte[] BytesLyt(Andastra.Parsing.Resource.Formats.LYT.LYT lyt, ResourceType fileFormat = null)
         {
             ResourceType format = fileFormat ?? ResourceType.LYT;
             using (var ms = new MemoryStream())

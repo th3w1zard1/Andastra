@@ -33,14 +33,23 @@ namespace KotorDiff.App
             // Log configuration
             DiffApplicationHelpers.LogConfiguration(config);
 
-            // Run with optional profiler (not implemented in C# - would need profiling library)
+            // Run with optional profiler
             // Python: if config.use_profiler: profiler = cProfile.Profile(); profiler.enable()
-            // TODO: STUB - C# equivalent would require a profiling library like MiniProfiler or similar
-            // For now, we skip profiler support
-
+            Profiler profiler = null;
             try
             {
+                if (config.UseProfiler)
+                {
+                    profiler = new Profiler();
+                    profiler.Enable();
+                }
+
                 var comparison = DiffApplicationHelpers.ExecuteDiff(config);
+
+                if (profiler != null)
+                {
+                    DiffApplicationHelpers.StopProfiler(profiler);
+                }
 
                 // Format and return final output
                 if (comparison.HasValue)
@@ -54,6 +63,10 @@ namespace KotorDiff.App
             }
             catch (Exception ex)
             {
+                if (profiler != null)
+                {
+                    DiffApplicationHelpers.StopProfiler(profiler);
+                }
                 DiffApplicationHelpers.LogOutput($"KeyboardInterrupt - KotorDiff was cancelled by user: {ex.Message}");
                 throw;
             }

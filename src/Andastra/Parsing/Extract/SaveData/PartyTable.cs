@@ -753,35 +753,5 @@ namespace Andastra.Parsing.Extract.SaveData
                 return null;
             }
         }
-
-        private static void SetPropertyIfExists(object source, Type sourceType, string sourceProp, object target, string targetProp)
-        {
-            var prop = sourceType.GetProperty(sourceProp);
-            if (prop != null)
-            {
-                var value = prop.GetValue(source);
-                var targetType = target.GetType();
-                var targetPropInfo = targetType.GetProperty(targetProp);
-                if (targetPropInfo != null && targetPropInfo.CanWrite)
-                {
-                    targetPropInfo.SetValue(target, value);
-                }
-            }
-        }
-
-        private static void SetRuntimePropertyIfExists(object target, Type targetType, object source, string sourceProp, string targetProp)
-        {
-            var sourceType = source.GetType();
-            var prop = sourceType.GetProperty(sourceProp);
-            if (prop != null)
-            {
-                var value = prop.GetValue(source);
-                var targetPropInfo = targetType.GetProperty(targetProp);
-                if (targetPropInfo != null && targetPropInfo.CanWrite)
-                {
-                    targetPropInfo.SetValue(target, value);
-                }
-            }
-        }
     }
 }

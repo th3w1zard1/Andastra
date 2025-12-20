@@ -299,20 +299,6 @@ namespace Andastra.Runtime.MonoGame.GUI
             return button;
         }
 
-        /// <summary>
-        /// Gets the tag of the currently highlighted button (mouse over).
-        /// </summary>
-        /// <returns>The tag of the highlighted button, or null if no button is highlighted.</returns>
-        /// <remarks>
-        /// Highlighted Button Tag:
-        /// - Based on swkotor.exe and swkotor2.exe: Button hover state tracking
-        /// - Original implementation: Button hover state used for visual feedback and sound effects
-        /// - Updated automatically during Update() based on mouse position
-        /// - Returns null when no button is under the mouse cursor
-        /// - Used for playing hover sound effects and visual highlighting
-        /// </remarks>
-        [CanBeNull]
-        public string HighlightedButtonTag => _highlightedButtonTag;
 
         /// <summary>
         /// Updates the border fill texture for a control by tag.

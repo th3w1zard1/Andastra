@@ -11,6 +11,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Andastra\Parsing\Andastra.Parsing.csproj" />
+    <ProjectReference Include="..\..\Andastra\Runtime\Scripting\Andastra.Runtime.Scripting.csproj" />
+    <ProjectReference Include="..\..\Andastra\Runtime\Core\Andastra.Runtime.Core.csproj" />
   </ItemGroup>
 
 </Project>

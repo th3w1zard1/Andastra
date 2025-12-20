@@ -37,6 +37,11 @@ namespace HoloPatcher.UI.Views
             Opened += OnWindowOpened;
         }
 
+        private void InitializeComponent()
+        {
+            AvaloniaXamlLoader.Load(this);
+        }
+
         private async void OnWindowOpened(object sender, EventArgs e)
         {
             // Center window on screen - matches Python's set_window behavior

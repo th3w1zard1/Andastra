@@ -47,6 +47,9 @@ namespace Andastra.Runtime.MonoGame.Camera
         private float _yawVelocity = 0f;
         private float _pitchVelocity = 0f;
 
+        // Mouse input settings
+        private bool _invertMouseY = false;
+
         // Collision avoidance
         private Func<Vector3, Vector3, bool> _raycastCallback;
 
@@ -93,6 +96,16 @@ namespace Andastra.Runtime.MonoGame.Camera
         {
             get { return _lagFactor; }
             set { _lagFactor = Math.Max(1.0f, value); }
+        }
+
+        /// <summary>
+        /// Gets or sets whether mouse Y axis is inverted for camera pitch control.
+        /// When true, moving mouse up looks down and moving mouse down looks up.
+        /// </summary>
+        public bool InvertMouseY
+        {
+            get { return _invertMouseY; }
+            set { _invertMouseY = value; }
         }
 
         /// <summary>
@@ -192,6 +205,12 @@ namespace Andastra.Runtime.MonoGame.Camera
             {
                 int deltaX = mouseState.X - _lastMouseState.X;
                 int deltaY = mouseState.Y - _lastMouseState.Y;
+
+                // Apply mouse Y inversion if enabled
+                if (_invertMouseY)
+                {
+                    deltaY = -deltaY;
+                }
 
                 _yaw += deltaX * 0.1f;
                 _pitch += deltaY * 0.1f;

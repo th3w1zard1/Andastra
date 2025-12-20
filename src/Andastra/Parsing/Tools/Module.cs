@@ -4,7 +4,7 @@ using System.IO;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.LYT;
+using Andastra.Parsing.Resource.Formats.LYT;
 using Andastra.Parsing.Formats.RIM;
 using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Formats.VIS;
@@ -239,7 +239,7 @@ namespace Andastra.Parsing.Tools
             newModule.SetData(identifier, ResourceType.GIT, GFFAuto.BytesGff(GITHelpers.DismantleGit(git), ResourceType.GFF));
 
             var lytRes = oldModule.Layout();
-            var lyt = lytRes?.Resource() as Formats.LYT.LYT;
+            var lyt = lytRes?.Resource() as Andastra.Parsing.Resource.Formats.LYT.LYT;
 
             var visRes = oldModule.Vis();
             var vis = visRes?.Resource() as Formats.VIS.VIS;
@@ -253,7 +253,7 @@ namespace Andastra.Parsing.Tools
                     string oldModelName = room.Model;
                     string newModelName = StringUtils.IReplace(oldModelName, oldResref?.ToString() ?? "", identifier);
 
-                    room.Model = newModelName;
+                    room.Model = new Andastra.Parsing.Common.ResRef(newModelName);
                     if (vis != null && vis.RoomExists(oldModelName))
                     {
                         vis.RenameRoom(oldModelName, newModelName);
@@ -374,7 +374,7 @@ namespace Andastra.Parsing.Tools
 
             if (lyt != null)
             {
-                newModule.SetData(identifier, ResourceType.LYT, Formats.LYT.LYTAuto.BytesLyt(lyt));
+                newModule.SetData(identifier, ResourceType.LYT, Andastra.Parsing.Resource.Formats.LYT.LYTAuto.BytesLyt(lyt));
             }
             else
             {

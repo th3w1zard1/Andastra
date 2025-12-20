@@ -29,6 +29,12 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public IInputManager InputManager => _inputManager;
 
+        /// <summary>
+        /// Gets whether the graphics backend supports VSync (vertical synchronization).
+        /// Stride supports VSync through GraphicsDevice.Presenter when initialized.
+        /// </summary>
+        public bool SupportsVSync => _isInitialized && _graphicsDevice != null && _game?.GraphicsDevice?.Presenter != null;
+
         public StrideGraphicsBackend()
         {
             _game = new Game();
@@ -157,6 +163,60 @@ namespace Andastra.Runtime.Stride.Graphics
                 return new Odyssey.Stride.Audio.StrideVoicePlayer(provider, spatialAudio);
             }
             throw new ArgumentException("Resource provider must be an IGameResourceProvider instance", nameof(resourceProvider));
+        }
+
+        /// <summary>
+        /// Sets the VSync (vertical synchronization) state.
+        /// </summary>
+        /// <param name="enabled">True to enable VSync, false to disable it.</param>
+        /// <remarks>
+        /// VSync Implementation:
+        /// - Based on Stride GraphicsDevice.Presenter.VSyncMode
+        /// - Original game: VSync controlled via DirectX Present parameters (swkotor2.exe: DirectX device presentation)
+        /// - Stride uses GraphicsDevice.Presenter to control VSync
+        /// - Changes are applied immediately to the swap chain
+        /// - VSync synchronizes frame rendering with monitor refresh rate to prevent screen tearing
+        /// - Stride VSyncMode: None (disabled), VerticalSync (enabled), or Adaptive (adaptive sync)
+        /// </remarks>
+        public void SetVSync(bool enabled)
+        {
+            if (!_isInitialized || _graphicsDevice == null || _game?.GraphicsDevice == null)
+            {
+                Console.WriteLine("[Stride] WARNING: Cannot set VSync - backend not initialized");
+                return;
+            }
+
+            try
+            {
+                var presenter = _game.GraphicsDevice.Presenter;
+                if (presenter == null)
+                {
+                    Console.WriteLine("[Stride] WARNING: Cannot set VSync - Presenter not available");
+                    return;
+                }
+
+                // Set VSync state via GraphicsDevice.Presenter
+                // Based on Stride API: GraphicsDevice.Presenter.VSyncMode
+                // VSyncMode: None = disabled, VerticalSync = enabled, Adaptive = adaptive sync
+                if (enabled)
+                {
+                    // Enable VSync (VerticalSync mode)
+                    // Based on Stride API: Presenter.VSyncMode = Presenter.VSyncMode.VerticalSync
+                    presenter.VSyncMode = Presenter.VSyncMode.VerticalSync;
+                    Console.WriteLine("[Stride] VSync enabled");
+                }
+                else
+                {
+                    // Disable VSync (None mode)
+                    // Based on Stride API: Presenter.VSyncMode = Presenter.VSyncMode.None
+                    presenter.VSyncMode = Presenter.VSyncMode.None;
+                    Console.WriteLine("[Stride] VSync disabled");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Stride] ERROR: Failed to set VSync: {ex.Message}");
+            }
         }
 
         public void Dispose()

@@ -313,12 +313,35 @@ namespace Andastra.Game.GUI
             _controlMap["WindowIsMouseVisible"] = mouseVisibleCheck;
             layout.Rows.Add(CreateLabeledControl("Mouse Visible:", mouseVisibleCheck, ref row, "WindowIsMouseVisible"));
 
+            // VSync - Generic setting for all backends
+            // Based on IGraphicsBackend.SupportsVSync and SetVSync interface
+            // All graphics backends (MonoGame, Stride) support VSync through the common interface
+            var vsyncCheck = new CheckBox { Checked = _settings.WindowVSync ?? true };
+            _controlMap["WindowVSync"] = vsyncCheck;
+            layout.Rows.Add(CreateLabeledControl("VSync:", vsyncCheck, ref row, "WindowVSync"));
+
             // MonoGame-specific window settings
             if (_selectedBackend == GraphicsBackendType.MonoGame)
             {
-                var syncVerticalRetrace = new CheckBox { Checked = _settings.MonoGameSynchronizeWithVerticalRetrace ?? true };
+                // MonoGame-specific VSync setting (for backward compatibility)
+                // Note: WindowVSync is the preferred generic setting, but we keep this for compatibility
+                var syncVerticalRetrace = new CheckBox { Checked = _settings.MonoGameSynchronizeWithVerticalRetrace ?? (_settings.WindowVSync ?? true) };
                 _controlMap["MonoGameSynchronizeWithVerticalRetrace"] = syncVerticalRetrace;
-                layout.Rows.Add(CreateLabeledControl("VSync:", syncVerticalRetrace, ref row, "MonoGameSynchronizeWithVerticalRetrace"));
+                // Sync MonoGame-specific setting with generic VSync setting
+                syncVerticalRetrace.CheckedChanged += (sender, e) =>
+                {
+                    if (vsyncCheck.Checked != syncVerticalRetrace.Checked)
+                    {
+                        vsyncCheck.Checked = syncVerticalRetrace.Checked;
+                    }
+                };
+                vsyncCheck.CheckedChanged += (sender, e) =>
+                {
+                    if (syncVerticalRetrace.Checked != vsyncCheck.Checked)
+                    {
+                        syncVerticalRetrace.Checked = vsyncCheck.Checked;
+                    }
+                };
 
                 var preferMultiSampling = new CheckBox { Checked = _settings.MonoGamePreferMultiSampling ?? false };
                 _controlMap["MonoGamePreferMultiSampling"] = preferMultiSampling;
@@ -1199,6 +1222,7 @@ namespace Andastra.Game.GUI
             {
                 case "WindowFullscreen": _settings.WindowFullscreen = value; break;
                 case "WindowIsMouseVisible": _settings.WindowIsMouseVisible = value; break;
+                case "WindowVSync": _settings.WindowVSync = value; break;
                 case "MonoGameSynchronizeWithVerticalRetrace": _settings.MonoGameSynchronizeWithVerticalRetrace = value; break;
                 case "MonoGamePreferMultiSampling": _settings.MonoGamePreferMultiSampling = value; break;
                 case "MonoGamePreferHalfPixelOffset": _settings.MonoGamePreferHalfPixelOffset = value; break;
@@ -1502,6 +1526,7 @@ namespace Andastra.Game.GUI
             return a.WindowWidth == b.WindowWidth &&
                    a.WindowHeight == b.WindowHeight &&
                    a.WindowFullscreen == b.WindowFullscreen &&
+                   a.WindowVSync == b.WindowVSync &&
                    a.MonoGameSynchronizeWithVerticalRetrace == b.MonoGameSynchronizeWithVerticalRetrace &&
                    a.MonoGamePreferMultiSampling == b.MonoGamePreferMultiSampling &&
                    a.RasterizerMultiSampleAntiAlias == b.RasterizerMultiSampleAntiAlias &&
@@ -1533,6 +1558,13 @@ namespace Andastra.Game.GUI
         public int? WindowHeight { get; set; }
         public bool? WindowFullscreen { get; set; }
         public bool? WindowIsMouseVisible { get; set; }
+        /// <summary>
+        /// VSync (vertical synchronization) setting for all graphics backends.
+        /// When enabled, synchronizes frame rendering with monitor refresh rate to prevent screen tearing.
+        /// Based on swkotor.exe and swkotor2.exe: VSync controlled via DirectX Present parameters.
+        /// Original implementation: VSync can be toggled in real-time without requiring a restart.
+        /// </summary>
+        public bool? WindowVSync { get; set; }
 
         // MonoGame-Specific Window Settings
         public bool? MonoGameSynchronizeWithVerticalRetrace { get; set; }

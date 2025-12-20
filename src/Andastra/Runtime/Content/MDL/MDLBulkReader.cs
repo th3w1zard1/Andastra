@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+using Andastra.Runtime.Core.MDL;
 
 namespace Andastra.Runtime.Content.MDL
 {

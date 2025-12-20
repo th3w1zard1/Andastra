@@ -19,12 +19,23 @@ namespace Andastra.Parsing.Formats.MDLData
         public bool Fog { get; set; }
         public string Supermodel { get; set; }
         public MDLClassification Classification { get; set; }
+        /// <summary>
+        /// Unknown subclassification value from model header.
+        /// Corresponds to the "Subclassification" byte field in the binary model header.
+        /// Purpose unknown - may be reserved for future use or engine-specific flags.
+        /// </summary>
         public int ClassificationUnk1 { get; set; }
         public float AnimationScale { get; set; }
         public Vector3 BMin { get; set; }
         public Vector3 BMax { get; set; }
         public float Radius { get; set; }
         public string Headlink { get; set; }
+        /// <summary>
+        /// Flag indicating whether orientation quaternions should be compressed.
+        /// When true, uses compressed quaternion format (2 floats + reconstructed W).
+        /// When false, uses full quaternion format (4 floats).
+        /// Corresponds to controller data format detection in binary parsing.
+        /// </summary>
         public int CompressQuaternions { get; set; }
 
         public MDL()
@@ -861,6 +872,12 @@ namespace Andastra.Parsing.Formats.MDLData
         public int HasWeight { get; set; }
         public int Transpar { get; set; }
         public int Rotational { get; set; }
+        /// <summary>
+        /// Unknown field 12 in MDL mesh structure.
+        /// Based on MDLOps trimesh header template analysis, this may correspond to
+        /// one of the unknown uint32 fields in the binary trimesh header structure.
+        /// Purpose unknown. Currently unimplemented - defaults to 0.
+        /// </summary>
         public int Unknown12 { get; set; }
 
         // ASCII MDL format compatibility properties
@@ -888,7 +905,15 @@ namespace Andastra.Parsing.Formats.MDLData
         public string DirtTexture { get; set; }  // Dirt texture name
         // Saber-specific properties (matching PyKotor mdl_data.py:MDLMesh)
         // Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_data.py:1223
-        public byte[] SaberUnknowns { get; set; }  // Saber-specific unknown data (8 bytes, default: 3,0,0,0,0,0,0,0)
+        /// <summary>
+        /// Saber-specific unknown data (8 bytes).
+        /// Used only for lightsaber mesh nodes (NODE_HAS_SABER flag set).
+        /// Based on MDLOps analysis, this corresponds to saber mesh header data after the standard trimesh header.
+        /// Default values: { 3, 0, 0, 0, 0, 0, 0, 0 }
+        /// The first byte (value 3) may indicate saber piece type or rendering mode.
+        /// Purpose of remaining 7 bytes unknown.
+        /// </summary>
+        public byte[] SaberUnknowns { get; set; }
         public List<Vector3> VertexPositions
         {
             get { return Vertices; }
@@ -1054,8 +1079,25 @@ namespace Andastra.Parsing.Formats.MDLData
         public int NodeId { get; set; }
         public Vector3 Position { get; set; }
         public Vector4 Orientation { get; set; }
+        /// <summary>
+        /// Unknown field 0 in MDL node structure.
+        /// Based on MDLOps analysis, this may correspond to m_bUnknown1 field at index 18 in trimesh subheader.
+        /// Possibly a boolean flag related to rendering or processing state.
+        /// Currently unimplemented - defaults to 0.
+        /// </summary>
         public int Unknown0 { get; set; }
+
+        /// <summary>
+        /// Unknown field 1 in MDL node structure.
+        /// Purpose unknown. Currently unimplemented - defaults to 0.
+        /// </summary>
         public int Unknown1 { get; set; }
+
+        /// <summary>
+        /// Unknown field 2 in MDL node structure.
+        /// Based on MDLOps analysis, this may correspond to 'unknown' field at index 32 in trimesh subheader.
+        /// Purpose unknown. Currently unimplemented - defaults to 0.
+        /// </summary>
         public int Unknown2 { get; set; }
         public bool IgnoreFog { get; set; }
         public bool Shadow { get; set; }

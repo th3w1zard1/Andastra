@@ -50,6 +50,7 @@ namespace Andastra.Game.GUI
                 WindowHeight = 768,
                 WindowFullscreen = false,
                 WindowIsMouseVisible = true,
+                WindowVSync = false,
 
                 // MonoGame
                 MonoGameSynchronizeWithVerticalRetrace = false,
@@ -104,6 +105,7 @@ namespace Andastra.Game.GUI
             var settings = CreateLowPreset();
             settings.WindowWidth = 1280;
             settings.WindowHeight = 720;
+            settings.WindowVSync = true;
             settings.MonoGameSynchronizeWithVerticalRetrace = true;
             settings.MonoGameGraphicsProfile = "HiDef";
             settings.RasterizerMultiSampleAntiAlias = false;
@@ -157,6 +159,7 @@ namespace Andastra.Game.GUI
             { "WindowHeight", "The height of the game window in pixels. Minimum: 240, Maximum: 4320." },
             { "WindowFullscreen", "Enable fullscreen mode. The game will run in exclusive fullscreen mode." },
             { "WindowIsMouseVisible", "Show or hide the mouse cursor in the game window." },
+            { "WindowVSync", "Enable VSync (vertical synchronization) to synchronize frame rendering with the monitor's refresh rate. Reduces screen tearing but may limit FPS to the monitor's refresh rate. Based on swkotor.exe and swkotor2.exe: VSync controlled via DirectX Present parameters. Can be toggled in real-time without requiring a restart." },
 
             // MonoGame Settings
             { "MonoGameSynchronizeWithVerticalRetrace", "Enable VSync to synchronize frame rendering with the monitor's refresh rate. Reduces screen tearing but may limit FPS." },

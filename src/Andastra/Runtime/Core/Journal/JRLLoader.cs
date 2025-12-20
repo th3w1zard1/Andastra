@@ -137,8 +137,81 @@ namespace Andastra.Runtime.Core.Journal
                 return null;
             }
 
-            // Use Parsing's merged helper method
-            return JRLHelpers.GetQuestEntryText(jrl, questTag, entryId, _baseTlk, _customTlk);
+            // Find quest by tag
+            JRLQuest quest = null;
+            foreach (JRLQuest q in jrl.Quests)
+            {
+                if (string.Equals(q.Tag, questTag, StringComparison.OrdinalIgnoreCase))
+                {
+                    quest = q;
+                    break;
+                }
+            }
+
+            if (quest == null)
+            {
+                return null;
+            }
+
+            // Find entry by EntryId
+            // Note: EntryId in JRL is the actual ID stored in the file
+            // We need to match by EntryId, not by index
+            JRLQuestEntry entry = null;
+            foreach (JRLQuestEntry e in quest.Entries)
+            {
+                if (e.EntryId == entryId)
+                {
+                    entry = e;
+                    break;
+                }
+            }
+
+            // If not found by EntryId, try by index (0-based)
+            if (entry == null && entryId >= 0 && entryId < quest.Entries.Count)
+            {
+                entry = quest.Entries[entryId];
+            }
+
+            if (entry == null)
+            {
+                return null;
+            }
+
+            // Resolve LocalizedString to text
+            LocalizedString locString = entry.Text;
+            if (locString == null)
+            {
+                return null;
+            }
+
+            // If StringRef is valid (>= 0), use TLK lookup
+            if (locString.StringRef >= 0)
+            {
+                // Resolve using TLK tables
+                if (_baseTlk != null)
+                {
+                    TLKEntry tlkEntry = _baseTlk.Get(locString.StringRef);
+                    if (tlkEntry != null && !string.IsNullOrEmpty(tlkEntry.Text))
+                    {
+                        return tlkEntry.Text;
+                    }
+                }
+
+                if (_customTlk != null)
+                {
+                    TLKEntry tlkEntry = _customTlk.Get(locString.StringRef);
+                    if (tlkEntry != null && !string.IsNullOrEmpty(tlkEntry.Text))
+                    {
+                        return tlkEntry.Text;
+                    }
+                }
+
+                // Fallback: return string ID if TLK not available
+                return locString.StringRef.ToString();
+            }
+
+            // If StringRef is -1, use stored substrings (get English male as fallback)
+            return locString.Get(Language.English, Gender.Male, useFallback: true);
         }
 
         /// <summary>
@@ -174,8 +247,16 @@ namespace Andastra.Runtime.Core.Journal
                 return null;
             }
 
-            // Use Parsing's merged helper method
-            return JRLHelpers.FindQuestByTag(jrl, questTag);
+            // Find quest by tag
+            foreach (JRLQuest quest in jrl.Quests)
+            {
+                if (string.Equals(quest.Tag, questTag, StringComparison.OrdinalIgnoreCase))
+                {
+                    return quest;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>

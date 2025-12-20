@@ -7,8 +7,10 @@ using System.Reflection;
 using JetBrains.Annotations;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.MDL;
+using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
+using Andastra.Runtime.Graphics.MonoGame.Converters;
 using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
@@ -134,6 +136,9 @@ namespace Andastra.Runtime.Game.Core
         private float _mainMenuModelRotation = 0f; // Rotation angle for 3D model (in radians)
         private const float MainMenuRotationSpeed = 0.5f; // Rotation speed in radians per second (based on original games)
         private string _previousHighlightedButton = null; // Track button hover for sound effects
+        // Parent node map for efficient parent lookups (built once when model loads)
+        // Based on swkotor.exe and swkotor2.exe: MDL node hierarchy traversal for transforms
+        private Dictionary<MDLNode, MDLNode> _mainMenuModelParentMap;
 
         // Save/Load system
         private Andastra.Runtime.Core.Save.SaveSystem _saveSystem;
@@ -1108,6 +1113,12 @@ namespace Andastra.Runtime.Game.Core
                         {
                             _mainMenuModel = reader.Read();
 
+                            // Build parent node map for efficient parent lookups
+                            // Based on swkotor.exe and swkotor2.exe: MDL node hierarchy traversal
+                            // Original implementation: Tracks parent-child relationships for transform accumulation
+                            // This map is built once when model loads, then used for all transform calculations
+                            _mainMenuModelParentMap = BuildParentNodeMap(_mainMenuModel.RootNode);
+
                             // Find camera hook position in the model
                             // Based on swkotor.exe and swkotor2.exe: Searches MDL node tree for "camerahook1" node
                             // Camera hook format: "camerahook{N}" where N is 1-based index
@@ -1120,22 +1131,52 @@ namespace Andastra.Runtime.Game.Core
                                 {
                                     try
                                     {
+                                        // Load TPC texture and convert to MonoGame Texture2D
+                                        // Based on swkotor.exe and swkotor2.exe: Texture loading system
+                                        // Original implementation: Loads TPC files and creates DirectX textures (D3DTexture8/9)
+                                        // This MonoGame implementation: Converts TPC format to MonoGame Texture2D using TpcToMonoGameTextureConverter
                                         var textureRes = resourceProvider.GetResource(textureName, ResourceType.TPC);
                                         if (textureRes != null)
                                         {
-                                            // Load texture and create BasicEffect
-                                            // This is a simplified version - full implementation would load TPC texture
-                                            var effect = new Microsoft.Xna.Framework.Graphics.BasicEffect(mgDevice.Device);
-                                            effect.EnableDefaultLighting();
-                                            return effect;
+                                            // Parse TPC texture using TPCAuto (handles TPC, DDS, and TGA formats)
+                                            // Based on swkotor.exe texture loading: Supports multiple texture formats
+                                            var tpc = TPCAuto.ReadTpc(textureRes);
+
+                                            // Convert TPC to MonoGame Texture2D
+                                            // Based on TpcToMonoGameTextureConverter: Handles DXT1/DXT3/DXT5, RGB/RGBA, grayscale
+                                            var texture = TpcToMonoGameTextureConverter.Convert(tpc, mgDevice.Device, generateMipmaps: true);
+
+                                            if (texture is Microsoft.Xna.Framework.Graphics.Texture2D texture2D)
+                                            {
+                                                // Create BasicEffect with loaded texture
+                                                // Based on swkotor.exe and swkotor2.exe: Material system uses textures for rendering
+                                                // Original implementation: Sets texture on material/shader for rendering
+                                                var effect = new Microsoft.Xna.Framework.Graphics.BasicEffect(mgDevice.Device);
+                                                effect.Texture = texture2D;
+                                                effect.TextureEnabled = true;
+                                                effect.EnableDefaultLighting();
+                                                effect.LightingEnabled = true;
+
+                                                // Set ambient and diffuse lighting to match original engine
+                                                // Based on swkotor.exe: Default lighting setup for menu models
+                                                effect.AmbientLightColor = new Microsoft.Xna.Framework.Vector3(0.3f, 0.3f, 0.3f);
+                                                effect.DiffuseColor = new Microsoft.Xna.Framework.Vector3(1.0f, 1.0f, 1.0f);
+
+                                                return effect;
+                                            }
                                         }
                                     }
-                                    catch
+                                    catch (Exception texEx)
                                     {
-                                        // Fallback to default effect
+                                        // Log texture loading error but continue with default effect
+                                        Console.WriteLine($"[Odyssey] WARNING: Failed to load texture {textureName}: {texEx.Message}");
                                     }
+
+                                    // Fallback to default effect if texture loading fails
+                                    // Based on swkotor.exe: Uses default material when texture is missing
                                     var defaultEffect = new Microsoft.Xna.Framework.Graphics.BasicEffect(mgDevice.Device);
                                     defaultEffect.EnableDefaultLighting();
+                                    defaultEffect.LightingEnabled = true;
                                     return defaultEffect;
                                 });
 
@@ -1240,23 +1281,88 @@ namespace Andastra.Runtime.Game.Core
         }
 
         /// <summary>
-        /// Gets the world transform matrix for a node by accumulating parent transforms.
+        /// Builds a parent node map for efficient parent lookups.
+        /// Based on swkotor.exe and swkotor2.exe: MDL node hierarchy traversal
+        /// Original implementation: Tracks parent-child relationships for transform accumulation
+        /// This map is built once when model loads, then used for all transform calculations
         /// </summary>
+        /// <param name="rootNode">The root node of the MDL model.</param>
+        /// <returns>A dictionary mapping each node to its parent node (root node maps to null).</returns>
+        private Dictionary<MDLNode, MDLNode> BuildParentNodeMap(MDLNode rootNode)
+        {
+            var parentMap = new Dictionary<MDLNode, MDLNode>();
+
+            if (rootNode == null)
+            {
+                return parentMap;
+            }
+
+            // Root node has no parent
+            parentMap[rootNode] = null;
+
+            // Recursively build parent map for all children
+            // Based on swkotor.exe: MDL node tree traversal for building transform hierarchy
+            BuildParentNodeMapRecursive(rootNode, parentMap);
+
+            return parentMap;
+        }
+
+        /// <summary>
+        /// Recursively builds parent node map for all nodes in the tree.
+        /// </summary>
+        private void BuildParentNodeMapRecursive(MDLNode parentNode, Dictionary<MDLNode, MDLNode> parentMap)
+        {
+            if (parentNode == null || parentNode.Children == null)
+            {
+                return;
+            }
+
+            // Map each child to its parent
+            foreach (var child in parentNode.Children)
+            {
+                if (child != null)
+                {
+                    parentMap[child] = parentNode;
+                    // Recursively process children
+                    BuildParentNodeMapRecursive(child, parentMap);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the world transform matrix for a node by accumulating parent transforms.
+        /// Based on swkotor.exe and swkotor2.exe: Transform accumulation for MDL nodes
+        /// Original implementation: Accumulates transforms from root to target node
+        /// Uses parent map for efficient O(1) parent lookups instead of O(n) recursive search
+        /// </summary>
+        /// <param name="rootNode">The root node of the MDL model.</param>
+        /// <param name="targetNode">The target node to get world transform for.</param>
+        /// <returns>World transform matrix accumulated from root to target node.</returns>
         private System.Numerics.Matrix4x4 GetNodeWorldTransform(MDLNode rootNode, MDLNode targetNode)
         {
-            System.Numerics.Matrix4x4 transform = System.Numerics.Matrix4x4.Identity;
+            if (rootNode == null || targetNode == null || _mainMenuModelParentMap == null)
+            {
+                return System.Numerics.Matrix4x4.Identity;
+            }
+
+            // Build transform chain from target to root using parent map
+            // Based on swkotor.exe: Transform accumulation traverses parent chain
+            var transformChain = new List<MDLNode>();
             MDLNode current = targetNode;
 
-            // Build transform chain from target to root
-            var transformChain = new List<MDLNode>();
             while (current != null && current != rootNode)
             {
                 transformChain.Add(current);
-                // Find parent node (this is simplified - actual implementation would track parent references)
-                current = FindParentNode(rootNode, current);
+                // Use parent map for O(1) lookup instead of recursive search
+                if (!_mainMenuModelParentMap.TryGetValue(current, out current))
+                {
+                    break; // Reached root or node not in map
+                }
             }
 
             // Apply transforms in reverse order (from root to target)
+            // Based on swkotor.exe: Transforms are applied in parent-to-child order
+            System.Numerics.Matrix4x4 transform = System.Numerics.Matrix4x4.Identity;
             for (int i = transformChain.Count - 1; i >= 0; i--)
             {
                 var node = transformChain[i];
@@ -1265,36 +1371,6 @@ namespace Andastra.Runtime.Game.Core
             }
 
             return transform;
-        }
-
-        /// <summary>
-        /// Finds the parent node of a given node in the tree.
-        /// </summary>
-        private MDLNode FindParentNode(MDLNode rootNode, MDLNode targetNode)
-        {
-            if (rootNode == null || targetNode == null)
-            {
-                return null;
-            }
-
-            // Search recursively for the parent
-            if (rootNode.Children != null)
-            {
-                foreach (var child in rootNode.Children)
-                {
-                    if (child == targetNode)
-                    {
-                        return rootNode;
-                    }
-                    var parent = FindParentNode(child, targetNode);
-                    if (parent != null)
-                    {
-                        return parent;
-                    }
-                }
-            }
-
-            return null;
         }
 
         /// <summary>

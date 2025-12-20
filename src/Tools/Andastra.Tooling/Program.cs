@@ -4,6 +4,8 @@ using System.CommandLine.Invocation;
 using System.IO;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
+using Andastra.Runtime.Scripting.VM;
+using Andastra.Runtime.Scripting.Interfaces;
 
 namespace Andastra.Runtime.Tooling
 {
@@ -50,9 +52,13 @@ namespace Andastra.Runtime.Tooling
             rootCommand.Add(dumpCommand);
 
             // run-script command
-            var scriptPath = new Option<FileInfo>("--script", "Path to NCS file");
+            var scriptPath = new Option<FileInfo>("--script", "Path to NCS file")
+            {
+                Required = true
+            };
             var runScriptCommand = new Command("run-script", "Execute an NCS script with mocked world");
             runScriptCommand.Options.Add(scriptPath);
+            runScriptCommand.SetHandler((FileInfo script) => RunScript(script), scriptPath);
             rootCommand.Add(runScriptCommand);
 
             try
@@ -277,6 +283,17 @@ namespace Andastra.Runtime.Tooling
             }
         }
 
+        /// <summary>
+        /// Executes an NCS script file with a mocked world environment.
+        /// </summary>
+        /// <remarks>
+        /// Script Execution:
+        /// - Based on swkotor2.exe: NCS VM execution system
+        /// - Loads NCS bytecode from file and executes via NCS VM
+        /// - Creates mocked world, entity, engine API, and script globals for script execution
+        /// - Provides minimal but functional environment for testing script execution
+        /// - Prints script output and execution statistics
+        /// </remarks>
         private static void RunScript(FileInfo script)
         {
             Console.WriteLine("Running script: " + (script?.FullName ?? "not specified"));
@@ -288,8 +305,105 @@ namespace Andastra.Runtime.Tooling
                 return;
             }
 
-            // TODO: Implement script execution
-            Console.WriteLine("Script execution not yet implemented.");
+            try
+            {
+                // Load NCS bytecode from file
+                byte[] ncsBytes;
+                try
+                {
+                    ncsBytes = File.ReadAllBytes(script.FullName);
+                    Console.WriteLine($"Loaded NCS file: {ncsBytes.Length} bytes");
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"ERROR: Failed to read script file: {ex.Message}");
+                    Environment.ExitCode = 1;
+                    return;
+                }
+
+                // Validate NCS header
+                if (ncsBytes.Length < 13)
+                {
+                    Console.Error.WriteLine("ERROR: NCS file is too small (invalid format).");
+                    Environment.ExitCode = 1;
+                    return;
+                }
+
+                if (ncsBytes[0] != 'N' || ncsBytes[1] != 'C' || ncsBytes[2] != 'S' || ncsBytes[3] != ' ')
+                {
+                    Console.Error.WriteLine("ERROR: Invalid NCS signature (expected 'NCS ').");
+                    Environment.ExitCode = 1;
+                    return;
+                }
+
+                if (ncsBytes[4] != 'V' || ncsBytes[5] != '1' || ncsBytes[6] != '.' || ncsBytes[7] != '0')
+                {
+                    Console.Error.WriteLine("ERROR: Invalid NCS version (expected 'V1.0').");
+                    Environment.ExitCode = 1;
+                    return;
+                }
+
+                // Create mocked execution environment
+                Console.WriteLine("Creating mocked execution environment...");
+                
+                // Create mock world
+                var world = new MockWorld();
+                
+                // Create mock entity (caller)
+                var caller = new MockEntity("SCRIPT_CALLER");
+                world.RegisterEntity(caller);
+                
+                // Create mock engine API
+                var engineApi = new MockEngineApi();
+                
+                // Create script globals
+                var globals = new Andastra.Runtime.Scripting.VM.ScriptGlobals();
+                
+                // Create execution context
+                var context = new ExecutionContext(caller, world, engineApi, globals);
+                // Set resource provider to null (scripts won't be able to load other scripts via ExecuteScript)
+                context.ResourceProvider = null;
+                
+                // Create NCS VM
+                var vm = new NcsVm();
+                vm.MaxInstructions = 100000; // Default instruction limit
+                vm.EnableTracing = false; // Disable tracing by default (can be enabled for debugging)
+                
+                Console.WriteLine("Executing script...");
+                Console.WriteLine("--- Script Output ---");
+                
+                // Execute script
+                int returnValue;
+                try
+                {
+                    returnValue = vm.Execute(ncsBytes, context);
+                    
+                    Console.WriteLine("--- End Script Output ---");
+                    Console.WriteLine($"Script execution completed.");
+                    Console.WriteLine($"Return value: {returnValue}");
+                    Console.WriteLine($"Instructions executed: {vm.InstructionsExecuted}");
+                    
+                    if (vm.InstructionsExecuted >= vm.MaxInstructions)
+                    {
+                        Console.WriteLine("WARNING: Script hit instruction limit (possible infinite loop).");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"ERROR: Script execution failed: {ex.Message}");
+                    Console.Error.WriteLine($"Stack trace: {ex.StackTrace}");
+                    Environment.ExitCode = 1;
+                    return;
+                }
+                
+                Console.WriteLine("Script execution complete.");
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"ERROR: Unexpected error during script execution: {ex.Message}");
+                Console.Error.WriteLine($"Stack trace: {ex.StackTrace}");
+                Environment.ExitCode = 1;
+            }
         }
     }
 }

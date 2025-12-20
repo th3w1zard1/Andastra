@@ -1,8 +1,5 @@
-using System;
-using System.Collections.Generic;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.TLK;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Common;
 
@@ -23,24 +20,24 @@ namespace Andastra.Parsing.Resource.Generics
             {
                 var quest = new JRLQuest();
                 jrl.Quests.Add(quest);
-
+                
                 // Engine default: "" (swkotor2.exe:0x00600dd0 line 138, swkotor.exe:0x005c5a40 line 138)
                 // Note: Comment field is written but not read in engine loading function - optional field
                 quest.Comment = categoryStruct.Acquire("Comment", string.Empty);
-
+                
                 // Engine default: LocalizedString (swkotor2.exe:0x00600dd0 line 151, swkotor.exe:0x005c5a40 line 151)
                 quest.Name = categoryStruct.Acquire("Name", LocalizedString.FromInvalid());
-
+                
                 // Engine default: 0 (swkotor2.exe:0x00600dd0 line 186, swkotor.exe:0x005c5a40 line 186)
                 quest.PlanetId = categoryStruct.Acquire("PlanetID", 0);
-
+                
                 // Engine default: 0 (swkotor2.exe:0x00600dd0 line 180, swkotor.exe:0x005c5a40 line 180)
                 quest.PlotIndex = categoryStruct.Acquire("PlotIndex", 0);
-
+                
                 // Engine default: 0 (swkotor2.exe:0x00600dd0 line 165, swkotor.exe:0x005c5a40 line 165)
                 int priorityValue = categoryStruct.Acquire("Priority", 0);
                 quest.Priority = (JRLQuestPriority)priorityValue;
-
+                
                 // Engine default: "" (swkotor2.exe:0x00600dd0 line 138, swkotor.exe:0x005c5a40 line 138)
                 quest.Tag = categoryStruct.Acquire("Tag", string.Empty);
 
@@ -50,16 +47,16 @@ namespace Andastra.Parsing.Resource.Generics
                 {
                     var entry = new JRLQuestEntry();
                     quest.Entries.Add(entry);
-
+                    
                     // Engine default: 0 (swkotor2.exe:0x00600dd0 line 237, swkotor.exe:0x005c5a40 line 237)
                     entry.End = entryStruct.Acquire("End", (ushort)0) != 0;
-
+                    
                     // Engine default: 0 (swkotor2.exe:0x00600dd0 line 205, swkotor.exe:0x005c5a40 line 205)
                     entry.EntryId = (int)entryStruct.Acquire("ID", (uint)0);
-
+                    
                     // Engine default: LocalizedString (swkotor2.exe:0x00600dd0 line 209, swkotor.exe:0x005c5a40 line 209)
                     entry.Text = entryStruct.Acquire("Text", LocalizedString.FromInvalid());
-
+                    
                     // Engine default: 0.0 (swkotor2.exe:0x00600dd0 line 222, swkotor.exe:0x005c5a40 line 222)
                     entry.XpPercentage = entryStruct.Acquire("XP_Percentage", 0.0f);
                 }
@@ -127,144 +124,6 @@ namespace Andastra.Parsing.Resource.Generics
             }
             GFF gff = DismantleJrl(jrl);
             return GFFAuto.BytesGff(gff, fileFormat);
-        }
-
-        /// <summary>
-        /// Finds a quest by tag in a JRL file.
-        /// Merged from Runtime.Core.Journal.JRLLoader.GetQuestByTag()
-        /// </summary>
-        /// <param name="jrl">The JRL instance to search</param>
-        /// <param name="questTag">The quest tag to find</param>
-        /// <returns>The quest if found, null otherwise</returns>
-        public static JRLQuest FindQuestByTag(JRL jrl, string questTag)
-        {
-            if (jrl == null || string.IsNullOrEmpty(questTag))
-            {
-                return null;
-            }
-
-            foreach (JRLQuest quest in jrl.Quests)
-            {
-                if (string.Equals(quest.Tag, questTag, StringComparison.OrdinalIgnoreCase))
-                {
-                    return quest;
-                }
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Finds a quest entry by EntryId in a quest.
-        /// Merged from Runtime.Core.Journal.JRLLoader.GetQuestEntryText()
-        /// </summary>
-        /// <param name="quest">The quest to search</param>
-        /// <param name="entryId">The entry ID to find</param>
-        /// <returns>The entry if found, null otherwise</returns>
-        public static JRLQuestEntry FindEntryById(JRLQuest quest, int entryId)
-        {
-            if (quest == null)
-            {
-                return null;
-            }
-
-            // First try to find by EntryId (the actual ID stored in the file)
-            foreach (JRLQuestEntry entry in quest.Entries)
-            {
-                if (entry.EntryId == entryId)
-                {
-                    return entry;
-                }
-            }
-
-            // If not found by EntryId, try by index (0-based) as fallback
-            if (entryId >= 0 && entryId < quest.Entries.Count)
-            {
-                return quest.Entries[entryId];
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Resolves a LocalizedString to text using TLK tables.
-        /// Merged from Runtime.Core.Journal.JRLLoader.GetQuestEntryText()
-        /// </summary>
-        /// <param name="locString">The LocalizedString to resolve</param>
-        /// <param name="baseTlk">Base talk table (optional)</param>
-        /// <param name="customTlk">Custom talk table (optional)</param>
-        /// <returns>The resolved text, or null if unable to resolve</returns>
-        public static string ResolveLocalizedString(LocalizedString locString, TLK baseTlk = null, TLK customTlk = null)
-        {
-            if (locString == null)
-            {
-                return null;
-            }
-
-            // If StringRef is valid (>= 0), use TLK lookup
-            if (locString.StringRef >= 0)
-            {
-                // Try custom TLK first (overrides base)
-                if (customTlk != null)
-                {
-                    TLKEntry tlkEntry = customTlk.Get(locString.StringRef);
-                    if (tlkEntry != null && !string.IsNullOrEmpty(tlkEntry.Text))
-                    {
-                        return tlkEntry.Text;
-                    }
-                }
-
-                // Try base TLK
-                if (baseTlk != null)
-                {
-                    TLKEntry tlkEntry = baseTlk.Get(locString.StringRef);
-                    if (tlkEntry != null && !string.IsNullOrEmpty(tlkEntry.Text))
-                    {
-                        return tlkEntry.Text;
-                    }
-                }
-
-                // Fallback: return string ID if TLK not available
-                return locString.StringRef.ToString();
-            }
-
-            // If StringRef is -1, use stored substrings (get English male as fallback)
-            return locString.Get(Language.English, Gender.Male, useFallback: true);
-        }
-
-        /// <summary>
-        /// Gets quest entry text from a JRL file by quest tag and entry ID.
-        /// Merged from Runtime.Core.Journal.JRLLoader.GetQuestEntryText()
-        /// </summary>
-        /// <param name="jrl">The JRL instance</param>
-        /// <param name="questTag">The quest tag</param>
-        /// <param name="entryId">The entry ID</param>
-        /// <param name="baseTlk">Base talk table for LocalizedString resolution (optional)</param>
-        /// <param name="customTlk">Custom talk table for LocalizedString resolution (optional)</param>
-        /// <returns>The resolved entry text, or null if not found</returns>
-        public static string GetQuestEntryText(JRL jrl, string questTag, int entryId, TLK baseTlk = null, TLK customTlk = null)
-        {
-            if (jrl == null || string.IsNullOrEmpty(questTag))
-            {
-                return null;
-            }
-
-            // Find quest by tag
-            JRLQuest quest = FindQuestByTag(jrl, questTag);
-            if (quest == null)
-            {
-                return null;
-            }
-
-            // Find entry by ID
-            JRLQuestEntry entry = FindEntryById(quest, entryId);
-            if (entry == null)
-            {
-                return null;
-            }
-
-            // Resolve LocalizedString to text
-            return ResolveLocalizedString(entry.Text, baseTlk, customTlk);
         }
     }
 }

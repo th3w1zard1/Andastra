@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using Andastra.Parsing.Resource;
 using Andastra.Runtime.Content.Interfaces;
+using Andastra.Runtime.Core.MDL;
 
 namespace Andastra.Runtime.Content.MDL
 {
@@ -24,24 +25,24 @@ namespace Andastra.Runtime.Content.MDL
     /// - MDL files contain: Model structure, nodes, animations, bounding boxes, classification
     /// - MDX files contain: Vertex data, texture coordinates, normals, face indices
     /// - Original engine uses binary file format with specific offsets and structures
-    /// 
+    ///
     /// Optimization features:
     /// - Automatic model caching (configurable via UseCache property)
     /// - Ultra-optimized unsafe reader (MDLOptimizedReader) for maximum performance
     /// - Falls back to MDLBulkReader or MDLFastReader based on configuration
-    /// 
+    ///
     /// Performance characteristics:
     /// - Bulk read of entire MDL/MDX files into memory
     /// - Unsafe pointer operations for zero-copy direct memory access
     /// - Pre-allocated arrays based on header counts
     /// - Pre-computed vertex attribute offsets for single-pass reading
     /// - LRU cache with configurable size (default 100 models)
-    /// 
+    ///
     /// Reader selection (configurable via properties):
     /// - MDLOptimizedReader (default): Fastest, uses unsafe code and zero-copy operations
     /// - MDLBulkReader: Good performance with safe code, bulk operations
     /// - MDLFastReader: Stream-based loading for low-memory scenarios
-    /// 
+    ///
     /// Reference: KotOR.js MDLLoader.ts, reone mdlmdxreader.cpp, MDLOps
     /// Based on MDL file format documentation in vendor/PyKotor/wiki/MDL-MDX-File-Format.md
     /// </remarks>

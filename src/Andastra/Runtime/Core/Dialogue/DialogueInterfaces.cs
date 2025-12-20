@@ -92,6 +92,12 @@ namespace Andastra.Runtime.Core.Dialogue
         /// Gets the current playback position in seconds.
         /// </summary>
         float CurrentTime { get; }
+
+        /// <summary>
+        /// Gets or sets the voice volume (0.0 to 1.0).
+        /// Based on swkotor.exe and swkotor2.exe: VoiceVolume setting from INI file
+        /// </summary>
+        float Volume { get; set; }
     }
 
     /// <summary>

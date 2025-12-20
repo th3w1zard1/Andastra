@@ -129,6 +129,33 @@ namespace Andastra.Runtime.Graphics
         /// <param name="resourceProvider">Resource provider for loading audio files.</param>
         /// <returns>Created voice player.</returns>
         object CreateVoicePlayer(object resourceProvider);
+
+        /// <summary>
+        /// Gets whether the graphics backend supports VSync (vertical synchronization).
+        /// </summary>
+        /// <remarks>
+        /// VSync Support:
+        /// - Based on swkotor.exe and swkotor2.exe graphics options system
+        /// - Original implementation: VSync controlled through DirectX Present parameters
+        /// - VSync synchronizes frame rendering with monitor refresh rate to prevent screen tearing
+        /// - Some graphics backends may not support VSync (e.g., headless renderers)
+        /// </remarks>
+        bool SupportsVSync { get; }
+
+        /// <summary>
+        /// Sets the VSync (vertical synchronization) state.
+        /// </summary>
+        /// <param name="enabled">True to enable VSync, false to disable it.</param>
+        /// <remarks>
+        /// VSync Setting:
+        /// - Based on swkotor.exe and swkotor2.exe graphics options
+        /// - Original implementation: VSync controlled via DirectX Present flags (swkotor2.exe: DirectX device presentation)
+        /// - When enabled, frames are synchronized with monitor refresh rate (typically 60Hz, 120Hz, etc.)
+        /// - Reduces screen tearing but may limit frame rate to monitor refresh rate
+        /// - Can be applied immediately without restarting the game
+        /// - If VSync is not supported, this method should do nothing (no-op)
+        /// </remarks>
+        void SetVSync(bool enabled);
     }
 }
 

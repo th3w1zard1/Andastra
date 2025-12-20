@@ -5,9 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.LYT;
+using Andastra.Utility.Geometry;
 
-namespace Andastra.Parsing.Formats.LYT
+namespace Andastra.Parsing.Resource.Formats.LYT
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lyt/io_lyt.py:17-113
     // Original: class LYTAsciiReader(ResourceReader)
@@ -19,7 +21,7 @@ namespace Andastra.Parsing.Formats.LYT
         private const string DoorhookCountKey = "doorhookcount";
 
         private readonly Andastra.Parsing.Common.RawBinaryReader _reader;
-        private LYT _lyt;
+        private Andastra.Parsing.Resource.Formats.LYT.LYT _lyt;
         private List<string> _lines;
 
         public LYTAsciiReader(byte[] data, int offset = 0, int size = 0)
@@ -42,11 +44,11 @@ namespace Andastra.Parsing.Formats.LYT
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lyt/io_lyt.py:42-61
         // Original: @autoclose def load(self, *, auto_close: bool = True) -> LYT
-        public LYT Load(bool autoClose = true)
+        public Andastra.Parsing.Resource.Formats.LYT.LYT Load(bool autoClose = true)
         {
             try
             {
-                _lyt = new LYT();
+                _lyt = new Andastra.Parsing.Resource.Formats.LYT.LYT();
                 byte[] allBytes = _reader.ReadAll();
                 string text = Encoding.ASCII.GetString(allBytes);
                 _lines = text.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None).ToList();
@@ -108,7 +110,7 @@ namespace Andastra.Parsing.Formats.LYT
                 {
                     string model = tokens[0];
                     Vector3 position = new Vector3(float.Parse(tokens[1]), float.Parse(tokens[2]), float.Parse(tokens[3]));
-                    _lyt.Rooms.Add(new LYTRoom(model, position));
+                    _lyt.Rooms.Add(new LYTRoom { Model = new ResRef(model), Position = position });
                 }
             }
         }
@@ -128,7 +130,7 @@ namespace Andastra.Parsing.Formats.LYT
                 {
                     string model = tokens[0];
                     Vector3 position = new Vector3(float.Parse(tokens[1]), float.Parse(tokens[2]), float.Parse(tokens[3]));
-                    _lyt.Tracks.Add(new LYTTrack(model, position));
+                    _lyt.Tracks.Add(new LYTTrack { Model = new ResRef(model), Position = position });
                 }
             }
         }
@@ -148,7 +150,7 @@ namespace Andastra.Parsing.Formats.LYT
                 {
                     string model = tokens[0];
                     Vector3 position = new Vector3(float.Parse(tokens[1]), float.Parse(tokens[2]), float.Parse(tokens[3]));
-                    _lyt.Obstacles.Add(new LYTObstacle(model, position));
+                    _lyt.Obstacles.Add(new LYTObstacle { Model = new ResRef(model), Position = position });
                 }
             }
         }
@@ -175,7 +177,7 @@ namespace Andastra.Parsing.Formats.LYT
                         float.Parse(tokens[8]),
                         float.Parse(tokens[9])
                     );
-                    _lyt.Doorhooks.Add(new LYTDoorHook(room, door, position, orientation));
+                    _lyt.DoorHooks.Add(new LYTDoorHook { Room = room, Door = door, Position = position, Orientation = new Andastra.Utility.Geometry.Quaternion(orientation.X, orientation.Y, orientation.Z, orientation.W) });
                 }
             }
         }

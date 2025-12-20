@@ -6,7 +6,7 @@ using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.LIP;
 using Andastra.Parsing.Formats.LTR;
-using Andastra.Parsing.Formats.LYT;
+using Andastra.Parsing.Resource.Formats.LYT;
 using Andastra.Parsing.Formats.MDL;
 using Andastra.Parsing.Formats.MDLData;
 using Andastra.Parsing.Formats.NCS;
@@ -141,7 +141,7 @@ namespace Andastra.Parsing.Resource
                 }
                 if (resourceExt == "lyt")
                 {
-                    LYT lyt = LYTAuto.ReadLyt(source);
+                    Andastra.Parsing.Resource.Formats.LYT.LYT lyt = LYTAuto.ReadLyt(source);
                     return LYTAuto.BytesLyt(lyt);
                 }
                 if (resourceExt == "ltr")
@@ -253,7 +253,7 @@ namespace Andastra.Parsing.Resource
 
             try
             {
-                LYT lyt = LYTAuto.ReadLyt(source);
+                Andastra.Parsing.Resource.Formats.LYT.LYT lyt = LYTAuto.ReadLyt(source);
                 return LYTAuto.BytesLyt(lyt);
             }
             catch { }
@@ -379,7 +379,7 @@ namespace Andastra.Parsing.Resource
             {
                 return LTRAuto.BytesLtr(ltr);
             }
-            if (resource is LYT lyt)
+            if (resource is Andastra.Parsing.Resource.Formats.LYT.LYT lyt)
             {
                 return LYTAuto.BytesLyt(lyt);
             }

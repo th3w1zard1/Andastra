@@ -902,9 +902,9 @@ namespace Andastra.Parsing.Formats.MDL
                     binFace.Vertex1 = (ushort)face.V1;
                     binFace.Vertex2 = (ushort)face.V2;
                     binFace.Vertex3 = (ushort)face.V3;
-                    binFace.Adjacent1 = (ushort)face.Adjacent1;
-                    binFace.Adjacent2 = (ushort)face.Adjacent2;
-                    binFace.Adjacent3 = (ushort)face.Adjacent3;
+                    binFace.Adjacent1 = (ushort)face.A1;
+                    binFace.Adjacent2 = (ushort)face.A2;
+                    binFace.Adjacent3 = (ushort)face.A3;
                     binFace.Material = (ushort)face.Material;
                     binFace.Coefficient = face.Coefficient;
                     binFace.Normal = face.Normal;

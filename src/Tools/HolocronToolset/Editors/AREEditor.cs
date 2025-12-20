@@ -189,13 +189,13 @@ namespace HolocronToolset.Editors
                     // Any other error loading cameras.2da - fallback to defaults
                 }
             }
-            
+
             // Fallback to default camera styles if no items were loaded or installation is not available
             if (_cameraStyleSelect.ItemCount == 0)
             {
                 LoadDefaultCameraStyles();
             }
-            
+
             _cameraStyleSelect.SelectedIndex = 0;
             panel.Children.Add(cameraStyleLabel);
             panel.Children.Add(_cameraStyleSelect);
@@ -509,6 +509,9 @@ namespace HolocronToolset.Editors
         public Button TagGenerateButton => _tagGenerateButton;
         public ComboBox CameraStyleSelect => _cameraStyleSelect;
         public ComboBox OnEnterSelect => _onEnterSelect;
+        public ComboBox OnExitSelect => _onExitSelect;
+        public ComboBox OnHeartbeatSelect => _onHeartbeatSelect;
+        public ComboBox OnUserDefinedSelect => _onUserDefinedSelect;
         public TextBox EnvmapEdit => _envmapEdit;
         public CheckBox DisableTransitCheck => _disableTransitCheck;
         public CheckBox UnescapableCheck => _unescapableCheck;
@@ -1260,10 +1263,28 @@ namespace HolocronToolset.Editors
                 }
                 are.ShadowOpacity = shadowOpacityValue;
             }
-            // If shadows checkbox is unchecked, set opacity to 0
-            if (_shadowsCheck != null && _shadowsCheck.IsChecked == false)
+            // Handle shadows checkbox state
+            if (_shadowsCheck != null)
             {
-                are.ShadowOpacity = 0;
+                if (_shadowsCheck.IsChecked == false)
+                {
+                    // If shadows checkbox is unchecked, set opacity to 0
+                    are.ShadowOpacity = 0;
+                }
+                else if (_shadowsCheck.IsChecked == true)
+                {
+                    // If shadows checkbox is checked, ensure opacity is > 0
+                    // If opacity is 0 (e.g., from spin box), set to default value of 128
+                    if (are.ShadowOpacity == 0)
+                    {
+                        are.ShadowOpacity = 128;
+                        // Update spin box to reflect the default value
+                        if (_shadowsSpin != null)
+                        {
+                            _shadowsSpin.Value = 128;
+                        }
+                    }
+                }
             }
 
             // Scripts section - matching Python lines 350-354
@@ -1837,7 +1858,7 @@ namespace HolocronToolset.Editors
             }
             // Add separator before last item
             contextMenu.Items.Insert(menuItems.Count - 1, new Separator());
-            
+
             comboBox.ContextMenu = contextMenu;
         }
 
@@ -1860,7 +1881,7 @@ namespace HolocronToolset.Editors
                 // Try to find the script resource (NSS source preferred, fallback to NCS)
                 var resourceResult = _installation.Resource(scriptName, ResourceType.NSS, null);
                 ResourceType resourceType = ResourceType.NSS;
-                
+
                 if (resourceResult == null)
                 {
                     // Try compiled version
@@ -1884,7 +1905,7 @@ namespace HolocronToolset.Editors
                     resourceResult.FilePath
                 );
 
-                HolocronToolset.Utils.WindowUtils.OpenResourceEditor(fileResource, _installation, this);
+                HolocronToolset.Editors.WindowUtils.OpenResourceEditor(fileResource, _installation, this);
             }
             catch (Exception ex)
             {
@@ -1907,8 +1928,8 @@ namespace HolocronToolset.Editors
                 if (string.IsNullOrEmpty(scriptName))
                 {
                     // Generate based on ARE resref and script type
-                    string baseName = !string.IsNullOrEmpty(_resname) 
-                        ? _resname 
+                    string baseName = !string.IsNullOrEmpty(_resname)
+                        ? _resname
                         : "m00xx_area_000";
                     scriptName = $"{baseName}_{scriptTypeName.ToLowerInvariant().Replace(" ", "_")}";
                 }
@@ -1922,9 +1943,9 @@ namespace HolocronToolset.Editors
                 // Create a new NSS editor with empty content
                 var nssEditor = new NSSEditor(this, _installation);
                 nssEditor.New();
-                
+
                 // Show the editor - user will set the resref when saving
-                HolocronToolset.Utils.WindowUtils.AddWindow(nssEditor, show: true);
+                HolocronToolset.Editors.WindowUtils.AddWindow(nssEditor, show: true);
 
                 // Update the combo box with the suggested script name
                 comboBox.Text = scriptName;

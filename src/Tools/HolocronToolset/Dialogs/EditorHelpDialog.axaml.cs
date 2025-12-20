@@ -22,9 +22,47 @@ namespace HolocronToolset.Dialogs
     {
         private ScrollViewer _scrollViewer;
         private Panel _htmlContainer;
+        private string _htmlContent;
 
         // Expose HTML container for testing
         public Panel HtmlContainer => _htmlContainer;
+
+        // Expose HTML content for testing (matching PyKotor text_browser.toHtml())
+        public string HtmlContent => _htmlContent ?? "";
+
+        // Expose text content for testing (extracted from HTML)
+        public string TextContent
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_htmlContent))
+                {
+                    return "";
+                }
+
+                // Extract text from HTML using HtmlAgilityPack
+                try
+                {
+                    var doc = new HtmlDocument();
+                    doc.LoadHtml(_htmlContent);
+                    return doc.DocumentNode.InnerText ?? "";
+                }
+                catch
+                {
+                    return "";
+                }
+            }
+        }
+
+        // Compatibility property for tests (matching PyKotor text_browser)
+        public TextBlock TextBrowser
+        {
+            get
+            {
+                // Return a TextBlock with the text content for compatibility with tests
+                return new TextBlock { Text = TextContent };
+            }
+        }
 
         // Public parameterless constructor for XAML
         public EditorHelpDialog() : this(null, new string[0])
@@ -42,7 +80,7 @@ namespace HolocronToolset.Dialogs
         public EditorHelpDialog(Window parent, string[] wikiFilenames)
         {
             InitializeComponent();
-            
+
             // Set title based on files
             if (wikiFilenames != null && wikiFilenames.Length > 0)
             {
@@ -59,7 +97,7 @@ namespace HolocronToolset.Dialogs
             {
                 Title = "Help";
             }
-            
+
             Width = 900;
             Height = 700;
             SetupUI();
@@ -115,7 +153,7 @@ namespace HolocronToolset.Dialogs
                 // Find controls from XAML
                 _scrollViewer = this.FindControl<ScrollViewer>("scrollViewer");
                 _htmlContainer = this.FindControl<Panel>("htmlContainer");
-                
+
                 // If XAML doesn't have htmlContainer, create it
                 if (_htmlContainer == null && _scrollViewer != null)
                 {
@@ -222,13 +260,13 @@ namespace HolocronToolset.Dialogs
                     // Convert markdown to HTML using Markdig
                     var pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
                     string htmlBody = Markdown.ToHtml(text, pipeline);
-                    
+
                     // Add a separator between documents if multiple files
                     if (htmlBodies.Count > 0)
                     {
                         htmlBodies.Add("<hr style=\"margin: 48px 0;\" />");
                     }
-                    
+
                     htmlBodies.Add(htmlBody);
                 }
                 catch (Exception ex)
@@ -247,6 +285,7 @@ namespace HolocronToolset.Dialogs
             {
                 string combinedHtmlBody = string.Join("\n", htmlBodies);
                 string html = WrapHtmlWithStyles(combinedHtmlBody);
+                _htmlContent = html; // Store HTML for testing
                 RenderHtml(html);
             }
         }
@@ -967,7 +1006,7 @@ namespace HolocronToolset.Dialogs
 
                 // Resolve wiki file path
                 string filePath = Path.Combine(wikiPath, targetFile);
-                
+
                 // Try with .md extension if file doesn't exist
                 if (!File.Exists(filePath) && !targetFile.EndsWith(".md", System.StringComparison.OrdinalIgnoreCase))
                 {
@@ -979,7 +1018,7 @@ namespace HolocronToolset.Dialogs
                 {
                     // Get relative filename for dialog title
                     string wikiFilename = Path.GetFileName(filePath);
-                    
+
                     // Open in new EditorHelpDialog (matching PyKotor behavior)
                     var helpDialog = new EditorHelpDialog(this, new[] { wikiFilename });
                     helpDialog.Show();

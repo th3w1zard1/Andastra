@@ -71,6 +71,9 @@
     <ProjectReference Include="..\Data\Data.csproj" />
     <ProjectReference Include="..\Windows\Windows.csproj" />
     <ProjectReference Include="..\Utils\Utils.csproj" />
+    <ProjectReference Include="..\Editors\Editors.csproj" />
+    <ProjectReference Include="..\Dialogs\Dialogs.csproj" />
+    <ProjectReference Include="..\Widgets\Widgets.csproj" />
   </ItemGroup>
 
   <!-- Exclude subdirectories that are separate projects -->

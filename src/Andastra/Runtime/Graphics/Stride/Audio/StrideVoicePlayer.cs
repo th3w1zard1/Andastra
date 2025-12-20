@@ -48,6 +48,7 @@ namespace Andastra.Runtime.Stride.Audio
         private SoundInstance _currentVoiceInstance;
         private Action _onCompleteCallback;
         private bool _isPlaying;
+        private float _volume = 1.0f;
 
         /// <summary>
         /// Initializes a new Stride voice player.
@@ -150,6 +151,10 @@ namespace Andastra.Runtime.Stride.Audio
                 // Set callback and play state
                 _onCompleteCallback = onComplete;
                 _isPlaying = true;
+
+                // Apply voice volume setting before playing
+                // Based on swkotor.exe and swkotor2.exe: VoiceVolume setting applied to voice-over playback
+                _currentVoiceInstance.Volume = _volume;
 
                 // Play the sound instance
                 // Based on Stride API: SoundInstance.Play() starts playback
@@ -387,6 +392,32 @@ namespace Andastra.Runtime.Stride.Audio
                 {
                     Console.WriteLine($"[StrideVoicePlayer] Error getting playback position: {ex.Message}");
                     return 0.0f;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the voice volume (0.0 to 1.0).
+        /// Based on swkotor.exe and swkotor2.exe: VoiceVolume setting from INI file
+        /// </summary>
+        public float Volume
+        {
+            get { return _volume; }
+            set
+            {
+                _volume = Math.Max(0.0f, Math.Min(1.0f, value));
+                // Apply to currently playing instance if any
+                // Stride SoundInstance uses Volume property (0.0 to 1.0)
+                if (_currentVoiceInstance != null)
+                {
+                    try
+                    {
+                        _currentVoiceInstance.Volume = _volume;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[StrideVoicePlayer] Error setting volume: {ex.Message}");
+                    }
                 }
             }
         }
