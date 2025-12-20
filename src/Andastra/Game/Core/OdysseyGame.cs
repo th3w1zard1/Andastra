@@ -4027,6 +4027,319 @@ namespace Andastra.Runtime.Game.Core
             _spriteBatch.End();
         }
 
+        #region Movies Menu
+
+        /// <summary>
+        /// Opens the movies menu and enumerates available movies.
+        /// </summary>
+        /// <remarks>
+        /// Movies Menu Opening:
+        /// - Based on swkotor.exe and swkotor2.exe movies menu system
+        /// - Enumerates BIK files from the movies directory
+        /// - Initializes movie player for playback
+        /// - Movie file paths: "MOVIES:%s" format, ".\\movies" or "d:\\movies" directories
+        /// - Original implementation: Lists all available BIK files for player selection
+        /// </remarks>
+        private void OpenMoviesMenu()
+        {
+            _currentState = GameState.MoviesMenu;
+            _selectedMovieIndex = 0;
+            _isPlayingMovie = false;
+
+            // Initialize movie list
+            _availableMovies = new List<string>();
+
+            // Enumerate BIK files from resource provider
+            // Based on swkotor.exe: Movie files are stored in movies directory as BIK files
+            try
+            {
+                // Get installation path from settings
+                if (string.IsNullOrEmpty(_settings.GamePath))
+                {
+                    Console.WriteLine("[Odyssey] Movies menu: No game path set, cannot enumerate movies");
+                    return;
+                }
+
+                // Create resource provider to enumerate BIK files
+                var installation = new Installation(_settings.GamePath);
+                var resourceProvider = new OdysseyResourceProvider(installation);
+
+                // Enumerate all BIK resources
+                // Based on IGameResourceProvider.EnumerateResources(ResourceType.BIK)
+                var bikResources = resourceProvider.EnumerateResources(Andastra.Parsing.Resource.ResourceType.BIK);
+                foreach (var resourceId in bikResources)
+                {
+                    // Add movie name (without .bik extension) to list
+                    string movieName = resourceId.ResRef;
+                    if (!string.IsNullOrEmpty(movieName))
+                    {
+                        _availableMovies.Add(movieName);
+                    }
+                }
+
+                // Sort movies alphabetically
+                _availableMovies.Sort();
+
+                Console.WriteLine($"[Odyssey] Movies menu: Found {_availableMovies.Count} movies");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Odyssey] Error enumerating movies: {ex.Message}");
+                _availableMovies = new List<string>();
+            }
+        }
+
+        /// <summary>
+        /// Updates the movies menu state and handles input.
+        /// </summary>
+        /// <param name="deltaTime">Time elapsed since last frame.</param>
+        /// <param name="keyboardState">Current keyboard state.</param>
+        /// <param name="mouseState">Current mouse state.</param>
+        /// <remarks>
+        /// Movies Menu Update:
+        /// - Handles navigation (Up/Down arrow keys)
+        /// - Handles selection (Enter to play movie)
+        /// - Handles cancellation (Escape to return to main menu)
+        /// - Manages movie playback state
+        /// </remarks>
+        private void UpdateMoviesMenu(float deltaTime, IKeyboardState keyboardState, IMouseState mouseState)
+        {
+            var inputManager = _graphicsBackend.InputManager;
+            var currentKeyboard = inputManager.KeyboardState;
+            var currentMouse = inputManager.MouseState;
+
+            // If playing a movie, handle movie playback
+            if (_isPlayingMovie)
+            {
+                // Check for cancellation (Escape key)
+                if (IsKeyJustPressed(_previousKeyboardState, currentKeyboard, Keys.Escape))
+                {
+                    // Cancel movie playback
+                    if (_movieCancellationTokenSource != null && !_movieCancellationTokenSource.IsCancellationRequested)
+                    {
+                        _movieCancellationTokenSource.Cancel();
+                    }
+                    _isPlayingMovie = false;
+                    _movieCancellationTokenSource = null;
+                }
+                _previousKeyboardState = currentKeyboard;
+                return;
+            }
+
+            // Handle ESC to cancel
+            if (IsKeyJustPressed(_previousKeyboardState, currentKeyboard, Keys.Escape))
+            {
+                _currentState = GameState.MainMenu;
+                return;
+            }
+
+            // Navigation
+            if (IsKeyJustPressed(_previousKeyboardState, currentKeyboard, Keys.Up))
+            {
+                _selectedMovieIndex = Math.Max(0, _selectedMovieIndex - 1);
+            }
+            if (IsKeyJustPressed(_previousKeyboardState, currentKeyboard, Keys.Down))
+            {
+                if (_availableMovies != null && _availableMovies.Count > 0)
+                {
+                    _selectedMovieIndex = Math.Min(_availableMovies.Count - 1, _selectedMovieIndex + 1);
+                }
+            }
+
+            // Selection - play selected movie
+            if (IsKeyJustPressed(_previousKeyboardState, currentKeyboard, Keys.Enter))
+            {
+                if (_availableMovies != null && _selectedMovieIndex >= 0 && _selectedMovieIndex < _availableMovies.Count)
+                {
+                    string movieName = _availableMovies[_selectedMovieIndex];
+                    PlayMovie(movieName);
+                }
+            }
+
+            _previousKeyboardState = currentKeyboard;
+        }
+
+        /// <summary>
+        /// Plays a movie by name.
+        /// </summary>
+        /// <param name="movieName">Name of the movie to play (without .bik extension).</param>
+        /// <remarks>
+        /// Movie Playback:
+        /// - Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 (main playback loop)
+        /// - Based on swkotor.exe: FUN_004053e0 @ 0x004053e0 (movie initialization)
+        /// - Movie playback is fullscreen and blocking until completion or cancellation
+        /// - Uses MoviePlayer class for BIK file decoding and playback
+        /// - Creates movie player with adapters from resource provider and graphics device
+        /// </remarks>
+        private async void PlayMovie(string movieName)
+        {
+            if (string.IsNullOrEmpty(movieName) || _world == null)
+            {
+                return;
+            }
+
+            _isPlayingMovie = true;
+            _movieCancellationTokenSource = new System.Threading.CancellationTokenSource();
+
+            Console.WriteLine($"[Odyssey] Playing movie: {movieName}");
+
+            try
+            {
+                // Get installation and create resource provider
+                if (string.IsNullOrEmpty(_settings.GamePath))
+                {
+                    Console.WriteLine("[Odyssey] Movies menu: No game path set, cannot play movie");
+                    return;
+                }
+
+                var installation = new Installation(_settings.GamePath);
+                var resourceProvider = new OdysseyResourceProvider(installation);
+
+                // Create adapters for movie player
+                // Based on ModuleTransitionSystem adapter pattern
+                Andastra.Runtime.Core.Interfaces.IMovieResourceProvider movieResourceProvider = null;
+                Andastra.Runtime.Core.Interfaces.IMovieGraphicsDevice movieGraphicsDevice = null;
+
+                // Adapt resource provider
+                Type contentProviderType = Type.GetType("Andastra.Runtime.Content.Interfaces.IGameResourceProvider, Andastra.Runtime.Content");
+                if (contentProviderType != null && contentProviderType.IsAssignableFrom(resourceProvider.GetType()))
+                {
+                    Type adapterType = Type.GetType("Andastra.Runtime.Content.Adapters.MovieResourceProviderAdapter, Andastra.Runtime.Content");
+                    if (adapterType != null)
+                    {
+                        movieResourceProvider = (Andastra.Runtime.Core.Interfaces.IMovieResourceProvider)Activator.CreateInstance(adapterType, resourceProvider);
+                    }
+                }
+
+                // Adapt graphics device
+                Type graphicsDeviceType = Type.GetType("Andastra.Runtime.Graphics.IGraphicsDevice, Andastra.Runtime.Graphics.Common");
+                if (graphicsDeviceType != null && graphicsDeviceType.IsAssignableFrom(_graphicsDevice.GetType()))
+                {
+                    Type adapterType = Type.GetType("Andastra.Runtime.Graphics.Adapters.MovieGraphicsDeviceAdapter, Andastra.Runtime.Graphics.Common");
+                    if (adapterType != null)
+                    {
+                        movieGraphicsDevice = (Andastra.Runtime.Core.Interfaces.IMovieGraphicsDevice)Activator.CreateInstance(adapterType, _graphicsDevice);
+                    }
+                }
+
+                if (movieResourceProvider == null || movieGraphicsDevice == null)
+                {
+                    Console.WriteLine("[Odyssey] Failed to create movie player adapters");
+                    return;
+                }
+
+                // Create movie player
+                var moviePlayer = new Andastra.Runtime.Core.Video.MoviePlayer(_world, movieResourceProvider, movieGraphicsDevice);
+
+                // Play movie asynchronously
+                // Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 (playback loop)
+                bool success = await moviePlayer.PlayMovie(movieName, _movieCancellationTokenSource.Token);
+                if (!success)
+                {
+                    Console.WriteLine($"[Odyssey] Failed to play movie: {movieName}");
+                }
+            }
+            catch (System.OperationCanceledException)
+            {
+                Console.WriteLine($"[Odyssey] Movie playback cancelled: {movieName}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Odyssey] Error playing movie '{movieName}': {ex.Message}");
+            }
+            finally
+            {
+                _isPlayingMovie = false;
+                if (_movieCancellationTokenSource != null)
+                {
+                    _movieCancellationTokenSource.Dispose();
+                    _movieCancellationTokenSource = null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Draws the movies menu.
+        /// </summary>
+        /// <remarks>
+        /// Movies Menu Rendering:
+        /// - Displays list of available movies
+        /// - Highlights selected movie
+        /// - Shows instructions for navigation and playback
+        /// - If movie is playing, shows playback status
+        /// </remarks>
+        private void DrawMoviesMenu()
+        {
+            _graphicsDevice.Clear(new Color(20, 20, 30, 255));
+
+            if (_spriteBatch == null || _font == null || _menuTexture == null)
+            {
+                return;
+            }
+
+            _spriteBatch.Begin();
+
+            int viewportWidth = _graphicsDevice.Viewport.Width;
+            int viewportHeight = _graphicsDevice.Viewport.Height;
+
+            // Title
+            string title = "Movies";
+            Vector2 titleSize = _font.MeasureString(title);
+            Vector2 titlePos = new Vector2((viewportWidth - titleSize.X) / 2, 50);
+            _spriteBatch.DrawString(_font, title, titlePos, new Color(255, 255, 255, 255));
+
+            // If playing movie, show playback status
+            if (_isPlayingMovie)
+            {
+                string playingText = "Playing movie... Press Escape to cancel.";
+                Vector2 playingSize = _font.MeasureString(playingText);
+                Vector2 playingPos = new Vector2((viewportWidth - playingSize.X) / 2, viewportHeight / 2);
+                _spriteBatch.DrawString(_font, playingText, playingPos, new Color(255, 255, 0, 255));
+                _spriteBatch.End();
+                return;
+            }
+
+            // Movie list
+            if (_availableMovies == null || _availableMovies.Count == 0)
+            {
+                string noMoviesText = "No movies found.";
+                Vector2 noMoviesSize = _font.MeasureString(noMoviesText);
+                Vector2 noMoviesPos = new Vector2((viewportWidth - noMoviesSize.X) / 2, viewportHeight / 2);
+                _spriteBatch.DrawString(_font, noMoviesText, noMoviesPos, new Color(211, 211, 211, 255));
+            }
+            else
+            {
+                int startY = 150;
+                int itemHeight = 60;
+                int itemSpacing = 10;
+                int maxVisible = Math.Min(10, (viewportHeight - startY - 100) / (itemHeight + itemSpacing));
+                int startIdx = Math.Max(0, _selectedMovieIndex - maxVisible / 2);
+                int endIdx = Math.Min(_availableMovies.Count, startIdx + maxVisible);
+
+                for (int i = startIdx; i < endIdx; i++)
+                {
+                    int y = startY + (i - startIdx) * (itemHeight + itemSpacing);
+                    bool isSelected = (i == _selectedMovieIndex);
+                    Color bgColor = isSelected ? new Color(100, 100, 150) : new Color(50, 50, 70);
+
+                    Rectangle itemRect = new Rectangle(100, y, viewportWidth - 200, itemHeight);
+                    _spriteBatch.Draw(_menuTexture, itemRect, bgColor);
+
+                    string movieName = _availableMovies[i];
+                    Vector2 textPos = new Vector2(itemRect.X + 10, itemRect.Y + (itemHeight - _font.LineSpacing) / 2);
+                    _spriteBatch.DrawString(_font, movieName, textPos, new Color(255, 255, 255, 255));
+                }
+            }
+
+            // Instructions
+            string instructions = "Select a movie to play. Press Escape to cancel.";
+            Vector2 instSize = _font.MeasureString(instructions);
+            Vector2 instPos = new Vector2((viewportWidth - instSize.X) / 2, viewportHeight - 50);
+            _spriteBatch.DrawString(_font, instructions, instPos, new Color(211, 211, 211, 255));
+
+            _spriteBatch.End();
+        }
+
         #endregion
 
         public void Dispose()
