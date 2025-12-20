@@ -186,7 +186,7 @@ namespace HolocronToolset.Dialogs
             }
             if (_okButton != null)
             {
-                _okButton.Click += (s, e) => Accept();
+                _okButton.Click += async (s, e) => await Accept();
             }
             if (_cancelButton != null)
             {

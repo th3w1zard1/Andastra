@@ -183,14 +183,13 @@ namespace HolocronToolset.Dialogs
         {
             if (Ui?.ResultList?.SelectedItem is FileResourceResultItem item)
             {
-                _selection = item.Resource;
-                SearchResultsSelected?.Invoke(_selection);
+                FileResource resource = item.Resource;
                 
-                // Open resource editor (matching PyKotor: open_resource_editor(resource, installation=self.installation, parent_window=self.window().parent()))
-                var parentWindow = this.Parent as Window ?? this;
-                WindowUtils.OpenResourceEditor(_selection, _installation, parentWindow);
-                
+                // Matching PyKotor: open_resource_editor(resource, installation=self.installation, parent_window=self.window().parent())
+                // Note: PyKotor's open() method does NOT emit the signal - only accept() does
                 // Note: Dialog does NOT close on open (unlike accept method) - matches PyKotor behavior
+                Window parentWindow = this.Parent as Window ?? this;
+                WindowUtils.OpenResourceEditor(resource, _installation, parentWindow);
             }
             else
             {

@@ -60,6 +60,13 @@ namespace HolocronToolset.Dialogs
         // Dictionary to store TLK string entries (key: token name, value: TLKStringEntry)
         private Dictionary<string, TLKStringEntry> _tlkStrings = new Dictionary<string, TLKStringEntry>(StringComparer.OrdinalIgnoreCase);
         private int _nextTlkTokenId = 0;
+        
+        // 2DA Memory controls
+        private ListBox _twodaList;
+        private TreeView _twodaTokensTree;
+        // Dictionary to store 2DA memory entries (key: 2DA filename, value: List of 2DAMemoryTokenEntry)
+        private Dictionary<string, List<TwoDAMemoryTokenEntry>> _twodaMemoryTokens = new Dictionary<string, List<TwoDAMemoryTokenEntry>>(StringComparer.OrdinalIgnoreCase);
+        private int _nextTwodaTokenId = 0;
 
         // Public parameterless constructor for XAML
         public TSLPatchDataEditorDialog() : this(null, null, null)

@@ -1032,6 +1032,29 @@ namespace HolocronToolset.Data
             return sounds;
         }
 
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1890-1916
+        // Original: def sound(self, resname: str, order: Sequence[SearchLocation] | None = None, ...) -> bytes | None:
+        /// <summary>
+        /// Returns the bytes of a sound resource if it can be found, otherwise returns null.
+        /// This is a wrapper of the Sounds() method provided to make searching for a single resource more convenient.
+        /// </summary>
+        /// <param name="resname">The case-insensitive name of the sound (without the extension) to look for.</param>
+        /// <param name="searchOrder">The ordered list of locations to check. If null, uses default order.</param>
+        /// <returns>A byte array if found, otherwise null.</returns>
+        public byte[] Sound(string resname, SearchLocation[] searchOrder = null)
+        {
+            if (string.IsNullOrEmpty(resname))
+            {
+                return null;
+            }
+
+            // Matching PyKotor implementation: batch = self.sounds([resname], order, ...)
+            // Original: batch: CaseInsensitiveDict[bytes | None] = self.sounds([resname], order, capsules=capsules, folders=folders, logger=logger)
+            var batch = Sounds(new List<string> { resname }, searchOrder);
+            // Matching PyKotor implementation: return batch[resname] if batch else None
+            return batch != null && batch.ContainsKey(resname) ? batch[resname] : null;
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:471-518
         // Original: def get_relevant_resources(self, restype: ResourceType, src_filepath: Path | None = None) -> set[FileResource]:
         public HashSet<FileResource> GetRelevantResources(ResourceType restype, string srcFilepath = null)

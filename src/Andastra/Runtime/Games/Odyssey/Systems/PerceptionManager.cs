@@ -148,6 +148,14 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
         // Key: entity ObjectId, Value: last known position
         private readonly Dictionary<uint, Vector3> _lastPositions;
 
+        // Track activation state for placeables/doors (for hearing perception)
+        // Key: entity ObjectId, Value: last known IsOpen state
+        private readonly Dictionary<uint, bool> _lastPlaceableDoorStates;
+
+        // Track activation timestamps for placeables/doors (for hearing perception)
+        // Key: entity ObjectId, Value: timestamp when last activated (opened/closed/used)
+        private readonly Dictionary<uint, float> _placeableDoorActivationTimes;
+
         // Cached feat ID for See Invisibility (looked up from feat.2da)
         private int? _cachedSeeInvisibilityFeatId;
 
@@ -181,6 +189,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
             _lastPerceivedEntity = new Dictionary<uint, IEntity>();
             _lastPerceptionWasHeard = new Dictionary<uint, bool>();
             _lastPositions = new Dictionary<uint, Vector3>();
+            _lastPlaceableDoorStates = new Dictionary<uint, bool>();
+            _placeableDoorActivationTimes = new Dictionary<uint, float>();
             _timeSinceUpdate = 0f;
         }
 
@@ -246,6 +256,9 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
             float perceptionOrder = 0.0f;
             const float perceptionOrderIncrement = 1.0f;
 
+            // Track current time for activation state checks
+            float currentTime = _timeSinceUpdate;
+
             // Check all potential targets
             foreach (IEntity target in _world.GetAllEntities())
             {
@@ -270,6 +283,50 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
 
                 Vector3 targetPosition = targetTransform.Position;
                 float distSq = Vector3.DistanceSquared(position, targetPosition);
+
+                // Track activation state changes for placeables/doors (for hearing perception)
+                // Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 (perception update system)
+                // Original implementation: Placeables/doors make sound when activated (opening, closing, using)
+                // We track state changes to detect recent activations
+                if (target.ObjectType == ObjectType.Placeable || target.ObjectType == ObjectType.Door)
+                {
+                    bool currentIsOpen = false;
+                    if (target.ObjectType == ObjectType.Placeable)
+                    {
+                        IPlaceableComponent placeableComp = target.GetComponent<IPlaceableComponent>();
+                        if (placeableComp != null)
+                        {
+                            currentIsOpen = placeableComp.IsOpen;
+                        }
+                    }
+                    else if (target.ObjectType == ObjectType.Door)
+                    {
+                        IDoorComponent doorComp = target.GetComponent<IDoorComponent>();
+                        if (doorComp != null)
+                        {
+                            currentIsOpen = doorComp.IsOpen;
+                        }
+                    }
+
+                    // Check if state changed (activation detected)
+                    bool lastIsOpen;
+                    if (_lastPlaceableDoorStates.TryGetValue(target.ObjectId, out lastIsOpen))
+                    {
+                        if (currentIsOpen != lastIsOpen)
+                        {
+                            // State changed - record activation time
+                            _placeableDoorActivationTimes[target.ObjectId] = currentTime;
+                        }
+                    }
+                    else
+                    {
+                        // First time tracking this entity - initialize state
+                        _lastPlaceableDoorStates[target.ObjectId] = currentIsOpen;
+                    }
+
+                    // Update last known state
+                    _lastPlaceableDoorStates[target.ObjectId] = currentIsOpen;
+                }
 
                 // Check sight
                 float distance = (float)Math.Sqrt(distSq);

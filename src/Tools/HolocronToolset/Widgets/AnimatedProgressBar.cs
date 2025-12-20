@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Threading;
+using Avalonia.Media.Imaging;
 
 namespace HolocronToolset.Widgets
 {
@@ -72,9 +73,133 @@ namespace HolocronToolset.Widgets
                 return;
             }
 
-            // TODO: Implement shimmering effect when custom rendering is available
-            // This would draw a moving light effect across the progress bar
-            // For now, the base ProgressBar rendering is sufficient
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/progressbar.py:56-76
+            // Original: Draw the shimmering effect (moving light)
+            DrawShimmeringEffect(context, width, height, filledWidth);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/progressbar.py:56-76
+        // Original: def paintEvent - shimmering effect drawing logic
+        private void DrawShimmeringEffect(DrawingContext context, double width, double height, double filledWidth)
+        {
+            // Matching PyKotor: light_width: int = chunk_height * 2
+            double lightWidth = height * 2; // Width of the shimmering light effect
+
+            // Matching PyKotor: light_rect: QRectF = QRectF(self._offset - light_width / 2, 0, light_width, chunk_height)
+            double lightLeft = _offset - lightWidth / 2;
+            double lightTop = 0;
+            double lightRight = lightLeft + lightWidth;
+            double lightBottom = height;
+
+            // Matching PyKotor: Adjust light position if it starts before the progress bar
+            if (lightLeft < 0)
+            {
+                lightLeft = 0;
+                lightRight = lightWidth;
+            }
+
+            // Matching PyKotor: Adjust light position if it ends after the progress bar
+            if (lightRight > filledWidth)
+            {
+                lightRight = filledWidth;
+                lightLeft = filledWidth - lightWidth;
+                if (lightLeft < 0)
+                {
+                    lightLeft = 0;
+                }
+            }
+
+            // Only draw if the light rectangle is within the filled area
+            if (lightLeft >= filledWidth || lightRight <= 0)
+            {
+                return;
+            }
+
+            // Clamp light rectangle to filled width
+            if (lightLeft < 0)
+            {
+                lightLeft = 0;
+            }
+            if (lightRight > filledWidth)
+            {
+                lightRight = filledWidth;
+            }
+
+            // Matching PyKotor: chunk_radius: float = chunk_height / 2
+            double chunkRadius = height / 2;
+
+            // Matching PyKotor: Create a linear gradient for the shimmering light effect
+            // QLinearGradient(light_rect.left(), 0, light_rect.right(), 0)
+            // setColorAt(0, QColor(255, 255, 255, 0))  # Transparent at the edges
+            // setColorAt(0.5, QColor(255, 255, 255, 150))  # Semi-transparent white in the center
+            // setColorAt(1, QColor(255, 255, 255, 0))  # Transparent at the edges
+            var gradientStops = new GradientStops
+            {
+                new GradientStop(0.0, Color.FromArgb(0, 255, 255, 255)), // Transparent at the edges
+                new GradientStop(0.5, Color.FromArgb(150, 255, 255, 255)), // Semi-transparent white in the center
+                new GradientStop(1.0, Color.FromArgb(0, 255, 255, 255)) // Transparent at the edges
+            };
+
+            var gradientBrush = new LinearGradientBrush
+            {
+                StartPoint = new RelativePoint(lightLeft, 0, RelativeUnit.Absolute),
+                EndPoint = new RelativePoint(lightRight, 0, RelativeUnit.Absolute),
+                GradientStops = gradientStops
+            };
+
+            // Create rounded rectangle geometry
+            // Matching PyKotor: painter.drawRoundedRect(light_rect, chunk_radius, chunk_radius)
+            var lightRect = new Rect(lightLeft, lightTop, lightRight - lightLeft, lightBottom - lightTop);
+            
+            // Create a rounded rectangle geometry using StreamGeometry
+            var geometry = new StreamGeometry();
+            using (var ctx = geometry.Open())
+            {
+                // Draw rounded rectangle path
+                double radius = chunkRadius;
+                double x = lightRect.X;
+                double y = lightRect.Y;
+                double w = lightRect.Width;
+                double h = lightRect.Height;
+
+                // Start from top-left corner (after rounding)
+                ctx.BeginFigure(new Point(x + radius, y), true);
+                
+                // Top edge
+                ctx.LineTo(new Point(x + w - radius, y));
+                
+                // Top-right corner arc
+                ctx.ArcTo(new Point(x + w, y + radius), new Size(radius, radius), 0, false, SweepDirection.Clockwise);
+                
+                // Right edge
+                ctx.LineTo(new Point(x + w, y + h - radius));
+                
+                // Bottom-right corner arc
+                ctx.ArcTo(new Point(x + w - radius, y + h), new Size(radius, radius), 0, false, SweepDirection.Clockwise);
+                
+                // Bottom edge
+                ctx.LineTo(new Point(x + radius, y + h));
+                
+                // Bottom-left corner arc
+                ctx.ArcTo(new Point(x, y + h - radius), new Size(radius, radius), 0, false, SweepDirection.Clockwise);
+                
+                // Left edge
+                ctx.LineTo(new Point(x, y + radius));
+                
+                // Top-left corner arc
+                ctx.ArcTo(new Point(x + radius, y), new Size(radius, radius), 0, false, SweepDirection.Clockwise);
+                
+                ctx.EndFigure(true);
+            }
+
+            // Clip to the filled width area to ensure shimmer only appears in progress area
+            var filledRect = new Rect(0, 0, filledWidth, height);
+            using (context.PushClip(filledRect))
+            {
+                // Draw the shimmering effect with the gradient brush
+                // Matching PyKotor: painter.setPen(QtCore.Qt.PenStyle.NoPen) - no pen, just fill
+                context.FillGeometry(gradientBrush, null, geometry);
+            }
         }
     }
 }

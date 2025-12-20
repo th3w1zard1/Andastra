@@ -1,12 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Media;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
-
+using Avalonia.Threading;
 using Avalonia.Media;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
@@ -121,6 +125,11 @@ namespace HolocronToolset.Editors
         // Original: self._focused: bool = False
         private bool _focused = false;
 
+        // Sound player for playing audio files
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor/base.py:80
+        // Original: self.media_player: EditorMedia = EditorMedia(self)
+        private SoundPlayer _soundPlayer;
+
         // Reference history for navigation
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:148-150
         // Original: self.dialog_references: ReferenceChooserDialog | None = None
@@ -141,6 +150,7 @@ namespace HolocronToolset.Editors
             _coreDlg = new DLGType();
             _model = new DLGModel(this);
             _actionHistory = new DLGActionHistory(this);
+            _soundPlayer = new SoundPlayer();
             InitializeComponent();
             SetupUI();
             UpdateUIForGame(); // Update UI visibility based on game type
@@ -1402,12 +1412,155 @@ namespace HolocronToolset.Editors
         }
 
         /// <summary>
+        /// Blinks the window to indicate an error or invalid action.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor/base.py:725-734
+        /// Original: def blink_window(self, *, sound: bool = True):
+        /// </summary>
+        /// <param name="sound">Whether to play a sound effect when blinking. Defaults to true.</param>
+        private void BlinkWindow(bool sound = true)
+        {
+            // Matching PyKotor implementation: if sound: self.play_sound("dr_metal_lock")
+            if (sound)
+            {
+                try
+                {
+                    PlaySound("dr_metal_lock", new[] { SearchLocation.SOUND, SearchLocation.VOICE });
+                }
+                catch
+                {
+                    // Suppress exceptions when playing sound fails (matching PyKotor: with suppress(Exception))
+                }
+            }
+
+            // Matching PyKotor implementation: self.setWindowOpacity(0.7)
+            // Matching PyKotor: QTimer.singleShot(125, lambda: self.setWindowOpacity(1))
+            double originalOpacity = Opacity;
+            Opacity = 0.7;
+            
+            // Restore opacity after 125ms (matching PyKotor timing)
+            DispatcherTimer timer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(125)
+            };
+            timer.Tick += (s, e) =>
+            {
+                Opacity = 1.0;
+                timer.Stop();
+            };
+            timer.Start();
+        }
+
+        /// <summary>
+        /// Plays a sound resource.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor/base.py:771-797
+        /// Original: def play_sound(self, resname: str, order: list[SearchLocation] | None = None) -> bool:
+        /// </summary>
+        /// <param name="resname">The resource name of the sound to play (without extension).</param>
+        /// <param name="searchOrder">The ordered list of locations to search for the sound. If null, uses default order.</param>
+        /// <returns>True if the sound was played successfully, false otherwise.</returns>
+        private bool PlaySound(string resname, SearchLocation[] searchOrder = null)
+        {
+            // Matching PyKotor implementation: if not resname or not resname.strip() or self._installation is None:
+            // Matching PyKotor: self.blink_window(sound=False); return False
+            if (string.IsNullOrWhiteSpace(resname) || _installation == null)
+            {
+                BlinkWindow(sound: false);
+                return false;
+            }
+
+            // Matching PyKotor implementation: self.media_player.player.stop()
+            try
+            {
+                _soundPlayer?.Stop();
+            }
+            catch
+            {
+                // Ignore errors when stopping
+            }
+
+            // Matching PyKotor implementation: data = self._installation.sound(resname, order)
+            // Default search order matching PyKotor: [MUSIC, VOICE, SOUND, OVERRIDE, CHITIN]
+            if (searchOrder == null || searchOrder.Length == 0)
+            {
+                searchOrder = new[]
+                {
+                    SearchLocation.MUSIC,
+                    SearchLocation.VOICE,
+                    SearchLocation.SOUND,
+                    SearchLocation.OVERRIDE,
+                    SearchLocation.CHITIN
+                };
+            }
+
+            byte[] soundData = _installation.Sound(resname.Trim(), searchOrder);
+
+            // Matching PyKotor implementation: if not data: self.blink_window(sound=False); return False
+            if (soundData == null || soundData.Length == 0)
+            {
+                BlinkWindow(sound: false);
+                return false;
+            }
+
+            // Matching PyKotor implementation: return self.play_byte_source_media(data)
+            return PlayByteSourceMedia(soundData);
+        }
+
+        /// <summary>
+        /// Plays audio from byte array data.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor/base.py:736-772
+        /// Original: def play_byte_source_media(self, data: bytes | None) -> bool:
+        /// </summary>
+        /// <param name="data">The audio data bytes (WAV format).</param>
+        /// <returns>True if playback started successfully, false otherwise.</returns>
+        private bool PlayByteSourceMedia(byte[] data)
+        {
+            // Matching PyKotor implementation: if not data: self.blink_window(); return False
+            if (data == null || data.Length == 0)
+            {
+                BlinkWindow();
+                return false;
+            }
+
+            try
+            {
+                // Use System.Media.SoundPlayer for WAV files
+                // This matches PyKotor's QMediaPlayer behavior for WAV files
+                using (MemoryStream stream = new MemoryStream(data))
+                {
+                    _soundPlayer.Stream = stream;
+                    _soundPlayer.Play();
+                }
+                return true;
+            }
+            catch (Exception)
+            {
+                // Matching PyKotor: blink_window on error
+                BlinkWindow();
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Plays sound or blinks window.
-        /// Matching PyKotor implementation: self.play_sound(...) or self.blink_window()
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2071-2079
+        /// Original: elif key == Qt.Key.Key_P: sound_resname = self.ui.soundComboBox.currentText().strip() ...
         /// </summary>
         private void PlaySoundOrBlink()
         {
-            // TODO: PLACEHOLDER - Implement play_sound and blink_window when audio system is implemented
+            // Matching PyKotor implementation:
+            // sound_resname: str = self.ui.soundComboBox.currentText().strip()
+            // voice_resname: str = self.ui.voiceComboBox.currentText().strip()
+            // if sound_resname:
+            //     self.play_sound(sound_resname, [SearchLocation.SOUND, SearchLocation.VOICE])
+            // elif voice_resname:
+            //     self.play_sound(voice_resname, [SearchLocation.VOICE])
+            // else:
+            //     self.blink_window()
+
+            // Note: Sound and voice combo boxes are not yet implemented in the C# UI
+            // For now, we'll just blink the window to match the "else" case
+            // When combo boxes are added, this should check them first
+            BlinkWindow();
         }
 
         /// <summary>

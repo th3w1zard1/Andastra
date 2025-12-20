@@ -3,12 +3,18 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
+using Avalonia.Threading;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
+using Newtonsoft.Json;
+using HolocronToolset.Utils;
 
 namespace HolocronToolset.Dialogs
 {
@@ -16,24 +22,7 @@ namespace HolocronToolset.Dialogs
     // Original: class GitHubFileSelector(QDialog):
     public partial class GitHubSelectorDialog : Window
     {
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:494-502
-        // Original: @dataclass class TreeInfoData(AbstractAPIResult):
-        private class TreeInfoData
-        {
-            public string Mode { get; set; }
-            public string Type { get; set; } // "blob" for files, "tree" for directories
-            public string Sha { get; set; }
-            public int? Size { get; set; }
-            public string Url { get; set; }
-            public string Path { get; set; }
-        }
-
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:504-519
-        // Original: @dataclass class CompleteRepoData(AbstractAPIResult):
-        private class CompleteRepoData
-        {
-            public List<TreeInfoData> Tree { get; set; }
-        }
+        // Using GitHubApiModels.TreeInfoData and GitHubApiModels.CompleteRepoData instead of local classes
 
         private string _owner;
         private string _repo;
@@ -49,10 +38,24 @@ namespace HolocronToolset.Dialogs
         
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:120
         // Original: self.repo_data: CompleteRepoData | None = None
-        private CompleteRepoData _repoData;
+        private Utils.CompleteRepoData _repoData;
         
         // Dictionary to map file paths to TreeViewItems for efficient lookup during filtering
         private Dictionary<string, TreeViewItem> _pathToItemMap;
+        
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:121-122
+        // Original: self.rate_limit_reset: int | None = None, self.rate_limit_remaining: int | None = None
+        private int? _rateLimitReset;
+        private int? _rateLimitRemaining;
+        
+        // HTTP client for GitHub API requests
+        private static readonly HttpClient HttpClient = new HttpClient
+        {
+            Timeout = TimeSpan.FromSeconds(15)
+        };
+        
+        // Rate limit timer (matching PyKotor's QTimer)
+        private DispatcherTimer _rateLimitTimer;
 
         // Public parameterless constructor for XAML
         public GitHubSelectorDialog() : this(null, null, null)
@@ -188,10 +191,520 @@ namespace HolocronToolset.Dialogs
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:185-218
         // Original: def initialize_repo_data(self) -> CompleteRepoData | None:
-        private void InitializeRepoData()
+        private async void InitializeRepoData()
         {
-            // TODO: Implement GitHub API integration when available
-            System.Console.WriteLine($"Initializing repo data for {_owner}/{_repo}");
+            if (string.IsNullOrEmpty(_owner) || string.IsNullOrEmpty(_repo))
+            {
+                return;
+            }
+
+            try
+            {
+                Utils.CompleteRepoData repoData = await LoadRepoAsync(_owner, _repo);
+                if (repoData != null)
+                {
+                    LoadRepoData(repoData);
+                    StopRateLimitTimer();
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                // Check for rate limiting (403 status)
+                if (ex.Message.Contains("403") || ex.Message.Contains("rate limit"))
+                {
+                    if (_rateLimitTimer == null || !_rateLimitTimer.IsEnabled)
+                    {
+                        var msgBox = MessageBoxManager.GetMessageBoxStandard(
+                            "Rate Limited",
+                            "You have submitted too many requests to GitHub's API. Check the status bar at the bottom.",
+                            ButtonEnum.Ok,
+                            Icon.Error);
+                        msgBox.ShowAsync();
+                        StartRateLimitTimer(null);
+                    }
+                    return;
+                }
+
+                // Try to load forks as fallback
+                var errorMsgBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Repository Not Found",
+                    $"The repository '{_owner}/{_repo}' had an unexpected error:\n\n{ex.Message}",
+                    ButtonEnum.Ok,
+                    Icon.Error);
+                await errorMsgBox.ShowAsync();
+
+                // Try to fetch forks
+                try
+                {
+                    string forksUrl = $"https://api.github.com/repos/{_owner}/{_repo}/forks";
+                    string forksJson = await HttpClient.GetStringAsync(forksUrl);
+                    List<ForkContentsData> forks = JsonConvert.DeserializeObject<List<ForkContentsData>>(forksJson);
+                    
+                    if (forks != null && forks.Count > 0)
+                    {
+                        string firstFork = forks[0].FullName;
+                        var infoMsgBox = MessageBoxManager.GetMessageBoxStandard(
+                            "Using Fork",
+                            $"The main repository is not available. Using the fork: {firstFork}",
+                            ButtonEnum.Ok,
+                            Icon.Information);
+                        await infoMsgBox.ShowAsync();
+
+                        string[] forkParts = firstFork.Split('/');
+                        if (forkParts.Length == 2)
+                        {
+                            Utils.CompleteRepoData forkRepoData = await LoadRepoAsync(forkParts[0], forkParts[1]);
+                            if (forkRepoData != null)
+                            {
+                                if (_forkComboBox != null)
+                                {
+                                    _forkComboBox.Items.Add(firstFork);
+                                }
+                                LoadRepoData(forkRepoData, false);
+                                return;
+                            }
+                        }
+                    }
+
+                    var noForksMsgBox = MessageBoxManager.GetMessageBoxStandard(
+                        "No Forks Available",
+                        "No forks are available to load.",
+                        ButtonEnum.Ok,
+                        Icon.Error);
+                    await noForksMsgBox.ShowAsync();
+                }
+                catch (Exception forkEx)
+                {
+                    var forkErrorMsgBox = MessageBoxManager.GetMessageBoxStandard(
+                        "Forks Load Error",
+                        $"Failed to load forks: {forkEx.Message}",
+                        ButtonEnum.Ok,
+                        Icon.Error);
+                    await forkErrorMsgBox.ShowAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                var errorMsgBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Error",
+                    $"Failed to initialize repository data: {ex.Message}",
+                    ButtonEnum.Ok,
+                    Icon.Error);
+                await errorMsgBox.ShowAsync();
+            }
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/utility/updater/github.py:532-568
+        // Original: @classmethod def load_repo(cls, owner: str, repo_name: str, *, timeout: int = 15) -> CompleteRepoData:
+        private async Task<Utils.CompleteRepoData> LoadRepoAsync(string owner, string repoName, int timeoutSeconds = 15)
+        {
+            string baseUrl = $"https://api.github.com/repos/{owner}/{repoName}";
+
+            var endpoints = new Dictionary<string, string>
+            {
+                { "repo_info", baseUrl },
+                { "branches", $"{baseUrl}/branches" },
+                { "contents", $"{baseUrl}/contents" },
+                { "forks", $"{baseUrl}/forks" }
+            };
+
+            var repoData = new Dictionary<string, object>();
+
+            foreach (var kvp in endpoints)
+            {
+                try
+                {
+                    System.Console.WriteLine($"Fetching {kvp.Key}...");
+                    string responseJson = await HttpClient.GetStringAsync(kvp.Value);
+                    repoData[kvp.Key] = JsonConvert.DeserializeObject(responseJson);
+                }
+                catch (HttpRequestException ex)
+                {
+                    // Update rate limit info from response headers if available
+                    if (ex.Message.Contains("403"))
+                    {
+                        // Try to get rate limit info from exception
+                        UpdateRateLimitInfoFromException(ex);
+                    }
+                    throw;
+                }
+            }
+
+            // Fetch the tree using the correct default branch
+            string defaultBranch = "main";
+            if (repoData.ContainsKey("repo_info") && repoData["repo_info"] != null)
+            {
+                var repoInfoJson = JsonConvert.SerializeObject(repoData["repo_info"]);
+                var repoInfo = JsonConvert.DeserializeObject<RepoIndexData>(repoInfoJson);
+                if (repoInfo != null && !string.IsNullOrEmpty(repoInfo.DefaultBranch))
+                {
+                    defaultBranch = repoInfo.DefaultBranch;
+                }
+            }
+
+            string treeUrl = $"{baseUrl}/git/trees/{defaultBranch}?recursive=1";
+            System.Console.WriteLine($"Fetching tree from {treeUrl}...");
+            
+            try
+            {
+                string treeResponseJson = await HttpClient.GetStringAsync(treeUrl);
+                var treeResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(treeResponseJson);
+                if (treeResponse != null && treeResponse.ContainsKey("tree"))
+                {
+                    repoData["tree"] = treeResponse["tree"];
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Failed to fetch tree from {treeUrl}: {ex.Message}");
+                repoData["tree"] = new List<object>();
+            }
+
+            // Build CompleteRepoData instance
+            var completeRepoData = new Utils.CompleteRepoData
+            {
+                RepoInfo = repoData.ContainsKey("repo_info") && repoData["repo_info"] != null
+                    ? JsonConvert.DeserializeObject<Utils.RepoIndexData>(JsonConvert.SerializeObject(repoData["repo_info"]))
+                    : null,
+                Branches = repoData.ContainsKey("branches") && repoData["branches"] != null
+                    ? JsonConvert.DeserializeObject<List<Utils.BranchInfoData>>(JsonConvert.SerializeObject(repoData["branches"]))
+                    : new List<Utils.BranchInfoData>(),
+                Contents = repoData.ContainsKey("contents") && repoData["contents"] != null
+                    ? JsonConvert.DeserializeObject<List<Utils.ContentInfoData>>(JsonConvert.SerializeObject(repoData["contents"]))
+                    : new List<Utils.ContentInfoData>(),
+                Forks = repoData.ContainsKey("forks") && repoData["forks"] != null
+                    ? JsonConvert.DeserializeObject<List<Utils.ForkContentsData>>(JsonConvert.SerializeObject(repoData["forks"]))
+                    : new List<Utils.ForkContentsData>(),
+                Tree = repoData.ContainsKey("tree") && repoData["tree"] != null
+                    ? JsonConvert.DeserializeObject<List<Utils.TreeInfoData>>(JsonConvert.SerializeObject(repoData["tree"]))
+                    : new List<Utils.TreeInfoData>()
+            };
+
+            System.Console.WriteLine($"Completed loading of '{baseUrl}'");
+            return completeRepoData;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:220-234
+        // Original: def _load_repo_data(self, data: CompleteRepoData, *, do_fork_combo_update: bool = True) -> None:
+        private void LoadRepoData(Utils.CompleteRepoData data, bool doForkComboUpdate = true)
+        {
+            _repoData = data;
+            if (doForkComboUpdate)
+            {
+                PopulateForkComboBox();
+            }
+
+            string selectedFork = null;
+            if (_forkComboBox != null)
+            {
+                selectedFork = _forkComboBox.SelectedItem?.ToString() ?? _forkComboBox.Text;
+            }
+
+            if (string.IsNullOrEmpty(selectedFork) || selectedFork == $"{_owner}/{_repo} (main)")
+            {
+                LoadMainBranchFiles();
+            }
+            else
+            {
+                LoadFork(selectedFork);
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:235-238
+        // Original: def load_main_branch_files(self) -> None:
+        private void LoadMainBranchFiles()
+        {
+            if (_repoData != null)
+            {
+                if (_repoTreeWidget != null)
+                {
+                    _repoTreeWidget.Items.Clear();
+                }
+                PopulateTreeWidget();
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:240-269
+        // Original: def populate_tree_widget(self, files: list[TreeInfoData] | None = None, parent_item: QTreeWidgetItem | None = None) -> None:
+        private void PopulateTreeWidget(List<TreeInfoData> files = null)
+        {
+            if (files == null)
+            {
+                if (_repoData == null || _repoData.Tree == null)
+                {
+                    return;
+                }
+                files = _repoData.Tree;
+            }
+
+            if (_repoTreeWidget == null)
+            {
+                return;
+            }
+
+            // Dictionary to hold the tree items by their paths
+            var pathToItem = new Dictionary<string, TreeViewItem>();
+
+            // Create all tree items without parents first
+            foreach (var item in files)
+            {
+                if (string.IsNullOrEmpty(item.Path))
+                {
+                    continue;
+                }
+
+                string itemPath = item.Path;
+                string itemName = System.IO.Path.GetFileName(itemPath);
+                if (string.IsNullOrEmpty(itemName))
+                {
+                    itemName = itemPath;
+                }
+
+                var treeItem = new TreeViewItem
+                {
+                    Header = itemName,
+                    Tag = item
+                };
+
+                // Set tooltip to URL (matching PyKotor's setToolTip behavior)
+                if (!string.IsNullOrEmpty(item.Url))
+                {
+                    ToolTip.SetTip(treeItem, item.Url);
+                }
+
+                pathToItem[itemPath] = treeItem;
+                _pathToItemMap[itemPath] = treeItem;
+            }
+
+            // Add the tree items to their parents
+            foreach (var kvp in pathToItem)
+            {
+                string itemPath = kvp.Key;
+                TreeViewItem treeItem = kvp.Value;
+
+                string parentPath = System.IO.Path.GetDirectoryName(itemPath)?.Replace('\\', '/');
+                if (string.IsNullOrEmpty(parentPath))
+                {
+                    parentPath = "/";
+                }
+
+                if (pathToItem.ContainsKey(parentPath))
+                {
+                    TreeViewItem parentItem = pathToItem[parentPath];
+                    if (parentItem.Items == null)
+                    {
+                        parentItem.Items = new Avalonia.Controls.ItemsControl.Items();
+                    }
+                    parentItem.Items.Add(treeItem);
+                }
+                else
+                {
+                    // Top-level item
+                    if (_repoTreeWidget.Items == null)
+                    {
+                        _repoTreeWidget.Items = new Avalonia.Controls.ItemsControl.Items();
+                    }
+                    _repoTreeWidget.Items.Add(treeItem);
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:277-284
+        // Original: def populate_fork_combobox(self) -> None:
+        private void PopulateForkComboBox()
+        {
+            if (_forkComboBox == null)
+            {
+                return;
+            }
+
+            _forkComboBox.Items.Clear();
+            _forkComboBox.Items.Add($"{_owner}/{_repo} (main)");
+
+            if (_repoData == null || _repoData.Forks == null)
+            {
+                return;
+            }
+
+            foreach (var fork in _repoData.Forks)
+            {
+                if (!string.IsNullOrEmpty(fork.FullName))
+                {
+                    _forkComboBox.Items.Add(fork.FullName);
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:433-444
+        // Original: def load_fork(self, fork_name: str) -> None:
+        private async void LoadFork(string forkName)
+        {
+            if (_repoTreeWidget == null)
+            {
+                return;
+            }
+
+            _repoTreeWidget.Items.Clear();
+            string fullName = forkName.Replace(" (main)", "");
+
+            // Format the contents_url with the proper path and add the recursive parameter
+            string treeUrl = $"https://api.github.com/repos/{fullName}/git/trees/master?recursive=1";
+            
+            try
+            {
+                Dictionary<string, object> contentsDict = await ApiGetAsync(treeUrl);
+                if (contentsDict != null && contentsDict.ContainsKey("tree"))
+                {
+                    var treeArray = JsonConvert.SerializeObject(contentsDict["tree"]);
+                    List<TreeInfoData> repoIndex = JsonConvert.DeserializeObject<List<TreeInfoData>>(treeArray);
+                    PopulateTreeWidget(repoIndex);
+                    SearchFiles();
+                }
+            }
+            catch (Exception ex)
+            {
+                var errorMsgBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Error Loading Fork",
+                    $"Failed to load fork '{forkName}': {ex.Message}",
+                    ButtonEnum.Ok,
+                    Icon.Error);
+                await errorMsgBox.ShowAsync();
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:446-463
+        // Original: def api_get(self, url: str) -> dict[str, Any]:
+        private async Task<Dictionary<string, object>> ApiGetAsync(string url)
+        {
+            try
+            {
+                using (var response = await HttpClient.GetAsync(url))
+                {
+                    response.EnsureSuccessStatusCode();
+                    UpdateRateLimitInfo(response.Headers);
+                    string json = await response.Content.ReadAsStringAsync();
+                    return JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                if (ex.Message.Contains("403"))
+                {
+                    // Check if rate limited
+                    try
+                    {
+                        using (var response = await HttpClient.GetAsync(url))
+                        {
+                            if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                            {
+                                if (response.Headers.Contains("X-RateLimit-Reset"))
+                                {
+                                    StartRateLimitTimer(null);
+                                    return new Dictionary<string, object>(); // Return empty dictionary when rate limit is exceeded
+                                }
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Ignore
+                    }
+                }
+                throw;
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:497-504
+        // Original: def update_rate_limit_info(self, headers: dict[str, Any] | requests.structures.CaseInsensitiveDict[str]) -> None:
+        private void UpdateRateLimitInfo(System.Net.Http.Headers.HttpResponseHeaders headers)
+        {
+            if (headers.Contains("X-RateLimit-Reset"))
+            {
+                var resetHeader = headers.GetValues("X-RateLimit-Reset").FirstOrDefault();
+                if (int.TryParse(resetHeader, out int resetValue))
+                {
+                    _rateLimitReset = resetValue;
+                }
+            }
+
+            if (headers.Contains("X-RateLimit-Remaining"))
+            {
+                var remainingHeader = headers.GetValues("X-RateLimit-Remaining").FirstOrDefault();
+                if (int.TryParse(remainingHeader, out int remainingValue))
+                {
+                    _rateLimitRemaining = remainingValue;
+                }
+            }
+        }
+
+        private void UpdateRateLimitInfoFromException(HttpRequestException ex)
+        {
+            // Try to extract rate limit info from exception if possible
+            // This is a fallback when we can't access headers directly
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:465-476
+        // Original: def start_rate_limit_timer(self, e: requests.exceptions.HTTPError | None = None) -> None:
+        private void StartRateLimitTimer(HttpRequestException e)
+        {
+            if (e != null)
+            {
+                // Try to extract rate limit info from exception
+                // In a real implementation, we'd need to access response headers
+                _rateLimitRemaining = 0;
+            }
+
+            UpdateRateLimitStatus();
+            if (_rateLimitTimer == null)
+            {
+                _rateLimitTimer = new DispatcherTimer
+                {
+                    Interval = TimeSpan.FromSeconds(1)
+                };
+                _rateLimitTimer.Tick += (s, args) => UpdateRateLimitStatus();
+            }
+            _rateLimitTimer.Start();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:478-480
+        // Original: def stop_rate_limit_timer(self) -> None:
+        private void StopRateLimitTimer()
+        {
+            if (_rateLimitTimer != null)
+            {
+                _rateLimitTimer.Stop();
+            }
+            // Clear status bar message if available
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:482-495
+        // Original: def update_rate_limit_status(self) -> None:
+        private void UpdateRateLimitStatus()
+        {
+            if (_rateLimitReset == null || _rateLimitRemaining == null)
+            {
+                return;
+            }
+
+            if (_rateLimitRemaining > 0)
+            {
+                // Status bar message: "Requests remaining: {remaining}"
+                StopRateLimitTimer();
+            }
+            else
+            {
+                double remainingTime = Math.Max(_rateLimitReset.Value - DateTimeOffset.UtcNow.ToUnixTimeSeconds(), 0);
+                // Status bar message: "Rate limit exceeded. Try again in {int(remaining_time)} seconds."
+                if ((int)remainingTime % 15 == 0) // Refresh every 15 seconds
+                {
+                    RefreshData();
+                }
+                else if (remainingTime <= 0)
+                {
+                    RefreshData();
+                    StopRateLimitTimer();
+                }
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:285-286
@@ -232,8 +745,24 @@ namespace HolocronToolset.Dialogs
         // Original: def get_selected_path(self) -> str | None:
         private string GetSelectedPath()
         {
-            // TODO: Get selected path from tree widget when available
-            return _selectedPath;
+            if (_repoTreeWidget == null)
+            {
+                return null;
+            }
+
+            TreeViewItem selectedItem = _repoTreeWidget.SelectedItem as TreeViewItem;
+            if (selectedItem == null)
+            {
+                return null;
+            }
+
+            TreeInfoData itemInfo = selectedItem.Tag as TreeInfoData;
+            if (itemInfo != null && itemInfo.Type == "blob")
+            {
+                return itemInfo.Path;
+            }
+
+            return null;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:418-424
@@ -260,7 +789,10 @@ namespace HolocronToolset.Dialogs
         // Original: def on_fork_changed(self, index: int) -> None:
         private void OnForkChanged()
         {
-            // TODO: Reload repo data for selected fork when available
+            if (_repoData != null)
+            {
+                LoadRepoData(_repoData, false);
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:520-537
@@ -422,7 +954,21 @@ namespace HolocronToolset.Dialogs
         // Original: def refresh_data(self) -> None:
         private void RefreshData()
         {
-            InitializeRepoData();
+            CompleteRepoData data = null;
+            try
+            {
+                // InitializeRepoData is async, so we need to handle it differently
+                InitializeRepoData();
+            }
+            catch (Exception ex)
+            {
+                var errorMsgBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Refresh Error",
+                    $"Failed to refresh data: {ex.Message}",
+                    ButtonEnum.Ok,
+                    Icon.Error);
+                errorMsgBox.ShowAsync();
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:309-316
@@ -564,6 +1110,37 @@ namespace HolocronToolset.Dialogs
                     UnhideAllChildren(currentItem);
                 }
             }
+        }
+
+        // Helper method to convert TreeInfoData from Utils namespace
+        private TreeInfoData ConvertTreeInfoData(Utils.TreeInfoData source)
+        {
+            if (source == null)
+            {
+                return null;
+            }
+
+            return new TreeInfoData
+            {
+                Mode = source.Mode,
+                Type = source.Type,
+                Sha = source.Sha,
+                Size = source.Size,
+                Url = source.Url,
+                Path = source.Path
+            };
+        }
+
+        // Local TreeInfoData class for backward compatibility with existing code
+        private class TreeInfoData
+        {
+            public string Mode { get; set; }
+            public string Type { get; set; } // "blob" for files, "tree" for directories
+            public string Sha { get; set; }
+            public int? Size { get; set; }
+            public string Url { get; set; }
+            public string Path { get; set; }
+        }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:361-367
