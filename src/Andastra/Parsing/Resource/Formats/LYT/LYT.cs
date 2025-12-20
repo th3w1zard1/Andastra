@@ -232,6 +232,15 @@ namespace Andastra.Parsing.Resource.Formats.LYT
         /// </remarks>
         public List<LYTDoorHook> DoorHooks { get; set; } = new List<LYTDoorHook>();
 
+        /// <summary>
+        /// Property alias for DoorHooks to maintain compatibility with code expecting lowercase property name.
+        /// </summary>
+        public List<LYTDoorHook> Doorhooks
+        {
+            get { return DoorHooks; }
+            set { DoorHooks = value; }
+        }
+
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lyt/lyt_data.py:108
         // Original: def __init__(self):
         public LYT()

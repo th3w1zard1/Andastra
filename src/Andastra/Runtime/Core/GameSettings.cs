@@ -84,6 +84,19 @@ namespace Andastra.Runtime.Core
         public float MouseSensitivity { get; set; } = 0.5f;
 
         /// <summary>
+        /// Whether to invert the mouse Y axis for camera controls.
+        /// </summary>
+        /// <remarks>
+        /// Mouse Y Inversion Setting:
+        /// - Based on swkotor.exe and swkotor2.exe mouse configuration system
+        /// - Original implementation: Mouse invert option in options menu (Controls category)
+        /// - When enabled, inverts the Y axis so moving mouse up looks down and vice versa
+        /// - Used in camera look/rotation input processing
+        /// - Based on swkotor.exe and swkotor2.exe: Mouse invert implementation
+        /// </remarks>
+        public bool InvertMouseY { get; set; } = false;
+
+        /// <summary>
         /// Applies mouse Y inversion to a mouse Y delta value if the setting is enabled.
         /// </summary>
         /// <param name="mouseYDelta">The raw mouse Y delta value.</param>
