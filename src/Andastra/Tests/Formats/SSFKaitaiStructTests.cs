@@ -17,14 +17,17 @@ namespace Andastra.Parsing.Tests.Formats
     /// </summary>
     public class SSFKaitaiStructTests
     {
-        private static readonly string KsyFile = Path.Combine(
-            AppContext.BaseDirectory, "..", "..", "..", "..", "..",
-            "src", "Andastra", "Parsing", "Resource", "Formats", "SSF", "SSF.ksy");
+        private static readonly string SSFKsyPath = Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..", "..", "..", "..", "..",
+            "src", "Andastra", "Parsing", "Resource", "Formats", "SSF", "SSF.ksy"
+        ));
 
         private static readonly string TestSsfFile = TestFileHelper.GetPath("test.ssf");
-        private static readonly string KaitaiOutputDir = Path.Combine(
-            AppContext.BaseDirectory, "..", "..", "..", "..", "..",
-            "kaitai_compiled", "ssf");
+        private static readonly string TestOutputDir = Path.Combine(
+            AppContext.BaseDirectory,
+            "test_files", "kaitai_compiled", "ssf"
+        );
 
         // Languages supported by Kaitai Struct (at least a dozen)
         private static readonly string[] SupportedLanguages = new[]
@@ -33,127 +36,161 @@ namespace Andastra.Parsing.Tests.Formats
             "php", "rust", "swift", "perl", "nim", "lua", "kotlin", "typescript"
         };
 
-        [Fact(Timeout = 300000)]
-        public void TestKaitaiStructCompilerAvailable()
+        [Fact(Timeout = 300000)] // 5 minute timeout for compilation
+        public void TestKaitaiCompilerAvailable()
         {
-            // Check if kaitai-struct-compiler is available
-            var process = new Process
+            // Check if Java is available (required for Kaitai Struct compiler)
+            var javaCheck = RunCommand("java", "-version");
+            if (javaCheck.ExitCode != 0)
             {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "kaitai-struct-compiler",
-                    Arguments = "--version",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                }
-            };
+                // Skip test if Java is not available
+                return;
+            }
 
-            try
+            // Try to find Kaitai Struct compiler
+            var kscCheck = RunCommand("kaitai-struct-compiler", "--version");
+            if (kscCheck.ExitCode != 0)
             {
-                process.Start();
-                process.WaitForExit(5000);
-
-                if (process.ExitCode == 0)
+                // Try with .jar extension or check if it's in PATH
+                var jarPath = FindKaitaiCompilerJar();
+                if (string.IsNullOrEmpty(jarPath))
                 {
-                    string version = process.StandardOutput.ReadToEnd();
-                    version.Should().NotBeNullOrEmpty("Kaitai Struct compiler should return version");
-                }
-                else
-                {
-                    // Compiler not found - skip tests that require it
-                    Assert.True(true, "Kaitai Struct compiler not available - skipping compiler tests");
+                    // Skip if not found - in CI/CD this should be installed
+                    return;
                 }
             }
-            catch (System.ComponentModel.Win32Exception)
-            {
-                // Compiler not installed - skip tests
-                Assert.True(true, "Kaitai Struct compiler not installed - skipping compiler tests");
-            }
+
+            kscCheck.ExitCode.Should().Be(0, "Kaitai Struct compiler should be available");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestKsyFileExists()
+        public void TestSSFKsyFileExists()
         {
-            // Ensure SSF.ksy file exists
-            var ksyPath = new FileInfo(KsyFile);
-            if (!ksyPath.Exists)
-            {
-                // Try alternative path
-                ksyPath = new FileInfo(Path.Combine(
-                    AppContext.BaseDirectory, "..", "..", "..", "..",
-                    "src", "Andastra", "Parsing", "Resource", "Formats", "SSF", "SSF.ksy"));
-            }
+            var normalizedPath = Path.GetFullPath(SSFKsyPath);
+            File.Exists(normalizedPath).Should().BeTrue(
+                $"SSF.ksy file should exist at {normalizedPath}"
+            );
 
-            ksyPath.Exists.Should().BeTrue($"SSF.ksy should exist at {ksyPath.FullName}");
+            // Verify it's a valid YAML file
+            var content = File.ReadAllText(normalizedPath);
+            content.Should().Contain("meta:", "SSF.ksy should contain meta section");
+            content.Should().Contain("id: ssf", "SSF.ksy should have id: ssf");
+            content.Should().Contain("sounds", "SSF.ksy should contain sounds field");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestKsyFileValid()
+        public void TestSSFKsyFileValid()
         {
             // Validate that SSF.ksy is valid YAML and can be parsed by compiler
-            if (!File.Exists(KsyFile))
+            if (!File.Exists(SSFKsyPath))
             {
                 Assert.True(true, "SSF.ksy not found - skipping validation");
                 return;
             }
 
-            var process = new Process
+            var javaCheck = RunCommand("java", "-version");
+            if (javaCheck.ExitCode != 0)
             {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "kaitai-struct-compiler",
-                    Arguments = $"--version",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                }
-            };
-
-            try
-            {
-                process.Start();
-                process.WaitForExit(5000);
-
-                if (process.ExitCode != 0)
-                {
-                    Assert.True(true, "Kaitai Struct compiler not available - skipping validation");
-                    return;
-                }
-
-                // Try to compile to a test language to validate syntax
-                var testProcess = new Process
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = "kaitai-struct-compiler",
-                        Arguments = $"-t python \"{KsyFile}\" -d \"{Path.GetTempPath()}\"",
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    }
-                };
-
-                testProcess.Start();
-                testProcess.WaitForExit(30000);
-
-                // If compilation succeeds, the file is valid
-                // If it fails, we'll get error output
-                string stderr = testProcess.StandardError.ReadToEnd();
-
-                // Compilation might fail due to missing dependencies, but syntax errors would be caught
-                if (testProcess.ExitCode != 0 && stderr.Contains("error") && !stderr.Contains("import"))
-                {
-                    Assert.True(false, $"SSF.ksy has syntax errors: {stderr}");
-                }
+                Assert.True(true, "Java not available - skipping validation");
+                return;
             }
-            catch (System.ComponentModel.Win32Exception)
+
+            // Try to compile to a test language to validate syntax
+            var result = CompileToLanguage(SSFKsyPath, "python");
+            if (!result.Success && result.ErrorMessage.Contains("error") && !result.ErrorMessage.Contains("import"))
             {
-                Assert.True(true, "Kaitai Struct compiler not installed - skipping validation");
+                Assert.True(false, $"SSF.ksy has syntax errors: {result.ErrorMessage}");
             }
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileSSFToPython()
+        {
+            TestCompileToLanguage("python");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileSSFToJava()
+        {
+            TestCompileToLanguage("java");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileSSFToJavaScript()
+        {
+            TestCompileToLanguage("javascript");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileSSFToCSharp()
+        {
+            TestCompileToLanguage("csharp");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileSSFToCpp()
+        {
+            TestCompileToLanguage("cpp_stl");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileSSFToGo()
+        {
+            TestCompileToLanguage("go");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileSSFToRuby()
+        {
+            TestCompileToLanguage("ruby");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileSSFToPhp()
+        {
+            TestCompileToLanguage("php");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileSSFToRust()
+        {
+            TestCompileToLanguage("rust");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileSSFToSwift()
+        {
+            TestCompileToLanguage("swift");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileSSFToPerl()
+        {
+            TestCompileToLanguage("perl");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileSSFToNim()
+        {
+            TestCompileToLanguage("nim");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileSSFToLua()
+        {
+            TestCompileToLanguage("lua");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileSSFToKotlin()
+        {
+            TestCompileToLanguage("kotlin");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileSSFToTypeScript()
+        {
+            TestCompileToLanguage("typescript");
         }
 
         [Theory(Timeout = 300000)]
@@ -161,91 +198,108 @@ namespace Andastra.Parsing.Tests.Formats
         public void TestKaitaiStructCompilation(string language)
         {
             // Test that SSF.ksy compiles to each target language
-            if (!File.Exists(KsyFile))
+            if (!File.Exists(SSFKsyPath))
             {
                 Assert.True(true, "SSF.ksy not found - skipping compilation test");
                 return;
             }
 
-            var result = CompileToLanguage(KsyFile, language);
-            
+            var javaCheck = RunCommand("java", "-version");
+            if (javaCheck.ExitCode != 0)
+            {
+                Assert.True(true, "Java not available - skipping compilation test");
+                return;
+            }
+
+            var result = CompileToLanguage(SSFKsyPath, language);
+
+            // Compilation should succeed
+            // Some languages might not be fully supported, but syntax should be valid
             if (!result.Success)
             {
-                // Some languages may not be fully supported or may have missing dependencies
-                // Log the error but don't fail the test for individual language failures
-                // The "all languages" test will verify at least some work
-                Assert.True(true, $"Compilation to {language} failed (may not be supported): {result.ErrorMessage}");
-                return;
-            }
-
-            result.Success.Should().BeTrue(
-                $"Compilation to {language} should succeed. Error: {result.ErrorMessage}, Output: {result.Output}");
-        }
-
-        [Fact(Timeout = 300000)]
-        public void TestKaitaiStructCompilesToAllLanguages()
-        {
-            // Test compilation to all supported languages
-            if (!File.Exists(KsyFile))
-            {
-                Assert.True(true, "SSF.ksy not found - skipping compilation test");
-                return;
-            }
-
-            // Check if compiler is available
-            var compilerCheck = RunKaitaiCompiler(KsyFile, "-t python", Path.GetTempPath());
-            if (compilerCheck.ExitCode != 0 && compilerCheck.ExitCode != -1)
-            {
-                // Try to find compiler JAR
-                var jarPath = FindKaitaiCompilerJar();
-                if (string.IsNullOrEmpty(jarPath))
+                // Check if it's a known limitation vs actual error
+                if (result.ErrorMessage?.Contains("not supported") == true ||
+                    result.ErrorMessage?.Contains("unsupported") == true)
                 {
-                    Assert.True(true, "Kaitai Struct compiler not available - skipping compilation test");
-                    return;
-                }
-            }
-
-            int successCount = 0;
-            int failCount = 0;
-            var results = new List<string>();
-
-            foreach (string lang in SupportedLanguages)
-            {
-                var compileResult = CompileToLanguage(KsyFile, lang);
-                
-                if (compileResult.Success)
-                {
-                    successCount++;
-                    results.Add($"{lang}: Success");
+                    Assert.True(true, $"Language {language} not supported by compiler: {result.ErrorMessage}");
                 }
                 else
                 {
-                    failCount++;
-                    string errorMsg = compileResult.ErrorMessage ?? "Unknown error";
-                    if (errorMsg.Length > 100)
+                    // For individual language tests, we allow failures (the "all languages" test will verify success)
+                    Assert.True(true, $"Compilation to {language} failed (may be environment-specific): {result.ErrorMessage}");
+                }
+            }
+            else
+            {
+                Assert.True(true, $"Successfully compiled SSF.ksy to {language}");
+            }
+        }
+
+        [Fact(Timeout = 600000)] // 10 minute timeout for compiling all languages
+        public void TestCompileSSFToAllLanguages()
+        {
+            var normalizedKsyPath = Path.GetFullPath(SSFKsyPath);
+            if (!File.Exists(normalizedKsyPath))
+            {
+                // Skip if .ksy file doesn't exist
+                return;
+            }
+
+            // Check if Java/Kaitai compiler is available
+            var javaCheck = RunCommand("java", "-version");
+            if (javaCheck.ExitCode != 0)
+            {
+                // Skip test if Java is not available
+                return;
+            }
+
+            Directory.CreateDirectory(TestOutputDir);
+
+            var results = new Dictionary<string, CompileResult>();
+
+            foreach (var language in SupportedLanguages)
+            {
+                try
+                {
+                    var result = CompileToLanguage(normalizedKsyPath, language);
+                    results[language] = result;
+                }
+                catch (Exception ex)
+                {
+                    results[language] = new CompileResult
                     {
-                        errorMsg = errorMsg.Substring(0, 100) + "...";
-                    }
-                    results.Add($"{lang}: Failed - {errorMsg}");
+                        Success = false,
+                        ErrorMessage = ex.Message,
+                        Output = ex.ToString()
+                    };
                 }
             }
 
-            // At least some languages should compile successfully
-            results.Should().NotBeEmpty("Should have compilation results");
-            
-            // Log results
-            foreach (string result in results)
+            // Report results
+            var successful = results.Where(r => r.Value.Success).ToList();
+            var failed = results.Where(r => !r.Value.Success).ToList();
+
+            // At least 12 languages should compile successfully (as required)
+            // (We allow some failures as not all languages may be fully supported in all environments)
+            successful.Count.Should().BeGreaterThanOrEqualTo(12,
+                $"At least 12 languages should compile successfully (got {successful.Count}). Failed: {string.Join(", ", failed.Select(f => $"{f.Key}: {f.Value.ErrorMessage}"))}");
+
+            // Log successful compilations
+            foreach (var success in successful)
             {
-                Console.WriteLine($"  {result}");
+                // Verify output files were created
+                var outputDir = Path.Combine(TestOutputDir, success.Key);
+                if (Directory.Exists(outputDir))
+                {
+                    var files = Directory.GetFiles(outputDir, "*", SearchOption.AllDirectories);
+                    files.Length.Should().BeGreaterThan(0,
+                        $"Language {success.Key} should generate output files");
+                }
             }
-            
-            // We expect at least a dozen languages to be testable
-            // Some may not be supported, but the majority should work
-            Assert.True(successCount > 0, $"At least one language should compile successfully. Results: {string.Join(", ", results)}");
         }
 
         [Fact(Timeout = 300000)]
-        public void TestKaitaiStructGeneratedParserConsistency()
+        public void TestSSFKaitaiStructGeneratedParserConsistency()
         {
             // Test that generated parsers produce consistent results
             // This requires actual test files and parser execution
@@ -278,16 +332,16 @@ namespace Andastra.Parsing.Tests.Formats
         }
 
         [Fact(Timeout = 300000)]
-        public void TestKaitaiStructDefinitionCompleteness()
+        public void TestSSFKaitaiStructDefinitionCompleteness()
         {
             // Validate that SSF.ksy definition is complete and matches the format
-            if (!File.Exists(KsyFile))
+            if (!File.Exists(SSFKsyPath))
             {
                 Assert.True(true, "SSF.ksy not found - skipping completeness test");
                 return;
             }
 
-            string ksyContent = File.ReadAllText(KsyFile);
+            string ksyContent = File.ReadAllText(SSFKsyPath);
 
             // Check for required elements in Kaitai Struct definition
             ksyContent.Should().Contain("meta:", "Should have meta section");
@@ -301,52 +355,107 @@ namespace Andastra.Parsing.Tests.Formats
             ksyContent.Should().Contain("sound_entry", "Should define sound_entry type");
             ksyContent.Should().Contain("strref_raw", "Should define strref_raw field");
             ksyContent.Should().Contain("is_no_sound", "Should define is_no_sound instance");
+            ksyContent.Should().Contain("doc:", "Should have documentation");
         }
 
-        [Fact(Timeout = 300000)]
-        public void TestKaitaiStructCompilesToAtLeastDozenLanguages()
+        private void TestCompileToLanguage(string language)
+        {
+            var normalizedKsyPath = Path.GetFullPath(SSFKsyPath);
+            if (!File.Exists(normalizedKsyPath))
+            {
+                // Skip if .ksy file doesn't exist
+                return;
+            }
+
+            var javaCheck = RunCommand("java", "-version");
+            if (javaCheck.ExitCode != 0)
+            {
+                // Skip if Java is not available
+                return;
+            }
+
+            Directory.CreateDirectory(TestOutputDir);
+
+            var result = CompileToLanguage(normalizedKsyPath, language);
+
+            if (!result.Success)
+            {
+                // Some languages may not be fully supported or may have missing dependencies
+                // Log the error but don't fail the test for individual language failures
+                // The "all languages" test will verify at least some work
+                return;
+            }
+
+            result.Success.Should().BeTrue(
+                $"Compilation to {language} should succeed. Error: {result.ErrorMessage}, Output: {result.Output}");
+
+            // Verify output directory was created
+            var outputDir = Path.Combine(TestOutputDir, language);
+            Directory.Exists(outputDir).Should().BeTrue(
+                $"Output directory for {language} should be created");
+        }
+
+        [Fact(Timeout = 600000)]
+        public void TestCompileSSFToAtLeastDozenLanguages()
         {
             // Ensure we test at least a dozen languages
-            if (!File.Exists(KsyFile))
+            var normalizedKsyPath = Path.GetFullPath(SSFKsyPath);
+            if (!File.Exists(normalizedKsyPath))
             {
                 Assert.True(true, "SSF.ksy not found - skipping test");
                 return;
             }
 
-            SupportedLanguages.Length.Should().BeGreaterOrEqualTo(12, 
+            SupportedLanguages.Length.Should().BeGreaterOrEqualTo(12,
                 "Should support at least a dozen languages for testing");
 
-            // Check if compiler is available
-            var compilerCheck = RunKaitaiCompiler(KsyFile, "-t python", Path.GetTempPath());
-            if (compilerCheck.ExitCode != 0 && compilerCheck.ExitCode != -1)
+            var javaCheck = RunCommand("java", "-version");
+            if (javaCheck.ExitCode != 0)
             {
-                var jarPath = FindKaitaiCompilerJar();
-                if (string.IsNullOrEmpty(jarPath))
+                Assert.True(true, "Java not available - skipping test");
+                return;
+            }
+
+            Directory.CreateDirectory(TestOutputDir);
+
+            int compiledCount = 0;
+            var results = new List<string>();
+
+            foreach (string lang in SupportedLanguages)
+            {
+                try
                 {
-                    Assert.True(true, "Kaitai Struct compiler not available - skipping test");
-                    return;
+                    var result = CompileToLanguage(normalizedKsyPath, lang);
+                    if (result.Success)
+                    {
+                        compiledCount++;
+                        results.Add($"{lang}: Success");
+                    }
+                    else
+                    {
+                        results.Add($"{lang}: Failed - {result.ErrorMessage?.Substring(0, Math.Min(100, result.ErrorMessage?.Length ?? 0))}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    results.Add($"{lang}: Error - {ex.Message}");
                 }
             }
 
-            int compiledCount = 0;
-            foreach (string lang in SupportedLanguages)
+            // Log results
+            foreach (string result in results)
             {
-                var compileResult = CompileToLanguage(KsyFile, lang);
-                if (compileResult.Success)
-                {
-                    compiledCount++;
-                }
+                Console.WriteLine($"  {result}");
             }
 
             // We should be able to compile to at least a dozen languages
-            // (Some may fail due to missing dependencies, but syntax should be valid for most)
-            compiledCount.Should().BeGreaterOrEqualTo(12, 
-                $"Should successfully compile SSF.ksy to at least 12 languages. Compiled to {compiledCount} languages.");
+            compiledCount.Should().BeGreaterOrEqualTo(12,
+                $"Should successfully compile SSF.ksy to at least 12 languages. Compiled to {compiledCount} languages. Results: {string.Join(", ", results)}");
         }
 
         private CompileResult CompileToLanguage(string ksyPath, string language)
         {
-            var outputDir = Path.Combine(Path.GetTempPath(), "kaitai_ssf_test", language);
+            var outputDir = Path.Combine(TestOutputDir, language);
             Directory.CreateDirectory(outputDir);
 
             var result = RunKaitaiCompiler(ksyPath, $"-t {language}", outputDir);
@@ -475,7 +584,7 @@ namespace Andastra.Parsing.Tests.Formats
 
                     var output = process.StandardOutput.ReadToEnd();
                     var error = process.StandardError.ReadToEnd();
-                    process.WaitForExit(60000); // 60 second timeout
+                    process.WaitForExit(30000); // 30 second timeout
 
                     return (process.ExitCode, output, error);
                 }
