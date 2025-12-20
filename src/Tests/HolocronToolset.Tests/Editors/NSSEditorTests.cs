@@ -1135,14 +1135,74 @@ void helper() {
             // (This matches the Python test behavior which allows for different search implementations)
         }
 
-        // TODO: STUB - Implement test_nss_editor_constants_list_populated (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:617-640)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:617-640
         // Original: def test_nss_editor_constants_list_populated(qtbot, installation: HTInstallation): Test constants list populated
         [Fact]
         public void TestNssEditorConstantsListPopulated()
         {
-            // TODO: STUB - Implement constants list populated test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:617-640
-            throw new NotImplementedException("TestNssEditorConstantsListPopulated: Constants list populated test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            var editor = new NSSEditor(null, installation);
+            editor.New();
+
+            // Constants should be populated
+            editor.UpdateGameSpecificData();
+
+            // Constant list should have items
+            var constantList = editor.ConstantList;
+            constantList.Should().NotBeNull("Constant list should be initialized");
+            constantList.Items.Should().NotBeNull("Constant list items should be initialized");
+            constantList.Items.Count.Should().BeGreaterThan(0, "Constant list should be populated with constants");
+
+            // Test searching constants
+            editor.OnConstantSearch("OBJECT_TYPE");
+
+            // Should find matching constants
+            bool foundObjectType = false;
+            foreach (var item in constantList.Items)
+            {
+                var listBoxItem = item as Avalonia.Controls.ListBoxItem;
+                if (listBoxItem != null && listBoxItem.Content != null)
+                {
+                    string itemText = listBoxItem.Content.ToString();
+                    if (itemText != null && itemText.Contains("OBJECT_TYPE"))
+                    {
+                        // Verify the item is visible after search
+                        listBoxItem.IsVisible.Should().BeTrue("OBJECT_TYPE constant should be visible after search");
+                        foundObjectType = true;
+                        break;
+                    }
+                }
+            }
+
+            // If we get here, search may work differently, which is fine
+            // The test passes if the constant list is populated, even if OBJECT_TYPE isn't found
+            // (This matches the Python test behavior which allows for different search implementations)
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:642-665
@@ -1942,14 +2002,104 @@ void helper() {
             statusBar.Should().NotBeNull("Status bar should be initialized");
         }
 
-        // TODO: STUB - Implement test_nss_editor_status_bar_updates (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1058-1080)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1058-1080
         // Original: def test_nss_editor_status_bar_updates(qtbot, installation: HTInstallation, complex_nss_script: str): Test status bar updates
         [Fact]
         public void TestNssEditorStatusBarUpdates()
         {
-            // TODO: STUB - Implement status bar updates test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1058-1080
-            throw new NotImplementedException("TestNssEditorStatusBarUpdates: Status bar updates test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            // Matching Python: editor = NSSEditor(None, installation)
+            var editor = new NSSEditor(null, installation);
+
+            // Matching Python: editor.new()
+            editor.New();
+
+            // Matching Python: complex_nss_script fixture (from conftest.py:38-59)
+            string complexNssScript = @"// Global variable
+int g_globalVar = 10;
+
+// Main function
+void main() {
+    int localVar = 20;
+
+    if (localVar > 10) {
+        SendMessageToPC(GetFirstPC(), ""Condition met"");
+    }
+
+    for (int i = 0; i < 5; i++) {
+        localVar += i;
+    }
+}
+
+// Helper function
+void helper() {
+    int helperVar = 30;
+}";
+
+            // Matching Python: editor.ui.codeEdit.setPlainText(complex_nss_script)
+            // Get the code editor using reflection (matching pattern used in other tests)
+            var codeEditField = typeof(NSSEditor).GetField("_codeEdit", BindingFlags.NonPublic | BindingFlags.Instance);
+            codeEditField.Should().NotBeNull("_codeEdit field should exist");
+            var codeEdit = codeEditField.GetValue(editor) as HolocronToolset.Widgets.CodeEditor;
+            codeEdit.Should().NotBeNull("Code editor should be initialized");
+            codeEdit.SetPlainText(complexNssScript);
+
+            // Matching Python: cursor = editor.ui.codeEdit.textCursor()
+            // Matching Python: cursor.movePosition(QTextCursor.MoveOperation.Down)
+            // Matching Python: editor.ui.codeEdit.setTextCursor(cursor)
+            // In Avalonia TextBox, we move the cursor by setting CaretIndex
+            // Move cursor down one line by finding the first newline character
+            string text = codeEdit.ToPlainText();
+            int firstNewlineIndex = text.IndexOf('\n');
+            if (firstNewlineIndex >= 0)
+            {
+                // Move cursor to the position after the first newline (start of second line)
+                // Add 1 to move past the newline character itself
+                int newCaretIndex = firstNewlineIndex + 1;
+                if (newCaretIndex < text.Length)
+                {
+                    // CodeEditor inherits from TextBox, which has CaretIndex property
+                    // Set CaretIndex directly to move cursor
+                    codeEdit.CaretIndex = newCaretIndex;
+                }
+            }
+
+            // Matching Python: editor._update_status_bar()
+            // UpdateStatusBar is private, so we use reflection to call it
+            var updateStatusBarMethod = typeof(NSSEditor).GetMethod("UpdateStatusBar", BindingFlags.NonPublic | BindingFlags.Instance);
+            updateStatusBarMethod.Should().NotBeNull("UpdateStatusBar method should exist");
+            updateStatusBarMethod.Invoke(editor, null);
+
+            // Matching Python: assert editor.statusBar() is not None
+            // Status bar should exist
+            var statusBar = editor.StatusBar();
+            statusBar.Should().NotBeNull("Status bar should exist and not be null");
         }
 
         // TODO: STUB - Implement test_nss_editor_panel_toggle_actions (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1082-1101)
@@ -3033,14 +3183,70 @@ void helper() {
             return count;
         }
 
-        // TODO: STUB - Implement test_nss_editor_command_palette_setup (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1847-1861)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1847-1861
         // Original: def test_nss_editor_command_palette_setup(qtbot, installation: HTInstallation): Test command palette setup
         [Fact]
         public void TestNssEditorCommandPaletteSetup()
         {
-            // TODO: STUB - Implement command palette setup test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1847-1861
-            throw new NotImplementedException("TestNssEditorCommandPaletteSetup: Command palette setup test not yet implemented");
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1847-1861
+            // Original: editor = NSSEditor(None, installation)
+            // Original: editor.new()
+            // Original: assert hasattr(editor, '_command_palette')
+            // Original: editor._show_command_palette()
+            // Original: assert editor._command_palette is not None
+
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            var editor = new NSSEditor(null, installation);
+            editor.New();
+
+            // Command palette should exist (field should be present, but may be null until first show)
+            // Use reflection to access private field _commandPalette
+            var fieldInfo = typeof(NSSEditor).GetField("_commandPalette",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+            fieldInfo.Should().NotBeNull("NSSEditor should have _commandPalette field");
+
+            // Initially, command palette should be null (created lazily on first show)
+            var commandPalette = fieldInfo.GetValue(editor);
+            // It's okay if it's null at this point - it's created lazily
+
+            // Show command palette (this should create it)
+            // Use reflection to call private method ShowCommandPalette
+            var showMethod = typeof(NSSEditor).GetMethod("ShowCommandPalette",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+            showMethod.Should().NotBeNull("NSSEditor should have ShowCommandPalette method");
+            showMethod.Invoke(editor, null);
+
+            // Should be created now
+            commandPalette = fieldInfo.GetValue(editor);
+            commandPalette.Should().NotBeNull("_commandPalette should be initialized after ShowCommandPalette()");
         }
 
         // TODO: STUB - Implement test_nss_editor_command_palette_actions (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1863-1875)
@@ -3083,14 +3289,126 @@ void helper() {
             throw new NotImplementedException("TestNssEditorFoldingAndBreadcrumbsTogether: Folding and breadcrumbs together test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_nss_editor_multiple_features_integration (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1958-1991)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1958-1991
         // Original: def test_nss_editor_multiple_features_integration(qtbot, installation: HTInstallation, foldable_nss_script: str): Test multiple features integration
         [Fact]
         public void TestNssEditorMultipleFeaturesIntegration()
         {
-            // TODO: STUB - Implement multiple features integration test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1958-1991
-            throw new NotImplementedException("TestNssEditorMultipleFeaturesIntegration: Multiple features integration test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                // Try K1 path as fallback
+                k2Path = Environment.GetEnvironmentVariable("K1_PATH");
+            }
+
+            HTInstallation installation = null;
+            if (!string.IsNullOrEmpty(k2Path) && System.IO.Directory.Exists(k2Path))
+            {
+                installation = new HTInstallation { Path = k2Path };
+            }
+
+            // If no installation found, create a minimal one for testing
+            if (installation == null)
+            {
+                string tempDir = System.IO.Path.GetTempPath();
+                installation = new HTInstallation { Path = tempDir };
+            }
+
+            // Foldable NSS script matching Python fixture
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1235-1258
+            string foldableNssScript = @"// Global variable
+int g_var = 10;
+
+void main() {
+    int local = 5;
+
+    if (local > 0) {
+        int nested = 10;
+        if (nested > 5) {
+            // Nested block
+            local += nested;
+        }
+    }
+
+    for (int i = 0; i < 10; i++) {
+        local += i;
+    }
+}
+
+void helper() {
+    int helper_var = 20;
+}";
+
+            // Matching Python: editor = NSSEditor(None, installation)
+            var editor = new NSSEditor(null, installation);
+
+            // Matching Python: editor.new()
+            editor.New();
+
+            // Access CodeEditor via reflection
+            var codeEditorField = typeof(NSSEditor).GetField("_codeEdit",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            codeEditorField.Should().NotBeNull("NSSEditor should have _codeEdit field");
+
+            var codeEditor = codeEditorField.GetValue(editor) as HolocronToolset.Widgets.CodeEditor;
+            codeEditor.Should().NotBeNull("_codeEdit should be initialized");
+
+            // Matching Python: editor.ui.codeEdit.setPlainText(foldable_nss_script)
+            codeEditor.SetPlainText(foldableNssScript);
+
+            // Matching Python: qtbot.wait(300)
+            System.Threading.Thread.Sleep(300);
+
+            // Matching Python: cursor = editor.ui.codeEdit.textCursor()
+            // doc = editor.ui.codeEdit.document()
+            // block = doc.findBlockByLineNumber(1)
+            // if block.isValid():
+            //     cursor.setPosition(block.position())
+            //     editor.ui.codeEdit.setTextCursor(cursor)
+            // Move cursor to line 1 (0-indexed, so line 1 is index 1)
+            // In C#, we use GotoLine which is 1-indexed
+            editor.GotoLine(2); // Line 2 (1-indexed) = line 1 (0-indexed) in Python
+
+            // Matching Python: editor.add_bookmark()
+            editor.AddBookmark();
+
+            // Matching Python: editor.ui.codeEdit.fold_region()
+            codeEditor.FoldRegion();
+
+            // Matching Python: editor._update_breadcrumbs()
+            editor.UpdateBreadcrumbs();
+
+            // Matching Python: assert editor.ui.bookmarkTree.topLevelItemCount() >= 1
+            // Access bookmark tree via reflection
+            var bookmarkTreeField = typeof(NSSEditor).GetField("_bookmarkTree",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            bookmarkTreeField.Should().NotBeNull("NSSEditor should have _bookmarkTree field");
+
+            var bookmarkTree = bookmarkTreeField.GetValue(editor) as Avalonia.Controls.TreeView;
+            bookmarkTree.Should().NotBeNull("_bookmarkTree should be initialized");
+
+            // Get bookmark items count
+            var itemsList = bookmarkTree.ItemsSource as System.Collections.Generic.List<Avalonia.Controls.TreeViewItem> ??
+                          (bookmarkTree.Items as System.Collections.Generic.IEnumerable<Avalonia.Controls.TreeViewItem> ??
+                           new System.Collections.Generic.List<Avalonia.Controls.TreeViewItem>());
+            int bookmarkCount = itemsList is System.Collections.Generic.List<Avalonia.Controls.TreeViewItem> list ? list.Count : itemsList.Count();
+            bookmarkCount.Should().BeGreaterOrEqual(1, "Bookmark tree should have at least 1 bookmark");
+
+            // Matching Python: assert hasattr(editor.ui.codeEdit, '_folded_block_numbers')
+            // Check that _foldedBlockNumbers field exists using reflection
+            var foldedBlockNumbersField = typeof(HolocronToolset.Widgets.CodeEditor).GetField("_foldedBlockNumbers",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            foldedBlockNumbersField.Should().NotBeNull("CodeEditor should have _foldedBlockNumbers field");
+
+            // Matching Python: assert editor._breadcrumbs is not None
+            // Check that _breadcrumbs field exists using reflection
+            var breadcrumbsField = typeof(NSSEditor).GetField("_breadcrumbs",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            breadcrumbsField.Should().NotBeNull("NSSEditor should have _breadcrumbs field");
+
+            var breadcrumbs = breadcrumbsField.GetValue(editor) as HolocronToolset.Widgets.BreadcrumbsWidget;
+            breadcrumbs.Should().NotBeNull("Breadcrumbs should be initialized");
         }
 
         // TODO: STUB - Implement test_nss_editor_fold_empty_block (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1993-2008)

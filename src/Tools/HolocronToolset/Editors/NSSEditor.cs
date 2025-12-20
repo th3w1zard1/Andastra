@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Common.Script;
@@ -27,6 +28,7 @@ namespace HolocronToolset.Editors
     {
         private CodeEditor _codeEdit;
         private TerminalWidget _terminalWidget;
+        private TextBox _outputEdit;
         private bool _isDecompiled;
         private NoScrollEventFilter _noScrollFilter;
         private FindReplaceWidget _findReplaceWidget;
@@ -47,7 +49,12 @@ namespace HolocronToolset.Editors
         private string _sourcerepoUrl;
         private Label _statusLabel;
         private Border _statusBar;
-        
+
+        // Command palette
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2535
+        // Original: self._command_palette = CommandPalette(self)
+        private CommandPalette _commandPalette;
+
         // File explorer components
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:1351-1398
         // Original: self.file_system_model = QFileSystemModel()
@@ -56,6 +63,28 @@ namespace HolocronToolset.Editors
         private TextBox _fileExplorerAddressBar;
         private TextBox _fileSearchEdit;
         private Button _refreshFileExplorerButton;
+
+        // UI wrapper class to match PyKotor's self.ui pattern
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:136
+        // Original: self.ui = Ui_MainWindow()
+        public class NSSEditorUi
+        {
+            public MenuItem ActionCompile { get; set; }
+            public TextBox OutputEdit { get; set; }
+
+            public NSSEditorUi()
+            {
+                ActionCompile = null;
+                OutputEdit = null;
+            }
+        }
+
+        private NSSEditorUi _ui;
+
+        // Public property to expose UI for testing and external access
+        // Matching PyKotor implementation: self.ui.actionCompile
+        public NSSEditorUi Ui => _ui;
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:156
         // Original: self._highlighter: SyntaxHighlighter = SyntaxHighlighter(document, self._installation)
         private NWScriptSyntaxHighlighter _highlighter;
@@ -82,6 +111,9 @@ namespace HolocronToolset.Editors
             _globalSettings = new GlobalSettings();
             _completionMap = new Dictionary<string, object>();
 
+            // Initialize UI wrapper
+            _ui = new NSSEditorUi();
+
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:164-167
             // Original: self.owner: str = "KOTORCommunityPatches"
             _owner = "KOTORCommunityPatches";
@@ -101,6 +133,12 @@ namespace HolocronToolset.Editors
             SetupFileExplorer();
             AddHelpAction();
             SetupStatusBar();
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2534-2542
+            // Original: Command Palette (VS Code Ctrl+Shift+P)
+            // Original: self._command_palette = CommandPalette(self)
+            // Original: self._setup_command_palette()
+            SetupCommandPalette();
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:469-514
             // Original: Setup completer for autocompletion
@@ -151,6 +189,110 @@ namespace HolocronToolset.Editors
             {
                 _codeEdit = new CodeEditor();
             }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:479-484
+            // Original: self.output_text_edit = self.ui.outputEdit
+            // Original: self.output_text_edit.setReadOnly(True)
+            // Set up output panel for logging compilation results and other messages
+            SetupOutputPanel();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:479-484
+        // Original: Use the existing outputEdit widget from UI file with proper encoding
+        // Original: self.output_text_edit = self.ui.outputEdit
+        // Original: self.output_text_edit.setReadOnly(True)
+        // Original: configure_code_editor_font(self.output_text_edit, size=11)
+        /// <summary>
+        /// Sets up the output panel for displaying compilation results and log messages.
+        /// The output panel is read-only and uses monospace font for better readability.
+        /// </summary>
+        private void SetupOutputPanel()
+        {
+            // Try to find output edit from XAML first
+            _outputEdit = this.FindControl<TextBox>("outputEdit");
+
+            // If not found in XAML, create programmatically
+            if (_outputEdit == null)
+            {
+                _outputEdit = new TextBox();
+                _outputEdit.Name = "outputEdit";
+            }
+
+            // Configure as read-only output panel
+            _outputEdit.IsReadOnly = true;
+            _outputEdit.AcceptsReturn = true;
+            _outputEdit.TextWrapping = Avalonia.Media.TextWrapping.Wrap;
+
+            // Set monospace font for code-like output (matching Python's configure_code_editor_font with size=11)
+            _outputEdit.FontFamily = new Avalonia.Media.FontFamily("Consolas, Courier New, monospace");
+            _outputEdit.FontSize = 11;
+
+            // Set in UI wrapper for test access (matching PyKotor's self.ui.outputEdit pattern)
+            if (_ui != null)
+            {
+                _ui.OutputEdit = _outputEdit;
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:801-816
+        // Original: def _log_to_output(self, message: str):
+        /// <summary>
+        /// Logs a message to the output panel with proper encoding.
+        /// </summary>
+        /// <param name="message">The message to log.</param>
+        private void LogToOutput(string message)
+        {
+            if (_outputEdit == null)
+            {
+                return;
+            }
+
+            try
+            {
+                // Ensure proper text encoding - handle bytes if needed
+                string textToAppend = message;
+                if (message == null)
+                {
+                    textToAppend = "";
+                }
+
+                // Append text to output (matching Python's appendPlainText)
+                // In Avalonia TextBox, we append by setting Text to current + new
+                string currentText = _outputEdit.Text ?? "";
+                if (currentText.Length > 0 && !currentText.EndsWith("\n") && !currentText.EndsWith("\r\n"))
+                {
+                    _outputEdit.Text = currentText + "\n" + textToAppend;
+                }
+                else
+                {
+                    _outputEdit.Text = currentText + textToAppend;
+                }
+
+                // Scroll to end to show latest output
+                _outputEdit.CaretIndex = _outputEdit.Text?.Length ?? 0;
+            }
+            catch (Exception)
+            {
+                // Fallback if there's any encoding issue - try with ToString()
+                try
+                {
+                    string currentText = _outputEdit.Text ?? "";
+                    string textToAppend = message?.ToString() ?? "";
+                    if (currentText.Length > 0 && !currentText.EndsWith("\n") && !currentText.EndsWith("\r\n"))
+                    {
+                        _outputEdit.Text = currentText + "\n" + textToAppend;
+                    }
+                    else
+                    {
+                        _outputEdit.Text = currentText + textToAppend;
+                    }
+                    _outputEdit.CaretIndex = _outputEdit.Text?.Length ?? 0;
+                }
+                catch
+                {
+                    // If all else fails, silently ignore (matching Python's exception handling)
+                }
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:156
@@ -187,13 +329,25 @@ namespace HolocronToolset.Editors
         // Based on Avalonia control access patterns and testability best practices
         public TerminalWidget TerminalWidget => _terminalWidget;
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:480
+        // Original: self.output_text_edit = self.ui.outputEdit
+        // Public property to access output text edit for testing and external access
+        public TextBox OutputTextEdit => _outputEdit;
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:969-977
         // Original: def _setup_signals(self):
         private void SetupSignals()
         {
-            // Connect compile action (if available via menu or shortcut)
-            // Note: In Avalonia, actions are typically handled via menu items or keyboard shortcuts
-            // This will be connected when actionCompile menu item is available
+            // Create and connect compile action
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2412-2413
+            // Original: self.ui.actionCompile.setShortcut(QKeySequence("F5"))
+            // Original: self.ui.actionCompile.triggered.connect(self.compile_current_script)
+            _ui.ActionCompile = new MenuItem
+            {
+                Header = "Compile",
+                HotKey = new Avalonia.Input.KeyGesture(Avalonia.Input.Key.F5)
+            };
+            _ui.ActionCompile.Click += (s, e) => CompileCurrentScript();
 
             // Connect constant list double-click
             if (_constantList != null)
@@ -310,7 +464,7 @@ namespace HolocronToolset.Editors
             {
                 // Matching PyKotor implementation: Don't show message box, just log to output
                 // Original: self._log_to_output("Find: No more occurrences found")
-                System.Console.WriteLine("Find: No more occurrences found");
+                LogToOutput("Find: No more occurrences found");
             }
         }
 
@@ -486,7 +640,7 @@ namespace HolocronToolset.Editors
                 // Original: self._log_to_output(f"Replace All: Replaced {count} occurrence(s)")
                 // Original: QMessageBox.information(self, "Replace All", f"Replaced {count} occurrence(s)")
                 string message = $"Replace All: Replaced {count} occurrence(s)";
-                System.Console.WriteLine(message);
+                LogToOutput(message);
 
                 var infoBox = MessageBoxManager.GetMessageBoxStandard(
                     "Replace All",
@@ -505,6 +659,87 @@ namespace HolocronToolset.Editors
             {
                 _findReplaceWidget.IsVisible = false;
             }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:670
+        // Original: def _show_find(self):
+        /// <summary>
+        /// Shows the find widget.
+        /// </summary>
+        private void ShowFind()
+        {
+            if (_findReplaceWidget != null)
+            {
+                _findReplaceWidget.IsVisible = true;
+                _findReplaceWidget.SetFindMode();
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:671
+        // Original: def _show_replace(self):
+        /// <summary>
+        /// Shows the replace widget.
+        /// </summary>
+        private void ShowReplace()
+        {
+            if (_findReplaceWidget != null)
+            {
+                _findReplaceWidget.IsVisible = true;
+                _findReplaceWidget.SetReplaceMode();
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:684
+        // Original: def navigate.gotoLine: lambda: self.ui.codeEdit.go_to_line()
+        /// <summary>
+        /// Shows a dialog to go to a specific line number.
+        /// </summary>
+        private void ShowGotoLine()
+        {
+            // TODO: Implement go to line dialog
+            // For now, use the existing GotoLine method with a default line
+            // In a full implementation, this would show an input dialog
+            if (_codeEdit != null)
+            {
+                int currentLine = GetCurrentLineNumber();
+                GotoLine(currentLine);
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:685
+        // Original: def go_to_definition(self):
+        /// <summary>
+        /// Navigates to the definition of the symbol at the cursor.
+        /// </summary>
+        private void GoToDefinition()
+        {
+            // TODO: Implement go to definition
+            // This would need to parse the code, find symbol definitions, and navigate to them
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:686
+        // Original: def _find_all_references_at_cursor(self):
+        /// <summary>
+        /// Finds all references to the symbol at the cursor.
+        /// </summary>
+        private void FindAllReferencesAtCursor()
+        {
+            // TODO: Implement find all references
+            // This would need to parse the code, find all references to the symbol, and display them
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:690
+        // Original: def _toggle_bookmark_at_cursor(self):
+        /// <summary>
+        /// Toggles a bookmark at the current cursor position.
+        /// </summary>
+        private void ToggleBookmarkAtCursor()
+        {
+            // Check if there's already a bookmark at the current line
+            int currentLine = GetCurrentLineNumber();
+            // TODO: Check if bookmark exists and remove it, otherwise add it
+            // For now, just add a bookmark
+            AddBookmark();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2121-2162
@@ -967,32 +1202,46 @@ namespace HolocronToolset.Editors
                 return;
             }
 
-            var bookmarks = new List<BookmarkData>();
-            var itemsList = _bookmarkTree.Items as IEnumerable<TreeViewItem> ?? new List<TreeViewItem>();
+            // Collect bookmarks from tree items
+            // Matching Python: for i in range(self.ui.bookmarkTree.topLevelItemCount()):
+            var bookmarks = new List<Dictionary<string, object>>();
+            var itemsList = _bookmarkTree.ItemsSource as List<TreeViewItem> ??
+                          (_bookmarkTree.Items as IEnumerable<TreeViewItem> ?? new List<TreeViewItem>()).ToList();
 
             foreach (var item in itemsList)
             {
                 if (item?.Tag is BookmarkData bookmarkData)
                 {
-                    bookmarks.Add(bookmarkData);
+                    // Matching Python structure: {"line": line_data, "description": item.text(1)}
+                    // Skip items without valid line data (matching Python: if line_data is None: continue)
+                    if (bookmarkData.LineNumber > 0)
+                    {
+                        bookmarks.Add(new Dictionary<string, object>
+                        {
+                            { "line", bookmarkData.LineNumber },
+                            { "description", bookmarkData.Description ?? "" }
+                        });
+                    }
                 }
             }
 
-            // Save to application settings (using a simple JSON approach)
-            // In a full implementation, this would use Avalonia's settings system
+            // Save to application settings using Settings class
+            // Matching Python: settings = QSettings("HolocronToolsetV3", "NSSEditor")
             string fileKey = !string.IsNullOrEmpty(_resname)
                 ? $"nss_editor/bookmarks/{_resname}"
                 : "nss_editor/bookmarks/untitled";
 
             try
             {
+                var settings = new Settings("NSSEditor");
+                // Matching Python: settings.setValue(file_key, json.dumps(bookmarks))
                 string json = JsonSerializer.Serialize(bookmarks);
-                // Store in a simple dictionary for now (would use proper settings in production)
-                // This is a simplified implementation for testing
+                settings.SetValue(fileKey, json);
+                // Matching Python: settings.sync() - Save() is called automatically in SetValue
             }
             catch
             {
-                // Ignore save errors in test environment
+                // Ignore save errors
             }
         }
 
@@ -1005,23 +1254,87 @@ namespace HolocronToolset.Editors
                 return;
             }
 
+            // Matching Python: settings = QSettings("HolocronToolsetV3", "NSSEditor")
+            var settings = new Settings("NSSEditor");
+
+            // Matching Python: file_key = f"nss_editor/bookmarks/{self._resname}" if self._resname else "nss_editor/bookmarks/untitled"
             string fileKey = !string.IsNullOrEmpty(_resname)
                 ? $"nss_editor/bookmarks/{_resname}"
                 : "nss_editor/bookmarks/untitled";
 
-            // Load from application settings (simplified for testing)
-            // In a full implementation, this would use Avalonia's settings system
+            // Matching Python: bookmarks_json = settings.value(file_key, "[]")
+            string bookmarksJson = settings.GetValue(fileKey, "[]");
+
+            // Matching Python: bookmarks = json.loads(bookmarks_json) if isinstance(bookmarks_json, str) else []
+            List<Dictionary<string, object>> bookmarks = new List<Dictionary<string, object>>();
+
             try
             {
-                // For testing, we'll start with empty bookmarks
-                // In production, this would load from persistent storage
-                _bookmarkTree.ItemsSource = new List<TreeViewItem>();
+                if (!string.IsNullOrEmpty(bookmarksJson) && bookmarksJson != "[]")
+                {
+                    // Parse JSON array of bookmark dictionaries
+                    using (JsonDocument doc = JsonDocument.Parse(bookmarksJson))
+                    {
+                        if (doc.RootElement.ValueKind == JsonValueKind.Array)
+                        {
+                            foreach (JsonElement element in doc.RootElement.EnumerateArray())
+                            {
+                                if (element.ValueKind == JsonValueKind.Object)
+                                {
+                                    var bookmark = new Dictionary<string, object>();
+                                    foreach (JsonProperty prop in element.EnumerateObject())
+                                    {
+                                        if (prop.Value.ValueKind == JsonValueKind.Number)
+                                        {
+                                            bookmark[prop.Name] = prop.Value.GetInt32();
+                                        }
+                                        else if (prop.Value.ValueKind == JsonValueKind.String)
+                                        {
+                                            bookmark[prop.Name] = prop.Value.GetString();
+                                        }
+                                    }
+                                    // Matching Python: if isinstance(bookmark, dict) and "line" in bookmark:
+                                    if (bookmark.ContainsKey("line"))
+                                    {
+                                        bookmarks.Add(bookmark);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
             catch
             {
-                // Ignore load errors in test environment
-                _bookmarkTree.ItemsSource = new List<TreeViewItem>();
+                // Matching Python: except json.JSONDecodeError: bookmarks = []
+                bookmarks = new List<Dictionary<string, object>>();
             }
+
+            // Matching Python: self.ui.bookmarkTree.clear()
+            var itemsList = new List<TreeViewItem>();
+
+            // Matching Python: for bookmark in bookmarks:
+            foreach (var bookmark in bookmarks)
+            {
+                // Matching Python: item = QTreeWidgetItem(self.ui.bookmarkTree)
+                // Matching Python: item.setText(0, str(bookmark["line"]))
+                // Matching Python: item.setText(1, bookmark.get("description", ""))
+                // Matching Python: item.setData(0, Qt.ItemDataRole.UserRole, bookmark["line"])
+                int lineNumber = bookmark.ContainsKey("line") && bookmark["line"] is int line ? line : 0;
+                string description = bookmark.ContainsKey("description") && bookmark["description"] is string desc ? desc : "";
+
+                if (lineNumber > 0)
+                {
+                    var item = new TreeViewItem
+                    {
+                        Header = $"{lineNumber} - {description}",
+                        Tag = new BookmarkData { LineNumber = lineNumber, Description = description }
+                    };
+                    itemsList.Add(item);
+                }
+            }
+
+            _bookmarkTree.ItemsSource = itemsList;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:541-550
@@ -1035,12 +1348,22 @@ namespace HolocronToolset.Editors
         // Public property to access bookmark tree for testing
         public TreeView BookmarkTree => _bookmarkTree;
 
+        // Public property to access resname for testing
+        // Matching PyKotor: editor._resname in test_nss_editor_bookmark_persistence
+        public string Resname => _resname;
+
         // Matching PyKotor implementation: highlighter is accessible for testing
         // Original: editor._highlighter in test_nss_editor_syntax_highlighting_game_switch
         /// <summary>
         /// Gets the syntax highlighter instance for testing purposes.
         /// </summary>
         public NWScriptSyntaxHighlighter Highlighter => _highlighter;
+
+        // Original: editor.ui.codeEdit in test_nss_editor_syntax_highlighting_setup
+        /// <summary>
+        /// Gets the code editor instance for testing purposes.
+        /// </summary>
+        public CodeEditor CodeEdit => _codeEdit;
 
         // Matching PyKotor implementation: completer is accessible for testing
         // Original: editor.completer in test_nss_editor_autocompletion_setup
@@ -1193,7 +1516,7 @@ namespace HolocronToolset.Editors
                 foreach (var func in functions)
                 {
                     string returnType = func.ReturnType?.ToScriptString() ?? "void";
-                    
+
                     // Try to get parameter info
                     if (func.Params != null && func.Params.Count > 0)
                     {
@@ -1203,7 +1526,7 @@ namespace HolocronToolset.Editors
                             string paramName = p.Name ?? "";
                             return $"{paramType} {paramName}";
                         }).ToList();
-                        
+
                         string paramStr = string.Join(", ", paramStrings);
                         if (func.Params.Count > 3)
                         {
@@ -1225,7 +1548,7 @@ namespace HolocronToolset.Editors
                 {
                     string constType = constItem.DataType?.ToScriptString() ?? "";
                     string constValue = constItem.Value?.ToString() ?? "";
-                    
+
                     if (!string.IsNullOrEmpty(constType) && !string.IsNullOrEmpty(constValue))
                     {
                         completerList.Add($"{constItem.Name} ({constType} = {constValue})");
@@ -1475,6 +1798,131 @@ namespace HolocronToolset.Editors
         public Border StatusBar()
         {
             return _statusBar;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2534-2542
+        // Original: Command Palette (VS Code Ctrl+Shift+P)
+        // Original: self._command_palette = CommandPalette(self)
+        // Original: self._setup_command_palette()
+        // Original: command_palette_shortcut = QShortcut(QKeySequence("Ctrl+Shift+P"), self)
+        // Original: command_palette_shortcut.activated.connect(self._show_command_palette)
+        // Original: quick_open_shortcut = QShortcut(QKeySequence("Ctrl+P"), self)
+        // Original: quick_open_shortcut.activated.connect(self._show_command_palette)
+        /// <summary>
+        /// Sets up the command palette with all available commands and keyboard shortcuts.
+        /// Command palette is created lazily on first show (matching PyKotor behavior).
+        /// </summary>
+        private void SetupCommandPalette()
+        {
+            // Command palette is created lazily on first show (matching PyKotor: created on first show)
+            // Set up keyboard shortcuts for showing command palette
+            // Ctrl+Shift+P (VS Code style command palette)
+            this.KeyDown += (s, e) =>
+            {
+                if (e.Key == Key.P && (e.KeyModifiers & KeyModifiers.Control) != 0 && (e.KeyModifiers & KeyModifiers.Shift) != 0)
+                {
+                    ShowCommandPalette();
+                    e.Handled = true;
+                }
+                // Ctrl+P (Quick Open - for now just show command palette, matching PyKotor)
+                else if (e.Key == Key.P && (e.KeyModifiers & KeyModifiers.Control) != 0 && (e.KeyModifiers & KeyModifiers.Shift) == 0)
+                {
+                    ShowCommandPalette();
+                    e.Handled = true;
+                }
+            };
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:603-705
+        // Original: def _setup_command_palette(self):
+        /// <summary>
+        /// Sets up the command palette with all available commands.
+        /// Called lazily when command palette is first shown.
+        /// </summary>
+        private void SetupCommandPaletteCommands()
+        {
+            if (_commandPalette == null)
+            {
+                return;
+            }
+
+            // File operations
+            _commandPalette.RegisterCommand("file.new", "New File", () => New(), "File");
+            // Note: Open is handled by the application, not individual editors
+            // But we register it for completeness (would need to be implemented at application level)
+            _commandPalette.RegisterCommand("file.open", "Open File...", () => { /* TODO: Implement at application level */ }, "File");
+            _commandPalette.RegisterCommand("file.save", "Save", () => Save(), "File");
+            _commandPalette.RegisterCommand("file.save_as", "Save As...", () => SaveAs(), "File");
+            // Note: Save All, Close, Close All are typically handled by the application, not individual editors
+            // But we register them for completeness
+            _commandPalette.RegisterCommand("file.close", "Close", () => Close(), "File");
+
+            // Edit operations
+            if (_codeEdit != null)
+            {
+                _commandPalette.RegisterCommand("edit.undo", "Undo", () => _codeEdit.Undo(), "Edit");
+                _commandPalette.RegisterCommand("edit.redo", "Redo", () => _codeEdit.Redo(), "Edit");
+                _commandPalette.RegisterCommand("edit.cut", "Cut", () => _codeEdit.Cut(), "Edit");
+                _commandPalette.RegisterCommand("edit.copy", "Copy", () => _codeEdit.Copy(), "Edit");
+                _commandPalette.RegisterCommand("edit.paste", "Paste", () => _codeEdit.Paste(), "Edit");
+            }
+            _commandPalette.RegisterCommand("edit.find", "Find", () => ShowFind(), "Edit");
+            _commandPalette.RegisterCommand("edit.replace", "Replace", () => ShowReplace(), "Edit");
+            // Note: Code editor operations like toggle comment, duplicate line, etc. would need to be implemented in CodeEditor
+            // For now, we register them but they may not work until CodeEditor implements these methods
+            _commandPalette.RegisterCommand("edit.toggleComment", "Toggle Line Comment", () => { /* TODO: Implement in CodeEditor */ }, "Edit");
+            _commandPalette.RegisterCommand("edit.duplicateLine", "Duplicate Line", () => { /* TODO: Implement in CodeEditor */ }, "Edit");
+            _commandPalette.RegisterCommand("edit.deleteLine", "Delete Line", () => { /* TODO: Implement in CodeEditor */ }, "Edit");
+            _commandPalette.RegisterCommand("edit.moveLineUp", "Move Line Up", () => { /* TODO: Implement in CodeEditor */ }, "Edit");
+            _commandPalette.RegisterCommand("edit.moveLineDown", "Move Line Down", () => { /* TODO: Implement in CodeEditor */ }, "Edit");
+
+            // View operations
+            // Note: Toggle Explorer, Terminal, Output Panel would need UI actions to trigger
+            // For now, we register placeholders
+            _commandPalette.RegisterCommand("view.toggleExplorer", "Toggle Explorer", () => { /* TODO: Implement */ }, "View");
+            _commandPalette.RegisterCommand("view.toggleTerminal", "Toggle Terminal", () => { /* TODO: Implement */ }, "View");
+            _commandPalette.RegisterCommand("view.toggleOutput", "Toggle Output Panel", () => { /* TODO: Implement */ }, "View");
+            _commandPalette.RegisterCommand("view.zoomIn", "Zoom In", () => { /* TODO: Implement */ }, "View");
+            _commandPalette.RegisterCommand("view.zoomOut", "Zoom Out", () => { /* TODO: Implement */ }, "View");
+            _commandPalette.RegisterCommand("view.resetZoom", "Reset Zoom", () => { /* TODO: Implement */ }, "View");
+            _commandPalette.RegisterCommand("view.toggleWordWrap", "Toggle Word Wrap", () => { /* TODO: Implement */ }, "View");
+
+            // Navigation
+            _commandPalette.RegisterCommand("navigate.gotoLine", "Go to Line...", () => ShowGotoLine(), "Navigation");
+            _commandPalette.RegisterCommand("navigate.gotoDefinition", "Go to Definition", () => GoToDefinition(), "Navigation");
+            _commandPalette.RegisterCommand("navigate.findReferences", "Find All References", () => FindAllReferencesAtCursor(), "Navigation");
+
+            // Code operations
+            _commandPalette.RegisterCommand("code.compile", "Compile Script", () => CompileCurrentScript(), "Code");
+            // Note: Format and Analyze would need implementation
+            _commandPalette.RegisterCommand("code.format", "Format Document", () => { /* TODO: Implement */ }, "Code");
+            _commandPalette.RegisterCommand("code.analyze", "Analyze Code", () => { /* TODO: Implement */ }, "Code");
+
+            // Bookmarks
+            _commandPalette.RegisterCommand("bookmark.toggle", "Toggle Bookmark", () => ToggleBookmarkAtCursor(), "Bookmarks");
+            _commandPalette.RegisterCommand("bookmark.next", "Next Bookmark", () => GotoNextBookmark(), "Bookmarks");
+            _commandPalette.RegisterCommand("bookmark.previous", "Previous Bookmark", () => GotoPreviousBookmark(), "Bookmarks");
+
+            // Help
+            _commandPalette.RegisterCommand("help.documentation", "Show Documentation", () => { /* TODO: Implement */ }, "Help");
+            _commandPalette.RegisterCommand("help.shortcuts", "Show Keyboard Shortcuts", () => { /* TODO: Implement */ }, "Help");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:707-709
+        // Original: def _show_command_palette(self):
+        /// <summary>
+        /// Shows the command palette. Creates it lazily on first show if not already created.
+        /// </summary>
+        private void ShowCommandPalette()
+        {
+            // Create command palette lazily on first show (matching PyKotor behavior)
+            if (_commandPalette == null)
+            {
+                _commandPalette = new CommandPalette(this);
+                SetupCommandPaletteCommands();
+            }
+
+            _commandPalette.ShowPalette();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2363-2373
@@ -2740,34 +3188,34 @@ namespace HolocronToolset.Editors
         {
             // Create file system model
             _fileSystemModel = new FileSystemModel();
-            
+
             // Create file explorer TreeView if not already created
             if (_fileExplorerView == null)
             {
                 _fileExplorerView = new TreeView();
             }
-            
+
             // Create address bar if not already created
             if (_fileExplorerAddressBar == null)
             {
                 _fileExplorerAddressBar = new TextBox();
                 _fileExplorerAddressBar.Watermark = "Address Bar";
             }
-            
+
             // Create file search edit if not already created
             if (_fileSearchEdit == null)
             {
                 _fileSearchEdit = new TextBox();
                 _fileSearchEdit.Watermark = "Search files...";
             }
-            
+
             // Create refresh button if not already created
             if (_refreshFileExplorerButton == null)
             {
                 _refreshFileExplorerButton = new Button();
                 _refreshFileExplorerButton.Content = "Refresh";
             }
-            
+
             // Determine root path - start with current file's directory or home directory
             string rootPath;
             if (!string.IsNullOrEmpty(_filepath) && File.Exists(_filepath))
@@ -2778,13 +3226,13 @@ namespace HolocronToolset.Editors
             {
                 rootPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             }
-            
+
             // Set root path in model
             _fileSystemModel.SetRootPath(rootPath);
-            
+
             // Set address bar text
             _fileExplorerAddressBar.Text = rootPath;
-            
+
             // Connect address bar return pressed
             _fileExplorerAddressBar.KeyDown += (s, e) =>
             {
@@ -2793,16 +3241,16 @@ namespace HolocronToolset.Editors
                     OnAddressBarChanged();
                 }
             };
-            
+
             // Connect file search text changed
             _fileSearchEdit.TextChanged += (s, e) => FilterFileExplorer();
-            
+
             // Connect refresh button click
             _refreshFileExplorerButton.Click += (s, e) => RefreshFileExplorer();
-            
+
             // Connect file explorer double-click
             _fileExplorerView.DoubleTapped += (s, e) => OpenFileFromExplorer();
-            
+
             // Set current file if available
             if (!string.IsNullOrEmpty(_filepath) && File.Exists(_filepath))
             {
@@ -2810,7 +3258,7 @@ namespace HolocronToolset.Editors
                 // For now, we just ensure the model is set up correctly
             }
         }
-        
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:1399-1410
         // Original: def _on_address_bar_changed(self):
         /// <summary>
@@ -2823,13 +3271,13 @@ namespace HolocronToolset.Editors
             {
                 return;
             }
-            
+
             string pathText = _fileExplorerAddressBar.Text ?? "";
             if (string.IsNullOrEmpty(pathText))
             {
                 return;
             }
-            
+
             if (Directory.Exists(pathText))
             {
                 _fileSystemModel.SetRootPath(pathText);
@@ -2839,12 +3287,12 @@ namespace HolocronToolset.Editors
                 // Invalid path - reset to current root
                 string currentRoot = _fileSystemModel.RootPath ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
                 _fileExplorerAddressBar.Text = currentRoot;
-                
+
                 // Show warning (matching Python QMessageBox.warning)
                 System.Console.WriteLine($"Invalid Path: The path '{pathText}' does not exist or is not a directory.");
             }
         }
-        
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:1412-1453
         // Original: def _filter_file_explorer(self):
         /// <summary>
@@ -2857,7 +3305,7 @@ namespace HolocronToolset.Editors
             {
                 return;
             }
-            
+
             string searchText = (_fileSearchEdit.Text ?? "").ToLowerInvariant();
             if (string.IsNullOrEmpty(searchText))
             {
@@ -2865,11 +3313,11 @@ namespace HolocronToolset.Editors
                 _fileSystemModel.ClearFilter();
                 return;
             }
-            
+
             // Filter files matching search text
             _fileSystemModel.SetFilter(searchText);
         }
-        
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:1455-1461
         // Original: def _refresh_file_explorer(self):
         /// <summary>
@@ -2882,13 +3330,13 @@ namespace HolocronToolset.Editors
             {
                 return;
             }
-            
+
             string currentRoot = _fileSystemModel.RootPath ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             _fileSystemModel.SetRootPath(""); // Reset model
             _fileSystemModel.SetRootPath(currentRoot); // Reload
             _fileExplorerAddressBar.Text = currentRoot;
         }
-        
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:1492-1500
         // Original: def _open_file_from_explorer(self, index: QModelIndex):
         /// <summary>
@@ -2901,19 +3349,19 @@ namespace HolocronToolset.Editors
             {
                 return;
             }
-            
+
             var selectedItem = _fileExplorerView.SelectedItem;
             if (selectedItem == null)
             {
                 return;
             }
-            
+
             // Get file path from selected item
             // Note: In a full implementation, we would extract the path from the TreeViewItem
             // and open it in the editor or a new editor instance
             System.Console.WriteLine("File opened from explorer (implementation in progress)");
         }
-        
+
         // Public properties for testing
         // Matching PyKotor test at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:928-940
         // Original: assert hasattr(editor, 'file_system_model')
@@ -2922,20 +3370,21 @@ namespace HolocronToolset.Editors
         /// Exposed for testing purposes to match Python test behavior.
         /// </summary>
         public FileSystemModel FileSystemModel => _fileSystemModel;
-        
+
         /// <summary>
         /// Gets the file explorer TreeView.
         /// Exposed for testing purposes to match Python test behavior.
         /// </summary>
         public TreeView FileExplorerView => _fileExplorerView;
-        
+
         // Helper class to store bookmark data
-        private class BookmarkData
+        // Internal class for bookmark data (accessible to tests)
+        internal class BookmarkData
         {
             public int LineNumber { get; set; }
             public string Description { get; set; }
         }
-        
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:1351-1356
         // Original: self.file_system_model = QFileSystemModel()
         /// <summary>
@@ -2946,7 +3395,7 @@ namespace HolocronToolset.Editors
         {
             private string _rootPath;
             private string _filter;
-            
+
             /// <summary>
             /// Gets or sets the root path of the file system model.
             /// </summary>
@@ -2954,7 +3403,7 @@ namespace HolocronToolset.Editors
             {
                 get { return _rootPath; }
             }
-            
+
             /// <summary>
             /// Sets the root path for the file system model.
             /// </summary>
@@ -2974,7 +3423,7 @@ namespace HolocronToolset.Editors
                     _rootPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
                 }
             }
-            
+
             /// <summary>
             /// Sets a filter string for filtering files and directories.
             /// </summary>
@@ -2983,7 +3432,7 @@ namespace HolocronToolset.Editors
             {
                 _filter = filter ?? "";
             }
-            
+
             /// <summary>
             /// Clears the current filter, showing all files.
             /// </summary>
