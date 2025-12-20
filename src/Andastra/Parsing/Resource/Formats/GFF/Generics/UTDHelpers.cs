@@ -10,92 +10,135 @@ namespace Andastra.Parsing.Resource.Generics
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utd.py
     // Original: construct_utd and dismantle_utd functions
+    // Engine references: swkotor2.exe:0x00588010, swkotor.exe:0x00585670
+    // These functions load UTD template data from GFF files. Most fields use existing object values as defaults
+    // (for new objects, these would be 0, empty string, or blank ResRef).
     public static class UTDHelpers
     {
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utd.py:498-560
         // Original: def construct_utd(gff: GFF) -> UTD:
+        // Engine references: swkotor2.exe:0x00588010, swkotor.exe:0x00585670
         public static UTD ConstructUtd(GFF gff)
         {
             var utd = new UTD();
             var root = gff.Root;
 
             // Extract basic fields
+            // Engine default: existing value (swkotor2.exe:0x00588010 line 56, swkotor.exe:0x00585670 line 56)
             utd.Tag = root.Acquire<string>("Tag", "");
+            // Engine default: existing value (swkotor2.exe:0x00588010 line 68, swkotor.exe:0x00585670 line 68)
             utd.Name = root.Acquire<LocalizedString>("LocName", LocalizedString.FromInvalid());
+            // Engine default: existing value (swkotor2.exe:0x00588010 line 64, swkotor.exe:0x00585670 line 64)
             utd.ResRef = root.Acquire<ResRef>("TemplateResRef", ResRef.FromBlank());
             // AutoRemoveKey, Plot, Min1HP, KeyRequired, Lockable, Locked, Static, NotBlastable are stored as UInt8 (boolean flags)
+            // Engine default: 0 (swkotor2.exe:0x00588010 line 75, swkotor.exe:0x00585670 line 75)
             byte? autoRemoveKeyNullable = root.GetUInt8("AutoRemoveKey");
             utd.AutoRemoveKey = (autoRemoveKeyNullable ?? 0) != 0;
+            // Engine default: existing value (swkotor2.exe:0x00588010 line 180, swkotor.exe:0x00585670 line 167)
             utd.Conversation = root.Acquire<ResRef>("Conversation", ResRef.FromBlank());
             // Faction is stored as UInt32, so we need to read it as uint, not int
+            // Engine default: 0 (swkotor2.exe:0x00588010 line 77, swkotor.exe:0x00585670 line 77)
             uint? factionNullable = root.GetUInt32("Faction");
             utd.FactionId = factionNullable.HasValue ? (int)factionNullable.Value : 0;
+            // Engine default: fallback from Invulnerable if Plot missing, then existing value (swkotor2.exe:0x00588010 line 79-84, swkotor.exe:0x00585670 line 79-84)
             byte? plotNullable = root.GetUInt8("Plot");
             utd.Plot = (plotNullable ?? 0) != 0;
+            // Engine default: existing value (swkotor2.exe:0x00588010 line 89, swkotor.exe:0x00585670 line 86)
             byte? min1HpNullable = root.GetUInt8("Min1HP");
             utd.Min1Hp = (min1HpNullable ?? 0) != 0;
+            // Engine default: 0 (swkotor2.exe:0x00588010 line 165, swkotor.exe:0x00585670 line 152)
             byte? keyRequiredNullable = root.GetUInt8("KeyRequired");
             utd.KeyRequired = (keyRequiredNullable ?? 0) != 0;
+            // Engine default: 0 (swkotor2.exe:0x00588010 line 159, swkotor.exe:0x00585670 line 146)
             byte? lockableNullable = root.GetUInt8("Lockable");
             utd.Lockable = (lockableNullable ?? 0) != 0;
+            // Engine default: 0 (swkotor2.exe:0x00588010 line 161, swkotor.exe:0x00585670 line 148)
             byte? lockedNullable = root.GetUInt8("Locked");
             utd.Locked = (lockedNullable ?? 0) != 0;
             // OpenLockDC is stored as UInt8, so we need to read it as byte, not int
+            // Engine default: 0 (swkotor2.exe:0x00588010 line 93, swkotor.exe:0x00585670 line 90)
             byte? unlockDcNullable = root.GetUInt8("OpenLockDC");
             utd.UnlockDc = unlockDcNullable ?? 0;
+            // Engine default: existing value (swkotor2.exe:0x00588010 line 101, swkotor.exe:0x00585670 line 94)
             utd.KeyName = root.Acquire<string>("KeyName", "");
             // AnimationState is stored as UInt8, so we need to read it as byte, not int
+            // Engine default: 0 (swkotor2.exe:0x00588010 line 338, swkotor.exe:0x00585670 line 315)
             byte? animationStateNullable = root.GetUInt8("AnimationState");
             utd.AnimationState = animationStateNullable ?? 0;
             // HP and CurrentHP are stored as Int16, so we need to read them as short, not int
+            // Engine default: 0 (swkotor2.exe:0x00588010 line 147, swkotor.exe:0x00585670 line 134)
             short? maximumHpNullable = root.GetInt16("HP");
             utd.MaximumHp = maximumHpNullable ?? 0;
+            // Engine default: 0 (swkotor2.exe:0x00588010 line 149, swkotor.exe:0x00585670 line 136)
             short? currentHpNullable = root.GetInt16("CurrentHP");
             utd.CurrentHp = currentHpNullable ?? 0;
             // Hardness, Fort, GenericType are stored as UInt8, so we need to read them as byte, not int
+            // Engine default: 0 (swkotor2.exe:0x00588010 line 151, swkotor.exe:0x00585670 line 138)
             byte? hardnessNullable = root.GetUInt8("Hardness");
             utd.Hardness = hardnessNullable ?? 0;
+            // Engine default: 0 (swkotor2.exe:0x00588010 line 153, swkotor.exe:0x00585670 line 140)
             byte? fortNullable = root.GetUInt8("Fort");
             utd.Fortitude = fortNullable ?? 0;
+            // Engine default: 0 (swkotor2.exe:0x00588010 line 141, swkotor.exe:0x00585670 line 132)
+            // Note: Engine reads "Appearance" field, but we use "GenericType" for compatibility
             byte? genericTypeNullable = root.GetUInt8("GenericType");
             utd.AppearanceId = genericTypeNullable ?? 0;
+            // Engine default: 0, but has special logic - if missing and Useable=1, Static=0; if Useable=0, Static=1 (swkotor2.exe:0x00588010 line 127-135, swkotor.exe:0x00585670 line 118-126)
             byte? staticNullable = root.GetUInt8("Static");
             utd.Static = (staticNullable ?? 0) != 0;
+            // Engine default: existing value (blank ResRef for new objects)
             utd.OnClick = root.Acquire<ResRef>("OnClick", ResRef.FromBlank());
+            // Engine default: existing value (swkotor2.exe:0x00588010 line 319, K2 only)
             utd.OnOpenFailed = root.Acquire<ResRef>("OnFailToOpen", ResRef.FromBlank());
+            // Engine default: Comment field is NOT read by the engine (not present in loading functions)
             utd.Comment = root.Acquire<string>("Comment", "");
             // OpenLockDiff and OpenState are stored as UInt8 (K2 only), so we need to read them as byte, not int
+            // Engine default: existing value (swkotor2.exe:0x00588010 line 95, K2 only)
             byte? unlockDiffNullable = root.GetUInt8("OpenLockDiff");
             utd.UnlockDiff = unlockDiffNullable ?? 0;
             // OpenLockDiffMod is stored as Int8 (K2 only), so we need to read it as sbyte, not int
+            // Engine default: existing value (swkotor2.exe:0x00588010 line 97, K2 only)
             sbyte? unlockDiffModNullable = root.GetInt8("OpenLockDiffMod");
             utd.UnlockDiffMod = unlockDiffModNullable ?? 0;
+            // Engine default: existing value (swkotor2.exe:0x00588010 line 197, swkotor.exe:0x00585670 line 184)
             utd.Description = root.Acquire<LocalizedString>("Description", LocalizedString.FromInvalid());
             // Ref and Will are stored as UInt8 (deprecated), so we need to read them as byte, not int
+            // Engine default: 0 (swkotor2.exe:0x00588010 line 157, swkotor.exe:0x00585670 line 144)
             byte? reflexNullable = root.GetUInt8("Ref");
             utd.Reflex = reflexNullable ?? 0;
+            // Engine default: 0 (swkotor2.exe:0x00588010 line 155, swkotor.exe:0x00585670 line 142)
             byte? willpowerNullable = root.GetUInt8("Will");
             utd.Willpower = willpowerNullable ?? 0;
+            // Engine default: existing value, but if object is new (0x358==0), defaults to 3 (swkotor2.exe:0x00580ed0 line 52-56, K2 only)
             byte? openStateNullable = root.GetUInt8("OpenState");
             utd.OpenState = openStateNullable ?? 0;
+            // Engine default: existing value (swkotor2.exe:0x00588010 line 86, K2 only)
             byte? notBlastableNullable = root.GetUInt8("NotBlastable");
             utd.NotBlastable = (notBlastableNullable ?? 0) != 0;
 
             // Extract trap properties (deprecated, toolset only)
+            // Engine default: 0 (swkotor2.exe:0x00588010 line 110, swkotor.exe:0x00585670 line 103)
             byte? trapDetectableNullable = root.GetUInt8("TrapDetectable");
             utd.TrapDetectable = (trapDetectableNullable ?? 0) != 0;
+            // Engine default: 0 (swkotor2.exe:0x00588010 line 108, swkotor.exe:0x00585670 line 101)
             byte? trapDisarmableNullable = root.GetUInt8("TrapDisarmable");
             utd.TrapDisarmable = (trapDisarmableNullable ?? 0) != 0;
+            // Engine default: 0 (swkotor2.exe:0x00588010 line 112, swkotor.exe:0x00585670 line 105)
             byte? disarmDcNullable = root.GetUInt8("DisarmDC");
             utd.DisarmDc = disarmDcNullable ?? 0;
+            // Engine default: 0 (swkotor2.exe:0x00588010 line 120, swkotor.exe:0x00585670 line 111)
             byte? trapOneShotNullable = root.GetUInt8("TrapOneShot");
             utd.TrapOneShot = (trapOneShotNullable ?? 0) != 0;
+            // Engine default: existing value (swkotor2.exe:0x00588010 line 123, swkotor.exe:0x00585670 line 114)
             byte? trapTypeNullable = root.GetUInt8("TrapType");
             utd.TrapType = trapTypeNullable ?? 0;
+            // Engine default: PaletteID field is NOT read by the engine (not present in loading functions)
             byte? paletteIdNullable = root.GetUInt8("PaletteID");
             utd.PaletteId = paletteIdNullable ?? 0;
 
             // Extract script hooks
+            // Engine default: existing value (blank ResRef for new objects) - all script hooks use same pattern
+            // (swkotor2.exe:0x00588010 lines 207-300, swkotor.exe:0x00585670 lines 194-287)
             utd.OnClosed = root.Acquire<ResRef>("OnClosed", ResRef.FromBlank());
             utd.OnDamaged = root.Acquire<ResRef>("OnDamaged", ResRef.FromBlank());
             utd.OnDeath = root.Acquire<ResRef>("OnDeath", ResRef.FromBlank());
