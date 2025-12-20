@@ -69,6 +69,242 @@ namespace Andastra.Parsing.Formats.NCS
         }
 
         /// <summary>
+        /// Analyzes NSS source code to identify which symbols (functions and constants) are actually used.
+        /// Performs comprehensive analysis to match nwnnsscomp.exe's selective loading behavior.
+        /// </summary>
+        private static SymbolUsageInfo AnalyzeSymbolUsageInSource(string source)
+        {
+            var usage = new SymbolUsageInfo();
+            var lines = source.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+            
+            foreach (var line in lines)
+            {
+                var trimmed = line.Trim();
+                
+                // Skip #include directives (they're handled separately)
+                if (trimmed.StartsWith("#include"))
+                {
+                    continue;
+                }
+                
+                // Skip comments
+                if (trimmed.StartsWith("//") || trimmed.StartsWith("/*"))
+                {
+                    continue;
+                }
+                
+                // Extract symbol usage from the line
+                ExtractSymbolUsageFromLine(trimmed, usage);
+            }
+            
+            return usage;
+        }
+
+        /// <summary>
+        /// Extracts function calls and constant references from a line of NSS source code.
+        /// Uses pattern matching to identify function calls (identifier followed by '(') and constants (all uppercase identifiers).
+        /// </summary>
+        private static void ExtractSymbolUsageFromLine(string line, SymbolUsageInfo usage)
+        {
+            // Use regex to find identifiers that could be function calls or constants
+            // Function calls: identifier followed by '(' (possibly with whitespace)
+            // Constants: all uppercase identifiers (possibly with underscores and digits)
+            
+            // First, handle function calls - look for identifier( pattern
+            var functionCallPattern = new Regex(@"\b([a-zA-Z_][a-zA-Z0-9_]*)\s*\(");
+            var functionMatches = functionCallPattern.Matches(line);
+            foreach (Match match in functionMatches)
+            {
+                string functionName = match.Groups[1].Value;
+                if (!usage.usedFunctions.Contains(functionName))
+                {
+                    usage.usedFunctions.Add(functionName);
+                }
+            }
+            
+            // Then, handle constants - all uppercase identifiers that aren't function calls
+            // Look for identifiers that are all uppercase and not followed by '('
+            var constantPattern = new Regex(@"\b([A-Z][A-Z0-9_]*)\b(?!\s*\()");
+            var constantMatches = constantPattern.Matches(line);
+            foreach (Match match in constantMatches)
+            {
+                string constantName = match.Groups[1].Value;
+                // Filter out keywords and already-identified function names
+                if (!IsKeyword(constantName) && 
+                    !usage.usedFunctions.Contains(constantName) &&
+                    !usage.usedConstants.Contains(constantName))
+                {
+                    usage.usedConstants.Add(constantName);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Checks if an identifier is a reserved keyword in NSS.
+        /// </summary>
+        private static bool IsKeyword(string identifier)
+        {
+            var keywords = new HashSet<string>
+            {
+                "int", "float", "string", "void", "object", "vector", "location",
+                "effect", "event", "talent", "action", "itemproperty", "struct",
+                "if", "else", "for", "while", "do", "switch", "case", "default",
+                "break", "continue", "return", "const"
+            };
+            return keywords.Contains(identifier.ToLowerInvariant());
+        }
+
+        /// <summary>
+        /// Parses an include file (NSS source) to extract its function and constant definitions.
+        /// Uses NwscriptParser by writing content to a temporary file.
+        /// </summary>
+        private static (List<ScriptFunction> functions, List<ScriptConstant> constants) ParseIncludeFileSymbols(
+            string includeFileSource, Game game)
+        {
+            try
+            {
+                // Write content to temporary file and use NwscriptParser
+                string tempFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".nss");
+                File.WriteAllText(tempFile, includeFileSource, Encoding.UTF8);
+                
+                try
+                {
+                    var parsed = NwscriptParser.ParseNwscriptFile(tempFile, game);
+                    return (parsed.functions, parsed.constants);
+                }
+                finally
+                {
+                    // Clean up temporary file
+                    try
+                    {
+                        File.Delete(tempFile);
+                    }
+                    catch
+                    {
+                        // Ignore cleanup errors
+                    }
+                }
+            }
+            catch
+            {
+                // If parsing fails for any reason, return empty lists (will fallback to full file)
+                return (new List<ScriptFunction>(), new List<ScriptConstant>());
+            }
+        }
+
+
+        /// <summary>
+        /// Filters a list of functions to only include those that are in the used names list.
+        /// Always includes essential functions that nwnnsscomp.exe includes by default.
+        /// </summary>
+        private static List<ScriptFunction> FilterSymbols(
+            List<ScriptFunction> allFunctions, List<string> usedNames)
+        {
+            var essentialFunctions = new HashSet<string>
+            {
+                "main", "StartingConditional", "GetLastPerceived", "GetEnteringObject",
+                "GetExitingObject", "GetIsDead", "GetHitDice", "GetTag", "GetName"
+            };
+            
+            var filtered = new List<ScriptFunction>();
+            var usedSet = new HashSet<string>(usedNames, StringComparer.OrdinalIgnoreCase);
+            
+            foreach (var func in allFunctions)
+            {
+                if (essentialFunctions.Contains(func.Name) || usedSet.Contains(func.Name))
+                {
+                    filtered.Add(func);
+                }
+            }
+            
+            return filtered;
+        }
+
+        /// <summary>
+        /// Filters a list of constants to only include those that are in the used names list.
+        /// Always includes essential constants.
+        /// </summary>
+        private static List<ScriptConstant> FilterSymbols(
+            List<ScriptConstant> allConstants, List<string> usedNames)
+        {
+            var essentialConstants = new HashSet<string>
+            {
+                "TRUE", "FALSE", "OBJECT_INVALID", "OBJECT_SELF"
+            };
+            
+            var filtered = new List<ScriptConstant>();
+            var usedSet = new HashSet<string>(usedNames, StringComparer.OrdinalIgnoreCase);
+            
+            foreach (var constant in allConstants)
+            {
+                if (essentialConstants.Contains(constant.Name) || usedSet.Contains(constant.Name))
+                {
+                    filtered.Add(constant);
+                }
+            }
+            
+            return filtered;
+        }
+
+        /// <summary>
+        /// Generates filtered NSS source code containing only the specified functions and constants.
+        /// Matches the format expected by the NSS parser.
+        /// </summary>
+        private static string GenerateFilteredNssSource(
+            List<ScriptFunction> functions, List<ScriptConstant> constants)
+        {
+            var lines = new List<string>();
+            
+            // Add constants first
+            foreach (var constant in constants)
+            {
+                string valueStr = FormatConstantValue(constant.Value, constant.DataType);
+                lines.Add($"{constant.DataType.ToScriptString()} {constant.Name} = {valueStr};");
+            }
+            
+            // Add functions
+            foreach (var function in functions)
+            {
+                string paramStr = string.Join(", ", function.Params.Select(p => p.ToString()));
+                lines.Add($"{function.ReturnType.ToScriptString()} {function.Name}({paramStr});");
+            }
+            
+            return string.Join("\n", lines);
+        }
+
+        /// <summary>
+        /// Formats a constant value for NSS source code output.
+        /// </summary>
+        private static string FormatConstantValue(object value, DataType dataType)
+        {
+            if (value == null)
+            {
+                return "0";
+            }
+            
+            switch (dataType)
+            {
+                case DataType.Int:
+                    return value.ToString();
+                case DataType.Float:
+                    return ((float)value).ToString("F", System.Globalization.CultureInfo.InvariantCulture);
+                case DataType.String:
+                    return "\"" + value.ToString().Replace("\"", "\\\"") + "\"";
+                default:
+                    return value.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Information about symbol usage in source code.
+        /// </summary>
+        private class SymbolUsageInfo
+        {
+            public List<string> usedFunctions = new List<string>();
+            public List<string> usedConstants = new List<string>();
+        }
+
+        /// <summary>
         /// Returns an NCS instance from the source.
         ///
         /// Args:
@@ -246,14 +482,34 @@ namespace Andastra.Parsing.Formats.NCS
                     selectiveLibrary["nwscript"] = baseLibrary["nwscript"];
                 }
 
-                // For other includes, only load if they exist and are referenced
+                // For other includes, perform selective symbol extraction based on usage analysis
+                // This matches nwnnsscomp.exe behavior of only including symbols that are actually referenced
+                var symbolUsage = AnalyzeSymbolUsageInSource(source);
                 foreach (var includeFile in includeFiles)
                 {
                     if (baseLibrary.ContainsKey(includeFile))
                     {
-                        // TODO: Implement selective symbol extraction based on usage analysis
-                        // For now, include the full file but mark for future optimization
-                        selectiveLibrary[includeFile] = baseLibrary[includeFile];
+                        // Parse the include file to extract its functions and constants
+                        byte[] includeFileContent = baseLibrary[includeFile];
+                        string includeFileSource = Encoding.UTF8.GetString(includeFileContent);
+                        var includeSymbols = ParseIncludeFileSymbols(includeFileSource, game);
+                        
+                        // If parsing succeeded and we have symbols, filter them
+                        if (includeSymbols.functions.Count > 0 || includeSymbols.constants.Count > 0)
+                        {
+                            // Filter to only include symbols that are actually used in the source code
+                            var filteredFunctions = FilterSymbols(includeSymbols.functions, symbolUsage.usedFunctions);
+                            var filteredConstants = FilterSymbols(includeSymbols.constants, symbolUsage.usedConstants);
+                            
+                            // Generate filtered NSS source code with only the used symbols
+                            string filteredSource = GenerateFilteredNssSource(filteredFunctions, filteredConstants);
+                            selectiveLibrary[includeFile] = Encoding.UTF8.GetBytes(filteredSource);
+                        }
+                        else
+                        {
+                            // If parsing failed, fall back to full file (matches original behavior)
+                            selectiveLibrary[includeFile] = includeFileContent;
+                        }
                     }
                 }
 
