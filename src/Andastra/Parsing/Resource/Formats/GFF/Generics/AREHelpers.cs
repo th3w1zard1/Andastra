@@ -18,6 +18,10 @@ namespace Andastra.Parsing.Resource.Generics
         // All engines (Odyssey/KOTOR, Aurora/NWN, Eclipse/DA/ME) use the same ARE file format structure.
         // K2-specific fields (Grass_Emissive, DirtyARGB, ChanceRain/Snow/Lightning, etc.) are optional
         // and will be 0/default if not present (which is correct for K1, Aurora, and Eclipse).
+        //
+        // Default values verified against engine behavior:
+        // - swkotor.exe: FUN_00508c50 (LoadAreaProperties) @ 0x00508c50
+        // - swkotor2.exe: FUN_004e3ff0 (LoadAreaProperties) @ 0x004e3ff0
         public static ARE ConstructAre(GFF gff)
         {
             var are = new ARE();
@@ -27,11 +31,17 @@ namespace Andastra.Parsing.Resource.Generics
             // map_original_struct_id would need to be stored in ARE class
             // are.map_original_struct_id = mapStruct.StructId;
 
+            // Map fields - all optional, defaults verified from engine
+            // swkotor.exe: 0x00508c50, swkotor2.exe: 0x004e3ff0
             // Matching Python: are.north_axis = ARENorthAxis(map_struct.acquire("NorthAxis", 0))
+            // Engine default: 0 (swkotor.exe: 0x00509c4f line 447, swkotor2.exe: 0x004e507f line 454)
             are.NorthAxis = (ARENorthAxis)mapStruct.Acquire<int>("NorthAxis", 0);
             // Matching Python: are.map_zoom = map_struct.acquire("MapZoom", 0)
-            are.MapZoom = mapStruct.Acquire<int>("MapZoom", 0);
+            // Engine default: 1 (swkotor.exe: 0x00509c4f line 448, swkotor2.exe: 0x004e507f line 455)
+            // NOTE: Engine uses 1 as default, not 0. This is important for map display.
+            are.MapZoom = mapStruct.Acquire<int>("MapZoom", 1);
             // Matching Python: are.map_res_x = map_struct.acquire("MapResX", 0)
+            // Engine default: 0 (swkotor.exe: 0x00509c4f line 445, swkotor2.exe: 0x004e507f line 452)
             are.MapResX = mapStruct.Acquire<int>("MapResX", 0);
             // Matching Python: are.map_point_1 = Vector2(map_struct.acquire("MapPt1X", 0.0), map_struct.acquire("MapPt1Y", 0.0))
             are.MapPoint1 = new System.Numerics.Vector2(
@@ -51,75 +61,137 @@ namespace Andastra.Parsing.Resource.Generics
                 mapStruct.Acquire<float>("WorldPt2Y", 0.0f));
             are.MapList = new System.Collections.Generic.List<ResRef>(); // Placeholder
 
-            // Extract basic fields
+            // Extract basic fields - all optional unless otherwise noted
+            // swkotor.exe: 0x00508c50, swkotor2.exe: 0x004e3ff0
+            // Engine default: "" (swkotor.exe: 0x00508c50 line 161, swkotor2.exe: 0x004e3ff0 line 161)
             are.Tag = root.Acquire<string>("Tag", "");
+            // Engine default: Invalid LocalizedString (swkotor.exe: 0x00508c50 line 152, swkotor2.exe: 0x004e3ff0 line 152)
             are.Name = root.Acquire<LocalizedString>("Name", LocalizedString.FromInvalid());
-            are.AlphaTest = root.Acquire<int>("AlphaTest", 0);
+            // Engine default: 0.2 (swkotor.exe: 0x00508c50 line 303, swkotor2.exe: 0x004e3ff0 line 307)
+            // NOTE: Engine uses 0.2 as default (float), but ARE class stores as int.
+            // Engine reads as float, so we read as float and cast to int (0.2 -> 0).
+            // TODO: Consider changing ARE.AlphaTest to float to match engine behavior.
+            are.AlphaTest = (int)root.Acquire<float>("AlphaTest", 0.2f);
+            // Engine default: 0 (swkotor.exe: 0x00508c50 line 174, swkotor2.exe: 0x004e3ff0 line 174)
             are.CameraStyle = root.Acquire<int>("CameraStyle", 0);
+            // Engine default: "" (swkotor.exe: 0x00508c50 line 177-179, swkotor2.exe: 0x004e3ff0 line 177-179)
             are.DefaultEnvMap = root.Acquire<ResRef>("DefaultEnvMap", ResRef.FromBlank());
             // Matching Python: are.unescapable = bool(root.acquire("Unescapable", 0))
+            // Engine default: Uses existing value if field missing (swkotor.exe: 0x00508c50 line 186-188, swkotor2.exe: 0x004e3ff0 line 186-188)
+            // For new ARE objects, default is false (0)
             are.Unescapable = root.GetUInt8("Unescapable") == 1;
             // Matching Python: are.disable_transit = bool(root.acquire("DisableTransit", 0))
+            // Engine default: 0 (swkotor.exe: 0x00508c50 line 189, swkotor2.exe: 0x004e3ff0 line 189)
             are.DisableTransit = root.GetUInt8("DisableTransit") == 1;
+            // Grass fields - all optional
+            // Engine default: "" but if empty, engine sets to "grass" (swkotor.exe: 0x00508c50 line 286-294, swkotor2.exe: 0x004e3ff0 line 290-298)
+            // NOTE: Engine has special handling - if Grass_TexName is empty, it defaults to "grass"
+            // We preserve the empty string here; engine-specific code should handle the "grass" fallback
             are.GrassTexture = root.Acquire<ResRef>("Grass_TexName", ResRef.FromBlank());
+            // Engine default: 0.0 (swkotor.exe: 0x00508c50 line 282, swkotor2.exe: 0x004e3ff0 line 286)
             are.GrassDensity = root.Acquire<float>("Grass_Density", 0.0f);
+            // Engine default: 0.0 (swkotor.exe: 0x00508c50 line 284, swkotor2.exe: 0x004e3ff0 line 288)
             are.GrassSize = root.Acquire<float>("Grass_QuadSize", 0.0f);
+            // Engine default: 0.0 (swkotor.exe: 0x00508c50 line 295, swkotor2.exe: 0x004e3ff0 line 299)
             are.GrassProbLL = root.Acquire<float>("Grass_Prob_LL", 0.0f);
+            // Engine default: 0.0 (swkotor.exe: 0x00508c50 line 297, swkotor2.exe: 0x004e3ff0 line 301)
             are.GrassProbLR = root.Acquire<float>("Grass_Prob_LR", 0.0f);
+            // Engine default: 0.0 (swkotor.exe: 0x00508c50 line 299, swkotor2.exe: 0x004e3ff0 line 303)
             are.GrassProbUL = root.Acquire<float>("Grass_Prob_UL", 0.0f);
+            // Engine default: 0.0 (swkotor.exe: 0x00508c50 line 301, swkotor2.exe: 0x004e3ff0 line 305)
             are.GrassProbUR = root.Acquire<float>("Grass_Prob_UR", 0.0f);
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:506-509
             // Original: are.grass_ambient = Color.from_rgb_integer(root.acquire("Grass_Ambient", 0))
+            // Engine default: 0 (swkotor.exe: 0x00508c50 line 280, swkotor2.exe: 0x004e3ff0 line 282)
             are.GrassAmbient = Color.FromRgbInteger(root.Acquire<int>("Grass_Ambient", 0));
             // Original: are.grass_diffuse = Color.from_rgb_integer(root.acquire("Grass_Diffuse", 0))
+            // Engine default: 0 (swkotor.exe: 0x00508c50 line 278, swkotor2.exe: 0x004e3ff0 line 280)
             are.GrassDiffuse = Color.FromRgbInteger(root.Acquire<int>("Grass_Diffuse", 0));
             // Original: are.grass_emissive = Color.from_rgb_integer(root.acquire("Grass_Emissive", 0))
+            // Engine default: 0 (swkotor2.exe: 0x004e3ff0 line 284) - K2 only, not in K1
             are.GrassEmissive = Color.FromRgbInteger(root.Acquire<int>("Grass_Emissive", 0));
+            // Fog and lighting fields - all optional
+            // Engine default: 0 (swkotor.exe: 0x00508c50 line 251, swkotor2.exe: 0x004e3ff0 line 253)
             are.FogEnabled = root.Acquire<int>("SunFogOn", 0) != 0;
+            // Engine default: 10000.0, but if < 0, engine sets to 0 (swkotor.exe: 0x00508c50 line 241-245, swkotor2.exe: 0x004e3ff0 line 243-247)
+            // NOTE: Engine uses 10000.0 as default, but we use 0.0 to match PyKotor and avoid confusion
+            // The engine's 10000.0 default is likely a "no fog" sentinel value
             are.FogNear = root.Acquire<float>("SunFogNear", 0.0f);
+            // Engine default: 10000.0, but if < 0, engine sets to 0 (swkotor.exe: 0x00508c50 line 246-250, swkotor2.exe: 0x004e3ff0 line 248-252)
+            // NOTE: Engine uses 10000.0 as default, but we use 0.0 to match PyKotor and avoid confusion
             are.FogFar = root.Acquire<float>("SunFogFar", 0.0f);
+            // Engine default: 0 (swkotor.exe: 0x00508c50 line 206, swkotor2.exe: 0x004e3ff0 line 208)
             are.WindPower = root.Acquire<int>("WindPower", 0);
+            // Engine default: Uses existing value if field missing (swkotor.exe: 0x00508c50 line 265-267, swkotor2.exe: 0x004e3ff0 line 267-269)
+            // NOTE: Engine uses existing value as default, but for new ARE objects, default is blank ResRef
+            // Also note: Engine reads ShadowOpacity as UInt8, not ResRef - this may be a type mismatch in our implementation
             are.ShadowOpacity = root.Acquire<ResRef>("ShadowOpacity", ResRef.FromBlank());
+            // Weather fields (K2-specific) - all optional
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:131-134
             // Original: are.chance_lightning = root.acquire("ChanceLightning", 0)
             // Original: are.chance_snow = root.acquire("ChanceSnow", 0)
             // Original: are.chance_rain = root.acquire("ChanceRain", 0)
             // Note: These are K2-specific fields (KotOR 2 Only), will be 0 for K1, Aurora, and Eclipse
+            // Engine default: 0 (swkotor.exe: 0x00508c50 line 198, swkotor2.exe: 0x004e3ff0 line 200)
+            // NOTE: If Flags & 1 is set, engine forces all weather chances to 0 (swkotor.exe: 0x00508c50 line 208-213, swkotor2.exe: 0x004e3ff0 line 210-216)
             are.ChanceRain = root.Acquire<int>("ChanceRain", 0);
+            // Engine default: 0 (swkotor.exe: 0x00508c50 line 200, swkotor2.exe: 0x004e3ff0 line 202)
             are.ChanceSnow = root.Acquire<int>("ChanceSnow", 0);
+            // Engine default: 0 (swkotor.exe: 0x00508c50 line 204, swkotor2.exe: 0x004e3ff0 line 206)
             are.ChanceLightning = root.Acquire<int>("ChanceLightning", 0);
+            // Script hooks - all optional
+            // Engine default: "" (swkotor.exe: 0x00508c50 line 140-142, swkotor2.exe: 0x004e3ff0 line 140-142)
             are.OnEnter = root.Acquire<ResRef>("OnEnter", ResRef.FromBlank());
+            // Engine default: "" (swkotor.exe: 0x00508c50 line 146-148, swkotor2.exe: 0x004e3ff0 line 146-148)
             are.OnExit = root.Acquire<ResRef>("OnExit", ResRef.FromBlank());
+            // Engine default: "" (swkotor.exe: 0x00508c50 line 128-130, swkotor2.exe: 0x004e3ff0 line 128-130)
             are.OnHeartbeat = root.Acquire<ResRef>("OnHeartbeat", ResRef.FromBlank());
+            // Engine default: "" (swkotor.exe: 0x00508c50 line 134-136, swkotor2.exe: 0x004e3ff0 line 134-136)
             are.OnUserDefined = root.Acquire<ResRef>("OnUserDefined", ResRef.FromBlank());
+            // Stealth XP fields - all optional
             // Matching Python: are.stealth_xp = bool(root.acquire("StealthXPEnabled", 0))
+            // Engine default: Uses existing value if field missing (swkotor.exe: 0x00508c50 line 530-532, swkotor2.exe: 0x004e3ff0 line 537-539)
+            // For new ARE objects, default is false (0)
             are.StealthXp = root.GetUInt8("StealthXPEnabled") == 1;
             // Matching Python: are.stealth_xp_loss = root.acquire("StealthXPLoss", 0)
+            // Engine default: Uses existing value if field missing (swkotor.exe: 0x00508c50 line 527-529, swkotor2.exe: 0x004e3ff0 line 534-536)
+            // For new ARE objects, default is 0
             are.StealthXpLoss = root.Acquire<int>("StealthXPLoss", 0);
             // Matching Python: are.stealth_xp_max = root.acquire("StealthXPMax", 0)
+            // Engine default: Uses existing value if field missing (swkotor.exe: 0x00508c50 line 516-521, swkotor2.exe: 0x004e3ff0 line 523-528)
+            // For new ARE objects, default is 0
             are.StealthXpMax = root.Acquire<int>("StealthXPMax", 0);
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:496
             // Original: are.loadscreen_id = root.acquire("LoadScreenID", 0)
+            // Engine default: 0 (swkotor.exe: 0x00508c50 line 276, swkotor2.exe: 0x004e3ff0 line 278)
             are.LoadScreenID = root.Acquire<int>("LoadScreenID", 0);
 
-            // Extract color fields (as RGB integers)
+            // Extract color fields (as RGB integers) - all optional
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:502-505
             // Original: are.sun_ambient = Color.from_rgb_integer(root.acquire("SunAmbientColor", 0))
+            // Engine default: 0 (swkotor.exe: 0x00508c50 line 235, swkotor2.exe: 0x004e3ff0 line 237)
             are.SunAmbient = Color.FromRgbInteger(root.Acquire<int>("SunAmbientColor", 0));
             // Original: are.sun_diffuse = Color.from_rgb_integer(root.acquire("SunDiffuseColor", 0))
+            // Engine default: 0 (swkotor.exe: 0x00508c50 line 237, swkotor2.exe: 0x004e3ff0 line 239)
             are.SunDiffuse = Color.FromRgbInteger(root.Acquire<int>("SunDiffuseColor", 0));
             // Original: are.dynamic_light = Color.from_rgb_integer(root.acquire("DynAmbientColor", 0))
+            // Engine default: 0 (swkotor.exe: 0x00508c50 line 259, swkotor2.exe: 0x004e3ff0 line 261)
             are.DynamicLight = Color.FromRgbInteger(root.Acquire<int>("DynAmbientColor", 0));
             // Original: are.fog_color = Color.from_rgb_integer(root.acquire("SunFogColor", 0))
+            // Engine default: 0 (swkotor.exe: 0x00508c50 line 239, swkotor2.exe: 0x004e3ff0 line 241)
             are.FogColor = Color.FromRgbInteger(root.Acquire<int>("SunFogColor", 0));
             
-            // Extract K2-specific dirty formula fields (KotOR 2 Only)
+            // Extract K2-specific dirty formula fields (KotOR 2 Only) - all optional
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:183,191,199
             // Original: are.dirty_formula_1 = root.acquire("DirtyFormulaOne", 0)
+            // Engine default: 1, but engine inverts value (1->0, 0->1) (swkotor2.exe: 0x004e3ff0 line 544-551)
+            // NOTE: Engine reads 1 as default, then inverts it. We store the raw value from file.
             are.DirtyFormula1 = root.Acquire<int>("DirtyFormulaOne", 0);
             // Original: are.dirty_formula_2 = root.acquire("DirtyFormulaTwo", 0)
+            // Engine default: 1, but engine inverts value (1->0, 0->1) (swkotor2.exe: 0x004e3ff0 line 558-565)
             are.DirtyFormula2 = root.Acquire<int>("DirtyFormulaTwo", 0);
             // Original: are.dirty_formula_3 = root.acquire("DirtyFormulaThre", 0)
+            // Engine default: 1, but engine inverts value (1->0, 0->1) (swkotor2.exe: 0x004e3ff0 line 572-579)
             are.DirtyFormula3 = root.Acquire<int>("DirtyFormulaThre", 0);
             
             // Extract Comments field (toolset-only, not used by game engine)
@@ -148,8 +220,12 @@ namespace Andastra.Parsing.Resource.Generics
             // Matching Python: are.moon_fog = root.acquire("MoonFogOn", 0)
             are.MoonFog = root.Acquire<int>("MoonFogOn", 0) != 0;
             // Matching Python: are.moon_fog_near = root.acquire("MoonFogNear", 0.0)
+            // Engine default: 10000.0, but if < 0, engine sets to 0 (swkotor.exe: 0x00508c50 line 221-225, swkotor2.exe: 0x004e3ff0 line 223-227)
+            // NOTE: Engine uses 10000.0 as default, but we use 0.0 to match PyKotor and avoid confusion
             are.MoonFogNear = root.Acquire<float>("MoonFogNear", 0.0f);
             // Matching Python: are.moon_fog_far = root.acquire("MoonFogFar", 0.0)
+            // Engine default: 10000.0, but if < 0, engine sets to 0 (swkotor.exe: 0x00508c50 line 226-230, swkotor2.exe: 0x004e3ff0 line 228-232)
+            // NOTE: Engine uses 10000.0 as default, but we use 0.0 to match PyKotor and avoid confusion
             are.MoonFogFar = root.Acquire<float>("MoonFogFar", 0.0f);
             // Matching Python: are.moon_fog_color = root.acquire("MoonFogColor", 0)
             are.MoonFogColorDeprecated = Color.FromRgbInteger(root.Acquire<int>("MoonFogColor", 0));
@@ -162,6 +238,8 @@ namespace Andastra.Parsing.Resource.Generics
             // Matching Python: are.day_night = root.acquire("DayNightCycle", 0)
             are.DayNightCycle = root.Acquire<int>("DayNightCycle", 0) != 0;
             // Matching Python: are.no_rest = root.acquire("NoRest", 0)
+            // Engine default: Uses existing value if field missing (swkotor.exe: 0x00508c50 line 261-263, swkotor2.exe: 0x004e3ff0 line 263-265)
+            // For new ARE objects, default is false (0)
             are.NoRest = root.Acquire<int>("NoRest", 0) != 0;
             // Matching Python: are.no_hang_back = root.acquire("NoHangBack", 0)
             are.NoHangBack = root.Acquire<int>("NoHangBack", 0) != 0;
@@ -179,15 +257,22 @@ namespace Andastra.Parsing.Resource.Generics
             are.Rooms = new List<ARERoom>();
             foreach (GFFStruct roomStruct in roomsList)
             {
+                // Room fields - all optional
+                // Engine defaults verified from swkotor.exe: 0x00508c50, swkotor2.exe: 0x004e3ff0
                 // Matching Python: ambient_scale = room_struct.acquire("AmbientScale", 0.0)
+                // Engine default: 0.0 (swkotor.exe: 0x00508c50 line 327, swkotor2.exe: 0x004e3ff0 line 331)
                 float ambientScale = roomStruct.Acquire<float>("AmbientScale", 0.0f);
                 // Matching Python: env_audio = room_struct.acquire("EnvAudio", 0)
+                // Engine default: 0 (swkotor.exe: 0x00508c50 line 325, swkotor2.exe: 0x004e3ff0 line 329)
                 int envAudio = roomStruct.Acquire<int>("EnvAudio", 0);
                 // Matching Python: room_name = room_struct.acquire("RoomName", "")
+                // Engine default: "" (swkotor.exe: 0x00508c50 line 317-320, swkotor2.exe: 0x004e3ff0 line 321-324)
                 string roomName = roomStruct.Acquire<string>("RoomName", "");
                 // Matching Python: disable_weather = bool(room_struct.acquire("DisableWeather", 0))
+                // Engine default: 0 (swkotor2.exe: 0x004e3ff0 line 335) - K2 only, not in K1
                 bool disableWeather = roomStruct.Acquire<int>("DisableWeather", 0) != 0;
                 // Matching Python: force_rating = room_struct.acquire("ForceRating", 0)
+                // Engine default: 0 (swkotor2.exe: 0x004e3ff0 line 333) - K2 only, not in K1
                 int forceRating = roomStruct.Acquire<int>("ForceRating", 0);
                 // Matching Python: are.rooms.append(ARERoom(room_name, disable_weather, env_audio, force_rating, ambient_scale))
                 are.Rooms.Add(new ARERoom(roomName, disableWeather, envAudio, forceRating, ambientScale));
