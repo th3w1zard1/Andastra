@@ -3,11 +3,8 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Andastra.Parsing.Resource;
-// TODO: Core cannot depend on Content or Graphics - these should be injected or removed
-// using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Video.Bink;
-// using Andastra.Runtime.Graphics;
 
 namespace Andastra.Runtime.Core.Video
 {
@@ -45,10 +42,8 @@ namespace Andastra.Runtime.Core.Video
     public class MoviePlayer
     {
         private readonly IWorld _world;
-        // TODO: IGameResourceProvider and IGraphicsDevice are in Content/Graphics - Core cannot depend on them
-        // These should be injected by engine-specific implementations
-        private readonly object _resourceProvider;
-        private readonly object _graphicsDevice;
+        private readonly IMovieResourceProvider _resourceProvider;
+        private readonly IMovieGraphicsDevice _graphicsDevice;
         private bool _isPlaying;
 
         /// <summary>
@@ -57,7 +52,7 @@ namespace Andastra.Runtime.Core.Video
         /// <param name="world">World instance for accessing game services.</param>
         /// <param name="resourceProvider">Resource provider for loading movie files.</param>
         /// <param name="graphicsDevice">Graphics device for rendering video frames.</param>
-        public MoviePlayer(IWorld world, object resourceProvider, object graphicsDevice)
+        public MoviePlayer(IWorld world, IMovieResourceProvider resourceProvider, IMovieGraphicsDevice graphicsDevice)
         {
             _world = world ?? throw new ArgumentNullException("world");
             _resourceProvider = resourceProvider ?? throw new ArgumentNullException("resourceProvider");
@@ -142,15 +137,13 @@ namespace Andastra.Runtime.Core.Video
                 // Create resource identifier for BIK file
                 ResourceIdentifier resourceId = new ResourceIdentifier(normalizedResRef, ResourceType.BIK);
 
-
-                // Check if resource exists (using dynamic since Core cannot depend on Content)
-                dynamic resourceProvider = _resourceProvider;
-                bool exists = await resourceProvider.ExistsAsync(resourceId, cancellationToken);
+                // Check if resource exists
+                bool exists = await _resourceProvider.ExistsAsync(resourceId, cancellationToken);
                 if (!exists)
                 {
                     // Try with .bik extension
                     resourceId = new ResourceIdentifier(normalizedResRef + ".bik", ResourceType.BIK);
-                    exists = await resourceProvider.ExistsAsync(resourceId, cancellationToken);
+                    exists = await _resourceProvider.ExistsAsync(resourceId, cancellationToken);
                 }
 
                 if (!exists)
@@ -160,7 +153,7 @@ namespace Andastra.Runtime.Core.Video
                 }
 
                 // Load movie file data
-                byte[] movieData = await resourceProvider.GetResourceBytesAsync(resourceId, cancellationToken);
+                byte[] movieData = await _resourceProvider.GetResourceBytesAsync(resourceId, cancellationToken);
                 return movieData;
             }
             catch (Exception ex)
@@ -282,26 +275,20 @@ namespace Andastra.Runtime.Core.Video
                 return;
             }
 
-            // Get viewport dimensions for fullscreen rendering (using dynamic since Core cannot depend on Graphics)
-            dynamic graphicsDevice = _graphicsDevice;
-            dynamic viewport = graphicsDevice.Viewport;
+            // Get viewport dimensions for fullscreen rendering
+            MovieViewport viewport = _graphicsDevice.Viewport;
             int screenWidth = viewport.Width;
             int screenHeight = viewport.Height;
 
-            // Clear screen to black (using dynamic Color creation)
-            Type colorType = Type.GetType("Andastra.Runtime.Graphics.Color, Andastra.Runtime.Graphics.Common");
-            dynamic clearColor = colorType != null ? Activator.CreateInstance(colorType, 0, 0, 0, 255) : null;
-            if (clearColor != null)
-            {
-                graphicsDevice.Clear(clearColor);
-            }
+            // Clear screen to black
+            MovieColor clearColor = new MovieColor(0, 0, 0, 255);
+            _graphicsDevice.Clear(clearColor);
 
             // Render frame texture fullscreen
             // Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 27 calls BinkBufferBlit
             // Original implementation: Blits buffer directly to screen using BinkBufferBlit
             // Our implementation: Uses sprite batch to render texture fullscreen
-            dynamic spriteBatch = graphicsDevice.CreateSpriteBatch();
-            if (spriteBatch != null)
+            using (IMovieSpriteBatch spriteBatch = _graphicsDevice.CreateSpriteBatch())
             {
                 spriteBatch.Begin();
 
@@ -318,16 +305,9 @@ namespace Andastra.Runtime.Core.Video
                 // Draw frame texture centered and scaled
                 // Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 27 (BinkBufferBlit)
                 // Original: Blits directly to screen, we use sprite batch for abstraction
-                // Using dynamic types since Core cannot depend on Graphics
-                // Rectangle and Color are created dynamically via reflection
-                Type rectType = Type.GetType("Andastra.Runtime.Graphics.Rectangle, Andastra.Runtime.Graphics.Common");
-                Type whiteColorType = Type.GetType("Andastra.Runtime.Graphics.Color, Andastra.Runtime.Graphics.Common");
-                dynamic destinationRect = rectType != null ? Activator.CreateInstance(rectType, offsetX, offsetY, scaledWidth, scaledHeight) : null;
-                dynamic whiteColor = whiteColorType != null ? Activator.CreateInstance(whiteColorType, 255, 255, 255, 255) : null;
-                if (destinationRect != null && whiteColor != null)
-                {
-                    spriteBatch.Draw(decoder.FrameTexture, destinationRect, whiteColor);
-                }
+                MovieRectangle destinationRect = new MovieRectangle(offsetX, offsetY, scaledWidth, scaledHeight);
+                MovieColor whiteColor = new MovieColor(255, 255, 255, 255);
+                spriteBatch.Draw(decoder.FrameTexture, destinationRect, whiteColor);
 
                 spriteBatch.End();
             }

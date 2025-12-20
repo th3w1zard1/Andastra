@@ -70,12 +70,13 @@ namespace Andastra.Runtime.Core.Module
         /// <param name="saveSystem">Save system for module state persistence.</param>
         /// <param name="moduleLoader">Module loader for loading modules.</param>
         /// <param name="loadingScreen">Loading screen interface for displaying loading screens during transitions. If null, uses NullLoadingScreen.</param>
-        /// <param name="resourceProvider">Optional resource provider for movie playback.</param>
-        /// <param name="graphicsDevice">Optional graphics device for movie playback.</param>
+        /// <param name="resourceProvider">Optional resource provider for movie playback (must implement IMovieResourceProvider or be adaptable).</param>
+        /// <param name="graphicsDevice">Optional graphics device for movie playback (must implement IMovieGraphicsDevice or be adaptable).</param>
         /// <remarks>
         /// Based on swkotor2.exe: Module transition system initialization
         /// - Loading screen is injected to avoid Core depending on Graphics/Content
         /// - Movie player is created if resource provider and graphics device are available
+        /// - Resource provider and graphics device are adapted from Content/Graphics layers if needed
         /// - Original implementation: Module transition system handles loading screens, movies, and module state
         /// </remarks>
         public ModuleTransitionSystem(IWorld world, SaveSystem saveSystem, IModuleLoader moduleLoader, ILoadingScreen loadingScreen = null, object resourceProvider = null, object graphicsDevice = null)
@@ -86,9 +87,57 @@ namespace Andastra.Runtime.Core.Module
             _loadingScreen = loadingScreen ?? new NullLoadingScreen();
             
             // Create movie player if resource provider and graphics device are available
-            if (resourceProvider != null && graphicsDevice != null)
+            // Adapt from Content/Graphics layers if needed
+            IMovieResourceProvider movieResourceProvider = null;
+            IMovieGraphicsDevice movieGraphicsDevice = null;
+            
+            if (resourceProvider != null)
             {
-                _moviePlayer = new MoviePlayer(world, resourceProvider, graphicsDevice);
+                // Try to use as IMovieResourceProvider directly, or adapt from IGameResourceProvider
+                if (resourceProvider is IMovieResourceProvider directProvider)
+                {
+                    movieResourceProvider = directProvider;
+                }
+                else
+                {
+                    // Try to adapt from Content layer
+                    Type contentProviderType = Type.GetType("Andastra.Runtime.Content.Interfaces.IGameResourceProvider, Andastra.Runtime.Content");
+                    if (contentProviderType != null && contentProviderType.IsAssignableFrom(resourceProvider.GetType()))
+                    {
+                        Type adapterType = Type.GetType("Andastra.Runtime.Content.Adapters.MovieResourceProviderAdapter, Andastra.Runtime.Content");
+                        if (adapterType != null)
+                        {
+                            movieResourceProvider = (IMovieResourceProvider)Activator.CreateInstance(adapterType, resourceProvider);
+                        }
+                    }
+                }
+            }
+            
+            if (graphicsDevice != null)
+            {
+                // Try to use as IMovieGraphicsDevice directly, or adapt from IGraphicsDevice
+                if (graphicsDevice is IMovieGraphicsDevice directDevice)
+                {
+                    movieGraphicsDevice = directDevice;
+                }
+                else
+                {
+                    // Try to adapt from Graphics layer
+                    Type graphicsDeviceType = Type.GetType("Andastra.Runtime.Graphics.IGraphicsDevice, Andastra.Runtime.Graphics.Common");
+                    if (graphicsDeviceType != null && graphicsDeviceType.IsAssignableFrom(graphicsDevice.GetType()))
+                    {
+                        Type adapterType = Type.GetType("Andastra.Runtime.Graphics.Adapters.MovieGraphicsDeviceAdapter, Andastra.Runtime.Graphics.Common");
+                        if (adapterType != null)
+                        {
+                            movieGraphicsDevice = (IMovieGraphicsDevice)Activator.CreateInstance(adapterType, graphicsDevice);
+                        }
+                    }
+                }
+            }
+            
+            if (movieResourceProvider != null && movieGraphicsDevice != null)
+            {
+                _moviePlayer = new MoviePlayer(world, movieResourceProvider, movieGraphicsDevice);
             }
             else
             {

@@ -3,8 +3,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-// TODO: Core cannot depend on Graphics - this should be injected or removed
-// using Andastra.Runtime.Graphics;
+using Andastra.Runtime.Core.Interfaces;
 
 namespace Andastra.Runtime.Core.Video.Bink
 {
@@ -19,8 +18,8 @@ namespace Andastra.Runtime.Core.Video.Bink
         private BinkApi.BINKSUMMARY _summary;
         private bool _isDisposed;
         private readonly string _moviePath;
-        private readonly object _graphicsDevice;
-        private object _frameTexture;
+        private readonly IMovieGraphicsDevice _graphicsDevice;
+        private IMovieTexture2D _frameTexture;
         private int _frameWidth;
         private int _frameHeight;
         private byte[] _frameBuffer;
@@ -30,7 +29,7 @@ namespace Andastra.Runtime.Core.Video.Bink
         /// </summary>
         /// <param name="moviePath">Path to BIK file.</param>
         /// <param name="graphicsDevice">Graphics device for rendering.</param>
-        public BikDecoder(string moviePath, object graphicsDevice)
+        public BikDecoder(string moviePath, IMovieGraphicsDevice graphicsDevice)
         {
             _moviePath = moviePath ?? throw new ArgumentNullException("moviePath");
             _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException("graphicsDevice");
@@ -84,9 +83,8 @@ namespace Andastra.Runtime.Core.Video.Bink
             // Parameters: window handle, width, height, flags (0x5d000000)
             // Line 128: _BinkBufferOpen_16(*(undefined4 *)((int)this + 0x50), *puVar8, puVar8[1], 0x5d000000)
             // windowHandle = this + 0x50 (window handle), width = *puVar8 (BINK width), height = puVar8[1] (BINK height)
-            // Get window handle if available (using dynamic since Core cannot depend on Graphics)
-            dynamic graphicsDevice = _graphicsDevice;
-            IntPtr windowHandle = graphicsDevice.NativeHandle; // Get window handle if available (0 if not available)
+            // Get window handle if available
+            IntPtr windowHandle = _graphicsDevice.NativeHandle; // Get window handle if available (0 if not available)
             const uint BinkBufferFlags = 0x5d000000; // Flags from decompilation
             _bufferHandle = BinkApi.BinkBufferOpen(windowHandle, _frameWidth, _frameHeight, BinkBufferFlags);
             if (_bufferHandle == IntPtr.Zero)
@@ -99,7 +97,7 @@ namespace Andastra.Runtime.Core.Video.Bink
             // Set buffer scale and offset for fullscreen rendering
             // Based on swkotor.exe: FUN_004053e0 @ 0x004053e0 line 154-160
             // BinkBufferSetScale and BinkBufferSetOffset are called to position video
-            dynamic viewport = graphicsDevice.Viewport;
+            MovieViewport viewport = _graphicsDevice.Viewport;
             int screenWidth = viewport.Width;
             int screenHeight = viewport.Height;
 
@@ -123,8 +121,8 @@ namespace Andastra.Runtime.Core.Video.Bink
             // Allocate frame buffer for copying to texture (RGBA format)
             _frameBuffer = new byte[_frameWidth * _frameHeight * 4];
 
-            // Create texture for rendering (using dynamic since Core cannot depend on Graphics)
-            _frameTexture = graphicsDevice.CreateTexture2D(_frameWidth, _frameHeight, null);
+            // Create texture for rendering
+            _frameTexture = _graphicsDevice.CreateTexture2D(_frameWidth, _frameHeight, null);
         }
 
         /// <summary>
@@ -271,9 +269,8 @@ namespace Andastra.Runtime.Core.Video.Bink
             // Original: Blits buffer directly to screen, we update texture for rendering
             if (_frameTexture != null && _frameBuffer != null)
             {
-                // Update texture with frame buffer data (using dynamic since Core cannot depend on Graphics)
-                dynamic frameTexture = _frameTexture;
-                frameTexture.SetData(_frameBuffer);
+                // Update texture with frame buffer data
+                _frameTexture.SetData(_frameBuffer);
             }
 
             // Get destination rectangles for blitting
@@ -320,7 +317,7 @@ namespace Andastra.Runtime.Core.Video.Bink
         /// <summary>
         /// Gets the frame texture for rendering.
         /// </summary>
-        public object FrameTexture
+        public IMovieTexture2D FrameTexture
         {
             get { return _frameTexture; }
         }
@@ -349,12 +346,8 @@ namespace Andastra.Runtime.Core.Video.Bink
 
             if (_frameTexture != null)
             {
-                // Dispose texture (using dynamic since Core cannot depend on Graphics)
-                dynamic frameTexture = _frameTexture;
-                if (frameTexture is IDisposable disposable)
-                {
-                    disposable.Dispose();
-                }
+                // Dispose texture
+                _frameTexture.Dispose();
                 _frameTexture = null;
             }
 
