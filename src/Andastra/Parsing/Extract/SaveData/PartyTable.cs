@@ -34,6 +34,204 @@ namespace Andastra.Parsing.Extract.SaveData
     // Original: class PartyTable
     public class PartyTable
     {
+        /// <summary>
+        /// Converts a Runtime PartyState to Parsing PartyTable format.
+        /// </summary>
+        public static PartyTable FromRuntimePartyState(object runtimeState)
+        {
+            if (runtimeState == null) return new PartyTable("");
+
+            var runtimeType = runtimeState.GetType();
+            var partyTable = new PartyTable("");
+
+            // Extract basic properties using reflection
+            SetPropertyIfExists(runtimeState, runtimeType, "Gold", partyTable, "Gold");
+            SetPropertyIfExists(runtimeState, runtimeType, "ExperiencePoints", partyTable, "XpPool");
+            SetPropertyIfExists(runtimeState, runtimeType, "ControlledNPC", partyTable, "ControlledNpc");
+            SetPropertyIfExists(runtimeState, runtimeType, "SoloMode", partyTable, "SoloMode");
+            SetPropertyIfExists(runtimeState, runtimeType, "CheatUsed", partyTable, "CheatUsed");
+            SetPropertyIfExists(runtimeState, runtimeType, "AIState", partyTable, "AiState");
+            SetPropertyIfExists(runtimeState, runtimeType, "FollowState", partyTable, "FollowState");
+            SetPropertyIfExists(runtimeState, runtimeType, "ItemComponent", partyTable, "ItemComponents");
+            SetPropertyIfExists(runtimeState, runtimeType, "ItemChemical", partyTable, "ItemChemicals");
+
+            // Extract play time
+            var playTimeProp = runtimeType.GetProperty("PlayTime");
+            if (playTimeProp != null)
+            {
+                var playTime = playTimeProp.GetValue(runtimeState);
+                if (playTime is TimeSpan ts)
+                {
+                    partyTable.TimePlayed = (int)ts.TotalSeconds;
+                }
+            }
+
+            // Extract selected party
+            var selectedPartyProp = runtimeType.GetProperty("SelectedParty");
+            if (selectedPartyProp != null)
+            {
+                var selectedParty = selectedPartyProp.GetValue(runtimeState) as System.Collections.IList;
+                if (selectedParty != null)
+                {
+                    for (int i = 0; i < selectedParty.Count; i++)
+                    {
+                        var memberEntry = new PartyMemberEntry { Index = i };
+                        partyTable.Members.Add(memberEntry);
+                    }
+                }
+            }
+
+            // Extract available members
+            var availableMembersProp = runtimeType.GetProperty("AvailableMembers");
+            if (availableMembersProp != null)
+            {
+                var availableMembers = availableMembersProp.GetValue(runtimeState) as System.Collections.IDictionary;
+                if (availableMembers != null)
+                {
+                    foreach (System.Collections.DictionaryEntry entry in availableMembers)
+                    {
+                        var memberState = entry.Value;
+                        if (memberState != null)
+                        {
+                            var memberType = memberState.GetType();
+                            var isAvailableProp = memberType.GetProperty("IsAvailable");
+                            var isSelectableProp = memberType.GetProperty("IsSelectable");
+
+                            if (isAvailableProp != null && isSelectableProp != null)
+                            {
+                                var npcEntry = new AvailableNPCEntry
+                                {
+                                    NpcAvailable = (bool)isAvailableProp.GetValue(memberState),
+                                    NpcSelected = (bool)isSelectableProp.GetValue(memberState)
+                                };
+                                partyTable.AvailableNpcs.Add(npcEntry);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Extract influence
+            var influenceProp = runtimeType.GetProperty("Influence");
+            if (influenceProp != null)
+            {
+                var influence = influenceProp.GetValue(runtimeState) as System.Collections.IList;
+                if (influence != null)
+                {
+                    foreach (var val in influence)
+                    {
+                        partyTable.Influence.Add((int)val);
+                    }
+                }
+            }
+
+            return partyTable;
+        }
+
+        /// <summary>
+        /// Converts Parsing PartyTable to Runtime PartyState format.
+        /// </summary>
+        public static object ToRuntimePartyState(PartyTable partyTable, Type runtimeType)
+        {
+            if (partyTable == null || runtimeType == null) return null;
+
+            var runtimeState = Activator.CreateInstance(runtimeType);
+
+            // Set basic properties
+            SetRuntimePropertyIfExists(runtimeState, runtimeType, partyTable, "Gold", "Gold");
+            SetRuntimePropertyIfExists(runtimeState, runtimeType, partyTable, "XpPool", "ExperiencePoints");
+            SetRuntimePropertyIfExists(runtimeState, runtimeType, partyTable, "ControlledNpc", "ControlledNPC");
+            SetRuntimePropertyIfExists(runtimeState, runtimeType, partyTable, "SoloMode", "SoloMode");
+            SetRuntimePropertyIfExists(runtimeState, runtimeType, partyTable, "CheatUsed", "CheatUsed");
+            SetRuntimePropertyIfExists(runtimeState, runtimeType, partyTable, "AiState", "AIState");
+            SetRuntimePropertyIfExists(runtimeState, runtimeType, partyTable, "FollowState", "FollowState");
+            SetRuntimePropertyIfExists(runtimeState, runtimeType, partyTable, "ItemComponents", "ItemComponent");
+            SetRuntimePropertyIfExists(runtimeState, runtimeType, partyTable, "ItemChemicals", "ItemChemical");
+
+            // Set play time
+            var playTimeProp = runtimeType.GetProperty("PlayTime");
+            if (playTimeProp != null)
+            {
+                playTimeProp.SetValue(runtimeState, TimeSpan.FromSeconds(partyTable.TimePlayed));
+            }
+
+            // Set selected party (simplified - just create list of ResRefs)
+            var selectedPartyProp = runtimeType.GetProperty("SelectedParty");
+            if (selectedPartyProp != null)
+            {
+                var selectedParty = new List<string>();
+                foreach (var member in partyTable.Members)
+                {
+                    // Convert member index back to ResRef (simplified mapping)
+                    selectedParty.Add($"npc_{member.Index:D2}");
+                }
+                selectedPartyProp.SetValue(runtimeState, selectedParty);
+            }
+
+            // Set available members (simplified)
+            var availableMembersProp = runtimeType.GetProperty("AvailableMembers");
+            if (availableMembersProp != null)
+            {
+                var availableMembers = new Dictionary<string, object>();
+                var partyMemberStateType = runtimeType.Assembly.GetType("Andastra.Runtime.Core.Save.PartyMemberState");
+                if (partyMemberStateType != null)
+                {
+                    for (int i = 0; i < partyTable.AvailableNpcs.Count; i++)
+                    {
+                        var npcEntry = partyTable.AvailableNpcs[i];
+                        var memberState = Activator.CreateInstance(partyMemberStateType);
+                        var isAvailableProp = partyMemberStateType.GetProperty("IsAvailable");
+                        var isSelectableProp = partyMemberStateType.GetProperty("IsSelectable");
+
+                        if (isAvailableProp != null) isAvailableProp.SetValue(memberState, npcEntry.NpcAvailable);
+                        if (isSelectableProp != null) isSelectableProp.SetValue(memberState, npcEntry.NpcSelected);
+
+                        availableMembers[$"npc_{i:D2}"] = memberState;
+                    }
+                }
+                availableMembersProp.SetValue(runtimeState, availableMembers);
+            }
+
+            // Set influence
+            var influenceProp = runtimeType.GetProperty("Influence");
+            if (influenceProp != null)
+            {
+                influenceProp.SetValue(runtimeState, partyTable.Influence);
+            }
+
+            return runtimeState;
+        }
+
+        private static void SetPropertyIfExists(object source, Type sourceType, string sourceProp, object target, string targetProp)
+        {
+            var prop = sourceType.GetProperty(sourceProp);
+            if (prop != null)
+            {
+                var value = prop.GetValue(source);
+                var targetType = target.GetType();
+                var targetPropInfo = targetType.GetProperty(targetProp);
+                if (targetPropInfo != null && targetPropInfo.CanWrite)
+                {
+                    targetPropInfo.SetValue(target, value);
+                }
+            }
+        }
+
+        private static void SetRuntimePropertyIfExists(object target, Type targetType, object source, string sourceProp, string targetProp)
+        {
+            var sourceType = source.GetType();
+            var prop = sourceType.GetProperty(sourceProp);
+            if (prop != null)
+            {
+                var value = prop.GetValue(source);
+                var targetPropInfo = targetType.GetProperty(targetProp);
+                if (targetPropInfo != null && targetPropInfo.CanWrite)
+                {
+                    targetPropInfo.SetValue(target, value);
+                }
+            }
+        }
+
         public List<PartyMemberEntry> Members { get; } = new List<PartyMemberEntry>();
         public List<AvailableNPCEntry> AvailableNpcs { get; } = new List<AvailableNPCEntry>();
         public int ControlledNpc { get; set; } = -1;
@@ -335,7 +533,7 @@ namespace Andastra.Parsing.Extract.SaveData
                     case GFFFieldType.ResRef: root.SetResRef(label, value as ResRef ?? ResRef.FromBlank()); break;
                     case GFFFieldType.LocalizedString: root.SetLocString(label, value as LocalizedString ?? LocalizedString.FromInvalid()); break;
                     case GFFFieldType.Binary: root.SetBinary(label, value as byte[] ?? Array.Empty<byte>()); break;
-                    case GFFFieldType.Vector3: 
+                    case GFFFieldType.Vector3:
                         if (value is Vector3 v3)
                         {
                             root.SetVector3(label, new System.Numerics.Vector3(v3.X, v3.Y, v3.Z));
@@ -345,7 +543,7 @@ namespace Andastra.Parsing.Extract.SaveData
                             root.SetVector3(label, System.Numerics.Vector3.Zero);
                         }
                         break;
-                    case GFFFieldType.Vector4: 
+                    case GFFFieldType.Vector4:
                         if (value is Vector4 v4)
                         {
                             root.SetVector4(label, new System.Numerics.Vector4(v4.X, v4.Y, v4.Z, v4.W));
@@ -363,6 +561,227 @@ namespace Andastra.Parsing.Extract.SaveData
 
             byte[] bytes = new GFFBinaryWriter(gff).Write();
             File.WriteAllBytes(_partyTablePath, bytes);
+        }
+
+        /// <summary>
+        /// Serializes a Runtime PartyState directly to GFF bytes.
+        /// </summary>
+        public static byte[] SerializeRuntimePartyState(object runtimeState)
+        {
+            if (runtimeState == null) return new byte[0];
+
+            var runtimeType = runtimeState.GetType();
+
+            // Create temporary PartyTable instance to use its serialization
+            var partyTable = new PartyTable("");
+
+            // Extract basic properties using reflection
+            SetPropertyIfExists(runtimeState, runtimeType, "Gold", partyTable, "Gold");
+            SetPropertyIfExists(runtimeState, runtimeType, "ExperiencePoints", partyTable, "XpPool");
+            SetPropertyIfExists(runtimeState, runtimeType, "ControlledNPC", partyTable, "ControlledNpc");
+            SetPropertyIfExists(runtimeState, runtimeType, "SoloMode", partyTable, "SoloMode");
+            SetPropertyIfExists(runtimeState, runtimeType, "CheatUsed", partyTable, "CheatUsed");
+            SetPropertyIfExists(runtimeState, runtimeType, "AIState", partyTable, "AiState");
+            SetPropertyIfExists(runtimeState, runtimeType, "FollowState", partyTable, "FollowState");
+            SetPropertyIfExists(runtimeState, runtimeType, "ItemComponent", partyTable, "ItemComponents");
+            SetPropertyIfExists(runtimeState, runtimeType, "ItemChemical", partyTable, "ItemChemicals");
+
+            // Extract play time
+            var playTimeProp = runtimeType.GetProperty("PlayTime");
+            if (playTimeProp != null)
+            {
+                var playTime = playTimeProp.GetValue(runtimeState);
+                if (playTime is TimeSpan ts)
+                {
+                    partyTable.TimePlayed = (int)ts.TotalSeconds;
+                }
+            }
+
+            // Extract selected party
+            var selectedPartyProp = runtimeType.GetProperty("SelectedParty");
+            if (selectedPartyProp != null)
+            {
+                var selectedParty = selectedPartyProp.GetValue(runtimeState) as System.Collections.IList;
+                if (selectedParty != null)
+                {
+                    for (int i = 0; i < selectedParty.Count; i++)
+                    {
+                        var memberEntry = new PartyMemberEntry { Index = i };
+                        partyTable.Members.Add(memberEntry);
+                    }
+                }
+            }
+
+            // Extract available members
+            var availableMembersProp = runtimeType.GetProperty("AvailableMembers");
+            if (availableMembersProp != null)
+            {
+                var availableMembers = availableMembersProp.GetValue(runtimeState) as System.Collections.IDictionary;
+                if (availableMembers != null)
+                {
+                    foreach (System.Collections.DictionaryEntry entry in availableMembers)
+                    {
+                        var memberState = entry.Value;
+                        if (memberState != null)
+                        {
+                            var memberType = memberState.GetType();
+                            var isAvailableProp = memberType.GetProperty("IsAvailable");
+                            var isSelectableProp = memberType.GetProperty("IsSelectable");
+
+                            if (isAvailableProp != null && isSelectableProp != null)
+                            {
+                                var npcEntry = new AvailableNPCEntry
+                                {
+                                    NpcAvailable = (bool)isAvailableProp.GetValue(memberState),
+                                    NpcSelected = (bool)isSelectableProp.GetValue(memberState)
+                                };
+                                partyTable.AvailableNpcs.Add(npcEntry);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Extract influence
+            var influenceProp = runtimeType.GetProperty("Influence");
+            if (influenceProp != null)
+            {
+                var influence = influenceProp.GetValue(runtimeState) as System.Collections.IList;
+                if (influence != null)
+                {
+                    foreach (var val in influence)
+                    {
+                        partyTable.Influence.Add((int)val);
+                    }
+                }
+            }
+
+            // Serialize using existing PartyTable.Save method
+            partyTable.Save();
+            return System.IO.File.ReadAllBytes(partyTable.GetPath());
+        }
+
+        /// <summary>
+        /// Deserializes GFF bytes directly to Runtime PartyState.
+        /// </summary>
+        public static object DeserializeRuntimePartyState(byte[] data, Type runtimeType)
+        {
+            if (data == null || data.Length == 0 || runtimeType == null) return null;
+
+            try
+            {
+                // Create temporary file for PartyTable to load from
+                string tempPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "temp_partytable_" + Guid.NewGuid().ToString("N") + ".res");
+                System.IO.File.WriteAllBytes(tempPath, data);
+
+                // Load using PartyTable
+                var partyTable = new PartyTable(tempPath);
+                partyTable.Load();
+
+                // Convert to Runtime format
+                var runtimeState = Activator.CreateInstance(runtimeType);
+
+                // Set basic properties
+                SetRuntimePropertyIfExists(runtimeState, runtimeType, partyTable, "Gold", "Gold");
+                SetRuntimePropertyIfExists(runtimeState, runtimeType, partyTable, "XpPool", "ExperiencePoints");
+                SetRuntimePropertyIfExists(runtimeState, runtimeType, partyTable, "ControlledNpc", "ControlledNPC");
+                SetRuntimePropertyIfExists(runtimeState, runtimeType, partyTable, "SoloMode", "SoloMode");
+                SetRuntimePropertyIfExists(runtimeState, runtimeType, partyTable, "CheatUsed", "CheatUsed");
+                SetRuntimePropertyIfExists(runtimeState, runtimeType, partyTable, "AiState", "AIState");
+                SetRuntimePropertyIfExists(runtimeState, runtimeType, partyTable, "FollowState", "FollowState");
+                SetRuntimePropertyIfExists(runtimeState, runtimeType, partyTable, "ItemComponents", "ItemComponent");
+                SetRuntimePropertyIfExists(runtimeState, runtimeType, partyTable, "ItemChemicals", "ItemChemical");
+
+                // Set play time
+                var playTimeProp = runtimeType.GetProperty("PlayTime");
+                if (playTimeProp != null)
+                {
+                    playTimeProp.SetValue(runtimeState, TimeSpan.FromSeconds(partyTable.TimePlayed));
+                }
+
+                // Set selected party (simplified - just create list of ResRefs)
+                var selectedPartyProp = runtimeType.GetProperty("SelectedParty");
+                if (selectedPartyProp != null)
+                {
+                    var selectedParty = new List<string>();
+                    foreach (var member in partyTable.Members)
+                    {
+                        // Convert member index back to ResRef (simplified mapping)
+                        selectedParty.Add($"npc_{member.Index:D2}");
+                    }
+                    selectedPartyProp.SetValue(runtimeState, selectedParty);
+                }
+
+                // Set available members (simplified)
+                var availableMembersProp = runtimeType.GetProperty("AvailableMembers");
+                if (availableMembersProp != null)
+                {
+                    var availableMembers = new Dictionary<string, object>();
+                    var partyMemberStateType = runtimeType.Assembly.GetType("Andastra.Runtime.Core.Save.PartyMemberState");
+                    if (partyMemberStateType != null)
+                    {
+                        for (int i = 0; i < partyTable.AvailableNpcs.Count; i++)
+                        {
+                            var npcEntry = partyTable.AvailableNpcs[i];
+                            var memberState = Activator.CreateInstance(partyMemberStateType);
+                            var isAvailableProp = partyMemberStateType.GetProperty("IsAvailable");
+                            var isSelectableProp = partyMemberStateType.GetProperty("IsSelectable");
+
+                            if (isAvailableProp != null) isAvailableProp.SetValue(memberState, npcEntry.NpcAvailable);
+                            if (isSelectableProp != null) isSelectableProp.SetValue(memberState, npcEntry.NpcSelected);
+
+                            availableMembers[$"npc_{i:D2}"] = memberState;
+                        }
+                    }
+                    availableMembersProp.SetValue(runtimeState, availableMembers);
+                }
+
+                // Set influence
+                var influenceProp = runtimeType.GetProperty("Influence");
+                if (influenceProp != null)
+                {
+                    influenceProp.SetValue(runtimeState, partyTable.Influence);
+                }
+
+                // Clean up temp file
+                try { System.IO.File.Delete(tempPath); } catch { }
+
+                return runtimeState;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        private static void SetPropertyIfExists(object source, Type sourceType, string sourceProp, object target, string targetProp)
+        {
+            var prop = sourceType.GetProperty(sourceProp);
+            if (prop != null)
+            {
+                var value = prop.GetValue(source);
+                var targetType = target.GetType();
+                var targetPropInfo = targetType.GetProperty(targetProp);
+                if (targetPropInfo != null && targetPropInfo.CanWrite)
+                {
+                    targetPropInfo.SetValue(target, value);
+                }
+            }
+        }
+
+        private static void SetRuntimePropertyIfExists(object target, Type targetType, object source, string sourceProp, string targetProp)
+        {
+            var sourceType = source.GetType();
+            var prop = sourceType.GetProperty(sourceProp);
+            if (prop != null)
+            {
+                var value = prop.GetValue(source);
+                var targetPropInfo = targetType.GetProperty(targetProp);
+                if (targetPropInfo != null && targetPropInfo.CanWrite)
+                {
+                    targetPropInfo.SetValue(target, value);
+                }
+            }
         }
     }
 }

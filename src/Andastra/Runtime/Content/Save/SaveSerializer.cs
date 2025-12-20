@@ -326,27 +326,25 @@ namespace Andastra.Runtime.Content.Save
         // - CatString (list of structs with "Name" field) + ValString (list of strings, indexed by CatString entry order)
         private byte[] SerializeGlobalVariables(GlobalVariableState state)
         {
-            if (state == null)
-            {
-                state = new GlobalVariableState();
-            }
+            return Andastra.Parsing.Extract.SaveData.GlobalVars.SerializeRuntimeGlobalVariableState(state);
+        }
 
-            // Use Andastra.Parsing GFF writer
-            // Original creates GFF with "GVT " signature and "V2.0" version
-            // Based on swkotor2.exe: FUN_005ab310 @ 0x005ab310 creates GFF with "GVT " signature
-            // Located via string reference: "GLOBALVARS" @ 0x007c27bc
-            // Note: Andastra.Parsing GFFBinaryWriter always writes "V3.2" version, but signature is correct
-            var gff = new GFF(GFFContent.GVT);
-            var root = gff.Root;
+        private GlobalVariableState DeserializeGlobalVariables(byte[] data)
+        {
+            return Andastra.Parsing.Extract.SaveData.GlobalVars.DeserializeRuntimeGlobalVariableState(data, typeof(GlobalVariableState)) as GlobalVariableState ?? new GlobalVariableState();
+        }
 
-            // CatBoolean list: Each entry has "Name" field
-            var catBooleanList = root.Acquire<GFFList>("CatBoolean", new GFFList());
-            var boolValues = new List<byte>();
-            foreach (KeyValuePair<string, bool> kvp in state.Booleans)
-            {
-                GFFStruct entry = catBooleanList.Add();
-                entry.SetString("Name", kvp.Key);
-                boolValues.Add(kvp.Value ? (byte)1 : (byte)0);
+        private byte[] SerializePartyTable(PartyState state)
+        {
+            return Andastra.Parsing.Extract.SaveData.PartyTable.SerializeRuntimePartyState(state);
+        }
+
+        private PartyState DeserializePartyTable(byte[] data)
+        {
+            return Andastra.Parsing.Extract.SaveData.PartyTable.DeserializeRuntimePartyState(data, typeof(PartyState)) as PartyState ?? new PartyState();
+        }
+
+        private float GetMemberId(string resRef)
             }
             // ValBoolean: Binary byte array
             if (boolValues.Count > 0)
