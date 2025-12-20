@@ -396,7 +396,7 @@ namespace Andastra.Parsing.Tests.Formats
             // Test LocName field (LocalizedString)
             var utm = new UTM();
             utm.Name = LocalizedString.FromEnglish("English Merchant Name");
-            utm.Name.Set(Language.German, Gender.Male, "Deutscher Händlername");
+            utm.Name.SetData(Language.German, Gender.Male, "Deutscher Händlername");
 
             byte[] data = UTMHelpers.BytesUtm(utm, Game.K2);
             UTM loaded = UTMHelpers.ReadUtm(data);
@@ -529,7 +529,7 @@ namespace Andastra.Parsing.Tests.Formats
             var utm = new UTM();
             utm.ResRef = new ResRef("all_fields_merchant");
             utm.Name = LocalizedString.FromEnglish("All Fields Merchant");
-            utm.Name.Set(Language.French, Gender.Female, "Marchand Tous Champs");
+            utm.Name.SetData(Language.French, Gender.Female, "Marchand Tous Champs");
             utm.Tag = "ALLFIELDS";
             utm.MarkUp = 50;
             utm.MarkDown = 40;

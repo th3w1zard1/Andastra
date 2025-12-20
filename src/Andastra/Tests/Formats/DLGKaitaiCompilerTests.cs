@@ -3,14 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Generics.DLG;
-using Andastra.Parsing.Tests.Common;
 using FluentAssertions;
 using Xunit;
 
@@ -19,7 +11,7 @@ namespace Andastra.Parsing.Tests.Formats
     /// <summary>
     /// Comprehensive tests for DLG.ksy Kaitai Struct compiler functionality.
     /// Tests compile DLG.ksy to multiple languages and validate the generated parsers work correctly.
-    /// 
+    ///
     /// Supported languages tested (at least 12 as required):
     /// - Python, Java, JavaScript, C#, C++, Ruby, PHP, Go, Rust, Perl, Lua, Nim, Swift, VisualBasic
     /// </summary>

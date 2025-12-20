@@ -588,7 +588,7 @@ namespace Andastra.Parsing.Tests.Formats
             GFF loadedGff = GFFAuto.ReadGff(data);
             UTE loaded = UTEHelpers.ConstructUte(loadedGff);
 
-            loaded.Name.StringId.Should().Be(12345);
+            loaded.Name.StringRef.Should().Be(12345);
         }
 
         [Fact(Timeout = 120000)]

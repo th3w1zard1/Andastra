@@ -356,55 +356,63 @@ namespace Andastra.Parsing.Tests.Formats
 
         private CommandResult RunKaitaiCompiler(string ksyPath, string args, string outputDir)
         {
-            var kscPath = FindKaitaiCompiler();
-            if (kscPath == null)
+            // Try different ways to invoke Kaitai Struct compiler
+            // 1. As a command (if installed via package manager)
+            var result = RunCommand("kaitai-struct-compiler", $"{args} -d \"{outputDir}\" \"{ksyPath}\"");
+
+            if (result.ExitCode == 0)
             {
-                return new CommandResult
-                {
-                    ExitCode = -1,
-                    Output = "",
-                    Error = "Kaitai Struct compiler not found"
-                };
+                return result;
             }
 
-            var fullArgs = $"{kscPath} {args} -d \"{outputDir}\" \"{ksyPath}\"";
-            return RunCommand("java", fullArgs);
-        }
+            // 2. Try with .jar extension
+            result = RunCommand("kaitai-struct-compiler.jar", $"{args} -d \"{outputDir}\" \"{ksyPath}\"");
 
-        private string FindKaitaiCompiler()
-        {
-            // Check environment variable
-            var envJar = Environment.GetEnvironmentVariable("KAITAI_COMPILER_JAR");
-            if (!string.IsNullOrEmpty(envJar) && File.Exists(envJar))
+            if (result.ExitCode == 0)
             {
-                return $"-jar \"{envJar}\"";
+                return result;
             }
 
-            // Check common locations
+            // 3. Try as Java JAR (common installation method)
+            var jarPath = FindKaitaiCompilerJar();
+            if (!string.IsNullOrEmpty(jarPath) && File.Exists(jarPath))
+            {
+                result = RunCommand("java", $"-jar \"{jarPath}\" {args} -d \"{outputDir}\" \"{ksyPath}\"");
+                return result;
+            }
+
+            // 4. Try in common installation locations
             var commonPaths = new[]
             {
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".kaitai", "kaitai-struct-compiler.jar"),
-                Path.Combine(AppContext.BaseDirectory, "kaitai-struct-compiler.jar"),
-                "kaitai-struct-compiler.jar"
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "bin", "kaitai-struct-compiler"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "kaitai-struct-compiler", "kaitai-struct-compiler.jar"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "kaitai-struct-compiler", "kaitai-struct-compiler.jar"),
             };
 
             foreach (var path in commonPaths)
             {
                 if (File.Exists(path))
                 {
-                    return $"-jar \"{Path.GetFullPath(path)}\"";
+                    if (path.EndsWith(".jar"))
+                    {
+                        result = RunCommand("java", $"-jar \"{path}\" {args} -d \"{outputDir}\" \"{ksyPath}\"");
+                    }
+                    else
+                    {
+                        result = RunCommand(path, $"{args} -d \"{outputDir}\" \"{ksyPath}\"");
+                    }
+
+                    if (result.ExitCode == 0)
+                    {
+                        return result;
+                    }
                 }
             }
 
-            // Try as command
-            var check = RunCommand("kaitai-struct-compiler", "--version");
-            if (check.ExitCode == 0)
-            {
-                return "kaitai-struct-compiler";
-            }
-
-            return null;
+            // Return the last result (which will be a failure)
+            return result;
         }
+
 
         private string FindKaitaiCompilerJar()
         {
