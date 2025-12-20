@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Formats.ERF;
+using Andastra.Parsing.Formats.GFF;
 using Andastra.Runtime.Content.Interfaces;
 
 namespace Andastra.Runtime.Content.ResourceProviders
@@ -536,16 +537,137 @@ namespace Andastra.Runtime.Content.ResourceProviders
             return null;
         }
 
+        /// <summary>
+        /// Initializes HAK files list from Module.ifo for the current module.
+        /// </summary>
+        /// <remarks>
+        /// HAK File Loading (Aurora):
+        /// - HAK files are specified in Module.ifo in two ways:
+        ///   1. Mod_HakList (preferred): List of HAK file entries (StructID 8), each with Mod_Hak field
+        ///   2. Mod_Hak (obsolete): Single semicolon-separated string of HAK filenames
+        /// - HAK files are loaded in order specified in Module.ifo
+        /// - Resources in earlier HAK files override resources in later HAK files
+        /// - HAK files are located in the "hak" directory under installation path
+        /// - HAK filenames in Module.ifo do not include the .hak extension
+        /// 
+        /// Based on nwmain.exe: CExoResMan::LoadHakFiles (needs Ghidra address verification)
+        /// - nwmain.exe: Module.ifo parsing extracts Mod_HakList or Mod_Hak field
+        /// - nwmain.exe: HAK files are loaded in order and registered with resource manager
+        /// - nwmain.exe: HAK file paths resolved from "hak" directory + filename + ".hak" extension
+        /// 
+        /// Official BioWare Documentation:
+        /// - vendor/PyKotor/wiki/Bioware-Aurora-IFO.md: Mod_HakList structure (StructID 8)
+        /// - vendor/PyKotor/wiki/Bioware-Aurora-IFO.md: Mod_Hak field (obsolete, semicolon-separated)
+        /// - HAK files are ERF format archives containing module resources
+        /// </remarks>
         private void InitializeHakFiles()
         {
+            // Clear existing HAK files list
+            _hakFiles.Clear();
+
             // HAK files are loaded per-module and specified in Module.ifo
-            // This will be populated by the module loader when a module is loaded
-            // For now, check for common HAK file locations
-            string hakPath = Path.Combine(_installationPath, "hak");
-            if (Directory.Exists(hakPath))
+            // If no module is set, HAK files list remains empty
+            if (string.IsNullOrEmpty(_currentModule))
             {
-                // TODO: Load HAK files from Module.ifo when module is loaded
-                // For now, HAK files list remains empty until module loader sets it
+                return;
+            }
+
+            try
+            {
+                // Load Module.ifo from module directory
+                string modulePath = ModulePath();
+                string moduleIfoPath = Path.Combine(modulePath, _currentModule, "Module.ifo");
+                
+                if (!File.Exists(moduleIfoPath))
+                {
+                    // Module.ifo not found - HAK files list remains empty
+                    return;
+                }
+
+                // Parse Module.ifo as GFF file
+                byte[] ifoData = File.ReadAllBytes(moduleIfoPath);
+                var gff = GFF.FromBytes(ifoData);
+                if (gff?.Root == null)
+                {
+                    // Invalid GFF - HAK files list remains empty
+                    return;
+                }
+
+                // Extract HAK file list from Module.ifo
+                // Priority: Mod_HakList (preferred) > Mod_Hak (obsolete fallback)
+                List<string> hakFileNames = new List<string>();
+
+                // Try Mod_HakList first (preferred method)
+                // Mod_HakList is a List field containing structs with StructID 8
+                // Each struct has a Mod_Hak field (CExoString) with the HAK filename (without .hak extension)
+                if (gff.Root.TryGetList("Mod_HakList", out GFFList hakList))
+                {
+                    // Iterate through HAK list entries
+                    // Based on nwmain.exe: HAK files are loaded in order specified in list
+                    // Earlier HAK files in list have higher priority (override later ones)
+                    foreach (GFFStruct hakEntry in hakList)
+                    {
+                        // Extract Mod_Hak field from each entry
+                        // Mod_Hak is a CExoString containing the HAK filename without .hak extension
+                        string hakFileName = hakEntry.GetString("Mod_Hak");
+                        if (!string.IsNullOrEmpty(hakFileName))
+                        {
+                            // Trim whitespace and add to list
+                            hakFileName = hakFileName.Trim();
+                            if (!string.IsNullOrEmpty(hakFileName))
+                            {
+                                hakFileNames.Add(hakFileName);
+                            }
+                        }
+                    }
+                }
+                // Fallback to Mod_Hak (obsolete method) if Mod_HakList doesn't exist
+                // Mod_Hak is a semicolon-separated string of HAK filenames (without .hak extension)
+                else
+                {
+                    string hakField = gff.Root.GetString("Mod_Hak");
+                    if (!string.IsNullOrEmpty(hakField))
+                    {
+                        // Split by semicolon and add each HAK filename
+                        // Based on nwmain.exe: Mod_Hak field uses semicolon as separator
+                        string[] hakNames = hakField.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+                        foreach (string hakName in hakNames)
+                        {
+                            string trimmedName = hakName.Trim();
+                            if (!string.IsNullOrEmpty(trimmedName))
+                            {
+                                hakFileNames.Add(trimmedName);
+                            }
+                        }
+                    }
+                }
+
+                // Resolve HAK file paths and add to list
+                // HAK files are located in the "hak" directory under installation path
+                // HAK filenames in Module.ifo do not include the .hak extension
+                string hakPath = HakPath();
+                if (Directory.Exists(hakPath))
+                {
+                    foreach (string hakFileName in hakFileNames)
+                    {
+                        // Construct full path: hak directory + filename + .hak extension
+                        // Based on nwmain.exe: HAK file path resolution pattern
+                        string hakFilePath = Path.Combine(hakPath, hakFileName + ".hak");
+                        
+                        // Only add HAK file if it exists
+                        // Based on nwmain.exe: Missing HAK files are skipped (not an error)
+                        if (File.Exists(hakFilePath))
+                        {
+                            _hakFiles.Add(hakFilePath);
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // On any error (file read, parsing, etc.), HAK files list remains empty
+                // This is non-fatal - module can still load without HAK files
+                _hakFiles.Clear();
             }
         }
 
