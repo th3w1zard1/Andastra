@@ -1,7 +1,37 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFrameworks></TargetFrameworks>
+    <!-- Helper to append without duplicate semicolons -->
+    <TargetFrameworks Condition="'$(TargetFrameworks)' != ''">
+      $([System.String]::Copy('$(TargetFrameworks)').TrimEnd(';').TrimStart(';'))
+    </TargetFrameworks>
+    <!-- Add each TFM conditionally -->
+    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '10.0.0'))">
+      $(TargetFrameworks);net10.0
+    </TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '9.0.0'))">
+      $(TargetFrameworks);net9.0
+    </TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '8.0.0'))">
+      $(TargetFrameworks);net8.0
+    </TargetFrameworks>
+    <!-- === .NET 7 SDK: include net7.0 + net6.0 (legacy support) === -->
+    <TargetFrameworks Condition="$([System.String]::new('$(NETCoreSdkVersion)').StartsWith('7.'))">
+      $(TargetFrameworks);net7.0;net6.0
+    </TargetFrameworks>
+    <!-- === .NET 6 SDK: include (legacy support) === -->
+    <TargetFrameworks Condition="$([System.String]::new('$(NETCoreSdkVersion)').StartsWith('6.'))">
+      $(TargetFrameworks);net6.0
+    </TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT' AND Exists('$(MSBuildProgramFiles32)\..\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8')">
+      $(TargetFrameworks);net48
+    </TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT' AND Exists('$(MSBuildProgramFiles32)\..\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2')">
+      $(TargetFrameworks);net462
+    </TargetFrameworks>
+    <!-- Ensure we always have at least one framework to avoid empty TargetFrameworks -->
+    <TargetFrameworks Condition="'$(TargetFrameworks)' == ''">net9.0</TargetFrameworks>
     <LangVersion>7.3</LangVersion>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>
@@ -19,12 +49,14 @@
 
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Andastra.Runtime.Core.csproj" />
     <ProjectReference Include="..\..\Content\Andastra.Runtime.Content.csproj" />
     <ProjectReference Include="..\..\..\Parsing\Andastra.Parsing.csproj" />
+    <ProjectReference Include="..\MonoGame\Andastra.Runtime.Graphics.MonoGame.csproj" />
   </ItemGroup>
 
   <ItemGroup>
