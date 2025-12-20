@@ -46,7 +46,8 @@ namespace Andastra.Parsing.Tests.Formats
             "perl",
             "lua",
             "nim",
-            "visualbasic"
+            "visualbasic",
+            "swift"
         };
 
         static UTMKaitaiCompilerTests()
