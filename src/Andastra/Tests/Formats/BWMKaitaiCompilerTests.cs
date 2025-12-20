@@ -11,8 +11,11 @@ using Xunit;
 namespace Andastra.Parsing.Tests.Formats
 {
     /// <summary>
-    /// Comprehensive tests for Kaitai Struct compiler functionality with BWM.ksy.
-    /// Tests compilation to multiple target languages and verifies compiler output.
+    /// Comprehensive tests for BWM.ksy Kaitai Struct compiler functionality.
+    /// Tests compile BWM.ksy to multiple languages and validate the generated parsers work correctly.
+    ///
+    /// Supported languages tested (14 total, at least 12 as required):
+    /// - Python, Java, JavaScript, C#, C++, Ruby, PHP, Go, Rust, Perl, Lua, Nim, Swift, VisualBasic
     /// </summary>
     public class BWMKaitaiCompilerTests
     {
@@ -237,7 +240,7 @@ namespace Andastra.Parsing.Tests.Formats
                         $"Language {success.Key} should generate output files. Found: {string.Join(", ", files.Select(Path.GetFileName))}");
 
                     // Verify at least one parser file was generated (language-specific patterns)
-            var hasParserFile = files.Any(f => 
+            var hasParserFile = files.Any(f =>
                 f.Contains("bwm") || f.Contains("Bwm") || f.Contains("BWM") ||
                 f.EndsWith(".py") || f.EndsWith(".java") || f.EndsWith(".js") ||
                 f.EndsWith(".cs") || f.EndsWith(".cpp") || f.EndsWith(".h") ||
@@ -325,7 +328,7 @@ namespace Andastra.Parsing.Tests.Formats
                 $"Language {language} should generate parser files. Found: {string.Join(", ", files.Select(Path.GetFileName))}");
 
             // Verify at least one parser file matches language-specific patterns
-            var hasParserFile = files.Any(f => 
+            var hasParserFile = files.Any(f =>
                 f.Contains("bwm") || f.Contains("Bwm") || f.Contains("BWM") ||
                 f.EndsWith(".py") || f.EndsWith(".java") || f.EndsWith(".js") ||
                 f.EndsWith(".cs") || f.EndsWith(".cpp") || f.EndsWith(".h") ||
