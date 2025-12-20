@@ -13,6 +13,7 @@
     <IsPackable>false</IsPackable>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <TargetFrameworks></TargetFrameworks>
     <!-- Helper to append without duplicate semicolons -->
     <TargetFrameworks Condition="'$(TargetFrameworks)' != ''">
@@ -73,6 +74,8 @@
     <PackageReference Include="System.Reactive" Version="6.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Markdig" Version="0.37.0" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
+    <PackageReference Include="System.Windows.Extensions" Version="9.0.0" />
   </ItemGroup>
 
   <ItemGroup>

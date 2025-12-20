@@ -397,7 +397,7 @@ namespace HolocronToolset.Dialogs
                     "No Release Found",
                     "No toolset releases found?",
                     ButtonEnum.Ok,
-                    Icon.Information);
+                    MsBox.Avalonia.Enums.Icon.Information);
                 msgBox.ShowAsync();
                 return;
             }
@@ -421,7 +421,7 @@ namespace HolocronToolset.Dialogs
                     "Select a release",
                     "No release selected, select one first.",
                     ButtonEnum.Ok,
-                    Icon.Information);
+                    MsBox.Avalonia.Enums.Icon.Information);
                 msgBox.ShowAsync();
                 return;
             }
@@ -484,7 +484,7 @@ namespace HolocronToolset.Dialogs
                     "No Asset Found",
                     $"There are no binaries available for download for release '{releaseObj["tag_name"]?.Value<string>() ?? "unknown"}'.",
                     ButtonEnum.Ok,
-                    Icon.Warning);
+                    MsBox.Avalonia.Enums.Icon.Warning);
                 msgBox.ShowAsync();
                 return;
             }
@@ -505,7 +505,7 @@ namespace HolocronToolset.Dialogs
                             "Update Not Available",
                             "The update process is not yet fully implemented. Please download and install updates manually.",
                             ButtonEnum.Ok,
-                            Icon.Information);
+                            MsBox.Avalonia.Enums.Icon.Information);
                         msgBox.ShowAsync();
                     });
                 }
@@ -517,7 +517,7 @@ namespace HolocronToolset.Dialogs
                             "Update Error",
                             $"An error occurred while starting the update: {ex.Message}",
                             ButtonEnum.Ok,
-                            Icon.Error);
+                            MsBox.Avalonia.Enums.Icon.Error);
                         msgBox.ShowAsync();
                     });
                 }

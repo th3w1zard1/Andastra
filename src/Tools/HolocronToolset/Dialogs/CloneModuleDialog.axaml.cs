@@ -316,13 +316,13 @@ namespace HolocronToolset.Dialogs
         private void Ok()
         {
             // Validate that a module is selected
-            if (_moduleSelect?.SelectedItem is not ModuleOption option)
+            if (!(_moduleSelect?.SelectedItem is ModuleOption option))
             {
                 var errorBox = MessageBoxManager.GetMessageBoxStandard(
                     "Error",
                     "Please select a module to clone.",
                     ButtonEnum.Ok,
-                    Icon.Error);
+                    MsBox.Avalonia.Enums.Icon.Error);
                 errorBox.ShowAsync();
                 return;
             }
@@ -334,7 +334,7 @@ namespace HolocronToolset.Dialogs
                     "Error",
                     "Invalid installation selected.",
                     ButtonEnum.Ok,
-                    Icon.Error);
+                    MsBox.Avalonia.Enums.Icon.Error);
                 errorBox.ShowAsync();
                 return;
             }
@@ -346,7 +346,7 @@ namespace HolocronToolset.Dialogs
                     "Error",
                     "Invalid module root selected.",
                     ButtonEnum.Ok,
-                    Icon.Error);
+                    MsBox.Avalonia.Enums.Icon.Error);
                 errorBox.ShowAsync();
                 return;
             }
@@ -359,7 +359,7 @@ namespace HolocronToolset.Dialogs
                     "Error",
                     "Please enter a module filename.",
                     ButtonEnum.Ok,
-                    Icon.Error);
+                    MsBox.Avalonia.Enums.Icon.Error);
                 errorBox.ShowAsync();
                 return;
             }
@@ -371,7 +371,7 @@ namespace HolocronToolset.Dialogs
                     "Error",
                     "Module filename must be 16 characters or less.",
                     ButtonEnum.Ok,
-                    Icon.Error);
+                    MsBox.Avalonia.Enums.Icon.Error);
                 errorBox.ShowAsync();
                 return;
             }
@@ -383,7 +383,7 @@ namespace HolocronToolset.Dialogs
                     "Error",
                     "Please enter a module prefix.",
                     ButtonEnum.Ok,
-                    Icon.Error);
+                    MsBox.Avalonia.Enums.Icon.Error);
                 errorBox.ShowAsync();
                 return;
             }
@@ -395,7 +395,7 @@ namespace HolocronToolset.Dialogs
                     "Error",
                     "Module prefix must be 3 characters or less.",
                     ButtonEnum.Ok,
-                    Icon.Error);
+                    MsBox.Avalonia.Enums.Icon.Error);
                 errorBox.ShowAsync();
                 return;
             }
@@ -407,7 +407,7 @@ namespace HolocronToolset.Dialogs
                     "Error",
                     "Please enter a module name.",
                     ButtonEnum.Ok,
-                    Icon.Error);
+                    MsBox.Avalonia.Enums.Icon.Error);
                 errorBox.ShowAsync();
                 return;
             }
@@ -428,7 +428,7 @@ namespace HolocronToolset.Dialogs
                     "This may take a while",
                     "You have selected to create copies of the texture. This process may add a few extra minutes to the waiting time.",
                     ButtonEnum.Ok,
-                    Icon.Info);
+                    MsBox.Avalonia.Enums.Icon.Info);
                 // Show the warning - user must acknowledge before proceeding
                 // In a full implementation, we'd await this, but for now we'll show it
                 // and let the async loader start after user acknowledges
@@ -486,7 +486,7 @@ namespace HolocronToolset.Dialogs
                 "Clone Successful",
                 $"You can now warp to the cloned module '{identifier}'.",
                 ButtonEnum.Ok,
-                Icon.Success);
+                MsBox.Avalonia.Enums.Icon.Success);
             successBox.ShowAsync();
 
             // Close the dialog

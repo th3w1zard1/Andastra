@@ -355,8 +355,8 @@ namespace HolocronToolset.Editors
                     gameToUse = Game.DA;
                 }
                 var cnv = DLGHelper.ToCnv(_coreDlg);
-                byte[] data = CNVHelper.BytesCnv(cnv, gameToUse, ResourceType.CNV);
-                return Tuple.Create(data, new byte[0]);
+                byte[] cnvData = CNVHelper.BytesCnv(cnv, gameToUse, ResourceType.CNV);
+                return Tuple.Create(cnvData, new byte[0]);
             }
 
             // Detect game from installation - supports all engines (Odyssey K1/K2, Aurora NWN, Eclipse DA/DA2/ME)
@@ -1181,7 +1181,15 @@ namespace HolocronToolset.Editors
 
                 // Update the model's selected index to track the new selection
                 var rootItems = _model.GetRootItems();
-                int newIndex = rootItems.IndexOf(newItem);
+                int newIndex = -1;
+                for (int i = 0; i < rootItems.Count; i++)
+                {
+                    if (rootItems[i] == newItem)
+                    {
+                        newIndex = i;
+                        break;
+                    }
+                }
                 if (newIndex >= 0)
                 {
                     _model.SelectedIndex = newIndex;
@@ -1270,7 +1278,7 @@ namespace HolocronToolset.Editors
                         if (!parentWindow.IsVisible || !parentWindow.IsEnabled)
                         {
                             // Use active window as fallback if parent is not in a good state
-                            var activeWindow = Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+                            var activeWindow = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
                                 ? desktop.MainWindow
                                 : null;
                             if (activeWindow != null)
@@ -1283,7 +1291,7 @@ namespace HolocronToolset.Editors
                 catch (Exception)
                 {
                     // Window is being destroyed or invalid, use active window or this window as fallback
-                    var activeWindow = Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+                    var activeWindow = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
                         ? desktop.MainWindow
                         : null;
                     if (activeWindow != null)
@@ -2840,13 +2848,13 @@ namespace HolocronToolset.Editors
                 var rootItems = _model?.GetRootItems();
                 if (rootItems != null)
                 {
-                    var seenNodes = new HashSet<DLGNode>();
+                    var rootSeenNodes = new HashSet<DLGNode>();
                     foreach (var rootItem in rootItems)
                     {
                         TreeViewItem rootTreeItem = FindTreeViewItem(_dialogTree.ItemsSource as System.Collections.IEnumerable, rootItem);
                         if (rootTreeItem != null)
                         {
-                            SetExpandRecursivelyInternal(rootItem, rootTreeItem, seenNodes, expand, maxDepth, 0, true);
+                            SetExpandRecursivelyInternal(rootItem, rootTreeItem, rootSeenNodes, expand, maxDepth, 0, true);
                         }
                     }
                 }
@@ -3599,7 +3607,7 @@ namespace HolocronToolset.Editors
         /// Original: def update_item_display_text(self, item: DLGStandardItem, *, update_copies: bool = True)
         /// </summary>
         /// <param name="item">The DLGStandardItem to update.</param>
-        private void UpdateItemDisplayText(DLGStandardItem item)
+        public void UpdateItemDisplayText(DLGStandardItem item)
         {
             if (item == null || item.Link == null)
             {
@@ -3612,7 +3620,10 @@ namespace HolocronToolset.Editors
             // In a more optimized implementation, we would update just the specific tree view item's header
             
             // Update the tree view to reflect changes
-            UpdateTreeView();
+            if (_editor != null)
+            {
+                _editor.UpdateTreeView();
+            }
         }
 
         /// <summary>

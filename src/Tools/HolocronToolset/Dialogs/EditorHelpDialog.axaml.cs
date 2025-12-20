@@ -4,8 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
+using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Layout;
@@ -455,14 +457,14 @@ namespace HolocronToolset.Dialogs
                     }
 
                     // Create new TextBlock for text
-                    var textBlock = new TextBlock
+                    var newTextBlock = new TextBlock
                     {
                         Text = text,
                         TextWrapping = TextWrapping.Wrap,
                         Margin = new Thickness(0, 0, 0, 4)
                     };
-                    ApplyTextStyles(node, textBlock);
-                    parent.Children.Add(textBlock);
+                    ApplyTextStyles(node, newTextBlock);
+                    parent.Children.Add(newTextBlock);
                 }
                 return;
             }
@@ -554,16 +556,31 @@ namespace HolocronToolset.Dialogs
             };
 
             // Set font size based on heading level
-            double fontSize = level switch
+            double fontSize;
+            switch (level)
             {
-                "h1" => 32,
-                "h2" => 24,
-                "h3" => 20,
-                "h4" => 18,
-                "h5" => 16,
-                "h6" => 14,
-                _ => 16
-            };
+                case "h1":
+                    fontSize = 32;
+                    break;
+                case "h2":
+                    fontSize = 24;
+                    break;
+                case "h3":
+                    fontSize = 20;
+                    break;
+                case "h4":
+                    fontSize = 18;
+                    break;
+                case "h5":
+                    fontSize = 16;
+                    break;
+                case "h6":
+                    fontSize = 14;
+                    break;
+                default:
+                    fontSize = 16;
+                    break;
+            }
 
             heading.FontSize = fontSize;
             heading.FontWeight = FontWeight.SemiBold;

@@ -1430,10 +1430,10 @@ namespace HolocronToolset.Dialogs
             else if (selectedItem is string tokenName)
             {
                 // Try to find by token name
-                string twodaFile = _twodaList.SelectedItem as string;
-                if (!string.IsNullOrEmpty(twodaFile) && _twodaMemoryTokens.ContainsKey(twodaFile))
+                string selectedTwodaFile = _twodaList.SelectedItem as string;
+                if (!string.IsNullOrEmpty(selectedTwodaFile) && _twodaMemoryTokens.ContainsKey(selectedTwodaFile))
                 {
-                    tokenEntry = _twodaMemoryTokens[twodaFile].FirstOrDefault(t => t.TokenName == tokenName);
+                    tokenEntry = _twodaMemoryTokens[selectedTwodaFile].FirstOrDefault(t => t.TokenName == tokenName);
                 }
             }
             
