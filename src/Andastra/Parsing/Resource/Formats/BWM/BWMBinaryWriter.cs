@@ -240,8 +240,12 @@ namespace Andastra.Parsing.Formats.BWM
                     bw.Write((uint)4);
                     bw.Write((uint)(int)aabb.Sigplane);
                     // Find AABB indices by object identity
-                    uint leftIdx = aabb.Left == null ? 0xFFFFFFFF : (uint)(FindAabbIndex(aabb.Left, aabbs) + 1);
-                    uint rightIdx = aabb.Right == null ? 0xFFFFFFFF : (uint)(FindAabbIndex(aabb.Right, aabbs) + 1);
+                    // CRITICAL FIX: Use 0-based indices (not 1-based) for AABB children
+                    // The game engine (swkotor.exe/swkotor2.exe) reads these as direct array indices.
+                    // Reference: vendor/reone/src/libs/graphics/format/bwmreader.cpp:164-167
+                    // Reference: wiki/BWM-File-Format.md - AABB Tree section - Vendor Discrepancy
+                    uint leftIdx = aabb.Left == null ? 0xFFFFFFFF : (uint)FindAabbIndex(aabb.Left, aabbs);
+                    uint rightIdx = aabb.Right == null ? 0xFFFFFFFF : (uint)FindAabbIndex(aabb.Right, aabbs);
                     bw.Write(leftIdx);
                     bw.Write(rightIdx);
                 }
