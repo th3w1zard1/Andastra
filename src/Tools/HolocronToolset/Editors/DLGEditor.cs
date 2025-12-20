@@ -1242,12 +1242,177 @@ namespace HolocronToolset.Editors
         }
 
         /// <summary>
-        /// Jumps to the original node.
-        /// Matching PyKotor implementation: self.jump_to_original(selected_item)
+        /// Jumps to the original node of a copied item.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1489-1510
+        /// Original: def jump_to_original(self, copied_item: DLGStandardItem):
+        /// Searches through the entire dialog tree to find the original node that matches the copied item's node,
+        /// then expands the tree and selects the original item.
         /// </summary>
         private void JumpToOriginal()
         {
-            // TODO: PLACEHOLDER - Implement jump_to_original when reference system is implemented
+            // Get the currently selected item
+            DLGStandardItem selectedItem = null;
+            var treeSelectedItem = _dialogTree?.SelectedItem;
+            if (treeSelectedItem is TreeViewItem treeItem && treeItem.Tag is DLGStandardItem dlgItem)
+            {
+                selectedItem = dlgItem;
+            }
+            else if (treeSelectedItem is DLGStandardItem dlgItemDirect)
+            {
+                selectedItem = dlgItemDirect;
+            }
+
+            if (selectedItem?.Link == null)
+            {
+                return;
+            }
+
+            // Get the source node from the selected item's link
+            DLGNode sourceNode = selectedItem.Link.Node;
+            if (sourceNode == null)
+            {
+                return;
+            }
+
+            // Get the link from the selected item to avoid finding the same item
+            DLGLink selectedLink = selectedItem.Link;
+
+            // Perform breadth-first search through the entire dialog tree to find the original node
+            // Matching PyKotor: items: deque[DLGStandardItem | QStandardItem | None] = deque([self.model.item(i, 0) for i in range(self.model.rowCount())])
+            var items = new Queue<DLGStandardItem>();
+            var rootItems = _model.GetRootItems();
+            foreach (var rootItem in rootItems)
+            {
+                items.Enqueue(rootItem);
+            }
+
+            DLGStandardItem foundItem = null;
+            while (items.Count > 0)
+            {
+                DLGStandardItem item = items.Dequeue();
+                if (item?.Link == null)
+                {
+                    continue;
+                }
+
+                // Check if this item's node matches the source node
+                // Matching PyKotor: if item.link.node == source_node:
+                // Also check that this is a different link (not the same one we started with)
+                // This ensures we find a different reference to the same node (the "original")
+                if (item.Link.Node == sourceNode && item.Link != selectedLink)
+                {
+                    foundItem = item;
+                    break;
+                }
+
+                // Add all children to the queue for breadth-first search
+                // Matching PyKotor: items.extend([item.child(i, 0) for i in range(item.rowCount())])
+                foreach (var child in item.Children)
+                {
+                    items.Enqueue(child);
+                }
+            }
+
+            // If we didn't find a different link, try finding any link (fallback behavior)
+            // This handles the case where there's only one link pointing to the node
+            if (foundItem == null)
+            {
+                // Reset the queue
+                items.Clear();
+                foreach (var rootItem in rootItems)
+                {
+                    items.Enqueue(rootItem);
+                }
+
+                while (items.Count > 0)
+                {
+                    DLGStandardItem item = items.Dequeue();
+                    if (item?.Link == null)
+                    {
+                        continue;
+                    }
+
+                    if (item.Link.Node == sourceNode)
+                    {
+                        foundItem = item;
+                        break;
+                    }
+
+                    foreach (var child in item.Children)
+                    {
+                        items.Enqueue(child);
+                    }
+                }
+            }
+
+            if (foundItem != null)
+            {
+                // Expand to root and select the found item
+                // Matching PyKotor: self.expand_to_root(item), self.ui.dialogTree.setCurrentIndex(item.index())
+                ExpandToRoot(foundItem);
+                HighlightResult(foundItem);
+            }
+            else
+            {
+                // Matching PyKotor: self._logger.error(f"Failed to find original node for node {source_node!r}")
+                // In a full implementation, we would log this error
+                // For now, we silently fail (matching the behavior when logging is not available)
+            }
+        }
+
+        /// <summary>
+        /// Expands all parent items to make the specified item visible.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1480-1487
+        /// Original: def expand_to_root(self, item: DLGStandardItem):
+        /// </summary>
+        /// <param name="item">The item whose parents should be expanded.</param>
+        private void ExpandToRoot(DLGStandardItem item)
+        {
+            if (item == null || _dialogTree == null)
+            {
+                return;
+            }
+
+            // Find the TreeViewItem corresponding to this DLGStandardItem
+            TreeViewItem treeItem = FindTreeViewItem(_dialogTree.ItemsSource as System.Collections.IEnumerable, item);
+            if (treeItem != null)
+            {
+                // Expand all parent items
+                ExpandParentItems(treeItem);
+            }
+        }
+
+        /// <summary>
+        /// Highlights and scrolls to the specified item in the dialog tree.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:659-676
+        /// Original: def highlight_result(self, item: DLGStandardItem):
+        /// </summary>
+        /// <param name="item">The item to highlight.</param>
+        private void HighlightResult(DLGStandardItem item)
+        {
+            if (item == null || _dialogTree == null)
+            {
+                return;
+            }
+
+            // Find the TreeViewItem corresponding to this DLGStandardItem
+            TreeViewItem treeItem = FindTreeViewItem(_dialogTree.ItemsSource as System.Collections.IEnumerable, item);
+            if (treeItem != null)
+            {
+                // Expand all parent items to ensure the item is visible
+                ExpandParentItems(treeItem);
+
+                // Select the item
+                _dialogTree.SelectedItem = treeItem;
+
+                // Focus the tree view
+                _dialogTree.Focus();
+
+                // Scroll to the item to make it visible
+                // Note: Avalonia TreeView doesn't have a direct ScrollTo method like Qt,
+                // but selecting the item and expanding parents should make it visible
+                // In a full implementation, we might need to use BringIntoView or similar
+            }
         }
 
         /// <summary>
