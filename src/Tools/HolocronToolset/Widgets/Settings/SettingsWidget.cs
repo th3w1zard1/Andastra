@@ -161,10 +161,65 @@ namespace HolocronToolset.Widgets.Settings
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/base.py:96-100
         // Original: def _reset_and_get_default(self, settingName: str) -> Any:
+        /// <summary>
+        /// Resets a bind setting to its default value and returns the default.
+        /// 
+        /// This method uses the SettingsProperty system to reset the setting and retrieve
+        /// its default value. If the SettingsProperty system is not available for this setting,
+        /// it falls back to returning an empty bind tuple.
+        /// 
+        /// Matching PyKotor: _reset_and_get_default() in base.py
+        /// </summary>
+        /// <param name="settingName">The name of the bind setting to reset.</param>
+        /// <returns>The default bind value (tuple of Key set and PointerUpdateKind set).</returns>
         private Tuple<HashSet<Key>, HashSet<PointerUpdateKind>> ResetAndGetDefaultBind(string settingName)
         {
-            // TODO: Reset setting and get default when SettingsProperty system is fully available
-            return Tuple.Create(new HashSet<Key>(), new HashSet<PointerUpdateKind>());
+            try
+            {
+                // Reset the setting to its default value
+                _settings.ResetSetting(settingName);
+                
+                // Get the default value from the SettingsProperty system
+                object defaultValue = _settings.GetDefault(settingName);
+                System.Console.WriteLine($"Due to last error, will use default value '{defaultValue}'");
+                
+                // Convert default value to bind tuple
+                if (defaultValue is Tuple<HashSet<Key>, HashSet<PointerUpdateKind>> bindValue)
+                {
+                    return bindValue;
+                }
+                
+                // Try to deserialize if it's stored as a different format
+                // This handles cases where the value might be stored as JSON or another format
+                if (defaultValue != null)
+                {
+                    try
+                    {
+                        // Try to convert using GetValue with the expected type
+                        var convertedValue = _settings.GetValue<Tuple<HashSet<Key>, HashSet<PointerUpdateKind>>>(settingName, null);
+                        if (convertedValue != null)
+                        {
+                            return convertedValue;
+                        }
+                    }
+                    catch
+                    {
+                        // Conversion failed, fall through to default
+                    }
+                }
+                
+                // If default is not a bind tuple, return empty bind as fallback
+                System.Console.WriteLine($"Warning: Default value for '{settingName}' is not a bind tuple, using empty bind");
+                return Tuple.Create(new HashSet<Key>(), new HashSet<PointerUpdateKind>());
+            }
+            catch (Exception ex)
+            {
+                // If ResetSetting or GetDefault fails (e.g., property doesn't use SettingsProperty system),
+                // return empty bind as fallback
+                System.Console.WriteLine($"Error resetting bind setting '{settingName}': {ex.Message}");
+                System.Console.WriteLine($"Warning: SettingsProperty system not available for '{settingName}', using empty bind as fallback");
+                return Tuple.Create(new HashSet<Key>(), new HashSet<PointerUpdateKind>());
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/base.py:96-100
