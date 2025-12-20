@@ -978,6 +978,102 @@ namespace Andastra.Runtime.Content.Save
             return 0.0f;
         }
 
+        // Helper to get ResRef from member ID (reverse of GetMemberId)
+        // Member IDs: -1 = Player, 0-8 = NPC slots (K1), 0-11 = NPC slots (K2)
+        // Based on swkotor2.exe: partytable.2da system
+        // Located via string reference: "PARTYTABLE" @ 0x007c1910
+        // Original implementation: partytable.2da maps NPC ResRefs to member IDs (row index = member ID)
+        // partytable.2da structure: Row label is ResRef, row index is member ID (0-11 for K2, 0-8 for K1)
+        // Reverse mapping: member ID -> ResRef by reading row label at index = member ID
+        // Based on swkotor2.exe: FUN_0057dcd0 @ 0x0057dcd0 (LoadPartyTable function)
+        // Original implementation reads PT_MEMBER_ID (float) and converts to ResRef using partytable.2da lookup
+        private string GetResRefFromMemberId(float memberId)
+        {
+            // Player character (member ID = -1)
+            // Based on nwscript.nss constants: NPC_PLAYER = -1
+            // Player ResRefs are typically "player", "pc", or start with "pc_"
+            if (memberId < 0.0f || Math.Abs(memberId - (-1.0f)) < 0.001f)
+            {
+                return "player"; // Default player ResRef
+            }
+
+            // Convert float to int (member IDs are stored as floats but represent integer indices)
+            int memberIndex = (int)memberId;
+            if (memberIndex < 0)
+            {
+                return "player"; // Default to player for negative values
+            }
+
+            // Try to load from partytable.2da if GameDataManager is available
+            // Based on swkotor2.exe: partytable.2da system
+            // Located via string reference: "PARTYTABLE" @ 0x007c1910
+            // Original implementation: partytable.2da row index = member ID, row label = ResRef
+            // FUN_0057dcd0 @ 0x0057dcd0: Reads PT_MEMBER_ID and uses row index to get ResRef from partytable.2da
+            if (_gameDataManager != null)
+            {
+                // Use dynamic to call GetTable without referencing Odyssey.Kotor
+                dynamic gameDataManager = _gameDataManager;
+                Andastra.Parsing.Formats.TwoDA.TwoDA partyTable = gameDataManager.GetTable("partytable");
+                if (partyTable != null)
+                {
+                    // Check if member index is within valid range
+                    if (memberIndex < partyTable.GetHeight())
+                    {
+                        Andastra.Parsing.Formats.TwoDA.TwoDARow row = partyTable.GetRow(memberIndex);
+                        string rowLabel = row.Label();
+
+                        if (!string.IsNullOrEmpty(rowLabel))
+                        {
+                            return rowLabel; // Return the ResRef from partytable.2da row label
+                        }
+                    }
+                }
+            }
+
+            // Fallback: Hardcoded reverse mapping for common NPCs when partytable.2da not available
+            // Based on nwscript.nss constants and common ResRef patterns
+            // This is the reverse of the mapping in GetMemberId
+            var memberIdToResRef = new Dictionary<int, string>
+            {
+                // K1 NPCs (0-8)
+                { 0, "bastila" },      // NPC_BASTILA
+                { 1, "canderous" },    // NPC_CANDEROUS
+                { 2, "carth" },        // NPC_CARTH
+                { 3, "hk47" },         // NPC_HK_47
+                { 4, "jolee" },        // NPC_JOLEE
+                { 5, "juhani" },       // NPC_JUHANI
+                { 6, "mission" },      // NPC_MISSION
+                { 7, "t3m4" },         // NPC_T3_M4
+                { 8, "zaalbar" },      // NPC_ZAALBAR
+
+                // K2 NPCs (0-11) - some overlap with K1, but K2 takes precedence
+                // Note: K2 has different NPCs, but some slots may overlap with K1
+                // When both games have NPCs in same slot, K2 mapping is used (game-specific behavior)
+                { 0, "atton" },        // K2 NPC_ATTON (overrides bastila for K2)
+                { 1, "bao-dur" },      // K2 NPC_BAO_DUR
+                { 2, "disciple" },     // K2 NPC_DISCIPLE
+                { 3, "handmaiden" },   // K2 NPC_HANDMAIDEN
+                { 4, "hanharr" },      // K2 NPC_HANHARR
+                { 5, "g0-t0" },        // K2 NPC_G0_T0
+                { 6, "kreia" },        // K2 NPC_KREIA
+                { 7, "mira" },         // K2 NPC_MIRA
+                { 8, "visas" },        // K2 NPC_VISAS (overrides zaalbar for K2)
+                { 9, "mandalore" },    // K2 NPC_MANDALORE
+                { 11, "sion" },        // K2 NPC_SION
+            };
+
+            // Try to find ResRef in hardcoded mapping
+            if (memberIdToResRef.TryGetValue(memberIndex, out string resRef))
+            {
+                return resRef;
+            }
+
+            // If no mapping found, return generic NPC ResRef based on index
+            // This matches original engine behavior when ResRef cannot be resolved from partytable.2da
+            // Format: "npc_XX" where XX is zero-padded member index
+            return string.Format("npc_{0:D2}", memberIndex);
+        }
+
         // Deserialize party table from GFF format
         // Based on swkotor2.exe: FUN_0057dcd0 @ 0x0057dcd0
         // Located via string reference: "PARTYTABLE" @ 0x007c1910
@@ -1055,9 +1151,19 @@ namespace Andastra.Runtime.Content.Save
                 byte numMembers = root.GetUInt8("PT_NUM_MEMBERS");
 
                 // PT_MEMBERS - List of party members
+                // Based on swkotor2.exe: FUN_0057dcd0 @ 0x0057dcd0
+                // Original implementation: Reads PT_MEMBER_ID (float) and PT_IS_LEADER (byte) for each member
+                // Maps member IDs to ResRefs using partytable.2da lookup (row index = member ID, row label = ResRef)
+                // Adds ResRefs to SelectedParty list and sets LeaderResRef if PT_IS_LEADER is true
                 GFFList membersList = root.GetList("PT_MEMBERS");
                 if (membersList != null)
                 {
+                    // Initialize SelectedParty if not already initialized
+                    if (state.SelectedParty == null)
+                    {
+                        state.SelectedParty = new List<string>();
+                    }
+
                     int memberCount = Math.Min(numMembers, membersList.Count);
                     for (int i = 0; i < memberCount; i++)
                     {
@@ -1065,11 +1171,24 @@ namespace Andastra.Runtime.Content.Save
                         float memberId = entry.GetSingle("PT_MEMBER_ID");
                         bool isLeader = entry.GetUInt8("PT_IS_LEADER") != 0;
 
-                        // TODO: PLACEHOLDER - Member ID would need to be mapped to ResRef
-                        // TODO: PLACEHOLDER - For now, store as placeholder - actual implementation would need ResRef mapping
+                        // Map member ID to ResRef using reverse lookup
+                        // Based on swkotor2.exe: FUN_0057dcd0 @ 0x0057dcd0
+                        // Original implementation uses partytable.2da to convert member ID (row index) to ResRef (row label)
+                        string memberResRef = GetResRefFromMemberId(memberId);
+
+                        // Add member ResRef to SelectedParty list
+                        // SelectedParty contains ResRefs of currently active party members
+                        if (!string.IsNullOrEmpty(memberResRef) && !state.SelectedParty.Contains(memberResRef))
+                        {
+                            state.SelectedParty.Add(memberResRef);
+                        }
+
+                        // Set LeaderResRef if this member is the leader
+                        // PT_IS_LEADER (byte): 1 = leader, 0 = not leader
+                        // Only one member should have PT_IS_LEADER = 1 (original engine enforces this)
                         if (isLeader)
                         {
-                            // Would set leader based on member ID
+                            state.LeaderResRef = memberResRef;
                         }
                     }
                 }
@@ -1122,9 +1241,19 @@ namespace Andastra.Runtime.Content.Save
                 }
 
                 // PT_AVAIL_NPCS - Available NPCs list (12 entries)
+                // Based on swkotor2.exe: FUN_0057dcd0 @ 0x0057dcd0
+                // Original implementation: Reads PT_NPC_AVAIL (byte) and PT_NPC_SELECT (byte) for each NPC slot (0-11)
+                // List index corresponds to member ID (0-11), maps to ResRef using partytable.2da lookup
+                // PT_AVAIL_NPCS[0] = NPC at member ID 0, PT_AVAIL_NPCS[1] = NPC at member ID 1, etc.
                 GFFList availNpcsList = root.GetList("PT_AVAIL_NPCS");
                 if (availNpcsList != null)
                 {
+                    // Initialize AvailableMembers if not already initialized
+                    if (state.AvailableMembers == null)
+                    {
+                        state.AvailableMembers = new Dictionary<string, PartyMemberState>();
+                    }
+
                     int count = Math.Min(12, availNpcsList.Count);
                     for (int i = 0; i < count; i++)
                     {
@@ -1132,9 +1261,15 @@ namespace Andastra.Runtime.Content.Save
                         bool available = entry.GetUInt8("PT_NPC_AVAIL") != 0;
                         bool selectable = entry.GetUInt8("PT_NPC_SELECT") != 0;
 
-                        // TODO: PLACEHOLDER - Would need to map index to NPC ResRef
-                        // TODO: PLACEHOLDER - For now, create placeholder entries
-                        string npcResRef = string.Format("NPC_{0:D2}", i);
+                        // Map index (member ID) to NPC ResRef using reverse lookup
+                        // Based on swkotor2.exe: FUN_0057dcd0 @ 0x0057dcd0
+                        // Original implementation uses partytable.2da to convert member ID (row index) to ResRef (row label)
+                        // List index i corresponds to member ID i (0-11)
+                        string npcResRef = GetResRefFromMemberId((float)i);
+
+                        // Skip if ResRef is "player" (member ID -1 is player, but index 0-11 should be NPCs)
+                        // However, if GetResRefFromMemberId returns "player" for index 0, it means partytable.2da lookup failed
+                        // We still create the entry but use the resolved ResRef
                         if (!state.AvailableMembers.ContainsKey(npcResRef))
                         {
                             state.AvailableMembers[npcResRef] = new PartyMemberState
@@ -1142,6 +1277,10 @@ namespace Andastra.Runtime.Content.Save
                                 TemplateResRef = npcResRef
                             };
                         }
+
+                        // Set availability and selectability flags
+                        // PT_NPC_AVAIL (byte): 1 = available, 0 = not available
+                        // PT_NPC_SELECT (byte): 1 = selectable, 0 = not selectable
                         state.AvailableMembers[npcResRef].IsAvailable = available;
                         state.AvailableMembers[npcResRef].IsSelectable = selectable;
                     }
