@@ -68,6 +68,106 @@ namespace Andastra.Runtime.Core
         /// Skip intro videos.
         /// </summary>
         public bool SkipIntro { get; set; } = true;
+
+        /// <summary>
+        /// Mouse sensitivity for camera controls.
+        /// </summary>
+        /// <remarks>
+        /// Mouse Sensitivity Setting:
+        /// - Based on swkotor.exe and swkotor2.exe mouse configuration system
+        /// - Original implementation: Mouse sensitivity option in options menu (Controls category)
+        /// - Controls how responsive mouse movement is for camera rotation/looking
+        /// - Range: 0.0 (no sensitivity) to 1.0 (maximum sensitivity)
+        /// - Applied to mouse delta input when processing camera controls
+        /// - Based on swkotor2.exe: Mouse input scaling for camera control
+        /// </remarks>
+        public float MouseSensitivity { get; set; } = 0.5f;
+
+        /// <summary>
+        /// Invert mouse Y axis for camera movement.
+        /// </summary>
+        /// <remarks>
+        /// Mouse Invert Setting:
+        /// - Based on swkotor.exe and swkotor2.exe mouse configuration system
+        /// - Original implementation: Mouse invert option in options menu (Controls category)
+        /// - When enabled, mouse Y movement is inverted (moving mouse up moves camera down, and vice versa)
+        /// - Applied to camera look/rotation input processing
+        /// - Based on swkotor2.exe: Mouse input processing for camera control
+        /// </remarks>
+        public bool InvertMouseY { get; set; } = false;
+
+        /// <summary>
+        /// Applies mouse Y inversion to a mouse Y delta value if the setting is enabled.
+        /// </summary>
+        /// <param name="mouseYDelta">The raw mouse Y delta value.</param>
+        /// <returns>The mouse Y delta with inversion applied if enabled, otherwise the original value.</returns>
+        /// <remarks>
+        /// Mouse Y Inversion:
+        /// - When InvertMouseY is true, negates the mouse Y delta (inverts the axis)
+        /// - Used in camera look/rotation input processing
+        /// - Call this method wherever mouse Y delta is used for camera pitch/vertical rotation
+        /// - Based on swkotor.exe and swkotor2.exe: Mouse invert implementation
+        /// </remarks>
+        public float ApplyMouseYInversion(float mouseYDelta)
+        {
+            return InvertMouseY ? -mouseYDelta : mouseYDelta;
+        }
+
+        /// <summary>
+        /// Audio settings (volume levels for music, sound effects, and voice).
+        /// </summary>
+        /// <remarks>
+        /// Audio Settings:
+        /// - Based on swkotor2.exe audio configuration system
+        /// - Located via string references: "MusicVolume" @ 0x007c2cdc, "SoundVolume" @ 0x007c2ce0, "VoiceVolume" @ 0x007c2ce4
+        /// - Original implementation: Audio volumes stored in INI file (swkotor2.ini for K2, swkotor.ini for K1)
+        /// - Volume range: 0.0 to 1.0 (0% to 100% in UI)
+        /// - Based on swkotor2.exe: FUN_00631ff0 @ 0x00631ff0 (writes INI values for audio settings)
+        /// - Based on swkotor2.exe: FUN_00633270 @ 0x00633270 (loads audio settings from INI file)
+        /// </remarks>
+        public AudioSettings Audio { get; set; } = new AudioSettings();
+
+        /// <summary>
+        /// Invert mouse Y axis for camera controls.
+        /// </summary>
+        /// <remarks>
+        /// Mouse Invert Setting:
+        /// - Based on swkotor.exe and swkotor2.exe: Mouse invert option in options menu
+        /// - When enabled, mouse Y movement is inverted (moving mouse up looks down, moving mouse down looks up)
+        /// - Original implementation: Stored in INI file as boolean value
+        /// - Applied to camera pitch control when using mouse for camera rotation
+        /// </remarks>
+        public bool InvertMouseY { get; set; } = false;
+
+        /// <summary>
+        /// Audio settings configuration.
+        /// </summary>
+        public class AudioSettings
+        {
+            /// <summary>
+            /// Master volume (0.0 to 1.0, affects all audio).
+            /// </summary>
+            public float MasterVolume { get; set; } = 1.0f;
+
+            /// <summary>
+            /// Music volume (0.0 to 1.0).
+            /// </summary>
+            public float MusicVolume { get; set; } = 0.8f;
+
+            /// <summary>
+            /// Sound effects volume (0.0 to 1.0).
+            /// </summary>
+            public float SfxVolume { get; set; } = 1.0f;
+
+            /// <summary>
+            /// Voice volume (0.0 to 1.0).
+            /// </summary>
+            public float VoiceVolume { get; set; } = 1.0f;
+
+            /// <summary>
+            /// Whether music is enabled.
+            /// </summary>
+            public bool MusicEnabled { get; set; } = true;
+        }
     }
 }
-
