@@ -125,6 +125,7 @@ namespace Andastra.Parsing.Common
         public abstract void WriteInt64(long value, bool bigEndian = false);
         public abstract void WriteSingle(float value, bool bigEndian = false);
         public abstract void WriteDouble(double value, bool bigEndian = false);
+        public abstract void WriteVector2(Vector2 value, bool bigEndian = false);
         public abstract void WriteVector3(Vector3 value, bool bigEndian = false);
         public abstract void WriteVector4(Vector4 value, bool bigEndian = false);
         public abstract void WriteBytes(byte[] value);
@@ -304,6 +305,12 @@ namespace Andastra.Parsing.Common
                 Array.Reverse(bytes);
             }
             _stream.Write(bytes, 0, bytes.Length);
+        }
+
+        public override void WriteVector2(Vector2 value, bool bigEndian = false)
+        {
+            WriteSingle(value.X, bigEndian);
+            WriteSingle(value.Y, bigEndian);
         }
 
         public override void WriteVector3(Vector3 value, bool bigEndian = false)
@@ -617,6 +624,12 @@ namespace Andastra.Parsing.Common
             _position += 8;
         }
 
+        public override void WriteVector2(Vector2 value, bool bigEndian = false)
+        {
+            WriteSingle(value.X, bigEndian);
+            WriteSingle(value.Y, bigEndian);
+        }
+
         public override void WriteVector3(Vector3 value, bool bigEndian = false)
         {
             WriteSingle(value.X, bigEndian);
@@ -834,6 +847,7 @@ namespace Andastra.Parsing.Common
         public override void WriteInt64(long value, bool bigEndian = false) => _fileWriter.WriteInt64(value, bigEndian);
         public override void WriteSingle(float value, bool bigEndian = false) => _fileWriter.WriteSingle(value, bigEndian);
         public override void WriteDouble(double value, bool bigEndian = false) => _fileWriter.WriteDouble(value, bigEndian);
+        public override void WriteVector2(Vector2 value, bool bigEndian = false) => _fileWriter.WriteVector2(value, bigEndian);
         public override void WriteVector3(Vector3 value, bool bigEndian = false) => _fileWriter.WriteVector3(value, bigEndian);
         public override void WriteVector4(Vector4 value, bool bigEndian = false) => _fileWriter.WriteVector4(value, bigEndian);
         public override void WriteBytes(byte[] value) => _fileWriter.WriteBytes(value);
@@ -892,6 +906,7 @@ namespace Andastra.Parsing.Common
         public override void WriteInt64(long value, bool bigEndian = false) => _memoryWriter.WriteInt64(value, bigEndian);
         public override void WriteSingle(float value, bool bigEndian = false) => _memoryWriter.WriteSingle(value, bigEndian);
         public override void WriteDouble(double value, bool bigEndian = false) => _memoryWriter.WriteDouble(value, bigEndian);
+        public override void WriteVector2(Vector2 value, bool bigEndian = false) => _memoryWriter.WriteVector2(value, bigEndian);
         public override void WriteVector3(Vector3 value, bool bigEndian = false) => _memoryWriter.WriteVector3(value, bigEndian);
         public override void WriteVector4(Vector4 value, bool bigEndian = false) => _memoryWriter.WriteVector4(value, bigEndian);
         public override void WriteBytes(byte[] value) => _memoryWriter.WriteBytes(value);

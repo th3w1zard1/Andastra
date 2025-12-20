@@ -1768,7 +1768,7 @@ namespace HolocronToolset.Data
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
         // Serialization support for pickle-equivalent functionality
         // Original: Python pickle serializes the object state including _path, name, and _tsl
-        
+
         /// <summary>
         /// Serializes the HTInstallation to a byte array (equivalent to pickle.dumps).
         /// </summary>
@@ -1780,13 +1780,13 @@ namespace HolocronToolset.Data
             {
                 // Write version for future compatibility
                 writer.Write(1);
-                
+
                 // Write path (the main field checked in Python tests)
                 writer.Write(Path ?? string.Empty);
-                
+
                 // Write name
                 writer.Write(Name ?? string.Empty);
-                
+
                 // Write _tsl (nullable bool: 0 = null, 1 = false, 2 = true)
                 if (!_tsl.HasValue)
                 {
@@ -1796,7 +1796,7 @@ namespace HolocronToolset.Data
                 {
                     writer.Write(_tsl.Value ? (byte)2 : (byte)1);
                 }
-                
+
                 return stream.ToArray();
             }
         }
@@ -1825,10 +1825,10 @@ namespace HolocronToolset.Data
 
                 // Read path
                 string path = reader.ReadString();
-                
+
                 // Read name
                 string name = reader.ReadString();
-                
+
                 // Read _tsl
                 byte tslByte = reader.ReadByte();
                 bool? tsl = null;

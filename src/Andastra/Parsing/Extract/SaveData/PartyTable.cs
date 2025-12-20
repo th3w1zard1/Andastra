@@ -273,6 +273,11 @@ namespace Andastra.Parsing.Extract.SaveData
             _partyTablePath = Path.Combine(folderPath, "partytable.res");
         }
 
+        public string GetPath()
+        {
+            return _partyTablePath;
+        }
+
         public void Load()
         {
             if (!File.Exists(_partyTablePath))

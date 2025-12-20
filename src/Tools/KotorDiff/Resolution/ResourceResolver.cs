@@ -577,7 +577,7 @@ namespace KotorDiff.Resolution
                             {
                                 try
                                 {
-                                    chosenModuleRoot = DiffEngineUtils.GetModuleRoot(f);
+                                    chosenModuleRoot = ResolutionUtils.GetModuleRoot(f);
                                 }
                                 catch (Exception e)
                                 {

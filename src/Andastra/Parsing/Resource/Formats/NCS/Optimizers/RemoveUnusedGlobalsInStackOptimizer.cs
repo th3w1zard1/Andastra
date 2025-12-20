@@ -6,16 +6,16 @@ namespace Andastra.Parsing.Formats.NCS.Optimizers
 {
     /// <summary>
     /// Optimizer to remove unused global variables from the stack.
-    /// 
+    ///
     /// This optimizer identifies global variables declared in the globals section
     /// (before SAVEBP) and removes those that are never accessed via CPTOPBP,
     /// CPDOWNBP, INCxBP, or DECxBP instructions.
-    /// 
+    ///
     /// When a global is removed:
     /// 1. The RSADD instruction that declares it is removed
     /// 2. All subsequent global variables shift up in the stack
     /// 3. All BP-relative instruction offsets are adjusted to account for the removed global
-    /// 
+    ///
     /// References:
     ///     vendor/PyKotor/wiki/NCS-File-Format.md - Global variable access via BP
     ///     vendor/xoreos/src/aurora/nwscript/ncsfile.cpp:389-394 (globals)

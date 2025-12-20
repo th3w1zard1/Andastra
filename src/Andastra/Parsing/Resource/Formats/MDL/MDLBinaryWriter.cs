@@ -83,7 +83,7 @@ namespace Andastra.Parsing.Formats.MDL
                 writer.WriteVector3(BoundingBoxMax);
                 writer.WriteSingle(Radius);
                 writer.WriteSingle(AnimScale);
-                writer.WriteString(Supermodel, 32, '\0', "ascii");
+                writer.WriteString(Supermodel, "ascii", 0, 32, '\0', false);
                 writer.WriteUInt32(OffsetToSuperRoot);
                 writer.WriteUInt32(Unknown3);
                 writer.WriteUInt32(MdxSize);
@@ -120,7 +120,7 @@ namespace Andastra.Parsing.Formats.MDL
                 writer.WriteUInt32(FunctionPointer0);
                 writer.WriteUInt32(FunctionPointer1);
                 writer.WriteInt32(GeometryType);
-                writer.WriteString(ModelName, 32, '\0', "ascii");
+                writer.WriteString(ModelName, "ascii", 0, 32, '\0', false);
                 writer.WriteUInt32(RootNodeOffset);
                 writer.WriteUInt32(NodeCount);
             }
@@ -286,8 +286,8 @@ namespace Andastra.Parsing.Formats.MDL
                 writer.WriteVector3(BoundingBoxMax);
                 writer.WriteVector3(BoundingBoxMin);
                 writer.WriteSingle(TotalArea);
-                writer.WriteString(Texture1, 32, '\0', "ascii");
-                writer.WriteString(Texture2, 32, '\0', "ascii");
+                writer.WriteString(Texture1, "ascii", 0, 32, '\0', false);
+                writer.WriteString(Texture2, "ascii", 0, 32, '\0', false);
                 writer.WriteVector3(Diffuse);
                 writer.WriteVector3(Ambient);
                 writer.WriteUInt32(TransparencyHint);
@@ -483,7 +483,7 @@ namespace Andastra.Parsing.Formats.MDL
 
             public int ChildrenOffsetsSize()
             {
-                return 4 * Header.ChildrenCount;
+                return 4 * (int)Header.ChildrenCount;
             }
 
             public int ControllersOffset(bool isK2)
@@ -618,7 +618,7 @@ namespace Andastra.Parsing.Formats.MDL
                 Geometry.Write(writer);
                 writer.WriteSingle(Duration);
                 writer.WriteSingle(Transition);
-                writer.WriteString(Root, 32, '\0', "ascii");
+                writer.WriteString(Root, "ascii", 0, 32, '\0', false);
                 writer.WriteUInt32(OffsetToEvents);
                 writer.WriteUInt32(EventCount);
                 writer.WriteUInt32(EventCount2);
@@ -641,7 +641,7 @@ namespace Andastra.Parsing.Formats.MDL
             public void Write(RawBinaryWriter writer)
             {
                 writer.WriteSingle(ActivationTime);
-                writer.WriteString(EventName, 32, '\0', "ascii");
+                writer.WriteString(EventName, "ascii", 0, 32, '\0', false);
             }
         }
 
@@ -1509,7 +1509,7 @@ namespace Andastra.Parsing.Formats.MDL
                 // Write names
                 foreach (var name in _names)
                 {
-                    mdlBuffer.WriteString(name + "\0", name.Length + 1, '\0', "ascii");
+                    mdlBuffer.WriteString(name + "\0", "ascii", 0, name.Length + 1, '\0', false);
                 }
 
                 // Write animation offsets

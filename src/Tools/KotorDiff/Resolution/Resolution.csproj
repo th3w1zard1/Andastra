@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Andastra\Parsing\Andastra.Parsing.csproj" />
-    <ProjectReference Include="..\Diff\Diff.csproj" />
+    <ProjectReference Include="..\Cache\Cache.csproj" />
     <ProjectReference Include="..\Logger\Logger.csproj" />
   </ItemGroup>
 

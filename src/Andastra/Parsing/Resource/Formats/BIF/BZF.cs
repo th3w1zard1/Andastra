@@ -31,11 +31,11 @@ namespace Andastra.Parsing.Extract
     /// <summary>
     /// Represents a fixed resource entry in a BIF/BZF file.
     /// Fixed resources are a legacy feature from Neverwinter Nights, not used in KotOR.
-    /// 
+    ///
     /// Fixed resource entries are 20 bytes (vs 16 for variable resources) and include
     /// a PartCount field. Fixed resources have a different ID encoding:
     /// Fixed ID = (x << 20) + (y << 14) where x = BIF index, y = resource index.
-    /// 
+    ///
     /// References:
     ///     vendor/PyKotor/wiki/Bioware-Aurora-KeyBIF.md:547-596 (Fixed Resource Table)
     ///     vendor/PyKotor/wiki/BIF-File-Format.md:73 (Fixed resources note)
@@ -229,14 +229,14 @@ namespace Andastra.Parsing.Extract
 
         /// <summary>
         /// Reads the fixed resource table from the BIF/BZF file.
-        /// 
+        ///
         /// Fixed resource entries are 20 bytes each (vs 16 for variable):
         /// - ID (4 bytes): Fixed ID = (x << 20) + (y << 14) where x = BIF index, y = resource index
         /// - Offset (4 bytes): Byte offset to fixed resource data
         /// - PartCount (4 bytes): Number of parts (unique to fixed resources)
         /// - FileSize (4 bytes): Uncompressed size of resource data
         /// - ResourceType (4 bytes): Resource type identifier
-        /// 
+        ///
         /// References:
         ///     vendor/PyKotor/wiki/Bioware-Aurora-KeyBIF.md:547-596 (Fixed Resource Table)
         ///     vendor/xoreos/src/aurora/biffile.cpp (fixed resource reading, if implemented)

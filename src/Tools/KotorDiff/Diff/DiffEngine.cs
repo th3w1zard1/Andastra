@@ -107,7 +107,8 @@ namespace KotorDiff.Diff
                         logFunc: logFunc,
                         compareHashes: compareHashes,
                         modificationsByType: modificationsByType,
-                        incrementalWriter: incrementalWriter);
+                        incrementalWriter: incrementalWriter,
+                        diffDataFunc: (data1, data2, ctx, compHashes, modsByType, logFn, incWriter) => DiffData(data1, data2, ctx, compHashes, modsByType, logFn, incWriter));
                 }
 
                 // Mixed path types or non-Installation comparison

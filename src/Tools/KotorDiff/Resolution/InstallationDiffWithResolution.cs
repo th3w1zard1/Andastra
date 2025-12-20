@@ -37,7 +37,8 @@ namespace KotorDiff.Resolution
             Action<string> logFunc = null,
             bool compareHashes = true,
             ModificationsByType modificationsByType = null,
-            IncrementalTSLPatchDataWriter incrementalWriter = null)
+            IncrementalTSLPatchDataWriter incrementalWriter = null,
+            Func<byte[], byte[], DiffContext, bool, ModificationsByType, Action<string>, IncrementalTSLPatchDataWriter, bool?> diffDataFunc = null)
         {
             if (filesAndFoldersAndInstallations == null || filesAndFoldersAndInstallations.Count < 2)
             {
@@ -48,6 +49,11 @@ namespace KotorDiff.Resolution
             if (logFunc == null)
             {
                 logFunc = Console.WriteLine;
+            }
+
+            if (diffDataFunc == null)
+            {
+                throw new ArgumentNullException(nameof(diffDataFunc), "diffDataFunc parameter is required");
             }
 
             // Convert Path objects to Installations if they are KOTOR installations
@@ -117,14 +123,15 @@ namespace KotorDiff.Resolution
                 }
 
                 return DiffInstallationsWithResolutionImpl(
-                    (Installation)install1Candidate,
-                    (Installation)install2Candidate,
-                    filters: filters,
-                    logFunc: logFunc,
-                    compareHashes: compareHashes,
-                    modificationsByType: modificationsByType,
-                    incrementalWriter: incrementalWriter,
-                    additionalInstalls: null);
+                        install1: (Installation)convertedPaths[0],
+                        install2: (Installation)convertedPaths[1],
+                        filters: filters,
+                        logFunc: logFunc,
+                        compareHashes: compareHashes,
+                        modificationsByType: modificationsByType,
+                        incrementalWriter: incrementalWriter,
+                        additionalInstalls: null,
+                        diffDataFunc: diffDataFunc);
             }
 
             // For 3+ installations, delegate with additional_installs
@@ -144,14 +151,15 @@ namespace KotorDiff.Resolution
                 .ToList();
 
             return DiffInstallationsWithResolutionImpl(
-                (Installation)install1Candidate2,
-                (Installation)install2Candidate2,
+                install1: (Installation)install1Candidate2,
+                install2: (Installation)install2Candidate2,
                 filters: filters,
                 logFunc: logFunc,
                 compareHashes: compareHashes,
                 modificationsByType: modificationsByType,
                 incrementalWriter: incrementalWriter,
-                additionalInstalls: additionalInstallations.Count > 0 ? additionalInstallations : null);
+                additionalInstalls: additionalInstallations.Count > 0 ? additionalInstallations : null,
+                diffDataFunc: diffDataFunc);
         }
 
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/resolution.py:618-1226
@@ -172,7 +180,8 @@ namespace KotorDiff.Resolution
             bool compareHashes = true,
             ModificationsByType modificationsByType = null,
             IncrementalTSLPatchDataWriter incrementalWriter = null,
-            List<Installation> additionalInstalls = null)
+            List<Installation> additionalInstalls = null,
+            Func<byte[], byte[], DiffContext, bool, ModificationsByType, Action<string>, IncrementalTSLPatchDataWriter, bool?> diffDataFunc = null)
         {
             if (logFunc == null)
             {
@@ -359,14 +368,14 @@ namespace KotorDiff.Resolution
 
                     Action<string> tlkBufferedLogFunc = msg => tlkDiffOutputLines.Add(msg);
 
-                    bool? result = DiffEngine.DiffData(
+                    bool? result = diffDataFunc(
                         resolved1.Data,
                         resolved2.Data,
                         ctx,
-                        compareHashes: compareHashes,
-                        modificationsByType: modificationsByType,
-                        logFunc: tlkBufferedLogFunc,
-                        incrementalWriter: incrementalWriter);
+                        compareHashes,
+                        modificationsByType,
+                        tlkBufferedLogFunc,
+                        incrementalWriter);
 
                     // Output the buffered diff results
                     foreach (string line in tlkDiffOutputLines)
@@ -689,14 +698,14 @@ namespace KotorDiff.Resolution
 
                 Action<string> bufferedLogFunc = msg => diffOutputLines.Add(msg);
 
-                bool? result = DiffEngine.DiffData(
+                bool? result = diffDataFunc(
                     resolved1.Data,
                     resolved2.Data,
                     ctx,
-                    compareHashes: compareHashes,
-                    modificationsByType: modificationsByType,
-                    logFunc: bufferedLogFunc,
-                    incrementalWriter: incrementalWriter);
+                    compareHashes,
+                    modificationsByType,
+                    bufferedLogFunc,
+                    incrementalWriter);
 
                 if (result == false)
                 {

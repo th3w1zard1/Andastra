@@ -453,7 +453,12 @@ namespace Andastra.Parsing.Formats.MDLData
                    Coefficient == other.Coefficient;
         }
 
-        public override int GetHashCode() => HashCode.Combine(V1, V2, V3, Material, SmoothingGroup, SurfaceLight, PlaneDistance, Normal, A1, A2, A3, Coefficient);
+        public override int GetHashCode()
+        {
+            int hash = HashCode.Combine(V1, V2, V3, Material, SmoothingGroup, SurfaceLight, PlaneDistance, Normal);
+            hash = HashCode.Combine(hash, A1, A2, A3, Coefficient);
+            return hash;
+        }
     }
 
     public class MDLConstraint : IEquatable<MDLConstraint>

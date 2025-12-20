@@ -8,7 +8,7 @@ using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.BWM;
 using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.LYT;
+using Andastra.Parsing.Resource.Formats.LYT;
 using Andastra.Parsing.Formats.MDL;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
@@ -29,38 +29,38 @@ namespace HolocronToolset.Data
     /// </summary>
     /// <remarks>
     /// WHAT IS A KIT?
-    /// 
+    ///
     /// A kit is like a box of LEGO pieces for building game levels. Instead of building rooms from
     /// scratch every time, you can use pre-made room pieces (components) from a kit. Each kit
     /// contains:
-    /// 
+    ///
     /// 1. COMPONENTS: Pre-made room pieces that can be placed in the indoor map builder.
     ///    - Each component has a 3D model (MDL/MDX files), a walkmesh (BWM), and a preview image
     ///    - Components can be rotated, flipped, and positioned anywhere in the map
     ///    - Components have "hooks" (connection points) where doors can be placed
-    /// 
+    ///
     /// 2. DOORS: Door templates that can be placed at component hooks.
     ///    - Each door has a width, height, and door definition (UTD)
     ///    - Doors connect components together, allowing characters to move between rooms
-    /// 
+    ///
     /// 3. TEXTURES: Image files used to texture the 3D models.
     ///    - Stored as TPC (texture) files
     ///    - Applied to component models during rendering
-    /// 
+    ///
     /// 4. LIGHTMAPS: Pre-computed lighting data for components.
     ///    - Lightmaps make rooms look realistic by adding shadows and lighting
     ///    - Stored as TPC files
-    /// 
+    ///
     /// 5. TXIS: Texture information files that describe how textures should be applied.
-    /// 
+    ///
     /// 6. ALWAYS: Resources that are always included in modules built from this kit.
-    /// 
+    ///
     /// 7. SIDE/TOP PADDING: Additional model pieces used to fill gaps between components.
-    /// 
+    ///
     /// 8. SKYBOXES: Background images that appear outside the module.
-    /// 
+    ///
     /// HOW KITS ARE USED:
-    /// 
+    ///
     /// When building an indoor module:
     /// 1. Load a kit (or create one from an existing module)
     /// 2. Select components from the kit
@@ -68,15 +68,15 @@ namespace HolocronToolset.Data
     /// 4. Connect components using doors at hook points
     /// 5. The builder combines all component walkmeshes into one navigation mesh
     /// 6. The builder combines all component models into one 3D scene
-    /// 
+    ///
     /// KITS FROM MODULES:
-    /// 
+    ///
     /// Kits can be extracted from existing game modules. The ModuleKit class loads a module file
     /// (.rim or .mod), extracts all rooms as components, and creates a kit from them. This allows
     /// you to reuse rooms from existing game areas in your own modules.
-    /// 
+    ///
     /// ORIGINAL IMPLEMENTATION:
-    /// 
+    ///
     /// Based on PyKotor's Kit class. Kits are a standard feature of the Aurora engine's module
     /// building system, allowing level designers to create modular, reusable room pieces.
     /// </remarks>
@@ -118,58 +118,58 @@ namespace HolocronToolset.Data
     /// </summary>
     /// <remarks>
     /// WHAT IS A KIT COMPONENT?
-    /// 
+    ///
     /// A KitComponent is a single room piece that can be reused in multiple places. Think of it
     /// like a stamp - you can stamp the same room design multiple times in different locations.
-    /// 
+    ///
     /// Each component contains:
-    /// 
+    ///
     /// 1. BWM (Walkmesh): The collision/navigation data for the room.
     ///    - Defines where characters can walk
     ///    - Contains triangles with surface materials
     ///    - Has edges with transitions (door connection points)
     ///    - MUST be centered at origin (0, 0, 0) for proper placement
-    /// 
+    ///
     /// 2. MDL/MDX (Model): The 3D visual representation of the room.
     ///    - MDL contains the model geometry
     ///    - MDX contains model extensions (animations, etc.)
     ///    - These are the files that make the room visible in-game
-    /// 
+    ///
     /// 3. IMAGE: A preview image shown in the indoor map builder.
     ///    - Generated from the walkmesh (top-down view)
     ///    - Shows walkable areas in white, non-walkable in gray
     ///    - Used for visual selection in the builder UI
-    /// 
+    ///
     /// 4. HOOKS: Connection points where doors can be placed.
     ///    - Each hook has a position, rotation, and edge index
     ///    - Hooks are extracted from walkmesh edges with transitions
     ///    - When two components are connected, their hooks link together
-    /// 
+    ///
     /// WHY COMPONENTS ARE CENTERED:
-    /// 
+    ///
     /// Components are stored with their walkmesh centered at (0, 0, 0). This is critical because:
-    /// 
+    ///
     /// 1. The preview image is drawn centered at the component's position
     /// 2. The walkmesh is translated by the component's position when placed
     /// 3. If the walkmesh isn't centered, the image and walkmesh won't align
-    /// 
+    ///
     /// For example, if a walkmesh has vertices at (100, 200, 0) to (200, 300, 0), and the component
     /// is placed at position (50, 50, 0):
     /// - Without centering: Walkmesh ends up at (150, 250, 0) to (250, 350, 0) - WRONG!
     /// - With centering: Walkmesh is first centered to (-50, -50, 0) to (50, 50, 0), then
     ///   translated to (0, 0, 0) to (100, 100, 0) - CORRECT!
-    /// 
+    ///
     /// The _RecenterBwm() method in ModuleKit ensures components are properly centered when
     /// extracted from game modules.
-    /// 
+    ///
     /// DEEP COPYING:
-    /// 
+    ///
     /// When a component is placed in a map, it's deep copied so each placement can have its own
     /// transformations (rotation, flip, position). The DeepCopy() method creates a new BWM,
     /// new MDL/MDX byte arrays, and new hooks, ensuring no shared state between placements.
-    /// 
+    ///
     /// ORIGINAL IMPLEMENTATION:
-    /// 
+    ///
     /// Based on PyKotor's KitComponent class. Components are the fundamental building blocks
     /// of the indoor map builder system.
     /// </remarks>
@@ -203,19 +203,19 @@ namespace HolocronToolset.Data
         /// </summary>
         /// <remarks>
         /// WHAT IS DEEP COPYING?
-        /// 
+        ///
         /// Deep copying creates a completely independent copy of an object. Unlike a shallow copy
         /// (which just copies references), a deep copy creates new objects for all nested data.
-        /// 
+        ///
         /// WHY DO WE NEED DEEP COPYING FOR COMPONENTS?
-        /// 
+        ///
         /// When placing a component in an indoor map, each placement needs to be independent. If
         /// multiple rooms use the same component, they each need their own copy so they can be
         /// transformed (flipped, rotated, translated) independently. Without deep copying, transforming
         /// one room would affect all other rooms that share that component.
-        /// 
+        ///
         /// WHAT GETS COPIED?
-        /// 
+        ///
         /// The DeepCopy method creates a new KitComponent and copies:
         /// 1. BWM (Walkmesh): Creates a completely new BWM with all faces copied
         ///    - CRITICAL: Material is explicitly copied to preserve walkability
@@ -225,62 +225,62 @@ namespace HolocronToolset.Data
         /// 3. Hooks: Creates new KitComponentHook objects for each hook
         ///    - Hook positions are copied (Vector3 is a struct, so copied by value)
         ///    - Door references stay the same (doors are shared within a kit)
-        /// 
+        ///
         /// WHAT DOESN'T GET COPIED?
-        /// 
+        ///
         /// These are shared references (not copied):
         /// - Kit: The component still belongs to the same kit
         /// - Image: Preview images are typically immutable or shared
         /// - Name: Strings are immutable in C#, so safe to share
         /// - Door (in hooks): Doors are shared within a kit, so references stay the same
-        /// 
+        ///
         /// CRITICAL: MATERIAL PRESERVATION:
-        /// 
+        ///
         /// The DeepCopyBwm method MUST explicitly copy Material: newFace.Material = face.Material
-        /// 
+        ///
         /// If materials are not preserved during deep copying, faces that should be walkable will
         /// become non-walkable, causing the bug where "levels/modules are NOT walkable despite having
         /// the right surface material."
-        /// 
+        ///
         /// This bug was fixed by ensuring Material is explicitly copied in DeepCopyBwm(). The original
         /// implementation might have relied on default copying behavior, which could fail if the
         /// BWMFace constructor doesn't initialize Material properly.
-        /// 
+        ///
         /// HOW IT WORKS:
-        /// 
+        ///
         /// STEP 1: Deep Copy BWM
         /// - Calls DeepCopyBwm() to create an independent walkmesh copy
         /// - This ensures each component placement has its own walkmesh
-        /// 
+        ///
         /// STEP 2: Deep Copy Model Data
         /// - Creates new byte arrays for MDL and MDX
         /// - Copies all bytes from original to new arrays
         /// - This ensures each placement can transform models independently
-        /// 
+        ///
         /// STEP 3: Create New Component
         /// - Creates new KitComponent with copied BWM and models
         /// - Shares Kit, Name, and Image (these are safe to share)
-        /// 
+        ///
         /// STEP 4: Deep Copy Hooks
         /// - Creates new KitComponentHook for each hook
         /// - Copies position (Vector3 is a struct, so copied by value)
         /// - Shares Door reference (doors are shared within a kit)
-        /// 
+        ///
         /// STEP 5: Return Independent Copy
         /// - Returns a completely independent KitComponent that can be transformed without affecting the original
-        /// 
+        ///
         /// WHEN IS IT USED?
-        /// 
+        ///
         /// DeepCopy is called when:
         /// 1. Placing a component in an indoor map (each placement needs its own copy)
         /// 2. Editing hooks on a component (hooks can be edited independently)
         /// 3. Applying transformations (flip, rotate, translate) to a component
-        /// 
+        ///
         /// ORIGINAL IMPLEMENTATION:
-        /// 
+        ///
         /// Based on PyKotor's deepcopy(component) behavior. The original code also explicitly copies
         /// materials to ensure walkability is preserved during transformations.
-        /// 
+        ///
         /// Matching PyKotor implementation: deepcopy(component) behavior
         /// This matches the behavior in indoor_builder.py:338 and indoor_builder.py:1721
         /// </remarks>
@@ -340,13 +340,13 @@ namespace HolocronToolset.Data
         /// </summary>
         /// <remarks>
         /// CRITICAL: MATERIAL PRESERVATION:
-        /// 
+        ///
         /// The Material property MUST be explicitly copied: newFace.Material = face.Material
-        /// 
+        ///
         /// If materials are not preserved during deep copying, faces that should be walkable will
         /// become non-walkable, causing the bug where "levels/modules are NOT walkable despite having
         /// the right surface material."
-        /// 
+        ///
         /// This bug was fixed by ensuring Material is explicitly copied. The original implementation
         /// might have relied on default copying behavior, which could fail if the BWMFace constructor
         /// doesn't initialize Material properly.
@@ -390,20 +390,20 @@ namespace HolocronToolset.Data
     /// </summary>
     /// <remarks>
     /// WHAT IS A KITCOMPONENTHOOK?
-    /// 
+    ///
     /// A KitComponentHook is a connection point on a room component (KitComponent) where a door
     /// can be placed. When you place a door in the indoor map builder, it goes on one of these
     /// hooks. Hooks tell the game where doors should be positioned and how they should be rotated.
-    /// 
+    ///
     /// WHERE DO HOOKS COME FROM?
-    /// 
+    ///
     /// Hooks are extracted from the walkmesh's perimeter edges. A perimeter edge is an edge of
     /// a walkable triangle that doesn't have a neighboring triangle on one side - it forms the
     /// outer boundary of the walkable area. When a perimeter edge has a transition value (not -1),
     /// it means that edge is meant to connect to another room, so it becomes a hook.
-    /// 
+    ///
     /// HOW ARE HOOKS EXTRACTED?
-    /// 
+    ///
     /// The extraction process works like this:
     /// 1. Get all walkable faces from the component's BWM
     /// 2. For each walkable face, check its three edges
@@ -412,69 +412,69 @@ namespace HolocronToolset.Data
     /// 5. Calculate the hook's position (middle of the edge)
     /// 6. Calculate the hook's rotation (perpendicular to the edge, facing outward)
     /// 7. Store which edge this is (0, 1, or 2) and which door should be used
-    /// 
+    ///
     /// WHAT DATA DOES IT STORE?
-    /// 
+    ///
     /// A KitComponentHook stores:
     /// 1. Position: The 3D position where the door should be placed (middle of the edge)
     ///    - This is calculated as: (vertex1 + vertex2) / 2
     ///    - The position is in the component's local coordinate system (centered at origin)
-    /// 
+    ///
     /// 2. Rotation: The rotation angle (in degrees) for the door
     ///    - This is calculated as the angle perpendicular to the edge, facing outward
     ///    - The rotation tells which direction the door should face
     ///    - 0 degrees = facing positive X, 90 degrees = facing positive Y, etc.
-    /// 
+    ///
     /// 3. Edge: The edge index (0, 1, or 2) of the triangle that contains this hook
     ///    - Edge 0: V1 -> V2
     ///    - Edge 1: V2 -> V3
     ///    - Edge 2: V3 -> V1
     ///    - This is used to identify which edge of the triangle the hook is on
-    /// 
+    ///
     /// 4. Door: The KitDoor object that should be placed at this hook
     ///    - This tells what kind of door to use (width, height, UTD resources)
     ///    - Can be null if no specific door is assigned (uses default door)
-    /// 
+    ///
     /// HOW ARE HOOKS USED?
-    /// 
+    ///
     /// When you place a door in the indoor map builder:
     /// 1. The builder finds all hooks on the selected component
     /// 2. It displays them as connection points (usually shown as small markers)
     /// 3. When you click on a hook, it places a door at that hook's position and rotation
     /// 4. The door is positioned so it connects the current room to the room specified by the transition
-    /// 
+    ///
     /// TRANSITIONS AND ROOM CONNECTIONS:
-    /// 
+    ///
     /// The transition value on a perimeter edge tells which room this edge connects to. When
     /// the indoor map builder processes a room's walkmesh, it remaps transitions from dummy
     /// indices (from the kit component) to actual room indices (in the built module).
-    /// 
+    ///
     /// For example:
     /// - Component has a hook with transition = 1 (dummy index meaning "next room")
     /// - When placed in a module, transition = 1 gets remapped to the actual room index (e.g., 5)
     /// - The door is placed at the hook's position, connecting room 0 to room 5
-    /// 
+    ///
     /// WHY ARE HOOKS CENTERED AT THE ORIGIN?
-    /// 
+    ///
     /// KitComponents are centered at the origin (0, 0, 0) so they can be easily positioned,
     /// rotated, and flipped. When a component is placed in a module, its hooks are transformed
     /// along with the component (translated, rotated, flipped) to their final positions.
-    /// 
+    ///
     /// CRITICAL: HOOK EXTRACTION DEPENDS ON WALKMESH TYPE:
-    /// 
+    ///
     /// Hooks are only extracted from walkable faces. If the walkmesh type is not set to AreaModel
     /// (WOK), or if materials are not preserved, hooks may not be extracted correctly. This is
     /// because:
     /// 1. Only walkable faces have perimeter edges that can become hooks
     /// 2. Non-walkable faces (walls, obstacles) don't have hooks
     /// 3. If materials are lost, faces become non-walkable, and hooks disappear
-    /// 
+    ///
     /// ORIGINAL IMPLEMENTATION:
-    /// 
+    ///
     /// Based on PyKotor's KitComponentHook class. Hooks are extracted from BWM perimeter edges
     /// with transitions. The original implementation calculates hook positions and rotations
     /// from the edge's vertex positions and the triangle's normal vector.
-    /// 
+    ///
     /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit.py:50-55
     /// Original: class KitComponentHook
     /// </remarks>
@@ -497,18 +497,18 @@ namespace HolocronToolset.Data
         /// Position is in the component's local coordinate system (centered at origin).
         /// </summary>
         public Vector3 Position { get; set; }
-        
+
         /// <summary>
         /// The rotation angle (in degrees) for the door, perpendicular to the edge, facing outward.
         /// </summary>
         public float Rotation { get; set; }
-        
+
         /// <summary>
         /// The edge index (0, 1, or 2) of the triangle that contains this hook.
         /// Edge 0: V1 -> V2, Edge 1: V2 -> V3, Edge 2: V3 -> V1
         /// </summary>
         public int Edge { get; set; }
-        
+
         /// <summary>
         /// The KitDoor object that should be placed at this hook (can be null for default door).
         /// </summary>
@@ -521,33 +521,33 @@ namespace HolocronToolset.Data
     /// </summary>
     /// <remarks>
     /// WHAT IS A KITDOOR?
-    /// 
+    ///
     /// A KitDoor is a template for a door that can be placed in an indoor module. It defines what
     /// the door looks like (its 3D model), how big it is (width and height), and what resources
     /// it uses (UTD files). When you place a door at a hook, the builder uses the KitDoor's
     /// information to create the actual door in the module.
-    /// 
+    ///
     /// WHAT DATA DOES IT STORE?
-    /// 
+    ///
     /// A KitDoor stores:
     /// 1. UtdK1: The first UTD (door template) resource for this door
     ///    - UTD files define the door's appearance, behavior, and properties
     ///    - This is the primary door resource
-    /// 
+    ///
     /// 2. UtdK2: The second UTD resource for this door (optional, can be null)
     ///    - Some doors have two UTD files (one for each side)
     ///    - If null, only UtdK1 is used
-    /// 
+    ///
     /// 3. Width: The width of the door in game units
     ///    - This determines how wide the door opening is
     ///    - Used to position the door correctly at the hook
-    /// 
+    ///
     /// 4. Height: The height of the door in game units
     ///    - This determines how tall the door opening is
     ///    - Used to position the door correctly at the hook
-    /// 
+    ///
     /// HOW ARE DOORS PLACED?
-    /// 
+    ///
     /// When you place a door at a hook:
     /// 1. The builder gets the hook's position and rotation
     /// 2. It creates a door using the KitDoor's UTD resources
@@ -555,27 +555,27 @@ namespace HolocronToolset.Data
     /// 4. It rotates the door to match the hook's rotation
     /// 5. It sets the door's width and height from the KitDoor
     /// 6. It connects the door to the rooms specified by the hook's transition
-    /// 
+    ///
     /// DOOR CONNECTIONS:
-    /// 
+    ///
     /// Doors connect two rooms together. The hook's transition value tells which room the door
     /// connects to. When the door is placed:
     /// - The door is added to both rooms' door lists
     /// - The door's position is set to the hook's position (transformed to world coordinates)
     /// - The door's rotation is set to the hook's rotation (with component rotation applied)
     /// - The door's UTD resources are loaded from the KitDoor
-    /// 
+    ///
     /// DEFAULT DOORS:
-    /// 
+    ///
     /// If a hook doesn't have a specific KitDoor assigned (Door = null), the builder uses a
     /// default door. The default door is created when loading a module kit and has standard
     /// width and height values.
-    /// 
+    ///
     /// ORIGINAL IMPLEMENTATION:
-    /// 
+    ///
     /// Based on PyKotor's KitDoor class. Doors are defined in kit files and can be placed at
     /// hooks to connect rooms together.
-    /// 
+    ///
     /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit.py:58-63
     /// Original: class KitDoor
     /// </remarks>
@@ -597,17 +597,17 @@ namespace HolocronToolset.Data
         /// The first UTD (door template) resource for this door (primary door resource).
         /// </summary>
         public UTD UtdK1 { get; set; }
-        
+
         /// <summary>
         /// The second UTD resource for this door (optional, can be null for single-sided doors).
         /// </summary>
         public UTD UtdK2 { get; set; }
-        
+
         /// <summary>
         /// The width of the door in game units (determines door opening width).
         /// </summary>
         public float Width { get; set; }
-        
+
         /// <summary>
         /// The height of the door in game units (determines door opening height).
         /// </summary>
@@ -833,25 +833,25 @@ namespace HolocronToolset.Data
         /// </summary>
         /// <remarks>
         /// WHAT THIS METHOD DOES:
-        /// 
+        ///
         /// This method moves all vertices in the walkmesh so that the walkmesh's center point
         /// is at (0, 0, 0). The center is calculated as the midpoint between the minimum and
         /// maximum X, Y, and Z coordinates of all vertices.
-        /// 
+        ///
         /// WHY THIS IS CRITICAL:
-        /// 
+        ///
         /// Game walkmeshes (WOK files) are stored in "world coordinates" - they have absolute
         /// positions in the game world. For example, a room might have vertices at (100, 200, 0)
         /// to (200, 300, 0) in world space.
-        /// 
+        ///
         /// However, the Indoor Map Builder expects components to be centered at (0, 0, 0) because:
-        /// 
+        ///
         /// 1. PREVIEW IMAGE ALIGNMENT:
         ///    - The preview image is generated from the walkmesh and drawn CENTERED at the
         ///      component's position in the builder UI
         ///    - If the walkmesh isn't centered, the image and walkmesh won't align visually
         ///    - Users will see the image in one place but the walkmesh hitbox in another
-        /// 
+        ///
         /// 2. POSITIONING LOGIC:
         ///    - When a component is placed at position (50, 50, 0), the walkmesh is translated
         ///      by that amount from its ORIGINAL coordinates
@@ -859,39 +859,39 @@ namespace HolocronToolset.Data
         ///      (150, 250, 0) - which is NOT where the user expects it
         ///    - If the walkmesh is centered at (0, 0, 0), translating by (50, 50, 0) gives
         ///      (50, 50, 0) - which IS where the user expects it
-        /// 
+        ///
         /// 3. TRANSFORMATION CONSISTENCY:
         ///    - Components can be rotated and flipped
         ///    - Rotations and flips are applied around the origin (0, 0, 0)
         ///    - If the walkmesh isn't centered, rotations/flips will move it unexpectedly
-        /// 
+        ///
         /// HOW IT WORKS:
-        /// 
+        ///
         /// 1. Get all vertices from the walkmesh
         /// 2. Find the minimum and maximum X, Y, Z values across all vertices
         /// 3. Calculate the center: center = (min + max) / 2
         /// 4. Translate all vertices by -center (move walkmesh so center is at origin)
-        /// 
+        ///
         /// Example:
         /// - Vertices range from (100, 200, 0) to (200, 300, 0)
         /// - Center = ((100+200)/2, (200+300)/2, (0+0)/2) = (150, 250, 0)
         /// - Translate by (-150, -250, 0)
         /// - New vertices range from (-50, -50, 0) to (50, 50, 0)
         /// - Walkmesh is now centered at (0, 0, 0)
-        /// 
+        ///
         /// BUG PREVENTION:
-        /// 
+        ///
         /// Without this fix, the following bugs occur:
         /// - Preview images don't match walkmesh positions in the builder
         /// - Components appear in wrong locations when placed
         /// - Rotations/flips move components unexpectedly
         /// - Walkmesh hitboxes don't align with visual representation
-        /// 
+        ///
         /// This method is called in _CreateComponentFromLytRoom() after loading the walkmesh
         /// from the game module, ensuring all components are properly centered before use.
-        /// 
+        ///
         /// ORIGINAL IMPLEMENTATION:
-        /// 
+        ///
         /// Based on PyKotor's _recenter_bwm() method. This fix addresses a critical alignment
         /// issue where game walkmeshes (in world coordinates) don't match the builder's expectations
         /// (centered coordinates).
@@ -902,48 +902,48 @@ namespace HolocronToolset.Data
         // Original: def _recenter_bwm(self, bwm: BWM) -> BWM:
         /// <summary>
         /// Re-centers a walkmesh so its center is at the origin (0, 0, 0).
-        /// 
+        ///
         /// WHAT THIS FUNCTION DOES:
-        /// 
+        ///
         /// This function takes a walkmesh and moves all its vertices so that the walkmesh's center
         /// is at the origin (0, 0, 0). This is important because when components are placed in the
         /// indoor map builder, they are positioned relative to their center point. If the walkmesh
         /// is not centered, the component will appear in the wrong position.
-        /// 
+        ///
         /// HOW IT WORKS:
-        /// 
+        ///
         /// STEP 1: Find the Bounding Box
         /// - Get all vertices from the walkmesh
         /// - Find the smallest and largest X, Y, Z coordinates
         /// - This creates a box that contains all the vertices
-        /// 
+        ///
         /// STEP 2: Calculate the Center
         /// - The center is the midpoint of the bounding box
         /// - centerX = (minX + maxX) / 2
         /// - centerY = (minY + maxY) / 2
         /// - centerZ = (minZ + maxZ) / 2
-        /// 
+        ///
         /// STEP 3: Move the Walkmesh
         /// - Translate all vertices by (-centerX, -centerY, -centerZ)
         /// - This moves the walkmesh so its center is at (0, 0, 0)
-        /// 
+        ///
         /// WHY THIS IS NEEDED:
-        /// 
+        ///
         /// When a walkmesh is loaded from a game module, its vertices are in world coordinates.
         /// The walkmesh might be positioned anywhere in the world (e.g., at position 100, 200, 50).
         /// When we create a kit component from this walkmesh, we want it to be centered at the origin
         /// so that when we place it in the map builder, we can position it correctly by just moving
         /// it to the desired location.
-        /// 
+        ///
         /// EXAMPLE:
-        /// 
+        ///
         /// Before: Walkmesh vertices range from (95, 195, 45) to (105, 205, 55)
         /// - Center is at (100, 200, 50)
         /// - After translation: Vertices range from (-5, -5, -5) to (5, 5, 5)
         /// - Center is now at (0, 0, 0)
-        /// 
+        ///
         /// EDGE CASES HANDLED:
-        /// 
+        ///
         /// - Empty walkmesh: Returns unchanged (no vertices to process)
         /// </summary>
         /// <param name="bwm">The walkmesh to re-center</param>
@@ -980,32 +980,32 @@ namespace HolocronToolset.Data
 
         /// <summary>
         /// Loads a room's walkmesh (WOK file) from the module.
-        /// 
+        ///
         /// WHAT THIS FUNCTION DOES:
-        /// 
+        ///
         /// This function loads a walkmesh file (WOK) from the module. Each room in a module has a
         /// corresponding WOK file that defines where characters can walk in that room.
-        /// 
+        ///
         /// HOW IT WORKS:
-        /// 
+        ///
         /// STEP 1: Find the WOK Resource
         /// - Looks for a resource with the given model name and type WOK
         /// - WOK files are stored in the module's resource archive (RIM or MOD file)
-        /// 
+        ///
         /// STEP 2: Read the Resource Data
         /// - Gets the raw bytes from the resource
         /// - If the resource doesn't exist or has no data, returns null
-        /// 
+        ///
         /// STEP 3: Parse the BWM
         /// - Uses BWMAuto.ReadBwm to parse the raw bytes into a BWM object
         /// - If parsing fails (invalid data), logs a warning and returns null
-        /// 
+        ///
         /// FALLBACK BEHAVIOR:
-        /// 
+        ///
         /// If a room's walkmesh is missing or cannot be loaded, the caller should create a placeholder
         /// walkmesh using _CreatePlaceholderBwm. This ensures that every component has a walkmesh,
         /// even if the original is missing.
-        /// 
+        ///
         /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:245-270
         /// Original: def _get_room_walkmesh(self, model_name: str) -> BWM | None:
         /// </summary>
@@ -1099,11 +1099,11 @@ namespace HolocronToolset.Data
 
         /// <summary>
         /// Create a placeholder BWM with a single quad.
-        /// 
+        ///
         /// This method is used as a fallback when a room's walkmesh (WOK) is missing or empty.
         /// It creates a simple 10x10 unit square walkmesh at the origin with Stone material,
         /// providing a minimal walkable surface for collision and snapping logic.
-        /// 
+        ///
         /// The position parameter is provided for consistency with the PyKotor interface but
         /// is not used - the BWM is always created at the origin and positioning is handled
         /// by the caller via _RecenterBwm().
