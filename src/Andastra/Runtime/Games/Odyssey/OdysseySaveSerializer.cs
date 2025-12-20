@@ -682,6 +682,46 @@ namespace Andastra.Runtime.Games.Odyssey
         }
 
         /// <summary>
+        /// Helper method to safely get single (float) field from GFF struct.
+        /// </summary>
+        private float GetSingleField(GFFStruct gffStruct, string fieldName, float defaultValue)
+        {
+            if (gffStruct == null || string.IsNullOrEmpty(fieldName))
+            {
+                return defaultValue;
+            }
+
+            try
+            {
+                return gffStruct.GetSingle(fieldName);
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
+        /// <summary>
+        /// Helper method to safely get uint8 (byte) field from GFF struct.
+        /// </summary>
+        private byte GetUInt8Field(GFFStruct gffStruct, string fieldName, byte defaultValue)
+        {
+            if (gffStruct == null || string.IsNullOrEmpty(fieldName))
+            {
+                return defaultValue;
+            }
+
+            try
+            {
+                return gffStruct.GetUInt8(fieldName);
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
+        /// <summary>
         /// Helper method to safely set string field in GFF struct.
         /// </summary>
         private void SetStringField(GFFStruct gffStruct, string fieldName, string value)
@@ -1147,20 +1187,769 @@ namespace Andastra.Runtime.Games.Odyssey
         }
 
         /// <summary>
+        /// Helper to get ResRef from member ID (reverse of GetMemberId).
+        /// </summary>
+        /// <remarks>
+        /// Member IDs: -1 = Player, 0-8 = NPC slots (K1), 0-11 = NPC slots (K2)
+        /// Based on swkotor2.exe: partytable.2da system
+        /// Located via string reference: "PARTYTABLE" @ 0x007c1910
+        /// Original implementation: partytable.2da maps NPC ResRefs to member IDs (row index = member ID)
+        /// partytable.2da structure: Row label is ResRef, row index is member ID (0-11 for K2, 0-8 for K1)
+        /// Reverse mapping: member ID -> ResRef by reading row label at index = member ID
+        /// Based on swkotor2.exe: FUN_0057dcd0 @ 0x0057dcd0 (LoadPartyTable function) reads PT_MEMBER_ID and converts to ResRef
+        /// Original implementation reads PT_MEMBER_ID (float) and converts to ResRef using partytable.2da lookup
+        /// </remarks>
+        private string GetResRefFromMemberId(float memberId)
+        {
+            // Player character (member ID = -1)
+            // Based on nwscript.nss constants: NPC_PLAYER = -1
+            // Player ResRefs are typically "player", "pc", or start with "pc_"
+            if (memberId < 0.0f || Math.Abs(memberId - (-1.0f)) < 0.001f)
+            {
+                return "player"; // Default player ResRef
+            }
+
+            int memberIdInt = (int)memberId;
+
+            // Try to load from partytable.2da if GameDataManager is available
+            // Based on swkotor2.exe: partytable.2da system
+            // Located via string reference: "PARTYTABLE" @ 0x007c1910
+            // Original implementation: partytable.2da row index = member ID (0-11 for K2, 0-8 for K1)
+            // Row label in partytable.2da is the NPC ResRef (e.g., "bastila", "atton")
+            if (_gameDataManager != null)
+            {
+                Andastra.Parsing.Formats.TwoDA.TwoDA partyTable = _gameDataManager.GetTable("partytable");
+                if (partyTable != null && memberIdInt >= 0 && memberIdInt < partyTable.GetHeight())
+                {
+                    Andastra.Parsing.Formats.TwoDA.TwoDARow row = partyTable.GetRow(memberIdInt);
+                    string rowLabel = row.Label();
+                    if (!string.IsNullOrEmpty(rowLabel))
+                    {
+                        return rowLabel;
+                    }
+                }
+            }
+
+            // Fallback: Hardcoded reverse mapping for common NPCs when partytable.2da not available
+            // Based on nwscript.nss constants and common ResRef patterns
+            // Note: K1 and K2 use different NPCs for the same member IDs, so we provide both mappings
+            // The partytable.2da lookup above should handle this correctly, but this is a fallback
+            // Since we can't determine game version here, we'll try common mappings
+            // In practice, partytable.2da should always be available, so this is rarely used
+
+            // Common NPC mappings (try K1 first, then K2 if needed)
+            // This is a best-effort fallback - partytable.2da should be used when available
+            switch (memberIdInt)
+            {
+                case 0: return "bastila"; // K1, or "atton" for K2
+                case 1: return "canderous"; // K1, or "bao-dur" for K2
+                case 2: return "carth"; // K1, or "disciple" for K2
+                case 3: return "hk47"; // K1, or "handmaiden" for K2
+                case 4: return "jolee"; // K1, or "hanharr" for K2
+                case 5: return "juhani"; // K1, or "g0-t0" for K2
+                case 6: return "mission"; // K1, or "kreia" for K2
+                case 7: return "t3m4"; // K1, or "mira" for K2
+                case 8: return "zaalbar"; // K1, or "visas" for K2
+                case 9: return "mandalore"; // K2 only
+                case 11: return "sion"; // K2 only
+                default:
+                    // If no mapping found, return empty string
+                    // This matches original engine behavior when member ID cannot be resolved
+                    return "";
+            }
+        }
+
+        /// <summary>
         /// Deserializes party information.
         /// </summary>
         /// <remarks>
         /// Recreates party from save data.
         /// Restores companion states, relationships, equipment.
         /// Reestablishes party formation and leadership.
+        ///
+        /// Based on swkotor2.exe: FUN_0057dcd0 @ 0x0057dcd0 (LoadPartyTable function)
+        /// Located via string reference: "PARTYTABLE" @ 0x007c1910
+        /// Original implementation: Loads PARTYTABLE.res GFF file and deserializes all party state fields
+        /// GFF structure: "PT  " signature with "V2.0" version (K2) or "V1.0" (K1)
+        ///
+        /// Deserialization order matches original engine:
+        /// 1. PT_PCNAME - Player character name
+        /// 2. PT_GOLD - Gold/credits
+        /// 3. PT_ITEM_COMPONENT - Item component count
+        /// 4. PT_ITEM_CHEMICAL - Item chemical count
+        /// 5. PT_SWOOP1-3 - Swoop race times
+        /// 6. PT_XP_POOL - Experience point pool
+        /// 7. PT_PLAYEDSECONDS - Total seconds played
+        /// 8. PT_CONTROLLED_NPC - Currently controlled NPC ID
+        /// 9. PT_SOLOMODE - Solo mode flag
+        /// 10. PT_CHEAT_USED - Cheat used flag
+        /// 11. PT_NUM_MEMBERS - Number of party members
+        /// 12. PT_MEMBERS - List of party members (PT_MEMBER_ID, PT_IS_LEADER)
+        /// 13. PT_PUPPETS - List of puppets
+        /// 14. PT_AVAIL_PUPS - Available puppets list
+        /// 15. PT_AVAIL_NPCS - Available NPCs list
+        /// 16. PT_INFLUENCE - Influence values (K2 only)
+        /// 17. PT_AISTATE - AI state
+        /// 18. PT_FOLLOWSTATE - Follow state
+        /// 19. GlxyMap - Galaxy map data
+        /// 20. PT_PAZAAKCARDS - Pazaak cards list
+        /// 21. PT_PAZSIDELIST - Pazaak side list
+        /// 22. PT_TUT_WND_SHOWN - Tutorial windows shown
+        /// 23. PT_LAST_GUI_PNL - Last GUI panel
+        /// 24. PT_FB_MSG_LIST - Feedback message list
+        /// 25. PT_DLG_MSG_LIST - Dialogue message list
+        /// 26. PT_COM_MSG_LIST - Combat message list
+        /// 27. PT_COST_MULT_LIST - Cost multiplier list
+        /// 28. PT_DISABLEMAP - Disable map flag
+        /// 29. PT_DISABLEREGEN - Disable regen flag
         /// </remarks>
         public override void DeserializeParty(byte[] partyData, IPartyState partyState)
         {
-            // TODO: Implement party deserialization
-            // Parse PARTY struct
-            // Recreate companion entities
-            // Restore relationships and states
-            // Reestablish party structure
+            if (partyData == null || partyData.Length == 0)
+            {
+                // Empty or null party data - nothing to deserialize
+                return;
+            }
+
+            if (partyState == null)
+            {
+                throw new ArgumentNullException(nameof(partyState), "PartyState cannot be null for party deserialization");
+            }
+
+            // Parse GFF from byte array
+            // Based on swkotor2.exe: FUN_0057dcd0 @ 0x0057dcd0 loads GFF with "PT  " signature
+            // Located via string reference: "PARTYTABLE" @ 0x007c1910
+            GFF gff;
+            try
+            {
+                gff = GFF.FromBytes(partyData);
+            }
+            catch (Exception ex)
+            {
+                // Invalid GFF structure - log error but don't throw to allow save loading to continue
+                System.Diagnostics.Debug.WriteLine($"[OdysseySaveSerializer] Failed to parse PARTYTABLE GFF: {ex.Message}");
+                return;
+            }
+
+            if (gff == null || gff.Root == null)
+            {
+                // Invalid or empty GFF structure
+                return;
+            }
+
+            // Check PARTYTABLE signature
+            // Based on swkotor2.exe: PARTYTABLE GFF must have PT content type
+            if (gff.Content != GFFContent.PT)
+            {
+                System.Diagnostics.Debug.WriteLine("[OdysseySaveSerializer] PARTYTABLE GFF has incorrect content type");
+                return;
+            }
+
+            var root = gff.Root;
+
+            // Try to cast IPartyState to PartyState to populate rich data
+            // If cast fails, we'll only populate the basic IPartyState interface
+            PartyState state = partyState as PartyState;
+            bool hasRichState = state != null;
+
+            // Initialize PartyState if we have it
+            if (hasRichState)
+            {
+                if (state.AvailableMembers == null)
+                {
+                    state.AvailableMembers = new Dictionary<string, PartyMemberState>();
+                }
+                if (state.SelectedParty == null)
+                {
+                    state.SelectedParty = new List<string>();
+                }
+                if (state.Influence == null)
+                {
+                    state.Influence = new List<int>();
+                }
+                if (state.Puppets == null)
+                {
+                    state.Puppets = new List<uint>();
+                }
+                if (state.AvailablePuppets == null)
+                {
+                    state.AvailablePuppets = new List<bool>();
+                }
+                if (state.SelectablePuppets == null)
+                {
+                    state.SelectablePuppets = new List<bool>();
+                }
+                if (state.PazaakCards == null)
+                {
+                    state.PazaakCards = new List<int>();
+                }
+                if (state.PazaakSideList == null)
+                {
+                    state.PazaakSideList = new List<int>();
+                }
+                if (state.TutorialWindowsShown == null)
+                {
+                    state.TutorialWindowsShown = new List<bool>();
+                }
+                if (state.FeedbackMessages == null)
+                {
+                    state.FeedbackMessages = new List<FeedbackMessage>();
+                }
+                if (state.DialogueMessages == null)
+                {
+                    state.DialogueMessages = new List<DialogueMessage>();
+                }
+                if (state.CombatMessages == null)
+                {
+                    state.CombatMessages = new List<CombatMessage>();
+                }
+                if (state.CostMultipliers == null)
+                {
+                    state.CostMultipliers = new List<float>();
+                }
+            }
+
+            // 1. PT_PCNAME - Player character name
+            // Based on swkotor2.exe: FUN_0057dcd0 line 66-68 reads PT_PCNAME
+            string pcName = GetStringField(root, "PT_PCNAME", "");
+            if (hasRichState && !string.IsNullOrEmpty(pcName))
+            {
+                // Store PC name in PartyState (if it has a property for it)
+                // Note: PartyState doesn't have a direct PCName property, but we can store it in PlayerCharacter
+                if (state.PlayerCharacter == null)
+                {
+                    state.PlayerCharacter = new CreatureState();
+                }
+                state.PlayerCharacter.Tag = pcName;
+            }
+
+            // 2. PT_GOLD - Gold/credits
+            // Based on swkotor2.exe: FUN_0057dcd0 line 71 reads PT_GOLD
+            int gold = GetIntField(root, "PT_GOLD", 0);
+            if (hasRichState)
+            {
+                state.Gold = gold;
+            }
+
+            // 3. PT_ITEM_COMPONENT - Item component count
+            // Based on swkotor2.exe: FUN_0057dcd0 line 73 reads PT_ITEM_COMPONENT
+            int itemComponent = GetIntField(root, "PT_ITEM_COMPONENT", 0);
+            if (hasRichState)
+            {
+                state.ItemComponent = itemComponent;
+            }
+
+            // 4. PT_ITEM_CHEMICAL - Item chemical count
+            // Based on swkotor2.exe: FUN_0057dcd0 line 75 reads PT_ITEM_CHEMICAL
+            int itemChemical = GetIntField(root, "PT_ITEM_CHEMICAL", 0);
+            if (hasRichState)
+            {
+                state.ItemChemical = itemChemical;
+            }
+
+            // 5. PT_SWOOP1-3 - Swoop race times
+            // Based on swkotor2.exe: FUN_0057dcd0 lines 77-82 read PT_SWOOP1-3
+            int swoop1 = GetIntField(root, "PT_SWOOP1", 0);
+            int swoop2 = GetIntField(root, "PT_SWOOP2", 0);
+            int swoop3 = GetIntField(root, "PT_SWOOP3", 0);
+            if (hasRichState)
+            {
+                state.Swoop1 = swoop1;
+                state.Swoop2 = swoop2;
+                state.Swoop3 = swoop3;
+            }
+
+            // 6. PT_XP_POOL - Experience point pool (float)
+            // Based on swkotor2.exe: FUN_0057dcd0 line 83 reads PT_XP_POOL as float
+            float xpPool = GetSingleField(root, "PT_XP_POOL", 0.0f);
+            if (hasRichState)
+            {
+                state.ExperiencePoints = (int)xpPool;
+            }
+
+            // 7. PT_PLAYEDSECONDS - Total seconds played
+            // Based on swkotor2.exe: FUN_0057dcd0 lines 86-91 read PT_PLAYEDSECONDS (with fallback to PT_PLAYEDMINUTES)
+            int timePlayedSeconds = GetIntField(root, "PT_PLAYEDSECONDS", -1);
+            if (timePlayedSeconds < 0)
+            {
+                // Fallback to PT_PLAYEDMINUTES if PT_PLAYEDSECONDS not found
+                int timePlayedMinutes = GetIntField(root, "PT_PLAYEDMINUTES", 0);
+                timePlayedSeconds = timePlayedMinutes * 60;
+            }
+            if (hasRichState)
+            {
+                state.PlayTime = TimeSpan.FromSeconds(timePlayedSeconds);
+            }
+
+            // 8. PT_CONTROLLED_NPC - Currently controlled NPC ID (float, -1 if none)
+            // Based on swkotor2.exe: FUN_0057dcd0 line 92 reads PT_CONTROLLED_NPC
+            float controlledNpc = GetSingleField(root, "PT_CONTROLLED_NPC", -1.0f);
+            if (hasRichState)
+            {
+                state.ControlledNPC = (int)controlledNpc;
+            }
+
+            // 9. PT_SOLOMODE - Solo mode flag (byte)
+            // Based on swkotor2.exe: FUN_0057dcd0 lines 94-98 read PT_SOLOMODE
+            byte soloMode = GetUInt8Field(root, "PT_SOLOMODE", 0);
+            bool soloModeBool = soloMode != 0;
+            if (hasRichState)
+            {
+                state.SoloMode = soloModeBool;
+            }
+
+            // 10. PT_CHEAT_USED - Cheat used flag (byte)
+            // Based on swkotor2.exe: FUN_0057dcd0 line 99 reads PT_CHEAT_USED
+            byte cheatUsed = GetUInt8Field(root, "PT_CHEAT_USED", 0);
+            bool cheatUsedBool = cheatUsed != 0;
+            if (hasRichState)
+            {
+                state.CheatUsed = cheatUsedBool;
+            }
+
+            // 11. PT_NUM_MEMBERS - Number of party members (byte)
+            // Based on swkotor2.exe: FUN_0057dcd0 lines 101-107 read PT_NUM_MEMBERS
+            // Original implementation: Uses list length if PT_NUM_MEMBERS is less than actual list size
+            byte numMembers = GetUInt8Field(root, "PT_NUM_MEMBERS", 0);
+
+            // 12. PT_MEMBERS - List of party members
+            // Based on swkotor2.exe: FUN_0057dcd0 lines 108-122 read PT_MEMBERS list
+            // Each member has PT_MEMBER_ID (float) and PT_IS_LEADER (byte)
+            var membersList = root.GetList("PT_MEMBERS");
+            if (membersList != null)
+            {
+                // Use actual list size if it's larger than PT_NUM_MEMBERS
+                int actualListSize = membersList.Count;
+                if (actualListSize > numMembers)
+                {
+                    numMembers = (byte)actualListSize;
+                }
+
+                string leaderResRef = null;
+                List<string> selectedPartyResRefs = new List<string>();
+
+                // Process each member in the list
+                for (int i = 0; i < numMembers && i < membersList.Count; i++)
+                {
+                    GFFStruct memberStruct = membersList[i];
+                    if (memberStruct == null)
+                    {
+                        continue;
+                    }
+
+                    // PT_MEMBER_ID - Member ID (float, -1 = PC, 0-11 = NPC slots)
+                    // Based on swkotor2.exe: FUN_0057dcd0 line 113 reads PT_MEMBER_ID
+                    float memberId = GetSingleField(memberStruct, "PT_MEMBER_ID", -1.0f);
+
+                    // Convert member ID to ResRef
+                    // Based on swkotor2.exe: partytable.2da system for reverse mapping
+                    string memberResRef = GetResRefFromMemberId(memberId);
+
+                    if (!string.IsNullOrEmpty(memberResRef))
+                    {
+                        selectedPartyResRefs.Add(memberResRef);
+
+                        // PT_IS_LEADER - Whether this member is the leader (byte)
+                        // Based on swkotor2.exe: FUN_0057dcd0 lines 115-118 check PT_IS_LEADER
+                        byte isLeader = GetUInt8Field(memberStruct, "PT_IS_LEADER", 0);
+                        if (isLeader != 0)
+                        {
+                            leaderResRef = memberResRef;
+                        }
+
+                        // If we have rich state, populate AvailableMembers
+                        if (hasRichState)
+                        {
+                            if (!state.AvailableMembers.ContainsKey(memberResRef))
+                            {
+                                var memberState = new PartyMemberState
+                                {
+                                    TemplateResRef = memberResRef,
+                                    IsAvailable = true,
+                                    IsSelectable = true
+                                };
+                                state.AvailableMembers[memberResRef] = memberState;
+                            }
+                        }
+                    }
+                }
+
+                // Set selected party and leader
+                if (hasRichState)
+                {
+                    state.SelectedParty = selectedPartyResRefs;
+                    state.LeaderResRef = leaderResRef ?? (selectedPartyResRefs.Count > 0 ? selectedPartyResRefs[0] : null);
+                }
+            }
+
+            // 13. PT_PUPPETS - List of puppets
+            // Based on swkotor2.exe: FUN_0057dcd0 lines 123-146 read PT_PUPPETS
+            byte numPuppets = GetUInt8Field(root, "PT_NUM_PUPPETS", 0);
+            var puppetsList = root.GetList("PT_PUPPETS");
+            if (puppetsList != null)
+            {
+                int actualPuppetsSize = puppetsList.Count;
+                if (actualPuppetsSize > numPuppets)
+                {
+                    numPuppets = (byte)actualPuppetsSize;
+                }
+                if (numPuppets < 0)
+                {
+                    numPuppets = 0;
+                }
+
+                if (hasRichState)
+                {
+                    state.Puppets.Clear();
+                    for (int i = 0; i < numPuppets && i < puppetsList.Count; i++)
+                    {
+                        GFFStruct puppetStruct = puppetsList[i];
+                        if (puppetStruct != null)
+                        {
+                            float puppetId = GetSingleField(puppetStruct, "PT_PUPPET_ID", -1.0f);
+                            if (puppetId >= 0)
+                            {
+                                state.Puppets.Add((uint)puppetId);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 14. PT_AVAIL_PUPS - Available puppets list (3 entries)
+            // Based on swkotor2.exe: FUN_0057dcd0 lines 147-167 read PT_AVAIL_PUPS
+            var availPupsList = root.GetList("PT_AVAIL_PUPS");
+            if (availPupsList != null)
+            {
+                int availPupsSize = availPupsList.Count;
+                if (availPupsSize > 3)
+                {
+                    availPupsSize = 3;
+                }
+
+                if (hasRichState)
+                {
+                    state.AvailablePuppets.Clear();
+                    state.SelectablePuppets.Clear();
+                    for (int i = 0; i < availPupsSize && i < availPupsList.Count; i++)
+                    {
+                        GFFStruct pupStruct = availPupsList[i];
+                        if (pupStruct != null)
+                        {
+                            byte pupAvail = GetUInt8Field(pupStruct, "PT_PUP_AVAIL", 0);
+                            byte pupSelect = GetUInt8Field(pupStruct, "PT_PUP_SELECT", 0);
+                            state.AvailablePuppets.Add(pupAvail != 0);
+                            state.SelectablePuppets.Add(pupSelect != 0);
+                        }
+                        else
+                        {
+                            state.AvailablePuppets.Add(false);
+                            state.SelectablePuppets.Add(false);
+                        }
+                    }
+                }
+            }
+
+            // 15. PT_AVAIL_NPCS - Available NPCs list (12 entries)
+            // Based on swkotor2.exe: FUN_0057dcd0 lines 168-188 read PT_AVAIL_NPCS
+            var availNpcsList = root.GetList("PT_AVAIL_NPCS");
+            if (availNpcsList != null)
+            {
+                int availNpcsSize = availNpcsList.Count;
+                if (availNpcsSize > 12)
+                {
+                    availNpcsSize = 12;
+                }
+
+                if (hasRichState)
+                {
+                    for (int i = 0; i < availNpcsSize && i < availNpcsList.Count; i++)
+                    {
+                        GFFStruct npcStruct = availNpcsList[i];
+                        if (npcStruct != null)
+                        {
+                            byte npcAvail = GetUInt8Field(npcStruct, "PT_NPC_AVAIL", 0);
+                            byte npcSelect = GetUInt8Field(npcStruct, "PT_NPC_SELECT", 0);
+
+                            // Convert member ID to ResRef (member ID = index in list)
+                            string npcResRef = GetResRefFromMemberId((float)i);
+                            if (!string.IsNullOrEmpty(npcResRef))
+                            {
+                                if (!state.AvailableMembers.ContainsKey(npcResRef))
+                                {
+                                    var memberState = new PartyMemberState
+                                    {
+                                        TemplateResRef = npcResRef,
+                                        IsAvailable = npcAvail != 0,
+                                        IsSelectable = npcSelect != 0
+                                    };
+                                    state.AvailableMembers[npcResRef] = memberState;
+                                }
+                                else
+                                {
+                                    // Update existing member state
+                                    var memberState = state.AvailableMembers[npcResRef];
+                                    memberState.IsAvailable = npcAvail != 0;
+                                    memberState.IsSelectable = npcSelect != 0;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 16. PT_INFLUENCE - Influence values list (12 entries, K2 only)
+            // Based on swkotor2.exe: FUN_0057dcd0 lines 189-207 read PT_INFLUENCE
+            var influenceList = root.GetList("PT_INFLUENCE");
+            if (influenceList != null)
+            {
+                int influenceSize = influenceList.Count;
+                if (influenceSize > 12)
+                {
+                    influenceSize = 12;
+                }
+
+                if (hasRichState)
+                {
+                    state.Influence.Clear();
+                    for (int i = 0; i < influenceSize && i < influenceList.Count; i++)
+                    {
+                        GFFStruct influenceStruct = influenceList[i];
+                        if (influenceStruct != null)
+                        {
+                            float influence = GetSingleField(influenceStruct, "PT_NPC_INFLUENCE", 0.0f);
+                            state.Influence.Add((int)influence);
+                        }
+                        else
+                        {
+                            state.Influence.Add(0);
+                        }
+                    }
+                }
+            }
+
+            // 17. PT_AISTATE - AI state (float)
+            // Based on swkotor2.exe: FUN_0057dcd0 line 208 reads PT_AISTATE
+            float aiState = GetSingleField(root, "PT_AISTATE", 0.0f);
+            if (hasRichState)
+            {
+                state.AIState = (int)aiState;
+            }
+
+            // 18. PT_FOLLOWSTATE - Follow state (float)
+            // Based on swkotor2.exe: FUN_0057dcd0 line 210 reads PT_FOLLOWSTATE
+            float followState = GetSingleField(root, "PT_FOLLOWSTATE", 0.0f);
+            if (hasRichState)
+            {
+                state.FollowState = (int)followState;
+            }
+
+            // 19. GlxyMap - Galaxy map data
+            // Based on swkotor2.exe: FUN_0057dcd0 lines 212-232 read GlxyMap struct
+            GFFStruct glxyMapStruct = root.GetStruct("GlxyMap");
+            if (glxyMapStruct != null)
+            {
+                int glxyMapNumPnts = GetIntField(glxyMapStruct, "GlxyMapNumPnts", 0);
+                int glxyMapPlntMsk = GetIntField(glxyMapStruct, "GlxyMapPlntMsk", 0);
+                float glxyMapSelPnt = GetSingleField(glxyMapStruct, "GlxyMapSelPnt", -1.0f);
+
+                if (hasRichState)
+                {
+                    state.GalaxyMapPlanetMask = glxyMapPlntMsk;
+                    state.GalaxyMapSelectedPoint = (int)glxyMapSelPnt;
+                }
+            }
+
+            // 20. PT_PAZAAKCARDS - Pazaak cards list (23 entries)
+            // Based on swkotor2.exe: FUN_0057dcd0 lines 233-242 read PT_PAZAAKCARDS
+            var pazaakCardsList = root.GetList("PT_PAZAAKCARDS");
+            if (pazaakCardsList != null)
+            {
+                if (hasRichState)
+                {
+                    state.PazaakCards.Clear();
+                    for (int i = 0; i < 23 && i < pazaakCardsList.Count; i++)
+                    {
+                        GFFStruct cardStruct = pazaakCardsList[i];
+                        if (cardStruct != null)
+                        {
+                            float cardCount = GetSingleField(cardStruct, "PT_PAZAAKCOUNT", 0.0f);
+                            state.PazaakCards.Add((int)cardCount);
+                        }
+                        else
+                        {
+                            state.PazaakCards.Add(0);
+                        }
+                    }
+                }
+            }
+
+            // 21. PT_PAZSIDELIST - Pazaak side list (10 entries)
+            // Based on swkotor2.exe: FUN_0057dcd0 lines 243-252 read PT_PAZSIDELIST
+            var pazaakSideList = root.GetList("PT_PAZSIDELIST");
+            if (pazaakSideList != null)
+            {
+                if (hasRichState)
+                {
+                    state.PazaakSideList.Clear();
+                    for (int i = 0; i < 10 && i < pazaakSideList.Count; i++)
+                    {
+                        GFFStruct sideStruct = pazaakSideList[i];
+                        if (sideStruct != null)
+                        {
+                            float sideCard = GetSingleField(sideStruct, "PT_PAZSIDECARD", 0.0f);
+                            state.PazaakSideList.Add((int)sideCard);
+                        }
+                        else
+                        {
+                            state.PazaakSideList.Add(0);
+                        }
+                    }
+                }
+            }
+
+            // 22. PT_TUT_WND_SHOWN - Tutorial windows shown (array of 33 bytes)
+            // Based on swkotor2.exe: FUN_0057dcd0 line 260 reads PT_TUT_WND_SHOWN
+            byte[] tutWndShown = root.GetBinary("PT_TUT_WND_SHOWN");
+            if (tutWndShown != null && tutWndShown.Length > 0)
+            {
+                if (hasRichState)
+                {
+                    state.TutorialWindowsShown.Clear();
+                    for (int i = 0; i < 33 && i < tutWndShown.Length; i++)
+                    {
+                        state.TutorialWindowsShown.Add(tutWndShown[i] != 0);
+                    }
+                }
+            }
+
+            // 23. PT_LAST_GUI_PNL - Last GUI panel (float)
+            // Based on swkotor2.exe: FUN_0057dcd0 lines 263-265 read PT_LAST_GUI_PNL
+            float lastGuiPanel = GetSingleField(root, "PT_LAST_GUI_PNL", 0.0f);
+            if (hasRichState)
+            {
+                state.LastGUIPanel = (int)lastGuiPanel;
+            }
+
+            // 24. PT_FB_MSG_LIST - Feedback message list
+            // Based on swkotor2.exe: FUN_0057dcd0 lines 272-297 read PT_FB_MSG_LIST
+            var fbMsgList = root.GetList("PT_FB_MSG_LIST");
+            if (fbMsgList != null)
+            {
+                if (hasRichState)
+                {
+                    state.FeedbackMessages.Clear();
+                    foreach (GFFStruct msgStruct in fbMsgList)
+                    {
+                        if (msgStruct != null)
+                        {
+                            string msg = GetStringField(msgStruct, "PT_FB_MSG_MSG", "");
+                            int msgType = GetIntField(msgStruct, "PT_FB_MSG_TYPE", 0);
+                            byte msgColor = GetUInt8Field(msgStruct, "PT_FB_MSG_COLOR", 0);
+                            if (!string.IsNullOrEmpty(msg))
+                            {
+                                state.FeedbackMessages.Add(new FeedbackMessage
+                                {
+                                    Message = msg,
+                                    Type = msgType,
+                                    Color = msgColor
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 25. PT_DLG_MSG_LIST - Dialogue message list
+            // Based on swkotor2.exe: FUN_0057dcd0 lines 300-331 read PT_DLG_MSG_LIST
+            var dlgMsgList = root.GetList("PT_DLG_MSG_LIST");
+            if (dlgMsgList != null)
+            {
+                if (hasRichState)
+                {
+                    state.DialogueMessages.Clear();
+                    foreach (GFFStruct msgStruct in dlgMsgList)
+                    {
+                        if (msgStruct != null)
+                        {
+                            string speaker = GetStringField(msgStruct, "PT_DLG_MSG_SPKR", "");
+                            string msg = GetStringField(msgStruct, "PT_DLG_MSG_MSG", "");
+                            if (!string.IsNullOrEmpty(msg))
+                            {
+                                state.DialogueMessages.Add(new DialogueMessage
+                                {
+                                    Speaker = speaker,
+                                    Message = msg
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 26. PT_COM_MSG_LIST - Combat message list
+            // Based on swkotor2.exe: FUN_0057dcd0 lines 332-357 read PT_COM_MSG_LIST
+            var comMsgList = root.GetList("PT_COM_MSG_LIST");
+            if (comMsgList != null)
+            {
+                if (hasRichState)
+                {
+                    state.CombatMessages.Clear();
+                    foreach (GFFStruct msgStruct in comMsgList)
+                    {
+                        if (msgStruct != null)
+                        {
+                            string msg = GetStringField(msgStruct, "PT_COM_MSG_MSG", "");
+                            int msgType = GetIntField(msgStruct, "PT_COM_MSG_TYPE", 0);
+                            byte msgColor = GetUInt8Field(msgStruct, "PT_COM_MSG_COOR", 0);
+                            if (!string.IsNullOrEmpty(msg))
+                            {
+                                state.CombatMessages.Add(new CombatMessage
+                                {
+                                    Message = msg,
+                                    Type = msgType,
+                                    Color = msgColor
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 27. PT_COST_MULT_LIST - Cost multiplier list
+            // Based on swkotor2.exe: FUN_0057dcd0 lines 358-368 read PT_COST_MULT_LIST
+            var costMultList = root.GetList("PT_COST_MULT_LIST");
+            if (costMultList != null)
+            {
+                if (hasRichState)
+                {
+                    state.CostMultipliers.Clear();
+                    foreach (GFFStruct multStruct in costMultList)
+                    {
+                        if (multStruct != null)
+                        {
+                            float multValue = GetSingleField(multStruct, "PT_COST_MULT_VALUE", 1.0f);
+                            state.CostMultipliers.Add(multValue);
+                        }
+                    }
+                }
+            }
+
+            // 28. PT_DISABLEMAP - Disable map flag (float)
+            // Based on swkotor2.exe: FUN_0057dcd0 line 369 reads PT_DISABLEMAP
+            float disableMap = GetSingleField(root, "PT_DISABLEMAP", 0.0f);
+            if (hasRichState)
+            {
+                state.DisableMap = disableMap != 0.0f;
+            }
+
+            // 29. PT_DISABLEREGEN - Disable regen flag (float)
+            // Based on swkotor2.exe: FUN_0057dcd0 line 371 reads PT_DISABLEREGEN
+            float disableRegen = GetSingleField(root, "PT_DISABLEREGEN", 0.0f);
+            if (hasRichState)
+            {
+                state.DisableRegen = disableRegen != 0.0f;
+            }
         }
 
         /// <summary>
