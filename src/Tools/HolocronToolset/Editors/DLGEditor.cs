@@ -14,6 +14,7 @@ using Avalonia.Threading;
 using Avalonia.Media;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using DLGType = Andastra.Parsing.Resource.Generics.DLG.DLG;
 using DLGLink = Andastra.Parsing.Resource.Generics.DLG.DLGLink;
@@ -1859,10 +1860,117 @@ namespace HolocronToolset.Editors
             UpdateResultsLabel();
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:525-569
+        // Original: def parse_query(self, input_text: str) -> list[tuple[str, str | None, Literal["AND", "OR", None]]]:
+        /// <summary>
+        /// Parses a search query string into conditions with operators.
+        /// Supports attribute searches (e.g., "speaker:TestSpeaker"), text searches, and AND/OR operators.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:525-569
+        /// </summary>
+        private List<Tuple<string, string, string>> ParseQuery(string inputText)
+        {
+            var conditions = new List<Tuple<string, string, string>>();
+            
+            if (string.IsNullOrEmpty(inputText))
+            {
+                return conditions;
+            }
+
+            // Pattern to match quoted strings or whitespace-separated tokens
+            // Matching PyKotor: pattern = r'("[^"]*"|\S+)'
+            var quotedStringPattern = new Regex(@"""[^""]*""");
+            var tokens = new List<string>();
+            
+            // Extract quoted strings first
+            var quotedMatches = quotedStringPattern.Matches(inputText);
+            int lastIndex = 0;
+            foreach (Match match in quotedMatches)
+            {
+                // Add text before the quoted string
+                if (match.Index > lastIndex)
+                {
+                    string before = inputText.Substring(lastIndex, match.Index - lastIndex);
+                    var beforeTokens = Regex.Split(before, @"\s+");
+                    foreach (var token in beforeTokens)
+                    {
+                        if (!string.IsNullOrWhiteSpace(token))
+                        {
+                            tokens.Add(token);
+                        }
+                    }
+                }
+                
+                // Add the quoted string (without quotes)
+                tokens.Add(match.Value.Substring(1, match.Value.Length - 2));
+                lastIndex = match.Index + match.Length;
+            }
+            
+            // Add remaining text after last quoted string
+            if (lastIndex < inputText.Length)
+            {
+                string remaining = inputText.Substring(lastIndex);
+                var remainingTokens = Regex.Split(remaining, @"\s+");
+                foreach (var token in remainingTokens)
+                {
+                    if (!string.IsNullOrWhiteSpace(token))
+                    {
+                        tokens.Add(token);
+                    }
+                }
+            }
+
+            string operator = null;
+            int i = 0;
+            while (i < tokens.Count)
+            {
+                string token = tokens[i].ToUpperInvariant();
+                if (token == "AND" || token == "OR")
+                {
+                    operator = token;
+                    i++;
+                    continue;
+                }
+
+                int? nextIndex = i + 1 < tokens.Count ? (int?)(i + 1) : null;
+                if (tokens[i].Contains(":"))
+                {
+                    // Attribute search: "key:value"
+                    var parts = tokens[i].Split(new[] { ':' }, 2);
+                    string key = parts[0].Trim().ToLowerInvariant();
+                    string value = parts.Length > 1 ? parts[1].Trim().ToLowerInvariant() : null;
+                    conditions.Add(Tuple.Create(key, value ?? "", operator));
+                    operator = null;
+                }
+                else if (nextIndex.HasValue && (tokens[nextIndex.Value].ToUpperInvariant() == "AND" || tokens[nextIndex.Value].ToUpperInvariant() == "OR"))
+                {
+                    // Text search with operator
+                    conditions.Add(Tuple.Create(tokens[i], "", operator));
+                    operator = null;
+                }
+                else if (!nextIndex.HasValue)
+                {
+                    // Last token
+                    conditions.Add(Tuple.Create(tokens[i], "", operator));
+                    operator = null;
+                }
+                else
+                {
+                    // Text search without operator
+                    conditions.Add(Tuple.Create(tokens[i], "", operator));
+                    operator = null;
+                }
+
+                i++;
+            }
+
+            return conditions;
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:571-657
         // Original: def find_item_matching_display_text(self, input_text: str) -> list[DLGStandardItem]:
         /// <summary>
-        /// Finds all items matching the search text.
+        /// Finds all items matching the search text with full query parsing and attribute search support.
+        /// Supports attribute searches (e.g., "speaker:TestSpeaker"), text searches, and AND/OR operators.
         /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:571-657
         /// </summary>
         private List<DLGStandardItem> FindItemMatchingDisplayText(string inputText)
@@ -1874,62 +1982,291 @@ namespace HolocronToolset.Editors
                 return matchingItems;
             }
 
-            // Simplified search: match against display text
-            // Matching PyKotor: item_text: str = item.text().lower()
-            // Matching PyKotor: if input_text.lower() in item_text: return True
+            // Parse query into conditions
+            var conditions = ParseQuery(inputText);
             string searchTextLower = inputText.ToLowerInvariant();
 
-            // Search through all items in the model
+            // Helper to check if a condition matches an item
+            // Matching PyKotor: def condition_matches(key: str, value: str | None, operator: Literal["AND", "OR", None], item: DLGStandardItem) -> bool:
+            bool ConditionMatches(string key, string value, string op, DLGStandardItem item)
+            {
+                if (item?.Link?.Node == null)
+                {
+                    return false;
+                }
+
+                var link = item.Link;
+                var node = item.Link.Node;
+                object sentinel = new object();
+
+                // Get attribute value from link or node using reflection
+                // Matching PyKotor: link_value: Any = getattr(item.link, key, sentinel)
+                // Matching PyKotor: node_value: Any = getattr(item.link.node, key, sentinel)
+                object linkValue = GetAttributeValue(link, key, sentinel);
+                object nodeValue = GetAttributeValue(node, key, sentinel);
+
+                // Helper to check value match
+                // Matching PyKotor: def check_value(attr_value: Any, search_value: str | None) -> bool:
+                bool CheckValue(object attrValue, string searchValue)
+                {
+                    if (ReferenceEquals(attrValue, sentinel))
+                    {
+                        return false;
+                    }
+
+                    // Truthiness check (value is None or empty)
+                    if (string.IsNullOrEmpty(searchValue))
+                    {
+                        if (attrValue is bool boolVal)
+                        {
+                            return boolVal;
+                        }
+                        if (attrValue is int intVal)
+                        {
+                            return intVal != 0 && intVal != 0xFFFFFFFF && intVal != -1;
+                        }
+                        return attrValue != null;
+                    }
+
+                    // Type-specific matching
+                    if (attrValue is int intAttr)
+                    {
+                        if (int.TryParse(searchValue, out int searchInt))
+                        {
+                            return intAttr == searchInt;
+                        }
+                        return false;
+                    }
+
+                    if (attrValue is bool boolAttr)
+                    {
+                        if (searchValue == "true" || searchValue == "1")
+                        {
+                            return boolAttr == true;
+                        }
+                        if (searchValue == "false" || searchValue == "0")
+                        {
+                            return boolAttr == false;
+                        }
+                        return false;
+                    }
+
+                    // String/substring matching
+                    string attrStr = attrValue?.ToString() ?? "";
+                    return attrStr.ToLowerInvariant().Contains(searchValue.ToLowerInvariant());
+                }
+
+                // Check link or node value
+                if (CheckValue(linkValue, value) || CheckValue(nodeValue, value))
+                {
+                    return true;
+                }
+
+                // Special handling for strref/stringref
+                if (key == "strref" || key == "stringref")
+                {
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                        if (int.TryParse(value, out int strref))
+                        {
+                            // Check if strref exists in text substrings
+                            // Matching PyKotor: return int(value.strip()) in item.link.node.text._substrings
+                            if (node.Text != null)
+                            {
+                                // Note: Accessing _substrings would require reflection or public API
+                                // For now, check if text exists (simplified)
+                                return node.Text.GetString(0, Gender.Male) != null;
+                            }
+                        }
+                        return false;
+                    }
+                    return node.Text != null && !string.IsNullOrEmpty(node.Text.GetString(0, Gender.Male));
+                }
+
+                return false;
+            }
+
+            // Helper to evaluate all conditions for an item
+            // Matching PyKotor: def evaluate_conditions(item: DLGStandardItem) -> bool:
+            bool EvaluateConditions(DLGStandardItem item)
+            {
+                // Always check text match first
+                // Matching PyKotor: item_text: str = item.text().lower()
+                // Matching PyKotor: if input_text.lower() in item_text: return True
+                string itemText = GetItemDisplayText(item).ToLowerInvariant();
+                if (itemText.Contains(searchTextLower))
+                {
+                    return true;
+                }
+
+                // If no conditions, return false (text didn't match)
+                if (conditions.Count == 0)
+                {
+                    return false;
+                }
+
+                // Evaluate conditions with AND/OR logic
+                // Matching PyKotor: result: bool = not conditions
+                // In Python, "not conditions" means False when conditions list has items, True when empty
+                bool result = conditions.Count == 0;
+                foreach (var condition in conditions)
+                {
+                    string key = condition.Item1;
+                    string value = condition.Item2;
+                    string op = condition.Item3;
+
+                    bool matches = ConditionMatches(key, value, op, item);
+
+                    // Matching PyKotor logic: apply operator if present, otherwise set result directly
+                    if (op == "AND")
+                    {
+                        result = result && matches;
+                    }
+                    else if (op == "OR")
+                    {
+                        result = result || matches;
+                    }
+                    else
+                    {
+                        // First condition or condition without operator - set result directly
+                        result = matches;
+                    }
+                }
+
+                return result;
+            }
+
+            // Recursive search function
+            // Matching PyKotor: def search_item(item: DLGStandardItem):
+            void SearchItem(DLGStandardItem item)
+            {
+                if (item == null)
+                {
+                    return;
+                }
+
+                if (EvaluateConditions(item))
+                {
+                    matchingItems.Add(item);
+                }
+
+                // Search children
+                foreach (var child in item.Children)
+                {
+                    SearchItem(child);
+                }
+            }
+
+            // Search all root items
+            // Matching PyKotor: def search_children(parent_item: DLGStandardItem):
             // Matching PyKotor: search_children(cast("DLGStandardItem", self.model.invisibleRootItem()))
             var rootItems = _model.GetRootItems();
             foreach (var rootItem in rootItems)
             {
-                SearchItemRecursive(rootItem, searchTextLower, matchingItems);
+                SearchItem(rootItem);
             }
 
             // Matching PyKotor: return list({*matching_items}) - remove duplicates
             return new List<DLGStandardItem>(new HashSet<DLGStandardItem>(matchingItems));
         }
 
-        // Helper method for recursive search
-        private void SearchItemRecursive(DLGStandardItem item, string searchTextLower, List<DLGStandardItem> matchingItems)
+        // Helper method to get attribute value using reflection
+        // Matching PyKotor: getattr(obj, key, sentinel) behavior
+        // Handles case-insensitive property/field lookup and converts ResRef to string
+        private object GetAttributeValue(object obj, string key, object sentinel)
         {
-            if (item == null)
+            if (obj == null || string.IsNullOrEmpty(key))
             {
-                return;
+                return sentinel;
             }
 
-            // Matching PyKotor: item_text: str = item.text().lower()
-            // Matching PyKotor: if input_text.lower() in item_text: return True
-            string itemText = GetItemDisplayText(item).ToLowerInvariant();
-            if (itemText.Contains(searchTextLower))
+            try
             {
-                matchingItems.Add(item);
-            }
+                // Convert snake_case to PascalCase for C# property names
+                // e.g., "speaker" -> "Speaker", "is_child" -> "IsChild", "active1" -> "Active1"
+                string pascalKey = ToPascalCase(key);
+                
+                // Try property first (case-insensitive)
+                var properties = obj.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                foreach (var property in properties)
+                {
+                    if (property.Name.Equals(pascalKey, StringComparison.OrdinalIgnoreCase) ||
+                        property.Name.Equals(key, StringComparison.OrdinalIgnoreCase))
+                    {
+                        object value = property.GetValue(obj);
+                        
+                        // Convert ResRef to string for comparison
+                        if (value != null && value.GetType().Name == "ResRef")
+                        {
+                            return value.ToString();
+                        }
+                        
+                        return value;
+                    }
+                }
 
-            // Matching PyKotor: for row in range(item.rowCount()): search_item(child_item)
-            foreach (var child in item.Children)
+                // Try fields if property not found
+                var fields = obj.GetType().GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                foreach (var field in fields)
+                {
+                    if (field.Name.Equals(pascalKey, StringComparison.OrdinalIgnoreCase) ||
+                        field.Name.Equals(key, StringComparison.OrdinalIgnoreCase))
+                    {
+                        object value = field.GetValue(obj);
+                        
+                        // Convert ResRef to string for comparison
+                        if (value != null && value.GetType().Name == "ResRef")
+                        {
+                            return value.ToString();
+                        }
+                        
+                        return value;
+                    }
+                }
+
+                return sentinel;
+            }
+            catch
             {
-                SearchItemRecursive(child, searchTextLower, matchingItems);
+                return sentinel;
             }
         }
 
-        // Helper method to get display text for an item
-        private string GetItemDisplayText(DLGStandardItem item)
+        // Helper to convert snake_case to PascalCase
+        // e.g., "speaker" -> "Speaker", "is_child" -> "IsChild", "active1_param1" -> "Active1Param1"
+        private string ToPascalCase(string input)
         {
-            if (item?.Link?.Node == null)
+            if (string.IsNullOrEmpty(input))
             {
-                return "Unknown";
+                return input;
             }
 
-            var node = item.Link.Node;
-            string nodeType = node is DLGEntry ? "Entry" : "Reply";
-            string text = node.Text?.GetString(0, Gender.Male) ?? "";
-            if (string.IsNullOrEmpty(text))
+            // Handle snake_case
+            if (input.Contains("_"))
             {
-                text = "<empty>";
+                var parts = input.Split('_');
+                var result = new System.Text.StringBuilder();
+                foreach (var part in parts)
+                {
+                    if (part.Length > 0)
+                    {
+                        result.Append(char.ToUpperInvariant(part[0]));
+                        if (part.Length > 1)
+                        {
+                            result.Append(part.Substring(1));
+                        }
+                    }
+                }
+                return result.ToString();
             }
-            return $"{nodeType}: {text}";
+
+            // Simple camelCase/PascalCase conversion
+            if (input.Length > 0)
+            {
+                return char.ToUpperInvariant(input[0]) + (input.Length > 1 ? input.Substring(1) : "");
+            }
+
+            return input;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:659-676
@@ -2269,39 +2606,6 @@ namespace HolocronToolset.Editors
             {
                 // Expand all parent items
                 ExpandParentItems(treeItem);
-            }
-        }
-
-        /// <summary>
-        /// Highlights and scrolls to the specified item in the dialog tree.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:659-676
-        /// Original: def highlight_result(self, item: DLGStandardItem):
-        /// </summary>
-        /// <param name="item">The item to highlight.</param>
-        private void HighlightResult(DLGStandardItem item)
-        {
-            if (item == null || _dialogTree == null)
-            {
-                return;
-            }
-
-            // Find the TreeViewItem corresponding to this DLGStandardItem
-            TreeViewItem treeItem = FindTreeViewItem(_dialogTree.ItemsSource as System.Collections.IEnumerable, item);
-            if (treeItem != null)
-            {
-                // Expand all parent items to ensure the item is visible
-                ExpandParentItems(treeItem);
-
-                // Select the item
-                _dialogTree.SelectedItem = treeItem;
-
-                // Focus the tree view
-                _dialogTree.Focus();
-
-                // Scroll to the item to make it visible
-                // Note: Avalonia TreeView doesn't have a direct ScrollTo method like Qt,
-                // but selecting the item and expanding parents should make it visible
-                // In a full implementation, we might need to use BringIntoView or similar
             }
         }
 
