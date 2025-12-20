@@ -25,7 +25,7 @@ using DLGNode = Andastra.Parsing.Resource.Generics.DLG.DLGNode;
 using DLGEntry = Andastra.Parsing.Resource.Generics.DLG.DLGEntry;
 using DLGReply = Andastra.Parsing.Resource.Generics.DLG.DLGReply;
 using DLGHelper = Andastra.Parsing.Resource.Generics.DLG.DLGHelper;
-using DLGStunt = Andastra.Parsing.Resource.Formats.GFF.Generics.DLG.DLGStunt;
+using DLGStunt = Andastra.Parsing.Resource.Generics.DLG.DLGStunt;
 using CNVHelper = Andastra.Parsing.Resource.Generics.CNV.CNVHelper;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;

@@ -12,7 +12,7 @@ using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Andastra.Parsing;
+// Andastra.Parsing includes Utility files, causing SystemHelpers conflict - use global:: prefix
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Config;
 using Andastra.Parsing.Installation;
@@ -21,7 +21,6 @@ using Andastra.Parsing.Namespaces;
 using Andastra.Parsing.TSLPatcher;
 using Andastra.Parsing.Reader;
 using Andastra.Parsing.Uninstall;
-// SystemHelpers exists in both Andastra.Parsing and Utility, so we use fully qualified names
 using HoloPatcher.UI;
 using HoloPatcher.UI.Update;
 using RteDocument = global::HoloPatcher.UI.Rte.RteDocument;
@@ -793,7 +792,7 @@ namespace HoloPatcher.UI.ViewModels
             {
                 try
                 {
-                    Andastra.Utility.SystemHelpers.FixPermissions(directory, msg => AddLogEntry(msg));
+                    SystemHelpers.FixPermissions(directory, msg => AddLogEntry(msg));
 
                     int numFiles = 0;
                     int numFolders = 0;
@@ -868,7 +867,7 @@ namespace HoloPatcher.UI.ViewModels
                 try
                 {
                     bool madeChange = false;
-                    Andastra.Utility.SystemHelpers.FixCaseSensitivity(directory, msg =>
+                    SystemHelpers.FixCaseSensitivity(directory, msg =>
                     {
                         AddLogEntry(msg);
                         madeChange = true;

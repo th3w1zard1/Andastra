@@ -260,7 +260,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             // Configure render pass descriptor with drawable's texture
             IntPtr drawableTexture = MetalNative.GetDrawableTexture(_currentDrawable);
-            MetalNative.SetRenderPassColorAttachment(_currentRenderPassDescriptor, 0, drawableTexture, 
+            MetalNative.SetRenderPassColorAttachment(_currentRenderPassDescriptor, 0, drawableTexture,
                 MetalLoadAction.Clear, MetalStoreAction.Store, new MetalClearColor(0.0f, 0.0f, 0.0f, 1.0f));
 
             // Begin render pass
@@ -389,16 +389,16 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         /// <summary>
         /// Uploads texture pixel data to a previously created texture.
-        /// 
+        ///
         /// Matches original engine behavior: Metal uses MTLTexture::replaceRegion
         /// to upload texture data after creating the texture resource.
-        /// 
+        ///
         /// Based on original engine texture upload pattern:
         /// - swkotor.exe: FUN_00428380 @ 0x00428380 (texture upload with mipmap generation)
         /// - swkotor2.exe: FUN_00428380 @ 0x00428380 (texture upload with mipmap generation)
         /// - Original engine uses glTexImage2D for each mipmap level, Metal equivalent is replaceRegion
         /// - Both engines upload mipmaps sequentially, starting from base level (0)
-        /// 
+        ///
         /// Metal API Reference: https://developer.apple.com/documentation/metal/mtltexture/replace(region:mipmaplevel:withbytes:bytesperrow:)
         /// </summary>
         /// <param name="handle">Texture handle returned from CreateTexture.</param>
@@ -443,7 +443,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 for (int i = 0; i < data.Mipmaps.Length; i++)
                 {
                     TextureMipmapData mipmap = data.Mipmaps[i];
-                    
+
                     // Validate mipmap level is within valid range
                     if (mipmap.Level < 0 || mipmap.Level >= info.TextureDesc.MipLevels)
                     {
@@ -476,7 +476,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                         skippedCount++;
                         continue;
                     }
-                    
+
                     // Validate data size matches expected size
                     uint expectedDataSize = CalculateMipmapDataSize(data.Format, mipmap.Width, mipmap.Height);
                     if (mipmap.Data.Length < expectedDataSize)
@@ -955,9 +955,9 @@ namespace Andastra.Runtime.MonoGame.Backends
             for (int i = 0; i < layout.Elements.Length && i < 32; i++)
             {
                 InputElement element = layout.Elements[i];
-                MetalNative.SetVertexDescriptorAttribute(vertexDescriptor, (uint)i, 
+                MetalNative.SetVertexDescriptorAttribute(vertexDescriptor, (uint)i,
                     ConvertTextureFormat(element.Format), element.Slot, element.AlignedByteOffset);
-                MetalNative.SetVertexDescriptorLayout(vertexDescriptor, (uint)element.Slot, 
+                MetalNative.SetVertexDescriptorLayout(vertexDescriptor, (uint)element.Slot,
                     element.AlignedByteOffset, 0); // stride would be calculated
             }
 
@@ -1108,7 +1108,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// For uncompressed formats: width * bytesPerPixel
         /// For compressed formats (DXT/BC): bytes from beginning of one row of blocks to the next
         /// Metal API Reference: https://developer.apple.com/documentation/metal/mtltexture/replace(region:mipmaplevel:withbytes:bytesperrow:)
-        /// 
+        ///
         /// Matches original engine behavior: texture uploads use format-specific row pitch calculations.
         /// Original engine: swkotor.exe and swkotor2.exe calculate row pitch based on format for DirectX texture uploads.
         /// </summary>
@@ -1204,7 +1204,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// Calculates expected data size for a mipmap level based on format and dimensions.
         /// For uncompressed formats: width * height * bytesPerPixel
         /// For compressed formats: ((width + 3) / 4) * ((height + 3) / 4) * bytesPerBlock
-        /// 
+        ///
         /// Matches original engine behavior: texture data size validation ensures correct upload.
         /// Original engine: swkotor.exe and swkotor2.exe validate texture data size before upload.
         /// </summary>
@@ -1376,7 +1376,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         public static extern void ReleaseRenderPassDescriptor(IntPtr descriptor);
 
         [DllImport(MetalFramework)]
-        public static extern void SetRenderPassColorAttachment(IntPtr descriptor, uint index, IntPtr texture, 
+        public static extern void SetRenderPassColorAttachment(IntPtr descriptor, uint index, IntPtr texture,
             MetalLoadAction loadAction, MetalStoreAction storeAction, MetalClearColor clearColor);
 
         [DllImport(MetalFramework)]
@@ -1543,7 +1543,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         StorageModePrivate = 8
     }
 
-    internal enum MetalPrimitiveType : uint
+    public enum MetalPrimitiveType : uint
     {
         Point = 0,
         Line = 1,
@@ -1552,7 +1552,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         TriangleStrip = 4
     }
 
-    internal enum MetalIndexType : uint
+    public enum MetalIndexType : uint
     {
         UInt16 = 0,
         UInt32 = 1

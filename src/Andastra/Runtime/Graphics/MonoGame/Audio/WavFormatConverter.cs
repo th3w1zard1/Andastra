@@ -171,7 +171,7 @@ namespace Andastra.Runtime.MonoGame.Audio
                                 {
                                     sample24 |= 0xFF000000; // Sign extend
                                 }
-                                sample16 = (short)(sample24 >> 8); // Convert to 16-bit
+                                sample16 = (short)((int)(sample24 >> 8)); // Convert to 16-bit
                                 break;
 
                             case 32:

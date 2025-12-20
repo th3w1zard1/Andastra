@@ -37,7 +37,7 @@ namespace HolocronToolset.Dialogs
         private Button _generateButton;
         private Button _previewButton;
         private Button _saveButton;
-        
+
         // General settings controls
         private TextBox _modNameEdit;
         private TextBox _modAuthorEdit;
@@ -45,27 +45,27 @@ namespace HolocronToolset.Dialogs
         private CheckBox _installToOverrideCheck;
         private CheckBox _backupFilesCheck;
         private CheckBox _confirmOverwritesCheck;
-        
+
         // INI Preview control
         private TextBox _iniPreviewText;
-        
+
         // GFF Fields controls
         private ListBox _gffFileList;
         private TreeView _gffFieldsTree;
         private List<ModificationsGFF> _gffModifications = new List<ModificationsGFF>();
-        
+
         // Scripts controls
         private ListBox _scriptList;
         // Dictionary to store full file paths for scripts (key: filename, value: full path)
         // This allows us to copy the actual files during generation
         private Dictionary<string, string> _scriptPaths = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        
+
         // TLK StrRef controls
         private TreeView _tlkStringTree;
         // Dictionary to store TLK string entries (key: token name, value: TLKStringEntry)
         private Dictionary<string, TLKStringEntry> _tlkStrings = new Dictionary<string, TLKStringEntry>(StringComparer.OrdinalIgnoreCase);
         private int _nextTlkTokenId = 0;
-        
+
         // 2DA Memory controls
         private ListBox _twodaList;
         private TreeView _twodaTokensTree;
@@ -243,14 +243,14 @@ namespace HolocronToolset.Dialogs
             var content = new StackPanel { Spacing = 10, Margin = new Avalonia.Thickness(10) };
 
             // Header
-            content.Children.Add(new TextBlock 
-            { 
-                Text = "2DA Memory Tokens:", 
-                FontWeight = Avalonia.Media.FontWeight.Bold 
+            content.Children.Add(new TextBlock
+            {
+                Text = "2DA Memory Tokens:",
+                FontWeight = Avalonia.Media.FontWeight.Bold
             });
-            content.Children.Add(new TextBlock 
-            { 
-                Text = "Track row numbers in 2DA files that will change during installation." 
+            content.Children.Add(new TextBlock
+            {
+                Text = "Track row numbers in 2DA files that will change during installation."
             });
 
             // Splitter for 2DA list and token details
@@ -284,15 +284,15 @@ namespace HolocronToolset.Dialogs
             var addTokenBtn = new Button { Content = "Add Token" };
             addTokenBtn.Click += (s, e) => Add2DAToken();
             tokenBtnLayout.Children.Add(addTokenBtn);
-            
+
             var editTokenBtn = new Button { Content = "Edit Token" };
             editTokenBtn.Click += (s, e) => Edit2DAToken();
             tokenBtnLayout.Children.Add(editTokenBtn);
-            
+
             var removeTokenBtn = new Button { Content = "Remove Token" };
             removeTokenBtn.Click += (s, e) => Remove2DAToken();
             tokenBtnLayout.Children.Add(removeTokenBtn);
-            
+
             rightWidget.Children.Add(tokenBtnLayout);
 
             Grid.SetColumn(rightWidget, 1);
@@ -314,14 +314,14 @@ namespace HolocronToolset.Dialogs
             var content = new StackPanel { Spacing = 10, Margin = new Avalonia.Thickness(10) };
 
             // Header
-            content.Children.Add(new TextBlock 
-            { 
-                Text = "TLK String References:", 
-                FontWeight = Avalonia.Media.FontWeight.Bold 
+            content.Children.Add(new TextBlock
+            {
+                Text = "TLK String References:",
+                FontWeight = Avalonia.Media.FontWeight.Bold
             });
-            content.Children.Add(new TextBlock 
-            { 
-                Text = "Manage string references that will be added to dialog.tlk." 
+            content.Children.Add(new TextBlock
+            {
+                Text = "Manage string references that will be added to dialog.tlk."
             });
 
             // TLK string tree
@@ -337,19 +337,19 @@ namespace HolocronToolset.Dialogs
             var addStrBtn = new Button { Content = "Add TLK String" };
             addStrBtn.Click += (s, e) => AddTlkString();
             btnLayout.Children.Add(addStrBtn);
-            
+
             var editStrBtn = new Button { Content = "Edit String" };
             editStrBtn.Click += (s, e) => EditTlkString();
             btnLayout.Children.Add(editStrBtn);
-            
+
             var removeStrBtn = new Button { Content = "Remove String" };
             removeStrBtn.Click += (s, e) => RemoveTlkString();
             btnLayout.Children.Add(removeStrBtn);
-            
+
             var openTlkEditorBtn = new Button { Content = "Open TLK Editor" };
             openTlkEditorBtn.Click += (s, e) => OpenTlkEditor();
             btnLayout.Children.Add(openTlkEditorBtn);
-            
+
             btnLayout.Children.Add(new TextBlock()); // Spacer
             content.Children.Add(btnLayout);
 
@@ -358,7 +358,7 @@ namespace HolocronToolset.Dialogs
             {
                 _configTabs.Items.Add(tab);
             }
-            
+
             RefreshTlkStringTree();
         }
 
@@ -370,14 +370,14 @@ namespace HolocronToolset.Dialogs
             var content = new StackPanel { Spacing = 10, Margin = new Avalonia.Thickness(10) };
 
             // Header
-            content.Children.Add(new TextBlock 
-            { 
-                Text = "GFF Field Modifications:", 
-                FontWeight = Avalonia.Media.FontWeight.Bold 
+            content.Children.Add(new TextBlock
+            {
+                Text = "GFF Field Modifications:",
+                FontWeight = Avalonia.Media.FontWeight.Bold
             });
-            content.Children.Add(new TextBlock 
-            { 
-                Text = "View and edit fields that will be modified in GFF files." 
+            content.Children.Add(new TextBlock
+            {
+                Text = "View and edit fields that will be modified in GFF files."
             });
 
             // Splitter for file list and field modifications
@@ -427,7 +427,7 @@ namespace HolocronToolset.Dialogs
             public string NewValue { get; set; }
             public string Type { get; set; }
         }
-        
+
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:350-373
         // Original: def _create_scripts_tab(self):
@@ -449,11 +449,11 @@ namespace HolocronToolset.Dialogs
             var addScriptBtn = new Button { Content = "Add Script" };
             addScriptBtn.Click += async (s, e) => await AddScript();
             btnLayout.Children.Add(addScriptBtn);
-            
+
             var removeScriptBtn = new Button { Content = "Remove Script" };
             removeScriptBtn.Click += (s, e) => RemoveScript();
             btnLayout.Children.Add(removeScriptBtn);
-            
+
             btnLayout.Children.Add(new TextBlock()); // Spacer
             content.Children.Add(btnLayout);
 
@@ -648,7 +648,7 @@ namespace HolocronToolset.Dialogs
 
                 // Create tslpatchdata subdirectory in selected location
                 string tslpatchdataPath = Path.Combine(selectedPath, "tslpatchdata");
-                
+
                 // Create directory if it doesn't exist (exist_ok=True in Python)
                 if (!Directory.Exists(tslpatchdataPath))
                 {
@@ -707,7 +707,7 @@ namespace HolocronToolset.Dialogs
                 foreach (string line in iniLines)
                 {
                     string trimmedLine = line.Trim();
-                    
+
                     // Check for section headers
                     if (trimmedLine.StartsWith("[") && trimmedLine.EndsWith("]"))
                     {
@@ -1041,7 +1041,7 @@ namespace HolocronToolset.Dialogs
                         {
                             // Add just the filename to the list (matching PyKotor behavior)
                             string fileName = Path.GetFileName(filePath);
-                            
+
                             // Check if script is already in the list
                             bool alreadyExists = false;
                             foreach (var item in _scriptList.Items)
@@ -1061,7 +1061,7 @@ namespace HolocronToolset.Dialogs
                             }
                         }
                     }
-                    
+
                     // Update INI preview to reflect changes
                     UpdateIniPreview();
                 }
@@ -1123,13 +1123,13 @@ namespace HolocronToolset.Dialogs
                         await errorBox.ShowAsync();
                         return;
                     }
-                    
+
                     // Assign token ID if not set
                     if (entry.TokenId == 0)
                     {
                         entry.TokenId = _nextTlkTokenId++;
                     }
-                    
+
                     _tlkStrings[entry.TokenName] = entry;
                     RefreshTlkStringTree();
                     UpdateIniPreview();
@@ -1152,7 +1152,7 @@ namespace HolocronToolset.Dialogs
                 await errorBox.ShowAsync();
                 return;
             }
-            
+
             // Get the token name from the selected item
             string tokenName = null;
             if (selectedItem is TreeViewItem treeItem)
@@ -1163,12 +1163,12 @@ namespace HolocronToolset.Dialogs
             {
                 tokenName = str;
             }
-            
+
             if (string.IsNullOrWhiteSpace(tokenName) || !_tlkStrings.ContainsKey(tokenName))
             {
                 return;
             }
-            
+
             var existingEntry = _tlkStrings[tokenName];
             var dialog = new TLKStringEditDialog(this, existingEntry);
             var result = await dialog.ShowDialog<bool>(this);
@@ -1188,16 +1188,16 @@ namespace HolocronToolset.Dialogs
                         await errorBox.ShowAsync();
                         return;
                     }
-                    
+
                     if (entry.TokenName != tokenName)
                     {
                         _tlkStrings.Remove(tokenName);
                     }
-                    
+
                     // Preserve token ID and used by list
                     entry.TokenId = existingEntry.TokenId;
                     entry.UsedBy = existingEntry.UsedBy;
-                    
+
                     _tlkStrings[entry.TokenName] = entry;
                     RefreshTlkStringTree();
                     UpdateIniPreview();
@@ -1214,7 +1214,7 @@ namespace HolocronToolset.Dialogs
             {
                 return;
             }
-            
+
             // Get the token name from the selected item
             string tokenName = null;
             if (selectedItem is TreeViewItem treeItem)
@@ -1225,7 +1225,7 @@ namespace HolocronToolset.Dialogs
             {
                 tokenName = str;
             }
-            
+
             if (!string.IsNullOrWhiteSpace(tokenName) && _tlkStrings.ContainsKey(tokenName))
             {
                 _tlkStrings.Remove(tokenName);
@@ -1248,7 +1248,7 @@ namespace HolocronToolset.Dialogs
                 errorBox.ShowAsync();
                 return;
             }
-            
+
             string tlkPath = Path.Combine(_installation.Path, "dialog.tlk");
             if (File.Exists(tlkPath))
             {
@@ -1283,7 +1283,7 @@ namespace HolocronToolset.Dialogs
                 errorBox.ShowAsync();
             }
         }
-        
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:460-481
         // Original: def _add_2da_memory(self), _on_2da_selected(self), _add_2da_token(self), _edit_2da_token(self), _remove_2da_token(self):
         private async void Add2DAMemory()
@@ -1298,21 +1298,21 @@ namespace HolocronToolset.Dialogs
                 await errorBox.ShowAsync();
                 return;
             }
-            
+
             // Show dialog to select 2DA file
             var dialog = new TwoDAMemorySelectDialog(this, _installation);
             var result = await dialog.ShowDialog<bool>(this);
             if (result && !string.IsNullOrWhiteSpace(dialog.Selected2DAFile))
             {
                 string twodaFile = dialog.Selected2DAFile;
-                
+
                 // Check if 2DA file already exists in the list
                 if (!_twodaMemoryTokens.ContainsKey(twodaFile))
                 {
                     _twodaMemoryTokens[twodaFile] = new List<TwoDAMemoryTokenEntry>();
                     Refresh2DAList();
                 }
-                
+
                 // Select the newly added 2DA file
                 if (_twodaList != null)
                 {
@@ -1327,25 +1327,25 @@ namespace HolocronToolset.Dialogs
                 }
             }
         }
-        
+
         private void On2DASelected(object sender, SelectionChangedEventArgs e)
         {
             if (_twodaList == null || _twodaTokensTree == null)
             {
                 return;
             }
-            
+
             var selectedItem = _twodaList.SelectedItem as string;
             if (string.IsNullOrEmpty(selectedItem))
             {
                 _twodaTokensTree.Items.Clear();
                 return;
             }
-            
+
             // Load and display tokens for selected 2DA
             Refresh2DATokensTree(selectedItem);
         }
-        
+
         private async void Add2DAToken()
         {
             if (_twodaList == null || _twodaList.SelectedItem == null)
@@ -1358,20 +1358,20 @@ namespace HolocronToolset.Dialogs
                 await errorBox.ShowAsync();
                 return;
             }
-            
+
             string twodaFile = _twodaList.SelectedItem as string;
             if (string.IsNullOrEmpty(twodaFile))
             {
                 return;
             }
-            
+
             // Show dialog to add token
             var dialog = new TwoDAMemoryTokenEditDialog(this, null, twodaFile, _installation);
             var result = await dialog.ShowDialog<bool>(this);
             if (result && dialog.TokenEntry != null)
             {
                 var entry = dialog.TokenEntry;
-                
+
                 // Assign token ID if not set
                 if (entry.TokenId == 0)
                 {
@@ -1381,31 +1381,31 @@ namespace HolocronToolset.Dialogs
                 {
                     _nextTwodaTokenId = entry.TokenId + 1;
                 }
-                
+
                 // Generate token name if not set
                 if (string.IsNullOrWhiteSpace(entry.TokenName))
                 {
                     entry.TokenName = $"2DAMEMORY{entry.TokenId}";
                 }
-                
+
                 if (!_twodaMemoryTokens.ContainsKey(twodaFile))
                 {
                     _twodaMemoryTokens[twodaFile] = new List<TwoDAMemoryTokenEntry>();
                 }
-                
+
                 _twodaMemoryTokens[twodaFile].Add(entry);
                 Refresh2DATokensTree(twodaFile);
                 UpdateIniPreview();
             }
         }
-        
+
         private async void Edit2DAToken()
         {
             if (_twodaTokensTree == null || _twodaList == null)
             {
                 return;
             }
-            
+
             var selectedItem = _twodaTokensTree.SelectedItem;
             if (selectedItem == null)
             {
@@ -1417,7 +1417,7 @@ namespace HolocronToolset.Dialogs
                 await errorBox.ShowAsync();
                 return;
             }
-            
+
             // Get token entry from selected item
             TwoDAMemoryTokenEntry tokenEntry = null;
             if (selectedItem is TreeViewItem treeItem && treeItem.Tag is TwoDAMemoryTokenEntry entry)
@@ -1433,12 +1433,12 @@ namespace HolocronToolset.Dialogs
                     tokenEntry = _twodaMemoryTokens[selectedTwodaFile].FirstOrDefault(t => t.TokenName == tokenName);
                 }
             }
-            
+
             if (tokenEntry == null)
             {
                 return;
             }
-            
+
             string twodaFile = _twodaList.SelectedItem as string;
             var dialog = new TwoDAMemoryTokenEditDialog(this, tokenEntry, twodaFile, _installation);
             var result = await dialog.ShowDialog<bool>(this);
@@ -1449,20 +1449,20 @@ namespace HolocronToolset.Dialogs
                 UpdateIniPreview();
             }
         }
-        
+
         private void Remove2DAToken()
         {
             if (_twodaTokensTree == null || _twodaList == null)
             {
                 return;
             }
-            
+
             var selectedItem = _twodaTokensTree.SelectedItem;
             if (selectedItem == null)
             {
                 return;
             }
-            
+
             // Get token entry from selected item
             TwoDAMemoryTokenEntry tokenEntry = null;
             if (selectedItem is TreeViewItem treeItem && treeItem.Tag is TwoDAMemoryTokenEntry entry)
@@ -1478,7 +1478,7 @@ namespace HolocronToolset.Dialogs
                     tokenEntry = _twodaMemoryTokens[twodaFile].FirstOrDefault(t => t.TokenName == tokenName);
                 }
             }
-            
+
             if (tokenEntry != null)
             {
                 string twodaFile = _twodaList.SelectedItem as string;
@@ -1490,35 +1490,35 @@ namespace HolocronToolset.Dialogs
                 }
             }
         }
-        
+
         private void Refresh2DAList()
         {
             if (_twodaList == null)
             {
                 return;
             }
-            
+
             _twodaList.Items.Clear();
             foreach (var twodaFile in _twodaMemoryTokens.Keys.OrderBy(x => x))
             {
                 _twodaList.Items.Add(twodaFile);
             }
         }
-        
+
         private void Refresh2DATokensTree(string twodaFile)
         {
             if (_twodaTokensTree == null || string.IsNullOrEmpty(twodaFile))
             {
                 return;
             }
-            
+
             _twodaTokensTree.Items.Clear();
-            
+
             if (!_twodaMemoryTokens.ContainsKey(twodaFile))
             {
                 return;
             }
-            
+
             var tokens = _twodaMemoryTokens[twodaFile];
             foreach (var token in tokens.OrderBy(t => t.TokenId))
             {
@@ -1530,28 +1530,28 @@ namespace HolocronToolset.Dialogs
                 {
                     usedByText += $" (+{token.UsedBy.Count - 3} more)";
                 }
-                
+
                 string displayText = $"{token.TokenName} | {token.ColumnName ?? "(none)"} | {token.RowLabel ?? "(none)"} | Used By: {usedByText}";
-                
+
                 var item = new TreeViewItem
                 {
                     Header = new TextBlock { Text = displayText },
                     Tag = token
                 };
-                
+
                 _twodaTokensTree.Items.Add(item);
             }
         }
-        
+
         private void RefreshTlkStringTree()
         {
             if (_tlkStringTree == null)
             {
                 return;
             }
-            
+
             _tlkStringTree.Items.Clear();
-            
+
             foreach (var kvp in _tlkStrings.OrderBy(x => x.Key))
             {
                 var entry = kvp.Value;
@@ -1562,15 +1562,15 @@ namespace HolocronToolset.Dialogs
                     textPreview = textPreview.Substring(0, 57) + "...";
                 }
                 textPreview = textPreview.Replace("\n", "\\n").Replace("\r", "\\r");
-                
-                string usedByText = entry.UsedBy != null && entry.UsedBy.Count > 0 
+
+                string usedByText = entry.UsedBy != null && entry.UsedBy.Count > 0
                     ? string.Join(", ", entry.UsedBy.Take(3))
                     : "(not used)";
                 if (entry.UsedBy != null && entry.UsedBy.Count > 3)
                 {
                     usedByText += $" (+{entry.UsedBy.Count - 3} more)";
                 }
-                
+
                 string displayText = $"{entry.TokenName} | {textPreview} | Used By: {usedByText}";
                 _tlkStringTree.Items.Add(displayText);
             }
@@ -1607,13 +1607,13 @@ namespace HolocronToolset.Dialogs
                 {
                     string scriptName = scriptEntry.Key;
                     string sourcePath = scriptEntry.Value;
-                    
+
                     if (File.Exists(sourcePath))
                     {
                         string destPath = Path.Combine(_tslpatchdataPath, scriptName);
                         File.Copy(sourcePath, destPath, overwrite: true);
                         allFilePaths.Add(scriptName);
-                        
+
                         // Scripts go to Override folder by default
                         string destination = _installToOverrideCheck?.IsChecked == true ? "Override" : ".";
                         installFiles.Add(new InstallFile(scriptName, replaceExisting: false, destination: destination));
@@ -1628,7 +1628,7 @@ namespace HolocronToolset.Dialogs
                         // Try to find the GFF file in tslpatchdata or installation
                         string gffSourcePath = null;
                         string tslpatchdataFile = Path.Combine(_tslpatchdataPath, modGff.SourceFile);
-                        
+
                         if (File.Exists(tslpatchdataFile))
                         {
                             gffSourcePath = tslpatchdataFile;
@@ -1658,7 +1658,7 @@ namespace HolocronToolset.Dialogs
                                 File.Copy(gffSourcePath, destPath, overwrite: true);
                             }
                             allFilePaths.Add(modGff.SourceFile);
-                            
+
                             // GFF files go to Override folder by default
                             string destination = _installToOverrideCheck?.IsChecked == true ? "Override" : ".";
                             installFiles.Add(new InstallFile(modGff.SourceFile, replaceExisting: false, destination: destination));
@@ -1677,7 +1677,7 @@ namespace HolocronToolset.Dialogs
                 {
                     var tlkModifiers = new List<ModifyTLK>();
                     var appendEntries = new List<TLKStringEntry>();
-                    
+
                     foreach (var tlkEntry in _tlkStrings.Values)
                     {
                         var modifyTlk = new ModifyTLK(tlkEntry.TokenId, tlkEntry.IsReplacement)
@@ -1687,7 +1687,7 @@ namespace HolocronToolset.Dialogs
                             ModIndex = tlkEntry.IsReplacement ? tlkEntry.ModIndex : tlkEntry.TokenId
                         };
                         tlkModifiers.Add(modifyTlk);
-                        
+
                         // Collect non-replacement entries for append.tlk
                         if (!tlkEntry.IsReplacement)
                         {
@@ -1700,10 +1700,10 @@ namespace HolocronToolset.Dialogs
                     {
                         var appendTlk = new Andastra.Parsing.Formats.TLK.TLK();
                         appendTlk.Resize(appendEntries.Count);
-                        
+
                         // Sort by token ID for consistent ordering
                         var sortedAppends = appendEntries.OrderBy(e => e.TokenId).ToList();
-                        
+
                         for (int i = 0; i < sortedAppends.Count; i++)
                         {
                             var entry = sortedAppends[i];
@@ -1711,13 +1711,13 @@ namespace HolocronToolset.Dialogs
                             string sound = entry.Sound ?? "";
                             appendTlk.Replace(i, text, sound);
                         }
-                        
+
                         // Write append.tlk to tslpatchdata folder
                         string appendPath = Path.Combine(_tslpatchdataPath, "append.tlk");
                         var writer = new TLKBinaryWriter(appendTlk);
                         byte[] tlkData = writer.Write();
                         File.WriteAllBytes(appendPath, tlkData);
-                        
+
                         // Add append.tlk to install list
                         string destination = _installToOverrideCheck?.IsChecked == true ? "Override" : ".";
                         installFiles.Add(new InstallFile("append.tlk", replaceExisting: false, destination: destination));
@@ -1760,19 +1760,19 @@ namespace HolocronToolset.Dialogs
                 // Add custom settings section with mod name and author
                 var settingsLines = new List<string>();
                 settingsLines.Add("[Settings]");
-                
+
                 string modName = _modNameEdit?.Text?.Trim();
                 if (!string.IsNullOrEmpty(modName))
                 {
                     settingsLines.Add($"modname={modName}");
                 }
-                
+
                 string modAuthor = _modAuthorEdit?.Text?.Trim();
                 if (!string.IsNullOrEmpty(modAuthor))
                 {
                     settingsLines.Add($"author={modAuthor}");
                 }
-                
+
                 string modDescription = _modDescriptionEdit?.Text?.Trim();
                 if (!string.IsNullOrEmpty(modDescription))
                 {
@@ -1780,18 +1780,18 @@ namespace HolocronToolset.Dialogs
                     string escapedDescription = modDescription.Replace("\r\n", "\\n").Replace("\n", "\\n").Replace("\r", "\\r");
                     settingsLines.Add($"description={escapedDescription}");
                 }
-                
+
                 // Add installation options
                 if (_backupFilesCheck?.IsChecked == true)
                 {
                     settingsLines.Add("backup=1");
                 }
-                
+
                 if (_confirmOverwritesCheck?.IsChecked == true)
                 {
                     settingsLines.Add("confirmoverwrite=1");
                 }
-                
+
                 settingsLines.Add("LogLevel=3");
                 settingsLines.Add("");
 
@@ -1799,7 +1799,7 @@ namespace HolocronToolset.Dialogs
                 // Find the [Settings] section in the generated INI and replace it
                 var iniLines = iniContent.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None).ToList();
                 int settingsIndex = iniLines.FindIndex(line => line.Trim().Equals("[Settings]", StringComparison.OrdinalIgnoreCase));
-                
+
                 if (settingsIndex >= 0)
                 {
                     // Remove old settings section (until next section or end)
@@ -1893,7 +1893,7 @@ namespace HolocronToolset.Dialogs
 
             // Generate preview from current configuration
             var previewLines = new StringBuilder();
-            
+
             // Settings section
             previewLines.AppendLine("[settings]");
             string modName = _modNameEdit?.Text?.Trim() ?? "My Mod";
@@ -1931,7 +1931,7 @@ namespace HolocronToolset.Dialogs
                         previewLines.AppendLine();
                         previewLines.AppendLine($"[2DA:{twodaFile}]");
                         previewLines.AppendLine($"FileName={twodaFile}");
-                        
+
                         foreach (var token in tokens.OrderBy(t => t.TokenId))
                         {
                             // Format: 2DAMEMORY#=ColumnName|RowLabel
@@ -1949,7 +1949,7 @@ namespace HolocronToolset.Dialogs
                             {
                                 value = token.ColumnName;
                             }
-                            
+
                             if (!string.IsNullOrEmpty(value))
                             {
                                 previewLines.AppendLine($"{token.TokenName}={value}");
@@ -1971,7 +1971,7 @@ namespace HolocronToolset.Dialogs
                 {
                     previewLines.AppendLine("ReplaceFile0=replace.tlk");
                 }
-                
+
                 // Add append entries (non-replacements)
                 var appendEntries = _tlkStrings.Values.Where(e => !e.IsReplacement).OrderBy(e => e.TokenId).ToList();
                 foreach (var entry in appendEntries)
@@ -1979,7 +1979,7 @@ namespace HolocronToolset.Dialogs
                     // Truncate text for comment (max 60 chars)
                     string textPreview = (entry.Text ?? "").Substring(0, Math.Min(60, (entry.Text ?? "").Length));
                     textPreview = textPreview.Replace("\n", "\\n").Replace("\r", "\\r");
-                    
+
                     // Build comment with text and sound (if present)
                     var commentParts = new List<string>();
                     if (!string.IsNullOrEmpty(textPreview))
@@ -1990,13 +1990,13 @@ namespace HolocronToolset.Dialogs
                     {
                         commentParts.Add($"sound={entry.Sound}");
                     }
-                    
+
                     string comment = commentParts.Count > 0 ? string.Join(" | ", commentParts) : "(empty entry)";
-                    
+
                     // Add the line with comment: StrRef{modIndex}={tokenId}  ; comment
                     previewLines.AppendLine($"StrRef{entry.ModIndex}={entry.TokenId}  ; {comment}");
                 }
-                
+
                 // Add replacement section if needed
                 if (hasReplacements)
                 {
@@ -2104,7 +2104,7 @@ namespace HolocronToolset.Dialogs
                 await errorBox.ShowAsync();
             }
         }
-        
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:422-430
         // Original: def _load_existing_config(self) - TLK loading part
         private void LoadTlkStringsFromIni(string[] iniLines)
@@ -2113,18 +2113,18 @@ namespace HolocronToolset.Dialogs
             {
                 return;
             }
-            
+
             _tlkStrings.Clear();
             _nextTlkTokenId = 0;
-            
+
             bool inTlkListSection = false;
             bool inReplaceTlkSection = false;
             Dictionary<int, int> replaceMappings = new Dictionary<int, int>(); // tokenId -> modIndex
-            
+
             foreach (string line in iniLines)
             {
                 string trimmedLine = line.Trim();
-                
+
                 // Check for section headers
                 if (trimmedLine.StartsWith("[") && trimmedLine.EndsWith("]"))
                 {
@@ -2133,13 +2133,13 @@ namespace HolocronToolset.Dialogs
                     inReplaceTlkSection = sectionName.Equals("replace.tlk", StringComparison.OrdinalIgnoreCase);
                     continue;
                 }
-                
+
                 // Skip empty lines and comments
                 if (string.IsNullOrWhiteSpace(trimmedLine) || trimmedLine.StartsWith(";") || trimmedLine.StartsWith("#"))
                 {
                     continue;
                 }
-                
+
                 if (inReplaceTlkSection)
                 {
                     // Parse replacement mappings: tokenId=modIndex
@@ -2162,7 +2162,7 @@ namespace HolocronToolset.Dialogs
                         // ReplaceFile0=replace.tlk - we'll handle this when processing [replace.tlk] section
                         continue;
                     }
-                    
+
                     // Parse StrRef entries: StrRef{modIndex}={tokenId}  ; comment
                     if (trimmedLine.StartsWith("StrRef", StringComparison.OrdinalIgnoreCase))
                     {
@@ -2171,7 +2171,7 @@ namespace HolocronToolset.Dialogs
                         {
                             string leftPart = trimmedLine.Substring(0, equalsIndex).Trim();
                             string rightPart = trimmedLine.Substring(equalsIndex + 1).Trim();
-                            
+
                             // Extract modIndex from "StrRef{modIndex}"
                             if (leftPart.StartsWith("StrRef", StringComparison.OrdinalIgnoreCase))
                             {
@@ -2180,10 +2180,10 @@ namespace HolocronToolset.Dialogs
                                 {
                                     // Extract tokenId from right part (before comment)
                                     int commentIndex = rightPart.IndexOf(';');
-                                    string tokenIdStr = commentIndex >= 0 
+                                    string tokenIdStr = commentIndex >= 0
                                         ? rightPart.Substring(0, commentIndex).Trim()
                                         : rightPart.Trim();
-                                    
+
                                     if (int.TryParse(tokenIdStr, out int tokenId))
                                     {
                                         // Extract text and sound from comment if present
@@ -2207,10 +2207,10 @@ namespace HolocronToolset.Dialogs
                                                 sound = comment.Substring(6).Trim();
                                             }
                                         }
-                                        
+
                                         // Generate token name from tokenId
                                         string tokenName = $"StrRef{tokenId}";
-                                        
+
                                         var entry = new TLKStringEntry
                                         {
                                             TokenName = tokenName,
@@ -2220,7 +2220,7 @@ namespace HolocronToolset.Dialogs
                                             Sound = sound,
                                             IsReplacement = false
                                         };
-                                        
+
                                         _tlkStrings[tokenName] = entry;
                                         if (tokenId >= _nextTlkTokenId)
                                         {
@@ -2233,14 +2233,14 @@ namespace HolocronToolset.Dialogs
                     }
                 }
             }
-            
+
             // Process replacement mappings
             foreach (var kvp in replaceMappings)
             {
                 int tokenId = kvp.Key;
                 int modIndex = kvp.Value;
                 string tokenName = $"StrRef{tokenId}";
-                
+
                 var entry = new TLKStringEntry
                 {
                     TokenName = tokenName,
@@ -2250,17 +2250,17 @@ namespace HolocronToolset.Dialogs
                     Sound = "",
                     IsReplacement = true
                 };
-                
+
                 _tlkStrings[tokenName] = entry;
                 if (tokenId >= _nextTlkTokenId)
                 {
                     _nextTlkTokenId = tokenId + 1;
                 }
             }
-            
+
             RefreshTlkStringTree();
         }
-        
+
         // Load 2DA memory tokens from INI file
         private void Load2DAMemoryFromIni(string[] iniLines)
         {
@@ -2268,23 +2268,23 @@ namespace HolocronToolset.Dialogs
             {
                 return;
             }
-            
+
             _twodaMemoryTokens.Clear();
             _nextTwodaTokenId = 0;
-            
+
             string currentSection = null;
             string current2DAFile = null;
-            
+
             foreach (string line in iniLines)
             {
                 string trimmedLine = line.Trim();
-                
+
                 // Check for section headers
                 if (trimmedLine.StartsWith("[") && trimmedLine.EndsWith("]"))
                 {
                     string sectionName = trimmedLine.Substring(1, trimmedLine.Length - 2);
                     currentSection = sectionName;
-                    
+
                     // Check if this is a 2DA section (format: [2DA:filename.2da])
                     if (sectionName.StartsWith("2DA:", StringComparison.OrdinalIgnoreCase))
                     {
@@ -2300,13 +2300,13 @@ namespace HolocronToolset.Dialogs
                     }
                     continue;
                 }
-                
+
                 // Skip empty lines and comments
                 if (string.IsNullOrWhiteSpace(trimmedLine) || trimmedLine.StartsWith(";") || trimmedLine.StartsWith("#"))
                 {
                     continue;
                 }
-                
+
                 // Process 2DA memory tokens in 2DA sections
                 if (!string.IsNullOrEmpty(current2DAFile) && currentSection != null && currentSection.StartsWith("2DA:", StringComparison.OrdinalIgnoreCase))
                 {
@@ -2315,13 +2315,13 @@ namespace HolocronToolset.Dialogs
                     {
                         string key = trimmedLine.Substring(0, equalsIndex).Trim();
                         string value = trimmedLine.Substring(equalsIndex + 1).Trim();
-                        
+
                         // Skip FileName key
                         if (key.Equals("FileName", StringComparison.OrdinalIgnoreCase))
                         {
                             continue;
                         }
-                        
+
                         // Check if key is a 2DAMEMORY token (format: 2DAMEMORY#)
                         if (key.StartsWith("2DAMEMORY", StringComparison.OrdinalIgnoreCase))
                         {
@@ -2331,7 +2331,7 @@ namespace HolocronToolset.Dialogs
                                 // Parse value (format: ColumnName|RowLabel or just RowLabel)
                                 string columnName = "";
                                 string rowLabel = "";
-                                
+
                                 int pipeIndex = value.IndexOf('|');
                                 if (pipeIndex > 0)
                                 {
@@ -2342,7 +2342,7 @@ namespace HolocronToolset.Dialogs
                                 {
                                     rowLabel = value;
                                 }
-                                
+
                                 var entry = new TwoDAMemoryTokenEntry
                                 {
                                     TokenName = key,
@@ -2350,9 +2350,9 @@ namespace HolocronToolset.Dialogs
                                     ColumnName = columnName,
                                     RowLabel = rowLabel
                                 };
-                                
+
                                 _twodaMemoryTokens[current2DAFile].Add(entry);
-                                
+
                                 if (tokenId >= _nextTwodaTokenId)
                                 {
                                     _nextTwodaTokenId = tokenId + 1;
@@ -2362,11 +2362,11 @@ namespace HolocronToolset.Dialogs
                     }
                 }
             }
-            
+
             Refresh2DAList();
         }
     }
-    
+
     // Dialog for selecting 2DA file for memory token tracking
     // Matching PyKotor implementation pattern for dialogs
     internal class TwoDAMemorySelectDialog : Window
@@ -2376,29 +2376,29 @@ namespace HolocronToolset.Dialogs
         private Button _okButton;
         private Button _cancelButton;
         private HTInstallation _installation;
-        
+
         public TwoDAMemorySelectDialog(Window parent, HTInstallation installation)
         {
             Title = "Select 2DA File";
             Width = 500;
             Height = 400;
             _installation = installation;
-            
+
             InitializeComponent();
         }
-        
+
         private void InitializeComponent()
         {
             var mainPanel = new StackPanel { Spacing = 10, Margin = new Avalonia.Thickness(15) };
-            
-            mainPanel.Children.Add(new TextBlock 
-            { 
+
+            mainPanel.Children.Add(new TextBlock
+            {
                 Text = "Select a 2DA file to track memory tokens:",
-                FontWeight = Avalonia.Media.FontWeight.Bold 
+                FontWeight = Avalonia.Media.FontWeight.Bold
             });
-            
+
             _twodaList = new ListBox { MinHeight = 250 };
-            
+
             // Populate with 2DA files from installation
             if (_installation != null)
             {
@@ -2406,14 +2406,14 @@ namespace HolocronToolset.Dialogs
                 {
                     var twodaFiles = new List<string>();
                     // Common 2DA files in KotOR/TSL
-                    string[] common2DAFiles = 
+                    string[] common2DAFiles =
                     {
                         "appearance.2da", "baseitems.2da", "classes.2da", "feat.2da", "spells.2da",
                         "placeables.2da", "upgrade.2da", "upcrystals.2da", "heads.2da", "portraits.2da",
                         "damagetypes.2da", "ambientmusic.2da", "ambientsound.2da", "reputations.2da",
                         "description.2da", "environment.2da", "ranges.2da", "soundset.2da", "skills.2da"
                     };
-                    
+
                     foreach (var fileName in common2DAFiles)
                     {
                         var resource = _installation.Resource(fileName, ResourceType.TwoDA, null);
@@ -2422,7 +2422,7 @@ namespace HolocronToolset.Dialogs
                             twodaFiles.Add(fileName);
                         }
                     }
-                    
+
                     // Sort and add to list
                     foreach (var fileName in twodaFiles.OrderBy(x => x))
                     {
@@ -2434,9 +2434,9 @@ namespace HolocronToolset.Dialogs
                     // Ignore errors
                 }
             }
-            
+
             mainPanel.Children.Add(_twodaList);
-            
+
             // Buttons
             var buttonLayout = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5, HorizontalAlignment = HorizontalAlignment.Right };
             _okButton = new Button { Content = "OK", MinWidth = 80 };
@@ -2446,10 +2446,10 @@ namespace HolocronToolset.Dialogs
             buttonLayout.Children.Add(_okButton);
             buttonLayout.Children.Add(_cancelButton);
             mainPanel.Children.Add(buttonLayout);
-            
+
             Content = mainPanel;
         }
-        
+
         private void OnOk()
         {
             var selectedItem = _twodaList?.SelectedItem;
@@ -2469,7 +2469,7 @@ namespace HolocronToolset.Dialogs
             }
         }
     }
-    
+
     // Dialog for adding/editing 2DA memory tokens
     // Matching PyKotor implementation pattern for dialogs
     internal class TwoDAMemoryTokenEditDialog : Window
@@ -2483,7 +2483,7 @@ namespace HolocronToolset.Dialogs
         private TwoDAMemoryTokenEntry _originalEntry;
         private string _twodaFile;
         private HTInstallation _installation;
-        
+
         public TwoDAMemoryTokenEditDialog(Window parent, TwoDAMemoryTokenEntry existingEntry, string twodaFile, HTInstallation installation)
         {
             Title = existingEntry == null ? "Add 2DA Memory Token" : "Edit 2DA Memory Token";
@@ -2492,20 +2492,20 @@ namespace HolocronToolset.Dialogs
             _originalEntry = existingEntry;
             _twodaFile = twodaFile;
             _installation = installation;
-            
+
             InitializeComponent();
         }
-        
+
         private void InitializeComponent()
         {
             var mainPanel = new StackPanel { Spacing = 10, Margin = new Avalonia.Thickness(15) };
-            
-            mainPanel.Children.Add(new TextBlock 
-            { 
+
+            mainPanel.Children.Add(new TextBlock
+            {
                 Text = $"2DA File: {_twodaFile ?? "(none)"}",
-                FontWeight = Avalonia.Media.FontWeight.Bold 
+                FontWeight = Avalonia.Media.FontWeight.Bold
             });
-            
+
             // Token Name
             var tokenNameLayout = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5 };
             tokenNameLayout.Children.Add(new TextBlock { Text = "Token Name:", VerticalAlignment = VerticalAlignment.Center, MinWidth = 120 });
@@ -2520,7 +2520,7 @@ namespace HolocronToolset.Dialogs
             }
             tokenNameLayout.Children.Add(_tokenNameEdit);
             mainPanel.Children.Add(tokenNameLayout);
-            
+
             // Column Name
             var columnLayout = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5 };
             columnLayout.Children.Add(new TextBlock { Text = "Column Name:", VerticalAlignment = VerticalAlignment.Center, MinWidth = 120 });
@@ -2531,7 +2531,7 @@ namespace HolocronToolset.Dialogs
             }
             columnLayout.Children.Add(_columnNameEdit);
             mainPanel.Children.Add(columnLayout);
-            
+
             // Row Label
             var rowLabelLayout = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5 };
             rowLabelLayout.Children.Add(new TextBlock { Text = "Row Label:", VerticalAlignment = VerticalAlignment.Center, MinWidth = 120 });
@@ -2542,14 +2542,14 @@ namespace HolocronToolset.Dialogs
             }
             rowLabelLayout.Children.Add(_rowLabelEdit);
             mainPanel.Children.Add(rowLabelLayout);
-            
-            mainPanel.Children.Add(new TextBlock 
-            { 
+
+            mainPanel.Children.Add(new TextBlock
+            {
                 Text = "Note: Column Name and Row Label specify which cell value to store in the token.",
                 FontStyle = Avalonia.Media.FontStyle.Italic,
                 Foreground = Avalonia.Media.Brushes.Gray
             });
-            
+
             // Buttons
             var buttonLayout = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5, HorizontalAlignment = HorizontalAlignment.Right };
             _okButton = new Button { Content = "OK", MinWidth = 80 };
@@ -2559,10 +2559,10 @@ namespace HolocronToolset.Dialogs
             buttonLayout.Children.Add(_okButton);
             buttonLayout.Children.Add(_cancelButton);
             mainPanel.Children.Add(buttonLayout);
-            
+
             Content = mainPanel;
         }
-        
+
         private void OnOk()
         {
             string tokenName = _tokenNameEdit?.Text?.Trim();
@@ -2576,7 +2576,7 @@ namespace HolocronToolset.Dialogs
                 errorBox.ShowAsync();
                 return;
             }
-            
+
             // Extract token ID from token name if it matches pattern 2DAMEMORY#
             int tokenId = 0;
             if (tokenName.StartsWith("2DAMEMORY", StringComparison.OrdinalIgnoreCase))
@@ -2603,7 +2603,7 @@ namespace HolocronToolset.Dialogs
                 errorBox.ShowAsync();
                 return;
             }
-            
+
             TokenEntry = new TwoDAMemoryTokenEntry
             {
                 TokenName = tokenName,
@@ -2611,16 +2611,16 @@ namespace HolocronToolset.Dialogs
                 ColumnName = _columnNameEdit?.Text?.Trim() ?? "",
                 RowLabel = _rowLabelEdit?.Text?.Trim() ?? ""
             };
-            
+
             if (_originalEntry != null)
             {
                 TokenEntry.UsedBy = _originalEntry.UsedBy;
             }
-            
+
             Close(true);
         }
     }
-    
+
     // Dialog for adding/editing TLK strings
     // Matching PyKotor implementation pattern for dialogs
     internal class TLKStringEditDialog : Window
@@ -2634,21 +2634,21 @@ namespace HolocronToolset.Dialogs
         private Button _okButton;
         private Button _cancelButton;
         private TLKStringEntry _originalEntry;
-        
+
         public TLKStringEditDialog(Window parent, TLKStringEntry existingEntry = null)
         {
             Title = existingEntry == null ? "Add TLK String" : "Edit TLK String";
             Width = 500;
             Height = 400;
             _originalEntry = existingEntry;
-            
+
             InitializeComponent();
         }
-        
+
         private void InitializeComponent()
         {
             var mainPanel = new StackPanel { Spacing = 10, Margin = new Avalonia.Thickness(15) };
-            
+
             // Token Name
             var tokenNameLayout = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5 };
             tokenNameLayout.Children.Add(new TextBlock { Text = "Token Name:", VerticalAlignment = VerticalAlignment.Center, MinWidth = 120 });
@@ -2663,21 +2663,21 @@ namespace HolocronToolset.Dialogs
             }
             tokenNameLayout.Children.Add(_tokenNameEdit);
             mainPanel.Children.Add(tokenNameLayout);
-            
+
             // Text
             mainPanel.Children.Add(new TextBlock { Text = "Text:" });
-            _textEdit = new TextBox 
-            { 
-                MinHeight = 100, 
-                AcceptsReturn = true, 
-                TextWrapping = Avalonia.Media.TextWrapping.Wrap 
+            _textEdit = new TextBox
+            {
+                MinHeight = 100,
+                AcceptsReturn = true,
+                TextWrapping = Avalonia.Media.TextWrapping.Wrap
             };
             if (_originalEntry != null)
             {
                 _textEdit.Text = _originalEntry.Text ?? "";
             }
             mainPanel.Children.Add(_textEdit);
-            
+
             // Sound ResRef
             var soundLayout = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5 };
             soundLayout.Children.Add(new TextBlock { Text = "Sound ResRef:", VerticalAlignment = VerticalAlignment.Center, MinWidth = 120 });
@@ -2688,7 +2688,7 @@ namespace HolocronToolset.Dialogs
             }
             soundLayout.Children.Add(_soundEdit);
             mainPanel.Children.Add(soundLayout);
-            
+
             // Is Replacement
             _isReplacementCheck = new CheckBox { Content = "Replace existing StrRef (instead of append)" };
             if (_originalEntry != null)
@@ -2696,7 +2696,7 @@ namespace HolocronToolset.Dialogs
                 _isReplacementCheck.IsChecked = _originalEntry.IsReplacement;
             }
             mainPanel.Children.Add(_isReplacementCheck);
-            
+
             // Mod Index (for replacements)
             var modIndexLayout = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5 };
             modIndexLayout.Children.Add(new TextBlock { Text = "StrRef to Replace:", VerticalAlignment = VerticalAlignment.Center, MinWidth = 120 });
@@ -2707,12 +2707,12 @@ namespace HolocronToolset.Dialogs
             }
             modIndexLayout.Children.Add(_modIndexSpin);
             mainPanel.Children.Add(modIndexLayout);
-            
+
             // Update Mod Index visibility based on replacement checkbox
             _isReplacementCheck.Checked += (s, e) => modIndexLayout.IsVisible = true;
             _isReplacementCheck.Unchecked += (s, e) => modIndexLayout.IsVisible = false;
             modIndexLayout.IsVisible = _originalEntry != null && _originalEntry.IsReplacement;
-            
+
             // Buttons
             var buttonLayout = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5, HorizontalAlignment = HorizontalAlignment.Right };
             _okButton = new Button { Content = "OK", MinWidth = 80 };
@@ -2722,10 +2722,10 @@ namespace HolocronToolset.Dialogs
             buttonLayout.Children.Add(_okButton);
             buttonLayout.Children.Add(_cancelButton);
             mainPanel.Children.Add(buttonLayout);
-            
+
             Content = mainPanel;
         }
-        
+
         private void OnOk()
         {
             string tokenName = _tokenNameEdit?.Text?.Trim();
@@ -2739,7 +2739,7 @@ namespace HolocronToolset.Dialogs
                 errorBox.ShowAsync();
                 return;
             }
-            
+
             TlkEntry = new TLKStringEntry
             {
                 TokenName = tokenName,
@@ -2748,18 +2748,18 @@ namespace HolocronToolset.Dialogs
                 IsReplacement = _isReplacementCheck?.IsChecked == true,
                 ModIndex = _isReplacementCheck?.IsChecked == true ? (int)(_modIndexSpin?.Value ?? 0) : 0
             };
-            
+
             if (_originalEntry != null)
             {
                 TlkEntry.TokenId = _originalEntry.TokenId;
                 TlkEntry.UsedBy = _originalEntry.UsedBy;
             }
-            
+
             // Close with true result for ShowDialog<bool> support
             Close(true);
         }
     }
-    
+
     // Helper class for TLK string entries
     internal class TLKStringEntry
     {
@@ -2771,7 +2771,7 @@ namespace HolocronToolset.Dialogs
         public int ModIndex { get; set; } // For replacements, this is the StrRef to replace
         public List<string> UsedBy { get; set; } = new List<string>(); // List of files/sections that use this token
     }
-    
+
     // Helper class for 2DA memory token entries
     internal class TwoDAMemoryTokenEntry
     {

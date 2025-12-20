@@ -81,7 +81,7 @@ namespace HolocronToolset.Dialogs
 
             // Resource information section
             var infoPanel = new StackPanel { Spacing = 5 };
-            
+
             var nameLabel = new TextBlock { Text = "Resource Name:", FontWeight = Avalonia.Media.FontWeight.Bold };
             _resourceNameText = new TextBlock { Text = _resourceName ?? "" };
             infoPanel.Children.Add(nameLabel);

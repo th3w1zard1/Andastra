@@ -17,7 +17,8 @@ using static Andastra.Parsing.Formats.TwoDA.TwoDAAuto;
 using Andastra.Parsing.Formats.TLK;
 using static Andastra.Parsing.Formats.TLK.TLKAuto;
 using Andastra.Parsing.Resource;
-using KotorDiff.App;
+extern alias app;
+using App = app::KotorDiff.App;
 
 namespace KotorDiff.Tests.Helpers
 {
@@ -188,7 +189,7 @@ namespace KotorDiff.Tests.Helpers
             string iniFilename = "changes.ini",
             bool loggingEnabled = false)
         {
-            var config = new KotorDiffConfig
+            var config = new App.KotorDiffConfig
             {
                 Paths = new List<object> { vanillaDir.FullName, moddedDir.FullName },
                 TslPatchDataPath = tslpatchdataDir,
@@ -198,8 +199,8 @@ namespace KotorDiff.Tests.Helpers
                 UseIncrementalWriter = true
             };
 
-            var result = KotorDiff.App.DiffApplicationHelpers.HandleDiff(config);
-            int exitCode = KotorDiff.App.DiffApplicationHelpers.FormatComparisonOutput(result.comparison, config);
+            var result = App.DiffApplicationHelpers.HandleDiff(config);
+            int exitCode = App.DiffApplicationHelpers.FormatComparisonOutput(result.comparison, config);
 
             var iniPath = Path.Combine(tslpatchdataDir.FullName, iniFilename);
             if (File.Exists(iniPath))

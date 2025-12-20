@@ -8,7 +8,6 @@ using Andastra.Runtime.MonoGame.Converters;
 using Andastra.Parsing.Formats.MDLData;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Installation;
-using Andastra.Runtime.Engines.Odyssey.Systems;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.MonoGame.Rendering
@@ -104,10 +103,28 @@ namespace Andastra.Runtime.MonoGame.Rendering
             {
                 modelResRef = renderable.ModelResRef;
             }
-            else
+            else if (_gameDataManager != null)
             {
-                // Resolve model from appearance
-                modelResRef = ModelResolver.ResolveEntityModel(_gameDataManager, entity);
+                // Resolve model from appearance using reflection to avoid circular dependency
+                // ModelResolver is in Andastra.Runtime.Engines.Odyssey.Systems namespace
+                try
+                {
+                    System.Type modelResolverType = System.Type.GetType("Andastra.Runtime.Engines.Odyssey.Systems.ModelResolver, Andastra.Runtime.Games.Odyssey");
+                    if (modelResolverType != null)
+                    {
+                        System.Reflection.MethodInfo resolveMethod = modelResolverType.GetMethod("ResolveEntityModel", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                        if (resolveMethod != null)
+                        {
+                            object result = resolveMethod.Invoke(null, new object[] { _gameDataManager, entity });
+                            modelResRef = result as string;
+                        }
+                    }
+                }
+                catch
+                {
+                    // If ModelResolver is not available, return null (model won't be resolved)
+                    modelResRef = null;
+                }
             }
 
             if (string.IsNullOrEmpty(modelResRef))

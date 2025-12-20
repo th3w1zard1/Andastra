@@ -1,14 +1,13 @@
 // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/resolution.py
 // Tests for ResourceResolver functionality
+extern alias resolution;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
-using KotorDiff.Resolution;
-using ResolvedResource = KotorDiff.Resolution.ResolvedResource;
-using ResourceResolver = KotorDiff.Resolution.ResourceResolver;
 using Xunit;
+using Resolution = resolution::KotorDiff.Resolution;
 
 namespace KotorDiff.Tests.Resolution
 {
@@ -18,36 +17,36 @@ namespace KotorDiff.Tests.Resolution
         public void GetLocationDisplayName_ReturnsCorrectNames()
         {
             // GetLocationDisplayName just returns the input as-is (matching Python implementation)
-            Assert.Equal("Override folder", ResourceResolver.GetLocationDisplayName("Override folder"));
-            Assert.Equal("Modules (.mod)", ResourceResolver.GetLocationDisplayName("Modules (.mod)"));
-            Assert.Equal("Modules (.rim/_s.rim/_dlg.erf)", ResourceResolver.GetLocationDisplayName("Modules (.rim/_s.rim/_dlg.erf)"));
-            Assert.Equal("Chitin BIFs", ResourceResolver.GetLocationDisplayName("Chitin BIFs"));
-            Assert.Equal("Not Found", ResourceResolver.GetLocationDisplayName(null));
+            Assert.Equal("Override folder", Resolution.ResourceResolver.GetLocationDisplayName("Override folder"));
+            Assert.Equal("Modules (.mod)", Resolution.ResourceResolver.GetLocationDisplayName("Modules (.mod)"));
+            Assert.Equal("Modules (.rim/_s.rim/_dlg.erf)", Resolution.ResourceResolver.GetLocationDisplayName("Modules (.rim/_s.rim/_dlg.erf)"));
+            Assert.Equal("Chitin BIFs", Resolution.ResourceResolver.GetLocationDisplayName("Chitin BIFs"));
+            Assert.Equal("Not Found", Resolution.ResourceResolver.GetLocationDisplayName(null));
         }
 
         [Fact]
         public void ShouldProcessTlkFile_ReturnsTrueForDialogTlk()
         {
-            var resolved = new ResolvedResource
+            var resolved = new Resolution.ResolvedResource
             {
                 Filepath = Path.Combine("C:", "Game", "dialog.tlk"),
                 LocationType = "Override folder"
             };
-            Assert.True(ResourceResolver.ShouldProcessTlkFile(resolved));
+            Assert.True(Resolution.ResourceResolver.ShouldProcessTlkFile(resolved));
 
             resolved.Filepath = Path.Combine("C:", "Game", "dialog_f.tlk");
-            Assert.True(ResourceResolver.ShouldProcessTlkFile(resolved));
+            Assert.True(Resolution.ResourceResolver.ShouldProcessTlkFile(resolved));
         }
 
         [Fact]
         public void ShouldProcessTlkFile_ReturnsFalseForNonDialogTlk()
         {
-            var resolved = new ResolvedResource
+            var resolved = new Resolution.ResolvedResource
             {
                 Filepath = Path.Combine("C:", "Game", "other.tlk"),
                 LocationType = "Override folder"
             };
-            Assert.False(ResourceResolver.ShouldProcessTlkFile(resolved));
+            Assert.False(Resolution.ResourceResolver.ShouldProcessTlkFile(resolved));
         }
     }
 }

@@ -1,7 +1,7 @@
 using System;
 using Microsoft.Xna.Framework.Graphics;
 using Andastra.Runtime.Graphics;
-using Andastra.Runtime.MonoGame.Rendering; // For MonoGameRenderTarget
+using Andastra.Runtime.MonoGame.Graphics;
 
 namespace Andastra.Runtime.Graphics.MonoGame.Graphics
 {
@@ -132,7 +132,7 @@ namespace Andastra.Runtime.Graphics.MonoGame.Graphics
             return new MonoGameSpriteBatch(new SpriteBatch(_device));
         }
 
-        public IntPtr NativeHandle => _device.Handle;
+        public IntPtr NativeHandle => IntPtr.Zero; // MonoGame GraphicsDevice doesn't expose Handle directly
 
         // 3D Rendering Methods
 
@@ -225,7 +225,7 @@ namespace Andastra.Runtime.Graphics.MonoGame.Graphics
         {
             if (blendState == null)
             {
-                _device.BlendState = BlendState.Opaque;
+                _device.BlendState = Microsoft.Xna.Framework.Graphics.BlendState.Opaque;
             }
             else if (blendState is MonoGameBlendState mgBs)
             {

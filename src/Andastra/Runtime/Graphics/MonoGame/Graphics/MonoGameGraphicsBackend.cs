@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common.Enums;
+using Andastra.Runtime.Graphics.MonoGame.Graphics;
 
 namespace Andastra.Runtime.MonoGame.Graphics
 {
@@ -20,6 +21,8 @@ namespace Andastra.Runtime.MonoGame.Graphics
         private bool _isInitialized;
 
         public GraphicsBackendType BackendType => GraphicsBackendType.MonoGame;
+
+        public bool IsInitialized => _isInitialized;
 
         public IGraphicsDevice GraphicsDevice => _graphicsDevice;
 

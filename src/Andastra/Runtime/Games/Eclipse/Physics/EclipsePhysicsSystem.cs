@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Games.Eclipse.Physics;
 
 namespace Andastra.Runtime.Games.Eclipse
 {

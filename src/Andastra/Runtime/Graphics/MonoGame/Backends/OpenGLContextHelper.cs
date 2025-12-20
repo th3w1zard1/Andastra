@@ -62,10 +62,11 @@ namespace Andastra.Runtime.MonoGame.Backends
                 }
 
                 // Create a minimal window class for OpenGL context
+                WndProcDelegate wndProc = new WndProcDelegate(WGLNativeMethods.DefWindowProc);
                 WNDCLASS wc = new WNDCLASS
                 {
                     style = 0,
-                    lpfnWndProc = WGLNativeMethods.DefWindowProc,
+                    lpfnWndProc = Marshal.GetFunctionPointerForDelegate(wndProc),
                     cbClsExtra = 0,
                     cbWndExtra = 0,
                     hInstance = WGLNativeMethods.GetModuleHandle(null),
@@ -239,6 +240,9 @@ namespace Andastra.Runtime.MonoGame.Backends
             public uint dwVisibleMask;
             public uint dwDamageMask;
         }
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate IntPtr WndProcDelegate(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
         private static class WGLNativeMethods
         {

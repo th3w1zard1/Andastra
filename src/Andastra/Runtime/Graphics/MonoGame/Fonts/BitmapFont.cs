@@ -3,13 +3,10 @@ using System.Collections.Generic;
 using System.Numerics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Numerics;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Andastra.Parsing;
 using Andastra.Parsing.Installation;
-using Andastra.Runtime.Games.Odyssey.Fonts;
+using Andastra.Runtime.Games.Common;
+using Andastra.Runtime.MonoGame.Graphics;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.MonoGame.Fonts
@@ -25,12 +22,22 @@ namespace Andastra.Runtime.MonoGame.Fonts
     [Obsolete("Use OdysseyBitmapFont instead. This class is maintained for backward compatibility only.")]
     public class BitmapFont
     {
-        private readonly OdysseyBitmapFont _wrappedFont;
+        private readonly BaseBitmapFont _wrappedFont;
 
         /// <summary>
         /// Gets the font texture.
         /// </summary>
-        public Texture2D Texture => _wrappedFont?.MonoGameTexture;
+        public Texture2D Texture
+        {
+            get
+            {
+                if (_wrappedFont?.Texture is MonoGameTexture2D mgTexture)
+                {
+                    return mgTexture.Texture;
+                }
+                return null;
+            }
+        }
 
         /// <summary>
         /// Gets the font height in pixels.
@@ -70,13 +77,14 @@ namespace Andastra.Runtime.MonoGame.Fonts
         /// <summary>
         /// Private constructor for creating a BitmapFont instance.
         /// </summary>
-        private BitmapFont(OdysseyBitmapFont wrappedFont)
+        private BitmapFont(BaseBitmapFont wrappedFont)
         {
             _wrappedFont = wrappedFont;
         }
 
         /// <summary>
         /// Loads a bitmap font from a ResRef.
+        /// Uses reflection to avoid circular dependency with OdysseyBitmapFont.
         /// </summary>
         /// <param name="fontResRef">The font resource reference (without extension).</param>
         /// <param name="installation">The game installation for resource lookup.</param>
@@ -101,13 +109,34 @@ namespace Andastra.Runtime.MonoGame.Fonts
 
             try
             {
-                // Delegate to OdysseyBitmapFont and wrap it
-                OdysseyBitmapFont odysseyFont = OdysseyBitmapFont.Load(fontResRef, installation, graphicsDevice);
+                // Use reflection to call OdysseyBitmapFont.Load to avoid circular dependency
+                System.Type odysseyFontType = System.Type.GetType("Andastra.Runtime.Games.Odyssey.Fonts.OdysseyBitmapFont, Andastra.Runtime.Games.Odyssey");
+                if (odysseyFontType == null)
+                {
+                    Console.WriteLine("[BitmapFont] ERROR: Could not find OdysseyBitmapFont type. Please use OdysseyBitmapFont directly.");
+                    return null;
+                }
+
+                System.Reflection.MethodInfo loadMethod = odysseyFontType.GetMethod("Load", new System.Type[] { typeof(string), typeof(Installation), typeof(GraphicsDevice) });
+                if (loadMethod == null)
+                {
+                    Console.WriteLine("[BitmapFont] ERROR: Could not find OdysseyBitmapFont.Load method. Please use OdysseyBitmapFont directly.");
+                    return null;
+                }
+
+                object odysseyFont = loadMethod.Invoke(null, new object[] { fontResRef, installation, graphicsDevice });
                 if (odysseyFont == null)
                 {
                     return null;
                 }
-                return new BitmapFont(odysseyFont);
+
+                if (odysseyFont is BaseBitmapFont baseFont)
+                {
+                    return new BitmapFont(baseFont);
+                }
+
+                Console.WriteLine("[BitmapFont] ERROR: OdysseyBitmapFont.Load did not return a BaseBitmapFont. Please use OdysseyBitmapFont directly.");
+                return null;
             }
             catch (Exception ex)
             {
@@ -150,13 +179,14 @@ namespace Andastra.Runtime.MonoGame.Fonts
         /// </summary>
         /// <param name="text">The text to measure.</param>
         /// <returns>The size of the text in pixels.</returns>
-        public Vector2 MeasureString([CanBeNull] string text)
+        public Microsoft.Xna.Framework.Vector2 MeasureString([CanBeNull] string text)
         {
             if (_wrappedFont == null)
             {
-                return Vector2.Zero;
+                return Microsoft.Xna.Framework.Vector2.Zero;
             }
-            return _wrappedFont.MeasureString(text);
+            var size = _wrappedFont.MeasureString(text);
+            return new Microsoft.Xna.Framework.Vector2(size.X, size.Y);
         }
 
         /// <summary>

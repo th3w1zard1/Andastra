@@ -33,16 +33,17 @@ An AABB tree is a spatial acceleration structure that dramatically improves perf
 
 1. **Point Queries**: Finding which triangle contains a given (x, y, z) point
    - Used for: Character positioning, height calculation, collision detection
-   
+
 2. **Ray Casting**: Finding where a ray intersects the walkmesh
    - Used for: Mouse clicks (movement commands), projectile collisions, line-of-sight checks
-   
+
 3. **Spatial Searches**: Finding all triangles within a bounding box
    - Used for: Area queries, proximity checks
 
 ### Structure
 
 Each AABB node contains:
+
 - **Bounding Box**: Minimum and maximum corners (6 floats: minX, minY, minZ, maxX, maxY, maxZ)
 - **Face Index**: If leaf node, index of the triangle contained (-1 if internal node)
 - **Most Significant Plane**: Split axis indicator (0=leaf, 1=X, 2=Y, 3=Z, -1/-2/-3 for negative axes)
@@ -51,6 +52,7 @@ Each AABB node contains:
 ### Critical Detail: Child Index Encoding
 
 The child indices can be interpreted in multiple ways:
+
 1. **0-based array index**: Direct index into AABB node array
 2. **1-based array index**: Index + 1 (used by PyKotor before fix)
 3. **Byte offset multiplier**: Index * node_size (used by xoreos)
@@ -156,6 +158,7 @@ void BwmReader::loadAABB() {
 ```
 
 **Analysis**:
+
 - Reads child indices directly from file
 - Uses them as **0-based array indices**: `aabbs[childIdx1]`
 - No offset calculation or subtraction performed
@@ -210,6 +213,7 @@ Common::AABBNode *WalkmeshLoader::getAABB(Common::SeekableReadStream &stream,
 ```
 
 **Analysis**:
+
 - Reads child indices from file
 - Interprets them as **byte offset multipliers**: `leftOffset * 44 + AABBsOffset`
 - Multiplies by 44 (AABB node size) to compute byte offsets
@@ -266,6 +270,7 @@ def save_aabbs(self):
 ```
 
 **Analysis**:
+
 - Generates AABB tree during export
 - Uses `len(aabb_tree)` to compute child indices (0-based)
 - Writes indices directly without modification
@@ -275,15 +280,17 @@ def save_aabbs(self):
 
 ### 4. PyKotor / Andastra.Parsing (Python/C# Implementation)
 
-**Location**: 
+**Location**:
+
 - Python: `vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/bwm/io_bwm.py`
 - C#: `src/Andastra/Parsing/Resource/Formats/BWM/BWMBinaryWriter.cs`
 
 **Writing Strategy**: Generates AABB tree on-the-fly, **was writing 1-based indices (BUG - NOW FIXED)**
 
-#### BEFORE FIX (Incorrect - 1-based):
+#### BEFORE FIX (Incorrect - 1-based)
 
 **Python** (`io_bwm.py` lines 259-260 - OLD CODE):
+
 ```python
 # Find AABB indices by object identity
 left_idx = 0xFFFFFFFF if aabb.left is None else next(i for i, a in enumerate(aabbs) if a is aabb.left) + 1
@@ -291,14 +298,16 @@ right_idx = 0xFFFFFFFF if aabb.right is None else next(i for i, a in enumerate(a
 ```
 
 **C#** (`BWMBinaryWriter.cs` lines 243-244 - OLD CODE):
+
 ```csharp
 uint leftIdx = aabb.Left == null ? 0xFFFFFFFF : (uint)(FindAabbIndex(aabb.Left, aabbs) + 1);
 uint rightIdx = aabb.Right == null ? 0xFFFFFFFF : (uint)(FindAabbIndex(aabb.Right, aabbs) + 1);
 ```
 
-#### AFTER FIX (Correct - 0-based):
+#### AFTER FIX (Correct - 0-based)
 
 **Python** (`io_bwm.py` lines 263-264):
+
 ```python
 # CRITICAL FIX: Use 0-based indices (not 1-based) for AABB children
 left_idx = 0xFFFFFFFF if aabb.left is None else next(i for i, a in enumerate(aabbs) if a is aabb.left)
@@ -306,6 +315,7 @@ right_idx = 0xFFFFFFFF if aabb.right is None else next(i for i, a in enumerate(a
 ```
 
 **C#** (`BWMBinaryWriter.cs` lines 249-250):
+
 ```csharp
 // CRITICAL FIX: Use 0-based indices (not 1-based) for AABB children
 uint leftIdx = aabb.Left == null ? 0xFFFFFFFF : (uint)FindAabbIndex(aabb.Left, aabbs);
@@ -313,6 +323,7 @@ uint rightIdx = aabb.Right == null ? 0xFFFFFFFF : (uint)FindAabbIndex(aabb.Right
 ```
 
 **Analysis**:
+
 - **Bug**: Was adding `+ 1` to indices, producing 1-based encoding
 - **Fix**: Removed `+ 1`, now uses 0-based indices
 - **Impact**: This bug caused complete player immobility in Indoor Map Builder modules
@@ -346,6 +357,7 @@ public BWM Load(bool autoClose = true)
 ```
 
 **Analysis**:
+
 - Reads AABB count and offset from header but **does not read actual AABB data**
 - AABB tree is generated on-demand when `bwm.Aabbs()` is called
 - Uses `BWM._AabbsRec()` to build tree recursively from faces
@@ -425,6 +437,7 @@ private static NavigationMesh.AabbNode BuildAabbTree(BWM bwm, Vector3[] vertices
 ```
 
 **Analysis**:
+
 - Calls `bwm.Aabbs()` which generates AABB tree on-the-fly (doesn't read from file)
 - Converts `BWMNodeAABB` objects to `NavigationMesh.AabbNode` objects
 - Uses **object references** to link children (not indices)
@@ -448,6 +461,7 @@ Based on Ghidra MCP analysis (Project: "C:\Users\boden\Andastra Ghidra Project.g
 **Purpose**: BWM file writing function (confirmed by error string: "ERROR: opening a Binary walkmesh file for writeing that already exists")
 
 **Decompiled Structure** (lines 69-79):
+
 ```c
 // Writes header
 _fwrite(local_a0, 0x88, 1, pFVar2);  // Header (136 bytes = 0x88)
@@ -473,19 +487,23 @@ _fwrite(*(void **)((int)this + 0x6c), 4, *(size_t *)((int)this + 0x58), pFVar2);
 **Cross-Reference Evidence**:
 
 1. **reone's Implementation** (`vendor/reone/src/libs/graphics/format/bwmreader.cpp:164-167`):
+
    ```cpp
    uint32_t childIdx1 = aabbChildren[i].first;
    uint32_t childIdx2 = aabbChildren[i].second;
    aabbs[i]->left = aabbs[childIdx1];   // Direct array access - 0-based
    aabbs[i]->right = aabbs[childIdx2];  // Direct array access - 0-based
    ```
+
    This implementation is based on reverse engineering of `swkotor.exe`, confirming the game engine uses direct 0-based array indexing.
 
 2. **xoreos Implementation** (`vendor/xoreos/src/engines/kotorbase/path/walkmeshloader.cpp:241-243`):
+
    ```cpp
    Common::AABBNode *leftNode = getAABB(stream, leftOffset * AABBNodeSize + AABBsOffset, ...);
    Common::AABBNode *rightNode = getAABB(stream, rightOffset * AABBNodeSize + AABBsOffset, ...);
    ```
+
    While xoreos multiplies by `AABBNodeSize` (44 bytes), this still requires the indices to be 0-based for correct byte offset calculation. If indices were 1-based, the multiplication would produce incorrect offsets.
 
 3. **String References in Game Executables**:
@@ -495,12 +513,14 @@ _fwrite(*(void **)((int)this + 0x6c), 4, *(size_t *)((int)this + 0x58), pFVar2);
 ### KOTORMax and KAurora Tool Analysis
 
 **KOTORMax** (`kotormax.exe`):
+
 - **Purpose**: Legacy 3DS Max plugin for module creation (stable methodology)
 - **Status**: Found in Ghidra project but implementation details are not easily accessible via static analysis
 - **Note**: KOTORMax is referenced in user documentation as a working tool that produces valid BWM files
 - **Conclusion**: KOTORMax-generated modules work correctly, suggesting it uses 0-based indexing (matching game engine expectations)
 
 **KAurora** (`KAuroraEditor.exe`):
+
 - **Purpose**: Area editor tool that processes BWM files
 - **Status**: Found in Ghidra project but implementation details are not easily accessible via static analysis  
 - **User Observation**: Processing v4 beta Indoor Map Builder modules through KAurora restores walkability within rooms but fails at room transitions, suggesting KAurora may regenerate or fix certain BWM properties but may not handle transition/adjacency data correctly
@@ -529,6 +549,7 @@ The game engine (`swkotor.exe` / `swkotor2.exe`) expects 0-based indices for AAB
 **The Bug**: PyKotor/Andastra was writing **1-based indices** instead of **0-based indices** for AABB child nodes.
 
 **What Happened**:
+
 1. When writing AABB node `i` with left child at index `j`, PyKotor wrote `j + 1`
 2. Game engine reads `j + 1` and tries to access `aabbs[j + 1]`
 3. But the actual left child is at `aabbs[j]`, not `aabbs[j + 1]`
@@ -545,6 +566,7 @@ The game engine (`swkotor.exe` / `swkotor2.exe`) expects 0-based indices for AAB
 ### The Fix
 
 **Changed in**:
+
 1. `vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/bwm/io_bwm.py` (lines 263-264)
 2. `src/Andastra/Parsing/Resource/Formats/BWM/BWMBinaryWriter.cs` (lines 249-250)
 
@@ -560,7 +582,8 @@ left_idx = ...  # No +1
 right_idx = ...  # No +1
 ```
 
-**Verification**: 
+**Verification**:
+
 - Matches reone's implementation (game engine behavior)
 - Matches kotorblender's implementation (working tool)
 - Consistent with BWM-File-Format.md documentation (notes PyKotor discrepancy)
@@ -580,11 +603,13 @@ right_idx = ...  # No +1
 **Key Difference**: Andastra.Parsing does NOT read AABB data from files - it always generates trees on-the-fly.
 
 **Advantages**:
+
 - **Always Correct**: Generated trees are always structurally correct (no file format bugs)
 - **Flexibility**: Can generate trees with different algorithms if needed
 - **Simplicity**: Reader code is simpler (doesn't need to parse AABB binary data)
 
 **Disadvantages**:
+
 - **Performance**: Must generate tree every time (though this is fast - O(n log n))
 - **Round-trip Loss**: Original tree structure is lost when reading/writing files
 - **Format Fidelity**: Doesn't preserve exact tree structure from original files
@@ -643,4 +668,3 @@ The bug was caused by PyKotor/Andastra writing 1-based child indices when the ga
 **Authors**: AI Analysis based on codebase investigation and Ghidra reverse engineering  
 **Related Issues**: Indoor Map Builder walkability bug (INDOOR_MAP_BUILDER_BUG_EXPLAINED.md)  
 **Ghidra Project**: "C:\Users\boden\Andastra Ghidra Project.gpr" (swkotor.exe, swkotor2.exe, kotormax.exe, KAuroraEditor.exe analyzed)
-

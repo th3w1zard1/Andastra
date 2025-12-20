@@ -88,3 +88,12 @@ x64/
 x86/
 DELETEME_TEST_COMP4
 DELETEME_TEST_SAFETY_539905882
+vendor/kotor.three.js/
+vendor/kotor.NET/
+vendor/HoloLSP/
+vendor/NCSDecomp/
+.cursor/GhidraMCP/
+vendor/reone/extern/
+vendor/reone/glsl/
+*.mk
+vendor\Kotor.three.js\

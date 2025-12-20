@@ -1,0 +1,211 @@
+Yeah the walkabikity issue has me for a spin. Maybe I’ll look at what nothernlight’s editor is doing next weekend
+SAO
+
+ — 12/6/2025 8:51 PM
+See that's what I did, but now I'm back to the issue that I can't walk between rooms unfortunately
+Wizard
+
+ — 12/6/2025 8:51 PM
+Guess it’s a retroactive problem
+TCS — 12/6/2025 8:58 PM
+Is that due to walk meshes?
+SAO
+
+ — 12/6/2025 9:06 PM
+Yes, but I can't say I understand it more than that
+I've tried snapping them together on KotorBlender, and they never seem to quite mend.
+Cortisol showed me a fairly lengthy process involving vertex painting that worked for some rooms, but it seemed to cause crashing on larger modules
+TCS — 12/6/2025 9:07 PM
+Same issue I've experienced, it's so gimmicky the walk meshes
+Wizard
+
+ — 12/6/2025 9:08 PM
+Latest version has a walkmesh painter built in
+I painted everything metal and still couldn’t walk
+SAO
+
+ — 12/6/2025 9:22 PM
+Does anyone know if it's possible to just merge all the room mdls and walkmeshes into one big room, thus with one big walkmesh?
+Wizard
+
+ — 12/6/2025 9:22 PM
+That’s actually a brilliant idea
+SAO
+
+ — 12/6/2025 9:23 PM
+I've tried it before and it didn't work, but I also don't have the KOTORBlender experience others do
+Wizard
+
+ — 12/6/2025 9:23 PM
+@here
+DarthParametric — 12/6/2025 9:26 PM
+You don't need to merge the room models just to have a single walkmesh. There are some vanilla instances of a single walkmesh for a level.
+Wizard
+
+ — 12/6/2025 9:32 PM
+Doesn’t solve the problem
+DarthParametric — 12/6/2025 9:33 PM
+If the problem is you don't know how to link walkmeshes then yes, it does. Because you only have a single walkmesh.
+Alternatively, ditch KBlender, convert the models to ASCII, load up in KMax (via GMax if you must), and create the room links in a sane and reliable fashion.
+SAO
+
+ — 12/6/2025 9:35 PM
+That doesn't seem right... Do you have an example?
+It seems like every room .mdl has a matching .lyt I've seen so far
+Wizard
+
+ — 12/6/2025 9:36 PM
+I’ve heard this being done before
+Cortisol — 12/6/2025 9:36 PM
+The map builder exports models in a way that KBlender doesn't understand
+KMax may have the same issue
+DarthParametric — 12/6/2025 9:36 PM
+There is only a single LYT per module.
+SAO
+
+ — 12/6/2025 9:37 PM
+I misspoke. I meant a matching .wok.
+Wizard
+
+ — 12/6/2025 9:37 PM
+Kmax is old school how they solved the problem back for stuff like m478ep
+DarthParametric — 12/6/2025 9:38 PM
+For some reason - I can only assume sadism - seedhartha decided to use vertex painting to define room links. KMax on the other hand, you just select the edges.
+But to his credit, the KBlender approach is entirely on-brand for their weird-ass conventions for everything.
+SAO
+
+ — 12/6/2025 9:46 PM
+I don’t suppose you have a means for us to download KMax, @DarthParametric ?
+DarthParametric — 12/6/2025 9:49 PM
+KMax is on DS. I assume you mean Max. Like I said, you can use GMax. It's no longer officially available, but it's still around. I think I posted how to activate it on the DS server a year or two ago. I'll see if I can dig out the post.
+So GMax itself is available here: https://archive.org/download/turbosquid-discreet-gmax-1.2/gmax12.exe
+DarthParametric — 12/6/2025 9:57 PM
+There are some registry keys for activation here - https://neverwintervault.org/project/nwn1/other/tool/gmax-12-registration-workaround
+From memory, the
+[HKEY_CURRENT_USER\Software\Autodesk\gmax\UserProfile]
+
+one is all you need.
+SAO
+
+ — 12/6/2025 10:03 PM
+I’ll give it a try. Thank you
+TCS — 12/7/2025 5:51 AM
+Don't mind if I help myself, thanks for the tool!
+TCS — 12/7/2025 7:15 AM
+install the plugin of KOTORmax v0.4.1 , to import mdl?
+TCS — 12/7/2025 7:22 AM
+nvm got it working lol
+Image
+Wizard
+
+ — 12/7/2025 6:12 PM
+nice work
+If you’re able to export a lyt or a module please do post here so we may dissect it (to help fix Holocron toolsets mapbuilder )
+TCS — 12/7/2025 8:04 PM
+Alright sure
+TCS — 12/7/2025 8:07 PM
+I have a question, where specifically in the source code does it handle map builder by any chance , is it a single python script?
+Image
+Cortisol — 12/7/2025 8:16 PM
+Iirc indoor_builder.py is the main script
+TCS — 12/7/2025 8:17 PM
+Wizard
+
+ — 12/7/2025 8:57 PM
+God I remember the days when that script was a 10,000+ line monster of undocumented untyped code
+Cortisol — 12/7/2025 8:58 PM
+what can I say i was excited to rush out a prototype
+I'm just surprised it brought Fred Tetra out of hiding
+SAO
+
+ — 12/7/2025 8:59 PM
+Trying to fix it, @TCS ?
+J — 12/7/2025 9:26 PM
+how does it work?
+idk
+TCS — 12/7/2025 9:28 PM
+Just checking to see how it works, might tweak it if I feel like it
+SAO
+
+ — 12/7/2025 9:30 PM
+Well if you manage to get it working I’m buying you a drink
+Lane
+
+ — 12/8/2025 1:13 PM
+I was cleaning up some of my reversed types to prep for some layout research, and I came across something I was unsure about.
+
+In the door hook section of LYTs what is the (usually 0) integer after the door_name but before the position?
+
+For example:
+M01aa_08c Door_02 0 39.5591 135.621 -0.0407561 0.0 0.0 0.0 1.0
+
+the 0 after Door_02.
+
+ It's not mentioned in the pyKotor wiki from what I can see. Xoreos doesn't parse it either. Though I can clearly see it being parsed and stored within the binary.
+
+Am I missing something?
+Cause my current understanding is:
+<room> <door> <?> <x> <y> <z> <qx> <qy> <qz> <qw>
+Wizard
+
+ — 12/8/2025 1:22 PM
+hang tight
+SAO
+
+ — 12/8/2025 1:24 PM
+I would be willing to guess it’s a binary value for locked… try setting it to locked see if that changes anything
+Lane
+
+ — 12/8/2025 1:24 PM
+I'm pretty sure lock state is stored in GFF for any given door. Door hooks are mostly for handling things like room connections I thought?
+SAO
+
+ — 12/8/2025 1:25 PM
+Hmm good point
+Lane
+
+ — 12/8/2025 1:27 PM
+The value also seems to always be zero, at least everywhere I've looked.
+
+I also haven't found what consumes this field aside from where it is parsed. So perhaps it does nothing. I'll continue poking around. Just figured I'd ask first in-case I could avoid a rabbit-hole haha
+TCS — 12/8/2025 1:32 PM
+Nwn flag I think idk
+Wizard
+
+ — 12/8/2025 1:32 PM
+okay i've looked at xoreos, reone, kotor.js and northernlights and I'm afraid I have more questions than answers.
+
+xoreos parses door hooks, but strictly expects 10 tokens <room> <door> <x> <y> <z> <unk1> <unk2> <unk3> <unk4> <unk5>
+reone doesn't even implement door hooks. (src/libs/resource/format/lytreader.cpp). The parser only handles roomcount, It listens for beginlayout, donelayout, and roomcount. It has no case for doorhookcount, effectively ignoring that entire section of the LYT file.
+NorthernLights (Unity): Waste of time looking here, its Assets/Scripts/ResourceLoader/LayoutLoader.cs explicitly marks door hooks as TODO and skips parsing.
+KotOR.js: Implements parsing, but (I believe) the logic appears buggy/broken. (src/resource/LYTObject.ts)
+    name: params[1].toLowerCase(),
+    position: new THREE.Vector3(parseFloat(params[1]), parseFloat(params[2]), parseFloat(params[3])),
+Beyond that I have no idea what's going on
+the integer exists in the binary format or original game executable logic, but the entire open-source ecosystem is currently missing this field.
+Lane
+
+ — 12/8/2025 1:33 PM
+So there are 10 tokens, but I think Xoreos misinterprets this as the x value. and also has the orientation (and the z-coord I suppose) marked as "unk"
+TCS — 12/8/2025 1:36 PM
+I think it's redundant NWN-era coded stuff
+Probably wrong lol
+Wizard
+
+ — 12/8/2025 1:38 PM
+my best guess is the engine reimplementations have found more efficient ways to load the lyt. presumably the hooks exist for memory alignment or something to do with the constraints of the 64mb(?) ram that the original xbox had.
+Lane
+
+ — 12/8/2025 1:38 PM
+seems plausible
+Regardless I haven't seen any example of it being used (aside from parsing) in kotor's binary implementation. So I'm leaving it blank for now.
+I suppose what we do know is that is it's a 32-bit unsigned integer, judging by the format string doorhooks get parsed with:
+%s%s%d%f%f%f%f%f%f%f
+SAO
+
+ — 12/14/2025 4:21 PM
+I don't mean to get ahead of myself, but I think I have fixed the problem of the indoor map builder in 2.0.4 outputting modules without working walkmeshes when converted for KOTOR 2
+SAO
+
+ — 12/14/2025 4:42 PM
+Never mind, as broken as ever.

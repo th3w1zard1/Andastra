@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Andastra.Runtime.MonoGame.Spatial;
 using Andastra.Runtime.Graphics.Common.Lighting;
 using BaseLightProbeSystem = Andastra.Runtime.Graphics.Common.Lighting.BaseLightProbeSystem;
+using XnaVector3 = Microsoft.Xna.Framework.Vector3;
 
 namespace Andastra.Runtime.MonoGame.Lighting
 {
@@ -31,12 +32,12 @@ namespace Andastra.Runtime.MonoGame.Lighting
             /// <summary>
             /// Probe position.
             /// </summary>
-            public Vector3 Position;
+            public XnaVector3 Position;
 
             /// <summary>
             /// Spherical harmonics coefficients (9 coefficients for L2 SH).
             /// </summary>
-            public Vector3[] SHCoefficients;
+            public XnaVector3[] SHCoefficients;
 
             /// <summary>
             /// Probe influence radius.
@@ -50,7 +51,7 @@ namespace Andastra.Runtime.MonoGame.Lighting
         /// Initializes a new light probe system with default world bounds.
         /// </summary>
         public LightProbeSystem()
-            : this(new Spatial.BoundingBox(new Vector3(-1000, -1000, -1000), new Vector3(1000, 1000, 1000)), 10.0f)
+            : this(new Spatial.BoundingBox(new System.Numerics.Vector3(-1000, -1000, -1000), new System.Numerics.Vector3(1000, 1000, 1000)), 10.0f)
         {
         }
 
@@ -76,15 +77,15 @@ namespace Andastra.Runtime.MonoGame.Lighting
         /// <summary>
         /// Converts System.Numerics.Vector3 to Microsoft.Xna.Framework.Vector3.
         /// </summary>
-        private static Vector3 ConvertVector3(System.Numerics.Vector3 v)
+        private static XnaVector3 ConvertVector3(System.Numerics.Vector3 v)
         {
-            return new Vector3(v.X, v.Y, v.Z);
+            return new XnaVector3(v.X, v.Y, v.Z);
         }
 
         /// <summary>
         /// Converts Microsoft.Xna.Framework.Vector3 to System.Numerics.Vector3.
         /// </summary>
-        private static System.Numerics.Vector3 ConvertVector3(Vector3 v)
+        private static System.Numerics.Vector3 ConvertVector3(XnaVector3 v)
         {
             return new System.Numerics.Vector3(v.X, v.Y, v.Z);
         }
@@ -110,10 +111,10 @@ namespace Andastra.Runtime.MonoGame.Lighting
         /// </summary>
         private static BaseLightProbeSystem.LightProbe ConvertProbe(LightProbe probe)
         {
-            Vector3[] shCoeffs = null;
+            System.Numerics.Vector3[] shCoeffs = null;
             if (probe.SHCoefficients != null)
             {
-                shCoeffs = new Vector3[probe.SHCoefficients.Length];
+                shCoeffs = new System.Numerics.Vector3[probe.SHCoefficients.Length];
                 for (int i = 0; i < probe.SHCoefficients.Length; i++)
                 {
                     shCoeffs[i] = ConvertVector3(probe.SHCoefficients[i]);
@@ -133,10 +134,10 @@ namespace Andastra.Runtime.MonoGame.Lighting
         /// </summary>
         private static LightProbe ConvertProbe(BaseLightProbeSystem.LightProbe probe)
         {
-            Vector3[] shCoeffs = null;
+            System.Numerics.Vector3[] shCoeffs = null;
             if (probe.SHCoefficients != null)
             {
-                shCoeffs = new Vector3[probe.SHCoefficients.Length];
+                shCoeffs = new System.Numerics.Vector3[probe.SHCoefficients.Length];
                 for (int i = 0; i < probe.SHCoefficients.Length; i++)
                 {
                     shCoeffs[i] = ConvertVector3(probe.SHCoefficients[i]);
@@ -211,7 +212,7 @@ namespace Andastra.Runtime.MonoGame.Lighting
         /// </summary>
         /// <param name="position">World space position to sample at.</param>
         /// <returns>Interpolated ambient light color at the position.</returns>
-        public Vector3 SampleAmbientLight(Vector3 position)
+        public XnaVector3 SampleAmbientLight(XnaVector3 position)
         {
             return ConvertVector3(base.SampleAmbientLight(ConvertVector3(position)));
         }
@@ -222,7 +223,7 @@ namespace Andastra.Runtime.MonoGame.Lighting
         /// <param name="position">World space position to sample at.</param>
         /// <param name="searchRadius">Search radius for finding nearby probes.</param>
         /// <returns>Interpolated ambient light color at the position.</returns>
-        public Vector3 SampleAmbientLight(Vector3 position, float searchRadius)
+        public XnaVector3 SampleAmbientLight(XnaVector3 position, float searchRadius)
         {
             return ConvertVector3(base.SampleAmbientLight(ConvertVector3(position), searchRadius));
         }
@@ -234,7 +235,7 @@ namespace Andastra.Runtime.MonoGame.Lighting
         /// <param name="direction">Direction vector for spherical harmonics evaluation (should be normalized).</param>
         /// <param name="searchRadius">Search radius for finding nearby probes.</param>
         /// <returns>Interpolated ambient light color at the position in the specified direction.</returns>
-        public Vector3 SampleAmbientLight(Vector3 position, Vector3 direction, float searchRadius)
+        public XnaVector3 SampleAmbientLight(XnaVector3 position, XnaVector3 direction, float searchRadius)
         {
             return ConvertVector3(base.SampleAmbientLight(ConvertVector3(position), ConvertVector3(direction), searchRadius));
         }

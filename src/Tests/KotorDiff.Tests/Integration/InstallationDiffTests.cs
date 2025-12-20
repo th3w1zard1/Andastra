@@ -1,14 +1,14 @@
 // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/tests/tslpatcher/test_kotordiff_comprehensive.py
 // Integration tests for KotorDiff installation comparison
+extern alias resolution;
 using System;
 using System.IO;
 using System.Diagnostics;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Mods;
-using KotorDiff.Resolution;
 using KotorDiff.Diff;
-using InstallationDiffWithResolution = KotorDiff.Resolution.InstallationDiffWithResolution;
 using Xunit;
+using Resolution = resolution::KotorDiff.Resolution;
 
 namespace KotorDiff.Tests.Integration
 {
@@ -44,7 +44,7 @@ namespace KotorDiff.Tests.Integration
                 var logLines = new System.Collections.Generic.List<string>();
                 Action<string> logFunc = msg => { }; // Silent logging for performance
 
-                bool? result = InstallationDiffWithResolution.DiffInstallationsWithResolution(
+                bool? result = Resolution.InstallationDiffWithResolution.DiffInstallationsWithResolution(
                     new System.Collections.Generic.List<object> { install1, install2 },
                     filters: null,
                     logFunc: logFunc,
@@ -120,7 +120,7 @@ namespace KotorDiff.Tests.Integration
                 var logLines = new System.Collections.Generic.List<string>();
                 Action<string> logFunc = msg => { }; // Silent logging for performance
 
-                bool? result = InstallationDiffWithResolution.DiffInstallationsWithResolution(
+                bool? result = Resolution.InstallationDiffWithResolution.DiffInstallationsWithResolution(
                     new System.Collections.Generic.List<object> { install1, install2 },
                     filters: null,
                     logFunc: logFunc,
