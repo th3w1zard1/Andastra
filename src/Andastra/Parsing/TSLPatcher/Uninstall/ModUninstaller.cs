@@ -6,6 +6,7 @@ using System.Linq;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.TLK;
 using Andastra.Parsing.Logger;
+using Andastra.Utility.System;
 using JetBrains.Annotations;
 using Andastra.Parsing.Common;
 
@@ -297,9 +298,23 @@ namespace Andastra.Parsing.Uninstall
 
                     if (result == true)
                     {
-                        Console.WriteLine("Gaining permission, please wait...");
-                        // TODO: STUB - Attempt to gain access - in C# this would require platform-specific code
-                        // For now, we'll just retry
+                        _logger.AddNote("Gaining permission, please wait...");
+                        bool accessGained = OSHelper.RequestNativeAccess(
+                            mostRecentBackupFolder.ToString(),
+                            recurse: true,
+                            logAction: message => _logger.AddNote(message)
+                        );
+
+                        if (accessGained)
+                        {
+                            _logger.AddNote("Successfully gained access to backup folder. Retrying deletion...");
+                        }
+                        else
+                        {
+                            _logger.AddNote("Warning: Failed to gain full access to backup folder. Attempting deletion anyway...");
+                        }
+
+                        // Retry deletion after attempting to gain access
                         continue;
                     }
                     if (result == false)

@@ -2,6 +2,8 @@ using Andastra.Parsing.Common;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
+using System.Media;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
@@ -28,6 +30,7 @@ using StackPanel = Avalonia.Controls.StackPanel;
 using Expander = Avalonia.Controls.Expander;
 using ResourceTYpe = Andastra.Parsing.Resource.ResourceType;
 using GFF = Andastra.Parsing.Formats.GFF.GFF;
+using MsBox = MsBox.Avalonia;
 
 namespace HolocronToolset.Editors
 {
@@ -80,6 +83,11 @@ namespace HolocronToolset.Editors
         // UI Controls - Comments
         private TextBlock _commentsEdit;
 
+        // Sound playback - Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:55-56
+        // Original: self.player = QMediaPlayer(self), self.buffer = QBuffer(self)
+        private SoundPlayer _soundPlayer;
+        private MemoryStream _soundStream;
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:29-73
         // Original: def __init__(self, parent, installation):
         public UTSEditor(Window parent = null, HTInstallation installation = null)
@@ -90,6 +98,9 @@ namespace HolocronToolset.Editors
         {
             _installation = installation;
             _uts = new UTS();
+
+            // Initialize sound player - Matching PyKotor: self.player = QMediaPlayer(self)
+            _soundPlayer = new SoundPlayer();
 
             InitializeComponent();
             SetupUI();
@@ -573,17 +584,125 @@ namespace HolocronToolset.Editors
         // Original: def play_sound(self):
         private void PlaySound()
         {
-            // Placeholder for sound playback
-            // Will be implemented when audio playback is available
-            System.Console.WriteLine("Sound playback not yet implemented");
+            // Matching PyKotor implementation: self.player.stop()
+            try
+            {
+                _soundPlayer?.Stop();
+            }
+            catch
+            {
+                // Ignore errors when stopping
+            }
+
+            // Matching PyKotor implementation: cur_item: QListWidgetItem | None = self.ui.soundList.currentItem()
+            // Matching PyKotor: cur_item_text: str | None = cur_item.text() if cur_item else None
+            if (_soundList?.SelectedItem == null)
+            {
+                return;
+            }
+
+            string resname = _soundList.SelectedItem.ToString();
+            if (string.IsNullOrWhiteSpace(resname))
+            {
+                return;
+            }
+
+            // Matching PyKotor implementation: assert self._installation is not None
+            if (_installation == null)
+            {
+                return;
+            }
+
+            // Matching PyKotor implementation: data: bytes | None = self._installation.sound(resname)
+            // Default search order: SOUND, VOICE, OVERRIDE, CHITIN (matching PyKotor's default for UTS editor)
+            byte[] soundData = _installation.Sound(resname.Trim(), new[]
+            {
+                SearchLocation.SOUND,
+                SearchLocation.VOICE,
+                SearchLocation.OVERRIDE,
+                SearchLocation.CHITIN
+            });
+
+            // Matching PyKotor implementation: if data: self.play_byte_source_media(data); return True
+            if (soundData != null && soundData.Length > 0)
+            {
+                PlayByteSourceMedia(soundData);
+            }
+            else
+            {
+                // Matching PyKotor implementation: QMessageBox(QMessageBox.Icon.Critical, "Could not find audio file", f"Could not find audio resource '{resname}'.")
+                var msgBox = MsBox.MessageBoxManager.GetMessageBoxStandard(
+                    "Could not find audio file",
+                    $"Could not find audio resource '{resname}'.",
+                    MsBox.Avalonia.Enums.ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Error);
+                msgBox.ShowAsync();
+            }
+        }
+
+        /// <summary>
+        /// Plays audio from byte array data.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor/base.py:736-772
+        /// Original: def play_byte_source_media(self, data: bytes | None) -> bool:
+        /// </summary>
+        /// <param name="data">The audio data bytes (WAV format).</param>
+        /// <returns>True if playback started successfully, false otherwise.</returns>
+        private bool PlayByteSourceMedia(byte[] data)
+        {
+            // Matching PyKotor implementation: if not data: self.blink_window(); return False
+            if (data == null || data.Length == 0)
+            {
+                return false;
+            }
+
+            try
+            {
+                // Stop any currently playing sound
+                _soundPlayer?.Stop();
+
+                // Dispose previous stream if it exists
+                if (_soundStream != null)
+                {
+                    _soundStream.Dispose();
+                    _soundStream = null;
+                }
+
+                // Create a new memory stream for the sound data
+                // Note: The stream must remain alive while the sound is playing
+                // Matching PyKotor's QBuffer approach which keeps the buffer alive
+                _soundStream = new MemoryStream(data);
+                _soundPlayer.Stream = _soundStream;
+                _soundPlayer.Play();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Log error and show message box
+                System.Console.WriteLine($"Failed to play sound: {ex}");
+                var msgBox = MsBox.MessageBoxManager.GetMessageBoxStandard(
+                    "Error Playing Sound",
+                    $"Failed to play sound:\n{ex.Message}",
+                    MsBox.Avalonia.Enums.ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Error);
+                msgBox.ShowAsync();
+                return false;
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:323-326
         // Original: def stop_sound(self):
         private void StopSound()
         {
-            // Placeholder for sound stopping
-            System.Console.WriteLine("Sound stopping not yet implemented");
+            // Matching PyKotor implementation: self.player.stop()
+            try
+            {
+                _soundPlayer?.Stop();
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Failed to stop sound: {ex}");
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:328-331
@@ -637,6 +756,36 @@ namespace HolocronToolset.Editors
         public override void SaveAs()
         {
             Save();
+        }
+
+        /// <summary>
+        /// Cleans up resources when the window is closed.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:365-366
+        /// Original: def closeEvent(self, e: QCloseEvent): self.player.stop()
+        /// </summary>
+        protected override void OnClosed(EventArgs e)
+        {
+            // Clean up sound player resources
+            try
+            {
+                _soundPlayer?.Stop();
+                _soundPlayer?.Dispose();
+            }
+            catch
+            {
+                // Ignore errors during cleanup
+            }
+
+            try
+            {
+                _soundStream?.Dispose();
+            }
+            catch
+            {
+                // Ignore errors during cleanup
+            }
+
+            base.OnClosed(e);
         }
     }
 }
