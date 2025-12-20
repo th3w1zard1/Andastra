@@ -565,13 +565,13 @@ namespace Andastra.Parsing.Formats.MDL
                     }
                     else if (_nodeIndex.ContainsKey(parentName))
                     {
-                        // Parent is a model node - store the original parent name (preserving case)
-                        // Parent is a model node - store the parent name for later resolution during hierarchy building
+                        // Parent is a model node - store the parent name (lowercase) for later resolution during hierarchy building
                         // Animation nodes can reference model nodes by name, but we need to resolve this
                         // when building the hierarchy since model nodes are in a separate list
+                        // The model node parent reference is preserved in _animNodeModelParents for animation application
                         int animNodeIndex = _animNodes.Count - 1; // Current node was just added to _animNodes
-                        _animNodeModelParents[animNodeIndex] = parentName; // Store lowercase to match _nodeIndex keys
-                        _currentNode.ParentId = -1; // Mark as no animation node parent
+                        _animNodeModelParents[animNodeIndex] = parentName; // Store lowercase to match _nodeIndex keys (case-insensitive lookup)
+                        _currentNode.ParentId = -1; // Mark as no animation node parent (model node parent handled separately)
                     }
                     else
                     {
@@ -1769,6 +1769,28 @@ namespace Andastra.Parsing.Formats.MDL
                 
                 if (node.ParentId == -1)
                 {
+                    // Check if this node has a model node parent
+                    if (_animNodeModelParents.ContainsKey(i))
+                    {
+                        // Node has a model node parent - validate that the model node exists
+                        string modelParentName = _animNodeModelParents[i];
+                        if (_nodeIndex.ContainsKey(modelParentName))
+                        {
+                            int modelParentIndex = _nodeIndex[modelParentName];
+                            if (modelParentIndex >= 0 && modelParentIndex < _nodes.Count)
+                            {
+                                // Model node parent exists and is valid
+                                // The reference is stored in _animNodeModelParents for animation application
+                                // Animation nodes remain in the animation tree but reference their model node parents
+                            }
+                            else
+                            {
+                                // Invalid model node index - treat as root-level animation node
+                                // This should not happen in valid MDL files, but handle gracefully
+                            }
+                        }
+                        // If model node not found, treat as root-level (should not happen in valid MDL files)
+                    }
                     // Node has no parent in the animation tree (either truly root-level or has model node parent)
                     // Both cases: attach to animation root
                     // The model node parent reference (if any) is stored in _animNodeModelParents for later use
