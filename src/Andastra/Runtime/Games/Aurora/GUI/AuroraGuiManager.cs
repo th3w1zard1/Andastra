@@ -10,9 +10,11 @@ using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics.GUI;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Formats.TPC;
 using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Games.Aurora.Fonts;
 using Andastra.Runtime.Graphics;
+using Andastra.Runtime.MonoGame.Converters;
 using Andastra.Runtime.MonoGame.Graphics;
 using JetBrains.Annotations;
 
@@ -609,7 +611,22 @@ namespace Andastra.Runtime.Games.Aurora.GUI
 
         /// <summary>
         /// Loads a texture from a ResRef, with caching.
+        /// Based on nwmain.exe texture loading system (Aurora Engine texture loading)
+        /// Aurora Engine uses TGA format primarily, with TPC as fallback for compressed textures.
         /// </summary>
+        /// <param name="textureName">The texture resource reference (without extension).</param>
+        /// <returns>The loaded texture, or null if loading failed.</returns>
+        /// <remarks>
+        /// Texture Loading (nwmain.exe):
+        /// - Aurora Engine texture loading follows resource precedence: OVERRIDE > MODULE > HAK > BASE_GAME
+        /// - Texture formats: TGA (primary) and TPC (compressed/alternative)
+        /// - Texture lookup: Searches for TGA first, then TPC as fallback
+        /// - Texture conversion: Converts TPC/TGA format to MonoGame Texture2D using TpcToMonoGameTextureConverter
+        /// - Caching: Textures are cached by lowercase ResRef to avoid reloading
+        /// - Error handling: Returns null on failure (missing resource, parsing error, conversion error)
+        /// 
+        /// Implementation pattern matches AuroraBitmapFont.Load for consistency.
+        /// </remarks>
         private ITexture2D LoadTexture(string textureName)
         {
             if (string.IsNullOrEmpty(textureName) || textureName == "****")
@@ -625,9 +642,73 @@ namespace Andastra.Runtime.Games.Aurora.GUI
                 return cached;
             }
 
-            // TODO: Implement texture loading for Aurora
-            // For now, return null - texture loading should be handled by texture loading system
-            return null;
+            try
+            {
+                // Aurora Engine uses TGA format primarily (unlike Odyssey which uses TPC)
+                // Try TGA first, then TPC as fallback
+                TPC texture = null;
+                ResourceResult textureResult = _installation.Resources.LookupResource(textureName, ResourceType.TGA, null, null);
+                if (textureResult != null && textureResult.Data != null && textureResult.Data.Length > 0)
+                {
+                    texture = TPCAuto.ReadTpc(textureResult.Data);
+                }
+
+                // If TGA not found, try TPC format
+                if (texture == null)
+                {
+                    textureResult = _installation.Resources.LookupResource(textureName, ResourceType.TPC, null, null);
+                    if (textureResult != null && textureResult.Data != null && textureResult.Data.Length > 0)
+                    {
+                        texture = TPCAuto.ReadTpc(textureResult.Data);
+                    }
+                }
+
+                if (texture == null)
+                {
+                    Console.WriteLine($"[AuroraGuiManager] WARNING: Texture not found: {textureName} (searched TGA and TPC)");
+                    return null;
+                }
+
+                // Get MonoGame GraphicsDevice for texture conversion
+                GraphicsDevice mgDevice = _graphicsDevice as GraphicsDevice;
+                if (mgDevice == null && _graphicsDevice is MonoGameGraphicsDevice mgGfxDevice)
+                {
+                    mgDevice = mgGfxDevice.Device;
+                }
+                if (mgDevice == null)
+                {
+                    Console.WriteLine($"[AuroraGuiManager] ERROR: Graphics device must be MonoGame GraphicsDevice for texture loading");
+                    return null;
+                }
+
+                // Convert TPC/TGA to MonoGame Texture2D
+                // GUI textures are always 2D (not cube maps), so set generateMipmaps to false for better performance
+                Texture convertedTexture = TpcToMonoGameTextureConverter.Convert(texture, mgDevice, false);
+                if (convertedTexture is TextureCube)
+                {
+                    Console.WriteLine($"[AuroraGuiManager] ERROR: GUI texture cannot be a cube map: {textureName}");
+                    return null;
+                }
+                Texture2D texture2D = (Texture2D)convertedTexture;
+                if (texture2D == null)
+                {
+                    Console.WriteLine($"[AuroraGuiManager] ERROR: Failed to convert texture: {textureName}");
+                    return null;
+                }
+
+                // Wrap in MonoGameTexture2D and cache
+                MonoGameTexture2D wrappedTexture = new MonoGameTexture2D(texture2D);
+                _textureCache[key] = wrappedTexture;
+
+                Console.WriteLine($"[AuroraGuiManager] Successfully loaded texture: {textureName} ({texture2D.Width}x{texture2D.Height})");
+                return wrappedTexture;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[AuroraGuiManager] ERROR: Exception loading texture {textureName}: {ex.Message}");
+                Console.WriteLine($"[AuroraGuiManager] Stack trace: {ex.StackTrace}");
+                return null;
+            }
         }
 
         /// <summary>
