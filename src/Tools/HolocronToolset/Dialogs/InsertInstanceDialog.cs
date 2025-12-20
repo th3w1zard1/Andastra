@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Andastra.Parsing.Common;
@@ -316,14 +317,20 @@ namespace HolocronToolset.Dialogs
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:117-181
         // Original: def accept(self):
-        private void Accept()
+        private async Task Accept()
         {
             bool newResource = true;
 
             if (_resourceList?.SelectedItem == null)
             {
-                // TODO: Show MessageBox when available
-                System.Console.WriteLine("You must choose an instance.");
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:131-132
+                // Original: BetterMessageBox(tr("Choose an instance"), tr("You must choose an instance, use the radial buttons to determine where/how to create the GIT instance."), icon=QMessageBox.Critical).exec()
+                var msgBox = MessageBoxManager.GetMessageBoxStandard(
+                    Localization.Translate("Choose an instance"),
+                    Localization.Translate("You must choose an instance, use the radial buttons to determine where/how to create the GIT instance."),
+                    ButtonEnum.Ok,
+                    Icon.Error);
+                await msgBox.ShowDialogAsync(this);
                 return;
             }
 
