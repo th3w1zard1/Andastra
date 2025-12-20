@@ -1081,6 +1081,9 @@ namespace Andastra.Runtime.Game.Core
             _viewMatrix = System.Numerics.Matrix4x4.Identity;
             _projectionMatrix = System.Numerics.Matrix4x4.Identity;
 
+            // Create ground plane for fallback rendering
+            CreateGroundPlane();
+
             Console.WriteLine("[Odyssey] Game rendering initialized (3D rendering enabled with abstraction layer)");
         }
 
@@ -1231,6 +1234,8 @@ namespace Andastra.Runtime.Game.Core
             {
                 // Fallback: Manual rendering for backward compatibility (deprecated - should use Area.Render())
                 // Draw 3D scene using abstraction layer
+                // Ground plane rendering: Provides visual reference when area geometry is not available
+                // Based on swkotor2.exe: Fallback rendering path when Area.Render() is not available
                 if (_groundVertexBuffer != null && _groundIndexBuffer != null && _basicEffect != null)
                 {
                     _graphicsDevice.SetVertexBuffer(_groundVertexBuffer);
@@ -1239,12 +1244,25 @@ namespace Andastra.Runtime.Game.Core
                     _basicEffect.View = _viewMatrix;
                     _basicEffect.Projection = _projectionMatrix;
                     _basicEffect.World = System.Numerics.Matrix4x4.Identity;
+                    _basicEffect.VertexColorEnabled = true;
+                    _basicEffect.LightingEnabled = true;
+
+                    // Ground plane: 4 vertices, 2 triangles (6 indices total)
+                    const int groundVertexCount = 4;
+                    const int groundPrimitiveCount = 2; // 2 triangles = 6 indices / 3
 
                     foreach (IEffectPass pass in _basicEffect.CurrentTechnique.Passes)
                     {
                         pass.Apply();
-                        // Draw ground plane (would need to know primitive count)
-                        // _graphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, vertexCount, 0, primitiveCount);
+                        // Draw ground plane: 2 triangles forming a 100x100 unit quad
+                        _graphicsDevice.DrawIndexedPrimitives(
+                            PrimitiveType.TriangleList,
+                            0,
+                            0,
+                            groundVertexCount,
+                            0,
+                            groundPrimitiveCount
+                        );
                     }
                 }
 
@@ -2873,6 +2891,19 @@ namespace Andastra.Runtime.Game.Core
             {
                 _menuTexture.Dispose();
                 _menuTexture = null;
+            }
+
+            // Dispose ground plane buffers
+            if (_groundVertexBuffer != null)
+            {
+                _groundVertexBuffer.Dispose();
+                _groundVertexBuffer = null;
+            }
+
+            if (_groundIndexBuffer != null)
+            {
+                _groundIndexBuffer.Dispose();
+                _groundIndexBuffer = null;
             }
 
             if (_graphicsBackend != null)
