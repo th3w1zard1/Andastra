@@ -14,11 +14,14 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Camera;
 using Andastra.Runtime.Core.Collision;
 using Andastra.Runtime.Games.Odyssey.Collision;
+using Andastra.Runtime.Games.Odyssey.Content.ResourceProviders;
+using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Engines.Odyssey.EngineApi;
 using Andastra.Runtime.Kotor.Game;
 using Andastra.Runtime.Scripting.EngineApi;
 using Andastra.Runtime.Scripting.VM;
+using Andastra.Runtime.Core.Audio;
 using Microsoft.Xna.Framework;
 
 namespace Andastra.Runtime.Game.Core
@@ -94,6 +97,27 @@ namespace Andastra.Runtime.Game.Core
 
         // Entity model rendering (using abstraction layer)
         private IEntityModelRenderer _entityModelRenderer;
+
+        // Audio system
+        private Andastra.Runtime.Core.Audio.IMusicPlayer _musicPlayer;
+        private bool _musicStarted = false;
+
+        // GUI system for main menu
+        private Andastra.Runtime.Graphics.MonoGame.GUI.KotorGuiManager _guiManager;
+        private bool _mainMenuGuiLoaded = false;
+
+        // Main menu 3D model rendering
+        private MDL _mainMenuModel;
+        private MDL _gui3DRoomModel;
+        private MdlToMonoGameModelConverter.ConversionResult _mainMenuModelData;
+        private System.Numerics.Vector3 _mainMenuCameraHookPosition;
+        private bool _mainMenuModelLoaded = false;
+        private bool _gui3DRoomLoaded = false;
+        private Installation _menuInstallation;
+        private string _menuVariant = "mainmenu01"; // Default variant, K2 only
+        private System.Numerics.Matrix4x4 _mainMenuViewMatrix;
+        private System.Numerics.Matrix4x4 _mainMenuProjectionMatrix;
+        private float _mainMenuCameraDistance = 22.7f; // 0x41b5ced9 (~22.7)
 
         // Save/Load system
         private Andastra.Runtime.Core.Save.SaveSystem _saveSystem;
@@ -201,6 +225,62 @@ namespace Andastra.Runtime.Game.Core
             // Will be created when module loads with proper dependencies
             _entityModelRenderer = null;
 
+            // Initialize music player and GUI manager for main menu
+            // Based on swkotor.exe FUN_005f9af0 @ 0x005f9af0 (K1) and swkotor2.exe FUN_006456b0 @ 0x006456b0 (K2)
+            // Music files: K1 uses "mus_theme_cult", K2 uses "mus_sion"
+            // GUI files: K1 uses "mainmenu16x12", K2 uses "mainmenu8x6_p" or "mainmenu_p"
+            // Based on swkotor.exe FUN_0067c4c0 @ 0x0067c4c0 (K1 main menu constructor)
+            // Based on swkotor2.exe FUN_006d2350 @ 0x006d2350 (K2 main menu constructor)
+            try
+            {
+                // Create resource provider from installation if game path is available
+                if (!string.IsNullOrEmpty(_settings.GamePath) && Directory.Exists(_settings.GamePath))
+                {
+                    var installation = new Installation(_settings.GamePath, _settings.Game == Andastra.Runtime.Core.KotorGame.K1 ? Andastra.Parsing.Common.Game.K1 : Andastra.Parsing.Common.Game.K2);
+                    var resourceProvider = new OdysseyResourceProvider(installation);
+                    
+                    // Create music player from graphics backend
+                    var musicPlayerObj = _graphicsBackend.CreateMusicPlayer(resourceProvider);
+                    if (musicPlayerObj is IMusicPlayer musicPlayer)
+                    {
+                        _musicPlayer = musicPlayer;
+                        Console.WriteLine("[Odyssey] Music player initialized successfully");
+                    }
+                    else
+                    {
+                        Console.WriteLine("[Odyssey] WARNING: Graphics backend returned invalid music player type");
+                    }
+
+                    // Initialize GUI manager for main menu
+                    // Based on swkotor.exe FUN_0067c4c0: Loads "MAINMENU" GUI and "RIMS:MAINMENU" RIM
+                    // Based on swkotor2.exe FUN_006d2350: Loads "MAINMENU" GUI and "RIMS:MAINMENU" RIM
+                    if (_graphicsDevice is Andastra.Runtime.Graphics.MonoGame.Graphics.MonoGameGraphicsDevice mgDevice)
+                    {
+                        _guiManager = new Andastra.Runtime.Graphics.MonoGame.GUI.KotorGuiManager(installation, mgDevice.Device);
+                        
+                        // Subscribe to button click events
+                        // Based on swkotor.exe FUN_0067c4c0: Button event handlers (0x27 hover, 0x2d leave, 0 click, 1 release)
+                        // Based on swkotor2.exe FUN_006d2350: Button event handlers
+                        //_guiManager.OnButtonClicked += HandleGuiButtonClick;
+                        
+                        Console.WriteLine("[Odyssey] GUI manager initialized successfully");
+                    }
+                    else
+                    {
+                        Console.WriteLine("[Odyssey] WARNING: GUI manager requires MonoGame graphics device");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("[Odyssey] WARNING: Game path not available, music player and GUI manager will be created when path is set");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Odyssey] WARNING: Failed to initialize music player or GUI manager: {ex.Message}");
+                Console.WriteLine($"[Odyssey] Stack trace: {ex.StackTrace}");
+            }
+
             Console.WriteLine("[Odyssey] Content loaded");
         }
 
@@ -234,9 +314,85 @@ namespace Andastra.Runtime.Game.Core
             if (_currentState == GameState.MainMenu)
             {
                 _menuAnimationTime += deltaTime;
+                
+                // Start main menu music if not already started
+                // Based on swkotor.exe FUN_005f9af0: Plays "mus_theme_cult" for K1 main menu
+                // Based on swkotor2.exe FUN_006456b0: Plays "mus_sion" for K2 main menu
+                if (!_musicStarted && _musicPlayer != null)
+                {
+                    string musicResRef = _settings.Game == Andastra.Runtime.Core.KotorGame.K1 ? "mus_theme_cult" : "mus_sion";
+                    if (_musicPlayer.Play(musicResRef, 1.0f))
+                    {
+                        _musicStarted = true;
+                        Console.WriteLine($"[Odyssey] Main menu music started: {musicResRef}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[Odyssey] WARNING: Failed to play main menu music: {musicResRef}");
+                    }
+                }
+                
                 UpdateMainMenu(deltaTime, keyboardState, mouseState);
             }
-            else if (_currentState == GameState.SaveMenu)
+            else if (_musicStarted && _musicPlayer != null)
+            {
+                // Stop music when leaving main menu
+                _musicPlayer.Stop();
+                _musicStarted = false;
+                Console.WriteLine("[Odyssey] Main menu music stopped");
+            }
+
+            // Load main menu GUI if not already loaded
+            // Based on swkotor.exe FUN_0067c4c0 @ 0x0067c4c0: Loads "MAINMENU" GUI
+            // Based on swkotor2.exe FUN_006d2350 @ 0x006d2350: Loads "MAINMENU" GUI
+            if (_currentState == GameState.MainMenu && !_mainMenuGuiLoaded && _guiManager != null)
+            {
+                // Determine GUI file name based on game
+                // K1: "mainmenu16x12" (from Ghidra analysis - actual file may differ, try "MAINMENU" first)
+                // K2: "mainmenu8x6_p" or "mainmenu_p" (from Ghidra analysis FUN_006d0790)
+                string guiName = "MAINMENU"; // Try standard name first
+                int viewportWidth = _graphicsDevice.Viewport.Width;
+                int viewportHeight = _graphicsDevice.Viewport.Height;
+                
+                if (_guiManager.LoadGui(guiName, viewportWidth, viewportHeight))
+                {
+                    _mainMenuGuiLoaded = true;
+                    Console.WriteLine($"[Odyssey] Main menu GUI loaded: {guiName}");
+                }
+                else
+                {
+                    // Try game-specific GUI names
+                    if (_settings.Game == Andastra.Runtime.Core.KotorGame.K1)
+                    {
+                        guiName = "mainmenu16x12";
+                    }
+                    else
+                    {
+                        guiName = "mainmenu8x6_p";
+                    }
+                    
+                    if (_guiManager.LoadGui(guiName, viewportWidth, viewportHeight))
+                    {
+                        _mainMenuGuiLoaded = true;
+                        Console.WriteLine($"[Odyssey] Main menu GUI loaded: {guiName}");
+                    }
+                    else
+                    {
+                        // Try fallback
+                        if (_settings.Game == Andastra.Runtime.Core.KotorGame.K2)
+                        {
+                            guiName = "mainmenu_p";
+                            if (_guiManager.LoadGui(guiName, viewportWidth, viewportHeight))
+                            {
+                                _mainMenuGuiLoaded = true;
+                                Console.WriteLine($"[Odyssey] Main menu GUI loaded: {guiName}");
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (_currentState == GameState.SaveMenu)
             {
                 UpdateSaveMenu(deltaTime, keyboardState, mouseState);
             }
@@ -347,6 +503,45 @@ namespace Andastra.Runtime.Game.Core
             int viewportWidth = _graphicsDevice.Viewport.Width;
             int viewportHeight = _graphicsDevice.Viewport.Height;
 
+            // Handle GUI button clicks if GUI is loaded
+            // Based on swkotor.exe FUN_0067ace0 @ 0x0067ace0: Button setup with event handlers
+            // Based on swkotor2.exe FUN_006d0790 @ 0x006d0790: Button setup with event handlers
+            // Button events: 0x27 (hover), 0x2d (leave), 0 (click), 1 (release)
+            if (_mainMenuGuiLoaded && _guiManager != null)
+            {
+                // Update GUI manager with input
+                _guiManager.Update(deltaTime, _graphicsDevice, _graphicsBackend.InputManager);
+                
+                // Handle button clicks from GUI
+                // Check for button clicks on main menu buttons
+                var btnNewGame = _guiManager.GetButton("BTN_NEWGAME");
+                var btnLoadGame = _guiManager.GetButton("BTN_LOADGAME");
+                var btnOptions = _guiManager.GetButton("BTN_OPTIONS");
+                var btnExit = _guiManager.GetButton("BTN_EXIT");
+                
+                // Handle button clicks (check if button was clicked this frame)
+                // TODO: Implement proper button click detection from GUI manager
+                // For now, use mouse position to detect clicks on GUI buttons
+                Point mousePos = mouseState.Position;
+                
+                // Check if mouse was clicked
+                bool mouseClicked = mouseState.LeftButton == ButtonState.Pressed && 
+                                   _previousMenuMouseState.LeftButton == ButtonState.Released;
+                
+                if (mouseClicked)
+                {
+                    // Check which GUI button was clicked
+                    // GUI manager should handle this, but for now check manually
+                    // TODO: Use GUI manager's button click detection
+                }
+                
+                // Update previous mouse state
+                _previousMenuMouseState = mouseState;
+                _previousMenuKeyboardState = keyboardState;
+                return; // GUI handles input, no need for fallback input handling
+            }
+
+            // Fallback: Handle input for simple menu if GUI not loaded
             // Calculate menu button positions (matching DrawMainMenu layout)
             int centerX = viewportWidth / 2;
             int startY = viewportHeight / 2;
@@ -357,7 +552,7 @@ namespace Andastra.Runtime.Game.Core
 
             // Track mouse hover
             _hoveredMenuIndex = -1;
-            Point mousePos = currentMouseState.Position;
+            Point mousePos = mouseState.Position;
 
             // Check which button the mouse is over
             for (int i = 0; i < _menuItems.Length; i++)
@@ -445,6 +640,71 @@ namespace Andastra.Runtime.Game.Core
             return previous.IsKeyUp(key) && current.IsKeyDown(key);
         }
 
+        /// <summary>
+        /// Handles GUI button clicks from the main menu GUI.
+        /// Based on swkotor.exe FUN_0067afb0 @ 0x0067afb0 (New Game button handler)
+        /// Based on swkotor2.exe FUN_006d0b00 @ 0x006d0b00 (New Game button handler)
+        /// </summary>
+        private void HandleGuiButtonClick(object sender, GuiButtonClickedEventArgs e)
+        {
+            string buttonTag = e.ButtonTag;
+            Console.WriteLine($"[Odyssey] GUI button clicked: {buttonTag} (ID: {e.ButtonId})");
+
+            // Handle button clicks based on button tag
+            // Based on swkotor.exe FUN_0067ace0: Button tags (BTN_NEWGAME, BTN_LOADGAME, BTN_OPTIONS, BTN_EXIT)
+            // Based on swkotor2.exe FUN_006d0790: Button tags (BTN_NEWGAME, BTN_LOADGAME, BTN_OPTIONS, BTN_EXIT, BTN_MUSIC)
+            switch (buttonTag.ToUpperInvariant())
+            {
+                case "BTN_NEWGAME":
+                    // New Game button - go to character creation
+                    // Based on swkotor.exe FUN_0067afb0: New Game loads module "END_M01AA" (Endar Spire)
+                    // Based on swkotor2.exe FUN_006d0b00: New Game loads module "001ebo" (Prologue/Ebon Hawk)
+                    // However, original games go to character creation first, then load module
+                    Console.WriteLine("[Odyssey] New Game button clicked - transitioning to character creation");
+                    _currentState = GameState.CharacterCreation;
+                    if (_characterCreationScreen == null)
+                    {
+                        _characterCreationScreen = new CharacterCreationScreen(_settings, _graphicsDevice, _spriteBatch, _font);
+                    }
+                    break;
+
+                case "BTN_LOADGAME":
+                    // Load Game button - show load game menu
+                    Console.WriteLine("[Odyssey] Load Game button clicked - opening load game menu");
+                    _currentState = GameState.LoadMenu;
+                    LoadAvailableSaves();
+                    break;
+
+                case "BTN_OPTIONS":
+                    // Options button - show options menu
+                    Console.WriteLine("[Odyssey] Options button clicked - options menu not yet implemented");
+                    // TODO: Implement options menu
+                    break;
+
+                case "BTN_EXIT":
+                    // Exit button - exit game
+                    Console.WriteLine("[Odyssey] Exit button clicked - exiting game");
+                    Exit();
+                    break;
+
+                case "BTN_MOVIES":
+                    // Movies button (K1/K2) - show movies menu
+                    Console.WriteLine("[Odyssey] Movies button clicked - movies menu not yet implemented");
+                    // TODO: Implement movies menu
+                    break;
+
+                case "BTN_MUSIC":
+                    // Music button (K2 only) - toggle music
+                    Console.WriteLine("[Odyssey] Music button clicked - music toggle not yet implemented");
+                    // TODO: Implement music toggle
+                    break;
+
+                default:
+                    Console.WriteLine($"[Odyssey] Unknown button clicked: {buttonTag}");
+                    break;
+            }
+        }
+
         private void HandleMenuSelection(int menuIndex)
         {
             switch (menuIndex)
@@ -517,17 +777,463 @@ namespace Andastra.Runtime.Game.Core
         }
 
         /// <summary>
-        /// Draws a professional main menu with proper text rendering, shadows, and visual effects.
+        /// Loads the main menu 3D models (gui3D_room and mainmenu model).
+        /// Based on swkotor.exe FUN_0067c4c0 lines 109-120: Loads gui3D_room and mainmenu model
+        /// Based on swkotor2.exe FUN_006d2350: Loads gui3D_room and mainmenu model with variant selection
+        /// </summary>
+        /// <remarks>
+        /// Main Menu 3D Model Loading:
+        /// - swkotor.exe (K1): Loads "gui3D_room" model and "mainmenu" model
+        /// - swkotor2.exe (K2): Loads "gui3D_room" model, determines menu variant based on gui3D_room condition
+        /// - Menu variants (K2 only): mainmenu01 (default), mainmenu02, mainmenu03, mainmenu04, mainmenu05
+        /// - Variant selection: Based on "gui3D_room" condition check (swkotor2.exe: 0x006d2350:120-150)
+        /// - Camera hook: Searches model for "camerahook1" node to position camera
+        /// - Camera distance: 0x41b5ced9 (~22.7) from camerahook position
+        /// </remarks>
+        private void LoadMainMenu3DModels(Installation installation)
+        {
+            if (installation == null)
+            {
+                Console.WriteLine("[Odyssey] WARNING: Cannot load main menu 3D models - installation is null");
+                return;
+            }
+            
+            try
+            {
+                // Create resource provider
+                var resourceProvider = new OdysseyResourceProvider(installation);
+                
+                // Load gui3D_room model first
+                // Based on swkotor.exe and swkotor2.exe: gui3D_room is loaded to determine menu variant (K2) and for 3D rendering
+                try
+                {
+                    var gui3DRoomRes = resourceProvider.GetResource("gui3D_room", ResourceType.MDL);
+                    if (gui3DRoomRes != null)
+                    {
+                        using (var reader = new MDLBinaryReader(gui3DRoomRes))
+                        {
+                            _gui3DRoomModel = reader.Read();
+                            _gui3DRoomLoaded = true;
+                            Console.WriteLine("[Odyssey] gui3D_room model loaded successfully");
+                            
+                            // Determine menu variant based on gui3D_room condition (K2 only)
+                            // Based on swkotor2.exe FUN_006d2350:120-150: Menu variant selection based on gui3D_room condition
+                            if (_settings.Game == Andastra.Runtime.Core.KotorGame.K2)
+                            {
+                                // Check gui3D_room condition to determine variant
+                                // Original implementation checks model properties or conditions
+                                // For now, use default variant (mainmenu01) - this should be verified with Ghidra
+                                _menuVariant = "mainmenu01";
+                                Console.WriteLine($"[Odyssey] Menu variant determined: {_menuVariant} (K2)");
+                            }
+                            else
+                            {
+                                // K1 uses single "mainmenu" panel (no variants)
+                                _menuVariant = "mainmenu";
+                                Console.WriteLine("[Odyssey] Using single mainmenu panel (K1)");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("[Odyssey] WARNING: gui3D_room model resource not found");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[Odyssey] WARNING: Failed to load gui3D_room model: {ex.Message}");
+                }
+                
+                // Load mainmenu model (or variant for K2)
+                // Based on swkotor.exe FUN_0067c4c0: Loads "mainmenu" model
+                // Based on swkotor2.exe FUN_006d2350: Loads menu variant model (mainmenu01-05)
+                try
+                {
+                    string mainMenuModelName = _menuVariant;
+                    var mainMenuRes = resourceProvider.GetResource(mainMenuModelName, ResourceType.MDL);
+                    if (mainMenuRes != null)
+                    {
+                        using (var reader = new MDLBinaryReader(mainMenuRes))
+                        {
+                            _mainMenuModel = reader.Read();
+                            
+                            // Find camera hook position in the model
+                            // Based on swkotor.exe and swkotor2.exe: Searches MDL node tree for "camerahook1" node
+                            // Camera hook format: "camerahook{N}" where N is 1-based index
+                            _mainMenuCameraHookPosition = FindCameraHookPosition(_mainMenuModel, 1);
+                            
+                            // Convert model to MonoGame format if using MonoGame backend
+                            if (_graphicsDevice is Andastra.Runtime.Graphics.MonoGame.Graphics.MonoGameGraphicsDevice mgDevice)
+                            {
+                                var materialResolver = new Func<string, Microsoft.Xna.Framework.Graphics.BasicEffect>(textureName =>
+                                {
+                                    try
+                                    {
+                                        var textureRes = resourceProvider.GetResource(textureName, ResourceType.TPC);
+                                        if (textureRes != null)
+                                        {
+                                            // Load texture and create BasicEffect
+                                            // This is a simplified version - full implementation would load TPC texture
+                                            var effect = new Microsoft.Xna.Framework.Graphics.BasicEffect(mgDevice.Device);
+                                            effect.EnableDefaultLighting();
+                                            return effect;
+                                        }
+                                    }
+                                    catch
+                                    {
+                                        // Fallback to default effect
+                                    }
+                                    var defaultEffect = new Microsoft.Xna.Framework.Graphics.BasicEffect(mgDevice.Device);
+                                    defaultEffect.EnableDefaultLighting();
+                                    return defaultEffect;
+                                });
+                                
+                                var converter = new MdlToMonoGameModelConverter(mgDevice.Device, materialResolver);
+                                _mainMenuModelData = converter.Convert(_mainMenuModel);
+                                _mainMenuModelLoaded = true;
+                                Console.WriteLine($"[Odyssey] Main menu model loaded and converted: {mainMenuModelName}");
+                            }
+                            else
+                            {
+                                Console.WriteLine("[Odyssey] WARNING: Main menu 3D model rendering requires MonoGame graphics device");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[Odyssey] WARNING: Main menu model resource not found: {mainMenuModelName}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[Odyssey] WARNING: Failed to load main menu model: {ex.Message}");
+                }
+                
+                // Set up camera matrices for 3D rendering
+                // Based on swkotor.exe and swkotor2.exe: Camera positioned at camerahook with distance ~22.7
+                SetupMainMenuCamera();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Odyssey] ERROR: Failed to load main menu 3D models: {ex.Message}");
+                Console.WriteLine($"[Odyssey] Stack trace: {ex.StackTrace}");
+            }
+        }
+        
+        /// <summary>
+        /// Finds camera hook position in an MDL model.
+        /// Based on swkotor.exe and swkotor2.exe: Searches MDL node tree for "camerahook{N}" nodes
+        /// Located via string references: "camerahook" @ 0x007c7dac, "camerahook%d" @ 0x007d0448
+        /// </summary>
+        /// <param name="model">The MDL model to search.</param>
+        /// <param name="hookIndex">The camera hook index (1-based, e.g., 1 = "camerahook1").</param>
+        /// <returns>World-space position of the camera hook, or Vector3.Zero if not found.</returns>
+        private System.Numerics.Vector3 FindCameraHookPosition(MDL model, int hookIndex)
+        {
+            if (model == null || hookIndex < 1)
+            {
+                return System.Numerics.Vector3.Zero;
+            }
+            
+            // Construct camera hook node name (format: "camerahook{N}")
+            string hookNodeName = string.Format("camerahook{0}", hookIndex);
+            
+            // Search for camera hook node recursively in the model's node tree
+            if (model.RootNode != null)
+            {
+                MDLNode hookNode = FindNodeByName(model.RootNode, hookNodeName);
+                if (hookNode != null)
+                {
+                    // Transform node position to world space
+                    // Based on swkotor2.exe: FUN_006c6020 transforms node local position to world space
+                    System.Numerics.Matrix4x4 nodeTransform = GetNodeWorldTransform(model.RootNode, hookNode);
+                    System.Numerics.Vector3 localPos = hookNode.Position;
+                    System.Numerics.Vector3 worldPos = System.Numerics.Vector3.Transform(localPos, nodeTransform);
+                    return worldPos;
+                }
+            }
+            
+            return System.Numerics.Vector3.Zero;
+        }
+        
+        /// <summary>
+        /// Recursively searches for a node by name in the MDL node tree.
+        /// </summary>
+        private MDLNode FindNodeByName(MDLNode node, string name)
+        {
+            if (node == null)
+            {
+                return null;
+            }
+            
+            // Check current node
+            if (node.Name != null && node.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
+            {
+                return node;
+            }
+            
+            // Search children recursively
+            if (node.Children != null)
+            {
+                foreach (var child in node.Children)
+                {
+                    var found = FindNodeByName(child, name);
+                    if (found != null)
+                    {
+                        return found;
+                    }
+                }
+            }
+            
+            return null;
+        }
+        
+        /// <summary>
+        /// Gets the world transform matrix for a node by accumulating parent transforms.
+        /// </summary>
+        private System.Numerics.Matrix4x4 GetNodeWorldTransform(MDLNode rootNode, MDLNode targetNode)
+        {
+            System.Numerics.Matrix4x4 transform = System.Numerics.Matrix4x4.Identity;
+            MDLNode current = targetNode;
+            
+            // Build transform chain from target to root
+            var transformChain = new List<MDLNode>();
+            while (current != null && current != rootNode)
+            {
+                transformChain.Add(current);
+                // Find parent node (this is simplified - actual implementation would track parent references)
+                current = FindParentNode(rootNode, current);
+            }
+            
+            // Apply transforms in reverse order (from root to target)
+            for (int i = transformChain.Count - 1; i >= 0; i--)
+            {
+                var node = transformChain[i];
+                System.Numerics.Matrix4x4 nodeTransform = CreateNodeTransform(node);
+                transform = System.Numerics.Matrix4x4.Multiply(transform, nodeTransform);
+            }
+            
+            return transform;
+        }
+        
+        /// <summary>
+        /// Finds the parent node of a given node in the tree.
+        /// </summary>
+        private MDLNode FindParentNode(MDLNode rootNode, MDLNode targetNode)
+        {
+            if (rootNode == null || targetNode == null)
+            {
+                return null;
+            }
+            
+            // Search recursively for the parent
+            if (rootNode.Children != null)
+            {
+                foreach (var child in rootNode.Children)
+                {
+                    if (child == targetNode)
+                    {
+                        return rootNode;
+                    }
+                    var parent = FindParentNode(child, targetNode);
+                    if (parent != null)
+                    {
+                        return parent;
+                    }
+                }
+            }
+            
+            return null;
+        }
+        
+        /// <summary>
+        /// Creates a transform matrix from an MDL node's position, rotation, and scale.
+        /// Based on swkotor.exe and swkotor2.exe: MDL nodes use quaternion orientation and separate scale components
+        /// </summary>
+        private System.Numerics.Matrix4x4 CreateNodeTransform(MDLNode node)
+        {
+            if (node == null)
+            {
+                return System.Numerics.Matrix4x4.Identity;
+            }
+            
+            // Create translation matrix
+            System.Numerics.Matrix4x4 translation = System.Numerics.Matrix4x4.CreateTranslation(node.Position);
+            
+            // Create rotation matrix from quaternion (MDL nodes use Vector4 quaternion: x, y, z, w)
+            System.Numerics.Matrix4x4 rotation = System.Numerics.Matrix4x4.Identity;
+            if (node.Orientation.W != 0 || node.Orientation.X != 0 || node.Orientation.Y != 0 || node.Orientation.Z != 0)
+            {
+                // Convert Vector4 to Quaternion (MDL format: x, y, z, w)
+                System.Numerics.Quaternion quat = new System.Numerics.Quaternion(
+                    node.Orientation.X,
+                    node.Orientation.Y,
+                    node.Orientation.Z,
+                    node.Orientation.W
+                );
+                rotation = System.Numerics.Matrix4x4.CreateFromQuaternion(quat);
+            }
+            
+            // Create scale matrix from separate scale components
+            System.Numerics.Matrix4x4 scale = System.Numerics.Matrix4x4.CreateScale(node.ScaleX, node.ScaleY, node.ScaleZ);
+            
+            // Combine: Scale * Rotation * Translation
+            System.Numerics.Matrix4x4 result = System.Numerics.Matrix4x4.Multiply(scale, rotation);
+            result = System.Numerics.Matrix4x4.Multiply(result, translation);
+            
+            return result;
+        }
+        
+        /// <summary>
+        /// Sets up the camera for main menu 3D rendering.
+        /// Based on swkotor.exe and swkotor2.exe: Camera positioned at camerahook with distance ~22.7
+        /// Camera distance: 0x41b5ced9 (~22.7), attached to "camerahook"
+        /// </summary>
+        private void SetupMainMenuCamera()
+        {
+            if (!_mainMenuModelLoaded || _mainMenuCameraHookPosition == System.Numerics.Vector3.Zero)
+            {
+                // Use default camera position if model not loaded
+                _mainMenuCameraHookPosition = new System.Numerics.Vector3(0, 0, 0);
+            }
+            
+            // Set up view matrix: Camera looks at the model from camerahook position
+            // Based on swkotor.exe and swkotor2.exe: Camera distance 0x41b5ced9 (~22.7) from camerahook
+            System.Numerics.Vector3 cameraPosition = _mainMenuCameraHookPosition + new System.Numerics.Vector3(0, 0, _mainMenuCameraDistance);
+            System.Numerics.Vector3 lookAtPosition = _mainMenuCameraHookPosition;
+            System.Numerics.Vector3 upVector = System.Numerics.Vector3.UnitY;
+            
+            _mainMenuViewMatrix = System.Numerics.Matrix4x4.CreateLookAt(cameraPosition, lookAtPosition, upVector);
+            
+            // Set up projection matrix: Perspective projection for 3D rendering
+            int viewportWidth = _graphicsDevice.Viewport.Width;
+            int viewportHeight = _graphicsDevice.Viewport.Height;
+            float aspectRatio = (float)viewportWidth / (float)viewportHeight;
+            float fieldOfView = (float)Math.PI / 4.0f; // 45 degrees
+            float nearPlane = 0.1f;
+            float farPlane = 1000.0f;
+            
+            _mainMenuProjectionMatrix = System.Numerics.Matrix4x4.CreatePerspectiveFieldOfView(fieldOfView, aspectRatio, nearPlane, farPlane);
+        }
+        
+        /// <summary>
+        /// Renders the main menu 3D character model.
+        /// Based on swkotor.exe FUN_0067c4c0: Renders 3D character model at camerahook position
+        /// Based on swkotor2.exe FUN_006d2350: Renders 3D character model with menu variant
+        /// </summary>
+        private void RenderMainMenu3DModel()
+        {
+            if (!_mainMenuModelLoaded || _mainMenuModelData == null)
+            {
+                return;
+            }
+            
+            // Only render if using MonoGame backend
+            if (!(_graphicsDevice is Andastra.Runtime.Graphics.MonoGame.Graphics.MonoGameGraphicsDevice mgDevice))
+            {
+                return;
+            }
+            
+            try
+            {
+                // Set up render state for 3D rendering
+                // Enable depth testing and disable alpha blending for 3D model
+                _graphicsDevice.SetDepthStencilState(DepthStencilState.Default);
+                _graphicsDevice.SetBlendState(BlendState.Opaque);
+                _graphicsDevice.SetRasterizerState(RasterizerState.CullCounterClockwise);
+                
+                // Render each mesh in the model
+                foreach (var mesh in _mainMenuModelData.Meshes)
+                {
+                    if (mesh.VertexBuffer == null || mesh.IndexBuffer == null || mesh.Effect == null)
+                    {
+                        continue;
+                    }
+                    
+                    // Set vertex and index buffers
+                    mgDevice.Device.SetVertexBuffer(mesh.VertexBuffer);
+                    mgDevice.Device.Indices = mesh.IndexBuffer;
+                    
+                    // Set effect parameters
+                    mesh.Effect.World = mesh.WorldTransform;
+                    mesh.Effect.View = ConvertMatrix(_mainMenuViewMatrix);
+                    mesh.Effect.Projection = ConvertMatrix(_mainMenuProjectionMatrix);
+                    
+                    // Render the mesh
+                    foreach (var pass in mesh.Effect.CurrentTechnique.Passes)
+                    {
+                        pass.Apply();
+                        mgDevice.Device.DrawIndexedPrimitives(
+                            Microsoft.Xna.Framework.Graphics.PrimitiveType.TriangleList,
+                            0,
+                            0,
+                            mesh.IndexCount / 3
+                        );
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Odyssey] WARNING: Failed to render main menu 3D model: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// Converts System.Numerics.Matrix4x4 to Microsoft.Xna.Framework.Matrix.
+        /// </summary>
+        private Microsoft.Xna.Framework.Matrix ConvertMatrix(System.Numerics.Matrix4x4 matrix)
+        {
+            return new Microsoft.Xna.Framework.Matrix(
+                matrix.M11, matrix.M12, matrix.M13, matrix.M14,
+                matrix.M21, matrix.M22, matrix.M23, matrix.M24,
+                matrix.M31, matrix.M32, matrix.M33, matrix.M34,
+                matrix.M41, matrix.M42, matrix.M43, matrix.M44
+            );
+        }
+        
+        /// <summary>
+        /// Draws the main menu with GUI panel, 3D character model, and buttons.
+        /// Based on swkotor.exe FUN_0067c4c0 @ 0x0067c4c0 (K1 main menu rendering)
+        /// Based on swkotor2.exe FUN_006d2350 @ 0x006d2350 (K2 main menu rendering)
         /// </summary>
         private void DrawMainMenu()
         {
             // Clear to dark space-like background (deep blue/black gradient effect)
             _graphicsDevice.Clear(new Color(15, 15, 25, 255));
 
+            // Render 3D character model (gui3D_room + menu variant) at camerahook position
+            // Based on swkotor.exe FUN_0067c4c0 lines 109-120: Loads gui3D_room and mainmenu model
+            // Based on swkotor2.exe FUN_006d2350: Renders 3D character model with menu variant
+            // Camera distance: 0x41b5ced9 (~22.7), attached to "camerahook"
+            // Render 3D model before GUI (3D scene renders first, then GUI on top)
+            if (_mainMenuModelLoaded && _mainMenuModelData != null)
+            {
+                // Set up camera for menu 3D view
+                SetupMainMenuCamera();
+                
+                // Render the 3D model
+                RenderMainMenu3DModel();
+            }
+
             // Begin sprite batch rendering
             _spriteBatch.Begin();
 
-            int viewportWidth = _graphicsDevice.Viewport.Width;
+            // Render GUI panel if loaded
+            // Based on swkotor.exe FUN_0067c4c0: Renders MAINMENU GUI panel
+            // Based on swkotor2.exe FUN_006d2350: Renders MAINMENU GUI panel
+            if (_mainMenuGuiLoaded && _guiManager != null)
+            {
+                // Render GUI using KotorGuiManager
+                // GUI manager handles rendering of all GUI elements (buttons, labels, backgrounds)
+                // BaseGuiManager.Draw takes object gameTime, but we need to render with sprite batch
+                // KotorGuiManager should handle sprite batch internally
+                _guiManager.Draw(_menuAnimationTime);
+                _spriteBatch.End();
+                return; // GUI handles all rendering, no need for fallback
+            }
+
+            // Fallback: Draw simple menu if GUI not loaded
+            DrawMainMenuFallback();
             int viewportHeight = _graphicsDevice.Viewport.Height;
             int centerX = viewportWidth / 2;
             int centerY = viewportHeight / 2;
@@ -1790,6 +2496,100 @@ namespace Andastra.Runtime.Game.Core
             catch (Exception ex)
             {
                 Console.WriteLine($"[Odyssey] Failed to load MDL model {modelResRef}: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Initializes the main menu 3D rendering system.
+        /// Based on swkotor.exe FUN_0067c4c0 @ 0x0067c4c0 (K1 main menu rendering)
+        /// Based on swkotor2.exe FUN_006d2350 @ 0x006d2350 (K2 main menu rendering)
+        /// </summary>
+        private void InitializeMainMenu3DRendering()
+        {
+            try
+            {
+                // Create dedicated entity model renderer for main menu
+                // This renderer will handle loading and rendering of gui3D_room and mainmenu models
+                _menuEntityModelRenderer = _graphicsBackend.CreateEntityModelRenderer();
+
+                // Set up menu camera controller with camerahook positioning
+                // Based on swkotor.exe FUN_0067c4c0: Camera distance 0x41b5ced9 (~22.7 units)
+                // Camera is attached to "camerahook" node in the 3D scene
+                _menuCameraController = _graphicsBackend.CreateCameraController();
+                _menuCameraController.SetFreeMode();
+
+                // Position camera at distance ~22.7 units from origin (matching original engine)
+                // This matches the hex value 0x41b5ced9 which converts to approximately 22.7
+                const float cameraDistance = 22.7f;
+                var cameraPosition = new System.Numerics.Vector3(0, 0, cameraDistance);
+                var cameraTarget = System.Numerics.Vector3.Zero;
+                var cameraUp = System.Numerics.Vector3.UnitY;
+
+                _menuCameraController.SetPosition(cameraPosition);
+                _menuCameraController.SetLookAt(cameraTarget, cameraUp);
+
+                // Calculate view and projection matrices for menu rendering
+                float aspectRatio = (float)_graphicsDevice.Viewport.Width / _graphicsDevice.Viewport.Height;
+                _menuViewMatrix = _menuCameraController.GetViewMatrix();
+                _menuProjectionMatrix = _menuCameraController.GetProjectionMatrix(aspectRatio, 0.1f, 1000f);
+
+                // Load gui3D_room model (the 3D scene/room for the menu)
+                // Based on swkotor.exe FUN_0067c4c0 lines 109-120: Loads gui3D_room
+                _gui3DRoomModel = LoadMenuModel("gui3D_room");
+
+                // Load mainmenu model (the character model displayed in the menu)
+                // Based on swkotor.exe FUN_0067c4c0 lines 109-120: Loads mainmenu model
+                _mainMenuModel = LoadMenuModel("mainmenu");
+
+                Console.WriteLine("[Odyssey] Main menu 3D rendering system initialized successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Odyssey] Failed to initialize main menu 3D rendering: {ex.Message}");
+                // Continue without 3D rendering - menu will still work with GUI only
+                _menuEntityModelRenderer = null;
+                _gui3DRoomModel = null;
+                _mainMenuModel = null;
+            }
+        }
+
+        /// <summary>
+        /// Loads a model directly from the installation for main menu rendering.
+        /// </summary>
+        /// <param name="modelName">Name of the model to load (without .mdl extension).</param>
+        /// <returns>The loaded MDL model, or null if loading fails.</returns>
+        [CanBeNull]
+        private Andastra.Parsing.Formats.MDLData.MDL LoadMenuModel(string modelName)
+        {
+            if (string.IsNullOrEmpty(modelName) || _settings.Installation == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                // Use installation resource manager to find the MDL file
+                var resourceResult = _settings.Installation.Resources.LookupResource(modelName, ResourceType.MDL);
+                if (resourceResult == null)
+                {
+                    Console.WriteLine($"[Odyssey] Could not find MDL resource: {modelName}");
+                    return null;
+                }
+
+                // Load MDL using MDLAuto (same as LoadMDLModel method)
+                string activePath = resourceResult.Activate();
+                if (string.IsNullOrEmpty(activePath))
+                {
+                    Console.WriteLine($"[Odyssey] Could not activate MDL resource: {modelName}");
+                    return null;
+                }
+
+                return MDLAuto.ReadMdl(activePath);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Odyssey] Failed to load menu model {modelName}: {ex.Message}");
                 return null;
             }
         }
