@@ -348,7 +348,7 @@ namespace KotorDiff.Diff
                                     if (restype == ResourceType.TwoDA && relevant2DaFilenames.ContainsKey(fileNameLower))
                                     {
                                         byte[] fileData = File.ReadAllBytes(filePath);
-                                        TwoDA twodaObj = new TwoDABinaryReader(fileData).Load();
+                                        2DA twodaObj = new TwoDABinaryReader(fileData).Load();
                                         HashSet<string> columnsWithStrrefs = relevant2DaFilenames[fileNameLower];
 
                                         for (int rowIdx = 0; rowIdx < twodaObj.GetHeight(); rowIdx++)
@@ -441,7 +441,7 @@ namespace KotorDiff.Diff
                                 try
                                 {
                                     byte[] resourceData = resource.GetData();
-                                    TwoDA twodaObj = new TwoDABinaryReader(resourceData).Load();
+                                    2DA twodaObj = new TwoDABinaryReader(resourceData).Load();
                                     HashSet<string> columnsWithStrrefs = relevant2DaFilenames[filename];
 
                                     // Find all cells containing this StrRef

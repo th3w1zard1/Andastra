@@ -180,7 +180,13 @@ namespace Andastra.Parsing.Resource.Generics.DLG
             }
 
             List<string> paths = new List<string>();
-            _FindPathsRecursive(Starters, target, "", paths, new HashSet<object>());
+            // Build starter paths - iterate through starters and build paths from each
+            for (int i = 0; i < Starters.Count; i++)
+            {
+                string starterPath = $"StartingList\\{i}";
+                var starterLinks = new List<DLGLink> { Starters[i] };
+                _FindPathsRecursive(starterLinks, target, starterPath, paths, new HashSet<object>());
+            }
             return paths;
         }
 
@@ -253,7 +259,16 @@ namespace Andastra.Parsing.Resource.Generics.DLG
                     }
                     seenLinksAndNodes.Add(node);
                     string nodeListName = node is DLGEntry ? "EntryList" : "ReplyList";
+                    // Add the direct path (matching Python implementation)
                     paths.Add($"{nodeListName}\\{node.ListIndex}");
+                    // Add the full path from starter if we have a currentPath
+                    // When currentPath is set, we're traversing from a starter, so include full path
+                    if (!string.IsNullOrEmpty(currentPath))
+                    {
+                        // currentPath already includes the path up to the link list
+                        // Just append the link index to complete the path
+                        paths.Add($"{currentPath}\\{link.ListIndex}");
+                    }
                     continue;
                 }
 
@@ -263,7 +278,8 @@ namespace Andastra.Parsing.Resource.Generics.DLG
                     string nodeListName = node is DLGEntry ? "EntryList" : "ReplyList";
                     string linkListName = node is DLGEntry ? "RepliesList" : "EntriesList";
                     string nodePath = $"{nodeListName}\\{node.ListIndex}";
-                    string newPath = string.IsNullOrEmpty(currentPath) ? nodePath : $"{currentPath}\\{nodePath}\\{linkListName}";
+                    // Build new path: currentPath / nodePath / linkListName (matching Python)
+                    string newPath = string.IsNullOrEmpty(currentPath) ? $"{nodePath}\\{linkListName}" : $"{currentPath}\\{nodePath}\\{linkListName}";
                     _FindPathsRecursive(node.Links, target, newPath, paths, seenLinksAndNodes);
                 }
             }

@@ -20,8 +20,8 @@ namespace Andastra.Runtime.Games.Aurora.Collision
     ///   - Part::GetMinimumBoundingBox @ 0x14008eb20 (nwmain.exe: calculates minimum bounding box for 3D parts)
     /// - Located via string references:
     ///   - "Appearance" @ 0x140dc50b0 (nwmain.exe: appearance field in GFF loading)
-    ///   - "Already loaded Appearance.2DA!" @ 0x140dc5dd8 (nwmain.exe: appearance.2da loading check)
-    ///   - "Failed to load Appearance.2DA!" @ 0x140dc5e08 (nwmain.exe: appearance.2da loading error)
+    ///   - "Already loaded Appearance.TwoDA!" @ 0x140dc5dd8 (nwmain.exe: appearance.2da loading check)
+    ///   - "Failed to load Appearance.TwoDA!" @ 0x140dc5e08 (nwmain.exe: appearance.2da loading error)
     ///   - "HandleNotifyCollision" @ 0x140d93d48 (nwmain.exe: collision notification handler)
     ///   - "Tile Has No Axis-Aligned Bounding Box!" @ 0x140dc8368 (nwmain.exe: tile bounding box error)
     /// - Cross-engine analysis:
@@ -128,7 +128,7 @@ namespace Andastra.Runtime.Games.Aurora.Collision
             // - CNWSArea::NoCreaturesOnLine @ 0x14036ec90 accesses radius via: *(float *)(*(longlong *)(creature + 0x530) + 8)
             // - CNWSCreature::BumpFriends @ 0x140385130 adds two radii: radius1 + radius2 for collision distance
             // - Radius is looked up from appearance.2da hitradius column using C2DA::GetFloatingPoint
-            // - Located via string references: "Appearance" @ 0x140dc50b0, "Already loaded Appearance.2DA!" @ 0x140dc5dd8
+            // - Located via string references: "Appearance" @ 0x140dc50b0, "Already loaded Appearance.TwoDA!" @ 0x140dc5dd8
             float radius = 0.5f; // Default radius (medium creature size)
 
             if (appearanceType >= 0 && entity.World != null && entity.World.GameDataProvider != null)

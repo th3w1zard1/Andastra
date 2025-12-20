@@ -56,7 +56,7 @@ IndexField=2DAMEMORY5
             PatcherConfig config = SetupIniAndConfig(iniText);
 
             // Setup data
-            TwoDA twoda = CreateTest2DA(new[] { "label", "strref_col" }, Array.Empty<(string, string[])>());
+            2DA twoda = CreateTest2DA(new[] { "label", "strref_col" }, Array.Empty<(string, string[])>());
             var gff = new GFF();
             var tlk = new TLK();
             tlk.Add("Original");
@@ -117,7 +117,7 @@ DefaultValue=def
 I0=special
 ";
             PatcherConfig config = SetupIniAndConfig(iniText);
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[]
                 {
@@ -267,7 +267,7 @@ id=1
 value=also_conflict
 ";
             PatcherConfig config = SetupIniAndConfig(iniText);
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "id", "value" },
                 new[]
                 {
@@ -315,7 +315,7 @@ RowIndex=0
 col1=high()
 ";
             PatcherConfig config = SetupIniAndConfig(iniText);
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "col1", "col2", "col3" },
                 new[]
                 {
@@ -389,7 +389,7 @@ Battlecry 2=2DAMEMORY0
             PatcherConfig config = SetupIniAndConfig(iniText);
 
             var tlk = new TLK();
-            TwoDA twoda = CreateTest2DA(new[] { "label", "value" }, Array.Empty<(string, string[])>());
+            2DA twoda = CreateTest2DA(new[] { "label", "value" }, Array.Empty<(string, string[])>());
             var gff = new GFF();
             var ssf = new SSF();
 

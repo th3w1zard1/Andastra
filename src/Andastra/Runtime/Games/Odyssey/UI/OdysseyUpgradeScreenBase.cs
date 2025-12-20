@@ -209,7 +209,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
                 }
 
                 // Parse 2DA file to get upgrade items
-                TwoDA upgradeTable = null;
+                2DA upgradeTable = null;
                 using (var stream = new MemoryStream(upgradeTableResult.Data))
                 {
                     var reader = new TwoDABinaryReader(stream);

@@ -21,7 +21,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void AddColumn_Empty_ShouldFillWithStars()
         {
             // Arrange
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[]
                 {
@@ -44,7 +44,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void AddColumn_WithDefault_ShouldFillAllRows()
         {
             // Arrange
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "Col1" },
                 new[]
                 {
@@ -68,7 +68,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void AddColumn_RowIndexConstant_ShouldSetSpecificRow()
         {
             // Arrange
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "Col1" },
                 new[]
                 {
@@ -106,7 +106,7 @@ I1=special_value
         {
             // Python test: test_addcolumn_rowlabel_2damemory
             // Arrange
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[]
                 {
@@ -144,7 +144,7 @@ L1=2DAMEMORY5
         public void AddColumn_RowLabelTLKMemory_ShouldUseTokenValue()
         {
             // Arrange
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "Col1" },
                 new[]
                 {
@@ -181,7 +181,7 @@ L1=StrRef5
         {
             // Python test: test_addcolumn_2damemory_index
             // Arrange
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[]
                 {
@@ -221,7 +221,7 @@ I1=Y
         {
             // Python test: test_addcolumn_2damemory_line
             // Arrange
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[]
                 {
@@ -260,7 +260,7 @@ I1=Y
         public void ChangeRow_WithAllRowValueTypes_ShouldApplyCorrectly()
         {
             // Arrange
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "id", "name", "value", "ref" },
                 new[]
                 {
@@ -293,7 +293,7 @@ I1=Y
         public void AddRow_WithAllCellTypes_ShouldPopulateCorrectly()
         {
             // Arrange
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "id", "name", "value", "index", "label", "cell" },
                 new[]
                 {
@@ -327,7 +327,7 @@ I1=Y
         public void CopyRow_WithOverrides_ShouldMergeProperly()
         {
             // Arrange
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "id", "name", "health", "damage" },
                 new[]
                 {
@@ -354,7 +354,7 @@ I1=Y
         public void ComplexWorkflow_MultipleOperations_ShouldApplyInOrder()
         {
             // Arrange
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "id", "name" },
                 new[]
                 {
@@ -408,7 +408,7 @@ DefaultValue=default
         public void ExclusiveColumn_MultipleAttempts_ShouldOnlyAddOnce()
         {
             // Arrange
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "unique_id", "name" },
                 new[]
                 {
@@ -442,7 +442,7 @@ DefaultValue=default
         public void HighValue_EmptyColumn_ShouldReturnZero()
         {
             // Arrange
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "id", "empty_col" },
                 new[]
                 {
@@ -465,7 +465,7 @@ DefaultValue=default
         public void RowValueRowCell_ShouldGetValueFromSpecifiedColumn()
         {
             // Arrange
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "id", "reference", "data" },
                 new[]
                 {

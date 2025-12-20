@@ -16,14 +16,14 @@ namespace Andastra.Parsing.Tests.Diff
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Analyze_ShouldFindNewColumn()
         {
-            var older = new TwoDA();
+            var older = new 2DA();
             older.AddColumn("A");
             int olderRow0 = older.AddRow("0");
             int olderRow1 = older.AddRow("1");
             older.SetCellString(olderRow0, "A", "a0");
             older.SetCellString(olderRow1, "A", "a1");
 
-            var newer = new TwoDA();
+            var newer = new 2DA();
             newer.AddColumn("A");
             newer.AddColumn("B");
             int newerRow0 = newer.AddRow("0");
@@ -56,7 +56,7 @@ namespace Andastra.Parsing.Tests.Diff
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Analyze_ShouldFindNewRow()
         {
-            var older = new TwoDA();
+            var older = new 2DA();
             older.AddColumn("A");
             older.AddColumn("B");
             int olderRow0 = older.AddRow("0");
@@ -65,7 +65,7 @@ namespace Andastra.Parsing.Tests.Diff
             older.SetCellString(olderRow1, "A", "a1");
             older.SetCellString(olderRow1, "B", "b1");
 
-            var newer = new TwoDA();
+            var newer = new 2DA();
             newer.AddColumn("A");
             newer.AddColumn("B");
             int newerRow0 = newer.AddRow("0");

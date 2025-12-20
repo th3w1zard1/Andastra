@@ -1310,7 +1310,11 @@ namespace HolocronToolset.Tests.Formats
             restored.Unskippable.Should().BeTrue();
             restored.Text.GetString(Language.French, Gender.Female).Should().Be("Ligne");
             restored.Animations[0].AnimationId.Should().Be(123);
-            restored.Links[0].Node.Links[0].Node.Comment.Should().Be("deep node");
+            // Verify circular reference is preserved
+            restored.Links.Should().NotBeEmpty("entry should have links");
+            restored.Links[0].Node.Should().NotBeNull("link should have a node");
+            restored.Links[0].Node.Links.Should().NotBeEmpty("reply should have links back to entry");
+            restored.Links[0].Node.Links[0].Node.Comment.Should().Be("deep node", "circular reference should be preserved");
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/tests/resource/generics/test_dlg.py:1612
@@ -1337,12 +1341,14 @@ namespace HolocronToolset.Tests.Formats
 
             var pathsReplyA = dlg.FindPaths(replyA);
             var pathsEntryB = dlg.FindPaths(entryB);
+            var parentForReplyLink = dlg.GetLinkParent(entryA.Links[0]);
 
-            // replyA should be reachable from starterA
-            pathsReplyA.Should().Contain(p => p.Contains("StartingList\\0") && p.Contains("RepliesList\\0"));
-            // entryB should be reachable from both starters
-            pathsEntryB.Should().Contain(p => p.Contains("StartingList\\0") && p.Contains("RepliesList\\0") && p.Contains("EntriesList\\0"));
-            pathsEntryB.Should().Contain(p => p.Contains("StartingList\\1") && p.Contains("EntriesList\\1"));
+            // Matching Python: assert PureWindowsPath("ReplyList", "4") in paths_reply_a
+            pathsReplyA.Should().Contain("ReplyList\\4", "replyA should be found by ListIndex");
+            // Matching Python: assert PureWindowsPath("EntryList", "3") in paths_entry_b
+            pathsEntryB.Should().Contain("EntryList\\3", "entryB should be found by ListIndex");
+            // Matching Python: assert parent_for_reply_link is entry_a
+            parentForReplyLink.Should().Be(entryA, "parent of entryA's link to replyA should be entryA");
         }
     }
 

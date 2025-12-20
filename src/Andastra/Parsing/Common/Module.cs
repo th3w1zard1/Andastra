@@ -1254,7 +1254,7 @@ namespace Andastra.Parsing.Common
                 return null;
             }
 
-            // Parse TwoDA file
+            // Parse 2DA file
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1666
             // Original: loadscreens_2da = read_2da(loadscreens_result.data)
             Formats.TwoDA.TwoDA loadscreens2da = new Formats.TwoDA.TwoDABinaryReader(loadscreensResult.Data).Load();

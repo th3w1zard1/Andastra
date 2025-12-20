@@ -312,10 +312,10 @@ namespace HolocronToolset.Editors
 
             // Matching PyKotor implementation: Load required 2da files if they have not been loaded already
             List<string> required = new List<string> { HTInstallation.TwoDAPlaceables, HTInstallation.TwoDAFactions };
-            installation.HtBatchCache2DA(required);
+            installation.HtBatchCacheTwoDA(required);
 
             // Matching PyKotor implementation: appearances: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_PLACEABLES)
-            TwoDA appearances = installation.HtGetCache2DA(HTInstallation.TwoDAPlaceables);
+            TwoDA appearances = installation.HtGetCacheTwoDA(HTInstallation.TwoDAPlaceables);
             if (_appearanceSelect != null && appearances != null)
             {
                 _appearanceSelect.Items.Clear();
@@ -327,7 +327,7 @@ namespace HolocronToolset.Editors
             }
 
             // Matching PyKotor implementation: factions: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_FACTIONS)
-            TwoDA factions = installation.HtGetCache2DA(HTInstallation.TwoDAFactions);
+            TwoDA factions = installation.HtGetCacheTwoDA(HTInstallation.TwoDAFactions);
             if (_factionSelect != null && factions != null)
             {
                 _factionSelect.Items.Clear();

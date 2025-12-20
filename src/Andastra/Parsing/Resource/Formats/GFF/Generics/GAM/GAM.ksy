@@ -66,41 +66,12 @@ doc: |
 seq:
   - id: gff_header
     type: gff_header
-    doc: GFF file header (56 bytes)
-  
-  - id: label_array
-    type: label_array
-    if: gff_header.label_count > 0
-    pos: gff_header.label_array_offset
-    doc: Array of field name labels (16-byte null-terminated strings)
-  
-  - id: struct_array
-    type: struct_array
-    pos: gff_header.struct_array_offset
-    doc: Array of struct entries (12 bytes each)
-  
-  - id: field_array
-    type: field_array
-    pos: gff_header.field_array_offset
-    doc: Array of field entries (12 bytes each)
-  
-  - id: field_data
-    type: field_data_section
-    if: gff_header.field_data_count > 0
-    pos: gff_header.field_data_offset
-    doc: Field data section for complex types (strings, ResRefs, LocalizedStrings, etc.)
-  
-  - id: field_indices
-    type: field_indices_array
-    if: gff_header.field_indices_count > 0
-    pos: gff_header.field_indices_offset
-    doc: Field indices array (MultiMap) for structs with multiple fields
-  
-  - id: list_indices
-    type: list_indices_array
-    if: gff_header.list_indices_count > 0
-    pos: gff_header.list_indices_offset
-    doc: List indices array for LIST type fields
+    doc: |
+      GFF file header (56 bytes).
+      Contains offsets to other sections (label_array, struct_array, field_array, etc.).
+      Note: Other sections are at absolute file offsets specified in the header.
+      Due to Kaitai Struct limitations with absolute positioning in seq, these sections
+      should be accessed via instances or manual seeking in application code.
 
 types:
   # GFF Header (56 bytes)
@@ -111,9 +82,8 @@ types:
         encoding: ASCII
         size: 4
         doc: |
-          File type signature. Must be "GAM " for game state files.
+          File type signature. Must be "GAM " (space-padded) for game state files.
           Other GFF types: "GFF ", "ARE ", "UTC ", "UTI ", "DLG ", etc.
-        valid: "GAM "
       
       - id: file_version
         type: str
@@ -122,7 +92,6 @@ types:
         doc: |
           File format version. Typically "V3.2" for KotOR-era games.
           Other versions: "V3.3", "V4.0", "V4.1" for other BioWare games.
-        valid: ["V3.2", "V3.3", "V4.0", "V4.1"]
       
       - id: struct_array_offset
         type: u4
@@ -262,31 +231,6 @@ types:
             Struct index into struct_array
           For List type:
             Byte offset into list_indices array
-    instances:
-      is_simple_type:
-        value: (field_type.value >= 0 && field_type.value <= 5) || field_type.value == 8
-        doc: True if field stores data inline (simple types)
-      is_complex_type:
-        value: (field_type.value >= 6 && field_type.value <= 13) || (field_type.value >= 16 && field_type.value <= 17)
-        doc: True if field stores data in field_data section
-      is_struct_type:
-        value: field_type.value == 14
-        doc: True if field is a nested struct
-      is_list_type:
-        value: field_type.value == 15
-        doc: True if field is a list of structs
-      field_data_offset_value:
-        value: _root.gff_header.field_data_offset + data_or_offset
-        if: is_complex_type
-        doc: Absolute file offset to field data for complex types
-      struct_index_value:
-        value: data_or_offset
-        if: is_struct_type
-        doc: Struct index for struct type fields
-      list_indices_offset_value:
-        value: _root.gff_header.list_indices_offset + data_or_offset
-        if: is_list_type
-        doc: Absolute file offset to list indices for list type fields
   
   # Field Data Section
   field_data_section:
@@ -294,6 +238,7 @@ types:
       - id: raw_data
         type: str
         size: _root.gff_header.field_data_count
+        encoding: UTF-8
         doc: |
           Raw field data storage. Individual field data entries are accessed via
           field_entry.field_data_offset_value offsets. The structure of each entry
@@ -321,6 +266,7 @@ types:
       - id: raw_data
         type: str
         size: _root.gff_header.list_indices_count
+        encoding: UTF-8
         doc: |
           Raw list indices data. List entries are accessed via offsets stored in
           list-type field entries (field_entry.list_indices_offset_value).
@@ -341,48 +287,7 @@ types:
         repeat-expr: count
         doc: Array of struct indices (indices into struct_array)
 
-enums:
-  gff_field_type:
-    0: uint8
-    doc: 8-bit unsigned integer (byte)
-    1: int8
-    doc: 8-bit signed integer (char)
-    2: uint16
-    doc: 16-bit unsigned integer (word)
-    3: int16
-    doc: 16-bit signed integer (short)
-    4: uint32
-    doc: 32-bit unsigned integer (dword)
-    5: int32
-    doc: 32-bit signed integer (int)
-    6: uint64
-    doc: 64-bit unsigned integer (stored in field_data)
-    7: int64
-    doc: 64-bit signed integer (stored in field_data)
-    8: single
-    doc: 32-bit floating point (float)
-    9: double
-    doc: 64-bit floating point (stored in field_data)
-    10: string
-    doc: Null-terminated string (CExoString, stored in field_data)
-    11: resref
-    doc: Resource reference (ResRef, max 16 chars, stored in field_data)
-    12: localized_string
-    doc: Localized string (CExoLocString, stored in field_data)
-    13: binary
-    doc: Binary data blob (Void, stored in field_data)
-    14: struct
-    doc: Nested struct (struct index stored inline)
-    15: list
-    doc: List of structs (offset to list_indices stored inline)
-    16: vector4
-    doc: Quaternion/Orientation (4×float, stored in field_data as Vector4)
-    17: vector3
-    doc: 3D vector (3×float, stored in field_data)
-
-types:
   # Complex field data types (used when accessing field_data section)
-
   localized_string_data:
     seq:
       - id: total_size
@@ -406,10 +311,6 @@ types:
         repeat: expr
         repeat-expr: string_count
         doc: Array of language-specific string substrings
-    instances:
-      string_ref_value:
-        value: string_ref == 0xFFFFFFFF ? -1 : string_ref
-        doc: String reference as signed integer (-1 if none)
   
   localized_substring:
     seq:
@@ -439,5 +340,26 @@ types:
       gender_id:
         value: string_id & 0xFF
         doc: Gender ID (0 = Male, 1 = Female)
+
+enums:
+  gff_field_type:
+    0: uint8
+    1: int8
+    2: uint16
+    3: int16
+    4: uint32
+    5: int32
+    6: uint64
+    7: int64
+    8: single
+    9: double
+    10: string
+    11: resref
+    12: localized_string
+    13: binary
+    14: struct
+    15: list
+    16: vector4
+    17: vector3
 
 

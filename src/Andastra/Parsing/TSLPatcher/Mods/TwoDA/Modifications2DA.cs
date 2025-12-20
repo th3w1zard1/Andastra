@@ -66,7 +66,7 @@ namespace Andastra.Parsing.Mods.TwoDA
         {
             if (!(mutableData is Formats.TwoDA.TwoDA twoda))
             {
-                logger.AddError($"Expected TwoDA object for Modifications2DA, but got {mutableData.GetType().Name}");
+                logger.AddError($"Expected 2DA object for Modifications2DA, but got {mutableData.GetType().Name}");
                 return;
             }
 

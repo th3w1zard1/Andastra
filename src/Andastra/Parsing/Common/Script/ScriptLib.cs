@@ -839,7 +839,7 @@ int EBO_CheckInventoryNumbers(string sTag1, string sTag2 = """", string sTag3 = 
 int EBO_GetCurrentPlanet();
 //Returns the scripting constant for the future planet.
 int EBO_GetFuturePlanet();
-//Returns the correct K_CURRENT_PLANET value when a Planetary.2DA index is passed in.
+//Returns the correct K_CURRENT_PLANET value when a Planetary.TwoDA index is passed in.
 int EBO_GetPlanetFrom2DA(int nPlanetIndex);
 //Starts the correct sequence based on the planet being traveled to.
 void EBO_PlayRenderSequence();
@@ -5689,7 +5689,7 @@ int GN_TalentMasterRoutine(int nTalentConstant, object oTarget)
         {
             GN_MyPrintString(""GENERIC DEBUG *************** Clear 2300"");
             int nSpell = GetIdFromTalent(tUse);
-            GN_MyPrintString(""GENERIC DEBUG *************** Spells.2DA ID = "" + GN_ITS(nSpell));
+            GN_MyPrintString(""GENERIC DEBUG *************** Spells.TwoDA ID = "" + GN_ITS(nSpell));
             ClearAllActions();
             ActionUseTalentOnObject(tUse, OBJECT_SELF);
             return TRUE;
@@ -29666,7 +29666,7 @@ int GN_TalentMasterRoutine(int nTalentConstant, object oTarget)
         {
             GN_MyPrintString(""GENERIC DEBUG *************** Clear 2300"");
             int nSpell = GetIdFromTalent(tUse);
-            GN_MyPrintString(""GENERIC DEBUG *************** Spells.2DA ID = "" + GN_ITS(nSpell));
+            GN_MyPrintString(""GENERIC DEBUG *************** Spells.TwoDA ID = "" + GN_ITS(nSpell));
             ClearAllActions();
             ActionUseTalentOnObject(tUse, OBJECT_SELF);
             return TRUE;

@@ -84,7 +84,7 @@ namespace Andastra.Parsing.Tests.Formats
             }
 
             // Test invalid resource type (Python raises ValueError for ResourceType.INVALID)
-            // Python: write_2da(TwoDA(), ".", ResourceType.INVALID)
+            // Python: write_2da(2DA(), ".", ResourceType.INVALID)
             Action act2 = () => WriteTwoDA(twoda, ".", ResourceType.INVALID);
             act2.Should().Throw<ArgumentException>().WithMessage("*Unsupported format*");
         }

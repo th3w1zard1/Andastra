@@ -12,7 +12,7 @@ namespace Andastra.Runtime.Games.Aurora.Data
     /// Aurora 2DA Table Manager:
     /// - Based on nwmain.exe: C2DA::Load2DArray @ 0x1401a73a0, CTwoDimArrays::Load2DArrays @ 0x1402b3920
     /// - Located via string references: "2DA has no rows: '%s.2da'" @ 0x140da5e80, "C2DA::Load2DArray(): No row label: %s.2da; Row: %d" @ 0x140da5ea0
-    /// - Error messages: "Already loaded Appearance.2DA!" @ 0x140dc5dd8, "Failed to load Appearance.2DA!" @ 0x140dc5e08
+    /// - Error messages: "Already loaded Appearance.TwoDA!" @ 0x140dc5dd8, "Failed to load Appearance.TwoDA!" @ 0x140dc5e08
     /// - Cross-engine analysis:
     ///   - Odyssey (swkotor.exe, swkotor2.exe): Similar 2DA loading via resource system
     ///   - Eclipse (daorigins.exe, DragonAge2.exe, ): 2DA system is UnrealScript-based (different architecture)
@@ -26,7 +26,7 @@ namespace Andastra.Runtime.Games.Aurora.Data
     public class AuroraTwoDATableManager
     {
         private readonly Installation _installation;
-        private readonly Dictionary<string, TwoDA> _cachedTables;
+        private readonly Dictionary<string, 2DA> _cachedTables;
 
         /// <summary>
         /// Initializes a new instance of the Aurora 2DA table manager.
@@ -35,19 +35,19 @@ namespace Andastra.Runtime.Games.Aurora.Data
         public AuroraTwoDATableManager(Installation installation)
         {
             _installation = installation ?? throw new ArgumentNullException("installation");
-            _cachedTables = new Dictionary<string, TwoDA>(StringComparer.OrdinalIgnoreCase);
+            _cachedTables = new Dictionary<string, 2DA>(StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>
         /// Gets a 2DA table by name (e.g., "appearance", "baseitems").
         /// </summary>
         /// <param name="tableName">Table name without extension (e.g., "baseitems")</param>
-        /// <returns>The loaded TwoDA, or null if not found</returns>
+        /// <returns>The loaded 2DA, or null if not found</returns>
         /// <remarks>
         /// Based on nwmain.exe: C2DA::Load2DArray @ 0x1401a73a0
         /// Loads 2DA files from installation resource system with caching
         /// </remarks>
-        public TwoDA GetTable(string tableName)
+        public 2DA GetTable(string tableName)
         {
             if (string.IsNullOrEmpty(tableName))
             {
@@ -55,7 +55,7 @@ namespace Andastra.Runtime.Games.Aurora.Data
             }
 
             // Check cache first
-            TwoDA cached;
+            2DA cached;
             if (_cachedTables.TryGetValue(tableName, out cached))
             {
                 return cached;
@@ -70,7 +70,7 @@ namespace Andastra.Runtime.Games.Aurora.Data
                     return null;
                 }
 
-                TwoDA table = TwoDA.FromBytes(resource.Data);
+                2DA table = 2DA.FromBytes(resource.Data);
                 _cachedTables[tableName] = table;
                 return table;
             }
@@ -91,7 +91,7 @@ namespace Andastra.Runtime.Games.Aurora.Data
         /// </remarks>
         public TwoDARow GetRow(string tableName, int rowIndex)
         {
-            TwoDA table = GetTable(tableName);
+            2DA table = GetTable(tableName);
             if (table == null)
             {
                 return null;
@@ -111,7 +111,7 @@ namespace Andastra.Runtime.Games.Aurora.Data
         /// </remarks>
         public TwoDARow GetRowByLabel(string tableName, string rowLabel)
         {
-            TwoDA table = GetTable(tableName);
+            2DA table = GetTable(tableName);
             if (table == null)
             {
                 return null;

@@ -54,7 +54,7 @@ namespace Andastra.Parsing.Tests.Integration
             // This is a combined INI loading + patching test
 
             // Arrange
-            var twoda = new TwoDA(new List<string> { "Col1", "Col2", "Col3" });
+            var twoda = new 2DA(new List<string> { "Col1", "Col2", "Col3" });
             twoda.AddRow("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" }, { "Col3", "c" } });
             twoda.AddRow("1", new Dictionary<string, object> { { "Col1", "d" }, { "Col2", "e" }, { "Col3", "f" } });
 
@@ -99,7 +99,7 @@ namespace Andastra.Parsing.Tests.Integration
             // Python test: test_change_existing_rowlabel
 
             // Arrange
-            var twoda = new TwoDA(new List<string> { "Col1", "Col2", "Col3" });
+            var twoda = new 2DA(new List<string> { "Col1", "Col2", "Col3" });
             twoda.AddRow("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" }, { "Col3", "c" } });
             twoda.AddRow("1", new Dictionary<string, object> { { "Col1", "d" }, { "Col2", "e" }, { "Col3", "f" } });
 
@@ -132,7 +132,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void AddRow_ShouldAppendRow_EndToEnd()
         {
             // Arrange
-            var twoda = new TwoDA(new List<string> { "Col1", "Col2" });
+            var twoda = new 2DA(new List<string> { "Col1", "Col2" });
             twoda.AddRow("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } });
 
             string iniText = @"
@@ -165,7 +165,7 @@ namespace Andastra.Parsing.Tests.Integration
         public void CopyRow_ShouldCopyAndModify_EndToEnd()
         {
             // Arrange
-            var twoda = new TwoDA(new List<string> { "Col1", "Col2" });
+            var twoda = new 2DA(new List<string> { "Col1", "Col2" });
             twoda.AddRow("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } });
 
             string iniText = @"

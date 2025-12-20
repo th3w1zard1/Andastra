@@ -77,9 +77,9 @@ namespace Andastra.Parsing.Tests.Integration
         /// <summary>
         /// Creates a simple test 2DA file with specified columns and rows.
         /// </summary>
-        protected static TwoDA CreateTest2DA(string[] columns, (string label, string[] values)[] rows)
+        protected static 2DA CreateTest2DA(string[] columns, (string label, string[] values)[] rows)
         {
-            var twoda = new TwoDA(columns.ToList());
+            var twoda = new 2DA(columns.ToList());
 
             foreach ((string label, string[] values) in rows)
             {
@@ -119,7 +119,7 @@ namespace Andastra.Parsing.Tests.Integration
         /// <summary>
         /// Saves a 2DA file to the tslpatchdata directory.
         /// </summary>
-        protected void SaveTest2DA(string filename, TwoDA twoda)
+        protected void SaveTest2DA(string filename, 2DA twoda)
         {
             string path = Path.Combine(TslPatchDataPath, filename);
             twoda.Save(path);
@@ -128,7 +128,7 @@ namespace Andastra.Parsing.Tests.Integration
         /// <summary>
         /// Asserts that a 2DA cell contains the expected value.
         /// </summary>
-        protected static void AssertCellValue(TwoDA twoda, string rowLabel, string columnLabel, string expectedValue)
+        protected static void AssertCellValue(2DA twoda, string rowLabel, string columnLabel, string expectedValue)
         {
             int rowIndex = twoda.GetRowIndex(rowLabel);
             string actualValue = twoda.GetCellString(rowIndex, columnLabel) ?? string.Empty;
@@ -141,7 +141,7 @@ namespace Andastra.Parsing.Tests.Integration
         /// <summary>
         /// Asserts that a 2DA cell contains the expected value (by row index).
         /// </summary>
-        protected static void AssertCellValue(TwoDA twoda, int rowIndex, string columnLabel, string expectedValue)
+        protected static void AssertCellValue(2DA twoda, int rowIndex, string columnLabel, string expectedValue)
         {
             string actualValue = twoda.GetCellString(rowIndex, columnLabel) ?? string.Empty;
             if (!actualValue.Equals(expectedValue, StringComparison.Ordinal))

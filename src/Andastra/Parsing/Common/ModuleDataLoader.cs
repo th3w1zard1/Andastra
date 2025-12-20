@@ -11,7 +11,7 @@ namespace Andastra.Parsing.Common
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module_loader.py (backend-agnostic loader)
     public static class ModuleDataSearch
     {
-        public static readonly SearchLocation[] SearchOrder2DA = { SearchLocation.OVERRIDE, SearchLocation.CHITIN };
+        public static readonly SearchLocation[] SearchOrderTwoDA = { SearchLocation.OVERRIDE, SearchLocation.CHITIN };
     }
 
     /// <summary>
@@ -61,7 +61,7 @@ namespace Andastra.Parsing.Common
 
         private TwoDA Load2da(string name)
         {
-            Installation.ResourceResult res = _installation.Resources.LookupResource(name, ResourceType.TwoDA, ModuleDataSearch.SearchOrder2DA);
+            Installation.ResourceResult res = _installation.Resources.LookupResource(name, ResourceType.TwoDA, ModuleDataSearch.SearchOrderTwoDA);
             if (res == null)
             {
                 return new TwoDA();

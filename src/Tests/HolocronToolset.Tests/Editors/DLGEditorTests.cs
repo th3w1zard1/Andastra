@@ -1743,14 +1743,25 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestDlgEditorLeftDockWidget: Left dock widget test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_dlg_editor_empty_dlg (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2226-2241)
+        // Matching PyKotor implementation at vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2226-2241
         // Original: def test_dlg_editor_empty_dlg(qtbot, installation: HTInstallation): Test empty DLG
         [Fact]
         public void TestDlgEditorEmptyDlg()
         {
-            // TODO: STUB - Implement empty DLG test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2226-2241
-            throw new NotImplementedException("TestDlgEditorEmptyDlg: Empty DLG test not yet implemented");
+            var installation = CreateTestInstallation();
+            var editor = new DLGEditor(null, installation);
+            editor.Show();
+            editor.New();
+
+            // Matching PyKotor: Verify empty DLG has no starters
+            // Original: assert len(editor.core_dlg.starters) == 0
+            editor.CoreDlg.Starters.Count.Should().Be(0, "New DLG should have no starters");
+            editor.Model.RowCount.Should().Be(0, "Model should have no root items");
+
+            // Verify we can build an empty DLG
+            var result = editor.Build();
+            var data = result.Item1;
+            data.Should().NotBeNull("Empty DLG should build successfully");
         }
 
         // TODO: STUB - Implement test_dlg_editor_deep_nesting (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2243-2268)

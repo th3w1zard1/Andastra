@@ -15,7 +15,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
     /// - Located via string references: "2DAName" @ 0x007c3980, " 2DA file" @ 0x007c4674
     /// - Error messages: "CSWClass::LoadFeatGain: can't load featgain.2da" @ 0x007c46bc, "CSWClass::LoadFeatTable: Can't load feat.2da" @ 0x007c4720
     /// - Cross-engine analysis:
-    ///   - Aurora (nwmain.exe): C2DA::Load2DArray @ 0x1401a73a0, Load2DArrays @ 0x1402b3920 - loads 2DA files via C2DA class, "Already loaded Appearance.2DA!" @ 0x140dc5dd8
+    ///   - Aurora (nwmain.exe): C2DA::Load2DArray @ 0x1401a73a0, Load2DArrays @ 0x1402b3920 - loads 2DA files via C2DA class, "Already loaded Appearance.TwoDA!" @ 0x140dc5dd8
     ///   - Eclipse (daorigins.exe, DragonAge2.exe, ): 2DA system is UnrealScript-based (different architecture), uses "Get2DAValue", "GetNum2DARows" functions
     /// - Inheritance: Base class BaseGameDataManager (Runtime.Games.Common) - abstract 2DA loading, Odyssey override (Runtime.Games.Odyssey) - resource-based 2DA loading
     /// - Original implementation: Loads 2DA tables from resource system (chitin.key, module archives), uses "2DAName" field to identify tables, caches loaded tables
@@ -28,12 +28,12 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
     public class GameDataManager
     {
         private readonly Installation _installation;
-        private readonly Dictionary<string, TwoDA> _tableCache;
+        private readonly Dictionary<string, 2DA> _tableCache;
 
         public GameDataManager(Installation installation)
         {
             _installation = installation ?? throw new ArgumentNullException("installation");
-            _tableCache = new Dictionary<string, TwoDA>(StringComparer.OrdinalIgnoreCase);
+            _tableCache = new Dictionary<string, 2DA>(StringComparer.OrdinalIgnoreCase);
         }
 
         #region Table Access
@@ -42,9 +42,9 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         /// Gets a 2DA table by name.
         /// </summary>
         /// <param name="tableName">Table name without extension (e.g., "appearance")</param>
-        /// <returns>The loaded TwoDA, or null if not found</returns>
+        /// <returns>The loaded 2DA, or null if not found</returns>
         [CanBeNull]
-        public TwoDA GetTable(string tableName)
+        public 2DA GetTable(string tableName)
         {
             if (string.IsNullOrEmpty(tableName))
             {
@@ -52,7 +52,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
             }
 
             // Check cache first
-            TwoDA cached;
+            2DA cached;
             if (_tableCache.TryGetValue(tableName, out cached))
             {
                 return cached;
@@ -67,7 +67,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
                     return null;
                 }
 
-                TwoDA table = TwoDA.FromBytes(resource.Data);
+                2DA table = 2DA.FromBytes(resource.Data);
                 _tableCache[tableName] = table;
                 return table;
             }
@@ -104,7 +104,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         [CanBeNull]
         public AppearanceData GetAppearance(int appearanceType)
         {
-            TwoDA table = GetTable("appearance");
+            2DA table = GetTable("appearance");
             if (table == null || appearanceType < 0 || appearanceType >= table.GetHeight())
             {
                 return null;
@@ -139,7 +139,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         [CanBeNull]
         public ClassData GetClass(int classId)
         {
-            TwoDA table = GetTable("classes");
+            2DA table = GetTable("classes");
             if (table == null || classId < 0 || classId >= table.GetHeight())
             {
                 return null;
@@ -172,7 +172,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         [CanBeNull]
         public BaseItemData GetBaseItem(int baseItem)
         {
-            TwoDA table = GetTable("baseitems");
+            2DA table = GetTable("baseitems");
             if (table == null || baseItem < 0 || baseItem >= table.GetHeight())
             {
                 return null;
@@ -207,7 +207,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         [CanBeNull]
         public FeatData GetFeat(int featId)
         {
-            TwoDA table = GetTable("feat");
+            2DA table = GetTable("feat");
             if (table == null || featId < 0 || featId >= table.GetHeight())
             {
                 return null;
@@ -241,7 +241,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         [CanBeNull]
         public SurfaceMatData GetSurfaceMaterial(int surfaceId)
         {
-            TwoDA table = GetTable("surfacemat");
+            2DA table = GetTable("surfacemat");
             if (table == null || surfaceId < 0 || surfaceId >= table.GetHeight())
             {
                 return null;
@@ -280,7 +280,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         [CanBeNull]
         public PlaceableData GetPlaceable(int placeableType)
         {
-            TwoDA table = GetTable("placeables");
+            2DA table = GetTable("placeables");
             if (table == null || placeableType < 0 || placeableType >= table.GetHeight())
             {
                 return null;
@@ -307,7 +307,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         [CanBeNull]
         public DoorData GetDoor(int doorType)
         {
-            TwoDA table = GetTable("genericdoors");
+            2DA table = GetTable("genericdoors");
             if (table == null || doorType < 0 || doorType >= table.GetHeight())
             {
                 return null;
@@ -342,7 +342,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         [CanBeNull]
         public SpellData GetSpell(int spellId)
         {
-            TwoDA table = GetTable("spells");
+            2DA table = GetTable("spells");
             if (table == null || spellId < 0 || spellId >= table.GetHeight())
             {
                 return null;
@@ -398,7 +398,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
                 FeatData feat = GetFeat(spell.FeatId);
                 if (feat != null)
                 {
-                    TwoDA featTable = GetTable("feat");
+                    2DA featTable = GetTable("feat");
                     if (featTable != null)
                     {
                         TwoDARow featRow = featTable.GetRow(spell.FeatId);

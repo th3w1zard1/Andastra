@@ -45,7 +45,7 @@ namespace Andastra.Parsing.Mods.TwoDA
         }
 
         /// <summary>
-        /// Searches a TwoDA for a row matching the target.
+        /// Searches a 2DA for a row matching the target.
         /// 1:1 port from Python Target.search()
         /// </summary>
         [CanBeNull]

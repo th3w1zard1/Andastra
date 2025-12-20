@@ -6495,7 +6495,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
                                 using (var stream = new MemoryStream(baseitemsResult.Data))
                                 {
                                     var reader = new TwoDABinaryReader(stream);
-                                    TwoDA baseitems = reader.Load();
+                                    2DA baseitems = reader.Load();
 
                                     if (baseitems != null && itemComponent.BaseItem >= 0 && itemComponent.BaseItem < baseitems.GetHeight())
                                     {

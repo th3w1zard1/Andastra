@@ -346,7 +346,7 @@ namespace KotorDiff.Resolution
 
             try
             {
-                // For 2DA files, create empty TwoDA
+                // For 2DA files, create empty 2DA
                 if (extLower == "2da")
                 {
                     var empty2da = new Andastra.Parsing.Formats.TwoDA.TwoDA();

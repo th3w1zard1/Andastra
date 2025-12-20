@@ -41,11 +41,13 @@ seq:
   
   - id: struct_array
     type: struct_array
+    if: gff_header.struct_count > 0
     pos: gff_header.struct_array_offset
     doc: Array of struct entries (12 bytes each)
   
   - id: field_array
     type: field_array
+    if: gff_header.field_count > 0
     pos: gff_header.field_array_offset
     doc: Array of field entries (12 bytes each)
   
@@ -158,7 +160,10 @@ types:
       
       - id: data_or_offset
         type: u4
-        doc: If field_count = 1: Direct field index. If field_count > 1: Byte offset into field_indices array.
+        doc: |
+          If field_count = 1: Direct field index into field_array.
+          If field_count > 1: Byte offset into field_indices array.
+          If field_count = 0: Unused (empty struct).
       
       - id: field_count
         type: u4
@@ -184,7 +189,11 @@ types:
       
       - id: data_or_offset
         type: u4
-        doc: For simple types: inline data. For complex types: byte offset into field_data. For Struct: struct index. For List: byte offset into list_indices.
+        doc: |
+          For simple types (Byte, Char, UInt16, Int16, UInt32, Int32, UInt64, Int64, Single, Double): Inline data value.
+          For complex types (String, ResRef, LocalizedString, Binary, Vector3, Vector4): Byte offset into field_data section.
+          For Struct type: Struct index into struct_array.
+          For List type: Byte offset into list_indices array.
   
   field_data_section:
     seq:

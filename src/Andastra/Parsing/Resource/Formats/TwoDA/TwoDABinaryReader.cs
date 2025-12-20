@@ -9,7 +9,7 @@ namespace Andastra.Parsing.Formats.TwoDA
 {
 
     /// <summary>
-    /// Reads TwoDA binary data.
+    /// Reads 2DA binary data.
     /// 1:1 port of Python TwoDABinaryReader from pykotor/resource/formats/twoda/io_twoda.py
     /// </summary>
     public class TwoDABinaryReader : BinaryFormatReaderBase
@@ -42,12 +42,12 @@ namespace Andastra.Parsing.Formats.TwoDA
 
                 if (fileType != "2DA ")
                 {
-                    throw new InvalidDataException("The file type that was loaded is invalid.");
+                    throw new InvalidDataException($"The file type that was loaded ({fileType}) is invalid.");
                 }
 
                 if (fileVersion != "V2.b")
                 {
-                    throw new InvalidDataException("The 2DA version that was loaded is not supported.");
+                    throw new InvalidDataException($"The 2DA version that was loaded ({fileVersion}) is not supported.");
                 }
 
                 Reader.ReadUInt8(); // \n

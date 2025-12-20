@@ -157,7 +157,7 @@ namespace Andastra.Parsing.Tests.Formats
             foreach (var instruction in ncs.Instructions)
             {
                 instruction.Should().NotBeNull("Instruction should not be null");
-                instruction.InsType.Should().NotBeNull("Instruction type should not be null");
+                instruction.InsType.Should().BeDefined("Instruction type should be defined");
                 instruction.Args.Should().NotBeNull("Instruction arguments should not be null");
             }
         }

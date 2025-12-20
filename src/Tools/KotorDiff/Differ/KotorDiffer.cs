@@ -493,7 +493,7 @@ namespace KotorDiff.Differ
             }
         }
 
-        private string TwoDaToText(TwoDA twoda)
+        private string TwoDaToText(2DA twoda)
         {
             var sb = new StringBuilder();
             // Write headers

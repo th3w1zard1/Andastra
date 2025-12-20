@@ -465,7 +465,7 @@ namespace Andastra.Parsing.Resource
                         var tlkReader = new TLKBinaryReader(data);
                         return tlkReader.Load();
 
-                    case 2019: // TwoDA
+                    case 2019: // 2DA
                         var twodaReader = new TwoDABinaryReader(data);
                         return twodaReader.Load();
                     case 2034: // CNV

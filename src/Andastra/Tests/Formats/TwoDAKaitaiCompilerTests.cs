@@ -11,7 +11,7 @@ using Xunit;
 namespace Andastra.Parsing.Tests.Formats
 {
     /// <summary>
-    /// Comprehensive tests for Kaitai Struct compiler functionality with TwoDA.ksy.
+    /// Comprehensive tests for Kaitai Struct compiler functionality with 2DA.ksy.
     /// Tests compilation to multiple target languages and verifies compiler output.
     /// </summary>
     public class TwoDAKaitaiCompilerTests
@@ -19,7 +19,7 @@ namespace Andastra.Parsing.Tests.Formats
         private static readonly string TwoDAKsyPath = Path.GetFullPath(Path.Combine(
             AppContext.BaseDirectory,
             "..", "..", "..", "..", "..",
-            "src", "Andastra", "Parsing", "Resource", "Formats", "TwoDA", "TwoDA.ksy"
+            "src", "Andastra", "Parsing", "Resource", "Formats", "2DA", "2DA.ksy"
         ));
 
         private static readonly string TestOutputDir = Path.Combine(
@@ -74,14 +74,14 @@ namespace Andastra.Parsing.Tests.Formats
         {
             var normalizedPath = Path.GetFullPath(TwoDAKsyPath);
             File.Exists(normalizedPath).Should().BeTrue(
-                $"TwoDA.ksy file should exist at {normalizedPath}"
+                $"2DA.ksy file should exist at {normalizedPath}"
             );
 
             // Verify it's a valid YAML file
             var content = File.ReadAllText(normalizedPath);
-            content.Should().Contain("meta:", "TwoDA.ksy should contain meta section");
-            content.Should().Contain("id: twoda", "TwoDA.ksy should have id: twoda");
-            content.Should().Contain("seq:", "TwoDA.ksy should contain seq section");
+            content.Should().Contain("meta:", "2DA.ksy should contain meta section");
+            content.Should().Contain("id: twoda", "2DA.ksy should have id: twoda");
+            content.Should().Contain("seq:", "2DA.ksy should contain seq section");
         }
 
         [Theory(Timeout = 300000)]
@@ -185,8 +185,8 @@ namespace Andastra.Parsing.Tests.Formats
             }
 
             // We should be able to compile to at least a dozen languages
-            compiledCount.Should().BeGreaterOrEqualTo(12,
-                $"Should successfully compile TwoDA.ksy to at least 12 languages. Compiled to {compiledCount} languages.");
+            compiledCount.Should().BeGreaterThanOrEqualTo(12,
+                $"Should successfully compile 2DA.ksy to at least 12 languages. Compiled to {compiledCount} languages.");
         }
 
         [Fact(Timeout = 300000)]
@@ -255,7 +255,7 @@ namespace Andastra.Parsing.Tests.Formats
                 // Compilation might fail due to missing dependencies, but syntax errors would be caught
                 if (testProcess.ExitCode != 0 && stderr.Contains("error") && !stderr.Contains("import"))
                 {
-                    Assert.True(false, $"TwoDA.ksy has syntax errors: {stderr}");
+                    Assert.True(false, $"2DA.ksy has syntax errors: {stderr}");
                 }
             }
             catch (System.ComponentModel.Win32Exception)

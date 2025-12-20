@@ -364,7 +364,7 @@ namespace Andastra.Parsing.Tests.Formats
             }
 
             // Verify at least a dozen (12) languages compiled successfully
-            compiledCount.Should().BeGreaterOrEqualTo(12,
+            compiledCount.Should().BeGreaterThanOrEqualTo(12,
                 $"UTS.ksy should compile to at least 12 languages (a dozen). " +
                 $"Successfully compiled to {compiledCount} languages: {string.Join(", ", compiledLanguages)}. " +
                 $"Failed languages: {string.Join("; ", failedLanguages)}");

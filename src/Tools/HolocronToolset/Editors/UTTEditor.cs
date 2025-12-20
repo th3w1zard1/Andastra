@@ -154,10 +154,10 @@ namespace HolocronToolset.Editors
                 _nameEdit.SetInstallation(installation);
             }
 
-            // TODO: Setup 2DA combos when TwoDA loading is available
-            // cursors: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_CURSORS)
-            // factions: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_FACTIONS)
-            // traps: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_TRAPS)
+            // TODO: Setup 2DA combos when 2DA loading is available
+            // cursors: 2DA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_CURSORS)
+            // factions: 2DA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_FACTIONS)
+            // traps: 2DA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_TRAPS)
         }
 
         private void SetupProgrammaticUI()

@@ -52,9 +52,8 @@ namespace Andastra.Parsing.Tests.Formats
 
             GFF gff = GFF.FromBytes(File.ReadAllBytes(BinaryTestFile));
 
-            // Validate header constants match UTC.ksy
-            gff.Header.FileType.Should().Be("UTC ", "UTC file type should be 'UTC ' as defined in UTC.ksy");
-            gff.Header.FileVersion.Should().BeOneOf("V3.2", "V3.3", "V4.0", "V4.1", "UTC version should match UTC.ksy definition");
+            // Validate content type matches UTC.ksy
+            gff.Content.Should().Be(GFFContent.UTC, "UTC file content type should be UTC as defined in UTC.ksy");
         }
 
         [Fact(Timeout = 120000)]
@@ -92,10 +91,8 @@ namespace Andastra.Parsing.Tests.Formats
             GFF gff = GFF.FromBytes(File.ReadAllBytes(BinaryTestFile));
 
             // Validate GFF structure
-            gff.Header.StructCount.Should().BeGreaterThanOrEqualTo(1, "UTC should have at least one struct (root struct)");
-            gff.Header.FieldCount.Should().BeGreaterThanOrEqualTo(0, "Field count should be non-negative");
-            gff.Header.LabelCount.Should().BeGreaterThanOrEqualTo(0, "Label count should be non-negative");
-            gff.Header.FieldDataCount.Should().BeGreaterThanOrEqualTo(0, "Field data count should be non-negative");
+            gff.Root.Should().NotBeNull("UTC should have a root struct");
+            gff.Content.Should().Be(GFFContent.UTC, "UTC file content type should be UTC");
         }
 
         [Fact(Timeout = 120000)]

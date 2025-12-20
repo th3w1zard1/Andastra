@@ -11,7 +11,7 @@ namespace Andastra.Runtime.Games.Aurora.Data
     /// <remarks>
     /// Aurora Game Data Provider:
     /// - Based on nwmain.exe: C2DA::Load2DArray @ 0x1401a73a0, CTwoDimArrays::Load2DArrays @ 0x1402b3920
-    /// - Located via string references: "Already loaded Appearance.2DA!" @ 0x140dc5dd8, "Failed to load Appearance.2DA!" @ 0x140dc5e08
+    /// - Located via string references: "Already loaded Appearance.TwoDA!" @ 0x140dc5dd8, "Failed to load Appearance.TwoDA!" @ 0x140dc5e08
     /// - Error messages: "2DA has no rows: '%s.2da'" @ 0x140da5e80, "C2DA::Load2DArray(): No row label: %s.2da; Row: %d" @ 0x140da5ea0
     /// - Original implementation: Uses C2DA class to access 2DA tables (appearance.2da, etc.)
     /// - Uses AuroraTwoDATableManager to access 2DA tables (appearance.2da, baseitems.2da, etc.)

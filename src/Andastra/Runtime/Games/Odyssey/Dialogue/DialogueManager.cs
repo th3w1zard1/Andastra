@@ -1050,7 +1050,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
 
             // Look up plot.2da row using PlotIndex
             // Based on swkotor2.exe: FUN_0057eb20 looks up plot.2da data
-            TwoDA plotTable = _gameDataManager.GetTable("plot");
+            2DA plotTable = _gameDataManager.GetTable("plot");
             if (plotTable == null)
             {
                 return;

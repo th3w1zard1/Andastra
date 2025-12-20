@@ -28,21 +28,21 @@ namespace Andastra.Parsing.Tests.Formats
             "test_files", "kaitai_compiled", "utw"
         );
 
-        // Supported languages in Kaitai Struct (at least 12 as required)
+        // Supported languages in Kaitai Struct
         private static readonly string[] SupportedLanguages = new[]
         {
             "python",
             "csharp",
-            "java",
+            "go",
             "javascript",
+            "rust",
+            "java",
+            "perl"
             "cpp_stl",
             "ruby",
-            "go",
-            "php",
-            "rust",
             "lua",
             "nim",
-            "perl"
+            "php",
         };
 
         [Fact(Timeout = 300000)]

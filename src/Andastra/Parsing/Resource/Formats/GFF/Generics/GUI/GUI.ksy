@@ -273,7 +273,6 @@ types:
   # and resolving field references based on label names.
 
   gui_root:
-    doc: |
       Root GUI struct. Contains:
       - Tag (string): GUI identifier/tag name
       - CONTROLS (list): Array of GUIControl structs (top-level controls)
@@ -284,7 +283,6 @@ types:
         doc: GUI tag/identifier string (from "Tag" field)
 
   gui_control:
-    doc: |
       GUI Control struct. Represents a single UI control element.
       Can be nested recursively via CONTROLS list.
 
@@ -320,7 +318,6 @@ types:
         doc: Control tag name
 
   gui_extent:
-    doc: |
       EXTENT struct defining control position and size.
       Fields: LEFT (int32), TOP (int32), WIDTH (int32), HEIGHT (int32)
     seq:
@@ -338,7 +335,6 @@ types:
         doc: Control height (pixels)
 
   gui_border:
-    doc: |
       BORDER struct for border styling (also used for HILIGHT, SELECTED, HILIGHTSELECTED).
       Fields:
       - CORNER (ResRef): Corner tile texture resource
@@ -386,7 +382,6 @@ types:
         doc: Pulsing animation flag (optional)
 
   gui_text:
-    doc: |
       TEXT struct for text properties.
       Fields:
       - TEXT (string): Text content
@@ -419,7 +414,6 @@ types:
         doc: Pulsing animation flag (optional)
 
   gui_moveto:
-    doc: |
       MOVETO struct for keyboard navigation between controls.
       Fields: UP (int32), DOWN (int32), LEFT (int32), RIGHT (int32)
       Values are control IDs (-1 if no navigation in that direction).
@@ -438,7 +432,6 @@ types:
         doc: Control ID for RIGHT navigation (-1 if none)
 
   gui_scrollbar:
-    doc: |
       SCROLLBAR struct for scrollbar properties (used in ListBox controls).
       Fields:
       - MAXVALUE (int32): Maximum scroll value
@@ -462,7 +455,6 @@ types:
         doc: Horizontal orientation (0=vertical, 1=horizontal)
 
   gui_scrollbar_dir:
-    doc: |
       DIR struct for scrollbar direction arrows.
       Fields: IMAGE (ResRef), ALIGNMENT (int32)
     seq:
@@ -476,7 +468,6 @@ types:
         doc: Alignment (default 18 = Center)
 
   gui_scrollbar_thumb:
-    doc: |
       THUMB struct for scrollbar thumb (draggable handle).
       Fields:
       - IMAGE (ResRef): Thumb image resource
@@ -504,7 +495,6 @@ types:
         doc: Rotation angle in degrees (optional)
 
   gui_progress:
-    doc: |
       PROGRESS struct for progress bar styling (similar to BORDER).
       Fields:
       - CORNER (ResRef): Corner texture
@@ -552,7 +542,6 @@ types:
         doc: Pulsing flag (optional)
 
   gui_selected:
-    doc: |
       SELECTED struct for selected state styling (used in CheckBox, ListBox items, ProtoItem).
       Same structure as BORDER but for selected state appearance.
       Fields:
@@ -601,7 +590,6 @@ types:
         doc: Pulsing animation flag (optional)
 
   gui_hilight_selected:
-    doc: |
       HILIGHTSELECTED struct for highlight+selected state styling (highest priority state).
       Same structure as BORDER but for combined highlight+selected state appearance.
       Fields:
@@ -650,7 +638,6 @@ types:
         doc: Pulsing animation flag (optional)
 
   gui_listbox:
-    doc: |
       ListBox control-specific properties (CONTROLTYPE = 11).
       Fields:
       - PROTOITEM (struct): Template for list item appearance
@@ -684,7 +671,6 @@ types:
         doc: Scrollbar position (0=right, 1=left)
 
   gui_slider:
-    doc: |
       Slider control-specific properties (CONTROLTYPE = 8).
       Fields:
       - THUMB (struct): Slider thumb appearance
@@ -706,7 +692,6 @@ types:
         doc: Orientation (0=horizontal, 1=vertical)
 
   gui_checkbox:
-    doc: |
       CheckBox control-specific properties (CONTROLTYPE = 7).
       Fields:
       - SELECTED (struct): Appearance when checked
@@ -724,7 +709,6 @@ types:
         doc: Default checked state (0=unchecked, 1=checked)
 
   gui_button:
-    doc: |
       Button control-specific properties (CONTROLTYPE = 6).
       Fields:
       - HILIGHT (struct): Hover state appearance
@@ -746,7 +730,6 @@ types:
         doc: Pulsing animation flag (optional)
 
   gui_label:
-    doc: |
       Label control-specific properties (CONTROLTYPE = 5).
       Fields:
       - TEXT (struct): Text display properties
@@ -756,7 +739,6 @@ types:
         doc: TEXT struct for text properties
 
   gui_panel:
-    doc: |
       Panel control-specific properties (CONTROLTYPE = 2).
       Fields:
       - CONTROLS (list): Child controls list
@@ -780,7 +762,6 @@ types:
         doc: Panel transparency (0.0-1.0, optional)
 
   gui_protoitem:
-    doc: |
       ProtoItem control-specific properties (CONTROLTYPE = 4).
       Template for list items used in ListBox controls.
       Fields:
@@ -811,7 +792,6 @@ types:
         doc: Default selected state (0=unselected, 1=selected)
 
   vector3:
-    doc: |
       3D vector (3×float32) for RGB colors.
       Used for COLOR fields in various GUI structs.
     seq:
@@ -826,7 +806,6 @@ types:
         doc: Z component (Blue for colors, 0.0-1.0 range)
 
   vector4:
-    doc: |
       4D vector (4×float32) for quaternions/orientations.
       Used in some GFF contexts, though GUI primarily uses Vector3 for colors.
     seq:
@@ -845,7 +824,6 @@ types:
 
 enums:
   gui_control_type:
-    doc: GUI Control Type enumeration
     -1: invalid
     doc: Invalid control type
     0: control
@@ -870,7 +848,6 @@ enums:
     doc: List box with items
 
   gui_text_alignment:
-    doc: Text alignment enumeration (bitfield: horizontal + vertical)
     1: top_left
     doc: Top-Left alignment
     2: top_center
@@ -891,7 +868,6 @@ enums:
     doc: Bottom-Right alignment
 
   gui_fill_style:
-    doc: Fill style enumeration for borders and progress bars
     -1: none
     doc: No fill style (not set)
     0: empty
@@ -902,7 +878,6 @@ enums:
     doc: Texture fill (most common)
 
   gui_slider_direction:
-    doc: Slider direction/orientation enumeration
     0: horizontal
     doc: Horizontal slider (left-right)
     1: vertical

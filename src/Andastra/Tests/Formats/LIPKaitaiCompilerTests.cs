@@ -31,6 +31,8 @@ namespace Andastra.Parsing.Tests.Formats
         );
 
         // Supported languages in Kaitai Struct (at least 12 as required)
+        // Note: Only languages actually supported by Kaitai Struct compiler 0.11 are included
+        // Requested languages not supported: ps1, bat, pascal/delphi, typescript, COBOL, FORTRAN, ADA, BASH, Crystal, F#, visual basic
         private static readonly string[] SupportedLanguages = new[]
         {
             "python",
@@ -42,12 +44,11 @@ namespace Andastra.Parsing.Tests.Formats
             "ruby",
             "php",
             "rust",
-            "swift",
             "lua",
-            "nim",
+            "nim",        // NIM from requested list - supported!
             "perl",
-            "kotlin",
-            "typescript"
+            "html",       // Additional supported language
+            "construct"   // Additional supported language
         };
 
         [Fact(Timeout = 300000)] // 5 minute timeout for compilation

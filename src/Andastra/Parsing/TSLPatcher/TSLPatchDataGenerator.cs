@@ -192,7 +192,7 @@ namespace Andastra.Parsing.TSLPatcher
                         {
                             try
                             {
-                                // Copy using TwoDA reader/writer to ensure proper format
+                                // Copy using 2DA reader/writer to ensure proper format
                                 var twodaObj = new TwoDABinaryReader(potentialPath.FullName).Load();
                                 TwoDAAuto.WriteTwoDA(twodaObj, outputPath.FullName, ResourceType.TwoDA);
                                 generated[filename] = outputPath;

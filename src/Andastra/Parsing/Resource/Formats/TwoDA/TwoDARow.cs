@@ -7,7 +7,7 @@ namespace Andastra.Parsing.Formats.TwoDA
 {
 
     /// <summary>
-    /// Represents a single row in a TwoDA file.
+    /// Represents a single row in a 2DA file.
     /// </summary>
     public class TwoDARow
     {

@@ -143,7 +143,7 @@ namespace HolocronToolset.Dialogs
                 return;
             }
 
-            // Matching PyKotor implementation: cost_table_list: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_IPRP_COSTTABLE)
+            // Matching PyKotor implementation: cost_table_list: 2DA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_IPRP_COSTTABLE)
             TwoDA costTableList = _installation.HtGetCache2DA(HTInstallation.TwoDAIprpCosttable);
             if (costTableList == null)
             {
@@ -158,7 +158,7 @@ namespace HolocronToolset.Dialogs
                 string costtableResref = costTableList.GetCellString(_utiProperty.CostTable, "name");
                 if (!string.IsNullOrEmpty(costtableResref))
                 {
-                    // Matching PyKotor implementation: costtable: TwoDA | None = installation.ht_get_cache_2da(costtable_resref)
+                    // Matching PyKotor implementation: costtable: 2DA | None = installation.ht_get_cache_2da(costtable_resref)
                     TwoDA costtable = _installation.HtGetCache2DA(costtableResref);
                     if (costtable != null && _costList != null)
                     {
@@ -177,7 +177,7 @@ namespace HolocronToolset.Dialogs
             // Matching PyKotor implementation: if uti_property.param1 != 0xFF:
             if (_utiProperty.Param1 != 0xFF && _parameterList != null)
             {
-                // Matching PyKotor implementation: param_list: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_IPRP_PARAMTABLE)
+                // Matching PyKotor implementation: param_list: 2DA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_IPRP_PARAMTABLE)
                 TwoDA paramList = _installation.HtGetCache2DA(HTInstallation.TwoDAIprpParamtable);
                 if (paramList != null)
                 {
@@ -185,7 +185,7 @@ namespace HolocronToolset.Dialogs
                     string paramtableResref = paramList.GetCellString(_utiProperty.Param1, "tableresref");
                     if (!string.IsNullOrEmpty(paramtableResref))
                     {
-                        // Matching PyKotor implementation: paramtable: TwoDA | None = installation.ht_get_cache_2da(paramtable_resref)
+                        // Matching PyKotor implementation: paramtable: 2DA | None = installation.ht_get_cache_2da(paramtable_resref)
                         TwoDA paramtable = _installation.HtGetCache2DA(paramtableResref);
                         if (paramtable != null)
                         {
@@ -202,7 +202,7 @@ namespace HolocronToolset.Dialogs
                 }
             }
 
-            // Matching PyKotor implementation: upgrades: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_UPGRADES)
+            // Matching PyKotor implementation: upgrades: 2DA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_UPGRADES)
             TwoDA upgrades = _installation.HtGetCache2DA(HTInstallation.TwoDAUpgrades);
             if (_upgradeSelect != null)
             {

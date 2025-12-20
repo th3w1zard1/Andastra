@@ -167,9 +167,9 @@ namespace KotorDiff.Diff.Objects
         {
             try
             {
-                if (!(left is TwoDA left2da) || !(right is TwoDA right2da))
+                if (!(left is 2DA left2da) || !(right is 2DA right2da))
                 {
-                    throw new ArgumentException("Both arguments must be TwoDA objects");
+                    throw new ArgumentException("Both arguments must be 2DA objects");
                 }
 
                 // Use StructuredDiffEngine for 2DA comparison

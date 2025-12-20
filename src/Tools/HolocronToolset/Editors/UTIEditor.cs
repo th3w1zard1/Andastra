@@ -831,7 +831,7 @@ namespace HolocronToolset.Editors
             }
 
             // Matching PyKotor implementation: itemprops: TwoDA | None = self._installation.ht_get_cache_2da(HTInstallation.TwoDA_ITEM_PROPERTIES)
-            TwoDA itemProps = _installation.HtGetCache2DA(HTInstallation.TwoDAItemProperties);
+            TwoDA itemProps = _installation.HtGetCacheTwoDA(HTInstallation.TwoDAItemProperties);
             if (itemProps == null)
             {
                 return;
@@ -929,10 +929,10 @@ namespace HolocronToolset.Editors
         // Original: @staticmethod def cost_name(installation: HTInstallation, cost: int, value: int) -> str | None:
         public static string CostName(HTInstallation installation, int cost, int value)
         {
-            TwoDA costTableList = installation.HtGetCache2DA(HTInstallation.TwoDAIprpCosttable);
+            TwoDA costTableList = installation.HtGetCacheTwoDA(HTInstallation.TwoDAIprpCosttable);
             if (costTableList == null)
             {
-                System.Console.WriteLine("Failed to retrieve IPRP_COSTTABLE 2DA.");
+                System.Console.WriteLine("Failed to retrieve IPRP_COSTTABLE TwoDA.");
                 return null;
             }
 
@@ -943,10 +943,10 @@ namespace HolocronToolset.Editors
                 return null;
             }
 
-            TwoDA costtable = installation.HtGetCache2DA(costtableName);
+            TwoDA costtable = installation.HtGetCacheTwoDA(costtableName);
             if (costtable == null)
             {
-                System.Console.WriteLine($"Failed to retrieve '{costtableName}' 2DA.");
+                System.Console.WriteLine($"Failed to retrieve '{costtableName}' TwoDA.");
                 return null;
             }
 
@@ -961,7 +961,7 @@ namespace HolocronToolset.Editors
             }
             catch (Exception)
             {
-                System.Console.WriteLine("Could not get the costtable 2DA row/value");
+                System.Console.WriteLine("Could not get the costtable TwoDA row/value");
             }
             return null;
         }
@@ -970,17 +970,17 @@ namespace HolocronToolset.Editors
         // Original: @staticmethod def param_name(installation: HTInstallation, paramtable: int, param: int) -> str | None:
         public static string ParamName(HTInstallation installation, int paramtable, int param)
         {
-            // Get the IPRP_PARAMTABLE 2DA
-            TwoDA paramtableList = installation.HtGetCache2DA(HTInstallation.TwoDAIprpParamtable);
+            // Get the IPRP_PARAMTABLE TwoDA
+            TwoDA paramtableList = installation.HtGetCacheTwoDA(HTInstallation.TwoDAIprpParamtable);
             if (paramtableList == null)
             {
-                System.Console.WriteLine("Failed to retrieve IPRP_PARAMTABLE 2DA.");
+                System.Console.WriteLine("Failed to retrieve IPRP_PARAMTABLE TwoDA.");
                 return null;
             }
 
             try
             {
-                // Get the specific parameter table 2DA
+                // Get the specific parameter table TwoDA
                 string tableResref = paramtableList.GetCellString(paramtable, "tableresref");
                 if (string.IsNullOrEmpty(tableResref))
                 {
@@ -988,10 +988,10 @@ namespace HolocronToolset.Editors
                     return null;
                 }
 
-                TwoDA paramtable2da = installation.HtGetCache2DA(tableResref);
+                TwoDA paramtable2da = installation.HtGetCacheTwoDA(tableResref);
                 if (paramtable2da == null)
                 {
-                    System.Console.WriteLine($"Failed to retrieve 2DA file: {tableResref}.");
+                    System.Console.WriteLine($"Failed to retrieve TwoDA file: {tableResref}.");
                     return null;
                 }
 
@@ -1112,13 +1112,13 @@ namespace HolocronToolset.Editors
 
             // Matching PyKotor implementation: required: list[str] = [HTInstallation.TwoDA_BASEITEMS, HTInstallation.TwoDA_ITEM_PROPERTIES]
             var required = new List<string> { HTInstallation.TwoDABaseitems, HTInstallation.TwoDAItemProperties };
-            installation.HtBatchCache2DA(required);
+            installation.HtBatchCacheTwoDA(required);
 
             // Matching PyKotor implementation: baseitems: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_BASEITEMS)
-            TwoDA baseitems = installation.HtGetCache2DA(HTInstallation.TwoDABaseitems);
+            TwoDA baseitems = installation.HtGetCacheTwoDA(HTInstallation.TwoDABaseitems);
             if (baseitems == null)
             {
-                System.Console.WriteLine("Failed to retrieve BASEITEMS 2DA.");
+                System.Console.WriteLine("Failed to retrieve BASEITEMS TwoDA.");
             }
             else
             {
@@ -1144,10 +1144,10 @@ namespace HolocronToolset.Editors
             _availablePropertyList.Items.Clear();
 
             // Matching PyKotor implementation: item_properties: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_ITEM_PROPERTIES)
-            TwoDA itemProperties = installation.HtGetCache2DA(HTInstallation.TwoDAItemProperties);
+            TwoDA itemProperties = installation.HtGetCacheTwoDA(HTInstallation.TwoDAItemProperties);
             if (itemProperties == null)
             {
-                System.Console.WriteLine("Failed to retrieve ITEM_PROPERTIES 2DA.");
+                System.Console.WriteLine("Failed to retrieve ITEM_PROPERTIES TwoDA.");
                 return;
             }
 
@@ -1180,7 +1180,7 @@ namespace HolocronToolset.Editors
                     }
 
                     // Matching PyKotor implementation: subtype: TwoDA | None = installation.ht_get_cache_2da(subtype_resname)
-                    TwoDA subtype = installation.HtGetCache2DA(subtypeResname);
+                    TwoDA subtype = installation.HtGetCacheTwoDA(subtypeResname);
                     if (subtype == null)
                     {
                         System.Console.WriteLine($"Failed to retrieve subtype '{subtypeResname}' for property name '{propName}' at index {i}. Skipping...");
@@ -1234,10 +1234,10 @@ namespace HolocronToolset.Editors
         public static string GetPropertyName(HTInstallation installation, int prop)
         {
             // Matching PyKotor implementation: properties: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_ITEM_PROPERTIES)
-            TwoDA properties = installation.HtGetCache2DA(HTInstallation.TwoDAItemProperties);
+            TwoDA properties = installation.HtGetCacheTwoDA(HTInstallation.TwoDAItemProperties);
             if (properties == null)
             {
-                System.Console.WriteLine("Failed to retrieve ITEM_PROPERTIES 2DA.");
+                System.Console.WriteLine("Failed to retrieve ITEM_PROPERTIES TwoDA.");
                 return "Unknown";
             }
 
@@ -1261,10 +1261,10 @@ namespace HolocronToolset.Editors
         public static string GetSubpropertyName(HTInstallation installation, int prop, int subprop)
         {
             // Matching PyKotor implementation: properties: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_ITEM_PROPERTIES)
-            TwoDA properties = installation.HtGetCache2DA(HTInstallation.TwoDAItemProperties);
+            TwoDA properties = installation.HtGetCacheTwoDA(HTInstallation.TwoDAItemProperties);
             if (properties == null)
             {
-                System.Console.WriteLine("Failed to retrieve ITEM_PROPERTIES 2DA.");
+                System.Console.WriteLine("Failed to retrieve ITEM_PROPERTIES TwoDA.");
                 return null;
             }
 
@@ -1278,7 +1278,7 @@ namespace HolocronToolset.Editors
             }
 
             // Matching PyKotor implementation: subproperties: TwoDA | None = installation.ht_get_cache_2da(subtype_resname)
-            TwoDA subproperties = installation.HtGetCache2DA(subtypeResname);
+            TwoDA subproperties = installation.HtGetCacheTwoDA(subtypeResname);
             if (subproperties == null)
             {
                 return null;

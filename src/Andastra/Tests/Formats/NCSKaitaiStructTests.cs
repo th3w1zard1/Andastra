@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Andastra.Parsing.Formats.TwoDA;
+using Andastra.Parsing.Formats.NCS;
 using Andastra.Parsing.Tests.Common;
 using FluentAssertions;
 using Xunit;
@@ -11,26 +11,26 @@ using Xunit;
 namespace Andastra.Parsing.Tests.Formats
 {
     /// <summary>
-    /// Comprehensive tests for 2DA format using Kaitai Struct generated parsers.
-    /// Tests validate that the 2DA.ksy definition compiles correctly to multiple languages
-    /// and that the generated parsers correctly parse 2DA files.
+    /// Comprehensive tests for NCS format using Kaitai Struct generated parsers.
+    /// Tests validate that the NCS.ksy definition compiles correctly to multiple languages
+    /// and that the generated parsers correctly parse NCS files.
     /// </summary>
-    public class TwoDAKaitaiStructTests
+    public class NCSKaitaiStructTests
     {
         private static readonly string KsyFile = Path.Combine(
             AppContext.BaseDirectory, "..", "..", "..", "..", "..",
-            "src", "Andastra", "Parsing", "Resource", "Formats", "2DA", "2DA.ksy");
+            "src", "Andastra", "Parsing", "Resource", "Formats", "NSS", "NCS.ksy");
 
-        private static readonly string TestTwoDAFile = TestFileHelper.GetPath("test.2da");
+        private static readonly string TestNcsFile = TestFileHelper.GetPath("test.ncs");
         private static readonly string KaitaiOutputDir = Path.Combine(
             AppContext.BaseDirectory, "..", "..", "..", "..", "..",
-            "kaitai_compiled", "twoda");
+            "kaitai_compiled", "ncs");
 
         // Languages supported by Kaitai Struct (at least a dozen)
         private static readonly string[] SupportedLanguages = new[]
         {
             "python", "java", "javascript", "csharp", "cpp_stl", "go", "ruby",
-            "php", "rust", "perl", "nim", "lua"
+            "php", "rust", "swift", "perl", "nim", "lua", "kotlin", "typescript"
         };
 
         private static string FindKaitaiCompiler()
@@ -49,7 +49,7 @@ namespace Andastra.Parsing.Tests.Formats
                 {
                     StartInfo = new ProcessStartInfo
                     {
-                        FileName = FindKaitaiCompiler(),
+                        FileName = "kaitai-struct-compiler",
                         Arguments = "--version",
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
@@ -118,10 +118,10 @@ namespace Andastra.Parsing.Tests.Formats
             {
                 ksyPath = new FileInfo(Path.Combine(
                     AppContext.BaseDirectory, "..", "..", "..", "..",
-                    "src", "Andastra", "Parsing", "Resource", "Formats", "2DA", "2DA.ksy"));
+                    "src", "Andastra", "Parsing", "Resource", "Formats", "NSS", "NCS.ksy"));
             }
 
-            ksyPath.Exists.Should().BeTrue($"2DA.ksy should exist at {ksyPath.FullName}");
+            ksyPath.Exists.Should().BeTrue($"NCS.ksy should exist at {ksyPath.FullName}");
         }
 
         [Fact(Timeout = 300000)]
@@ -129,7 +129,7 @@ namespace Andastra.Parsing.Tests.Formats
         {
             if (!File.Exists(KsyFile))
             {
-                Assert.True(true, "2DA.ksy not found - skipping validation");
+                Assert.True(true, "NCS.ksy not found - skipping validation");
                 return;
             }
 
@@ -180,7 +180,7 @@ namespace Andastra.Parsing.Tests.Formats
                 // Compilation might fail due to missing dependencies, but syntax errors would be caught
                 if (testProcess.ExitCode != 0 && stderr.Contains("error") && !stderr.Contains("import"))
                 {
-                    Assert.True(false, $"2DA.ksy has syntax errors: {stderr}");
+                    Assert.True(false, $"NCS.ksy has syntax errors: {stderr}");
                 }
             }
             catch (System.ComponentModel.Win32Exception)
@@ -195,7 +195,7 @@ namespace Andastra.Parsing.Tests.Formats
         {
             if (!File.Exists(KsyFile))
             {
-                Assert.True(true, "2DA.ksy not found - skipping compilation test");
+                Assert.True(true, "NCS.ksy not found - skipping compilation test");
                 return;
             }
 
@@ -229,12 +229,12 @@ namespace Andastra.Parsing.Tests.Formats
                     }
                     else
                     {
-                        Assert.True(false, $"Failed to compile 2DA.ksy to {language}: {stderr}");
+                        Assert.True(false, $"Failed to compile NCS.ksy to {language}: {stderr}");
                     }
                 }
                 else
                 {
-                    Assert.True(true, $"Successfully compiled 2DA.ksy to {language}");
+                    Assert.True(true, $"Successfully compiled NCS.ksy to {language}");
                 }
             }
             catch (System.ComponentModel.Win32Exception)
@@ -248,7 +248,7 @@ namespace Andastra.Parsing.Tests.Formats
         {
             if (!File.Exists(KsyFile))
             {
-                Assert.True(true, "2DA.ksy not found - skipping compilation test");
+                Assert.True(true, "NCS.ksy not found - skipping compilation test");
                 return;
             }
 
@@ -336,73 +336,11 @@ namespace Andastra.Parsing.Tests.Formats
         }
 
         [Fact(Timeout = 300000)]
-        public void TestKaitaiStructGeneratedParserConsistency()
-        {
-            if (!File.Exists(TestTwoDAFile))
-            {
-                // Create test file if needed
-                var testTwoda = new 2DA(new List<string> { "col1", "col2", "col3" });
-                testTwoda.AddRow("0", new Dictionary<string, object> { { "col1", "abc" }, { "col2", "def" }, { "col3", "ghi" } });
-                testTwoda.AddRow("1", new Dictionary<string, object> { { "col1", "def" }, { "col2", "ghi" }, { "col3", "123" } });
-                testTwoda.AddRow("2", new Dictionary<string, object> { { "col1", "123" }, { "col2", "" }, { "col3", "abc" } });
-
-                byte[] data = new TwoDABinaryWriter(testTwoda).Write();
-                Directory.CreateDirectory(Path.GetDirectoryName(TestTwoDAFile));
-                File.WriteAllBytes(TestTwoDAFile, data);
-            }
-
-            // This test validates the structure matches expectations
-            2DA twoda = new TwoDABinaryReader(TestTwoDAFile).Load();
-
-            // Validate structure matches Kaitai Struct definition expectations
-            twoda.GetCellString(0, "col1").Should().Be("abc");
-            twoda.GetCellString(0, "col2").Should().Be("def");
-            twoda.GetCellString(0, "col3").Should().Be("ghi");
-
-            twoda.GetCellString(1, "col1").Should().Be("def");
-            twoda.GetCellString(1, "col2").Should().Be("ghi");
-            twoda.GetCellString(1, "col3").Should().Be("123");
-
-            twoda.GetCellString(2, "col1").Should().Be("123");
-            twoda.GetCellString(2, "col2").Should().Be("");
-            twoda.GetCellString(2, "col3").Should().Be("abc");
-        }
-
-        [Fact(Timeout = 300000)]
-        public void TestKaitaiStructDefinitionCompleteness()
-        {
-            if (!File.Exists(KsyFile))
-            {
-                Assert.True(true, "2DA.ksy not found - skipping completeness test");
-                return;
-            }
-
-            string ksyContent = File.ReadAllText(KsyFile);
-
-            // Check for required elements in Kaitai Struct definition
-            ksyContent.Should().Contain("meta:", "Should have meta section");
-            ksyContent.Should().Contain("id: twoda", "Should have id: twoda");
-            ksyContent.Should().Contain("file_type", "Should define file_type field or header");
-            ksyContent.Should().Contain("header", "Should define header field");
-            ksyContent.Should().Contain("column_headers_raw", "Should define column_headers_raw field");
-            ksyContent.Should().Contain("row_count", "Should define row_count field");
-            ksyContent.Should().Contain("row_labels_section", "Should define row_labels_section");
-            ksyContent.Should().Contain("cell_offsets", "Should define cell_offsets or cell_offsets_array");
-            ksyContent.Should().Contain("data_size", "Should define data_size field");
-            ksyContent.Should().Contain("cell_values_section", "Should define cell_values_section");
-            ksyContent.Should().Contain("twoda_header", "Should define twoda_header type");
-            ksyContent.Should().Contain("magic", "Should define magic field");
-            ksyContent.Should().Contain("version", "Should define version field");
-            ksyContent.Should().Contain("2DA", "Should reference \"2DA \" magic");
-            ksyContent.Should().Contain("V2.b", "Should reference \"V2.b\" version");
-        }
-
-        [Fact(Timeout = 300000)]
         public void TestKaitaiStructCompilesToAtLeastDozenLanguages()
         {
             if (!File.Exists(KsyFile))
             {
-                Assert.True(true, "2DA.ksy not found - skipping test");
+                Assert.True(true, "NCS.ksy not found - skipping test");
                 return;
             }
 
@@ -471,8 +409,73 @@ namespace Andastra.Parsing.Tests.Formats
                 }
             }
 
-            compiledCount.Should().BeGreaterOrEqualTo(12,
-                $"Should successfully compile 2DA.ksy to at least 12 languages. Compiled to {compiledCount} languages.");
+            compiledCount.Should().BeGreaterThanOrEqualTo(12,
+                $"Should successfully compile NCS.ksy to at least 12 languages. Compiled to {compiledCount} languages.");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestNcsKsyDefinitionCompleteness()
+        {
+            if (!File.Exists(KsyFile))
+            {
+                Assert.True(true, "NCS.ksy not found - skipping completeness test");
+                return;
+            }
+
+            string ksyContent = File.ReadAllText(KsyFile);
+
+            // Check for required elements in Kaitai Struct definition
+            ksyContent.Should().Contain("meta:", "Should have meta section");
+            ksyContent.Should().Contain("id: ncs", "Should have id: ncs");
+            ksyContent.Should().Contain("file_type", "Should define file_type field");
+            ksyContent.Should().Contain("file_version", "Should define file_version field");
+            ksyContent.Should().Contain("size_marker", "Should define size_marker field");
+            ksyContent.Should().Contain("total_file_size", "Should define total_file_size field");
+            ksyContent.Should().Contain("instructions", "Should define instructions field");
+            ksyContent.Should().Contain("instruction", "Should define instruction type");
+            ksyContent.Should().Contain("bytecode", "Should define bytecode field");
+            ksyContent.Should().Contain("qualifier", "Should define qualifier field");
+            ksyContent.Should().Contain("NCS ", "Should reference \"NCS \" magic");
+            ksyContent.Should().Contain("V1.0", "Should reference \"V1.0\" version");
+            ksyContent.Should().Contain("0x42", "Should reference 0x42 size marker");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestNcsKsyHeaderStructure()
+        {
+            if (!File.Exists(KsyFile))
+            {
+                Assert.True(true, "NCS.ksy not found - skipping header structure test");
+                return;
+            }
+
+            string ksyContent = File.ReadAllText(KsyFile);
+
+            // Validate header structure matches NCS format
+            ksyContent.Should().Contain("file_type", "Header should define file_type");
+            ksyContent.Should().Contain("file_version", "Header should define file_version");
+            ksyContent.Should().Contain("size_marker", "Header should define size_marker");
+            ksyContent.Should().Contain("total_file_size", "Header should define total_file_size");
+            ksyContent.Should().Contain("endian: be", "NCS format should use big-endian");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestNcsKsyInstructionStructure()
+        {
+            if (!File.Exists(KsyFile))
+            {
+                Assert.True(true, "NCS.ksy not found - skipping instruction structure test");
+                return;
+            }
+
+            string ksyContent = File.ReadAllText(KsyFile);
+
+            // Validate instruction structure
+            ksyContent.Should().Contain("instruction:", "Should define instruction type");
+            ksyContent.Should().Contain("bytecode", "Instruction should define bytecode field");
+            ksyContent.Should().Contain("qualifier", "Instruction should define qualifier field");
+            ksyContent.Should().Contain("repeat: until", "Should use repeat-until for instructions");
+            ksyContent.Should().Contain("repeat-until", "Should have repeat-until condition");
         }
 
         public static IEnumerable<object[]> GetSupportedLanguages()
@@ -481,3 +484,4 @@ namespace Andastra.Parsing.Tests.Formats
         }
     }
 }
+

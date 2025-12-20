@@ -7,6 +7,7 @@ using System.Text;
 using Andastra.Parsing.Tests.Common;
 using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing;
+using Andastra.Parsing.Resource;
 using FluentAssertions;
 using Xunit;
 

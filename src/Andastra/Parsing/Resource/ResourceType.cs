@@ -256,7 +256,7 @@ namespace Andastra.Parsing.Resource
         public static readonly ResourceType IFO = new ResourceType(2014, "ifo", "Module Data", "gff", name: "IFO");
         public static readonly ResourceType BIC = new ResourceType(2015, "bic", "Creatures", "gff", name: "BIC");
         public static readonly ResourceType WOK = new ResourceType(2016, "wok", "Walkmeshes", "binary", name: "WOK");
-        public static readonly ResourceType TwoDA = new ResourceType(2017, "2da", "2D Arrays", "binary", name: "TwoDA");
+\1TwoDA\2
         public static readonly ResourceType TLK = new ResourceType(2018, "tlk", "Talk Tables", "binary", name: "TLK");
         public static readonly ResourceType TXI = new ResourceType(2022, "txi", "Textures", "plaintext", name: "TXI");
         public static readonly ResourceType GIT = new ResourceType(2023, "git", "Module Data", "gff", name: "GIT");
@@ -374,7 +374,7 @@ namespace Andastra.Parsing.Resource
         public static readonly ResourceType LIP_XML = new ResourceType(50023, "lip.xml", "Lips", "plaintext", targetMember: "LIP", name: "LIP_XML");
         public static readonly ResourceType SSF_XML = new ResourceType(50024, "ssf.xml", "Soundsets", "plaintext", targetMember: "SSF", name: "SSF_XML");
         public static readonly ResourceType ARE_XML = new ResourceType(50025, "are.xml", "Module Data", "plaintext", targetMember: "ARE", name: "ARE_XML");
-        public static readonly ResourceType TwoDA_JSON = new ResourceType(50026, "2da.json", "2D Arrays", "plaintext", targetMember: "TwoDA", name: "TwoDA_JSON");
+        public static readonly ResourceType TwoDA_JSON = new ResourceType(50026, "2da.json", "2D Arrays", "plaintext", targetMember: "2DA", name: "TwoDA_JSON");
         public static readonly ResourceType TLK_JSON = new ResourceType(50027, "tlk.json", "Talk Tables", "plaintext", targetMember: "TLK", name: "TLK_JSON");
         public static readonly ResourceType LIP_JSON = new ResourceType(50028, "lip.json", "Lips", "plaintext", targetMember: "LIP", name: "LIP_JSON");
         public static readonly ResourceType RES_XML = new ResourceType(50029, "res.xml", "Save Data", "plaintext", targetMember: "RES", name: "RES_XML");

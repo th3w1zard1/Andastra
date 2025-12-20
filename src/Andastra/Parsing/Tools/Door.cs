@@ -17,7 +17,7 @@ namespace Andastra.Parsing.Tools
     public static class Door
     {
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/door.py:25-64
-        // Original: def get_model(utd: UTD, installation: Installation, *, genericdoors: TwoDA | SOURCE_TYPES | None = None) -> str:
+        // Original: def get_model(utd: UTD, installation: Installation, *, genericdoors: 2DA | SOURCE_TYPES | None = None) -> str:
         public static string GetModel(
             UTD utd,
             Installation.Installation installation,
@@ -415,7 +415,7 @@ namespace Andastra.Parsing.Tools
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/door.py:483-587
-        // Original: def get_door_dimensions(utd_data: bytes, installation: Installation, *, door_name: str | None = None, default_width: float = 2.0, default_height: float = 3.0, genericdoors: TwoDA | None = None, logger: RobustLogger | None = None) -> tuple[float, float]:
+        // Original: def get_door_dimensions(utd_data: bytes, installation: Installation, *, door_name: str | None = None, default_width: float = 2.0, default_height: float = 3.0, genericdoors: 2DA | None = None, logger: RobustLogger | None = None) -> tuple[float, float]:
         public static (float width, float height) GetDoorDimensions(
             byte[] utdData,
             Installation.Installation installation,

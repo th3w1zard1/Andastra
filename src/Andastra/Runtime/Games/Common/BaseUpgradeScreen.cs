@@ -205,7 +205,7 @@ namespace Andastra.Runtime.Games.Common
                     using (var stream = new MemoryStream(baseitemsResult.Data))
                     {
                         var reader = new TwoDABinaryReader(stream);
-                        TwoDA baseitems = reader.Load();
+                        2DA baseitems = reader.Load();
 
                         if (baseitems != null && baseItemId >= 0 && baseItemId < baseitems.GetHeight())
                         {

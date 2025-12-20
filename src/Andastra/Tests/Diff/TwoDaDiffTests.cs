@@ -16,10 +16,10 @@ namespace Andastra.Parsing.Tests.Diff
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Compare_ShouldDetectAddedRows()
         {
-            var original = new TwoDA(new List<string> { "col1", "col2" });
+            var original = new 2DA(new List<string> { "col1", "col2" });
             original.AddRow("0", new Dictionary<string, object> { { "col1", "a" }, { "col2", "b" } });
 
-            var modified = new TwoDA(new List<string> { "col1", "col2" });
+            var modified = new 2DA(new List<string> { "col1", "col2" });
             modified.AddRow("0", new Dictionary<string, object> { { "col1", "a" }, { "col2", "b" } });
             modified.AddRow("1", new Dictionary<string, object> { { "col1", "c" }, { "col2", "d" } });
 
@@ -34,10 +34,10 @@ namespace Andastra.Parsing.Tests.Diff
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Compare_ShouldDetectChangedRows()
         {
-            var original = new TwoDA(new List<string> { "col1" });
+            var original = new 2DA(new List<string> { "col1" });
             original.AddRow("0", new Dictionary<string, object> { { "col1", "old" } });
 
-            var modified = new TwoDA(new List<string> { "col1" });
+            var modified = new 2DA(new List<string> { "col1" });
             modified.AddRow("0", new Dictionary<string, object> { { "col1", "new" } });
 
             TwoDaCompareResult result = TwoDaDiff.Compare(original, modified);
@@ -49,10 +49,10 @@ namespace Andastra.Parsing.Tests.Diff
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Compare_ShouldDetectAddedColumns()
         {
-            var original = new TwoDA(new List<string> { "col1" });
+            var original = new 2DA(new List<string> { "col1" });
             original.AddRow("0", new Dictionary<string, object> { { "col1", "val" } });
 
-            var modified = new TwoDA(new List<string> { "col1", "col2" });
+            var modified = new 2DA(new List<string> { "col1", "col2" });
             modified.AddRow("0", new Dictionary<string, object> { { "col1", "val" }, { "col2", "new_col_val" } });
 
             TwoDaCompareResult result = TwoDaDiff.Compare(original, modified);

@@ -331,7 +331,7 @@ namespace Andastra.Parsing.Formats.TwoDA
         }
 
         /// <summary>
-        /// Compares this TwoDA with another TwoDA instance.
+        /// Compares this 2DA with another 2DA instance.
         /// Ported from vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/twoda/twoda_data.py:854.
         /// </summary>
         public bool Compare(TwoDA other, Action<string> logFunc = null)
@@ -346,7 +346,7 @@ namespace Andastra.Parsing.Formats.TwoDA
             missingHeaders.ExceptWith(newHeaders);
             if (missingHeaders.Count > 0)
             {
-                logger($"Missing headers in new TwoDA: {string.Join(", ", missingHeaders)}");
+                logger($"Missing headers in new 2DA: {string.Join(", ", missingHeaders)}");
                 ret = false;
             }
 
@@ -354,7 +354,7 @@ namespace Andastra.Parsing.Formats.TwoDA
             extraHeaders.ExceptWith(oldHeaders);
             if (extraHeaders.Count > 0)
             {
-                logger($"Extra headers in new TwoDA: {string.Join(", ", extraHeaders)}");
+                logger($"Extra headers in new 2DA: {string.Join(", ", extraHeaders)}");
                 ret = false;
             }
 
@@ -382,7 +382,7 @@ namespace Andastra.Parsing.Formats.TwoDA
             missingRows.ExceptWith(newIndices);
             if (missingRows.Count > 0)
             {
-                logger($"Missing rows in new TwoDA: {string.Join(", ", missingRows)}");
+                logger($"Missing rows in new 2DA: {string.Join(", ", missingRows)}");
                 ret = false;
             }
 
@@ -390,7 +390,7 @@ namespace Andastra.Parsing.Formats.TwoDA
             extraRows.ExceptWith(oldIndices);
             if (extraRows.Count > 0)
             {
-                logger($"Extra rows in new TwoDA: {string.Join(", ", extraRows)}");
+                logger($"Extra rows in new 2DA: {string.Join(", ", extraRows)}");
                 ret = false;
             }
 

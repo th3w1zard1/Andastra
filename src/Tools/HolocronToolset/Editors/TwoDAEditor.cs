@@ -268,7 +268,7 @@ namespace HolocronToolset.Editors
                 }
             }
 
-            // Add columns to TwoDA
+            // Add columns to 2DA
             foreach (var header in headers)
             {
                 twoda.AddColumn(header);
@@ -299,7 +299,7 @@ namespace HolocronToolset.Editors
         public override void New()
         {
             base.New();
-            // Set default restype to TwoDA for new files
+            // Set default restype to 2DA for new files
             _restype = ResourceType.TwoDA;
             _sourceData.Clear();
             _columnHeaders.Clear();

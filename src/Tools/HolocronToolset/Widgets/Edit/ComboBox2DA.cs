@@ -29,7 +29,7 @@ namespace HolocronToolset.Widgets.Edit
         }
 
         private bool _sortAlphabetically = false;
-        private TwoDA _this2DA; // Can be null (matching Python: TwoDA | None)
+        private TwoDA _this2DA; // Can be null (matching Python: 2DA | None)
         private HTInstallation _installation;
         private string _resname;
 
@@ -155,7 +155,7 @@ namespace HolocronToolset.Widgets.Edit
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/combobox_2da.py:175-179
-        // Original: def set_context(self, data: TwoDA | None, install: HTInstallation, resname: str):
+        // Original: def set_context(self, data: 2DA | None, install: HTInstallation, resname: str):
         public void SetContext(TwoDA data, HTInstallation install, string resname)
         {
             _this2DA = data;

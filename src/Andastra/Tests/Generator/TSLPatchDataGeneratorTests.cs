@@ -125,7 +125,7 @@ namespace Andastra.Parsing.Tests.Generator
             
             // Create a base 2DA file in temp dir
             var base2DAPath = Path.Combine(_tempDir, "test.2da");
-            var twoda = new TwoDA(new List<string> { "Col1", "Col2" });
+            var twoda = new 2DA(new List<string> { "Col1", "Col2" });
             twoda.AddRow(null, new Dictionary<string, object> { { "Col1", "Value1" }, { "Col2", "Value2" } });
             twoda.Save(base2DAPath);
 
@@ -262,7 +262,7 @@ namespace Andastra.Parsing.Tests.Generator
             var base2DAPath = Path.Combine(baseDir.FullName, "Override", "test.2da");
             Directory.CreateDirectory(Path.GetDirectoryName(base2DAPath));
             
-            var twoda = new TwoDA(new List<string> { "Col1" });
+            var twoda = new 2DA(new List<string> { "Col1" });
             twoda.AddRow(null, new Dictionary<string, object> { { "Col1", "Value1" } });
             twoda.Save(base2DAPath);
             

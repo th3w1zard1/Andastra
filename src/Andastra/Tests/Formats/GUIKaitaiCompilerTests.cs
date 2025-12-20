@@ -67,11 +67,27 @@ namespace Andastra.Parsing.Tests.Formats
             string compilerPath = FindKaitaiCompiler();
             compilerPath.Should().NotBeNullOrEmpty("kaitai-struct-compiler should be available in PATH or common locations");
 
+            // Handle node-based compiler path and .bat files
+            string actualCompilerPath = compilerPath;
+            string versionArgs = "--version";
+            if (compilerPath.StartsWith("node:\""))
+            {
+                actualCompilerPath = "node";
+                string jsPath = compilerPath.Substring(6).TrimEnd('"');
+                versionArgs = $"\"{jsPath}\" --version";
+            }
+            else if (compilerPath.EndsWith(".bat", StringComparison.OrdinalIgnoreCase))
+            {
+                // Use cmd.exe to run .bat file on Windows
+                actualCompilerPath = "cmd.exe";
+                versionArgs = $"/c \"{compilerPath}\" --version";
+            }
+
             // Test compiler version
             var processInfo = new ProcessStartInfo
             {
-                FileName = compilerPath,
-                Arguments = "--version",
+                FileName = actualCompilerPath,
+                Arguments = versionArgs,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -120,11 +136,27 @@ namespace Andastra.Parsing.Tests.Formats
             }
             Directory.CreateDirectory(langOutputDir);
 
+            // Handle node-based compiler path and .bat files
+            string actualCompilerPath = compilerPath;
+            string arguments = $"-t {language} \"{GuiKsyPath}\" -d \"{langOutputDir}\"";
+            if (compilerPath.StartsWith("node:\""))
+            {
+                actualCompilerPath = "node";
+                string jsPath = compilerPath.Substring(6).TrimEnd('"');
+                arguments = $"\"{jsPath}\" -t {language} \"{GuiKsyPath}\" -d \"{langOutputDir}\"";
+            }
+            else if (compilerPath.EndsWith(".bat", StringComparison.OrdinalIgnoreCase))
+            {
+                // Use cmd.exe to run .bat file on Windows
+                actualCompilerPath = "cmd.exe";
+                arguments = $"/c \"{compilerPath}\" -t {language} \"{GuiKsyPath}\" -d \"{langOutputDir}\"";
+            }
+
             // Compile GUI.ksy to target language
             var processInfo = new ProcessStartInfo
             {
-                FileName = compilerPath,
-                Arguments = $"-t {language} \"{GuiKsyPath}\" -d \"{langOutputDir}\"",
+                FileName = actualCompilerPath,
+                Arguments = arguments,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -176,10 +208,26 @@ namespace Andastra.Parsing.Tests.Formats
                     }
                     Directory.CreateDirectory(langOutputDir);
 
+                    // Handle node-based compiler path and .bat files
+                    string actualCompilerPath = compilerPath;
+                    string arguments = $"-t {language} \"{GuiKsyPath}\" -d \"{langOutputDir}\"";
+                    if (compilerPath.StartsWith("node:\""))
+                    {
+                        actualCompilerPath = "node";
+                        string jsPath = compilerPath.Substring(6).TrimEnd('"');
+                        arguments = $"\"{jsPath}\" -t {language} \"{GuiKsyPath}\" -d \"{langOutputDir}\"";
+                    }
+                    else if (compilerPath.EndsWith(".bat", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Use cmd.exe to run .bat file on Windows
+                        actualCompilerPath = "cmd.exe";
+                        arguments = $"/c \"{compilerPath}\" -t {language} \"{GuiKsyPath}\" -d \"{langOutputDir}\"";
+                    }
+
                     var processInfo = new ProcessStartInfo
                     {
-                        FileName = compilerPath,
-                        Arguments = $"-t {language} \"{GuiKsyPath}\" -d \"{langOutputDir}\"",
+                        FileName = actualCompilerPath,
+                        Arguments = arguments,
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
                         UseShellExecute = false,
@@ -246,11 +294,27 @@ namespace Andastra.Parsing.Tests.Formats
             }
             Directory.CreateDirectory(langOutputDir);
 
+            // Handle node-based compiler path and .bat files
+            string actualCompilerPath = compilerPath;
+            string arguments = $"-t python \"{GuiKsyPath}\" -d \"{langOutputDir}\"";
+            if (compilerPath.StartsWith("node:\""))
+            {
+                actualCompilerPath = "node";
+                string jsPath = compilerPath.Substring(6).TrimEnd('"');
+                arguments = $"\"{jsPath}\" -t python \"{GuiKsyPath}\" -d \"{langOutputDir}\"";
+            }
+            else if (compilerPath.EndsWith(".bat", StringComparison.OrdinalIgnoreCase))
+            {
+                // Use cmd.exe to run .bat file on Windows
+                actualCompilerPath = "cmd.exe";
+                arguments = $"/c \"{compilerPath}\" -t python \"{GuiKsyPath}\" -d \"{langOutputDir}\"";
+            }
+
             // Compile to Python
             var processInfo = new ProcessStartInfo
             {
-                FileName = compilerPath,
-                Arguments = $"-t python \"{GuiKsyPath}\" -d \"{langOutputDir}\"",
+                FileName = actualCompilerPath,
+                Arguments = arguments,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -292,11 +356,27 @@ namespace Andastra.Parsing.Tests.Formats
             }
             Directory.CreateDirectory(langOutputDir);
 
+            // Handle node-based compiler path and .bat files
+            string actualCompilerPath = compilerPath;
+            string arguments = $"-t csharp \"{GuiKsyPath}\" -d \"{langOutputDir}\"";
+            if (compilerPath.StartsWith("node:\""))
+            {
+                actualCompilerPath = "node";
+                string jsPath = compilerPath.Substring(6).TrimEnd('"');
+                arguments = $"\"{jsPath}\" -t csharp \"{GuiKsyPath}\" -d \"{langOutputDir}\"";
+            }
+            else if (compilerPath.EndsWith(".bat", StringComparison.OrdinalIgnoreCase))
+            {
+                // Use cmd.exe to run .bat file on Windows
+                actualCompilerPath = "cmd.exe";
+                arguments = $"/c \"{compilerPath}\" -t csharp \"{GuiKsyPath}\" -d \"{langOutputDir}\"";
+            }
+
             // Compile to C#
             var compileInfo = new ProcessStartInfo
             {
-                FileName = compilerPath,
-                Arguments = $"-t csharp \"{GuiKsyPath}\" -d \"{langOutputDir}\"",
+                FileName = actualCompilerPath,
+                Arguments = arguments,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -340,11 +420,27 @@ namespace Andastra.Parsing.Tests.Formats
                 return; // Skip if compiler not available
             }
 
+            // Handle node-based compiler path and .bat files
+            string actualCompilerPath = compilerPath;
+            string arguments = $"-t python \"{GuiKsyPath}\" --debug";
+            if (compilerPath.StartsWith("node:\""))
+            {
+                actualCompilerPath = "node";
+                string jsPath = compilerPath.Substring(6).TrimEnd('"');
+                arguments = $"\"{jsPath}\" -t python \"{GuiKsyPath}\" --debug";
+            }
+            else if (compilerPath.EndsWith(".bat", StringComparison.OrdinalIgnoreCase))
+            {
+                // Use cmd.exe to run .bat file on Windows
+                actualCompilerPath = "cmd.exe";
+                arguments = $"/c \"{compilerPath}\" -t python \"{GuiKsyPath}\" --debug";
+            }
+
             // Use Python as validation target (most commonly supported)
             var validateInfo = new ProcessStartInfo
             {
-                FileName = compilerPath,
-                Arguments = $"-t python \"{GuiKsyPath}\" --debug",
+                FileName = actualCompilerPath,
+                Arguments = arguments,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -591,11 +687,19 @@ namespace Andastra.Parsing.Tests.Formats
         private static string FindKaitaiCompiler()
         {
             // Try common locations and PATH
+            string npmGlobalPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "npm");
+            string npmModulePath = Path.Combine(npmGlobalPath, "node_modules", "kaitai-struct-compiler");
+            string npmCmdPath = Path.Combine(npmGlobalPath, "kaitai-struct-compiler.cmd");
+            string npmJsPath = Path.Combine(npmModulePath, "kaitai-struct-compiler.js");
+            
             string[] possiblePaths = new[]
             {
                 "kaitai-struct-compiler",
                 "ksc",
+                @"C:\Program Files (x86)\kaitai-struct-compiler\bin\kaitai-struct-compiler.bat",
+                npmCmdPath,
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "kaitai-struct-compiler", "kaitai-struct-compiler.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "kaitai-struct-compiler", "bin", "kaitai-struct-compiler.bat"),
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "kaitai-struct-compiler", "kaitai-struct-compiler.exe"),
                 "/usr/bin/kaitai-struct-compiler",
                 "/usr/local/bin/kaitai-struct-compiler",
@@ -606,15 +710,32 @@ namespace Andastra.Parsing.Tests.Formats
             {
                 try
                 {
-                    var processInfo = new ProcessStartInfo
+                    ProcessStartInfo processInfo;
+                    if (path.EndsWith(".bat", StringComparison.OrdinalIgnoreCase))
                     {
-                        FileName = path,
-                        Arguments = "--version",
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    };
+                        // Use cmd.exe to run .bat file on Windows
+                        processInfo = new ProcessStartInfo
+                        {
+                            FileName = "cmd.exe",
+                            Arguments = $"/c \"{path}\" --version",
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true,
+                            UseShellExecute = false,
+                            CreateNoWindow = true
+                        };
+                    }
+                    else
+                    {
+                        processInfo = new ProcessStartInfo
+                        {
+                            FileName = path,
+                            Arguments = "--version",
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true,
+                            UseShellExecute = false,
+                            CreateNoWindow = true
+                        };
+                    }
 
                     using (var process = Process.Start(processInfo))
                     {
@@ -631,6 +752,41 @@ namespace Andastra.Parsing.Tests.Formats
                 catch
                 {
                     // Continue searching
+                }
+            }
+
+            // Try using node to run the npm-installed compiler
+            if (File.Exists(npmJsPath))
+            {
+                try
+                {
+                    string nodePath = "node";
+                    var processInfo = new ProcessStartInfo
+                    {
+                        FileName = nodePath,
+                        Arguments = $"\"{npmJsPath}\" --version",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+
+                    using (var process = Process.Start(processInfo))
+                    {
+                        if (process != null)
+                        {
+                            process.WaitForExit(5000);
+                            if (process.ExitCode == 0)
+                            {
+                                // Return a special marker that we'll handle in the compilation calls
+                                return $"node:\"{npmJsPath}\"";
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // Continue
                 }
             }
 
@@ -652,11 +808,12 @@ namespace Andastra.Parsing.Tests.Formats
             controlStruct.SetString("TAG", "TestButton");
 
             // Create EXTENT struct
-            var extentStruct = controlStruct.AddStruct("EXTENT");
+            var extentStruct = new GFFStruct();
             extentStruct.SetInt32("LEFT", 10);
             extentStruct.SetInt32("TOP", 20);
             extentStruct.SetInt32("WIDTH", 100);
             extentStruct.SetInt32("HEIGHT", 30);
+            controlStruct.SetStruct("EXTENT", extentStruct);
 
             gff.Root.SetList("CONTROLS", controlsList);
 

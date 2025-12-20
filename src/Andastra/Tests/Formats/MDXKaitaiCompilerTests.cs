@@ -328,13 +328,19 @@ namespace Andastra.Parsing.Tests.Formats
         private string FindKaitaiCompiler()
         {
             // Try common locations and PATH
+            var npmPrefix = Environment.GetEnvironmentVariable("npm_config_prefix") ?? 
+                           Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "AppData", "Roaming", "npm");
             var possiblePaths = new[]
             {
                 "kaitai-struct-compiler",
                 "ksc",
+                Path.Combine(npmPrefix, "kaitai-struct-compiler.cmd"),
+                Path.Combine(npmPrefix, "kaitai-struct-compiler"),
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "bin", "kaitai-struct-compiler"),
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "kaitai-struct-compiler", "bin", "kaitai-struct-compiler.exe"),
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "kaitai-struct-compiler", "bin", "kaitai-struct-compiler.exe")
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "kaitai-struct-compiler", "bin", "kaitai-struct-compiler.exe"),
+                "/usr/bin/kaitai-struct-compiler",
+                "/usr/local/bin/kaitai-struct-compiler"
             };
 
             foreach (var path in possiblePaths)
@@ -412,6 +418,43 @@ namespace Andastra.Parsing.Tests.Formats
                         // Fall back to -jar method
                     }
                     return $"java -jar \"{jarPath}\"";
+                }
+            }
+
+            // Try npm-installed version (Node.js)
+            var npmGlobalRoot = Environment.GetEnvironmentVariable("npm_config_prefix") ?? 
+                               Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "AppData", "Roaming", "npm");
+            var nodeModulesPath = Path.Combine(npmGlobalRoot, "node_modules", "kaitai-struct-compiler");
+            var compilerJs = Path.Combine(nodeModulesPath, "kaitai-struct-compiler.js");
+            if (File.Exists(compilerJs))
+            {
+                // Test if node can run it
+                try
+                {
+                    var testProcess = new ProcessStartInfo
+                    {
+                        FileName = "node",
+                        Arguments = $"\"{compilerJs}\" --version",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+                    using (var testProc = Process.Start(testProcess))
+                    {
+                        if (testProc != null)
+                        {
+                            testProc.WaitForExit(5000);
+                            if (testProc.ExitCode == 0)
+                            {
+                                return $"node \"{compilerJs}\"";
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // Continue searching
                 }
             }
 

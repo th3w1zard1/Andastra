@@ -636,18 +636,18 @@ namespace Andastra.Parsing.Tests.Formats
         {
             // Basic validation
             ifo.Should().NotBeNull("IFO should not be null");
-            
+
             // Validate module ID
             ifo.ModId.Should().NotBeNull("Mod_ID should not be null");
-            
+
             // Validate module name
             ifo.ModName.Should().NotBeNull("Mod_Name should not be null");
             ifo.Name.Should().NotBeNull("Name should not be null");
-            
+
             // Validate entry configuration
             ifo.ResRef.Should().NotBeNull("ResRef should not be null");
             ifo.EntryArea.Should().NotBeNull("EntryArea should not be null");
-            
+
             // Validate area list
             ifo.AreaList.Should().NotBeNull("AreaList should not be null");
         }
@@ -655,14 +655,14 @@ namespace Andastra.Parsing.Tests.Formats
         private static void CreateTestIfoFile(string path)
         {
             var ifo = new IFO();
-            
+
             // Set basic module information
             ifo.ModId = new byte[16] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10 };
             ifo.ModName = LocalizedString.FromInvalid();
             ifo.Tag = "TEST_MODULE";
             ifo.VoId = "test_vo";
             ifo.Hak = "test_hak";
-            
+
             // Set entry configuration
             ifo.ResRef = ResRef.FromString("testarea");
             ifo.EntryX = 0.0f;
@@ -670,15 +670,15 @@ namespace Andastra.Parsing.Tests.Formats
             ifo.EntryZ = 0.0f;
             ifo.EntryDirectionX = 1.0f;
             ifo.EntryDirectionY = 0.0f;
-            
+
             // Set script hooks
             ifo.OnHeartbeat = ResRef.FromString("test_heartbeat");
             ifo.OnLoad = ResRef.FromString("test_load");
             ifo.OnStart = ResRef.FromString("test_start");
-            
+
             // Set area list
             ifo.AreaList.Add(ResRef.FromString("testarea"));
-            
+
             // Set other fields
             ifo.ExpansionPack = 0;
             ifo.ModVersion = 3;
@@ -694,11 +694,9 @@ namespace Andastra.Parsing.Tests.Formats
             // Write to file
             GFF gff = IFOHelpers.DismantleIfo(ifo);
             Directory.CreateDirectory(Path.GetDirectoryName(path));
-            using (var writer = new GFFBinaryWriter(gff))
-            {
-                byte[] data = writer.Write();
-                File.WriteAllBytes(path, data);
-            }
+            var writer = new GFFBinaryWriter(gff);
+            byte[] data = writer.Write();
+            File.WriteAllBytes(path, data);
         }
     }
 }

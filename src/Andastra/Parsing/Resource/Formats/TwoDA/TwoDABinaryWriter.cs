@@ -8,7 +8,7 @@ namespace Andastra.Parsing.Formats.TwoDA
 {
 
     /// <summary>
-    /// Writes TwoDA binary data.
+    /// Writes 2DA binary data.
     /// 1:1 port of Python TwoDABinaryWriter from pykotor/resource/formats/twoda/io_twoda.py
     /// </summary>
     public class TwoDABinaryWriter

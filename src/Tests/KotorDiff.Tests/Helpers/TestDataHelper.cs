@@ -65,9 +65,9 @@ namespace KotorDiff.Tests.Helpers
         /// Create a basic 2DA file with headers and rows.
         /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/tests/tslpatcher/test_diff_comprehensive.py:89-102
         /// </summary>
-        public static TwoDA CreateBasic2DA(List<string> headers, List<(string label, Dictionary<string, string> cells)> rows)
+        public static 2DA CreateBasic2DA(List<string> headers, List<(string label, Dictionary<string, string> cells)> rows)
         {
-            var twoda = new TwoDA(headers);
+            var twoda = new 2DA(headers);
             foreach (var (label, cells) in rows)
             {
                 var cellsObj = new Dictionary<string, object>();

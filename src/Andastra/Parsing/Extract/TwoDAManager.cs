@@ -26,7 +26,7 @@ namespace Andastra.Parsing.Extract
         }
     }
 
-    // Minimal TwoDA manager to match extract/twoda.py lookup behavior.
+    // Minimal 2DA manager to match extract/twoda.py lookup behavior.
     public class TwoDAManager
     {
         public static List<string> GetColumnNames(string dataType)

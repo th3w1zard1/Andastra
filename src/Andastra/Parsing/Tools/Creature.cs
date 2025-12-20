@@ -16,7 +16,7 @@ namespace Andastra.Parsing.Tools
     public static class Creature
     {
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/creature.py:22-151
-        // Original: def get_body_model(utc: UTC, installation: Installation, *, appearance: TwoDA | None = None, baseitems: TwoDA | None = None) -> tuple[str | None, str | None]:
+        // Original: def get_body_model(utc: UTC, installation: Installation, *, appearance: 2DA | None = None, baseitems: 2DA | None = None) -> tuple[str | None, str | None]:
         public static (string bodyModel, string bodyTexture) GetBodyModel(
             UTC utc,
             Installation.Installation installation,
@@ -162,7 +162,7 @@ namespace Andastra.Parsing.Tools
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/creature.py:154-194
-        // Original: def get_weapon_models(utc: UTC, installation: Installation, *, appearance: TwoDA | None = None, baseitems: TwoDA | None = None) -> tuple[str | None, str | None]:
+        // Original: def get_weapon_models(utc: UTC, installation: Installation, *, appearance: 2DA | None = None, baseitems: 2DA | None = None) -> tuple[str | None, str | None]:
         public static (string rightHandModel, string leftHandModel) GetWeaponModels(
             UTC utc,
             Installation.Installation installation,
@@ -208,7 +208,7 @@ namespace Andastra.Parsing.Tools
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/creature.py:197-211
-        // Original: def _load_hand_uti(installation: Installation, hand_resref: str, baseitems: TwoDA) -> str | None:
+        // Original: def _load_hand_uti(installation: Installation, hand_resref: str, baseitems: 2DA) -> str | None:
         private static string LoadHandUti(
             Installation.Installation installation,
             string handResref,
@@ -228,7 +228,7 @@ namespace Andastra.Parsing.Tools
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/creature.py:214-289
-        // Original: def get_head_model(utc: UTC, installation: Installation, *, appearance: TwoDA | None = None, heads: TwoDA | None = None) -> tuple[str | None, str | None]:
+        // Original: def get_head_model(utc: UTC, installation: Installation, *, appearance: 2DA | None = None, heads: 2DA | None = None) -> tuple[str | None, str | None]:
         public static (string model, string texture) GetHeadModel(
             UTC utc,
             Installation.Installation installation,

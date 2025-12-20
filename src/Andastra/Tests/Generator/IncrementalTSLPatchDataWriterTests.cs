@@ -101,7 +101,7 @@ namespace Andastra.Parsing.Tests.Generator
             mod2DA.Destination = "Override";
             
             // Create test 2DA data
-            var twoda = new TwoDA(new List<string> { "Col1", "Col2" });
+            var twoda = new 2DA(new List<string> { "Col1", "Col2" });
             twoda.AddRow(null, new Dictionary<string, object> { { "Col1", "Value1" }, { "Col2", "Value2" } });
             var twodaPath = Path.Combine(_tempDir, "temp.2da");
             twoda.Save(twodaPath);

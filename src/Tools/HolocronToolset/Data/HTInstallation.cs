@@ -196,7 +196,7 @@ namespace HolocronToolset.Data
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:444-469
-        // Original: def ht_get_cache_2da(self, resname: str) -> TwoDA | None:
+        // Original: def ht_get_cache_2da(self, resname: str) -> 2DA | None:
         [CanBeNull]
         public TwoDA HtGetCache2DA(string resname)
         {

@@ -306,8 +306,8 @@ namespace Andastra.Parsing.Tests.Formats
             if (!File.Exists(TestSsfFile))
             {
                 // Create test file if needed
-                var ssf = new SSF();
-                byte[] data = new SSFBinaryWriter(ssf).Write();
+                var testSsf = new SSF();
+                byte[] data = new SSFBinaryWriter(testSsf).Write();
                 Directory.CreateDirectory(Path.GetDirectoryName(TestSsfFile));
                 File.WriteAllBytes(TestSsfFile, data);
             }

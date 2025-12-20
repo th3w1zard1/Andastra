@@ -34,7 +34,7 @@ LabelIndex=d
 Col2=X
 ";
             PatcherConfig config = SetupIniAndConfig(iniText);
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "label", "Col2", "Col3" },
                 new[]
                 {
@@ -71,7 +71,7 @@ RowIndex=1
 Col1=StrRef1
 ";
             PatcherConfig config = SetupIniAndConfig(iniText);
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2", "Col3" },
                 new[]
                 {
@@ -85,7 +85,7 @@ Col1=StrRef1
             memory.MemoryStr[1] = 1;
 
             object bytes = config.Patches2DA.First(p => p.SaveAs == "test.2da").PatchResource(twoda.ToBytes(), memory, new PatchLogger(), Game.K1);
-            var patchedTwoda = TwoDA.FromBytes((byte[])bytes);
+            var patchedTwoda = 2DA.FromBytes((byte[])bytes);
 
             patchedTwoda.GetColumn("Col1").Should().Equal("0", "1");
             patchedTwoda.GetColumn("Col2").Should().Equal("b", "e");
@@ -112,7 +112,7 @@ RowIndex=1
 Col1=2DAMEMORY1
 ";
             PatcherConfig config = SetupIniAndConfig(iniText);
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2", "Col3" },
                 new[]
                 {
@@ -152,7 +152,7 @@ RowIndex=0
 Col2=high()
 ";
             PatcherConfig config = SetupIniAndConfig(iniText);
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2", "Col3" },
                 new[]
                 {
@@ -184,7 +184,7 @@ RowIndex=1
 2DAMEMORY5=RowIndex
 ";
             PatcherConfig config = SetupIniAndConfig(iniText);
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2", "Col3" },
                 new[]
                 {
@@ -217,7 +217,7 @@ RowIndex=1
 2DAMEMORY5=RowLabel
 ";
             PatcherConfig config = SetupIniAndConfig(iniText);
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2", "Col3" },
                 new[]
                 {
@@ -260,7 +260,7 @@ RowIndex=1
 2DAMEMORY5=label
 ";
             PatcherConfig config = SetupIniAndConfig(iniText);
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "label", "Col2", "Col3" },
                 new[]
                 {
@@ -294,7 +294,7 @@ AddRow1=add_row_1
 [add_row_1]
 ";
             PatcherConfig config = SetupIniAndConfig(iniText);
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "Col1" },
                 new[] { ("0", new string[0]) }
             );
@@ -322,7 +322,7 @@ AddRow0=add_row_0
 RowLabel=r1
 ";
             PatcherConfig config = SetupIniAndConfig(iniText);
-            TwoDA twoda = CreateTest2DA(new[] { "Col1" }, Array.Empty<(string, string[])>());
+            2DA twoda = CreateTest2DA(new[] { "Col1" }, Array.Empty<(string, string[])>());
 
             var memory = new PatcherMemory();
             config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
@@ -347,14 +347,14 @@ Col1=123
 Col2=ABC
 ";
             PatcherConfig config = SetupIniAndConfig(iniText);
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[] { ("0", new[] { "123", "456" }) }
             );
 
             var memory = new PatcherMemory();
             object bytes = config.Patches2DA.First(p => p.SaveAs == "test.2da").PatchResource(twoda.ToBytes(), memory, new PatchLogger(), Game.K1);
-            var patchedTwoda = TwoDA.FromBytes((byte[])bytes);
+            var patchedTwoda = 2DA.FromBytes((byte[])bytes);
 
             patchedTwoda.GetHeight().Should().Be(1);
             patchedTwoda.GetLabel(0).Should().Be("0");
@@ -376,7 +376,7 @@ Col1=999
 Col2=ABC
 ";
             PatcherConfig config = SetupIniAndConfig(iniText);
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[] { ("0", new[] { "123", "456" }) }
             );
@@ -405,7 +405,7 @@ Col1=123
 Col2=ABC
 ";
             PatcherConfig config = SetupIniAndConfig(iniText);
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[] { ("0", new[] { "123", "456" }) }
             );
@@ -433,7 +433,7 @@ Col1=999
 Col2=ABC
 ";
             PatcherConfig config = SetupIniAndConfig(iniText);
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[]
                 {
@@ -465,7 +465,7 @@ Col1=high()
 Col2=high()
 ";
             PatcherConfig config = SetupIniAndConfig(iniText);
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[]
                 {
@@ -497,7 +497,7 @@ Col1=StrRef5
 Col2=StrRef6
 ";
             PatcherConfig config = SetupIniAndConfig(iniText);
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[] { ("0", new[] { "1", "2" }) }
             );
@@ -528,7 +528,7 @@ Col1=2DAMEMORY5
 Col2=2DAMEMORY6
 ";
             PatcherConfig config = SetupIniAndConfig(iniText);
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "Col1", "Col2" },
                 new[] { ("0", new[] { "1", "2" }) }
             );
@@ -559,7 +559,7 @@ Col1=test
 2DAMEMORY5=RowIndex
 ";
             PatcherConfig config = SetupIniAndConfig(iniText);
-            TwoDA twoda = CreateTest2DA(
+            2DA twoda = CreateTest2DA(
                 new[] { "Col1" },
                 new[] { ("0", new[] { "existing" }) }
             );

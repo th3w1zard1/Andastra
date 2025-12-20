@@ -13,10 +13,10 @@ namespace Andastra.Parsing.Tests.Formats
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Compare_ShouldReturnFalse_WhenColumnCountsDiffer()
         {
-            var older = new TwoDA(new List<string> { "ABC", "123" });
+            var older = new 2DA(new List<string> { "ABC", "123" });
             older.AddRow("0");
 
-            var newer = new TwoDA(new List<string> { "ABC" });
+            var newer = new 2DA(new List<string> { "ABC" });
             newer.AddRow("0");
 
             bool result = older.Compare(newer);
@@ -27,11 +27,11 @@ namespace Andastra.Parsing.Tests.Formats
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Compare_ShouldReturnFalse_WhenRowCountsDiffer()
         {
-            var older = new TwoDA(new List<string> { "A", "B" });
+            var older = new 2DA(new List<string> { "A", "B" });
             older.AddRow("0");
             older.AddRow("1");
 
-            var newer = new TwoDA(new List<string> { "A", "B" });
+            var newer = new 2DA(new List<string> { "A", "B" });
             newer.AddRow("0");
 
             bool result = older.Compare(newer);
@@ -42,11 +42,11 @@ namespace Andastra.Parsing.Tests.Formats
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Compare_ShouldReturnFalse_WhenCellsDiffer()
         {
-            var older = new TwoDA(new List<string> { "A", "B" });
+            var older = new 2DA(new List<string> { "A", "B" });
             older.AddRow("0");
             older.AddRow("1");
 
-            var newer = new TwoDA(new List<string> { "A", "B" });
+            var newer = new 2DA(new List<string> { "A", "B" });
             newer.AddRow("0");
             newer.AddRow("1");
             newer.SetCellString(0, "A", "asdf");
@@ -59,12 +59,12 @@ namespace Andastra.Parsing.Tests.Formats
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void Compare_ShouldReturnTrue_WhenTablesMatch()
         {
-            var older = new TwoDA(new List<string> { "A", "B" });
+            var older = new 2DA(new List<string> { "A", "B" });
             older.AddRow("0");
             older.AddRow("1");
             older.SetCellString(0, "A", "asdf");
 
-            var newer = new TwoDA(new List<string> { "A", "B" });
+            var newer = new 2DA(new List<string> { "A", "B" });
             newer.AddRow("0");
             newer.AddRow("1");
             newer.SetCellString(0, "A", "asdf");
