@@ -567,43 +567,32 @@ namespace Andastra.Parsing.Resource.Generics.DLG
 
             // Process links after all other fields are set and node is in node_map
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/nodes.py:467-483
-            // Check for links directly in nodeData to ensure we process them
-            if (nodeData.ContainsKey("links"))
+            // Python iterates through node_data.items() again in the second loop
+            foreach (KeyValuePair<string, object> kvp in nodeData)
             {
-                object linksValue = nodeData["links"];
-                if (linksValue is Dictionary<string, object> linksValueDict)
-                {
-                    string pyType = linksValueDict.ContainsKey("py_type") ? linksValueDict["py_type"].ToString() : null;
-                    object actualValue = linksValueDict.ContainsKey("value") ? linksValueDict["value"] : null;
+                string key = kvp.Key;
+                object value = kvp.Value;
 
-                    if (pyType == "list")
+                if (!(value is Dictionary<string, object> valueDict))
+                {
+                    continue;
+                }
+
+                string pyType = valueDict.ContainsKey("py_type") ? valueDict["py_type"].ToString() : null;
+                object actualValue = valueDict.ContainsKey("value") ? valueDict["value"] : null;
+
+                if (pyType == "list" && key == "links")
+                {
+                    // Matching PyKotor implementation: always deserialize links, even if empty
+                    List<DLGLink> links = new List<DLGLink>();
+                    if (actualValue != null)
                     {
-                        // Matching PyKotor implementation: always deserialize links, even if empty
-                        List<DLGLink> links = new List<DLGLink>();
                         // Handle both List<object> and List<Dictionary<string, object>> cases
-                        // When serialized, linksList is List<Dictionary<string, object>>, but stored as object
-                        // So we need to check for both List<object> and the actual type
-                        if (actualValue != null)
+                        if (actualValue is List<object> linksListObj)
                         {
-                            // Try List<object> first (common case)
-                            if (actualValue is List<object> linksListObj)
+                            foreach (object linkObj in linksListObj)
                             {
-                                foreach (object linkObj in linksListObj)
-                                {
-                                    if (linkObj is Dictionary<string, object> linkDict)
-                                    {
-                                        DLGLink deserializedLink = DLGLink.FromDict(linkDict, nodeMap);
-                                        if (deserializedLink != null)
-                                        {
-                                            links.Add(deserializedLink);
-                                        }
-                                    }
-                                }
-                            }
-                            // Try List<Dictionary<string, object>> (actual serialized type)
-                            else if (actualValue is List<Dictionary<string, object>> linksListDict)
-                            {
-                                foreach (Dictionary<string, object> linkDict in linksListDict)
+                                if (linkObj is Dictionary<string, object> linkDict)
                                 {
                                     DLGLink deserializedLink = DLGLink.FromDict(linkDict, nodeMap);
                                     if (deserializedLink != null)
@@ -612,30 +601,41 @@ namespace Andastra.Parsing.Resource.Generics.DLG
                                     }
                                 }
                             }
-                            // Fallback to IEnumerable for any other collection type
-                            else if (actualValue is System.Collections.IEnumerable linksEnumerable)
+                        }
+                        else if (actualValue is List<Dictionary<string, object>> linksListDict)
+                        {
+                            foreach (Dictionary<string, object> linkDict in linksListDict)
                             {
-                                foreach (object linkObj in linksEnumerable)
+                                DLGLink deserializedLink = DLGLink.FromDict(linkDict, nodeMap);
+                                if (deserializedLink != null)
                                 {
-                                    if (linkObj is Dictionary<string, object> linkDict)
+                                    links.Add(deserializedLink);
+                                }
+                            }
+                        }
+                        else if (actualValue is System.Collections.IEnumerable linksEnumerable)
+                        {
+                            foreach (object linkObj in linksEnumerable)
+                            {
+                                if (linkObj is Dictionary<string, object> linkDict)
+                                {
+                                    DLGLink deserializedLink = DLGLink.FromDict(linkDict, nodeMap);
+                                    if (deserializedLink != null)
                                     {
-                                        DLGLink deserializedLink = DLGLink.FromDict(linkDict, nodeMap);
-                                        if (deserializedLink != null)
-                                        {
-                                            links.Add(deserializedLink);
-                                        }
+                                        links.Add(deserializedLink);
                                     }
                                 }
                             }
                         }
-                        // Always set Links, even if empty, to match Python behavior
-                        node.Links = links;
                     }
+                    // Always set Links, even if empty, to match Python behavior
+                    node.Links = links;
                 }
             }
-            else
+
+            // If Links wasn't set (links key missing), initialize empty list to match Python behavior
+            if (node.Links == null)
             {
-                // If links key is missing, initialize empty list to match Python behavior
                 node.Links = new List<DLGLink>();
             }
 
