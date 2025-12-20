@@ -3073,7 +3073,7 @@ int g_var = 10;
 
 void main() {
     int local = 5;
-    
+
     if (local > 0) {
         int nested = 10;
         if (nested > 5) {
@@ -3081,7 +3081,7 @@ void main() {
             local += nested;
         }
     }
-    
+
     for (int i = 0; i < 10; i++) {
         local += i;
     }
@@ -3374,7 +3374,7 @@ void helper() {
             // Matching Python:     editor.ui.codeEdit.setTextCursor(cursor)
             // In Avalonia, we move cursor to line 2 (around main function) by finding "void main()"
             string text = codeEdit.ToPlainText();
-            
+
             // Find position of "void main()" which should be on line 2 (0-indexed line 1)
             int mainFunctionPos = text.IndexOf("void main()");
             if (mainFunctionPos >= 0)
@@ -4302,7 +4302,7 @@ void helper() {
         {
             // Matching PyKotor implementation: editor = NSSEditor(None, installation)
             var editor = new NSSEditor(null, null);
-            
+
             // Matching PyKotor implementation: editor.new()
             editor.New();
 
@@ -4342,30 +4342,30 @@ void helper() {
         {
             // Matching PyKotor implementation: editor = NSSEditor(None, installation)
             var editor = new NSSEditor(null, null);
-            
+
             // Matching PyKotor implementation: editor.new()
             editor.New();
-            
+
             // Matching PyKotor implementation: Trigger shortcut
             // Note: In PyKotor test, a QKeyEvent is created but not actually sent - the test just calls _show_command_palette() directly
             // This verifies that the command palette can be shown via the shortcut handler
             // Use reflection to call private method ShowCommandPalette (which is what the shortcut triggers)
             var showMethod = typeof(NSSEditor).GetMethod("ShowCommandPalette",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            
+
             showMethod.Should().NotBeNull("NSSEditor should have ShowCommandPalette method");
-            
+
             // Matching PyKotor implementation: editor._show_command_palette()
             // This simulates what happens when Ctrl+Shift+P is pressed
             showMethod.Invoke(editor, null);
-            
+
             // Matching PyKotor implementation: assert editor._command_palette is not None
             // Use reflection to access private field _commandPalette
             var commandPaletteField = typeof(NSSEditor).GetField("_commandPalette",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            
+
             commandPaletteField.Should().NotBeNull("NSSEditor should have _commandPalette field");
-            
+
             var commandPalette = commandPaletteField.GetValue(editor);
             commandPalette.Should().NotBeNull("_commandPalette should be initialized after ShowCommandPalette() is called");
         }
@@ -4391,7 +4391,7 @@ int g_var = 10;
 
 void main() {
     int local = 5;
-    
+
     if (local > 0) {
         int nested = 10;
         if (nested > 5) {
@@ -4399,7 +4399,7 @@ void main() {
             local += nested;
         }
     }
-    
+
     for (int i = 0; i < 10; i++) {
         local += i;
     }
@@ -4451,7 +4451,7 @@ void helper() {
 
             // Matching PyKotor: editor.ui.codeEdit.setPlainText(foldable_nss_script)
             codeEdit.SetPlainText(foldableNssScript);
-            
+
             // Matching PyKotor: qtbot.wait(300) - wait for processing
             System.Threading.Thread.Sleep(300);
 
@@ -4460,7 +4460,7 @@ void helper() {
             // Original: doc = editor.ui.codeEdit.document()
             // Original: block = doc.findBlockByLineNumber(2)
             // Original: if block.isValid(): cursor.setPosition(block.position()); editor.ui.codeEdit.setTextCursor(cursor); editor.ui.codeEdit.fold_region()
-            
+
             // Calculate position for line 2 (0-indexed, so line 2 is the 3rd line)
             // Line 0: "// Global variable"
             // Line 1: "int g_var = 10;"
@@ -4474,30 +4474,30 @@ void helper() {
                 {
                     line2Position += lines[i].Length + 1; // +1 for newline
                 }
-                
+
                 // Set cursor to line 2 position
                 codeEdit.SelectionStart = line2Position;
                 codeEdit.SelectionEnd = line2Position;
-                
+
                 // Manually trigger foldable regions update (matching Python: editor.ui.codeEdit._update_foldable_regions())
                 codeEdit.UpdateFoldableRegionsForTesting();
-                
+
                 // Wait a bit for processing
                 System.Threading.Thread.Sleep(50);
-                
+
                 // Fold the region (matching Python: editor.ui.codeEdit.fold_region())
                 codeEdit.FoldRegion();
-                
+
                 // Wait for processing
                 System.Threading.Thread.Sleep(50);
 
                 // Matching PyKotor: Breadcrumbs should still work
                 // Original: editor._update_breadcrumbs()
                 editor.UpdateBreadcrumbs();
-                
+
                 // Matching PyKotor: assert editor._breadcrumbs is not None
                 editor.Breadcrumbs.Should().NotBeNull("Breadcrumbs should not be null after update");
-                
+
                 // Matching PyKotor: path = editor._breadcrumbs._path
                 // Original: assert len(path) >= 0
                 // Get breadcrumbs path via reflection or public property
@@ -4510,7 +4510,7 @@ void helper() {
                     {
                         var path = breadcrumbsPathField.GetValue(editor.Breadcrumbs);
                         path.Should().NotBeNull("Breadcrumbs path should not be null");
-                        
+
                         // If path is a list/array, check its length
                         if (path is System.Collections.ICollection pathCollection)
                         {
@@ -4522,7 +4522,7 @@ void helper() {
                 {
                     var path = breadcrumbsPathProperty.GetValue(editor.Breadcrumbs);
                     path.Should().NotBeNull("Breadcrumbs path should not be null");
-                    
+
                     // If path is a list/array, check its length
                     if (path is System.Collections.ICollection pathCollection)
                     {
