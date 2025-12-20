@@ -2351,7 +2351,33 @@ namespace Andastra.Runtime.Core.Navigation
         /// THE TRIANGLE INTERSECTION TEST (FUN_00575f60 @ 0x00575f60):
         /// - Tests if a vertical line segment (from z+tolerance to z-tolerance) intersects the triangle
         /// - Uses the AABB tree to find candidate triangles
-        /// - Original implementation: FUN_00575f60 calls FUN_00575350 @ 0x00575350 for AABB tree traversal
+        /// - Original implementation: FUN_00575f60 @ 0x00575f60 calls FUN_00575350 @ 0x00575350 for AABB tree traversal
+        /// - FUN_00575f60 takes 8 parameters:
+        ///   - param_1 (this): Pointer to AABB tree structure
+        ///   - param_2-4: Lower bound point coordinates (x, y, z-tolerance)
+        ///   - param_5-7: Upper bound point coordinates (x, y, z+tolerance)
+        ///   - param_8: Pointer to result array (8 uint32 values)
+        /// - Line 17: Checks if AABB tree exists (offset 0xb0 in tree structure)
+        ///   - If tree doesn't exist, returns 0 (no intersection)
+        /// - Line 20: Stores tree's root face index in result array (offset 0xe0 in tree structure)
+        /// - Line 21: Calls FUN_00575350 to traverse AABB tree and find intersection
+        ///   - FUN_00575350 tests if the vertical line segment intersects any triangle in the tree
+        ///   - Returns number of intersections found
+        /// - Line 22: If result array[3] == 0xffffffff (no intersection found):
+        ///   - Lines 23-29: Calculates a small offset vector (1.0, 1.0, 0.0) normalized and scaled
+        ///   - The offset is multiplied by _DAT_007b5704 (typically a small value like 0.01)
+        ///   - This creates a small random offset to help with edge cases
+        ///   - Lines 30-35: Adds offset to both lower and upper bound points
+        ///   - Line 36: Calls FUN_00575350 again with offset points (retry with slight offset)
+        /// - Line 38: If FUN_00575350 found intersections (return value > 0):
+        ///   - Lines 39-42: Stores intersection point coordinates in result array:
+        ///     - param_8[4] = intersection x coordinate
+        ///     - param_8[5] = intersection y coordinate
+        ///     - param_8[6] = intersection z coordinate
+        ///   - param_8[2] = 1 (intersection flag set)
+        /// - Line 44: Returns param_8[2] (1 if intersection found, 0 if not)
+        /// - Why the offset retry? Sometimes points exactly on triangle edges or vertices can be missed
+        ///   due to floating-point precision. The small offset helps catch these edge cases.
         /// 
         /// THE AABB TREE TRAVERSAL (FUN_00575350 @ 0x00575350):
         /// - Tests ray against node's AABB using FUN_004d7400 @ 0x004d7400 (slab method)

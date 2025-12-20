@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.IO;
+using System.Reflection;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.BWM;
@@ -278,6 +279,100 @@ namespace HolocronToolset.Data
         }
     }
 
+    /// <summary>
+    /// Represents a connection point (hook) on a KitComponent where a door can be placed.
+    /// Hooks are extracted from the walkmesh's perimeter edges that have transitions.
+    /// </summary>
+    /// <remarks>
+    /// WHAT IS A KITCOMPONENTHOOK?
+    /// 
+    /// A KitComponentHook is a connection point on a room component (KitComponent) where a door
+    /// can be placed. When you place a door in the indoor map builder, it goes on one of these
+    /// hooks. Hooks tell the game where doors should be positioned and how they should be rotated.
+    /// 
+    /// WHERE DO HOOKS COME FROM?
+    /// 
+    /// Hooks are extracted from the walkmesh's perimeter edges. A perimeter edge is an edge of
+    /// a walkable triangle that doesn't have a neighboring triangle on one side - it forms the
+    /// outer boundary of the walkable area. When a perimeter edge has a transition value (not -1),
+    /// it means that edge is meant to connect to another room, so it becomes a hook.
+    /// 
+    /// HOW ARE HOOKS EXTRACTED?
+    /// 
+    /// The extraction process works like this:
+    /// 1. Get all walkable faces from the component's BWM
+    /// 2. For each walkable face, check its three edges
+    /// 3. For each edge, check if it's a perimeter edge (no adjacent neighbor)
+    /// 4. If it's a perimeter edge AND has a transition (not -1), create a hook
+    /// 5. Calculate the hook's position (middle of the edge)
+    /// 6. Calculate the hook's rotation (perpendicular to the edge, facing outward)
+    /// 7. Store which edge this is (0, 1, or 2) and which door should be used
+    /// 
+    /// WHAT DATA DOES IT STORE?
+    /// 
+    /// A KitComponentHook stores:
+    /// 1. Position: The 3D position where the door should be placed (middle of the edge)
+    ///    - This is calculated as: (vertex1 + vertex2) / 2
+    ///    - The position is in the component's local coordinate system (centered at origin)
+    /// 
+    /// 2. Rotation: The rotation angle (in degrees) for the door
+    ///    - This is calculated as the angle perpendicular to the edge, facing outward
+    ///    - The rotation tells which direction the door should face
+    ///    - 0 degrees = facing positive X, 90 degrees = facing positive Y, etc.
+    /// 
+    /// 3. Edge: The edge index (0, 1, or 2) of the triangle that contains this hook
+    ///    - Edge 0: V1 -> V2
+    ///    - Edge 1: V2 -> V3
+    ///    - Edge 2: V3 -> V1
+    ///    - This is used to identify which edge of the triangle the hook is on
+    /// 
+    /// 4. Door: The KitDoor object that should be placed at this hook
+    ///    - This tells what kind of door to use (width, height, UTD resources)
+    ///    - Can be null if no specific door is assigned (uses default door)
+    /// 
+    /// HOW ARE HOOKS USED?
+    /// 
+    /// When you place a door in the indoor map builder:
+    /// 1. The builder finds all hooks on the selected component
+    /// 2. It displays them as connection points (usually shown as small markers)
+    /// 3. When you click on a hook, it places a door at that hook's position and rotation
+    /// 4. The door is positioned so it connects the current room to the room specified by the transition
+    /// 
+    /// TRANSITIONS AND ROOM CONNECTIONS:
+    /// 
+    /// The transition value on a perimeter edge tells which room this edge connects to. When
+    /// the indoor map builder processes a room's walkmesh, it remaps transitions from dummy
+    /// indices (from the kit component) to actual room indices (in the built module).
+    /// 
+    /// For example:
+    /// - Component has a hook with transition = 1 (dummy index meaning "next room")
+    /// - When placed in a module, transition = 1 gets remapped to the actual room index (e.g., 5)
+    /// - The door is placed at the hook's position, connecting room 0 to room 5
+    /// 
+    /// WHY ARE HOOKS CENTERED AT THE ORIGIN?
+    /// 
+    /// KitComponents are centered at the origin (0, 0, 0) so they can be easily positioned,
+    /// rotated, and flipped. When a component is placed in a module, its hooks are transformed
+    /// along with the component (translated, rotated, flipped) to their final positions.
+    /// 
+    /// CRITICAL: HOOK EXTRACTION DEPENDS ON WALKMESH TYPE:
+    /// 
+    /// Hooks are only extracted from walkable faces. If the walkmesh type is not set to AreaModel
+    /// (WOK), or if materials are not preserved, hooks may not be extracted correctly. This is
+    /// because:
+    /// 1. Only walkable faces have perimeter edges that can become hooks
+    /// 2. Non-walkable faces (walls, obstacles) don't have hooks
+    /// 3. If materials are lost, faces become non-walkable, and hooks disappear
+    /// 
+    /// ORIGINAL IMPLEMENTATION:
+    /// 
+    /// Based on PyKotor's KitComponentHook class. Hooks are extracted from BWM perimeter edges
+    /// with transitions. The original implementation calculates hook positions and rotations
+    /// from the edge's vertex positions and the triangle's normal vector.
+    /// 
+    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit.py:50-55
+    /// Original: class KitComponentHook
+    /// </remarks>
     // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit.py:50
     // Original: class KitComponentHook:
     public class KitComponentHook
@@ -292,12 +387,93 @@ namespace HolocronToolset.Data
             Door = door;
         }
 
+        /// <summary>
+        /// The 3D position where the door should be placed (middle of the perimeter edge).
+        /// Position is in the component's local coordinate system (centered at origin).
+        /// </summary>
         public Vector3 Position { get; set; }
+        
+        /// <summary>
+        /// The rotation angle (in degrees) for the door, perpendicular to the edge, facing outward.
+        /// </summary>
         public float Rotation { get; set; }
+        
+        /// <summary>
+        /// The edge index (0, 1, or 2) of the triangle that contains this hook.
+        /// Edge 0: V1 -> V2, Edge 1: V2 -> V3, Edge 2: V3 -> V1
+        /// </summary>
         public int Edge { get; set; }
+        
+        /// <summary>
+        /// The KitDoor object that should be placed at this hook (can be null for default door).
+        /// </summary>
         public KitDoor Door { get; set; }
     }
 
+    /// <summary>
+    /// Represents a door template that can be placed at hooks in the indoor map builder.
+    /// Doors connect rooms together and allow characters to move between them.
+    /// </summary>
+    /// <remarks>
+    /// WHAT IS A KITDOOR?
+    /// 
+    /// A KitDoor is a template for a door that can be placed in an indoor module. It defines what
+    /// the door looks like (its 3D model), how big it is (width and height), and what resources
+    /// it uses (UTD files). When you place a door at a hook, the builder uses the KitDoor's
+    /// information to create the actual door in the module.
+    /// 
+    /// WHAT DATA DOES IT STORE?
+    /// 
+    /// A KitDoor stores:
+    /// 1. UtdK1: The first UTD (door template) resource for this door
+    ///    - UTD files define the door's appearance, behavior, and properties
+    ///    - This is the primary door resource
+    /// 
+    /// 2. UtdK2: The second UTD resource for this door (optional, can be null)
+    ///    - Some doors have two UTD files (one for each side)
+    ///    - If null, only UtdK1 is used
+    /// 
+    /// 3. Width: The width of the door in game units
+    ///    - This determines how wide the door opening is
+    ///    - Used to position the door correctly at the hook
+    /// 
+    /// 4. Height: The height of the door in game units
+    ///    - This determines how tall the door opening is
+    ///    - Used to position the door correctly at the hook
+    /// 
+    /// HOW ARE DOORS PLACED?
+    /// 
+    /// When you place a door at a hook:
+    /// 1. The builder gets the hook's position and rotation
+    /// 2. It creates a door using the KitDoor's UTD resources
+    /// 3. It positions the door at the hook's position
+    /// 4. It rotates the door to match the hook's rotation
+    /// 5. It sets the door's width and height from the KitDoor
+    /// 6. It connects the door to the rooms specified by the hook's transition
+    /// 
+    /// DOOR CONNECTIONS:
+    /// 
+    /// Doors connect two rooms together. The hook's transition value tells which room the door
+    /// connects to. When the door is placed:
+    /// - The door is added to both rooms' door lists
+    /// - The door's position is set to the hook's position (transformed to world coordinates)
+    /// - The door's rotation is set to the hook's rotation (with component rotation applied)
+    /// - The door's UTD resources are loaded from the KitDoor
+    /// 
+    /// DEFAULT DOORS:
+    /// 
+    /// If a hook doesn't have a specific KitDoor assigned (Door = null), the builder uses a
+    /// default door. The default door is created when loading a module kit and has standard
+    /// width and height values.
+    /// 
+    /// ORIGINAL IMPLEMENTATION:
+    /// 
+    /// Based on PyKotor's KitDoor class. Doors are defined in kit files and can be placed at
+    /// hooks to connect rooms together.
+    /// 
+    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit.py:58-63
+    /// Original: class KitDoor
+    /// </remarks>
     // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit.py:58
     // Original: class KitDoor:
     public class KitDoor
@@ -312,9 +488,24 @@ namespace HolocronToolset.Data
             Height = height;
         }
 
+        /// <summary>
+        /// The first UTD (door template) resource for this door (primary door resource).
+        /// </summary>
         public UTD UtdK1 { get; set; }
+        
+        /// <summary>
+        /// The second UTD resource for this door (optional, can be null for single-sided doors).
+        /// </summary>
         public UTD UtdK2 { get; set; }
+        
+        /// <summary>
+        /// The width of the door in game units (determines door opening width).
+        /// </summary>
         public float Width { get; set; }
+        
+        /// <summary>
+        /// The height of the door in game units (determines door opening height).
+        /// </summary>
         public float Height { get; set; }
     }
 

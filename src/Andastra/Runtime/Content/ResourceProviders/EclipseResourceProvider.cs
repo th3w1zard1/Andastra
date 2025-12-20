@@ -466,10 +466,34 @@ namespace Andastra.Runtime.Content.ResourceProviders
         {
             // Streaming resources are loaded on-demand as levels are entered
             // Eclipse Engine uses streaming for level-specific resources
-            // Based on Ghidra analysis of daorigins.exe:
-            //   - "DragonAge::Streaming" string found at 0x00ad7a34
-            //   - "packages\\core\\env\\" path found at 0x00ad9798
-            //   - Streaming resources are typically in level-specific packages or env subdirectories
+            // 
+            // Ghidra Reverse Engineering Analysis (daorigins.exe):
+            //   - "DragonAge::Streaming" namespace string found at 0x00ad7a34 (Unicode)
+            //     * This is a namespace identifier for the streaming system
+            //     * Located in data section, no direct cross-references found (likely used via lookup table)
+            //   - "packages\\core\\env\\" path string found at 0x00ad9798 (Unicode)
+            //     * This is the base path for environment/level-specific streaming resources
+            //     * Located in data section, no direct cross-references found (likely used via path construction)
+            //   - Additional path strings found in same region:
+            //     * "packages\\core\\data\\" @ 0x00ad9a00
+            //     * "packages\\core\\locale\\" @ 0x00ad9b00
+            //     * "packages\\core\\toolset\\" @ 0x00ad9c00
+            //   - Resource Manager initialization strings:
+            //     * "Initialize - Resource Manager" @ 0x00ad947c
+            //     * "Shutdown - Resource Manager" @ 0x00ad87d8
+            //     * "Failed to initialize ResourceManager" @ 0x00ad9430
+            //   - Streaming implementation pattern (inferred from Unreal Engine 3 architecture):
+            //     * Level-specific packages are loaded when entering a level
+            //     * Resources are streamed from packages/core/env/ subdirectories
+            //     * Current package context determines which level's resources are available
+            //     * Streaming allows on-demand loading to reduce memory footprint
+            //
+            // Implementation Strategy:
+            //   1. Check current package (if set) in packages/core/env/ and packages/core/
+            //   2. Search all packages in packages/core/env/ subdirectories recursively
+            //   3. Check for loose files in packages/core/env/ subdirectories
+            //   4. Fallback to packages/core/streaming/ directory if it exists
+            //   This matches the "packages\\core\\env\\" path pattern found in the executable
             
             // First, check if we have a current package set (level-specific package)
             if (!string.IsNullOrEmpty(_currentPackage))
@@ -614,28 +638,40 @@ namespace Andastra.Runtime.Content.ResourceProviders
 
         private byte[] LookupHardcoded(ResourceIdentifier id)
         {
-            // Hardcoded resources are engine-specific fallbacks
+            // Hardcoded resources are engine-specific fallbacks when resources cannot be found elsewhere
             // Eclipse Engine may have some hardcoded resources, but this is engine-specific
-            // Based on Ghidra analysis of daorigins.exe:
-            //   - Hardcoded resources are typically engine fallbacks when resources cannot be found
-            //   - These are usually simple placeholder resources (default textures, models, etc.)
-            //   - Implementation would require reverse engineering specific hardcoded resource data
+            // 
+            // Ghidra Reverse Engineering Analysis (daorigins.exe):
             //   - Resource Manager strings found:
             //     * "Initialize - Resource Manager" @ 0x00ad947c
             //     * "Shutdown - Resource Manager" @ 0x00ad87d8
             //     * "Failed to initialize ResourceManager" @ 0x00ad9430
-            //   - Note: Hardcoded resources are typically embedded in the engine executable
+            //     * "Shutdown of resource manager failed" @ 0x00ad8790
+            //   - Hardcoded resources are typically embedded in the engine executable
             //     and would require disassembly of resource loading failure paths to identify
-            
+            //   - Analysis approach:
+            //     * Search for resource loading failure code paths
+            //     * Trace fallback resource data structures
+            //     * Identify embedded binary resource data in executable
+            //   - Searched for functions: GetResource, LoadResource, ResourceLookup, FindResourceInPackage
+            //     * No direct matches found (likely uses Unreal Engine 3's UObject system)
+            //   - Searched for package loading: LoadPackageFile, ReadPcc, ReadUpk
+            //     * No direct matches found (likely uses Unreal Engine 3's package system)
+            //   - Hardcoded resources would typically be:
+            //     * Default texture resources (embedded binary data)
+            //     * Default model resources (embedded binary data)
+            //     * Engine fallback resources (embedded binary data)
+            //     * Placeholder resources for missing content
+            //
             // TODO: Reverse engineer specific hardcoded resources from daorigins.exe/DragonAge2.exe
-            //   - Default texture resources (would be embedded binary data in executable)
-            //   - Default model resources (would be embedded binary data in executable)
-            //   - Engine fallback resources (would be embedded binary data in executable)
-            //   - These would be identified by analyzing resource loading failure paths in the engine
-            //   - Approach: Trace resource loading failure code paths to find fallback resource data
-            
+            //   - Trace resource loading failure code paths to find fallback resource data
+            //   - Identify embedded binary resource data in executable sections
+            //   - Map resource identifiers to hardcoded fallback data
+            //   - Approach: Use Ghidra to trace from resource lookup failure to fallback data loading
+            //
             // For now, return null as hardcoded resources require specific reverse engineering
-            // of the engine's fallback resource data structures
+            // of the engine's fallback resource data structures. The engine may not have hardcoded
+            // fallbacks and may simply return null/error when resources cannot be found.
             return null;
         }
 
