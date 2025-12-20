@@ -2522,14 +2522,94 @@ void helper() {
             throw new NotImplementedException("TestNssEditorPanelToggleActions: Panel toggle actions test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_nss_editor_full_workflow (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1103-1132)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1103-1132
         // Original: def test_nss_editor_full_workflow(qtbot, installation: HTInstallation): Test full workflow
         [Fact]
         public void TestNssEditorFullWorkflow()
         {
-            // TODO: STUB - Implement full workflow test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1103-1132
-            throw new NotImplementedException("TestNssEditorFullWorkflow: Full workflow test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            // Create editor and initialize
+            var editor = new NSSEditor(null, installation);
+            editor.New();
+
+            // Get the code editor using reflection (matching pattern used in other tests)
+            var codeEditField = typeof(NSSEditor).GetField("_codeEdit", BindingFlags.NonPublic | BindingFlags.Instance);
+            codeEditField.Should().NotBeNull("_codeEdit field should exist");
+            var codeEdit = codeEditField.GetValue(editor) as HolocronToolset.Widgets.CodeEditor;
+            codeEdit.Should().NotBeNull("Code editor should be initialized");
+
+            // Write script (matching Python test)
+            string script = @"void main() {
+    int x = 5;
+    SendMessageToPC(GetFirstPC(), ""Test"");
+}";
+            codeEdit.Text = script;
+
+            // Add bookmark at line 2 (1-indexed in Python, 0-indexed in C#)
+            // Position cursor at line 1 (0-indexed) which corresponds to line 2 in Python
+            var getPositionFromLineMethod = typeof(HolocronToolset.Widgets.CodeEditor)
+                .GetMethod("GetPositionFromLine", BindingFlags.NonPublic | BindingFlags.Instance);
+            var position = (int?)getPositionFromLineMethod?.Invoke(codeEdit, new object[] { 1 });
+            position.Should().NotBeNull("Should get valid position for line 1");
+
+            codeEdit.SelectionStart = position.Value;
+            codeEdit.SelectionEnd = position.Value;
+
+            // Add bookmark
+            editor.AddBookmark();
+
+            // Verify bookmark was added (matching Python: assert editor.ui.bookmarkTree.topLevelItemCount() >= 1)
+            editor.BookmarkTree.Should().NotBeNull("Bookmark tree should exist");
+            var bookmarkItems = editor.BookmarkTree.ItemsSource as IEnumerable<object> ??
+                              (editor.BookmarkTree.Items as IEnumerable<object> ?? new List<object>());
+            bookmarkItems.Should().NotBeNull("Bookmark items should not be null");
+            bookmarkItems.Count().Should().BeGreaterThanOrEqualTo(1, "Should have at least one bookmark");
+
+            // Build script (matching Python: data, _ = editor.build())
+            var (data, _) = editor.Build();
+            data.Should().NotBeNull("Build data should not be null");
+            data.Length.Should().BeGreaterThan(0, "Build data should not be empty");
+
+            // Verify script content is in build data (matching Python assertion)
+            // The script might be encoded as UTF-8 bytes or stored as string in the data
+            string dataAsString = "";
+            try
+            {
+                dataAsString = System.Text.Encoding.UTF8.GetString(data);
+            }
+            catch
+            {
+                // If UTF-8 decoding fails, data might be binary
+            }
+
+            bool containsScript = dataAsString.Contains(script) ||
+                                data.Contains(System.Text.Encoding.UTF8.GetBytes(script));
+            containsScript.Should().BeTrue("Build data should contain the original script content");
         }
 
         // TODO: STUB - Implement test_nss_editor_multiple_modifications_roundtrip (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1134-1161)
