@@ -563,12 +563,22 @@ namespace Andastra.Runtime.Content.Loaders
     {
         public float XOrientation { get; set; }
         public float YOrientation { get; set; }
+        [Obsolete("Use HasMapNote and MapNoteText instead")]
         public bool MapNote { get; set; }
         public bool MapNoteEnabled { get; set; }
+        public bool HasMapNote { get; set; }
+        public string MapNoteText { get; set; }
 
         public float Facing
         {
             get { return (float)Math.Atan2(YOrientation, XOrientation); }
+        }
+
+        public WaypointInstance()
+        {
+            HasMapNote = false;
+            MapNoteText = string.Empty;
+            MapNoteEnabled = false;
         }
     }
 

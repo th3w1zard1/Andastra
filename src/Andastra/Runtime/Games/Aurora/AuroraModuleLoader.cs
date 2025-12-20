@@ -17,6 +17,7 @@ using Andastra.Parsing.Resource;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.GFF.IO;
 using Andastra.Parsing.Formats.ERF;
+using Andastra.Parsing.Common;
 using Andastra.Runtime.Games.Odyssey.Components;
 
 namespace Andastra.Runtime.Games.Aurora
@@ -624,11 +625,29 @@ namespace Andastra.Runtime.Games.Aurora
         /// <returns>The entry area resource reference, or null if not found.</returns>
         /// <remarks>
         /// Entry Area (Aurora):
-        /// - Specified in Module.ifo structure
+        /// - Specified in Module.ifo structure as Mod_Entry_Area field (CResRef type)
         /// - First area loaded when module starts
         /// - Player spawns in entry area
         /// 
+        /// Module.ifo Field (Aurora):
+        /// - Mod_Entry_Area: CResRef (ResRef) - Starting area ResRef where player spawns
+        /// - Field type: ResRef (16-character resource reference name)
+        /// - Default value: Blank ResRef (empty string) if field is missing
+        /// 
         /// Based on nwmain.exe: Entry area extraction from Module.ifo.
+        /// - nwmain.exe: CNWSModule::SaveModule @ 0x1404861e3 line 59 writes Mod_Entry_Area using CResGFF::WriteFieldCResRef
+        /// - nwmain.exe: String reference "Mod_Entry_Area" @ 0x140def8c0, referenced by function @ 0x1404863ce
+        /// - Original implementation: CResGFF::WriteFieldCResRef(param_1, param_2, *(CResRef **)(param_3 + 0x108), "Mod_Entry_Area")
+        /// - Reading implementation: CResGFF::ReadFieldCResRef or similar function reads Mod_Entry_Area from GFF structure
+        /// 
+        /// Official BioWare Documentation:
+        /// - vendor/PyKotor/wiki/Bioware-Aurora-IFO.md: Mod_Entry_Area field (CResRef type, page 97-99)
+        /// - vendor/PyKotor/wiki/GFF-IFO.md: Mod_Entry_Area field (ResRef type, starting area ResRef)
+        /// - vendor/xoreos/src/aurora/ifofile.cpp:203 - _entryArea = ifoTop.getString("Mod_Entry_Area")
+        /// 
+        /// Reference Implementations:
+        /// - src/Andastra/Parsing/Resource/Formats/GFF/Generics/IFOHelpers.cs:173 - root.Acquire&lt;ResRef&gt;("Mod_Entry_Area", ResRef.FromBlank())
+        /// - vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/generics/ifo.py:137 - root.acquire("Mod_Entry_Area", ResRef.from_blank())
         /// </remarks>
         private string GetEntryAreaResRef(GFFStruct moduleInfo)
         {
@@ -637,10 +656,25 @@ namespace Andastra.Runtime.Games.Aurora
                 return null;
             }
 
-            // TODO: Extract entry area from Module.ifo structure
-            // Module.ifo structure needs Ghidra analysis to determine exact field names
-            // For now, return null (needs implementation)
-            return null;
+            // Extract Mod_Entry_Area field from Module.ifo GFF structure
+            // Based on nwmain.exe: Mod_Entry_Area is a CResRef (ResRef) field
+            // Based on nwmain.exe: CNWSModule::SaveModule @ 0x1404861e3 line 59 writes Mod_Entry_Area as CResRef
+            // Based on vendor/xoreos/src/aurora/ifofile.cpp:203 - reads Mod_Entry_Area as string (ResRef converted to string)
+            // Based on src/Andastra/Parsing/Resource/Formats/GFF/Generics/IFOHelpers.cs:173 - reads Mod_Entry_Area as ResRef
+            ResRef entryAreaResRef = moduleInfo.GetResRef("Mod_Entry_Area");
+
+            // Check if ResRef is blank (empty or null)
+            // Based on nwmain.exe: Blank ResRef means no entry area specified (module load will fail)
+            // Based on vendor/xoreos/src/aurora/ifofile.cpp:203 - empty string means no entry area
+            if (entryAreaResRef == null || entryAreaResRef.IsBlank())
+            {
+                return null;
+            }
+
+            // Convert ResRef to string and return
+            // Based on nwmain.exe: ResRef is converted to string for area resource lookup
+            // Based on vendor/xoreos/src/aurora/ifofile.cpp:203 - ResRef stored as string
+            return entryAreaResRef.ToString();
         }
 
         /// <summary>
@@ -1033,6 +1067,14 @@ namespace Andastra.Runtime.Games.Aurora
         /// <summary>
         /// Parses a waypoint instance from GFF struct.
         /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: CNWSWaypoint::LoadWaypoint @ 0x140509f80
+        /// - Line 67: Reads HasMapNote as BYTE (boolean)
+        /// - Lines 68-82: If HasMapNote is true:
+        ///   - Line 69: Reads MapNoteEnabled as BYTE (boolean)
+        ///   - Lines 71-76: Reads MapNote as CExoLocString (LocalizedString)
+        ///   - Lines 79-81: Sets HasMapNote (offset 0x308), MapNoteEnabled (offset 0x30c), MapNote (offset 0x310)
+        /// </remarks>
         private WaypointInstance ParseWaypointInstance(GFFStruct s)
         {
             var instance = new WaypointInstance();
@@ -1043,8 +1085,39 @@ namespace Andastra.Runtime.Games.Aurora
             instance.ZPosition = GetFloat(s, "ZPosition");
             instance.XOrientation = GetFloat(s, "XOrientation");
             instance.YOrientation = GetFloat(s, "YOrientation");
-            instance.MapNote = GetByte(s, "MapNote") != 0;
-            instance.MapNoteEnabled = GetByte(s, "MapNoteEnabled") != 0;
+            
+            // Parse HasMapNote, MapNoteEnabled, and MapNote according to nwmain.exe behavior
+            // Based on nwmain.exe: CNWSWaypoint::LoadWaypoint @ 0x140509f80 line 67
+            instance.HasMapNote = GetByte(s, "HasMapNote") != 0;
+            
+            // Based on nwmain.exe: Only read MapNote and MapNoteEnabled if HasMapNote is true
+            if (instance.HasMapNote)
+            {
+                // Based on nwmain.exe: CNWSWaypoint::LoadWaypoint @ 0x140509f80 line 69
+                instance.MapNoteEnabled = GetByte(s, "MapNoteEnabled") != 0;
+                
+                // Based on nwmain.exe: CNWSWaypoint::LoadWaypoint @ 0x140509f80 lines 71-76
+                // MapNote is a CExoLocString (LocalizedString), not a byte
+                LocalizedString mapNoteLocString = s.GetLocString("MapNote");
+                if (mapNoteLocString != null && !mapNoteLocString.IsInvalid)
+                {
+                    instance.MapNoteText = mapNoteLocString.ToString();
+                }
+                else
+                {
+                    instance.MapNoteText = string.Empty;
+                }
+            }
+            else
+            {
+                // If HasMapNote is false, MapNoteEnabled should be false and MapNoteText should be empty
+                instance.MapNoteEnabled = false;
+                instance.MapNoteText = string.Empty;
+            }
+            
+            // Legacy property for backwards compatibility
+            instance.MapNote = instance.HasMapNote;
+            
             return instance;
         }
 
@@ -1196,11 +1269,25 @@ namespace Andastra.Runtime.Games.Aurora
             }
 
             // Set waypoint-specific properties
+            // Based on nwmain.exe: CNWSWaypoint::LoadWaypoint @ 0x140509f80
+            // Sets HasMapNote (offset 0x308), MapNoteEnabled (offset 0x30c), MapNote (offset 0x310)
             var waypointComponent = entity.GetComponent<Core.Interfaces.Components.IWaypointComponent>();
             if (waypointComponent != null)
             {
-                // Map note properties are handled by waypoint component
-                // TODO: Set MapNote and MapNoteEnabled when waypoint component supports them
+                // Set map note properties from GIT waypoint instance
+                // Based on nwmain.exe: CNWSWaypoint::LoadWaypoint @ 0x140509f80 lines 79-81
+                // GIT MapNote, MapNoteEnabled, HasMapNote override template values (if present)
+                waypointComponent.HasMapNote = waypoint.HasMapNote;
+                if (waypoint.HasMapNote && !string.IsNullOrEmpty(waypoint.MapNoteText))
+                {
+                    waypointComponent.MapNote = waypoint.MapNoteText;
+                    waypointComponent.MapNoteEnabled = waypoint.MapNoteEnabled;
+                }
+                else
+                {
+                    waypointComponent.MapNote = string.Empty;
+                    waypointComponent.MapNoteEnabled = false;
+                }
             }
 
             // Add entity to area
