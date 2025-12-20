@@ -72,6 +72,86 @@ namespace HolocronToolset.Data
         public byte[] Mdl { get; set; }
         public byte[] Mdx { get; set; }
         public List<KitComponentHook> Hooks { get; set; }
+
+        // Matching PyKotor implementation: deepcopy(component) behavior
+        // Creates a deep copy of the component so hooks can be edited independently
+        // This matches the behavior in indoor_builder.py:338 and indoor_builder.py:1721
+        public KitComponent DeepCopy()
+        {
+            // Deep copy the BWM (walkmesh) - each component needs its own instance
+            BWM bwmCopy = DeepCopyBwm(Bwm);
+
+            // Deep copy the byte arrays (MDL and MDX model data)
+            byte[] mdlCopy = null;
+            if (Mdl != null)
+            {
+                mdlCopy = new byte[Mdl.Length];
+                System.Array.Copy(Mdl, mdlCopy, Mdl.Length);
+            }
+
+            byte[] mdxCopy = null;
+            if (Mdx != null)
+            {
+                mdxCopy = new byte[Mdx.Length];
+                System.Array.Copy(Mdx, mdxCopy, Mdx.Length);
+            }
+
+            // Create new component with copied data
+            // Kit reference stays the same (component belongs to the same kit)
+            // Image reference stays the same (images are typically immutable or shared)
+            // Name is a string (immutable in C#)
+            var componentCopy = new KitComponent(Kit, Name, Image, bwmCopy, mdlCopy, mdxCopy);
+
+            // Deep copy all hooks - each hook needs to be a new instance
+            foreach (var hook in Hooks)
+            {
+                if (hook != null)
+                {
+                    // Create new hook with copied values
+                    // Position is a struct (Vector3), so it's copied by value
+                    // Door reference stays the same (doors are shared within a kit)
+                    var hookCopy = new KitComponentHook(
+                        new Vector3(hook.Position.X, hook.Position.Y, hook.Position.Z),
+                        hook.Rotation,
+                        hook.Edge,
+                        hook.Door
+                    );
+                    componentCopy.Hooks.Add(hookCopy);
+                }
+            }
+
+            return componentCopy;
+        }
+
+        // Helper method to deep copy a BWM (matching _DeepCopyBwm pattern from ModuleKit)
+        private BWM DeepCopyBwm(BWM original)
+        {
+            if (original == null)
+            {
+                return null;
+            }
+
+            var copy = new BWM();
+            copy.WalkmeshType = original.WalkmeshType;
+            copy.Position = original.Position;
+            copy.RelativeHook1 = original.RelativeHook1;
+            copy.RelativeHook2 = original.RelativeHook2;
+            copy.AbsoluteHook1 = original.AbsoluteHook1;
+            copy.AbsoluteHook2 = original.AbsoluteHook2;
+
+            // Deep copy all faces
+            foreach (var face in original.Faces)
+            {
+                var newFace = new BWMFace(face.V1, face.V2, face.V3);
+                newFace.Material = face.Material;
+                newFace.Trans1 = face.Trans1;
+                newFace.Trans2 = face.Trans2;
+                newFace.Trans3 = face.Trans3;
+                copy.Faces.Add(newFace);
+            }
+
+            return copy;
+        }
     }
 
     // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit.py:50

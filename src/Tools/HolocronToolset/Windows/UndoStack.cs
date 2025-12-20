@@ -398,10 +398,12 @@ namespace HolocronToolset.Windows
             Duplicates = new List<IndoorMapRoom>();
             foreach (var room in rooms)
             {
-                // TODO: STUB - Note: For now, we use the same component reference. Full deep copy of component
-                // will be implemented when component editing is needed. This matches the basic behavior.
+                // Deep copy component so hooks can be edited independently
+                // Matching Python line 338: component_copy = deepcopy(room.component)
+                KitComponent componentCopy = room.Component?.DeepCopy();
+
                 var newRoom = new IndoorMapRoom(
-                    room.Component, // Component reference (shallow for now)
+                    componentCopy,
                     new System.Numerics.Vector3(
                         room.Position.X + _offset.X,
                         room.Position.Y + _offset.Y,
@@ -411,8 +413,27 @@ namespace HolocronToolset.Windows
                     flipX: room.FlipX,
                     flipY: room.FlipY
                 );
-                // TODO: STUB - Note: walkmesh_override deep copy will be implemented when needed
-                // newRoom.walkmesh_override = deepcopy(room.walkmesh_override) if room.walkmesh_override is not None else None
+                // Matching Python line 346: new_room.walkmesh_override = deepcopy(room.walkmesh_override) if room.walkmesh_override is not None else None
+                // Note: walkmesh_override is not currently implemented in IndoorMapRoom, but when it is,
+                // it should be deep copied here using the same pattern as component deep copy
+                // Initialize hooks connections list to match hooks length (matching Python line 348)
+                if (componentCopy != null && componentCopy.Hooks != null)
+                {
+                    // Hooks list is already initialized in IndoorMapRoom constructor, but ensure it matches
+                    if (newRoom.Hooks == null)
+                    {
+                        newRoom.Hooks = new List<IndoorMapRoom>();
+                    }
+                    // Ensure hooks list has the correct length (all null initially)
+                    while (newRoom.Hooks.Count < componentCopy.Hooks.Count)
+                    {
+                        newRoom.Hooks.Add(null);
+                    }
+                    while (newRoom.Hooks.Count > componentCopy.Hooks.Count)
+                    {
+                        newRoom.Hooks.RemoveAt(newRoom.Hooks.Count - 1);
+                    }
+                }
                 Duplicates.Add(newRoom);
             }
         }

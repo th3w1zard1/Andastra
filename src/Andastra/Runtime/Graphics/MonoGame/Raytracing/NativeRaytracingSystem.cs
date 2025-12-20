@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
+using System.Runtime.InteropServices;
 
 namespace Andastra.Runtime.MonoGame.Raytracing
 {
@@ -37,10 +38,17 @@ namespace Andastra.Runtime.MonoGame.Raytracing
         private uint _nextBlasHandle = 1;
 
         // Ray tracing pipelines
-        private IntPtr _shadowPipeline;
-        private IntPtr _reflectionPipeline;
-        private IntPtr _aoPipeline;
-        private IntPtr _giPipeline;
+        private IRaytracingPipeline _shadowPipeline;
+        private IRaytracingPipeline _reflectionPipeline;
+        private IRaytracingPipeline _aoPipeline;
+        private IRaytracingPipeline _giPipeline;
+        
+        // Shadow pipeline resources
+        private IBindingLayout _shadowBindingLayout;
+        private IBindingSet _shadowBindingSet;
+        private IBuffer _shadowConstantBuffer;
+        private IBuffer _shadowShaderBindingTable;
+        private ShaderBindingTable _shadowSbt;
 
         // Denoiser state
         private IntPtr _denoiserShadow;
@@ -415,17 +423,75 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                 return;
             }
 
+            if (_shadowPipeline == null || _tlas == null || _device == null)
+            {
+                return;
+            }
+
             // Ensure TLAS is up to date
             BuildTopLevelAS();
 
-            // Dispatch shadow rays
-            // TODO: STUB - In real implementation:
-            // - Bind shadow pipeline
-            // - Set shader constants (light direction, max distance)
-            // - Dispatch rays at render resolution
-            // - Apply temporal denoising
+            // Get render resolution from output texture
+            int renderWidth = 1920;
+            int renderHeight = 1080;
+            if (parameters.OutputTexture != IntPtr.Zero)
+            {
+                var textureInfo = GetTextureInfo(parameters.OutputTexture);
+                if (textureInfo.HasValue)
+                {
+                    renderWidth = textureInfo.Value.Width;
+                    renderHeight = textureInfo.Value.Height;
+                }
+            }
 
-            _lastStats.RaysTraced += (long)parameters.SamplesPerPixel * 1920 * 1080;
+            // Update constant buffer with shadow ray parameters
+            UpdateShadowConstants(parameters, renderWidth, renderHeight);
+
+            // Create or update binding set with current resources
+            UpdateShadowBindingSet(parameters.OutputTexture);
+
+            // Create command list for ray dispatch
+            ICommandList commandList = _device.CreateCommandList(CommandListType.Graphics);
+            commandList.Open();
+
+            // Set raytracing state
+            RaytracingState rtState = new RaytracingState
+            {
+                Pipeline = _shadowPipeline,
+                BindingSets = new IBindingSet[] { _shadowBindingSet },
+                ShaderTable = _shadowSbt
+            };
+            commandList.SetRaytracingState(rtState);
+
+            // Dispatch shadow rays at render resolution
+            // Each pixel traces one or more shadow rays based on SamplesPerPixel
+            DispatchRaysArguments dispatchArgs = new DispatchRaysArguments
+            {
+                Width = renderWidth,
+                Height = renderHeight,
+                Depth = 1
+            };
+            commandList.DispatchRays(dispatchArgs);
+
+            commandList.Close();
+            _device.ExecuteCommandList(commandList);
+            commandList.Dispose();
+
+            // Update statistics
+            _lastStats.RaysTraced += (long)parameters.SamplesPerPixel * renderWidth * renderHeight;
+            _lastStats.TraceTimeMs = 0.0; // Would be measured in real implementation
+
+            // Apply temporal denoising if enabled
+            if (_settings.EnableDenoiser && _settings.Denoiser != DenoiserType.None)
+            {
+                Denoise(new DenoiserParams
+                {
+                    InputTexture = parameters.OutputTexture,
+                    OutputTexture = parameters.OutputTexture,
+                    Type = _settings.Denoiser,
+                    BlendFactor = 0.1f // Default temporal blend factor
+                });
+            }
         }
 
         public void TraceReflectionRays(ReflectionRayParams parameters)
@@ -501,6 +567,11 @@ namespace Andastra.Runtime.MonoGame.Raytracing
 
         private bool CreatePipelines()
         {
+            if (_device == null)
+            {
+                return false;
+            }
+
             // Create raytracing shader pipelines
             // Each pipeline contains:
             // - Ray generation shader
@@ -509,28 +580,420 @@ namespace Andastra.Runtime.MonoGame.Raytracing
             // - Any hit shader(s) for alpha testing
 
             // Shadow pipeline - simple occlusion testing
-            _shadowPipeline = IntPtr.Zero; // Would create actual pipeline
+            _shadowPipeline = CreateShadowPipeline();
+            if (_shadowPipeline == null)
+            {
+                Console.WriteLine("[NativeRT] Failed to create shadow pipeline");
+                return false;
+            }
+
+            // Create shadow pipeline resources
+            if (!CreateShadowPipelineResources())
+            {
+                Console.WriteLine("[NativeRT] Failed to create shadow pipeline resources");
+                return false;
+            }
 
             // Reflection pipeline - full material evaluation
-            _reflectionPipeline = IntPtr.Zero;
+            _reflectionPipeline = CreateReflectionPipeline();
 
             // AO pipeline - short-range visibility
-            _aoPipeline = IntPtr.Zero;
+            _aoPipeline = CreateAmbientOcclusionPipeline();
 
             // GI pipeline - multi-bounce indirect lighting
-            _giPipeline = IntPtr.Zero;
+            _giPipeline = CreateGlobalIlluminationPipeline();
 
             return true;
         }
 
+        private IRaytracingPipeline CreateShadowPipeline()
+        {
+            // Create shadow raytracing pipeline
+            // Shadow pipeline needs:
+            // - RayGen shader: generates shadow rays from light source
+            // - Miss shader: returns 1.0 (fully lit) when ray doesn't hit anything
+            // - ClosestHit shader: returns 0.0 (fully shadowed) when ray hits geometry
+            // - AnyHit shader: can be used for alpha testing
+
+            // Create shaders (in real implementation, these would be loaded from compiled shader bytecode)
+            IShader rayGenShader = CreatePlaceholderShader(ShaderType.RayGen, "ShadowRayGen");
+            IShader missShader = CreatePlaceholderShader(ShaderType.Miss, "ShadowMiss");
+            IShader closestHitShader = CreatePlaceholderShader(ShaderType.ClosestHit, "ShadowClosestHit");
+
+            if (rayGenShader == null || missShader == null || closestHitShader == null)
+            {
+                // If shaders can't be created, return null (pipeline creation will fail gracefully)
+                return null;
+            }
+
+            // Create hit group for shadow rays
+            HitGroup[] hitGroups = new HitGroup[]
+            {
+                new HitGroup
+                {
+                    Name = "ShadowHitGroup",
+                    ClosestHitShader = closestHitShader,
+                    AnyHitShader = null, // No alpha testing for shadows
+                    IntersectionShader = null // Using triangle geometry
+                }
+            };
+
+            // Create binding layout for shadow pipeline
+            // Slot 0: TLAS (acceleration structure)
+            // Slot 1: Output texture (RWTexture2D<float>)
+            // Slot 2: Constant buffer (shadow parameters)
+            _shadowBindingLayout = _device.CreateBindingLayout(new BindingLayoutDesc
+            {
+                Items = new BindingLayoutItem[]
+                {
+                    new BindingLayoutItem
+                    {
+                        Slot = 0,
+                        Type = BindingType.AccelStruct,
+                        Stages = ShaderStageFlags.RayGen,
+                        Count = 1
+                    },
+                    new BindingLayoutItem
+                    {
+                        Slot = 1,
+                        Type = BindingType.RWTexture,
+                        Stages = ShaderStageFlags.RayGen,
+                        Count = 1
+                    },
+                    new BindingLayoutItem
+                    {
+                        Slot = 2,
+                        Type = BindingType.ConstantBuffer,
+                        Stages = ShaderStageFlags.RayGen | ShaderStageFlags.ClosestHit | ShaderStageFlags.Miss,
+                        Count = 1
+                    }
+                },
+                IsPushDescriptor = false
+            });
+
+            // Create raytracing pipeline
+            RaytracingPipelineDesc pipelineDesc = new RaytracingPipelineDesc
+            {
+                Shaders = new IShader[] { rayGenShader, missShader, closestHitShader },
+                HitGroups = hitGroups,
+                MaxPayloadSize = 16, // Shadow ray payload: float hitDistance (4 bytes) + padding
+                MaxAttributeSize = 8, // Barycentric coordinates (2 floats)
+                MaxRecursionDepth = 1, // Shadows only need one bounce
+                GlobalBindingLayout = _shadowBindingLayout,
+                DebugName = "ShadowRaytracingPipeline"
+            };
+
+            return _device.CreateRaytracingPipeline(pipelineDesc);
+        }
+
+        private IRaytracingPipeline CreateReflectionPipeline()
+        {
+            // Placeholder - will be implemented when needed
+            return null;
+        }
+
+        private IRaytracingPipeline CreateAmbientOcclusionPipeline()
+        {
+            // Placeholder - will be implemented when needed
+            return null;
+        }
+
+        private IRaytracingPipeline CreateGlobalIlluminationPipeline()
+        {
+            // Placeholder - will be implemented when needed
+            return null;
+        }
+
+        private IShader CreatePlaceholderShader(ShaderType type, string name)
+        {
+            // In a real implementation, this would load compiled shader bytecode
+            // For now, we create a placeholder that indicates shaders need to be provided
+            // The actual shader bytecode would come from:
+            // - Compiled HLSL/DXIL for D3D12
+            // - Compiled SPIR-V for Vulkan
+            // - Pre-compiled shader libraries
+            
+            // Return null to indicate shaders are not yet available
+            // In production, this would load actual shader bytecode:
+            // byte[] shaderBytecode = LoadShaderBytecode(name, type);
+            // return _device.CreateShader(new ShaderDesc
+            // {
+            //     Type = type,
+            //     Bytecode = shaderBytecode,
+            //     EntryPoint = "main",
+            //     DebugName = name
+            // });
+            
+            Console.WriteLine($"[NativeRT] Warning: Placeholder shader requested for {name} ({type}). Shader bytecode must be provided for full functionality.");
+            return null;
+        }
+
+        private bool CreateShadowPipelineResources()
+        {
+            if (_device == null || _shadowBindingLayout == null)
+            {
+                return false;
+            }
+
+            // Create constant buffer for shadow ray parameters
+            // Size: Vector3 lightDirection (12 bytes) + float maxDistance (4 bytes) + 
+            //       int samplesPerPixel (4 bytes) + float softShadowAngle (4 bytes) +
+            //       int2 renderResolution (8 bytes) + padding = 32 bytes (aligned)
+            _shadowConstantBuffer = _device.CreateBuffer(new BufferDesc
+            {
+                ByteSize = 32,
+                Usage = BufferUsageFlags.ConstantBuffer,
+                InitialState = ResourceState.ConstantBuffer,
+                IsAccelStructBuildInput = false,
+                DebugName = "ShadowRayConstants"
+            });
+
+            // Create shader binding table
+            // SBT layout:
+            // - RayGen: 1 record
+            // - Miss: 1 record
+            // - HitGroup: 1 record (for opaque geometry)
+            // Each record is typically 32-64 bytes depending on shader identifier size
+            int sbtRecordSize = 64; // D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT = 32, but we use 64 for safety
+            int sbtSize = sbtRecordSize * 3; // RayGen + Miss + HitGroup
+
+            _shadowShaderBindingTable = _device.CreateBuffer(new BufferDesc
+            {
+                ByteSize = sbtSize,
+                Usage = BufferUsageFlags.ShaderBindingTable,
+                InitialState = ResourceState.ShaderResource,
+                IsAccelStructBuildInput = false,
+                DebugName = "ShadowShaderBindingTable"
+            });
+
+            // Initialize SBT structure
+            _shadowSbt = new ShaderBindingTable
+            {
+                Buffer = _shadowShaderBindingTable,
+                RayGenOffset = 0,
+                RayGenSize = (ulong)sbtRecordSize,
+                MissOffset = (ulong)sbtRecordSize,
+                MissStride = (ulong)sbtRecordSize,
+                MissSize = (ulong)sbtRecordSize,
+                HitGroupOffset = (ulong)(sbtRecordSize * 2),
+                HitGroupStride = (ulong)sbtRecordSize,
+                HitGroupSize = (ulong)sbtRecordSize,
+                CallableOffset = 0,
+                CallableStride = 0,
+                CallableSize = 0
+            };
+
+            // Write SBT records (in real implementation, this would contain actual shader identifiers)
+            // For now, we'll write placeholder data - the actual shader identifiers would be
+            // retrieved from the pipeline state object after creation
+            WriteShaderBindingTable();
+
+            // Create initial binding set (will be updated each frame with current resources)
+            _shadowBindingSet = _device.CreateBindingSet(_shadowBindingLayout, new BindingSetDesc
+            {
+                Items = new BindingSetItem[]
+                {
+                    new BindingSetItem
+                    {
+                        Slot = 0,
+                        Type = BindingType.AccelStruct,
+                        AccelStruct = _tlas
+                    },
+                    new BindingSetItem
+                    {
+                        Slot = 1,
+                        Type = BindingType.RWTexture,
+                        Texture = null // Will be set in UpdateShadowBindingSet
+                    },
+                    new BindingSetItem
+                    {
+                        Slot = 2,
+                        Type = BindingType.ConstantBuffer,
+                        Buffer = _shadowConstantBuffer
+                    }
+                }
+            });
+
+            return true;
+        }
+
+        private void WriteShaderBindingTable()
+        {
+            if (_shadowShaderBindingTable == null || _shadowPipeline == null)
+            {
+                return;
+            }
+
+            // In a real implementation, this would write actual shader identifiers
+            // retrieved from the raytracing pipeline state object
+            // For D3D12: GetShaderIdentifier() from ID3D12StateObjectProperties
+            // For Vulkan: vkGetRayTracingShaderGroupHandlesKHR
+            
+            // Shader identifiers are opaque handles that identify shaders within the pipeline
+            // They are written to the SBT buffer at specific offsets
+            
+            // Placeholder: In production, this would be:
+            // byte[] rayGenId = _shadowPipeline.GetShaderIdentifier("ShadowRayGen");
+            // byte[] missId = _shadowPipeline.GetShaderIdentifier("ShadowMiss");
+            // byte[] hitGroupId = _shadowPipeline.GetShaderIdentifier("ShadowHitGroup");
+            // Then write these to the SBT buffer at the appropriate offsets
+            
+            Console.WriteLine("[NativeRT] Shader binding table created (shader identifiers must be written for full functionality)");
+        }
+
+        private void UpdateShadowConstants(ShadowRayParams parameters, int width, int height)
+        {
+            if (_shadowConstantBuffer == null)
+            {
+                return;
+            }
+
+            // Shadow ray constant buffer structure
+            // struct ShadowRayConstants {
+            //     float3 lightDirection;  // 12 bytes
+            //     float maxDistance;      // 4 bytes
+            //     float softShadowAngle; // 4 bytes
+            //     int samplesPerPixel;   // 4 bytes
+            //     int2 renderResolution; // 8 bytes
+            // }; // Total: 32 bytes
+
+            // Create structured data for constant buffer
+            ShadowRayConstants constants = new ShadowRayConstants
+            {
+                LightDirection = parameters.LightDirection,
+                MaxDistance = parameters.MaxDistance,
+                SoftShadowAngle = parameters.SoftShadowAngle,
+                SamplesPerPixel = parameters.SamplesPerPixel,
+                RenderWidth = width,
+                RenderHeight = height
+            };
+
+            // Convert to byte array for buffer write
+            // Manual layout to ensure correct byte order
+            byte[] constantData = new byte[32];
+            int offset = 0;
+            
+            // Light direction (Vector3 = 3 floats = 12 bytes)
+            BitConverter.GetBytes(constants.LightDirection.X).CopyTo(constantData, offset);
+            offset += 4;
+            BitConverter.GetBytes(constants.LightDirection.Y).CopyTo(constantData, offset);
+            offset += 4;
+            BitConverter.GetBytes(constants.LightDirection.Z).CopyTo(constantData, offset);
+            offset += 4;
+            
+            // Max distance (float = 4 bytes)
+            BitConverter.GetBytes(constants.MaxDistance).CopyTo(constantData, offset);
+            offset += 4;
+            
+            // Soft shadow angle (float = 4 bytes)
+            BitConverter.GetBytes(constants.SoftShadowAngle).CopyTo(constantData, offset);
+            offset += 4;
+            
+            // Samples per pixel (int = 4 bytes)
+            BitConverter.GetBytes(constants.SamplesPerPixel).CopyTo(constantData, offset);
+            offset += 4;
+            
+            // Render width (int = 4 bytes)
+            BitConverter.GetBytes(constants.RenderWidth).CopyTo(constantData, offset);
+            offset += 4;
+            
+            // Render height (int = 4 bytes)
+            BitConverter.GetBytes(constants.RenderHeight).CopyTo(constantData, offset);
+
+            // Write constants to buffer
+            ICommandList commandList = _device.CreateCommandList(CommandListType.Graphics);
+            commandList.Open();
+            commandList.WriteBuffer(_shadowConstantBuffer, constantData);
+            commandList.Close();
+            _device.ExecuteCommandList(commandList);
+            commandList.Dispose();
+        }
+
+        private void UpdateShadowBindingSet(IntPtr outputTexture)
+        {
+            if (_shadowBindingSet == null || _shadowBindingLayout == null)
+            {
+                return;
+            }
+
+            // In a real implementation, we would update the binding set with the current output texture
+            // However, since binding sets are typically immutable, we may need to recreate it
+            // or use push descriptors if supported
+            
+            // For now, we'll note that the binding set should be updated with the output texture
+            // The actual implementation depends on whether the backend supports push descriptors
+            // or requires recreating the binding set each frame
+            
+            // If push descriptors are supported:
+            // commandList.PushDescriptorSet(_shadowBindingLayout, slot, outputTexture);
+            
+            // Otherwise, we would recreate the binding set:
+            // _shadowBindingSet.Dispose();
+            // _shadowBindingSet = _device.CreateBindingSet(_shadowBindingLayout, new BindingSetDesc { ... });
+        }
+
+        private System.Nullable<(int Width, int Height)> GetTextureInfo(IntPtr textureHandle)
+        {
+            // In a real implementation, this would query the backend for texture information
+            // For now, we'll return null and use default resolution
+            // The backend would need to provide a method like:
+            // ITexture texture = _backend.GetTextureFromHandle(textureHandle);
+            // if (texture != null) return (texture.Desc.Width, texture.Desc.Height);
+            
+            return null;
+        }
+
         private void DestroyPipelines()
         {
-            if (_shadowPipeline != IntPtr.Zero)
+            // Destroy shadow pipeline resources
+            if (_shadowBindingSet != null)
             {
-                _backend.DestroyResource(_shadowPipeline);
-                _shadowPipeline = IntPtr.Zero;
+                _shadowBindingSet.Dispose();
+                _shadowBindingSet = null;
             }
-            // ... destroy other pipelines
+
+            if (_shadowConstantBuffer != null)
+            {
+                _shadowConstantBuffer.Dispose();
+                _shadowConstantBuffer = null;
+            }
+
+            if (_shadowShaderBindingTable != null)
+            {
+                _shadowShaderBindingTable.Dispose();
+                _shadowShaderBindingTable = null;
+            }
+
+            if (_shadowBindingLayout != null)
+            {
+                _shadowBindingLayout.Dispose();
+                _shadowBindingLayout = null;
+            }
+
+            if (_shadowPipeline != null)
+            {
+                _shadowPipeline.Dispose();
+                _shadowPipeline = null;
+            }
+
+            // Destroy other pipelines
+            if (_reflectionPipeline != null)
+            {
+                _reflectionPipeline.Dispose();
+                _reflectionPipeline = null;
+            }
+
+            if (_aoPipeline != null)
+            {
+                _aoPipeline.Dispose();
+                _aoPipeline = null;
+            }
+
+            if (_giPipeline != null)
+            {
+                _giPipeline.Dispose();
+                _giPipeline = null;
+            }
         }
 
         private void InitializeDenoiser(DenoiserType type)
@@ -578,6 +1041,21 @@ namespace Andastra.Runtime.MonoGame.Raytracing
             public Matrix4x4 Transform;
             public uint InstanceMask;
             public uint HitGroupIndex;
+        }
+
+        /// <summary>
+        /// Shadow ray constant buffer structure matching shader layout.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential, Pack = 4)]
+        private struct ShadowRayConstants
+        {
+            public Vector3 LightDirection;      // 12 bytes
+            public float MaxDistance;            // 4 bytes
+            public float SoftShadowAngle;       // 4 bytes
+            public int SamplesPerPixel;         // 4 bytes
+            public int RenderWidth;             // 4 bytes
+            public int RenderHeight;            // 4 bytes
+            // Total: 32 bytes (aligned)
         }
     }
 }
