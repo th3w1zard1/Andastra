@@ -1053,7 +1053,8 @@ namespace Andastra.Runtime.Games.Aurora
                             Orientation = 0,
                             Height = 0,
                             IsLoaded = false,
-                            IsWalkable = false
+                            IsWalkable = false,
+                            SurfaceMaterial = 0 // Undefined/NotDefined - default for empty tiles
                         };
                     }
                 }
@@ -1126,13 +1127,19 @@ namespace Andastra.Runtime.Games.Aurora
                     // TODO: Query tileset file to determine actual walkability from tile model data
 
                     // Create AuroraTile instance
+                    // Surface material would ideally be looked up from tileset data
+                    // For now, default to Stone (4) for walkable tiles, Undefined (0) for non-walkable
+                    // TODO: Query tileset file to determine actual surface material from tile model data
+                    int surfaceMaterial = isWalkable ? 4 : 0; // Stone (walkable) or Undefined (non-walkable)
+                    
                     AuroraTile tile = new AuroraTile
                     {
                         TileId = tileId,
                         Orientation = orientation,
                         Height = tileHeight,
                         IsLoaded = isLoaded,
-                        IsWalkable = isWalkable
+                        IsWalkable = isWalkable,
+                        SurfaceMaterial = surfaceMaterial
                     };
 
                     // Store tile in 2D array at calculated coordinates

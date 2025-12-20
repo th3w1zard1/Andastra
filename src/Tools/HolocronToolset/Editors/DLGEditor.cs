@@ -129,6 +129,7 @@ namespace HolocronToolset.Editors
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor/base.py:80
         // Original: self.media_player: EditorMedia = EditorMedia(self)
         private SoundPlayer _soundPlayer;
+        private MemoryStream _soundStream;
 
         // Reference history for navigation
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:148-150
@@ -1143,8 +1144,8 @@ namespace HolocronToolset.Editors
             // Get selected item from tree view
             if (_dialogTree?.SelectedItem == null)
             {
-                // Matching PyKotor: blink_window() - for now, we'll just return silently
-                // In a full implementation, we would blink the window to indicate no selection
+                // Matching PyKotor: blink_window()
+                BlinkWindow();
                 return;
             }
 
@@ -1523,13 +1524,23 @@ namespace HolocronToolset.Editors
 
             try
             {
-                // Use System.Media.SoundPlayer for WAV files
-                // This matches PyKotor's QMediaPlayer behavior for WAV files
-                using (MemoryStream stream = new MemoryStream(data))
+                // Stop any currently playing sound
+                _soundPlayer?.Stop();
+                
+                // Dispose previous stream if it exists
+                if (_soundStream != null)
                 {
-                    _soundPlayer.Stream = stream;
-                    _soundPlayer.Play();
+                    _soundStream.Dispose();
+                    _soundStream = null;
                 }
+
+                // Create a new memory stream for the sound data
+                // Note: The stream must remain alive while the sound is playing
+                // Matching PyKotor's QBuffer approach which keeps the buffer alive
+                _soundStream = new MemoryStream(data);
+                _soundPlayer.Stream = _soundStream;
+                _soundPlayer.Play();
+                
                 return true;
             }
             catch (Exception)
@@ -1561,6 +1572,34 @@ namespace HolocronToolset.Editors
             // For now, we'll just blink the window to match the "else" case
             // When combo boxes are added, this should check them first
             BlinkWindow();
+        }
+
+        /// <summary>
+        /// Cleans up resources when the window is closed.
+        /// </summary>
+        protected override void OnClosed(EventArgs e)
+        {
+            // Clean up sound player resources
+            try
+            {
+                _soundPlayer?.Stop();
+                _soundPlayer?.Dispose();
+            }
+            catch
+            {
+                // Ignore errors during cleanup
+            }
+
+            try
+            {
+                _soundStream?.Dispose();
+            }
+            catch
+            {
+                // Ignore errors during cleanup
+            }
+
+            base.OnClosed(e);
         }
 
         /// <summary>
@@ -1614,8 +1653,8 @@ namespace HolocronToolset.Editors
             catch (Exception ex)
             {
                 // Matching PyKotor: if no paths or error, log and blink window
-                // For now, we'll silently fail (blink_window is not yet implemented)
-                // In a full implementation, we would log the error and blink the window
+                // In a full implementation, we would log the error: RobustLogger().error(...)
+                BlinkWindow();
                 return;
             }
 
@@ -1623,8 +1662,8 @@ namespace HolocronToolset.Editors
             if (paths == null || paths.Count == 0)
             {
                 // Matching PyKotor: No paths available - log error and blink window
-                // For now, we'll silently fail (blink_window is not yet implemented)
-                // In a full implementation, we would log the error and blink the window
+                // In a full implementation, we would log: RobustLogger().error("No paths available.")
+                BlinkWindow();
                 return;
             }
 

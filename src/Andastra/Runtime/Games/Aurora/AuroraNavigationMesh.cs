@@ -16,6 +16,7 @@ namespace Andastra.Runtime.Games.Aurora
     /// - Tile_Orientation: Rotation (0-3 for 0°, 90°, 180°, 270°)
     /// - Tile_Height: Number of height transitions
     /// - Tile location stored at offsets 0x1c (X) and 0x20 (Y) in CNWTile::GetLocation
+    /// - SurfaceMaterial: Surface material index from tileset (0-30, corresponds to surfacemat.2da)
     /// </remarks>
     internal struct AuroraTile
     {
@@ -43,6 +44,25 @@ namespace Andastra.Runtime.Games.Aurora
         /// Whether this tile has walkable surfaces.
         /// </summary>
         public bool IsWalkable { get; set; }
+
+        /// <summary>
+        /// Surface material index (0-30, corresponds to surfacemat.2da entries).
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: Tile surface material lookup from tileset data.
+        /// Surface materials determine walkability, sound effects, and movement costs.
+        /// Default value is 0 (Undefined) for tiles without material data.
+        /// 
+        /// Common Aurora surface materials (from surfacemat.2da):
+        /// - 0: Undefined/NotDefined
+        /// - 1: Dirt (walkable)
+        /// - 3: Grass (walkable)
+        /// - 4: Stone (walkable)
+        /// - 7: NonWalk (non-walkable)
+        /// - 15: Lava (non-walkable)
+        /// - 17: DeepWater (non-walkable)
+        /// </remarks>
+        public int SurfaceMaterial { get; set; }
     }
 
     /// <summary>
@@ -1076,10 +1096,97 @@ namespace Andastra.Runtime.Games.Aurora
         /// <summary>
         /// Gets the surface material of a face.
         /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: Aurora tile-based surface material lookup.
+        /// In Aurora, faces map to tiles in the tile grid. Each face index corresponds to a unique tile.
+        /// Surface materials are stored per-tile and correspond to entries in surfacemat.2da.
+        /// 
+        /// Algorithm:
+        /// 1. Validate face index is within expected range (0 to tileHeight * tileWidth - 1)
+        /// 2. Convert face index to tile coordinates: tileY = faceIndex / tileWidth, tileX = faceIndex % tileWidth
+        /// 3. Validate tile coordinates are within bounds
+        /// 4. Check if tile is valid (loaded and has valid tile ID)
+        /// 5. Return tile's SurfaceMaterial property
+        /// 6. Return 0 (Undefined) for invalid face indices or unloaded tiles
+        /// 
+        /// Based on reverse engineering of:
+        /// - nwmain.exe: CNWSArea::GetTile @ 0x14035edc0 - Tile coordinate conversion and validation
+        /// - nwmain.exe: CNWTileSet::GetTileData() - Tile surface material lookup from tileset
+        /// - Face index calculation: faceIndex = tileY * tileWidth + tileX (from FindFaceAt)
+        /// - Tile array indexing pattern: width * y + x (matches face index calculation)
+        /// 
+        /// Surface material values (0-30) correspond to surfacemat.2da entries:
+        /// - 0: Undefined/NotDefined (non-walkable)
+        /// - 1: Dirt (walkable)
+        /// - 3: Grass (walkable)
+        /// - 4: Stone (walkable)
+        /// - 7: NonWalk (non-walkable)
+        /// - 15: Lava (non-walkable)
+        /// - 17: DeepWater (non-walkable)
+        /// 
+        /// Note: Unlike Odyssey's triangle-based walkmesh where faces are actual triangles with per-face materials,
+        /// Aurora uses a tile-based system where each face index maps to a tile in the grid.
+        /// Surface materials are determined by the tile's material from the tileset data.
+        /// </remarks>
         public int GetSurfaceMaterial(int faceIndex)
         {
-            // TODO: Implement Aurora surface material lookup
-            throw new NotImplementedException("Aurora surface material lookup not yet implemented");
+            // Handle empty tile grid
+            if (_tileWidth <= 0 || _tileHeight <= 0 || _tiles == null || _tiles.Length == 0)
+            {
+                // No tiles available - return undefined material
+                return 0; // Undefined/NotDefined
+            }
+
+            // Validate face index is within expected range
+            // Maximum face index should be (tileHeight - 1) * tileWidth + (tileWidth - 1) = tileHeight * tileWidth - 1
+            int maxFaceIndex = _tileHeight * _tileWidth - 1;
+            if (faceIndex < 0 || faceIndex > maxFaceIndex)
+            {
+                // Face index is out of bounds - return undefined material
+                return 0; // Undefined/NotDefined
+            }
+
+            // Convert face index to tile coordinates
+            // Based on FindFaceAt: faceIndex = tileY * tileWidth + tileX
+            // Reverse: tileY = faceIndex / tileWidth, tileX = faceIndex % tileWidth
+            int tileY = faceIndex / _tileWidth;
+            int tileX = faceIndex % _tileWidth;
+
+            // Validate tile coordinates are within bounds
+            // This should always be true if faceIndex is valid, but check for safety
+            if (tileX < 0 || tileX >= _tileWidth || tileY < 0 || tileY >= _tileHeight)
+            {
+                // Invalid tile coordinates - return undefined material
+                return 0; // Undefined/NotDefined
+            }
+
+            // Check if tile is valid (loaded and has valid tile ID)
+            // Based on nwmain.exe: CNWSArea::GetTile @ 0x14035edc0 validation checks
+            if (!IsTileValid(tileX, tileY))
+            {
+                // Tile is not valid (not loaded, out of bounds, or invalid tile ID)
+                // Return undefined material for invalid tiles
+                return 0; // Undefined/NotDefined
+            }
+
+            // Get the tile at the specified coordinates
+            // Based on nwmain.exe: Tile array access pattern (width * y + x)
+            AuroraTile tile = _tiles[tileY, tileX];
+
+            // Tile must be loaded to have a valid surface material
+            // Based on nwmain.exe: CNWTileSet::GetTileData() validation
+            // Tiles must be loaded before they can have surface material data
+            if (!tile.IsLoaded)
+            {
+                // Tile is not loaded - return undefined material
+                return 0; // Undefined/NotDefined
+            }
+
+            // Return the tile's surface material
+            // Surface material is stored per-tile and corresponds to surfacemat.2da entries
+            // Default value is 0 (Undefined) for tiles without material data
+            // Based on nwmain.exe: CNWTileSet::GetTileData() surface material lookup
+            return tile.SurfaceMaterial;
         }
 
         /// <summary>
