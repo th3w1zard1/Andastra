@@ -426,14 +426,63 @@ namespace HolocronToolset.Tests.Editors
             modifiedDlg.OnEnd.ToString().Should().Be("test_on_end", "OnEnd script should be saved correctly");
         }
 
-        // TODO: STUB - Implement test_dlg_editor_manipulate_camera_model_select (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:622-641)
-        // Original: def test_dlg_editor_manipulate_camera_model_select(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating camera model select
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:622-641
+        // Original: def test_dlg_editor_manipulate_camera_model_select(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating camera model combo box
         [Fact]
         public void TestDlgEditorManipulateCameraModelSelect()
         {
-            // TODO: STUB - Implement camera model select manipulation test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:622-641
-            throw new NotImplementedException("TestDlgEditorManipulateCameraModelSelect: Camera model select manipulation test not yet implemented");
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            // Try to find ORIHA.dlg
+            string dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            }
+
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Skip if test file not available (matching Python pytest.skip behavior)
+                return;
+            }
+
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new DLGEditor(null, installation);
+
+            byte[] originalData = System.IO.File.ReadAllBytes(dlgFile);
+            editor.Load(dlgFile, "ORIHA", ResourceType.DLG, originalData);
+
+            // Modify camera model (matching Python: editor.ui.cameraModelSelect.set_combo_box_text("test_camera"))
+            // Since UI controls are not exposed yet, we modify the CoreDlg directly
+            // This tests that the Build() method properly saves the CameraModel field
+            ResRef testCameraModel = new ResRef("test_camera");
+            editor.CoreDlg.CameraModel = testCameraModel;
+
+            // Save and verify (matching Python: data, _ = editor.build())
+            var (savedData, _) = editor.Build();
+
+            // Verify the change was saved (matching Python: assert str(modified_dlg.camera_model) == "test_camera")
+            DLG modifiedDlg = DLGHelper.ReadDlg(savedData);
+            modifiedDlg.CameraModel.ToString().Should().Be("test_camera", "CameraModel should be saved correctly");
         }
 
         // TODO: STUB - Implement test_dlg_editor_manipulate_ambient_track_combo (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:643-662)
