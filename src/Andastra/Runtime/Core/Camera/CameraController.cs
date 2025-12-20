@@ -138,7 +138,7 @@ namespace Andastra.Runtime.Core.Camera
         /// </summary>
         public event Action OnCameraUpdated;
 
-        public CameraController(IWorld world, MDLLoader mdlLoader = null)
+        public CameraController(IWorld world, Andastra.Runtime.Content.MDL.MDLLoader mdlLoader = null)
         {
             _world = world ?? throw new ArgumentNullException("world");
             _mdlLoader = mdlLoader;

@@ -224,33 +224,6 @@ namespace Andastra.Parsing.Formats.MDLData
         }
 
         /// <summary>
-        /// Get a node by name.
-        /// Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_data.py:115-134
-        /// </summary>
-        public MDLNode Get(string nodeName)
-        {
-            MDLNode pick = null;
-            var nodes = new List<MDLNode> { Root };
-            while (nodes.Count > 0)
-            {
-                var node = nodes[nodes.Count - 1];
-                nodes.RemoveAt(nodes.Count - 1);
-                if (node.Name == nodeName)
-                {
-                    pick = node;
-                }
-                else
-                {
-                    if (node.Children != null)
-                    {
-                        nodes.AddRange(node.Children);
-                    }
-                }
-            }
-            return pick;
-        }
-
-        /// <summary>
         /// Alias for AllNodes() for test compatibility.
         /// </summary>
         public List<MDLNode> GetAllNodes()

@@ -51,6 +51,14 @@ namespace HolocronToolset.Editors
         private Label _statusLabel;
         private Border _statusBar;
 
+        // Panel container structure for output, terminal, etc.
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py
+        // Original: self.ui.mainSplitter (QSplitter), self.ui.panelTabs (QTabWidget)
+        private Grid _mainSplitter;  // Grid used as splitter (Avalonia equivalent of QSplitter)
+        private TabControl _panelTabs;  // TabControl for panels (output, terminal, etc.)
+        private TabItem _outputTab;  // Output panel tab
+        private Control _mainContentContainer;  // Container for main content (code editor)
+
         // Error and warning line tracking
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:178-179
         // Original: self._error_lines: set[int] = set()  # Line numbers with errors (1-indexed)
