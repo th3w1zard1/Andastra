@@ -1,0 +1,60 @@
+using System;
+using Andastra.Parsing.Resource;
+using Andastra.Runtime.Content.Interfaces;
+
+namespace Andastra.Runtime.Content.ResourceProviders
+{
+    /// <summary>
+    /// Resource provider for Neverwinter Nights: Enhanced Edition (NWN:EE).
+    /// </summary>
+    /// <remarks>
+    /// Neverwinter Nights: Enhanced Edition Resource Provider:
+    /// - Based on Aurora Engine resource loading system (nwmain.exe - Enhanced Edition)
+    /// - Extends AuroraResourceProvider with NWN:EE-specific hardcoded resource implementations
+    /// - Hardcoded resources: NWN:EE-specific fallback resources when normal resource lookup fails
+    /// - Based on nwmain.exe (Enhanced Edition): CExoResMan::Demand resource lookup system with Enhanced Edition enhancements
+    /// - Game-specific hardcoded resources override base class implementations for NWN:EE-specific behavior
+    /// - Enhanced Edition may have additional hardcoded resources or updated default resources compared to original NWN
+    /// </remarks>
+    public class NwnEEResourceProvider : AuroraResourceProvider
+    {
+        public NwnEEResourceProvider(string installationPath) 
+            : base(installationPath, GameType.NWNEE)
+        {
+        }
+
+        /// <summary>
+        /// Looks up hardcoded (fallback) resources specific to Neverwinter Nights: Enhanced Edition.
+        /// </summary>
+        /// <remarks>
+        /// NWN:EE-Specific Hardcoded Resources:
+        /// - Overrides base class to provide NWN:EE-specific hardcoded resource implementations
+        /// - Based on nwmain.exe (Enhanced Edition): NWN:EE-specific hardcoded resources referenced in engine code
+        /// - Calls base class for common hardcoded resources, then adds NWN:EE-specific ones
+        /// - Enhanced Edition may have updated default resources (higher resolution icons, improved default models, etc.)
+        /// - nwmain.exe (Enhanced Edition): Similar hardcoded resource system to original nwmain.exe but with Enhanced Edition updates
+        /// </remarks>
+        protected override byte[] LookupHardcoded(ResourceIdentifier id)
+        {
+            if (id == null || id.ResType == null)
+            {
+                return null;
+            }
+
+            // First, try common hardcoded resources (from base class)
+            byte[] result = base.LookupHardcoded(id);
+            if (result != null)
+            {
+                return result;
+            }
+
+            // NWN:EE-specific hardcoded resources
+            // Add NWN:EE-specific hardcoded resource lookups here if needed
+            // Enhanced Edition may have additional hardcoded resources or updated defaults
+            // For now, NWN:EE uses the common hardcoded resources from base class
+
+            return null;
+        }
+    }
+}
+
