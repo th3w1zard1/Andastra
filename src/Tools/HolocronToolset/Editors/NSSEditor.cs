@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Common.Script;
@@ -74,7 +75,7 @@ namespace HolocronToolset.Editors
         // File explorer components
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:1351-1398
         // Original: self.file_system_model = QFileSystemModel()
-        private FileSystemModel _fileSystemModel;
+        private NSSEditorFileSystemModel _fileSystemModel;
         private TreeView _fileExplorerView;
         private TextBox _fileExplorerAddressBar;
         private TextBox _fileSearchEdit;
@@ -1225,7 +1226,7 @@ namespace HolocronToolset.Editors
             {
                 var bookmarksPanel = new StackPanel
                 {
-                    Orientation = Orientation.Vertical,
+                    Orientation = Avalonia.Layout.Orientation.Vertical,
                     Name = "bookmarksDock"
                 };
 
@@ -1275,7 +1276,7 @@ namespace HolocronToolset.Editors
             {
                 var snippetsPanel = new StackPanel
                 {
-                    Orientation = Orientation.Vertical,
+                    Orientation = Avalonia.Layout.Orientation.Vertical,
                     Name = "snippetsDock"
                 };
 
@@ -1657,7 +1658,7 @@ namespace HolocronToolset.Editors
                     "Find All References",
                     $"No references to '{word}' found in current file.",
                     ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Information);
+                    Icon.Info);
                 messageBox.ShowAsync();
             }
             else
@@ -1718,7 +1719,7 @@ namespace HolocronToolset.Editors
                     "Find All References",
                     $"Found {results.Count} reference(s) to '{word}'. Navigated to first occurrence.",
                     ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Information);
+                    Icon.Info);
                 messageBox.ShowAsync();
             }
         }
@@ -2754,7 +2755,7 @@ namespace HolocronToolset.Editors
             // Code operations
             _commandPalette.RegisterCommand("code.compile", "Compile Script", () => CompileCurrentScript(), "Code");
             // Note: Format and Analyze would need implementation
-            _commandPalette.RegisterCommand("code.format", "Format Document", () => FormatDocument(), "Code");
+            _commandPalette.RegisterCommand("code.format", "Format Document", () => { FormatDocument(); }, "Code");
             _commandPalette.RegisterCommand("code.analyze", "Analyze Code", () => AnalyzeCode(), "Code");
 
             // Bookmarks
@@ -3900,6 +3901,40 @@ namespace HolocronToolset.Editors
             await resultBox.ShowAsync();
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2865-2892
+        // Original: def _format_code(self):
+        /// <summary>
+        /// Formats the code with proper indentation and spacing.
+        /// </summary>
+        private async void FormatDocument()
+        {
+            if (_codeEdit == null)
+            {
+                return;
+            }
+
+            string text = _codeEdit.Text;
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                var infoBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Format Document",
+                    "No code to format.",
+                    ButtonEnum.Ok,
+                    Icon.Info);
+                await infoBox.ShowAsync();
+                return;
+            }
+
+            // TODO: PLACEHOLDER - Implement full code formatting with proper indentation
+            // For now, show a message that formatting is not yet implemented
+            var messageBox = MessageBoxManager.GetMessageBoxStandard(
+                "Format Document",
+                "Code formatting is not yet implemented. This feature will format the code with proper indentation and spacing.",
+                ButtonEnum.Ok,
+                Icon.Info);
+            await messageBox.ShowAsync();
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2349-2354
         // Original: def insert_selected_constant(self):
         /// <summary>
@@ -4131,7 +4166,7 @@ namespace HolocronToolset.Editors
         private void SetupFileExplorer()
         {
             // Create file system model
-            _fileSystemModel = new FileSystemModel();
+            _fileSystemModel = new NSSEditorFileSystemModel();
 
             // Create file explorer TreeView if not already created
             if (_fileExplorerView == null)
@@ -4167,7 +4202,7 @@ namespace HolocronToolset.Editors
                 // Create a vertical stack panel to hold all file explorer components
                 var explorerPanel = new StackPanel
                 {
-                    Orientation = Orientation.Vertical,
+                    Orientation = Avalonia.Layout.Orientation.Vertical,
                     Name = "fileExplorerDock"
                 };
 
@@ -4177,7 +4212,7 @@ namespace HolocronToolset.Editors
                 // Add search and refresh controls in a horizontal panel
                 var searchPanel = new StackPanel
                 {
-                    Orientation = Orientation.Horizontal
+                    Orientation = Avalonia.Layout.Orientation.Horizontal
                 };
                 searchPanel.Children.Add(_fileSearchEdit);
                 searchPanel.Children.Add(_refreshFileExplorerButton);
@@ -4501,7 +4536,7 @@ namespace HolocronToolset.Editors
         /// Gets the file system model used by the file explorer.
         /// Exposed for testing purposes to match Python test behavior.
         /// </summary>
-        public FileSystemModel FileSystemModel => _fileSystemModel;
+        public NSSEditorFileSystemModel FileSystemModel => _fileSystemModel;
 
         /// <summary>
         /// Gets the file explorer TreeView.
@@ -4647,7 +4682,7 @@ namespace HolocronToolset.Editors
         /// Simple file system model for Avalonia TreeView.
         /// Provides file system browsing functionality similar to Qt's QFileSystemModel.
         /// </summary>
-        public class FileSystemModel
+        public class NSSEditorFileSystemModel
         {
             private string _rootPath;
             private string _filter;

@@ -1122,7 +1122,7 @@ namespace HolocronToolset.Editors
                     resourceResult.FilePath
                 );
 
-                HolocronToolset.Utils.WindowUtils.OpenResourceEditor(fileResource, _installation, this);
+                HolocronToolset.Editors.WindowUtils.OpenResourceEditor(fileResource, _installation, this);
             }
             catch (Exception ex)
             {
@@ -1162,7 +1162,7 @@ namespace HolocronToolset.Editors
                 nssEditor.New();
                 
                 // Show the editor - user will set the resref when saving
-                HolocronToolset.Utils.WindowUtils.AddWindow(nssEditor, show: true);
+                HolocronToolset.Editors.WindowUtils.AddWindow(nssEditor, show: true);
 
                 // Update the combo box with the suggested script name
                 // User can change this before saving
@@ -1351,7 +1351,7 @@ namespace HolocronToolset.Editors
                     resourceResult.FilePath
                 );
 
-                HolocronToolset.Utils.WindowUtils.OpenResourceEditor(fileResource, _installation, this);
+                HolocronToolset.Editors.WindowUtils.OpenResourceEditor(fileResource, _installation, this);
             }
             catch (Exception ex)
             {
@@ -1386,7 +1386,7 @@ namespace HolocronToolset.Editors
                 utpEditor.New();
 
                 // Show the editor
-                HolocronToolset.Utils.WindowUtils.AddWindow(utpEditor, show: true);
+                HolocronToolset.Editors.WindowUtils.AddWindow(utpEditor, show: true);
 
                 // Optionally add the new creature to the encounter table
                 // User can manually add it via the Add button after creating

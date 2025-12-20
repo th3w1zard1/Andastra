@@ -10,6 +10,7 @@ using Andastra.Parsing.Extract;
 using Andastra.Parsing.Resource;
 using HolocronToolset.Data;
 using HolocronToolset.Utils;
+using HolocronToolset.Editors;
 using MsBox.Avalonia;
 
 namespace HolocronToolset.Dialogs

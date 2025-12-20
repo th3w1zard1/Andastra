@@ -32,12 +32,14 @@
     <Compile Include="..\Editors\DLGListWidgetItem.cs" />
     <Compile Include="..\Editors\DLGEditor.cs" />
     <Compile Include="..\Editors\Editor.cs" />
+    <Compile Include="..\Editors\EditorHelpers.cs" />
     <Compile Include="..\Editors\WindowUtils.cs" />
     <Compile Include="..\Editors\EditorWikiMapping.cs" />
     <Compile Include="..\Editors\UTIEditor.cs" />
     <Compile Include="..\Editors\TwoDAEditor.cs" />
     <Compile Include="..\Editors\SSFEditor.cs" />
     <Compile Include="..\Editors\TLKEditor.cs" />
+    <Compile Include="..\Editors\TLKEntryViewModel.cs" />
     <Compile Include="..\Editors\LTREditor.cs" />
     <Compile Include="..\Editors\LIPEditor.cs" />
     <Compile Include="..\Editors\BWMEditor.cs" />
@@ -46,6 +48,20 @@
     <Compile Include="..\Editors\GFFEditor.cs" />
     <Compile Include="..\Editors\UTCEditor.cs" />
     <Compile Include="..\Editors\UTPEditor.cs" />
+    <Compile Include="..\Editors\UTDEditor.cs" />
+    <Compile Include="..\Editors\IFOEditor.cs" />
+    <Compile Include="..\Editors\UTSEditor.cs" />
+    <Compile Include="..\Editors\UTTEditor.cs" />
+    <Compile Include="..\Editors\UTMEditor.cs" />
+    <Compile Include="..\Editors\UTWEditor.cs" />
+    <Compile Include="..\Editors\UTEEditor.cs" />
+    <Compile Include="..\Editors\JRLEditor.cs" />
+    <Compile Include="..\Editors\AREEditor.cs" />
+    <Compile Include="..\Editors\PTHEditor.cs" />
+    <Compile Include="..\Editors\GITEditor.cs" />
+    <Compile Include="..\Editors\WAVEditor.cs" />
+    <Compile Include="..\Editors\ERFEditor.cs" />
+    <Compile Include="..\Editors\MDLEditor.cs" />
     <Compile Include="..\Editors\Actions\*.cs" />
   </ItemGroup>
 

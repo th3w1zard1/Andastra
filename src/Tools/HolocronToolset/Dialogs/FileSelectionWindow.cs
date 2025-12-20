@@ -12,6 +12,7 @@ using Andastra.Parsing.Extract;
 using Andastra.Parsing.Resource;
 using HolocronToolset.Data;
 using HolocronToolset.Utils;
+using HolocronToolset.Editors;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 using FileResource = Andastra.Parsing.Extract.FileResource;

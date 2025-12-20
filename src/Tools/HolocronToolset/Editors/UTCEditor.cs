@@ -633,14 +633,14 @@ namespace HolocronToolset.Editors
                     }
 
                     // Add all feats from 2DA
-                    for (int i = 0; i < feats.RowCount; i++)
+                    for (int i = 0; i < feats.GetHeight(); i++)
                     {
                         int featId = i;
-                        int stringRef = feats.GetCellInt(i, "name", 0);
+                        int stringRef = feats.GetCellInt(i, "name", 0) ?? 0;
                         string text;
-                        if (stringRef != 0 && _installation.Talktable() != null)
+                        if (stringRef != 0 && _installation.TalkTable() != null)
                         {
-                            text = _installation.Talktable().String(stringRef);
+                            text = _installation.TalkTable().GetString(stringRef);
                         }
                         else
                         {
@@ -692,14 +692,14 @@ namespace HolocronToolset.Editors
                     }
 
                     // Add all powers from 2DA
-                    for (int i = 0; i < powers.RowCount; i++)
+                    for (int i = 0; i < powers.GetHeight(); i++)
                     {
                         int powerId = i;
-                        int stringRef = powers.GetCellInt(i, "name", 0);
+                        int stringRef = powers.GetCellInt(i, "name", 0) ?? 0;
                         string text;
-                        if (stringRef != 0 && _installation.Talktable() != null)
+                        if (stringRef != 0 && _installation.TalkTable() != null)
                         {
-                            text = _installation.Talktable().String(stringRef);
+                            text = _installation.TalkTable().GetString(stringRef);
                         }
                         else
                         {
@@ -1421,7 +1421,7 @@ namespace HolocronToolset.Editors
                         filepath = System.IO.Path.Combine(overridePath, $"{resname}.dlg");
                         Game game = _installation.Game;
                         var blankDlg = new Andastra.Parsing.Resource.Generics.DLG.DLG();
-                        var gff = Andastra.Parsing.Resource.Generics.DLG.DLGHelpers.DismantleDlg(blankDlg, game);
+                        var gff = Andastra.Parsing.Resource.Generics.DLG.DLGHelper.DismantleDlg(blankDlg, game);
                         data = GFFAuto.BytesGff(gff, ResourceType.DLG);
                         System.IO.File.WriteAllBytes(filepath, data);
                     }
@@ -1433,7 +1433,7 @@ namespace HolocronToolset.Editors
             }
             else
             {
-                filepath = search.Filepath;
+                filepath = search.FilePath;
                 if (search.Data != null)
                 {
                     data = search.Data;
@@ -1477,7 +1477,7 @@ namespace HolocronToolset.Editors
             
             if (_filepath != null)
             {
-                if (Andastra.Parsing.Formats.Capsule.Capsule.IsSavFile(_filepath))
+                if (Andastra.Parsing.Tools.Misc.IsSavFile(_filepath))
                 {
                     // Search capsules inside the .sav outer capsule
                     // Matching PyKotor: capsules_to_search = [Capsule(res.filepath()) for res in Capsule(self._filepath) if is_capsule_file(res.filename()) and res.inside_capsule]
@@ -1486,11 +1486,16 @@ namespace HolocronToolset.Editors
                         var outerCapsule = new Andastra.Parsing.Formats.Capsule.Capsule(_filepath);
                         foreach (var res in outerCapsule)
                         {
-                            if (Andastra.Parsing.Formats.Capsule.Capsule.IsCapsuleFile(res.Filename) && res.InsideCapsule)
+                            // Check if the resource name (resname + extension) is a capsule file
+                            string resourceFilename = $"{res.ResName}.{res.ResType.Extension}";
+                            if (Andastra.Parsing.Tools.Misc.IsCapsuleFile(resourceFilename))
                             {
+                                // The resource is inside a capsule (since we're iterating through a capsule)
+                                // Construct the nested capsule path: outerCapsulePath/resourceFilename
+                                string nestedCapsulePath = System.IO.Path.Combine(_filepath, resourceFilename);
                                 try
                                 {
-                                    capsulesToSearch.Add(new Andastra.Parsing.Formats.Capsule.Capsule(res.Filepath));
+                                    capsulesToSearch.Add(new Andastra.Parsing.Formats.Capsule.Capsule(nestedCapsulePath));
                                 }
                                 catch
                                 {
@@ -1504,7 +1509,7 @@ namespace HolocronToolset.Editors
                         // Failed to load outer capsule
                     }
                 }
-                else if (Andastra.Parsing.Formats.Capsule.Capsule.IsCapsuleFile(_filepath))
+                else if (Andastra.Parsing.Tools.Misc.IsCapsuleFile(_filepath))
                 {
                     // Get capsules matching the module
                     // Matching PyKotor: capsules_to_search = Module.get_capsules_tuple_matching(self._installation, self._filepath.name)
