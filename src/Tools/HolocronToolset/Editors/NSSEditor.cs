@@ -46,6 +46,9 @@ namespace HolocronToolset.Editors
         private string _repo;
         private string _sourcerepoUrl;
         private Label _statusLabel;
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:156
+        // Original: self._highlighter: SyntaxHighlighter = SyntaxHighlighter(document, self._installation)
+        private NWScriptSyntaxHighlighter _highlighter;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:119-199
         // Original: def __init__(self, parent: QWidget | None = None, installation: HTInstallation | None = None):

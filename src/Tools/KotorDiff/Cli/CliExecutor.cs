@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Andastra.Parsing.Installation;
+using KotorDiff;
 using KotorDiff.App;
 
 namespace KotorDiff.Cli

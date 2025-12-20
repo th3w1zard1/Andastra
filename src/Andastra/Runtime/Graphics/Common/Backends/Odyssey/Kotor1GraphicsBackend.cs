@@ -1596,8 +1596,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                             
                             if (result == 0)
                             {
-                                int* iVar3Ptr = (int*)((byte*)thisPtr + 0x5c);
-                                if (*iVar3Ptr < 1)
+                                int* iVar3PtrLocal = (int*)((byte*)thisPtr + 0x5c);
+                                if (*iVar3PtrLocal < 1)
                                 {
                                     return;
                                 }

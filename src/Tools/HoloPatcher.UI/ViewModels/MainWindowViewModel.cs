@@ -23,6 +23,7 @@ using Andastra.Parsing.Reader;
 using Andastra.Parsing.Uninstall;
 using Andastra.Utility;
 using HoloPatcher.UI;
+using HoloPatcher.UI.Update;
 using RteDocument = HoloPatcher.UI.Rte.RteDocument;
 using RemoteUpdateInfo = HoloPatcher.UI.Update.RemoteUpdateInfo;
 using HoloPatcher.UI.Views;

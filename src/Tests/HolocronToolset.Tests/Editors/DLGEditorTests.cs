@@ -1862,11 +1862,7 @@ namespace HolocronToolset.Tests.Editors
             var (savedData, _) = editor.Build();
 
             // Compare GFF structures
-RtfDomParserAv.dll                                                                                                          
-    G:\GitHub\Andastra\src\RtfDomParserAvalonia\RtfDomParserAvalonia\RTFDom\RTFDomDocument.cs(936,19): warning CS0414: The field 'RTFDomDocument.ListTextFlag' is assigned but its value is never used                                                  
-  Andastra.Runtime.Tests net9.0 failed with 1 error(s) and 1 warning(s) (0.6s)
-    G:\GitHub\Andastra\src\Andastra\Tests\Runtime\Andastra.Runtime.Tests.csproj : warning NU1701: Package 'Eto.Platform.Windows 2.10.2' was restored using '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1' instead of the project target framework 'net9.0'. This package may not be fully compatible with your project.
-    C:\Program Files\dotnet\sdk\9.0.307\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.Sdk.DefaultItems.Shared.targets(250,5): error NETSDK1136: The target platform must be set to Windows (usually by including '-windows' in the TargetFramework property) when using Windows Forms or WPF, or referencing projects or packages that do so.            var originalGff = GFFAuto.ReadGff(originalData);
+            var originalGff = GFFAuto.ReadGff(originalData);
             var savedGff = GFFAuto.ReadGff(savedData);
 
             // Root should have same number of fields (allowing for minor differences)

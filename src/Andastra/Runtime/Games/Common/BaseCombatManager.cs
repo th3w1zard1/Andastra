@@ -20,7 +20,19 @@ namespace Andastra.Runtime.Games.Common
     /// - swkotor2.exe: Advanced combat mechanics with force powers, feats
     /// - nwmain.exe: D20-based combat system
     /// - daorigins.exe: Tactical combat with positioning and abilities
-    /// - TODO: dragonage2
+    /// - DragonAge2.exe: Enhanced tactical combat with improved party coordination, ability system, and real-time action
+    ///   Combat state strings: "GameModeCombat" @ 0x00beaf3c, "InCombat" @ 0x00bf4c10, "CombatTarget" @ 0x00bf4dc0
+    ///   "Combatant" @ 0x00bf4664, "Combat_%u" @ 0x00be0ba4, "BInCombatMode" @ 0x00beeed2, "AutoPauseCombat" @ 0x00bf6f9c
+    ///   Ability system: "PerformAbilityMessage" @ 0x00be3010, "PerformAbilityOnTargetUnderCursorMessage" @ 0x00be45b0
+    ///   "PerformAbilityOnSelectedTargetMessage" @ 0x00be4708, "PerformAbilityOnPlayerMessage" @ 0x00be4754
+    ///   "FireAOEAbilityMessage" @ 0x00be4790, "CancelAbilityTargetingMessage" @ 0x00be4604
+    ///   Weapon system: "SwitchWeaponSetMessage" @ 0x00be3bbc, "SwitchWeaponSetNowMessage" @ 0x00be3bec
+    ///   "ActiveWeaponSet" @ 0x00bf4ca0, "CanSwitchWeaponSets" @ 0x00bf4bc8
+    ///   "InactiveWeaponSetOwners" @ 0x00beb1a0, "InactiveWeaponSetItems" @ 0x00beb1b8
+    ///   Damage display: "ShowDamageFloaties" @ 0x00bf6f6c, "TargetAttack" @ 0x00bf6878
+    ///   Architecture: Eclipse engine uses UnrealScript message-based combat system (different from Odyssey/Aurora NCS VM)
+    ///   Combat features: Real-time action combat with tactical pause, ability combos, weapon set switching
+    ///   Party coordination: Enhanced AI for party member coordination and ability selection
     /// - Common combat concepts: Initiative, rounds, attacks, damage, effects
     ///
     /// Common functionality across engines:
