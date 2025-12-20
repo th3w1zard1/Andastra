@@ -1499,10 +1499,10 @@ namespace Andastra.Parsing.Formats.MDL
             foreach (var flag in emitterFlags)
             {
                 var pattern = $@"^\s*{Regex.Escape(flag.Key)}\s+(\S+)";
-                match = Regex.Match(line, pattern, RegexOptions.IgnoreCase);
-                if (match.Success)
+                var flagMatch = Regex.Match(line, pattern, RegexOptions.IgnoreCase);
+                if (flagMatch.Success)
                 {
-                    if (int.Parse(match.Groups[1].Value) == 1)
+                    if (int.Parse(flagMatch.Groups[1].Value) == 1)
                     {
                         emitter.Flags |= flag.Value;
                     }

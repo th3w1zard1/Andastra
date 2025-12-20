@@ -82,6 +82,135 @@ namespace Andastra.Parsing.Formats.MDLData
             hash.Add(CompressQuaternions);
             return hash.ToHashCode();
         }
+
+        /// <summary>
+        /// Gets a node by name from the tree.
+        /// Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_data.py:110-134
+        /// </summary>
+        public MDLNode Get(string nodeName)
+        {
+            var nodes = new List<MDLNode> { Root };
+            while (nodes.Count > 0)
+            {
+                var node = nodes[nodes.Count - 1];
+                nodes.RemoveAt(nodes.Count - 1);
+                
+                if (node.Name == nodeName)
+                {
+                    return node;
+                }
+                
+                if (node.Children != null)
+                {
+                    nodes.AddRange(node.Children);
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Returns a list of all nodes in the tree including the root node and children recursively.
+        /// Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_data.py:136-155
+        /// </summary>
+        public List<MDLNode> AllNodes()
+        {
+            var nodes = new List<MDLNode>();
+            var scan = new List<MDLNode> { Root };
+            while (scan.Count > 0)
+            {
+                var node = scan[scan.Count - 1];
+                scan.RemoveAt(scan.Count - 1);
+                nodes.Add(node);
+                if (node.Children != null)
+                {
+                    scan.AddRange(node.Children);
+                }
+            }
+            return nodes;
+        }
+
+        /// <summary>
+        /// Find the parent node of the given child node.
+        /// Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_data.py:157-176
+        /// </summary>
+        public MDLNode FindParent(MDLNode child)
+        {
+            var allNodes = AllNodes();
+            foreach (var node in allNodes)
+            {
+                if (node.Children != null && node.Children.Contains(child))
+                {
+                    return node;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Returns the global position of a node by traversing up the parent chain.
+        /// Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_data.py:178-197
+        /// </summary>
+        public Vector3 GlobalPosition(MDLNode node)
+        {
+            var position = node.Position;
+            var parent = FindParent(node);
+            while (parent != null)
+            {
+                position += parent.Position;
+                parent = FindParent(parent);
+            }
+            return position;
+        }
+
+        /// <summary>
+        /// Get node by node id.
+        /// Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_data.py:199-216
+        /// </summary>
+        public MDLNode GetByNodeId(int nodeId)
+        {
+            foreach (var node in AllNodes())
+            {
+                if (node.NodeId == nodeId)
+                {
+                    return node;
+                }
+            }
+            throw new ArgumentException($"No node with id {nodeId}");
+        }
+
+        /// <summary>
+        /// Returns all unique texture names used in the scene.
+        /// Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_data.py:218-235
+        /// </summary>
+        public HashSet<string> AllTextures()
+        {
+            var textures = new HashSet<string>();
+            foreach (var node in AllNodes())
+            {
+                if (node.Mesh != null && !string.IsNullOrEmpty(node.Mesh.Texture1) && node.Mesh.Texture1 != "NULL")
+                {
+                    textures.Add(node.Mesh.Texture1);
+                }
+            }
+            return textures;
+        }
+
+        /// <summary>
+        /// Returns a set of all lightmap textures used in the scene.
+        /// Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_data.py:237-254
+        /// </summary>
+        public HashSet<string> AllLightmaps()
+        {
+            var lightmaps = new HashSet<string>();
+            foreach (var node in AllNodes())
+            {
+                if (node.Mesh != null && !string.IsNullOrEmpty(node.Mesh.Texture2) && node.Mesh.Texture2 != "NULL")
+                {
+                    lightmaps.Add(node.Mesh.Texture2);
+                }
+            }
+            return lightmaps;
+        }
     }
 
     public class MDLAnimation : IEquatable<MDLAnimation>
@@ -126,6 +255,27 @@ namespace Andastra.Parsing.Formats.MDLData
             foreach (var e in Events) hash.Add(e);
             hash.Add(Root);
             return hash.ToHashCode();
+        }
+
+        /// <summary>
+        /// Returns all nodes in the animation tree including children recursively.
+        /// Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_data.py:370-389
+        /// </summary>
+        public List<MDLNode> AllNodes()
+        {
+            var nodes = new List<MDLNode>();
+            var scan = new List<MDLNode> { Root };
+            while (scan.Count > 0)
+            {
+                var node = scan[scan.Count - 1];
+                scan.RemoveAt(scan.Count - 1);
+                nodes.Add(node);
+                if (node.Children != null)
+                {
+                    scan.AddRange(node.Children);
+                }
+            }
+            return nodes;
         }
     }
 
