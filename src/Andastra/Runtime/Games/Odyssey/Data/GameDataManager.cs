@@ -929,248 +929,248 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         }
 
         #endregion
-    }
 
-    #region Data Structures
+        #region Data Structures
 
-    /// <summary>
-    /// Appearance data from appearance.2da.
-    /// </summary>
-    public class AppearanceData
-    {
-        public int RowIndex { get; set; }
-        public int AppearanceId { get { return RowIndex; } set { RowIndex = value; } }
-        public string Label { get; set; }
-        public string ModelType { get; set; }
-        public string ModelA { get; set; }
-        public string ModelB { get; set; }
-        public string TexA { get; set; }
-        public string TexB { get; set; }
-        public string Race { get; set; }
-        public int RacialType { get; set; }
-        public float WalkSpeed { get; set; }
-        public float WalkDist { get { return WalkSpeed; } set { WalkSpeed = value; } }
-        public float RunSpeed { get; set; }
-        public float RunDist { get { return RunSpeed; } set { RunSpeed = value; } }
-        public float PerceptionRange { get; set; }
-        public int PerceptionDist { get { return (int)PerceptionRange; } set { PerceptionRange = value; } }
-        public float Height { get; set; }
-        public int SizeCategory { get; set; }
-        public float HitRadius { get; set; }
-    }
-
-    /// <summary>
-    /// Class data from classes.2da.
-    /// </summary>
-    public class ClassData
-    {
-        public int RowIndex { get; set; }
-        public string Label { get; set; }
-        public string Name { get; set; }
-        public int HitDie { get; set; }
-        public string AttackBonusTable { get; set; }
-        public string FeatsBonusTable { get; set; }
-        public string SavingThrowTable { get; set; }
-        public int SkillsPerLevel { get; set; }
-        public string PrimaryAbility { get; set; }
-        public bool SpellCaster { get; set; }
-        public bool ForceUser { get; set; }
-    }
-
-    /// <summary>
-    /// Base item data from baseitems.2da.
-    /// </summary>
-    public class BaseItemData
-    {
-        public int RowIndex { get; set; }
-        public int BaseItemId { get { return RowIndex; } set { RowIndex = value; } }
-        public string Label { get; set; }
-        public string Name { get; set; }
-        public int EquipableSlots { get; set; }
-        public string DefaultIcon { get; set; }
-        public string DefaultModel { get; set; }
-        public int WeaponType { get; set; }
-        public int WeaponWield { get; set; }
-        public int DamageType { get; set; }
-        public int DamageFlags { get; set; }
-        public int WeaponSize { get; set; }
-        public int NumDice { get; set; }
-        public int DieToRoll { get; set; }
-        public int CriticalThreat { get; set; }
-        public int CriticalMultiplier { get; set; }
-        public int BaseCost { get; set; }
-        public int MaxStack { get; set; }
-        public bool RangedWeapon { get; set; }
-        public int MaxRange { get; set; }
-        public int MinRange { get; set; }
-    }
-
-    /// <summary>
-    /// Feat data from feat.2da.
-    /// </summary>
-    public class FeatData : Andastra.Runtime.Games.Common.Components.BaseCreatureComponent.IFeatData
-    {
-        public int RowIndex { get; set; }
-        public int FeatId { get { return RowIndex; } set { RowIndex = value; } }
-        public string Label { get; set; }
-        public string Name { get; set; }
-        public string Description { get; set; }
-        public int DescriptionStrRef { get; set; }
-        public string Icon { get; set; }
-        public int FeatCategory { get; set; }
-        public int MaxRanks { get; set; }
-        public int PrereqFeat1 { get; set; }
-        public int PrereqFeat2 { get; set; }
-        public int MinLevel { get; set; }
-        public int MinLevelClass { get; set; }
-        public int MinStr { get; set; }
-        public int MinDex { get; set; }
-        public int MinInt { get; set; }
-        public int MinWis { get; set; }
-        public int MinCon { get; set; }
-        public int MinCha { get; set; }
-        public bool Selectable { get; set; }
-        public bool RequiresAction { get; set; }
         /// <summary>
-        /// Uses per day limit for the feat.
-        /// -1 = unlimited uses or special handling (e.g., based on class levels)
-        /// 0+ = maximum uses per day
+        /// Appearance data from appearance.2da.
         /// </summary>
-        public int UsesPerDay { get; set; }
-    }
-
-    /// <summary>
-    /// Surface material data from surfacemat.2da.
-    /// </summary>
-    public class SurfaceMatData
-    {
-        public int RowIndex { get; set; }
-        public string Label { get; set; }
-        public bool Walk { get; set; }
-        public bool WalkCheck { get; set; }
-        public bool LineOfSight { get; set; }
-        public bool Grass { get; set; }
-        public string Sound { get; set; }
-        public string Name { get; set; }
-    }
-
-    /// <summary>
-    /// Placeable data from placeables.2da.
-    /// </summary>
-    public class PlaceableData
-    {
-        public int RowIndex { get; set; }
-        public string Label { get; set; }
-        public string ModelName { get; set; }
-        public string LowGore { get; set; }
-        public int SoundAppType { get; set; }
-    }
-
-    /// <summary>
-    /// Door data from genericdoors.2da.
-    /// </summary>
-    public class DoorData
-    {
-        public int RowIndex { get; set; }
-        public string Label { get; set; }
-        public string ModelName { get; set; }
-        public int SoundAppType { get; set; }
-        public bool BlockSight { get; set; }
-    }
-
-    /// <summary>
-    /// Spell/Force power data from spells.2da.
-    /// </summary>
-    public class SpellData
-    {
-        public int RowIndex { get; set; }
-        public int SpellId { get { return RowIndex; } set { RowIndex = value; } }
-        public string Label { get; set; }
-        public int Name { get; set; } // StrRef
-        public int NameStrRef { get; set; }
-        public int DescriptionStrRef { get; set; }
-        public string Icon { get; set; }
-        public int School { get; set; }
-        public float ConjTime { get; set; }
-        public float CastTime { get; set; }
-        public float CastingTime { get { return CastTime; } set { CastTime = value; } }
-        public int Range { get; set; }
-        public int TargetType { get; set; }
-        public int HostileSetting { get; set; }
-        public string ImpactScript { get; set; }
-        public int SpellLevel { get; set; }
-        public string Projectile { get; set; }
-        public string ProjectileModel { get; set; }
-        public int ConjHandVfx { get; set; }
-        public int ConjHeadVfx { get; set; }
-        public int ConjGrndVfx { get; set; }
-        public int ConjCastVfx { get; set; }
-        public float ConjDuration { get; set; }
-        public int ConjRange { get; set; }
-        public int Innate { get; set; }
-        public int FeatId { get; set; }
-    }
-
-    /// <summary>
-    /// Skill data from skills.2da.
-    /// </summary>
-    public class SkillData
-    {
-        public int RowIndex { get; set; }
-        public int SkillId { get { return RowIndex; } set { RowIndex = value; } }
-        public string Label { get; set; }
-        public string Name { get; set; }
-        public string Description { get; set; }
-        public int DescriptionStrRef { get; set; }
-    }
-
-    #endregion
-
-    #region Portrait Data
-
-    /// <summary>
-    /// Gets portrait data from portraits.2da.
-    /// </summary>
-    /// <param name="portraitId">Portrait ID (row index in portraits.2da).</param>
-    /// <returns>Portrait data if found, null otherwise.</returns>
-    /// <remarks>
-    /// Portrait Data Access:
-    /// - Based on swkotor.exe and swkotor2.exe: Portrait loading from portraits.2da
-    /// - Located via string references: "portraits.2da" in resource loading
-    /// - Original implementation: Loads portrait ResRef from portraits.2da table
-    /// - Portrait ID is row index in portraits.2da (0-based)
-    /// - Portraits.2da structure: Row index = Portrait ID, "baseresref" column = portrait texture ResRef
-    /// - Portrait textures are stored as TPC or TGA files in game resources
-    /// </remarks>
-    [CanBeNull]
-    public PortraitData GetPortrait(int portraitId)
-    {
-        TwoDA table = GetTable("portraits");
-        if (table == null || portraitId < 0 || portraitId >= table.GetHeight())
+        public class AppearanceData
         {
-            return null;
+            public int RowIndex { get; set; }
+            public int AppearanceId { get { return RowIndex; } set { RowIndex = value; } }
+            public string Label { get; set; }
+            public string ModelType { get; set; }
+            public string ModelA { get; set; }
+            public string ModelB { get; set; }
+            public string TexA { get; set; }
+            public string TexB { get; set; }
+            public string Race { get; set; }
+            public int RacialType { get; set; }
+            public float WalkSpeed { get; set; }
+            public float WalkDist { get { return WalkSpeed; } set { WalkSpeed = value; } }
+            public float RunSpeed { get; set; }
+            public float RunDist { get { return RunSpeed; } set { RunSpeed = value; } }
+            public float PerceptionRange { get; set; }
+            public int PerceptionDist { get { return (int)PerceptionRange; } set { PerceptionRange = value; } }
+            public float Height { get; set; }
+            public int SizeCategory { get; set; }
+            public float HitRadius { get; set; }
         }
 
-        TwoDARow row = table.GetRow(portraitId);
-        return new PortraitData
+        /// <summary>
+        /// Class data from classes.2da.
+        /// </summary>
+        public class ClassData
         {
-            RowIndex = portraitId,
-            PortraitId = portraitId,
-            Label = row.Label(),
-            BaseResRef = row.GetString("baseresref") ?? row.GetString("resref") ?? string.Empty
-        };
-    }
+            public int RowIndex { get; set; }
+            public string Label { get; set; }
+            public string Name { get; set; }
+            public int HitDie { get; set; }
+            public string AttackBonusTable { get; set; }
+            public string FeatsBonusTable { get; set; }
+            public string SavingThrowTable { get; set; }
+            public int SkillsPerLevel { get; set; }
+            public string PrimaryAbility { get; set; }
+            public bool SpellCaster { get; set; }
+            public bool ForceUser { get; set; }
+        }
 
-    #endregion
+        /// <summary>
+        /// Base item data from baseitems.2da.
+        /// </summary>
+        public class BaseItemData
+        {
+            public int RowIndex { get; set; }
+            public int BaseItemId { get { return RowIndex; } set { RowIndex = value; } }
+            public string Label { get; set; }
+            public string Name { get; set; }
+            public int EquipableSlots { get; set; }
+            public string DefaultIcon { get; set; }
+            public string DefaultModel { get; set; }
+            public int WeaponType { get; set; }
+            public int WeaponWield { get; set; }
+            public int DamageType { get; set; }
+            public int DamageFlags { get; set; }
+            public int WeaponSize { get; set; }
+            public int NumDice { get; set; }
+            public int DieToRoll { get; set; }
+            public int CriticalThreat { get; set; }
+            public int CriticalMultiplier { get; set; }
+            public int BaseCost { get; set; }
+            public int MaxStack { get; set; }
+            public bool RangedWeapon { get; set; }
+            public int MaxRange { get; set; }
+            public int MinRange { get; set; }
+        }
 
-    /// <summary>
-    /// Portrait data from portraits.2da.
-    /// </summary>
-    public class PortraitData
-    {
-        public int RowIndex { get; set; }
-        public int PortraitId { get { return RowIndex; } set { RowIndex = value; } }
-        public string Label { get; set; }
-        public string BaseResRef { get; set; }
+        /// <summary>
+        /// Feat data from feat.2da.
+        /// </summary>
+        public class FeatData : Andastra.Runtime.Games.Common.Components.BaseCreatureComponent.IFeatData
+        {
+            public int RowIndex { get; set; }
+            public int FeatId { get { return RowIndex; } set { RowIndex = value; } }
+            public string Label { get; set; }
+            public string Name { get; set; }
+            public string Description { get; set; }
+            public int DescriptionStrRef { get; set; }
+            public string Icon { get; set; }
+            public int FeatCategory { get; set; }
+            public int MaxRanks { get; set; }
+            public int PrereqFeat1 { get; set; }
+            public int PrereqFeat2 { get; set; }
+            public int MinLevel { get; set; }
+            public int MinLevelClass { get; set; }
+            public int MinStr { get; set; }
+            public int MinDex { get; set; }
+            public int MinInt { get; set; }
+            public int MinWis { get; set; }
+            public int MinCon { get; set; }
+            public int MinCha { get; set; }
+            public bool Selectable { get; set; }
+            public bool RequiresAction { get; set; }
+            /// <summary>
+            /// Uses per day limit for the feat.
+            /// -1 = unlimited uses or special handling (e.g., based on class levels)
+            /// 0+ = maximum uses per day
+            /// </summary>
+            public int UsesPerDay { get; set; }
+        }
+
+        /// <summary>
+        /// Surface material data from surfacemat.2da.
+        /// </summary>
+        public class SurfaceMatData
+        {
+            public int RowIndex { get; set; }
+            public string Label { get; set; }
+            public bool Walk { get; set; }
+            public bool WalkCheck { get; set; }
+            public bool LineOfSight { get; set; }
+            public bool Grass { get; set; }
+            public string Sound { get; set; }
+            public string Name { get; set; }
+        }
+
+        /// <summary>
+        /// Placeable data from placeables.2da.
+        /// </summary>
+        public class PlaceableData
+        {
+            public int RowIndex { get; set; }
+            public string Label { get; set; }
+            public string ModelName { get; set; }
+            public string LowGore { get; set; }
+            public int SoundAppType { get; set; }
+        }
+
+        /// <summary>
+        /// Door data from genericdoors.2da.
+        /// </summary>
+        public class DoorData
+        {
+            public int RowIndex { get; set; }
+            public string Label { get; set; }
+            public string ModelName { get; set; }
+            public int SoundAppType { get; set; }
+            public bool BlockSight { get; set; }
+        }
+
+        /// <summary>
+        /// Spell/Force power data from spells.2da.
+        /// </summary>
+        public class SpellData
+        {
+            public int RowIndex { get; set; }
+            public int SpellId { get { return RowIndex; } set { RowIndex = value; } }
+            public string Label { get; set; }
+            public int Name { get; set; } // StrRef
+            public int NameStrRef { get; set; }
+            public int DescriptionStrRef { get; set; }
+            public string Icon { get; set; }
+            public int School { get; set; }
+            public float ConjTime { get; set; }
+            public float CastTime { get; set; }
+            public float CastingTime { get { return CastTime; } set { CastTime = value; } }
+            public int Range { get; set; }
+            public int TargetType { get; set; }
+            public int HostileSetting { get; set; }
+            public string ImpactScript { get; set; }
+            public int SpellLevel { get; set; }
+            public string Projectile { get; set; }
+            public string ProjectileModel { get; set; }
+            public int ConjHandVfx { get; set; }
+            public int ConjHeadVfx { get; set; }
+            public int ConjGrndVfx { get; set; }
+            public int ConjCastVfx { get; set; }
+            public float ConjDuration { get; set; }
+            public int ConjRange { get; set; }
+            public int Innate { get; set; }
+            public int FeatId { get; set; }
+        }
+
+        /// <summary>
+        /// Skill data from skills.2da.
+        /// </summary>
+        public class SkillData
+        {
+            public int RowIndex { get; set; }
+            public int SkillId { get { return RowIndex; } set { RowIndex = value; } }
+            public string Label { get; set; }
+            public string Name { get; set; }
+            public string Description { get; set; }
+            public int DescriptionStrRef { get; set; }
+        }
+
+        #endregion
+
+        #region Portrait Data
+
+        /// <summary>
+        /// Gets portrait data from portraits.2da.
+        /// </summary>
+        /// <param name="portraitId">Portrait ID (row index in portraits.2da).</param>
+        /// <returns>Portrait data if found, null otherwise.</returns>
+        /// <remarks>
+        /// Portrait Data Access:
+        /// - Based on swkotor.exe and swkotor2.exe: Portrait loading from portraits.2da
+        /// - Located via string references: "portraits.2da" in resource loading
+        /// - Original implementation: Loads portrait ResRef from portraits.2da table
+        /// - Portrait ID is row index in portraits.2da (0-based)
+        /// - Portraits.2da structure: Row index = Portrait ID, "baseresref" column = portrait texture ResRef
+        /// - Portrait textures are stored as TPC or TGA files in game resources
+        /// </remarks>
+        [CanBeNull]
+        public PortraitData GetPortrait(int portraitId)
+        {
+            TwoDA table = GetTable("portraits");
+            if (table == null || portraitId < 0 || portraitId >= table.GetHeight())
+            {
+                return null;
+            }
+
+            TwoDARow row = table.GetRow(portraitId);
+            return new PortraitData
+            {
+                RowIndex = portraitId,
+                PortraitId = portraitId,
+                Label = row.Label(),
+                BaseResRef = row.GetString("baseresref") ?? row.GetString("resref") ?? string.Empty
+            };
+        }
+
+        /// <summary>
+        /// Portrait data from portraits.2da.
+        /// </summary>
+        public class PortraitData
+        {
+            public int RowIndex { get; set; }
+            public int PortraitId { get { return RowIndex; } set { RowIndex = value; } }
+            public string Label { get; set; }
+            public string BaseResRef { get; set; }
+        }
+
+        #endregion
     }
 }
