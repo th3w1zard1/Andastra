@@ -692,6 +692,8 @@ namespace Andastra.Runtime.MonoGame.GUI
 
         /// <summary>
         /// Renders a list box control.
+        /// Based on swkotor.exe and swkotor2.exe: CSWGuiListBox::Draw
+        /// Original implementation: Items rendered using ProtoItem template with proper states and scrolling
         /// </summary>
         private void RenderListBox(GUIListBox listBox, Vector2 position, Vector2 size)
         {
@@ -706,8 +708,402 @@ namespace Andastra.Runtime.MonoGame.GUI
                 }
             }
 
-            // TODO: Render list box items using ProtoItem template
-            // TODO: Render scrollbar if present
+            // Cannot render items without ProtoItem template
+            if (listBox.ProtoItem == null)
+            {
+                return;
+            }
+
+            // Get list of items to render
+            List<string> items = GetListBoxItems(listBox);
+            if (items == null || items.Count == 0)
+            {
+                // No items to render - scrollbar still might be needed if it's visible by default
+                if (listBox.ScrollBar != null)
+                {
+                    RenderListBoxScrollbar(listBox, position, size, 0, 0);
+                }
+                return;
+            }
+
+            // Get scroll offset (which item index to start rendering from)
+            int scrollOffset = GetListBoxScrollOffset(listBox, items.Count);
+            int visibleItemCount = GetVisibleItemCount(listBox, items.Count, size);
+
+            // Calculate item height from ProtoItem template
+            float itemHeight = listBox.ProtoItem.Size.Y > 0 ? listBox.ProtoItem.Size.Y : 20.0f; // Default to 20 if not set
+            int padding = listBox.Padding;
+
+            // Get selected item index
+            int selectedIndex = GetSelectedListBoxItemIndex(listBox, items.Count);
+
+            // Render visible items
+            float currentY = position.Y;
+            int itemsRendered = 0;
+
+            for (int i = scrollOffset; i < items.Count && itemsRendered < visibleItemCount; i++)
+            {
+                string itemText = items[i];
+                bool isSelected = (i == selectedIndex);
+                bool isHighlighted = IsListBoxItemHighlighted(listBox, position, size, itemsRendered, itemHeight, padding);
+
+                // Render proto item at current position
+                Vector2 itemPosition = new Vector2(position.X, currentY);
+                Vector2 itemSize = new Vector2(size.X, itemHeight);
+                RenderProtoItem(listBox.ProtoItem, itemPosition, itemSize, itemText, isSelected, isHighlighted);
+
+                // Move to next item position
+                currentY += itemHeight + padding;
+                itemsRendered++;
+            }
+
+            // Render scrollbar if present and needed
+            if (listBox.ScrollBar != null && items.Count > visibleItemCount)
+            {
+                RenderListBoxScrollbar(listBox, position, size, items.Count, visibleItemCount);
+            }
+        }
+
+        /// <summary>
+        /// Gets the list of items to render in a list box.
+        /// Items can be stored in Properties["Items"] or as child ProtoItem controls.
+        /// Based on swkotor.exe and swkotor2.exe: CSWGuiListBox item storage
+        /// </summary>
+        private List<string> GetListBoxItems(GUIListBox listBox)
+        {
+            // Check if items are stored in Properties dictionary
+            if (listBox.Properties != null && listBox.Properties.ContainsKey("Items"))
+            {
+                object itemsObj = listBox.Properties["Items"];
+                if (itemsObj is List<string> itemsList)
+                {
+                    return itemsList;
+                }
+                if (itemsObj is string[] itemsArray)
+                {
+                    return new List<string>(itemsArray);
+                }
+            }
+
+            // Check if there are child ProtoItem controls (some GUIs pre-create items)
+            if (listBox.Children != null && listBox.Children.Count > 0)
+            {
+                List<string> childItems = new List<string>();
+                foreach (var child in listBox.Children)
+                {
+                    if (child is GUIProtoItem protoItem && protoItem.GuiText != null && !string.IsNullOrEmpty(protoItem.GuiText.Text))
+                    {
+                        childItems.Add(protoItem.GuiText.Text);
+                    }
+                }
+                if (childItems.Count > 0)
+                {
+                    return childItems;
+                }
+            }
+
+            // No items found
+            return new List<string>();
+        }
+
+        /// <summary>
+        /// Gets the scroll offset (starting item index) for a list box.
+        /// Based on swkotor.exe and swkotor2.exe: Scroll offset calculation
+        /// </summary>
+        private int GetListBoxScrollOffset(GUIListBox listBox, int totalItemCount)
+        {
+            // Check if scroll offset is stored in Properties
+            if (listBox.Properties != null && listBox.Properties.ContainsKey("ScrollOffset"))
+            {
+                object scrollOffsetObj = listBox.Properties["ScrollOffset"];
+                if (scrollOffsetObj is int offset)
+                {
+                    return Math.Max(0, Math.Min(offset, totalItemCount - 1));
+                }
+            }
+
+            // Calculate from scrollbar current value if available
+            if (listBox.ScrollBar != null && listBox.ScrollBar.CurrentValue.HasValue)
+            {
+                int scrollValue = listBox.ScrollBar.CurrentValue.Value;
+                return Math.Max(0, Math.Min(scrollValue, totalItemCount - 1));
+            }
+
+            // Default: start at first item
+            return 0;
+        }
+
+        /// <summary>
+        /// Calculates how many items can fit in the visible area of the list box.
+        /// Based on swkotor.exe and swkotor2.exe: Visible item count calculation
+        /// </summary>
+        private int GetVisibleItemCount(GUIListBox listBox, int totalItemCount, Vector2 listBoxSize)
+        {
+            if (listBox.ProtoItem == null)
+            {
+                return 0;
+            }
+
+            float itemHeight = listBox.ProtoItem.Size.Y > 0 ? listBox.ProtoItem.Size.Y : 20.0f;
+            int padding = listBox.Padding;
+
+            // Account for scrollbar width if present
+            float availableHeight = listBoxSize.Y;
+            if (listBox.ScrollBar != null && !listBox.ScrollBar.Horizontal)
+            {
+                // Vertical scrollbar takes up space (typically ~20 pixels)
+                availableHeight -= 20.0f;
+            }
+
+            // Calculate how many items fit
+            if (itemHeight + padding <= 0)
+            {
+                return totalItemCount; // Prevent division by zero
+            }
+
+            int visibleCount = (int)Math.Floor((availableHeight + padding) / (itemHeight + padding));
+            return Math.Max(0, Math.Min(visibleCount, totalItemCount));
+        }
+
+        /// <summary>
+        /// Gets the index of the currently selected item in a list box.
+        /// Based on swkotor.exe and swkotor2.exe: Selected item tracking
+        /// </summary>
+        private int GetSelectedListBoxItemIndex(GUIListBox listBox, int totalItemCount)
+        {
+            // Check if selected index is stored in Properties
+            if (listBox.Properties != null && listBox.Properties.ContainsKey("SelectedIndex"))
+            {
+                object selectedIndexObj = listBox.Properties["SelectedIndex"];
+                if (selectedIndexObj is int selectedIndex)
+                {
+                    if (selectedIndex >= 0 && selectedIndex < totalItemCount)
+                    {
+                        return selectedIndex;
+                    }
+                }
+            }
+
+            // Check CurrentValue as fallback
+            if (listBox.CurrentValue.HasValue)
+            {
+                int selectedIndex = listBox.CurrentValue.Value;
+                if (selectedIndex >= 0 && selectedIndex < totalItemCount)
+                {
+                    return selectedIndex;
+                }
+            }
+
+            // No item selected
+            return -1;
+        }
+
+        /// <summary>
+        /// Checks if a list box item at a specific render position is currently highlighted (mouse over).
+        /// Based on swkotor.exe and swkotor2.exe: Mouse hover detection
+        /// </summary>
+        private bool IsListBoxItemHighlighted(GUIListBox listBox, Vector2 listBoxPosition, Vector2 listBoxSize, int itemIndex, float itemHeight, int padding)
+        {
+            MouseState currentMouseState = Mouse.GetState();
+            int mouseX = currentMouseState.X;
+            int mouseY = currentMouseState.Y;
+
+            // Calculate item bounds
+            float itemY = listBoxPosition.Y + (itemIndex * (itemHeight + padding));
+            float itemBottom = itemY + itemHeight;
+
+            // Account for scrollbar position if present
+            float itemLeft = listBoxPosition.X;
+            float itemRight = listBoxPosition.X + listBoxSize.X;
+            if (listBox.ScrollBar != null && !listBox.ScrollBar.Horizontal && listBox.LeftScrollbar != null && listBox.LeftScrollbar.Value != 0)
+            {
+                // Scrollbar on left side - adjust item left edge
+                itemLeft += 20.0f; // Approximate scrollbar width
+            }
+            else if (listBox.ScrollBar != null && !listBox.ScrollBar.Horizontal)
+            {
+                // Scrollbar on right side - adjust item right edge
+                itemRight -= 20.0f; // Approximate scrollbar width
+            }
+
+            // Check if mouse is within item bounds
+            return mouseX >= itemLeft && mouseX <= itemRight && mouseY >= itemY && mouseY <= itemBottom;
+        }
+
+        /// <summary>
+        /// Renders a proto item control.
+        /// Based on swkotor.exe and swkotor2.exe: ProtoItem rendering with state support
+        /// Original implementation: ProtoItem renders differently based on selected/highlighted states
+        /// </summary>
+        private void RenderProtoItem(GUIProtoItem protoItem, Vector2 position, Vector2 size, string itemText, bool isSelected, bool isHighlighted)
+        {
+            // Determine which border state to use (normal, hilight, selected, hilight+selected)
+            // Priority: hilight+selected > selected > hilight > normal
+            GUIBorder borderToUse = protoItem.Border;
+            if (isHighlighted && isSelected && protoItem.HilightSelected != null)
+            {
+                // Item is both highlighted and selected - use hilight+selected border
+                borderToUse = ConvertHilightSelectedToBorder(protoItem.HilightSelected);
+            }
+            else if (isSelected && protoItem.Selected != null)
+            {
+                // Item is selected (but not highlighted) - use selected border
+                borderToUse = ConvertSelectedToBorder(protoItem.Selected);
+            }
+            else if (isHighlighted && protoItem.Hilight != null)
+            {
+                // Item is highlighted (but not selected) - use hilight border
+                borderToUse = protoItem.Hilight;
+            }
+
+            // Render proto item background
+            if (borderToUse != null && !borderToUse.Fill.IsBlank)
+            {
+                Texture2D fillTexture = LoadTexture(borderToUse.Fill.ToString());
+                if (fillTexture != null)
+                {
+                    Color tint = Microsoft.Xna.Framework.Color.White;
+                    _spriteBatch.Draw(fillTexture, new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                }
+            }
+            else if (protoItem.Border != null && !protoItem.Border.Fill.IsBlank)
+            {
+                Texture2D fillTexture = LoadTexture(protoItem.Border.Fill.ToString());
+                if (fillTexture != null)
+                {
+                    Color tint = Microsoft.Xna.Framework.Color.White;
+                    _spriteBatch.Draw(fillTexture, new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                }
+            }
+            else
+            {
+                // Render solid color background if available
+                Color bgColor = protoItem.Color;
+                if (bgColor.A > 0)
+                {
+                    Texture2D pixel = GetPixelTexture();
+                    Color tint = new Microsoft.Xna.Framework.Color(bgColor.R, bgColor.G, bgColor.B, bgColor.A);
+                    _spriteBatch.Draw(pixel, new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                }
+            }
+
+            // Render proto item text if available
+            if (!string.IsNullOrEmpty(itemText))
+            {
+                // Use proto item's text properties if available, otherwise use defaults
+                Color textColor;
+                int alignment;
+                ResRef fontResRef;
+
+                if (protoItem.GuiText != null)
+                {
+                    textColor = new Microsoft.Xna.Framework.Color(
+                        protoItem.GuiText.Color.R,
+                        protoItem.GuiText.Color.G,
+                        protoItem.GuiText.Color.B,
+                        protoItem.GuiText.Color.A);
+                    alignment = protoItem.GuiText.Alignment;
+                    fontResRef = protoItem.GuiText.Font;
+                }
+                else
+                {
+                    // Default text properties
+                    textColor = Microsoft.Xna.Framework.Color.White;
+                    alignment = 1; // Left align
+                    fontResRef = protoItem.Font;
+                }
+
+                // Load font
+                BaseBitmapFont font = LoadFont(fontResRef.ToString());
+                if (font != null)
+                {
+                    // Measure text size
+                    Vector2 textSize = font.MeasureString(itemText);
+
+                    // Calculate text position based on alignment
+                    Vector2 textPos = CalculateTextPosition(alignment, position, size, textSize);
+
+                    // Render text using bitmap font
+                    RenderBitmapText(font, itemText, textPos, textColor);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Renders the scrollbar for a list box.
+        /// Based on swkotor.exe and swkotor2.exe: ListBox scrollbar rendering
+        /// </summary>
+        private void RenderListBoxScrollbar(GUIListBox listBox, Vector2 listBoxPosition, Vector2 listBoxSize, int totalItemCount, int visibleItemCount)
+        {
+            if (listBox.ScrollBar == null || totalItemCount <= visibleItemCount)
+            {
+                return;
+            }
+
+            GUIScrollbar scrollBar = listBox.ScrollBar;
+
+            // Determine scrollbar position (left or right)
+            bool isLeftScrollbar = listBox.LeftScrollbar.HasValue && listBox.LeftScrollbar.Value != 0;
+            float scrollbarX = isLeftScrollbar ? listBoxPosition.X : listBoxPosition.X + listBoxSize.X - 20.0f; // Approximate scrollbar width
+            float scrollbarY = listBoxPosition.Y;
+            float scrollbarWidth = 20.0f; // Approximate scrollbar width
+            float scrollbarHeight = listBoxSize.Y;
+
+            Vector2 scrollbarPosition = new Vector2(scrollbarX, scrollbarY);
+            Vector2 scrollbarSize = new Vector2(scrollbarWidth, scrollbarHeight);
+
+            // Render scrollbar background if available
+            if (scrollBar.Border != null && !scrollBar.Border.Fill.IsBlank)
+            {
+                Texture2D scrollbarBgTexture = LoadTexture(scrollBar.Border.Fill.ToString());
+                if (scrollbarBgTexture != null)
+                {
+                    Color tint = Microsoft.Xna.Framework.Color.White;
+                    _spriteBatch.Draw(scrollbarBgTexture, new Rectangle((int)scrollbarPosition.X, (int)scrollbarPosition.Y, (int)scrollbarSize.X, (int)scrollbarSize.Y), tint);
+                }
+            }
+
+            // Render scrollbar thumb
+            if (scrollBar.GuiThumb != null && !scrollBar.GuiThumb.Image.IsBlank)
+            {
+                Texture2D thumbTexture = LoadTexture(scrollBar.GuiThumb.Image.ToString());
+                if (thumbTexture != null)
+                {
+                    // Calculate thumb position based on current scroll value
+                    int currentValue = scrollBar.CurrentValue ?? 0;
+                    int maxValue = Math.Max(1, totalItemCount - visibleItemCount);
+                    float scrollRatio = maxValue > 0 ? (float)currentValue / maxValue : 0.0f;
+                    scrollRatio = Math.Max(0.0f, Math.Min(1.0f, scrollRatio)); // Clamp to [0, 1]
+
+                    // Calculate thumb height based on visible vs total items ratio
+                    float thumbHeight = Math.Max(10.0f, scrollbarSize.Y * (visibleItemCount / (float)totalItemCount));
+                    float availableTrackHeight = scrollbarSize.Y - thumbHeight;
+                    float thumbY = scrollbarPosition.Y + (scrollRatio * availableTrackHeight);
+
+                    // Render thumb
+                    Color thumbTint = Microsoft.Xna.Framework.Color.White;
+                    Rectangle thumbRect = new Rectangle((int)scrollbarPosition.X, (int)thumbY, (int)scrollbarSize.X, (int)thumbHeight);
+                    _spriteBatch.Draw(thumbTexture, thumbRect, thumbTint);
+                }
+            }
+
+            // Render scrollbar direction arrows if available
+            if (scrollBar.GuiDirection != null && !scrollBar.GuiDirection.Image.IsBlank)
+            {
+                Texture2D arrowTexture = LoadTexture(scrollBar.GuiDirection.Image.ToString());
+                if (arrowTexture != null)
+                {
+                    // Render up arrow (top of scrollbar)
+                    float upArrowSize = Math.Min(20.0f, scrollbarSize.Y * 0.1f);
+                    Rectangle upArrowRect = new Rectangle((int)scrollbarPosition.X, (int)scrollbarPosition.Y, (int)scrollbarSize.X, (int)upArrowSize);
+                    _spriteBatch.Draw(arrowTexture, upArrowRect, Microsoft.Xna.Framework.Color.White);
+
+                    // Render down arrow (bottom of scrollbar)
+                    float downArrowY = scrollbarPosition.Y + scrollbarSize.Y - upArrowSize;
+                    Rectangle downArrowRect = new Rectangle((int)scrollbarPosition.X, (int)downArrowY, (int)scrollbarSize.X, (int)upArrowSize);
+                    _spriteBatch.Draw(arrowTexture, downArrowRect, Microsoft.Xna.Framework.Color.White);
+                }
+            }
         }
 
         /// <summary>

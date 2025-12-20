@@ -555,36 +555,185 @@ namespace Andastra.Runtime.Core.Navigation
     /// </para>
     /// 
     /// <para>
+    /// HOW IS THE AABB TREE BUILT?
+    /// 
+    /// The AABB tree is a binary tree structure that organizes triangles into boxes for fast searching.
+    /// It's built using a recursive top-down construction algorithm.
+    /// 
+    /// Construction Algorithm:
+    /// 
+    /// STEP 1: Calculate Bounding Box
+    /// - For all triangles in the current set, find the smallest box that contains them all
+    /// - The box is defined by min and max points (BoundsMin, BoundsMax)
+    /// - BoundsMin = minimum of all vertex coordinates
+    /// - BoundsMax = maximum of all vertex coordinates
+    /// 
+    /// STEP 2: Check Termination Conditions
+    /// - If only one triangle remains, create a leaf node (FaceIndex = triangle index)
+    /// - If maximum depth is reached, create a leaf node
+    /// - Otherwise, create an internal node and split
+    /// 
+    /// STEP 3: Choose Split Axis
+    /// - Find the longest dimension of the bounding box (X, Y, or Z)
+    /// - Split along this axis (splitting along longest axis creates more balanced trees)
+    /// - Split point is the center of the bounding box along the chosen axis
+    /// 
+    /// STEP 4: Partition Triangles
+    /// - For each triangle, calculate its center point (average of three vertices)
+    /// - If triangle center is less than split point, add to left child set
+    /// - Otherwise, add to right child set
+    /// 
+    /// STEP 5: Handle Degenerate Cases
+    /// - If all triangles end up on one side, try splitting along a different axis
+    /// - If still degenerate, split in half by index (simple fallback)
+    /// 
+    /// STEP 6: Recursively Build Children
+    /// - Recursively build left child tree with left triangle set
+    /// - Recursively build right child tree with right triangle set
+    /// - Return the internal node with children attached
+    /// 
+    /// Tree Structure:
+    /// - Leaf nodes: FaceIndex >= 0 (contains a triangle index)
+    /// - Internal nodes: FaceIndex = -1 (contains child nodes)
+    /// - Each node has BoundsMin and BoundsMax (bounding box)
+    /// - Each internal node has Left and Right child pointers
+    /// 
+    /// Performance:
+    /// - Building the tree: O(n log n) where n is number of triangles
+    /// - Searching the tree: O(log n) average case, O(n) worst case (degenerate tree)
+    /// - Without tree: O(n) for every search (must test all triangles)
+    /// 
+    /// Based on swkotor2.exe: AABB tree is built during walkmesh loading, not at runtime.
+    /// The tree structure is stored in BWM files for WOK (area walkmeshes).
+    /// </para>
+    /// 
+    /// <para>
     /// OPTIMIZATIONS:
     /// 
     /// 1. AABB Tree: Instead of testing every triangle, the tree organizes them into boxes, making
-    ///    searches much faster (from O(n) to O(log n) where n is the number of triangles)
+    ///    searches much faster (from O(n) to O(log n) where n is the number of triangles).
+    ///    - Building: O(n log n) time, done once during walkmesh loading
+    ///    - Searching: O(log n) average case, O(n) worst case
+    ///    - Memory: O(n) space for tree nodes
+    ///    - Based on swkotor2.exe: AABB tree is stored in BWM files for WOK walkmeshes
     /// 
     /// 2. Hint Face Index: When finding a face, if you provide a guess (hint), it tests that triangle
-    ///    first. This is fast because characters usually stay on the same triangle for multiple frames.
+    ///    first. This is fast because characters usually stay on the same triangle for multiple frames
+    ///    (60+ frames per second). The hint is correct most of the time, avoiding tree traversal.
+    ///    - Based on swkotor2.exe: FUN_004f4260 @ 0x004f4260 tests hint face first (lines 31-42)
+    ///    - Optimization: O(1) best case (hint correct), O(log n) average case (hint wrong)
     /// 
     /// 3. Normalized Direction Caching: When raycasting, the direction vector is normalized once
     ///    and reused for all intersection tests, avoiding repeated calculations.
+    ///    - Normalization: Calculate length once, divide direction by length
+    ///    - Reuse: Use normalized direction in all AABB and triangle intersection tests
+    ///    - Saves: n-1 normalization calculations (where n = number of triangles tested)
     /// 
-    /// 4. Early Termination: If a raycast finds an exact hit (distance = 0), it stops immediately
-    ///    instead of checking more triangles.
+    /// 4. Early Termination: If a raycast finds an exact hit (distance = 0, within tolerance), it
+    ///    stops immediately instead of checking more triangles.
+    ///    - Exact hit: Ray starts on triangle surface (distance < 1e-5)
+    ///    - Optimization: O(1) best case (exact hit on first triangle)
+    ///    - Based on swkotor2.exe: Early termination when exact hit found
     /// 
     /// 5. Distance-Based AABB Traversal: When traversing the AABB tree, it tests the closer child
     ///    first. This is an optimization over the original flag-based ordering (FUN_00575350 uses
     ///    param_4[1] flag to determine order), but maintains correctness while improving performance.
+    ///    - Calculates distance from ray origin to each child's AABB center
+    ///    - Tests closer child first (more likely to contain closest hit)
+    ///    - Can reduce bestDist earlier, allowing more aggressive culling of second child
+    ///    - Based on swkotor2.exe: Original uses flag-based ordering, this is optimized version
+    /// 
+    /// 6. AABB Pre-filtering: Before testing triangle intersection, test if ray hits triangle's AABB.
+    ///    This is a fast rejection test - if ray doesn't hit AABB, it can't hit the triangle.
+    ///    - AABB test: O(1) per triangle (simple box test)
+    ///    - Triangle test: O(1) per triangle (plane + edge tests)
+    ///    - Rejection rate: High (most triangles are rejected by AABB test)
+    ///    - Based on swkotor2.exe: FUN_0055b300 @ 0x0055b300 tests AABB before triangle
+    /// 
+    /// 7. Brute Force Fallback: If no AABB tree is available, falls back to brute force search.
+    ///    While slower (O(n)), it still works correctly and handles edge cases properly.
+    ///    - Used for: PWK/DWK walkmeshes (placeable/door walkmeshes don't have AABB trees)
+    ///    - Optimization: Still uses normalized direction caching and early termination
     /// </para>
     /// 
     /// <para>
     /// EDGE CASES HANDLED:
     /// 
-    /// - Empty mesh: Returns false immediately for all queries
-    /// - Zero or invalid direction vectors: Rejected before processing
-    /// - Degenerate triangles (zero area): Skipped during intersection tests
-    /// - Ray starting inside triangle: Handled with tolerance checks
-    /// - Ray on triangle surface: Returns as hit with distance 0
-    /// - Invalid face/vertex indices: Validated before use
-    /// - Vertical triangles (normal.Z ≈ 0): Uses average height of vertices
-    /// - Ray parallel to triangle plane: Rejected (no intersection possible)
+    /// EMPTY MESH:
+    /// - If mesh has no triangles (faceCount == 0), all queries return false immediately
+    /// - FindFaceAt returns -1, Raycast returns false, ProjectToSurface returns false
+    /// - Prevents division by zero and array access errors
+    /// 
+    /// ZERO OR INVALID DIRECTION VECTORS:
+    /// - Direction vector with length < 1e-6 is rejected (too small to be meaningful)
+    /// - Non-finite direction values (NaN, Infinity) are rejected
+    /// - Prevents division by zero in normalization and intersection calculations
+    /// 
+    /// DEGENERATE TRIANGLES (ZERO AREA):
+    /// - Triangles where all three vertices are collinear (in a straight line)
+    /// - Detected by checking if normal vector length < 1e-6
+    /// - Skipped during intersection tests (can't determine which side is "front")
+    /// - Based on swkotor2.exe: FUN_004d9030 @ 0x004d9030 checks normal length (line 58)
+    /// 
+    /// RAY STARTING INSIDE TRIANGLE:
+    /// - If ray origin is inside a triangle, intersection distance is 0 or negative
+    /// - Handled with tolerance checks: distance < 1e-5 is treated as exact hit (distance = 0)
+    /// - Returns hit with distance 0 (ray starts on triangle surface)
+    /// 
+    /// RAY ON TRIANGLE SURFACE:
+    /// - If ray starts exactly on triangle surface, distance = 0 (within tolerance)
+    /// - Returns as hit with distance 0
+    /// - Early termination optimization stops searching immediately
+    /// 
+    /// INVALID FACE/VERTEX INDICES:
+    /// - Face indices are validated: 0 <= faceIndex < faceCount
+    /// - Vertex indices are validated: 0 <= vertexIndex < vertexCount
+    /// - Face index bounds checked: faceIndex * 3 + 2 < faceIndices.Length
+    /// - Prevents array out-of-bounds access
+    /// 
+    /// VERTICAL TRIANGLES (NORMAL.Z ≈ 0):
+    /// - Triangles that are standing straight up (normal.Z very close to 0)
+    /// - Can't use plane equation (would divide by zero)
+    /// - Uses average height of three vertices: (v1.z + v2.z + v3.z) / 3
+    /// - Based on swkotor2.exe: FUN_004d6b10 @ 0x004d6b10 checks if normal.Z == _DAT_007b56fc
+    /// 
+    /// RAY PARALLEL TO TRIANGLE PLANE:
+    /// - If ray direction is parallel to triangle plane, ray never intersects
+    /// - Detected by checking if ray crosses plane (dist0 and dist1 have opposite signs)
+    /// - If both have same sign, ray is parallel - rejected
+    /// - Based on swkotor2.exe: FUN_004d9030 @ 0x004d9030 checks plane crossing (lines 65-67)
+    /// 
+    /// INVALID MAX DISTANCE:
+    /// - Max distance <= 0 is rejected
+    /// - Non-finite max distance (NaN, Infinity) is rejected
+    /// - Prevents infinite loops and invalid calculations
+    /// 
+    /// INVALID AABB (MIN > MAX):
+    /// - AABB with min > max on any axis is invalid
+    /// - Returns false immediately (no intersection possible)
+    /// - Prevents incorrect calculations
+    /// 
+    /// RAY STARTING INSIDE AABB:
+    /// - If ray origin is inside AABB, tmin < 0
+    /// - Uses tmax instead (ray starts inside, exits at tmax)
+    /// - Handled by checking if tmin < 0 and using tmax
+    /// 
+    /// COORDINATE TRANSFORMATIONS:
+    /// - Area walkmeshes (WOK): Vertices in world coordinates, no transformation needed
+    /// - Placeable/Door walkmeshes (PWK/DWK): Vertices in local coordinates
+    /// - Transformation applied when object is placed: local_to_world = position + rotation * local
+    /// - Based on swkotor2.exe: FUN_00557540 @ 0x00557540 applies coordinate transformations
+    /// - Original implementation: FUN_00557540 transforms points using rotation matrix
+    /// 
+    /// TOLERANCE VALUES:
+    /// - Degenerate triangle epsilon: 1e-6 (normal length threshold)
+    /// - Plane crossing epsilon: 1e-6 (floating-point precision threshold)
+    /// - Edge containment epsilon: 1e-6 (edge test tolerance)
+    /// - Exact hit tolerance: 1e-5 (distance threshold for early termination)
+    /// - Direction zero threshold: 1e-6 (minimum direction length)
+    /// - AABB division epsilon: 1e-8 (division by zero protection)
+    /// - Vertical triangle threshold: 1e-6 (normal.Z threshold for vertical triangles)
+    /// - Based on swkotor2.exe: Various epsilon values used throughout code (_DAT_007bc338, etc.)
     /// </para>
     /// </remarks>
     public class NavigationMesh : INavigationMesh
@@ -778,6 +927,84 @@ namespace Andastra.Runtime.Core.Navigation
         /// Computes adjacency information from triangle edges.
         /// Adjacency encoding: faceIndex * 3 + edgeIndex, -1 = no neighbor
         /// </summary>
+        /// <remarks>
+        /// WHAT THIS FUNCTION DOES:
+        /// 
+        /// This function figures out which triangles share edges with each other. Two triangles are
+        /// adjacent (neighbors) if they share exactly two vertices, which forms a shared edge.
+        /// 
+        /// WHY ADJACENCY IS IMPORTANT:
+        /// 
+        /// Adjacency information is critical for pathfinding. The pathfinding algorithm needs to know
+        /// which triangles are connected so it can find routes from one triangle to another. Without
+        /// adjacency, the algorithm wouldn't know which triangles can be reached from the current triangle.
+        /// 
+        /// HOW IT WORKS:
+        /// 
+        /// STEP 1: Initialize Adjacency Array
+        /// - Create an array with size faceCount * 3 (3 edges per triangle)
+        /// - Initialize all values to -1 (meaning "no neighbor")
+        /// - Each triangle has 3 edges, so we need 3 adjacency entries per triangle
+        /// 
+        /// STEP 2: Build Edge-to-Face Mapping
+        /// - Create a dictionary that maps edges to faces
+        /// - An edge is defined by two vertex indices (the two vertices that form the edge)
+        /// - For each triangle, look at each of its 3 edges
+        /// - For each edge, check if we've seen this edge before
+        /// 
+        /// STEP 3: Link Adjacent Triangles
+        /// - If we find an edge we've seen before, it means two triangles share that edge
+        /// - Link them bidirectionally:
+        ///   * Triangle A's edge points to Triangle B's edge
+        ///   * Triangle B's edge points to Triangle A's edge
+        /// - If it's the first time seeing an edge, record it for future matching
+        /// 
+        /// ADJACENCY ENCODING:
+        /// 
+        /// Adjacency is stored as: face_index * 3 + edge_index
+        /// 
+        /// For example:
+        /// - Face 5, Edge 1 is stored at index 5*3+1 = 16
+        /// - The value stored is: neighbor_face_index * 3 + neighbor_edge_index
+        /// - If face 5, edge 1 is adjacent to face 12, edge 2:
+        ///   * adjacency[16] = 12*3+2 = 38
+        ///   * adjacency[38] = 5*3+1 = 16 (bidirectional)
+        /// - If an edge has no neighbor, the value is -1
+        /// 
+        /// EDGE ORDERING:
+        /// 
+        /// Each triangle has 3 edges:
+        /// - Edge 0: from vertex 0 to vertex 1 (v0 -> v1)
+        /// - Edge 1: from vertex 1 to vertex 2 (v1 -> v2)
+        /// - Edge 2: from vertex 2 to vertex 0 (v2 -> v0)
+        /// 
+        /// EDGE MATCHING:
+        /// 
+        /// Two edges match if they have the same two vertices, regardless of order.
+        /// For example, edge (5, 12) matches edge (12, 5).
+        /// 
+        /// To handle this, we use EdgeKey which stores vertices in sorted order (min, max).
+        /// This ensures that (5, 12) and (12, 5) both become EdgeKey(5, 12) and match correctly.
+        /// 
+        /// ORIGINAL IMPLEMENTATION:
+        /// 
+        /// Based on swkotor2.exe: Adjacency is computed during walkmesh loading, not stored in BWM files.
+        /// However, BWM files can contain precomputed adjacency data for WOK files.
+        /// 
+        /// The original engine computes adjacency by:
+        /// 1. Building an edge-to-face mapping (similar to this implementation)
+        /// 2. Linking triangles that share edges
+        /// 3. Storing adjacency in the format: face_index * 3 + edge_index
+        /// 
+        /// PERFORMANCE:
+        /// - Time complexity: O(n * m) where n is number of faces, m is average edges per face (3)
+        /// - Space complexity: O(n) for adjacency array + O(e) for edge dictionary where e is number of unique edges
+        /// - Typically e ≈ n * 1.5 (each triangle has 3 edges, but edges are shared)
+        /// </remarks>
+        /// <param name="vertices">Array of vertex positions</param>
+        /// <param name="faceIndices">Array of face vertex indices (3 indices per face)</param>
+        /// <param name="faceCount">Number of faces in the mesh</param>
+        /// <returns>Adjacency array with size faceCount * 3, encoding: faceIndex * 3 + edgeIndex, -1 = no neighbor</returns>
         private static int[] ComputeAdjacencyFromTriangles(Vector3[] vertices, int[] faceIndices, int faceCount)
         {
             int[] adjacency = new int[faceCount * 3];
@@ -896,16 +1123,116 @@ namespace Andastra.Runtime.Core.Navigation
         /// Builds an AABB tree from face data for spatial acceleration.
         /// Uses recursive top-down construction with longest-axis splitting.
         /// </summary>
+        /// <remarks>
+        /// WHAT THIS FUNCTION DOES:
+        /// 
+        /// This function builds a binary tree structure that organizes triangles into boxes (AABBs).
+        /// The tree makes spatial searches much faster - instead of testing every triangle (O(n)),
+        /// we can test only a few triangles (O(log n)).
+        /// 
+        /// HOW THE TREE WORKS:
+        /// 
+        /// The tree is a binary tree where:
+        /// - Each node contains a bounding box (AABB) that contains all triangles in that subtree
+        /// - Leaf nodes contain a single triangle (FaceIndex >= 0)
+        /// - Internal nodes contain child nodes (FaceIndex = -1, Left and Right children)
+        /// - The root node contains all triangles in the mesh
+        /// 
+        /// CONSTRUCTION ALGORITHM (Top-Down Recursive):
+        /// 
+        /// STEP 1: Calculate Bounding Box
+        /// - For all triangles in the current set, find the smallest box that contains them all
+        /// - The box is defined by min and max points:
+        ///   * BoundsMin = (min of all x, min of all y, min of all z)
+        ///   * BoundsMax = (max of all x, max of all y, max of all z)
+        /// - This box is the AABB (Axis-Aligned Bounding Box) for this node
+        /// 
+        /// STEP 2: Check Termination Conditions
+        /// - If only one triangle remains, create a leaf node:
+        ///   * Set FaceIndex = triangle index
+        ///   * Set Left = null, Right = null
+        ///   * Return the leaf node
+        /// - If maximum depth is reached, create a leaf node (prevents infinite recursion)
+        /// - Otherwise, create an internal node and split
+        /// 
+        /// STEP 3: Choose Split Axis
+        /// - Calculate the size of the bounding box in each dimension:
+        ///   * sizeX = BoundsMax.X - BoundsMin.X
+        ///   * sizeY = BoundsMax.Y - BoundsMin.Y
+        ///   * sizeZ = BoundsMax.Z - BoundsMin.Z
+        /// - Choose the longest dimension as the split axis
+        /// - Splitting along the longest axis creates more balanced trees
+        /// 
+        /// STEP 4: Calculate Split Point
+        /// - Split point is the center of the bounding box along the chosen axis
+        /// - splitValue = (BoundsMin[axis] + BoundsMax[axis]) / 2
+        /// 
+        /// STEP 5: Partition Triangles
+        /// - For each triangle, calculate its center point:
+        ///   * center = (v1 + v2 + v3) / 3 (average of three vertices)
+        /// - If triangle center is less than split point, add to left child set
+        /// - Otherwise, add to right child set
+        /// 
+        /// STEP 6: Handle Degenerate Cases
+        /// - If all triangles end up on one side, the split didn't work
+        /// - Try splitting along a different axis (next axis: (splitAxis + 1) % 3)
+        /// - If still degenerate, split in half by index (simple fallback)
+        /// - This ensures the tree is always built, even for difficult cases
+        /// 
+        /// STEP 7: Recursively Build Children
+        /// - Recursively build left child tree with left triangle set
+        /// - Recursively build right child tree with right triangle set
+        /// - Attach children to internal node
+        /// - Return the internal node
+        /// 
+        /// TREE STRUCTURE:
+        /// 
+        /// Leaf Node:
+        /// - FaceIndex >= 0 (contains triangle index)
+        /// - Left = null, Right = null
+        /// - BoundsMin, BoundsMax = bounding box of the single triangle
+        /// 
+        /// Internal Node:
+        /// - FaceIndex = -1 (indicates internal node)
+        /// - Left = left child node (or null)
+        /// - Right = right child node (or null)
+        /// - BoundsMin, BoundsMax = bounding box containing all triangles in subtree
+        /// 
+        /// PERFORMANCE:
+        /// 
+        /// Building:
+        /// - Time complexity: O(n log n) where n is number of triangles
+        /// - Space complexity: O(n) for tree nodes
+        /// - Done once during walkmesh loading, not at runtime
+        /// 
+        /// Searching:
+        /// - Time complexity: O(log n) average case, O(n) worst case (degenerate tree)
+        /// - Without tree: O(n) for every search (must test all triangles)
+        /// - Speedup: 100x-1000x faster for large meshes (1000+ triangles)
+        /// 
+        /// ORIGINAL IMPLEMENTATION:
+        /// 
+        /// Based on swkotor2.exe: AABB tree is built during walkmesh loading, not at runtime.
+        /// The tree structure is stored in BWM files for WOK (area walkmeshes).
+        /// 
+        /// The original engine builds the tree using a similar top-down recursive algorithm:
+        /// - Splits along longest axis
+        /// - Partitions triangles based on center position
+        /// - Handles degenerate cases
+        /// - Stores tree in BWM file format
+        /// 
+        /// PARAMETERS:
+        /// 
+        /// MaxDepth: 32 (prevents infinite recursion, handles up to 4 billion triangles)
+        /// MinFacesPerLeaf: 1 (leaf nodes contain exactly one triangle)
+        /// 
+        /// These parameters ensure the tree is always built successfully, even for very large meshes.
+        /// </remarks>
         /// <param name="vertices">Vertex array for the mesh</param>
         /// <param name="faceIndices">Face indices array (3 indices per face)</param>
-        /// <param name="surfaceMaterials">Surface materials array (one per face)</param>
+        /// <param name="surfaceMaterials">Surface materials array (one per face, not used in tree building but kept for consistency)</param>
         /// <param name="faceCount">Number of faces in the mesh</param>
         /// <returns>Root node of the AABB tree, or null if no faces</returns>
-        /// <remarks>
-        /// Based on swkotor2.exe walkmesh AABB tree construction.
-        /// Recursively builds a binary tree by splitting faces along the longest axis.
-        /// Leaf nodes contain face indices, internal nodes contain bounding boxes.
-        /// </remarks>
         public static AabbNode BuildAabbTreeFromFaces(Vector3[] vertices, int[] faceIndices, int[] surfaceMaterials, int faceCount)
         {
             if (faceCount == 0)
@@ -1561,25 +1888,71 @@ namespace Andastra.Runtime.Core.Navigation
         }
 
         /// <summary>
-        /// Finds the face index at a given position using 2D projection.
-        /// </summary>
-        /// <summary>
         /// Finds the triangle (face) that contains the given 2D position (x, y).
         /// Based on swkotor2.exe: FUN_004f4260 @ 0x004f4260.
         /// </summary>
         /// <remarks>
-        /// This function finds which triangle contains a point by:
-        /// 1. If an AABB tree exists, it uses that for fast spatial search (O(log n) instead of O(n))
-        /// 2. Otherwise, it tests every triangle until it finds one that contains the point
-        /// 3. The test is done in 2D (only x and y coordinates) because we're finding which triangle
-        ///    is directly below or above the point
+        /// WHAT THIS FUNCTION DOES:
         /// 
-        /// The original implementation (FUN_004f4260) works like this:
+        /// This function finds which triangle contains a point by testing triangles in the walkmesh.
+        /// The test is done in 2D (only x and y coordinates) because we're finding which triangle
+        /// is directly below or above the point. The z coordinate of the input is used for tolerance
+        /// calculations but the actual triangle selection is based on x and y only.
+        /// 
+        /// HOW IT WORKS:
+        /// 
+        /// 1. AABB TREE SEARCH (if available):
+        ///    - If an AABB tree exists, it uses that for fast spatial search
+        ///    - Starting from the root, tests if point is inside root's bounding box
+        ///    - If yes, recursively tests left and right children
+        ///    - Continues until reaching a leaf node (single triangle)
+        ///    - Tests if point is inside that triangle using 2D point-in-triangle test
+        ///    - Performance: O(log n) average case, O(n) worst case
+        ///    - Based on swkotor2.exe: FUN_004f4260 uses AABB tree if available
+        /// 
+        /// 2. BRUTE FORCE SEARCH (if no AABB tree):
+        ///    - Tests every triangle until it finds one that contains the point
+        ///    - For each triangle, uses 2D point-in-triangle test
+        ///    - Performance: O(n) where n is number of triangles
+        ///    - Used for: PWK/DWK walkmeshes (placeable/door walkmeshes don't have AABB trees)
+        /// 
+        /// 3. 2D POINT-IN-TRIANGLE TEST:
+        ///    - Uses the "same-side test" to check if point is inside triangle
+        ///    - For each edge of the triangle, checks which side of the edge the point is on
+    ///    - If point is on the same side of all three edges, it's inside the triangle
+        ///    - Uses cross products to determine which side of each edge the point is on
+        ///    - Based on swkotor2.exe: FUN_0055b300 @ 0x0055b300 tests triangle intersection
+        /// 
+        /// ORIGINAL IMPLEMENTATION DETAILS (FUN_004f4260 @ 0x004f4260):
+        /// 
         /// - Takes a position (x, y, z) and creates a vertical range: z + tolerance to z - tolerance
+        ///   The tolerance value is _DAT_007b56f8 (stored in memory, typically 0.1-0.5 units)
+        ///   This range accounts for floating-point precision and character movement
+        /// 
         /// - If a hint face index is provided, tests that triangle first (optimization)
-        /// - Tests each triangle using FUN_0055b300 which checks AABB intersection, then triangle intersection
+        ///   Characters usually stay on the same triangle for multiple frames, so hint is often correct
+        ///   Original: Lines 31-42 test hint face first using FUN_0055b300
+        /// 
+        /// - Tests each triangle using FUN_0055b300 which:
+        ///   a. Tests if point is inside triangle's AABB (fast rejection)
+        ///   b. If yes, tests actual triangle intersection using FUN_00575f60
+        ///   Original: Lines 45-63 iterate through faces, calling FUN_0055b300 for each
+        /// 
         /// - Returns the first triangle that contains the point, or -1 if none found
+        /// 
+        /// COORDINATE SYSTEM:
+        /// - Input position is in world coordinates (x, y, z)
+        /// - Test is done in 2D (x, y only) - z is used for tolerance but not triangle selection
+        /// - For area walkmeshes (WOK): Vertices are in world coordinates, no transformation needed
+        /// - For placeable/door walkmeshes (PWK/DWK): Vertices are transformed to world coordinates first
+        /// 
+        /// PERFORMANCE:
+        /// - With AABB tree: O(log n) average case, O(n) worst case
+        /// - Without AABB tree: O(n) always
+        /// - Hint face optimization: O(1) best case (hint correct), O(log n) average (hint wrong)
         /// </remarks>
+        /// <param name="position">The 3D position to find the triangle for (x, y used for selection, z used for tolerance)</param>
+        /// <returns>The index of the triangle containing the point, or -1 if no triangle found</returns>
         public int FindFaceAt(Vector3 position)
         {
             // Use AABB tree if available for faster search
@@ -2296,21 +2669,76 @@ namespace Andastra.Runtime.Core.Navigation
         /// Based on swkotor2.exe: FUN_0055b1d0 @ 0x0055b1d0 and FUN_0055b210 @ 0x0055b210.
         /// </summary>
         /// <remarks>
-        /// HOW HEIGHT CALCULATION WORKS:
+        /// WHAT THIS FUNCTION DOES:
         /// 
-        /// When you have an (x, y) position and want to know the height (z coordinate) of the ground
-        /// at that point, you need to:
-        /// 1. Find which triangle contains that (x, y) point
-        /// 2. Use the triangle's three vertices to calculate the height using the plane equation
+        /// This function takes a point with x and y coordinates and finds the height (z coordinate)
+        /// of the walkmesh surface at that position. The z coordinate of the input point is ignored -
+        /// we only care about x and y to determine which triangle contains the point, then we calculate
+        /// the correct z height from that triangle.
         /// 
-        /// The plane equation works because a triangle defines a flat plane in 3D space.
-        /// The equation is: ax + by + cz + d = 0
-        /// Where (a, b, c) is the normal vector of the triangle, and d is calculated from a vertex.
+        /// HOW IT WORKS:
         /// 
-        /// Once we have the plane equation, we can solve for z:
+        /// STEP 1: Find the Triangle
+        /// - Uses FindFaceAt to find which triangle contains the (x, y) point
+        /// - FindFaceAt uses FUN_004f4260 @ 0x004f4260 or FUN_004f43c0 @ 0x004f43c0
+        /// - If no triangle is found, returns false (point is not on walkmesh)
+        /// 
+        /// STEP 2: Get Triangle Vertices
+        /// - Gets the three vertices that make up the triangle from the vertex array
+        /// - Each vertex has x, y, z coordinates
+        /// - These vertices define the triangle's plane
+        /// 
+        /// STEP 3: Calculate Height Using Plane Equation
+        /// - Uses DetermineZ function to calculate height from plane equation
+        /// - DetermineZ uses FUN_004d6b10 @ 0x004d6b10 algorithm
+        /// - Returns the calculated height and projected point
+        /// 
+        /// THE PLANE EQUATION:
+        /// 
+        /// A triangle defines a flat plane in 3D space. The plane can be described by the equation:
+        /// ax + by + cz + d = 0
+        /// 
+        /// Where:
+        /// - (a, b, c) is the normal vector of the triangle (perpendicular to its surface)
+        /// - d is calculated from a point on the plane (one of the triangle's vertices)
+        /// 
+        /// To calculate the normal vector:
+        /// 1. Take two edges of the triangle: edge1 = v2 - v1, edge2 = v3 - v1
+        /// 2. Calculate cross product: normal = cross(edge1, edge2)
+        /// 3. Normalize: normal = normal / length(normal)
+        /// 
+        /// To calculate d:
+        /// d = -(a * v1.x + b * v1.y + c * v1.z)
+        /// 
+        /// To solve for z when we know x and y:
         /// z = (-d - ax - by) / c
         /// 
-        /// This gives us the exact height of the plane at the given (x, y) position.
+        /// SPECIAL CASE - VERTICAL TRIANGLES:
+        /// If the triangle is vertical (normal.Z is very close to 0), we can't divide by c.
+        /// In this case, we return the average height of the three vertices:
+        /// z = (v1.z + v2.z + v3.z) / 3
+        /// 
+        /// ORIGINAL IMPLEMENTATION:
+        /// 
+        /// FUN_0055b1d0 @ 0x0055b1d0 (3D point height):
+        /// - Takes a 3D point and finds height at that (x, y) position
+        /// - Uses FUN_005761f0 @ 0x005761f0 to find face containing point
+        /// - Then uses FUN_00576640 @ 0x00576640 to calculate height
+        /// - Original: FUN_0055b1d0 calls FUN_00576640 (line 12)
+        /// 
+        /// FUN_0055b210 @ 0x0055b210 (2D point height with known face):
+        /// - Takes a 2D point (x, y) and a face index (already known)
+        /// - Directly calculates height without finding face first
+        /// - Faster when you already know which triangle contains the point
+        /// - Uses FUN_00575050 @ 0x00575050 to calculate height
+        /// - Original: FUN_0055b210 calls FUN_00575050 (line 11)
+        /// 
+        /// FUN_004d6b10 @ 0x004d6b10 (plane equation height calculation):
+        /// - Input: normal vector (a, b, c), plane distance (d), point (x, y)
+        /// - Output: height (z coordinate)
+        /// - Formula: z = (-d - ax - by) / c
+        /// - Special case: If c (normal.Z) is very close to 0, returns _DAT_007b56fc
+        /// - Original: FUN_004d6b10 lines 7-11 calculate height
         /// </remarks>
         /// <param name="point">The point to project (x, y are used, z is ignored)</param>
         /// <param name="result">The projected point with correct z height</param>
@@ -2348,35 +2776,115 @@ namespace Andastra.Runtime.Core.Navigation
         /// Based on swkotor2.exe: FUN_004d6b10 @ 0x004d6b10 (plane equation height calculation).
         /// </summary>
         /// <remarks>
+        /// WHAT THIS FUNCTION DOES:
+        /// 
+        /// This function calculates the exact height (z coordinate) of a point on a triangle's plane
+        /// when you only know the x and y coordinates. It uses the mathematical plane equation to solve
+        /// for z.
+        /// 
         /// HOW THE PLANE EQUATION WORKS:
         /// 
         /// A triangle defines a flat plane in 3D space. The plane can be described by the equation:
         /// ax + by + cz + d = 0
         /// 
-        /// Where:
-        /// - (a, b, c) is the normal vector of the triangle (perpendicular to its surface)
-        /// - d is calculated from a point on the plane (one of the triangle's vertices)
+        /// This equation means: for any point (x, y, z) on the plane, when you plug it into the equation,
+        /// the result is 0. If the point is not on the plane, the result is not 0 (positive on one side,
+        /// negative on the other).
         /// 
-        /// To calculate the normal vector:
-        /// 1. Take two edges of the triangle (edge1 = v2 - v1, edge2 = v3 - v1)
-        /// 2. Calculate the cross product of these edges
-        /// 3. This gives us a vector perpendicular to the triangle
+        /// STEP 1: Calculate the Normal Vector
         /// 
-        /// To calculate d:
+        /// The normal vector (a, b, c) is a vector that points perpendicular to the triangle's surface.
+        /// To calculate it:
+        /// 
+        /// 1. Take two edges of the triangle:
+        ///    - edge1 = v2 - v1 (vector from vertex 1 to vertex 2)
+        ///    - edge2 = v3 - v1 (vector from vertex 1 to vertex 3)
+        /// 
+        /// 2. Calculate the cross product of these edges:
+        ///    - normal = cross(edge1, edge2)
+        ///    - The cross product of two vectors gives a vector perpendicular to both
+        ///    - This perpendicular vector is the normal to the triangle
+        /// 
+        /// 3. The normal vector components become (a, b, c) in the plane equation
+        /// 
+        /// STEP 2: Calculate d (Plane Distance)
+        /// 
+        /// The value d is calculated from a point on the plane (we use vertex v1):
         /// d = -(a * v1.x + b * v1.y + c * v1.z)
         /// 
-        /// Once we have the plane equation, we can solve for z when we know x and y:
-        /// z = (-d - ax - by) / c
+        /// This ensures that when we plug v1 into the plane equation, we get 0:
+        /// a * v1.x + b * v1.y + c * v1.z + d = 0
         /// 
-        /// Special case: If the triangle is vertical (normal.Z is very close to 0), we can't
-        /// divide by c. In this case, we return the average height of the three vertices.
+        /// STEP 3: Solve for z
+        /// 
+        /// Once we have the plane equation (a, b, c, d), we can solve for z when we know x and y:
+        /// 
+        /// Starting with: ax + by + cz + d = 0
+        /// Rearranging: cz = -d - ax - by
+        /// Solving for z: z = (-d - ax - by) / c
+        /// 
+        /// This gives us the exact height of the plane at the given (x, y) point.
+        /// 
+        /// STEP 4: Handle Vertical Triangles (Special Case)
+        /// 
+        /// If the triangle is vertical (standing straight up), the normal vector's Z component (c) is
+        /// very close to 0. If we try to divide by c, we get division by zero, which is invalid.
+        /// 
+        /// In this case, we can't use the plane equation. Instead, we return the average height of
+        /// the three vertices:
+        /// z = (v1.z + v2.z + v3.z) / 3
+        /// 
+        /// This is a reasonable approximation because all three vertices are at roughly the same height
+        /// (the triangle is vertical, so z doesn't change much across the triangle).
+        /// 
+        /// ORIGINAL IMPLEMENTATION (FUN_004d6b10 @ 0x004d6b10):
+        /// 
+        /// Function signature: float10 FUN_004d6b10(float* normal, float d, float* point)
+        /// 
+        /// Input parameters:
+        /// - normal: Pointer to normal vector (a, b, c) - 3 floats
+        /// - d: Plane distance value (d in plane equation)
+        /// - point: Pointer to point (x, y) - 2 floats (z is output, not input)
+        /// 
+        /// Algorithm:
+        /// 1. Check if normal.Z (c) is very close to 0 (vertical triangle)
+        ///    - If yes, return _DAT_007b56fc (special value indicating vertical triangle)
+        ///    - Original: Line 7 checks if normal[2] == _DAT_007b56fc
+        /// 
+        /// 2. Calculate height using plane equation:
+        ///    - z = (-d - a*x - b*y) / c
+        ///    - Original: Lines 10-11 calculate height
+        /// 
+        /// 3. Return calculated height
+        /// 
+        /// Called from:
+        /// - FUN_00575050 @ 0x00575050 (height calculation with known face index)
+        /// - FUN_00576640 @ 0x00576640 (height calculation after finding face)
+        /// 
+        /// MATHEMATICAL DETAILS:
+        /// 
+        /// Why the cross product gives the normal:
+        /// - The cross product of two vectors gives a vector perpendicular to both
+        /// - Since edge1 and edge2 are both in the triangle's plane, their cross product is
+        ///   perpendicular to the plane (the normal)
+        /// 
+        /// Why we normalize the normal:
+        /// - The normal vector from cross product has a length equal to twice the triangle's area
+        /// - Normalizing (making length = 1) makes calculations easier and more accurate
+        /// - However, in this implementation, we don't normalize - we use the raw normal
+        /// - This is fine because we divide by normal.Z anyway, so the scale cancels out
+        /// 
+        /// Why the plane equation works:
+        /// - Any point on the plane satisfies: ax + by + cz + d = 0
+        /// - If we know x and y, we can rearrange to solve for z
+        /// - This gives us the exact height of the plane at that (x, y) position
         /// </remarks>
-        /// <param name="v1">First vertex of the triangle</param>
-        /// <param name="v2">Second vertex of the triangle</param>
-        /// <param name="v3">Third vertex of the triangle</param>
-        /// <param name="x">X coordinate of the point</param>
-        /// <param name="y">Y coordinate of the point</param>
-        /// <returns>The Z (height) coordinate at the given (x, y) point</returns>
+        /// <param name="v1">First vertex of the triangle (x, y, z coordinates)</param>
+        /// <param name="v2">Second vertex of the triangle (x, y, z coordinates)</param>
+        /// <param name="v3">Third vertex of the triangle (x, y, z coordinates)</param>
+        /// <param name="x">X coordinate of the point to find height for</param>
+        /// <param name="y">Y coordinate of the point to find height for</param>
+        /// <returns>The Z (height) coordinate at the given (x, y) point on the triangle's plane</returns>
         private float DetermineZ(Vector3 v1, Vector3 v2, Vector3 v3, float x, float y)
         {
             // Step 1: Calculate the triangle's normal vector
