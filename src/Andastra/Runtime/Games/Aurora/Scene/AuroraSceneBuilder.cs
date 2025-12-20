@@ -8,6 +8,7 @@ using Andastra.Runtime.Graphics.Common.Scene;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Common;
+using Andastra.Runtime.Games.Aurora.Data;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Aurora.Scene
@@ -41,6 +42,7 @@ namespace Andastra.Runtime.Games.Aurora.Scene
     public class AuroraSceneBuilder : BaseSceneBuilder
     {
         private readonly IGameResourceProvider _resourceProvider;
+        private readonly Dictionary<ResRef, AuroraTileset> _tilesetCache;
 
         public AuroraSceneBuilder([NotNull] IGameResourceProvider resourceProvider)
         {
@@ -50,6 +52,7 @@ namespace Andastra.Runtime.Games.Aurora.Scene
             }
 
             _resourceProvider = resourceProvider;
+            _tilesetCache = new Dictionary<ResRef, AuroraTileset>();
         }
 
         /// <summary>
@@ -263,12 +266,10 @@ namespace Andastra.Runtime.Games.Aurora.Scene
                 Vector3 position = new Vector3(worldX, worldY, worldZ);
 
                 // Generate tile model ResRef
-                // Based on nwmain.exe: CNWTileSet::GetTileData() constructs tile model ResRef from tileset and Tile_ID
-                // Format: tileset name + tile index (e.g., "tts_a01_01" for tileset "tts_a01" with Tile_ID 1)
-                // For now, use a simplified format: tileset_TileID
-                // A full implementation would query the tileset file to get the actual tile model ResRef
-                string modelResRef = string.Format("{0}_{1:D2}", tileset.ToString(), tileId);
-                // TODO: Query tileset file to get actual tile model ResRef from Tile_ID
+                // Based on nwmain.exe: CNWTileSet::GetTileData() @ 0x1402c67d0 returns CNWTileData pointer
+                // CNWTileData contains Model ResRef field, read from [TILE{N}] Model entry in SET file
+                // Based on nwmain.exe: CNWSArea::LoadTileSetInfo @ 0x140362700 calls GetTileData for each tile
+                string modelResRef = GetTileModelResRef(tileset, tileId);
 
                 // Generate tile identifier (format: "tile_X_Y")
                 // Based on nwmain.exe: Tile identifiers used for area transitions and visibility culling
@@ -469,6 +470,71 @@ namespace Andastra.Runtime.Games.Aurora.Scene
         protected override void BuildSceneInternal(object areaData)
         {
             BuildScene(areaData);
+        }
+
+        /// <summary>
+        /// Gets the tile model ResRef from the tileset file using Tile_ID.
+        /// </summary>
+        /// <param name="tileset">Tileset ResRef (SET file reference).</param>
+        /// <param name="tileId">Tile_ID (index into tileset's tile list).</param>
+        /// <returns>Tile model ResRef string, or fallback format if tileset lookup fails.</returns>
+        /// <remarks>
+        /// Based on nwmain.exe: CNWTileSet::GetTileData @ 0x1402c67d0
+        /// - Loads tileset SET file if not already cached
+        /// - Queries tileset for Model ResRef using Tile_ID
+        /// - Returns Model ResRef from [TILE{Tile_ID}] Model entry
+        /// - Falls back to simplified format if tileset cannot be loaded or Tile_ID is invalid
+        ///
+        /// Error handling:
+        /// - If tileset cannot be loaded: Falls back to simplified format (tileset_TileID)
+        /// - If Tile_ID is invalid: Falls back to simplified format
+        /// - If Model entry is missing: Falls back to simplified format
+        /// </remarks>
+        private string GetTileModelResRef(ResRef tileset, int tileId)
+        {
+            // Skip lookup if tileset is blank
+            if (tileset == null || tileset.IsBlank)
+            {
+                // Fallback to simplified format
+                return string.Format("{0}_{1:D2}", tileset != null ? tileset.ToString() : "unknown", tileId);
+            }
+
+            try
+            {
+                // Get or create tileset instance (with caching)
+                // Based on nwmain.exe: CNWTileSetManager::GetTileSet caches tilesets
+                if (!_tilesetCache.TryGetValue(tileset, out AuroraTileset tilesetInstance))
+                {
+                    tilesetInstance = new AuroraTileset(_resourceProvider, tileset);
+                    _tilesetCache[tileset] = tilesetInstance;
+                }
+
+                // Load tileset if not already loaded
+                // Based on nwmain.exe: CNWTileSet::LoadTileSet loads SET file on demand
+                if (!tilesetInstance.IsLoaded)
+                {
+                    tilesetInstance.Load();
+                }
+
+                // Get Model ResRef from tileset using Tile_ID
+                // Based on nwmain.exe: CNWTileSet::GetTileData returns CNWTileData, which contains Model ResRef
+                ResRef modelResRef = tilesetInstance.GetTileModelResRef(tileId);
+
+                // Return Model ResRef if valid, otherwise fallback to simplified format
+                if (modelResRef != null && !modelResRef.IsBlank)
+                {
+                    return modelResRef.ToString();
+                }
+            }
+            catch
+            {
+                // If tileset loading fails, fall back to simplified format
+                // This ensures scene building continues even if tileset file is missing or corrupted
+            }
+
+            // Fallback to simplified format if tileset lookup fails
+            // Based on original simplified implementation before tileset lookup was added
+            return string.Format("{0}_{1:D2}", tileset.ToString(), tileId);
         }
     }
 
