@@ -104,6 +104,13 @@ namespace HolocronToolset.Editors
         private NumericUpDown _script1Param1Spin;
         private StackPanel _script1Param1Panel; // Panel containing script1Param1 control for visibility management
 
+        // UI Controls - Node timing widgets
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
+        // Original: QSpinBox delaySpin, waitFlagSpin, fadeTypeSpin
+        private NumericUpDown _delaySpin;
+        private NumericUpDown _waitFlagSpin;
+        private NumericUpDown _fadeTypeSpin;
+
         // Flag to track if node is loaded into UI (prevents updates during loading)
         private bool _nodeLoadedIntoUi = false;
 
@@ -111,6 +118,15 @@ namespace HolocronToolset.Editors
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:152
         // Original: self._focused: bool = False
         private bool _focused = false;
+
+        // Reference history for navigation
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:148-150
+        // Original: self.dialog_references: ReferenceChooserDialog | None = None
+        // Original: self.reference_history: list[tuple[list[weakref.ref[DLGLink]], str]] = []
+        // Original: self.current_reference_index: int = -1
+        private ReferenceChooserDialog _dialogReferences;
+        private List<Tuple<List<WeakReference<DLGLink>>, string>> _referenceHistory = new List<Tuple<List<WeakReference<DLGLink>>, string>>();
+        private int _currentReferenceIndex = -1;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:101-177
         // Original: def __init__(self, parent: QWidget | None = None, installation: HTInstallation | None = None):
@@ -179,6 +195,29 @@ namespace HolocronToolset.Editors
             _script1Param1Panel.Children.Add(new TextBlock { Text = "Script1 Param1 (K2 only):" });
             _script1Param1Panel.Children.Add(_script1Param1Spin);
             panel.Children.Add(_script1Param1Panel);
+
+            // Initialize node timing widgets
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
+            // Original: QSpinBox delaySpin, waitFlagSpin, fadeTypeSpin
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:416-419
+            // Original: self.ui.delaySpin.valueChanged.connect(self.on_node_update), self.ui.waitFlagSpin.valueChanged.connect(self.on_node_update), self.ui.fadeTypeSpin.valueChanged.connect(self.on_node_update)
+            _delaySpin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = -1 };
+            _delaySpin.ValueChanged += (s, e) => OnNodeUpdate();
+
+            _waitFlagSpin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = 0 };
+            _waitFlagSpin.ValueChanged += (s, e) => OnNodeUpdate();
+
+            _fadeTypeSpin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = 0 };
+            _fadeTypeSpin.ValueChanged += (s, e) => OnNodeUpdate();
+
+            var timingPanel = new StackPanel();
+            timingPanel.Children.Add(new TextBlock { Text = "Delay:" });
+            timingPanel.Children.Add(_delaySpin);
+            timingPanel.Children.Add(new TextBlock { Text = "Wait Flags:" });
+            timingPanel.Children.Add(_waitFlagSpin);
+            timingPanel.Children.Add(new TextBlock { Text = "Fade Type:" });
+            timingPanel.Children.Add(_fadeTypeSpin);
+            panel.Children.Add(timingPanel);
 
             // Initialize animation UI controls
             // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui:966-992
@@ -447,6 +486,9 @@ namespace HolocronToolset.Editors
         // Matching PyKotor implementation: editor.ui.questEdit, editor.ui.questEntrySpin
         public TextBox QuestEdit => _questEdit;
         public NumericUpDown QuestEntrySpin => _questEntrySpin;
+        public NumericUpDown DelaySpin => _delaySpin;
+        public NumericUpDown WaitFlagSpin => _waitFlagSpin;
+        public NumericUpDown FadeTypeSpin => _fadeTypeSpin;
 
         // Expose speaker widgets for testing
         // Matching PyKotor implementation: editor.ui.speakerEdit, editor.ui.speakerEditLabel
@@ -600,6 +642,24 @@ namespace HolocronToolset.Editors
             {
                 _script1Param1Spin.Value = node.Script1Param1;
             }
+
+            // Load delay, wait flags, and fade type from node
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2446-2449
+            // Original: self.ui.delaySpin.setValue(item.link.node.delay), self.ui.waitFlagSpin.setValue(item.link.node.wait_flags), self.ui.fadeTypeSpin.setValue(item.link.node.fade_type)
+            if (_delaySpin != null && node != null)
+            {
+                _delaySpin.Value = node.Delay;
+            }
+
+            if (_waitFlagSpin != null && node != null)
+            {
+                _waitFlagSpin.Value = node.WaitFlags;
+            }
+
+            if (_fadeTypeSpin != null && node != null)
+            {
+                _fadeTypeSpin.Value = node.FadeType;
+            }
         }
 
         /// <summary>
@@ -686,6 +746,24 @@ namespace HolocronToolset.Editors
             if (_script1Param1Spin != null && node != null)
             {
                 node.Script1Param1 = _script1Param1Spin.Value.HasValue ? (int)_script1Param1Spin.Value.Value : 0;
+            }
+
+            // Update delay, wait flags, and fade type in node
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2538-2540
+            // Original: item.link.node.delay = self.ui.delaySpin.value(), item.link.node.wait_flags = self.ui.waitFlagSpin.value(), item.link.node.fade_type = self.ui.fadeTypeSpin.value()
+            if (_delaySpin != null && node != null)
+            {
+                node.Delay = _delaySpin.Value.HasValue ? (int)_delaySpin.Value.Value : -1;
+            }
+
+            if (_waitFlagSpin != null && node != null)
+            {
+                node.WaitFlags = _waitFlagSpin.Value.HasValue ? (int)_waitFlagSpin.Value.Value : 0;
+            }
+
+            if (_fadeTypeSpin != null && node != null)
+            {
+                node.FadeType = _fadeTypeSpin.Value.HasValue ? (int)_fadeTypeSpin.Value.Value : 0;
             }
         }
 
@@ -1044,11 +1122,135 @@ namespace HolocronToolset.Editors
 
         /// <summary>
         /// Edits text of the selected item.
-        /// Matching PyKotor implementation: self.edit_text(event, selectedIndexes(), view)
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1349-1437
+        /// Original: def edit_text(self, e: QMouseEvent | QKeyEvent | None = None, indexes: list[QModelIndex] | None = None, source_widget: DLGListWidget | DLGTreeView | None = None)
         /// </summary>
-        private void EditText()
+        private async void EditText()
         {
-            // TODO: PLACEHOLDER - Implement edit_text when UI text editing is implemented
+            // Matching PyKotor implementation: if not indexes: self.blink_window(); return
+            // Get selected item from tree view
+            if (_dialogTree?.SelectedItem == null)
+            {
+                // Matching PyKotor: blink_window() - for now, we'll just return silently
+                // In a full implementation, we would blink the window to indicate no selection
+                return;
+            }
+
+            // Get the selected item and extract DLGStandardItem
+            DLGStandardItem item = null;
+            var selectedItem = _dialogTree.SelectedItem;
+            if (selectedItem is TreeViewItem treeItem && treeItem.Tag is DLGStandardItem dlgItem)
+            {
+                item = dlgItem;
+            }
+            else if (selectedItem is DLGStandardItem dlgItemDirect)
+            {
+                item = dlgItemDirect;
+            }
+
+            // Matching PyKotor implementation: if item is None: continue
+            if (item == null)
+            {
+                return;
+            }
+
+            // Matching PyKotor implementation: if item.link is None: continue
+            if (item.Link == null)
+            {
+                return;
+            }
+
+            // Matching PyKotor implementation: Check if parent widget is valid before creating dialog
+            // Matching PyKotor: if self._installation is None: RobustLogger().error("Cannot edit text: installation is not set"); continue
+            if (_installation == null)
+            {
+                // In a full implementation, we would log an error
+                // For now, we'll just return silently
+                return;
+            }
+
+            try
+            {
+                // Matching PyKotor implementation: parent_widget validation and fallback logic
+                // Get parent window for dialog
+                Window parentWindow = this;
+                try
+                {
+                    // Check if window is valid (not null, not being destroyed)
+                    if (parentWindow != null)
+                    {
+                        // Try to access a property to ensure window is valid
+                        var _ = parentWindow.IsVisible;
+                        // If we get here, window is likely valid
+                        if (!parentWindow.IsVisible || !parentWindow.IsEnabled)
+                        {
+                            // Use active window as fallback if parent is not in a good state
+                            var activeWindow = Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+                                ? desktop.MainWindow
+                                : null;
+                            if (activeWindow != null)
+                            {
+                                parentWindow = activeWindow;
+                            }
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    // Window is being destroyed or invalid, use active window or this window as fallback
+                    var activeWindow = Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+                        ? desktop.MainWindow
+                        : null;
+                    if (activeWindow != null)
+                    {
+                        parentWindow = activeWindow;
+                    }
+                }
+
+                // Matching PyKotor implementation: dialog = LocalizedStringDialog(parent_widget, self._installation, item.link.node.text)
+                var dialog = new LocalizedStringDialog(parentWindow, _installation, item.Link.Node.Text);
+                
+                // Matching PyKotor implementation: dialog_result: bool | int = False
+                // Matching PyKotor: dialog_result = dialog.exec()
+                bool dialogResult = false;
+                try
+                {
+                    // In Avalonia, we use ShowDialogAsync to show the dialog modally
+                    dialogResult = await dialog.ShowDialog<bool>(parentWindow);
+                }
+                catch (Exception exc)
+                {
+                    // Matching PyKotor: RobustLogger().exception(f"Error executing LocalizedStringDialog: {exc.__class__.__name__}: {exc}")
+                    // In a full implementation, we would log the error
+                    // For now, we'll just continue to the next item
+                    return;
+                }
+
+                // Matching PyKotor implementation: if not dialog_result: continue
+                if (!dialogResult)
+                {
+                    // User cancelled the dialog
+                    return;
+                }
+
+                // Matching PyKotor implementation: item.link.node.text = dialog.locstring
+                // Access dialog.LocString before cleanup
+                item.Link.Node.Text = dialog.LocString;
+
+                // Matching PyKotor implementation: if isinstance(item, DLGStandardItem): self.model.update_item_display_text(item)
+                // Update the display text in the tree view
+                _model.UpdateItemDisplayText(item);
+
+                // Restore selection after tree view update
+                SelectTreeViewItem(item);
+            }
+            catch (Exception exc)
+            {
+                // Matching PyKotor: RobustLogger().exception(f"Error creating LocalizedStringDialog: {exc.__class__.__name__}: {exc}")
+                // In a full implementation, we would log the error
+                // For now, we'll just return silently
+                return;
+            }
         }
 
         /// <summary>
@@ -2134,11 +2336,24 @@ namespace HolocronToolset.Editors
 
         /// <summary>
         /// Updates the display text for an item.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:1072-1098
+        /// Original: def update_item_display_text(self, item: DLGStandardItem, *, update_copies: bool = True)
         /// </summary>
+        /// <param name="item">The DLGStandardItem to update.</param>
         private void UpdateItemDisplayText(DLGStandardItem item)
         {
-            // This would update the display text in the tree view
-            // For now, it's a placeholder
+            if (item == null || item.Link == null)
+            {
+                return;
+            }
+
+            // Matching PyKotor implementation: Refresh the item text and formatting based on the node data
+            // The actual display update happens when we rebuild the tree view
+            // For now, we'll trigger a tree view update to reflect the changes
+            // In a more optimized implementation, we would update just the specific tree view item's header
+            
+            // Update the tree view to reflect changes
+            UpdateTreeView();
         }
 
         /// <summary>

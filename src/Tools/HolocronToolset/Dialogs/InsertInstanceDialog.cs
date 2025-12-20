@@ -212,7 +212,41 @@ namespace HolocronToolset.Dialogs
             _locationSelect.Items.Add(_installation.OverridePath());
 
             // Add module capsules
-            // TODO: Implement when Module.capsules() is available
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:89-92
+            // Original: for capsule in self._module.capsules():
+            // Original:     if is_rim_file(capsule.filepath()) and GlobalSettings().disableRIMSaving:
+            // Original:         continue
+            // Original:     self.ui.locationSelect.addItem(str(capsule.filepath()), capsule.filepath())
+            var capsules = _module.Capsules();
+            bool disableRIMSaving = _globalSettings.GetValue<bool>("DisableRIMSaving", false);
+            
+            foreach (var capsule in capsules)
+            {
+                if (capsule == null)
+                {
+                    continue;
+                }
+
+                string capsulePath = capsule.Path.ToString();
+                string fileName = Path.GetFileName(capsulePath);
+                
+                // Skip RIM files if RIM saving is disabled
+                if (FileHelpers.IsRimFile(fileName) && disableRIMSaving)
+                {
+                    continue;
+                }
+
+                // Add capsule path to location select
+                _locationSelect.Items.Add(capsulePath);
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:93
+            // Original: self.ui.locationSelect.setCurrentIndex(self.ui.locationSelect.count() - 1)
+            // Set current selection to the last item (most recently added capsule or override path)
+            if (_locationSelect.Items.Count > 0)
+            {
+                _locationSelect.SelectedIndex = _locationSelect.Items.Count - 1;
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:95-112

@@ -2235,14 +2235,98 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestDlgEditorManipulateDelayRoundtrip: Delay roundtrip test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_dlg_editor_manipulate_wait_flags_roundtrip (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2902-2929)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2902-2929
         // Original: def test_dlg_editor_manipulate_wait_flags_roundtrip(qtbot, installation: HTInstallation, test_files_dir: Path): Test wait flags roundtrip
         [Fact]
         public void TestDlgEditorManipulateWaitFlagsRoundtrip()
         {
-            // TODO: STUB - Implement wait flags roundtrip test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2902-2929
-            throw new NotImplementedException("TestDlgEditorManipulateWaitFlagsRoundtrip: Wait flags roundtrip test not yet implemented");
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            // Try to find a DLG file
+            string dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            }
+
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Skip if no DLG files available for testing (matching Python pytest.skip behavior)
+                return;
+            }
+
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new DLGEditor(null, installation);
+            editor.Show();
+
+            byte[] originalData = System.IO.File.ReadAllBytes(dlgFile);
+            editor.Load(dlgFile, "ORIHA", ResourceType.DLG, originalData);
+
+            // Matching PyKotor: if editor.model.rowCount() > 0:
+            if (editor.Model.RowCount > 0)
+            {
+                // Matching PyKotor: first_item = editor.model.item(0, 0)
+                var firstItem = editor.Model.Item(0, 0);
+                if (firstItem != null)
+                {
+                    // Matching PyKotor: editor.ui.dialogTree.setCurrentIndex(first_item.index())
+                    // In Avalonia, we need to select the item in the tree view
+                    // Create a TreeViewItem with the DLGStandardItem as Tag to simulate selection
+                    var treeItem = new Avalonia.Controls.TreeViewItem { Tag = firstItem };
+                    editor.DialogTree.SelectedItem = treeItem;
+
+                    // Matching PyKotor: test_values = [0, 1, 2, 3]
+                    int[] testValues = { 0, 1, 2, 3 };
+                    foreach (int val in testValues)
+                    {
+                        // Matching PyKotor: editor.ui.waitFlagSpin.setValue(val)
+                        if (editor.WaitFlagSpin != null)
+                        {
+                            editor.WaitFlagSpin.Value = val;
+                        }
+
+                        // Matching PyKotor: editor.on_node_update()
+                        editor.OnNodeUpdate();
+
+                        // Matching PyKotor: data, _ = editor.build()
+                        var (data, _) = editor.Build();
+                        data.Should().NotBeNull();
+
+                        // Matching PyKotor: modified_dlg = read_dlg(data)
+                        var modifiedDlg = DLGHelper.ReadDlg(data);
+
+                        // Matching PyKotor: if modified_dlg.starters: assert modified_dlg.starters[0].node.wait_flags == val
+                        if (modifiedDlg.Starters != null && modifiedDlg.Starters.Count > 0)
+                        {
+                            var firstStarter = modifiedDlg.Starters[0];
+                            if (firstStarter.Node != null)
+                            {
+                                firstStarter.Node.WaitFlags.Should().Be(val, 
+                                    $"WaitFlags should be {val} after setting waitFlagSpin to {val} and calling OnNodeUpdate");
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         // TODO: STUB - Implement test_dlg_editor_manipulate_fade_type_roundtrip (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2931-2958)
