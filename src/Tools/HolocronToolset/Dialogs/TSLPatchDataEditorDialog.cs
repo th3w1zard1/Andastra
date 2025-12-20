@@ -361,10 +361,108 @@ namespace HolocronToolset.Dialogs
             }
         }
 
-        private void CreateNewTslpatchdata()
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:405-420
+        // Original: def _create_new_tslpatchdata(self):
+        private async void CreateNewTslpatchdata()
         {
-            // TODO: Create new TSLPatchData folder structure
-            System.Console.WriteLine("Create new TSLPatchData not yet implemented");
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel == null)
+            {
+                return;
+            }
+
+            try
+            {
+                // Open folder picker to select location for new TSLPatchData
+                var options = new FolderPickerOpenOptions
+                {
+                    Title = "Select Location for New TSLPatchData",
+                    AllowMultiple = false
+                };
+
+                // Get initial directory from current path edit text if it's a valid path
+                string initialDirectory = null;
+                if (!string.IsNullOrEmpty(_pathEdit?.Text))
+                {
+                    string currentPath = _pathEdit.Text;
+                    if (Directory.Exists(currentPath))
+                    {
+                        initialDirectory = currentPath;
+                    }
+                    else
+                    {
+                        // Try parent directory
+                        string parentDir = Path.GetDirectoryName(currentPath);
+                        if (!string.IsNullOrEmpty(parentDir) && Directory.Exists(parentDir))
+                        {
+                            initialDirectory = parentDir;
+                        }
+                    }
+                }
+
+                // If no valid initial directory, use user's home directory
+                if (string.IsNullOrEmpty(initialDirectory))
+                {
+                    initialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                }
+
+                // Set initial directory if available
+                if (!string.IsNullOrEmpty(initialDirectory) && Directory.Exists(initialDirectory))
+                {
+                    var storageFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(initialDirectory);
+                    if (storageFolder != null)
+                    {
+                        options.SuggestedStartLocation = storageFolder;
+                    }
+                }
+
+                var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(options);
+                if (folders == null || folders.Count == 0)
+                {
+                    // User cancelled
+                    return;
+                }
+
+                string selectedPath = folders[0].Path.LocalPath;
+                if (string.IsNullOrWhiteSpace(selectedPath))
+                {
+                    return;
+                }
+
+                // Create tslpatchdata subdirectory in selected location
+                string tslpatchdataPath = Path.Combine(selectedPath, "tslpatchdata");
+                
+                // Create directory if it doesn't exist (exist_ok=True in Python)
+                if (!Directory.Exists(tslpatchdataPath))
+                {
+                    Directory.CreateDirectory(tslpatchdataPath);
+                }
+
+                // Update path
+                _tslpatchdataPath = tslpatchdataPath;
+                if (_pathEdit != null)
+                {
+                    _pathEdit.Text = tslpatchdataPath;
+                }
+
+                // Show success message
+                var msgBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Created",
+                    $"New tslpatchdata folder created at:\n{tslpatchdataPath}",
+                    ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Success);
+                await msgBox.ShowAsync();
+            }
+            catch (Exception ex)
+            {
+                // Show error message
+                var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Error",
+                    $"Failed to create TSLPatchData folder:\n{ex.Message}",
+                    ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Error);
+                await errorBox.ShowAsync();
+            }
         }
 
         private void LoadExistingConfig()
