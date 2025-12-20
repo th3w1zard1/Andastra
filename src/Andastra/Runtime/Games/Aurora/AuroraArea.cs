@@ -104,6 +104,11 @@ namespace Andastra.Runtime.Games.Aurora
         private float _dayNightTimer;
         private const float DayNightCycleDuration = 1440.0f; // 24 minutes of real time = 24 hours game time (1 minute = 1 hour)
 
+        // Cached temporary area entity for script execution
+        // Based on nwmain.exe: Area scripts execute with area ResRef as context entity
+        // This entity is created on-demand and cached for reuse across heartbeat calls
+        private IEntity _temporaryAreaEntity;
+
         /// <summary>
         /// Creates a new Aurora area.
         /// </summary>
@@ -1263,6 +1268,29 @@ namespace Andastra.Runtime.Games.Aurora
         }
 
         /// <summary>
+        /// Public method for removing entities from area collections.
+        /// </summary>
+        /// <remarks>
+        /// Public method for removing entities from area collections.
+        /// Calls the protected RemoveEntityFromArea method.
+        /// Aurora-specific: Basic entity removal without physics system.
+        /// 
+        /// Based on nwmain.exe: CNWSArea::RemoveObjectFromArea @ 0x140365600 (approximate - needs Ghidra verification)
+        /// Entities are removed from type-specific lists (creatures, placeables, doors, etc.)
+        /// when they are destroyed or removed from the area.
+        /// 
+        /// Reverse Engineering Notes:
+        /// - nwmain.exe: CNWSCreature::RemoveFromArea @ 0x14039e6b0 calls CNWSArea::RemoveObjectFromArea
+        /// - CNWSArea::RemoveObjectFromArea removes entity from area's type-specific collections
+        /// - Entity removal sequence: Remove from area collections, then remove from world collections
+        /// - Located via string references: "RemoveObjectFromArea" in nwmain.exe entity management
+        /// </remarks>
+        public void RemoveEntity(IEntity entity)
+        {
+            RemoveEntityFromArea(entity);
+        }
+
+        /// <summary>
         /// Removes an entity from this area's collections.
         /// </summary>
         /// <remarks>
@@ -1608,37 +1636,92 @@ namespace Andastra.Runtime.Games.Aurora
             {
                 _areaHeartbeatTimer -= AreaHeartbeatInterval;
 
-                // Fire area heartbeat script
-                // Area scripts need World/EventBus access to execute
-                // We get World reference from any entity in the area (if available)
-                // If no entities available, we skip script execution this frame
-                IWorld world = GetWorldFromAreaEntities();
-                if (world != null && world.EventBus != null)
+                    // Fire area heartbeat script
+                    // Area scripts need World/EventBus access to execute
+                    // We get World reference from any entity in the area (if available)
+                    // If no entities available, we skip script execution this frame
+                    IWorld world = GetWorldFromAreaEntities();
+                    if (world != null && world.EventBus != null)
+                    {
+                        // Get or create area entity for script execution context
+                        // Based on nwmain.exe: Area heartbeat scripts use area ResRef as entity context
+                        // Located via string references: "OnHeartbeat" @ 0x140ddb2b8 (nwmain.exe)
+                        // Area scripts don't require a physical entity in the world - they use area ResRef as script context
+                        IEntity areaEntity = GetOrCreateAreaEntityForScripts(world);
+                        if (areaEntity != null)
+                        {
+                            // Fire OnHeartbeat script event
+                            // Based on nwmain.exe: Area heartbeat script execution
+                            world.EventBus.FireScriptEvent(areaEntity, ScriptEvent.OnHeartbeat, null);
+                        }
+                    }
+            }
+        }
+
+        /// <summary>
+        /// Gets or creates the area entity for script execution.
+        /// </summary>
+        /// <param name="world">World instance to create entity in if needed.</param>
+        /// <returns>Area entity for script execution, or null if world is invalid.</returns>
+        /// <remarks>
+        /// Based on nwmain.exe: Area scripts execute with area ResRef as entity context
+        /// Located via string references: "OnHeartbeat" @ 0x140ddb2b8 (nwmain.exe)
+        /// Area scripts don't require a physical entity in the world - they use area ResRef as script context
+        /// 
+        /// Pattern matches ModuleTransitionSystem module entity creation:
+        /// - Module scripts create temporary entities with module ResRef as tag
+        /// - Area scripts follow the same pattern - create entity with area ResRef as tag
+        /// 
+        /// Implementation details:
+        /// - First attempts to find existing entity by area ResRef tag
+        /// - Falls back to finding entity by area tag
+        /// - If no entity exists, creates a temporary entity with ObjectType.Invalid
+        /// - Caches the temporary entity for reuse across script execution calls
+        /// - Entity is used for all area scripts (OnEnter, OnExit, OnHeartbeat, OnUserDefined)
+        /// </remarks>
+        private IEntity GetOrCreateAreaEntityForScripts(IWorld world)
+        {
+            if (world == null)
+            {
+                return null;
+            }
+
+            // First, try to get existing entity by area ResRef tag
+            // Area scripts use area ResRef as entity tag for execution
+            IEntity areaEntity = world.GetEntityByTag(_resRef, 0);
+            if (areaEntity != null && areaEntity.IsValid)
+            {
+                return areaEntity;
+            }
+
+            // Try using area tag as fallback
+            if (!string.IsNullOrEmpty(_tag) && !string.Equals(_tag, _resRef, StringComparison.OrdinalIgnoreCase))
+            {
+                areaEntity = world.GetEntityByTag(_tag, 0);
+                if (areaEntity != null && areaEntity.IsValid)
                 {
-                    // Get or create area entity for script execution context
-                    // Area scripts use area ResRef as entity tag for execution
-                    IEntity areaEntity = world.GetEntityByTag(_resRef, 0);
-                    if (areaEntity == null)
-                    {
-                        // Try using area tag as fallback
-                        areaEntity = world.GetEntityByTag(_tag, 0);
-                    }
-
-                    // If no area entity exists, create a temporary one for script execution
-                    // This is similar to how module scripts are executed
-                    if (areaEntity == null)
-                    {
-                        // TODO: Create temporary area entity for script execution
-                        // For now, we skip if no area entity exists
-                        // Full implementation would create a temporary entity with area ResRef as tag
-                        return;
-                    }
-
-                    // Fire OnHeartbeat script event
-                    // Based on nwmain.exe: Area heartbeat script execution
-                    world.EventBus.FireScriptEvent(areaEntity, ScriptEvent.OnHeartbeat, null);
+                    return areaEntity;
                 }
             }
+
+            // If no area entity exists, create a temporary one for script execution
+            // Use cached temporary area entity if available and still valid
+            if (_temporaryAreaEntity != null && _temporaryAreaEntity.IsValid && _temporaryAreaEntity.World == world)
+            {
+                return _temporaryAreaEntity;
+            }
+
+            // Create temporary area entity for script execution
+            // Based on nwmain.exe: Area scripts execute with area ResRef as entity tag
+            // Pattern matches ModuleTransitionSystem module entity creation (CreateEntity with ObjectType.Invalid)
+            areaEntity = world.CreateEntity(ObjectType.Invalid, Vector3.Zero, 0.0f);
+            areaEntity.Tag = _resRef; // Set tag to area ResRef for script context
+
+            // Cache the entity for reuse across script execution calls
+            // This avoids recreating the entity for every area script event
+            _temporaryAreaEntity = areaEntity;
+
+            return areaEntity;
         }
 
         /// <summary>
@@ -1816,6 +1899,10 @@ namespace Andastra.Runtime.Games.Aurora
             _resRef = null;
             _displayName = null;
             _tag = null;
+
+            // Clear temporary area entity cache
+            // Based on nwmain.exe: Area entity references are cleared during unload
+            _temporaryAreaEntity = null;
         }
 
         /// <summary>
