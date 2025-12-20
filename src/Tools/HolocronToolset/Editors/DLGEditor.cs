@@ -110,7 +110,7 @@ namespace HolocronToolset.Editors
         private ComboBox _condition2ResrefEdit;
         private NumericUpDown _logicSpin;
         private TreeView _dialogTree;
-        
+
         // Condition parameter widgets (K2-specific, but available in UI for all games)
         // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
         // Original: QSpinBox condition1Param1Spin, condition1Param2Spin, etc., QCheckBox condition1NotCheckbox, condition2NotCheckbox
@@ -163,6 +163,11 @@ namespace HolocronToolset.Editors
         // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
         // Original: QComboBox voiceComboBox
         private ComboBox _voiceComboBox;
+
+        // UI Controls - File-level properties (root DLG fields)
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui:1595
+        // Original: QLineEdit voIdEdit (row 4, column 1 in file properties grid)
+        private TextBox _voIdEdit;
 
         // Flag to track if node is loaded into UI (prevents updates during loading)
         private bool _nodeLoadedIntoUi = false;
@@ -228,6 +233,19 @@ namespace HolocronToolset.Editors
             {
                 panel.Children.Insert(0, _findBar);
             }
+
+            // Initialize file-level properties (root DLG fields)
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui:1587-1603
+            // Original: QLineEdit voIdEdit (row 4, column 1 in file properties grid)
+            _voIdEdit = new TextBox();
+            _voIdEdit.LostFocus += (s, e) => OnFilePropertyChanged();
+            var filePropertiesPanel = new StackPanel();
+            filePropertiesPanel.Children.Add(new TextBlock { Text = "File Properties" });
+            var voIdPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal };
+            voIdPanel.Children.Add(new TextBlock { Text = "Voiceover ID:", Width = 120 });
+            voIdPanel.Children.Add(_voIdEdit);
+            filePropertiesPanel.Children.Add(voIdPanel);
+            panel.Children.Add(filePropertiesPanel);
 
             // Initialize dialog tree view
             // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
@@ -296,7 +314,7 @@ namespace HolocronToolset.Editors
             linkPanel.Children.Add(_condition1Param6Edit);
             linkPanel.Children.Add(_condition1NotCheckbox);
             linkPanel.Children.Add(new TextBlock { Text = "Condition 1 Not" });
-            
+
             linkPanel.Children.Add(new TextBlock { Text = "Condition 2 ResRef:" });
             linkPanel.Children.Add(_condition2ResrefEdit);
             linkPanel.Children.Add(new TextBlock { Text = "Condition 2 Param1:" });
@@ -313,7 +331,7 @@ namespace HolocronToolset.Editors
             linkPanel.Children.Add(_condition2Param6Edit);
             linkPanel.Children.Add(_condition2NotCheckbox);
             linkPanel.Children.Add(new TextBlock { Text = "Condition 2 Not" });
-            
+
             linkPanel.Children.Add(new TextBlock { Text = "Logic:" });
             linkPanel.Children.Add(_logicSpin);
             panel.Children.Add(linkPanel);
@@ -450,6 +468,14 @@ namespace HolocronToolset.Editors
                 }
             }
 
+            // Load file-level properties (root DLG fields)
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1149
+            // Original: self.ui.voIdEdit.setText(dlg.vo_id)
+            if (_voIdEdit != null)
+            {
+                _voIdEdit.Text = dlg.VoId ?? string.Empty;
+            }
+
             // Clear undo/redo history when loading a dialog
             _actionHistory.Clear();
             UpdateTreeView();
@@ -459,6 +485,14 @@ namespace HolocronToolset.Editors
         // Original: def build(self) -> tuple[bytes, byte[]]:
         public override Tuple<byte[], byte[]> Build()
         {
+            // Save file-level properties (root DLG fields) from UI to CoreDlg
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1233
+            // Original: self.core_dlg.vo_id = self.ui.voIdEdit.text()
+            if (_voIdEdit != null)
+            {
+                _coreDlg.VoId = _voIdEdit.Text ?? string.Empty;
+            }
+
             // Handle CNV format by converting DLG to CNV
             if (_restype == ResourceType.CNV)
             {
@@ -660,7 +694,7 @@ namespace HolocronToolset.Editors
         public ComboBox Condition2ResrefEdit => _condition2ResrefEdit;
         public NumericUpDown LogicSpin => _logicSpin;
         public TreeView DialogTree => _dialogTree;
-        
+
         // Expose condition parameter widgets for testing
         // Matching PyKotor implementation: editor.ui.condition1Param1Spin, etc.
         public NumericUpDown Condition1Param1Spin => _condition1Param1Spin;
@@ -702,6 +736,10 @@ namespace HolocronToolset.Editors
         // Expose voice widget for testing
         // Matching PyKotor implementation: editor.ui.voiceComboBox
         public ComboBox VoiceComboBox => _voiceComboBox;
+
+        // Expose VO ID widget for testing
+        // Matching PyKotor implementation: editor.ui.voIdEdit
+        public TextBox VoIdEdit => _voIdEdit;
 
         /// <summary>
         /// Handles selection changes in the dialog tree.
@@ -1193,6 +1231,27 @@ namespace HolocronToolset.Editors
         }
 
         /// <summary>
+        /// Updates file-level properties (root DLG fields) based on UI changes.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1233
+        /// Original: self.core_dlg.vo_id = self.ui.voIdEdit.text() (called during build, but we update immediately for consistency)
+        /// </summary>
+        private void OnFilePropertyChanged()
+        {
+            if (_coreDlg == null)
+            {
+                return;
+            }
+
+            // Update VO ID from UI
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1233
+            // Original: self.core_dlg.vo_id = self.ui.voIdEdit.text()
+            if (_voIdEdit != null)
+            {
+                _coreDlg.VoId = _voIdEdit.Text ?? string.Empty;
+            }
+        }
+
+        /// <summary>
         /// Updates the tree view with the current model data.
         /// </summary>
         public void UpdateTreeView()
@@ -1642,7 +1701,7 @@ namespace HolocronToolset.Editors
 
                 // Matching PyKotor implementation: dialog = LocalizedStringDialog(parent_widget, self._installation, item.link.node.text)
                 var dialog = new LocalizedStringDialog(parentWindow, _installation, item.Link.Node.Text);
-                
+
                 // Matching PyKotor implementation: dialog_result: bool | int = False
                 // Matching PyKotor: dialog_result = dialog.exec()
                 bool dialogResult = false;
@@ -1857,7 +1916,7 @@ namespace HolocronToolset.Editors
             // Matching PyKotor: QTimer.singleShot(125, lambda: self.setWindowOpacity(1))
             double originalOpacity = Opacity;
             Opacity = 0.7;
-            
+
             // Restore opacity after 125ms (matching PyKotor timing)
             DispatcherTimer timer = new DispatcherTimer
             {
@@ -1946,7 +2005,7 @@ namespace HolocronToolset.Editors
             {
                 // Stop any currently playing sound
                 _soundPlayer?.Stop();
-                
+
                 // Dispose previous stream if it exists
                 if (_soundStream != null)
                 {
@@ -1960,7 +2019,7 @@ namespace HolocronToolset.Editors
                 _soundStream = new MemoryStream(data);
                 _soundPlayer.Stream = _soundStream;
                 _soundPlayer.Play();
-                
+
                 return true;
             }
             catch (Exception)
@@ -2190,7 +2249,7 @@ namespace HolocronToolset.Editors
             }
 
             string inputText = _findInput.Text ?? "";
-            
+
             // Matching PyKotor: if not self.search_results or input_text != self.current_search_text:
             if (_searchResults == null || _searchResults.Count == 0 || inputText != _currentSearchText)
             {
@@ -2254,7 +2313,7 @@ namespace HolocronToolset.Editors
         private List<Tuple<string, string, string>> ParseQuery(string inputText)
         {
             var conditions = new List<Tuple<string, string, string>>();
-            
+
             if (string.IsNullOrEmpty(inputText))
             {
                 return conditions;
@@ -2264,7 +2323,7 @@ namespace HolocronToolset.Editors
             // Matching PyKotor: pattern = r'("[^"]*"|\S+)'
             var quotedStringPattern = new Regex(@"""[^""]*""");
             var tokens = new List<string>();
-            
+
             // Extract quoted strings first
             var quotedMatches = quotedStringPattern.Matches(inputText);
             int lastIndex = 0;
@@ -2283,12 +2342,12 @@ namespace HolocronToolset.Editors
                         }
                     }
                 }
-                
+
                 // Add the quoted string (without quotes)
                 tokens.Add(match.Value.Substring(1, match.Value.Length - 2));
                 lastIndex = match.Index + match.Length;
             }
-            
+
             // Add remaining text after last quoted string
             if (lastIndex < inputText.Length)
             {
@@ -2360,7 +2419,7 @@ namespace HolocronToolset.Editors
         private List<DLGStandardItem> FindItemMatchingDisplayText(string inputText)
         {
             var matchingItems = new List<DLGStandardItem>();
-            
+
             if (string.IsNullOrEmpty(inputText))
             {
                 return matchingItems;
@@ -2569,7 +2628,7 @@ namespace HolocronToolset.Editors
                 // Convert snake_case to PascalCase for C# property names
                 // e.g., "speaker" -> "Speaker", "is_child" -> "IsChild", "active1" -> "Active1"
                 string pascalKey = ToPascalCase(key);
-                
+
                 // Try property first (case-insensitive)
                 var properties = obj.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
                 foreach (var property in properties)
@@ -2578,13 +2637,13 @@ namespace HolocronToolset.Editors
                         property.Name.Equals(key, StringComparison.OrdinalIgnoreCase))
                     {
                         object value = property.GetValue(obj);
-                        
+
                         // Convert ResRef to string for comparison
                         if (value != null && value.GetType().Name == "ResRef")
                         {
                             return value.ToString();
                         }
-                        
+
                         return value;
                     }
                 }
@@ -2597,13 +2656,13 @@ namespace HolocronToolset.Editors
                         field.Name.Equals(key, StringComparison.OrdinalIgnoreCase))
                     {
                         object value = field.GetValue(obj);
-                        
+
                         // Convert ResRef to string for comparison
                         if (value != null && value.GetType().Name == "ResRef")
                         {
                             return value.ToString();
                         }
-                        
+
                         return value;
                     }
                 }
@@ -3959,7 +4018,7 @@ namespace HolocronToolset.Editors
             // The actual display update happens when we rebuild the tree view
             // For now, we'll trigger a tree view update to reflect the changes
             // In a more optimized implementation, we would update just the specific tree view item's header
-            
+
             // Update the tree view to reflect changes
             if (_editor != null)
             {
@@ -4244,7 +4303,7 @@ namespace HolocronToolset.Editors
                 // Matching PyKotor implementation: q_app_clipboard.setText(json.dumps(link.to_dict()))
                 Dictionary<string, object> nodeMap = new Dictionary<string, object>();
                 Dictionary<string, object> linkDict = link.ToDict(nodeMap);
-                
+
                 // Serialize to JSON
                 string json = JsonSerializer.Serialize(linkDict, new JsonSerializerOptions
                 {
@@ -4713,6 +4772,103 @@ namespace HolocronToolset.Editors
                         }
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Deletes a node from the DLG and UI tree model.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:1051-1063
+        /// Original: def delete_node(self, item: DLGStandardItem):
+        /// </summary>
+        /// <param name="item">The DLGStandardItem to delete.</param>
+        public void DeleteNode(DLGStandardItem item)
+        {
+            if (item == null)
+            {
+                return;
+            }
+
+            var parentItem = item.Parent;
+            var link = item.Link;
+
+            if (parentItem == null)
+            {
+                // Root item - remove from root items list
+                int index = _rootItems.IndexOf(item);
+                if (index >= 0)
+                {
+                    _rootItems.RemoveAt(index);
+
+                    // Also remove from CoreDlg.Starters if editor is available
+                    if (_editor != null && _editor.CoreDlg != null && link != null)
+                    {
+                        _editor.CoreDlg.Starters.Remove(link);
+                    }
+
+                    // Clean up dictionaries
+                    if (link != null)
+                    {
+                        if (_linkToItems.ContainsKey(link))
+                        {
+                            _linkToItems[link].Remove(item);
+                            if (_linkToItems[link].Count == 0)
+                            {
+                                _linkToItems.Remove(link);
+                            }
+                        }
+
+                        if (link.Node != null && _nodeToItems.ContainsKey(link.Node))
+                        {
+                            _nodeToItems[link.Node].Remove(item);
+                            if (_nodeToItems[link.Node].Count == 0)
+                            {
+                                _nodeToItems.Remove(link.Node);
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Child item - remove from parent
+                parentItem.RemoveChild(item);
+
+                // Remove the link from the parent node's Links collection
+                if (parentItem.Link != null && parentItem.Link.Node != null && link != null)
+                {
+                    parentItem.Link.Node.Links.Remove(link);
+                }
+
+                // Clean up dictionaries
+                if (link != null)
+                {
+                    if (_linkToItems.ContainsKey(link))
+                    {
+                        _linkToItems[link].Remove(item);
+                        if (_linkToItems[link].Count == 0)
+                        {
+                            _linkToItems.Remove(link);
+                        }
+                    }
+
+                    if (link.Node != null && _nodeToItems.ContainsKey(link.Node))
+                    {
+                        _nodeToItems[link.Node].Remove(item);
+                        if (_nodeToItems[link.Node].Count == 0)
+                        {
+                            _nodeToItems.Remove(link.Node);
+                        }
+                    }
+                }
+
+                // Update parent item display text
+                UpdateItemDisplayText(parentItem);
+            }
+
+            // Update tree view if editor is available
+            if (_editor != null)
+            {
+                _editor.UpdateTreeView();
             }
         }
     }
