@@ -51,15 +51,6 @@ namespace HolocronToolset.Editors
         private Label _statusLabel;
         private Border _statusBar;
 
-        // Panel container structure for output, terminal, etc.
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py
-        // Original: self.ui.mainSplitter (QSplitter), self.ui.panelTabs (QTabWidget)
-        private Grid _mainSplitter;  // Grid used as splitter (Avalonia equivalent of QSplitter)
-        private GridSplitter _gridSplitter;  // GridSplitter for resizing
-        private TabControl _panelTabs;  // TabControl for panels (output, terminal, etc.)
-        private TabItem _outputTab;  // Output panel tab
-        private Control _mainContentContainer;  // Container for main content (code editor)
-
         // Error and warning line tracking
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:178-179
         // Original: self._error_lines: set[int] = set()  # Line numbers with errors (1-indexed)
@@ -88,13 +79,11 @@ namespace HolocronToolset.Editors
         {
             public MenuItem ActionCompile { get; set; }
             public TextBox OutputEdit { get; set; }
-            public CodeEditor CodeEdit { get; set; }
 
             public NSSEditorUi()
             {
                 ActionCompile = null;
                 OutputEdit = null;
-                CodeEdit = null;
             }
         }
 
@@ -215,12 +204,6 @@ namespace HolocronToolset.Editors
                 _codeEdit = new CodeEditor();
             }
 
-            // Set in UI wrapper for test access (matching PyKotor's self.ui.codeEdit pattern)
-            if (_ui != null)
-            {
-                _ui.CodeEdit = _codeEdit;
-            }
-
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:479-484
             // Original: self.output_text_edit = self.ui.outputEdit
             // Original: self.output_text_edit.setReadOnly(True)
@@ -262,6 +245,159 @@ namespace HolocronToolset.Editors
             if (_ui != null)
             {
                 _ui.OutputEdit = _outputEdit;
+            }
+
+            // Add output to panel tabs if panel container is already set up
+            if (_panelTabs != null && _outputTab == null)
+            {
+                _outputTab = new TabItem { Header = "Output", Content = _outputEdit };
+                _panelTabs.Items.Add(_outputTab);
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py
+        // Original: Panel container structure with mainSplitter (QSplitter) and panelTabs (QTabWidget)
+        /// <summary>
+        /// Sets up the panel container structure with a splitter for main content and panels.
+        /// Creates a Grid-based splitter layout with TabControl for output, terminal, etc.
+        /// </summary>
+        private void SetupPanelContainer()
+        {
+            // Create main splitter (Grid with two rows: main content and panels)
+            // Matching PyKotor: self.ui.mainSplitter (QSplitter with vertical orientation)
+            _mainSplitter = new Grid();
+            _mainSplitter.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+            _mainSplitter.RowDefinitions.Add(new RowDefinition { Height = new GridLength(0) });  // Initially hidden (0 height)
+
+            // Store current content as main content container
+            _mainContentContainer = Content;
+
+            // Create panel tabs (TabControl for output, terminal, etc.)
+            // Matching PyKotor: self.ui.panelTabs (QTabWidget)
+            _panelTabs = new TabControl();
+            _panelTabs.Name = "panelTabs";
+            _panelTabs.IsVisible = false;  // Initially hidden
+
+            // Add output tab if output panel is already set up
+            // This handles the case where SetupOutputPanel was called before SetupPanelContainer
+            if (_outputEdit != null)
+            {
+                _outputTab = new TabItem { Header = "Output", Content = _outputEdit };
+                _panelTabs.Items.Add(_outputTab);
+            }
+
+            // Add terminal tab if terminal widget is already set up
+            if (_terminalWidget != null)
+            {
+                var terminalTab = new TabItem { Header = "Terminal", Content = _terminalWidget };
+                _panelTabs.Items.Add(terminalTab);
+            }
+
+            // Create grid splitter for resizing (Avalonia equivalent of QSplitter handle)
+            _gridSplitter = new GridSplitter
+            {
+                Height = 4,
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
+                Background = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.FromRgb(200, 200, 200)),
+                ShowsPreview = true
+            };
+            Grid.SetRow(_gridSplitter, 0);  // Place in first row, will be moved when panel is shown
+
+            // Add main content to first row
+            if (_mainContentContainer != null)
+            {
+                _mainSplitter.Children.Add(_mainContentContainer);
+                Grid.SetRow(_mainContentContainer, 0);
+            }
+
+            // Add panel tabs to second row
+            _mainSplitter.Children.Add(_panelTabs);
+            Grid.SetRow(_panelTabs, 1);
+
+            // Set the splitter as the new content
+            Content = _mainSplitter;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2749-2759
+        // Original: def _toggle_output_panel(self):
+        /// <summary>
+        /// Toggles the output panel visibility.
+        /// Shows or hides the panel container (TabControl) by adjusting the splitter sizes.
+        /// Matching PyKotor behavior: toggles panelTabs visibility via mainSplitter sizes.
+        /// </summary>
+        private void ToggleOutputPanel()
+        {
+            if (_mainSplitter == null || _panelTabs == null)
+            {
+                // Panel container not set up yet, initialize it
+                SetupPanelContainer();
+                if (_mainSplitter == null || _panelTabs == null)
+                {
+                    return;  // Still failed to set up
+                }
+            }
+
+            // Matching PyKotor: if self.ui.panelTabs.isVisible()
+            if (_panelTabs.IsVisible)
+            {
+                // Hide panel if visible
+                // Matching PyKotor: self.ui.mainSplitter.setSizes([999999, 0])
+                _mainSplitter.RowDefinitions[0].Height = new GridLength(1, GridUnitType.Star);
+                _mainSplitter.RowDefinitions[1].Height = new GridLength(0);
+                _panelTabs.IsVisible = false;
+
+                // Remove grid splitter if it exists
+                if (_gridSplitter != null && _mainSplitter.Children.Contains(_gridSplitter))
+                {
+                    _mainSplitter.Children.Remove(_gridSplitter);
+                }
+            }
+            else
+            {
+                // Show panel
+                // Matching PyKotor: sizes = self.ui.mainSplitter.sizes()
+                // Matching PyKotor: if sizes[1] == 0: self.ui.mainSplitter.setSizes([sizes[0] - 200, 200])
+                var currentMainHeight = _mainSplitter.RowDefinitions[0].Height;
+                double mainHeightValue = 200;  // Default panel height
+
+                // If main content has a star height, calculate a reasonable split
+                if (currentMainHeight.GridUnitType == GridUnitType.Star)
+                {
+                    // Set panel to 200px, main content takes remaining space
+                    _mainSplitter.RowDefinitions[0].Height = new GridLength(1, GridUnitType.Star);
+                    _mainSplitter.RowDefinitions[1].Height = new GridLength(200);
+                }
+                else
+                {
+                    // Use pixel-based sizing
+                    double totalHeight = currentMainHeight.Value;
+                    if (totalHeight > 200)
+                    {
+                        _mainSplitter.RowDefinitions[0].Height = new GridLength(totalHeight - 200);
+                        _mainSplitter.RowDefinitions[1].Height = new GridLength(200);
+                    }
+                    else
+                    {
+                        // Fallback: use star-based sizing
+                        _mainSplitter.RowDefinitions[0].Height = new GridLength(1, GridUnitType.Star);
+                        _mainSplitter.RowDefinitions[1].Height = new GridLength(200);
+                    }
+                }
+
+                _panelTabs.IsVisible = true;
+
+                // Add grid splitter for resizing
+                if (_gridSplitter != null && !_mainSplitter.Children.Contains(_gridSplitter))
+                {
+                    _mainSplitter.Children.Add(_gridSplitter);
+                    Grid.SetRow(_gridSplitter, 0);
+                }
+
+                // Switch to output tab if available
+                if (_outputTab != null && _panelTabs.Items.Contains(_outputTab))
+                {
+                    _panelTabs.SelectedItem = _outputTab;
+                }
             }
         }
 
@@ -456,6 +592,31 @@ namespace HolocronToolset.Editors
             // Connect context menu (if available)
             // Note: Avalonia handles context menus differently than Qt
             // Context menu setup would be done in SetupUI or via XAML
+
+            // Setup keyboard shortcuts for panel toggles
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2544-2547
+            // Original: self.ui.actionToggleFileExplorer.setShortcut(QKeySequence("Ctrl+B"))
+            SetupPanelShortcuts();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2544-2547
+        // Original: Panel toggles shortcuts
+        /// <summary>
+        /// Set up keyboard shortcuts for panel toggle actions.
+        /// </summary>
+        private void SetupPanelShortcuts()
+        {
+            // Add KeyDown event handler for global shortcuts
+            // Matching PyKotor: self.ui.actionToggleFileExplorer.setShortcut(QKeySequence("Ctrl+B"))
+            this.KeyDown += (s, e) =>
+            {
+                // Ctrl+B: Toggle file explorer
+                if (e.Key == Key.B && e.KeyModifiers == KeyModifiers.Control)
+                {
+                    ToggleFileExplorer();
+                    e.Handled = true;
+                }
+            };
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:3060-3117
@@ -1804,10 +1965,6 @@ namespace HolocronToolset.Editors
         // Matching PyKotor: editor._resname in test_nss_editor_bookmark_persistence
         public string Resname => _resname;
 
-        // Public property to access filepath for testing
-        // Matching PyKotor: editor._filepath in test_nss_editor_load_real_ncs_file
-        public string Filepath => _filepath;
-
         // Matching PyKotor implementation: highlighter is accessible for testing
         // Original: editor._highlighter in test_nss_editor_syntax_highlighting_game_switch
         /// <summary>
@@ -2497,7 +2654,9 @@ namespace HolocronToolset.Editors
             // For now, we register placeholders
             _commandPalette.RegisterCommand("view.toggleExplorer", "Toggle Explorer", () => { /* TODO: Implement */ }, "View");
             _commandPalette.RegisterCommand("view.toggleTerminal", "Toggle Terminal", () => { /* TODO: Implement */ }, "View");
-            _commandPalette.RegisterCommand("view.toggleOutput", "Toggle Output Panel", () => { /* TODO: Implement */ }, "View");
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2749-2759
+            // Original: "view.toggleOutput": lambda: self.ui.actionToggle_Output_Panel.trigger()
+            _commandPalette.RegisterCommand("view.toggleOutput", "Toggle Output Panel", () => ToggleOutputPanel(), "View");
             _commandPalette.RegisterCommand("view.zoomIn", "Zoom In", () => { if (_codeEdit != null) _codeEdit.ZoomIn(); }, "View");
             _commandPalette.RegisterCommand("view.zoomOut", "Zoom Out", () => { if (_codeEdit != null) _codeEdit.ZoomOut(); }, "View");
             _commandPalette.RegisterCommand("view.resetZoom", "Reset Zoom", () => { if (_codeEdit != null) _codeEdit.ResetZoom(); }, "View");
@@ -4077,80 +4236,6 @@ namespace HolocronToolset.Editors
         /// Exposed for testing purposes to match Python test behavior.
         /// </summary>
         public TreeView FileExplorerView => _fileExplorerView;
-
-        /// <summary>
-        /// Gets the file explorer dock panel.
-        /// Exposed for testing purposes to match Python test behavior.
-        /// </summary>
-        public Panel FileExplorerDock => _fileExplorerDock;
-
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2739-2741
-        // Original: def _toggle_file_explorer(self):
-        // Original:     """Toggle file explorer dock visibility."""
-        // Original:     self.ui.fileExplorerDock.setVisible(not self.ui.fileExplorerDock.isVisible())
-        /// <summary>
-        /// Toggle file explorer dock visibility.
-        /// Shows or hides the file explorer panel based on current visibility state.
-        /// </summary>
-        private void ToggleFileExplorer()
-        {
-            if (_fileExplorerDock == null)
-            {
-                return;
-            }
-
-            // Toggle visibility
-            _fileExplorerDock.IsVisible = !_fileExplorerDock.IsVisible;
-        }
-
-        /// <summary>
-        /// Integrate the file explorer dock into the main UI layout.
-        /// Adds the file explorer panel to the window's content structure.
-        /// </summary>
-        private void IntegrateFileExplorerDock()
-        {
-            if (_fileExplorerDock == null)
-            {
-                return;
-            }
-
-            // Start with hidden by default (matching common IDE behavior)
-            _fileExplorerDock.IsVisible = false;
-
-            // Get or create the main layout container
-            // The Content should be a DockPanel (from SetupStatusBar or AddHelpAction)
-            if (Content is DockPanel mainDockPanel)
-            {
-                // Check if file explorer dock is already added
-                if (!mainDockPanel.Children.Contains(_fileExplorerDock))
-                {
-                    // Add file explorer dock to the left side
-                    mainDockPanel.Children.Add(_fileExplorerDock);
-                    DockPanel.SetDock(_fileExplorerDock, Dock.Left);
-                }
-            }
-            else
-            {
-                // Content is not a DockPanel, wrap it in one
-                var newDockPanel = new DockPanel();
-                
-                // Add file explorer to the left
-                newDockPanel.Children.Add(_fileExplorerDock);
-                DockPanel.SetDock(_fileExplorerDock, Dock.Left);
-
-                // Add existing content
-                if (Content != null && Content is Control existingContent)
-                {
-                    newDockPanel.Children.Add(existingContent);
-                }
-                else if (_codeEdit != null)
-                {
-                    newDockPanel.Children.Add(_codeEdit);
-                }
-
-                Content = newDockPanel;
-            }
-        }
 
         /// <summary>
         /// Gets the error lines set.
