@@ -127,6 +127,50 @@ namespace Andastra.Parsing.Resource.Generics
             // Original: are.comment = root.acquire("Comments", "")
             are.Comment = root.Acquire<string>("Comments", "");
 
+            // Extract deprecated fields (toolset-only, not used by game engines)
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:481-500
+            // Original: These fields are from NWN and are preserved for compatibility with existing ARE files
+            // Reference: vendor/reone/src/libs/resource/parser/gff/are.cpp:308,325,336,338-339,348-365
+            // Matching Python: are.unused_id = root.acquire("ID", 0)
+            are.UnusedId = root.Acquire<int>("ID", 0);
+            // Matching Python: are.creator_id = root.acquire("Creator_ID", 0)
+            are.CreatorId = root.Acquire<int>("Creator_ID", 0);
+            // Matching Python: are.flags = root.acquire("Flags", 0)
+            are.Flags = root.Acquire<uint>("Flags", 0);
+            // Matching Python: are.mod_spot_check = root.acquire("ModSpotCheck", 0)
+            are.ModSpotCheck = root.Acquire<int>("ModSpotCheck", 0);
+            // Matching Python: are.mod_listen_check = root.acquire("ModListenCheck", 0)
+            are.ModListenCheck = root.Acquire<int>("ModListenCheck", 0);
+            // Matching Python: are.moon_ambient = root.acquire("MoonAmbientColor", 0)
+            are.MoonAmbient = Color.FromRgbInteger(root.Acquire<int>("MoonAmbientColor", 0));
+            // Matching Python: are.moon_diffuse = root.acquire("MoonDiffuseColor", 0)
+            are.MoonDiffuse = Color.FromRgbInteger(root.Acquire<int>("MoonDiffuseColor", 0));
+            // Matching Python: are.moon_fog = root.acquire("MoonFogOn", 0)
+            are.MoonFog = root.Acquire<int>("MoonFogOn", 0) != 0;
+            // Matching Python: are.moon_fog_near = root.acquire("MoonFogNear", 0.0)
+            are.MoonFogNear = root.Acquire<float>("MoonFogNear", 0.0f);
+            // Matching Python: are.moon_fog_far = root.acquire("MoonFogFar", 0.0)
+            are.MoonFogFar = root.Acquire<float>("MoonFogFar", 0.0f);
+            // Matching Python: are.moon_fog_color = root.acquire("MoonFogColor", 0)
+            are.MoonFogColorDeprecated = Color.FromRgbInteger(root.Acquire<int>("MoonFogColor", 0));
+            // Matching Python: are.moon_shadows = root.acquire("MoonShadows", 0)
+            are.MoonShadows = root.Acquire<int>("MoonShadows", 0) != 0;
+            // Matching Python: are.is_night = root.acquire("IsNight", 0)
+            are.IsNight = root.Acquire<int>("IsNight", 0) != 0;
+            // Matching Python: are.lighting_scheme = root.acquire("LightingScheme", 0)
+            are.LightingScheme = root.Acquire<int>("LightingScheme", 0);
+            // Matching Python: are.day_night = root.acquire("DayNightCycle", 0)
+            are.DayNightCycle = root.Acquire<int>("DayNightCycle", 0) != 0;
+            // Matching Python: are.no_rest = root.acquire("NoRest", 0)
+            are.NoRest = root.Acquire<int>("NoRest", 0) != 0;
+            // Matching Python: are.no_hang_back = root.acquire("NoHangBack", 0)
+            are.NoHangBack = root.Acquire<int>("NoHangBack", 0) != 0;
+            // Matching Python: are.player_only = root.acquire("PlayerOnly", 0)
+            are.PlayerOnly = root.Acquire<int>("PlayerOnly", 0) != 0;
+            // Matching Python: are.player_vs_player = root.acquire("PlayerVsPlayer", 0)
+            are.PlayerVsPlayer = root.Acquire<int>("PlayerVsPlayer", 0) != 0;
+            // Note: Expansion_List is always written as empty list in dismantle_are, so we don't need to read it
+
             // Extract rooms list
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:514-521
             // Original: rooms_list = root.acquire("Rooms", GFFList())
@@ -310,30 +354,50 @@ namespace Andastra.Parsing.Resource.Generics
             // Original: if use_deprecated:
             // Note: These fields are toolset-only and not used by game engines
             // They are preserved for compatibility with existing ARE files
+            // Reference: vendor/reone/src/libs/resource/parser/gff/are.cpp:308,325,336,338-339,348-365
             if (useDeprecated)
             {
-                // TODO: When ARE class has these deprecated properties, implement:
-                // root.SetInt32("ID", are.UnusedId);
-                // root.SetInt32("Creator_ID", are.CreatorId);
-                // root.SetUInt32("Flags", are.Flags);
-                // root.SetInt32("ModSpotCheck", are.ModSpotCheck);
-                // root.SetInt32("ModListenCheck", are.ModListenCheck);
-                // root.SetUInt32("MoonAmbientColor", (uint)are.MoonAmbient.ToRgbInteger());
-                // root.SetUInt32("MoonDiffuseColor", (uint)are.MoonDiffuse.ToRgbInteger());
-                // root.SetUInt8("MoonFogOn", are.MoonFog ? (byte)1 : (byte)0);
-                // root.SetSingle("MoonFogNear", are.MoonFogNear);
-                // root.SetSingle("MoonFogFar", are.MoonFogFar);
-                // root.SetUInt32("MoonFogColor", (uint)are.MoonFogColor.ToRgbInteger());
-                // root.SetUInt8("MoonShadows", are.MoonShadows ? (byte)1 : (byte)0);
-                // root.SetUInt8("IsNight", are.IsNight ? (byte)1 : (byte)0);
-                // root.SetUInt8("LightingScheme", (byte)are.LightingScheme);
-                // root.SetUInt8("DayNightCycle", are.DayNightCycle ? (byte)1 : (byte)0);
-                // root.SetUInt8("NoRest", are.NoRest ? (byte)1 : (byte)0);
-                // root.SetUInt8("NoHangBack", are.NoHangBack ? (byte)1 : (byte)0);
-                // root.SetUInt8("PlayerOnly", are.PlayerOnly ? (byte)1 : (byte)0);
-                // root.SetUInt8("PlayerVsPlayer", are.PlayerVsPlayer ? (byte)1 : (byte)0);
-                // var expansionList = new GFFList();
-                // root.SetList("Expansion_List", expansionList);
+                // Matching Python: root.set_int32("ID", are.unused_id)
+                root.SetInt32("ID", are.UnusedId);
+                // Matching Python: root.set_int32("Creator_ID", are.creator_id)
+                root.SetInt32("Creator_ID", are.CreatorId);
+                // Matching Python: root.set_uint32("Flags", are.flags)
+                root.SetUInt32("Flags", are.Flags);
+                // Matching Python: root.set_int32("ModSpotCheck", are.mod_spot_check)
+                root.SetInt32("ModSpotCheck", are.ModSpotCheck);
+                // Matching Python: root.set_int32("ModListenCheck", are.mod_listen_check)
+                root.SetInt32("ModListenCheck", are.ModListenCheck);
+                // Matching Python: root.set_uint32("MoonAmbientColor", are.moon_ambient)
+                root.SetUInt32("MoonAmbientColor", (uint)are.MoonAmbient.ToRgbInteger());
+                // Matching Python: root.set_uint32("MoonDiffuseColor", are.moon_diffuse)
+                root.SetUInt32("MoonDiffuseColor", (uint)are.MoonDiffuse.ToRgbInteger());
+                // Matching Python: root.set_uint8("MoonFogOn", are.moon_fog)
+                root.SetUInt8("MoonFogOn", are.MoonFog ? (byte)1 : (byte)0);
+                // Matching Python: root.set_single("MoonFogNear", moon_fog_near)
+                root.SetSingle("MoonFogNear", are.MoonFogNear);
+                // Matching Python: root.set_single("MoonFogFar", moon_fog_far)
+                root.SetSingle("MoonFogFar", are.MoonFogFar);
+                // Matching Python: root.set_uint32("MoonFogColor", are.moon_fog_color)
+                root.SetUInt32("MoonFogColor", (uint)are.MoonFogColorDeprecated.ToRgbInteger());
+                // Matching Python: root.set_uint8("MoonShadows", are.moon_shadows)
+                root.SetUInt8("MoonShadows", are.MoonShadows ? (byte)1 : (byte)0);
+                // Matching Python: root.set_uint8("IsNight", are.is_night)
+                root.SetUInt8("IsNight", are.IsNight ? (byte)1 : (byte)0);
+                // Matching Python: root.set_uint8("LightingScheme", are.lighting_scheme)
+                root.SetUInt8("LightingScheme", (byte)are.LightingScheme);
+                // Matching Python: root.set_uint8("DayNightCycle", are.day_night)
+                root.SetUInt8("DayNightCycle", are.DayNightCycle ? (byte)1 : (byte)0);
+                // Matching Python: root.set_uint8("NoRest", are.no_rest)
+                root.SetUInt8("NoRest", are.NoRest ? (byte)1 : (byte)0);
+                // Matching Python: root.set_uint8("NoHangBack", are.no_hang_back)
+                root.SetUInt8("NoHangBack", are.NoHangBack ? (byte)1 : (byte)0);
+                // Matching Python: root.set_uint8("PlayerOnly", are.player_only)
+                root.SetUInt8("PlayerOnly", are.PlayerOnly ? (byte)1 : (byte)0);
+                // Matching Python: root.set_uint8("PlayerVsPlayer", player_vs_player)
+                root.SetUInt8("PlayerVsPlayer", are.PlayerVsPlayer ? (byte)1 : (byte)0);
+                // Matching Python: root.set_list("Expansion_List", GFFList()) - always empty list for compatibility
+                var expansionList = new GFFList();
+                root.SetList("Expansion_List", expansionList);
             }
 
             return gff;

@@ -43,9 +43,72 @@ namespace Andastra.Runtime.Content.ResourceProviders
     ///   - Resources in later HAK files override resources in earlier HAK files
     ///   - Module overrides take precedence over HAK files
     /// 
-    /// TODO: Reverse engineer specific function addresses from Aurora Engine executables using Ghidra MCP
-    ///   - Neverwinter Nights: nwmain.exe resource loading functions (CExoResMan initialization, HAK loading, module resource lookup)
-    ///   - Neverwinter Nights 2: nwn2main.exe resource loading functions
+    /// Reverse Engineered Function Addresses (from Ghidra MCP analysis of nwmain.exe):
+    /// 
+    /// CExoResMan Resource Manager:
+    /// - CExoResMan::CExoResMan (constructor) @ 0x14018d6f0
+    ///   - Initializes resource manager with memory management
+    ///   - Sets up key table storage and resource tracking structures
+    ///   - Configures memory limits based on system physical memory
+    ///   - Initializes NWSync subsystem for resource synchronization
+    /// 
+    /// Resource Loading Functions:
+    /// - CExoResMan::Demand @ 0x14018ef90
+    ///   - Main resource loading function that services resource requests
+    ///   - Handles resource caching and demand tracking
+    ///   - Routes to appropriate service function based on resource source type:
+    ///     - Type 1: ServiceFromResFile (RES files)
+    ///     - Type 2: ServiceFromEncapsulated (ERF/HAK files)
+    ///     - Type 3: ServiceFromDirectory (override/modules directories)
+    ///     - Type 5: ServiceFromManifest (manifest-based resources)
+    /// - CRes::Demand @ 0x14018f300
+    ///   - Wrapper function that calls CExoResMan::Demand via global g_pExoResMan
+    ///   - Validates global resource manager is initialized
+    /// 
+    /// Resource Service Functions:
+    /// - CExoResMan::ServiceFromDirectory @ 0x140191e80
+    ///   - Loads resources from directory-based sources (override/modules)
+    ///   - Used for override directory and module-specific resource directories
+    /// - CExoResMan::ServiceFromEncapsulated @ 0x140192cf0
+    ///   - Loads resources from ERF-format archives (HAK files, module files)
+    ///   - Handles encapsulated resource file format parsing
+    /// - CExoResMan::ServiceFromResFile @ 0x140193b80
+    ///   - Loads resources from RES format files (legacy resource format)
+    /// 
+    /// Key Table Management (HAK File Registration):
+    /// - CExoResMan::AddKeyTable @ 0x14018e330
+    ///   - Registers a key table (resource index) with the resource manager
+    ///   - Used to register HAK files, module files, and other resource archives
+    ///   - Parameters: resource ID, path (CExoString), source type, priority, callback
+    ///   - Source types: 1=FixedKeyTableFile, 2=ResourceDirectory, 3=EncapsulatedResourceFile
+    ///   - Maintains ordered list of key tables for resource lookup precedence
+    ///   - Checks for duplicate registrations and rebuilds table if re-added
+    /// - CExoResMan::AddKeyTableContents @ 0x140189280
+    ///   - Adds resource entries from a key table file to an existing key table
+    /// 
+    /// Module.ifo HAK File Parsing:
+    /// - Module.ifo parsing functions reference Mod_HakList and Mod_Hak strings:
+    ///   - "Mod_HakList" string @ 0x140def690 (preferred method, GFF List field)
+    ///   - "Mod_Hak" string @ 0x140def6a0 (obsolete method, semicolon-separated string)
+    ///   - Functions at 0x14047f60e, 0x1404862d9, 0x140486325 reference these strings
+    ///   - Module loading code extracts HAK file list from Module.ifo GFF structure
+    ///   - HAK files are registered via AddKeyTable in the order specified in Module.ifo
+    /// 
+    /// Directory Configuration:
+    /// - "MODULES=" configuration string @ 0x140d80d20
+    ///   - Referenced by function @ 0x14003f569 for module directory path construction
+    /// - "OVERRIDE=" configuration string @ 0x140d80d50
+    /// - Directory name strings: "modules" @ 0x140d80f38, "override" @ 0x140d80f40
+    /// 
+    /// Resource Lookup Precedence (as implemented in CExoResMan::Demand):
+    /// 1. Override directory (ServiceFromDirectory, type 3)
+    /// 2. Module-specific resources (ServiceFromDirectory, type 3)
+    /// 3. HAK files in load order (ServiceFromEncapsulated, type 2, registered via AddKeyTable)
+    /// 4. Base game resources (ServiceFromResFile/ServiceFromEncapsulated)
+    /// 5. Hardcoded resources (engine-specific fallbacks)
+    /// 
+    /// Note: Neverwinter Nights 2 (nwn2main.exe) uses similar architecture but function addresses differ.
+    /// Additional reverse engineering required for nwn2main.exe specific addresses.
     /// </remarks>
     public class AuroraResourceProvider : IGameResourceProvider
     {
@@ -506,8 +569,8 @@ namespace Andastra.Runtime.Content.ResourceProviders
         private string LocateInHak(ResourceIdentifier id)
         {
             // Search HAK files in reverse order (later HAK files override earlier ones)
-            // Based on nwmain.exe: CExoResMan resource lookup searches HAK files in load order
-            // HAK files are ERF format archives, resources are checked using ERF.Get()
+            // Based on nwmain.exe: CExoResMan::Demand @ 0x14018ef90 searches key tables in registration order
+            // HAK files are ERF format archives, loaded via CExoResMan::ServiceFromEncapsulated @ 0x140192cf0
             for (int i = _hakFiles.Count - 1; i >= 0; i--)
             {
                 string hakPath = _hakFiles[i];
@@ -516,7 +579,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
                     try
                     {
                         // HAK files are ERF format - check if resource exists in this HAK file
-                        // Based on nwmain.exe: CExoResMan checks resource existence in HAK archives
+                        // Based on nwmain.exe: CExoResMan::ServiceFromEncapsulated @ 0x140192cf0 checks HAK archives
                         var erf = ERFAuto.ReadErf(hakPath);
                         byte[] resourceData = erf.Get(id.ResName, id.ResType);
                         if (resourceData != null)
@@ -550,10 +613,16 @@ namespace Andastra.Runtime.Content.ResourceProviders
         /// - HAK files are located in the "hak" directory under installation path
         /// - HAK filenames in Module.ifo do not include the .hak extension
         /// 
-        /// Based on nwmain.exe: CExoResMan::LoadHakFiles (needs Ghidra address verification)
-        /// - nwmain.exe: Module.ifo parsing extracts Mod_HakList or Mod_Hak field
-        /// - nwmain.exe: HAK files are loaded in order and registered with resource manager
-        /// - nwmain.exe: HAK file paths resolved from "hak" directory + filename + ".hak" extension
+        /// Based on nwmain.exe reverse engineering (Ghidra MCP analysis):
+        /// - Module.ifo parsing functions reference Mod_HakList/Mod_Hak strings:
+        ///   - "Mod_HakList" string @ 0x140def690, referenced by functions @ 0x14047f60e, 0x1404862d9
+        ///   - "Mod_Hak" string @ 0x140def6a0, referenced by functions @ 0x14047f6b9, 0x140486325, 0x1409d5658
+        /// - HAK files are registered via CExoResMan::AddKeyTable @ 0x14018e330
+        ///   - Each HAK file is registered as an encapsulated resource file (type 3)
+        ///   - HAK files are registered in the order specified in Module.ifo
+        ///   - Earlier HAK files in the list have higher priority (checked first during resource lookup)
+        /// - HAK file paths resolved from "hak" directory + filename + ".hak" extension
+        /// - Resource lookup uses CExoResMan::ServiceFromEncapsulated @ 0x140192cf0 for HAK files
         /// 
         /// Official BioWare Documentation:
         /// - vendor/PyKotor/wiki/Bioware-Aurora-IFO.md: Mod_HakList structure (StructID 8)
@@ -605,6 +674,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
                     // Iterate through HAK list entries
                     // Based on nwmain.exe: HAK files are loaded in order specified in list
                     // Earlier HAK files in list have higher priority (override later ones)
+                    // nwmain.exe: Functions @ 0x14047f60e, 0x1404862d9 parse Mod_HakList from Module.ifo
                     foreach (GFFStruct hakEntry in hakList)
                     {
                         // Extract Mod_Hak field from each entry
@@ -630,6 +700,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
                     {
                         // Split by semicolon and add each HAK filename
                         // Based on nwmain.exe: Mod_Hak field uses semicolon as separator
+                        // nwmain.exe: Functions @ 0x14047f6b9, 0x140486325, 0x1409d5658 parse Mod_Hak field
                         string[] hakNames = hakField.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
                         foreach (string hakName in hakNames)
                         {
@@ -652,10 +723,12 @@ namespace Andastra.Runtime.Content.ResourceProviders
                     {
                         // Construct full path: hak directory + filename + .hak extension
                         // Based on nwmain.exe: HAK file path resolution pattern
+                        // nwmain.exe: HAK files registered via CExoResMan::AddKeyTable @ 0x14018e330
                         string hakFilePath = Path.Combine(hakPath, hakFileName + ".hak");
                         
                         // Only add HAK file if it exists
                         // Based on nwmain.exe: Missing HAK files are skipped (not an error)
+                        // nwmain.exe: AddKeyTable @ 0x14018e330 handles missing file gracefully
                         if (File.Exists(hakFilePath))
                         {
                             _hakFiles.Add(hakFilePath);

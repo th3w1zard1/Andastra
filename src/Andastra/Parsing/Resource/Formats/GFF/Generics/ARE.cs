@@ -4,6 +4,7 @@ using Andastra.Parsing;
 using Andastra.Parsing.Resource;
 using JetBrains.Annotations;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Formats.GFF;
 
 namespace Andastra.Parsing.Resource.Generics
 {
@@ -102,7 +103,6 @@ namespace Andastra.Parsing.Resource.Generics
         public ResRef ChancesOfFog { get; set; } = ResRef.FromBlank();
         public int Weather { get; set; }
         public int SkyBox { get; set; }
-        public int MoonAmbient { get; set; }
         public int DawnAmbient { get; set; }
         public int DayAmbient { get; set; }
         public int DuskAmbient { get; set; }
@@ -324,6 +324,216 @@ namespace Andastra.Parsing.Resource.Generics
         /// Original: loadscreen_id: "LoadScreenID" field. Not used by the game engine.
         /// </remarks>
         public int LoadScreenID { get; set; }
+
+        // Deprecated fields (toolset-only, not used by game engines)
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:89-108
+        // Original: These fields are from NWN and are preserved for compatibility with existing ARE files
+        // Reference: vendor/reone/include/reone/resource/parser/gff/are.h:232,250,267-268,269-274,262-263,278,283-284
+        // Reference: vendor/reone/src/libs/resource/parser/gff/are.cpp:308,325,336,338-339,348-365
+
+        /// <summary>
+        /// Unused ID field (deprecated, toolset-only).
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:89
+        /// Original: unused_id: "ID" field. Not used by the game engine.
+        /// Reference: vendor/reone/include/reone/resource/parser/gff/are.h:261
+        /// </remarks>
+        public int UnusedId { get; set; }
+
+        /// <summary>
+        /// Creator ID field (deprecated, toolset-only).
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:90
+        /// Original: creator_id: "Creator_ID" field. Not used by the game engine.
+        /// Reference: vendor/reone/include/reone/resource/parser/gff/are.h:232
+        /// </remarks>
+        public int CreatorId { get; set; }
+
+        /// <summary>
+        /// Flags field (deprecated, toolset-only).
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:91
+        /// Original: flags: "Flags" field. Not used by the game engine.
+        /// Reference: vendor/reone/include/reone/resource/parser/gff/are.h:250
+        /// </remarks>
+        public uint Flags { get; set; }
+
+        /// <summary>
+        /// Modifier for spot check (deprecated, toolset-only).
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:92
+        /// Original: mod_spot_check: "ModSpotCheck" field. Not used by the game engine.
+        /// Reference: vendor/reone/include/reone/resource/parser/gff/are.h:268
+        /// </remarks>
+        public int ModSpotCheck { get; set; }
+
+        /// <summary>
+        /// Modifier for listen check (deprecated, toolset-only).
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:93
+        /// Original: mod_listen_check: "ModListenCheck" field. Not used by the game engine.
+        /// Reference: vendor/reone/include/reone/resource/parser/gff/are.h:267
+        /// </remarks>
+        public int ModListenCheck { get; set; }
+
+        /// <summary>
+        /// Moon ambient color (deprecated, toolset-only).
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:94
+        /// Original: moon_ambient: "MoonAmbientColor" field. Not used by the game engine.
+        /// Note: This is separate from the Aurora-specific MoonAmbientColor property.
+        /// Reference: vendor/reone/include/reone/resource/parser/gff/are.h:269
+        /// </remarks>
+        public Color MoonAmbient { get; set; } = new Color(0, 0, 0);
+
+        /// <summary>
+        /// Moon diffuse color (deprecated, toolset-only).
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:95
+        /// Original: moon_diffuse: "MoonDiffuseColor" field. Not used by the game engine.
+        /// Note: This is separate from the Aurora-specific MoonDiffuseColor property.
+        /// Reference: vendor/reone/include/reone/resource/parser/gff/are.h:270
+        /// </remarks>
+        public Color MoonDiffuse { get; set; } = new Color(0, 0, 0);
+
+        /// <summary>
+        /// Moon fog enabled flag (deprecated, toolset-only).
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:96
+        /// Original: moon_fog: "MoonFogOn" field. Not used by the game engine.
+        /// Reference: vendor/reone/include/reone/resource/parser/gff/are.h:274
+        /// </remarks>
+        public bool MoonFog { get; set; }
+
+        /// <summary>
+        /// Moon fog near distance (deprecated, toolset-only).
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:97
+        /// Original: moon_fog_near: "MoonFogNear" field. Not used by the game engine.
+        /// Reference: vendor/reone/include/reone/resource/parser/gff/are.h:273
+        /// </remarks>
+        public float MoonFogNear { get; set; }
+
+        /// <summary>
+        /// Moon fog far distance (deprecated, toolset-only).
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:98
+        /// Original: moon_fog_far: "MoonFogFar" field. Not used by the game engine.
+        /// Reference: vendor/reone/include/reone/resource/parser/gff/are.h:272
+        /// </remarks>
+        public float MoonFogFar { get; set; }
+
+        /// <summary>
+        /// Moon fog color (deprecated, toolset-only).
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:99
+        /// Original: moon_fog_color: "MoonFogColor" field. Not used by the game engine.
+        /// Note: This is separate from the Aurora-specific MoonFogColor property.
+        /// Reference: vendor/reone/include/reone/resource/parser/gff/are.h:271
+        /// </remarks>
+        public Color MoonFogColorDeprecated { get; set; } = new Color(0, 0, 0);
+
+        /// <summary>
+        /// Moon shadows enabled flag (deprecated, toolset-only).
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:100
+        /// Original: moon_shadows: "MoonShadows" field. Not used by the game engine.
+        /// Reference: vendor/reone/include/reone/resource/parser/gff/are.h:275
+        /// </remarks>
+        public bool MoonShadows { get; set; }
+
+        /// <summary>
+        /// Is night flag (deprecated, toolset-only).
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:101
+        /// Original: is_night: "IsNight" field. Not used by the game engine.
+        /// Reference: vendor/reone/include/reone/resource/parser/gff/are.h:262
+        /// </remarks>
+        public bool IsNight { get; set; }
+
+        /// <summary>
+        /// Lighting scheme (deprecated, toolset-only).
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:102
+        /// Original: lighting_scheme: "LightingScheme" field. Not used by the game engine.
+        /// Reference: vendor/reone/include/reone/resource/parser/gff/are.h:263
+        /// </remarks>
+        public int LightingScheme { get; set; }
+
+        /// <summary>
+        /// Day/night cycle enabled flag (deprecated, toolset-only).
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:103
+        /// Original: day_night: "DayNightCycle" field. Not used by the game engine.
+        /// Reference: vendor/reone/include/reone/resource/parser/gff/are.h:233
+        /// </remarks>
+        public bool DayNightCycle { get; set; }
+
+        /// <summary>
+        /// No rest flag (deprecated, toolset-only).
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:105
+        /// Original: no_rest: "NoRest" field. Not used by the game engine.
+        /// Reference: vendor/reone/include/reone/resource/parser/gff/are.h:278
+        /// </remarks>
+        public bool NoRest { get; set; }
+
+        /// <summary>
+        /// No hang back flag (deprecated, toolset-only).
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:106
+        /// Original: no_hang_back: "NoHangBack" field. Not used by the game engine.
+        /// Reference: vendor/reone/include/reone/resource/parser/gff/are.h:277
+        /// </remarks>
+        public bool NoHangBack { get; set; }
+
+        /// <summary>
+        /// Player only flag (deprecated, toolset-only).
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:107
+        /// Original: player_only: "PlayerOnly" field. Not used by the game engine.
+        /// Reference: vendor/reone/include/reone/resource/parser/gff/are.h:283
+        /// </remarks>
+        public bool PlayerOnly { get; set; }
+
+        /// <summary>
+        /// Player vs player flag (deprecated, toolset-only).
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:108
+        /// Original: player_vs_player: "PlayerVsPlayer" field. Not used by the game engine.
+        /// Reference: vendor/reone/include/reone/resource/parser/gff/are.h:284
+        /// </remarks>
+        public bool PlayerVsPlayer { get; set; }
+
+        /// <summary>
+        /// Expansion list (deprecated, toolset-only).
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py (dismantle_are line 680)
+        /// Original: root.set_list("Expansion_List", GFFList()) - empty list preserved for compatibility
+        /// Reference: vendor/reone/include/reone/resource/parser/gff/are.h:249
+        /// Note: This is always written as an empty list for compatibility.
+        /// </remarks>
+        public GFFList ExpansionList { get; set; } = new GFFList();
 
         public ARE()
         {
