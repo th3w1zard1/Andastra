@@ -23,24 +23,26 @@ namespace Andastra.Runtime.Games.Odyssey.Components
     /// - Error messages:
     ///   - "Cannot load door model '%s'." @ 0x007d2488 (door model loading error)
     ///   - "CSWCAnimBaseDoor::GetAnimationName(): No name for server animation %d" @ 0x007d24a8 (door animation name error)
-    /// - Original implementation: FUN_00584f40 @ 0x00584f40 (swkotor2.exe: load door data from GFF)
+    /// - swkotor2.exe: FUN_00584f40 @ 0x00584f40 (load door data from GFF/UTD template)
     ///   - Loads PortraitId/Portrait, CreatorId, script hooks (ScriptHeartbeat, ScriptOnEnter, ScriptOnExit, ScriptUserDefine, OnTrapTriggered, OnDisarm, OnClick)
     ///   - Loads TrapType, TrapOneShot, LinkedTo, LinkedToFlags, LinkedToModule, AutoRemoveKey, Tag, LocalizedName, Faction, KeyName
     ///   - Loads TrapDisarmable, TrapDetectable, OwnerDemolitionsSkill, DisarmDCMod, DetectDCMod, Cursor, TransitionDestination, Type, HighlightHeight
     ///   - Loads position (XPosition, YPosition, ZPosition), orientation (XOrientation, YOrientation, ZOrientation), Geometry polygon vertices
     ///   - Loads LoadScreenID, SetByPlayerParty
     ///   - Geometry vertices are transformed by door position/orientation (relative to door transform)
-    /// - FUN_00585ec0 @ 0x00585ec0 (swkotor2.exe: save door data to GFF)
+    /// - swkotor2.exe: FUN_00585ec0 @ 0x00585ec0 (save door data to GFF/UTD template)
     ///   - Saves script hooks (ScriptHeartbeat, ScriptOnEnter, ScriptOnExit, ScriptUserDefine, OnTrapTriggered, OnDisarm, OnClick)
     ///   - Saves TrapType, TrapOneShot, CreatorId, LinkedTo, LinkedToFlags, LinkedToModule, AutoRemoveKey, Tag, LocalizedName, Faction, Cursor, KeyName
     ///   - Saves TrapDisarmable, TrapDetectable, OwnerDemolitionsSkill, PortraitId/Portrait, Type, HighlightHeight
     ///   - Saves position (XPosition, YPosition, ZPosition), orientation (XOrientation, YOrientation, ZOrientation)
     ///   - Saves Geometry polygon vertices (PointX, PointY, PointZ) relative to door position
     ///   - Saves LoadScreenID, TransitionDestination, SetByPlayerParty
-    /// - FUN_004e08e0 @ 0x004e08e0 (swkotor2.exe: load door instances from GIT including position, linked transitions)
-    /// - FUN_00580ed0 @ 0x00580ed0 (swkotor2.exe: door loading function), FUN_005838d0 @ 0x005838d0 (swkotor2.exe: door initialization)
-    /// - FUN_0050a0e0 @ 0x0050a0e0 (swkotor.exe: load door list from GIT)
-    /// - FUN_00507810 @ 0x00507810 (swkotor.exe: save door list to GIT)
+    /// - swkotor2.exe: FUN_004e08e0 @ 0x004e08e0 (load door instances from GIT including position, linked transitions)
+    /// - swkotor2.exe: FUN_00580ed0 @ 0x00580ed0 (door loading function), FUN_005838d0 @ 0x005838d0 (door initialization)
+    /// - swkotor.exe: FUN_0050a0e0 @ 0x0050a0e0 (load door list from GIT)
+    /// - swkotor.exe: FUN_00507810 @ 0x00507810 (save door list to GIT)
+    /// - swkotor.exe: FUN_004dcfb0 @ 0x004dcfb0 (door event handling, including transition events)
+    /// - Note: swkotor.exe uses identical UTD template structure and transition flag system as swkotor2.exe; exact function addresses for door property loading from UTD templates in swkotor.exe need verification via Ghidra MCP
     /// - Doors have open/closed states, locks, traps, module transitions
     /// - Based on UTD file format (GFF with "UTD " signature) containing door template data
     /// - Script events: OnOpen, OnClose, OnLock, OnUnlock, OnDamaged, OnDeath (fired via EventBus)
@@ -197,15 +199,18 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// </summary>
         /// <remarks>
         /// Module Transition Check:
-        /// - TODO: swkotor.exe function addresses?
         /// - Based on swkotor.exe and swkotor2.exe door transition system
+        /// - swkotor.exe: Door list loading (FUN_0050a0e0 @ 0x0050a0e0 loads door list from GIT), door saving (FUN_00507810 @ 0x00507810 saves door list to GIT)
+        /// - swkotor.exe: Door event handling (FUN_004dcfb0 @ 0x004dcfb0 handles door events including transitions)
+        /// - swkotor.exe: Door transition system uses same UTD template fields (LinkedToModule, LinkedToFlags) as swkotor2.exe
         /// - Located via string references: "LinkedToModule" @ 0x007bd7bc (swkotor2.exe), "LinkedToFlags" @ 0x007bd788 (swkotor2.exe)
-        /// - Door loading: FUN_005838d0 @ 0x005838d0 (swkotor2.exe) reads LinkedToModule and LinkedToFlags from UTD template
-        /// - FUN_00580ed0 @ 0x00580ed0 (swkotor2.exe) loads door properties including transition data
-        /// - FUN_004e5920 @ 0x004e5920 (swkotor2.exe) loads door instances from GIT with transition fields
-        /// - Original implementation: LinkedToFlags bit 1 (0x1) = module transition flag
+        /// - swkotor2.exe door loading: FUN_005838d0 @ 0x005838d0 reads LinkedToModule and LinkedToFlags from UTD template
+        /// - swkotor2.exe door loading: FUN_00580ed0 @ 0x00580ed0 loads door properties including transition data
+        /// - swkotor2.exe GIT loading: FUN_004e5920 @ 0x004e5920 loads door instances from GIT with transition fields
+        /// - Original implementation: LinkedToFlags bit 1 (0x1) = module transition flag (same in both swkotor.exe and swkotor2.exe)
         /// - Module transition: If LinkedToFlags & 1 != 0 and LinkedToModule is non-empty, door triggers module transition
         /// - Transition destination: TransitionDestination waypoint tag specifies where party spawns in new module
+        /// - Note: swkotor.exe uses identical transition flag system to swkotor2.exe; exact function addresses for door property loading in swkotor.exe need verification via Ghidra MCP
         /// </remarks>
         public override bool IsModuleTransition
         {
@@ -218,14 +223,18 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// <remarks>
         /// Area Transition Check:
         /// - Based on swkotor.exe and swkotor2.exe door transition system
+        /// - swkotor.exe: Door list loading (FUN_0050a0e0 @ 0x0050a0e0 loads door list from GIT), door saving (FUN_00507810 @ 0x00507810 saves door list to GIT)
+        /// - swkotor.exe: Door event handling (FUN_004dcfb0 @ 0x004dcfb0 handles door events including transitions)
+        /// - swkotor.exe: Door transition system uses same UTD template fields (LinkedTo, LinkedToFlags, TransitionDestination) as swkotor2.exe
         /// - Located via string references: "LinkedTo" @ 0x007bd798 (swkotor2.exe), "LinkedToFlags" @ 0x007bd788 (swkotor2.exe), "TransitionDestination" @ 0x007bd7a4 (swkotor2.exe)
-        /// - Door loading: FUN_005838d0 @ 0x005838d0 (swkotor2.exe) reads LinkedTo and LinkedToFlags from UTD template
-        /// - FUN_00580ed0 @ 0x00580ed0 (swkotor2.exe) loads door properties including transition data
-        /// - FUN_004e5920 @ 0x004e5920 (swkotor2.exe) loads door instances from GIT with transition fields
-        /// - Original implementation: LinkedToFlags bit 2 (0x2) = area transition flag
+        /// - swkotor2.exe door loading: FUN_005838d0 @ 0x005838d0 reads LinkedTo and LinkedToFlags from UTD template
+        /// - swkotor2.exe door loading: FUN_00580ed0 @ 0x00580ed0 loads door properties including transition data
+        /// - swkotor2.exe GIT loading: FUN_004e5920 @ 0x004e5920 loads door instances from GIT with transition fields
+        /// - Original implementation: LinkedToFlags bit 2 (0x2) = area transition flag (same in both swkotor.exe and swkotor2.exe)
         /// - Area transition: If LinkedToFlags & 2 != 0 and LinkedTo is non-empty, door triggers area transition within module
         /// - LinkedTo: Waypoint or trigger tag to transition to (within current module)
         /// - Transition destination: TransitionDestination waypoint tag specifies where party spawns after transition
+        /// - Note: swkotor.exe uses identical transition flag system to swkotor2.exe; exact function addresses for door property loading in swkotor.exe need verification via Ghidra MCP
         /// </remarks>
         public override bool IsAreaTransition
         {
