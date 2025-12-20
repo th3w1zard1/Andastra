@@ -7,27 +7,32 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// </summary>
     /// <remarks>
     /// Stats Component Interface:
-    /// - TODO: lookup data from daorigins.exe/dragonage2.exe///swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
-    /// - TODO: this should NOT specify swkotor2.exe unless it specifies the other exes as well!!!
-    /// - Based on swkotor2.exe stats system
-    /// - Located via string references: "CurrentHP" @ 0x007c1b40, "Max_HPs" @ 0x007cb714, "ArmorClassColumn" @ 0x007c1230, "ArmorClass" @ 0x007c0b10
-    /// - HP fields: "CurrentHP" @ 0x007c1b40 (current HP field), "Max_HPs" @ 0x007cb714 (max HP field)
-    /// - "InCombatHPBase" @ 0x007bf224 (in-combat HP base), "OutOfCombatHPBase" @ 0x007bf210 (out-of-combat HP base)
-    /// - "TimePerHP" @ 0x007bf234 (time per HP regeneration), "Min1HP" @ 0x007c1b28 (minimum 1 HP flag)
-    /// - "DAM_HP" @ 0x007bf130 (HP damage constant), "POISONTRACE: Applying HP damage: %d\n" @ 0x007bf088 (HP damage trace)
-    /// - Debug: "    HP: " @ 0x007caf24, "    MaxHP: " @ 0x007cb15c, "CurrentHP: " @ 0x007cb168
+    /// - Common functionality shared across all BioWare engines (Odyssey, Aurora, Eclipse)
+    /// - Base interface for engine-specific implementations (OdysseyStatsComponent, AuroraStatsComponent, EclipseStatsComponent)
+    /// - Engine-specific details and function addresses are documented in implementation classes, not in this interface
+    /// 
+    /// Common functionality across all engines:
     /// - HP: Current and maximum hit points (D20 system)
-    /// - FP: Current and maximum Force points (KOTOR/TSL system)
     /// - Abilities: STR, DEX, CON, INT, WIS, CHA (D20 standard abilities, modifiers = (score - 10) / 2)
     /// - BaseAttackBonus: Base attack bonus from class levels
-    /// - ArmorClass: Total AC = 10 + AC modifiers (armor, shield, DEX, etc.)
+    /// - ArmorClass: Total AC = 10 + AC modifiers (armor, shield, DEX, etc.) - exact calculation varies by engine
     /// - Saves: Fortitude, Reflex, Will (D20 saving throws)
     /// - WalkSpeed/RunSpeed: Movement speeds in meters per second
-    /// - Skills: GetSkillRank returns skill rank (0 = untrained, positive = trained rank)
+    /// - Skills: GetSkillRank returns skill rank (0 = untrained, positive = trained rank) - skill count varies by engine
     /// - IsDead: True when CurrentHP <= 0
-    /// - HP regeneration: InCombatHPBase and OutOfCombatHPBase control HP regen rates (TimePerHP for regen timing)
-    /// - Min1HP: Prevents HP from going below 1 (creatures cannot die from ability damage, only HP damage)
-    /// - Based on swkotor2.exe stats calculation from classes.2da and appearance.2da tables
+    /// - Level: Character level (total class levels)
+    /// - HasSpell: Checks if creature knows a spell/ability
+    /// 
+    /// Engine-specific notes:
+    /// - Force Points (CurrentFP, MaxFP): Odyssey-specific (KOTOR/TSL only). Aurora/Eclipse implementations return 0.
+    /// - Skill systems: Odyssey has 8 skills, Aurora has 27 skills, Eclipse varies
+    /// - AC calculation: Exact formula varies (Aurora includes size modifiers, others may differ)
+    /// - HP regeneration: Implementation details vary by engine
+    /// 
+    /// For engine-specific implementation details and function addresses, see:
+    /// - Odyssey: StatsComponent (swkotor.exe, swkotor2.exe)
+    /// - Aurora: AuroraStatsComponent (nwmain.exe)
+    /// - Eclipse: EclipseStatsComponent (daorigins.exe, DragonAge2.exe)
     /// </remarks>
     public interface IStatsComponent : IComponent
     {
