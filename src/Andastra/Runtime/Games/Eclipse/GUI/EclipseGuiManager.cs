@@ -11,6 +11,7 @@ using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics.GUI;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.DDS;
+using Andastra.Parsing.Resource.Formats.TEX;
 using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Games.Eclipse.Fonts;
 using Andastra.Runtime.Graphics;
@@ -589,12 +590,30 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
             var texResult = _installation.Resources.LookupResource(textureName, ResourceType.TEX, null, null);
             if (texResult != null && texResult.Data != null && texResult.Data.Length > 0)
             {
-                // TEX format parsing requires TEX format parser implementation
-                // Note: Full implementation would parse TEX header to get width/height, then create texture
-                // For now, this is a placeholder that documents the requirement
-                // TODO: Implement TEX format parser to extract width/height and pixel data
-                // Then use: texture = _graphicsDevice.CreateTexture2D(width, height, pixelData);
-                System.Diagnostics.Debug.WriteLine($"[EclipseGuiManager] TEX texture found but parsing not yet implemented: {textureName}");
+                try
+                {
+                    // Parse TEX format to extract width/height and pixel data
+                    // Based on Eclipse engine: TEX format parser extracts texture dimensions and pixel data
+                    // Located via string references: TEX file extensions and texture loading in Eclipse engine
+                    using (TexParser parser = new TexParser(texResult.Data))
+                    {
+                        TexParser.TexParseResult result = parser.Parse();
+                        
+                        // Create texture from parsed TEX data
+                        // Based on Eclipse engine: Creates DirectX texture from TEX pixel data
+                        texture = _graphicsDevice.CreateTexture2D(result.Width, result.Height, result.RgbaData);
+                        
+                        if (texture != null)
+                        {
+                            _textureCache[key] = texture;
+                            System.Diagnostics.Debug.WriteLine($"[EclipseGuiManager] Successfully loaded TEX texture: {textureName} ({result.Width}x{result.Height})");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[EclipseGuiManager] ERROR: Failed to parse TEX texture {textureName}: {ex.Message}");
+                }
             }
 
             // Try loading as DDS format (DirectX texture format, commonly used in Eclipse)
