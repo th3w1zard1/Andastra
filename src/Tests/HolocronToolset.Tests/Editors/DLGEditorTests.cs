@@ -193,11 +193,64 @@ namespace HolocronToolset.Tests.Editors
 
         // TODO: STUB - Implement test_dlg_editor_all_widgets_exist (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:364-398)
         // Original: def test_dlg_editor_all_widgets_exist(qtbot, installation: HTInstallation): Verify all UI widgets exist in the editor
+        /// <summary>
+        /// Verify ALL widgets exist in DLG editor.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:364-398
+        /// </summary>
         [Fact]
         public void TestDlgEditorAllWidgetsExist()
         {
-            // TODO: STUB - Implement widget existence verification test (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:364-398)
-            throw new NotImplementedException("TestDlgEditorAllWidgetsExist: Widget existence verification test not yet implemented");
+            var editor = new DLGEditor(null, null);
+
+            // Main tree - verify via public property
+            editor.DialogTree.Should().NotBeNull("dialogTree should exist");
+
+            // Node editor widgets (right dock)
+            // Note: textEdit doesn't exist - text is edited via dialog, not a direct widget
+            editor.SpeakerEdit.Should().NotBeNull("speakerEdit should exist");
+            editor.SpeakerEditLabel.Should().NotBeNull("speakerEditLabel should exist");
+
+            // Script widgets
+            editor.Script1Param1Spin.Should().NotBeNull("script1Param1Spin should exist");
+
+            // Link widgets
+            editor.Condition1ResrefEdit.Should().NotBeNull("condition1ResrefEdit should exist");
+            editor.Condition2ResrefEdit.Should().NotBeNull("condition2ResrefEdit should exist");
+            editor.LogicSpin.Should().NotBeNull("logicSpin should exist");
+
+            // Voice widget
+            editor.VoiceComboBox.Should().NotBeNull("voiceComboBox should exist");
+
+            // Quest widgets
+            editor.QuestEdit.Should().NotBeNull("questEdit should exist");
+            editor.QuestEntrySpin.Should().NotBeNull("questEntrySpin should exist");
+
+            // Timing widgets
+            editor.DelaySpin.Should().NotBeNull("delaySpin should exist");
+            editor.WaitFlagSpin.Should().NotBeNull("waitFlagSpin should exist");
+            editor.FadeTypeSpin.Should().NotBeNull("fadeTypeSpin should exist");
+
+            // Animations list
+            editor.AnimsList.Should().NotBeNull("animsList should exist");
+            editor.AddAnimButton.Should().NotBeNull("addAnimButton should exist");
+            editor.RemoveAnimButton.Should().NotBeNull("removeAnimButton should exist");
+            editor.EditAnimButton.Should().NotBeNull("editAnimButton should exist");
+
+            // Search/find widgets - check via reflection since they're private
+            var editorType = typeof(DLGEditor);
+            var findBarField = editorType.GetField("_findBar", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            findBarField.Should().NotBeNull("_findBar field should exist");
+            
+            var findInputField = editorType.GetField("_findInput", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            findInputField.Should().NotBeNull("_findInput field should exist");
+            findInputField.GetValue(editor).Should().NotBeNull("findInput should be initialized");
+            
+            var resultsLabelField = editorType.GetField("_resultsLabel", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            resultsLabelField.Should().NotBeNull("_resultsLabel field should exist");
+            resultsLabelField.GetValue(editor).Should().NotBeNull("resultsLabel should be initialized");
+
+            // Model should be accessible
+            editor.Model.Should().NotBeNull("model should exist");
         }
 
 
@@ -1760,7 +1813,11 @@ namespace HolocronToolset.Tests.Editors
             var (savedData, _) = editor.Build();
 
             // Compare GFF structures
-            var originalGff = GFFAuto.ReadGff(originalData);
+RtfDomParserAv.dll                                                                                                          
+    G:\GitHub\Andastra\src\RtfDomParserAvalonia\RtfDomParserAvalonia\RTFDom\RTFDomDocument.cs(936,19): warning CS0414: The field 'RTFDomDocument.ListTextFlag' is assigned but its value is never used                                                  
+  Andastra.Runtime.Tests net9.0 failed with 1 error(s) and 1 warning(s) (0.6s)
+    G:\GitHub\Andastra\src\Andastra\Tests\Runtime\Andastra.Runtime.Tests.csproj : warning NU1701: Package 'Eto.Platform.Windows 2.10.2' was restored using '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1' instead of the project target framework 'net9.0'. This package may not be fully compatible with your project.
+    C:\Program Files\dotnet\sdk\9.0.307\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.Sdk.DefaultItems.Shared.targets(250,5): error NETSDK1136: The target platform must be set to Windows (usually by including '-windows' in the TargetFramework property) when using Windows Forms or WPF, or referencing projects or packages that do so.            var originalGff = GFFAuto.ReadGff(originalData);
             var savedGff = GFFAuto.ReadGff(savedData);
 
             // Root should have same number of fields (allowing for minor differences)
