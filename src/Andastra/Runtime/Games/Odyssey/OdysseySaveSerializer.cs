@@ -10,6 +10,7 @@ using Andastra.Parsing.Formats.GFF;
 using Andastra.Runtime.Core.Save;
 using Andastra.Runtime.Engines.Odyssey.Data;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Resource.Generics;
 
 namespace Andastra.Runtime.Games.Odyssey
 {
@@ -81,16 +82,225 @@ namespace Andastra.Runtime.Games.Odyssey
         /// - TIMEPLAYED: Play time in seconds
         /// - AREANAME: Current area resource
         /// - LASTMODIFIED: Timestamp
+        ///
+        /// Original implementation (swkotor2.exe: 0x004eb750):
+        /// 1. Creates GFF with "NFO " signature (4 bytes) and "V2.0" version string
+        /// 2. Writes fields in this exact order:
+        ///    - AREANAME (string): Current area name from module state
+        ///    - LASTMODULE (string): Last module ResRef
+        ///    - TIMEPLAYED (int32): Total seconds played (uint32 from party system)
+        ///    - CHEATUSED (byte): Cheat used flag (bool converted to byte)
+        ///    - SAVEGAMENAME (string): Save game name
+        ///    - TIMESTAMP (int64): FILETIME structure (GetLocalTime + SystemTimeToFileTime)
+        ///    - PCNAME (string): Player character name from party system
+        ///    - SAVENUMBER (int32): Save slot number
+        ///    - GAMEPLAYHINT (byte): Gameplay hint flag
+        ///    - STORYHINT0-9 (bytes): Story hint flags (10 boolean flags)
+        ///    - LIVECONTENT (byte): Bitmask for live content (1 << (i-1) for each enabled entry)
+        ///    - LIVE1-9 (strings): Live content entry strings (up to 9 entries)
+        ///    - PORTRAIT0-2 (ResRef): Player portrait resource references
+        /// 3. File path: Constructs "SAVES:\{saveName}\savenfo" path
+        /// Note: GFF signature is "NFO " (4 bytes), version string is "V2.0"
         /// </remarks>
         public override byte[] SerializeSaveNfo(Andastra.Runtime.Games.Common.SaveGameData saveData)
         {
-            // TODO: Implement complete NFO serialization
-            // Create GFF structure with NFO signature
-            // Add standard metadata fields
-            // Include screenshot data if available
-            // Write timestamp and version info
+            if (saveData == null)
+            {
+                throw new ArgumentNullException(nameof(saveData));
+            }
 
-            throw new NotImplementedException("Odyssey NFO serialization not yet implemented");
+            // Create NFOData structure
+            var nfo = new NFOData();
+
+            // AREANAME: Current area name from CurrentAreaInstance or CurrentArea
+            if (saveData.CurrentAreaInstance != null)
+            {
+                nfo.AreaName = saveData.CurrentAreaInstance.DisplayName ?? saveData.CurrentAreaInstance.ResRef ?? string.Empty;
+            }
+            else if (!string.IsNullOrEmpty(saveData.CurrentArea))
+            {
+                nfo.AreaName = saveData.CurrentArea;
+            }
+            else
+            {
+                nfo.AreaName = string.Empty;
+            }
+
+            // LASTMODULE: Last module ResRef
+            // Try to extract from CurrentAreaInstance or infer from area
+            if (saveData.CurrentAreaInstance != null)
+            {
+                // Module name might be stored in area or we can infer from area ResRef
+                // For now, use empty string if not available - caller should provide module name
+                nfo.LastModule = string.Empty;
+            }
+            else
+            {
+                nfo.LastModule = string.Empty;
+            }
+
+            // SAVEGAMENAME: Display name of the save
+            nfo.SavegameName = saveData.SaveName ?? string.Empty;
+
+            // TIMEPLAYED: Total seconds played
+            nfo.TimePlayedSeconds = saveData.TimePlayed;
+
+            // TIMESTAMP: FILETIME structure
+            if (saveData.Timestamp != null && saveData.Timestamp != default(DateTime))
+            {
+                long fileTime = saveData.Timestamp.ToFileTime();
+                if (fileTime > 0)
+                {
+                    nfo.TimestampFileTime = (ulong)fileTime;
+                }
+            }
+
+            // CHEATUSED: Cheat used flag
+            // Try to get from GameState globals, otherwise default to false
+            bool cheatUsed = false;
+            if (saveData.GameState != null)
+            {
+                try
+                {
+                    cheatUsed = saveData.GameState.GetGlobal<bool>("CHEATUSED", false);
+                }
+                catch
+                {
+                    // If GetGlobal fails, use default
+                    cheatUsed = false;
+                }
+            }
+            nfo.CheatUsed = cheatUsed;
+
+            // GAMEPLAYHINT: Gameplay hint flag
+            byte gameplayHint = 0;
+            if (saveData.GameState != null)
+            {
+                try
+                {
+                    bool hintValue = saveData.GameState.GetGlobal<bool>("GAMEPLAYHINT", false);
+                    gameplayHint = (byte)(hintValue ? 1 : 0);
+                }
+                catch
+                {
+                    gameplayHint = 0;
+                }
+            }
+            nfo.GameplayHint = gameplayHint;
+
+            // STORYHINT0-9: Story hint flags (10 boolean flags)
+            // Try to get from GameState globals
+            if (saveData.GameState != null)
+            {
+                for (int i = 0; i < 10; i++)
+                {
+                    try
+                    {
+                        string hintField = "STORYHINT" + i;
+                        bool hintValue = saveData.GameState.GetGlobal<bool>(hintField, false);
+                        if (i < nfo.StoryHints.Count)
+                        {
+                            nfo.StoryHints[i] = hintValue;
+                        }
+                    }
+                    catch
+                    {
+                        // If GetGlobal fails, leave default (false)
+                    }
+                }
+            }
+
+            // LIVECONTENT: Bitmask for live content
+            // Try to get from GameState globals
+            byte liveContentBitmask = 0;
+            if (saveData.GameState != null)
+            {
+                try
+                {
+                    // Try to get as a list of booleans
+                    var liveContentList = saveData.GameState.GetGlobal<List<bool>>("LIVECONTENT", null);
+                    if (liveContentList != null)
+                    {
+                        for (int i = 0; i < liveContentList.Count && i < 32; i++)
+                        {
+                            if (liveContentList[i])
+                            {
+                                liveContentBitmask |= (byte)(1 << (i & 0x1F));
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Try to get as a byte bitmask directly
+                        liveContentBitmask = saveData.GameState.GetGlobal<byte>("LIVECONTENT", 0);
+                    }
+                }
+                catch
+                {
+                    liveContentBitmask = 0;
+                }
+            }
+            nfo.LiveContentBitmask = liveContentBitmask;
+
+            // LIVE1-9: Live content entry strings (up to 9 entries)
+            if (saveData.GameState != null)
+            {
+                for (int i = 1; i <= 9; i++)
+                {
+                    try
+                    {
+                        string liveField = "LIVE" + i;
+                        string liveValue = saveData.GameState.GetGlobal<string>(liveField, null);
+                        if (!string.IsNullOrEmpty(liveValue))
+                        {
+                            int index = i - 1;
+                            if (index < nfo.LiveEntries.Count)
+                            {
+                                nfo.LiveEntries[index] = liveValue;
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // If GetGlobal fails, leave default (empty string)
+                    }
+                }
+            }
+
+            // PORTRAIT0-2: Player portrait resource references
+            // Convert Portrait byte[] to ResRef if possible
+            // Note: Portrait in SaveGameData is byte[], but NFOData expects ResRef
+            // For now, if Portrait is provided, we'd need to extract ResRef from it
+            // This is typically stored as a TPC or similar format
+            // For now, leave as blank ResRef - portrait loading would require format parsing
+            nfo.Portrait0 = ResRef.FromBlank();
+            nfo.Portrait1 = ResRef.FromBlank();
+            nfo.Portrait2 = ResRef.FromBlank();
+
+            // PCNAME: Player character name from party system
+            string pcName = string.Empty;
+            if (saveData.PartyState != null)
+            {
+                try
+                {
+                    // Convert IPartyState to PartyState to use helper method
+                    PartyState partyState = ConvertToPartyState(saveData.PartyState);
+                    pcName = GetPlayerCharacterName(partyState);
+                }
+                catch
+                {
+                    // If conversion fails, try to get from Leader directly
+                    if (saveData.PartyState.Leader != null)
+                    {
+                        pcName = saveData.PartyState.Leader.Tag ?? string.Empty;
+                    }
+                }
+            }
+            nfo.PcName = pcName ?? string.Empty;
+
+            // Serialize NFOData to GFF bytes using NFOAuto
+            // This creates a GFF with "NFO " signature and "V2.0" version
+            return NFOAuto.BytesNfo(nfo);
         }
 
         /// <summary>
