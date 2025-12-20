@@ -72,9 +72,12 @@ AI agents MUST maintain proper file organization in the repository root:
 
 ## Cross-Platform Target Framework Requirements
 
-**CRITICAL: NEVER use platform-specific TFMs like `net9.0-windows`, `net9.0-linux`, or `net9.0-macos`.**
+**CRITICAL: All projects must be cross-platform compatible. Use platform-agnostic target frameworks only.**
 
-All projects MUST use platform-agnostic TFMs (e.g., `net9.0`, `net8.0`) to ensure cross-platform compatibility. The codebase requires cross-platform solutions exclusively.
+- **DO use**: `net9.0`, `net8.0`, `net7.0` (no platform suffix)
+- **DO NOT use**: `net9.0-windows`, `net9.0-linux`, `net9.0-macos` (platform-specific TFMs are forbidden)
+
+This codebase must run on Windows, Linux, and macOS. Platform-specific TFMs break cross-platform compatibility and are not allowed under any circumstances.
 
 ## C# Language Version Requirements
 
