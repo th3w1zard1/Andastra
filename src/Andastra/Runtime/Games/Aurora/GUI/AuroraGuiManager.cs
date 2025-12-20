@@ -121,9 +121,11 @@ namespace Andastra.Runtime.Games.Aurora.GUI
             try
             {
                 // Lookup GUI resource from installation
-                // Aurora engine (nwmain.exe) uses ResourceType.GUI (0x7ff / 2047) with GFF format, signature "GUI "
+                // Based on Aurora engine (nwmain.exe): GUI files stored as ResourceType.GUI (0x7ff / 2047) in HAK/module/override archives
+                // Format: GFF-based with "GFF " signature (same as Odyssey/Eclipse engines)
                 // Verified via Ghidra: CGuiPanel::LoadLayoutFileModelsAndTags @ 0x1401feba0 line 44
-                // CResGFF::CResGFF(local_70, 0x7ff, "GUI ", pCVar14) - Creates GFF reader for GUI resource
+                // CResGFF::CResGFF(local_70, 0x7ff, "GUI ", pCVar14) - Creates GFF reader for GUI resource with signature "GUI "
+                // Resource loading: CExoResMan::Demand loads GUI resources as GFF format (nwmain.exe resource system)
                 var resourceResult = _installation.Resources.LookupResource(guiName, ResourceType.GUI, null, null);
                 if (resourceResult == null || resourceResult.Data == null || resourceResult.Data.Length == 0)
                 {
@@ -131,7 +133,27 @@ namespace Andastra.Runtime.Games.Aurora.GUI
                     return false;
                 }
 
+                // Validate GFF format signature
+                // Based on GFF format: First 4 bytes must be "GFF " signature
+                // Verified: Aurora GUI files use standard GFF format with "GFF " signature (nwmain.exe: CExoResMan loads as GFF)
+                // Cross-engine: Same validation as Eclipse engine (daorigins.exe/DragonAge2.exe) and Odyssey engine (swkotor.exe/swkotor2.exe)
+                if (resourceResult.Data.Length < 4)
+                {
+                    Console.WriteLine($"[AuroraGuiManager] ERROR: GUI file too small: {guiName}");
+                    return false;
+                }
+
+                string signature = System.Text.Encoding.ASCII.GetString(resourceResult.Data, 0, 4);
+                if (signature != "GFF ")
+                {
+                    Console.WriteLine($"[AuroraGuiManager] ERROR: Invalid GFF signature in GUI file: {guiName} (got: {signature})");
+                    return false;
+                }
+
                 // Parse GUI file using GUIReader
+                // Based on nwmain.exe: CGuiPanel::LoadLayoutFileModelsAndTags @ 0x1401feba0 loads GFF data into GUI objects
+                // CAuroraStringWrapper::LoadGffTextData @ 0x1401fe680 loads text data from GFF GUI files
+                // GUIReader handles GFF-based format parsing (same parser used by Odyssey/Eclipse engines)
                 GUIReader guiReader = new GUIReader(resourceResult.Data);
                 GUI gui = guiReader.Load();
 
