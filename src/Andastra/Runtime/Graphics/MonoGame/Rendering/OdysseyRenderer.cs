@@ -514,32 +514,86 @@ namespace Andastra.Runtime.MonoGame.Rendering
             return backend;
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "<Pending>")]
+        /// <summary>
+        /// Creates and returns a graphics backend instance of the specified type.
+        /// 
+        /// This method provides direct backend instantiation for multi-backend support scenarios
+        /// where the renderer needs to create specific backend types without going through
+        /// the full BackendFactory selection and initialization process.
+        /// 
+        /// Based on original engine graphics initialization:
+        /// - swkotor.exe: FUN_00404250 @ 0x00404250 (main game loop, WinMain equivalent) calls graphics initialization
+        /// - swkotor.exe: FUN_0044dab0 @ 0x0044dab0 (OpenGL context creation via wglCreateContext)
+        /// - swkotor2.exe: FUN_00404250 @ 0x00404250 (main game loop, WinMain equivalent) calls graphics initialization
+        /// - swkotor2.exe: FUN_00461c50 @ 0x00461c50 (OpenGL context creation via wglCreateContext)
+        /// - Original game uses OpenGL for rendering (OPENGL32.DLL, GLU32.DLL) - NOT DirectX
+        /// - Located via string references: "wglCreateContext" @ swkotor.exe:0x0073d2b8, swkotor2.exe:0x007b52cc
+        /// - "wglChoosePixelFormatARB" @ swkotor.exe:0x0073f444, swkotor2.exe:0x007b880c
+        /// - "Graphics Options" @ 0x007b56a8, "BTN_GRAPHICS" @ 0x007d0d8c, "Render Window" @ 0x007b5680
+        /// - Original implementation: Creates OpenGL context, sets up pixel format, initializes rendering pipeline
+        /// - This implementation: Creates modern graphics backend instances (Vulkan, DirectX 11/12, OpenGL, Metal)
+        /// - Note: Modern backends (Vulkan, DirectX 11/12) are enhancements not present in original game
+        /// - Original game rendering: OpenGL fixed-function pipeline, no modern post-processing or upscaling
+        /// 
+        /// Backend creation supports all available backend types:
+        /// - Vulkan: Cross-platform, modern API with raytracing support (VulkanBackend)
+        /// - Direct3D12: Windows modern API with DXR raytracing (Direct3D12Backend)
+        /// - Direct3D11: Windows legacy support, good compatibility (Direct3D11Backend)
+        /// - Direct3D10: Windows Vista+ transitional API (Direct3D10Backend)
+        /// - Direct3D9Remix: DirectX 9 compatibility mode for NVIDIA RTX Remix injection (Direct3D9Wrapper)
+        /// - OpenGL: Cross-platform fallback when Vulkan unavailable (OpenGLBackend)
+        /// - Metal: macOS and iOS native API (MetalBackend)
+        /// 
+        /// Note: This method only creates the backend instance. Initialization must be done separately
+        /// via the backend's Initialize() method with appropriate RenderSettings. For automatic backend
+        /// selection based on platform and hardware capabilities, use BackendFactory.CreateBackend() instead.
+        /// </summary>
+        /// <param name="type">The graphics backend type to create.</param>
+        /// <returns>An uninitialized backend instance, or null if the backend type is not supported or Auto (which requires factory selection).</returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Instance method for future extensibility and potential backend-specific renderer state")]
         private IGraphicsBackend TryCreateBackend(GraphicsBackend type)
         {
-            // All custom backends are disabled - we use MonoGame's rendering exclusively.
-            // TODO: PLACEHOLDER - This method is kept for future multi-backend support.
+            // Auto selection requires BackendFactory's full selection logic with RenderSettings
+            // This includes platform detection, capability checking, and fallback chain evaluation
+            if (type == GraphicsBackend.Auto)
+            {
+                Console.WriteLine("[OdysseyRenderer] Auto backend selection requires BackendFactory.CreateBackend() with RenderSettings");
+                return null;
+            }
+
+            // Create backend instance based on type
+            // This matches BackendFactory.CreateBackendInstance logic for consistency
             switch (type)
             {
-                case GraphicsBackend.OpenGL:
-                case GraphicsBackend.Auto:
-                    // OpenGL is handled by MonoGame natively - no custom backend needed
-                    Console.WriteLine("[OdysseyRenderer] OpenGL handled by MonoGame natively");
-                    return null;
-
                 case GraphicsBackend.Vulkan:
-                    // TODO: STUB - Vulkan backend disabled - will be implemented later
-                    Console.WriteLine("[OdysseyRenderer] Vulkan backend disabled (OpenGL only mode)");
-                    return null;
+                    return new VulkanBackend();
 
                 case GraphicsBackend.Direct3D12:
+                    return new Direct3D12Backend();
+
                 case GraphicsBackend.Direct3D11:
+                    return new Direct3D11Backend();
+
+                case GraphicsBackend.Direct3D10:
+                    return new Direct3D10Backend();
+
                 case GraphicsBackend.Direct3D9Remix:
-                    // TODO: STUB - DirectX backends disabled - will be implemented later
-                    Console.WriteLine("[OdysseyRenderer] DirectX backends disabled (OpenGL only mode)");
-                    return null;
+                    return new Direct3D9Wrapper();
+
+                case GraphicsBackend.OpenGL:
+                    return new OpenGLBackend();
+
+                case GraphicsBackend.Metal:
+                    return new MetalBackend();
+
+                case GraphicsBackend.OpenGLES:
+                    // OpenGL ES is typically handled by OpenGL backend with ES profile
+                    // For now, fall back to OpenGL backend
+                    Console.WriteLine("[OdysseyRenderer] OpenGL ES requested, using OpenGL backend");
+                    return new OpenGLBackend();
 
                 default:
+                    Console.WriteLine("[OdysseyRenderer] Unknown or unsupported backend type: " + type);
                     return null;
             }
         }
