@@ -434,11 +434,49 @@ namespace HolocronToolset.Data
         /// need to check every single triangle, which is too slow for real-time gameplay.
         /// 
         /// SYMPTOMS OF THE BUG:
-        /// - Characters cannot walk on indoor map levels/modules
-        /// - Pathfinding fails (characters cannot find routes)
+        /// - Characters cannot walk on indoor map levels/modules (pathfinding returns no path)
+        /// - Pathfinding fails (characters cannot find routes between points)
         /// - Height calculation fails (characters float or sink into ground)
-        /// - Line of sight checks fail
+        /// - Line of sight checks fail (can't see through walkable areas)
         /// - The walkmesh appears to have correct surface materials, but nothing works
+        /// - Performance is very poor (frame rate drops when near walkmesh)
+        /// - FindFaceAt() is extremely slow (must check every triangle instead of using AABB tree)
+        /// 
+        /// HOW TO VERIFY THE FIX:
+        /// 
+        /// If you suspect this bug is still occurring, check the following:
+        /// 
+        /// 1. Walkmesh Type Check:
+        ///    - After ProcessBwm(), verify: bwm.WalkmeshType == BWMType.AreaModel
+        ///    - If it's PlaceableOrDoor, the bug is present
+        /// 
+        /// 2. AABB Tree Check:
+        ///    - When converting to NavigationMesh, verify: _aabbRoot != null
+        ///    - If _aabbRoot is null, the AABB tree wasn't built, causing the bug
+        /// 
+        /// 3. Material Preservation Check:
+        ///    - Verify that face.Material is preserved after Flip(), Rotate(), Translate()
+        ///    - Materials should remain unchanged (only vertices are modified)
+        ///    - If materials are lost, faces become non-walkable
+        /// 
+        /// 4. Walkability Check:
+        ///    - Verify NavigationMesh.IsWalkable() returns true for faces with walkable materials
+        ///    - Check that WalkableMaterials set matches SurfaceMaterialExtensions.WalkableMaterials
+        ///    - Any mismatch will cause incorrect walkability determination
+        /// 
+        /// 5. FindFaceAt Performance Check:
+        ///    - If FindFaceAt() is very slow (checking all triangles), AABB tree is missing
+        ///    - With AABB tree, FindFaceAt() should be fast (O(log n) instead of O(n))
+        /// 
+        /// 6. Pathfinding Test:
+        ///    - Try pathfinding between two points on walkable surfaces
+        ///    - If pathfinding fails or is extremely slow, AABB tree is likely missing
+        /// 
+        /// If all of these checks pass but the bug still occurs, the problem is elsewhere:
+        /// - Check how the NavigationMesh is created from the BWM (converter might have issues)
+        /// - Check if the game engine's walkmesh loading code is correct
+        /// - Check if materials are being preserved when the BWM is written to file
+        /// - Check if the BWM file format is correct (header, data structure, etc.)
         /// 
         /// ROOT CAUSE:
         /// The ProcessBwm method was not setting WalkmeshType to AreaModel. It was copying
@@ -493,7 +531,7 @@ namespace HolocronToolset.Data
         // Original: def process_bwm(self, room: IndoorMapRoom) -> BWM:
         private BWM ProcessBwm(IndoorMapRoom room)
         {
-            var bwm = DeepCopyBwm(room.BaseWalkmesh());
+            var bwm = IndoorMapRoomHelper.DeepCopyBwm(room.BaseWalkmesh());
             bwm.Flip(room.FlipX, room.FlipY);
             bwm.Rotate(room.Rotation);
             bwm.Translate(room.Position.X, room.Position.Y, room.Position.Z);
@@ -662,7 +700,7 @@ namespace HolocronToolset.Data
                 // This shouldn't happen based on GenerateMipmap implementation, but handle it gracefully
                 var convertedBitmap = new WriteableBitmap(
                     new PixelSize(bitmap.PixelSize.Width, bitmap.PixelSize.Height),
-                    new Vector(96, 96),
+                    new Avalonia.Vector(96, 96),
                     PixelFormat.Rgba8888,
                     AlphaFormat.Premul);
                 
@@ -1406,5 +1444,8 @@ namespace HolocronToolset.Data
                 ["runtime_id"] = GetHashCode()
             };
         }
+    }
+}
+
     }
 }
