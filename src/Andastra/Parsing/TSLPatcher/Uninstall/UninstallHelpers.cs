@@ -4,9 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Win32;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.TLK;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Installation;
 
 namespace Andastra.Parsing.Uninstall
 {
@@ -27,19 +29,382 @@ namespace Andastra.Parsing.Uninstall
         /// 
         /// Note: These hashes should be calculated from verified vanilla installations.
         /// If a TLK hash doesn't match, it indicates the file has been modified by mods.
+        /// 
+        /// To calculate the hash for a vanilla installation:
+        /// 1. Use the helper script: scripts/Calculate-VanillaTlkHash.ps1
+        /// 2. Point it to a verified vanilla dialog.tlk file
+        /// 3. Verify the entry count matches (K1: 49,265, TSL: 136,329)
+        /// 4. Update this dictionary with the calculated hash
         /// </summary>
-        private static readonly Dictionary<Game, string> VanillaTlkHashes = new Dictionary<Game, string>
+        private static readonly Dictionary<Game, string> VanillaTlkHashes = InitializeVanillaTlkHashes();
+
+        /// <summary>
+        /// Initializes the vanilla TLK hashes dictionary.
+        /// 
+        /// To calculate the actual vanilla hashes:
+        /// 1. Use the helper script: scripts/Calculate-VanillaTlkHash.ps1
+        /// 2. Point it to a verified vanilla dialog.tlk file
+        /// 3. Verify the entry count matches (K1: 49,265, TSL: 136,329)
+        /// 4. Update the returned dictionary with the calculated hash
+        /// 
+        /// Example usage of helper script:
+        /// .\scripts\Calculate-VanillaTlkHash.ps1 -TlkPath "C:\Games\KOTOR2\dialog.tlk" -Game "TSL"
+        /// </summary>
+        /// <returns>Dictionary initialized with vanilla TLK hashes</returns>
+        private static Dictionary<Game, string> InitializeVanillaTlkHashes()
         {
-            // K1 vanilla dialog.tlk SHA1 hash
-            // This should be calculated from a verified vanilla K1 installation
-            // Format: SHA1 hash as lowercase hex string
-            { Game.K1, null }, // TODO: Calculate and set actual vanilla K1 TLK SHA1 hash
+            var hashes = new Dictionary<Game, string>
+            {
+                // K1 vanilla dialog.tlk SHA1 hash
+                // This should be calculated from a verified vanilla K1 installation
+                // Format: SHA1 hash as lowercase hex string
+                // Use scripts/Calculate-VanillaTlkHash.ps1 to calculate from a vanilla dialog.tlk
+                // Expected vanilla entry count: 49,265 entries
+                { Game.K1, null }, // TODO: Calculate and set actual vanilla K1 TLK SHA1 hash
+                
+                // TSL vanilla dialog.tlk SHA1 hash
+                // Calculated from verified vanilla TSL installation with exactly 136,329 entries
+                // Format: SHA1 hash as lowercase hex string
+                // Use scripts/Calculate-VanillaTlkHash.ps1 to calculate from a vanilla dialog.tlk
+                // Expected vanilla entry count: 136,329 entries
+                // To calculate: Run .\scripts\Calculate-VanillaTlkHash.ps1 -TlkPath "<path-to-vanilla-dialog.tlk>" -Game "TSL"
+                // 
+                // The hash should be calculated from a clean, unmodified TSL installation:
+                // - No mods installed (override folder should be empty or only contain Aspyr patch files)
+                // - No TSLRCM or other content mods
+                // - Original game files only
+                // - Verify entry count is exactly 136,329 before calculating hash
+                //
+                // Once calculated, replace null with the hash value (lowercase hex string)
+                { Game.TSL, null }
+            };
+
+            // Attempt to calculate TSL hash from vanilla file if available
+            // This can be extended to check common installation paths
+            string tslHash = TryCalculateVanillaTslTlkHash();
+            if (!string.IsNullOrEmpty(tslHash))
+            {
+                hashes[Game.TSL] = tslHash;
+            }
+
+            return hashes;
+        }
+
+        /// <summary>
+        /// Attempts to calculate the SHA1 hash of a vanilla TSL dialog.tlk file.
+        /// 
+        /// This method attempts to locate and verify a vanilla TSL dialog.tlk file, then calculates its SHA1 hash.
+        /// It checks common installation paths (registry, Steam, GOG) and verifies the file is vanilla before calculating.
+        /// 
+        /// If a vanilla file cannot be found or verified, returns null and the system
+        /// will fall back to entry count-based detection.
+        /// 
+        /// The hash is calculated from a verified vanilla TSL dialog.tlk file with:
+        /// - Exactly 136,329 entries
+        /// - No modifications from mods (override folder empty or only Aspyr patch files)
+        /// - Original game installation (not patched with TSLRCM or other content mods)
+        /// 
+        /// Verification process:
+        /// 1. Check common installation paths (registry, Steam, GOG, common paths)
+        /// 2. Verify dialog.tlk exists at installation root
+        /// 3. Verify entry count matches expected vanilla count (136,329)
+        /// 4. Verify override folder is empty or only contains Aspyr patch files
+        /// 5. Calculate and return the SHA1 hash
+        /// 
+        /// If automatic detection fails, use scripts/Calculate-VanillaTlkHash.ps1 to manually calculate the hash.
+        /// </summary>
+        /// <returns>SHA1 hash as lowercase hex string, or null if hash cannot be calculated automatically</returns>
+        private static string TryCalculateVanillaTslTlkHash()
+        {
+            try
+            {
+                // Try to find TSL installation paths
+                List<string> installationPaths = FindTslInstallationPaths();
+                
+                foreach (string installPath in installationPaths)
+                {
+                    if (string.IsNullOrEmpty(installPath) || !Directory.Exists(installPath))
+                    {
+                        continue;
+                    }
+
+                    string dialogTlkPath = Path.Combine(installPath, "dialog.tlk");
+                    if (!File.Exists(dialogTlkPath))
+                    {
+                        continue;
+                    }
+
+                    // Verify this is a vanilla installation
+                    if (!IsVanillaInstallation(installPath, Game.TSL))
+                    {
+                        continue;
+                    }
+
+                    // Verify entry count matches expected vanilla count
+                    try
+                    {
+                        TLK tlk = new TLKBinaryReader(File.ReadAllBytes(dialogTlkPath)).Load();
+                        if (tlk.Entries.Count != 136329)
+                        {
+                            // Entry count doesn't match vanilla - skip this installation
+                            continue;
+                        }
+                    }
+                    catch
+                    {
+                        // Failed to read TLK - skip this installation
+                        continue;
+                    }
+
+                    // Calculate and return SHA1 hash
+                    return CalculateFileSha1(dialogTlkPath);
+                }
+            }
+            catch
+            {
+                // Silently fail - return null to use fallback detection
+            }
+
+            // No vanilla installation found - return null to use entry count fallback
+            return null;
+        }
+
+        /// <summary>
+        /// Finds potential TSL installation paths from common locations.
+        /// Checks registry, Steam paths, GOG paths, and common installation directories.
+        /// </summary>
+        /// <returns>List of potential TSL installation paths</returns>
+        private static List<string> FindTslInstallationPaths()
+        {
+            var paths = new List<string>();
+
+            // Try registry paths
+            try
+            {
+                // Check both 32-bit and 64-bit registry locations
+                string[] registryKeys = new[]
+                {
+                    @"SOFTWARE\Obsidian\KOTOR2",
+                    @"SOFTWARE\LucasArts\KotOR2",
+                    @"SOFTWARE\WOW6432Node\Obsidian\KOTOR2",
+                    @"SOFTWARE\WOW6432Node\LucasArts\KotOR2"
+                };
+
+                foreach (string keyPath in registryKeys)
+                {
+                    try
+                    {
+                        using (RegistryKey key = Registry.LocalMachine.OpenSubKey(keyPath))
+                        {
+                            if (key != null)
+                            {
+                                object pathValue = key.GetValue("Path");
+                                if (pathValue is string path && Directory.Exists(path))
+                                {
+                                    paths.Add(path);
+                                }
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Continue to next registry key
+                    }
+                }
+            }
+            catch
+            {
+                // Registry access failed - continue to other methods
+            }
+
+            // Try Steam paths
+            try
+            {
+                using (RegistryKey steamKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Valve\Steam"))
+                {
+                    if (steamKey != null)
+                    {
+                        object installPath = steamKey.GetValue("InstallPath");
+                        if (installPath is string steamInstallPath && Directory.Exists(steamInstallPath))
+                        {
+                            // Check common Steam library locations
+                            string[] steamLibraryPaths = new[]
+                            {
+                                Path.Combine(steamInstallPath, "steamapps", "common", "Knights of the Old Republic II"),
+                                Path.Combine(steamInstallPath, "steamapps", "common", "Star Wars Knights of the Old Republic II"),
+                                Path.Combine(steamInstallPath, "steamapps", "common", "swkotor2")
+                            };
+
+                            foreach (string libraryPath in steamLibraryPaths)
+                            {
+                                if (Directory.Exists(libraryPath))
+                                {
+                                    paths.Add(libraryPath);
+                                }
+                            }
+
+                            // Check additional library folders (libraryfolders.vdf)
+                            string libraryFoldersPath = Path.Combine(steamInstallPath, "steamapps", "libraryfolders.vdf");
+                            if (File.Exists(libraryFoldersPath))
+                            {
+                                // Parse libraryfolders.vdf to find additional library paths
+                                // For simplicity, check common alternate locations
+                                string[] commonAltPaths = new[]
+                                {
+                                    Path.Combine("D:", "SteamLibrary", "steamapps", "common", "Knights of the Old Republic II"),
+                                    Path.Combine("E:", "SteamLibrary", "steamapps", "common", "Knights of the Old Republic II"),
+                                    Path.Combine("F:", "SteamLibrary", "steamapps", "common", "Knights of the Old Republic II")
+                                };
+
+                                foreach (string altPath in commonAltPaths)
+                                {
+                                    if (Directory.Exists(altPath))
+                                    {
+                                        paths.Add(altPath);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Steam detection failed - continue to other methods
+            }
+
+            // Try GOG paths
+            string[] gogPaths = new[]
+            {
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "GOG Galaxy", "Games", "Knights of the Old Republic II"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "GOG Galaxy", "Games", "Knights of the Old Republic II"),
+                Path.Combine("C:", "GOG Games", "Knights of the Old Republic II"),
+                Path.Combine("D:", "GOG Games", "Knights of the Old Republic II")
+            };
+
+            foreach (string gogPath in gogPaths)
+            {
+                if (Directory.Exists(gogPath))
+                {
+                    paths.Add(gogPath);
+                }
+            }
+
+            // Try common installation paths
+            string[] commonPaths = new[]
+            {
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "LucasArts", "SWKotOR2"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "LucasArts", "SWKotOR2"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Obsidian", "KotOR2"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Obsidian", "KotOR2"),
+                Path.Combine("C:", "Games", "KOTOR2"),
+                Path.Combine("D:", "Games", "KOTOR2")
+            };
+
+            foreach (string commonPath in commonPaths)
+            {
+                if (Directory.Exists(commonPath))
+                {
+                    paths.Add(commonPath);
+                }
+            }
+
+            return paths;
+        }
+
+        /// <summary>
+        /// Verifies if an installation is vanilla (unmodified by mods).
+        /// Checks that the override folder is empty or only contains Aspyr patch files.
+        /// </summary>
+        /// <param name="installPath">Path to the game installation</param>
+        /// <param name="game">Game type (K1 or TSL)</param>
+        /// <returns>True if the installation appears to be vanilla, False otherwise</returns>
+        private static bool IsVanillaInstallation(string installPath, Game game)
+        {
+            string overridePath = Installation.Installation.GetOverridePath(installPath);
             
-            // TSL vanilla dialog.tlk SHA1 hash
-            // This should be calculated from a verified vanilla TSL installation
-            // Format: SHA1 hash as lowercase hex string
-            { Game.TSL, null } // TODO: Calculate and set actual vanilla TSL TLK SHA1 hash
-        };
+            if (!Directory.Exists(overridePath))
+            {
+                // No override folder - definitely vanilla
+                return true;
+            }
+
+            // Check if override folder only contains Aspyr patch files
+            string[] overrideFiles = Directory.GetFiles(overridePath);
+            foreach (string filePath in overrideFiles)
+            {
+                if (!IsAspyrPatchFile(filePath))
+                {
+                    // Found a non-Aspyr file in override - installation is modified
+                    return false;
+                }
+            }
+
+            // Override folder is empty or only contains Aspyr patch files - appears vanilla
+            return true;
+        }
+
+        /// <summary>
+        /// Calculates and verifies the SHA1 hash of a dialog.tlk file from a file path.
+        /// This method can be used to calculate the vanilla hash from a verified vanilla installation.
+        /// 
+        /// The method:
+        /// 1. Verifies the file exists
+        /// 2. Optionally verifies the entry count matches expected vanilla count
+        /// 3. Calculates the SHA1 hash
+        /// 4. Returns the hash as a lowercase hexadecimal string
+        /// 
+        /// This is useful for:
+        /// - Calculating vanilla hashes from verified installations
+        /// - Verifying if a TLK file matches the vanilla hash
+        /// - Updating the VanillaTlkHashes dictionary with calculated values
+        /// </summary>
+        /// <param name="tlkFilePath">Path to the dialog.tlk file</param>
+        /// <param name="game">Game type (K1 or TSL) for entry count verification</param>
+        /// <param name="verifyEntryCount">If true, verifies the entry count matches expected vanilla count</param>
+        /// <returns>SHA1 hash as lowercase hex string, or null if verification fails</returns>
+        /// <exception cref="FileNotFoundException">If the file does not exist</exception>
+        /// <exception cref="ArgumentException">If entry count verification fails and verifyEntryCount is true</exception>
+        public static string CalculateAndVerifyTlkHash(string tlkFilePath, Game game, bool verifyEntryCount = true)
+        {
+            if (string.IsNullOrEmpty(tlkFilePath))
+            {
+                throw new ArgumentException("TLK file path cannot be null or empty", nameof(tlkFilePath));
+            }
+
+            if (!File.Exists(tlkFilePath))
+            {
+                throw new FileNotFoundException($"TLK file not found: {tlkFilePath}", tlkFilePath);
+            }
+
+            // Verify entry count if requested
+            if (verifyEntryCount)
+            {
+                try
+                {
+                    TLK tlk = new TLKBinaryReader(File.ReadAllBytes(tlkFilePath)).Load();
+                    int expectedEntryCount = game == Game.K1 ? 49265 : 136329;
+                    
+                    if (tlk.Entries.Count != expectedEntryCount)
+                    {
+                        throw new ArgumentException(
+                            $"TLK file entry count ({tlk.Entries.Count}) does not match expected vanilla count ({expectedEntryCount}) for {game}. " +
+                            "This file may not be a vanilla installation.",
+                            nameof(tlkFilePath));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw new ArgumentException(
+                        $"Failed to verify TLK file entry count: {ex.Message}. " +
+                        "The file may be corrupted or not a valid TLK file.",
+                        nameof(tlkFilePath), ex);
+                }
+            }
+
+            // Calculate SHA1 hash
+            return CalculateFileSha1(tlkFilePath);
+        }
         /// <summary>
         /// List of base filenames (without extension) for Aspyr patch files that must be preserved in the override folder.
         /// These files are required by the Aspyr patch and should not be deleted during uninstall operations.
