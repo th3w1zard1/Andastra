@@ -316,16 +316,162 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Reads NFO GFF and extracts save metadata.
         /// Validates NFO signature and version compatibility.
         /// Returns structured metadata for save game display.
+        ///
+        /// Based on swkotor2.exe: FUN_00707290 @ 0x00707290 (NFO loading)
+        /// Based on swkotor.exe: FUN_006c8e50 @ 0x006c8e50 (NFO loading)
+        /// Located via string reference: "savenfo" @ 0x007be1f0
+        ///
+        /// Original implementation:
+        /// 1. Loads GFF file from savenfo.res
+        /// 2. Validates GFF signature is "NFO " (4 bytes)
+        /// 3. Validates GFF version is "V1.0" (K1) or "V2.0" (K2)
+        /// 4. Reads metadata fields from GFF root structure:
+        ///    - AREANAME (string): Current area name
+        ///    - LASTMODULE (string): Last module ResRef
+        ///    - SAVEGAMENAME (string): Save game display name
+        ///    - TIMEPLAYED (int32): Total seconds played
+        ///    - TIMESTAMP (int64): FILETIME structure (Windows file time)
+        ///    - PCNAME (string): Player character name
+        ///    - CHEATUSED (byte): Cheat used flag
+        ///    - GAMEPLAYHINT (byte): Gameplay hint flag
+        ///    - STORYHINT0-9 (bytes): Story hint flags (10 boolean flags, K2 only)
+        ///    - STORYHINT (byte): Legacy story hint (K1 only)
+        ///    - LIVECONTENT (byte): Bitmask for live content
+        ///    - LIVE1-9 (strings): Live content entry strings (up to 9 entries)
+        ///    - PORTRAIT0-2 (ResRef): Player portrait resource references
+        /// 5. Converts NFO data to SaveGameMetadata structure
+        ///
+        /// Error handling:
+        /// - Throws ArgumentNullException if nfoData is null
+        /// - Throws InvalidDataException if data is too small or invalid GFF
+        /// - Throws InvalidDataException if GFF signature is not "NFO "
+        /// - Throws InvalidDataException if GFF version is unsupported
         /// </remarks>
         public override SaveGameMetadata DeserializeSaveNfo(byte[] nfoData)
         {
-            // TODO: Implement NFO deserialization
-            // Validate NFO signature
-            // Read metadata fields
-            // Extract screenshot if present
-            // Return structured metadata
+            if (nfoData == null)
+            {
+                throw new ArgumentNullException(nameof(nfoData), "NFO data cannot be null");
+            }
 
-            throw new NotImplementedException("Odyssey NFO deserialization not yet implemented");
+            if (nfoData.Length == 0)
+            {
+                throw new InvalidDataException("NFO data cannot be empty");
+            }
+
+            // Validate minimum GFF header size (56 bytes for GFF header)
+            // GFF header: 4 bytes signature + 4 bytes version + 11 * 4 bytes offsets/counts = 56 bytes
+            if (nfoData.Length < 56)
+            {
+                throw new InvalidDataException($"NFO data is too small ({nfoData.Length} bytes). Minimum GFF header size is 56 bytes.");
+            }
+
+            // Read and validate GFF signature
+            // Based on swkotor2.exe: GFF signature validation @ 0x00707290
+            // Original implementation checks first 4 bytes for "NFO " signature
+            string signature = Encoding.ASCII.GetString(nfoData, 0, 4);
+            if (signature != "NFO ")
+            {
+                throw new InvalidDataException($"Invalid NFO signature. Expected 'NFO ', got '{signature}'");
+            }
+
+            // Read GFF version (bytes 4-7)
+            // Based on swkotor2.exe: Version validation @ 0x00707290
+            // Original implementation: K1 uses "V1.0", K2 uses "V2.0"
+            // V3.2 is the modern GFF format used by Andastra.Parsing, but we accept it for compatibility
+            // Note: Andastra.Parsing GFFBinaryWriter writes V3.2, but we can still read it
+            string version = Encoding.ASCII.GetString(nfoData, 4, 4);
+            if (version != "V1.0" && version != "V2.0" && version != "V3.2")
+            {
+                throw new InvalidDataException($"Unsupported NFO version. Expected 'V1.0', 'V2.0', or 'V3.2', got '{version}'");
+            }
+
+            // Read NFO data using NFOAuto.ReadNfo
+            // This internally uses GFFAuto.ReadGff and NFOHelpers.ConstructNfo
+            // Based on swkotor2.exe: FUN_00707290 @ 0x00707290 reads GFF and constructs NFO data
+            // Located via string reference: "savenfo" @ 0x007be1f0
+            NFOData nfo;
+            try
+            {
+                nfo = NFOAuto.ReadNfo(nfoData);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidDataException($"Failed to read NFO data from GFF: {ex.Message}", ex);
+            }
+
+            // Validate that the GFF content type is NFO
+            // This is a double-check since we already validated the signature
+            // Based on swkotor2.exe: Content type validation @ 0x00707290
+            GFF gff = GFFAuto.ReadGff(nfoData);
+            if (gff.Content != GFFContent.NFO)
+            {
+                throw new InvalidDataException($"GFF content type is not NFO. Got: {gff.Content}");
+            }
+
+            // Convert NFOData to SaveGameMetadata
+            // Based on swkotor2.exe: Metadata extraction @ 0x00707290
+            // Original implementation extracts fields in this order:
+            // 1. SAVEGAMENAME -> SaveName
+            // 2. AREANAME -> AreaName
+            // 3. TIMEPLAYED -> TimePlayed
+            // 4. TIMESTAMP -> Timestamp (converted from FILETIME)
+            // 5. Engine version detection (K1 vs K2 based on version string)
+            var metadata = new SaveGameMetadata
+            {
+                SaveName = nfo.SavegameName ?? string.Empty,
+                AreaName = nfo.AreaName ?? string.Empty,
+                TimePlayed = nfo.TimePlayedSeconds,
+                EngineVersion = "Odyssey",
+                SaveVersion = (version == "V1.0") ? 1 : 2 // K1 uses version 1, K2 uses version 2
+            };
+
+            // Convert FILETIME to DateTime
+            // Based on swkotor2.exe: TIMESTAMP field handling @ 0x00707290 line 205
+            // Original implementation: TIMESTAMP is stored as FILETIME (64-bit unsigned integer)
+            // Windows FILETIME represents 100-nanosecond intervals since January 1, 1601
+            if (nfo.TimestampFileTime.HasValue)
+            {
+                try
+                {
+                    // FILETIME is stored as ulong, convert to DateTime
+                    // DateTime.FromFileTime expects long, but FILETIME is unsigned
+                    // Handle potential overflow by checking if value is within valid range
+                    ulong fileTime = nfo.TimestampFileTime.Value;
+                    if (fileTime <= (ulong)long.MaxValue)
+                    {
+                        metadata.Timestamp = DateTime.FromFileTime((long)fileTime);
+                    }
+                    else
+                    {
+                        // If FILETIME exceeds long.MaxValue, use current time as fallback
+                        // This should not happen in practice, but handle gracefully
+                        metadata.Timestamp = DateTime.Now;
+                    }
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    // If FILETIME is out of valid DateTime range, use current time as fallback
+                    // This handles edge cases where FILETIME might be corrupted or invalid
+                    metadata.Timestamp = DateTime.Now;
+                }
+            }
+            else
+            {
+                // If TIMESTAMP is not present, use current time as default
+                // Based on swkotor2.exe: Default timestamp handling @ 0x00707290
+                metadata.Timestamp = DateTime.Now;
+            }
+
+            // Validate that we have at least a save name
+            // Based on swkotor2.exe: Save name validation @ 0x00707290 line 173
+            // Original implementation: If SAVEGAMENAME is missing or empty, defaults to "Old Save Game"
+            if (string.IsNullOrEmpty(metadata.SaveName))
+            {
+                metadata.SaveName = "Old Save Game";
+            }
+
+            return metadata;
         }
 
         /// <summary>
