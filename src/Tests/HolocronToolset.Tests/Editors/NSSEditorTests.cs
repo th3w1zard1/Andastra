@@ -2887,14 +2887,101 @@ void main() {
             throw new NotImplementedException("TestNssEditorFoldAll: Fold all test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_nss_editor_unfold_all (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1386-1410)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1386-1410
         // Original: def test_nss_editor_unfold_all(qtbot, installation: HTInstallation, foldable_nss_script: str): Test unfold all
         [Fact]
         public void TestNssEditorUnfoldAll()
         {
-            // TODO: STUB - Implement unfold all test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1386-1410
-            throw new NotImplementedException("TestNssEditorUnfoldAll: Unfold all test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            // Foldable NSS script matching Python fixture (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1235-1258)
+            string foldableNssScript = @"// Global variable
+int g_var = 10;
+
+void main() {
+    int local = 5;
+    
+    if (local > 0) {
+        int nested = 10;
+        if (nested > 5) {
+            // Nested block
+            local += nested;
+        }
+    }
+    
+    for (int i = 0; i < 10; i++) {
+        local += i;
+    }
+}
+
+void helper() {
+    int helper_var = 20;
+}";
+
+            var editor = new NSSEditor(null, installation);
+            editor.New();
+
+            // Set up foldable script (matching Python: editor.ui.codeEdit.setPlainText(foldable_nss_script))
+            editor.Load("test_script.nss", "test_script", ResourceType.NSS, Encoding.UTF8.GetBytes(foldableNssScript));
+
+            // Get code editor
+            var codeEdit = editor.CodeEdit;
+            codeEdit.Should().NotBeNull("CodeEdit should be initialized");
+
+            // Manually trigger foldable regions update (matching Python: editor.ui.codeEdit._update_foldable_regions())
+            codeEdit.UpdateFoldableRegionsForTesting();
+
+            // Wait a bit for processing (matching Python: qtbot.wait(50))
+            System.Threading.Thread.Sleep(50);
+
+            // Verify foldable regions were detected (matching Python: assert len(editor.ui.codeEdit._foldable_regions) > 0)
+            var foldableRegions = codeEdit.GetFoldableRegions();
+            foldableRegions.Count.Should().BeGreaterThan(0, "Foldable regions should be detected");
+
+            // Fold all first (matching Python: editor.ui.codeEdit.fold_all())
+            codeEdit.FoldAll();
+
+            // Wait for processing (matching Python: qtbot.wait(50))
+            System.Threading.Thread.Sleep(50);
+
+            // Verify blocks are folded (matching Python: folded_count = len(editor.ui.codeEdit._folded_block_numbers))
+            int foldedCount = codeEdit.GetFoldedBlockCount();
+            foldedCount.Should().BeGreaterThan(0, $"Expected folded blocks, got {foldedCount}");
+
+            // Unfold all (matching Python: editor.ui.codeEdit.unfold_all())
+            codeEdit.UnfoldAll();
+
+            // Wait for processing
+            System.Threading.Thread.Sleep(50);
+
+            // Verify all blocks are unfolded (matching Python: assert unfolded_count == 0)
+            int unfoldedCount = codeEdit.GetFoldedBlockCount();
+            unfoldedCount.Should().Be(0, "All blocks should be unfolded after unfold_all()");
         }
 
         // TODO: STUB - Implement test_nss_editor_folding_preserved_on_edit (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1412-1445)

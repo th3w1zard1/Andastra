@@ -1287,5 +1287,14 @@ namespace HolocronToolset.Widgets
         {
             return _foldedBlockNumbers.Count;
         }
+
+        /// <summary>
+        /// Manually triggers foldable regions update.
+        /// Exposed for testing purposes to match Python test behavior (editor.ui.codeEdit._update_foldable_regions()).
+        /// </summary>
+        public void UpdateFoldableRegionsForTesting()
+        {
+            UpdateFoldableRegions();
+        }
     }
 }
