@@ -21,7 +21,6 @@ using Andastra.Parsing.Mods.NCS;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.TLK;
-using Andastra.Parsing.Resource.Formats.TLK;
 
 namespace HolocronToolset.Dialogs
 {
@@ -429,7 +428,7 @@ namespace HolocronToolset.Dialogs
         }
         
         // Helper class for TLK string entries
-        private class TLKStringEntry
+        internal class TLKStringEntry
         {
             public string TokenName { get; set; }
             public string Text { get; set; }
@@ -441,7 +440,7 @@ namespace HolocronToolset.Dialogs
         }
         
         // Helper class for 2DA memory token entries
-        private class TwoDAMemoryTokenEntry
+        internal class TwoDAMemoryTokenEntry
         {
             public string TokenName { get; set; } // e.g., "2DAMEMORY0"
             public int TokenId { get; set; }
@@ -883,7 +882,7 @@ namespace HolocronToolset.Dialogs
             }
         }
 
-        private string GetFieldValueString(Andastra.Parsing.Mods.FieldValue value)
+        private string GetFieldValueString(Andastra.Parsing.Mods.GFF.FieldValue value)
         {
             if (value == null)
             {
