@@ -1053,14 +1053,23 @@ namespace Andastra.Runtime.Games.Aurora
             instance.ZOrientation = GetFloat(s, "ZOrientation");
 
             // Parse geometry
+            // Based on nwmain.exe: CNWSTrigger::SaveTrigger @ 0x140504290 lines 140-142
+            // Geometry points are stored relative to trigger position (PointX/Y/Z - Position)
+            // When loading, we must add position back to get absolute coordinates
+            // Based on nwmain.exe: CNWSTrigger::LoadTrigger loads Geometry list and adds position to each point
+            // Based on vendor/xoreos/src/engines/nwn2/trigger.cpp:108 - position + glm::vec3(x, y, z)
             if (s.TryGetList("Geometry", out GFFList geometryList))
             {
+                Vector3 triggerPosition = new Vector3(instance.XPosition, instance.YPosition, instance.ZPosition);
                 foreach (GFFStruct vertexStruct in geometryList)
                 {
                     float pointX = GetFloat(vertexStruct, "PointX");
                     float pointY = GetFloat(vertexStruct, "PointY");
                     float pointZ = GetFloat(vertexStruct, "PointZ");
-                    instance.Geometry.Add(new Vector3(pointX, pointY, pointZ));
+                    // Add trigger position to relative coordinates to get absolute world coordinates
+                    // Based on nwmain.exe: CNWSTrigger::LoadTrigger adds position to geometry points
+                    Vector3 absolutePoint = triggerPosition + new Vector3(pointX, pointY, pointZ);
+                    instance.Geometry.Add(absolutePoint);
                 }
             }
 
@@ -1500,10 +1509,19 @@ namespace Andastra.Runtime.Games.Aurora
             }
 
             // Set trigger geometry
+            // Based on nwmain.exe: CNWSTrigger::LoadTrigger @ 0x140502ac0 loads Geometry list from GIT
+            // Geometry is stored as absolute world coordinates (relative coordinates + trigger position)
+            // Based on nwmain.exe: CNWSTrigger stores geometry vertices at offset 0x3b0 (array pointer) and count at 0x3a8
+            // Based on nwmain.exe: CNWSTrigger::SaveTrigger @ 0x140504290 lines 129-147 saves Geometry list
+            // Geometry vertices are used for point-in-polygon tests to detect when entities enter/exit trigger volume
             var triggerComponent = entity.GetComponent<Core.Interfaces.Components.ITriggerComponent>();
             if (triggerComponent != null && trigger.Geometry.Count > 0)
             {
-                // TODO: Set trigger geometry when trigger component supports it
+                // Set geometry on trigger component
+                // BaseTriggerComponent.Geometry property accepts IList<Vector3> and stores vertices for ContainsPoint tests
+                // Based on nwmain.exe: Trigger geometry is essential for trigger enter/exit detection
+                // Based on nwmain.exe: CNWSTrigger uses geometry vertices for point-in-polygon collision detection
+                triggerComponent.Geometry = trigger.Geometry;
             }
 
             // Add entity to area
