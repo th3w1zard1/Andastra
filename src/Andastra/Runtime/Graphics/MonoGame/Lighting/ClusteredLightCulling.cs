@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Andastra.Runtime.MonoGame.Graphics;
 
 namespace Andastra.Runtime.MonoGame.Lighting
 {
@@ -44,6 +45,23 @@ namespace Andastra.Runtime.MonoGame.Lighting
         }
 
         /// <summary>
+        /// Light grid entry structure (offset + count per cluster).
+        /// </summary>
+        [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+        public struct LightGridEntry
+        {
+            /// <summary>
+            /// Offset into the light index buffer where this cluster's lights start.
+            /// </summary>
+            public uint Offset;
+
+            /// <summary>
+            /// Number of lights in this cluster.
+            /// </summary>
+            public uint Count;
+        }
+
+        /// <summary>
         /// Cluster configuration.
         /// </summary>
         public struct ClusterConfig
@@ -67,11 +85,12 @@ namespace Andastra.Runtime.MonoGame.Lighting
         private readonly GraphicsDevice _graphicsDevice;
         private readonly ClusterConfig _config;
         private readonly List<LightData> _lights;
-        // TODO: Buffer is static in MonoGame - need to use GraphicsBuffer or VertexBuffer/IndexBuffer
-        // private Buffer _lightBuffer;
-        // private Buffer _lightIndexBuffer;
-        // private Buffer _lightGridBuffer;
+        private MonoGameGraphicsBuffer _lightBuffer;
+        private MonoGameGraphicsBuffer _lightIndexBuffer;
+        private MonoGameGraphicsBuffer _lightGridBuffer;
         private int _maxLightsPerCluster;
+        private int _maxLights;
+        private int _clusterCount;
 
         /// <summary>
         /// Gets or sets the maximum lights per cluster.
@@ -95,9 +114,29 @@ namespace Andastra.Runtime.MonoGame.Lighting
         }
 
         /// <summary>
+        /// Gets the maximum number of lights supported.
+        /// </summary>
+        public int MaxLights
+        {
+            get { return _maxLights; }
+        }
+
+        /// <summary>
+        /// Gets the number of clusters.
+        /// </summary>
+        public int ClusterCount
+        {
+            get { return _clusterCount; }
+        }
+
+        /// <summary>
         /// Initializes a new clustered light culling system.
         /// </summary>
-        public ClusteredLightCulling(GraphicsDevice graphicsDevice, ClusterConfig config, int maxLightsPerCluster = 255)
+        /// <param name="graphicsDevice">The graphics device.</param>
+        /// <param name="config">Cluster configuration.</param>
+        /// <param name="maxLightsPerCluster">Maximum lights per cluster (default: 255).</param>
+        /// <param name="maxLights">Maximum total lights supported (default: 1024).</param>
+        public ClusteredLightCulling(GraphicsDevice graphicsDevice, ClusterConfig config, int maxLightsPerCluster = 255, int maxLights = 1024)
         {
             if (graphicsDevice == null)
             {
@@ -106,8 +145,10 @@ namespace Andastra.Runtime.MonoGame.Lighting
 
             _graphicsDevice = graphicsDevice;
             _config = config;
-            _maxLightsPerCluster = maxLightsPerCluster;
+            _maxLightsPerCluster = Math.Max(1, maxLightsPerCluster);
+            _maxLights = Math.Max(1, maxLights);
             _lights = new List<LightData>();
+            _clusterCount = (int)(_config.ClusterCounts.X * _config.ClusterCounts.Y * _config.ClusterCounts.Z);
 
             RecreateBuffers();
         }
@@ -166,16 +207,32 @@ namespace Andastra.Runtime.MonoGame.Lighting
                 return;
             }
 
+            // Ensure buffers are large enough
+            if (_lights.Count > _maxLights)
+            {
+                _maxLights = _lights.Count;
+                RecreateBuffers();
+            }
+
             // Upload lights to GPU
             LightData[] lightArray = _lights.ToArray();
-            // _lightBuffer.SetData(lightArray);
+            if (_lightBuffer != null && lightArray.Length > 0)
+            {
+                // Resize buffer if needed
+                if (lightArray.Length > _lightBuffer.ElementCount)
+                {
+                    RecreateBuffers();
+                }
+                _lightBuffer.SetData(lightArray);
+            }
 
             // Dispatch compute shader to:
             // 1. Assign lights to clusters based on AABB intersection
             // 2. Build light index lists per cluster
             // 3. Store in light grid buffer
 
-            // Placeholder - requires compute shader
+            // Note: Actual compute shader dispatch would be implemented here
+            // when compute shader support is available in MonoGame
             // _graphicsDevice.DispatchCompute(...);
         }
 
@@ -191,22 +248,88 @@ namespace Andastra.Runtime.MonoGame.Lighting
         {
             DisposeBuffers();
 
-            int clusterCount = (int)(_config.ClusterCounts.X * _config.ClusterCounts.Y * _config.ClusterCounts.Z);
-            int maxLights = _lights.Count;
+            _clusterCount = (int)(_config.ClusterCounts.X * _config.ClusterCounts.Y * _config.ClusterCounts.Z);
+            if (_clusterCount <= 0)
+            {
+                _clusterCount = 1;
+            }
 
-            // Create buffers
-            // _lightBuffer = new Buffer(...); // All lights
-            // _lightIndexBuffer = new Buffer(...); // Light indices per cluster
-            // _lightGridBuffer = new Buffer(...); // Grid: offset + count per cluster
+            // Calculate buffer sizes
+            int lightDataStride = System.Runtime.InteropServices.Marshal.SizeOf(typeof(LightData));
+            int maxLightsForBuffer = Math.Max(_maxLights, _lights.Count);
+            if (maxLightsForBuffer <= 0)
+            {
+                maxLightsForBuffer = 1;
+            }
+
+            // Light index buffer: stores light indices for all clusters
+            // Each cluster can have up to _maxLightsPerCluster lights
+            int maxLightIndices = _clusterCount * _maxLightsPerCluster;
+
+            // Light grid buffer: stores offset + count for each cluster
+            int lightGridStride = System.Runtime.InteropServices.Marshal.SizeOf(typeof(LightGridEntry));
+
+            // Create light buffer (structured buffer for all lights)
+            _lightBuffer = new MonoGameGraphicsBuffer(
+                _graphicsDevice,
+                maxLightsForBuffer,
+                lightDataStride,
+                isDynamic: true
+            );
+
+            // Create light index buffer (stores light indices per cluster)
+            // Using uint (4 bytes) for light indices
+            _lightIndexBuffer = new MonoGameGraphicsBuffer(
+                _graphicsDevice,
+                maxLightIndices,
+                sizeof(uint),
+                isDynamic: true
+            );
+
+            // Create light grid buffer (offset + count per cluster)
+            _lightGridBuffer = new MonoGameGraphicsBuffer(
+                _graphicsDevice,
+                _clusterCount,
+                lightGridStride,
+                isDynamic: true
+            );
         }
 
         private void DisposeBuffers()
         {
-            // TODO: Dispose buffers when implemented
-            // _lightBuffer?.Dispose();
-            // _lightIndexBuffer?.Dispose();
-            // _lightGridBuffer?.Dispose();
+            if (_lightBuffer != null)
+            {
+                _lightBuffer.Dispose();
+                _lightBuffer = null;
+            }
+
+            if (_lightIndexBuffer != null)
+            {
+                _lightIndexBuffer.Dispose();
+                _lightIndexBuffer = null;
+            }
+
+            if (_lightGridBuffer != null)
+            {
+                _lightGridBuffer.Dispose();
+                _lightGridBuffer = null;
+            }
         }
+
+        /// <summary>
+        /// Gets the light buffer for binding to shaders.
+        /// </summary>
+        internal MonoGameGraphicsBuffer LightBuffer => _lightBuffer;
+
+        /// <summary>
+        /// Gets the light index buffer for binding to shaders.
+        /// </summary>
+        internal MonoGameGraphicsBuffer LightIndexBuffer => _lightIndexBuffer;
+
+        /// <summary>
+        /// Gets the light grid buffer for binding to shaders.
+        /// </summary>
+        internal MonoGameGraphicsBuffer LightGridBuffer => _lightGridBuffer;
 
         public void Dispose()
         {
