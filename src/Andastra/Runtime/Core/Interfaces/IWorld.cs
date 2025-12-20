@@ -154,10 +154,9 @@ namespace Andastra.Runtime.Core.Interfaces
         /// Provides access to game data tables (2DA files) for looking up creature properties,
         /// appearance data, and other game configuration data.
         /// Engine-specific implementations handle the actual table loading and lookup.
+        /// This property should be set by engine-specific implementations.
         /// </remarks>
-        // TODO: IGameDataProvider is in Games.Common - Core cannot depend on Games
-        // This property should be set by engine-specific implementations
-        object GameDataProvider { get; }
+        IGameDataProvider GameDataProvider { get; }
 
         /// <summary>
         /// Registers an entity with the world.

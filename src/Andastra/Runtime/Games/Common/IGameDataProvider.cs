@@ -1,4 +1,5 @@
 using JetBrains.Annotations;
+using Andastra.Runtime.Core.Interfaces;
 
 namespace Andastra.Runtime.Games.Common
 {
@@ -12,16 +13,20 @@ namespace Andastra.Runtime.Games.Common
     /// - Engine-specific implementations:
     ///   - Odyssey (swkotor.exe, swkotor2.exe): Uses 2DA tables (appearance.2da) via GameDataManager
     ///   - Aurora (nwmain.exe): Uses C2DA class for 2DA table access via AuroraTwoDATableManager
-    ///   - Eclipse (daorigins.exe, DragonAge2.exe, ): Uses 2DA tables via EclipseTwoDATableManager
-    ///   - Infinity (, ): Uses 2DA tables (similar to Eclipse)
+    ///   - Eclipse (daorigins.exe, DragonAge2.exe): Uses 2DA tables via EclipseTwoDATableManager
+    ///   - Infinity: Uses 2DA tables (similar to Eclipse)
     /// - Based on reverse engineering:
     ///   - swkotor2.exe: FUN_0041d2c0 @ 0x0041d2c0 (2DA table lookup), FUN_0065a380 @ 0x0065a380 (GetCreatureRadius)
     ///   - swkotor.exe: Similar 2DA lookup system
     ///   - nwmain.exe: C2DA::Load2DArray @ 0x1401a73a0 for 2DA loading
     /// - Common pattern: All engines store creature properties (radius, speed, etc.) in data tables indexed by appearance type
+    /// 
+    /// This interface extends Core.Interfaces.IGameDataProvider to maintain compatibility.
+    /// The interface definition was moved to Core.Interfaces to avoid circular dependencies.
+    /// All existing implementations remain compatible as they automatically implement the base interface.
     /// </remarks>
     [PublicAPI]
-    public interface IGameDataProvider
+    public interface IGameDataProvider : Core.Interfaces.IGameDataProvider
     {
         /// <summary>
         /// Gets the creature collision radius for a given appearance type.
@@ -43,21 +48,7 @@ namespace Andastra.Runtime.Games.Common
         ///   - Size 3 (Huge): 1.0
         ///   - Size 4 (Gargantuan): 1.5
         /// </remarks>
-        float GetCreatureRadius(int appearanceType, float defaultRadius = 0.5f);
-
-        /// <summary>
-        /// Gets a float value from a game data table.
-        /// </summary>
-        /// <param name="tableName">The table name (e.g., "appearance" for appearance.2da).</param>
-        /// <param name="rowIndex">The row index.</param>
-        /// <param name="columnName">The column name (case-insensitive).</param>
-        /// <param name="defaultValue">Default value to return if lookup fails.</param>
-        /// <returns>The float value, or defaultValue if lookup fails.</returns>
-        /// <remarks>
-        /// Generic table lookup method for accessing any game data table.
-        /// Engine-specific implementations handle the actual table loading and lookup.
-        /// </remarks>
-        float GetTableFloat(string tableName, int rowIndex, string columnName, float defaultValue = 0.0f);
+        // Methods are inherited from Core.Interfaces.IGameDataProvider
     }
 }
 
