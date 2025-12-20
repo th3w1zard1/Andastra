@@ -384,7 +384,7 @@ namespace HolocronToolset.Dialogs
         /// </summary>
         /// <param name="parent">The parent window for the dialog. If null, the dialog will be shown without a parent.</param>
         /// <returns>True if OK was clicked, false if Cancel was clicked or the dialog was closed.</returns>
-        public bool ShowDialog(Window parent = null)
+        public new bool ShowDialog(Window parent = null)
         {
             // Use ShowDialogAsync and block synchronously to match Qt's exec() behavior
             // This provides proper modal dialog behavior while maintaining compatibility with synchronous code

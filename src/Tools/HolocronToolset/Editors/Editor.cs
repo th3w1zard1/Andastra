@@ -58,15 +58,59 @@ namespace HolocronToolset.Editors
             // Setup file filters for open/save dialogs
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor.py:489-516
             // Original: Additional formats handling
-            // Note: ResourceType is a class, not an enum, so we can't use Enum.TryParse
-            // For now, we'll skip adding format variants as they would need to be looked up differently
-            // This functionality can be added later when needed
+            // Add format variants (XML, JSON, CSV, ASCII, YAML) for each base resource type
             var additionalFormats = new[] { "XML", "JSON", "CSV", "ASCII", "YAML" };
             var readList = _readSupported.ToList();
             var writeList = _writeSupported.ToList();
 
-            // TODO: Add additional format variants when ResourceType lookup by name is implemented
-            // For now, just use the provided supported types
+            // Add format variants for read supported types
+            // For each base type, look for variants like {FieldName}_XML, {FieldName}_JSON, etc.
+            // Matching PyKotor: uses restype.name (field name) to construct variant names
+            var readVariants = new List<ResourceType>();
+            foreach (var restype in _readSupported)
+            {
+                string fieldName = restype.GetFieldName();
+                if (string.IsNullOrEmpty(fieldName))
+                {
+                    continue;
+                }
+
+                foreach (var addFormat in additionalFormats)
+                {
+                    string variantFieldName = $"{fieldName}_{addFormat}";
+                    ResourceType variant = ResourceType.FromName(variantFieldName);
+                    if (variant != null && !variant.IsInvalid)
+                    {
+                        readVariants.Add(variant);
+                    }
+                }
+            }
+            readList.AddRange(readVariants);
+
+            // Add format variants for write supported types
+            // For each base type, look for variants like {FieldName}_XML, {FieldName}_JSON, etc.
+            // Matching PyKotor: uses restype.name (field name) to construct variant names
+            var writeVariants = new List<ResourceType>();
+            foreach (var restype in _writeSupported)
+            {
+                string fieldName = restype.GetFieldName();
+                if (string.IsNullOrEmpty(fieldName))
+                {
+                    continue;
+                }
+
+                foreach (var addFormat in additionalFormats)
+                {
+                    string variantFieldName = $"{fieldName}_{addFormat}";
+                    ResourceType variant = ResourceType.FromName(variantFieldName);
+                    if (variant != null && !variant.IsInvalid)
+                    {
+                        writeVariants.Add(variant);
+                    }
+                }
+            }
+            writeList.AddRange(writeVariants);
+
             _readSupported = readList.ToArray();
             _writeSupported = writeList.ToArray();
         }

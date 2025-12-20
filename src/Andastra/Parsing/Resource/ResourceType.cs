@@ -200,6 +200,54 @@ namespace Andastra.Parsing.Resource
         }
 
         /// <summary>
+        /// Returns the ResourceType for the specified field name (static field name).
+        /// This searches through all static fields of ResourceType to find a field with the matching name.
+        /// Returns null if not found.
+        /// </summary>
+        public static ResourceType FromName(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return null;
+            }
+
+            System.Reflection.FieldInfo field = typeof(ResourceType).GetField(
+                name,
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static
+            );
+            if (field != null && field.FieldType == typeof(ResourceType))
+            {
+                return (ResourceType)field.GetValue(null);
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Returns the static field name for this ResourceType instance.
+        /// This searches through all static fields to find which field holds this instance.
+        /// Returns null if not found (e.g., for invalid ResourceTypes).
+        /// </summary>
+        public string GetFieldName()
+        {
+            System.Reflection.FieldInfo[] fields = typeof(ResourceType).GetFields(
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static
+            );
+            foreach (var field in fields)
+            {
+                if (field.FieldType == typeof(ResourceType))
+                {
+                    ResourceType fieldValue = (ResourceType)field.GetValue(null);
+                    if (ReferenceEquals(fieldValue, this))
+                    {
+                        return field.Name;
+                    }
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
         /// Creates an invalid ResourceType instance.
         /// </summary>
         public static ResourceType FromInvalid(
@@ -256,7 +304,7 @@ namespace Andastra.Parsing.Resource
         public static readonly ResourceType IFO = new ResourceType(2014, "ifo", "Module Data", "gff", name: "IFO");
         public static readonly ResourceType BIC = new ResourceType(2015, "bic", "Creatures", "gff", name: "BIC");
         public static readonly ResourceType WOK = new ResourceType(2016, "wok", "Walkmeshes", "binary", name: "WOK");
-\1TwoDA\2
+        public static readonly ResourceType TwoDA = new ResourceType(2017, "2da", "2D Arrays", "binary", name: "2DA");
         public static readonly ResourceType TLK = new ResourceType(2018, "tlk", "Talk Tables", "binary", name: "TLK");
         public static readonly ResourceType TXI = new ResourceType(2022, "txi", "Textures", "plaintext", name: "TXI");
         public static readonly ResourceType GIT = new ResourceType(2023, "git", "Module Data", "gff", name: "GIT");

@@ -333,7 +333,7 @@ namespace HolocronToolset.Editors
             _removePropertyBtn = new Button { Content = "Remove" };
             _removePropertyBtn.Click += (s, e) => RemoveSelectedProperty();
             _editPropertyBtn = new Button { Content = "Edit" };
-            _editPropertyBtn.Click += (s, e) => EditSelectedProperty();
+            _editPropertyBtn.Click += async (s, e) => await EditSelectedProperty();
             propertyButtonsPanel.Children.Add(_addPropertyBtn);
             propertyButtonsPanel.Children.Add(_removePropertyBtn);
             propertyButtonsPanel.Children.Add(_editPropertyBtn);
@@ -396,7 +396,7 @@ namespace HolocronToolset.Editors
             }
             if (_editPropertyBtn != null)
             {
-                _editPropertyBtn.Click += (s, e) => EditSelectedProperty();
+                _editPropertyBtn.Click += async (s, e) => await EditSelectedProperty();
             }
             if (_removePropertyBtn != null)
             {
@@ -763,7 +763,7 @@ namespace HolocronToolset.Editors
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:260-268
         // Original: def edit_selected_property(self):
-        private void EditSelectedProperty()
+        private async System.Threading.Tasks.Task EditSelectedProperty()
         {
             // Matching PyKotor implementation: if not self.ui.assignedPropertiesList.selectedItems(): return
             if (_assignedPropertiesList?.SelectedItem == null)
@@ -780,24 +780,19 @@ namespace HolocronToolset.Editors
             // Matching PyKotor implementation: dialog = PropertyEditor(self._installation, uti_property)
             var dialog = new PropertyEditorDialog(this, _installation, selectedItem.Property);
             
-            // Store reference to update after dialog closes
-            var originalProperty = selectedItem.Property;
-            
             // Matching PyKotor implementation: if not dialog.exec(): return
-            // Use ShowDialogAsync for proper modal dialog handling
-            dialog.Closed += (s, e) =>
+            // Use ShowDialogAsync<bool> for proper modal dialog handling
+            bool result = await dialog.ShowDialogAsync<bool>(this);
+            if (!result)
             {
-                if (dialog.DialogResult)
-                {
-                    // Matching PyKotor implementation: self.ui.assignedPropertiesList.selectedItems()[0].setData(Qt.ItemDataRole.UserRole, dialog.uti_property())
-                    // Matching PyKotor implementation: self.ui.assignedPropertiesList.selectedItems()[0].setText(self.property_summary(dialog.uti_property()))
-                    UTIProperty updatedProperty = dialog.GetUtiProperty();
-                    selectedItem.Property = updatedProperty;
-                    selectedItem.Text = PropertySummary(updatedProperty);
-                }
-            };
+                return;
+            }
             
-            dialog.Show(this);
+            // Matching PyKotor implementation: self.ui.assignedPropertiesList.selectedItems()[0].setData(Qt.ItemDataRole.UserRole, dialog.uti_property())
+            // Matching PyKotor implementation: self.ui.assignedPropertiesList.selectedItems()[0].setText(self.property_summary(dialog.uti_property()))
+            UTIProperty updatedProperty = dialog.GetUtiProperty();
+            selectedItem.Property = updatedProperty;
+            selectedItem.Text = PropertySummary(updatedProperty);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:270-301
@@ -831,7 +826,7 @@ namespace HolocronToolset.Editors
             }
 
             // Matching PyKotor implementation: itemprops: TwoDA | None = self._installation.ht_get_cache_2da(HTInstallation.TwoDA_ITEM_PROPERTIES)
-            TwoDA itemProps = _installation.HtGetCacheTwoDA(HTInstallation.TwoDAItemProperties);
+            TwoDA itemProps = _installation.HtGetCache2DA(HTInstallation.TwoDAItemProperties);
             if (itemProps == null)
             {
                 return;
@@ -929,10 +924,10 @@ namespace HolocronToolset.Editors
         // Original: @staticmethod def cost_name(installation: HTInstallation, cost: int, value: int) -> str | None:
         public static string CostName(HTInstallation installation, int cost, int value)
         {
-            TwoDA costTableList = installation.HtGetCacheTwoDA(HTInstallation.TwoDAIprpCosttable);
+            TwoDA costTableList = installation.HtGetCache2DA(HTInstallation.TwoDAIprpCosttable);
             if (costTableList == null)
             {
-                System.Console.WriteLine("Failed to retrieve IPRP_COSTTABLE TwoDA.");
+                System.Console.WriteLine("Failed to retrieve IPRP_COSTTABLE 2DA.");
                 return null;
             }
 
@@ -943,10 +938,10 @@ namespace HolocronToolset.Editors
                 return null;
             }
 
-            TwoDA costtable = installation.HtGetCacheTwoDA(costtableName);
+            TwoDA costtable = installation.HtGetCache2DA(costtableName);
             if (costtable == null)
             {
-                System.Console.WriteLine($"Failed to retrieve '{costtableName}' TwoDA.");
+                System.Console.WriteLine($"Failed to retrieve '{costtableName}' 2DA.");
                 return null;
             }
 
@@ -961,7 +956,7 @@ namespace HolocronToolset.Editors
             }
             catch (Exception)
             {
-                System.Console.WriteLine("Could not get the costtable TwoDA row/value");
+                System.Console.WriteLine("Could not get the costtable 2DA row/value");
             }
             return null;
         }
@@ -971,10 +966,10 @@ namespace HolocronToolset.Editors
         public static string ParamName(HTInstallation installation, int paramtable, int param)
         {
             // Get the IPRP_PARAMTABLE TwoDA
-            TwoDA paramtableList = installation.HtGetCacheTwoDA(HTInstallation.TwoDAIprpParamtable);
+            TwoDA paramtableList = installation.HtGetCache2DA(HTInstallation.TwoDAIprpParamtable);
             if (paramtableList == null)
             {
-                System.Console.WriteLine("Failed to retrieve IPRP_PARAMTABLE TwoDA.");
+                System.Console.WriteLine("Failed to retrieve IPRP_PARAMTABLE 2DA.");
                 return null;
             }
 
@@ -988,10 +983,10 @@ namespace HolocronToolset.Editors
                     return null;
                 }
 
-                TwoDA paramtable2da = installation.HtGetCacheTwoDA(tableResref);
+                TwoDA paramtable2da = installation.HtGetCache2DA(tableResref);
                 if (paramtable2da == null)
                 {
-                    System.Console.WriteLine($"Failed to retrieve TwoDA file: {tableResref}.");
+                    System.Console.WriteLine($"Failed to retrieve 2DA file: {tableResref}.");
                     return null;
                 }
 
@@ -1112,13 +1107,13 @@ namespace HolocronToolset.Editors
 
             // Matching PyKotor implementation: required: list[str] = [HTInstallation.TwoDA_BASEITEMS, HTInstallation.TwoDA_ITEM_PROPERTIES]
             var required = new List<string> { HTInstallation.TwoDABaseitems, HTInstallation.TwoDAItemProperties };
-            installation.HtBatchCacheTwoDA(required);
+            installation.HtBatchCache2DA(required);
 
             // Matching PyKotor implementation: baseitems: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_BASEITEMS)
-            TwoDA baseitems = installation.HtGetCacheTwoDA(HTInstallation.TwoDABaseitems);
+            TwoDA baseitems = installation.HtGetCache2DA(HTInstallation.TwoDABaseitems);
             if (baseitems == null)
             {
-                System.Console.WriteLine("Failed to retrieve BASEITEMS TwoDA.");
+                System.Console.WriteLine("Failed to retrieve BASEITEMS 2DA.");
             }
             else
             {
@@ -1144,10 +1139,10 @@ namespace HolocronToolset.Editors
             _availablePropertyList.Items.Clear();
 
             // Matching PyKotor implementation: item_properties: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_ITEM_PROPERTIES)
-            TwoDA itemProperties = installation.HtGetCacheTwoDA(HTInstallation.TwoDAItemProperties);
+            TwoDA itemProperties = installation.HtGetCache2DA(HTInstallation.TwoDAItemProperties);
             if (itemProperties == null)
             {
-                System.Console.WriteLine("Failed to retrieve ITEM_PROPERTIES TwoDA.");
+                System.Console.WriteLine("Failed to retrieve ITEM_PROPERTIES 2DA.");
                 return;
             }
 
@@ -1180,7 +1175,7 @@ namespace HolocronToolset.Editors
                     }
 
                     // Matching PyKotor implementation: subtype: TwoDA | None = installation.ht_get_cache_2da(subtype_resname)
-                    TwoDA subtype = installation.HtGetCacheTwoDA(subtypeResname);
+                    TwoDA subtype = installation.HtGetCache2DA(subtypeResname);
                     if (subtype == null)
                     {
                         System.Console.WriteLine($"Failed to retrieve subtype '{subtypeResname}' for property name '{propName}' at index {i}. Skipping...");
@@ -1234,10 +1229,10 @@ namespace HolocronToolset.Editors
         public static string GetPropertyName(HTInstallation installation, int prop)
         {
             // Matching PyKotor implementation: properties: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_ITEM_PROPERTIES)
-            TwoDA properties = installation.HtGetCacheTwoDA(HTInstallation.TwoDAItemProperties);
+            TwoDA properties = installation.HtGetCache2DA(HTInstallation.TwoDAItemProperties);
             if (properties == null)
             {
-                System.Console.WriteLine("Failed to retrieve ITEM_PROPERTIES TwoDA.");
+                System.Console.WriteLine("Failed to retrieve ITEM_PROPERTIES 2DA.");
                 return "Unknown";
             }
 
@@ -1261,10 +1256,10 @@ namespace HolocronToolset.Editors
         public static string GetSubpropertyName(HTInstallation installation, int prop, int subprop)
         {
             // Matching PyKotor implementation: properties: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_ITEM_PROPERTIES)
-            TwoDA properties = installation.HtGetCacheTwoDA(HTInstallation.TwoDAItemProperties);
+            TwoDA properties = installation.HtGetCache2DA(HTInstallation.TwoDAItemProperties);
             if (properties == null)
             {
-                System.Console.WriteLine("Failed to retrieve ITEM_PROPERTIES TwoDA.");
+                System.Console.WriteLine("Failed to retrieve ITEM_PROPERTIES 2DA.");
                 return null;
             }
 
@@ -1278,7 +1273,7 @@ namespace HolocronToolset.Editors
             }
 
             // Matching PyKotor implementation: subproperties: TwoDA | None = installation.ht_get_cache_2da(subtype_resname)
-            TwoDA subproperties = installation.HtGetCacheTwoDA(subtypeResname);
+            TwoDA subproperties = installation.HtGetCache2DA(subtypeResname);
             if (subproperties == null)
             {
                 return null;
@@ -1334,10 +1329,10 @@ namespace HolocronToolset.Editors
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:443-444
         // Original: def on_assigned_property_list_double_clicked(self):
-        private void OnAssignedPropertyListDoubleClicked()
+        private async void OnAssignedPropertyListDoubleClicked()
         {
             // Matching PyKotor implementation: self.edit_selected_property()
-            EditSelectedProperty();
+            await EditSelectedProperty();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:446-449
