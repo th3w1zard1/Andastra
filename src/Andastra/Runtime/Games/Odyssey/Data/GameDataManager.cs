@@ -309,6 +309,292 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
             return feat != null ? feat.FeatId : -1;
         }
 
+        /// <summary>
+        /// Gets starting feats for a class at level 1 from featgain.2da.
+        /// </summary>
+        /// <param name="classId">The class ID (0=Soldier, 1=Scout, 2=Scoundrel, 3=JediGuardian, 4=JediConsular, 5=JediSentinel).</param>
+        /// <param name="level">The class level (typically 1 for starting feats).</param>
+        /// <returns>List of feat IDs granted at the specified level, or empty list if not found.</returns>
+        /// <remarks>
+        /// Starting Feats from featgain.2da:
+        /// - Based on swkotor.exe: FUN_005bcf70 @ 0x005bcf70 (LoadFeatGain)
+        /// - Based on swkotor2.exe: FUN_0060d1d0 @ 0x0060d1d0 (LoadFeatGain)
+        /// - Located via string references: "CSWClass::LoadFeatGain: can't load featgain.2da" @ swkotor.exe: 0x0074b370, swkotor2.exe: 0x007c46bc
+        /// - Original implementation: Loads featgain.2da table, looks up class-specific columns with "_REG" and "_BON" suffixes
+        /// - featgain.2da structure (based on Ghidra analysis):
+        ///   - Rows: Feat gain entries (up to 50 rows, indexed 0-0x32)
+        ///   - Columns: Class name + suffix (e.g., "soldier_REG", "soldier_BON", "scout_REG", "scout_BON")
+        ///   - Values: Feat IDs (integers) or empty/**** for no feat
+        ///   - The original function iterates through all rows (0 to 0x32) and stores feat IDs in arrays
+        /// - Class column name mapping:
+        ///   - Soldier (0) -> "soldier"
+        ///   - Scout (1) -> "scout"
+        ///   - Scoundrel (2) -> "scoundrel"
+        ///   - Jedi Guardian (3) -> "jedi_guardian"
+        ///   - Jedi Consular (4) -> "jedi_consular"
+        ///   - Jedi Sentinel (5) -> "jedi_sentinel"
+        /// - The function reads both "_REG" (regular) and "_BON" (bonus) columns for the class
+        /// - For starting feats at level 1, we check row 0 (first feat gain entry)
+        /// - Returns all non-empty, non-**** feat IDs from both columns
+        /// - Note: The actual structure may vary, but row 0 typically contains level 1 feats
+        /// </remarks>
+        public List<int> GetStartingFeatsForClass(int classId, int level = 1)
+        {
+            List<int> feats = new List<int>();
+
+            // Load featgain.2da table
+            TwoDA featgainTable = GetTable("featgain");
+            if (featgainTable == null)
+            {
+                Console.WriteLine("[GameDataManager] Failed to load featgain.2da table");
+                return feats;
+            }
+
+            // Map class ID to column name prefix
+            string classColumnPrefix = GetClassColumnName(classId);
+            if (string.IsNullOrEmpty(classColumnPrefix))
+            {
+                Console.WriteLine("[GameDataManager] Unknown class ID: " + classId);
+                return feats;
+            }
+
+            // For level 1 starting feats, check row 0 (first feat gain entry)
+            // Based on Ghidra analysis: The original function iterates through rows 0 to 0x32 (50 rows)
+            // Row 0 typically contains level 1 feats
+            int rowIndex = 0;
+            if (rowIndex < 0 || rowIndex >= featgainTable.GetHeight())
+            {
+                Console.WriteLine("[GameDataManager] Invalid row index for featgain.2da: " + rowIndex);
+                return feats;
+            }
+
+            // Get row for the first feat gain entry (level 1)
+            TwoDARow row = featgainTable.GetRow(rowIndex);
+            if (row == null)
+            {
+                return feats;
+            }
+
+            // Read feats from "_REG" (regular) column
+            string regColumnName = classColumnPrefix + "_REG";
+            string regValue = row.GetString(regColumnName);
+            if (!string.IsNullOrEmpty(regValue) && regValue != "****" && regValue != "*")
+            {
+                int? regFeatId = ParseFeatId(regValue);
+                if (regFeatId.HasValue && regFeatId.Value >= 0)
+                {
+                    feats.Add(regFeatId.Value);
+                }
+            }
+
+            // Read feats from "_BON" (bonus) column
+            string bonColumnName = classColumnPrefix + "_BON";
+            string bonValue = row.GetString(bonColumnName);
+            if (!string.IsNullOrEmpty(bonValue) && bonValue != "****" && bonValue != "*")
+            {
+                int? bonFeatId = ParseFeatId(bonValue);
+                if (bonFeatId.HasValue && bonFeatId.Value >= 0)
+                {
+                    feats.Add(bonFeatId.Value);
+                }
+            }
+
+            return feats;
+        }
+
+        /// <summary>
+        /// Maps class ID to featgain.2da column name prefix.
+        /// </summary>
+        /// <param name="classId">The class ID.</param>
+        /// <returns>Column name prefix (e.g., "soldier", "scout"), or null if unknown.</returns>
+        /// <remarks>
+        /// Class Column Name Mapping:
+        /// - Based on swkotor.exe and swkotor2.exe: Class column names in featgain.2da
+        /// - Class IDs match classes.2da row indices
+        /// - Column names are lowercase with underscores (e.g., "jedi_guardian")
+        /// </remarks>
+        private string GetClassColumnName(int classId)
+        {
+            switch (classId)
+            {
+                case 0: // Soldier
+                    return "soldier";
+                case 1: // Scout
+                    return "scout";
+                case 2: // Scoundrel
+                    return "scoundrel";
+                case 3: // Jedi Guardian
+                    return "jedi_guardian";
+                case 4: // Jedi Consular
+                    return "jedi_consular";
+                case 5: // Jedi Sentinel
+                    return "jedi_sentinel";
+                default:
+                    return null;
+            }
+        }
+
+        /// <summary>
+        /// Parses a feat ID from a string value in featgain.2da.
+        /// </summary>
+        /// <param name="value">The string value (may be integer, empty, or "****").</param>
+        /// <returns>Feat ID if valid, null otherwise.</returns>
+        private int? ParseFeatId(string value)
+        {
+            if (string.IsNullOrEmpty(value) || value == "****" || value == "*")
+            {
+                return null;
+            }
+
+            // Try to parse as integer
+            int featId;
+            if (int.TryParse(value, out featId))
+            {
+                return featId;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Gets starting feat IDs for a class at level 1 from featgain.2da.
+        /// </summary>
+        /// <param name="classId">The class ID to get starting feats for.</param>
+        /// <returns>List of feat IDs that should be granted at level 1 for this class, or empty list if not found.</returns>
+        /// <remarks>
+        /// Starting Feats from featgain.2da:
+        /// - Based on swkotor.exe and swkotor2.exe: FUN_0060d1d0 @ 0x0060d1d0 (LoadFeatGain)
+        /// - Located via string references: "CSWClass::LoadFeatGain: can't load featgain.2da" @ 0x007c46bc, "featgain" @ 0x007c46ec
+        /// - Original implementation: FUN_005d63d0 reads "FeatGain" column from classes.2da for each class, then calls LoadFeatGain
+        /// - LoadFeatGain loads featgain.2da table, finds row by label (from FeatGain column), reads "_REG" and "_BON" columns
+        /// - _REG column contains regular starting feats, _BON column contains bonus starting feats
+        /// - Each column can contain up to 50 feat IDs (loop iterates 0 to 0x32 = 50 times)
+        /// - Feat IDs are stored as integers in the 2DA cells
+        /// - Based on swkotor2.exe: FUN_0060d1d0 reads feat IDs from featgain.2da _REG and _BON columns and stores them in class data structure
+        /// </remarks>
+        public List<int> GetStartingFeats(int classId)
+        {
+            List<int> featIds = new List<int>();
+
+            // Get class data to find FeatGain row label
+            ClassData classData = GetClass(classId);
+            if (classData == null)
+            {
+                return featIds;
+            }
+
+            // Load featgain.2da table
+            TwoDA featgainTable = GetTable("featgain");
+            if (featgainTable == null)
+            {
+                return featIds;
+            }
+
+            // Get FeatGain row label from classes.2da (stored in a column we need to read)
+            // Based on swkotor2.exe: FUN_005d63d0 reads "FeatGain" column from classes.2da
+            TwoDA classesTable = GetTable("classes");
+            if (classesTable == null || classId < 0 || classId >= classesTable.GetHeight())
+            {
+                return featIds;
+            }
+
+            TwoDARow classRow = classesTable.GetRow(classId);
+            if (classRow == null)
+            {
+                return featIds;
+            }
+
+            // Get FeatGain column value (row label in featgain.2da)
+            string featGainLabel = classRow.GetString("featgain", string.Empty);
+            if (string.IsNullOrEmpty(featGainLabel))
+            {
+                return featIds;
+            }
+
+            // Find the row in featgain.2da by label
+            TwoDARow featgainRow = featgainTable.FindRow(featGainLabel);
+            if (featgainRow == null)
+            {
+                return featIds;
+            }
+
+            // Read feat IDs from _REG column (regular starting feats)
+            // Based on swkotor2.exe: FUN_0060d1d0 reads from "_REG" column (loop 0 to 0x32 = 50)
+            // The columns might be _REG0, _REG1, ..., _REG49, or a single _REG column with comma-separated values
+            // Try both patterns: indexed columns first, then single column with comma-separated values
+            bool foundIndexedColumns = false;
+            for (int i = 0; i < 50; i++)
+            {
+                string columnName = "_REG" + i;
+                int? featId = featgainRow.GetInteger(columnName);
+                if (featId.HasValue && featId.Value >= 0)
+                {
+                    featIds.Add(featId.Value);
+                    foundIndexedColumns = true;
+                }
+                else if (foundIndexedColumns)
+                {
+                    // Once we start finding indexed columns, stop at first missing one
+                    break;
+                }
+            }
+
+            // If no indexed columns found, try single _REG column with comma-separated values
+            if (!foundIndexedColumns)
+            {
+                string regFeats = featgainRow.GetString("_REG", string.Empty);
+                if (!string.IsNullOrEmpty(regFeats))
+                {
+                    string[] featIdStrings = regFeats.Split(new[] { ',', ' ', '\t' }, System.StringSplitOptions.RemoveEmptyEntries);
+                    foreach (string featIdStr in featIdStrings)
+                    {
+                        if (int.TryParse(featIdStr, out int featId) && featId >= 0)
+                        {
+                            featIds.Add(featId);
+                        }
+                    }
+                }
+            }
+
+            // Read feat IDs from _BON column (bonus starting feats)
+            // Based on swkotor2.exe: FUN_0060d1d0 reads from "_BON" column (loop 0 to 0x32 = 50)
+            foundIndexedColumns = false;
+            for (int i = 0; i < 50; i++)
+            {
+                string columnName = "_BON" + i;
+                int? featId = featgainRow.GetInteger(columnName);
+                if (featId.HasValue && featId.Value >= 0)
+                {
+                    featIds.Add(featId.Value);
+                    foundIndexedColumns = true;
+                }
+                else if (foundIndexedColumns)
+                {
+                    // Once we start finding indexed columns, stop at first missing one
+                    break;
+                }
+            }
+
+            // If no indexed columns found, try single _BON column with comma-separated values
+            if (!foundIndexedColumns)
+            {
+                string bonFeats = featgainRow.GetString("_BON", string.Empty);
+                if (!string.IsNullOrEmpty(bonFeats))
+                {
+                    string[] featIdStrings = bonFeats.Split(new[] { ',', ' ', '\t' }, System.StringSplitOptions.RemoveEmptyEntries);
+                    foreach (string featIdStr in featIdStrings)
+                    {
+                        if (int.TryParse(featIdStr, out int featId) && featId >= 0)
+                        {
+                            featIds.Add(featId);
+                        }
+                    }
+                }
+            }
+
+            return featIds;
+        }
+
         #endregion
 
         #region Surface Material Data

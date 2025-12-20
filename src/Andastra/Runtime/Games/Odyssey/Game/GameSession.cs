@@ -711,8 +711,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 creatureComp.IsImmortal = true; // Player is immortal
                 creatureComp.Tag = "Player";
 
-                // Starting feats from class (will be set below from GameDataManager)
-                // TODO: Add starting feats from class featgain.2da or classes.2da
+                // Starting feats from class will be set below from GameDataManager using featgain.2da
             }
 
             // Set entity data for appearance, gender, name
@@ -773,9 +772,23 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
 
             // Add starting feats from class
             // Based on swkotor.exe and swkotor2.exe: Starting feats come from class featgain.2da
-            // Each class has automatic feats granted at level 1
-            // TODO: Load starting feats from featgain.2da for the selected class
-            // For now, player will get feats from class progression system
+            // Located via string references: "CSWClass::LoadFeatGain: can't load featgain.2da" @ swkotor.exe: 0x0074b370, swkotor2.exe: 0x007c46bc
+            // Original implementation: FUN_005bcf70 @ 0x005bcf70 (swkotor.exe), FUN_0060d1d0 @ 0x0060d1d0 (swkotor2.exe)
+            // Based on swkotor2.exe: FUN_005d63d0 reads "FeatGain" column from classes.2da for each class, then calls FUN_0060d1d0 (LoadFeatGain)
+            // LoadFeatGain loads featgain.2da table, finds row by label (from FeatGain column), reads "_REG" and "_BON" columns
+            // Each class has automatic feats granted at level 1 from featgain.2da
+            if (_gameDataManager != null && creatureComp != null && creatureComp.FeatList != null)
+            {
+                List<int> startingFeats = _gameDataManager.GetStartingFeats(classId);
+                foreach (int featId in startingFeats)
+                {
+                    if (!creatureComp.FeatList.Contains(featId))
+                    {
+                        creatureComp.FeatList.Add(featId);
+                        Console.WriteLine("[GameSession] Added starting feat ID " + featId + " for class " + classId);
+                    }
+                }
+            }
 
             // Initialize all other components (ComponentInitializer already handles this, but ensure they exist)
             Systems.ComponentInitializer.InitializeComponents(playerEntity);

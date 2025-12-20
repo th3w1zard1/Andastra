@@ -11,6 +11,7 @@ using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Games.Odyssey.Components;
+using Andastra.Runtime.Engines.Odyssey.Components;
 
 namespace Andastra.Runtime.Games.Odyssey
 {
@@ -229,12 +230,94 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </summary>
         /// <remarks>
         /// Creatures have stats, inventory, combat capabilities, etc.
-        /// Based on creature component structure in swkotor2.exe.
+        /// Based on creature component structure in swkotor.exe and swkotor2.exe.
+        /// 
+        /// Component attachment pattern:
+        /// - Based on swkotor.exe and swkotor2.exe: Creature components are attached during entity creation from UTC templates
+        /// - ComponentInitializer also handles this, but we ensure it's attached here for consistency
+        /// - Component provides: Stats (HP, abilities, skills, saves), Inventory (equipped items and inventory bag), 
+        ///   Faction (hostility relationships), QuickSlots (quick-use items/abilities), Creature (appearance, classes, feats, force powers)
+        /// - Odyssey-specific: Uses CreatureComponent, StatsComponent, InventoryComponent, QuickSlotComponent, OdysseyFactionComponent
+        /// - Component initialization: Properties loaded from entity template files (UTC) and can be modified at runtime
+        /// 
+        /// Based on reverse engineering of:
+        /// - swkotor.exe: Creature initialization (FUN_004af630 @ 0x004af630 handles creature events)
+        /// - swkotor2.exe: FUN_005261b0 @ 0x005261b0 loads creature from UTC template
+        ///   - Calls FUN_005fb0f0 @ 0x005fb0f0 to load creature data from GFF
+        ///   - Calls FUN_0050c510 @ 0x0050c510 to load script hooks
+        ///   - Calls FUN_00521d40 @ 0x00521d40 to initialize equipment and items
+        /// - FUN_004dfbb0 @ 0x004dfbb0 loads creature instances from GIT "Creature List"
+        /// - Located via string references: "Creature List" @ 0x007bd01c (swkotor2.exe), "CreatureList" @ 0x007c0c80 (swkotor2.exe)
+        /// - Component attachment: Components are attached during entity creation from GIT instances and UTC templates
+        /// - ComponentInitializer @ Odyssey/Systems/ComponentInitializer.cs attaches these components
+        /// 
+        /// Cross-engine analysis:
+        /// - Odyssey (swkotor.exe, swkotor2.exe): Uses CreatureComponent, StatsComponent, InventoryComponent, QuickSlotComponent, OdysseyFactionComponent
+        /// - Aurora (nwmain.exe, nwn2main.exe): Similar component structure with AuroraCreatureComponent, StatsComponent, InventoryComponent, AuroraFactionComponent
+        /// - Eclipse (daorigins.exe, DragonAge2.exe): Enhanced component system with StatsComponent, InventoryComponent, EclipseFactionComponent, EclipseAnimationComponent
+        /// - Infinity (, ): Streamlined component system (to be reverse engineered)
         /// </remarks>
         private void AttachCreatureComponents()
         {
-            // TODO: Attach creature-specific components
-            // StatsComponent, InventoryComponent, CombatComponent, etc.
+            // Attach creature component if not already present
+            // Based on swkotor.exe and swkotor2.exe: Creature component is attached during entity creation
+            // ComponentInitializer also handles this, but we ensure it's attached here for consistency
+            // Component provides: TemplateResRef, Tag, Conversation, Appearance, Classes, Feats, KnownPowers, EquippedItems
+            if (!HasComponent<CreatureComponent>())
+            {
+                var creatureComponent = new CreatureComponent();
+                creatureComponent.Owner = this;
+                AddComponent<CreatureComponent>(creatureComponent);
+            }
+
+            // Attach stats component if not already present
+            // Based on swkotor.exe and swkotor2.exe: Stats component is attached during entity creation
+            // ComponentInitializer also handles this, but we ensure it's attached here for consistency
+            // Component provides: CurrentHP, MaxHP, CurrentFP, MaxFP, Abilities (STR, DEX, CON, INT, WIS, CHA), Skills, Saves, BAB, AC, Level
+            if (!HasComponent<IStatsComponent>())
+            {
+                var statsComponent = new StatsComponent();
+                AddComponent<IStatsComponent>(statsComponent);
+            }
+
+            // Attach inventory component if not already present
+            // Based on swkotor.exe and swkotor2.exe: Inventory component is attached during entity creation
+            // ComponentInitializer also handles this, but we ensure it's attached here for consistency
+            // Component provides: Equipped items (slots 0-17), Inventory bag (slots 18+), GetItemInSlot, AddItem, RemoveItem, EquipItem, UnequipItem
+            if (!HasComponent<IInventoryComponent>())
+            {
+                var inventoryComponent = new InventoryComponent(this);
+                AddComponent<IInventoryComponent>(inventoryComponent);
+            }
+
+            // Attach quick slot component if not already present
+            // Based on swkotor.exe and swkotor2.exe: Quick slot component is attached during entity creation
+            // ComponentInitializer also handles this, but we ensure it's attached here for consistency
+            // Component provides: Quick slots 0-11 (12 slots total) for storing items or abilities (spells/feats) for quick use
+            if (!HasComponent<IQuickSlotComponent>())
+            {
+                var quickSlotComponent = new QuickSlotComponent(this);
+                AddComponent<IQuickSlotComponent>(quickSlotComponent);
+            }
+
+            // Attach faction component if not already present
+            // Based on swkotor.exe and swkotor2.exe: Faction component is attached during entity creation
+            // ComponentInitializer also handles this, but we ensure it's attached here for consistency
+            // Component provides: FactionId, IsHostile, GetReputation, SetReputation, TemporaryHostileTargets
+            // Set FactionID from entity data if available (loaded from UTC template)
+            if (!HasComponent<IFactionComponent>())
+            {
+                var factionComponent = new OdysseyFactionComponent();
+                factionComponent.Owner = this;
+                // Set FactionID from entity data if available (loaded from UTC template)
+                // Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 loads FactionID from GFF at offset in creature structure
+                // Located via string references: "FactionID" @ 0x007c40b4 (swkotor2.exe) / 0x0074ae48 (swkotor.exe)
+                if (GetData("FactionID") is int factionId)
+                {
+                    factionComponent.FactionId = factionId;
+                }
+                AddComponent<IFactionComponent>(factionComponent);
+            }
         }
 
         /// <summary>
