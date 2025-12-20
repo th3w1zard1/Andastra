@@ -118,6 +118,51 @@ namespace Andastra.Runtime.Content.ResourceProviders
             _currentPackage = packageName;
         }
 
+        /// <summary>
+        /// Adds a RIM file to the resource provider's search path.
+        /// RIM files are searched in reverse order (later RIM files override earlier ones).
+        /// </summary>
+        /// <param name="rimFilePath">Full path to the RIM file to add.</param>
+        /// <remarks>
+        /// Module RIM files should be added when loading modules so that module-specific
+        /// resources can be found. Based on Eclipse Engine resource loading system:
+        /// - Module RIM files contain module-specific resources (areas, scripts, etc.)
+        /// - RIM files are searched after packages but before streaming resources
+        /// - Later RIM files override earlier ones (reverse order search)
+        /// </remarks>
+        public void AddRimFile(string rimFilePath)
+        {
+            if (string.IsNullOrEmpty(rimFilePath))
+            {
+                throw new ArgumentException("RIM file path cannot be null or empty", nameof(rimFilePath));
+            }
+
+            if (!File.Exists(rimFilePath))
+            {
+                throw new FileNotFoundException($"RIM file not found: {rimFilePath}", rimFilePath);
+            }
+
+            // Add to end of list (will be searched in reverse order, so this gets highest priority)
+            if (!_rimFiles.Contains(rimFilePath))
+            {
+                _rimFiles.Add(rimFilePath);
+            }
+        }
+
+        /// <summary>
+        /// Removes a RIM file from the resource provider's search path.
+        /// </summary>
+        /// <param name="rimFilePath">Full path to the RIM file to remove.</param>
+        public void RemoveRimFile(string rimFilePath)
+        {
+            if (string.IsNullOrEmpty(rimFilePath))
+            {
+                return;
+            }
+
+            _rimFiles.Remove(rimFilePath);
+        }
+
         public async Task<Stream> OpenResourceAsync(ResourceIdentifier id, CancellationToken ct)
         {
             return await Task.Run(() =>
