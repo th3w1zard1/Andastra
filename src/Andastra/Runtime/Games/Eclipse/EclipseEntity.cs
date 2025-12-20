@@ -533,6 +533,24 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Removes from world and area systems.
         /// Cleans up all components and resources.
         /// Marks entity as invalid.
+        /// 
+        /// Entity Destruction Sequence (Eclipse):
+        /// 1. Mark entity as invalid (prevents further use)
+        /// 2. Remove from area collections (if area is available)
+        /// 3. Unregister from world collections (ObjectId, Tag, ObjectType indices)
+        /// 4. Dispose all components that implement IDisposable
+        /// 5. Clear all component references
+        /// 
+        /// Based on daorigins.exe and DragonAge2.exe: Entity destruction pattern
+        /// - Located via string references: Entity destruction removes entity from all lookup indices
+        /// - Original implementation: Entities are removed from all lookup indices when destroyed
+        /// - World maintains indices: ObjectId dictionary, Tag dictionary, ObjectType dictionary
+        /// - Areas maintain indices: Type-specific lists (Creatures, Placeables, Doors, etc.), physics system
+        /// - Entity cleanup: Components are disposed, resources freed, entity marked invalid
+        /// - Physics cleanup: Entity removed from physics system if it has physics components
+        /// 
+        /// Note: World.DestroyEntity calls UnregisterEntity before calling entity.Destroy(), 
+        /// but this method handles unregistration directly for safety and completeness.
         /// </remarks>
         public override void Destroy()
         {
@@ -541,10 +559,33 @@ namespace Andastra.Runtime.Games.Eclipse
 
             _isValid = false;
 
-            // Remove from world/area
+            // Remove from world and area collections
             if (_world != null)
             {
-                // TODO: Remove from world's entity collections
+                // Remove from area collections first (if entity belongs to an area)
+                // Based on daorigins.exe and DragonAge2.exe: Entities belong to areas and must be removed from area collections
+                // Original implementation: Area.RemoveEntity removes entity from area's type-specific lists and physics system
+                if (_areaId != 0)
+                {
+                    IArea area = _world.GetArea(_areaId);
+                    if (area != null && area is EclipseArea eclipseArea)
+                    {
+                        // Remove entity from area's collections
+                        // Based on daorigins.exe and DragonAge2.exe: Area.RemoveEntity removes from type-specific lists and physics system
+                        // EclipseArea.RemoveEntity handles removal from Creatures, Placeables, Doors, Triggers, Waypoints, Sounds lists
+                        // and from physics system if entity has physics components
+                        eclipseArea.RemoveEntity(this);
+                    }
+                }
+
+                // Unregister from world collections
+                // Based on daorigins.exe and DragonAge2.exe: World.UnregisterEntity removes entity from all world lookup indices
+                // Original implementation: UnregisterEntity removes from:
+                // - _entitiesById dictionary (ObjectId lookup)
+                // - _entitiesByTag dictionary (Tag-based lookup, case-insensitive)
+                // - _entitiesByType dictionary (ObjectType-based lookup)
+                // This ensures entity is no longer accessible via GetEntity, GetEntityByTag, GetEntitiesOfType, GetAllEntities
+                _world.UnregisterEntity(this);
             }
 
             // Clean up components

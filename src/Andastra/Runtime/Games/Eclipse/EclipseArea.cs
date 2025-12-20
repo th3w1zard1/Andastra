@@ -91,7 +91,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <remarks>
         /// Eclipse areas are the most complex with advanced initialization.
         /// Includes lighting setup, physics world creation, and effect systems.
-        /// 
+        ///
         /// Module parameter:
         /// - If provided, enables loading WOK files for walkmesh construction
         /// - Required for full walkmesh functionality when rooms are available
@@ -357,23 +357,23 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <remarks>
         /// Eclipse saves runtime state changes.
         /// Includes dynamic lighting, physics state, destructible changes.
-        /// 
+        ///
         /// Based on reverse engineering of:
         /// - daorigins.exe: Area property saving functions (Eclipse engine ARE file format)
         /// - DragonAge2.exe: Enhanced area property serialization
-        /// 
+        ///
         /// Eclipse uses the same ARE file format structure as Odyssey/Aurora engines.
         /// All engines (Odyssey, Aurora, Eclipse) use the same GFF-based ARE format.
-        /// 
+        ///
         /// This implementation saves runtime-modifiable area properties to a valid ARE GFF format.
         /// Saves properties that can change during gameplay: Unescapable, Tag, DisplayName, ResRef.
         /// Creates minimal but valid ARE GFF structure following the standard ARE format specification.
-        /// 
+        ///
         /// ARE file format structure:
         /// - Root struct contains: Tag, Name, ResRef, Unescapable, lighting, fog, grass properties
         /// - Same GFF format as Odyssey/Aurora engines (all engines use same ARE structure)
         /// - Eclipse-specific: May include additional fields for physics, destructible geometry
-        /// 
+        ///
         /// Based on official BioWare ARE format specification:
         /// - vendor/PyKotor/wiki/Bioware-Aurora-AreaFile.md
         /// - All engines (Odyssey, Aurora, Eclipse) use the same ARE file format structure
@@ -545,23 +545,23 @@ namespace Andastra.Runtime.Games.Eclipse
         /// </summary>
         /// <remarks>
         /// Based on ARE file loading in daorigins.exe, DragonAge2.exe.
-        /// 
+        ///
         /// Function addresses (require Ghidra verification):
         /// - daorigins.exe: Area geometry loading functions (search for ARE file parsing)
         /// - DragonAge2.exe: Enhanced area geometry loading with physics integration
-        /// 
+        ///
         /// Eclipse ARE file structure (GFF with "ARE " signature):
         /// - Root struct contains: Tag, Name, ResRef, lighting, fog, grass properties
         /// - Same GFF format as Odyssey/Aurora engines (all engines use same ARE structure)
         /// - Eclipse-specific: May include additional fields for physics, destructible geometry
-        /// 
+        ///
         /// Navigation mesh loading:
         /// - Eclipse uses navigation mesh format similar to Odyssey (vertices, faces, adjacency)
         /// - Supports dynamic obstacles and destructible terrain modifications
         /// - Multi-level navigation surfaces (ground, platforms, elevated surfaces)
         /// - Physics-aware navigation with collision avoidance
         /// - For now, creates empty navigation mesh; full geometry loading requires additional file format research
-        /// 
+        ///
         /// Based on official BioWare ARE format specification:
         /// - vendor/PyKotor/wiki/Bioware-Aurora-AreaFile.md
         /// - All engines (Odyssey, Aurora, Eclipse) use the same ARE file format structure
@@ -679,11 +679,11 @@ namespace Andastra.Runtime.Games.Eclipse
         /// </summary>
         /// <remarks>
         /// Based on daorigins.exe/DragonAge2.exe walkmesh loading system.
-        /// 
+        ///
         /// Function addresses (require Ghidra verification):
         /// - daorigins.exe: Walkmesh loading from WOK files
         /// - DragonAge2.exe: Enhanced walkmesh loading with physics integration
-        /// 
+        ///
         /// Walkmesh loading process:
         /// 1. For each room in _rooms, load corresponding WOK file (room.ModelName = WOK resref)
         /// 2. Parse BWM format from WOK file data
@@ -692,7 +692,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// 5. Build AABB tree for spatial acceleration
         /// 6. Compute adjacency between walkable faces for pathfinding
         /// 7. Initialize multi-level navigation surfaces
-        /// 
+        ///
         /// BWM file format (same as Odyssey):
         /// - Header: "BWM V1.0" signature (8 bytes)
         /// - Walkmesh type: 0 = PWK/DWK (placeable/door), 1 = WOK (area walkmesh)
@@ -701,13 +701,13 @@ namespace Andastra.Runtime.Games.Eclipse
         /// - Materials: Array of uint32 (SurfaceMaterial ID per face)
         /// - Adjacency: Array of int32 triplets (face/edge pairs, -1 = no neighbor)
         /// - AABB tree: Spatial acceleration structure for efficient queries
-        /// 
+        ///
         /// Eclipse-specific features:
         /// - Multi-level navigation surfaces (ground, platforms, elevated surfaces)
         /// - Dynamic obstacles (loaded separately, added at runtime)
         /// - Destructible terrain modifications (applied at runtime)
         /// - Physics-aware navigation with collision avoidance
-        /// 
+        ///
         /// Based on BWM file format documentation:
         /// - vendor/PyKotor/wiki/BWM-File-Format.md
         /// </remarks>
@@ -905,11 +905,11 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <remarks>
         /// Eclipse-specific advanced lighting initialization.
         /// Sets up dynamic lights, shadows, global illumination.
-        /// 
+        ///
         /// Based on reverse engineering of:
         /// - daorigins.exe: Lighting system initialization from ARE file data
         /// - DragonAge2.exe: Enhanced lighting initialization with shadow mapping
-        /// 
+        ///
         /// Parses ARE file to extract lighting properties:
         /// - Sun/Moon ambient and diffuse colors
         /// - Dynamic ambient color
@@ -1058,7 +1058,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <remarks>
         /// Eclipse physics world setup.
         /// Creates rigid bodies, collision shapes, constraints.
-        /// 
+        ///
         /// Based on reverse engineering of:
         /// - daorigins.exe: Physics world initialization
         /// - DragonAge2.exe: Enhanced physics system initialization
@@ -1103,6 +1103,23 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Saved physics state for area transition.
         /// </summary>
         private PhysicsState _savedPhysicsState;
+
+        /// <summary>
+        /// Removes an entity from this area's collections.
+        /// </summary>
+        /// <remarks>
+        /// Public method for removing entities from area collections.
+        /// Calls the protected RemoveEntityFromArea method.
+        /// Eclipse-specific: Also removes entity from physics system.
+        /// 
+        /// Based on daorigins.exe and DragonAge2.exe: Entity removal from area collections.
+        /// Entities are removed from type-specific lists (creatures, placeables, doors, etc.)
+        /// and from physics system if they have physics components.
+        /// </remarks>
+        public void RemoveEntity(IEntity entity)
+        {
+            RemoveEntityFromArea(entity);
+        }
 
         /// <summary>
         /// Removes an entity from this area's collections.
@@ -1214,11 +1231,11 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <remarks>
         /// Eclipse engine preserves physics state (velocity, angular velocity, constraints)
         /// when entities transition between areas to maintain physics continuity.
-        /// 
+        ///
         /// Based on reverse engineering of:
         /// - daorigins.exe: Physics state preservation during area transitions
         /// - DragonAge2.exe: Enhanced physics state transfer with constraint preservation
-        /// 
+        ///
         /// This method queries the physics system for the entity's rigid body state,
         /// including velocity, angular velocity, mass, and all constraints attached to the entity.
         /// </remarks>
@@ -1294,11 +1311,11 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <remarks>
         /// Restores physics state to maintain continuity across area transitions.
         /// Adds entity to target area's physics system with preserved state.
-        /// 
+        ///
         /// Based on reverse engineering of:
         /// - daorigins.exe: Physics state restoration during area transitions
         /// - DragonAge2.exe: Enhanced state restoration with constraint recreation
-        /// 
+        ///
         /// This method restores velocity, angular velocity, mass, and constraints
         /// to the entity's rigid body in the target area's physics system.
         /// </remarks>
@@ -1363,7 +1380,7 @@ namespace Andastra.Runtime.Games.Eclipse
                             // Update constraint entity references if needed
                             // EntityA should be the current entity
                             constraint.EntityA = entity;
-                            
+
                             // Add constraint to physics system
                             eclipsePhysics.AddConstraint(constraint);
                         }
@@ -1378,11 +1395,11 @@ namespace Andastra.Runtime.Games.Eclipse
         /// </summary>
         /// <remarks>
         /// Creates a rigid body in the physics world for the entity.
-        /// 
+        ///
         /// Based on reverse engineering of:
         /// - daorigins.exe: Rigid body creation for entities
         /// - DragonAge2.exe: Enhanced rigid body creation with shape detection
-        /// 
+        ///
         /// This method:
         /// 1. Gets entity's transform component for position
         /// 2. Determines collision shape from entity components
@@ -1444,11 +1461,11 @@ namespace Andastra.Runtime.Games.Eclipse
         /// </summary>
         /// <remarks>
         /// Removes the rigid body from the physics world.
-        /// 
+        ///
         /// Based on reverse engineering of:
         /// - daorigins.exe: Rigid body removal from physics world
         /// - DragonAge2.exe: Enhanced cleanup with constraint removal
-        /// 
+        ///
         /// This method:
         /// 1. Removes rigid body from physics system
         /// 2. Removes all constraints attached to the entity
@@ -1499,7 +1516,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Constraint data structures for physics joints
         /// - DragonAge2.exe: Enhanced constraint system with multiple constraint types
-        /// 
+        ///
         /// Constraints can be:
         /// - Point-to-point (hinge-like)
         /// - Distance-based
