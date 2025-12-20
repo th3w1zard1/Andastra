@@ -17,7 +17,7 @@ using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Tools;
 using Andastra.Parsing.Logger;
 using Andastra.Parsing.Extract;
-using Andastra.Parsing.Formats.GFF.Generics;
+using Andastra.Parsing.Resource.Generics;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
@@ -831,7 +831,7 @@ namespace HolocronToolset.Data
             var walkmeshes = new List<BWM>();
             foreach (var room in Rooms)
             {
-                var bwm = IndoorMapRoomHelper.DeepCopyBwm(room.BaseWalkmesh());
+                var bwm = DeepCopyBwm(room.BaseWalkmesh());
                 bwm.Flip(room.FlipX, room.FlipY);
                 bwm.Rotate(room.Rotation);
                 bwm.Translate(room.Position.X, room.Position.Y, room.Position.Z);
@@ -879,29 +879,28 @@ namespace HolocronToolset.Data
                     }
 
                     // Save transformation state (matching Python: painter.save())
-                    using (context.PushTransform())
+                    // Build transformation matrix: translate -> rotate -> scale -> translate to center
+                    double translateX = room.Position.X * 10 - bbmin.X * 10;
+                    double translateY = room.Position.Y * 10 - bbmin.Y * 10;
+                    double imageWidth = roomImage.PixelSize.Width;
+                    double imageHeight = roomImage.PixelSize.Height;
+                    double scaleX = room.FlipX ? -1.0 : 1.0;
+                    double scaleY = room.FlipY ? -1.0 : 1.0;
+                    double rotationRadians = room.Rotation;
+
+                    // Build composite transformation matrix (applied in reverse order of operations)
+                    // 1. Translate to center image (last operation)
+                    // 2. Scale for flipping
+                    // 3. Rotate
+                    // 4. Translate to room position (first operation)
+                    var transform = Matrix.Identity;
+                    transform = transform * Matrix.CreateTranslation(translateX, translateY);
+                    transform = transform * Matrix.CreateRotation(rotationRadians);
+                    transform = transform * Matrix.CreateScale(scaleX, scaleY);
+                    transform = transform * Matrix.CreateTranslation(-imageWidth / 2, -imageHeight / 2);
+
+                    using (context.PushTransform(transform))
                     {
-                        // Translate to room position (matching Python lines 988-990)
-                        // Python: painter.translate(room.position.x * 10 - bbmin.x * 10, room.position.y * 10 - bbmin.y * 10)
-                        double translateX = room.Position.X * 10 - bbmin.X * 10;
-                        double translateY = room.Position.Y * 10 - bbmin.Y * 10;
-                        context.Transform = Matrix.CreateTranslation(translateX, translateY);
-
-                        // Rotate (matching Python line 992: painter.rotate(room.rotation))
-                        // Note: Python QPainter.rotate uses degrees, but we need radians
-                        double rotationDegrees = room.Rotation * (180.0 / Math.PI);
-                        context.Transform = context.Transform * Matrix.CreateRotation(rotationDegrees * (Math.PI / 180.0));
-
-                        // Scale for flipping (matching Python line 993: painter.scale(-1 if room.flip_x else 1, -1 if room.flip_y else 1))
-                        double scaleX = room.FlipX ? -1.0 : 1.0;
-                        double scaleY = room.FlipY ? -1.0 : 1.0;
-                        context.Transform = context.Transform * Matrix.CreateScale(scaleX, scaleY);
-
-                        // Translate to center image (matching Python line 994: painter.translate(-image.width() / 2, -image.height() / 2))
-                        double imageWidth = roomImage.PixelSize.Width;
-                        double imageHeight = roomImage.PixelSize.Height;
-                        context.Transform = context.Transform * Matrix.CreateTranslation(-imageWidth / 2, -imageHeight / 2);
-
                         // Draw the image (matching Python line 996: painter.drawImage(0, 0, image))
                         context.DrawImage(roomImage, new Rect(0, 0, imageWidth, imageHeight));
                     }
@@ -1118,13 +1117,13 @@ namespace HolocronToolset.Data
     // Original: class MinimapData(NamedTuple):
     public class MinimapData
     {
-        public object Image { get; set; }
+        public Bitmap Image { get; set; }
         public Vector2 ImagePointMin { get; set; }
         public Vector2 ImagePointMax { get; set; }
         public Vector2 WorldPointMin { get; set; }
         public Vector2 WorldPointMax { get; set; }
 
-        public MinimapData(object image, Vector2 imagePointMin, Vector2 imagePointMax, Vector2 worldPointMin, Vector2 worldPointMax)
+        public MinimapData(Bitmap image, Vector2 imagePointMin, Vector2 imagePointMax, Vector2 worldPointMin, Vector2 worldPointMax)
         {
             Image = image;
             ImagePointMin = imagePointMin;
