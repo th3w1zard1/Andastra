@@ -2069,14 +2069,66 @@ void helper() {
             throw new NotImplementedException("TestNssEditorTerminalSetup: Terminal setup test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_nss_editor_context_menu_exists (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:979-1001)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:979-1001
         // Original: def test_nss_editor_context_menu_exists(qtbot, installation: HTInstallation): Test context menu exists
         [Fact]
         public void TestNssEditorContextMenuExists()
         {
-            // TODO: STUB - Implement context menu exists test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:979-1001
-            throw new NotImplementedException("TestNssEditorContextMenuExists: Context menu exists test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor2";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+
+            // If K2 not available, try K1
+            if (installation == null)
+            {
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            // Matching Python: editor = NSSEditor(None, installation)
+            var editor = new NSSEditor(null, installation);
+
+            // Matching Python: editor.new()
+            editor.New();
+
+            // Matching Python: editor.ui.codeEdit.setPlainText("void main() { int x = 5; }")
+            if (editor.CodeEdit != null)
+            {
+                editor.CodeEdit.Text = "void main() { int x = 5; }";
+            }
+
+            // Matching Python: assert hasattr(editor, 'editor_context_menu')
+            // Matching Python: assert callable(editor.editor_context_menu)
+            // Verify the method exists and is callable
+            var methodInfo = editor.GetType().GetMethod("EditorContextMenu", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            methodInfo.Should().NotBeNull("EditorContextMenu method should exist");
+
+            // Verify the method can be called (doesn't throw)
+            Action callMethod = () => editor.EditorContextMenu(new Avalonia.Point(100, 100));
+            callMethod.Should().NotThrow("EditorContextMenu should be callable without throwing exceptions");
+
+            // Verify context menu was created and assigned
+            if (editor.CodeEdit != null)
+            {
+                editor.CodeEdit.ContextMenu.Should().NotBeNull("Context menu should be created and assigned to code editor");
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1003-1016

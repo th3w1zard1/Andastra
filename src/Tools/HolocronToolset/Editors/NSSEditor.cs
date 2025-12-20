@@ -1527,6 +1527,163 @@ namespace HolocronToolset.Editors
         /// </summary>
         public Completer Completer => _completer;
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:979-1085
+        // Original: def editor_context_menu(self, pos: QPoint):
+        /// <summary>
+        /// Enhanced context menu with VS Code-like organization.
+        /// Creates a context menu for the code editor with navigation, editing, and code action options.
+        /// </summary>
+        /// <param name="pos">The position where the context menu should appear (in screen coordinates).</param>
+        public void EditorContextMenu(Avalonia.Point pos)
+        {
+            if (_codeEdit == null)
+            {
+                return;
+            }
+
+            // Create standard context menu (Cut, Copy, Paste, etc.)
+            // Matching Python: menu: QMenu | None = self.ui.codeEdit.createStandardContextMenu()
+            var contextMenu = new ContextMenu();
+
+            // Get word under cursor for context-aware actions
+            // Matching Python: cursor: QTextCursor = self.ui.codeEdit.cursorForPosition(pos)
+            // Matching Python: cursor.select(QTextCursor.SelectionType.WordUnderCursor)
+            // Matching Python: word_under_cursor: str = cursor.selectedText().strip()
+            string wordUnderCursor = "";
+            if (!string.IsNullOrEmpty(_codeEdit.Text) && _codeEdit.SelectionStart >= 0)
+            {
+                int cursorPos = _codeEdit.SelectionStart;
+                string text = _codeEdit.Text;
+                
+                // Find word boundaries
+                int start = cursorPos;
+                int end = cursorPos;
+                
+                // Move start backward to beginning of word
+                while (start > 0 && (char.IsLetterOrDigit(text[start - 1]) || text[start - 1] == '_'))
+                {
+                    start--;
+                }
+                
+                // Move end forward to end of word
+                while (end < text.Length && (char.IsLetterOrDigit(text[end]) || text[end] == '_'))
+                {
+                    end++;
+                }
+                
+                if (end > start)
+                {
+                    wordUnderCursor = text.Substring(start, end - start).Trim();
+                }
+            }
+
+            // Standard editing actions (Cut, Copy, Paste)
+            var cutItem = new MenuItem { Header = "Cut", HotKey = new KeyGesture(Key.X, KeyModifiers.Control) };
+            cutItem.Click += (s, e) => { if (_codeEdit != null) _codeEdit.Cut(); };
+            contextMenu.Items.Add(cutItem);
+
+            var copyItem = new MenuItem { Header = "Copy", HotKey = new KeyGesture(Key.C, KeyModifiers.Control) };
+            copyItem.Click += (s, e) => { if (_codeEdit != null) _codeEdit.Copy(); };
+            contextMenu.Items.Add(copyItem);
+
+            var pasteItem = new MenuItem { Header = "Paste", HotKey = new KeyGesture(Key.V, KeyModifiers.Control) };
+            pasteItem.Click += (s, e) => { if (_codeEdit != null) _codeEdit.Paste(); };
+            contextMenu.Items.Add(pasteItem);
+
+            contextMenu.Items.Add(new Separator());
+
+            // Navigation section (if word under cursor exists)
+            if (!string.IsNullOrEmpty(wordUnderCursor))
+            {
+                // Go to Definition (F12) - placeholder for now
+                var goToDefItem = new MenuItem { Header = "Go to Definition", HotKey = new KeyGesture(Key.F12) };
+                goToDefItem.Click += (s, e) => { /* TODO: Implement go to definition */ };
+                contextMenu.Items.Add(goToDefItem);
+
+                // Find All References (Shift+F12) - placeholder for now
+                var findRefsItem = new MenuItem { Header = "Find All References", HotKey = new KeyGesture(Key.F12, KeyModifiers.Shift) };
+                findRefsItem.Click += (s, e) => { /* TODO: Implement find all references */ };
+                contextMenu.Items.Add(findRefsItem);
+
+                contextMenu.Items.Add(new Separator());
+            }
+
+            // Go to Line (Ctrl+G)
+            var goToLineItem = new MenuItem { Header = "Go to Line...", HotKey = new KeyGesture(Key.G, KeyModifiers.Control) };
+            goToLineItem.Click += (s, e) => { /* TODO: Implement go to line dialog */ };
+            contextMenu.Items.Add(goToLineItem);
+
+            contextMenu.Items.Add(new Separator());
+
+            // Bookmarks section
+            int currentLine = GetCurrentLineNumber();
+            bool hasBookmark = HasBookmarkAtLine(currentLine);
+
+            if (hasBookmark)
+            {
+                var removeBookmarkItem = new MenuItem { Header = "Remove Bookmark" };
+                removeBookmarkItem.Click += (s, e) => { RemoveBookmarkAtLine(currentLine); };
+                contextMenu.Items.Add(removeBookmarkItem);
+            }
+            else
+            {
+                var addBookmarkItem = new MenuItem { Header = "Add Bookmark" };
+                addBookmarkItem.Click += (s, e) => { AddBookmark(); };
+                contextMenu.Items.Add(addBookmarkItem);
+            }
+
+            // Show context menu at the specified position
+            // Note: In Avalonia, we would typically set ContextMenu property and let the system handle it
+            // For this method, we create the menu but don't automatically show it
+            // The caller or event handler would show it
+            _codeEdit.ContextMenu = contextMenu;
+        }
+
+        // Helper method to check if bookmark exists at a line
+        private bool HasBookmarkAtLine(int lineNumber)
+        {
+            if (_bookmarkTree == null)
+            {
+                return false;
+            }
+
+            var itemsList = _bookmarkTree.ItemsSource as List<TreeViewItem> ??
+                          (_bookmarkTree.Items as IEnumerable<TreeViewItem> ?? new List<TreeViewItem>()).ToList();
+
+            foreach (var item in itemsList)
+            {
+                if (item?.Tag is BookmarkData bookmarkData && bookmarkData.LineNumber == lineNumber)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // Helper method to remove bookmark at a specific line
+        private void RemoveBookmarkAtLine(int lineNumber)
+        {
+            if (_bookmarkTree == null)
+            {
+                return;
+            }
+
+            var itemsList = _bookmarkTree.ItemsSource as List<TreeViewItem> ??
+                          (_bookmarkTree.Items as IEnumerable<TreeViewItem> ?? new List<TreeViewItem>()).ToList();
+
+            var itemToRemove = itemsList.FirstOrDefault(item =>
+                item?.Tag is BookmarkData bookmarkData && bookmarkData.LineNumber == lineNumber);
+
+            if (itemToRemove != null)
+            {
+                itemsList.Remove(itemToRemove);
+                _bookmarkTree.ItemsSource = itemsList;
+                SaveBookmarks();
+                UpdateBookmarkVisualization();
+            }
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:905-950
         // Original: def _update_game_specific_data(self):
         /// <summary>
