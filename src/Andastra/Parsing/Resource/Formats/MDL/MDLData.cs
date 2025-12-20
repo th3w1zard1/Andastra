@@ -166,6 +166,12 @@ namespace Andastra.Parsing.Formats.MDLData
     public class MDLController : IEquatable<MDLController>
     {
         public MDLControllerType ControllerType { get; set; }
+        public MDLControllerType Type
+        {
+            get { return ControllerType; }
+            set { ControllerType = value; }
+        }
+        public bool IsBezier { get; set; }
         public List<MDLControllerRow> Rows { get; set; }
         public int DataOffset { get; set; }
         public int ColumnCount { get; set; }
@@ -176,6 +182,7 @@ namespace Andastra.Parsing.Formats.MDLData
         public MDLController()
         {
             ControllerType = MDLControllerType.INVALID;
+            IsBezier = false;
             Rows = new List<MDLControllerRow>();
         }
 
@@ -423,12 +430,16 @@ namespace Andastra.Parsing.Formats.MDLData
         public string DepthTexture { get; set; }
         public int UpdateFlags { get; set; }
         public int RenderFlags { get; set; }
+        
+        // ASCII MDL format compatibility property
+        public int Flags { get; set; }
 
         public MDLEmitter()
         {
             Texture = string.Empty;
             ChunkName = string.Empty;
             DepthTexture = string.Empty;
+            Flags = 0;
         }
 
         public override bool Equals(object obj) => obj is MDLEmitter other && Equals(other);
@@ -483,7 +494,7 @@ namespace Andastra.Parsing.Formats.MDLData
         }
     }
 
-    public class MDLDangly : IEquatable<MDLDangly>
+    public class MDLDangly : MDLMesh, IEquatable<MDLDangly>
     {
         public float Displacement { get; set; }
         public float Tightness { get; set; }
@@ -491,6 +502,7 @@ namespace Andastra.Parsing.Formats.MDLData
         public Vector3 Constraints { get; set; }
 
         public MDLDangly()
+            : base()
         {
             Constraints = Vector3.Zero;
         }
@@ -500,13 +512,23 @@ namespace Andastra.Parsing.Formats.MDLData
         public bool Equals(MDLDangly other)
         {
             if (other == null) return false;
-            return Displacement.Equals(other.Displacement) &&
+            return base.Equals(other) &&
+                   Displacement.Equals(other.Displacement) &&
                    Tightness.Equals(other.Tightness) &&
                    Period.Equals(other.Period) &&
                    Constraints.Equals(other.Constraints);
         }
 
-        public override int GetHashCode() => HashCode.Combine(Displacement, Tightness, Period, Constraints);
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(base.GetHashCode());
+            hash.Add(Displacement);
+            hash.Add(Tightness);
+            hash.Add(Period);
+            hash.Add(Constraints);
+            return hash.ToHashCode();
+        }
     }
 
     public class MDLSaber : IEquatable<MDLSaber>
@@ -518,11 +540,25 @@ namespace Andastra.Parsing.Formats.MDLData
         public float Hardness { get; set; }
         public string Texture { get; set; }
         public string EnvTexture { get; set; }
+        
+        // ASCII MDL format compatibility properties
+        public int SaberType { get; set; }
+        public int SaberColor { get; set; }
+        public float SaberLength { get; set; }
+        public float SaberWidth { get; set; }
+        public int SaberFlareColor { get; set; }
+        public float SaberFlareRadius { get; set; }
 
         public MDLSaber()
         {
             Texture = string.Empty;
             EnvTexture = string.Empty;
+            SaberType = 0;
+            SaberColor = 0;
+            SaberLength = 0.0f;
+            SaberWidth = 0.0f;
+            SaberFlareColor = 0;
+            SaberFlareRadius = 0.0f;
         }
 
         public override bool Equals(object obj) => obj is MDLSaber other && Equals(other);
@@ -547,11 +583,17 @@ namespace Andastra.Parsing.Formats.MDLData
         public string ModelName { get; set; }
         public string SupermodelName { get; set; }
         public int DummyRot { get; set; }
+        
+        // ASCII MDL format compatibility properties
+        public string Model { get; set; }
+        public bool Reattachable { get; set; }
 
         public MDLReference()
         {
             ModelName = string.Empty;
             SupermodelName = string.Empty;
+            Model = string.Empty;
+            Reattachable = false;
         }
 
         public override bool Equals(object obj) => obj is MDLReference other && Equals(other);
@@ -574,6 +616,12 @@ namespace Andastra.Parsing.Formats.MDLData
         public List<MDLBoneVertex> BoneWeights { get; set; }
         public List<int> BoneWeightIndices { get; set; }
         public int NodeCount { get; set; }
+        
+        // ASCII MDL format compatibility properties
+        public List<Vector4> Qbones { get; set; }
+        public List<Vector3> Tbones { get; set; }
+        public List<int> BoneIndices { get; set; }
+        public List<MDLBoneVertex> VertexBones { get; set; }
 
         public MDLSkin()
         {
@@ -581,6 +629,10 @@ namespace Andastra.Parsing.Formats.MDLData
             BoneNumbers = new List<int>();
             BoneWeights = new List<MDLBoneVertex>();
             BoneWeightIndices = new List<int>();
+            Qbones = new List<Vector4>();
+            Tbones = new List<Vector3>();
+            BoneIndices = new List<int>();
+            VertexBones = new List<MDLBoneVertex>();
         }
 
         public override bool Equals(object obj) => obj is MDLSkin other && Equals(other);
@@ -654,6 +706,30 @@ namespace Andastra.Parsing.Formats.MDLData
         public int Transpar { get; set; }
         public int Rotational { get; set; }
         public int Unknown12 { get; set; }
+
+        // ASCII MDL format compatibility properties
+        public int TransparencyHint { get; set; }
+        public bool HasLightmap { get; set; }
+        public List<Vector3> VertexPositions
+        {
+            get { return Vertices; }
+            set { Vertices = value; }
+        }
+        public List<Vector3> VertexNormals
+        {
+            get { return Normals; }
+            set { Normals = value; }
+        }
+        public List<Vector2> VertexUv1
+        {
+            get { return UV1; }
+            set { UV1 = value; }
+        }
+        public List<Vector2> VertexUv2
+        {
+            get { return UV2; }
+            set { UV2 = value; }
+        }
 
         public MDLMesh()
         {
@@ -804,6 +880,14 @@ namespace Andastra.Parsing.Formats.MDLData
         public MDLMesh Mesh { get; set; }
         public MDLReference Reference { get; set; }
         public MDLWalkmesh Walkmesh { get; set; }
+        
+        // ASCII MDL format compatibility fields (matching PyKotor mdl_data.py)
+        public MDLNodeType NodeType { get; set; }
+        public int ParentId { get; set; }
+        public MDLLight Light { get; set; }
+        public MDLEmitter Emitter { get; set; }
+        public MDLSaber Saber { get; set; }
+        public MDLWalkmesh Aabb { get; set; }
 
         public MDLNode()
         {
@@ -813,6 +897,8 @@ namespace Andastra.Parsing.Formats.MDLData
             Orientation = new Vector4(0, 0, 0, 1);
             Children = new List<MDLNode>();
             Controllers = new List<MDLController>();
+            NodeType = MDLNodeType.DUMMY;
+            ParentId = -1;
         }
 
         public override bool Equals(object obj) => obj is MDLNode other && Equals(other);
@@ -883,6 +969,9 @@ namespace Andastra.Parsing.Formats.MDLData
         public List<Vector3> Normals { get; set; }
         public List<int> Adjacency { get; set; }
         public List<int> Adjacency2 { get; set; }
+        
+        // ASCII MDL format compatibility property
+        public List<MDLNode> Aabbs { get; set; }
 
         public MDLWalkmesh()
         {
@@ -892,6 +981,7 @@ namespace Andastra.Parsing.Formats.MDLData
             Normals = new List<Vector3>();
             Adjacency = new List<int>();
             Adjacency2 = new List<int>();
+            Aabbs = new List<MDLNode>();
         }
 
         public override bool Equals(object obj) => obj is MDLWalkmesh other && Equals(other);
