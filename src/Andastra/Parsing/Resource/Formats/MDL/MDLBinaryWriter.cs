@@ -20,6 +20,16 @@ namespace Andastra.Parsing.Formats.MDL
         private readonly RawBinaryWriter _mdxWriter;
         private readonly Game _game;
 
+        // MDX data flags (matching PyKotor _MDXDataFlags)
+        private static class MDXDataFlags
+        {
+            public const uint VERTEX = 0x0001;
+            public const uint TEXTURE1 = 0x0002;
+            public const uint TEXTURE2 = 0x0004;
+            public const uint NORMAL = 0x0020;
+            public const uint BUMPMAP = 0x0080;
+        }
+
         // Internal state for writing
         private List<string> _names;
         private List<int> _nameOffsets;
@@ -1118,418 +1128,67 @@ namespace Andastra.Parsing.Formats.MDL
 
         private int _NodeType(MDLData.MDLNode node)
         {
-            int typeId = 1;
+            // Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_types.py:41-69
+            // Reference: vendor/mdlops/MDLOpsM.pm:301-311 (Node type quick reference)
+            // Reference: vendor/kotorblender/io_scene_kotor/format/mdl/types.py:93-101 (Node flags)
+            // Base node always has HEADER flag (0x0001)
+            int typeId = (int)MDLNodeFlags.HEADER;
+
+            // MESH flag (0x0020) - Triangle mesh geometry
             if (node.Mesh != null)
             {
                 typeId |= (int)MDLNodeFlags.MESH;
             }
-            // TODO: Add other node type flags (SKIN, DANGLY, SABER, AABB, EMITTER, LIGHT, REFERENCE)
-            return typeId;
-        }
 
-        private void _UpdateMdx(_Node binNode, MDLData.MDLNode mdlNode)
-        {
-            // TODO: Update MDX data (vertex normals, UVs, skinning)
-        }
-
-        private void _WriteAll()
-        {
-            // Update MDX data for all nodes with meshes
-            for (int i = 0; i < _binNodes.Count; i++)
+            // SKIN flag (0x0040) - Skinned mesh with bone weighting
+            // Note: SKIN requires MESH flag to be set (skin mesh = HEADER + MESH + SKIN = 0x061 = 97)
+            if (node.Skin != null)
             {
-                if (_binNodes[i].Trimesh != null)
-                {
-                    _UpdateMdx(_binNodes[i], _mdlNodes[i]);
-                }
+                typeId |= (int)MDLNodeFlags.SKIN;
             }
 
-            // Set file header properties
-            _fileHeader.Geometry.FunctionPointer0 = GeometryHeader.K1_FUNCTION_POINTER0;
-            _fileHeader.Geometry.FunctionPointer1 = GeometryHeader.K1_FUNCTION_POINTER1;
-            _fileHeader.Geometry.ModelName = _mdl.Name;
-            _fileHeader.Geometry.NodeCount = (uint)_mdlNodes.Count;
-            _fileHeader.Geometry.GeometryType = GeometryHeader.GEOM_TYPE_ROOT;
-            _fileHeader.OffsetToSuperRoot = _fileHeader.Geometry.RootNodeOffset;
-            _fileHeader.AnimationCount = (uint)_mdl.Anims.Count;
-            _fileHeader.AnimationCount2 = (uint)_mdl.Anims.Count;
-            _fileHeader.Supermodel = _mdl.Supermodel ?? "";
-            _fileHeader.NameOffsetsCount = (uint)_names.Count;
-            _fileHeader.NameOffsetsCount2 = (uint)_names.Count;
-
-            // Write MDL data to memory buffer first
-            using (var mdlBuffer = RawBinaryWriter.ToByteArray())
+            // DANGLY flag (0x0100) - Cloth/hair physics mesh with constraints
+            // Note: DANGLY requires MESH flag to be set (dangly mesh = HEADER + MESH + DANGLY = 0x121 = 289)
+            if (node.Dangly != null)
             {
-                // Write file header
-                _fileHeader.Write(mdlBuffer);
-
-                // Write name offsets
-                foreach (var nameOffset in _nameOffsets)
-                {
-                    mdlBuffer.WriteUInt32((uint)nameOffset);
-                }
-
-                // Write names
-                foreach (var name in _names)
-                {
-                    mdlBuffer.WriteString(name + "\0", name.Length + 1, '\0', "ascii");
-                }
-
-                // Write animation offsets
-                foreach (var animOffset in _animOffsets)
-                {
-                    mdlBuffer.WriteUInt32((uint)animOffset);
-                }
-
-                // Write animations
-                bool isK2Write = _game.IsK2();
-                foreach (var binAnim in _binAnims)
-                {
-                    binAnim.Write(mdlBuffer, isK2Write);
-                }
-
-                // Write nodes
-                foreach (var binNode in _binNodes)
-                {
-                    binNode.Write(mdlBuffer, isK2Write);
-                }
-
-                // Get MDL and MDX sizes
-                uint mdlSize = (uint)mdlBuffer.Position();
-                uint mdxSize = (uint)_mdxWriter.Position();
-
-                // Update MDX size in file header (already written, but we'll overwrite)
-                _fileHeader.MdxSize = mdxSize;
-
-                // Write file header (12 bytes: unused, mdl_size, mdx_size)
-                _writer.WriteUInt32(0); // Unused
-                _writer.WriteUInt32(mdlSize);
-                _writer.WriteUInt32(mdxSize);
-
-                // Write MDL data
-                byte[] mdlData = mdlBuffer.Data();
-                _writer.WriteBytes(mdlData);
+                typeId |= (int)MDLNodeFlags.DANGLY;
             }
 
-            // MDX data is already written to _mdxWriter, no need to write again
-        }
-
-        public void Dispose()
-        {
-            _writer?.Dispose();
-            _mdxWriter?.Dispose();
-        }
-    }
-}
-
+            // SABER flag (0x0800) - Lightsaber blade mesh with special rendering
+            // Note: SABER requires MESH flag to be set (saber mesh = HEADER + MESH + SABER = 0x821 = 2081)
+            if (node.Saber != null)
             {
-                if (_names.IndexOf(_mdlNodes[i].Name) == nameId)
-                {
-                    mdlNode = _mdlNodes[i];
-                    break;
-                }
-            }
-            if (mdlNode == null)
-            {
-                throw new InvalidOperationException("MDL node not found");
+                typeId |= (int)MDLNodeFlags.SABER;
             }
 
-            List<int> childNameIds = new List<int>();
-            foreach (var child in mdlNode.Children)
+            // AABB flag (0x0200) - Axis-aligned bounding box tree for walkmesh collision
+            // Note: AABB requires MESH flag to be set (aabb mesh = HEADER + MESH + AABB = 0x221 = 545)
+            if (node.Aabb != null)
             {
-                int childNameId = _names.IndexOf(child.Name);
-                childNameIds.Add(childNameId);
+                typeId |= (int)MDLNodeFlags.AABB;
             }
 
-            List<_Node> binChildren = new List<_Node>();
-            foreach (var childNameId in childNameIds)
+            // EMITTER flag (0x0004) - Particle emitter data
+            // Note: EMITTER does not require MESH (emitter = HEADER + EMITTER = 0x005 = 5)
+            if (node.Emitter != null)
             {
-                foreach (var bn in allNodes)
-                {
-                    if (bn.Header.NameId == childNameId)
-                    {
-                        binChildren.Add(bn);
-                    }
-                }
-            }
-            return binChildren;
-        }
-
-        private int _NodeType(MDLData.MDLNode node)
-        {
-            int typeId = 1;
-            if (node.Mesh != null)
-            {
-                typeId |= (int)MDLNodeFlags.MESH;
-            }
-            // TODO: Add other node type flags (SKIN, DANGLY, SABER, AABB, EMITTER, LIGHT, REFERENCE)
-            return typeId;
-        }
-
-        private void _UpdateMdx(_Node binNode, MDLData.MDLNode mdlNode)
-        {
-            // TODO: Update MDX data (vertex normals, UVs, skinning)
-        }
-
-        private void _WriteAll()
-        {
-            // Update MDX data for all nodes with meshes
-            for (int i = 0; i < _binNodes.Count; i++)
-            {
-                if (_binNodes[i].Trimesh != null)
-                {
-                    _UpdateMdx(_binNodes[i], _mdlNodes[i]);
-                }
+                typeId |= (int)MDLNodeFlags.EMITTER;
             }
 
-            // Set file header properties
-            _fileHeader.Geometry.FunctionPointer0 = GeometryHeader.K1_FUNCTION_POINTER0;
-            _fileHeader.Geometry.FunctionPointer1 = GeometryHeader.K1_FUNCTION_POINTER1;
-            _fileHeader.Geometry.ModelName = _mdl.Name;
-            _fileHeader.Geometry.NodeCount = (uint)_mdlNodes.Count;
-            _fileHeader.Geometry.GeometryType = GeometryHeader.GEOM_TYPE_ROOT;
-            _fileHeader.OffsetToSuperRoot = _fileHeader.Geometry.RootNodeOffset;
-            _fileHeader.AnimationCount = (uint)_mdl.Anims.Count;
-            _fileHeader.AnimationCount2 = (uint)_mdl.Anims.Count;
-            _fileHeader.Supermodel = _mdl.Supermodel ?? "";
-            _fileHeader.NameOffsetsCount = (uint)_names.Count;
-            _fileHeader.NameOffsetsCount2 = (uint)_names.Count;
-
-            // Write MDL data to memory buffer first
-            using (var mdlBuffer = RawBinaryWriter.ToByteArray())
+            // LIGHT flag (0x0002) - Light source data
+            // Note: LIGHT does not require MESH (light = HEADER + LIGHT = 0x003 = 3)
+            if (node.Light != null)
             {
-                // Write file header
-                _fileHeader.Write(mdlBuffer);
-
-                // Write name offsets
-                foreach (var nameOffset in _nameOffsets)
-                {
-                    mdlBuffer.WriteUInt32((uint)nameOffset);
-                }
-
-                // Write names
-                foreach (var name in _names)
-                {
-                    mdlBuffer.WriteString(name + "\0", name.Length + 1, '\0', "ascii");
-                }
-
-                // Write animation offsets
-                foreach (var animOffset in _animOffsets)
-                {
-                    mdlBuffer.WriteUInt32((uint)animOffset);
-                }
-
-                // Write animations
-                bool isK2Write = _game.IsK2();
-                foreach (var binAnim in _binAnims)
-                {
-                    binAnim.Write(mdlBuffer, isK2Write);
-                }
-
-                // Write nodes
-                foreach (var binNode in _binNodes)
-                {
-                    binNode.Write(mdlBuffer, isK2Write);
-                }
-
-                // Get MDL and MDX sizes
-                uint mdlSize = (uint)mdlBuffer.Position();
-                uint mdxSize = (uint)_mdxWriter.Position();
-
-                // Update MDX size in file header (already written, but we'll overwrite)
-                _fileHeader.MdxSize = mdxSize;
-
-                // Write file header (12 bytes: unused, mdl_size, mdx_size)
-                _writer.WriteUInt32(0); // Unused
-                _writer.WriteUInt32(mdlSize);
-                _writer.WriteUInt32(mdxSize);
-
-                // Write MDL data
-                byte[] mdlData = mdlBuffer.Data();
-                _writer.WriteBytes(mdlData);
+                typeId |= (int)MDLNodeFlags.LIGHT;
             }
 
-            // MDX data is already written to _mdxWriter, no need to write again
-        }
-
-        public void Dispose()
-        {
-            _writer?.Dispose();
-            _mdxWriter?.Dispose();
-        }
-    }
-}
-
+            // REFERENCE flag (0x0010) - Reference to another model
+            // Note: REFERENCE does not require MESH (reference = HEADER + REFERENCE = 0x011 = 17)
+            if (node.Reference != null)
             {
-                throw new InvalidOperationException("MDL node not found");
+                typeId |= (int)MDLNodeFlags.REFERENCE;
             }
 
-            List<int> childNameIds = new List<int>();
-            foreach (var child in mdlNode.Children)
-            {
-                int childNameId = _names.IndexOf(child.Name);
-                childNameIds.Add(childNameId);
-            }
-
-            List<_Node> binChildren = new List<_Node>();
-            foreach (var childNameId in childNameIds)
-            {
-                foreach (var bn in allNodes)
-                {
-                    if (bn.Header.NameId == childNameId)
-                    {
-                        binChildren.Add(bn);
-                    }
-                }
-            }
-            return binChildren;
-        }
-
-        private int _NodeType(MDLData.MDLNode node)
-        {
-            int typeId = 1;
-            if (node.Mesh != null)
-            {
-                typeId |= (int)MDLNodeFlags.MESH;
-            }
-            // TODO: Add other node type flags (SKIN, DANGLY, SABER, AABB, EMITTER, LIGHT, REFERENCE)
-            return typeId;
-        }
-
-        private void _UpdateMdx(_Node binNode, MDLData.MDLNode mdlNode)
-        {
-            // TODO: Update MDX data (vertex normals, UVs, skinning)
-        }
-
-        private void _WriteAll()
-        {
-            // Update MDX data for all nodes with meshes
-            for (int i = 0; i < _binNodes.Count; i++)
-            {
-                if (_binNodes[i].Trimesh != null)
-                {
-                    _UpdateMdx(_binNodes[i], _mdlNodes[i]);
-                }
-            }
-
-            // Set file header properties
-            _fileHeader.Geometry.FunctionPointer0 = GeometryHeader.K1_FUNCTION_POINTER0;
-            _fileHeader.Geometry.FunctionPointer1 = GeometryHeader.K1_FUNCTION_POINTER1;
-            _fileHeader.Geometry.ModelName = _mdl.Name;
-            _fileHeader.Geometry.NodeCount = (uint)_mdlNodes.Count;
-            _fileHeader.Geometry.GeometryType = GeometryHeader.GEOM_TYPE_ROOT;
-            _fileHeader.OffsetToSuperRoot = _fileHeader.Geometry.RootNodeOffset;
-            _fileHeader.AnimationCount = (uint)_mdl.Anims.Count;
-            _fileHeader.AnimationCount2 = (uint)_mdl.Anims.Count;
-            _fileHeader.Supermodel = _mdl.Supermodel ?? "";
-            _fileHeader.NameOffsetsCount = (uint)_names.Count;
-            _fileHeader.NameOffsetsCount2 = (uint)_names.Count;
-
-            // Write MDL data to memory buffer first
-            using (var mdlBuffer = RawBinaryWriter.ToByteArray())
-            {
-                // Write file header
-                _fileHeader.Write(mdlBuffer);
-
-                // Write name offsets
-                foreach (var nameOffset in _nameOffsets)
-                {
-                    mdlBuffer.WriteUInt32((uint)nameOffset);
-                }
-
-                // Write names
-                foreach (var name in _names)
-                {
-                    mdlBuffer.WriteString(name + "\0", name.Length + 1, '\0', "ascii");
-                }
-
-                // Write animation offsets
-                foreach (var animOffset in _animOffsets)
-                {
-                    mdlBuffer.WriteUInt32((uint)animOffset);
-                }
-
-                // Write animations
-                bool isK2Write = _game.IsK2();
-                foreach (var binAnim in _binAnims)
-                {
-                    binAnim.Write(mdlBuffer, isK2Write);
-                }
-
-                // Write nodes
-                foreach (var binNode in _binNodes)
-                {
-                    binNode.Write(mdlBuffer, isK2Write);
-                }
-
-                // Get MDL and MDX sizes
-                uint mdlSize = (uint)mdlBuffer.Position();
-                uint mdxSize = (uint)_mdxWriter.Position();
-
-                // Update MDX size in file header (already written, but we'll overwrite)
-                _fileHeader.MdxSize = mdxSize;
-
-                // Write file header (12 bytes: unused, mdl_size, mdx_size)
-                _writer.WriteUInt32(0); // Unused
-                _writer.WriteUInt32(mdlSize);
-                _writer.WriteUInt32(mdxSize);
-
-                // Write MDL data
-                byte[] mdlData = mdlBuffer.Data();
-                _writer.WriteBytes(mdlData);
-            }
-
-            // MDX data is already written to _mdxWriter, no need to write again
-        }
-
-        public void Dispose()
-        {
-            _writer?.Dispose();
-            _mdxWriter?.Dispose();
-        }
-    }
-}
-
-            {
-                if (_names.IndexOf(_mdlNodes[i].Name) == nameId)
-                {
-                    mdlNode = _mdlNodes[i];
-                    break;
-                }
-            }
-            if (mdlNode == null)
-            {
-                throw new InvalidOperationException("MDL node not found");
-            }
-
-            List<int> childNameIds = new List<int>();
-            foreach (var child in mdlNode.Children)
-            {
-                int childNameId = _names.IndexOf(child.Name);
-                childNameIds.Add(childNameId);
-            }
-
-            List<_Node> binChildren = new List<_Node>();
-            foreach (var childNameId in childNameIds)
-            {
-                foreach (var bn in allNodes)
-                {
-                    if (bn.Header.NameId == childNameId)
-                    {
-                        binChildren.Add(bn);
-                    }
-                }
-            }
-            return binChildren;
-        }
-
-        private int _NodeType(MDLData.MDLNode node)
-        {
-            int typeId = 1;
-            if (node.Mesh != null)
-            {
-                typeId |= (int)MDLNodeFlags.MESH;
-            }
-            // TODO: Add other node type flags (SKIN, DANGLY, SABER, AABB, EMITTER, LIGHT, REFERENCE)
             return typeId;
         }
 
