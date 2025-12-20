@@ -543,6 +543,8 @@ namespace HolocronToolset.Editors
         public ColorEdit GrassAmbientEdit => _grassAmbientEdit;
         public ColorEdit GrassEmissiveEdit => _grassEmissiveEdit;
         public TextBox GrassTextureEdit => _grassTextureEdit;
+        public NumericUpDown GrassDensitySpin => _grassDensitySpin;
+        public NumericUpDown GrassSizeSpin => _grassSizeSpin;
         public NumericUpDown DirtFormula1Spin => _dirtFormula1Spin;
         public NumericUpDown DirtFormula2Spin => _dirtFormula2Spin;
         public NumericUpDown DirtFormula3Spin => _dirtFormula3Spin;

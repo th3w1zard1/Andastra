@@ -2141,14 +2141,90 @@ namespace HolocronToolset.Tests.Editors
             }
         }
 
-        // TODO: STUB - Implement test_are_editor_manipulate_grass_density_size_spins (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:759-785)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:759-785
         // Original: def test_are_editor_manipulate_grass_density_size_spins(qtbot: QtBot, installation: HTInstallation, test_files_dir: Path): Test manipulating grass density and size spin boxes.
         [Fact]
         public void TestAreEditorManipulateGrassDensitySizeSpins()
         {
-            // TODO: STUB - Implement grass density and size spin boxes manipulation test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:759-785
-            throw new NotImplementedException("TestAreEditorManipulateGrassDensitySizeSpins: Grass density/size spin boxes manipulation test not yet implemented");
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            // Try to find an ARE file
+            string areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            if (!System.IO.File.Exists(areFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            }
+
+            if (!System.IO.File.Exists(areFile))
+            {
+                // Skip if no ARE files available for testing (matching Python pytest.skip behavior)
+                return;
+            }
+
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            // Matching PyKotor implementation: editor = AREEditor(None, installation)
+            var editor = new AREEditor(null, installation);
+            editor.Show();
+
+            // Matching PyKotor implementation: original_data = are_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(areFile);
+            // Matching PyKotor implementation: editor.load(are_file, "tat001", ResourceType.ARE, original_data)
+            editor.Load(areFile, "tat001", ResourceType.ARE, originalData);
+
+            // Test grass density
+            // Matching PyKotor implementation: test_densities = [0.0, 0.1, 0.5, 1.0, 2.0]
+            float[] testDensities = { 0.0f, 0.1f, 0.5f, 1.0f, 2.0f };
+            foreach (float density in testDensities)
+            {
+                // Matching PyKotor implementation: editor.ui.grassDensitySpin.setValue(density)
+                if (editor.GrassDensitySpin != null)
+                {
+                    editor.GrassDensitySpin.Value = (decimal)density;
+                }
+                // Matching PyKotor implementation: data, _ = editor.build()
+                var (data, _) = editor.Build();
+                // Matching PyKotor implementation: modified_are = read_are(data)
+                var modifiedAre = AREHelpers.ReadAre(data);
+                // Matching PyKotor implementation: assert abs(modified_are.grass_density - density) < 0.001
+                System.Math.Abs(modifiedAre.GrassDensity - density).Should().BeLessThan(0.001f);
+            }
+
+            // Test grass size
+            // Matching PyKotor implementation: test_sizes = [0.1, 0.5, 1.0, 2.0, 5.0]
+            float[] testSizes = { 0.1f, 0.5f, 1.0f, 2.0f, 5.0f };
+            foreach (float size in testSizes)
+            {
+                // Matching PyKotor implementation: editor.ui.grassSizeSpin.setValue(size)
+                if (editor.GrassSizeSpin != null)
+                {
+                    editor.GrassSizeSpin.Value = (decimal)size;
+                }
+                // Matching PyKotor implementation: data, _ = editor.build()
+                var (data, _) = editor.Build();
+                // Matching PyKotor implementation: modified_are = read_are(data)
+                var modifiedAre = AREHelpers.ReadAre(data);
+                // Matching PyKotor implementation: assert abs(modified_are.grass_size - size) < 0.001
+                System.Math.Abs(modifiedAre.GrassSize - size).Should().BeLessThan(0.001f);
+            }
         }
 
         // TODO: STUB - Implement test_are_editor_manipulate_grass_probability_spins (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:787-824)
