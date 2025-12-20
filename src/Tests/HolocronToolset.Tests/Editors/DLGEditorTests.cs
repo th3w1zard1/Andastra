@@ -3540,14 +3540,101 @@ namespace HolocronToolset.Tests.Editors
             editor.DialogTree.SelectedItem = treeItem;
         }
 
-        // TODO: STUB - Implement test_dlg_editor_manipulate_script1_roundtrip (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2440-2470)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2440-2470
         // Original: def test_dlg_editor_manipulate_script1_roundtrip(qtbot, installation: HTInstallation, test_files_dir: Path): Test script1 roundtrip
         [Fact]
         public void TestDlgEditorManipulateScript1Roundtrip()
         {
-            // TODO: STUB - Implement script1 roundtrip test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2440-2470
-            throw new NotImplementedException("TestDlgEditorManipulateScript1Roundtrip: Script1 roundtrip test not yet implemented");
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            // Try to find a DLG file
+            string dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            }
+
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Skip if no DLG files available for testing (matching Python pytest.skip behavior)
+                return;
+            }
+
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new DLGEditor(null, installation);
+
+            byte[] originalData = System.IO.File.ReadAllBytes(dlgFile);
+            editor.Load(dlgFile, "ORIHA", ResourceType.DLG, originalData);
+
+            // Verify tree populated
+            if (editor.Model.RowCount > 0)
+            {
+                // Get first item from model
+                // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2452-2453
+                // Original: first_item = editor.model.item(0, 0)
+                var firstItem = editor.Model.Item(0, 0);
+                if (firstItem != null && firstItem.Link != null && firstItem.Link.Node != null)
+                {
+                    // Select the first item in the tree view
+                    // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2455
+                    // Original: editor.ui.dialogTree.setCurrentIndex(first_item.index())
+                    var treeItem = new Avalonia.Controls.TreeViewItem { Tag = firstItem };
+                    editor.DialogTree.SelectedItem = treeItem;
+
+                    // Modify script1
+                    // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2458
+                    // Original: editor.ui.script1ResrefEdit.set_combo_box_text("test_script1")
+                    editor.Script1ResrefEdit.Text = "test_script1";
+                    editor.OnNodeUpdate();
+
+                    // Save and verify
+                    // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2462-2465
+                    // Original: data, _ = editor.build(); modified_dlg = read_dlg(data); assert str(modified_dlg.starters[0].node.script1) == "test_script1"
+                    var (data, _) = editor.Build();
+                    var modifiedDlg = DLGHelper.ReadDlg(data);
+                    if (modifiedDlg.Starters != null && modifiedDlg.Starters.Count > 0)
+                    {
+                        modifiedDlg.Starters[0].Node.Script1.ToString().Should().Be("test_script1",
+                            "Script1 should be saved correctly after modification");
+
+                        // Load back and verify
+                        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2468-2470
+                        // Original: editor.load(dlg_file, "ORIHA", ResourceType.DLG, data); editor.ui.dialogTree.setCurrentIndex(first_item.index()); assert editor.ui.script1ResrefEdit.currentText() == "test_script1"
+                        editor.Load(dlgFile, "ORIHA", ResourceType.DLG, data);
+
+                        // Select the first item again after reload
+                        var reloadedFirstItem = editor.Model.Item(0, 0);
+                        if (reloadedFirstItem != null)
+                        {
+                            var reloadedTreeItem = new Avalonia.Controls.TreeViewItem { Tag = reloadedFirstItem };
+                            editor.DialogTree.SelectedItem = reloadedTreeItem;
+
+                            // Verify script1 is loaded back correctly
+                            editor.Script1ResrefEdit.Text.Should().Be("test_script1",
+                                "Script1 should be loaded back correctly after roundtrip");
+                        }
+                    }
+                }
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2472-2496

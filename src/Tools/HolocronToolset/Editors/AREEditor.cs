@@ -554,6 +554,10 @@ namespace HolocronToolset.Editors
         public ColorEdit DirtColor3Edit => _dirtColor3Edit;
         public CheckBox ShadowsCheck => _shadowsCheck;
         public NumericUpDown ShadowsSpin => _shadowsSpin;
+        public CheckBox RainCheck => _rainCheck;
+        public CheckBox SnowCheck => _snowCheck;
+        public CheckBox LightningCheck => _lightningCheck;
+        public ComboBox WindPowerSelect => _windPowerSelect;
         public TextBox CommentsEdit => _commentsEdit;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:134-149

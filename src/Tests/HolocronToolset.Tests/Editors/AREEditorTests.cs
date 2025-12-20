@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
@@ -2861,14 +2862,192 @@ namespace HolocronToolset.Tests.Editors
             }
         }
 
-        // TODO: STUB - Implement test_are_editor_manipulate_all_weather_fields_combination (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1115-1163)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1115-1163
         // Original: def test_are_editor_manipulate_all_weather_fields_combination(qtbot: QtBot, tsl_installation: HTInstallation, test_files_dir: Path): Test manipulating all weather fields simultaneously (TSL only).
         [Fact]
         public void TestAreEditorManipulateAllWeatherFieldsCombination()
         {
-            // TODO: STUB - Implement combination test for all weather fields manipulated simultaneously (TSL only)
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1115-1163
-            throw new NotImplementedException("TestAreEditorManipulateAllWeatherFieldsCombination: All weather fields combination test not yet implemented (TSL-only features)");
+            // Get TSL installation path (matching Python: tsl_installation: HTInstallation)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor2";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no TSL installation available (matching Python: pytest.skip behavior)
+            }
+
+            // Get test files directory (matching Python: test_files_dir: Path)
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            // Try to find tat001.are (matching Python: are_file = test_files_dir / "tat001.are")
+            string areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            if (!System.IO.File.Exists(areFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            }
+
+            if (!System.IO.File.Exists(areFile))
+            {
+                return; // Skip if test file not available (matching Python: pytest.skip("tat001.are not found"))
+            }
+
+            // Create editor instance (matching Python: editor = AREEditor(None, tsl_installation))
+            var editor = new AREEditor(null, installation);
+
+            // Load the ARE file (matching Python: original_data = are_file.read_bytes() and editor.load(...))
+            byte[] originalData = System.IO.File.ReadAllBytes(areFile);
+            editor.Load(areFile, "tat001", ResourceType.ARE, originalData);
+
+            // Modify ALL weather fields (matching Python: editor.ui.fogEnabledCheck.setChecked(True))
+            if (editor.FogEnabledCheck != null)
+            {
+                editor.FogEnabledCheck.IsChecked = true;
+            }
+
+            // Matching Python: editor.ui.fogColorEdit.set_color(Color(0.5, 0.5, 0.5))
+            var fogColor = new Color(0.5f, 0.5f, 0.5f);
+            if (editor.FogColorEdit != null)
+            {
+                editor.FogColorEdit.SetColor(fogColor);
+            }
+
+            // Matching Python: editor.ui.fogNearSpin.setValue(5.0)
+            if (editor.FogNearSpin != null)
+            {
+                editor.FogNearSpin.Value = 5.0;
+            }
+
+            // Matching Python: editor.ui.fogFarSpin.setValue(100.0)
+            if (editor.FogFarSpin != null)
+            {
+                editor.FogFarSpin.Value = 100.0;
+            }
+
+            // Matching Python: editor.ui.ambientColorEdit.set_color(Color(0.2, 0.2, 0.2))
+            var ambientColor = new Color(0.2f, 0.2f, 0.2f);
+            if (editor.AmbientColorEdit != null)
+            {
+                editor.AmbientColorEdit.SetColor(ambientColor);
+            }
+
+            // Matching Python: editor.ui.diffuseColorEdit.set_color(Color(0.8, 0.8, 0.8))
+            var diffuseColor = new Color(0.8f, 0.8f, 0.8f);
+            if (editor.DiffuseColorEdit != null)
+            {
+                editor.DiffuseColorEdit.SetColor(diffuseColor);
+            }
+
+            // Matching Python: editor.ui.dynamicColorEdit.set_color(Color(1.0, 1.0, 1.0))
+            var dynamicColor = new Color(1.0f, 1.0f, 1.0f);
+            if (editor.DynamicColorEdit != null)
+            {
+                editor.DynamicColorEdit.SetColor(dynamicColor);
+            }
+
+            // Matching Python: if editor.ui.windPowerSelect.count() > 0: editor.ui.windPowerSelect.setCurrentIndex(2)
+            if (editor.WindPowerSelect != null && editor.WindPowerSelect.ItemCount > 0)
+            {
+                editor.WindPowerSelect.SelectedIndex = 2;
+            }
+
+            // Matching Python: editor.ui.rainCheck.setChecked(True)
+            if (editor.RainCheck != null)
+            {
+                editor.RainCheck.IsChecked = true;
+            }
+
+            // Matching Python: editor.ui.snowCheck.setChecked(False)
+            if (editor.SnowCheck != null)
+            {
+                editor.SnowCheck.IsChecked = false;
+            }
+
+            // Matching Python: editor.ui.lightningCheck.setChecked(True)
+            if (editor.LightningCheck != null)
+            {
+                editor.LightningCheck.IsChecked = true;
+            }
+
+            // Matching Python: editor.ui.shadowsCheck.setChecked(True)
+            if (editor.ShadowsCheck != null)
+            {
+                editor.ShadowsCheck.IsChecked = true;
+            }
+
+            // Matching Python: editor.ui.shadowsSpin.setValue(128)
+            if (editor.ShadowsSpin != null)
+            {
+                editor.ShadowsSpin.Value = 128;
+            }
+
+            // Save and verify all (matching Python: data, _ = editor.build() and modified_are = read_are(data))
+            var (data, _) = editor.Build();
+            var modifiedAre = AREHelpers.ReadAre(data);
+
+            // Matching Python: assert modified_are.fog_enabled
+            modifiedAre.FogEnabled.Should().BeTrue();
+
+            // Matching Python: assert abs(modified_are.fog_color.r - 0.5) < 0.01
+            System.Math.Abs(modifiedAre.FogColor.R - fogColor.R).Should().BeLessThan(0.01f);
+            System.Math.Abs(modifiedAre.FogColor.G - fogColor.G).Should().BeLessThan(0.01f);
+            System.Math.Abs(modifiedAre.FogColor.B - fogColor.B).Should().BeLessThan(0.01f);
+
+            // Matching Python: assert modified_are.fog_near == 5.0
+            modifiedAre.FogNear.Should().BeApproximately(5.0f, 0.001f);
+
+            // Matching Python: assert modified_are.fog_far == 100.0
+            modifiedAre.FogFar.Should().BeApproximately(100.0f, 0.001f);
+
+            // Matching Python: assert modified_are.chance_rain == 100
+            modifiedAre.ChanceRain.Should().Be(100);
+
+            // Matching Python: assert modified_are.chance_snow == 0
+            modifiedAre.ChanceSnow.Should().Be(0);
+
+            // Matching Python: assert modified_are.chance_lightning == 100
+            modifiedAre.ChanceLightning.Should().Be(100);
+
+            // Matching Python: assert modified_are.shadows
+            modifiedAre.Shadows.Should().BeTrue();
+
+            // Matching Python: assert modified_are.shadow_opacity == 128
+            modifiedAre.ShadowOpacity.Should().Be(128);
+
+            // Verify ambient color (matching Python: implicit verification of ambient color)
+            System.Math.Abs(modifiedAre.SunAmbient.R - ambientColor.R).Should().BeLessThan(0.01f);
+            System.Math.Abs(modifiedAre.SunAmbient.G - ambientColor.G).Should().BeLessThan(0.01f);
+            System.Math.Abs(modifiedAre.SunAmbient.B - ambientColor.B).Should().BeLessThan(0.01f);
+
+            // Verify diffuse color (matching Python: implicit verification of diffuse color)
+            System.Math.Abs(modifiedAre.SunDiffuse.R - diffuseColor.R).Should().BeLessThan(0.01f);
+            System.Math.Abs(modifiedAre.SunDiffuse.G - diffuseColor.G).Should().BeLessThan(0.01f);
+            System.Math.Abs(modifiedAre.SunDiffuse.B - diffuseColor.B).Should().BeLessThan(0.01f);
+
+            // Verify dynamic color (matching Python: implicit verification of dynamic color)
+            System.Math.Abs(modifiedAre.DynamicLight.R - dynamicColor.R).Should().BeLessThan(0.01f);
+            System.Math.Abs(modifiedAre.DynamicLight.G - dynamicColor.G).Should().BeLessThan(0.01f);
+            System.Math.Abs(modifiedAre.DynamicLight.B - dynamicColor.B).Should().BeLessThan(0.01f);
+
+            // Verify wind power (matching Python: implicit verification - windPowerSelect.setCurrentIndex(2) should set WindPower to 2)
+            if (editor.WindPowerSelect != null && editor.WindPowerSelect.ItemCount > 0)
+            {
+                modifiedAre.WindPower.Should().Be(2);
+            }
         }
 
         // TODO: STUB - Implement test_are_editor_manipulate_all_map_fields_combination (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1165-1204)

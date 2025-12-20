@@ -2251,9 +2251,9 @@ namespace HolocronToolset.Editors
             _commandPalette.RegisterCommand("view.toggleExplorer", "Toggle Explorer", () => { /* TODO: Implement */ }, "View");
             _commandPalette.RegisterCommand("view.toggleTerminal", "Toggle Terminal", () => { /* TODO: Implement */ }, "View");
             _commandPalette.RegisterCommand("view.toggleOutput", "Toggle Output Panel", () => { /* TODO: Implement */ }, "View");
-            _commandPalette.RegisterCommand("view.zoomIn", "Zoom In", () => { /* TODO: Implement */ }, "View");
-            _commandPalette.RegisterCommand("view.zoomOut", "Zoom Out", () => { /* TODO: Implement */ }, "View");
-            _commandPalette.RegisterCommand("view.resetZoom", "Reset Zoom", () => { /* TODO: Implement */ }, "View");
+            _commandPalette.RegisterCommand("view.zoomIn", "Zoom In", () => { if (_codeEdit != null) _codeEdit.ZoomIn(); }, "View");
+            _commandPalette.RegisterCommand("view.zoomOut", "Zoom Out", () => { if (_codeEdit != null) _codeEdit.ZoomOut(); }, "View");
+            _commandPalette.RegisterCommand("view.resetZoom", "Reset Zoom", () => { if (_codeEdit != null) _codeEdit.ResetZoom(); }, "View");
             _commandPalette.RegisterCommand("view.toggleWordWrap", "Toggle Word Wrap", () => { /* TODO: Implement */ }, "View");
 
             // Navigation
