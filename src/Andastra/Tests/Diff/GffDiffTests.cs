@@ -222,5 +222,78 @@ namespace Andastra.Parsing.Tests.Diff
             ini.Should().Contain("Field=new");
         }
 
+        [Fact(Timeout = 120000)] // 2 minutes timeout
+        public void BuildHierarchy_ShouldResolveConflictWhenLeafValuePrecedesNestedPath()
+        {
+            // Test conflict resolution: When a field appears as both a leaf value and a parent
+            // of nested values, the nested structure should take precedence by overwriting
+            // the leaf value with a dictionary.
+            //
+            // This scenario can occur when processing flat changes where:
+            //   - "Field1" = "leafValue" (creates a leaf)
+            //   - "Field1/SubField" = "nestedValue" (requires Field1 to be a dict)
+            //
+            // Expected behavior: The leaf value is overwritten with a dictionary, allowing
+            // the nested structure to be built correctly.
+            var flatChanges = new Dictionary<string, object>
+            {
+                // Process "Field1" as leaf first - this creates a leaf value
+                { "Field1", "leafValue" },
+                // Then process "Field1/SubField" - this conflicts because Field1 is already a leaf
+                // The implementation should overwrite the leaf with a dict to allow the nested structure
+                { "Field1/SubField", "nestedValue" },
+                // Additional nested path under Field1 to verify the dict is working
+                { "Field1/SubField2", "nestedValue2" }
+            };
+
+            Dictionary<string, object> hierarchy = GffDiff.BuildHierarchy(flatChanges);
+
+            // Verify that Field1 is now a dictionary (not the leaf value)
+            hierarchy.Should().ContainKey("Field1");
+            var field1 = hierarchy["Field1"] as Dictionary<string, object>;
+            Assert.NotNull(field1);
+            
+            // Verify the nested values are present
+            field1.Should().ContainKey("SubField");
+            field1["SubField"].Should().Be("nestedValue");
+            field1.Should().ContainKey("SubField2");
+            field1["SubField2"].Should().Be("nestedValue2");
+            
+            // Verify the original leaf value was overwritten (not preserved)
+            // This confirms the conflict resolution overwrote the leaf with a dict
+        }
+
+        [Fact(Timeout = 120000)] // 2 minutes timeout
+        public void BuildHierarchy_ShouldResolveConflictWhenNestedPathPrecedesLeafValue()
+        {
+            // Test the reverse scenario: When nested paths are processed first, then a leaf value
+            // is encountered at the same location.
+            //
+            // This scenario:
+            //   - "Field1/SubField" = "nestedValue" (creates Field1 as a dict)
+            //   - "Field1" = "leafValue" (conflicts because Field1 is already a dict)
+            //
+            // Expected behavior: The final assignment "Field1" = "leafValue" should overwrite
+            // the dictionary with the leaf value, since we process in order and later values
+            // take precedence.
+            var flatChanges = new Dictionary<string, object>
+            {
+                // Process nested path first - this creates Field1 as a dictionary
+                { "Field1/SubField", "nestedValue" },
+                // Then process leaf value - this should overwrite the dictionary with the leaf
+                { "Field1", "leafValue" }
+            };
+
+            Dictionary<string, object> hierarchy = GffDiff.BuildHierarchy(flatChanges);
+
+            // Verify that Field1 is now a leaf value (the dictionary was overwritten)
+            hierarchy.Should().ContainKey("Field1");
+            hierarchy["Field1"].Should().Be("leafValue");
+            
+            // Verify the nested structure is gone (overwritten by the leaf)
+            var field1AsDict = hierarchy["Field1"] as Dictionary<string, object>;
+            Assert.Null(field1AsDict);
+        }
+
     }
 }

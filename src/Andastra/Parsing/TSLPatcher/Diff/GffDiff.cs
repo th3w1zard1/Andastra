@@ -166,18 +166,30 @@ namespace Andastra.Parsing.Diff
                     string part = parts[i];
                     if (!currentDict.ContainsKey(part))
                     {
+                        // Create new dictionary for this path segment
                         currentDict[part] = new Dictionary<string, object>();
                     }
 
                     if (currentDict[part] is Dictionary<string, object> nextDict)
                     {
+                        // Path segment already exists as a dictionary - navigate into it
                         currentDict = nextDict;
                     }
                     else
                     {
-                        // Conflict: path implies directory but existing value is a leaf
-                        // TODO: FIXME - For now, overwrite or ignore?
-                        // Python logic probably overwrites.
+                        // Conflict resolution: Path implies a directory structure, but an existing leaf value
+                        // occupies this position. This can occur when building a hierarchy from flat changes
+                        // where the same field name appears as both a leaf value and a parent of nested values.
+                        // 
+                        // Example conflict scenario:
+                        //   - "Field1" = "leafValue" (processed first, creates leaf)
+                        //   - "Field1/SubField" = "nestedValue" (processed later, requires Field1 to be a dict)
+                        //
+                        // Resolution strategy: Overwrite the leaf value with a new dictionary to allow
+                        // the nested structure. This matches the behavior of the Python reference implementation
+                        // in vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/gff.py:build_hierarchy().
+                        // The leaf value is discarded in favor of the nested structure, which represents
+                        // a more complete/complex data structure that takes precedence.
                         var newDict = new Dictionary<string, object>();
                         currentDict[part] = newDict;
                         currentDict = newDict;
