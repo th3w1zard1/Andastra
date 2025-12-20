@@ -10,8 +10,8 @@ using Andastra.Parsing.Formats.TXI;
 using Andastra.Parsing.Resource.Formats.TEX;
 using Andastra.Parsing.Formats.DDS;
 using Andastra.Runtime.Games.Common;
-using Andastra.Runtime.MonoGame.Converters;
-using Andastra.Runtime.MonoGame.Graphics;
+using Andastra.Runtime.Graphics.MonoGame.Converters;
+using Andastra.Runtime.Graphics.MonoGame.Graphics;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Eclipse.Fonts

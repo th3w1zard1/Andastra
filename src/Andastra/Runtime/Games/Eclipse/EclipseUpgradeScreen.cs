@@ -8,6 +8,7 @@ using Andastra.Parsing.Installation;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource.Generics.GUI;
+using ParsingGUI = Andastra.Parsing.Resource.Generics.GUI.GUI;
 using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Games.Eclipse.GUI;
 using Andastra.Runtime.Graphics;
@@ -37,7 +38,7 @@ namespace Andastra.Runtime.Games.Eclipse
     {
         // GUI management
         private EclipseGuiManager _guiManager;
-        private GUI _loadedGui;
+        private ParsingGUI _loadedGui;
         private string _guiName;
         private Dictionary<string, GUIControl> _controlMap;
         private Dictionary<string, GUIButton> _buttonMap;
@@ -902,7 +903,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Gets the loaded GUI for external rendering.
         /// </summary>
         /// <returns>The loaded GUI, or null if not loaded.</returns>
-        public GUI GetLoadedGui()
+        public ParsingGUI GetLoadedGui()
         {
             return _loadedGui;
         }

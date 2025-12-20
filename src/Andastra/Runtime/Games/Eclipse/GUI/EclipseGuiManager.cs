@@ -5,10 +5,12 @@ using System.Numerics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using NumericsVector2 = System.Numerics.Vector2;
 using Andastra.Parsing;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics.GUI;
+using ParsingGUI = Andastra.Parsing.Resource.Generics.GUI.GUI;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.DDS;
 using Andastra.Parsing.Resource.Formats.TEX;
@@ -16,8 +18,8 @@ using Andastra.Parsing.Formats.TPC;
 using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Games.Eclipse.Fonts;
 using Andastra.Runtime.Graphics;
-using Andastra.Runtime.MonoGame.Graphics;
-using Andastra.Runtime.MonoGame.Converters;
+using Andastra.Runtime.Graphics.MonoGame.Graphics;
+using Andastra.Runtime.Graphics.MonoGame.Converters;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Eclipse.GUI
@@ -275,7 +277,7 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
 
             foreach (var control in _currentGui.Gui.Controls)
             {
-                RenderControl(control, Vector2.Zero);
+                RenderControl(control, NumericsVector2.Zero);
             }
 
             _spriteBatch.End();
@@ -399,12 +401,12 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
             }
         }
 
-        private void RenderControl(GUIControl control, Vector2 parentOffset)
+        private void RenderControl(GUIControl control, NumericsVector2 parentOffset)
         {
             if (control == null) return;
 
-            Vector2 controlPosition = control.Position + parentOffset;
-            Vector2 controlSize = control.Size;
+            NumericsVector2 controlPosition = control.Position + parentOffset;
+            NumericsVector2 controlSize = control.Size;
 
             switch (control.GuiType)
             {
@@ -431,7 +433,7 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
             }
         }
 
-        private void RenderPanel(GUIPanel panel, Vector2 position, Vector2 size)
+        private void RenderPanel(GUIPanel panel, NumericsVector2 position, NumericsVector2 size)
         {
             if (panel.Border != null && !panel.Border.Fill.IsBlank)
             {
@@ -445,7 +447,7 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
             }
         }
 
-        private void RenderButton(GUIButton button, Vector2 position, Vector2 size)
+        private void RenderButton(GUIButton button, NumericsVector2 position, NumericsVector2 size)
         {
             bool isHighlighted = string.Equals(_highlightedButtonTag, button.Tag, StringComparison.OrdinalIgnoreCase);
             bool isSelected = button.IsSelected.HasValue && button.IsSelected.Value != 0;
@@ -483,14 +485,14 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
                 BaseBitmapFont font = LoadFont(button.GuiText.Font.ToString());
                 if (font != null)
                 {
-                    Vector2 textSize = font.MeasureString(text);
-                    Vector2 textPos = CalculateTextPosition(button.GuiText.Alignment, position, size, textSize);
+                    NumericsVector2 textSize = font.MeasureString(text);
+                    NumericsVector2 textPos = CalculateTextPosition(button.GuiText.Alignment, position, size, textSize);
                     RenderBitmapText(font, text, textPos, textColor);
                 }
             }
         }
 
-        private void RenderLabel(GUILabel label, Vector2 position, Vector2 size)
+        private void RenderLabel(GUILabel label, NumericsVector2 position, NumericsVector2 size)
         {
             if (label.GuiText != null && !string.IsNullOrEmpty(label.GuiText.Text))
             {
@@ -501,14 +503,14 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
                 BaseBitmapFont font = LoadFont(label.GuiText.Font.ToString());
                 if (font != null)
                 {
-                    Vector2 textSize = font.MeasureString(text);
-                    Vector2 textPos = CalculateTextPosition(label.GuiText.Alignment, position, size, textSize);
+                    NumericsVector2 textSize = font.MeasureString(text);
+                    NumericsVector2 textPos = CalculateTextPosition(label.GuiText.Alignment, position, size, textSize);
                     RenderBitmapText(font, text, textPos, textColor);
                 }
             }
         }
 
-        private void RenderGenericControl(GUIControl control, Vector2 position, Vector2 size)
+        private void RenderGenericControl(GUIControl control, NumericsVector2 position, NumericsVector2 size)
         {
             if (control.Border != null && !control.Border.Fill.IsBlank)
             {
@@ -521,7 +523,7 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
             }
         }
 
-        private void RenderBitmapText(BaseBitmapFont font, string text, Vector2 position, Andastra.Runtime.Graphics.Color color)
+        private void RenderBitmapText(BaseBitmapFont font, string text, NumericsVector2 position, Andastra.Runtime.Graphics.Color color)
         {
             if (font == null || string.IsNullOrEmpty(text)) return;
 
@@ -757,9 +759,40 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
             };
         }
 
+        /// <summary>
+        /// Calculates text position based on alignment.
+        /// </summary>
+        private NumericsVector2 CalculateTextPosition(int alignment, NumericsVector2 position, NumericsVector2 size, NumericsVector2 textSize)
+        {
+            float x = position.X;
+            float y = position.Y;
+
+            // Alignment values: 0 = Left, 1 = Center, 2 = Right (typical GUI alignment)
+            switch (alignment)
+            {
+                case 0: // Left
+                    x = position.X;
+                    break;
+                case 1: // Center
+                    x = position.X + (size.X - textSize.X) / 2.0f;
+                    break;
+                case 2: // Right
+                    x = position.X + size.X - textSize.X;
+                    break;
+                default:
+                    x = position.X;
+                    break;
+            }
+
+            // Vertical alignment (assuming top for now)
+            y = position.Y;
+
+            return new NumericsVector2(x, y);
+        }
+
         private class LoadedGui
         {
-            public GUI Gui { get; set; }
+            public ParsingGUI Gui { get; set; }
             public string Name { get; set; }
             public int Width { get; set; }
             public int Height { get; set; }

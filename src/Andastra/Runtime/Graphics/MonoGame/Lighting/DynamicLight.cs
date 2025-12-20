@@ -1,9 +1,9 @@
 using System;
 using System.Numerics;
-using Andastra.Runtime.MonoGame.Enums;
-using Andastra.Runtime.MonoGame.Interfaces;
+using Andastra.Runtime.Graphics.MonoGame.Enums;
+using Andastra.Runtime.Graphics.MonoGame.Interfaces;
 
-namespace Andastra.Runtime.MonoGame.Lighting
+namespace Andastra.Runtime.Graphics.MonoGame.Lighting
 {
     /// <summary>
     /// Dynamic light source implementation.

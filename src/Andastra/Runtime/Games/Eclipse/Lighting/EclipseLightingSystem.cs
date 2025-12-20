@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Andastra.Runtime.MonoGame.Enums;
-using Andastra.Runtime.MonoGame.Interfaces;
-using Andastra.Runtime.MonoGame.Lighting;
+using Andastra.Runtime.Graphics.MonoGame.Enums;
+using Andastra.Runtime.Graphics.MonoGame.Interfaces;
+using Andastra.Runtime.Graphics.MonoGame.Lighting;
+using DynamicLight = Andastra.Runtime.Graphics.MonoGame.Lighting.DynamicLight;
 
 namespace Andastra.Runtime.Games.Eclipse.Lighting
 {

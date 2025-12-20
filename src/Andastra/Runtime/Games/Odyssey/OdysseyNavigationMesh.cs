@@ -360,7 +360,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// - Error messages: "failed to grid based pathfind from the creatures position to the starting path point." @ 0x007be510
         /// - Error messages: "failed to grid based pathfind from the ending path point ot the destiantion." @ 0x007be4b8
         /// </remarks>
-        public IList<Vector3> FindPath(Vector3 start, Vector3 goal)
+        public override IList<Vector3> FindPath(Vector3 start, Vector3 goal)
         {
             // Find faces containing start and goal positions
             int startFace = FindFaceAt(start);
@@ -464,7 +464,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Called from UpdateCreatureMovement @ 0x0054be70 (line 183) when creature collision detected
         /// Equivalent in swkotor.exe: FindPathAroundObstacle @ 0x005d0840 (called from UpdateCreatureMovement @ 0x00516630, line 254)
         /// </summary>
-        public IList<Vector3> FindPathAroundObstacles(Vector3 start, Vector3 goal, IList<Interfaces.ObstacleInfo> obstacles)
+        public override IList<Vector3> FindPathAroundObstacles(Vector3 start, Vector3 goal, IList<ObstacleInfo> obstacles)
         {
             // Find faces containing start and goal positions
             int startFace = FindFaceAt(start);
@@ -492,7 +492,7 @@ namespace Andastra.Runtime.Games.Odyssey
                     {
                         direction = Vector3.Normalize(direction);
                         // Check if any obstacle blocks the direct path
-                        foreach (Interfaces.ObstacleInfo obstacle in obstacles)
+                        foreach (ObstacleInfo obstacle in obstacles)
                         {
                             Vector3 toObstacle = obstacle.Position - start;
                             float projectionLength = Vector3.Dot(toObstacle, direction);
@@ -591,10 +591,10 @@ namespace Andastra.Runtime.Games.Odyssey
             // No path found - try with expanded obstacle radius
             if (obstacles != null && obstacles.Count > 0)
             {
-                var expandedObstacles = new List<Interfaces.ObstacleInfo>();
-                foreach (Interfaces.ObstacleInfo obstacle in obstacles)
+                var expandedObstacles = new List<ObstacleInfo>();
+                foreach (ObstacleInfo obstacle in obstacles)
                 {
-                    expandedObstacles.Add(new Interfaces.ObstacleInfo(obstacle.Position, obstacle.Radius * 1.5f));
+                    expandedObstacles.Add(new ObstacleInfo(obstacle.Position, obstacle.Radius * 1.5f));
                 }
                 return FindPathAroundObstacles(start, goal, expandedObstacles);
             }
@@ -605,7 +605,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <summary>
         /// Finds a path around an obstacle when start and goal are on the same face.
         /// </summary>
-        private IList<Vector3> FindPathAroundObstacleOnSameFace(Vector3 start, Vector3 goal, int faceIndex, IList<Interfaces.ObstacleInfo> obstacles)
+        private IList<Vector3> FindPathAroundObstacleOnSameFace(Vector3 start, Vector3 goal, int faceIndex, IList<ObstacleInfo> obstacles)
         {
             var candidateFaces = new List<int>();
             foreach (int neighbor in GetAdjacentFaces(faceIndex))
@@ -616,7 +616,7 @@ namespace Andastra.Runtime.Games.Odyssey
                     if (obstacles != null)
                     {
                         Vector3 neighborCenter = GetFaceCenter(neighbor);
-                        foreach (Interfaces.ObstacleInfo obstacle in obstacles)
+                        foreach (ObstacleInfo obstacle in obstacles)
                         {
                             if (Vector3.Distance(neighborCenter, obstacle.Position) < obstacle.Radius)
                             {
@@ -658,11 +658,11 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <summary>
         /// Builds a set of face indices that are blocked by obstacles.
         /// </summary>
-        private HashSet<int> BuildBlockedFacesSet(IList<Interfaces.ObstacleInfo> obstacles)
+        private HashSet<int> BuildBlockedFacesSet(IList<ObstacleInfo> obstacles)
         {
             var blockedFaces = new HashSet<int>();
 
-            foreach (Interfaces.ObstacleInfo obstacle in obstacles)
+            foreach (ObstacleInfo obstacle in obstacles)
             {
                 for (int i = 0; i < _faceCount; i++)
                 {
@@ -876,7 +876,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Uses AABB tree for spatial acceleration when available, falls back to brute force.
         /// Tests if point is within face bounds using 2D point-in-triangle test.
         /// </remarks>
-        public int FindFaceAt(Vector3 position)
+        public override int FindFaceAt(Vector3 position)
         {
             // Use AABB tree if available for faster spatial queries
             if (_aabbRoot != null)
@@ -1000,7 +1000,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Based on swkotor.exe and swkotor2.exe walkmesh face center calculation.
         /// Returns the centroid (average) of the three vertices.
         /// </remarks>
-        public Vector3 GetFaceCenter(int faceIndex)
+        public override Vector3 GetFaceCenter(int faceIndex)
         {
             if (faceIndex < 0 || faceIndex >= _faceCount)
             {
@@ -1028,7 +1028,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Adjacency encoding: adjacency_index = face_index * 3 + edge_index, -1 = no neighbor
         /// Returns the face indices of neighboring faces that share an edge.
         /// </remarks>
-        public IEnumerable<int> GetAdjacentFaces(int faceIndex)
+        public override IEnumerable<int> GetAdjacentFaces(int faceIndex)
         {
             if (faceIndex < 0 || faceIndex >= _faceCount)
             {
@@ -1067,7 +1067,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Walkable materials include dirt, grass, stone, wood, water, carpet, metal, etc.
         /// Non-walkable materials include lava, deep water, non-walk surfaces, etc.
         /// </remarks>
-        public bool IsWalkable(int faceIndex)
+        public override bool IsWalkable(int faceIndex)
         {
             if (faceIndex < 0 || faceIndex >= _surfaceMaterials.Length)
             {
@@ -1094,7 +1094,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// - 17: DeepWater (non-walkable)
         /// - etc.
         /// </remarks>
-        public int GetSurfaceMaterial(int faceIndex)
+        public override int GetSurfaceMaterial(int faceIndex)
         {
             if (faceIndex < 0 || faceIndex >= _surfaceMaterials.Length)
             {
@@ -1112,7 +1112,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Uses AABB tree for spatial acceleration when available, falls back to brute force.
         /// Returns the closest hit point and face index along the ray.
         /// </remarks>
-        public bool Raycast(Vector3 origin, Vector3 direction, float maxDistance, out Vector3 hitPoint, out int hitFace)
+        public override bool Raycast(Vector3 origin, Vector3 direction, float maxDistance, out Vector3 hitPoint, out int hitFace)
         {
             hitPoint = Vector3.Zero;
             hitFace = -1;
@@ -1361,12 +1361,12 @@ namespace Andastra.Runtime.Games.Odyssey
             return false;
         }
 
-        public bool TestLineOfSight(Vector3 from, Vector3 to)
+        public override bool TestLineOfSight(Vector3 from, Vector3 to)
         {
             return HasLineOfSight(from, to);
         }
 
-        public bool ProjectToSurface(Vector3 point, out Vector3 result, out float height)
+        public override bool ProjectToSurface(Vector3 point, out Vector3 result, out float height)
         {
             return ProjectToWalkmesh(point, out result, out height);
         }

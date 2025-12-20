@@ -3826,7 +3826,7 @@ namespace Andastra.Runtime.Games.Eclipse
     /// <summary>
     /// AABB tree node for spatial acceleration (shared with NavigationMesh).
     /// </summary>
-    internal class AabbNode
+    public class AabbNode
     {
         public Vector3 BoundsMin { get; set; }
         public Vector3 BoundsMax { get; set; }

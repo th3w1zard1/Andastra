@@ -2,7 +2,7 @@ using System;
 using Microsoft.Xna.Framework.Graphics;
 using Andastra.Runtime.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Graphics
+namespace Andastra.Runtime.Graphics.MonoGame.Graphics
 {
     /// <summary>
     /// MonoGame implementation of IGraphicsDevice.
