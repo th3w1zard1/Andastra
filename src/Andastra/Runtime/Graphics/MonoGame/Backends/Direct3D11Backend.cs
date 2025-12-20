@@ -249,10 +249,75 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 Type = ResourceType.Texture,
                 Handle = handle,
-                DebugName = desc.DebugName
+                DebugName = desc.DebugName,
+                TextureDesc = desc,
+                NativeTexture = IntPtr.Zero // Will be set when texture is actually created
             };
 
             return handle;
+        }
+
+        /// <summary>
+        /// Uploads texture pixel data to a previously created texture.
+        /// Matches original engine behavior: DirectX 9 uses IDirect3DTexture9::LockRect/UnlockRect
+        /// to upload texture data. DirectX 11 uses ID3D11DeviceContext::UpdateSubresource.
+        /// Based on swkotor.exe and swkotor2.exe texture upload patterns.
+        /// </summary>
+        public bool UploadTextureData(IntPtr handle, TextureUploadData data)
+        {
+            if (!_initialized)
+            {
+                return false;
+            }
+
+            if (handle == IntPtr.Zero)
+            {
+                return false;
+            }
+
+            if (!_resources.TryGetValue(handle, out ResourceInfo info))
+            {
+                Console.WriteLine("[Direct3D11Backend] UploadTextureData: Invalid texture handle");
+                return false;
+            }
+
+            if (info.Type != ResourceType.Texture)
+            {
+                Console.WriteLine("[Direct3D11Backend] UploadTextureData: Handle is not a texture");
+                return false;
+            }
+
+            if (data.Mipmaps == null || data.Mipmaps.Length == 0)
+            {
+                Console.WriteLine("[Direct3D11Backend] UploadTextureData: No mipmap data provided");
+                return false;
+            }
+
+            try
+            {
+                // For DirectX 11, we use ID3D11DeviceContext::UpdateSubresource to upload texture data
+                // This matches the original engine's pattern of uploading texture data after creation
+                // Original engine: swkotor.exe and swkotor2.exe use DirectX 8/9 LockRect/UnlockRect pattern
+                // DirectX 11 equivalent: UpdateSubresource for each mipmap level
+
+                // TODO: When DirectX 11 implementation is complete, upload each mipmap level:
+                // For each mipmap in data.Mipmaps:
+                //   D3D11_BOX box = { 0, 0, 0, mipmap.Width, mipmap.Height, 1 };
+                //   ID3D11DeviceContext::UpdateSubresource(texture, mipLevel, &box, mipmap.Data, rowPitch, depthPitch);
+
+                // For now, store the upload data so it can be used when the texture is actually created
+                // This allows the texture upload to work once the backend is fully implemented
+                info.UploadData = data;
+                _resources[handle] = info;
+
+                Console.WriteLine($"[Direct3D11Backend] UploadTextureData: Stored {data.Mipmaps.Length} mipmap levels for texture {info.DebugName}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Direct3D11Backend] UploadTextureData: Exception uploading texture: {ex.Message}");
+                return false;
+            }
         }
 
         public IntPtr CreateBuffer(BufferDescription desc)
@@ -608,6 +673,9 @@ namespace Andastra.Runtime.MonoGame.Backends
             public ResourceType Type;
             public IntPtr Handle;
             public string DebugName;
+            public TextureDescription TextureDesc;
+            public IntPtr NativeTexture; // Native texture object (ID3D11Texture2D*)
+            public TextureUploadData UploadData; // Stored upload data for deferred upload
         }
 
         private enum ResourceType

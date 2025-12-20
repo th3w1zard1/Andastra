@@ -163,6 +163,16 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         IntPtr CreateTexture(TextureDescription desc);
 
         /// <summary>
+        /// Uploads texture pixel data to a previously created texture.
+        /// Matches original engine behavior: swkotor.exe and swkotor2.exe use glTexImage2D/glCompressedTexImage2D
+        /// to upload texture data after creating the texture object.
+        /// </summary>
+        /// <param name="handle">Handle to the texture created by CreateTexture.</param>
+        /// <param name="data">Texture upload data containing mipmap levels.</param>
+        /// <returns>True if upload succeeded, false otherwise.</returns>
+        bool UploadTextureData(IntPtr handle, TextureUploadData data);
+
+        /// <summary>
         /// Creates a buffer resource.
         /// </summary>
         /// <param name="desc">Buffer description.</param>
@@ -410,6 +420,50 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         public int AlignedByteOffset;
         public bool PerInstance;
         public int InstanceDataStepRate;
+    }
+
+    /// <summary>
+    /// Texture mipmap level data for upload.
+    /// </summary>
+    public struct TextureMipmapData
+    {
+        /// <summary>
+        /// Mipmap level (0 = base level).
+        /// </summary>
+        public int Level;
+
+        /// <summary>
+        /// Width of this mipmap level.
+        /// </summary>
+        public int Width;
+
+        /// <summary>
+        /// Height of this mipmap level.
+        /// </summary>
+        public int Height;
+
+        /// <summary>
+        /// Pixel data for this mipmap level (RGBA format, width * height * 4 bytes).
+        /// </summary>
+        public byte[] Data;
+    }
+
+    /// <summary>
+    /// Texture upload data containing all mipmap levels.
+    /// Matches original engine texture upload pattern: TPC files contain multiple mipmap levels
+    /// that are uploaded sequentially using glTexImage2D for each level.
+    /// </summary>
+    public struct TextureUploadData
+    {
+        /// <summary>
+        /// Array of mipmap data, ordered from base level (0) to highest mip level.
+        /// </summary>
+        public TextureMipmapData[] Mipmaps;
+
+        /// <summary>
+        /// Texture format (must match the format used in CreateTexture).
+        /// </summary>
+        public TextureFormat Format;
     }
 }
 

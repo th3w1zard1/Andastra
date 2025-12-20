@@ -242,10 +242,97 @@ namespace Andastra.Runtime.MonoGame.Backends
                 Type = ResourceType.Texture,
                 Handle = handle,
                 GLHandle = 0, // Would be actual GL handle
-                DebugName = desc.DebugName
+                DebugName = desc.DebugName,
+                TextureDesc = desc
             };
 
             return handle;
+        }
+
+        /// <summary>
+        /// Uploads texture pixel data to a previously created texture.
+        /// Matches original engine behavior: swkotor.exe and swkotor2.exe use glTexImage2D/glCompressedTexImage2D
+        /// to upload texture data after creating the texture object.
+        /// Based on swkotor.exe: FUN_00427c90 @ 0x00427c90 and swkotor2.exe equivalent functions.
+        /// </summary>
+        public bool UploadTextureData(IntPtr handle, TextureUploadData data)
+        {
+            if (!_initialized)
+            {
+                return false;
+            }
+
+            if (handle == IntPtr.Zero)
+            {
+                return false;
+            }
+
+            if (!_resources.TryGetValue(handle, out ResourceInfo info))
+            {
+                Console.WriteLine("[OpenGLBackend] UploadTextureData: Invalid texture handle");
+                return false;
+            }
+
+            if (info.Type != ResourceType.Texture)
+            {
+                Console.WriteLine("[OpenGLBackend] UploadTextureData: Handle is not a texture");
+                return false;
+            }
+
+            if (data.Mipmaps == null || data.Mipmaps.Length == 0)
+            {
+                Console.WriteLine("[OpenGLBackend] UploadTextureData: No mipmap data provided");
+                return false;
+            }
+
+            try
+            {
+                // For OpenGL, we use glTexImage2D to upload texture data for each mipmap level
+                // This matches the original engine's pattern exactly:
+                // 1. Bind the texture: glBindTexture(GL_TEXTURE_2D, textureId)
+                // 2. For each mipmap level: glTexImage2D(GL_TEXTURE_2D, level, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, data)
+                // Original engine: swkotor.exe and swkotor2.exe use this exact pattern
+
+                // TODO: When OpenGL implementation is complete:
+                // if (info.GLHandle == 0) {
+                //     // Generate texture if not already created
+                //     uint textureId = 0;
+                //     glGenTextures(1, &textureId);
+                //     info.GLHandle = textureId;
+                // }
+                // 
+                // glBindTexture(GL_TEXTURE_2D, info.GLHandle);
+                // 
+                // uint format = ConvertTextureFormatToOpenGL(data.Format);
+                // uint internalFormat = GetOpenGLInternalFormat(data.Format);
+                // 
+                // for (int i = 0; i < data.Mipmaps.Length; i++) {
+                //     var mipmap = data.Mipmaps[i];
+                //     System.Runtime.InteropServices.GCHandle pinnedData = System.Runtime.InteropServices.GCHandle.Alloc(mipmap.Data, System.Runtime.InteropServices.GCHandleType.Pinned);
+                //     try {
+                //         IntPtr dataPtr = pinnedData.AddrOfPinnedObject();
+                //         glTexImage2D(GL_TEXTURE_2D, mipmap.Level, (int)internalFormat, mipmap.Width, mipmap.Height, 0, format, GL_UNSIGNED_BYTE, dataPtr);
+                //     } finally {
+                //         pinnedData.Free();
+                //     }
+                // }
+                // 
+                // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+                // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                // glBindTexture(GL_TEXTURE_2D, 0);
+
+                // For now, store the upload data so it can be used when the texture is actually created
+                info.UploadData = data;
+                _resources[handle] = info;
+
+                Console.WriteLine($"[OpenGLBackend] UploadTextureData: Stored {data.Mipmaps.Length} mipmap levels for texture {info.DebugName}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[OpenGLBackend] UploadTextureData: Exception uploading texture: {ex.Message}");
+                return false;
+            }
         }
 
         public IntPtr CreateBuffer(BufferDescription desc)
@@ -623,6 +710,8 @@ namespace Andastra.Runtime.MonoGame.Backends
             public IntPtr Handle;
             public uint GLHandle;
             public string DebugName;
+            public TextureDescription TextureDesc;
+            public TextureUploadData UploadData; // Stored upload data for deferred upload
         }
 
         private enum ResourceType

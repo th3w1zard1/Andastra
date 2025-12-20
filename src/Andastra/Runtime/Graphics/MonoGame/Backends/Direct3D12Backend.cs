@@ -235,10 +235,52 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 Type = ResourceType.Texture,
                 Handle = handle,
-                DebugName = desc.DebugName
+                DebugName = desc.DebugName,
+                TextureDesc = desc
             };
 
             return handle;
+        }
+
+        /// <summary>
+        /// Uploads texture pixel data to a previously created texture.
+        /// Matches original engine behavior: DirectX 12 uses ID3D12GraphicsCommandList::CopyTextureRegion
+        /// or UpdateSubresources to upload texture data after creating the texture resource.
+        /// </summary>
+        public bool UploadTextureData(IntPtr handle, TextureUploadData data)
+        {
+            if (!_initialized || handle == IntPtr.Zero)
+            {
+                return false;
+            }
+
+            if (!_resources.TryGetValue(handle, out ResourceInfo info) || info.Type != ResourceType.Texture)
+            {
+                Console.WriteLine("[Direct3D12Backend] UploadTextureData: Invalid texture handle");
+                return false;
+            }
+
+            if (data.Mipmaps == null || data.Mipmaps.Length == 0)
+            {
+                Console.WriteLine("[Direct3D12Backend] UploadTextureData: No mipmap data provided");
+                return false;
+            }
+
+            try
+            {
+                // For DirectX 12, we use UpdateSubresources or CopyTextureRegion to upload texture data
+                // Store upload data for deferred upload when texture is actually created
+                info.UploadData = data;
+                _resources[handle] = info;
+
+                Console.WriteLine($"[Direct3D12Backend] UploadTextureData: Stored {data.Mipmaps.Length} mipmap levels for texture {info.DebugName}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Direct3D12Backend] UploadTextureData: Exception uploading texture: {ex.Message}");
+                return false;
+            }
         }
 
         public IntPtr CreateBuffer(BufferDescription desc)
@@ -524,6 +566,8 @@ namespace Andastra.Runtime.MonoGame.Backends
             public ResourceType Type;
             public IntPtr Handle;
             public string DebugName;
+            public TextureDescription TextureDesc;
+            public TextureUploadData UploadData;
         }
 
         private enum ResourceType

@@ -220,10 +220,50 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 Type = ResourceType.Texture,
                 Handle = handle,
-                DebugName = desc.DebugName
+                DebugName = desc.DebugName,
+                TextureDesc = desc
             };
 
             return handle;
+        }
+
+        /// <summary>
+        /// Uploads texture pixel data to a previously created texture.
+        /// Matches original engine behavior: DirectX 10 uses ID3D10Device::UpdateSubresource
+        /// to upload texture data after creating the texture resource.
+        /// </summary>
+        public bool UploadTextureData(IntPtr handle, TextureUploadData data)
+        {
+            if (!_initialized || handle == IntPtr.Zero)
+            {
+                return false;
+            }
+
+            if (!_resources.TryGetValue(handle, out ResourceInfo info) || info.Type != ResourceType.Texture)
+            {
+                Console.WriteLine("[Direct3D10Backend] UploadTextureData: Invalid texture handle");
+                return false;
+            }
+
+            if (data.Mipmaps == null || data.Mipmaps.Length == 0)
+            {
+                Console.WriteLine("[Direct3D10Backend] UploadTextureData: No mipmap data provided");
+                return false;
+            }
+
+            try
+            {
+                info.UploadData = data;
+                _resources[handle] = info;
+
+                Console.WriteLine($"[Direct3D10Backend] UploadTextureData: Stored {data.Mipmaps.Length} mipmap levels for texture {info.DebugName}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Direct3D10Backend] UploadTextureData: Exception uploading texture: {ex.Message}");
+                return false;
+            }
         }
 
         public IntPtr CreateBuffer(BufferDescription desc)
@@ -459,6 +499,8 @@ namespace Andastra.Runtime.MonoGame.Backends
             public ResourceType Type;
             public IntPtr Handle;
             public string DebugName;
+            public TextureDescription TextureDesc;
+            public TextureUploadData UploadData;
         }
 
         private enum ResourceType

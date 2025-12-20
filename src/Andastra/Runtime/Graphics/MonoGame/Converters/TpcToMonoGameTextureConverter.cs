@@ -318,7 +318,11 @@ namespace Andastra.Runtime.MonoGame.Converters
             return texture;
         }
 
-        private static byte[] ConvertMipmapToRgba(TPCMipmap mipmap)
+        /// <summary>
+        /// Converts a single TPC mipmap to RGBA format.
+        /// Made internal for use by PbrMaterialFactory to upload individual mipmap levels.
+        /// </summary>
+        internal static byte[] ConvertMipmapToRgba(TPCMipmap mipmap)
         {
             int width = mipmap.Width;
             int height = mipmap.Height;
