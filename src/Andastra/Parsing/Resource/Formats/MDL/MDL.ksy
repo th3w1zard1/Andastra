@@ -10,7 +10,7 @@ doc: |
   BioWare MDL Model Format
 
   The MDL file contains:
-  - File header (12 bytes)
+  - File header (12 0xC bytes)
   - Geometry header (80 bytes)
   - Model header (92 bytes)
   - Names header (28 bytes)
@@ -920,17 +920,77 @@ types:
       - id: type
         type: u4
         doc: |
-          Controller type identifier:
-          - 8: position
-          - 20: orientation
-          - 36: scale
-          - 76: color (light)
-          - 88: radius (light)
-          - 96: shadow radius (light)
-          - 100: vertical displacement (light), drag (emitter), selfillumcolor (mesh)
-          - 132: alpha
-          - 140: multiplier (light), randvel (emitter)
-          And many more for emitters...
+          Controller type identifier. Controllers define animation data for node properties over time.
+          
+          Common Node Controllers (used by all node types):
+          - 8: Position (3 floats: X, Y, Z translation)
+          - 20: Orientation (4 floats: quaternion W, X, Y, Z rotation)
+          - 36: Scale (3 floats: X, Y, Z scale factors)
+          
+          Light Controllers (specific to light nodes):
+          - 76: Color (light color, 3 floats: R, G, B)
+          - 88: Radius (light radius, 1 float)
+          - 96: Shadow Radius (shadow casting radius, 1 float)
+          - 100: Vertical Displacement (vertical offset, 1 float)
+          - 140: Multiplier (light intensity multiplier, 1 float)
+          
+          Emitter Controllers (specific to emitter nodes):
+          - 80: Alpha End (final alpha value, 1 float)
+          - 84: Alpha Start (initial alpha value, 1 float)
+          - 88: Birth Rate (particle spawn rate, 1 float)
+          - 92: Bounce Coefficient (particle bounce factor, 1 float)
+          - 96: Combine Time (particle combination timing, 1 float)
+          - 100: Drag (particle drag/resistance, 1 float)
+          - 104: FPS (frames per second, 1 float)
+          - 108: Frame End (ending frame number, 1 float)
+          - 112: Frame Start (starting frame number, 1 float)
+          - 116: Gravity (gravity force, 1 float)
+          - 120: Life Expectancy (particle lifetime, 1 float)
+          - 124: Mass (particle mass, 1 float)
+          - 128: P2P Bezier 2 (point-to-point bezier control point 2, varies)
+          - 132: P2P Bezier 3 (point-to-point bezier control point 3, varies)
+          - 136: Particle Rotation (particle rotation speed/angle, 1 float)
+          - 140: Random Velocity (random velocity component, 3 floats: X, Y, Z)
+          - 144: Size Start (initial particle size, 1 float)
+          - 148: Size End (final particle size, 1 float)
+          - 152: Size Start Y (initial particle size Y component, 1 float)
+          - 156: Size End Y (final particle size Y component, 1 float)
+          - 160: Spread (particle spread angle, 1 float)
+          - 164: Threshold (threshold value, 1 float)
+          - 168: Velocity (particle velocity, 3 floats: X, Y, Z)
+          - 172: X Size (particle X dimension size, 1 float)
+          - 176: Y Size (particle Y dimension size, 1 float)
+          - 180: Blur Length (motion blur length, 1 float)
+          - 184: Lightning Delay (lightning effect delay, 1 float)
+          - 188: Lightning Radius (lightning effect radius, 1 float)
+          - 192: Lightning Scale (lightning effect scale factor, 1 float)
+          - 196: Lightning Subdivide (lightning subdivision count, 1 float)
+          - 200: Lightning Zig Zag (lightning zigzag pattern, 1 float)
+          - 216: Alpha Mid (mid-point alpha value, 1 float)
+          - 220: Percent Start (starting percentage, 1 float)
+          - 224: Percent Mid (mid-point percentage, 1 float)
+          - 228: Percent End (ending percentage, 1 float)
+          - 232: Size Mid (mid-point particle size, 1 float)
+          - 236: Size Mid Y (mid-point particle size Y component, 1 float)
+          - 240: Random Birth Rate (randomized particle spawn rate, 1 float)
+          - 252: Target Size (target particle size, 1 float)
+          - 256: Number of Control Points (control point count, 1 float)
+          - 260: Control Point Radius (control point radius, 1 float)
+          - 264: Control Point Delay (control point delay timing, 1 float)
+          - 268: Tangent Spread (tangent spread angle, 1 float)
+          - 272: Tangent Length (tangent vector length, 1 float)
+          - 284: Color Mid (mid-point color, 3 floats: R, G, B)
+          - 380: Color End (final color, 3 floats: R, G, B)
+          - 392: Color Start (initial color, 3 floats: R, G, B)
+          - 502: Emitter Detonate (detonation trigger, 1 float)
+          
+          Mesh Controllers (used by all mesh node types: trimesh, skinmesh, animmesh, danglymesh, AABB, lightsaber):
+          - 100: SelfIllumColor (self-illumination color, 3 floats: R, G, B)
+          - 128: Alpha (transparency/opacity, 1 float)
+          
+          Reference: vendor/PyKotor/wiki/MDL-MDX-File-Format.md - Additional Controller Types section
+          Reference: vendor/mdlops/MDLOpsM.pm:342-407 - Controller type definitions
+          Reference: vendor/xoreos-docs/specs/torlack/binmdl.html - Comprehensive controller list
       - id: unknown
         type: u2
         doc: Purpose unknown, typically 0xFFFF
