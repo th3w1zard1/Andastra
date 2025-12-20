@@ -575,7 +575,9 @@ void helper() {
             var bookmarkTree = editor.BookmarkTree;
             bookmarkTree.Should().NotBeNull("BookmarkTree should be initialized");
 
-            var itemsList = bookmarkTree.Items as System.Collections.Generic.IEnumerable<Avalonia.Controls.TreeViewItem> ?? new System.Collections.Generic.List<Avalonia.Controls.TreeViewItem>();
+            // Use same pattern as implementation: ItemsSource first, then fallback to Items
+            var itemsList = bookmarkTree.ItemsSource as System.Collections.Generic.List<Avalonia.Controls.TreeViewItem> ??
+                          (bookmarkTree.Items as System.Collections.Generic.IEnumerable<Avalonia.Controls.TreeViewItem> ?? new System.Collections.Generic.List<Avalonia.Controls.TreeViewItem>()).ToList();
             int bookmarkCount = itemsList.Count();
             bookmarkCount.Should().BeGreaterThanOrEqualTo(3, "At least 3 bookmarks should be added");
 

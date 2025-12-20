@@ -1158,6 +1158,23 @@ namespace HolocronToolset.Editors
             UpdateBookmarkVisualization();
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:267-269
+        // Original: def _goto_bookmark(self, item: QTreeWidgetItem):
+        /// <summary>
+        /// Navigates to the line number associated with a bookmark item.
+        /// </summary>
+        /// <param name="item">The TreeViewItem representing the bookmark.</param>
+        public void GotoBookmark(TreeViewItem item)
+        {
+            if (item == null || item.Tag is not BookmarkData bookmarkData)
+            {
+                return;
+            }
+
+            int lineNumber = bookmarkData.LineNumber;
+            GotoLine(lineNumber);
+        }
+
         // Helper method to get current line number from TextBox cursor position
         private int GetCurrentLineNumber()
         {
@@ -1554,23 +1571,23 @@ namespace HolocronToolset.Editors
             {
                 int cursorPos = _codeEdit.SelectionStart;
                 string text = _codeEdit.Text;
-                
+
                 // Find word boundaries
                 int start = cursorPos;
                 int end = cursorPos;
-                
+
                 // Move start backward to beginning of word
                 while (start > 0 && (char.IsLetterOrDigit(text[start - 1]) || text[start - 1] == '_'))
                 {
                     start--;
                 }
-                
+
                 // Move end forward to end of word
                 while (end < text.Length && (char.IsLetterOrDigit(text[end]) || text[end] == '_'))
                 {
                     end++;
                 }
-                
+
                 if (end > start)
                 {
                     wordUnderCursor = text.Substring(start, end - start).Trim();
@@ -3779,7 +3796,9 @@ namespace HolocronToolset.Editors
 
         // Helper class to store bookmark data
         // Internal class for bookmark data (accessible to tests)
-        internal class BookmarkData
+        // Public class for bookmark data, accessible from tests
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py
+        public class BookmarkData
         {
             public int LineNumber { get; set; }
             public string Description { get; set; }
