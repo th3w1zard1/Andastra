@@ -454,7 +454,7 @@ namespace Andastra.Utility.System
 
                     // Wait a short time for async output/error reading to complete
                     // The process has exited, but async handlers may still be processing
-                    System.Threading.Thread.Sleep(100);
+                    global::System.Threading.Thread.Sleep(100);
                     process.CancelOutputRead();
                     process.CancelErrorRead();
 
