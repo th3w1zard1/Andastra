@@ -742,12 +742,13 @@ namespace Andastra.Runtime.Game.Core
                     break;
                 
                 case "BTN_GAMEPLAY":
-                    // Gameplay options button - open gameplay options submenu
+                    // Gameplay options button - switch to gameplay options tab
                     // Based on swkotor2.exe: CSWGuiOptionsMain::OnGameplayOpt @ 0x006de240
                     if (_currentState == GameState.OptionsMenu)
                     {
-                        Console.WriteLine("[Odyssey] Gameplay options button clicked - opening gameplay options submenu");
-                        OpenGameplayOptionsMenu();
+                        Console.WriteLine("[Odyssey] Gameplay options button clicked - switching to gameplay tab");
+                        _optionsTab = Andastra.Runtime.Game.GUI.OptionsMenu.OptionsTab.Gameplay;
+                        _optionsSelectedIndex = 0;
                     }
                     break;
                 
