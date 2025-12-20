@@ -5,7 +5,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using HolocronToolset.Dialogs;
+using HolocronToolset.Config;
+using HolocronToolset.Update;
+using Newtonsoft.Json.Linq;
 
 namespace HolocronToolset.Dialogs
 {
@@ -36,10 +38,163 @@ namespace HolocronToolset.Dialogs
             // Get the current main window for progress dialog positioning
             Window ownerWindow = GetMainWindow();
 
-            // TODO: Implement update process
-            // Update functionality is not yet implemented
-            // AppUpdate class needs to be created in HolocronToolset.Update namespace
-            throw new NotImplementedException("Update process is not yet implemented. AppUpdate class needs to be created.");
+            // Create progress queue for communication between update process and progress dialog
+            Queue<Dictionary<string, object>> progressQueue = new Queue<Dictionary<string, object>>();
+
+            // Show progress dialog
+            UpdateProgressDialog progressDialog = new UpdateProgressDialog(progressQueue);
+            if (ownerWindow != null)
+            {
+                progressDialog.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            }
+            progressDialog.Show();
+
+            // Extract release information
+            JObject releaseObj = release as JObject;
+            if (releaseObj == null)
+            {
+                throw new ArgumentException("Release must be a JObject", nameof(release));
+            }
+
+            string tagName = releaseObj["tag_name"]?.Value<string>() ?? "";
+            JArray assets = releaseObj["assets"] as JArray;
+
+            // Get expected archive filenames from release assets
+            List<string> expectedArchiveFilenames = new List<string>();
+            if (assets != null)
+            {
+                foreach (JObject asset in assets.OfType<JObject>())
+                {
+                    string assetName = asset["name"]?.Value<string>();
+                    if (!string.IsNullOrEmpty(assetName))
+                    {
+                        expectedArchiveFilenames.Add(assetName);
+                    }
+                }
+            }
+
+            // Download progress hook
+            void DownloadProgressHook(Dictionary<string, object> data)
+            {
+                lock (progressQueue)
+                {
+                    progressQueue.Enqueue(data);
+                }
+            }
+
+            // Exit hook
+            void ExitApp(bool killSelfHere)
+            {
+                try
+                {
+                    // Signal progress dialog to close
+                    Dictionary<string, object> shutdownData = new Dictionary<string, object>
+                    {
+                        ["action"] = "shutdown",
+                        ["data"] = new Dictionary<string, object>()
+                    };
+                    lock (progressQueue)
+                    {
+                        progressQueue.Enqueue(shutdownData);
+                    }
+
+                    // Wait a bit for the dialog to close
+                    Thread.Sleep(500);
+
+                    // Terminate threads (best effort)
+                    TerminateThreads();
+
+                    // Quit application
+                    QuitApplication();
+
+                    if (killSelfHere)
+                    {
+                        Environment.Exit(0);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine($"Error in exit hook: {ex}");
+                    if (killSelfHere)
+                    {
+                        Environment.Exit(1);
+                    }
+                }
+            }
+
+            // Create AppUpdate instance
+            string currentVersion = ConfigInfo.CurrentVersion;
+            string latestVersion = ConfigVersion.ToolsetTagToVersion(tagName);
+
+            AppUpdate updater = new AppUpdate(
+                new List<string> { downloadUrl },
+                "HolocronToolset",
+                currentVersion,
+                latestVersion,
+                new List<Action<Dictionary<string, object>>> { DownloadProgressHook },
+                ExitApp,
+                ConfigVersion.VersionToToolsetTag);
+
+            // Override archive names getter if we have expected filenames
+            if (expectedArchiveFilenames.Count > 0)
+            {
+                updater.GetArchiveNamesFunc = () => expectedArchiveFilenames;
+            }
+
+            try
+            {
+                // Update status: Downloading
+                lock (progressQueue)
+                {
+                    progressQueue.Enqueue(new Dictionary<string, object>
+                    {
+                        ["action"] = "update_status",
+                        ["text"] = "Downloading update..."
+                    });
+                }
+
+                // Download the update
+                bool downloadSuccess = updater.Download(background: false);
+                if (!downloadSuccess)
+                {
+                    throw new Exception("Failed to download update");
+                }
+
+                // Update status: Restarting and Applying
+                lock (progressQueue)
+                {
+                    progressQueue.Enqueue(new Dictionary<string, object>
+                    {
+                        ["action"] = "update_status",
+                        ["text"] = "Restarting and Applying update..."
+                    });
+                }
+
+                // Extract and restart
+                updater.ExtractRestart();
+
+                // Update status: Cleaning up
+                lock (progressQueue)
+                {
+                    progressQueue.Enqueue(new Dictionary<string, object>
+                    {
+                        ["action"] = "update_status",
+                        ["text"] = "Cleaning up..."
+                    });
+                }
+
+                // Cleanup
+                updater.Cleanup();
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Error occurred while downloading/installing the toolset: {ex}");
+                throw;
+            }
+            finally
+            {
+                ExitApp(killSelfHere: true);
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/update_process.py:143-177
