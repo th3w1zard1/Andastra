@@ -14,7 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Andastra\Parsing\Andastra.Parsing.csproj" />
-    <ProjectReference Include="..\Cli\Cli.csproj" />
+    <ProjectReference Include="Cli\Cli.csproj" />
   </ItemGroup>
 
 </Project>

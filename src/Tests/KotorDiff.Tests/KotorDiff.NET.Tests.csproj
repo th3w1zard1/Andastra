@@ -20,6 +20,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Tools\KotorDiff\KotorDiff.NET.csproj" />
+    <ProjectReference Include="..\..\Tools\KotorDiff\App\App.csproj" />
+    <ProjectReference Include="..\..\Tools\KotorDiff\Resolution\Resolution.csproj" />
+    <ProjectReference Include="..\..\Tools\KotorDiff\Diff\Diff.csproj" />
     <ProjectReference Include="..\..\Andastra\Parsing\Andastra.Parsing.csproj" />
   </ItemGroup>
 

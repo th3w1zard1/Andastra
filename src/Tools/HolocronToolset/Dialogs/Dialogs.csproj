@@ -16,6 +16,8 @@
     <PackageReference Include="Markdig" Version="0.44.0" />
     <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
     <PackageReference Include="System.Reactive" Version="6.1.0" />
+    <PackageReference Include="System.Windows.Extensions" Version="9.0.0" />
+    <PackageReference Include="ReactiveUI" Version="22.3.1" />
     <ProjectReference Include="..\..\..\Andastra\Parsing\Andastra.Parsing.csproj" />
     <ProjectReference Include="..\Data\Data.csproj" />
     <ProjectReference Include="..\Utils\Utils.csproj" />
@@ -29,6 +31,22 @@
     <Compile Include="..\Editors\DLGListWidget.cs" />
     <Compile Include="..\Editors\DLGListWidgetItem.cs" />
     <Compile Include="..\Editors\DLGEditor.cs" />
+    <Compile Include="..\Editors\Editor.cs" />
+    <Compile Include="..\Editors\WindowUtils.cs" />
+    <Compile Include="..\Editors\EditorWikiMapping.cs" />
+    <Compile Include="..\Editors\UTIEditor.cs" />
+    <Compile Include="..\Editors\TwoDAEditor.cs" />
+    <Compile Include="..\Editors\SSFEditor.cs" />
+    <Compile Include="..\Editors\TLKEditor.cs" />
+    <Compile Include="..\Editors\LTREditor.cs" />
+    <Compile Include="..\Editors\LIPEditor.cs" />
+    <Compile Include="..\Editors\BWMEditor.cs" />
+    <Compile Include="..\Editors\TPCEditor.cs" />
+    <Compile Include="..\Editors\NSSEditor.cs" />
+    <Compile Include="..\Editors\GFFEditor.cs" />
+    <Compile Include="..\Editors\UTCEditor.cs" />
+    <Compile Include="..\Editors\UTPEditor.cs" />
+    <Compile Include="..\Editors\Actions\*.cs" />
   </ItemGroup>
 
   <PropertyGroup>
