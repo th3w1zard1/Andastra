@@ -290,18 +290,70 @@ namespace HolocronToolset.Data
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:258-285
         // Original: def process_model(self, room: IndoorMapRoom, installation: HTInstallation) -> tuple[bytes, bytes]:
+        /// <summary>
+        /// Processes a model for a room by applying flip, rotation, and format conversion.
+        /// 
+        /// Processing Logic:
+        /// - Flip the model based on room flip_x and flip_y properties
+        /// - Rotate the model based on room rotation property
+        /// - Convert the model to target system format based on installation tsl property
+        /// - Return processed model and material index strings.
+        /// 
+        /// Matching PyKotor: Tools/HolocronToolset/src/toolset/data/indoormap.py:258-285
+        /// </summary>
+        /// <param name="room">The room containing the model component to process.</param>
+        /// <param name="installation">The installation to determine target format (K1 vs K2).</param>
+        /// <returns>A tuple containing the processed MDL and MDX data.</returns>
         private (byte[] mdl, byte[] mdx) ProcessModel(IndoorMapRoom room, HTInstallation installation)
         {
+            if (room == null)
+            {
+                throw new ArgumentNullException(nameof(room));
+            }
+            if (room.Component == null)
+            {
+                throw new ArgumentException("Room component cannot be null", nameof(room));
+            }
+            if (installation == null)
+            {
+                throw new ArgumentNullException(nameof(installation));
+            }
+            if (room.Component.Mdl == null || room.Component.Mdl.Length == 0)
+            {
+                throw new ArgumentException("Room component MDL data cannot be null or empty", nameof(room));
+            }
+            if (room.Component.Mdx == null || room.Component.Mdx.Length == 0)
+            {
+                throw new ArgumentException("Room component MDX data cannot be null or empty", nameof(room));
+            }
+
             // Apply model flip transformation
             // Matching Python: mdl, mdx = model.flip(room.component.mdl, room.component.mdx, flip_x=room.flip_x, flip_y=room.flip_y)
             var flipped = ModelTools.Flip(room.Component.Mdl, room.Component.Mdx, room.FlipX, room.FlipY);
+            if (flipped == null)
+            {
+                throw new InvalidOperationException("Model flip operation returned null");
+            }
             byte[] mdl = flipped.Mdl;
             byte[] mdx = flipped.Mdx;
+
+            if (mdl == null || mdl.Length == 0)
+            {
+                throw new InvalidOperationException("Flipped MDL data is null or empty");
+            }
+            if (mdx == null || mdx.Length == 0)
+            {
+                throw new InvalidOperationException("Flipped MDX data is null or empty");
+            }
 
             // Apply model transformation (rotation)
             // Matching Python: mdl_transformed: bytes = model.transform(mdl, Vector3.from_null(), room.rotation)
             // Vector3.from_null() is Vector3(0, 0, 0) - no translation, only rotation
             mdl = ModelTools.Transform(mdl, System.Numerics.Vector3.Zero, room.Rotation);
+            if (mdl == null || mdl.Length == 0)
+            {
+                throw new InvalidOperationException("Transformed MDL data is null or empty");
+            }
 
             // Convert model to target game format (K1 or K2)
             // Matching Python: mdl_converted: bytes = model.convert_to_k2(mdl_transformed) if installation.tsl else model.convert_to_k1(mdl_transformed)
@@ -312,6 +364,11 @@ namespace HolocronToolset.Data
             else
             {
                 mdl = ModelTools.ConvertToK1(mdl);
+            }
+
+            if (mdl == null || mdl.Length == 0)
+            {
+                throw new InvalidOperationException("Converted MDL data is null or empty");
             }
 
             return (mdl, mdx);
