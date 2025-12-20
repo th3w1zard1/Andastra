@@ -9,7 +9,7 @@ using Andastra.Parsing.Common.Script;
 using Andastra.Parsing.Formats.NCS;
 using Andastra.Parsing.Formats.NCS.Optimizers;
 
-namespace KNSSComp.NET
+namespace NSSComp.NET
 {
     /// <summary>
     /// Unified CLI entrypoint for NSS compilation/decompilation.
@@ -74,11 +74,11 @@ namespace KNSSComp.NET
 
         private static void PrintUsage()
         {
-            Console.WriteLine("KNSSComp.NET - Unified NSS Compiler/Decompiler");
+            Console.WriteLine("NSSComp.NET - Unified NSS Compiler/Decompiler");
             Console.WriteLine("Drop-in compatible with all nwnnsscomp.exe variants");
             Console.WriteLine();
             Console.WriteLine("USAGE:");
-            Console.WriteLine("  knsscomp [OPTIONS]");
+            Console.WriteLine("  nsscomp [OPTIONS]");
             Console.WriteLine();
             Console.WriteLine("OPERATIONS:");
             Console.WriteLine("  -c, --compile          Compile NSS to NCS");
@@ -138,36 +138,36 @@ namespace KNSSComp.NET
             Console.WriteLine();
             Console.WriteLine("EXAMPLES:");
             Console.WriteLine("  # Compile (TSLPatcher style)");
-            Console.WriteLine("  knsscomp -c script.nss -o script.ncs");
+            Console.WriteLine("  nsscomp -c script.nss -o script.ncs");
             Console.WriteLine();
             Console.WriteLine("  # Compile (KOTOR Tool style)");
-            Console.WriteLine("  knsscomp -c script.nss --outputdir . -o script.ncs -g 2");
+            Console.WriteLine("  nsscomp -c script.nss --outputdir . -o script.ncs -g 2");
             Console.WriteLine();
             Console.WriteLine("  # Compile (V1 style)");
-            Console.WriteLine("  knsscomp -c script.nss script.ncs");
+            Console.WriteLine("  nsscomp -c script.nss script.ncs");
             Console.WriteLine();
             Console.WriteLine("  # Compile with includes");
-            Console.WriteLine("  knsscomp -c script.nss -o script.ncs -i ./includes");
+            Console.WriteLine("  nsscomp -c script.nss -o script.ncs -i ./includes");
             Console.WriteLine();
             Console.WriteLine("  # Decompile single file");
-            Console.WriteLine("  knsscomp -d script.ncs -o script.nss");
+            Console.WriteLine("  nsscomp -d script.ncs -o script.nss");
             Console.WriteLine();
             Console.WriteLine("  # Decompile to stdout");
-            Console.WriteLine("  knsscomp -d script.ncs --stdout");
+            Console.WriteLine("  nsscomp -d script.ncs --stdout");
             Console.WriteLine();
             Console.WriteLine("  # Decompile directory recursively");
-            Console.WriteLine("  knsscomp -d -i scripts_dir -r -O output_dir");
+            Console.WriteLine("  nsscomp -d -i scripts_dir -r -O output_dir");
             Console.WriteLine();
             Console.WriteLine("  # Decompile multiple files");
-            Console.WriteLine("  knsscomp -d -i file1.ncs -i file2.ncs -O output");
+            Console.WriteLine("  nsscomp -d -i file1.ncs -i file2.ncs -O output");
             Console.WriteLine();
             Console.WriteLine("  # Compile with custom nwscript.nss");
-            Console.WriteLine("  knsscomp -c script.nss -o script.ncs --nwscript custom_nwscript.nss");
+            Console.WriteLine("  nsscomp -c script.nss -o script.ncs --nwscript custom_nwscript.nss");
         }
 
         private static void PrintVersion()
         {
-            Console.WriteLine("KNSSComp.NET 1.0.0");
+            Console.WriteLine("NSSComp.NET 1.0.0");
             Console.WriteLine("Unified NSS Compiler/Decompiler for KOTOR and TSL");
             Console.WriteLine("Drop-in compatible with all nwnnsscomp.exe variants");
         }
@@ -520,7 +520,7 @@ namespace KNSSComp.NET
 
             // Handle positional arguments
             // Pattern 1: -c source output (V1 style)
-            // Pattern 2: -c source -o output (TSLPatcher/KNSSCOMP style)
+            // Pattern 2: -c source -o output (TSLPatcher/NSSCOMP style)
             // Pattern 3: source output (implicit compile)
             // Pattern 4: source (output inferred from source name)
             // Pattern 5: -d -i file1.ncs -i file2.ncs (multiple inputs)
