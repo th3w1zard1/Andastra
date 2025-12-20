@@ -5,6 +5,7 @@ using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
+using Andastra.Parsing.Formats.TLK;
 using JetBrains.Annotations;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
@@ -58,6 +59,16 @@ namespace Andastra.Runtime.Games.Eclipse.Loading
         // ObjectIds should be unique across all entities. Use high range (1000000+) to avoid conflicts with World.CreateEntity counter
         private uint _nextObjectId = 1000000;
 
+        // TLK (talk table) files for LocalizedString resolution
+        // Based on daorigins.exe/DragonAge2.exe: TLK lookup system for localized strings
+        // Eclipse engine uses TLK format compatible with Odyssey/Aurora engines
+        // Base TLK: dialog.tlk (main talk table)
+        // Custom TLK: Custom entries start at 0x01000000 (high bit set)
+        // Located via string references: TLK lookup in entity template loading
+        // Original implementation: Eclipse engine resolves LocalizedString.StringRef via TLK files
+        private TLK _baseTlk;
+        private TLK _customTlk;
+
         /// <summary>
         /// Gets the next available object ID.
         /// Uses high range to avoid conflicts with Entity's static counter (used by World.CreateEntity).
@@ -65,6 +76,81 @@ namespace Andastra.Runtime.Games.Eclipse.Loading
         private uint GetNextObjectId()
         {
             return _nextObjectId++;
+        }
+
+        /// <summary>
+        /// Sets the talk tables for LocalizedString resolution.
+        /// </summary>
+        /// <param name="baseTlk">The base TLK (dialog.tlk) for string lookups.</param>
+        /// <param name="customTlk">The custom TLK for custom string entries (optional).</param>
+        /// <remarks>
+        /// Based on daorigins.exe and DragonAge2.exe: TLK lookup system
+        /// - Eclipse engine uses TLK format compatible with Odyssey/Aurora engines
+        /// - Base TLK: dialog.tlk contains main string table
+        /// - Custom TLK: Custom entries start at 0x01000000 (high bit set)
+        /// - Located via string references: TLK lookup in entity template loading
+        /// - Original implementation: Eclipse engine resolves LocalizedString.StringRef via TLK files
+        /// - Similar to Odyssey DialogueManager.SetTalkTables and EclipseJRLLoader.SetTalkTables
+        /// </remarks>
+        public void SetTalkTables(object baseTlk, object customTlk = null)
+        {
+            _baseTlk = baseTlk as TLK;
+            _customTlk = customTlk as TLK;
+        }
+
+        /// <summary>
+        /// Looks up a string by string reference in the talk tables.
+        /// </summary>
+        /// <param name="stringRef">The string reference to look up.</param>
+        /// <returns>The string text from TLK, or empty string if not found.</returns>
+        /// <remarks>
+        /// Based on daorigins.exe and DragonAge2.exe: TLK string lookup system
+        /// - Eclipse engine uses TLK format compatible with Odyssey/Aurora engines
+        /// - Custom TLK entries start at 0x01000000 (high bit set)
+        /// - Base TLK: dialog.tlk contains main string table (0x00000000 - 0x00FFFFFF)
+        /// - Custom TLK: Custom entries (0x01000000+)
+        /// - Located via string references: TLK lookup in entity template loading
+        /// - Original implementation: Eclipse engine resolves LocalizedString.StringRef via TLK files
+        /// - Similar to Odyssey DialogueManager.LookupString implementation
+        /// </remarks>
+        private string LookupString(int stringRef)
+        {
+            if (stringRef < 0)
+            {
+                return string.Empty;
+            }
+
+            // Custom TLK entries start at 0x01000000 (high bit set)
+            // Based on Odyssey engine: Custom TLK entries use high bit to distinguish from base TLK
+            const int CUSTOM_TLK_START = 0x01000000;
+
+            if (stringRef >= CUSTOM_TLK_START)
+            {
+                // Look up in custom TLK
+                if (_customTlk != null)
+                {
+                    int customRef = stringRef - CUSTOM_TLK_START;
+                    string text = _customTlk.String(customRef);
+                    if (!string.IsNullOrEmpty(text))
+                    {
+                        return text;
+                    }
+                }
+            }
+            else
+            {
+                // Look up in base TLK
+                if (_baseTlk != null)
+                {
+                    string text = _baseTlk.String(stringRef);
+                    if (!string.IsNullOrEmpty(text))
+                    {
+                        return text;
+                    }
+                }
+            }
+
+            return string.Empty;
         }
 
         /// <summary>
@@ -411,13 +497,18 @@ namespace Andastra.Runtime.Games.Eclipse.Loading
             }
 
             // If StringRef is valid (>= 0), look up in TLK (if available)
-            // For now, return embedded substring (English/Male) as fallback
             // Based on daorigins.exe/DragonAge2.exe: LocalizedString resolution
-            // Eclipse may use different TLK system than Odyssey, but format is compatible
+            // Eclipse engine uses TLK format compatible with Odyssey/Aurora engines
+            // Located via string references: TLK lookup in entity template loading
+            // Original implementation: Eclipse engine resolves LocalizedString.StringRef via TLK files
             if (locString.StringRef >= 0)
             {
-                // TODO: Implement TLK lookup for Eclipse if needed
-                // For now, use embedded substring
+                // Look up string in TLK tables (base or custom)
+                string tlkText = LookupString(locString.StringRef);
+                if (!string.IsNullOrEmpty(tlkText))
+                {
+                    return tlkText;
+                }
             }
 
             // Use embedded substrings from GFF (default to English/Male)
