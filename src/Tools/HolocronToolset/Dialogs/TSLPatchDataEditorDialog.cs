@@ -427,27 +427,6 @@ namespace HolocronToolset.Dialogs
             public string Type { get; set; }
         }
         
-        // Helper class for TLK string entries
-        internal class TLKStringEntry
-        {
-            public string TokenName { get; set; }
-            public string Text { get; set; }
-            public string Sound { get; set; }
-            public int TokenId { get; set; }
-            public bool IsReplacement { get; set; }
-            public int ModIndex { get; set; } // For replacements, this is the StrRef to replace
-            public List<string> UsedBy { get; set; } = new List<string>(); // List of files/sections that use this token
-        }
-        
-        // Helper class for 2DA memory token entries
-        internal class TwoDAMemoryTokenEntry
-        {
-            public string TokenName { get; set; } // e.g., "2DAMEMORY0"
-            public int TokenId { get; set; }
-            public string ColumnName { get; set; } // Column name in the 2DA file
-            public string RowLabel { get; set; } // Row label/identifier in the 2DA file
-            public List<string> UsedBy { get; set; } = new List<string>(); // List of files/sections that use this token
-        }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:350-373
         // Original: def _create_scripts_tab(self):
@@ -2782,5 +2761,27 @@ namespace HolocronToolset.Dialogs
             // Close with true result for ShowDialog<bool> support
             Close(true);
         }
+    }
+    
+    // Helper class for TLK string entries
+    internal class TLKStringEntry
+    {
+        public string TokenName { get; set; }
+        public string Text { get; set; }
+        public string Sound { get; set; }
+        public int TokenId { get; set; }
+        public bool IsReplacement { get; set; }
+        public int ModIndex { get; set; } // For replacements, this is the StrRef to replace
+        public List<string> UsedBy { get; set; } = new List<string>(); // List of files/sections that use this token
+    }
+    
+    // Helper class for 2DA memory token entries
+    internal class TwoDAMemoryTokenEntry
+    {
+        public string TokenName { get; set; } // e.g., "2DAMEMORY0"
+        public int TokenId { get; set; }
+        public string ColumnName { get; set; } // Column name in the 2DA file
+        public string RowLabel { get; set; } // Row label/identifier in the 2DA file
+        public List<string> UsedBy { get; set; } = new List<string>(); // List of files/sections that use this token
     }
 }

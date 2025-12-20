@@ -347,10 +347,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey.Culling
                 // Bind texture and set parameters
                 // Matches swkotor2.exe: glBindTexture(GL_TEXTURE_2D, textureId) pattern
                 glBindTexture(GL_TEXTURE_2D, _hiZBufferTexture);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR_MIPMAP_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_CLAMP_TO_EDGE);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_CLAMP_TO_EDGE);
 
                 // Allocate texture storage (mip level 0 will be filled when GenerateHiZBuffer is called)
                 // Matches swkotor2.exe: glTexImage2D pattern from FUN_0042a100

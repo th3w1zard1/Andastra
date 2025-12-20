@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Resource;
+using ParsingResourceType = Andastra.Parsing.Resource.ResourceType;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
@@ -130,7 +131,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
                 // DirectX 9 BeginScene is already called in OnBeginFrame
                 // Clear operations would be done via IDirect3DDevice9::Clear
                 // For now, OpenGL is the primary path for NWN:EE
-                // DirectX 9 implementation would go here if needed
+                // TODO: DirectX 9 implementation would go here if needed
             }
         }
 
@@ -246,7 +247,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
             }
 
             // Try TPC first (most common format for NWN:EE)
-            ResourceIdentifier tpcId = new ResourceIdentifier(resRef, ResourceType.TPC);
+            ResourceIdentifier tpcId = new ResourceIdentifier(resRef, ParsingResourceType.TPC);
             Task<bool> existsTask = _resourceProvider.ExistsAsync(tpcId, System.Threading.CancellationToken.None);
             existsTask.Wait();
             if (existsTask.Result)
@@ -257,7 +258,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
             }
 
             // Try TGA format
-            ResourceIdentifier tgaId = new ResourceIdentifier(resRef, ResourceType.TGA);
+            ResourceIdentifier tgaId = new ResourceIdentifier(resRef, ParsingResourceType.TGA);
             existsTask = _resourceProvider.ExistsAsync(tgaId, System.Threading.CancellationToken.None);
             existsTask.Wait();
             if (existsTask.Result)
@@ -268,7 +269,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
             }
 
             // Try DDS format
-            ResourceIdentifier ddsId = new ResourceIdentifier(resRef, ResourceType.DDS);
+            ResourceIdentifier ddsId = new ResourceIdentifier(resRef, ParsingResourceType.DDS);
             existsTask = _resourceProvider.ExistsAsync(ddsId, System.Threading.CancellationToken.None);
             existsTask.Wait();
             if (existsTask.Result)
@@ -296,8 +297,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
             try
             {
                 // Detect format and parse
-                ResourceType format = TPCAuto.DetectTpc(data, 0);
-                if (format == ResourceType.INVALID)
+                ParsingResourceType format = TPCAuto.DetectTpc(data, 0);
+                if (format == ParsingResourceType.INVALID)
                 {
                     Console.WriteLine($"[NwnEeGraphicsBackend] ParseTextureData: Could not detect texture format for '{resRef}'");
                     return null;
@@ -309,7 +310,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
                 // Try to load TXI metadata if available
                 if (_resourceProvider != null)
                 {
-                    ResourceIdentifier txiId = new ResourceIdentifier(resRef, ResourceType.TXI);
+                    ResourceIdentifier txiId = new ResourceIdentifier(resRef, ParsingResourceType.TXI);
                     Task<bool> existsTask = _resourceProvider.ExistsAsync(txiId, System.Threading.CancellationToken.None);
                     existsTask.Wait();
                     if (existsTask.Result)
@@ -392,10 +393,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
 
             // Step 3: Set texture parameters (can be overridden by TXI if available)
             // Default values match nwmain.exe texture parameter defaults
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
 
             // Apply TXI parameters if available
             if (tpc.TxiObject != null)
@@ -426,15 +427,15 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
             glBindTexture(GL_TEXTURE_2D, 0);
 
             // Store texture in resource tracking
-            IntPtr handle = AllocateHandle();
+            IntPtr resourceHandle = AllocateHandle();
             var originalInfo = new OriginalEngineResourceInfo
             {
-                Handle = handle,
+                Handle = resourceHandle,
                 NativeHandle = new IntPtr(textureId),
                 ResourceType = OriginalEngineResourceType.OpenGLTexture,
                 DebugName = debugName
             };
-            _originalResources[handle] = originalInfo;
+            _originalResources[resourceHandle] = originalInfo;
 
             return new IntPtr(textureId);
         }
@@ -450,9 +451,15 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
             Console.WriteLine($"[NwnEeGraphicsBackend] CreateOpenGLCubeMapFromTpc: Cube map support not fully implemented, using first face");
             if (tpc.Layers.Count > 0)
             {
+                // Create a new TPC with just the first layer
+                // The format will be determined from the layer data when parsing
                 TPC singleFaceTpc = new TPC();
                 singleFaceTpc.Layers.Add(tpc.Layers[0]);
-                singleFaceTpc._format = tpc._format;
+                singleFaceTpc.AlphaTest = tpc.AlphaTest;
+                singleFaceTpc.IsCubeMap = false; // Single face is not a cube map
+                singleFaceTpc.IsAnimated = tpc.IsAnimated;
+                singleFaceTpc.Txi = tpc.Txi;
+                singleFaceTpc.TxiObject = tpc.TxiObject;
                 return CreateOpenGLTextureFromTpc(singleFaceTpc, debugName);
             }
             return IntPtr.Zero;

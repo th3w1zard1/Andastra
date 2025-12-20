@@ -16,9 +16,7 @@ using Andastra.Runtime.Engines.Odyssey.EngineApi;
 using Andastra.Runtime.Kotor.Game;
 using Andastra.Runtime.Scripting.EngineApi;
 using Andastra.Runtime.Scripting.VM;
-using Color = Odyssey.Graphics.Color;
-using Rectangle = Odyssey.Graphics.Rectangle;
-using Vector2 = Odyssey.Graphics.Vector2;
+using Microsoft.Xna.Framework;
 
 namespace Andastra.Runtime.Game.Core
 {

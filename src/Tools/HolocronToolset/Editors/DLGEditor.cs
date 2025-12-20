@@ -1919,14 +1919,14 @@ namespace HolocronToolset.Editors
                 }
             }
 
-            string operator = null;
+            string logicalOperator = null;
             int i = 0;
             while (i < tokens.Count)
             {
                 string token = tokens[i].ToUpperInvariant();
                 if (token == "AND" || token == "OR")
                 {
-                    operator = token;
+                    logicalOperator = token;
                     i++;
                     continue;
                 }
@@ -1938,26 +1938,26 @@ namespace HolocronToolset.Editors
                     var parts = tokens[i].Split(new[] { ':' }, 2);
                     string key = parts[0].Trim().ToLowerInvariant();
                     string value = parts.Length > 1 ? parts[1].Trim().ToLowerInvariant() : null;
-                    conditions.Add(Tuple.Create(key, value ?? "", operator));
-                    operator = null;
+                    conditions.Add(Tuple.Create(key, value ?? "", logicalOperator));
+                    logicalOperator = null;
                 }
                 else if (nextIndex.HasValue && (tokens[nextIndex.Value].ToUpperInvariant() == "AND" || tokens[nextIndex.Value].ToUpperInvariant() == "OR"))
                 {
                     // Text search with operator
-                    conditions.Add(Tuple.Create(tokens[i], "", operator));
-                    operator = null;
+                    conditions.Add(Tuple.Create(tokens[i], "", logicalOperator));
+                    logicalOperator = null;
                 }
                 else if (!nextIndex.HasValue)
                 {
                     // Last token
-                    conditions.Add(Tuple.Create(tokens[i], "", operator));
-                    operator = null;
+                    conditions.Add(Tuple.Create(tokens[i], "", logicalOperator));
+                    logicalOperator = null;
                 }
                 else
                 {
                     // Text search without operator
-                    conditions.Add(Tuple.Create(tokens[i], "", operator));
-                    operator = null;
+                    conditions.Add(Tuple.Create(tokens[i], "", logicalOperator));
+                    logicalOperator = null;
                 }
 
                 i++;

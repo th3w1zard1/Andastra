@@ -14,52 +14,215 @@ namespace Andastra.Runtime.Core.Navigation
     /// WHAT IS A WALKMESH?
     /// 
     /// A walkmesh is a special kind of 3D model that tells the game where characters can walk.
-    /// Think of it like an invisible floor map. The game world has beautiful 3D graphics that you see,
-    /// but the walkmesh is a simpler version made of triangles that the game uses to figure out where
-    /// things can move.
+    /// The game world has beautiful 3D graphics that you see, but the walkmesh is a simpler version
+    /// made of triangles that the game uses to figure out where things can move.
     /// 
     /// The walkmesh is made of triangles (three-sided shapes) that cover the ground. Each triangle
     /// has three points (called vertices) that define its corners. The game uses these triangles
     /// to answer questions like: "Can a character walk here?" and "What is the height of the ground
     /// at this point?"
+    /// 
+    /// Walkmeshes are used for four main things:
+    /// 1. Pathfinding: NPCs and the player use walkmeshes to find routes between locations
+    /// 2. Collision Detection: Prevents characters from walking through walls and objects
+    /// 3. Height Calculation: Determines the ground height at any (x, y) position
+    /// 4. Line of Sight: Checks if there's a clear path between two points
     /// </para>
     /// 
     /// <para>
     /// WHAT IS A BWM FILE?
     /// 
     /// BWM stands for "BioWare Walkmesh". It is a file format that stores all the walkmesh data.
-    /// The file contains:
+    /// The file format was created by BioWare for their Aurora engine and is used in Knights of the
+    /// Old Republic games. Files are stored on disk with a .wok extension (for area walkmeshes),
+    /// .pwk extension (for placeable walkmeshes), or .dwk extension (for door walkmeshes).
     /// 
-    /// 1. A header that says "BWM V1.0" (this identifies it as a walkmesh file)
-    /// 2. A list of all the points (vertices) that make up the triangles
-    /// 3. A list of all the triangles (faces), where each triangle is defined by three numbers
-    ///    that point to which vertices make up that triangle
-    /// 4. Adjacency information that tells which triangles are next to each other
-    /// 5. Surface materials that tell what kind of surface each triangle is (dirt, stone, water, etc.)
-    /// 6. An AABB tree (a special data structure that makes searching faster)
+    /// The BWM file structure (based on swkotor2.exe: WriteBWMFile @ 0x0055aef0):
     /// 
-    /// Based on swkotor2.exe: WriteBWMFile @ 0x0055aef0 writes BWM files with "BWM V1.0" signature
-    /// (located via "BWM V1.0" @ 0x007c061c). The file format is documented in vendor/PyKotor/wiki/BWM-File-Format.md
+    /// 1. FILE HEADER (8 bytes):
+    ///    - Bytes 0-3: Magic string "BWM " (space-padded, identifies file type)
+    ///    - Bytes 4-7: Version string "V1.0" (only version used in KotOR games)
+    ///    - Located via string reference: "BWM V1.0" @ 0x007c061c in swkotor2.exe
+    ///    - Original implementation: FUN_0055aef0 @ 0x0055aef0 writes this header (line 58)
+    /// 
+    /// 2. WALKMESH PROPERTIES (52 bytes, offset 0x08):
+    ///    - Walkmesh Type (4 bytes): 0 = PWK/DWK (placeable/door), 1 = WOK (area walkmesh)
+    ///    - Relative Use Position 1 (12 bytes): Hook point 1 relative to walkmesh origin
+    ///    - Relative Use Position 2 (12 bytes): Hook point 2 relative to walkmesh origin
+    ///    - Absolute Use Position 1 (12 bytes): Hook point 1 in world coordinates
+    ///    - Absolute Use Position 2 (12 bytes): Hook point 2 in world coordinates
+    ///    - Position (12 bytes): Walkmesh origin offset in world space
+    ///    - Original implementation: FUN_0055aef0 writes these values (lines 59-71)
+    /// 
+    /// 3. DATA TABLE OFFSETS (64 bytes, offset 0x48):
+    ///    - Vertex Count (4 bytes): Number of vertices in the mesh
+    ///    - Vertex Offset (4 bytes): File offset to vertex array
+    ///    - Face Count (4 bytes): Number of triangles in the mesh
+    ///    - Face Indices Offset (4 bytes): File offset to face indices array
+    ///    - Materials Offset (4 bytes): File offset to surface materials array
+    ///    - Normals Offset (4 bytes): File offset to face normals array
+    ///    - Planar Distances Offset (4 bytes): File offset to plane distances array
+    ///    - AABB Count (4 bytes): Number of AABB tree nodes (WOK only, 0 for PWK/DWK)
+    ///    - AABB Offset (4 bytes): File offset to AABB tree array (WOK only)
+    ///    - Unknown (4 bytes): Unknown field (typically 0 or 4)
+    ///    - Adjacency Count (4 bytes): Number of walkable faces for adjacency (WOK only)
+    ///    - Adjacency Offset (4 bytes): File offset to adjacency array (WOK only)
+    ///    - Edge Count (4 bytes): Number of perimeter edges (WOK only)
+    ///    - Edge Offset (4 bytes): File offset to edge array (WOK only)
+    ///    - Perimeter Count (4 bytes): Number of perimeter markers (WOK only)
+    ///    - Perimeter Offset (4 bytes): File offset to perimeter array (WOK only)
+    ///    - Original implementation: FUN_0055aef0 writes these offsets (lines 72-82)
+    /// 
+    /// 4. VERTICES ARRAY:
+    ///    - Each vertex is 12 bytes (three float32 values: x, y, z)
+    ///    - Vertices are stored in world coordinates for area walkmeshes (WOK)
+    ///    - Vertices are stored in local coordinates for placeable/door walkmeshes (PWK/DWK)
+    ///    - Original implementation: FUN_0055aef0 writes vertices (line 74)
+    /// 
+    /// 5. FACE INDICES ARRAY:
+    ///    - Each face is 12 bytes (three uint32 values pointing to vertex indices)
+    ///    - Faces are ordered with walkable faces first, then non-walkable faces
+    ///    - Original implementation: FUN_0055aef0 writes face indices (line 76)
+    /// 
+    /// 6. SURFACE MATERIALS ARRAY:
+    ///    - Each material is 4 bytes (uint32, material ID 0-30)
+    ///    - Material determines if face is walkable and what surface type it is
+    ///    - Original implementation: FUN_0055aef0 writes materials (line 78)
+    /// 
+    /// 7. NORMALS ARRAY (WOK only):
+    ///    - Each normal is 12 bytes (three float32 values: x, y, z)
+    ///    - Normal vector points perpendicular to the triangle's surface
+    ///    - Used for lighting and collision calculations
+    ///    - Original implementation: FUN_0055aef0 writes normals (line 80)
+    /// 
+    /// 8. PLANAR DISTANCES ARRAY (WOK only):
+    ///    - Each distance is 4 bytes (float32)
+    ///    - Distance from origin to plane defined by triangle
+    ///    - Used for plane equation calculations
+    ///    - Original implementation: FUN_0055aef0 writes planar distances (line 78)
+    /// 
+    /// 9. AABB TREE (WOK only):
+    ///    - Binary tree structure for fast spatial queries
+    ///    - Each node contains bounding box (min/max) and child pointers
+    ///    - Leaf nodes contain face indices
+    ///    - Original implementation: FUN_0055aef0 writes AABB tree (line 80)
+    /// 
+    /// 10. ADJACENCY ARRAY (WOK only):
+    ///     - Each adjacency entry is 4 bytes (int32)
+    ///     - Encoding: face_index * 3 + edge_index, -1 = no neighbor
+    ///     - Tells which triangles share edges (for pathfinding)
+    ///     - Original implementation: FUN_0055aef0 writes adjacency (line 82)
+    /// 
+    /// 11. EDGES ARRAY (WOK only):
+    ///     - Array of edge indices with transition information
+    ///     - Used for area boundaries and door connections
+    ///     - Original implementation: FUN_0055aef0 writes edges (line 82)
+    /// 
+    /// 12. PERIMETERS ARRAY (WOK only):
+    ///     - Array of edge indices forming boundary loops
+    ///     - Defines the outer edges of walkable areas
+    ///     - Original implementation: FUN_0055aef0 writes perimeters (line 82)
+    /// 
+    /// The file format is documented in vendor/PyKotor/wiki/BWM-File-Format.md
+    /// Reference implementations: vendor/reone/src/libs/graphics/format/bwmreader.cpp,
+    /// vendor/KotOR.js/src/odyssey/OdysseyWalkMesh.ts, vendor/kotorblender/io_scene_kotor/format/bwm/
     /// </para>
     /// 
     /// <para>
     /// HOW DOES THE DATA WORK?
     /// 
-    /// Vertices: These are 3D points (x, y, z coordinates) that define where corners of triangles are.
+    /// VERTICES:
+    /// Vertices are 3D points (x, y, z coordinates) that define where corners of triangles are.
     /// For example, a vertex might be at position (10.5, 20.3, 5.0) in the game world.
     /// 
-    /// Face Indices: Each triangle (face) is defined by three numbers that point to vertices.
-    /// For example, if face 0 has indices [5, 12, 8], it means the triangle uses vertices 5, 12, and 8.
+    /// Vertices are stored in an array, and multiple triangles can share the same vertex. This saves
+    /// memory because instead of storing the same point multiple times, we store it once and reference
+    /// it by index. For example, if two triangles share a corner, they both reference the same vertex
+    /// index instead of storing two copies of the same point.
     /// 
-    /// Adjacency: This tells which triangles share edges. If triangle 0 shares an edge with triangle 5,
+    /// Coordinate Systems:
+    /// - Area walkmeshes (WOK): Vertices are in world coordinates (absolute positions in the game world)
+    /// - Placeable/Door walkmeshes (PWK/DWK): Vertices are in local coordinates (relative to the object)
+    ///   When the object is placed, the engine transforms these local coordinates to world coordinates
+    ///   using a transformation matrix (translation, rotation, scale)
+    /// 
+    /// FACE INDICES:
+    /// Each triangle (face) is defined by three numbers that point to vertices in the vertex array.
+    /// For example, if face 0 has indices [5, 12, 8], it means:
+    /// - The first corner uses vertex 5 from the vertex array
+    /// - The second corner uses vertex 12 from the vertex array
+    /// - The third corner uses vertex 8 from the vertex array
+    /// 
+    /// The vertices are ordered counter-clockwise when viewed from the front (the side the normal points toward).
+    /// This ordering is important for determining which side of the triangle is the "front" (walkable side).
+    /// 
+    /// Face Ordering:
+    /// In BWM files, faces are typically ordered with walkable faces first, then non-walkable faces.
+    /// This ordering is important because:
+    /// - Adjacency data only exists for walkable faces
+    /// - The adjacency array index corresponds to the walkable face's position in the walkable face list
+    /// - The engine can quickly iterate through walkable faces for pathfinding
+    /// 
+    /// ADJACENCY:
+    /// Adjacency tells which triangles share edges. If triangle 0 shares an edge with triangle 5,
     /// the adjacency data stores that information. This is used for pathfinding - the game can move
-    /// from one triangle to its neighbors. Adjacency is stored as: adjacency_index = face_index * 3 + edge_index,
-    /// where -1 means no neighbor on that edge.
+    /// from one triangle to its neighbors.
     /// 
-    /// Surface Materials: Each triangle has a material number (0-30) that tells what kind of surface it is.
-    /// Material 4 is stone (walkable), material 7 is non-walkable, material 6 is shallow water (walkable),
-    /// material 17 is deep water (not walkable), etc. The game looks up these materials in a file called
-    /// surfacemat.2da to determine if characters can walk on them.
+    /// Adjacency Encoding:
+    /// - Each triangle has 3 edges (edge 0, edge 1, edge 2)
+    /// - Adjacency is stored as: adjacency_index = face_index * 3 + edge_index
+    /// - For example, face 5, edge 1 is stored at index 5*3+1 = 16
+    /// - The value stored is: neighbor_face_index * 3 + neighbor_edge_index
+    /// - If there's no neighbor on that edge, the value is -1
+    /// 
+    /// How Adjacency is Computed:
+    /// Two triangles are adjacent if they share exactly two vertices (forming a shared edge).
+    /// The algorithm works like this:
+    /// 1. For each triangle, look at each of its 3 edges
+    /// 2. For each edge, find if any other triangle has the same two vertices (in either order)
+    /// 3. If found, link them bidirectionally (triangle A's edge points to triangle B, and vice versa)
+    /// 
+    /// Based on swkotor2.exe: Adjacency is computed during walkmesh loading, not stored in BWM files.
+    /// However, BWM files can contain precomputed adjacency data for WOK files.
+    /// 
+    /// SURFACE MATERIALS:
+    /// Each triangle has a material number (0-30) that tells what kind of surface it is.
+    /// The material determines:
+    /// - Whether the triangle is walkable (characters can stand on it)
+    /// - What kind of surface it is (affects footstep sounds, movement speed, etc.)
+    /// - Pathfinding cost (some materials are harder to walk on)
+    /// 
+    /// Material Reference (from surfacemat.2da):
+    /// Walkable Materials:
+    /// - 1: Dirt (walkable, normal movement)
+    /// - 3: Grass (walkable, normal movement)
+    /// - 4: Stone (walkable, normal movement, default for generated walkmeshes)
+    /// - 5: Wood (walkable, normal movement)
+    /// - 6: Water - Shallow (walkable, slower movement, 1.5x pathfinding cost)
+    /// - 9: Carpet (walkable, normal movement)
+    /// - 10: Metal (walkable, normal movement)
+    /// - 11: Puddles (walkable, slower movement, 1.5x pathfinding cost)
+    /// - 12: Swamp (walkable, slower movement, 1.5x pathfinding cost)
+    /// - 13: Mud (walkable, slower movement, 1.5x pathfinding cost)
+    /// - 14: Leaves (walkable, normal movement)
+    /// - 16: BottomlessPit (walkable but dangerous, 10x pathfinding cost, AI avoids if possible)
+    /// - 18: Door (walkable, normal movement)
+    /// - 20: Sand (walkable, normal movement)
+    /// - 21: BareBones (walkable, normal movement)
+    /// - 22: StoneBridge (walkable, normal movement)
+    /// - 30: Trigger (walkable, PyKotor extended material)
+    /// 
+    /// Non-Walkable Materials:
+    /// - 0: NotDefined/UNDEFINED (non-walkable, used for undefined surfaces)
+    /// - 2: Obscuring (non-walkable, blocks line of sight)
+    /// - 7: Nonwalk/NON_WALK (non-walkable, explicitly marked as impassable)
+    /// - 8: Transparent (non-walkable, see-through but solid)
+    /// - 15: Lava (non-walkable, dangerous)
+    /// - 17: DeepWater (non-walkable, characters can't stand in deep water)
+    /// - 19: Snow/NON_WALK_GRASS (non-walkable, marked as non-walkable grass)
+    /// 
+    /// The game looks up these materials in a file called surfacemat.2da to determine properties.
+    /// However, the walkability is hardcoded in the engine based on the material ID.
     /// </para>
     /// 
     /// <para>
@@ -68,21 +231,62 @@ namespace Andastra.Runtime.Core.Navigation
     /// When the game needs to find which triangle contains a specific point (like where a character is standing),
     /// it uses the FindFaceAt function. This is based on swkotor2.exe: FUN_004f4260 @ 0x004f4260.
     /// 
-    /// The algorithm works like this:
-    /// 1. It takes a point (x, y, z) and tries to find which triangle contains it
-    /// 2. It creates a vertical range around the point (z + tolerance to z - tolerance) because the point
-    ///    might not be exactly on the triangle surface
-    /// 3. If a hint face index is provided (a guess about which triangle might contain the point), it tests
-    ///    that triangle first - this is an optimization because characters usually stay on the same triangle
-    ///    for multiple frames
-    /// 4. It tests each triangle to see if the point is inside it by:
-    ///    a. Testing if a vertical line through the point intersects the triangle (using AABB tree if available)
-    ///    b. If it finds a match, it returns that triangle's index
-    /// 5. If no triangle is found, it returns -1
+    /// The algorithm works in stages:
     /// 
-    /// The original implementation uses FUN_0055b300 @ 0x0055b300 to test if a point is inside a triangle's
-    /// AABB (Axis-Aligned Bounding Box - a box that contains the triangle), and then FUN_00575f60 @ 0x00575f60
-    /// to test the actual triangle intersection using the AABB tree.
+    /// STAGE 1: Input Processing
+    /// - Takes a point (x, y, z) and tries to find which triangle contains it
+    /// - Creates a vertical range around the point: z + tolerance to z - tolerance
+    ///   The tolerance value is _DAT_007b56f8 (typically a small value like 0.1 or 0.5 units)
+    ///   This is needed because the point might not be exactly on the triangle surface due to
+    ///   floating-point precision or character movement
+    /// - Original implementation: FUN_004f4260 lines 20-23 create this vertical range
+    /// 
+    /// STAGE 2: Hint Face Optimization (if provided)
+    /// - If a hint face index is provided (a guess about which triangle might contain the point),
+    ///   it tests that triangle first
+    /// - This is a major optimization because characters usually stay on the same triangle for
+    ///   multiple frames (60+ frames per second), so the hint is correct most of the time
+    /// - Original implementation: FUN_004f4260 lines 31-42 test hint face first
+    /// - The hint face test uses FUN_0055b300 @ 0x0055b300 to test AABB intersection, then
+    ///   FUN_00575f60 @ 0x00575f60 to test actual triangle intersection
+    /// 
+    /// STAGE 3: AABB Tree Traversal (if available)
+    /// - If an AABB tree exists, it uses that for fast spatial search
+    /// - Starting from the root, it tests if the point is inside the root's bounding box
+    /// - If yes, it tests the two child boxes (left and right)
+    /// - It keeps going down the tree until it reaches a leaf node (a single triangle)
+    /// - This is much faster than testing every triangle (O(log n) instead of O(n))
+    /// - Original implementation: FUN_004f4260 lines 45-63 iterate through faces using AABB tree
+    /// 
+    /// STAGE 4: Triangle Point-in-Triangle Test
+    /// - For each candidate triangle (from AABB tree or brute force), it tests if the point is inside
+    /// - The test is done in 2D (only x and y coordinates) because we're finding which triangle
+    ///   is directly below or above the point
+    /// - Uses the "same-side test": checks if the point is on the same side of all three edges
+    /// - If the point is on the same side of all edges, it's inside the triangle
+    /// - Original implementation: FUN_0055b300 @ 0x0055b300 tests AABB first, then FUN_00575f60
+    ///   @ 0x00575f60 tests triangle intersection using AABB tree
+    /// 
+    /// STAGE 5: Return Result
+    /// - If a triangle is found, returns its index (0 to faceCount-1)
+    /// - If no triangle is found, returns -1
+    /// 
+    /// Alternative Implementation (FUN_004f43c0 @ 0x004f43c0):
+    /// This is a variant that takes a parameter to control whether to use AABB tree or brute force.
+    /// - If param_2 == 0: Uses FUN_0055b300 (AABB tree traversal)
+    /// - If param_2 != 0: Uses FUN_0055b3c0 (brute force with AABB pre-filtering)
+    /// - Original implementation: FUN_004f43c0 lines 33-40 choose between methods
+    /// 
+    /// The AABB Test (FUN_0055b300 @ 0x0055b300):
+    /// - First tests if the point is inside the triangle's AABB (Axis-Aligned Bounding Box)
+    /// - An AABB is a box aligned with the X, Y, Z axes that contains the triangle
+    /// - This is a fast rejection test - if the point isn't in the AABB, it can't be in the triangle
+    /// - Original implementation: FUN_0055b300 calls FUN_00575f60 @ 0x00575f60 for AABB test
+    /// 
+    /// The Triangle Intersection Test (FUN_00575f60 @ 0x00575f60):
+    /// - Tests if a vertical line segment (from z+tolerance to z-tolerance) intersects the triangle
+    /// - Uses the AABB tree to find candidate triangles
+    /// - Original implementation: FUN_00575f60 calls FUN_00575350 @ 0x00575350 for AABB tree traversal
     /// </para>
     /// 
     /// <para>
@@ -91,19 +295,68 @@ namespace Andastra.Runtime.Core.Navigation
     /// When the game needs to know the height of the ground at a specific (x, y) position, it uses height
     /// calculation functions. This is based on swkotor2.exe: FUN_0055b1d0 @ 0x0055b1d0 and FUN_0055b210 @ 0x0055b210.
     /// 
-    /// The algorithm works like this:
-    /// 1. First, it finds which triangle contains the (x, y) point using FindFaceAt
-    /// 2. Once it knows which triangle, it uses the triangle's three vertices to calculate the height
-    /// 3. It uses a mathematical formula called "plane equation" to figure out the z (height) value
+    /// The algorithm works in steps:
     /// 
-    /// The plane equation works like this:
+    /// STEP 1: Find the Triangle
+    /// - First, it finds which triangle contains the (x, y) point using FindFaceAt
+    /// - FindFaceAt uses FUN_004f4260 @ 0x004f4260 or FUN_004f43c0 @ 0x004f43c0
+    /// - The z coordinate of the input point is ignored - we only care about x and y
+    /// - Original implementation: FUN_0055b1d0 calls FUN_005761f0 @ 0x005761f0 to find face
+    /// 
+    /// STEP 2: Get Triangle Vertices
+    /// - Once we know which triangle, we get its three vertices from the vertex array
+    /// - Each vertex has x, y, z coordinates
+    /// - Original implementation: FUN_0055b1d0 gets vertices from walkmesh structure
+    /// 
+    /// STEP 3: Calculate the Normal Vector
+    /// - The normal vector is a vector pointing perpendicular to the triangle's surface
+    /// - We calculate it by taking the cross product of two edges of the triangle
+    /// - Edge 1 = vertex2 - vertex1
+    /// - Edge 2 = vertex3 - vertex1
+    /// - Normal = cross(Edge1, Edge2)
+    /// - Original implementation: FUN_004d9030 @ 0x004d9030 calculates normal (lines 32-55)
+    /// 
+    /// STEP 4: Create the Plane Equation
     /// - A triangle defines a flat plane in 3D space
     /// - The equation for a plane is: ax + by + cz + d = 0
-    /// - The normal vector (a, b, c) is calculated from the triangle's edges
-    /// - Once we know a, b, c, and d, we can solve for z: z = (-d - ax - by) / c
+    /// - Where (a, b, c) is the normal vector (normalized to length 1)
+    /// - And d is calculated from a point on the plane (one of the triangle's vertices)
+    /// - d = -(a * vertex1.x + b * vertex1.y + c * vertex1.z)
+    /// - Original implementation: FUN_004d9030 lines 57-63 create plane equation
     /// 
-    /// The original implementation uses FUN_004d6b10 @ 0x004d6b10 to calculate the height from a plane equation.
-    /// If the triangle is vertical (c is very close to 0), it returns the average height of the three vertices.
+    /// STEP 5: Solve for Height (z coordinate)
+    /// - Once we have the plane equation, we can solve for z when we know x and y
+    /// - Rearranging the plane equation: z = (-d - ax - by) / c
+    /// - This gives us the exact height of the plane at the given (x, y) position
+    /// - Original implementation: FUN_004d6b10 @ 0x004d6b10 calculates height from plane equation
+    /// 
+    /// STEP 6: Handle Edge Cases
+    /// - If the triangle is vertical (normal.Z is very close to 0), we can't divide by c
+    /// - In this case, we return the average height of the three vertices
+    /// - Average = (vertex1.z + vertex2.z + vertex3.z) / 3
+    /// - Original implementation: FUN_004d6b10 lines 7-8 check if normal.Z == _DAT_007b56fc
+    /// 
+    /// Two Variants of Height Calculation:
+    /// 
+    /// FUN_0055b1d0 @ 0x0055b1d0 (3D point height):
+    /// - Takes a 3D point (x, y, z) and finds the height at that (x, y) position
+    /// - Uses FUN_005761f0 @ 0x005761f0 to find the face containing the point
+    /// - Then uses FUN_00576640 @ 0x00576640 to calculate height from plane equation
+    /// - Original implementation: FUN_0055b1d0 calls FUN_00576640 (line 12)
+    /// 
+    /// FUN_0055b210 @ 0x0055b210 (2D point height with face index):
+    /// - Takes a 2D point (x, y) and a face index (already known)
+    /// - Directly calculates height from the plane equation without finding the face
+    /// - Faster when you already know which triangle contains the point
+    /// - Uses FUN_00575050 @ 0x00575050 to calculate height
+    /// - Original implementation: FUN_0055b210 calls FUN_00575050 (line 11)
+    /// 
+    /// The Plane Equation Function (FUN_004d6b10 @ 0x004d6b10):
+    /// - Input: normal vector (a, b, c), plane distance (d), point (x, y)
+    /// - Output: height (z coordinate)
+    /// - Formula: z = (-d - ax - by) / c
+    /// - Special case: If c (normal.Z) is very close to 0, returns _DAT_007b56fc (special value)
+    /// - Original implementation: FUN_004d6b10 lines 7-11 calculate height
     /// </para>
     /// 
     /// <para>
@@ -113,49 +366,192 @@ namespace Andastra.Runtime.Core.Navigation
     /// if there's a clear line of sight between two points, or to find where a ray hits the walkmesh.
     /// This is based on swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 performs walkmesh raycasts.
     /// 
-    /// The raycast algorithm works in two stages:
+    /// The raycast algorithm works in multiple stages:
     /// 
-    /// Stage 1: AABB Tree Traversal (if available)
-    /// - The walkmesh has an AABB tree, which is like a tree structure that organizes triangles into boxes
-    /// - Starting from the root, it tests if the ray hits the box
+    /// STAGE 1: Input Validation
+    /// - Validates that the mesh is not empty
+    /// - Validates that maxDistance is positive and finite
+    /// - Validates that direction vector is not zero or near-zero
+    /// - Normalizes the direction vector once (optimization - reused in all tests)
+    /// - Original implementation: UpdateCreatureMovement @ 0x0054be70 validates inputs
+    /// 
+    /// STAGE 2: AABB Tree Traversal (if available)
+    /// - The walkmesh has an AABB tree, which organizes triangles into boxes (AABBs)
+    /// - Starting from the root, it tests if the ray hits the root's bounding box
     /// - If it hits, it tests the two child boxes (left and right)
     /// - It keeps going down the tree until it reaches a leaf node (a single triangle)
-    /// - This is much faster than testing every triangle
+    /// - This is much faster than testing every triangle (O(log n) instead of O(n))
     /// - Based on swkotor2.exe: FUN_00575350 @ 0x00575350 (AABB tree traversal)
     /// 
-    /// Stage 2: Ray-Triangle Intersection
-    /// - For each triangle that might be hit (from the AABB tree, or all triangles if no tree),
-    ///   it tests if the ray actually hits the triangle
-    /// - The algorithm works like this:
-    ///   a. Calculate the triangle's normal vector (a vector pointing perpendicular to the triangle)
-    ///   b. Create a plane equation from the triangle
-    ///   c. Check if the ray crosses the plane (one endpoint on each side)
-    ///   d. Calculate where the ray hits the plane
-    ///   e. Test if that hit point is inside the triangle using edge tests
-    /// - Based on swkotor2.exe: FUN_004d9030 @ 0x004d9030 (ray-triangle intersection)
+    /// AABB Tree Traversal Details (FUN_00575350 @ 0x00575350):
+    /// - Tests ray against node's AABB using FUN_004d7400 @ 0x004d7400 (slab method)
+    /// - If ray doesn't hit AABB, returns 0 (no intersection)
+    /// - If node is a leaf (contains a face index), tests ray against that triangle
+    /// - If node is internal, recursively tests left and right children
+    /// - Original implementation: FUN_00575350 lines 26-69 traverse tree recursively
+    /// - Traversal order: Original uses flag-based ordering (param_4[1] & node flag),
+    ///   this implementation uses distance-based ordering (test closer child first) as optimization
     /// 
-    /// The AABB-ray intersection test (FUN_004d7400 @ 0x004d7400) uses the "slab method":
-    /// - It tests the ray against each axis (X, Y, Z) separately
-    /// - For each axis, it finds where the ray enters and exits the box
-    /// - If the ray enters all three axes before exiting any, it hits the box
+    /// STAGE 3: AABB-Ray Intersection Test (FUN_004d7400 @ 0x004d7400)
+    /// - Uses the "slab method" to test if a ray hits an AABB
+    /// - A slab is a space between two parallel planes
+    /// - The method tests the ray against each axis (X, Y, Z) separately
+    /// - For each axis:
+    ///   a. Calculate where the ray enters the slab (tmin)
+    ///   b. Calculate where the ray exits the slab (tmax)
+    ///   c. Handle negative direction (swap tmin and tmax)
+    /// - The ray hits the AABB if:
+    ///   - It enters all three slabs before exiting any
+    ///   - The intersection is within maxDistance
+    /// - Original implementation: FUN_004d7400 lines 12-79 implement slab method
+    /// 
+    /// STAGE 4: Ray-Triangle Intersection (FUN_004d9030 @ 0x004d9030)
+    /// - For each triangle that might be hit (from AABB tree, or all triangles if no tree),
+    ///   it tests if the ray actually hits the triangle
+    /// - The algorithm uses a plane-based approach with edge containment tests:
+    /// 
+    ///   Step 4a: Calculate Triangle Normal
+    ///   - Calculate the triangle's normal vector (perpendicular to the triangle)
+    ///   - Normal = cross(edge01, edge12) where edge01 = v1-v0, edge12 = v2-v1
+    ///   - Normalize the normal (make it length 1)
+    ///   - Check for degenerate triangles (normal length too small) - skip if degenerate
+    ///   - Original implementation: FUN_004d9030 lines 32-56 calculate normal
+    /// 
+    ///   Step 4b: Create Plane Equation
+    ///   - Create plane equation: ax + by + cz + d = 0
+    ///   - Where (a, b, c) is the normalized normal vector
+    ///   - d = -(a * v0.x + b * v0.y + c * v0.z)
+    ///   - Original implementation: FUN_004d9030 line 63 creates plane equation
+    /// 
+    ///   Step 4c: Check if Ray Crosses Plane
+    ///   - Calculate distance from ray start to plane: dist0 = a*origin.x + b*origin.y + c*origin.z + d
+    ///   - Calculate distance from ray end to plane: dist1 = a*rayEnd.x + b*rayEnd.y + c*rayEnd.z + d
+    ///   - Ray crosses plane if dist0 and dist1 have opposite signs (one positive, one negative)
+    ///   - If both have same sign, ray doesn't cross plane - no intersection
+    ///   - Original implementation: FUN_004d9030 lines 65-67 check plane crossing
+    /// 
+    ///   Step 4d: Calculate Intersection Point
+    ///   - Use interpolation: t = dist0 / (dist0 - dist1)
+    ///   - Intersection = origin + direction * (t * maxDistance)
+    ///   - This gives the exact point where the ray hits the plane
+    ///   - Original implementation: FUN_004d9030 lines 71-76 calculate intersection
+    /// 
+    ///   Step 4e: Test if Intersection Point is Inside Triangle
+    ///   - Just because the ray hits the plane doesn't mean it hits the triangle
+    ///   - The triangle only covers a small part of the plane
+    ///   - Test each edge of the triangle:
+    ///     * For edge v0->v1: Check if intersection is on correct side
+    ///     * For edge v1->v2: Check if intersection is on correct side
+    ///     * For edge v2->v0: Check if intersection is on correct side
+    ///   - Use cross products to determine which side of each edge the point is on
+    ///   - If point is on correct side of all three edges, it's inside the triangle
+    ///   - Original implementation: FUN_004d9030 lines 79-95 test edge containment
+    /// 
+    /// STAGE 5: Return Closest Hit
+    /// - If multiple triangles are hit, return the closest one (smallest distance)
+    /// - Calculate distance from origin to hit point
+    /// - Return hit point, hit face index, and distance
+    /// - Original implementation: UpdateCreatureMovement @ 0x0054be70 tracks best hit
+    /// 
+    /// OPTIMIZATIONS:
+    /// - Normalized direction caching: Direction is normalized once and reused
+    /// - Early termination: If exact hit found (distance = 0), stop immediately
+    /// - Distance-based AABB traversal: Test closer children first (optimized from original)
+    /// - AABB pre-filtering: Fast rejection of triangles that can't be hit
+    /// 
+    /// EDGE CASES HANDLED:
+    /// - Empty mesh: Returns false immediately
+    /// - Zero or invalid direction: Rejected before processing
+    /// - Degenerate triangles: Skipped during intersection tests
+    /// - Ray starting inside triangle: Handled with tolerance checks
+    /// - Ray on triangle surface: Returns as hit with distance 0
+    /// - Ray parallel to triangle plane: Rejected (no intersection possible)
+    /// - Vertical triangles: Handled by edge containment tests
     /// </para>
     /// 
     /// <para>
     /// HOW DOES PATHFINDING WORK?
     /// 
-    /// Pathfinding uses the A* algorithm on the walkmesh adjacency graph. The algorithm works like this:
+    /// Pathfinding uses the A* algorithm on the walkmesh adjacency graph. A* is a search algorithm
+    /// that finds the shortest path between two points by exploring the most promising paths first.
     /// 
-    /// 1. Start at the triangle containing the starting point
-    /// 2. Use A* to find a path through adjacent triangles to the destination triangle
-    /// 3. A* keeps a list of triangles to explore, sorted by how promising they are
-    /// 4. For each triangle, it calculates a "score" = distance traveled + estimated distance to goal
-    /// 5. It explores the most promising triangles first
-    /// 6. When it reaches the destination, it traces back through the path
+    /// The algorithm works in stages:
     /// 
-    /// If direct walkmesh pathfinding fails, the game uses grid-based pathfinding for initial/terminal
-    /// path segments. Error messages from swkotor2.exe indicate this:
-    /// - "failed to grid based pathfind from the creatures position to the starting path point." @ 0x007be510
-    /// - "failed to grid based pathfind from the ending path point ot the destiantion." @ 0x007be4b8
+    /// STAGE 1: Initialization
+    /// - Find the triangle containing the starting point using FindFaceAt
+    /// - Find the triangle containing the destination point using FindFaceAt
+    /// - If either point is not on a walkable triangle, pathfinding fails
+    /// - If both points are on the same triangle, check for obstacles blocking direct path
+    /// - Original implementation: UpdateCreatureMovement @ 0x0054be70 finds start/end faces
+    /// 
+    /// STAGE 2: A* Search Algorithm
+    /// - A* keeps three data structures:
+    ///   * openSet: Triangles to explore, sorted by f-score (most promising first)
+    ///   * cameFrom: Maps each triangle to the triangle that led to it (for path reconstruction)
+    ///   * gScore: Distance traveled from start to each triangle
+    ///   * fScore: Estimated total distance (gScore + heuristic) for each triangle
+    /// - Start by adding the starting triangle to openSet with f-score = heuristic(start, goal)
+    /// 
+    /// STAGE 3: Main Search Loop
+    /// - While openSet is not empty:
+    ///   1. Remove triangle with lowest f-score from openSet (most promising)
+    ///   2. If this triangle is the goal, reconstruct and return the path
+    ///   3. For each adjacent triangle:
+    ///      a. Check if it's walkable (skip non-walkable faces)
+    ///      b. Check if it's blocked by obstacles (skip if blocked)
+    ///      c. Calculate tentative g-score = gScore[current] + edgeCost(current, neighbor)
+    ///      d. If this path to neighbor is better than any previous path:
+    ///         * Update cameFrom[neighbor] = current
+    ///         * Update gScore[neighbor] = tentative g-score
+    ///         * Update fScore[neighbor] = gScore[neighbor] + heuristic(neighbor, goal)
+    ///         * Add neighbor to openSet if not already there
+    /// 
+    /// STAGE 4: Heuristic Function
+    /// - The heuristic estimates the distance from a triangle to the goal
+    /// - Uses straight-line distance between triangle centers
+    /// - Must be "admissible" (never overestimate) for A* to find optimal path
+    /// - Original implementation: UpdateCreatureMovement @ 0x0054be70 uses distance heuristic
+    /// 
+    /// STAGE 5: Edge Cost Calculation
+    /// - The cost to move from one triangle to an adjacent triangle is:
+    ///   cost = distance * surfaceCostModifier
+    /// - Distance is the straight-line distance between triangle centers
+    /// - Surface cost modifiers:
+    ///   * Normal surfaces (stone, dirt, grass): 1.0x (normal speed)
+    ///   * Difficult surfaces (water, mud, swamp): 1.5x (slower movement)
+    ///   * Dangerous surfaces (bottomless pit): 10.0x (AI avoids if possible)
+    /// - Original implementation: Pathfinding considers surface materials for cost
+    /// 
+    /// STAGE 6: Path Reconstruction
+    /// - When goal is reached, trace back through cameFrom map
+    /// - Start from goal triangle, follow cameFrom links back to start
+    /// - Reverse the path to get start-to-goal order
+    /// - Convert triangle path to waypoint path (triangle centers + start/end points)
+    /// - Original implementation: UpdateCreatureMovement @ 0x0054be70 reconstructs path
+    /// 
+    /// STAGE 7: Path Smoothing
+    /// - Apply path smoothing to remove redundant waypoints
+    /// - For each waypoint, check if we can skip it (line of sight to next waypoint)
+    /// - If line of sight is clear, remove the intermediate waypoint
+    /// - This creates smoother, more direct paths
+    /// - Original implementation: Path smoothing is applied after pathfinding
+    /// 
+    /// OBSTACLE AVOIDANCE:
+    /// - If obstacles are provided, the algorithm builds a set of blocked faces
+    /// - A face is blocked if its center is within obstacle radius
+    /// - Blocked faces are skipped during pathfinding
+    /// - If pathfinding fails with obstacles, retry with 1.5x expanded obstacle radius
+    /// - Based on swkotor2.exe: FindPathAroundObstacle @ 0x0061c390
+    /// - Original implementation: FUN_0061c390 builds obstacle polygon and validates path
+    /// 
+    /// GRID-BASED PATHFINDING FALLBACK:
+    /// - If direct walkmesh pathfinding fails, the game uses grid-based pathfinding
+    /// - Grid-based pathfinding divides the area into a grid and finds paths through grid cells
+    /// - Used for initial/terminal path segments when walkmesh pathfinding fails
+    /// - Error messages from swkotor2.exe indicate this:
+    ///   * "failed to grid based pathfind from the creatures position to the starting path point." @ 0x007be510
+    ///   * "failed to grid based pathfind from the ending path point ot the destiantion." @ 0x007be4b8
+    /// - Original implementation: Grid-based pathfinding is used as fallback in UpdateCreatureMovement
     /// </para>
     /// 
     /// <para>

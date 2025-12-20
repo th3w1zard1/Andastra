@@ -5,9 +5,12 @@ using System.Collections.ObjectModel;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media.Imaging;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.LTR;
+using Andastra.Parsing.Formats.TPC;
+using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource;
 using HolocronToolset.Data;
@@ -35,6 +38,7 @@ namespace HolocronToolset.Editors
         private ComboBox _appearanceSelect;
         private ComboBox _soundsetSelect;
         private ComboBox _portraitSelect;
+        private Image _portraitPicture;
         private Slider _alignmentSlider;
         private TextBox _conversationEdit;
         private Button _conversationModifyBtn;
@@ -203,6 +207,15 @@ namespace HolocronToolset.Editors
             _portraitSelect.SelectionChanged += (s, e) => PortraitChanged();
             basicPanel.Children.Add(portraitLabel);
             basicPanel.Children.Add(_portraitSelect);
+            
+            // Portrait Picture
+            _portraitPicture = new Image
+            {
+                Width = 64,
+                Height = 64,
+                Stretch = Avalonia.Media.Stretch.Uniform
+            };
+            basicPanel.Children.Add(_portraitPicture);
 
             // Alignment
             var alignmentLabel = new TextBlock { Text = "Alignment:" };

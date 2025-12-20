@@ -872,10 +872,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 glGenTextures(1, ref _kotor2SecondaryTexture1);
                 glBindTexture(GL_TEXTURE_RECTANGLE_NV, _kotor2SecondaryTexture1);
                 glCopyTexImage2D(GL_TEXTURE_RECTANGLE_NV, 0, (uint)GL_RGBA8, 0, 0, _kotor2ScreenWidth, _kotor2ScreenHeight, 0);
-                glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_WRAP_T, GL_REPEAT);
-                glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_WRAP_S, (int)GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_WRAP_T, (int)GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
                 
                 // Create first secondary context
                 _kotor2SecondaryWindow0 = CreateKotor2SecondaryWindow();
@@ -920,10 +920,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 {
                     glGenTextures(1, ref _kotor2RenderTargetTexture);
                     glBindTexture(GL_TEXTURE_RECTANGLE_NV, _kotor2RenderTargetTexture);
-                    glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                    glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_WRAP_T, GL_REPEAT);
-                    glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                    glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_WRAP_S, (int)GL_REPEAT);
+                    glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_WRAP_T, (int)GL_REPEAT);
+                    glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
                     glCopyTexImage2D(GL_TEXTURE_RECTANGLE_NV, 0, (uint)GL_RGBA8, 0, 0, _kotor2TextureWidth, _kotor2TextureHeight, 0);
                     glBindTexture(GL_TEXTURE_RECTANGLE_NV, 0);
                 }
@@ -1231,14 +1231,14 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                     glBindTexture(GL_TEXTURE_2D, textureId);
                     
                     // Set texture parameters (matching swkotor2.exe texture loading)
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_REPEAT);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_REPEAT);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
                     
                     // Load texture data here
                     // This would read the texture file and upload it to OpenGL
-                    // For now, this is a placeholder
+                    // TODO: Implement texture loading
                     
                     glBindTexture(GL_TEXTURE_2D, 0);
                     

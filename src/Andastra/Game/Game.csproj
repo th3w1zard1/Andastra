@@ -1,38 +1,100 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- Use Windows-specific target framework on Windows to satisfy SDK requirements -->
+    <OutputType Condition="'$(OS)' == 'Windows_NT'">WinExe</OutputType>
+    <OutputType Condition="'$(OS)' != 'Windows_NT'">Exe</OutputType>
     <TargetFrameworks></TargetFrameworks>
     <!-- Helper to append without duplicate semicolons -->
     <TargetFrameworks Condition="'$(TargetFrameworks)' != ''">
       $([System.String]::Copy('$(TargetFrameworks)').TrimEnd(';').TrimStart(';'))
     </TargetFrameworks>
     <!-- Add each TFM conditionally -->
-    <TargetFrameworks Condition="$([System.Version]::Parse('$(NETCoreSdkVersion)').Major) >= 10">  
+    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT' AND $([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '10.0.0'))">
+      $(TargetFrameworks);net10.0-windows
+    </TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)' != 'Windows_NT' AND $([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '10.0.0'))">
       $(TargetFrameworks);net10.0
     </TargetFrameworks>
-    <TargetFrameworks Condition="$([System.Version]::Parse('$(NETCoreSdkVersion)').Major) >= 9">
+    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT' AND $([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '9.0.0'))">
+      $(TargetFrameworks);net9.0-windows
+    </TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)' != 'Windows_NT' AND $([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '9.0.0'))">
       $(TargetFrameworks);net9.0
     </TargetFrameworks>
-    <TargetFrameworks Condition="$([System.Version]::Parse('$(NETCoreSdkVersion)').Major) >= 8">
+    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '8.0.0'))">
       $(TargetFrameworks);net8.0
     </TargetFrameworks>
     <!-- === .NET 7 SDK: include net7.0 + net6.0 (legacy support) === -->
-    <TargetFrameworks Condition="$([System.String]::new('$(NETCoreSdkVersion)').StartsWith('7.'))">
+    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT' AND $([System.String]::new('$(NETCoreSdkVersion)').StartsWith('7.'))">
+      $(TargetFrameworks);net7.0-windows;net6.0-windows
+    </TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)' != 'Windows_NT' AND $([System.String]::new('$(NETCoreSdkVersion)').StartsWith('7.'))">
       $(TargetFrameworks);net7.0;net6.0
     </TargetFrameworks>
     <!-- === .NET 6 SDK: include (legacy support) === -->
-    <TargetFrameworks Condition="$([System.String]::new('$(NETCoreSdkVersion)').StartsWith('6.'))">
+    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT' AND $([System.String]::new('$(NETCoreSdkVersion)').StartsWith('6.'))">
+      $(TargetFrameworks);net6.0-windows
+    </TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)' != 'Windows_NT' AND $([System.String]::new('$(NETCoreSdkVersion)').StartsWith('6.'))">
       $(TargetFrameworks);net6.0
     </TargetFrameworks>
     <TargetFrameworks Condition="'$(OS)' == 'Windows_NT' AND Exists('$(MSBuildProgramFiles32)\..\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8')">
       $(TargetFrameworks);net48
     </TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)' != 'Windows_NT' AND Exists('$(MSBuildProgramFiles32)\..\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8')">
+      $(TargetFrameworks);net48
+    </TargetFrameworks>
     <TargetFrameworks Condition="'$(OS)' == 'Windows_NT' AND Exists('$(MSBuildProgramFiles32)\..\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2')">
+      $(TargetFrameworks);net462
+    </TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)' != 'Windows_NT' AND Exists('$(MSBuildProgramFiles32)\..\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2')">
       $(TargetFrameworks);net462
     </TargetFrameworks>
     <!-- Ensure we always have at least one framework to avoid empty TargetFrameworks -->
     <TargetFrameworks Condition="'$(TargetFrameworks)' == ''">net9.0</TargetFrameworks>
-    <Nullable>enable</Nullable>
+    <LangVersion>7.3</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>Andastra.Game</RootNamespace>
+    <AssemblyName>Andastra.Game</AssemblyName>
+    <Description>MonoGame executable launcher for Odyssey Engine</Description>
+    <ApplicationManifest Condition="'$(OS)' == 'Windows_NT'">app.manifest</ApplicationManifest>
+    <!-- Explicitly disable Windows Forms and WPF - we use Eto.Forms for cross-platform UI -->
+    <UseWindowsForms>false</UseWindowsForms>
+    <UseWPF>false</UseWPF>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Parsing\Andastra.Parsing.csproj" />
+    <ProjectReference Include="..\Runtime\Content\Andastra.Runtime.Content.csproj" />
+    <ProjectReference Include="..\Runtime\Core\Andastra.Runtime.Core.csproj" />
+    <ProjectReference Include="..\Runtime\Games\Odyssey\Andastra.Runtime.Games.Odyssey.csproj" />
+    <ProjectReference Include="..\Runtime\Graphics\Andastra.Runtime.Graphics.csproj" />
+    <ProjectReference Include="..\Runtime\Graphics\MonoGame\Andastra.Runtime.Graphics.MonoGame.csproj" />
+    <ProjectReference Include="..\Runtime\Scripting\Andastra.Runtime.Scripting.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Eto.Forms" Version="2.7.4" />
+    <PackageReference Include="Eto.Platform.Gtk" Version="2.7.4" Condition="$([MSBuild]::IsOSPlatform('Linux'))" />
+    <PackageReference Include="Eto.Platform.Mac" Version="2.7.4" Condition="$([MSBuild]::IsOSPlatform('OSX'))" />
+    <PackageReference Include="Eto.Platform.Windows" Version="2.7.4" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
+    <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
+    <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.1.303" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <MonoGameContentReference Include="Content.mgcb" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Content\**\*.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 
 </Project>

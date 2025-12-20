@@ -5,8 +5,6 @@ using Andastra.Runtime.Core.Animation;
 using Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Templates;
-// TODO: IGameDataProvider moved to Games.Common - Core cannot depend on Games
-// using Andastra.Runtime.Games.Common;
 
 namespace Andastra.Runtime.Core.Interfaces
 {

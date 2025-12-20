@@ -486,8 +486,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
 
             // Calculate mainEnd - it should be the minimum of all subroutine starts that are AFTER mainStart
             // But we need to calculate mainStart first, so we'll do this after mainStart is determined
-            // TODO: SIMPLIFIED - For now, just set it to instructions.Count as default
-            // We'll recalculate mainEnd after mainStart is determined
+            // mainEnd will be recalculated after mainStart is determined (see below after mainStart calculation)
 
             // If SAVEBP is found, create globals subroutine (0 to SAVEBP+1)
             // Then calculate where main should start (after globals and entry stub)
@@ -690,16 +689,57 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 Debug($"DEBUG NcsToAstConverter: Deferring mainStart adjustment (shouldDeferGlobals=true, split logic will set mainStart correctly)");
             }
 
-            // Calculate mainEnd - CRITICAL: Main function should include ALL instructions from mainStart
+            // Calculate mainEnd based on subroutine starts that are AFTER mainStart
+            // mainEnd should be the minimum of all subroutine starts that are AFTER mainStart
+            // If there are no subroutines after mainStart, mainEnd should be instructions.Count (end of file)
+            // This ensures main function includes all instructions from mainStart to either:
+            // 1. The first subroutine start after mainStart (if subroutines exist and are boundaries), OR
+            // 2. The end of the file (instructions.Count) if no subroutines exist after mainStart
+            // NOTE: Subroutines are typically separate functions called from main, so they don't truncate main.
+            // However, in some cases (e.g., inline subroutines or specific compiler patterns), subroutines
+            // may serve as boundaries. The calculation below handles both cases by finding the minimum
+            // subroutine start after mainStart, but the split globals logic and final check below will
+            // ensure mainEnd is set correctly based on the actual code structure.
+            if (subroutineStarts.Count > 0 && mainStart >= 0)
+            {
+                // Find all subroutine starts that are AFTER mainStart
+                List<int> subStartsAfterMain = subroutineStarts.Where(subStart => subStart > mainStart).ToList();
+                if (subStartsAfterMain.Count > 0)
+                {
+                    // Set mainEnd to the minimum (first) subroutine start after mainStart
+                    int minSubStartAfterMain = subStartsAfterMain.Min();
+                    mainEnd = minSubStartAfterMain;
+                    Debug($"DEBUG NcsToAstConverter: Calculated mainEnd={mainEnd} as minimum subroutine start after mainStart={mainStart} (found {subStartsAfterMain.Count} subroutines after main: {string.Join(", ", subStartsAfterMain.OrderBy(x => x))})");
+                }
+                else
+                {
+                    // No subroutines after mainStart - main should include all instructions to end of file
+                    mainEnd = instructions.Count;
+                    Debug($"DEBUG NcsToAstConverter: No subroutines found after mainStart={mainStart}, setting mainEnd={mainEnd} (end of file, {instructions.Count} instructions)");
+                }
+            }
+            else
+            {
+                // No subroutines at all, or mainStart is invalid - main should include all instructions
+                mainEnd = instructions.Count;
+                if (subroutineStarts.Count == 0)
+                {
+                    Debug($"DEBUG NcsToAstConverter: No subroutines found in file, setting mainEnd={mainEnd} (end of file, {instructions.Count} instructions)");
+                }
+                else
+                {
+                    Debug($"DEBUG NcsToAstConverter: mainStart={mainStart} is invalid, setting mainEnd={mainEnd} (end of file, {instructions.Count} instructions)");
+                }
+            }
+            
+            // CRITICAL: Main function should include ALL instructions from mainStart
             // to the last RETN (instructions.Count), not just up to the first subroutine start.
             // Subroutines are separate functions called from main, but they don't truncate the main function.
             // NOTE: If mainStart is in globals range (alternative main start), mainEnd will be updated
             // in the split globals logic below to include SAVEBP
-            // CRITICAL FIX: Always set mainEnd to instructions.Count initially - it will be updated by split logic if needed
-            // The previous code set mainEnd = savebpIndex for alternative main start, which was WRONG and caused
-            // instructions after SAVEBP to be missed (e.g., k_act_com41.nss has 121 instructions but only 88 were processed)
-            mainEnd = instructions.Count;
-            Debug($"DEBUG NcsToAstConverter: mainEnd INITIALLY set to {mainEnd} (all {instructions.Count} instructions from mainStart={mainStart} to last RETN)");
+            // The calculation above provides an initial mainEnd value, but the split globals logic
+            // and final check below will ensure mainEnd is set correctly based on the actual code structure.
+            Debug($"DEBUG NcsToAstConverter: mainEnd INITIALLY calculated as {mainEnd} (mainStart={mainStart}, instructions.Count={instructions.Count})");
             if (isAlternativeMainStart && savebpIndex >= 0)
             {
                 // Alternative main start is in globals range - split logic below will update mainEnd if needed

@@ -545,7 +545,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             SendMessageA(windowHandle, WM_SIZE, IntPtr.Zero, (IntPtr)sizeParam);
             
             // Step 8: Show window (matching swkotor.exe line 116)
-            ShowWindow(windowHandle, SW_SHOW);
+            ShowWindow(windowHandle, (int)SW_SHOW);
             
             // Step 9: Get device context (matching swkotor.exe line 117)
             IntPtr hdc = GetDC(windowHandle);
@@ -831,7 +831,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 {
                     // Create float array for parameters (matching swkotor.exe behavior)
                     // The values 0x8629 and 0x862a are likely OpenGL constants or need conversion
-                    // For now, we'll use them as if they're pointers to float arrays or convert them
+                    // TODO: STUB - For now, we'll use them as if they're pointers to float arrays or convert them
                     float[] params1 = new float[4];
                     // Interpret 0x8629 and 0x862a as if they're float values (bit pattern conversion)
                     // This matches the original behavior where these values are passed directly
@@ -1196,7 +1196,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                     {
                         // Read texture IDs from the array
                         uint[] textureIds = new uint[textureCount];
-                        Marshal.Copy(textureArrayPtr, textureIds, 0, textureCount);
+                        Marshal.Copy(textureArrayPtr, textureIds, 0, (int)textureCount);
                         
                         // Delete textures
                         if (textureIds.Length > 0)
@@ -1446,7 +1446,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         {
             // Matching swkotor.exe: FUN_00420710 @ 0x00420710 exactly
             // This is a complex function that calculates texture size based on various flags
-            // For now, we implement a simplified version that matches the core logic
+            // TODO: STUB - For now, we implement a simplified version that matches the core logic
             unsafe
             {
                 byte* e4Ptr = (byte*)thisPtr + 0xe4;
@@ -1513,7 +1513,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         {
             // Matching swkotor.exe: FUN_0041fa30 @ 0x0041fa30
             // This function initializes a texture object
-            // For now, we implement a placeholder that matches the function signature
+            // TODO: STUB - For now, we implement a placeholder that matches the function signature
             // The full implementation would load and initialize the texture data
         }
         
@@ -2543,7 +2543,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                     
                     // The actual texture data loading would be done by the resource system
                     // which parses TPC/TGA files and provides the image data
-                    // For now, return the texture ID as IntPtr
+                    // TODO: STUB - For now, return the texture ID as IntPtr
                     // The texture data would be loaded via glTexImage2D or similar
                     
                     glBindTexture(GL_TEXTURE_2D, 0);

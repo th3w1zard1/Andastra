@@ -121,7 +121,7 @@ namespace KotorDiff.Cache
         [CanBeNull]
         public static object RestoreStrrefCacheFromCache(
             DiffCache cache,
-            [CanBeNull] Game game = null)
+            Game? game = null)
         {
             if (cache.StrrefCacheData == null)
             {

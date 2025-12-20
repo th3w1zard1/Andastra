@@ -38,6 +38,8 @@
     <Nullable>disable</Nullable>
     <AssemblyName>kotordiff</AssemblyName>
     <RootNamespace>KotorDiff</RootNamespace>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <ItemGroup>

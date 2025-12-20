@@ -86,7 +86,7 @@ namespace Andastra.Parsing.Diff
             {
                 // TSLPatcher syntax: AddColumn stuff
                 // Requires heuristics to determine default value?
-                // For now, just output a basic instruction
+                // TODO: STUB - For now, just output a basic instruction
                 // [2DAList]
                 // Row0=filename
                 // [filename]

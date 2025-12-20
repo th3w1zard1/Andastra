@@ -12,8 +12,6 @@ using Andastra.Runtime.Core.Perception;
 using Andastra.Runtime.Core.Save;
 using Andastra.Runtime.Core.Triggers;
 using Andastra.Runtime.Core.Templates;
-// TODO: IGameDataProvider moved to Games.Common - Core cannot depend on Games
-// using Andastra.Runtime.Games.Common;
 
 namespace Andastra.Runtime.Core.Entities
 {
@@ -257,9 +255,16 @@ namespace Andastra.Runtime.Core.Entities
         public AIController AIController { get; }
         public AnimationSystem AnimationSystem { get; }
         public ModuleTransitionSystem ModuleTransitionSystem { get; }
-        // TODO: IGameDataProvider is in Games.Common - Core cannot depend on Games
-        // This property should be set by engine-specific implementations
-        public object GameDataProvider { get; set; }
+        /// <summary>
+        /// The game data provider for accessing engine-agnostic game data tables.
+        /// </summary>
+        /// <remarks>
+        /// Provides access to game data tables (2DA files) for looking up creature properties,
+        /// appearance data, and other game configuration data.
+        /// Engine-specific implementations handle the actual table loading and lookup.
+        /// This property should be set by engine-specific implementations.
+        /// </remarks>
+        public IGameDataProvider GameDataProvider { get; set; }
 
         public IEntity CreateEntity(IEntityTemplate template, Vector3 position, float facing)
         {
