@@ -94,6 +94,8 @@ namespace Andastra.Runtime.Game.Core
         private int _selectedSaveIndex = 0;
         private bool _isSaving = false;
         private string _newSaveName = string.Empty;
+        private bool _isEnteringSaveName = false;
+        private float _saveNameInputCursorTime = 0f;
 
         // Input tracking
         private IMouseState _previousMouseState;
@@ -2572,6 +2574,7 @@ namespace Andastra.Runtime.Game.Core
             _selectedSaveIndex = 0;
             _isSaving = true;
             _newSaveName = string.Empty;
+            _isEnteringSaveName = false;
             _currentState = GameState.SaveMenu;
         }
 
@@ -2672,6 +2675,16 @@ namespace Andastra.Runtime.Game.Core
             var currentKeyboard = inputManager.KeyboardState;
             var currentMouse = inputManager.MouseState;
 
+            // If entering save name, handle text input
+            if (_isEnteringSaveName)
+            {
+                // Update cursor blink timer
+                _saveNameInputCursorTime += deltaTime;
+                HandleSaveNameInput(currentKeyboard, _previousKeyboardState);
+                _previousKeyboardState = currentKeyboard;
+                return;
+            }
+
             // Handle ESC to cancel
             if (IsKeyJustPressed(_previousKeyboardState, currentKeyboard, Keys.Escape))
             {
@@ -2705,18 +2718,132 @@ namespace Andastra.Runtime.Game.Core
                 }
                 else
                 {
-                    // TODO: SIMPLIFIED - New save - prompt for name (simplified: use timestamp)
-                    string newSaveName = "Save_" + DateTime.Now.ToString("yyyyMMdd_HHmmss");
-                    if (_saveSystem != null)
-                    {
-                        _saveSystem.Save(newSaveName, Andastra.Runtime.Core.Save.SaveType.Manual);
-                        RefreshSaveList();
-                        _currentState = GameState.InGame;
-                    }
+                    // New save - enter text input mode
+                    _isEnteringSaveName = true;
+                    _newSaveName = string.Empty;
+                    _saveNameInputCursorTime = 0f;
                 }
             }
 
             _previousKeyboardState = currentKeyboard;
+        }
+
+        /// <summary>
+        /// Handles text input for save name entry.
+        /// </summary>
+        /// <param name="currentKeyboard">Current keyboard state.</param>
+        /// <param name="previousKeyboard">Previous keyboard state.</param>
+        /// <remarks>
+        /// Handles keyboard input for entering a save game name.
+        /// Supports letters, numbers, spaces, backspace, enter (confirm), and escape (cancel).
+        /// Save name is validated and sanitized before saving.
+        /// </remarks>
+        private void HandleSaveNameInput(IKeyboardState currentKeyboard, IKeyboardState previousKeyboard)
+        {
+            const int MaxSaveNameLength = 50; // Reasonable limit for save names
+
+            // Handle character input
+            Keys[] pressedKeys = currentKeyboard.GetPressedKeys();
+            foreach (Keys key in pressedKeys)
+            {
+                if (!previousKeyboard.IsKeyDown(key))
+                {
+                    // Letters (A-Z)
+                    if (key >= Keys.A && key <= Keys.Z)
+                    {
+                        // Check if shift is held for uppercase, otherwise use lowercase
+                        bool isShiftDown = currentKeyboard.IsKeyDown(Keys.LeftShift) || currentKeyboard.IsKeyDown(Keys.RightShift);
+                        if (_newSaveName.Length < MaxSaveNameLength)
+                        {
+                            // Keys.A = 65 ('A'), so if shift is down use as-is (uppercase), otherwise convert to lowercase
+                            char c = isShiftDown ? (char)(int)key : (char)((int)key + 32);
+                            _newSaveName += c;
+                        }
+                    }
+                    // Numbers (0-9)
+                    else if (key >= Keys.D0 && key <= Keys.D9)
+                    {
+                        if (_newSaveName.Length < MaxSaveNameLength)
+                        {
+                            _newSaveName += ((int)key - (int)Keys.D0).ToString();
+                        }
+                    }
+                    // Space
+                    else if (key == Keys.Space)
+                    {
+                        if (_newSaveName.Length < MaxSaveNameLength && _newSaveName.Length > 0)
+                        {
+                            _newSaveName += " ";
+                        }
+                    }
+                    // Backspace
+                    else if (key == Keys.Back)
+                    {
+                        if (_newSaveName.Length > 0)
+                        {
+                            _newSaveName = _newSaveName.Substring(0, _newSaveName.Length - 1);
+                        }
+                    }
+                    // Enter - confirm save name
+                    else if (key == Keys.Enter)
+                    {
+                        string sanitizedName = SanitizeSaveName(_newSaveName);
+                        if (!string.IsNullOrWhiteSpace(sanitizedName))
+                        {
+                            // Save the game with the entered name
+                            if (_saveSystem != null)
+                            {
+                                _saveSystem.Save(sanitizedName, Andastra.Runtime.Core.Save.SaveType.Manual);
+                                RefreshSaveList();
+                                _isEnteringSaveName = false;
+                                _newSaveName = string.Empty;
+                                _currentState = GameState.InGame;
+                            }
+                        }
+                    }
+                    // Escape - cancel text input
+                    else if (key == Keys.Escape)
+                    {
+                        _isEnteringSaveName = false;
+                        _newSaveName = string.Empty;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Sanitizes a save name by removing or replacing invalid filename characters.
+        /// </summary>
+        /// <param name="name">Save name to sanitize.</param>
+        /// <returns>Sanitized save name safe for use as a filename.</returns>
+        /// <remarks>
+        /// Removes or replaces invalid filename characters with underscores.
+        /// Based on Path.GetInvalidFileNameChars() to ensure compatibility across platforms.
+        /// </remarks>
+        private string SanitizeSaveName(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return string.Empty;
+            }
+
+            // Remove or replace invalid filename characters
+            char[] invalid = Path.GetInvalidFileNameChars();
+            foreach (char c in invalid)
+            {
+                name = name.Replace(c, '_');
+            }
+
+            // Trim whitespace
+            name = name.Trim();
+
+            // Ensure name is not empty after sanitization
+            if (string.IsNullOrEmpty(name))
+            {
+                return "Save_" + DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            }
+
+            return name;
         }
 
         /// <summary>
@@ -2814,10 +2941,71 @@ namespace Andastra.Runtime.Game.Core
             }
 
             // Instructions
-            string instructions = "Select a save slot or create a new save. Press Escape to cancel.";
+            string instructions;
+            if (_isEnteringSaveName)
+            {
+                instructions = "Enter save name. Press Enter to confirm, Escape to cancel.";
+            }
+            else
+            {
+                instructions = "Select a save slot or create a new save. Press Escape to cancel.";
+            }
             Vector2 instSize = _font.MeasureString(instructions);
             Vector2 instPos = new Vector2((viewportWidth - instSize.X) / 2, viewportHeight - 50);
             _spriteBatch.DrawString(_font, instructions, instPos, new Color(211, 211, 211, 255));
+
+            // Display text input if entering save name
+            if (_isEnteringSaveName)
+            {
+                // Draw text input box
+                int inputBoxX = viewportWidth / 2 - 200;
+                int inputBoxY = viewportHeight / 2 - 30;
+                int inputBoxWidth = 400;
+                int inputBoxHeight = 60;
+                Rectangle inputBoxRect = new Rectangle(inputBoxX, inputBoxY, inputBoxWidth, inputBoxHeight);
+                _spriteBatch.Draw(_menuTexture, inputBoxRect, new Color(30, 30, 40, 255));
+
+                // Draw border
+                Rectangle borderRect = new Rectangle(inputBoxX - 2, inputBoxY - 2, inputBoxWidth + 4, inputBoxHeight + 4);
+                _spriteBatch.Draw(_menuTexture, borderRect, new Color(150, 150, 150, 255));
+
+                // Draw label
+                string label = "Save Name:";
+                Vector2 labelSize = _font.MeasureString(label);
+                Vector2 labelPos = new Vector2(inputBoxX, inputBoxY - labelSize.Y - 10);
+                _spriteBatch.DrawString(_font, label, labelPos, new Color(255, 255, 255, 255));
+
+                // Draw entered text
+                string displayText = _newSaveName ?? string.Empty;
+                
+                // Add blinking cursor (blinks every 0.5 seconds)
+                const float cursorBlinkInterval = 0.5f;
+                bool showCursor = ((int)(_saveNameInputCursorTime / cursorBlinkInterval) % 2) == 0;
+                if (showCursor)
+                {
+                    displayText += "_";
+                }
+
+                Vector2 textSize = _font.MeasureString(displayText);
+                
+                // Clamp text to fit in box with padding
+                int maxTextWidth = inputBoxWidth - 20;
+                if (textSize.X > maxTextWidth && displayText.Length > 0)
+                {
+                    // Text is too long, show only the end portion (with cursor if needed)
+                    string textToShow = showCursor ? _newSaveName + "_" : _newSaveName;
+                    string truncated = textToShow;
+                    while (_font.MeasureString(truncated).X > maxTextWidth && truncated.Length > (showCursor ? 2 : 1))
+                    {
+                        truncated = truncated.Substring(1);
+                    }
+                    displayText = truncated;
+                    textSize = _font.MeasureString(displayText);
+                }
+
+                Vector2 textPos = new Vector2(inputBoxX + 10, inputBoxY + (inputBoxHeight - textSize.Y) / 2);
+                _spriteBatch.DrawString(_font, displayText, textPos, new Color(255, 255, 255, 255));
+            }
 
             _spriteBatch.End();
         }
