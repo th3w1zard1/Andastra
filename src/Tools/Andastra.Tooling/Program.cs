@@ -2,7 +2,6 @@ using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
-using System.Threading.Tasks;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 
@@ -13,7 +12,7 @@ namespace Andastra.Runtime.Tooling
     /// </summary>
     public class Program
     {
-        public static async Task<int> Main(string[] args)
+        public static int Main(string[] args)
         {
             var rootCommand = new RootCommand("Odyssey Engine Tooling CLI")
             {
@@ -21,44 +20,51 @@ namespace Andastra.Runtime.Tooling
             };
 
             // validate-install command
-            var validateCommand = new Command("validate-install", "Validate a KOTOR installation");
             var pathOption = new Option<DirectoryInfo>(
                 "--path",
                 "Path to the KOTOR installation directory"
-            );
-            pathOption.IsRequired = true;
-            validateCommand.AddOption(pathOption);
-            validateCommand.SetHandler(ValidateInstall, pathOption);
-            rootCommand.AddCommand(validateCommand);
+            )
+            {
+                Required = true
+            };
+            var validateCommand = new Command("validate-install", "Validate a KOTOR installation");
+            validateCommand.Options.Add(pathOption);
+            rootCommand.Add(validateCommand);
 
             // warm-cache command
-            var warmCacheCommand = new Command("warm-cache", "Pre-convert assets for a module");
             var modulePath = new Option<string>("--module", "Module resref to convert");
             var installPath = new Option<DirectoryInfo>("--install", "KOTOR installation path");
-            warmCacheCommand.AddOption(modulePath);
-            warmCacheCommand.AddOption(installPath);
-            warmCacheCommand.SetHandler(WarmCache, modulePath, installPath);
-            rootCommand.AddCommand(warmCacheCommand);
+            var warmCacheCommand = new Command("warm-cache", "Pre-convert assets for a module");
+            warmCacheCommand.Options.Add(modulePath);
+            warmCacheCommand.Options.Add(installPath);
+            rootCommand.Add(warmCacheCommand);
 
             // dump-resource command
-            var dumpCommand = new Command("dump-resource", "Dump a resource (raw and decoded)");
             var resRefOption = new Option<string>("--resref", "Resource reference name");
             var resTypeOption = new Option<string>("--type", "Resource type (e.g., utc, ncs, mdl)");
             var dumpInstallPath = new Option<DirectoryInfo>("--install", "KOTOR installation path");
-            dumpCommand.AddOption(resRefOption);
-            dumpCommand.AddOption(resTypeOption);
-            dumpCommand.AddOption(dumpInstallPath);
-            dumpCommand.SetHandler(DumpResource, resRefOption, resTypeOption, dumpInstallPath);
-            rootCommand.AddCommand(dumpCommand);
+            var dumpCommand = new Command("dump-resource", "Dump a resource (raw and decoded)");
+            dumpCommand.Options.Add(resRefOption);
+            dumpCommand.Options.Add(resTypeOption);
+            dumpCommand.Options.Add(dumpInstallPath);
+            rootCommand.Add(dumpCommand);
 
             // run-script command
-            var runScriptCommand = new Command("run-script", "Execute an NCS script with mocked world");
             var scriptPath = new Option<FileInfo>("--script", "Path to NCS file");
-            runScriptCommand.AddOption(scriptPath);
-            runScriptCommand.SetHandler(RunScript, scriptPath);
-            rootCommand.AddCommand(runScriptCommand);
+            var runScriptCommand = new Command("run-script", "Execute an NCS script with mocked world");
+            runScriptCommand.Options.Add(scriptPath);
+            rootCommand.Add(runScriptCommand);
 
-            return await rootCommand.InvokeAsync(args);
+            try
+            {
+                var parseResult = rootCommand.Parse(args);
+                return parseResult.Invoke();
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error: {ex.Message}");
+                return 1;
+            }
         }
 
         private static void ValidateInstall(DirectoryInfo path)
