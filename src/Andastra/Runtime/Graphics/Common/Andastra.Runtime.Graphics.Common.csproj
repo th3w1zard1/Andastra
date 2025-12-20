@@ -56,7 +56,6 @@
     <ProjectReference Include="..\..\Core\Andastra.Runtime.Core.csproj" />
     <ProjectReference Include="..\..\Content\Andastra.Runtime.Content.csproj" />
     <ProjectReference Include="..\..\..\Parsing\Andastra.Parsing.csproj" />
-    <ProjectReference Include="..\MonoGame\Andastra.Runtime.Graphics.MonoGame.csproj" />
   </ItemGroup>
 
   <ItemGroup>

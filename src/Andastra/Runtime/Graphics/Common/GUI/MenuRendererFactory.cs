@@ -1,12 +1,8 @@
 using System;
-using System.Linq;
 using System.Reflection;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common.Enums;
-using Andastra.Runtime.MonoGame.Graphics;
-using Andastra.Runtime.MonoGame.GUI;
 using JetBrains.Annotations;
-using Microsoft.Xna.Framework.Graphics;
 
 namespace Andastra.Runtime.Graphics.Common.GUI
 {
@@ -66,14 +62,14 @@ namespace Andastra.Runtime.Graphics.Common.GUI
         }
 
         /// <summary>
-        /// Creates a MonoGame menu renderer using Myra UI library.
+        /// Creates a MonoGame menu renderer using Myra UI library via reflection.
         /// </summary>
         /// <param name="graphicsDevice">The graphics device wrapper from the backend.</param>
         /// <returns>A MyraMenuRenderer instance, or null if creation fails.</returns>
         /// <remarks>
         /// MonoGame Menu Renderer Creation:
+        /// - Uses reflection to dynamically load MonoGame types to avoid circular dependencies
         /// - Extracts the underlying MonoGame GraphicsDevice from the IGraphicsDevice wrapper
-        /// - Uses reflection to access the private _device field in MonoGameGraphicsDevice
         /// - Creates MyraMenuRenderer with the extracted GraphicsDevice
         /// - Handles errors gracefully with detailed logging
         /// - Based on exhaustive reverse engineering of swkotor.exe and swkotor2.exe menu initialization
@@ -87,18 +83,20 @@ namespace Andastra.Runtime.Graphics.Common.GUI
                 return null;
             }
 
-            // Check if the graphics device is a MonoGameGraphicsDevice wrapper
-            if (!(graphicsDevice is MonoGameGraphicsDevice monoGameDevice))
-            {
-                Console.WriteLine($"[MenuRendererFactory] ERROR: GraphicsDevice is not a MonoGameGraphicsDevice (type: {graphicsDevice.GetType().Name})");
-                return null;
-            }
-
             try
             {
+                // Get the type of the graphics device wrapper
+                Type graphicsDeviceType = graphicsDevice.GetType();
+                
+                // Check if it's a MonoGameGraphicsDevice (using string comparison to avoid compile-time dependency)
+                if (graphicsDeviceType.FullName != "Andastra.Runtime.MonoGame.Graphics.MonoGameGraphicsDevice")
+                {
+                    Console.WriteLine($"[MenuRendererFactory] ERROR: GraphicsDevice is not a MonoGameGraphicsDevice (type: {graphicsDeviceType.FullName})");
+                    return null;
+                }
+
                 // Extract the underlying MonoGame GraphicsDevice using reflection
-                // MonoGameGraphicsDevice wraps the actual GraphicsDevice in a private _device field
-                GraphicsDevice mgGraphicsDevice = ExtractMonoGameGraphicsDevice(monoGameDevice);
+                object mgGraphicsDevice = ExtractMonoGameGraphicsDevice(graphicsDevice);
                 
                 if (mgGraphicsDevice == null)
                 {
@@ -106,8 +104,18 @@ namespace Andastra.Runtime.Graphics.Common.GUI
                     return null;
                 }
 
-                // Create MyraMenuRenderer with the extracted GraphicsDevice
-                var renderer = new MyraMenuRenderer(mgGraphicsDevice);
+                // Load the MyraMenuRenderer type using reflection
+                Assembly monoGameAssembly = graphicsDeviceType.Assembly;
+                Type myraMenuRendererType = monoGameAssembly.GetType("Andastra.Runtime.MonoGame.GUI.MyraMenuRenderer");
+                
+                if (myraMenuRendererType == null)
+                {
+                    Console.WriteLine("[MenuRendererFactory] ERROR: Could not find MyraMenuRenderer type in MonoGame assembly");
+                    return null;
+                }
+
+                // Create MyraMenuRenderer instance with the extracted GraphicsDevice
+                object renderer = Activator.CreateInstance(myraMenuRendererType, new[] { mgGraphicsDevice });
                 
                 if (renderer == null)
                 {
@@ -115,16 +123,40 @@ namespace Andastra.Runtime.Graphics.Common.GUI
                     return null;
                 }
 
-                // Verify initialization
-                if (!renderer.IsInitialized)
+                // Cast to BaseMenuRenderer (this should work since MyraMenuRenderer inherits from it)
+                if (!(renderer is BaseMenuRenderer baseRenderer))
                 {
-                    Console.WriteLine("[MenuRendererFactory] WARNING: MyraMenuRenderer was created but not initialized");
+                    Console.WriteLine($"[MenuRendererFactory] ERROR: Created instance is not a BaseMenuRenderer (type: {renderer.GetType().FullName})");
+                    return null;
                 }
 
-                Console.WriteLine($"[MenuRendererFactory] Successfully created MonoGame menu renderer (MyraMenuRenderer)");
-                Console.WriteLine($"[MenuRendererFactory] Viewport: {renderer.ViewportWidth}x{renderer.ViewportHeight}");
+                // Verify initialization using reflection
+                PropertyInfo isInitializedProperty = baseRenderer.GetType().GetProperty("IsInitialized");
+                if (isInitializedProperty != null)
+                {
+                    object isInitialized = isInitializedProperty.GetValue(baseRenderer);
+                    if (isInitialized is bool initialized && !initialized)
+                    {
+                        Console.WriteLine("[MenuRendererFactory] WARNING: MyraMenuRenderer was created but not initialized");
+                    }
+                }
+
+                // Get viewport dimensions using reflection for logging
+                PropertyInfo viewportWidthProperty = baseRenderer.GetType().GetProperty("ViewportWidth");
+                PropertyInfo viewportHeightProperty = baseRenderer.GetType().GetProperty("ViewportHeight");
+                if (viewportWidthProperty != null && viewportHeightProperty != null)
+                {
+                    object width = viewportWidthProperty.GetValue(baseRenderer);
+                    object height = viewportHeightProperty.GetValue(baseRenderer);
+                    Console.WriteLine($"[MenuRendererFactory] Successfully created MonoGame menu renderer (MyraMenuRenderer)");
+                    Console.WriteLine($"[MenuRendererFactory] Viewport: {width}x{height}");
+                }
+                else
+                {
+                    Console.WriteLine($"[MenuRendererFactory] Successfully created MonoGame menu renderer (MyraMenuRenderer)");
+                }
                 
-                return renderer;
+                return baseRenderer;
             }
             catch (Exception ex)
             {
@@ -154,7 +186,7 @@ namespace Andastra.Runtime.Graphics.Common.GUI
         /// - Handles reflection errors gracefully with detailed logging
         /// - Returns null if the field cannot be accessed or is null
         /// </remarks>
-        private static GraphicsDevice ExtractMonoGameGraphicsDevice(MonoGameGraphicsDevice wrapper)
+        private static object ExtractMonoGameGraphicsDevice(object wrapper)
         {
             if (wrapper == null)
             {
@@ -165,7 +197,7 @@ namespace Andastra.Runtime.Graphics.Common.GUI
             try
             {
                 // Get the type of MonoGameGraphicsDevice
-                Type wrapperType = typeof(MonoGameGraphicsDevice);
+                Type wrapperType = wrapper.GetType();
                 
                 // Get the private _device field using reflection
                 // BindingFlags.NonPublic | BindingFlags.Instance to access private instance field
@@ -174,7 +206,9 @@ namespace Andastra.Runtime.Graphics.Common.GUI
                 if (deviceField == null)
                 {
                     Console.WriteLine("[MenuRendererFactory] ERROR: Could not find _device field in MonoGameGraphicsDevice");
-                    Console.WriteLine($"[MenuRendererFactory] Available fields: {string.Join(", ", wrapperType.GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public).Select(f => f.Name))}");
+                    FieldInfo[] allFields = wrapperType.GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public);
+                    string fieldNames = string.Join(", ", Array.ConvertAll(allFields, f => f.Name));
+                    Console.WriteLine($"[MenuRendererFactory] Available fields: {fieldNames}");
                     return null;
                 }
 
@@ -187,15 +221,8 @@ namespace Andastra.Runtime.Graphics.Common.GUI
                     return null;
                 }
 
-                // Cast to GraphicsDevice
-                if (!(deviceValue is GraphicsDevice mgDevice))
-                {
-                    Console.WriteLine($"[MenuRendererFactory] ERROR: _device field is not a GraphicsDevice (type: {deviceValue.GetType().Name})");
-                    return null;
-                }
-
-                Console.WriteLine($"[MenuRendererFactory] Successfully extracted MonoGame GraphicsDevice (Handle: {mgDevice.Handle})");
-                return mgDevice;
+                Console.WriteLine($"[MenuRendererFactory] Successfully extracted MonoGame GraphicsDevice (type: {deviceValue.GetType().FullName})");
+                return deviceValue;
             }
             catch (Exception ex)
             {
