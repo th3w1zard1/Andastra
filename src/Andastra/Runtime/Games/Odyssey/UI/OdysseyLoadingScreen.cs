@@ -2,6 +2,7 @@ using System;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Graphics.MonoGame.GUI;
+using Andastra.Parsing.Resource.Generics.GUI;
 
 namespace Andastra.Runtime.Games.Odyssey.UI
 {
@@ -178,10 +179,28 @@ namespace Andastra.Runtime.Games.Odyssey.UI
 
             // Update progress bar if GUI is loaded
             // Based on swkotor2.exe: "PB_PROGRESS" control is updated with progress value
-            // The GUI manager should handle progress bar updates through control value changes
-            // This would typically be done by setting a control value on the "PB_PROGRESS" control
-            // For now, we rely on the GUI manager's internal progress tracking
-            // TODO: If GUI manager exposes progress bar update method, call it here
+            // - FUN_006cff90 @ 0x006cff90: Loading screen initialization gets PB_PROGRESS control via FUN_0040bb40 @ 0x0040bb40
+            // - Line 41-43: FUN_00630a90(&local_30,"PB_PROGRESS") followed by FUN_0040bb40(this,piVar1,&local_30,1,1) retrieves the progress bar control
+            // - Progress bar value is set by updating the control's current value property
+            // - Original implementation: Progress bar shows loading progress (0-100) during resource loading
+            // - "Load Bar = %d" @ 0x007c760c: Debug output shows progress bar value updates
+            // - This implementation: Gets PB_PROGRESS control using GetControl and calls SetValue to update progress
+            if (_guiManager is KotorGuiManager kotorGuiManager)
+            {
+                GUIControl control = kotorGuiManager.GetControl("PB_PROGRESS");
+                if (control != null && control is GUIProgressBar progressBar)
+                {
+                    progressBar.SetValue(_currentProgress);
+                }
+                else if (control == null)
+                {
+                    System.Console.WriteLine($"[OdysseyLoadingScreen] WARNING: PB_PROGRESS control not found in current GUI");
+                }
+                else
+                {
+                    System.Console.WriteLine($"[OdysseyLoadingScreen] WARNING: PB_PROGRESS control is not a progress bar (type: {control.GetType().Name})");
+                }
+            }
         }
 
         /// <summary>
