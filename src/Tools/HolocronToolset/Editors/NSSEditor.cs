@@ -46,6 +46,7 @@ namespace HolocronToolset.Editors
         private string _repo;
         private string _sourcerepoUrl;
         private Label _statusLabel;
+        private Border _statusBar;
         
         // File explorer components
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:1351-1398
@@ -99,6 +100,7 @@ namespace HolocronToolset.Editors
             SetupOutline();
             SetupFileExplorer();
             AddHelpAction();
+            SetupStatusBar();
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:469-514
             // Original: Setup completer for autocompletion
@@ -222,6 +224,18 @@ namespace HolocronToolset.Editors
             {
                 // Update status bar on text change
                 _codeEdit.TextChanged += (s, e) => UpdateStatusBar();
+
+                // Update status bar on focus changes (cursor position may change)
+                _codeEdit.GotFocus += (s, e) => UpdateStatusBar();
+                _codeEdit.LostFocus += (s, e) => UpdateStatusBar();
+
+                // Update status bar on pointer events (mouse clicks move cursor)
+                _codeEdit.PointerPressed += (s, e) => UpdateStatusBar();
+                _codeEdit.PointerReleased += (s, e) => UpdateStatusBar();
+
+                // Update status bar on key events (arrow keys, etc. move cursor)
+                _codeEdit.KeyDown += (s, e) => UpdateStatusBar();
+                _codeEdit.KeyUp += (s, e) => UpdateStatusBar();
 
                 // Validate bookmarks when text changes
                 _codeEdit.TextChanged += (s, e) => ValidateBookmarks();
@@ -1375,6 +1389,93 @@ namespace HolocronToolset.Editors
 
         // Public property to access function list for testing
         public ListBox FunctionList => _functionList;
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py
+        // Original: Status bar is set up in UI setup, accessible via statusBar() method
+        /// <summary>
+        /// Sets up the status bar UI element at the bottom of the window.
+        /// Creates a status bar with a label that displays cursor position and selection info.
+        /// </summary>
+        private void SetupStatusBar()
+        {
+            // Create status bar border (similar to Qt's QStatusBar)
+            _statusBar = new Border
+            {
+                Height = 25,
+                Background = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.FromRgb(240, 240, 240)),
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Bottom
+            };
+
+            // Create a panel to hold the status label
+            var statusPanel = new StackPanel
+            {
+                Orientation = Avalonia.Layout.Orientation.Horizontal,
+                Margin = new Avalonia.Thickness(4, 0, 4, 0),
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+            };
+
+            // Initialize status label if not already initialized
+            if (_statusLabel == null)
+            {
+                _statusLabel = new Label
+                {
+                    Content = "Ln 1, Col 1 | 1 lines",
+                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+                };
+            }
+
+            statusPanel.Children.Add(_statusLabel);
+            _statusBar.Child = statusPanel;
+
+            // Add status bar to window content structure
+            // Check if content is already a DockPanel (may have been created by AddHelpAction)
+            if (Content is DockPanel dockPanel)
+            {
+                // Content is already a DockPanel, check if status bar is already added
+                if (!dockPanel.Children.Contains(_statusBar))
+                {
+                    dockPanel.Children.Add(_statusBar);
+                    DockPanel.SetDock(_statusBar, Dock.Bottom);
+                }
+            }
+            else if (Content != null)
+            {
+                // Wrap existing content in DockPanel and add status bar
+                var newDockPanel = new DockPanel();
+                newDockPanel.Children.Add(Content);
+                newDockPanel.Children.Add(_statusBar);
+                DockPanel.SetDock(_statusBar, Dock.Bottom);
+                Content = newDockPanel;
+            }
+            else
+            {
+                // No content yet, create DockPanel with status bar
+                var newDockPanel = new DockPanel();
+                if (_codeEdit != null)
+                {
+                    newDockPanel.Children.Add(_codeEdit);
+                }
+                newDockPanel.Children.Add(_statusBar);
+                DockPanel.SetDock(_statusBar, Dock.Bottom);
+                Content = newDockPanel;
+            }
+
+            // Initial status bar update
+            UpdateStatusBar();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py
+        // Original: def statusBar(self) -> QStatusBar: return self.statusBar()
+        /// <summary>
+        /// Returns the status bar UI element for test compatibility.
+        /// Matches PyKotor's statusBar() method signature.
+        /// </summary>
+        /// <returns>The status bar Border control, or null if not initialized.</returns>
+        public Border StatusBar()
+        {
+            return _statusBar;
+        }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2363-2373
         // Original: def on_function_search(self):

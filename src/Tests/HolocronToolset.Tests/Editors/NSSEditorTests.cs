@@ -1560,14 +1560,19 @@ void helper() {
             throw new NotImplementedException("TestNssEditorLogToOutput: Log to output test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_nss_editor_status_bar_setup (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1048-1056)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1048-1056
         // Original: def test_nss_editor_status_bar_setup(qtbot, installation: HTInstallation): Test status bar setup
         [Fact]
         public void TestNssEditorStatusBarSetup()
         {
-            // TODO: STUB - Implement status bar setup test
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1048-1056
-            throw new NotImplementedException("TestNssEditorStatusBarSetup: Status bar setup test not yet implemented");
+            var installation = _fixture.Installation;
+            var editor = new NSSEditor(null, installation);
+            editor.New();
+            
+            // Status bar should exist
+            var statusBar = editor.StatusBar();
+            statusBar.Should().NotBeNull("Status bar should be initialized");
         }
 
         // TODO: STUB - Implement test_nss_editor_status_bar_updates (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1058-1080)
