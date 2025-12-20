@@ -4,6 +4,7 @@ using System.Numerics;
 using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
+using Andastra.Runtime.Core.Module;
 using Andastra.Runtime.Games.Common;
 
 namespace Andastra.Runtime.Games.Odyssey
@@ -33,6 +34,7 @@ namespace Andastra.Runtime.Games.Odyssey
     public class OdysseyEventDispatcher : BaseEventDispatcher
     {
         private readonly Queue<PendingEvent> _eventQueue = new Queue<PendingEvent>();
+        private readonly ILoadingScreen _loadingScreen;
 
         private struct PendingEvent
         {
@@ -40,6 +42,15 @@ namespace Andastra.Runtime.Games.Odyssey
             public IEntity TargetEntity;
             public int EventType;
             public int EventSubtype;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the OdysseyEventDispatcher.
+        /// </summary>
+        /// <param name="loadingScreen">Optional loading screen for area transitions. If provided, area transitions will display the transition bitmap.</param>
+        public OdysseyEventDispatcher(ILoadingScreen loadingScreen = null)
+        {
+            _loadingScreen = loadingScreen;
         }
 
         /// <summary>
@@ -247,6 +258,18 @@ namespace Andastra.Runtime.Games.Odyssey
             // If target area is different from current, perform full transition
             if (targetAreaInstance != currentArea)
             {
+                // Check for stored area transition bitmap on player entity
+                // Based on swkotor.exe: SetAreaTransitionBMP stores bitmap on player entity
+                // Original implementation: Area transition bitmap is displayed during area transitions
+                string transitionBitmap = GetAreaTransitionBitmap(entity);
+                
+                // Show loading screen with transition bitmap if available
+                if (!string.IsNullOrEmpty(transitionBitmap) && _loadingScreen != null)
+                {
+                    Console.WriteLine($"[OdysseyEventDispatcher] HandleAreaTransition: Showing area transition bitmap: {transitionBitmap}");
+                    _loadingScreen.Show(transitionBitmap);
+                }
+
                 // Remove entity from current area first
                 if (currentArea != null)
                 {
@@ -272,12 +295,44 @@ namespace Andastra.Runtime.Games.Odyssey
 
                 // Fire transition events (OnEnter script for target area)
                 FireAreaTransitionEvents(world, entity, targetAreaInstance);
+                
+                // Hide loading screen after transition completes
+                if (!string.IsNullOrEmpty(transitionBitmap) && _loadingScreen != null)
+                {
+                    _loadingScreen.Hide();
+                }
+                
                 Console.WriteLine($"[OdysseyEventDispatcher] HandleAreaTransition: Successfully transitioned entity {entity.Tag ?? "null"} ({entity.ObjectId}) to area {targetAreaInstance.ResRef}");
             }
             else
             {
                 Console.WriteLine($"[OdysseyEventDispatcher] HandleAreaTransition: Entity {entity.Tag ?? "null"} ({entity.ObjectId}) is already in target area {targetArea}, no transition needed");
             }
+        }
+
+        /// <summary>
+        /// Gets the area transition bitmap stored on the entity.
+        /// Based on swkotor.exe: SetAreaTransitionBMP stores bitmap on player entity
+        /// Original implementation: Bitmap is retrieved from entity data during area transitions
+        /// </summary>
+        /// <param name="entity">Entity to get transition bitmap from (usually player entity)</param>
+        /// <returns>Bitmap ResRef or null if not set</returns>
+        private string GetAreaTransitionBitmap(IEntity entity)
+        {
+            if (entity == null)
+            {
+                return null;
+            }
+
+            // Check if entity has stored area transition bitmap
+            // Key: "AreaTransitionBitmap" - set by SetAreaTransitionBMP function
+            if (entity.HasData("AreaTransitionBitmap"))
+            {
+                string bitmap = entity.GetData<string>("AreaTransitionBitmap", null);
+                return bitmap;
+            }
+
+            return null;
         }
 
         /// <summary>
