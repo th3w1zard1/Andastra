@@ -131,6 +131,39 @@ namespace HolocronToolset.Windows
 
             // Matching Python line 610: self.ui.actionZoomOut.triggered.connect(lambda: self.ui.mapRenderer.zoom_in_camera(-ZOOM_STEP))
             Ui.ActionZoomOut = () => Ui.MapRenderer.ZoomInCamera(-0.2f); // ZOOM_STEP = 0.2
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:632-638
+            // Original: self.ui.gridSizeSpin.valueChanged.connect(self.ui.mapRenderer.set_grid_size)
+            // Original: self.ui.rotSnapSpin.valueChanged.connect(self.ui.mapRenderer.set_rotation_snap)
+            // Setup spinbox bindings for grid size and rotation snap
+            Ui.GridSizeSpinValueChanged = (value) => Ui.MapRenderer.SetGridSize((float)value);
+            Ui.RotSnapSpinValueChanged = (value) => Ui.MapRenderer.SetRotationSnap((float)value);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1222-1247
+            // Original: def _initialize_options_ui(self):
+            InitializeOptionsUI();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1222-1247
+        // Original: def _initialize_options_ui(self):
+        //     """Initialize Options UI to match renderer's initial state."""
+        private void InitializeOptionsUI()
+        {
+            // Matching Python line 1224: renderer = self.ui.mapRenderer
+            var renderer = Ui.MapRenderer;
+
+            // Matching Python lines 1226-1231: Block signals temporarily to avoid triggering updates during initialization
+            // In Avalonia/C#, we use a flag to prevent event handlers from firing during initialization
+            Ui.BlockSpinboxSignals = true;
+
+            // Matching Python lines 1234-1239: Set UI to match renderer state
+            // Matching Python line 1238: self.ui.gridSizeSpin.setValue(renderer.grid_size)
+            Ui.GridSizeSpinValue = renderer.GridSize;
+            // Matching Python line 1239: self.ui.rotSnapSpin.setValue(int(renderer.rotation_snap))
+            Ui.RotSnapSpinValue = (decimal)renderer.RotationSnap;
+
+            // Matching Python lines 1242-1247: Unblock signals
+            Ui.BlockSpinboxSignals = false;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1751-1755
@@ -333,6 +366,80 @@ namespace HolocronToolset.Windows
         // Matching PyKotor implementation - actionZoomOut menu action
         // Original: self.ui.actionZoomOut.triggered.connect(lambda: self.ui.mapRenderer.zoom_in_camera(-ZOOM_STEP))
         public Action ActionZoomOut { get; set; }
+
+        // Matching PyKotor implementation - gridSizeSpin widget
+        // Original: self.ui.gridSizeSpin (QDoubleSpinBox)
+        // Grid size spinbox value property (decimal for NumericUpDown compatibility)
+        private decimal _gridSizeSpinValue = 1.0m; // DEFAULT_GRID_SIZE = 1.0
+        public decimal GridSizeSpinValue
+        {
+            get { return _gridSizeSpinValue; }
+            set
+            {
+                if (_gridSizeSpinValue != value)
+                {
+                    _gridSizeSpinValue = value;
+                    // Trigger value changed event if signals are not blocked
+                    if (!BlockSpinboxSignals && GridSizeSpinValueChanged != null)
+                    {
+                        GridSizeSpinValueChanged((double)value);
+                    }
+                }
+            }
+        }
+
+        // Matching PyKotor implementation - rotSnapSpin widget
+        // Original: self.ui.rotSnapSpin (QSpinBox)
+        // Rotation snap spinbox value property (decimal for NumericUpDown compatibility)
+        private decimal _rotSnapSpinValue = 15m; // DEFAULT_ROTATION_SNAP = 15
+        public decimal RotSnapSpinValue
+        {
+            get { return _rotSnapSpinValue; }
+            set
+            {
+                if (_rotSnapSpinValue != value)
+                {
+                    _rotSnapSpinValue = value;
+                    // Trigger value changed event if signals are not blocked
+                    if (!BlockSpinboxSignals && RotSnapSpinValueChanged != null)
+                    {
+                        RotSnapSpinValueChanged((double)value);
+                    }
+                }
+            }
+        }
+
+        // Matching PyKotor implementation - blockSignals functionality
+        // Original: self.ui.gridSizeSpin.blockSignals(True/False)
+        // Original: self.ui.rotSnapSpin.blockSignals(True/False)
+        // Flag to prevent value changed events from firing during initialization
+        public bool BlockSpinboxSignals { get; set; } = false;
+
+        // Matching PyKotor implementation - valueChanged signal/event
+        // Original: self.ui.gridSizeSpin.valueChanged.connect(self.ui.mapRenderer.set_grid_size)
+        // Action to call when grid size spinbox value changes
+        public Action<double> GridSizeSpinValueChanged { get; set; }
+
+        // Matching PyKotor implementation - valueChanged signal/event
+        // Original: self.ui.rotSnapSpin.valueChanged.connect(self.ui.mapRenderer.set_rotation_snap)
+        // Action to call when rotation snap spinbox value changes
+        public Action<double> RotSnapSpinValueChanged { get; set; }
+
+        // Matching PyKotor implementation - setValue method
+        // Original: self.ui.gridSizeSpin.setValue(value)
+        // Method to set grid size spinbox value programmatically (for testing and initialization)
+        public void SetGridSizeSpinValue(double value)
+        {
+            GridSizeSpinValue = (decimal)value;
+        }
+
+        // Matching PyKotor implementation - setValue method
+        // Original: self.ui.rotSnapSpin.setValue(value)
+        // Method to set rotation snap spinbox value programmatically (for testing and initialization)
+        public void SetRotSnapSpinValue(int value)
+        {
+            RotSnapSpinValue = (decimal)value;
+        }
     }
 
 }

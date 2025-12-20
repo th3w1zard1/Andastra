@@ -2317,9 +2317,7 @@ namespace HolocronToolset.Tests.Windows
                 var renderer = builder.Ui.MapRenderer;
 
                 // Matching Python line 981: builder.ui.gridSizeSpin.setValue(2.5)
-                // TODO: PLACEHOLDER - UI spinbox binding will be implemented when UI is complete
-                // For now, directly set the property to test the renderer behavior
-                renderer.SetGridSize(2.5f);
+                builder.Ui.SetGridSizeSpinValue(2.5);
 
                 // Matching Python lines 982-983: qtbot.wait(10) and QApplication.processEvents()
                 // Note: In headless tests, operations are synchronous
@@ -2328,7 +2326,7 @@ namespace HolocronToolset.Tests.Windows
                 renderer.GridSize.Should().BeApproximately(2.5f, 0.001f, "grid_size should be 2.5");
 
                 // Matching Python line 987: builder.ui.gridSizeSpin.setValue(5.0)
-                renderer.SetGridSize(5.0f);
+                builder.Ui.SetGridSizeSpinValue(5.0);
 
                 // Matching Python lines 988-989: qtbot.wait(10) and QApplication.processEvents()
                 // Note: In headless tests, operations are synchronous
@@ -2372,9 +2370,7 @@ namespace HolocronToolset.Tests.Windows
                 var renderer = builder.Ui.MapRenderer;
 
                 // Matching Python line 998: builder.ui.rotSnapSpin.setValue(30)
-                // TODO: PLACEHOLDER - UI spinbox binding will be implemented when UI is complete
-                // For now, directly set the property to test the renderer behavior
-                renderer.SetRotationSnap(30.0f);
+                builder.Ui.SetRotSnapSpinValue(30);
 
                 // Matching Python lines 999-1000: qtbot.wait(10) and QApplication.processEvents()
                 // Note: In headless tests, operations are synchronous
@@ -2383,7 +2379,7 @@ namespace HolocronToolset.Tests.Windows
                 renderer.RotationSnap.Should().BeApproximately(30.0f, 0.001f, "rotation_snap should be 30");
 
                 // Matching Python line 1004: builder.ui.rotSnapSpin.setValue(45)
-                renderer.SetRotationSnap(45.0f);
+                builder.Ui.SetRotSnapSpinValue(45);
 
                 // Matching Python lines 1005-1006: qtbot.wait(10) and QApplication.processEvents()
                 // Note: In headless tests, operations are synchronous
