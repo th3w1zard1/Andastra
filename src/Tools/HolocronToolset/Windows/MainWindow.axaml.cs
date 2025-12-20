@@ -66,6 +66,7 @@ namespace HolocronToolset.Windows
         private Button _openButton;
         private Button _extractButton;
         private Button _specialActionButton;
+        private Button _erfEditorButton;
         private TabItem _coreTab;
         private TabItem _modulesTab;
         private TabItem _overrideTab;
@@ -137,6 +138,12 @@ namespace HolocronToolset.Windows
             try
             {
                 _specialActionButton = this.FindControl<Button>("specialActionButton");
+            }
+            catch { }
+
+            try
+            {
+                _erfEditorButton = this.FindControl<Button>("erfEditorButton");
             }
             catch { }
 
@@ -213,6 +220,12 @@ namespace HolocronToolset.Windows
             {
                 SetupProgrammaticUI();
             }
+
+            // Initially hide ERF editor button (matching PyKotor: self.erf_editor_button.hide())
+            if (_erfEditorButton != null)
+            {
+                _erfEditorButton.IsVisible = false;
+            }
         }
 
         private void SetupProgrammaticUI()
@@ -239,9 +252,11 @@ namespace HolocronToolset.Windows
             _openButton = new Button { Content = "Open Selected" };
             _extractButton = new Button { Content = "Extract Selected" };
             _specialActionButton = new Button { Content = "Designer" };
+            _erfEditorButton = new Button { Content = "ERF Editor" };
             buttonPanel.Children.Add(_openButton);
             buttonPanel.Children.Add(_extractButton);
             buttonPanel.Children.Add(_specialActionButton);
+            buttonPanel.Children.Add(_erfEditorButton);
             mainPanel.Children.Add(buttonPanel);
 
             Content = mainPanel;
@@ -320,6 +335,17 @@ namespace HolocronToolset.Windows
             if (_specialActionButton != null)
             {
                 _specialActionButton.Click += (sender, e) => OpenModuleDesigner();
+            }
+
+            if (_erfEditorButton != null)
+            {
+                _erfEditorButton.Click += (sender, e) => OpenModuleTabErfEditor();
+            }
+
+            // Connect tab control selection changed event
+            if (_resourceTabs != null)
+            {
+                _resourceTabs.SelectionChanged += (sender, e) => OnTabChanged();
             }
 
             // Connect ResourceList events (matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:495-555)
@@ -815,21 +841,27 @@ namespace HolocronToolset.Windows
             return 0;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1606-1611
         // Original: def on_tab_changed(self):
         public void OnTabChanged()
         {
             // Handle tab change - update UI state based on active tab
-            // For example, show/hide ERF editor button on modules tab
+            // Show/hide ERF editor button on modules tab
             if (_resourceTabs?.SelectedItem == _modulesTab)
             {
                 // Show ERF editor button when on modules tab
-                // TODO: Implement when ERF editor button is added
+                if (_erfEditorButton != null)
+                {
+                    _erfEditorButton.IsVisible = true;
+                }
             }
             else
             {
                 // Hide ERF editor button when not on modules tab
-                // TODO: Implement when ERF editor button is added
+                if (_erfEditorButton != null)
+                {
+                    _erfEditorButton.IsVisible = false;
+                }
             }
         }
 
@@ -1144,6 +1176,65 @@ namespace HolocronToolset.Windows
 
             // TODO: Implement file search dialog when available
             System.Console.WriteLine("File search dialog not yet implemented");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1585-1604
+        // Original: def _open_module_tab_erf_editor(self):
+        private void OpenModuleTabErfEditor()
+        {
+            if (_active == null)
+            {
+                return;
+            }
+
+            ResourceList reslist = GetActiveResourceWidget();
+            if (reslist == null || reslist != _modulesWidget)
+            {
+                return;
+            }
+
+            // Get the selected module filename from the section combo
+            string filename = null;
+            if (reslist.Ui?.SectionCombo != null && reslist.Ui.SectionCombo.SelectedItem != null)
+            {
+                filename = reslist.Ui.SectionCombo.SelectedItem.ToString();
+            }
+
+            if (string.IsNullOrEmpty(filename))
+            {
+                return;
+            }
+
+            // Construct the full path to the module file
+            string modulePath = _active.ModulePath();
+            string erfFilepath = Path.Combine(modulePath, filename);
+            if (!File.Exists(erfFilepath))
+            {
+                return;
+            }
+
+            // Create ResourceIdentifier from path
+            var resIdent = ResourceIdentifier.FromPath(erfFilepath);
+            if (resIdent.ResType == null)
+            {
+                return;
+            }
+
+            // Create FileResource for the module file
+            var fileInfo = new FileInfo(erfFilepath);
+            var erfFileResource = new FileResource(
+                resIdent.ResName,
+                resIdent.ResType,
+                (int)fileInfo.Length,
+                0x0,
+                erfFilepath);
+
+            // Open the ERF editor
+            WindowUtils.OpenResourceEditor(
+                erfFileResource,
+                _active,
+                this,
+                useSpecializedEditor: null);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1517-1522

@@ -102,6 +102,7 @@
                 <StackPanel Margin="5" Spacing="10">
                     <Button Name="openButton" Content="Open Selected" HorizontalAlignment="Stretch" />
                     <Button Name="extractButton" Content="Extract Selected" HorizontalAlignment="Stretch" />
+                    <Button Name="erfEditorButton" Content="ERF Editor" HorizontalAlignment="Stretch" IsVisible="False" />
 
                     <Expander Header="TPC" IsExpanded="True">
                         <StackPanel Spacing="5" Margin="5">
