@@ -159,10 +159,18 @@ namespace Andastra.Runtime.Game.Core
             }
             catch (Exception ex)
             {
-                // Font not found - this is a critical issue for menu display
-                Console.WriteLine("[Odyssey] ERROR: Failed to load font from 'Fonts/Arial': " + ex.Message);
-                Console.WriteLine("[Odyssey] The font file must be built by the content pipeline");
-                _font = null;
+                // Font not found - create programmatic fallback font
+                Console.WriteLine("[Odyssey] WARNING: Failed to load font from 'Fonts/Arial': " + ex.Message);
+                Console.WriteLine("[Odyssey] Creating programmatic default font as fallback");
+                _font = CreateDefaultFont();
+                if (_font == null)
+                {
+                    Console.WriteLine("[Odyssey] ERROR: Failed to create default font - text rendering will be unavailable");
+                }
+                else
+                {
+                    Console.WriteLine("[Odyssey] Default font created successfully");
+                }
             }
 
             // Create 1x1 white texture for menu drawing
@@ -1676,13 +1684,33 @@ namespace Andastra.Runtime.Game.Core
             }
         }
 
+        /// <summary>
+        /// Creates a programmatic default font when content pipeline fonts are unavailable.
+        /// Based on swkotor2.exe: dialogfont16x16 (16x16 pixel bitmap font)
+        /// </summary>
+        /// <remarks>
+        /// Default Font Creation:
+        /// - Based on swkotor2.exe: dialogfont16x16 @ 0x007b6380 (font resource name)
+        /// - Original engine uses 16x16 pixel bitmap fonts for text rendering
+        /// - This creates a programmatic fallback font matching original engine dimensions
+        /// - Supports both MonoGame and Stride backends
+        /// - Ghidra analysis: FUN_00416890 @ 0x00416890 (font initialization), FUN_004155d0 (font loading)
+        /// </remarks>
         [CanBeNull]
         private IFont CreateDefaultFont()
         {
-            // Create a simple default font if none is loaded
-            // TODO: PLACEHOLDER - This is a fallback - ideally we'd have a proper font file
-            // TODO: PLACEHOLDER - For now, return null - text won't display but menu is still functional
-            return null;
+            try
+            {
+                // Use DefaultFontGenerator to create programmatic font
+                // Based on swkotor2.exe: dialogfont16x16 uses 16x16 pixel characters
+                return DefaultFontGenerator.CreateDefaultFont(_graphicsDevice, _graphicsBackend.BackendType);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Odyssey] ERROR: Exception creating default font: {ex.Message}");
+                Console.WriteLine($"[Odyssey] Stack trace: {ex.StackTrace}");
+                return null;
+            }
         }
 
         /// <summary>
