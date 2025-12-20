@@ -443,6 +443,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
                 ConjHeadVfx = row.GetInteger("conjheadvfx") ?? 0,
                 ConjGrndVfx = row.GetInteger("conjgrndvfx") ?? 0,
                 ConjCastVfx = row.GetInteger("conjcastvfx") ?? 0,
+                ConjDuration = row.GetFloat("conjduration") ?? 0f,
+                ConjRange = row.GetInteger("conjrange") ?? 0,
                 Innate = row.GetInteger("innate") ?? 0,
                 FeatId = row.GetInteger("featid") ?? -1
             };
@@ -667,6 +669,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         public int ConjHeadVfx { get; set; }
         public int ConjGrndVfx { get; set; }
         public int ConjCastVfx { get; set; }
+        public float ConjDuration { get; set; }
+        public int ConjRange { get; set; }
         public int Innate { get; set; }
         public int FeatId { get; set; }
     }
