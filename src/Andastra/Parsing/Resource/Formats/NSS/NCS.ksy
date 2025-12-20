@@ -136,36 +136,26 @@ types:
           - 0x3A: Vector, Vector (VV) - 12 bytes each
           - 0x3B: Vector, Float (VF)
           - 0x3C: Float, Vector (FV)
+    
+    doc-ref: |
+      Instruction arguments follow the qualifier byte. Format varies by instruction type.
+      All multi-byte values are big-endian.
       
-      - id: args
-        type: instruction_args
-        doc: |
-          Instruction arguments. Format varies by instruction type.
-          All multi-byte values are big-endian.
-          
-          Note: Due to Kaitai Struct limitations with dynamic field sizes based on parent values,
-          this structure provides a basic framework. The actual argument parsing must be handled
-          by application code based on bytecode and qualifier values.
-          
-          Common argument formats:
-          - No args (0 bytes): RSADDx, LOGANDxx, RETN, SAVEBP, RESTOREBP, NOP
-          - 4 bytes signed int: MOVSP, INCxSP, DECxSP, INCxBP, DECxBP, JMP, JSR, JZ, JNZ
-          - 4 bytes unsigned int: CONSTI (integer constant)
-          - 4 bytes float: CONSTF (float constant)
-          - 2 bytes length + string: CONSTS (string constant)
-          - 4 bytes signed int: CONSTO (object constant)
-          - 4 bytes offset + 2 bytes size: CPDOWNSP, CPTOPSP, CPDOWNBP, CPTOPBP
-          - 2 bytes routine + 1 byte argCount: ACTION
-          - 2 bytes size + 2 bytes offset + 2 bytes sizeNoDestroy: DESTRUCT
-          - 4 bytes size + 4 bytes sizeLocals: STORE_STATE
-          - 2 bytes size (if qualifier 0x24): EQUALxx, NEQUALxx (structure comparison)
-
-  instruction_args:
-    doc: |
-      Instruction arguments placeholder.
-      Actual argument parsing must be done by application code based on bytecode and qualifier.
-      This type exists for structure documentation purposes.
-    seq: []
+      Note: Kaitai Struct cannot easily handle variable-length fields based on parent field values.
+      Application code (NCSBinaryReader) handles argument parsing based on bytecode and qualifier.
+      
+      Common argument formats:
+      - No args (0 bytes): RSADDx, LOGANDxx, RETN, SAVEBP, RESTOREBP, NOP
+      - 4 bytes signed int: MOVSP, INCxSP, DECxSP, INCxBP, DECxBP, JMP, JSR, JZ, JNZ
+      - 4 bytes unsigned int: CONSTI (integer constant)
+      - 4 bytes float: CONSTF (float constant)
+      - 2 bytes length + string: CONSTS (string constant)
+      - 4 bytes signed int: CONSTO (object constant)
+      - 4 bytes offset + 2 bytes size: CPDOWNSP, CPTOPSP, CPDOWNBP, CPTOPBP
+      - 2 bytes routine + 1 byte argCount: ACTION
+      - 2 bytes size + 2 bytes offset + 2 bytes sizeNoDestroy: DESTRUCT
+      - 4 bytes size + 4 bytes sizeLocals: STORE_STATE
+      - 2 bytes size (if qualifier 0x24): EQUALxx, NEQUALxx (structure comparison)
 
   instruction_arg_data:
     doc: Base type for instruction argument data.

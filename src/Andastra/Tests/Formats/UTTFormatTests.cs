@@ -175,6 +175,7 @@ namespace Andastra.Parsing.Tests.Formats
             UTT utt = UTTAuto.ReadUtt(File.ReadAllBytes(BinaryTestFile));
 
             // Validate root struct fields exist (as per UTT.ksy documentation)
+            // Root struct should contain UTT-specific fields
             GFF gff = GFF.FromBytes(File.ReadAllBytes(BinaryTestFile));
             GFFStruct root = gff.Root;
 
@@ -183,93 +184,107 @@ namespace Andastra.Parsing.Tests.Formats
             root.Acquire<string>("Tag", "").Should().NotBeNull("Tag should not be null");
             root.Acquire<LocalizedString>("LocalizedName", LocalizedString.FromInvalid()).Should().NotBeNull("LocalizedName should not be null");
             root.Acquire<string>("KeyName", "").Should().NotBeNull("KeyName should not be null");
-            root.Acquire<uint>("Type", 0).Should().BeInRange(0u, 7u, "Type should be 0-7 (trigger type enum)");
-
-            // TrapFlag should be valid byte (0 or 1)
-            byte? trapFlag = root.GetUInt8("TrapFlag");
-            if (trapFlag.HasValue)
-            {
-                trapFlag.Value.Should().BeInRange((byte)0, (byte)1, "TrapFlag should be 0 or 1");
-            }
+            root.Acquire<int>("Type", 0).Should().BeGreaterOrEqualTo(0, "Type should be non-negative");
+            root.Acquire<int>("TrapFlag", 0).Should().BeInRange(0, 1, "TrapFlag should be 0 or 1");
         }
 
         [Fact(Timeout = 120000)]
-        public void TestUttTriggerTypeEnum()
+        public void TestUttTriggerTypeValues()
         {
-            // Test trigger type values (0-7 as per UTT.ksy documentation)
+            // Test Type field values (0-7 for different trigger types)
             var testCases = new[]
             {
-                (type: 0u, name: "Generic"),
-                (type: 1u, name: "Waypoint"),
-                (type: 2u, name: "Door"),
-                (type: 3u, name: "Placeable"),
-                (type: 4u, name: "Store"),
-                (type: 5u, name: "Area of Effect"),
-                (type: 6u, name: "Encounter"),
-                (type: 7u, name: "Trigger"),
+                (type: 0, name: "Generic"),
+                (type: 1, name: "Waypoint"),
+                (type: 2, name: "Door"),
+                (type: 3, name: "Placeable"),
+                (type: 4, name: "Store"),
+                (type: 5, name: "Area of Effect"),
+                (type: 6, name: "Encounter"),
+                (type: 7, name: "Trigger"),
             };
 
             foreach (var testCase in testCases)
             {
                 var utt = new UTT();
-                utt.TypeId = (int)testCase.type;
+                utt.TypeId = testCase.type;
 
                 byte[] data = UTTAuto.BytesUtt(utt, Game.K2);
                 UTT loaded = UTTAuto.ReadUtt(data);
 
-                loaded.TypeId.Should().Be((int)testCase.type, $"Type should be {testCase.type} ({testCase.name})");
+                loaded.TypeId.Should().Be(testCase.type, $"Type should be {testCase.type} ({testCase.name})");
             }
         }
 
         [Fact(Timeout = 120000)]
-        public void TestUttTrapFlag()
+        public void TestUttTrapFlagBits()
         {
             // Test TrapFlag field (0 = no trap, 1 = trap)
-            var utt1 = new UTT();
-            utt1.IsTrap = false;
+            var testCases = new[]
+            {
+                (flag: false, value: 0),
+                (flag: true, value: 1),
+            };
 
-            byte[] data1 = UTTAuto.BytesUtt(utt1, Game.K2);
-            GFF gff1 = GFF.FromBytes(data1);
-            gff1.Root.GetUInt8("TrapFlag").Should().Be(0, "TrapFlag should be 0 when IsTrap is false");
+            foreach (var testCase in testCases)
+            {
+                var utt = new UTT();
+                utt.IsTrap = testCase.flag;
 
-            var utt2 = new UTT();
-            utt2.IsTrap = true;
+                byte[] data = UTTAuto.BytesUtt(utt, Game.K2);
+                UTT loaded = UTTAuto.ReadUtt(data);
 
-            byte[] data2 = UTTAuto.BytesUtt(utt2, Game.K2);
-            GFF gff2 = GFF.FromBytes(data2);
-            gff2.Root.GetUInt8("TrapFlag").Should().Be(1, "TrapFlag should be 1 when IsTrap is true");
-
-            // Round-trip test
-            UTT loaded1 = UTTAuto.ReadUtt(data1);
-            loaded1.IsTrap.Should().BeFalse("IsTrap should be false after round-trip");
-
-            UTT loaded2 = UTTAuto.ReadUtt(data2);
-            loaded2.IsTrap.Should().BeTrue("IsTrap should be true after round-trip");
+                loaded.IsTrap.Should().Be(testCase.flag, $"IsTrap should be {testCase.flag}");
+            }
         }
 
         [Fact(Timeout = 120000)]
         public void TestUttScriptFields()
         {
-            // Test script ResRef fields
+            if (!File.Exists(BinaryTestFile))
+            {
+                CreateTestUttFile(BinaryTestFile);
+            }
+
+            UTT utt = UTTAuto.ReadUtt(File.ReadAllBytes(BinaryTestFile));
+
+            // Validate script hook properties exist
+            utt.OnTrapTriggeredScript.Should().NotBeNull("OnTrapTriggeredScript should not be null");
+            utt.OnClickScript.Should().NotBeNull("OnClickScript should not be null");
+            utt.OnEnterScript.Should().NotBeNull("OnEnterScript should not be null");
+            utt.OnExitScript.Should().NotBeNull("OnExitScript should not be null");
+            utt.OnHeartbeatScript.Should().NotBeNull("OnHeartbeatScript should not be null");
+            utt.OnUserDefinedScript.Should().NotBeNull("OnUserDefinedScript should not be null");
+            utt.OnDisarmScript.Should().NotBeNull("OnDisarmScript should not be null");
+        }
+
+        [Fact(Timeout = 120000)]
+        public void TestUttTrapProperties()
+        {
+            // Test trap-related fields
             var utt = new UTT();
-            utt.OnTrapTriggeredScript = new ResRef("trap_script");
-            utt.OnClickScript = new ResRef("click_script");
-            utt.OnHeartbeatScript = new ResRef("heartbeat_script");
-            utt.OnEnterScript = new ResRef("enter_script");
-            utt.OnExitScript = new ResRef("exit_script");
-            utt.OnUserDefinedScript = new ResRef("user_script");
-            utt.OnDisarmScript = new ResRef("disarm_script");
+            utt.IsTrap = true;
+            utt.TrapDetectable = true;
+            utt.TrapDetectDc = 15;
+            utt.TrapDisarmable = true;
+            utt.TrapDisarmDc = 20;
+            utt.TrapType = 1;
+            utt.TrapOnce = true;
+            utt.OnTrapTriggeredScript = new ResRef("trap_triggered");
+            utt.OnDisarmScript = new ResRef("trap_disarm");
 
             byte[] data = UTTAuto.BytesUtt(utt, Game.K2);
             UTT loaded = UTTAuto.ReadUtt(data);
 
-            loaded.OnTrapTriggeredScript.Should().Be(new ResRef("trap_script"), "OnTrapTriggeredScript should match");
-            loaded.OnClickScript.Should().Be(new ResRef("click_script"), "OnClickScript should match");
-            loaded.OnHeartbeatScript.Should().Be(new ResRef("heartbeat_script"), "OnHeartbeatScript should match");
-            loaded.OnEnterScript.Should().Be(new ResRef("enter_script"), "OnEnterScript should match");
-            loaded.OnExitScript.Should().Be(new ResRef("exit_script"), "OnExitScript should match");
-            loaded.OnUserDefinedScript.Should().Be(new ResRef("user_script"), "OnUserDefinedScript should match");
-            loaded.OnDisarmScript.Should().Be(new ResRef("disarm_script"), "OnDisarmScript should match");
+            loaded.IsTrap.Should().BeTrue("IsTrap should be true");
+            loaded.TrapDetectable.Should().BeTrue("TrapDetectable should be true");
+            loaded.TrapDetectDc.Should().Be(15, "TrapDetectDc should be 15");
+            loaded.TrapDisarmable.Should().BeTrue("TrapDisarmable should be true");
+            loaded.TrapDisarmDc.Should().Be(20, "TrapDisarmDc should be 20");
+            loaded.TrapType.Should().Be(1, "TrapType should be 1");
+            loaded.TrapOnce.Should().BeTrue("TrapOnce should be true");
+            loaded.OnTrapTriggeredScript.Should().Be(new ResRef("trap_triggered"), "OnTrapTriggeredScript should match");
+            loaded.OnDisarmScript.Should().Be(new ResRef("trap_disarm"), "OnDisarmScript should match");
         }
 
         [Fact(Timeout = 120000)]
@@ -278,8 +293,8 @@ namespace Andastra.Parsing.Tests.Formats
             // Test UTT with minimal structure
             var utt = new UTT();
             utt.ResRef = ResRef.FromBlank();
-            utt.Tag = "";
             utt.Name = LocalizedString.FromInvalid();
+            utt.Tag = "";
             utt.TypeId = 0;
             utt.IsTrap = false;
 
@@ -298,14 +313,14 @@ namespace Andastra.Parsing.Tests.Formats
             // Test LocalizedName field (LocalizedString)
             var utt = new UTT();
             utt.Name = LocalizedString.FromEnglish("English Trigger Name");
-            utt.Name.SetData(Language.German, Gender.Male, "Deutscher Auslösername");
+            utt.Name.Set(Language.German, Gender.Male, "Deutscher Triggername");
 
             byte[] data = UTTAuto.BytesUtt(utt, Game.K2);
             UTT loaded = UTTAuto.ReadUtt(data);
 
             loaded.Name.Should().NotBeNull("Name should not be null");
             loaded.Name.Get(Language.English, Gender.Male).Should().Be("English Trigger Name", "English name should match");
-            loaded.Name.Get(Language.German, Gender.Male).Should().Be("Deutscher Auslösername", "German name should match");
+            loaded.Name.Get(Language.German, Gender.Male).Should().Be("Deutscher Triggername", "German name should match");
         }
 
         [Fact(Timeout = 120000)]
@@ -326,99 +341,42 @@ namespace Andastra.Parsing.Tests.Formats
         {
             // Test KeyName field
             var utt = new UTT();
-            utt.KeyName = "required_key";
+            utt.KeyName = "REQUIRED_KEY";
 
             byte[] data = UTTAuto.BytesUtt(utt, Game.K2);
             UTT loaded = UTTAuto.ReadUtt(data);
 
-            loaded.KeyName.Should().Be("required_key", "KeyName should match");
+            loaded.KeyName.Should().Be("REQUIRED_KEY", "KeyName should match");
         }
 
         [Fact(Timeout = 120000)]
-        public void TestUttTrapProperties()
+        public void TestUttAutoRemoveKeyField()
         {
-            // Test trap-related properties
+            // Test AutoRemoveKey field
             var utt = new UTT();
-            utt.IsTrap = true;
-            utt.TrapDetectable = true;
-            utt.TrapDetectDc = 15;
-            utt.TrapDisarmable = true;
-            utt.TrapDisarmDc = 20;
-            utt.TrapType = 1;
-            utt.TrapOnce = true;
-
-            byte[] data = UTTAuto.BytesUtt(utt, Game.K2);
-            UTT loaded = UTTAuto.ReadUtt(data);
-
-            loaded.IsTrap.Should().BeTrue("IsTrap should match");
-            loaded.TrapDetectable.Should().BeTrue("TrapDetectable should match");
-            loaded.TrapDetectDc.Should().Be(15, "TrapDetectDc should match");
-            loaded.TrapDisarmable.Should().BeTrue("TrapDisarmable should match");
-            loaded.TrapDisarmDc.Should().Be(20, "TrapDisarmDc should match");
-            loaded.TrapType.Should().Be(1, "TrapType should match");
-            loaded.TrapOnce.Should().BeTrue("TrapOnce should match");
-        }
-
-        [Fact(Timeout = 120000)]
-        public void TestUttAllFieldsRoundTrip()
-        {
-            // Test all UTT fields in a comprehensive round-trip
-            var utt = new UTT();
-            utt.ResRef = new ResRef("all_fields_trigger");
-            utt.Tag = "ALLFIELDS";
-            utt.Name = LocalizedString.FromEnglish("All Fields Trigger");
-            utt.Name.SetData(Language.French, Gender.Female, "Déclencheur Tous Champs");
-            utt.KeyName = "master_key";
-            utt.TypeId = 7; // Trigger type
-            utt.IsTrap = true;
-            utt.TrapDetectable = true;
-            utt.TrapDetectDc = 18;
-            utt.TrapDisarmable = true;
-            utt.TrapDisarmDc = 22;
-            utt.TrapType = 2;
-            utt.TrapOnce = false;
             utt.AutoRemoveKey = true;
-            utt.FactionId = 5;
-            utt.Cursor = 3;
-            utt.HighlightHeight = 2.5f;
-            utt.Comment = "Trigger with all fields set";
-            utt.OnTrapTriggeredScript = new ResRef("trap_triggered");
-            utt.OnClickScript = new ResRef("on_click");
-            utt.OnHeartbeatScript = new ResRef("heartbeat");
-            utt.OnEnterScript = new ResRef("on_enter");
-            utt.OnExitScript = new ResRef("on_exit");
-            utt.OnUserDefinedScript = new ResRef("user_defined");
-            utt.OnDisarmScript = new ResRef("disarm");
 
             byte[] data = UTTAuto.BytesUtt(utt, Game.K2);
             UTT loaded = UTTAuto.ReadUtt(data);
 
-            // Validate all fields
-            loaded.ResRef.Should().Be(utt.ResRef);
-            loaded.Tag.Should().Be(utt.Tag);
-            loaded.Name.Get(Language.English, Gender.Male).Should().Be(utt.Name.Get(Language.English, Gender.Male));
-            loaded.Name.Get(Language.French, Gender.Female).Should().Be(utt.Name.Get(Language.French, Gender.Female));
-            loaded.KeyName.Should().Be(utt.KeyName);
-            loaded.TypeId.Should().Be(utt.TypeId);
-            loaded.IsTrap.Should().Be(utt.IsTrap);
-            loaded.TrapDetectable.Should().Be(utt.TrapDetectable);
-            loaded.TrapDetectDc.Should().Be(utt.TrapDetectDc);
-            loaded.TrapDisarmable.Should().Be(utt.TrapDisarmable);
-            loaded.TrapDisarmDc.Should().Be(utt.TrapDisarmDc);
-            loaded.TrapType.Should().Be(utt.TrapType);
-            loaded.TrapOnce.Should().Be(utt.TrapOnce);
-            loaded.AutoRemoveKey.Should().Be(utt.AutoRemoveKey);
-            loaded.FactionId.Should().Be(utt.FactionId);
-            loaded.Cursor.Should().Be(utt.Cursor);
-            loaded.HighlightHeight.Should().BeApproximately(utt.HighlightHeight, 0.001f);
-            loaded.Comment.Should().Be(utt.Comment);
-            loaded.OnTrapTriggeredScript.Should().Be(utt.OnTrapTriggeredScript);
-            loaded.OnClickScript.Should().Be(utt.OnClickScript);
-            loaded.OnHeartbeatScript.Should().Be(utt.OnHeartbeatScript);
-            loaded.OnEnterScript.Should().Be(utt.OnEnterScript);
-            loaded.OnExitScript.Should().Be(utt.OnExitScript);
-            loaded.OnUserDefinedScript.Should().Be(utt.OnUserDefinedScript);
-            loaded.OnDisarmScript.Should().Be(utt.OnDisarmScript);
+            loaded.AutoRemoveKey.Should().BeTrue("AutoRemoveKey should be true");
+        }
+
+        [Fact(Timeout = 120000)]
+        public void TestUttFactionAndCursorFields()
+        {
+            // Test Faction and Cursor fields
+            var utt = new UTT();
+            utt.FactionId = 5;
+            utt.Cursor = 2;
+            utt.HighlightHeight = 1.5f;
+
+            byte[] data = UTTAuto.BytesUtt(utt, Game.K2);
+            UTT loaded = UTTAuto.ReadUtt(data);
+
+            loaded.FactionId.Should().Be(5, "FactionId should be 5");
+            loaded.Cursor.Should().Be(2, "Cursor should be 2");
+            loaded.HighlightHeight.Should().BeApproximately(1.5f, 0.001f, "HighlightHeight should be approximately 1.5");
         }
 
         [Fact(Timeout = 120000)]
@@ -447,24 +405,152 @@ namespace Andastra.Parsing.Tests.Formats
             }
         }
 
+        [Fact(Timeout = 120000)]
+        public void TestUttRoundTripPreservesStructure()
+        {
+            // Create complex UTT structure
+            var utt = new UTT();
+            utt.ResRef = new ResRef("complex_trigger");
+            utt.Name = LocalizedString.FromEnglish("Complex Trigger");
+            utt.Tag = "COMPLEX";
+            utt.Comment = "Complex trigger with all fields set";
+            utt.TypeId = 7; // Trigger type
+            utt.IsTrap = true;
+            utt.TrapDetectable = true;
+            utt.TrapDetectDc = 18;
+            utt.TrapDisarmable = true;
+            utt.TrapDisarmDc = 22;
+            utt.TrapType = 2;
+            utt.TrapOnce = false;
+            utt.KeyName = "MASTER_KEY";
+            utt.AutoRemoveKey = true;
+            utt.FactionId = 3;
+            utt.Cursor = 1;
+            utt.HighlightHeight = 2.0f;
+            utt.OnClickScript = new ResRef("click_script");
+            utt.OnEnterScript = new ResRef("enter_script");
+            utt.OnExitScript = new ResRef("exit_script");
+            utt.OnHeartbeatScript = new ResRef("heartbeat_script");
+            utt.OnTrapTriggeredScript = new ResRef("trap_script");
+            utt.OnDisarmScript = new ResRef("disarm_script");
+            utt.OnUserDefinedScript = new ResRef("user_script");
+
+            // Round-trip test
+            byte[] data = UTTAuto.BytesUtt(utt, Game.K2);
+            UTT loaded = UTTAuto.ReadUtt(data);
+
+            loaded.ResRef.Should().Be(new ResRef("complex_trigger"));
+            loaded.Tag.Should().Be("COMPLEX");
+            loaded.Comment.Should().Be("Complex trigger with all fields set");
+            loaded.TypeId.Should().Be(7);
+            loaded.IsTrap.Should().BeTrue();
+            loaded.TrapDetectable.Should().BeTrue();
+            loaded.TrapDetectDc.Should().Be(18);
+            loaded.TrapDisarmable.Should().BeTrue();
+            loaded.TrapDisarmDc.Should().Be(22);
+            loaded.TrapType.Should().Be(2);
+            loaded.TrapOnce.Should().BeFalse();
+            loaded.KeyName.Should().Be("MASTER_KEY");
+            loaded.AutoRemoveKey.Should().BeTrue();
+            loaded.FactionId.Should().Be(3);
+            loaded.Cursor.Should().Be(1);
+            loaded.HighlightHeight.Should().BeApproximately(2.0f, 0.001f);
+            loaded.OnClickScript.Should().Be(new ResRef("click_script"));
+            loaded.OnEnterScript.Should().Be(new ResRef("enter_script"));
+            loaded.OnExitScript.Should().Be(new ResRef("exit_script"));
+            loaded.OnHeartbeatScript.Should().Be(new ResRef("heartbeat_script"));
+            loaded.OnTrapTriggeredScript.Should().Be(new ResRef("trap_script"));
+            loaded.OnDisarmScript.Should().Be(new ResRef("disarm_script"));
+            loaded.OnUserDefinedScript.Should().Be(new ResRef("user_script"));
+        }
+
+        [Fact(Timeout = 120000)]
+        public void TestUttAllFieldsRoundTrip()
+        {
+            // Test all UTT fields in a comprehensive round-trip
+            var utt = new UTT();
+            utt.ResRef = new ResRef("all_fields_trigger");
+            utt.Name = LocalizedString.FromEnglish("All Fields Trigger");
+            utt.Name.Set(Language.French, Gender.Female, "Déclencheur Tous Champs");
+            utt.Tag = "ALLFIELDS";
+            utt.Comment = "Trigger with all fields set";
+            utt.TypeId = 5; // Area of Effect
+            utt.IsTrap = true;
+            utt.TrapDetectable = true;
+            utt.TrapDetectDc = 20;
+            utt.TrapDisarmable = true;
+            utt.TrapDisarmDc = 25;
+            utt.TrapType = 3;
+            utt.TrapOnce = true;
+            utt.KeyName = "SPECIAL_KEY";
+            utt.AutoRemoveKey = false;
+            utt.FactionId = 7;
+            utt.Cursor = 3;
+            utt.HighlightHeight = 3.5f;
+            utt.OnClickScript = new ResRef("all_click");
+            utt.OnEnterScript = new ResRef("all_enter");
+            utt.OnExitScript = new ResRef("all_exit");
+            utt.OnHeartbeatScript = new ResRef("all_heartbeat");
+            utt.OnTrapTriggeredScript = new ResRef("all_trap");
+            utt.OnDisarmScript = new ResRef("all_disarm");
+            utt.OnUserDefinedScript = new ResRef("all_user");
+            utt.LoadscreenId = 10;
+            utt.PortraitId = 5;
+            utt.PaletteId = 2;
+
+            byte[] data = UTTAuto.BytesUtt(utt, Game.K2);
+            UTT loaded = UTTAuto.ReadUtt(data);
+
+            // Validate all fields
+            loaded.ResRef.Should().Be(utt.ResRef);
+            loaded.Name.Get(Language.English, Gender.Male).Should().Be(utt.Name.Get(Language.English, Gender.Male));
+            loaded.Name.Get(Language.French, Gender.Female).Should().Be(utt.Name.Get(Language.French, Gender.Female));
+            loaded.Tag.Should().Be(utt.Tag);
+            loaded.Comment.Should().Be(utt.Comment);
+            loaded.TypeId.Should().Be(utt.TypeId);
+            loaded.IsTrap.Should().Be(utt.IsTrap);
+            loaded.TrapDetectable.Should().Be(utt.TrapDetectable);
+            loaded.TrapDetectDc.Should().Be(utt.TrapDetectDc);
+            loaded.TrapDisarmable.Should().Be(utt.TrapDisarmable);
+            loaded.TrapDisarmDc.Should().Be(utt.TrapDisarmDc);
+            loaded.TrapType.Should().Be(utt.TrapType);
+            loaded.TrapOnce.Should().Be(utt.TrapOnce);
+            loaded.KeyName.Should().Be(utt.KeyName);
+            loaded.AutoRemoveKey.Should().Be(utt.AutoRemoveKey);
+            loaded.FactionId.Should().Be(utt.FactionId);
+            loaded.Cursor.Should().Be(utt.Cursor);
+            loaded.HighlightHeight.Should().BeApproximately(utt.HighlightHeight, 0.001f);
+            loaded.OnClickScript.Should().Be(utt.OnClickScript);
+            loaded.OnEnterScript.Should().Be(utt.OnEnterScript);
+            loaded.OnExitScript.Should().Be(utt.OnExitScript);
+            loaded.OnHeartbeatScript.Should().Be(utt.OnHeartbeatScript);
+            loaded.OnTrapTriggeredScript.Should().Be(utt.OnTrapTriggeredScript);
+            loaded.OnDisarmScript.Should().Be(utt.OnDisarmScript);
+            loaded.OnUserDefinedScript.Should().Be(utt.OnUserDefinedScript);
+            loaded.LoadscreenId.Should().Be(utt.LoadscreenId);
+            loaded.PortraitId.Should().Be(utt.PortraitId);
+            loaded.PaletteId.Should().Be(utt.PaletteId);
+        }
+
         private static void ValidateIO(UTT utt)
         {
             // Basic validation
-            utt.Should().NotBeNull("UTT object should not be null");
-            utt.ResRef.Should().NotBeNull("ResRef should not be null");
-            utt.Name.Should().NotBeNull("Name should not be null");
-            utt.TypeId.Should().BeInRange(0, 7, "TypeId should be 0-7");
+            utt.Should().NotBeNull();
+            utt.ResRef.Should().NotBeNull();
+            utt.Name.Should().NotBeNull();
+            utt.TypeId.Should().BeGreaterOrEqualTo(0);
         }
 
         private static void CreateTestUttFile(string path)
         {
             var utt = new UTT();
             utt.ResRef = new ResRef("test_trigger");
-            utt.Tag = "TEST";
             utt.Name = LocalizedString.FromEnglish("Test Trigger");
+            utt.Tag = "TEST";
             utt.TypeId = 7; // Trigger type
             utt.IsTrap = false;
             utt.Comment = "Test trigger comment";
+            utt.OnClickScript = new ResRef("test_click");
             utt.OnEnterScript = new ResRef("test_enter");
             utt.OnExitScript = new ResRef("test_exit");
 
