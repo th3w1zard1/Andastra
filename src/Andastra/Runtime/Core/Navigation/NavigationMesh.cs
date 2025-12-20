@@ -11,6 +11,282 @@ namespace Andastra.Runtime.Core.Navigation
     /// </summary>
     /// <remarks>
     /// <para>
+    /// WHAT IS A NAVIGATION MESH?
+    /// 
+    /// A navigation mesh is a data structure that the game uses to figure out where characters can walk
+    /// and how to move them from one place to another. It is built from a walkmesh (BWM file), which is
+    /// a collection of triangles that cover the ground.
+    /// 
+    /// The navigation mesh stores:
+    /// 1. All the points (vertices) that make up the triangles
+    /// 2. Which points belong to which triangles (face indices)
+    /// 3. Which triangles are next to each other (adjacency)
+    /// 4. What kind of surface each triangle is (surface materials)
+    /// 5. A tree structure (AABB tree) that helps find triangles quickly
+    /// 
+    /// WHY DO WE NEED IT?
+    /// 
+    /// The game needs to answer questions like:
+    /// - "Can a character walk here?" (walkability check)
+    /// - "What is the height of the ground at this point?" (height calculation)
+    /// - "How do I move a character from point A to point B?" (pathfinding)
+    /// - "Is there a clear line of sight between two points?" (line of sight)
+    /// - "What does this ray hit?" (raycasting)
+    /// 
+    /// The navigation mesh makes it possible to answer these questions quickly and accurately.
+    /// </para>
+    /// 
+    /// <para>
+    /// HOW DOES IT WORK?
+    /// 
+    /// The navigation mesh is created from a BWM (BioWare Walkmesh) file. The BWM file contains:
+    /// - Triangles (faces) that cover the ground
+    /// - Each triangle has three points (vertices)
+    /// - Each triangle has a material that tells if it's walkable
+    /// 
+    /// When the navigation mesh is created:
+    /// 1. All vertices are collected and stored in an array
+    /// 2. Each triangle is stored as three numbers pointing to vertices (face indices)
+    /// 3. Adjacency is computed: which triangles share edges
+    /// 4. Surface materials are stored: one material per triangle
+    /// 5. An AABB tree is built: organizes triangles into boxes for fast searching
+    /// 
+    /// Once created, the navigation mesh can answer all the questions listed above.
+    /// </para>
+    /// 
+    /// <para>
+    /// THE AABB TREE:
+    /// 
+    /// An AABB tree is a special way of organizing triangles so we can find them quickly. Without it,
+    /// we would have to check every single triangle to find which one contains a point, which is very
+    /// slow when there are thousands of triangles.
+    /// 
+    /// The tree works like this:
+    /// - All triangles are organized into boxes (AABBs = Axis-Aligned Bounding Boxes)
+    /// - Each box contains a smaller box, which contains an even smaller box, and so on
+    /// - At the bottom of the tree, each box contains just one triangle
+    /// 
+    /// When we need to find a triangle:
+    /// - Start at the top box (contains all triangles)
+    /// - Check if our point is in this box
+    /// - If yes, check the two smaller boxes inside it
+    /// - Keep going down until we find the triangle
+    /// 
+    /// This is much faster than checking every triangle. Instead of checking 1000 triangles, we might
+    /// only check 10 boxes.
+    /// 
+    /// IMPORTANT: The AABB tree is only built for area walkmeshes (WOK files), not for placeable or
+    /// door walkmeshes (PWK/DWK files). This is because area walkmeshes are large and need fast
+    /// searching, while placeable/door walkmeshes are small and can be checked directly.
+    /// </para>
+    /// 
+    /// <para>
+    /// WALKABILITY:
+    /// 
+    /// Not all triangles are walkable. Some triangles are walls, water that's too deep, or lava. The
+    /// game uses surface materials to determine if a triangle is walkable.
+    /// 
+    /// Each triangle has a material number (0-30). The material tells:
+    /// - If the triangle is walkable (characters can stand on it)
+    /// - What kind of surface it is (affects footstep sounds, movement speed)
+    /// - How hard it is to walk on (affects pathfinding cost)
+    /// 
+    /// Walkable materials include: Dirt (1), Grass (3), Stone (4), Wood (5), Water-Shallow (6),
+    /// Carpet (9), Metal (10), Puddles (11), Swamp (12), Mud (13), Leaves (14), BottomlessPit (16),
+    /// Door (18), Sand (20), BareBones (21), StoneBridge (22), and Trigger (30).
+    /// 
+    /// Non-walkable materials include: Undefined (0), Obscuring (2), NonWalk (7), Transparent (8),
+    /// Lava (15), DeepWater (17), and NonWalkGrass (19).
+    /// 
+    /// The IsWalkable() function checks if a triangle's material is in the walkable set. This is
+    /// critical for pathfinding because the pathfinding algorithm only considers walkable triangles.
+    /// </para>
+    /// 
+    /// <para>
+    /// ADJACENCY:
+    /// 
+    /// Adjacency tells which triangles share edges. Two triangles are adjacent if they share exactly
+    /// two vertices (which forms a shared edge). This information is stored in the adjacency array.
+    /// 
+    /// Adjacency is encoded as: faceIndex * 3 + edgeIndex
+    /// - faceIndex: which triangle (0 to faceCount-1)
+    /// - edgeIndex: which edge of that triangle (0, 1, or 2)
+    /// - The value stored is: neighborFaceIndex * 3 + neighborEdgeIndex
+    /// - If there's no neighbor, the value is -1
+    /// 
+    /// For example, if triangle 5's edge 1 is adjacent to triangle 12's edge 2:
+    /// - adjacency[5*3+1] = 12*3+2 = 38
+    /// - adjacency[38] = 5*3+1 = 16 (bidirectional)
+    /// 
+    /// Adjacency is critical for pathfinding because the pathfinding algorithm needs to know which
+    /// triangles can be reached from the current triangle.
+    /// </para>
+    /// 
+    /// <para>
+    /// PATHFINDING:
+    /// 
+    /// Pathfinding uses the A* algorithm to find the shortest path between two points. The algorithm
+    /// works on the adjacency graph: triangles are nodes, and shared edges are connections.
+    /// 
+    /// The algorithm:
+    /// 1. Finds which triangle contains the start point
+    /// 2. Finds which triangle contains the goal point
+    /// 3. Uses A* to search through adjacent triangles
+    /// 4. Returns a list of waypoints (points to move through)
+    /// 
+    /// A* is a smart search algorithm that explores the most promising paths first. It uses:
+    /// - g-score: distance traveled from start
+    /// - h-score: estimated distance to goal (heuristic)
+    /// - f-score: g-score + h-score (total estimated cost)
+    /// 
+    /// The algorithm always explores the path with the lowest f-score first, which usually leads to
+    /// the shortest path.
+    /// </para>
+    /// 
+    /// <para>
+    /// HEIGHT CALCULATION:
+    /// 
+    /// When the game needs to know the height of the ground at a point (x, y), it:
+    /// 1. Finds which triangle contains that (x, y) point
+    /// 2. Gets the three vertices of that triangle
+    /// 3. Calculates the triangle's normal vector (perpendicular to the surface)
+    /// 4. Uses the plane equation to solve for z (height)
+    /// 
+    /// The plane equation is: ax + by + cz + d = 0
+    /// - (a, b, c) is the normal vector
+    /// - d is calculated from a point on the plane
+    /// - We rearrange to solve for z: z = (-d - ax - by) / c
+    /// 
+    /// This gives us the exact height of the triangle's surface at that (x, y) point.
+    /// </para>
+    /// 
+    /// <para>
+    /// RAYCASTING:
+    /// 
+    /// Raycasting is like shooting an invisible laser and seeing what it hits. The game uses this for:
+    /// - Line of sight checks (can character A see character B?)
+    /// - Collision detection (does this ray hit a wall?)
+    /// - Finding where things are in the world
+    /// 
+    /// The algorithm:
+    /// 1. Starts at the origin point
+    /// 2. Travels in the direction specified
+    /// 3. Tests which triangles the ray might hit (using AABB tree)
+    /// 4. For each candidate triangle, tests if the ray actually hits it
+    /// 5. Returns the closest hit (shortest distance)
+    /// 
+    /// The ray-triangle intersection test:
+    /// 1. Calculates the triangle's normal vector
+    /// 2. Creates a plane equation from the triangle
+    /// 3. Checks if the ray crosses the plane
+    /// 4. Calculates where the ray hits the plane
+    /// 5. Tests if that hit point is inside the triangle (using edge tests)
+    /// </para>
+    /// 
+    /// <para>
+    /// FINDING FACES:
+    /// 
+    /// When the game needs to find which triangle contains a point, it uses FindFaceAt(). This function:
+    /// 1. Uses the AABB tree to quickly narrow down which triangles might contain the point
+    /// 2. For each candidate triangle, tests if the point is inside it
+    /// 3. Returns the first triangle found, or -1 if none found
+    /// 
+    /// The point-in-triangle test uses the "same-side test":
+    /// - For each edge of the triangle, check which side of the edge the point is on
+    /// - If the point is on the same side of all three edges, it's inside the triangle
+    /// - Uses cross products to determine which side of each edge the point is on
+    /// 
+    /// This test is done in 2D (only x and y coordinates) because we're finding which triangle
+    /// is directly below or above the point. The z coordinate is used for tolerance but not for
+    /// triangle selection.
+    /// </para>
+    /// 
+    /// <para>
+    /// CRITICAL BUG FIX - WALKMESH TYPE:
+    /// 
+    /// There was a bug where levels/modules built in the indoor map builder were not walkable even
+    /// though they had the correct surface materials. The problem was that the walkmesh type was not
+    /// being set to AreaModel (WOK).
+    /// 
+    /// WHAT WAS THE PROBLEM?
+    /// 
+    /// When a walkmesh is converted to a NavigationMesh, the converter checks the walkmesh type to
+    /// decide whether to build an AABB tree. The check is:
+    /// 
+    /// if (bwm.WalkmeshType == BWMType.AreaModel && bwm.Faces.Count > 0)
+    /// {
+    ///     aabbRoot = BuildAabbTree(bwm, vertices, faces);
+    /// }
+    /// 
+    /// If the walkmesh type is not AreaModel, the AABB tree is not built. Without the AABB tree:
+    /// - FindFaceAt() must check every triangle (very slow)
+    /// - Raycast() must check every triangle (very slow)
+    /// - Pathfinding fails because it can't find which triangles contain points
+    /// - Height calculation fails
+    /// - The entire navigation system breaks
+    /// 
+    /// THE FIX:
+    /// 
+    /// In IndoorMap.ProcessBwm(), we now always set:
+    /// bwm.WalkmeshType = BWMType.AreaModel;
+    /// 
+    /// This ensures that when the walkmesh is converted to a NavigationMesh, the AABB tree will
+    /// be built, and all navigation features will work correctly.
+    /// 
+    /// WHY THIS WORKS:
+    /// 
+    /// Indoor map walkmeshes are always area walkmeshes (WOK files), not placeable or door walkmeshes
+    /// (PWK/DWK files). Area walkmeshes are used for the ground of entire areas, while placeable/door
+    /// walkmeshes are used for individual objects. By setting the type to AreaModel, we tell the
+    /// converter that this is an area walkmesh and it should build the AABB tree.
+    /// </para>
+    /// 
+    /// <para>
+    /// CRITICAL BUG FIX - MATERIAL PRESERVATION:
+    /// 
+    /// There was another bug where materials were not being preserved during BWM transformations and
+    /// copying. This caused faces that should be walkable to become non-walkable.
+    /// 
+    /// WHAT WAS THE PROBLEM?
+    /// 
+    /// When a BWM is transformed (flipped, rotated, or translated), only the vertices are modified.
+    /// The materials should remain unchanged. However, when creating deep copies of BWMs, if the
+    /// Material property is not explicitly copied, it might be lost or set to a default value.
+    /// 
+    /// THE FIX:
+    /// 
+    /// When creating deep copies of BWMs (like in IndoorMap.DeepCopyBwm() and KitComponent.DeepCopy()),
+    /// we now explicitly copy the Material property:
+    /// 
+    /// newFace.Material = face.Material;
+    /// 
+    /// This ensures that materials are preserved during all transformations and copying operations.
+    /// 
+    /// WHY THIS MATTERS:
+    /// 
+    /// If materials are not preserved, faces that should be walkable (like Stone = 4) might become
+    /// non-walkable (like Undefined = 0). This causes the bug where "levels/modules are NOT walkable
+    /// despite having the right surface material."
+    /// </para>
+    /// 
+    /// <para>
+    /// CRITICAL CONSISTENCY REQUIREMENT:
+    /// 
+    /// The WalkableMaterials set in NavigationMesh MUST match the WalkableMaterials set in
+    /// SurfaceMaterialExtensions exactly. If they differ, the indoor map builder and other tools
+    /// will have incorrect walkability determination.
+    /// 
+    /// Both sets must contain the same material IDs:
+    /// - 1 (Dirt), 3 (Grass), 4 (Stone), 5 (Wood), 6 (Water), 9 (Carpet), 10 (Metal),
+    ///   11 (Puddles), 12 (Swamp), 13 (Mud), 14 (Leaves), 16 (BottomlessPit), 18 (Door),
+    ///   20 (Sand), 21 (BareBones), 22 (StoneBridge), 30 (Trigger)
+    /// 
+    /// Any mismatch will cause bugs where faces are marked as walkable in one place but non-walkable
+    /// in another.
+    /// </para>
+    /// 
+    /// <para>
+    /// <para>
     /// WHAT IS A WALKMESH?
     /// 
     /// A walkmesh is a special kind of 3D model that tells the game where characters can walk.
