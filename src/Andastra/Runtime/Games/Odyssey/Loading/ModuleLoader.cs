@@ -106,6 +106,15 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
         }
 
         /// <summary>
+        /// Gets the Installation instance used by this ModuleLoader.
+        /// </summary>
+        /// <returns>The Installation instance, or null if not available.</returns>
+        public Installation GetInstallation()
+        {
+            return _installation;
+        }
+
+        /// <summary>
         /// Loads a module by name.
         /// </summary>
         /// <param name="moduleName">Module name (e.g., "end_m01aa" for Endar Spire)</param>
@@ -287,41 +296,85 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
         /// <summary>
         /// Loads an area from ARE + GIT + LYT + VIS.
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: LoadAreaProperties @ 0x004e26d0
+        /// Loads area resources by ResRef from module archives.
+        /// 
+        /// Area loading sequence:
+        /// 1. Load ARE (area properties) - GFF with "ARE " signature
+        /// 2. Load GIT (game instance data) - GFF with "GIT " signature containing entities
+        /// 3. Load LYT (room layout) - Binary format for room organization (module-level, not area-specific)
+        /// 4. Load VIS (visibility) - Binary format for room visibility (module-level, not area-specific)
+        /// 5. Load navigation mesh from BWM files - Walkmesh for pathfinding
+        /// 
+        /// Resource lookup:
+        /// - ARE and GIT files are area-specific (loaded by areaResRef)
+        /// - LYT and VIS files are module-level (loaded by module ID)
+        /// - Resources are searched in: override directory, module archives, base game resources
+        /// </remarks>
         [CanBeNull]
         public RuntimeArea LoadArea(Module module, string areaResRef)
         {
+            if (module == null)
+            {
+                throw new ArgumentNullException("module");
+            }
+            if (string.IsNullOrEmpty(areaResRef))
+            {
+                throw new ArgumentException("Area ResRef cannot be null or empty", "areaResRef");
+            }
+
             var area = new RuntimeArea();
             area.ResRef = areaResRef;
 
-            // Load ARE (area properties)
-            ModuleResource areResource = module.Are();
+            // Load ARE (area properties) - area-specific resource
+            // Based on swkotor2.exe: ARE files contain area lighting, fog, grass, walkmesh references
+            // Use module.Resource() to get ARE file by areaResRef (not module ID)
+            ModuleResource areResource = module.Resource(areaResRef, ResourceType.ARE);
             if (areResource != null)
             {
                 LoadAreaProperties(areResource, area);
             }
+            else
+            {
+                Console.WriteLine($"[ModuleLoader] LoadArea: ARE file not found for area {areaResRef}");
+                // Continue loading other resources even if ARE is missing
+            }
 
-            // Load LYT (room layout)
+            // Load GIT (dynamic objects) - area-specific resource
+            // Based on swkotor2.exe: GIT files contain creature, door, placeable, trigger, waypoint instances
+            // Use module.Resource() to get GIT file by areaResRef (not module ID)
+            ModuleResource gitResource = module.Resource(areaResRef, ResourceType.GIT);
+            if (gitResource != null)
+            {
+                LoadGitObjects(gitResource, area, module);
+            }
+            else
+            {
+                Console.WriteLine($"[ModuleLoader] LoadArea: GIT file not found for area {areaResRef}");
+                // Continue loading other resources even if GIT is missing
+            }
+
+            // Load LYT (room layout) - module-level resource
+            // Based on swkotor2.exe: LYT files are module-level, not area-specific
+            // Use module.Layout() to get LYT file by module ID
             ModuleResource lytResource = module.Layout();
             if (lytResource != null)
             {
                 LoadLayout(lytResource, area);
             }
 
-            // Load VIS (visibility)
+            // Load VIS (visibility) - module-level resource
+            // Based on swkotor2.exe: VIS files are module-level, not area-specific
+            // Use module.Vis() to get VIS file by module ID
             ModuleResource visResource = module.Vis();
             if (visResource != null)
             {
                 LoadVisibility(visResource, area);
             }
 
-            // Load GIT (dynamic objects)
-            ModuleResource gitResource = module.Git();
-            if (gitResource != null)
-            {
-                LoadGitObjects(gitResource, area, module);
-            }
-
             // Load navigation mesh from BWM files
+            // Based on swkotor2.exe: Walkmesh is loaded from BWM files referenced in ARE
             LoadNavigationMesh(module, area);
 
             return area;

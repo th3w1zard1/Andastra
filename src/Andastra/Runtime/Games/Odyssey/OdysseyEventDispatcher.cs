@@ -39,6 +39,7 @@ namespace Andastra.Runtime.Games.Odyssey
     {
         private readonly Queue<PendingEvent> _eventQueue = new Queue<PendingEvent>();
         private readonly ILoadingScreen _loadingScreen;
+        private readonly Andastra.Runtime.Engines.Odyssey.Loading.ModuleLoader _moduleLoader;
 
         private struct PendingEvent
         {
@@ -52,9 +53,11 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Initializes a new instance of the OdysseyEventDispatcher.
         /// </summary>
         /// <param name="loadingScreen">Optional loading screen for area transitions. If provided, area transitions will display the transition bitmap.</param>
-        protected OdysseyEventDispatcher(ILoadingScreen loadingScreen = null)
+        /// <param name="moduleLoader">Optional module loader for area streaming. If provided, areas will be loaded on-demand during transitions.</param>
+        protected OdysseyEventDispatcher(ILoadingScreen loadingScreen = null, Andastra.Runtime.Engines.Odyssey.Loading.ModuleLoader moduleLoader = null)
         {
             _loadingScreen = loadingScreen;
+            _moduleLoader = moduleLoader;
         }
 
         /// <summary>
@@ -466,9 +469,26 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Loads or gets the target area for transition.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Area streaming system
-        /// Checks if area is already loaded in current module, otherwise loads it.
-        /// For now, simplified implementation - full area streaming would require IModuleLoader integration.
+        /// Based on swkotor2.exe: Area streaming system (swkotor2.exe: LoadAreaProperties @ 0x004e26d0)
+        /// Checks if area is already loaded in current module, otherwise loads it via ModuleLoader.
+        /// 
+        /// Area streaming flow (based on swkotor2.exe area transition system):
+        /// 1. Check if area is already loaded in current module (via IModule.GetArea)
+        /// 2. Check if area is the current area
+        /// 3. If not found and ModuleLoader is available:
+        ///    a. Get current module name from world.CurrentModule.ResRef
+        ///    b. Create Module instance from module name and Installation
+        ///    c. Load area using ModuleLoader.LoadArea(module, areaResRef)
+        ///    d. Add loaded area to module's Areas collection
+        ///    e. Register area with world (assign AreaId)
+        ///    f. Return loaded area
+        /// 4. If ModuleLoader is not available, return null (area streaming disabled)
+        /// 
+        /// Based on reverse engineering of:
+        /// - swkotor2.exe: Area loading during transitions (FUN_004e26d0 @ 0x004e26d0)
+        /// - swkotor.exe: Similar area loading system (KOTOR 1)
+        /// - Area resources: ARE (properties), GIT (instances), LYT (layout), VIS (visibility)
+        /// - Module resource lookup: Areas are loaded from module archives using area ResRef
         /// </remarks>
         private IArea LoadOrGetTargetArea(IWorld world, string targetAreaResRef)
         {
@@ -488,25 +508,81 @@ namespace Andastra.Runtime.Games.Odyssey
                     return world.CurrentArea;
                 }
 
-                // In a full implementation, this would query IModule.GetAreas() to find the area
-                // For now, we check if it's the current area or search through module areas
-                // TODO: Full area streaming implementation would load area via IModuleLoader if not found
+                // Check if area is already loaded in module
+                IArea existingArea = world.CurrentModule.GetArea(targetAreaResRef);
+                if (existingArea != null)
+                {
+                    Console.WriteLine($"[OdysseyEventDispatcher] LoadOrGetTargetArea: Target area {targetAreaResRef} is already loaded in module");
+                    return existingArea;
+                }
             }
 
-            // For now, return current area if target matches, or null if not found
-            // Full implementation would integrate with module loading system
-            if (world.CurrentArea != null && string.Equals(world.CurrentArea.ResRef, targetAreaResRef, StringComparison.OrdinalIgnoreCase))
+            // Area is not loaded - attempt to load it via ModuleLoader (area streaming)
+            if (_moduleLoader == null)
             {
-                Console.WriteLine($"[OdysseyEventDispatcher] LoadOrGetTargetArea: Target area {targetAreaResRef} matches current area");
-                return world.CurrentArea;
+                Console.WriteLine($"[OdysseyEventDispatcher] LoadOrGetTargetArea: Target area {targetAreaResRef} is not loaded and ModuleLoader is not available (area streaming disabled)");
+                return null;
             }
 
-            // If target area is not current area and not loaded, we would need to load it
-            // This requires IModuleLoader which may not be available in this context
-            // For now, return null to indicate area not found/not loaded
-            // Full implementation would integrate with module loading system
-            Console.WriteLine($"[OdysseyEventDispatcher] LoadOrGetTargetArea: Target area {targetAreaResRef} is not loaded (area streaming not yet implemented)");
-            return null;
+            if (world.CurrentModule == null || string.IsNullOrEmpty(world.CurrentModule.ResRef))
+            {
+                Console.WriteLine($"[OdysseyEventDispatcher] LoadOrGetTargetArea: Cannot load area {targetAreaResRef} - no current module loaded");
+                return null;
+            }
+
+            // Get current module name for area loading
+            string moduleName = world.CurrentModule.ResRef;
+            Console.WriteLine($"[OdysseyEventDispatcher] LoadOrGetTargetArea: Loading area {targetAreaResRef} from module {moduleName} via ModuleLoader");
+
+            try
+            {
+                // Create Module instance for resource access
+                // Based on swkotor2.exe: Module objects are created per module for resource lookups
+                // Module instance provides access to ARE, GIT, LYT, VIS files for areas
+                Andastra.Parsing.Installation.Installation installation = _moduleLoader.GetInstallation();
+                if (installation == null)
+                {
+                    Console.WriteLine($"[OdysseyEventDispatcher] LoadOrGetTargetArea: Cannot load area {targetAreaResRef} - ModuleLoader has no Installation");
+                    return null;
+                }
+
+                var module = new Andastra.Parsing.Common.Module(moduleName, installation);
+
+                // Load area using ModuleLoader
+                // Based on swkotor2.exe: LoadAreaProperties @ 0x004e26d0 loads ARE + GIT + LYT + VIS
+                // ModuleLoader.LoadArea creates RuntimeArea with all area resources
+                RuntimeArea loadedArea = _moduleLoader.LoadArea(module, targetAreaResRef);
+                if (loadedArea == null)
+                {
+                    Console.WriteLine($"[OdysseyEventDispatcher] LoadOrGetTargetArea: Failed to load area {targetAreaResRef} from module {moduleName}");
+                    return null;
+                }
+
+                Console.WriteLine($"[OdysseyEventDispatcher] LoadOrGetTargetArea: Successfully loaded area {targetAreaResRef} from module {moduleName}");
+
+                // Add loaded area to module's Areas collection
+                // Based on swkotor2.exe: Areas are stored in module's area list for lookup
+                if (world.CurrentModule is RuntimeModule runtimeModule)
+                {
+                    runtimeModule.AddArea(loadedArea);
+                    Console.WriteLine($"[OdysseyEventDispatcher] LoadOrGetTargetArea: Added area {targetAreaResRef} to module {moduleName}");
+                }
+
+                // Register area with world (assign AreaId for entity lookup)
+                // Based on swkotor2.exe: Areas are registered with AreaId for GetArea() lookups
+                // World.RegisterArea assigns AreaId and stores area for efficient lookup
+                world.RegisterArea(loadedArea);
+                uint areaId = world.GetAreaId(loadedArea);
+                Console.WriteLine($"[OdysseyEventDispatcher] LoadOrGetTargetArea: Registered area {targetAreaResRef} with world (AreaId: {areaId})");
+
+                return loadedArea;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[OdysseyEventDispatcher] LoadOrGetTargetArea: Exception loading area {targetAreaResRef} from module {moduleName}: {ex.Message}");
+                Console.WriteLine($"[OdysseyEventDispatcher] LoadOrGetTargetArea: Stack trace: {ex.StackTrace}");
+                return null;
+            }
         }
 
         /// <summary>
@@ -1134,8 +1210,9 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Initializes a new instance of the Kotor1EventDispatcher.
         /// </summary>
         /// <param name="loadingScreen">Optional loading screen for area transitions.</param>
-        public Kotor1EventDispatcher(ILoadingScreen loadingScreen = null)
-            : base(loadingScreen)
+        /// <param name="moduleLoader">Optional module loader for area streaming. If provided, areas will be loaded on-demand during transitions.</param>
+        public Kotor1EventDispatcher(ILoadingScreen loadingScreen = null, Andastra.Runtime.Engines.Odyssey.Loading.ModuleLoader moduleLoader = null)
+            : base(loadingScreen, moduleLoader)
         {
         }
 
@@ -1257,8 +1334,9 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Initializes a new instance of the Kotor2EventDispatcher.
         /// </summary>
         /// <param name="loadingScreen">Optional loading screen for area transitions.</param>
-        public Kotor2EventDispatcher(ILoadingScreen loadingScreen = null)
-            : base(loadingScreen)
+        /// <param name="moduleLoader">Optional module loader for area streaming. If provided, areas will be loaded on-demand during transitions.</param>
+        public Kotor2EventDispatcher(ILoadingScreen loadingScreen = null, Andastra.Runtime.Engines.Odyssey.Loading.ModuleLoader moduleLoader = null)
+            : base(loadingScreen, moduleLoader)
         {
         }
 
