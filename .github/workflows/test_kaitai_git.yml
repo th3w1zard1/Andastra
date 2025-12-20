@@ -1,0 +1,116 @@
+name: Test Kaitai Struct GIT Format
+
+on:
+  push:
+    paths:
+      - 'src/Andastra/Parsing/Resource/Formats/GFF/Generics/GIT/**'
+      - 'scripts/test_kaitai*.ps1'
+      - 'scripts/validate_kaitai*.ps1'
+  pull_request:
+    paths:
+      - 'src/Andastra/Parsing/Resource/Formats/GFF/Generics/GIT/**'
+      - 'scripts/test_kaitai*.ps1'
+      - 'scripts/validate_kaitai*.ps1'
+  workflow_dispatch:
+
+jobs:
+  validate-structure:
+    name: Validate GIT.ksy Structure
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Validate KSY file structure
+        run: |
+          pwsh -ExecutionPolicy Bypass -File scripts/validate_kaitai_git.ps1 -SkipCompilation
+          
+  test-compilation:
+    name: Test Compilation (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language:
+          - python
+          - java
+          - javascript
+          - csharp
+          - cpp_stl
+          - ruby
+          - php
+          - perl
+          - go
+          - lua
+          - nim
+          - rust
+          - swift
+          - typescript
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Java (required for Kaitai Struct compiler)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      
+      - name: Install Kaitai Struct Compiler
+        run: |
+          wget https://packages.kaitai.io/dists/unstable/main/binary-amd64/kaitai-struct-compiler_0.10_all.deb
+          sudo dpkg -i kaitai-struct-compiler_0.10_all.deb || sudo apt-get install -f -y
+          kaitai-struct-compiler --version
+      
+      - name: Compile GIT.ksy to ${{ matrix.language }}
+        run: |
+          mkdir -p compiled/${{ matrix.language }}
+          kaitai-struct-compiler -t ${{ matrix.language }} \
+            -d compiled/${{ matrix.language }} \
+            src/Andastra/Parsing/Resource/Formats/GFF/Generics/GIT/GIT.ksy
+      
+      - name: Verify output files generated
+        run: |
+          if [ ! "$(ls -A compiled/${{ matrix.language }})" ]; then
+            echo "ERROR: No output files generated for ${{ matrix.language }}"
+            exit 1
+          fi
+          echo "Generated files:"
+          ls -la compiled/${{ matrix.language }}
+      
+      - name: Upload compiled artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled-${{ matrix.language }}
+          path: compiled/${{ matrix.language }}/
+          retention-days: 1
+
+  test-all-languages:
+    name: Test All Languages Summary
+    runs-on: ubuntu-latest
+    needs: test-compilation
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      
+      - name: Install Kaitai Struct Compiler
+        run: |
+          wget https://packages.kaitai.io/dists/unstable/main/binary-amd64/kaitai-struct-compiler_0.10_all.deb
+          sudo dpkg -i kaitai-struct-compiler_0.10_all.deb || sudo apt-get install -f -y
+      
+      - name: Run comprehensive multi-language test
+        run: |
+          pwsh -ExecutionPolicy Bypass -File scripts/test_kaitai_multilang.ps1 -Verbose
+      
+      - name: Generate test report
+        if: always()
+        run: |
+          if [ -f test_kaitai_multilang_output/test_report.txt ]; then
+            cat test_kaitai_multilang_output/test_report.txt
+          fi
+
