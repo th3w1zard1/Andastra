@@ -388,11 +388,31 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             }
 
             // Load starting module (from settings or default)
+            // Based on swkotor.exe (K1) and swkotor2.exe (K2) entry points:
+            // - K1: "END_M01AA" (Endar Spire - Command Module) @ swkotor.exe: 0x0067afb0 (OnNewGamePicked)
+            //   - Located via string reference: "END_M01AA" @ 0x00752f58
+            //   - Original implementation: FUN_005e5a90(aiStack_2c,"END_M01AA") sets module name in OnNewGamePicked
+            //   - Decompiled code shows: FUN_005e5a90(aiStack_2c,"END_M01AA") then FUN_00408bc0 loads module
+            // - K2: "001ebo" (Ebon Hawk Interior - Prologue) @ swkotor2.exe: 0x0067afb0 (OnNewGamePicked equivalent)
+            //   - Located via string reference: "001ebo" @ 0x007cc028
+            //   - Original implementation: Character generation finishes and loads module "001ebo"
+            //   - Note: In K2, character creation happens BEFORE module load (chargen -> finish -> load module)
+            // Module name casing: Ghidra shows "END_M01AA" (uppercase) but resource lookup is case-insensitive
+            // We use lowercase "end_m01aa" and "001ebo" to match Andastra.Parsing conventions
+            // TODO: Character creation is NOT implemented - New Game currently skips directly to module load
+            //   - Original flow: Main Menu -> New Game -> Character Creation -> Module Load
+            //   - Current flow: Main Menu -> New Game -> Module Load (skips character creation)
+            //   - Character creation should allow: Class selection, Portrait, Name, Abilities, Skills, Feats
+            //   - Based on swkotor.exe/swkotor2.exe: Character generation GUI system (chargen GUI files)
+            // TODO: Music system is NOT implemented - ARE files have MusicDay/MusicNight/MusicBattle fields but no playback
+            //   - ARE files contain: MusicDay (int), MusicNight (int), MusicBattle (int) - references to music.2da
+            //   - Original engine plays music based on time of day and combat state
+            //   - Music files are WAV/MP3 in MUSIC: directory, referenced by music.2da table
             string startingModule = _settings.StartModule;
             if (string.IsNullOrEmpty(startingModule))
             {
                 // Default starting modules
-                startingModule = _settings.Game == KotorGame.K1 ? "end_m01aa" : "001ebo"; // Endar Spire or Peragus
+                startingModule = _settings.Game == KotorGame.K1 ? "end_m01aa" : "001ebo"; // Endar Spire or Prologue (Ebon Hawk)
             }
 
             // Load module synchronously for now (can be made async later)
