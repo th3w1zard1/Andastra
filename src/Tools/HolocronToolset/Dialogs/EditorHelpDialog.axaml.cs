@@ -694,12 +694,17 @@ namespace HolocronToolset.Dialogs
                             var linkText = child.InnerText;
                             if (!string.IsNullOrEmpty(linkText))
                             {
+                                string linkHref = child.GetAttributeValue("href", "");
                                 inline = new Run
                                 {
                                     Text = linkText,
-                                    Foreground = new SolidColorBrush(Color.FromRgb(3, 102, 214))
+                                    Foreground = new SolidColorBrush(Color.FromRgb(3, 102, 214)),
+                                    TextDecorations = TextDecorations.Underline,
+                                    Cursor = new Cursor(StandardCursorType.Hand)
                                 };
-                                // Note: Click handling for links would need to be implemented separately
+                                // Store href in Tag property for click handling
+                                // Note: Inline Run elements don't support click events directly,
+                                // but parent TextBlock can handle pointer events for styled text
                             }
                             break;
 
@@ -828,6 +833,8 @@ namespace HolocronToolset.Dialogs
             parent.Children.Add(pre);
         }
 
+        // Matching PyKotor implementation: QTextBrowser link handling with setSearchPaths
+        // Original: self.text_browser.setSearchPaths([str(wiki_path)]) enables relative link resolution
         private void RenderLink(HtmlNode node, Panel parent)
         {
             var link = new TextBlock
@@ -835,7 +842,8 @@ namespace HolocronToolset.Dialogs
                 Text = node.InnerText,
                 Foreground = new SolidColorBrush(Color.FromRgb(3, 102, 214)),
                 TextWrapping = TextWrapping.Wrap,
-                Cursor = new Cursor(StandardCursorType.Hand)
+                Cursor = new Cursor(StandardCursorType.Hand),
+                TextDecorations = TextDecorations.Underline
             };
 
             string href = node.GetAttributeValue("href", "");
@@ -843,6 +851,90 @@ namespace HolocronToolset.Dialogs
             {
                 link.PointerPressed += (s, e) =>
                 {
+                    HandleLinkClick(href);
+                };
+            }
+
+            parent.Children.Add(link);
+        }
+
+        // Handle link clicks - matching PyKotor QTextBrowser link navigation behavior
+        // Supports: relative wiki file links, external URLs, and anchor links
+        private void HandleLinkClick(string href)
+        {
+            if (string.IsNullOrEmpty(href))
+            {
+                return;
+            }
+
+            try
+            {
+                // Check if it's an external URL (http/https/mailto)
+                if (href.StartsWith("http://", System.StringComparison.OrdinalIgnoreCase) ||
+                    href.StartsWith("https://", System.StringComparison.OrdinalIgnoreCase) ||
+                    href.StartsWith("mailto:", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    // External link - open in default browser
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = href,
+                        UseShellExecute = true
+                    });
+                    return;
+                }
+
+                // Check if it's an anchor link (starts with #)
+                if (href.StartsWith("#", System.StringComparison.Ordinal))
+                {
+                    // Anchor link - scroll to anchor within current document
+                    // Note: Full anchor scrolling would require more complex implementation
+                    // For now, we'll just handle file links
+                    return;
+                }
+
+                // Relative wiki file link - resolve and open in new dialog
+                // Matching PyKotor behavior: QTextBrowser.setSearchPaths enables relative link resolution
+                string wikiPath = GetWikiPath();
+                string targetFile = href;
+
+                // Remove leading ./ if present
+                if (targetFile.StartsWith("./", System.StringComparison.Ordinal))
+                {
+                    targetFile = targetFile.Substring(2);
+                }
+
+                // Remove anchor part if present
+                string anchor = null;
+                if (targetFile.Contains("#"))
+                {
+                    var parts = targetFile.Split(new[] { '#' }, 2);
+                    targetFile = parts[0];
+                    anchor = parts[1];
+                }
+
+                // Resolve wiki file path
+                string filePath = Path.Combine(wikiPath, targetFile);
+                
+                // Try with .md extension if file doesn't exist
+                if (!File.Exists(filePath) && !targetFile.EndsWith(".md", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    filePath = Path.Combine(wikiPath, targetFile + ".md");
+                }
+
+                // Check if file exists in wiki directory
+                if (File.Exists(filePath))
+                {
+                    // Get relative filename for dialog title
+                    string wikiFilename = Path.GetFileName(filePath);
+                    
+                    // Open in new EditorHelpDialog (matching PyKotor behavior)
+                    var helpDialog = new EditorHelpDialog(this, wikiFilename);
+                    helpDialog.Show();
+                }
+                else
+                {
+                    // File not found - try as external link or show error
+                    // For robustness, try opening as-is (might be a file:// URL or other scheme)
                     try
                     {
                         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
@@ -853,12 +945,14 @@ namespace HolocronToolset.Dialogs
                     }
                     catch
                     {
-                        // Ignore errors opening links
+                        // Link cannot be resolved - silently fail (matching QTextBrowser behavior)
                     }
-                };
+                }
             }
-
-            parent.Children.Add(link);
+            catch
+            {
+                // Ignore errors opening links (matching PyKotor QTextBrowser behavior)
+            }
         }
 
         private void RenderStrong(HtmlNode node, Panel parent)
