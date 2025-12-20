@@ -528,26 +528,43 @@ namespace Andastra.Runtime.Core.Movement
                 }
             }
 
-            // Check weapon type to determine range
-            // Ranged weapons typically have longer range than melee
+            // Get base item ID from weapon component and look up attack range from baseitems.2da
             // Based on swkotor2.exe weapon system
-            // Located via string references: "WeaponType" in baseitems.2da
-            // Original implementation: Weapon types determine attack range
-            // For melee weapons: 2.0f, for ranged weapons: 10.0f (approximate)
-            if (weapon is Entities.Entity weaponEntity2 && weaponEntity2.HasData("WeaponType"))
+            // Located via string references: "WeaponType" in baseitems.2da, "maxattackrange" column
+            // Original implementation: Reads maxattackrange from baseitems.2da using BaseItem ID
+            // xoreos implementation: Item::getMaxAttackRange() @ vendor/xoreos/src/engines/kotorbase/item.cpp:74
+            //   Reads _maxAttackRange = twoDA.getFloat("maxattackrange") from baseitems.2da
+            // PyKotor documentation: baseitems.2da has "maxattackrange" column (Integer) for maximum attack range
+            Interfaces.Components.IItemComponent itemComponent = weapon.GetComponent<Interfaces.Components.IItemComponent>();
+            if (itemComponent != null && _world?.GameDataProvider != null)
             {
-                int weaponType = weaponEntity2.GetData<int>("WeaponType", 0);
-                // TODO: SIMPLIFIED - Weapon type constants: 0=melee, 1=ranged (simplified)
-                // Full implementation would check baseitems.2da for exact ranges
-                if (weaponType == 1) // Ranged weapon
+                int baseItemId = itemComponent.BaseItem;
+                if (baseItemId >= 0)
                 {
-                    return 10.0f; // Approximate ranged weapon range
+                    // Read maxattackrange from baseitems.2da using GameDataProvider
+                    // Based on swkotor2.exe: Reads maxattackrange column from baseitems.2da row indexed by BaseItem ID
+                    float maxAttackRange = _world.GameDataProvider.GetTableFloat("baseitems", baseItemId, "maxattackrange", 0.0f);
+                    if (maxAttackRange > 0.0f)
+                    {
+                        // Convert from game units to world units if necessary (maxattackrange is typically in game units)
+                        // Based on xoreos implementation: getMaxAttackRange() returns float directly from 2DA
+                        // KOTOR uses game units where 1.0 = 1 meter approximately, so direct conversion should work
+                        return maxAttackRange;
+                    }
+
+                    // Fallback: Check if ranged weapon to use default ranged range
+                    // Based on swkotor2.exe: Ranged weapons have longer default range than melee
+                    // Read rangedweapon flag from baseitems.2da to determine if ranged
+                    int rangedWeapon = (int)_world.GameDataProvider.GetTableFloat("baseitems", baseItemId, "rangedweapon", 0.0f);
+                    if (rangedWeapon != 0)
+                    {
+                        // Default ranged weapon range (approximate fallback when maxattackrange not available)
+                        return 10.0f;
+                    }
                 }
             }
 
-            // Default to melee range
-
-            // Default melee range
+            // Default melee range (unarmed or melee weapon without range data)
             return 2.0f;
         }
 

@@ -193,7 +193,10 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
                 CriticalThreat = row.GetInteger("criticalthreat") ?? 20,
                 CriticalMultiplier = row.GetInteger("critmultiplier") ?? 2,
                 BaseCost = row.GetInteger("basecost") ?? 0,
-                MaxStack = row.GetInteger("stacking") ?? 1
+                MaxStack = row.GetInteger("stacking") ?? 1,
+                RangedWeapon = row.GetInteger("rangedweapon") != null && row.GetInteger("rangedweapon").Value != 0,
+                MaxRange = row.GetInteger("maxattackrange") ?? 0,
+                MinRange = row.GetInteger("preferredattackrange") ?? 0
             };
         }
 
