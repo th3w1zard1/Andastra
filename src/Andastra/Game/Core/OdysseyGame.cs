@@ -792,14 +792,40 @@ namespace Andastra.Runtime.Game.Core
             {
                 case "BTN_NEWGAME":
                     // New Game button - go to character creation
-                    // Based on swkotor.exe FUN_0067afb0: New Game loads module "END_M01AA" (Endar Spire)
-                    // Based on swkotor2.exe FUN_006d0b00: New Game loads module "001ebo" (Prologue/Ebon Hawk)
+                    // Based on swkotor.exe FUN_0067afb0 @ 0x0067afb0: New Game loads module "END_M01AA" (Endar Spire)
+                    // Based on swkotor2.exe FUN_006d0b00 @ 0x006d0b00: New Game loads module "001ebo" (Prologue/Ebon Hawk)
                     // However, original games go to character creation first, then load module
+                    // Original implementation: Character creation completes -> module loads -> player entity created
                     Console.WriteLine("[Odyssey] New Game button clicked - transitioning to character creation");
                     _currentState = GameState.CharacterCreation;
                     if (_characterCreationScreen == null)
                     {
-                        _characterCreationScreen = new CharacterCreationScreen(_settings, _graphicsDevice, _spriteBatch, _font);
+                        // Get installation from session (created in Initialize) or create from settings
+                        Installation installation = null;
+                        if (_session != null && _session.Installation != null)
+                        {
+                            installation = _session.Installation;
+                        }
+                        else if (!string.IsNullOrEmpty(_settings.GamePath))
+                        {
+                            installation = new Installation(_settings.GamePath, _settings.Game == Andastra.Runtime.Core.KotorGame.K1 ? Andastra.Parsing.Common.Game.K1 : Andastra.Parsing.Common.Game.K2);
+                        }
+                        
+                        if (installation == null)
+                        {
+                            Console.WriteLine("[Odyssey] ERROR: Cannot create character creation screen - no installation available");
+                            _currentState = GameState.MainMenu;
+                            break;
+                        }
+                        
+                        _characterCreationScreen = new CharacterCreationScreen(
+                            _graphicsDevice,
+                            installation,
+                            _settings.Game,
+                            _guiManager,
+                            OnCharacterCreationComplete,
+                            OnCharacterCreationCancel,
+                            _graphicsBackend);
                     }
                     break;
 
@@ -2109,6 +2135,30 @@ namespace Andastra.Runtime.Game.Core
             }
         }
 
+        /// <summary>
+        /// Callback when character creation is completed.
+        /// Based on swkotor.exe (K1) and swkotor2.exe (K2): Character generation completes, then module loads
+        /// - K1: Loads module "end_m01aa" (Endar Spire) @ swkotor.exe: 0x0067afb0
+        /// - K2: Loads module "001ebo" (Prologue/Ebon Hawk) @ swkotor2.exe: 0x006d0b00
+        /// </summary>
+        private void OnCharacterCreationComplete(Andastra.Runtime.Game.Core.CharacterCreationData characterData)
+        {
+            Console.WriteLine("[Odyssey] Character creation completed - starting new game");
+            _characterData = characterData;
+            StartGame();
+        }
+
+        /// <summary>
+        /// Callback when character creation is cancelled.
+        /// Returns to main menu.
+        /// </summary>
+        private void OnCharacterCreationCancel()
+        {
+            Console.WriteLine("[Odyssey] Character creation cancelled - returning to main menu");
+            _currentState = GameState.MainMenu;
+            _characterCreationScreen = null; // Allow recreation on next New Game click
+        }
+
         private void StartGame()
         {
             Console.WriteLine("[Odyssey] Starting game");
@@ -2123,6 +2173,7 @@ namespace Andastra.Runtime.Game.Core
             if (string.IsNullOrEmpty(gamePath))
             {
                 Console.WriteLine("[Odyssey] ERROR: No game path detected!");
+                _currentState = GameState.MainMenu;
                 return;
             }
 
@@ -2181,6 +2232,7 @@ namespace Andastra.Runtime.Game.Core
             {
                 Console.Error.WriteLine("[Odyssey] Failed to start game: " + ex.Message);
                 Console.Error.WriteLine(ex.StackTrace);
+                _currentState = GameState.MainMenu;
             }
         }
 
