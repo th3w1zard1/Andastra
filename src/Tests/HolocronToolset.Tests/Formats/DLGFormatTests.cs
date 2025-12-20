@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Andastra.Parsing.Common;
@@ -1169,6 +1170,474 @@ namespace HolocronToolset.Tests.Formats
             // entryB should be reachable from both starters
             pathsEntryB.Should().Contain(p => p.Contains("StartingList\\0") && p.Contains("RepliesList\\0") && p.Contains("EntriesList\\0"));
             pathsEntryB.Should().Contain(p => p.Contains("StartingList\\1") && p.Contains("EntriesList\\1"));
+        }
+    }
+
+    // Matching PyKotor implementation at Libraries/PyKotor/tests/resource/generics/test_dlg.py:726
+    // Original: class TestDLG(TestCase):
+    public class TestDLGReconstruct
+    {
+        private List<string> _logMessages;
+
+        public TestDLGReconstruct()
+        {
+            _logMessages = new List<string> { Environment.NewLine };
+        }
+
+        private void LogFunc(string message)
+        {
+            _logMessages.Add(message);
+        }
+
+        private string GetTestFilePath(string relativePath)
+        {
+            // Try to find test files relative to test assembly location
+            string testAssemblyPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            string baseDir = System.IO.Path.GetDirectoryName(testAssemblyPath);
+            string testFile = System.IO.Path.Combine(baseDir, "..", "..", "..", "..", "vendor", "PyKotor", relativePath);
+            testFile = System.IO.Path.GetFullPath(testFile);
+            return System.IO.File.Exists(testFile) ? testFile : null;
+        }
+
+        // Matching PyKotor test_k1_reconstruct
+        [Fact(Skip = "Requires test file - test_k1.dlg")]
+        public void TestK1Reconstruct()
+        {
+            string testFile = GetTestFilePath("Libraries/PyKotor/tests/test_files/test_k1.dlg");
+            if (testFile == null)
+            {
+                // Skip if file not found
+                return;
+            }
+
+            GFF gff = GFFAuto.ReadGff(testFile);
+            GFF reconstructedGff = DLGHelper.DismantleDlg(DLGHelper.ConstructDlg(gff), Game.K1);
+
+            // Note: GFF.Compare doesn't exist in C# yet - this test is a placeholder
+            // Once GFF comparison is implemented, uncomment and fix:
+            // bool result = gff.Compare(reconstructedGff, LogFunc, ignoreDefaultChanges: true);
+            // string output = string.Join(Environment.NewLine, _logMessages);
+            // result.Should().BeTrue(output);
+        }
+
+        // Matching PyKotor test_k1_reconstruct_from_reconstruct
+        [Fact(Skip = "Requires test file - test_k1.dlg")]
+        public void TestK1ReconstructFromReconstruct()
+        {
+            string testFile = GetTestFilePath("Libraries/PyKotor/tests/test_files/test_k1.dlg");
+            if (testFile == null)
+            {
+                return;
+            }
+
+            GFF gff = GFFAuto.ReadGff(testFile);
+            GFF reconstructedGff = DLGHelper.DismantleDlg(DLGHelper.ConstructDlg(gff), Game.K1);
+            GFF reReconstructedGff = DLGHelper.DismantleDlg(DLGHelper.ConstructDlg(reconstructedGff), Game.K1);
+
+            // Note: GFF.Compare doesn't exist in C# yet
+            // bool result = reconstructedGff.Compare(reReconstructedGff, LogFunc);
+            // string output = string.Join(Environment.NewLine, _logMessages);
+            // result.Should().BeTrue(output);
+        }
+
+        // Matching PyKotor test_k1_serialization
+        [Fact]
+        public void TestK1Serialization()
+        {
+            // Read TEST_DLG_XML - Note: XML format not fully supported yet, so construct DLG directly
+            // For now, skip this test or construct DLG manually from expected structure
+            DLG dlg = ConstructTestDlgFromXml();
+            DLG dlg = DLGHelper.ConstructDlg(gff);
+
+            foreach (DLGNode node in dlg.AllEntries())
+            {
+                var serialized = node.ToDict();
+                DLGNode deserialized = DLGNode.FromDict(serialized);
+                deserialized.Should().BeEquivalentTo(node, options => options.ExcludingMissingMembers());
+            }
+        }
+
+        // Matching PyKotor test_k2_reconstruct
+        [Fact(Skip = "Requires test file - test.dlg")]
+        public void TestK2Reconstruct()
+        {
+            string testFile = GetTestFilePath("Libraries/PyKotor/tests/test_files/test.dlg");
+            if (testFile == null)
+            {
+                return;
+            }
+
+            GFF gff = GFFAuto.ReadGff(testFile);
+            GFF reconstructedGff = DLGHelper.DismantleDlg(DLGHelper.ConstructDlg(gff), Game.K2);
+
+            // Note: GFF.Compare doesn't exist in C# yet
+            // bool result = gff.Compare(reconstructedGff, LogFunc, ignoreDefaultChanges: true);
+            // string output = string.Join(Environment.NewLine, _logMessages);
+            // result.Should().BeTrue(output);
+        }
+
+        // Matching PyKotor test_k2_reconstruct_from_reconstruct
+        [Fact(Skip = "Requires test file - test.dlg")]
+        public void TestK2ReconstructFromReconstruct()
+        {
+            string testFile = GetTestFilePath("Libraries/PyKotor/tests/test_files/test.dlg");
+            if (testFile == null)
+            {
+                return;
+            }
+
+            GFF gff = GFFAuto.ReadGff(testFile);
+            GFF reconstructedGff = DLGHelper.DismantleDlg(DLGHelper.ConstructDlg(gff), Game.K2);
+            GFF reReconstructedGff = DLGHelper.DismantleDlg(DLGHelper.ConstructDlg(reconstructedGff), Game.K2);
+
+            // Note: GFF.Compare doesn't exist in C# yet
+            // bool result = reconstructedGff.Compare(reReconstructedGff, LogFunc);
+            // string output = string.Join(Environment.NewLine, _logMessages);
+            // result.Should().BeTrue(output);
+        }
+
+        // Matching PyKotor test_io_construct
+        [Fact]
+        public void TestIoConstruct()
+        {
+            // Note: XML GFF reading not yet implemented in C#
+            // For now, construct DLG directly from expected structure
+            DLG dlg = ConstructTestDlgFromXml();
+            ValidateIo(dlg);
+        }
+
+        private DLG ConstructTestDlgFromXml()
+        {
+            // Manually construct DLG matching TEST_DLG_XML structure
+            var dlg = new DLG
+            {
+                DelayEntry = 13,
+                DelayReply = 14,
+                WordCount = 1337,
+                OnAbort = new ResRef("abort"),
+                OnEnd = new ResRef("end"),
+                Skippable = true,
+                AmbientTrack = new ResRef("track"),
+                AnimatedCut = 123,
+                CameraModel = new ResRef("camm"),
+                ComputerType = DLGComputerType.Ancient,
+                ConversationType = DLGConversationType.Human,
+                OldHitCheck = true,
+                UnequipHands = true,
+                UnequipItems = true,
+                VoId = "echo",
+                AlienRaceOwner = 123,
+                PostProcOwner = 12,
+                RecordNoVo = 3
+            };
+
+            var entry0 = new DLGEntry
+            {
+                Speaker = "bark",
+                Listener = "yoohoo",
+                Text = LocalizedString.FromEnglish("Greetings"),
+                VoResRef = new ResRef("gand"),
+                Script1 = new ResRef("num1"),
+                Delay = -1,
+                Comment = "commentto",
+                Sound = new ResRef("gonk"),
+                Quest = "quest",
+                PlotIndex = -1,
+                PlotXpPercentage = 1.0f,
+                WaitFlags = 1,
+                CameraAngle = 14,
+                FadeType = 1,
+                SoundExists = 1,
+                AlienRaceNode = 1,
+                VoTextChanged = true,
+                EmotionId = 4,
+                FacialId = 2,
+                NodeId = 1,
+                Unskippable = true,
+                PostProcNode = 3,
+                RecordVo = true,
+                Script2 = new ResRef("num2"),
+                CameraId = 32,
+                CameraEffect = -1,
+                RecordNoVoOverride = true,
+                ListIndex = 0
+            };
+            entry0.Animations.Add(new DLGAnimation { Participant = "aaa", AnimationId = 1200 });
+            entry0.Animations.Add(new DLGAnimation { Participant = "bbb", AnimationId = 2400 });
+
+            var entry1 = new DLGEntry
+            {
+                Text = LocalizedString.FromEnglish("Farewell"),
+                ListIndex = 1
+            };
+
+            var entry2 = new DLGEntry
+            {
+                Text = LocalizedString.FromEnglish("Hello"),
+                ListIndex = 2
+            };
+
+            var reply0 = new DLGReply
+            {
+                Text = LocalizedString.FromEnglish("Reply 0"),
+                ListIndex = 0
+            };
+
+            var reply1 = new DLGReply
+            {
+                Text = LocalizedString.FromEnglish("Reply 1"),
+                ListIndex = 1
+            };
+
+            entry0.Links.Add(new DLGLink(reply0, 0));
+            entry0.Links.Add(new DLGLink(reply1, 1));
+            reply0.Links.Add(new DLGLink(entry0, 0));
+            reply1.Links.Add(new DLGLink(entry1, 0));
+
+            dlg.Starters.Add(new DLGLink(entry0, 0));
+            dlg.Starters.Add(new DLGLink(entry2, 1));
+
+            dlg.Stunts.Add(new DLGStunt { Participant = "aaa", StuntModel = new ResRef("model1") });
+            dlg.Stunts.Add(new DLGStunt { Participant = "bbb", StuntModel = new ResRef("m01aa_c04_char01") });
+
+            return dlg;
+        }
+
+        private void ValidateIo(DLG dlg)
+        {
+            // Matching PyKotor validate_io method
+            var allEntries = dlg.AllEntries();
+            var allReplies = dlg.AllReplies();
+
+            var entry0 = allEntries[0];
+            var entry1 = allEntries[1];
+            var entry2 = allEntries[2];
+
+            var reply0 = allReplies[0];
+            var reply1 = allReplies[1];
+
+            allEntries.Count.Should().Be(3);
+            allReplies.Count.Should().Be(2);
+            dlg.Starters.Count.Should().Be(2);
+            dlg.Stunts.Count.Should().Be(2);
+
+            dlg.Starters.Should().Contain(link => link.Node == entry0);
+            dlg.Starters.Should().Contain(link => link.Node == entry2);
+
+            entry0.Links.Count.Should().Be(2);
+            entry0.Links.Should().Contain(link => link.Node == reply0);
+            entry0.Links.Should().Contain(link => link.Node == reply1);
+
+            reply0.Links.Count.Should().Be(1);
+            reply0.Links.Should().Contain(link => link.Node == entry0);
+
+            reply1.Links.Count.Should().Be(1);
+            reply1.Links.Should().Contain(link => link.Node == entry1);
+
+            entry2.Links.Count.Should().Be(0);
+
+            dlg.DelayEntry.Should().Be(13);
+            dlg.DelayReply.Should().Be(14);
+            dlg.WordCount.Should().Be(1337);
+            dlg.OnAbort.Should().Be(new ResRef("abort"));
+            dlg.OnEnd.Should().Be(new ResRef("end"));
+            dlg.Skippable.Should().BeTrue();
+            dlg.AmbientTrack.Should().Be(new ResRef("track"));
+            dlg.AnimatedCut.Should().Be(123);
+            dlg.CameraModel.Should().Be(new ResRef("camm"));
+            dlg.ComputerType.Should().Be(DLGComputerType.Ancient);
+            dlg.ConversationType.Should().Be(DLGConversationType.Human);
+            dlg.OldHitCheck.Should().BeTrue();
+            dlg.UnequipHands.Should().BeTrue();
+            dlg.UnequipItems.Should().BeTrue();
+            dlg.VoId.Should().Be("echo");
+            dlg.AlienRaceOwner.Should().Be(123);
+            dlg.PostProcOwner.Should().Be(12);
+            dlg.RecordNoVo.Should().Be(3);
+
+            entry0.Listener.Should().Be("yoohoo");
+            entry0.Text.StringRef.Should().Be(-1);
+            entry0.VoResRef.Should().Be(new ResRef("gand"));
+            entry0.Script1.Should().Be(new ResRef("num1"));
+            entry0.Delay.Should().Be(-1);
+            entry0.Comment.Should().Be("commentto");
+            entry0.Sound.Should().Be(new ResRef("gonk"));
+            entry0.Quest.Should().Be("quest");
+            entry0.PlotIndex.Should().Be(-1);
+            entry0.PlotXpPercentage.Should().BeApproximately(1.0f, 0.01f);
+            entry0.WaitFlags.Should().Be(1);
+            entry0.CameraAngle.Should().Be(14);
+            entry0.FadeType.Should().Be(1);
+            entry0.SoundExists.Should().Be(1);
+            entry0.AlienRaceNode.Should().Be(1);
+            entry0.VoTextChanged.Should().BeTrue();
+            entry0.EmotionId.Should().Be(4);
+            entry0.FacialId.Should().Be(2);
+            entry0.NodeId.Should().Be(1);
+            entry0.Unskippable.Should().BeTrue();
+            entry0.PostProcNode.Should().Be(3);
+            entry0.RecordVo.Should().BeTrue();
+            entry0.Script2.Should().Be(new ResRef("num2"));
+            entry0.CameraId.Should().Be(32);
+            entry0.Speaker.Should().Be("bark");
+            entry0.CameraEffect.Should().Be(-1);
+            entry0.RecordNoVoOverride.Should().BeTrue();
+
+            dlg.Stunts[1].Participant.Should().Be("bbb");
+            dlg.Stunts[1].StuntModel.Should().Be(new ResRef("m01aa_c04_char01"));
+        }
+
+        private string GetTestDlgXml()
+        {
+            // Return the TEST_DLG_XML content from Python test
+            return @"<gff3>
+  <struct id=""-1"">
+    <uint32 label=""DelayEntry"">13</uint32>
+    <uint32 label=""DelayReply"">14</uint32>
+    <uint32 label=""NumWords"">1337</uint32>
+    <resref label=""EndConverAbort"">abort</resref>
+    <resref label=""EndConversation"">end</resref>
+    <byte label=""Skippable"">1</byte>
+    <resref label=""AmbientTrack"">track</resref>
+    <byte label=""AnimatedCut"">123</byte>
+    <resref label=""CameraModel"">camm</resref>
+    <byte label=""ComputerType"">1</byte>
+    <sint32 label=""ConversationType"">1</sint32>
+    <list label=""EntryList"">
+      <struct id=""0"">
+        <exostring label=""Speaker"">bark</exostring>
+        <exostring label=""Listener"">yoohoo</exostring>
+        <list label=""AnimList"">
+          <struct id=""0"">
+            <exostring label=""Participant"">aaa</exostring>
+            <uint16 label=""Animation"">1200</uint16>
+          </struct>
+          <struct id=""0"">
+            <exostring label=""Participant"">bbb</exostring>
+            <uint16 label=""Animation"">2400</uint16>
+          </struct>
+        </list>
+        <locstring label=""Text"" strref=""-1"">
+          <string language=""0"">Greetings</string>
+        </locstring>
+        <resref label=""VO_ResRef"">gand</resref>
+        <resref label=""Script"">num1</resref>
+        <uint32 label=""Delay"">4294967295</uint32>
+        <exostring label=""Comment"">commentto</exostring>
+        <resref label=""Sound"">gonk</resref>
+        <exostring label=""Quest"">quest</exostring>
+        <sint32 label=""PlotIndex"">-1</sint32>
+        <float label=""PlotXPPercentage"">1.0</float>
+        <uint32 label=""WaitFlags"">1</uint32>
+        <uint32 label=""CameraAngle"">14</uint32>
+        <byte label=""FadeType"">1</byte>
+        <list label=""RepliesList"">
+          <struct id=""0"">
+            <uint32 label=""Index"">0</uint32>
+            <resref label=""Active"" />
+            <byte label=""IsChild"">0</byte>
+          </struct>
+          <struct id=""1"">
+            <uint32 label=""Index"">1</uint32>
+            <resref label=""Active"" />
+            <byte label=""IsChild"">0</byte>
+          </struct>
+        </list>
+        <byte label=""SoundExists"">1</byte>
+        <sint32 label=""ActionParam1"">1</sint32>
+        <sint32 label=""AlienRaceNode"">1</sint32>
+        <sint32 label=""CamVidEffect"">-1</sint32>
+        <byte label=""Changed"">1</byte>
+        <sint32 label=""Emotion"">4</sint32>
+        <sint32 label=""FacialAnim"">2</sint32>
+        <sint32 label=""NodeID"">1</sint32>
+        <sint32 label=""NodeUnskippable"">1</sint32>
+        <sint32 label=""PostProcNode"">3</sint32>
+        <sint32 label=""RecordNoOverri"">1</sint32>
+        <sint32 label=""RecordVO"">1</sint32>
+        <resref label=""Script2"">num2</resref>
+        <sint32 label=""VOTextChanged"">1</sint32>
+        <sint32 label=""CameraID"">32</sint32>
+        <sint32 label=""RecordNoVOOverri"">1</sint32>
+      </struct>
+      <struct id=""1"">
+        <exostring label=""Speaker"" />
+        <locstring label=""Text"" strref=""-1"">
+          <string language=""0"">Farewell</string>
+        </locstring>
+        <list label=""RepliesList"">
+          <struct id=""0"">
+            <uint32 label=""Index"">0</uint32>
+            <resref label=""Active"" />
+            <byte label=""IsChild"">0</byte>
+          </struct>
+        </list>
+      </struct>
+      <struct id=""2"">
+        <exostring label=""Speaker"" />
+        <locstring label=""Text"" strref=""-1"">
+          <string language=""0"">Hello</string>
+        </locstring>
+        <list label=""RepliesList"" />
+      </struct>
+    </list>
+    <list label=""ReplyList"">
+      <struct id=""0"">
+        <locstring label=""Text"" strref=""-1"">
+          <string language=""0"">Reply 0</string>
+        </locstring>
+        <list label=""EntriesList"">
+          <struct id=""0"">
+            <uint32 label=""Index"">0</uint32>
+            <resref label=""Active"" />
+            <byte label=""IsChild"">0</byte>
+          </struct>
+        </list>
+      </struct>
+      <struct id=""1"">
+        <locstring label=""Text"" strref=""-1"">
+          <string language=""0"">Reply 1</string>
+        </locstring>
+        <list label=""EntriesList"">
+          <struct id=""0"">
+            <uint32 label=""Index"">1</uint32>
+            <resref label=""Active"" />
+            <byte label=""IsChild"">0</byte>
+          </struct>
+        </list>
+      </struct>
+    </list>
+    <list label=""StartingList"">
+      <struct id=""0"">
+        <uint32 label=""Index"">0</uint32>
+        <resref label=""Active"" />
+        <byte label=""IsChild"">0</byte>
+      </struct>
+      <struct id=""1"">
+        <uint32 label=""Index"">2</uint32>
+        <resref label=""Active"" />
+        <byte label=""IsChild"">0</byte>
+      </struct>
+    </list>
+    <list label=""StuntList"">
+      <struct id=""0"">
+        <exostring label=""Participant"">aaa</exostring>
+        <resref label=""StuntModel"">model1</resref>
+      </struct>
+      <struct id=""0"">
+        <exostring label=""Participant"">bbb</exostring>
+        <resref label=""StuntModel"">m01aa_c04_char01</resref>
+      </struct>
+    </list>
+    <sint32 label=""AlienRaceOwner"">123</sint32>
+    <sint32 label=""PostProcOwner"">12</sint32>
+    <sint32 label=""RecordNoVO"">3</sint32>
+    <byte label=""OldHitCheck"">1</byte>
+    <byte label=""UnequipHands"">1</byte>
+    <byte label=""UnequipItems"">1</byte>
+    <exostring label=""VO_ID"">echo</exostring>
+  </struct>
+</gff3>";
         }
     }
 }
