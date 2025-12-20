@@ -1817,6 +1817,78 @@ namespace HolocronToolset.Tests.Formats
   </struct>
 </gff3>";
         }
+
+        /// <summary>
+        /// Ensure nested entry/reply chains survive ToDict/FromDict roundtrips.
+        /// Matching PyKotor implementation at Libraries/PyKotor/tests/resource/generics/test_dlg.py:1660-1676
+        /// </summary>
+        [Fact]
+        public void TestSerializationRoundtripPreservesDeepChain()
+        {
+            // Build nested chain
+            var entry1 = new DLGEntry { Comment = "E248" };
+            var entry2 = new DLGEntry { Comment = "E221" };
+            var entry3 = new DLGEntry { Comment = "E250" };
+
+            var reply1 = new DLGReply { Text = LocalizedString.FromEnglish("R222") };
+            var reply2 = new DLGReply { Text = LocalizedString.FromEnglish("R223") };
+            var reply3 = new DLGReply { Text = LocalizedString.FromEnglish("R249") };
+            var reply4 = new DLGReply { Text = LocalizedString.FromEnglish("R225") };
+            var reply5 = new DLGReply { Text = LocalizedString.FromEnglish("R224") };
+
+            entry1.Links.Add(new DLGLink(reply1));
+            reply1.Links.Add(new DLGLink(entry2));
+            reply1.Links.Add(new DLGLink(reply2));
+            reply2.Links.Add(new DLGLink(entry3));
+            entry3.Links.Add(new DLGLink(reply4));
+            reply4.Links.Add(new DLGLink(reply5));
+            entry2.Links.Add(new DLGLink(reply3));
+
+            var serialized = entry1.ToDict();
+            var deserialized = DLGEntry.FromDict(serialized);
+
+            var deserializedReply1 = deserialized.Links[0].Node as DLGReply;
+            deserializedReply1.Should().NotBeNull();
+            var deserializedReply2 = deserializedReply1.Links[1].Node as DLGReply;
+            deserializedReply2.Should().NotBeNull();
+            var deserializedEntry3 = deserializedReply2.Links[0].Node as DLGEntry;
+            deserializedEntry3.Should().NotBeNull();
+            var deserializedReply4 = deserializedEntry3.Links[0].Node as DLGReply;
+            deserializedReply4.Should().NotBeNull();
+            var deserializedReply5 = deserializedReply4.Links[0].Node as DLGReply;
+            deserializedReply5.Should().NotBeNull();
+
+            deserializedReply1.Text.GetString(Language.English, Gender.Male).Should().Be("R222");
+            deserializedReply2.Text.GetString(Language.English, Gender.Male).Should().Be("R223");
+            deserializedEntry3.Comment.Should().Be("E250");
+            deserializedReply4.Text.GetString(Language.English, Gender.Male).Should().Be("R225");
+            deserializedReply5.Text.GetString(Language.English, Gender.Male).Should().Be("R224");
+        }
+
+        /// <summary>
+        /// Ensure shared nodes are restored as the same object when deserialized.
+        /// Matching PyKotor implementation at Libraries/PyKotor/tests/resource/generics/test_dlg.py:1679-1695
+        /// </summary>
+        [Fact]
+        public void TestSharedNodeIdentitySurvivesLinkRoundtrip()
+        {
+            var sharedReply = new DLGReply { Text = LocalizedString.FromEnglish("Shared Reply") };
+            var linkA = new DLGLink(sharedReply, 0);
+            var linkB = new DLGLink(sharedReply, 1);
+
+            var nodeMap = new Dictionary<string, object>();
+            var linkADict = linkA.ToDict(nodeMap);
+            var linkBDict = linkB.ToDict(nodeMap);
+
+            var restoreMap = new Dictionary<string, object>();
+            var restoredA = DLGLink.FromDict(linkADict, restoreMap);
+            var restoredB = DLGLink.FromDict(linkBDict, restoreMap);
+
+            // In C#, we use ReferenceEquals to check object identity
+            ReferenceEquals(restoredA.Node, restoredB.Node).Should().BeTrue("Shared nodes should be the same object");
+            restoredA.Node.Text.GetString(Language.English, Gender.Male).Should().Be("Shared Reply");
+            new HashSet<int> { restoredA.ListIndex, restoredB.ListIndex }.Should().BeEquivalentTo(new[] { 0, 1 });
+        }
     }
 }
 

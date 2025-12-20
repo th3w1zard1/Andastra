@@ -1047,7 +1047,107 @@ namespace Andastra.Runtime.Stride.Backends
 
         protected override void OnRemoveBindlessTexture(IntPtr heap, int index)
         {
-            // TODO: STUB - Remove texture from bindless heap
+            // Validate inputs
+            if (heap == IntPtr.Zero)
+            {
+                Console.WriteLine("[StrideDX12] OnRemoveBindlessTexture: Invalid heap handle");
+                return;
+            }
+
+            if (index < 0)
+            {
+                Console.WriteLine($"[StrideDX12] OnRemoveBindlessTexture: Invalid index {index}");
+                return;
+            }
+
+            if (_device == IntPtr.Zero)
+            {
+                Console.WriteLine("[StrideDX12] OnRemoveBindlessTexture: DirectX 12 device not available");
+                return;
+            }
+
+            // Get heap information
+            if (!_bindlessHeaps.TryGetValue(heap, out BindlessHeapInfo heapInfo))
+            {
+                Console.WriteLine($"[StrideDX12] OnRemoveBindlessTexture: Heap not found for handle {heap}");
+                return;
+            }
+
+            // Validate index is within heap capacity
+            if (index >= heapInfo.Capacity)
+            {
+                Console.WriteLine($"[StrideDX12] OnRemoveBindlessTexture: Index {index} exceeds heap capacity {heapInfo.Capacity}");
+                return;
+            }
+
+            // Check if index is already free
+            if (heapInfo.FreeIndices.Contains(index))
+            {
+                Console.WriteLine($"[StrideDX12] OnRemoveBindlessTexture: Index {index} is already free");
+                return;
+            }
+
+            // Check if index is beyond the allocated range
+            if (index >= heapInfo.NextIndex)
+            {
+                Console.WriteLine($"[StrideDX12] OnRemoveBindlessTexture: Index {index} is beyond allocated range (NextIndex: {heapInfo.NextIndex})");
+                return;
+            }
+
+            // Find which texture is at this index by iterating through the tracking dictionary
+            // This is necessary because we only track texture -> index, not index -> texture
+            IntPtr textureToRemove = IntPtr.Zero;
+            foreach (var kvp in _textureToHeapIndex)
+            {
+                if (kvp.Value == index)
+                {
+                    textureToRemove = kvp.Key;
+                    break;
+                }
+            }
+
+            if (textureToRemove == IntPtr.Zero)
+            {
+                Console.WriteLine($"[StrideDX12] OnRemoveBindlessTexture: No texture found at index {index}");
+                return;
+            }
+
+            // Remove texture from tracking dictionary
+            _textureToHeapIndex.Remove(textureToRemove);
+
+            // Mark index as free for reuse
+            heapInfo.FreeIndices.Add(index);
+
+            // If this is the last allocated index, we can decrement NextIndex to allow reuse
+            // This optimization allows the heap to compact when removing the highest-indexed texture
+            if (index == heapInfo.NextIndex - 1)
+            {
+                // Find the new highest allocated index (highest index that's allocated and not free)
+                // NextIndex should be set to the highest allocated index + 1
+                int highestAllocatedIndex = -1;
+                foreach (var kvp in _textureToHeapIndex)
+                {
+                    int allocatedIndex = kvp.Value;
+                    // Only consider indices that are allocated (in dictionary) and not free
+                    if (!heapInfo.FreeIndices.Contains(allocatedIndex))
+                    {
+                        if (allocatedIndex > highestAllocatedIndex)
+                        {
+                            highestAllocatedIndex = allocatedIndex;
+                        }
+                    }
+                }
+                // Set NextIndex to highest allocated index + 1 (or 0 if no textures remain)
+                heapInfo.NextIndex = highestAllocatedIndex + 1;
+            }
+
+            // Note: In DirectX 12, we don't actually "clear" or "remove" descriptors from the heap.
+            // Descriptors remain in the descriptor heap, but we mark the slot as free for reuse.
+            // The descriptor at that index may still be valid in GPU memory until it's overwritten
+            // by a new descriptor when the index is reused. This is the standard DirectX 12 pattern
+            // for bindless resource management - descriptors are persistent until explicitly overwritten.
+
+            Console.WriteLine($"[StrideDX12] OnRemoveBindlessTexture: Removed texture {textureToRemove} from heap {heap} at index {index} (NextIndex: {heapInfo.NextIndex}, FreeIndices: {heapInfo.FreeIndices.Count})");
         }
 
         protected override void OnRemoveBindlessSampler(IntPtr heap, int index)
