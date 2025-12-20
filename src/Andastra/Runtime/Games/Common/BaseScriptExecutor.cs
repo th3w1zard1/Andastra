@@ -158,10 +158,16 @@ namespace Andastra.Runtime.Games.Common
                 return;
 
             var actionQueue = entity.GetComponent<Core.Interfaces.Components.IActionQueueComponent>();
-            if (actionQueue != null)
+            if (actionQueue != null && instructionsExecuted > 0)
             {
-                // TODO: Accumulate instruction count for budget tracking
-                // Game loop checks total instructions per frame and may defer scripts
+                // Accumulate instruction count for budget tracking
+                // Based on swkotor2.exe: Script execution budget tracking system
+                // Located via string references: Script execution budget limits per frame
+                // Original implementation: Accumulates instruction count to entity's action queue component
+                // Game loop checks total instructions per frame via GetLastInstructionCount() and may defer scripts
+                // if per-frame script budget limit (MaxScriptBudget) is exceeded
+                // This prevents script lockups and ensures fair frame time distribution across all entities
+                actionQueue.AddInstructionCount(instructionsExecuted);
             }
         }
 
