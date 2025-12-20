@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using HolocronToolset.Data;
 using HolocronToolset.Widgets.Edit;
+using HolocronToolset.Common;
 using Andastra.Parsing.Common;
 using Andastra.Utility;
 using SettingsBase = HolocronToolset.Data.Settings;
@@ -18,6 +20,8 @@ namespace HolocronToolset.Widgets.Settings
         protected Dictionary<string, SetBindWidget> _binds;
         protected Dictionary<string, ColorEdit> _colours;
         protected SettingsBase _settings;
+        protected NoScrollEventFilter _noScrollEventFilter;
+        protected HoverEventFilter _hoverEventFilter;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/base.py:33-44
         // Original: def __init__(self, parent: QWidget):
@@ -25,14 +29,73 @@ namespace HolocronToolset.Widgets.Settings
         {
             _binds = new Dictionary<string, SetBindWidget>();
             _colours = new Dictionary<string, ColorEdit>();
+            
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/base.py:40-43
+            // Original: self.noScrollEventFilter: NoScrollEventFilter = NoScrollEventFilter(self)
+            // Original: self.hoverEventFilter: HoverEventFilter = HoverEventFilter(self)
+            // Original: self.installEventFilters(self, self.noScrollEventFilter)
+            // Initialize event filters (will be set up when widget is loaded)
+            _noScrollEventFilter = new NoScrollEventFilter();
+            _hoverEventFilter = new HoverEventFilter();
+        }
+
+        // Override OnLoaded to automatically install event filters when widget is loaded
+        // This ensures the widget tree is fully constructed before installing filters
+        // Matching PyKotor: filters are installed in __init__, but in Avalonia we need to wait for the tree to be ready
+        protected override void OnLoaded(RoutedEventArgs e)
+        {
+            base.OnLoaded(e);
+            
+            // Install event filters automatically when widget is loaded
+            // Matching PyKotor: self.installEventFilters(self, self.noScrollEventFilter)
+            InstallEventFilters(this);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/base.py:46-64
         // Original: def installEventFilters(self, parent_widget, event_filter, include_types):
-        protected void InstallEventFilters(Control parentWidget, Control includeTypes = null)
+        /// <summary>
+        /// Recursively installs event filters on all child widgets matching the specified types.
+        /// This method sets up NoScrollEventFilter and optionally HoverEventFilter on child controls
+        /// to prevent scrollbar interaction with controls like ComboBox, Slider, etc.
+        /// </summary>
+        /// <param name="parentWidget">The parent widget to start installation from (typically 'this')</param>
+        /// <param name="includeTypes">Optional array of control types to include. If null, uses default types: ComboBox, Slider, NumericUpDown, CheckBox</param>
+        protected void InstallEventFilters(Control parentWidget, Type[] includeTypes = null)
         {
-            // TODO: Install event filters when event filter system is available
-            // This should recursively install NoScrollEventFilter and HoverEventFilter on child widgets
+            if (parentWidget == null)
+            {
+                return;
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/base.py:46-64
+            // Original: def installEventFilters(self, parent_widget, event_filter, include_types):
+            // Original: if include_types is None:
+            // Original:     include_types = [QComboBox, QSlider, QSpinBox, QGroupBox, QAbstractSpinBox, QDoubleSpinBox]
+            // Set default include types if not provided (matching PyKotor default types)
+            if (includeTypes == null)
+            {
+                includeTypes = new[] 
+                { 
+                    typeof(ComboBox), 
+                    typeof(Slider), 
+                    typeof(NumericUpDown), 
+                    typeof(CheckBox),
+                    // Additional types from PyKotor: QGroupBox, QAbstractSpinBox, QDoubleSpinBox
+                    // Note: Avalonia equivalents may differ, but these are the core types
+                };
+            }
+
+            // Install NoScrollEventFilter (primary filter for preventing scrollbar interaction)
+            // Matching PyKotor: self.installEventFilters(self, self.noScrollEventFilter)
+            // The NoScrollEventFilter.SetupFilter method handles recursive installation
+            if (_noScrollEventFilter != null)
+            {
+                _noScrollEventFilter.SetupFilter(parentWidget, includeTypes);
+            }
+
+            // Note: HoverEventFilter installation is commented out in PyKotor (line 44)
+            // Original: #self.installEventFilters(self, self.hoverEventFilter, include_types=[QWidget])
+            // So we don't install it here, but the instance is available if needed
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/base.py:66-70
