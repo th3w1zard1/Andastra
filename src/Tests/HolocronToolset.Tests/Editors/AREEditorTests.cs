@@ -1981,14 +1981,76 @@ namespace HolocronToolset.Tests.Editors
             }
         }
 
-        // TODO: STUB - Implement test_are_editor_manipulate_grass_texture (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:703-723)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:703-723
         // Original: def test_are_editor_manipulate_grass_texture(qtbot: QtBot, installation: HTInstallation, test_files_dir: Path): Test manipulating grass texture field.
         [Fact]
         public void TestAreEditorManipulateGrassTexture()
         {
-            // TODO: STUB - Implement grass texture field manipulation test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:703-723
-            throw new NotImplementedException("TestAreEditorManipulateGrassTexture: Grass texture manipulation test not yet implemented");
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            // Try to find an ARE file
+            string areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            if (!System.IO.File.Exists(areFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            }
+
+            if (!System.IO.File.Exists(areFile))
+            {
+                // Skip if no ARE files available for testing (matching Python pytest.skip behavior)
+                return;
+            }
+
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            // Matching Python: editor = AREEditor(None, installation)
+            var editor = new AREEditor(null, installation);
+
+            // Matching Python: original_data = are_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(areFile);
+
+            // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, original_data)
+            editor.Load(areFile, "tat001", ResourceType.ARE, originalData);
+
+            // Matching Python: test_textures = ["grass01", "grass_texture", "terrain_grass", ""]
+            string[] testTextures = { "grass01", "grass_texture", "terrain_grass", "" };
+
+            // Matching Python: for texture in test_textures:
+            foreach (string texture in testTextures)
+            {
+                // Matching Python: editor.ui.grassTextureEdit.setText(texture)
+                if (editor.GrassTextureEdit != null)
+                {
+                    editor.GrassTextureEdit.Text = texture;
+                }
+
+                // Matching Python: data, _ = editor.build()
+                var (data, _) = editor.Build();
+
+                // Matching Python: modified_are = read_are(data)
+                var modifiedAre = AREHelpers.ReadAre(data);
+
+                // Matching Python: assert str(modified_are.grass_texture) == texture
+                modifiedAre.GrassTexture.ToString().Should().Be(texture);
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:725-757

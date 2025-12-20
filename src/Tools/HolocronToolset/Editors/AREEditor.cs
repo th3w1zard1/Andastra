@@ -540,12 +540,16 @@ namespace HolocronToolset.Editors
         public ColorEdit GrassDiffuseEdit => _grassDiffuseEdit;
         public ColorEdit GrassAmbientEdit => _grassAmbientEdit;
         public ColorEdit GrassEmissiveEdit => _grassEmissiveEdit;
+        public TextBox GrassTextureEdit => _grassTextureEdit;
         public NumericUpDown DirtFormula1Spin => _dirtFormula1Spin;
         public NumericUpDown DirtFormula2Spin => _dirtFormula2Spin;
         public NumericUpDown DirtFormula3Spin => _dirtFormula3Spin;
         public NumericUpDown DirtSize1Spin => _dirtSize1Spin;
         public NumericUpDown DirtSize2Spin => _dirtSize2Spin;
         public NumericUpDown DirtSize3Spin => _dirtSize3Spin;
+        public ColorEdit DirtColor1Edit => _dirtColor1Edit;
+        public ColorEdit DirtColor2Edit => _dirtColor2Edit;
+        public ColorEdit DirtColor3Edit => _dirtColor3Edit;
         public CheckBox ShadowsCheck => _shadowsCheck;
         public NumericUpDown ShadowsSpin => _shadowsSpin;
         public TextBox CommentsEdit => _commentsEdit;
@@ -856,19 +860,19 @@ namespace HolocronToolset.Editors
                 _shadowsSpin.Value = are.ShadowOpacity;
             }
             // Matching Python: self.ui.dirtColor1Edit.set_color(are.dirty_argb_1) (line 227)
-            // Note: ARE class doesn't have DirtyArgb properties - these may need to be extracted from GFF
-            // For now, set to default color
             if (_dirtColor1Edit != null)
             {
-                _dirtColor1Edit.SetColor(new Color(0, 0, 0));
+                _dirtColor1Edit.SetColor(are.DirtyArgb1);
             }
+            // Matching Python: self.ui.dirtColor2Edit.set_color(are.dirty_argb_2) (line 228)
             if (_dirtColor2Edit != null)
             {
-                _dirtColor2Edit.SetColor(new Color(0, 0, 0));
+                _dirtColor2Edit.SetColor(are.DirtyArgb2);
             }
+            // Matching Python: self.ui.dirtColor3Edit.set_color(are.dirty_argb_3) (line 229)
             if (_dirtColor3Edit != null)
             {
-                _dirtColor3Edit.SetColor(new Color(0, 0, 0));
+                _dirtColor3Edit.SetColor(are.DirtyArgb3);
             }
             // Matching Python: self.ui.dirtFormula1Spin.setValue(are.dirty_formula_1) (line 230)
             if (_dirtFormula1Spin != null)
@@ -1173,8 +1177,20 @@ namespace HolocronToolset.Editors
                 are.GrassProbUR = (float)_grassProbURSpin.Value.Value;
             }
             // Original: are.dirty_argb_1 = self.ui.dirtColor1Edit.color() (line 337)
-            // Note: ARE class doesn't have DirtyArgb properties - these may need to be written to GFF directly
-            // For now, we'll skip setting these as the ARE class doesn't support them
+            if (_dirtColor1Edit != null)
+            {
+                are.DirtyArgb1 = _dirtColor1Edit.GetColor();
+            }
+            // Original: are.dirty_argb_2 = self.ui.dirtColor2Edit.color() (line 338)
+            if (_dirtColor2Edit != null)
+            {
+                are.DirtyArgb2 = _dirtColor2Edit.GetColor();
+            }
+            // Original: are.dirty_argb_3 = self.ui.dirtColor3Edit.color() (line 339)
+            if (_dirtColor3Edit != null)
+            {
+                are.DirtyArgb3 = _dirtColor3Edit.GetColor();
+            }
             // Original: are.dirty_formula_1 = self.ui.dirtFormula1Spin.value() (line 340)
             if (_dirtFormula1Spin != null && _dirtFormula1Spin.Value.HasValue)
             {
@@ -2020,16 +2036,4 @@ namespace HolocronToolset.Editors
                         var msgBox = MessageBoxManager.GetMessageBoxStandard(
                             "Resource Not Found",
                             $"Script '{scriptName}' not found in installation.\n\nSearched for:\n- {scriptName}.nss\n- {scriptName}.ncs",
-                            ButtonEnum.Ok,
-                            MsBox.Avalonia.Enums.Icon.Info);
-                        msgBox.ShowAsync();
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Console.WriteLine($"Error viewing script location '{scriptName}': {ex.Message}");
-            }
-        }
-    }
-}
+                        
