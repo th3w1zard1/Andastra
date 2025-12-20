@@ -27,20 +27,43 @@ namespace HolocronToolset.Dialogs
         public Panel HtmlContainer => _htmlContainer;
 
         // Public parameterless constructor for XAML
-        public EditorHelpDialog() : this(null, "")
+        public EditorHelpDialog() : this(null, new string[0])
         {
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/editor_help.py:49-82
         // Original: def __init__(self, parent, wiki_filename):
         public EditorHelpDialog(Window parent, string wikiFilename)
+            : this(parent, new[] { wikiFilename })
+        {
+        }
+
+        // Constructor accepting multiple wiki files
+        public EditorHelpDialog(Window parent, string[] wikiFilenames)
         {
             InitializeComponent();
-            Title = $"Help - {wikiFilename}";
+            
+            // Set title based on files
+            if (wikiFilenames != null && wikiFilenames.Length > 0)
+            {
+                if (wikiFilenames.Length == 1)
+                {
+                    Title = $"Help - {wikiFilenames[0]}";
+                }
+                else
+                {
+                    Title = $"Help - {wikiFilenames.Length} Documents";
+                }
+            }
+            else
+            {
+                Title = "Help";
+            }
+            
             Width = 900;
             Height = 700;
             SetupUI();
-            LoadWikiFile(wikiFilename);
+            LoadWikiFiles(wikiFilenames);
         }
 
         private void InitializeComponent()
@@ -158,59 +181,73 @@ namespace HolocronToolset.Dialogs
         // Original: def load_wiki_file(self, wiki_filename: str):
         private void LoadWikiFile(string wikiFilename)
         {
-            if (string.IsNullOrEmpty(wikiFilename))
+            LoadWikiFiles(new[] { wikiFilename });
+        }
+
+        // Load multiple wiki files and combine them
+        private void LoadWikiFiles(string[] wikiFilenames)
+        {
+            if (wikiFilenames == null || wikiFilenames.Length == 0)
             {
                 return;
             }
 
             string wikiPath = GetWikiPath();
-            string filePath = Path.Combine(wikiPath, wikiFilename);
+            var htmlBodies = new List<string>();
 
-            if (!File.Exists(filePath))
+            foreach (string wikiFilename in wikiFilenames)
             {
-                string errorHtml = $@"
-<html>
-<body>
-<h1>Help File Not Found</h1>
+                if (string.IsNullOrEmpty(wikiFilename))
+                {
+                    continue;
+                }
+
+                string filePath = Path.Combine(wikiPath, wikiFilename);
+
+                if (!File.Exists(filePath))
+                {
+                    // Add error message for this file
+                    htmlBodies.Add($@"
+<div>
+<h2>Help File Not Found</h2>
 <p>Could not find help file: <code>{wikiFilename}</code></p>
 <p>Expected location: <code>{filePath}</code></p>
-<p>Wiki path: <code>{wikiPath}</code></p>
-</body>
-</html>";
-                if (_htmlContainer != null)
-                {
-                    RenderHtml(errorHtml);
+</div>");
+                    continue;
                 }
-                return;
-            }
 
-            try
-            {
-                string text = File.ReadAllText(filePath, Encoding.UTF8);
-                // Convert markdown to HTML using Markdig
-                var pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
-                string htmlBody = Markdown.ToHtml(text, pipeline);
-                string html = WrapHtmlWithStyles(htmlBody);
-
-                if (_htmlContainer != null)
+                try
                 {
-                    RenderHtml(html);
+                    string text = File.ReadAllText(filePath, Encoding.UTF8);
+                    // Convert markdown to HTML using Markdig
+                    var pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
+                    string htmlBody = Markdown.ToHtml(text, pipeline);
+                    
+                    // Add a separator between documents if multiple files
+                    if (htmlBodies.Count > 0)
+                    {
+                        htmlBodies.Add("<hr style=\"margin: 48px 0;\" />");
+                    }
+                    
+                    htmlBodies.Add(htmlBody);
                 }
-            }
-            catch (Exception ex)
-            {
-                string errorHtml = $@"
-<html>
-<body>
-<h1>Error Loading Help File</h1>
+                catch (Exception ex)
+                {
+                    // Add error message for this file
+                    htmlBodies.Add($@"
+<div>
+<h2>Error Loading Help File</h2>
 <p>Could not load help file: <code>{wikiFilename}</code></p>
 <p>Error: {ex.Message}</p>
-</body>
-</html>";
-                if (_htmlContainer != null)
-                {
-                    RenderHtml(errorHtml);
+</div>");
                 }
+            }
+
+            if (htmlBodies.Count > 0 && _htmlContainer != null)
+            {
+                string combinedHtmlBody = string.Join("\n", htmlBodies);
+                string html = WrapHtmlWithStyles(combinedHtmlBody);
+                RenderHtml(html);
             }
         }
 
@@ -944,7 +981,7 @@ namespace HolocronToolset.Dialogs
                     string wikiFilename = Path.GetFileName(filePath);
                     
                     // Open in new EditorHelpDialog (matching PyKotor behavior)
-                    var helpDialog = new EditorHelpDialog(this, wikiFilename);
+                    var helpDialog = new EditorHelpDialog(this, new[] { wikiFilename });
                     helpDialog.Show();
                 }
                 else

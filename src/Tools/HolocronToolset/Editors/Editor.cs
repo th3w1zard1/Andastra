@@ -224,16 +224,23 @@ namespace HolocronToolset.Editors
         // Original: def _add_help_action(self, wiki_filename: str | None = None):
         public void AddHelpAction(string wikiFilename = null)
         {
-            // Auto-detect wiki file if not provided
+            string[] wikiFilenames = null;
+            
+            // Auto-detect wiki files if not provided
             if (string.IsNullOrEmpty(wikiFilename))
             {
                 string editorClassName = GetType().Name;
-                wikiFilename = EditorWikiMapping.GetWikiFile(editorClassName);
-                if (string.IsNullOrEmpty(wikiFilename))
+                wikiFilenames = EditorWikiMapping.GetWikiFiles(editorClassName);
+                if (wikiFilenames == null || wikiFilenames.Length == 0)
                 {
-                    // No wiki file for this editor, skip adding help
+                    // No wiki files for this editor, skip adding help
                     return;
                 }
+            }
+            else
+            {
+                // Single file provided, convert to array for consistency
+                wikiFilenames = new[] { wikiFilename };
             }
 
             // Find or create Help menu item
@@ -252,7 +259,7 @@ namespace HolocronToolset.Editors
                 {
                     Header = "Documentation"
                 };
-                docAction.Click += (sender, e) => ShowHelpDialog(wikiFilename);
+                docAction.Click += (sender, e) => ShowHelpDialog(wikiFilenames);
                 
                 // Add F1 shortcut
                 var shortcut = new KeyGesture(Key.F1);
@@ -271,8 +278,19 @@ namespace HolocronToolset.Editors
                 return;
             }
 
-            // Create non-blocking dialog
-            var dialog = new Dialogs.EditorHelpDialog(this, wikiFilename);
+            ShowHelpDialog(new[] { wikiFilename });
+        }
+
+        // Overload to support multiple wiki files
+        public void ShowHelpDialog(string[] wikiFilenames)
+        {
+            if (wikiFilenames == null || wikiFilenames.Length == 0)
+            {
+                return;
+            }
+
+            // Create non-blocking dialog with multiple files
+            var dialog = new Dialogs.EditorHelpDialog(this, wikiFilenames);
             dialog.Show(); // Non-blocking show
         }
 
