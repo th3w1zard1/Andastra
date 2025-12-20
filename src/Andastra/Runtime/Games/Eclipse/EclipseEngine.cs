@@ -161,9 +161,7 @@ namespace Andastra.Runtime.Engines.Eclipse
                 string daOriginsExeUpper = System.IO.Path.Combine(installationPath, "DAORIGINS.EXE");
                 if (System.IO.File.Exists(daOriginsExe) || System.IO.File.Exists(daOriginsExeUpper))
                 {
-                    // GameType enum doesn't have Dragon Age games yet, return Unknown for now
-                    // TODO: Extend GameType enum to support Eclipse Engine games
-                    return GameType.Unknown;
+                    return GameType.DA_ORIGINS;
                 }
             }
             else if (game.IsDragonAge2())
@@ -173,9 +171,7 @@ namespace Andastra.Runtime.Engines.Eclipse
                 string da2ExeUpper = System.IO.Path.Combine(installationPath, "DRAGONAGE2.EXE");
                 if (System.IO.File.Exists(da2Exe) || System.IO.File.Exists(da2ExeUpper))
                 {
-                    // GameType enum doesn't have Dragon Age games yet, return Unknown for now
-                    // TODO: Extend GameType enum to support Eclipse Engine games
-                    return GameType.Unknown;
+                    return GameType.DA2;
                 }
             }
 
@@ -184,7 +180,24 @@ namespace Andastra.Runtime.Engines.Eclipse
             if (System.IO.Directory.Exists(packagesPath))
             {
                 // Eclipse Engine installation detected via directory structure
-                return GameType.Unknown; // GameType enum doesn't support Eclipse games yet
+                // Try to determine which Eclipse game based on additional file checks
+                // Dragon Age: Origins typically has "data" subdirectory with RIM files
+                // Dragon Age 2 may have different structure or additional files
+                string dataPath = System.IO.Path.Combine(installationPath, "data");
+                if (System.IO.Directory.Exists(dataPath))
+                {
+                    // Check for Dragon Age: Origins specific files
+                    string globalRim = System.IO.Path.Combine(dataPath, "global.rim");
+                    if (System.IO.File.Exists(globalRim))
+                    {
+                        // Likely Dragon Age: Origins (has global.rim)
+                        return GameType.DA_ORIGINS;
+                    }
+                }
+                
+                // If we can't determine, default to DA_ORIGINS for packages directory structure
+                // (most Eclipse Engine installations are DA:O)
+                return GameType.DA_ORIGINS;
             }
 
             return GameType.Unknown;

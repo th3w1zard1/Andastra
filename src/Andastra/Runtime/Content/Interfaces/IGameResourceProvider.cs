@@ -89,9 +89,11 @@ namespace Andastra.Runtime.Content.Interfaces
         // Odyssey Engine games
         K1,
         K2,
-        //  games
-        BaldursGate
-
+        // Aurora Engine games
+        BaldursGate,
+        // Eclipse Engine games
+        DA_ORIGINS,
+        DA2
     }
 }
 
