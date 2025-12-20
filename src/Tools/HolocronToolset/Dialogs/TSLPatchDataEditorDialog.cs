@@ -14,9 +14,14 @@ using HolocronToolset.Data;
 using HolocronToolset.Utils;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
+using Andastra.Parsing.Mods;
 using Andastra.Parsing.Mods.GFF;
+using Andastra.Parsing.Mods.TLK;
+using Andastra.Parsing.Mods.NCS;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Formats.TLK;
+using Andastra.Parsing.Resource.Formats.TLK;
 
 namespace HolocronToolset.Dialogs
 {
@@ -1596,10 +1601,297 @@ namespace HolocronToolset.Dialogs
             }
         }
 
-        private void GenerateTslpatchdata()
+        private async void GenerateTslpatchdata()
         {
-            // TODO: Generate TSLPatchData files
-            System.Console.WriteLine("Generate TSLPatchData not yet implemented");
+            try
+            {
+                // Validate tslpatchdata path
+                if (string.IsNullOrEmpty(_tslpatchdataPath))
+                {
+                    var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                        "Error",
+                        "TSLPatchData path is not set. Please specify a path first.",
+                        ButtonEnum.Ok,
+                        Icon.Error);
+                    await errorBox.ShowAsync();
+                    return;
+                }
+
+                // Create tslpatchdata directory if it doesn't exist
+                if (!Directory.Exists(_tslpatchdataPath))
+                {
+                    Directory.CreateDirectory(_tslpatchdataPath);
+                }
+
+                // Collect all files to install
+                var installFiles = new List<InstallFile>();
+                var allFilePaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                // Copy scripts to tslpatchdata folder and add to install list
+                foreach (var scriptEntry in _scriptPaths)
+                {
+                    string scriptName = scriptEntry.Key;
+                    string sourcePath = scriptEntry.Value;
+                    
+                    if (File.Exists(sourcePath))
+                    {
+                        string destPath = Path.Combine(_tslpatchdataPath, scriptName);
+                        File.Copy(sourcePath, destPath, overwrite: true);
+                        allFilePaths.Add(scriptName);
+                        
+                        // Scripts go to Override folder by default
+                        string destination = _installToOverrideCheck?.IsChecked == true ? "Override" : ".";
+                        installFiles.Add(new InstallFile(scriptName, replaceExisting: false, destination: destination));
+                    }
+                }
+
+                // Collect GFF files that need to be installed
+                foreach (var modGff in _gffModifications)
+                {
+                    if (!string.IsNullOrEmpty(modGff.SourceFile))
+                    {
+                        // Try to find the GFF file in tslpatchdata or installation
+                        string gffSourcePath = null;
+                        string tslpatchdataFile = Path.Combine(_tslpatchdataPath, modGff.SourceFile);
+                        
+                        if (File.Exists(tslpatchdataFile))
+                        {
+                            gffSourcePath = tslpatchdataFile;
+                        }
+                        else if (_installation != null)
+                        {
+                            try
+                            {
+                                var resource = _installation.Resource(modGff.SourceFile, ResourceType.GFF);
+                                if (resource != null)
+                                {
+                                    gffSourcePath = resource.Filepath;
+                                }
+                            }
+                            catch
+                            {
+                                // Resource not found
+                            }
+                        }
+
+                        // If we found the file and it's not already in tslpatchdata, copy it
+                        if (!string.IsNullOrEmpty(gffSourcePath) && File.Exists(gffSourcePath))
+                        {
+                            string destPath = Path.Combine(_tslpatchdataPath, modGff.SourceFile);
+                            if (!File.Exists(destPath) || !gffSourcePath.Equals(destPath, StringComparison.OrdinalIgnoreCase))
+                            {
+                                File.Copy(gffSourcePath, destPath, overwrite: true);
+                            }
+                            allFilePaths.Add(modGff.SourceFile);
+                            
+                            // GFF files go to Override folder by default
+                            string destination = _installToOverrideCheck?.IsChecked == true ? "Override" : ".";
+                            installFiles.Add(new InstallFile(modGff.SourceFile, replaceExisting: false, destination: destination));
+                        }
+                    }
+                }
+
+                // Build ModificationsByType from UI state
+                var modificationsByType = new ModificationsByType();
+
+                // Add GFF modifications
+                modificationsByType.Gff = _gffModifications.ToList();
+
+                // Build TLK modifications from _tlkStrings and generate append.tlk file
+                if (_tlkStrings.Count > 0)
+                {
+                    var tlkModifiers = new List<ModifyTLK>();
+                    var appendEntries = new List<TLKStringEntry>();
+                    
+                    foreach (var tlkEntry in _tlkStrings.Values)
+                    {
+                        var modifyTlk = new ModifyTLK(tlkEntry.TokenId, tlkEntry.IsReplacement)
+                        {
+                            Text = tlkEntry.Text ?? "",
+                            Sound = tlkEntry.Sound ?? "",
+                            ModIndex = tlkEntry.IsReplacement ? tlkEntry.ModIndex : tlkEntry.TokenId
+                        };
+                        tlkModifiers.Add(modifyTlk);
+                        
+                        // Collect non-replacement entries for append.tlk
+                        if (!tlkEntry.IsReplacement)
+                        {
+                            appendEntries.Add(tlkEntry);
+                        }
+                    }
+
+                    // Generate append.tlk file for non-replacement entries
+                    if (appendEntries.Count > 0)
+                    {
+                        var appendTlk = new Formats.TLK.TLK();
+                        appendTlk.Resize(appendEntries.Count);
+                        
+                        // Sort by token ID for consistent ordering
+                        var sortedAppends = appendEntries.OrderBy(e => e.TokenId).ToList();
+                        
+                        for (int i = 0; i < sortedAppends.Count; i++)
+                        {
+                            var entry = sortedAppends[i];
+                            string text = entry.Text ?? "";
+                            string sound = entry.Sound ?? "";
+                            appendTlk.Replace(i, text, sound);
+                        }
+                        
+                        // Write append.tlk to tslpatchdata folder
+                        string appendPath = Path.Combine(_tslpatchdataPath, "append.tlk");
+                        var writer = new TLKBinaryWriter(appendTlk);
+                        byte[] tlkData = writer.Write();
+                        File.WriteAllBytes(appendPath, tlkData);
+                        
+                        // Add append.tlk to install list
+                        string destination = _installToOverrideCheck?.IsChecked == true ? "Override" : ".";
+                        installFiles.Add(new InstallFile("append.tlk", replaceExisting: false, destination: destination));
+                        allFilePaths.Add("append.tlk");
+                    }
+
+                    var modTlk = new ModificationsTLK(
+                        filename: ModificationsTLK.DEFAULT_SOURCEFILE,
+                        replace: false,
+                        modifiers: tlkModifiers);
+                    modificationsByType.Tlk.Add(modTlk);
+                }
+
+                // Build NCS modifications from scripts
+                foreach (var scriptEntry in _scriptPaths)
+                {
+                    string scriptName = scriptEntry.Key;
+                    // NCS files don't need modifications by default - they're just installed
+                    // But we can create an empty ModificationsNCS if needed for the INI
+                    var modNcs = new ModificationsNCS(scriptName, replace: false, modifiers: new List<ModifyNCS>());
+                    modificationsByType.Ncs.Add(modNcs);
+                }
+
+                // Note: 2DA modifications would come from actual 2DA files being modified
+                // The _twodaMemoryTokens are just memory tracking tokens, not actual 2DA file modifications
+                // If there are actual 2DA files to modify, they would be added here
+                // For now, we'll leave Twoda empty unless there are actual 2DA modifications
+
+                // Add install files
+                modificationsByType.Install = installFiles;
+
+                // Generate changes.ini using TSLPatcherINISerializer
+                var serializer = new TSLPatcherINISerializer();
+                string iniContent = serializer.Serialize(
+                    modificationsByType,
+                    includeHeader: true,
+                    includeSettings: true,
+                    verbose: false);
+
+                // Add custom settings section with mod name and author
+                var settingsLines = new List<string>();
+                settingsLines.Add("[Settings]");
+                
+                string modName = _modNameEdit?.Text?.Trim();
+                if (!string.IsNullOrEmpty(modName))
+                {
+                    settingsLines.Add($"modname={modName}");
+                }
+                
+                string modAuthor = _modAuthorEdit?.Text?.Trim();
+                if (!string.IsNullOrEmpty(modAuthor))
+                {
+                    settingsLines.Add($"author={modAuthor}");
+                }
+                
+                string modDescription = _modDescriptionEdit?.Text?.Trim();
+                if (!string.IsNullOrEmpty(modDescription))
+                {
+                    // Description can be multi-line, escape it properly
+                    string escapedDescription = modDescription.Replace("\r\n", "\\n").Replace("\n", "\\n").Replace("\r", "\\r");
+                    settingsLines.Add($"description={escapedDescription}");
+                }
+                
+                // Add installation options
+                if (_backupFilesCheck?.IsChecked == true)
+                {
+                    settingsLines.Add("backup=1");
+                }
+                
+                if (_confirmOverwritesCheck?.IsChecked == true)
+                {
+                    settingsLines.Add("confirmoverwrite=1");
+                }
+                
+                settingsLines.Add("LogLevel=3");
+                settingsLines.Add("");
+
+                // Replace the default [Settings] section with our custom one
+                // Find the [Settings] section in the generated INI and replace it
+                var iniLines = iniContent.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None).ToList();
+                int settingsIndex = iniLines.FindIndex(line => line.Trim().Equals("[Settings]", StringComparison.OrdinalIgnoreCase));
+                
+                if (settingsIndex >= 0)
+                {
+                    // Remove old settings section (until next section or end)
+                    int removeCount = 1; // Remove [Settings] line
+                    for (int i = settingsIndex + 1; i < iniLines.Count; i++)
+                    {
+                        string line = iniLines[i].Trim();
+                        if (string.IsNullOrEmpty(line) || line.StartsWith(";") || line.StartsWith("#"))
+                        {
+                            removeCount++;
+                            if (string.IsNullOrEmpty(line))
+                            {
+                                break; // Stop at first blank line after settings
+                            }
+                        }
+                        else if (line.StartsWith("["))
+                        {
+                            break; // Stop at next section
+                        }
+                        else
+                        {
+                            removeCount++;
+                        }
+                    }
+                    iniLines.RemoveRange(settingsIndex, removeCount);
+                    iniLines.InsertRange(settingsIndex, settingsLines);
+                }
+                else
+                {
+                    // If no [Settings] section found, insert after header
+                    int insertIndex = iniLines.FindIndex(line => line.Trim().StartsWith("["));
+                    if (insertIndex < 0)
+                    {
+                        insertIndex = iniLines.Count;
+                    }
+                    iniLines.InsertRange(insertIndex, settingsLines);
+                }
+
+                iniContent = string.Join("\n", iniLines);
+
+                // Write changes.ini to tslpatchdata folder
+                string iniPath = Path.Combine(_tslpatchdataPath, "changes.ini");
+                File.WriteAllText(iniPath, iniContent, Encoding.UTF8);
+
+                // Show success message
+                var successBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Success",
+                    $"TSLPatchData generated successfully at:\n{_tslpatchdataPath}\n\n" +
+                    $"Files included:\n" +
+                    $"- {installFiles.Count} file(s) to install\n" +
+                    $"- {_gffModifications.Count} GFF modification(s)\n" +
+                    $"- {_tlkStrings.Count} TLK string(s)\n" +
+                    $"- {_scriptPaths.Count} script(s)\n\n" +
+                    $"You can now distribute this folder with HoloPatcher/TSLPatcher.",
+                    ButtonEnum.Ok,
+                    Icon.Success);
+                await successBox.ShowAsync();
+            }
+            catch (Exception ex)
+            {
+                var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Error",
+                    $"Failed to generate TSLPatchData:\n{ex.Message}\n\n{ex.StackTrace}",
+                    ButtonEnum.Ok,
+                    Icon.Error);
+                await errorBox.ShowAsync();
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:566-571
