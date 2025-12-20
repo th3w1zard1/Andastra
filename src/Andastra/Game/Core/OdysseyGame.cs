@@ -1084,10 +1084,62 @@ namespace Andastra.Runtime.Game.Core
             Console.WriteLine("[Odyssey] Game rendering initialized (3D rendering enabled with abstraction layer)");
         }
 
+        /// <summary>
+        /// Creates a ground plane for fallback rendering when area geometry is not available.
+        /// Uses the 3D rendering abstraction layer to create vertex and index buffers.
+        /// </summary>
+        /// <remarks>
+        /// Ground Plane Creation:
+        /// - Based on swkotor2.exe: Fallback rendering when area rooms are not loaded
+        /// - Original implementation: Simple flat plane rendered when area geometry unavailable
+        /// - Located via rendering fallback path: When Area.Render() is not available, ground plane provides visual reference
+        /// - Ground plane: Large flat quad (100x100 units) positioned at Y=0 (ground level)
+        /// - Color: Neutral brown/gray (139, 69, 19) matching typical ground appearance
+        /// - Uses VertexPositionColor format matching entity rendering pattern
+        /// - Created using graphics abstraction layer (IGraphicsDevice.CreateVertexBuffer/CreateIndexBuffer)
+        /// - Based on swkotor2.exe: FUN_00461c20/FUN_00461c00 fallback rendering when area not loaded
+        /// </remarks>
         private void CreateGroundPlane()
         {
-            // TODO: Ground plane creation needs 3D rendering abstraction
-            // TODO: STUB - This will be implemented once 3D rendering abstraction is complete
+            // Ground plane dimensions: 100x100 units (large enough for typical area sizes)
+            const float planeSize = 50f; // Half-size (total size is 100x100)
+            const float planeY = 0f; // Ground level
+
+            // Ground plane color: Neutral brown (RGB: 139, 69, 19) matching typical ground appearance
+            // This provides a visual reference when area geometry is not available
+            Color groundColor = new Color(139, 69, 19, 255); // Brown color
+
+            // Create ground plane vertices (4 corners of a quad)
+            // Vertices are positioned in XZ plane (Y is constant at ground level)
+            // Order: bottom-left, bottom-right, top-right, top-left (when viewed from above)
+            var groundVertices = new VertexPositionColor[]
+            {
+                // Bottom-left corner
+                new VertexPositionColor(new System.Numerics.Vector3(-planeSize, planeY, -planeSize), groundColor),
+                // Bottom-right corner
+                new VertexPositionColor(new System.Numerics.Vector3(planeSize, planeY, -planeSize), groundColor),
+                // Top-right corner
+                new VertexPositionColor(new System.Numerics.Vector3(planeSize, planeY, planeSize), groundColor),
+                // Top-left corner
+                new VertexPositionColor(new System.Numerics.Vector3(-planeSize, planeY, planeSize), groundColor)
+            };
+
+            // Create ground plane indices (2 triangles forming a quad)
+            // Triangle 1: bottom-left, bottom-right, top-right
+            // Triangle 2: bottom-left, top-right, top-left
+            // Winding order: Counter-clockwise (standard for front-facing geometry)
+            short[] groundIndices = new short[]
+            {
+                0, 1, 2, // First triangle: bottom-left -> bottom-right -> top-right
+                0, 2, 3  // Second triangle: bottom-left -> top-right -> top-left
+            };
+
+            // Create vertex and index buffers using 3D rendering abstraction layer
+            // This matches the pattern used for entity rendering (CreateVertexBuffer, CreateIndexBuffer)
+            _groundVertexBuffer = _graphicsDevice.CreateVertexBuffer(groundVertices);
+            _groundIndexBuffer = _graphicsDevice.CreateIndexBuffer(groundIndices, true);
+
+            Console.WriteLine("[Odyssey] Ground plane created (100x100 units, brown color)");
         }
 
         private void UpdateCamera()

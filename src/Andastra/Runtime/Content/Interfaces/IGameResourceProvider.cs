@@ -90,6 +90,9 @@ namespace Andastra.Runtime.Content.Interfaces
         K1,
         K2,
         // Aurora Engine games
+        NWN,
+        NWN2,
+        NWNEE,
         BaldursGate,
         // Eclipse Engine games
         DA_ORIGINS,

@@ -178,32 +178,35 @@ namespace Andastra.Runtime.Engines.Aurora
             }
 
             // Check for Neverwinter Nights executable
+            // Based on nwmain.exe: SDL_main @ 0x140046340 calls RegisterCrashHandler("nwmain") to identify game
+            // Game detection: Executable name "nwmain.exe" is the primary identifier for Neverwinter Nights 1
             string nwnExe = System.IO.Path.Combine(installationPath, "nwmain.exe");
             string nwnExeUpper = System.IO.Path.Combine(installationPath, "NWMAIN.EXE");
             if (System.IO.File.Exists(nwnExe) || System.IO.File.Exists(nwnExeUpper))
             {
-                // GameType enum doesn't have NWN/NWN2 yet, return Unknown for now
-                // TODO: Extend GameType enum to support Aurora Engine games
-                return GameType.Unknown;
+                return GameType.NWN;
             }
 
             // Check for Neverwinter Nights 2 executable
+            // Game detection: Executable name "nwn2main.exe" is the primary identifier for Neverwinter Nights 2
             string nwn2Exe = System.IO.Path.Combine(installationPath, "nwn2main.exe");
             string nwn2ExeUpper = System.IO.Path.Combine(installationPath, "NWN2MAIN.EXE");
             if (System.IO.File.Exists(nwn2Exe) || System.IO.File.Exists(nwn2ExeUpper))
             {
-                // GameType enum doesn't have NWN/NWN2 yet, return Unknown for now
-                // TODO: Extend GameType enum to support Aurora Engine games
-                return GameType.Unknown;
+                return GameType.NWN2;
             }
 
             // Fallback: Check for module directory and HAK files (indicates Aurora Engine installation)
+            // Based on nwmain.exe: CExoResMan::Initialize sets up MODULES and HAK directory aliases
+            // Resource path configuration strings: "MODULES=" @ 0x140d80d20, "OVERRIDE=" @ 0x140d80d50 (nwmain.exe: VERIFIED)
+            // Directory name strings: "modules" @ 0x140d80f38, "override" @ 0x140d80f40 (nwmain.exe: VERIFIED)
             string modulesPath = System.IO.Path.Combine(installationPath, "modules");
             string hakPath = System.IO.Path.Combine(installationPath, "hak");
             if (System.IO.Directory.Exists(modulesPath) || System.IO.Directory.Exists(hakPath))
             {
                 // Aurora Engine installation detected via directory structure
-                return GameType.Unknown; // GameType enum doesn't support Aurora games yet
+                // Default to NWN if we can't determine which specific game
+                return GameType.NWN;
             }
 
             return GameType.Unknown;
