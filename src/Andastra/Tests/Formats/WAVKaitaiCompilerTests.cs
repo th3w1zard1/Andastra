@@ -293,7 +293,7 @@ namespace Andastra.Parsing.Tests.Formats
             if (result.ExitCode != 0)
             {
                 // Check if it's a syntax error or just missing dependencies
-                var hasSyntaxError = result.Error.Contains("error") || 
+                var hasSyntaxError = result.Error.Contains("error") ||
                                    result.Error.Contains("Error") ||
                                    result.Output.Contains("error") ||
                                    result.Output.Contains("Error");

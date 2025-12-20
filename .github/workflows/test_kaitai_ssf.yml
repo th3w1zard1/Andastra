@@ -19,11 +19,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Validate KSY file structure
         run: |
           pwsh -ExecutionPolicy Bypass -File scripts/compile_ssf_kaitai_multilang.ps1 -Quick
-          
+
   test-compilation:
     name: Test Compilation (${{ matrix.language }})
     runs-on: ubuntu-latest
@@ -48,26 +48,26 @@ jobs:
           - kotlin
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Java (required for Kaitai Struct compiler)
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
-      
+
       - name: Install Kaitai Struct Compiler
         run: |
           wget https://packages.kaitai.io/dists/unstable/main/binary-amd64/kaitai-struct-compiler_0.10_all.deb
           sudo dpkg -i kaitai-struct-compiler_0.10_all.deb || sudo apt-get install -f -y
           kaitai-struct-compiler --version
-      
+
       - name: Compile SSF.ksy to ${{ matrix.language }}
         run: |
           mkdir -p compiled/${{ matrix.language }}
           kaitai-struct-compiler -t ${{ matrix.language }} \
             -d compiled/${{ matrix.language }} \
             src/Andastra/Parsing/Resource/Formats/SSF/SSF.ksy
-      
+
       - name: Verify output files generated
         run: |
           if [ ! "$(ls -A compiled/${{ matrix.language }})" ]; then
@@ -76,7 +76,7 @@ jobs:
           fi
           echo "Generated files:"
           ls -la compiled/${{ matrix.language }}
-      
+
       - name: Upload compiled artifacts
         if: success()
         uses: actions/upload-artifact@v4
@@ -92,22 +92,22 @@ jobs:
     if: always()
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
-      
+
       - name: Install Kaitai Struct Compiler
         run: |
           wget https://packages.kaitai.io/dists/unstable/main/binary-amd64/kaitai-struct-compiler_0.10_all.deb
           sudo dpkg -i kaitai-struct-compiler_0.10_all.deb || sudo apt-get install -f -y
-      
+
       - name: Run comprehensive multi-language test
         run: |
           pwsh -ExecutionPolicy Bypass -File scripts/compile_ssf_kaitai_multilang.ps1 -Verbose
-      
+
       - name: Verify at least 12 languages compiled
         run: |
           if [ -f test_kaitai_ssf_multilang_output/test_report.txt ]; then

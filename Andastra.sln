@@ -3,117 +3,115 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "CSharpKOTOR.Tests", "tests\CSharpKOTOR.Tests\CSharpKOTOR.Tests.csproj", "{63A2FF12-564B-4981-8117-7DB91B32637F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CSharpKOTOR.Tests", "tests\CSharpKOTOR.Tests\CSharpKOTOR.Tests.csproj", "{63A2FF12-564B-4981-8117-7DB91B32637F}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "GenerateScriptDefs", "scripts\GenerateScriptDefs\GenerateScriptDefs.csproj", "{95A87843-C444-4BDF-944A-DDCBF6B741BA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GenerateScriptDefs", "scripts\GenerateScriptDefs\GenerateScriptDefs.csproj", "{95A87843-C444-4BDF-944A-DDCBF6B741BA}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Performance", "tests\CSharpKOTOR.Tests\Performance\Performance.csproj", "{2BD31CD5-6640-4E75-A290-89614CA7FF25}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Performance", "tests\CSharpKOTOR.Tests\Performance\Performance.csproj", "{2BD31CD5-6640-4E75-A290-89614CA7FF25}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "NCSDecomp", "src\Tools\NCSDecomp\NCSDecomp.csproj", "{3264EF53-941C-4B2A-A740-9E6CBA6D239C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NCSDecomp", "src\Tools\NCSDecomp\NCSDecomp.csproj", "{3264EF53-941C-4B2A-A740-9E6CBA6D239C}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "KotorDiff.NET", "src\Tools\KotorDiff\KotorDiff.NET.csproj", "{9E0339D3-D34D-42A8-8938-66F80AD1DEE3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KotorDiff.NET", "src\Tools\KotorDiff\KotorDiff.NET.csproj", "{9E0339D3-D34D-42A8-8938-66F80AD1DEE3}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "KotorDiff", "src\Tools\KotorDiff\KotorDiff.csproj", "{0922E83D-EF35-4C77-9A26-6DC3D4B54A41}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KotorDiff", "src\Tools\KotorDiff\KotorDiff.csproj", "{0922E83D-EF35-4C77-9A26-6DC3D4B54A41}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "KNSSComp.NET", "src\Tools\KNSSComp\KNSSComp.NET.csproj", "{D390A22D-5B50-43BB-BB43-B0293D8CAC4B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KNSSComp.NET", "src\Tools\KNSSComp\KNSSComp.NET.csproj", "{D390A22D-5B50-43BB-BB43-B0293D8CAC4B}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "KNSSComp", "src\Tools\KNSSComp\KNSSComp.csproj", "{60778EB1-8FD8-46F0-9719-1BF10E48B3EA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KNSSComp", "src\Tools\KNSSComp\KNSSComp.csproj", "{60778EB1-8FD8-46F0-9719-1BF10E48B3EA}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "HoloPatcher", "src\Tools\HoloPatcher\HoloPatcher.csproj", "{FE5139A3-4BEF-48A9-A23E-4A045318830B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HoloPatcher", "src\Tools\HoloPatcher\HoloPatcher.csproj", "{FE5139A3-4BEF-48A9-A23E-4A045318830B}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Andastra.Patcher", "src\Tools\HoloPatcher\Andastra.Patcher.csproj", "{F89F0655-3DE7-4DB2-91BA-57B772FEA0BB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Andastra.Patcher", "src\Tools\HoloPatcher\Andastra.Patcher.csproj", "{F89F0655-3DE7-4DB2-91BA-57B772FEA0BB}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "HoloPatcher.UI", "src\Tools\HoloPatcher.UI\HoloPatcher.UI.csproj", "{47B7732C-EA7D-446C-8309-C86FBDD871CB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HoloPatcher.UI", "src\Tools\HoloPatcher.UI\HoloPatcher.UI.csproj", "{47B7732C-EA7D-446C-8309-C86FBDD871CB}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Andastra.Patcher.UI", "src\Tools\HoloPatcher.UI\Andastra.Patcher.UI.csproj", "{E22CEC5C-6732-4399-8514-AA0EAD2F2DB5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Andastra.Patcher.UI", "src\Tools\HoloPatcher.UI\Andastra.Patcher.UI.csproj", "{E22CEC5C-6732-4399-8514-AA0EAD2F2DB5}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Andastra.Tooling", "src\Tools\Andastra.Tooling\Andastra.Tooling.csproj", "{15D5FC57-4AEA-434D-9DA4-5F96BF3C94C2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Andastra.Tooling", "src\Tools\Andastra.Tooling\Andastra.Tooling.csproj", "{15D5FC57-4AEA-434D-9DA4-5F96BF3C94C2}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "HolocronToolset.NET", "src\Tools\HolocronToolset\HolocronToolset.NET.csproj", "{45B19C45-0989-4D85-B89B-EBF2F2F48222}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HolocronToolset.NET", "src\Tools\HolocronToolset\HolocronToolset.NET.csproj", "{45B19C45-0989-4D85-B89B-EBF2F2F48222}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "HolocronToolset", "src\Tools\HolocronToolset\HolocronToolset.csproj", "{0538F16A-7412-4766-88F1-7B533E68FAAD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HolocronToolset", "src\Tools\HolocronToolset\HolocronToolset.csproj", "{0538F16A-7412-4766-88F1-7B533E68FAAD}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "NCSDecomp.Tests", "src\Tests\NCSDecomp.Tests\NCSDecomp.Tests.csproj", "{088E9969-4906-41E6-BB56-3A99DE28D5A2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NCSDecomp.Tests", "src\Tests\NCSDecomp.Tests\NCSDecomp.Tests.csproj", "{088E9969-4906-41E6-BB56-3A99DE28D5A2}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "KNCSDecomp.Tests", "src\Tests\NCSDecomp.Tests\KNCSDecomp.Tests.csproj", "{33A35428-4C54-4565-A29A-F4287F762341}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KNCSDecomp.Tests", "src\Tests\NCSDecomp.Tests\KNCSDecomp.Tests.csproj", "{33A35428-4C54-4565-A29A-F4287F762341}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "KotorDiff.NET.Tests", "src\Tests\KotorDiff.Tests\KotorDiff.NET.Tests.csproj", "{6B28A294-E047-4B32-B828-1EE18ECD2149}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KotorDiff.NET.Tests", "src\Tests\KotorDiff.Tests\KotorDiff.NET.Tests.csproj", "{6B28A294-E047-4B32-B828-1EE18ECD2149}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "HolocronToolset.NET.Tests", "src\Tests\HolocronToolset.Tests\HolocronToolset.NET.Tests.csproj", "{6025114D-89C8-453E-8BAA-B5D0DD1D49C3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HolocronToolset.NET.Tests", "src\Tests\HolocronToolset.Tests\HolocronToolset.NET.Tests.csproj", "{6025114D-89C8-453E-8BAA-B5D0DD1D49C3}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "DLGFormatTests.Standalone", "src\Tests\DLGFormatTests.Standalone\DLGFormatTests.Standalone.csproj", "{CAE53519-2F30-4388-92DC-890873FE2F99}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DLGFormatTests.Standalone", "src\Tests\DLGFormatTests.Standalone\DLGFormatTests.Standalone.csproj", "{CAE53519-2F30-4388-92DC-890873FE2F99}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "RtfDomParserAvalonia", "src\RtfDomParserAvalonia\RtfDomParserAvalonia\RtfDomParserAvalonia.csproj", "{EBBA2B46-DDA4-4EFB-BA38-F50E1B2EDB18}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RtfDomParserAvalonia", "src\RtfDomParserAvalonia\RtfDomParserAvalonia\RtfDomParserAvalonia.csproj", "{EBBA2B46-DDA4-4EFB-BA38-F50E1B2EDB18}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "RtfDomParserAv", "src\RtfDomParserAvalonia\RtfDomParserAvalonia\RtfDomParserAv.csproj", "{09D95C63-3831-4BF5-9306-FF43432C07AC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RtfDomParserAv", "src\RtfDomParserAvalonia\RtfDomParserAvalonia\RtfDomParserAv.csproj", "{09D95C63-3831-4BF5-9306-FF43432C07AC}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "DemoApp_AvRichTextBox", "src\AvRichTextBox\DemoApp_AvRichtextBox\DemoApp_AvRichTextBox.csproj", "{7E93C0CA-A4AB-40E8-9C6A-A6C25D43350D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DemoApp_AvRichTextBox", "src\AvRichTextBox\DemoApp_AvRichtextBox\DemoApp_AvRichTextBox.csproj", "{7E93C0CA-A4AB-40E8-9C6A-A6C25D43350D}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "AvRichTextBox", "src\AvRichTextBox\AvRichTextBox\AvRichTextBox.csproj", "{B1FC8EA8-C9D0-40B9-9CE8-EC0F529C0146}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AvRichTextBox", "src\AvRichTextBox\AvRichTextBox\AvRichTextBox.csproj", "{B1FC8EA8-C9D0-40B9-9CE8-EC0F529C0146}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Utility", "src\Andastra\Utility\Utility.csproj", "{3FF08963-6E9D-4A74-A5E4-C0ECE4E87142}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Utility", "src\Andastra\Utility\Utility.csproj", "{3FF08963-6E9D-4A74-A5E4-C0ECE4E87142}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "TSLPatcher.Tests", "src\Andastra\Tests\TSLPatcher.Tests.csproj", "{3B56D123-7153-41FA-86F6-F5EAD5CB42F0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TSLPatcher.Tests", "src\Andastra\Tests\TSLPatcher.Tests.csproj", "{3B56D123-7153-41FA-86F6-F5EAD5CB42F0}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Parsing", "src\Andastra\Parsing\Parsing.csproj", "{0A380C78-6211-4B5B-AA92-26E2CF36F390}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Andastra.Parsing", "src\Andastra\Parsing\Andastra.Parsing.csproj", "{87513B33-73DB-40EF-B7E7-75AE09B16A60}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Andastra.Parsing", "src\Andastra\Parsing\Andastra.Parsing.csproj", "{87513B33-73DB-40EF-B7E7-75AE09B16A60}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Game", "src\Andastra\Game\Game.csproj", "{5702F2F4-05D4-4C8C-AED7-1A5863B0D4C1}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Game", "src\Andastra\Game\Game.csproj", "{5702F2F4-05D4-4C8C-AED7-1A5863B0D4C1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Andastra.Game", "src\Andastra\Game\Andastra.Game.csproj", "{AC4B9F6A-57A1-461E-ACAD-F6BBE967EFB5}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Andastra.Game", "src\Andastra\Game\Andastra.Game.csproj", "{AC4B9F6A-57A1-461E-ACAD-F6BBE967EFB5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Resolution", "src\Tools\KotorDiff\Resolution\Resolution.csproj", "{D26ACE3C-8A5B-4DA4-96A3-4E84E5F5F37F}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Resolution", "src\Tools\KotorDiff\Resolution\Resolution.csproj", "{D26ACE3C-8A5B-4DA4-96A3-4E84E5F5F37F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Logger", "src\Tools\KotorDiff\Logger\Logger.csproj", "{AF453862-ABA4-43FB-BAF7-DF6D33925DB5}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Logger", "src\Tools\KotorDiff\Logger\Logger.csproj", "{AF453862-ABA4-43FB-BAF7-DF6D33925DB5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Formatters", "src\Tools\KotorDiff\Formatters\Formatters.csproj", "{6B5A1BC9-2D60-46D6-B39F-3ECD742D2616}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Formatters", "src\Tools\KotorDiff\Formatters\Formatters.csproj", "{6B5A1BC9-2D60-46D6-B39F-3ECD742D2616}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Differ", "src\Tools\KotorDiff\Differ\Differ.csproj", "{1C94D7D4-13B8-4153-AAEF-3A8B54A4EBD3}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Differ", "src\Tools\KotorDiff\Differ\Differ.csproj", "{1C94D7D4-13B8-4153-AAEF-3A8B54A4EBD3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Diff", "src\Tools\KotorDiff\Diff\Diff.csproj", "{1A7F7AB3-8D44-432A-8E32-835909593AB2}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Diff", "src\Tools\KotorDiff\Diff\Diff.csproj", "{1A7F7AB3-8D44-432A-8E32-835909593AB2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cli", "src\Tools\KotorDiff\Cli\Cli.csproj", "{46979E8F-FA45-4B44-8DB4-8AC52ACE2288}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Cli", "src\Tools\KotorDiff\Cli\Cli.csproj", "{46979E8F-FA45-4B44-8DB4-8AC52ACE2288}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cache", "src\Tools\KotorDiff\Cache\Cache.csproj", "{C8029F24-22E0-4EB9-BBE8-5D4BD1AFAC21}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Cache", "src\Tools\KotorDiff\Cache\Cache.csproj", "{C8029F24-22E0-4EB9-BBE8-5D4BD1AFAC21}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "App", "src\Tools\KotorDiff\App\App.csproj", "{F878249C-3B69-4BA7-9563-7F9BAB20FB9A}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "App", "src\Tools\KotorDiff\App\App.csproj", "{F878249C-3B69-4BA7-9563-7F9BAB20FB9A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Views", "src\Tools\HoloPatcher.UI\Views\Views.csproj", "{B7FDC016-968E-4244-A416-F12349B3E3B7}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Views", "src\Tools\HoloPatcher.UI\Views\Views.csproj", "{B7FDC016-968E-4244-A416-F12349B3E3B7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ViewModels", "src\Tools\HoloPatcher.UI\ViewModels\ViewModels.csproj", "{C45C6765-F13C-47B5-A45E-7129E54DEFD7}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "ViewModels", "src\Tools\HoloPatcher.UI\ViewModels\ViewModels.csproj", "{C45C6765-F13C-47B5-A45E-7129E54DEFD7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Update", "src\Tools\HoloPatcher.UI\Update\Update.csproj", "{97F3B8EB-196F-40B5-A392-D18040799257}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Update", "src\Tools\HoloPatcher.UI\Update\Update.csproj", "{97F3B8EB-196F-40B5-A392-D18040799257}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rte", "src\Tools\HoloPatcher.UI\Rte\Rte.csproj", "{C3718F8E-7A13-4C84-9256-94E7808092C2}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Rte", "src\Tools\HoloPatcher.UI\Rte\Rte.csproj", "{C3718F8E-7A13-4C84-9256-94E7808092C2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Windows", "src\Tools\HolocronToolset\Windows\Windows.csproj", "{DF826E8B-6F85-45C1-9E3D-9D7BABAF5E99}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Windows", "src\Tools\HolocronToolset\Windows\Windows.csproj", "{DF826E8B-6F85-45C1-9E3D-9D7BABAF5E99}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Widgets", "src\Tools\HolocronToolset\Widgets\Widgets.csproj", "{F6599FD5-EC12-40F9-BD77-A84DA501D52B}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Widgets", "src\Tools\HolocronToolset\Widgets\Widgets.csproj", "{F6599FD5-EC12-40F9-BD77-A84DA501D52B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Andastra.Runtime.Tests", "src\Andastra\Tests\Runtime\Andastra.Runtime.Tests.csproj", "{EEF7151C-AD93-41E3-BD94-2FA658BB6A58}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Andastra.Runtime.Tests", "src\Andastra\Tests\Runtime\Andastra.Runtime.Tests.csproj", "{EEF7151C-AD93-41E3-BD94-2FA658BB6A58}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Andastra.Runtime.Scripting", "src\Andastra\Runtime\Scripting\Andastra.Runtime.Scripting.csproj", "{5E8A0D84-4D9A-4B5B-86DB-4BC92A383832}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Andastra.Runtime.Scripting", "src\Andastra\Runtime\Scripting\Andastra.Runtime.Scripting.csproj", "{5E8A0D84-4D9A-4B5B-86DB-4BC92A383832}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Andastra.Runtime.Graphics", "src\Andastra\Runtime\Graphics\Andastra.Runtime.Graphics.csproj", "{4337B641-E36C-417E-B684-9A1AA829CAF9}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Andastra.Runtime.Graphics", "src\Andastra\Runtime\Graphics\Andastra.Runtime.Graphics.csproj", "{4337B641-E36C-417E-B684-9A1AA829CAF9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Andastra.Runtime.Core", "src\Andastra\Runtime\Core\Andastra.Runtime.Core.csproj", "{3259AD72-321E-4A96-B20B-234B0F6416E9}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Andastra.Runtime.Core", "src\Andastra\Runtime\Core\Andastra.Runtime.Core.csproj", "{3259AD72-321E-4A96-B20B-234B0F6416E9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Andastra.Runtime.Content", "src\Andastra\Runtime\Content\Andastra.Runtime.Content.csproj", "{72244F3D-382B-4BFB-B372-2C5E31005473}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Andastra.Runtime.Content", "src\Andastra\Runtime\Content\Andastra.Runtime.Content.csproj", "{72244F3D-382B-4BFB-B372-2C5E31005473}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Andastra.Runtime.Graphics.Stride", "src\Andastra\Runtime\Graphics\Stride\Andastra.Runtime.Graphics.Stride.csproj", "{24DB58E5-322C-4202-9AA9-7ED7E30117E9}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Andastra.Runtime.Graphics.Stride", "src\Andastra\Runtime\Graphics\Stride\Andastra.Runtime.Graphics.Stride.csproj", "{24DB58E5-322C-4202-9AA9-7ED7E30117E9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Andastra.Runtime.Graphics.MonoGame", "src\Andastra\Runtime\Graphics\MonoGame\Andastra.Runtime.Graphics.MonoGame.csproj", "{B963D7FE-9B6A-4DEC-B1B1-DD9BFC8501CD}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Andastra.Runtime.Graphics.MonoGame", "src\Andastra\Runtime\Graphics\MonoGame\Andastra.Runtime.Graphics.MonoGame.csproj", "{B963D7FE-9B6A-4DEC-B1B1-DD9BFC8501CD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Andastra.Runtime.Graphics.Common", "src\Andastra\Runtime\Graphics\Common\Andastra.Runtime.Graphics.Common.csproj", "{3B3C6158-A373-4BA6-BA26-336102731670}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Andastra.Runtime.Graphics.Common", "src\Andastra\Runtime\Graphics\Common\Andastra.Runtime.Graphics.Common.csproj", "{3B3C6158-A373-4BA6-BA26-336102731670}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Andastra.Runtime.Games.Odyssey", "src\Andastra\Runtime\Games\Odyssey\Andastra.Runtime.Games.Odyssey.csproj", "{34B4D41F-7087-4833-AA45-C5F21F54BBC7}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Andastra.Runtime.Games.Odyssey", "src\Andastra\Runtime\Games\Odyssey\Andastra.Runtime.Games.Odyssey.csproj", "{34B4D41F-7087-4833-AA45-C5F21F54BBC7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Andastra.Runtime.Games.Eclipse", "src\Andastra\Runtime\Games\Eclipse\Andastra.Runtime.Games.Eclipse.csproj", "{12E524B4-20DD-4DAD-B2EA-0FF7DFD216E7}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Andastra.Runtime.Games.Eclipse", "src\Andastra\Runtime\Games\Eclipse\Andastra.Runtime.Games.Eclipse.csproj", "{12E524B4-20DD-4DAD-B2EA-0FF7DFD216E7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Andastra.Runtime.Games.Aurora", "src\Andastra\Runtime\Games\Aurora\Andastra.Runtime.Games.Aurora.csproj", "{EC94C914-DA70-4AC0-8E4C-AB4692FE83AC}"
 EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Andastra.Runtime.Games.Aurora", "src\Andastra\Runtime\Games\Aurora\Andastra.Runtime.Games.Aurora.csproj", "{EC94C914-DA70-4AC0-8E4C-AB4692FE83AC}"
-EndProject
-Project("9A19103F-16F7-4668-BE54-9A1E7A4F7556") = "Andastra.Runtime.Games.Common", "src\Andastra\Runtime\Games\Common\Andastra.Runtime.Games.Common.csproj", "{31019F56-59D6-4F48-89E8-8D820EB11DB6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Andastra.Runtime.Games.Common", "src\Andastra\Runtime\Games\Common\Andastra.Runtime.Games.Common.csproj", "{31019F56-59D6-4F48-89E8-8D820EB11DB6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -121,10 +119,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{6C8DA355-B2A5-45C9-84C7-91EB4197AE4E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6C8DA355-B2A5-45C9-84C7-91EB4197AE4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6C8DA355-B2A5-45C9-84C7-91EB4197AE4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6C8DA355-B2A5-45C9-84C7-91EB4197AE4E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{63A2FF12-564B-4981-8117-7DB91B32637F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{63A2FF12-564B-4981-8117-7DB91B32637F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{63A2FF12-564B-4981-8117-7DB91B32637F}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -229,10 +223,6 @@ Global
 		{3B56D123-7153-41FA-86F6-F5EAD5CB42F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3B56D123-7153-41FA-86F6-F5EAD5CB42F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3B56D123-7153-41FA-86F6-F5EAD5CB42F0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0A380C78-6211-4B5B-AA92-26E2CF36F390}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0A380C78-6211-4B5B-AA92-26E2CF36F390}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0A380C78-6211-4B5B-AA92-26E2CF36F390}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0A380C78-6211-4B5B-AA92-26E2CF36F390}.Release|Any CPU.Build.0 = Release|Any CPU
 		{87513B33-73DB-40EF-B7E7-75AE09B16A60}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{87513B33-73DB-40EF-B7E7-75AE09B16A60}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{87513B33-73DB-40EF-B7E7-75AE09B16A60}.Release|Any CPU.ActiveCfg = Release|Any CPU

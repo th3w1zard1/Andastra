@@ -4,9 +4,9 @@ meta:
   license: MIT
   endian: le
   file-extension:
-    - wok
-    - pwk
     - dwk
+    - pwk
+    - wok
   xref:
     pykotor: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/bwm/
     reone: vendor/reone/src/libs/graphics/format/bwmreader.cpp

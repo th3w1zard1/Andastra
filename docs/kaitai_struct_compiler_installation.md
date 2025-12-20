@@ -11,6 +11,7 @@ The Kaitai Struct compiler requires **Java Runtime Environment (JRE) 8 or later*
 - **macOS**: `brew install openjdk` or download from Adoptium
 
 Verify Java is installed:
+
 ```bash
 java -version
 ```
@@ -20,8 +21,8 @@ java -version
 ### Method 1: Windows MSI Installer (Recommended for Windows)
 
 1. Download the MSI installer from [GitHub Releases](https://github.com/kaitai-io/kaitai_struct_compiler/releases/latest):
-   - **Direct link for v0.11**: https://github.com/kaitai-io/kaitai_struct_compiler/releases/download/0.11/kaitai-struct-compiler-0.11.msi
-   - Or browse all releases: https://github.com/kaitai-io/kaitai_struct_compiler/releases
+   - **Direct link for v0.11**: <https://github.com/kaitai-io/kaitai_struct_compiler/releases/download/0.11/kaitai-struct-compiler-0.11.msi>
+   - Or browse all releases: <https://github.com/kaitai-io/kaitai_struct_compiler/releases>
 
 2. Run the MSI installer and follow the installation wizard
 
@@ -34,8 +35,8 @@ java -version
 This method works on Windows, Linux, and macOS and requires no installation:
 
 1. Download the universal ZIP from [GitHub Releases](https://github.com/kaitai-io/kaitai_struct_compiler/releases/latest):
-   - **Direct link for v0.11**: https://github.com/kaitai-io/kaitai_struct_compiler/releases/download/0.11/kaitai-struct-compiler-0.11.zip
-   - Or browse all releases: https://github.com/kaitai-io/kaitai_struct_compiler/releases
+   - **Direct link for v0.11**: <https://github.com/kaitai-io/kaitai_struct_compiler/releases/download/0.11/kaitai-struct-compiler-0.11.zip>
+   - Or browse all releases: <https://github.com/kaitai-io/kaitai_struct_compiler/releases>
 
 2. Extract the ZIP file to a location of your choice:
    - Windows: `C:\Tools\kaitai-struct-compiler` or `%USERPROFILE%\.local\kaitai-struct-compiler`
@@ -44,6 +45,7 @@ This method works on Windows, Linux, and macOS and requires no installation:
 3. (Optional) Add the extracted directory to your PATH:
    - **Windows**: Add the directory to System Environment Variables (PATH)
    - **Linux/macOS**: Add to PATH in `~/.bashrc` or `~/.zshrc`:
+
      ```bash
      export PATH="$HOME/.local/kaitai-struct-compiler:$PATH"
      ```
@@ -86,16 +88,19 @@ If you prefer to use just the JAR file:
 3. (Optional) Create a wrapper script for easier use:
 
    **Windows (`kaitai-struct-compiler.bat`)**:
+
    ```batch
    @echo off
    java -jar "%USERPROFILE%\.kaitai\kaitai-struct-compiler.jar" %*
    ```
 
    **Linux/macOS (`kaitai-struct-compiler`)**:
+
    ```bash
    #!/bin/bash
    java -jar "$HOME/.kaitai/kaitai-struct-compiler.jar" "$@"
    ```
+
    Make it executable: `chmod +x kaitai-struct-compiler`
 
 ## Verification
@@ -107,6 +112,7 @@ kaitai-struct-compiler --version
 ```
 
 Or if using the JAR directly:
+
 ```bash
 java -jar kaitai-struct-compiler.jar --version
 ```
@@ -118,11 +124,13 @@ Expected output should show the compiler version (e.g., `0.11`).
 If you installed the JAR in a custom location, you can set an environment variable:
 
 **Windows**:
+
 ```powershell
 [System.Environment]::SetEnvironmentVariable('KAITAI_COMPILER_JAR', 'C:\path\to\kaitai-struct-compiler.jar', 'User')
 ```
 
 **Linux/macOS**:
+
 ```bash
 export KAITAI_COMPILER_JAR=/path/to/kaitai-struct-compiler.jar
 echo 'export KAITAI_COMPILER_JAR=/path/to/kaitai-struct-compiler.jar' >> ~/.bashrc  # or ~/.zshrc

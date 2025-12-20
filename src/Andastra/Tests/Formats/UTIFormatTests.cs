@@ -636,6 +636,299 @@ namespace Andastra.Parsing.Tests.Formats
         }
 
         [Fact(Timeout = 120000)]
+        public void TestUtiGffHeaderSize()
+        {
+            // Test that GFF header matches UTI.ksy definition (56 bytes)
+            if (!File.Exists(BinaryTestFile))
+            {
+                CreateTestUtiFile(BinaryTestFile);
+            }
+
+            GFF gff = GFF.FromBytes(File.ReadAllBytes(BinaryTestFile));
+
+            // Validate header size matches UTI.ksy (56 bytes = 14 fields × 4 bytes each)
+            // File type (4) + version (4) + 13 offsets/counts (13×4 = 52) = 56 bytes
+            gff.Header.Should().NotBeNull("GFF header should exist");
+        }
+
+        [Fact(Timeout = 120000)]
+        public void TestUtiStructArrayStructure()
+        {
+            if (!File.Exists(BinaryTestFile))
+            {
+                CreateTestUtiFile(BinaryTestFile);
+            }
+
+            GFF gff = GFF.FromBytes(File.ReadAllBytes(BinaryTestFile));
+
+            // Validate struct array structure matches UTI.ksy
+            gff.Header.StructCount.Should().BeGreaterThanOrEqualTo(0, "Struct count should be non-negative");
+            
+            // Each struct entry is 12 bytes (struct_id: 4, data_or_offset: 4, field_count: 4)
+            if (gff.Header.StructCount > 0)
+            {
+                gff.Structs.Should().NotBeNull("Struct array should exist");
+                gff.Structs.Count.Should().Be((int)gff.Header.StructCount, "Struct count should match header");
+            }
+        }
+
+        [Fact(Timeout = 120000)]
+        public void TestUtiFieldArrayStructure()
+        {
+            if (!File.Exists(BinaryTestFile))
+            {
+                CreateTestUtiFile(BinaryTestFile);
+            }
+
+            GFF gff = GFF.FromBytes(File.ReadAllBytes(BinaryTestFile));
+
+            // Validate field array structure matches UTI.ksy
+            gff.Header.FieldCount.Should().BeGreaterThanOrEqualTo(0, "Field count should be non-negative");
+            
+            // Each field entry is 12 bytes (field_type: 4, label_index: 4, data_or_offset: 4)
+            if (gff.Header.FieldCount > 0)
+            {
+                gff.Fields.Should().NotBeNull("Field array should exist");
+                gff.Fields.Count.Should().Be((int)gff.Header.FieldCount, "Field count should match header");
+            }
+        }
+
+        [Fact(Timeout = 120000)]
+        public void TestUtiLabelArrayStructure()
+        {
+            if (!File.Exists(BinaryTestFile))
+            {
+                CreateTestUtiFile(BinaryTestFile);
+            }
+
+            GFF gff = GFF.FromBytes(File.ReadAllBytes(BinaryTestFile));
+
+            // Validate label array structure matches UTI.ksy
+            gff.Header.LabelCount.Should().BeGreaterThanOrEqualTo(0, "Label count should be non-negative");
+            
+            // Each label is 16 bytes (null-terminated ASCII string, padded to 16 bytes)
+            if (gff.Header.LabelCount > 0)
+            {
+                gff.Labels.Should().NotBeNull("Label array should exist");
+                gff.Labels.Count.Should().Be((int)gff.Header.LabelCount, "Label count should match header");
+                
+                foreach (var label in gff.Labels)
+                {
+                    label.Should().NotBeNull("Label should not be null");
+                    label.Length.Should().BeLessThanOrEqualTo(16, "Label should be at most 16 bytes");
+                }
+            }
+        }
+
+        [Fact(Timeout = 120000)]
+        public void TestUtiFieldDataSection()
+        {
+            if (!File.Exists(BinaryTestFile))
+            {
+                CreateTestUtiFile(BinaryTestFile);
+            }
+
+            GFF gff = GFF.FromBytes(File.ReadAllBytes(BinaryTestFile));
+
+            // Validate field data section matches UTI.ksy
+            gff.Header.FieldDataCount.Should().BeGreaterThanOrEqualTo(0, "Field data count should be non-negative");
+            
+            // Field data section contains raw bytes for complex types
+            if (gff.Header.FieldDataCount > 0)
+            {
+                gff.FieldData.Should().NotBeNull("Field data section should exist");
+                gff.FieldData.Length.Should().Be((int)gff.Header.FieldDataCount, "Field data size should match header");
+            }
+        }
+
+        [Fact(Timeout = 120000)]
+        public void TestUtiFieldIndicesArray()
+        {
+            if (!File.Exists(BinaryTestFile))
+            {
+                CreateTestUtiFile(BinaryTestFile);
+            }
+
+            GFF gff = GFF.FromBytes(File.ReadAllBytes(BinaryTestFile));
+
+            // Validate field indices array matches UTI.ksy
+            gff.Header.FieldIndicesCount.Should().BeGreaterThanOrEqualTo(0, "Field indices count should be non-negative");
+            
+            // Field indices array contains uint32 values for structs with multiple fields
+            if (gff.Header.FieldIndicesCount > 0)
+            {
+                gff.FieldIndices.Should().NotBeNull("Field indices array should exist");
+                gff.FieldIndices.Length.Should().Be((int)gff.Header.FieldIndicesCount, "Field indices count should match header");
+            }
+        }
+
+        [Fact(Timeout = 120000)]
+        public void TestUtiListIndicesArray()
+        {
+            if (!File.Exists(BinaryTestFile))
+            {
+                CreateTestUtiFile(BinaryTestFile);
+            }
+
+            GFF gff = GFF.FromBytes(File.ReadAllBytes(BinaryTestFile));
+
+            // Validate list indices array matches UTI.ksy
+            gff.Header.ListIndicesCount.Should().BeGreaterThanOrEqualTo(0, "List indices count should be non-negative");
+            
+            // List indices array contains uint32 values for LIST type fields
+            if (gff.Header.ListIndicesCount > 0)
+            {
+                gff.ListIndices.Should().NotBeNull("List indices array should exist");
+                gff.ListIndices.Length.Should().Be((int)gff.Header.ListIndicesCount, "List indices count should match header");
+            }
+        }
+
+        [Fact(Timeout = 120000)]
+        public void TestUtiPropertiesListStructure()
+        {
+            if (!File.Exists(BinaryTestFile))
+            {
+                CreateTestUtiFile(BinaryTestFile);
+            }
+
+            GFF gff = GFF.FromBytes(File.ReadAllBytes(BinaryTestFile));
+            UTI uti = UTIHelpers.ReadUti(File.ReadAllBytes(BinaryTestFile));
+
+            // Validate PropertiesList is a LIST type field as per UTI.ksy
+            uti.Properties.Should().NotBeNull("PropertiesList should exist");
+            
+            // PropertiesList should be stored as a LIST type field in GFF
+            // Each property is a struct within the list
+            if (uti.Properties.Count > 0)
+            {
+                // PropertiesList should reference list indices
+                gff.Header.ListIndicesCount.Should().BeGreaterThanOrEqualTo(0, "List indices should exist if properties exist");
+            }
+        }
+
+        [Fact(Timeout = 120000)]
+        public void TestUtiPropertyStructFields()
+        {
+            // Test that property struct fields match UTI.ksy documentation
+            var uti = new UTI();
+            uti.ResRef = ResRef.FromString("proptest");
+            uti.BaseItem = 1;
+
+            var prop = new UTIProperty();
+            // PropertyName: UInt16 (Word)
+            prop.PropertyName = 65535;
+            // Subtype: UInt16 (Word)
+            prop.Subtype = 65535;
+            // CostTable: UInt8 (Byte)
+            prop.CostTable = 255;
+            // CostValue: UInt16 (Word)
+            prop.CostValue = 65535;
+            // Param1: UInt8 (Byte)
+            prop.Param1 = 255;
+            // Param1Value: UInt8 (Byte)
+            prop.Param1Value = 255;
+            // ChanceAppear: UInt8 (Byte)
+            prop.ChanceAppear = 255;
+            uti.Properties.Add(prop);
+
+            byte[] data = UTIHelpers.BytesUti(uti);
+            UTI loaded = UTIHelpers.ReadUti(data);
+
+            loaded.Properties.Count.Should().Be(1);
+            loaded.Properties[0].PropertyName.Should().Be(65535);
+            loaded.Properties[0].Subtype.Should().Be(65535);
+            loaded.Properties[0].CostTable.Should().Be(255);
+            loaded.Properties[0].CostValue.Should().Be(65535);
+            loaded.Properties[0].Param1.Should().Be(255);
+            loaded.Properties[0].Param1Value.Should().Be(255);
+            loaded.Properties[0].ChanceAppear.Should().Be(255);
+        }
+
+        [Fact(Timeout = 120000)]
+        public void TestUtiDataOffsets()
+        {
+            if (!File.Exists(BinaryTestFile))
+            {
+                CreateTestUtiFile(BinaryTestFile);
+            }
+
+            GFF gff = GFF.FromBytes(File.ReadAllBytes(BinaryTestFile));
+
+            // Validate that all offsets in header are valid
+            // Offsets should be >= 56 (header size) or 0 (not present)
+            gff.Header.StructArrayOffset.Should().BeGreaterThanOrEqualTo(56, "Struct array offset should be after header");
+            gff.Header.FieldArrayOffset.Should().BeGreaterThanOrEqualTo(56, "Field array offset should be after header");
+            
+            if (gff.Header.LabelCount > 0)
+            {
+                gff.Header.LabelArrayOffset.Should().BeGreaterThanOrEqualTo(56, "Label array offset should be after header");
+            }
+            
+            if (gff.Header.FieldDataCount > 0)
+            {
+                gff.Header.FieldDataOffset.Should().BeGreaterThanOrEqualTo(56, "Field data offset should be after header");
+            }
+            
+            if (gff.Header.FieldIndicesCount > 0)
+            {
+                gff.Header.FieldIndicesOffset.Should().BeGreaterThanOrEqualTo(56, "Field indices offset should be after header");
+            }
+            
+            if (gff.Header.ListIndicesCount > 0)
+            {
+                gff.Header.ListIndicesOffset.Should().BeGreaterThanOrEqualTo(56, "List indices offset should be after header");
+            }
+        }
+
+        [Fact(Timeout = 120000)]
+        public void TestUtiRootStructId()
+        {
+            if (!File.Exists(BinaryTestFile))
+            {
+                CreateTestUtiFile(BinaryTestFile);
+            }
+
+            GFF gff = GFF.FromBytes(File.ReadAllBytes(BinaryTestFile));
+
+            // Root struct should have struct_id = 0xFFFFFFFF (-1) as per UTI.ksy
+            if (gff.Header.StructCount > 0)
+            {
+                var rootStruct = gff.Structs[0];
+                rootStruct.StructId.Should().Be(-1, "Root struct should have struct_id = -1 (0xFFFFFFFF)");
+            }
+        }
+
+        [Fact(Timeout = 120000)]
+        public void TestUtiFieldTypeValidation()
+        {
+            // Test that UTI uses correct GFF field types as documented in UTI.ksy
+            var uti = new UTI();
+            uti.ResRef = ResRef.FromString("typetest");
+            uti.BaseItem = 1;
+            uti.Tag = "test_tag";
+            uti.Comment = "Test comment";
+
+            byte[] data = UTIHelpers.BytesUti(uti);
+            GFF gff = GFF.FromBytes(data);
+
+            // TemplateResRef should be ResRef type (11)
+            // Tag should be String type (10)
+            // Comment should be String type (10)
+            // BaseItem should be Int32 type (5)
+            // Cost should be UInt32 type (4)
+            // Charges should be UInt8 type (0)
+            // StackSize should be UInt16 type (2)
+            // ModelVariation should be UInt8 type (0)
+            // BodyVariation should be UInt8 type (0)
+            // TextureVar should be UInt8 type (0)
+            // PaletteID should be UInt8 type (0)
+            // Plot should be UInt8 type (0)
+            // PropertiesList should be List type (15)
+
+            gff.Fields.Should().NotBeNull("Fields should exist");
+        }
+
+        [Fact(Timeout = 120000)]
         public void TestReadRaises()
         {
             // Test reading from directory

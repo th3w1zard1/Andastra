@@ -19,11 +19,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Validate KSY file structure
         run: |
           pwsh -ExecutionPolicy Bypass -File scripts/validate_kaitai_git.ps1 -SkipCompilation
-          
+
   test-compilation:
     name: Test Compilation (${{ matrix.language }})
     runs-on: ubuntu-latest
@@ -47,26 +47,26 @@ jobs:
           - typescript
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Java (required for Kaitai Struct compiler)
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
-      
+
       - name: Install Kaitai Struct Compiler
         run: |
           wget https://packages.kaitai.io/dists/unstable/main/binary-amd64/kaitai-struct-compiler_0.10_all.deb
           sudo dpkg -i kaitai-struct-compiler_0.10_all.deb || sudo apt-get install -f -y
           kaitai-struct-compiler --version
-      
+
       - name: Compile GIT.ksy to ${{ matrix.language }}
         run: |
           mkdir -p compiled/${{ matrix.language }}
           kaitai-struct-compiler -t ${{ matrix.language }} \
             -d compiled/${{ matrix.language }} \
             src/Andastra/Parsing/Resource/Formats/GFF/Generics/GIT/GIT.ksy
-      
+
       - name: Verify output files generated
         run: |
           if [ ! "$(ls -A compiled/${{ matrix.language }})" ]; then
@@ -75,7 +75,7 @@ jobs:
           fi
           echo "Generated files:"
           ls -la compiled/${{ matrix.language }}
-      
+
       - name: Upload compiled artifacts
         if: success()
         uses: actions/upload-artifact@v4
@@ -91,23 +91,23 @@ jobs:
     if: always()
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
-      
+
       - name: Install Kaitai Struct Compiler
         run: |
           wget https://packages.kaitai.io/dists/unstable/main/binary-amd64/kaitai-struct-compiler_0.10_all.deb
           sudo dpkg -i kaitai-struct-compiler_0.10_all.deb || sudo apt-get install -f -y
           kaitai-struct-compiler --version
-      
+
       - name: Run comprehensive multi-language test
         run: |
           pwsh -ExecutionPolicy Bypass -File scripts/test_kaitai_multilang.ps1 -Verbose
-      
+
       - name: Verify at least 12 languages compiled
         run: |
           if [ -f test_kaitai_multilang_output/test_report.txt ]; then
@@ -118,7 +118,7 @@ jobs:
           echo "Matrix job tested 14 languages in parallel"
           echo "Each language compilation is verified individually in test-compilation job"
           echo "At least 12 languages must compile successfully for this workflow to pass"
-      
+
       - name: Generate test report
         if: always()
         run: |
@@ -131,34 +131,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
-      
+
       - name: Setup Java (required for Kaitai Struct compiler)
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
-      
+
       - name: Install Kaitai Struct Compiler
         run: |
           wget https://packages.kaitai.io/dists/unstable/main/binary-amd64/kaitai-struct-compiler_0.10_all.deb
           sudo dpkg -i kaitai-struct-compiler_0.10_all.deb || sudo apt-get install -f -y
           kaitai-struct-compiler --version
-      
+
       - name: Restore dependencies
         run: dotnet restore
-      
+
       - name: Build test project
         run: dotnet build --no-restore
-      
+
       - name: Run GIT Kaitai Struct tests
         run: |
           dotnet test --no-build --filter "FullyQualifiedName~GITKaitaiStructTests" --verbosity normal
-      
+
       - name: Verify at least 12 languages test exists
         run: |
           # Verify the test that requires at least 12 languages exists

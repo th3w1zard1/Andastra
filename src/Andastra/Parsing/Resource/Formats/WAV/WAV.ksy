@@ -25,25 +25,31 @@ doc: |
   - vendor/xoreos/src/sound/decoders/wave.cpp:34-84
 
 seq:
-  - id: first_byte
-    type: u1
-    doc: First byte to detect header type (0xFF for SFX, 0x52 'R' for RIFF)
-  
-  - id: sfx_header
-    type: sfx_header
-    if: first_byte == 0xFF
-    doc: 470-byte SFX obfuscation header (only present for SFX files)
-  
-  - id: vo_header
-    type: vo_header
-    if: first_byte == 0x52
-    doc: 20-byte VO header (only present for VO files)
+  - id: header_detection
+    type: header_detection
+    doc: Detect header type and read appropriate header
   
   - id: riff_wave
     type: riff_wave
     doc: RIFF/WAVE structure (present in all WAV files, after optional headers)
 
 types:
+  header_detection:
+    seq:
+      - id: first_four_bytes
+        type: u4
+        doc: First 4 bytes to detect header type
+    instances:
+      is_sfx:
+        value: (first_four_bytes & 0xFFFFFFFF) == 0xC460F3FF
+        doc: SFX header detected (0xFF 0xF3 0x60 0xC4 in little-endian)
+      is_vo:
+        value: (first_four_bytes & 0xFFFFFFFF) == 0x46464952
+        doc: VO header detected ("RIFF" = 0x46464952 in little-endian)
+      is_standard:
+        value: !is_sfx && (first_four_bytes & 0xFFFFFFFF) == 0x46464952
+        doc: Standard RIFF/WAVE (no obfuscation header)
+  
   sfx_header:
     seq:
       - id: magic_byte1
