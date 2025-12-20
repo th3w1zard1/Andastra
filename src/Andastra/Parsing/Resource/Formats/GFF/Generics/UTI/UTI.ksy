@@ -93,38 +93,50 @@ seq:
   - id: label_array
     type: label_array
     if: gff_header.label_count > 0
-    pos: gff_header.label_array_offset
-    doc: Array of field name labels (16-byte null-terminated strings)
+    doc: |
+      Array of field name labels (16-byte null-terminated strings).
+      Located at offset gff_header.label_array_offset from start of file.
+      Note: Position-based reading handled by application code due to Kaitai Struct limitations.
   
   - id: struct_array
     type: struct_array
     if: gff_header.struct_count > 0
-    pos: gff_header.struct_array_offset
-    doc: Array of struct entries (12 bytes each)
+    doc: |
+      Array of struct entries (12 bytes each).
+      Located at offset gff_header.struct_array_offset from start of file.
+      Note: Position-based reading handled by application code due to Kaitai Struct limitations.
   
   - id: field_array
     type: field_array
     if: gff_header.field_count > 0
-    pos: gff_header.field_array_offset
-    doc: Array of field entries (12 bytes each)
+    doc: |
+      Array of field entries (12 bytes each).
+      Located at offset gff_header.field_array_offset from start of file.
+      Note: Position-based reading handled by application code due to Kaitai Struct limitations.
   
   - id: field_data
     type: field_data_section
     if: gff_header.field_data_count > 0
-    pos: gff_header.field_data_offset
-    doc: Field data section for complex types (strings, ResRefs, LocalizedStrings, etc.)
+    doc: |
+      Field data section for complex types (strings, ResRefs, LocalizedStrings, etc.).
+      Located at offset gff_header.field_data_offset from start of file.
+      Note: Position-based reading handled by application code due to Kaitai Struct limitations.
   
   - id: field_indices
     type: field_indices_array
     if: gff_header.field_indices_count > 0
-    pos: gff_header.field_indices_offset
-    doc: Field indices array (MultiMap) for structs with multiple fields
+    doc: |
+      Field indices array (MultiMap) for structs with multiple fields.
+      Located at offset gff_header.field_indices_offset from start of file.
+      Note: Position-based reading handled by application code due to Kaitai Struct limitations.
   
   - id: list_indices
     type: list_indices_array
     if: gff_header.list_indices_count > 0
-    pos: gff_header.list_indices_offset
-    doc: List indices array for LIST type fields (used for PropertiesList)
+    doc: |
+      List indices array for LIST type fields (used for PropertiesList).
+      Located at offset gff_header.list_indices_offset from start of file.
+      Note: Position-based reading handled by application code due to Kaitai Struct limitations.
 
 types:
   # GFF Header (56 bytes)
@@ -137,16 +149,14 @@ types:
         doc: |
           File type signature. Must be "UTI " (space-padded) for item template files.
           Other GFF types: "GFF ", "DLG ", "ARE ", "UTC ", "UTD ", "UTM ", "GIT ", etc.
-        valid: "UTI "
+          Validation handled by application code.
       
       - id: file_version
         type: str
         encoding: ASCII
         size: 4
         doc: |
-          File format version. Typically "V3.2" for KotOR.
-          Other versions: "V3.3", "V4.0", "V4.1" for other BioWare games.
-        valid: ["V3.2", "V3.3", "V4.0", "V4.1"]
+          File format version. Valid values: "V3.2" (KotOR), "V3.3", "V4.0", "V4.1" (other BioWare games).
       
       - id: struct_array_offset
         type: u4
@@ -219,10 +229,7 @@ types:
           "ModelVariation", "BodyVariation", "TextureVar", "PaletteID", "Identified", "Stolen",
           "PropertiesList", "Upgradable" (KotOR1), "UpgradeLevel" (KotOR2), "WeaponColor" (KotOR2),
           "WeaponWhoosh" (KotOR2), "ArmorRulesType" (KotOR2).
-    instances:
-      name_trimmed:
-        value: name.rstrip('\x00')
-        doc: "Label name with trailing nulls removed"
+          Note: Trailing nulls should be trimmed by application code.
   
   # Struct Array
   struct_array:
@@ -326,36 +333,28 @@ types:
           For List type:
             Byte offset into list_indices array (relative to list_indices_offset)
     instances:
-      is_simple_type:
-        value: field_type.value >= 0 && field_type.value <= 5 || field_type.value == 8
-        doc: "True if field stores data inline (simple types: Byte, Char, UInt16, Int16, UInt32, Int32, Float)"
-      is_complex_type:
-        value: field_type.value >= 6 && field_type.value <= 13 || field_type.value >= 16 && field_type.value <= 17
-        doc: "True if field stores data in field_data section (complex types: UInt64, Int64, Double, String, ResRef, LocalizedString, Binary, Vector3, Vector4)"
-      is_struct_type:
-        value: field_type.value == 14
-        doc: True if field is a nested struct
-      is_list_type:
-        value: field_type.value == 15
-        doc: True if field is a list of structs (e.g., PropertiesList)
       field_data_offset_value:
         value: _root.gff_header.field_data_offset + data_or_offset
-        if: is_complex_type
-        doc: Absolute file offset to field data for complex types
+        doc: |
+          Absolute file offset to field data for complex types.
+          Note: Field type checking (simple vs complex vs struct vs list) handled by application code.
       struct_index_value:
         value: data_or_offset
-        if: is_struct_type
-        doc: Struct index for struct type fields
+        doc: |
+          Struct index for struct type fields (when field_type is struct/14).
+          Note: Field type checking handled by application code.
       list_indices_offset_value:
         value: _root.gff_header.list_indices_offset + data_or_offset
-        if: is_list_type
-        doc: Absolute file offset to list indices for list type fields (e.g., PropertiesList)
+        doc: |
+          Absolute file offset to list indices for list type fields (when field_type is list/15).
+          Note: Field type checking handled by application code. Used for PropertiesList.
   
   # Field Data Section
   field_data_section:
     seq:
       - id: data
         type: str
+        encoding: UTF-8
         size: _root.gff_header.field_data_count
         doc: |
           Raw field data bytes for complex types. Individual field data entries are accessed via
@@ -404,11 +403,7 @@ types:
           String data (ASCII encoded, null-terminated).
           Trailing null bytes should be trimmed.
           Common UTI strings: Tag (item tag for scripting), Comment (developer notes).
-          Note: To extract the actual string value, trim trailing null bytes from 'data'.
-    instances:
-      data_trimmed:
-        value: data.rstrip('\x00')
-        doc: "String data with trailing nulls removed"
+          Note: To extract the actual string value, trim trailing null bytes from 'data' in application code.
   
   # Field Indices Array (MultiMap)
   field_indices_array:
@@ -430,6 +425,7 @@ types:
     seq:
       - id: raw_data
         type: str
+        encoding: UTF-8
         size: _root.gff_header.list_indices_count
         doc: |
           Raw list indices data. List entries are accessed via offsets stored in
@@ -588,59 +584,20 @@ types:
 enums:
   gff_field_type:
     0: uint8
-    doc: |
-      8-bit unsigned integer (byte).
-      Used in UTI for: Plot, Charges, ModelVariation, BodyVariation, TextureVar, PaletteID,
-      Upgradable (KotOR1), UpgradeLevel (KotOR2), WeaponColor (KotOR2), WeaponWhoosh (KotOR2),
-      ArmorRulesType (KotOR2), CostTable, Param1, Param1Value, ChanceAppear, UpgradeType (KotOR2).
     1: int8
-    doc: 8-bit signed integer (char)
     2: uint16
-    doc: |
-      16-bit unsigned integer (word).
-      Used in UTI for: StackSize (stack quantity), PropertyName (property type index),
-      Subtype (property subtype), CostValue (property cost value).
     3: int16
-    doc: 16-bit signed integer (short)
     4: uint32
-    doc: |
-      32-bit unsigned integer (dword).
-      Used in UTI for: Cost (base item cost), AddCost (additional cost from properties).
     5: int32
-    doc: |
-      32-bit signed integer (int).
-      Used in UTI for: BaseItem (index into baseitems.2da), Identified (identification flag),
-      Stolen (stolen flag, deprecated).
     6: uint64
-    doc: 64-bit unsigned integer (stored in field_data section)
     7: int64
-    doc: 64-bit signed integer (stored in field_data section)
     8: single
-    doc: 32-bit floating point (float)
     9: double
-    doc: 64-bit floating point (stored in field_data section)
     10: string
-    doc: |
-      Null-terminated string (CExoString, stored in field_data section).
-      Used in UTI for: Tag (item tag identifier), Comment (developer comment).
     11: resref
-    doc: |
-      Resource reference (ResRef, max 16 chars, stored in field_data section).
-      Used in UTI for: TemplateResRef (item template name).
     12: localized_string
-    doc: |
-      Localized string (CExoLocString, stored in field_data section).
-      Used in UTI for: LocalizedName (localized item name with multiple language/gender support),
-      Description (generic description when unidentified), DescIdentified (description when identified).
     13: binary
-    doc: Binary data blob (Void, stored in field_data section)
     14: struct
-    doc: Nested struct (struct index stored inline)
     15: list
-    doc: |
-      List of structs (offset to list_indices stored inline).
-      Used in UTI for: PropertiesList (list of item property structs).
     16: vector4
-    doc: Quaternion/Orientation (4×float, stored in field_data as Vector4)
     17: vector3
-    doc: 3D vector (3×float, stored in field_data)
