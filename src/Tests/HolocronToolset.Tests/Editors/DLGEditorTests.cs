@@ -4057,14 +4057,112 @@ namespace HolocronToolset.Tests.Editors
             }
         }
 
-        // TODO: STUB - Implement test_dlg_editor_manipulate_quest_entry_roundtrip (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2726-2758)
-        // Original: def test_dlg_editor_manipulate_quest_entry_roundtrip(qtbot, installation: HTInstallation, test_files_dir: Path): Test quest entry roundtrip
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2726-2758
+        // Original: def test_dlg_editor_manipulate_quest_entry_roundtrip(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating quest entry spin box with save/load roundtrip
         [Fact]
         public void TestDlgEditorManipulateQuestEntryRoundtrip()
         {
-            // TODO: STUB - Implement quest entry roundtrip test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2726-2758
-            throw new NotImplementedException("TestDlgEditorManipulateQuestEntryRoundtrip: Quest entry roundtrip test not yet implemented");
+            // Get test files directory
+            // Matching PyKotor implementation: dlg_file = test_files_dir / "ORIHA.dlg"
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            // Try to find a DLG file
+            string dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            }
+
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Skip if no DLG files available for testing (matching Python pytest.skip behavior)
+                // Matching PyKotor implementation: if not dlg_file.exists(): pytest.skip("ORIHA.dlg not found")
+                return;
+            }
+
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            // Matching PyKotor implementation: editor = DLGEditor(None, installation)
+            var editor = new DLGEditor(null, installation);
+
+            // Matching PyKotor implementation: original_data = dlg_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(dlgFile);
+            // Matching PyKotor implementation: editor.load(dlg_file, "ORIHA", ResourceType.DLG, original_data)
+            editor.Load(dlgFile, "ORIHA", ResourceType.DLG, originalData);
+
+            // Matching PyKotor implementation: if editor.model.rowCount() > 0:
+            if (editor.Model.RowCount > 0)
+            {
+                // Get first item from model
+                // Matching PyKotor implementation: first_item = editor.model.item(0, 0)
+                var firstItem = editor.Model.Item(0, 0);
+                // Matching PyKotor implementation: if isinstance(first_item, DLGStandardItem):
+                if (firstItem != null)
+                {
+                    // Matching PyKotor implementation: editor.ui.dialogTree.setCurrentIndex(first_item.index())
+                    SelectTreeViewItem(editor, firstItem);
+
+                    // Test various quest entry values
+                    // Matching PyKotor implementation: test_values = [0, 1, 5, 10, 50]
+                    int[] testValues = { 0, 1, 5, 10, 50 };
+                    foreach (int val in testValues)
+                    {
+                        // Matching PyKotor implementation: editor.ui.questEntrySpin.setValue(val)
+                        if (editor.QuestEntrySpin != null)
+                        {
+                            editor.QuestEntrySpin.Value = val;
+                        }
+                        // Matching PyKotor implementation: editor.on_node_update()
+                        editor.OnNodeUpdate();
+
+                        // Save and verify
+                        // Matching PyKotor implementation: data, _ = editor.build()
+                        var (data, _) = editor.Build();
+                        // Matching PyKotor implementation: modified_dlg = read_dlg(data)
+                        var modifiedDlg = DLGHelper.ReadDlg(data);
+                        // Matching PyKotor implementation: if modified_dlg.starters:
+                        if (modifiedDlg.Starters != null && modifiedDlg.Starters.Count > 0)
+                        {
+                            // Matching PyKotor implementation: assert modified_dlg.starters[0].node.quest_entry == val
+                            modifiedDlg.Starters[0].Node.QuestEntry.Should().Be(val,
+                                $"Quest entry should be saved as {val} after modification");
+
+                            // Load back and verify
+                            // Matching PyKotor implementation: editor.load(dlg_file, "ORIHA", ResourceType.DLG, data)
+                            editor.Load(dlgFile, "ORIHA", ResourceType.DLG, data);
+                            // Matching PyKotor implementation: editor.ui.dialogTree.setCurrentIndex(first_item.index())
+                            var reloadedFirstItem = editor.Model.Item(0, 0);
+                            if (reloadedFirstItem != null)
+                            {
+                                SelectTreeViewItem(editor, reloadedFirstItem);
+                                // Matching PyKotor implementation: assert editor.ui.questEntrySpin.value() == val
+                                if (editor.QuestEntrySpin != null)
+                                {
+                                    editor.QuestEntrySpin.Value.Should().Be(val,
+                                        $"Quest entry spin should show {val} after reload");
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         // TODO: STUB - Implement test_dlg_editor_manipulate_plot_xp_roundtrip (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2760-2792)
