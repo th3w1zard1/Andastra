@@ -3093,6 +3093,18 @@ RtfDomParserAv.dll
             }
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:247-302
+        // Original: def test_serialize_mime_data(self):
+        // Note: Qt MIME data format differs from Avalonia drag-and-drop, so this test is stubbed
+        [Fact(Skip = "Requires Qt MIME data format which differs from Avalonia drag-and-drop")]
+        public void TestSerializeMimeData()
+        {
+            // TODO: STUB - Implement MIME data serialization test
+            // Python test uses Qt's QMimeData/QDataStream format which is not directly compatible with Avalonia
+            // Would need to implement Avalonia-compatible drag-and-drop data format
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:247-302
+        }
+
         // Helper method matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:84-141
         // Original: def create_complex_tree(self) -> DLG:
         private DLGType CreateComplexTree()
