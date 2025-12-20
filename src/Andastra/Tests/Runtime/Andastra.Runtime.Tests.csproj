@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework Condition="'$(OS)' == 'Windows_NT'">net9.0-windows</TargetFramework>
-    <TargetFramework Condition="'$(OS)' != 'Windows_NT'">net9.0</TargetFramework>
+    <TargetFrameworks>net9.0</TargetFrameworks>
     <LangVersion>7.3</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
@@ -28,7 +27,7 @@
     </PackageReference>
     <PackageReference Include="FluentAssertions" Version="8.8.0" />
     <PackageReference Include="Moq" Version="4.20.72" />
-    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
   </ItemGroup>
 
   <ItemGroup>
