@@ -2128,8 +2128,6 @@ RtfDomParserAv.dll
             throw new NotImplementedException("TestDlgEditorDeepNesting: Deep nesting test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_dlg_editor_many_siblings (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2270-2288)
-        // Original: def test_dlg_editor_many_siblings(qtbot, installation: HTInstallation): Test many siblings
         // Matching PyKotor implementation at vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2270-2288
         // Original: def test_dlg_editor_many_siblings(qtbot, installation: HTInstallation): Test handling many sibling nodes
         [Fact]
@@ -2153,6 +2151,9 @@ RtfDomParserAv.dll
             editor.CoreDlg.Starters.Count.Should().Be(20, "CoreDlg should have 20 starters");
 
             // Matching PyKotor: Build and verify
+            // Original: data, _ = editor.build()
+            // Original: dlg = read_dlg(data)
+            // Original: assert len(dlg.starters) == 20
             var result = editor.Build();
             var data = result.Item1;
             var dlg = DLGHelper.ReadDlg(data);
