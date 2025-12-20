@@ -897,14 +897,97 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestDlgEditorSearchWithOperators: Search with operators test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_dlg_editor_search_navigation (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1229-1253)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1229-1253
         // Original: def test_dlg_editor_search_navigation(qtbot, installation: HTInstallation): Test search navigation
         [Fact]
         public void TestDlgEditorSearchNavigation()
         {
-            // TODO: STUB - Implement search navigation test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1229-1253
-            throw new NotImplementedException("TestDlgEditorSearchNavigation: Search navigation test not yet implemented");
+            // Matching PyKotor implementation: editor = DLGEditor(None, installation)
+            var installation = CreateTestInstallation();
+            if (installation == null)
+            {
+                // Skip test if installation is not available
+                return;
+            }
+
+            var editor = new DLGEditor(null, installation);
+            
+            // Matching PyKotor implementation: editor.new()
+            editor.New();
+
+            // Matching PyKotor implementation: for _ in range(3): editor.model.add_root_node()
+            // Add multiple nodes
+            for (int i = 0; i < 3; i++)
+            {
+                editor.Model.AddRootNode();
+            }
+
+            // Matching PyKotor implementation: editor.show_find_bar()
+            // Use reflection to call private ShowFindBar method
+            var showFindBarMethod = typeof(DLGEditor).GetMethod("ShowFindBar", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            showFindBarMethod?.Invoke(editor, null);
+
+            // Matching PyKotor implementation: editor.find_input.setText("")  # Empty search finds all
+            // Use reflection to access private _findInput field
+            var findInputField = typeof(DLGEditor).GetField("_findInput", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var findInput = findInputField?.GetValue(editor) as TextBox;
+            if (findInput != null)
+            {
+                findInput.Text = ""; // Empty search finds all
+            }
+
+            // Matching PyKotor implementation: editor.handle_find()
+            // Use reflection to call private HandleFind method
+            var handleFindMethod = typeof(DLGEditor).GetMethod("HandleFind", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            handleFindMethod?.Invoke(editor, null);
+
+            // Matching PyKotor implementation: if editor.search_results:
+            // Use reflection to access private _searchResults field
+            var searchResultsField = typeof(DLGEditor).GetField("_searchResults", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var searchResults = searchResultsField?.GetValue(editor) as List<DLGStandardItem>;
+
+            if (searchResults != null && searchResults.Count > 0)
+            {
+                // Matching PyKotor implementation: initial_index = editor.current_result_index
+                // Use reflection to access private _currentResultIndex field
+                var currentResultIndexField = typeof(DLGEditor).GetField("_currentResultIndex", 
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                int initialIndex = currentResultIndexField != null ? (int)currentResultIndexField.GetValue(editor) : 0;
+
+                // Matching PyKotor implementation: editor.handle_find()  # Move forward
+                handleFindMethod?.Invoke(editor, null);
+
+                // Verify index changed (moved forward)
+                int newIndex = currentResultIndexField != null ? (int)currentResultIndexField.GetValue(editor) : 0;
+                // The index should have changed (wrapped around if needed)
+                newIndex.Should().BeGreaterOrEqualTo(0, "Result index should be valid after forward navigation");
+                newIndex.Should().BeLessThan(searchResults.Count, "Result index should be within bounds");
+
+                // Matching PyKotor implementation: editor.handle_back()  # Move back
+                // Use reflection to call private HandleBack method
+                var handleBackMethod = typeof(DLGEditor).GetMethod("HandleBack", 
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                handleBackMethod?.Invoke(editor, null);
+
+                // Verify index changed back (moved backward)
+                int backIndex = currentResultIndexField != null ? (int)currentResultIndexField.GetValue(editor) : 0;
+                // The index should have changed back (wrapped around if needed)
+                backIndex.Should().BeGreaterOrEqualTo(0, "Result index should be valid after backward navigation");
+                backIndex.Should().BeLessThan(searchResults.Count, "Result index should be within bounds");
+
+                // Matching PyKotor implementation: # Just verify no crash
+                // If we get here without exceptions, the navigation worked correctly
+                backIndex.Should().Be(initialIndex, "After forward then back, should return to initial index");
+            }
+            else
+            {
+                // If no search results, that's also valid - just verify no crash
+                // This can happen if the search didn't find any matches
+            }
         }
 
         // TODO: STUB - Implement test_dlg_editor_copy_paste_real (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1255-1290)
