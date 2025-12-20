@@ -589,6 +589,227 @@ namespace Andastra.Parsing.Tests.Formats
             content.Should().Contain("Plot", "UTI.ksy should document Plot field");
         }
 
+        [Fact(Timeout = 300000)]
+        public void TestUtiKsyDefinitionCompleteness()
+        {
+            // Validate UTI.ksy defines all UTI-specific fields and structures comprehensively
+            var normalizedKsyPath = Path.GetFullPath(UtiKsyPath);
+            if (!File.Exists(normalizedKsyPath))
+            {
+                return;
+            }
+
+            var content = File.ReadAllText(normalizedKsyPath);
+
+            // Check for required elements in Kaitai Struct definition
+            content.Should().Contain("meta:", "Should have meta section");
+            content.Should().Contain("id: uti", "Should have id: uti");
+            content.Should().Contain("file-extension: uti", "Should define file extension");
+            content.Should().Contain("gff_header", "Should define gff_header type");
+            content.Should().Contain("file_type", "Should define file_type field");
+            content.Should().Contain("file_version", "Should define file_version field");
+            content.Should().Contain("UTI ", "Should support UTI file type signature");
+
+            // Check for all core UTI item fields
+            content.Should().Contain("TemplateResRef", "Should document TemplateResRef field");
+            content.Should().Contain("LocalizedName", "Should document LocalizedName field");
+            content.Should().Contain("Description", "Should document Description field");
+            content.Should().Contain("DescIdentified", "Should document DescIdentified field");
+            content.Should().Contain("Tag", "Should document Tag field");
+            content.Should().Contain("Comment", "Should document Comment field");
+            content.Should().Contain("BaseItem", "Should document BaseItem field");
+            content.Should().Contain("Cost", "Should document Cost field");
+            content.Should().Contain("AddCost", "Should document AddCost field");
+            content.Should().Contain("Plot", "Should document Plot field");
+            content.Should().Contain("Charges", "Should document Charges field");
+            content.Should().Contain("StackSize", "Should document StackSize field");
+            content.Should().Contain("ModelVariation", "Should document ModelVariation field");
+            content.Should().Contain("BodyVariation", "Should document BodyVariation field");
+            content.Should().Contain("TextureVar", "Should document TextureVar field");
+            content.Should().Contain("PaletteID", "Should document PaletteID field");
+            content.Should().Contain("Identified", "Should document Identified field");
+            content.Should().Contain("Stolen", "Should document Stolen field");
+
+            // Check for KotOR2-specific fields
+            content.Should().Contain("UpgradeLevel", "Should document UpgradeLevel field (KotOR2)");
+            content.Should().Contain("WeaponColor", "Should document WeaponColor field (KotOR2)");
+            content.Should().Contain("WeaponWhoosh", "Should document WeaponWhoosh field (KotOR2)");
+            content.Should().Contain("ArmorRulesType", "Should document ArmorRulesType field (KotOR2)");
+
+            // Check for KotOR1-specific fields
+            content.Should().Contain("Upgradable", "Should document Upgradable field (KotOR1)");
+
+            // Check for PropertiesList structure
+            content.Should().Contain("PropertiesList", "Should document PropertiesList field");
+            content.Should().Contain("PropertyName", "Should document PropertyName field in PropertiesList");
+            content.Should().Contain("Subtype", "Should document Subtype field in PropertiesList");
+            content.Should().Contain("CostTable", "Should document CostTable field in PropertiesList");
+            content.Should().Contain("CostValue", "Should document CostValue field in PropertiesList");
+            content.Should().Contain("Param1", "Should document Param1 field in PropertiesList");
+            content.Should().Contain("Param1Value", "Should document Param1Value field in PropertiesList");
+            content.Should().Contain("ChanceAppear", "Should document ChanceAppear field in PropertiesList");
+            content.Should().Contain("UpgradeType", "Should document UpgradeType field in PropertiesList");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestUtiKsyHeaderStructure()
+        {
+            // Validate UTI.ksy defines all required header fields comprehensively
+            var normalizedKsyPath = Path.GetFullPath(UtiKsyPath);
+            if (!File.Exists(normalizedKsyPath))
+            {
+                return;
+            }
+
+            var content = File.ReadAllText(normalizedKsyPath);
+
+            // Check for all required header fields
+            content.Should().Contain("file_type", "Header should define file_type");
+            content.Should().Contain("file_version", "Header should define file_version");
+            content.Should().Contain("struct_array_offset", "Header should define struct_array_offset");
+            content.Should().Contain("struct_count", "Header should define struct_count");
+            content.Should().Contain("field_array_offset", "Header should define field_array_offset");
+            content.Should().Contain("field_count", "Header should define field_count");
+            content.Should().Contain("label_array_offset", "Header should define label_array_offset");
+            content.Should().Contain("label_count", "Header should define label_count");
+            content.Should().Contain("field_data_offset", "Header should define field_data_offset");
+            content.Should().Contain("field_data_count", "Header should define field_data_count");
+            content.Should().Contain("field_indices_offset", "Header should define field_indices_offset");
+            content.Should().Contain("field_indices_count", "Header should define field_indices_count");
+            content.Should().Contain("list_indices_offset", "Header should define list_indices_offset");
+            content.Should().Contain("list_indices_count", "Header should define list_indices_count");
+
+            // Check for header size documentation (56 bytes)
+            content.Should().Contain("56", "Header should be 56 bytes");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestUtiKsyFieldTypeDocumentation()
+        {
+            // Validate UTI.ksy documents all field types used in UTI format
+            var normalizedKsyPath = Path.GetFullPath(UtiKsyPath);
+            if (!File.Exists(normalizedKsyPath))
+            {
+                return;
+            }
+
+            var content = File.ReadAllText(normalizedKsyPath);
+
+            // Check for field type documentation
+            content.Should().Contain("uint8", "Should document uint8 field type (used for Plot, Charges, etc.)");
+            content.Should().Contain("uint16", "Should document uint16 field type (used for StackSize, PropertyName, etc.)");
+            content.Should().Contain("uint32", "Should document uint32 field type (used for Cost, AddCost)");
+            content.Should().Contain("int32", "Should document int32 field type (used for BaseItem, Identified, Stolen)");
+            content.Should().Contain("string", "Should document string field type (used for Tag, Comment)");
+            content.Should().Contain("resref", "Should document resref field type (used for TemplateResRef)");
+            content.Should().Contain("localized_string", "Should document localized_string field type (used for LocalizedName, Description)");
+            content.Should().Contain("list", "Should document list field type (used for PropertiesList)");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestUtiKsyLocalizedStringDocumentation()
+        {
+            // Validate UTI.ksy documents LocalizedString structure comprehensively
+            var normalizedKsyPath = Path.GetFullPath(UtiKsyPath);
+            if (!File.Exists(normalizedKsyPath))
+            {
+                return;
+            }
+
+            var content = File.ReadAllText(normalizedKsyPath);
+
+            // Check for LocalizedString type documentation
+            content.Should().Contain("localized_string_data", "Should define localized_string_data type");
+            content.Should().Contain("localized_substring", "Should define localized_substring type");
+            content.Should().Contain("string_ref", "Should document string_ref field");
+            content.Should().Contain("string_count", "Should document string_count field");
+            content.Should().Contain("string_id", "Should document string_id field");
+            content.Should().Contain("language_id", "Should document language_id computed instance");
+            content.Should().Contain("gender_id", "Should document gender_id computed instance");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestUtiKsyPropertiesListStructure()
+        {
+            // Validate UTI.ksy documents PropertiesList structure comprehensively
+            var normalizedKsyPath = Path.GetFullPath(UtiKsyPath);
+            if (!File.Exists(normalizedKsyPath))
+            {
+                return;
+            }
+
+            var content = File.ReadAllText(normalizedKsyPath);
+
+            // Check for PropertiesList structure documentation
+            content.Should().Contain("PropertiesList", "Should document PropertiesList field");
+            content.Should().Contain("PropertyName", "Should document PropertyName in PropertiesList struct");
+            content.Should().Contain("Subtype", "Should document Subtype in PropertiesList struct");
+            content.Should().Contain("CostTable", "Should document CostTable in PropertiesList struct");
+            content.Should().Contain("CostValue", "Should document CostValue in PropertiesList struct");
+            content.Should().Contain("Param1", "Should document Param1 in PropertiesList struct");
+            content.Should().Contain("Param1Value", "Should document Param1Value in PropertiesList struct");
+            content.Should().Contain("ChanceAppear", "Should document ChanceAppear in PropertiesList struct");
+            content.Should().Contain("list_entry", "Should document list_entry type for PropertiesList");
+            content.Should().Contain("struct_indices", "Should document struct_indices in list_entry");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestUtiKsyResRefDocumentation()
+        {
+            // Validate UTI.ksy documents ResRef structure comprehensively
+            var normalizedKsyPath = Path.GetFullPath(UtiKsyPath);
+            if (!File.Exists(normalizedKsyPath))
+            {
+                return;
+            }
+
+            var content = File.ReadAllText(normalizedKsyPath);
+
+            // Check for ResRef type documentation
+            content.Should().Contain("resref_data", "Should define resref_data type");
+            content.Should().Contain("max 16", "Should document ResRef max 16 characters limit");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestUtiKsyVersionSupport()
+        {
+            // Validate UTI.ksy supports all required GFF versions
+            var normalizedKsyPath = Path.GetFullPath(UtiKsyPath);
+            if (!File.Exists(normalizedKsyPath))
+            {
+                return;
+            }
+
+            var content = File.ReadAllText(normalizedKsyPath);
+
+            // Check for version support
+            content.Should().Contain("V3.2", "Should support V3.2 version (KotOR)");
+            content.Should().Contain("V3.3", "Should support V3.3 version");
+            content.Should().Contain("V4.0", "Should support V4.0 version");
+            content.Should().Contain("V4.1", "Should support V4.1 version");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestUtiKsyReferencesAndDocumentation()
+        {
+            // Validate UTI.ksy includes comprehensive references and documentation
+            var normalizedKsyPath = Path.GetFullPath(UtiKsyPath);
+            if (!File.Exists(normalizedKsyPath))
+            {
+                return;
+            }
+
+            var content = File.ReadAllText(normalizedKsyPath);
+
+            // Check for documentation references
+            content.Should().Contain("xref:", "Should include xref section with references");
+            content.Should().Contain("pykotor", "Should reference PyKotor implementation");
+            content.Should().Contain("wiki", "Should reference wiki documentation");
+            content.Should().Contain("doc:", "Should include comprehensive doc section");
+            content.Should().Contain("baseitems.2da", "Should document baseitems.2da reference");
+            content.Should().Contain("itempropdef.2da", "Should document itempropdef.2da reference");
+        }
+
         public static IEnumerable<object[]> GetSupportedLanguages()
         {
             return SupportedLanguages.Select(lang => new object[] { lang });

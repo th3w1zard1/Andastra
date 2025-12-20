@@ -39,6 +39,7 @@ doc: |
     - WeaponColor: Blade color for lightsabers (UInt8/Byte, KotOR2 only, 0-10)
     - WeaponWhoosh: Whoosh sound type (UInt8/Byte, KotOR2 only)
     - ArmorRulesType: Armor class category (UInt8/Byte, KotOR2 only)
+    - Cursed: Cannot be unequipped flag (UInt8/Byte, 0 = normal, 1 = cursed item, deprecated in some versions)
   - PropertiesList: Array of UTI_PropertiesList structs containing item properties and enchantments (List type)
     Each property struct contains:
     - PropertyName: Property index (UInt16, index into itempropdef.2da)
@@ -48,6 +49,8 @@ doc: |
     - Param1: First parameter (UInt8/Byte, property-specific parameter)
     - Param1Value: First parameter value (UInt8/Byte, value for Param1)
     - ChanceAppear: Percentage chance to appear (UInt8/Byte, 0-100, for random loot generation)
+    - UsesPerDay: Daily usage limit (UInt8/Byte, 0 = unlimited, optional/deprecated field)
+    - UsesLeft: Remaining uses for today (UInt8/Byte, optional/deprecated field)
     - UpgradeType: Upgrade type (UInt8/Byte, optional, KotOR2 upgrade slot type)
   
   BaseItem types (from baseitems.2da):
@@ -213,9 +216,9 @@ types:
           Common UTI field names: "TemplateResRef", "LocalizedName", "Description", "DescIdentified",
           "Tag", "Comment", "BaseItem", "Cost", "AddCost", "Plot", "Charges", "StackSize",
           "ModelVariation", "BodyVariation", "TextureVar", "PaletteID", "Identified", "Stolen",
-          "UpgradeLevel", "Upgradable", "WeaponColor", "WeaponWhoosh", "ArmorRulesType",
+          "UpgradeLevel", "Upgradable", "WeaponColor", "WeaponWhoosh", "ArmorRulesType", "Cursed",
           "PropertiesList", "PropertyName", "Subtype", "CostTable", "CostValue", "Param1",
-          "Param1Value", "ChanceAppear", "UpgradeType".
+          "Param1Value", "ChanceAppear", "UsesPerDay", "UsesLeft", "UpgradeType".
     instances:
       name_trimmed:
         value: name.rstrip('\x00')
