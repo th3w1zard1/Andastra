@@ -206,7 +206,17 @@ namespace Andastra.Runtime.MonoGame.Rendering
                 try
                 {
                     _remixBridge = new RemixBridge();
-                    if (_remixBridge.Initialize(windowHandle))
+                    RemixSettings remixSettings = new RemixSettings
+                    {
+                        RuntimePath = settings.RemixRuntimePath ?? string.Empty,
+                        EnablePathTracing = true,
+                        MaxBounces = 8,
+                        EnableDenoiser = settings.RaytracingDenoiser,
+                        EnableDlss = false,
+                        EnableReflex = false,
+                        CaptureMode = false
+                    };
+                    if (_remixBridge.Initialize(windowHandle, remixSettings))
                     {
                         Console.WriteLine("[OdysseyRenderer] RTX Remix bridge initialized successfully");
                     }
@@ -282,7 +292,10 @@ namespace Andastra.Runtime.MonoGame.Rendering
                 {
                     Console.WriteLine("[OdysseyRenderer] WARNING: Material factory initialization failed: " + ex.Message);
                     Console.WriteLine("[OdysseyRenderer] Stack trace: " + ex.StackTrace);
-                    _materialFactory?.Dispose();
+                    if (_materialFactory is IDisposable disposable)
+                    {
+                        disposable.Dispose();
+                    }
                     _materialFactory = null;
                 }
             }
@@ -318,7 +331,10 @@ namespace Andastra.Runtime.MonoGame.Rendering
             _lighting?.Dispose();
             _lighting = null;
 
-            _materialFactory?.Dispose();
+            if (_materialFactory is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
             _materialFactory = null;
 
             _backend?.Dispose();

@@ -4,14 +4,11 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Engines.Odyssey.Components;
-using Andastra.Runtime.Engines.Odyssey.Systems;
-using Andastra.Runtime.Engines.Odyssey.Data;
-using GameDataManager = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager;
 using Andastra.Runtime.MonoGame.Converters;
 using Andastra.Parsing.Formats.MDLData;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Installation;
+using Andastra.Runtime.Engines.Odyssey.Systems;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.MonoGame.Rendering
@@ -39,13 +36,14 @@ namespace Andastra.Runtime.MonoGame.Rendering
         private readonly GraphicsDevice _graphicsDevice;
         private readonly Dictionary<string, MdlToMonoGameModelConverter.ConversionResult> _modelCache;
         private readonly Dictionary<string, BasicEffect> _materialCache;
-        private readonly GameDataManager _gameDataManager;
+        // Using object to avoid circular dependency - should be GameDataManager at runtime
+        private readonly object _gameDataManager;
         private readonly Installation _installation;
         private readonly Func<string, BasicEffect> _materialResolver;
 
         public EntityModelRenderer(
             [NotNull] GraphicsDevice device,
-            [NotNull] GameDataManager gameDataManager,
+            [NotNull] object gameDataManager,
             [NotNull] Installation installation)
         {
             if (device == null)
@@ -249,7 +247,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
 
             try
             {
-                Andastra.Parsing.Installation.ResourceResult result = _installation.Resources.LookupResource(modelResRef, Andastra.Parsing.Resources.ResourceType.MDL);
+                Andastra.Parsing.Installation.ResourceResult result = _installation.Resources.LookupResource(modelResRef, Andastra.Parsing.Resource.ResourceType.MDL);
                 if (result == null || result.Data == null)
                 {
                     return null;

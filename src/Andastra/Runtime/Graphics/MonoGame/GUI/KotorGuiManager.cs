@@ -5,15 +5,23 @@ using System.Numerics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using XnaVector2 = Microsoft.Xna.Framework.Vector2;
+using XnaColor = Microsoft.Xna.Framework.Color;
+using XnaRectangle = Microsoft.Xna.Framework.Rectangle;
+using XnaSpriteEffects = Microsoft.Xna.Framework.Graphics.SpriteEffects;
+using ParsingColor = Andastra.Parsing.Common.Color;
 using Andastra.Parsing;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics.GUI;
+using GuiResource = Andastra.Parsing.Resource.Generics.GUI.GUI;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.TPC;
 using Andastra.Runtime.Games.Common;
-using Andastra.Runtime.Games.Odyssey.Fonts;
 using Andastra.Runtime.MonoGame.Converters;
+using Andastra.Runtime.MonoGame.Graphics;
+using Andastra.Runtime.Graphics;
+using Andastra.Runtime.Graphics.MonoGame.Graphics;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.MonoGame.GUI
@@ -66,7 +74,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         private readonly SpriteBatch _spriteBatch;
         private readonly Dictionary<string, LoadedGui> _loadedGuis;
         private readonly Dictionary<string, Texture2D> _textureCache;
-        private readonly Dictionary<string, OdysseyBitmapFont> _fontCache;
+        private readonly Dictionary<string, BaseBitmapFont> _fontCache;
         private LoadedGui _currentGui;
         private MouseState _previousMouseState;
         private KeyboardState _previousKeyboardState;
@@ -428,7 +436,7 @@ namespace Andastra.Runtime.MonoGame.GUI
             // Render all controls recursively
             foreach (var control in _currentGui.Gui.Controls)
             {
-                RenderControl(control, Vector2.Zero);
+                RenderControl(control, XnaVector2.Zero);
             }
 
             _spriteBatch.End();
@@ -633,15 +641,15 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// <summary>
         /// Recursively renders a GUI control and its children.
         /// </summary>
-        private void RenderControl(GUIControl control, Vector2 parentOffset)
+        private void RenderControl(GUIControl control, XnaVector2 parentOffset)
         {
             if (control == null)
             {
                 return;
             }
 
-            Vector2 controlPosition = control.Position + parentOffset;
-            Vector2 controlSize = control.Size;
+            XnaVector2 controlPosition = new XnaVector2(control.Position.X, control.Position.Y) + parentOffset;
+            XnaVector2 controlSize = new XnaVector2(control.Size.X, control.Size.Y);
 
             // Skip rendering if control is outside viewport
             if (controlPosition.X + controlSize.X < 0 || controlPosition.Y + controlSize.Y < 0 ||
@@ -708,7 +716,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// <summary>
         /// Renders a panel control.
         /// </summary>
-        private void RenderPanel(GUIPanel panel, Vector2 position, Vector2 size)
+        private void RenderPanel(GUIPanel panel, XnaVector2 position, XnaVector2 size)
         {
             // Render panel background using border fill texture if available
             if (panel.Border != null && !panel.Border.Fill.IsBlank)
@@ -717,8 +725,8 @@ namespace Andastra.Runtime.MonoGame.GUI
                 if (fillTexture != null)
                 {
                     float alpha = panel.Alpha;
-                    Color tint = Microsoft.Xna.Framework.Color.White * alpha;
-                    _spriteBatch.Draw(fillTexture, new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    XnaColor tint = Microsoft.Xna.Framework.Color.White * alpha;
+                    _spriteBatch.Draw(fillTexture, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
             else
@@ -729,8 +737,8 @@ namespace Andastra.Runtime.MonoGame.GUI
                 {
                     Texture2D pixel = GetPixelTexture();
                     float alpha = panel.Alpha;
-                    Color tint = new Microsoft.Xna.Framework.Color(bgColor.R, bgColor.G, bgColor.B, (byte)(bgColor.A * alpha));
-                    _spriteBatch.Draw(pixel, new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    XnaColor tint = new Microsoft.Xna.Framework.Color(bgColor.R, bgColor.G, bgColor.B, (byte)(bgColor.A * alpha));
+                    _spriteBatch.Draw(pixel, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
         }
@@ -738,7 +746,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// <summary>
         /// Renders a button control.
         /// </summary>
-        private void RenderButton(GUIButton button, Vector2 position, Vector2 size)
+        private void RenderButton(GUIButton button, XnaVector2 position, XnaVector2 size)
         {
             // Check button states: highlighted (mouse over) and selected (programmatically selected)
             bool isHighlighted = IsButtonHighlighted(button);
@@ -769,8 +777,8 @@ namespace Andastra.Runtime.MonoGame.GUI
                 Texture2D fillTexture = LoadTexture(borderToUse.Fill.ToString());
                 if (fillTexture != null)
                 {
-                    Color tint = Microsoft.Xna.Framework.Color.White;
-                    _spriteBatch.Draw(fillTexture, new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    XnaColor tint = Microsoft.Xna.Framework.Color.White;
+                    _spriteBatch.Draw(fillTexture, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
             else if (button.Border != null && !button.Border.Fill.IsBlank)
@@ -778,8 +786,8 @@ namespace Andastra.Runtime.MonoGame.GUI
                 Texture2D fillTexture = LoadTexture(button.Border.Fill.ToString());
                 if (fillTexture != null)
                 {
-                    Color tint = Microsoft.Xna.Framework.Color.White;
-                    _spriteBatch.Draw(fillTexture, new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    XnaColor tint = Microsoft.Xna.Framework.Color.White;
+                    _spriteBatch.Draw(fillTexture, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
             else
@@ -789,8 +797,8 @@ namespace Andastra.Runtime.MonoGame.GUI
                 if (bgColor.A > 0)
                 {
                     Texture2D pixel = GetPixelTexture();
-                    Color tint = new Microsoft.Xna.Framework.Color(bgColor.R, bgColor.G, bgColor.B, bgColor.A);
-                    _spriteBatch.Draw(pixel, new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    XnaColor tint = new Microsoft.Xna.Framework.Color(bgColor.R, bgColor.G, bgColor.B, bgColor.A);
+                    _spriteBatch.Draw(pixel, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
 
@@ -823,7 +831,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// <summary>
         /// Renders a label control.
         /// </summary>
-        private void RenderLabel(GUILabel label, Vector2 position, Vector2 size)
+        private void RenderLabel(GUILabel label, XnaVector2 position, XnaVector2 size)
         {
             // Render label background if it has a border
             if (label.Border != null && !label.Border.Fill.IsBlank)
@@ -831,8 +839,8 @@ namespace Andastra.Runtime.MonoGame.GUI
                 Texture2D fillTexture = LoadTexture(label.Border.Fill.ToString());
                 if (fillTexture != null)
                 {
-                    Color tint = Microsoft.Xna.Framework.Color.White;
-                    _spriteBatch.Draw(fillTexture, new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    XnaColor tint = Microsoft.Xna.Framework.Color.White;
+                    _spriteBatch.Draw(fillTexture, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
 
@@ -867,7 +875,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// Based on swkotor.exe and swkotor2.exe: CSWGuiListBox::Draw
         /// Original implementation: Items rendered using ProtoItem template with proper states and scrolling
         /// </summary>
-        private void RenderListBox(GUIListBox listBox, Vector2 position, Vector2 size)
+        private void RenderListBox(GUIListBox listBox, XnaVector2 position, XnaVector2 size)
         {
             // Render list box background
             if (listBox.Border != null && !listBox.Border.Fill.IsBlank)
@@ -875,8 +883,8 @@ namespace Andastra.Runtime.MonoGame.GUI
                 Texture2D fillTexture = LoadTexture(listBox.Border.Fill.ToString());
                 if (fillTexture != null)
                 {
-                    Color tint = Microsoft.Xna.Framework.Color.White;
-                    _spriteBatch.Draw(fillTexture, new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    XnaColor tint = Microsoft.Xna.Framework.Color.White;
+                    _spriteBatch.Draw(fillTexture, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
 
@@ -920,8 +928,8 @@ namespace Andastra.Runtime.MonoGame.GUI
                 bool isHighlighted = IsListBoxItemHighlighted(listBox, position, size, itemsRendered, itemHeight, padding);
 
                 // Render proto item at current position
-                Vector2 itemPosition = new Vector2(position.X, currentY);
-                Vector2 itemSize = new Vector2(size.X, itemHeight);
+                XnaVector2 itemPosition = new XnaVector2(position.X, currentY);
+                XnaVector2 itemSize = new XnaVector2(size.X, itemHeight);
                 RenderProtoItem(listBox.ProtoItem, itemPosition, itemSize, itemText, isSelected, isHighlighted);
 
                 // Move to next item position
@@ -1009,7 +1017,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// Calculates how many items can fit in the visible area of the list box.
         /// Based on swkotor.exe and swkotor2.exe: Visible item count calculation
         /// </summary>
-        private int GetVisibleItemCount(GUIListBox listBox, int totalItemCount, Vector2 listBoxSize)
+        private int GetVisibleItemCount(GUIListBox listBox, int totalItemCount, XnaVector2 listBoxSize)
         {
             if (listBox.ProtoItem == null)
             {
@@ -1074,7 +1082,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// Checks if a list box item at a specific render position is currently highlighted (mouse over).
         /// Based on swkotor.exe and swkotor2.exe: Mouse hover detection
         /// </summary>
-        private bool IsListBoxItemHighlighted(GUIListBox listBox, Vector2 listBoxPosition, Vector2 listBoxSize, int itemIndex, float itemHeight, int padding)
+        private bool IsListBoxItemHighlighted(GUIListBox listBox, XnaVector2 listBoxPosition, XnaVector2 listBoxSize, int itemIndex, float itemHeight, int padding)
         {
             MouseState currentMouseState = Mouse.GetState();
             int mouseX = currentMouseState.X;
@@ -1107,7 +1115,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// Based on swkotor.exe and swkotor2.exe: ProtoItem rendering with state support
         /// Original implementation: ProtoItem renders differently based on selected/highlighted states
         /// </summary>
-        private void RenderProtoItem(GUIProtoItem protoItem, Vector2 position, Vector2 size, string itemText, bool isSelected, bool isHighlighted)
+        private void RenderProtoItem(GUIProtoItem protoItem, XnaVector2 position, XnaVector2 size, string itemText, bool isSelected, bool isHighlighted)
         {
             // Determine which border state to use (normal, hilight, selected, hilight+selected)
             // Priority: hilight+selected > selected > hilight > normal
@@ -1134,8 +1142,8 @@ namespace Andastra.Runtime.MonoGame.GUI
                 Texture2D fillTexture = LoadTexture(borderToUse.Fill.ToString());
                 if (fillTexture != null)
                 {
-                    Color tint = Microsoft.Xna.Framework.Color.White;
-                    _spriteBatch.Draw(fillTexture, new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    XnaColor tint = Microsoft.Xna.Framework.Color.White;
+                    _spriteBatch.Draw(fillTexture, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
             else if (protoItem.Border != null && !protoItem.Border.Fill.IsBlank)
@@ -1143,8 +1151,8 @@ namespace Andastra.Runtime.MonoGame.GUI
                 Texture2D fillTexture = LoadTexture(protoItem.Border.Fill.ToString());
                 if (fillTexture != null)
                 {
-                    Color tint = Microsoft.Xna.Framework.Color.White;
-                    _spriteBatch.Draw(fillTexture, new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    XnaColor tint = Microsoft.Xna.Framework.Color.White;
+                    _spriteBatch.Draw(fillTexture, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
             else
@@ -1154,8 +1162,8 @@ namespace Andastra.Runtime.MonoGame.GUI
                 if (bgColor.A > 0)
                 {
                     Texture2D pixel = GetPixelTexture();
-                    Color tint = new Microsoft.Xna.Framework.Color(bgColor.R, bgColor.G, bgColor.B, bgColor.A);
-                    _spriteBatch.Draw(pixel, new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    XnaColor tint = new Microsoft.Xna.Framework.Color(bgColor.R, bgColor.G, bgColor.B, bgColor.A);
+                    _spriteBatch.Draw(pixel, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
 
@@ -1205,7 +1213,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// Renders the scrollbar for a list box.
         /// Based on swkotor.exe and swkotor2.exe: ListBox scrollbar rendering
         /// </summary>
-        private void RenderListBoxScrollbar(GUIListBox listBox, Vector2 listBoxPosition, Vector2 listBoxSize, int totalItemCount, int visibleItemCount)
+        private void RenderListBoxScrollbar(GUIListBox listBox, XnaVector2 listBoxPosition, XnaVector2 listBoxSize, int totalItemCount, int visibleItemCount)
         {
             if (listBox.ScrollBar == null || totalItemCount <= visibleItemCount)
             {
@@ -1221,8 +1229,8 @@ namespace Andastra.Runtime.MonoGame.GUI
             float scrollbarWidth = 20.0f; // Approximate scrollbar width
             float scrollbarHeight = listBoxSize.Y;
 
-            Vector2 scrollbarPosition = new Vector2(scrollbarX, scrollbarY);
-            Vector2 scrollbarSize = new Vector2(scrollbarWidth, scrollbarHeight);
+            XnaVector2 scrollbarPosition = new XnaVector2(scrollbarX, scrollbarY);
+            XnaVector2 scrollbarSize = new XnaVector2(scrollbarWidth, scrollbarHeight);
 
             // Render scrollbar background if available
             if (scrollBar.Border != null && !scrollBar.Border.Fill.IsBlank)
@@ -1236,7 +1244,7 @@ namespace Andastra.Runtime.MonoGame.GUI
             }
 
             // Render scrollbar thumb
-            if (scrollBar.GuiThumb != null && !scrollBar.GuiThumb.Image.IsBlank)
+            if (scrollBar.GuiThumb != null && !scrollBar.GuiThumb.Image.IsBlank())
             {
                 Texture2D thumbTexture = LoadTexture(scrollBar.GuiThumb.Image.ToString());
                 if (thumbTexture != null)
@@ -1254,25 +1262,25 @@ namespace Andastra.Runtime.MonoGame.GUI
 
                     // Render thumb
                     Color thumbTint = Microsoft.Xna.Framework.Color.White;
-                    Rectangle thumbRect = new Rectangle((int)scrollbarPosition.X, (int)thumbY, (int)scrollbarSize.X, (int)thumbHeight);
+                    XnaRectangle thumbRect = new XnaRectangle((int)scrollbarPosition.X, (int)thumbY, (int)scrollbarSize.X, (int)thumbHeight);
                     _spriteBatch.Draw(thumbTexture, thumbRect, thumbTint);
                 }
             }
 
             // Render scrollbar direction arrows if available
-            if (scrollBar.GuiDirection != null && !scrollBar.GuiDirection.Image.IsBlank)
+            if (scrollBar.GuiDirection != null && !scrollBar.GuiDirection.Image.IsBlank())
             {
                 Texture2D arrowTexture = LoadTexture(scrollBar.GuiDirection.Image.ToString());
                 if (arrowTexture != null)
                 {
                     // Render up arrow (top of scrollbar)
                     float upArrowSize = Math.Min(20.0f, scrollbarSize.Y * 0.1f);
-                    Rectangle upArrowRect = new Rectangle((int)scrollbarPosition.X, (int)scrollbarPosition.Y, (int)scrollbarSize.X, (int)upArrowSize);
+                    XnaRectangle upArrowRect = new XnaRectangle((int)scrollbarPosition.X, (int)scrollbarPosition.Y, (int)scrollbarSize.X, (int)upArrowSize);
                     _spriteBatch.Draw(arrowTexture, upArrowRect, Microsoft.Xna.Framework.Color.White);
 
                     // Render down arrow (bottom of scrollbar)
                     float downArrowY = scrollbarPosition.Y + scrollbarSize.Y - upArrowSize;
-                    Rectangle downArrowRect = new Rectangle((int)scrollbarPosition.X, (int)downArrowY, (int)scrollbarSize.X, (int)upArrowSize);
+                    XnaRectangle downArrowRect = new XnaRectangle((int)scrollbarPosition.X, (int)downArrowY, (int)scrollbarSize.X, (int)upArrowSize);
                     _spriteBatch.Draw(arrowTexture, downArrowRect, Microsoft.Xna.Framework.Color.White);
                 }
             }
@@ -1281,7 +1289,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// <summary>
         /// Renders a progress bar control.
         /// </summary>
-        private void RenderProgressBar(GUIProgressBar progressBar, Vector2 position, Vector2 size)
+        private void RenderProgressBar(GUIProgressBar progressBar, XnaVector2 position, XnaVector2 size)
         {
             // Render progress bar background
             if (progressBar.Border != null && !progressBar.Border.Fill.IsBlank)
@@ -1289,8 +1297,8 @@ namespace Andastra.Runtime.MonoGame.GUI
                 Texture2D fillTexture = LoadTexture(progressBar.Border.Fill.ToString());
                 if (fillTexture != null)
                 {
-                    Color tint = Microsoft.Xna.Framework.Color.White;
-                    _spriteBatch.Draw(fillTexture, new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    XnaColor tint = Microsoft.Xna.Framework.Color.White;
+                    _spriteBatch.Draw(fillTexture, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
 
@@ -1305,8 +1313,8 @@ namespace Andastra.Runtime.MonoGame.GUI
                     Texture2D progressTexture = LoadTexture(progressBar.Progress.Fill.ToString());
                     if (progressTexture != null)
                     {
-                        Color tint = Microsoft.Xna.Framework.Color.White;
-                        _spriteBatch.Draw(progressTexture, new Rectangle((int)position.X, (int)position.Y, fillWidth, (int)size.Y), tint);
+                        XnaColor tint = Microsoft.Xna.Framework.Color.White;
+                        _spriteBatch.Draw(progressTexture, new XnaRectangle((int)position.X, (int)position.Y, fillWidth, (int)size.Y), tint);
                     }
                 }
             }
@@ -1315,7 +1323,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// <summary>
         /// Renders a checkbox control.
         /// </summary>
-        private void RenderCheckBox(GUICheckBox checkBox, Vector2 position, Vector2 size)
+        private void RenderCheckBox(GUICheckBox checkBox, XnaVector2 position, XnaVector2 size)
         {
             // Check if checkbox is selected
             bool isSelected = checkBox.IsSelected.HasValue && checkBox.IsSelected.Value != 0;
@@ -1348,8 +1356,8 @@ namespace Andastra.Runtime.MonoGame.GUI
                 Texture2D fillTexture = LoadTexture(borderToUse.Fill.ToString());
                 if (fillTexture != null)
                 {
-                    Color tint = Microsoft.Xna.Framework.Color.White;
-                    _spriteBatch.Draw(fillTexture, new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    XnaColor tint = Microsoft.Xna.Framework.Color.White;
+                    _spriteBatch.Draw(fillTexture, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
             else if (checkBox.Border != null && !checkBox.Border.Fill.IsBlank)
@@ -1357,8 +1365,8 @@ namespace Andastra.Runtime.MonoGame.GUI
                 Texture2D fillTexture = LoadTexture(checkBox.Border.Fill.ToString());
                 if (fillTexture != null)
                 {
-                    Color tint = Microsoft.Xna.Framework.Color.White;
-                    _spriteBatch.Draw(fillTexture, new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    XnaColor tint = Microsoft.Xna.Framework.Color.White;
+                    _spriteBatch.Draw(fillTexture, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
             else
@@ -1368,8 +1376,8 @@ namespace Andastra.Runtime.MonoGame.GUI
                 if (bgColor.A > 0)
                 {
                     Texture2D pixel = GetPixelTexture();
-                    Color tint = new Microsoft.Xna.Framework.Color(bgColor.R, bgColor.G, bgColor.B, bgColor.A);
-                    _spriteBatch.Draw(pixel, new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    XnaColor tint = new Microsoft.Xna.Framework.Color(bgColor.R, bgColor.G, bgColor.B, bgColor.A);
+                    _spriteBatch.Draw(pixel, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
 
@@ -1406,18 +1414,18 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// <summary>
         /// Renders a checkmark for a selected checkbox.
         /// </summary>
-        private void RenderCheckmark(GUICheckBox checkBox, Vector2 position, Vector2 size)
+        private void RenderCheckmark(GUICheckBox checkBox, XnaVector2 position, XnaVector2 size)
         {
             // Try to load checkmark texture from Selected or HilightSelected if available
             Texture2D checkmarkTexture = null;
 
-            if (checkBox.Selected != null && !checkBox.Selected.Fill.IsBlank)
+            if (checkBox.Selected != null && !checkBox.Selected.Fill.IsBlank())
             {
                 // Try Selected.Fill as checkmark texture
                 checkmarkTexture = LoadTexture(checkBox.Selected.Fill.ToString());
             }
 
-            if (checkmarkTexture == null && checkBox.HilightSelected != null && !checkBox.HilightSelected.Fill.IsBlank)
+            if (checkmarkTexture == null && checkBox.HilightSelected != null && !checkBox.HilightSelected.Fill.IsBlank())
             {
                 // Try HilightSelected.Fill as checkmark texture
                 checkmarkTexture = LoadTexture(checkBox.HilightSelected.Fill.ToString());
@@ -1430,8 +1438,8 @@ namespace Andastra.Runtime.MonoGame.GUI
                 int checkmarkX = (int)(position.X + (size.X - checkmarkSize) / 2);
                 int checkmarkY = (int)(position.Y + (size.Y - checkmarkSize) / 2);
 
-                Color tint = Microsoft.Xna.Framework.Color.White;
-                _spriteBatch.Draw(checkmarkTexture, new Rectangle(checkmarkX, checkmarkY, checkmarkSize, checkmarkSize), tint);
+                XnaColor tint = Microsoft.Xna.Framework.Color.White;
+                _spriteBatch.Draw(checkmarkTexture, new XnaRectangle(checkmarkX, checkmarkY, checkmarkSize, checkmarkSize), tint);
             }
             else
             {
@@ -1448,9 +1456,9 @@ namespace Andastra.Runtime.MonoGame.GUI
                 float offset = checkmarkSize * 0.3f;
 
                 // Calculate checkmark points
-                Vector2 point1 = new Vector2(centerX - offset, centerY);
-                Vector2 point2 = new Vector2(centerX - offset * 0.3f, centerY + offset * 0.5f);
-                Vector2 point3 = new Vector2(centerX + offset, centerY - offset * 0.5f);
+                XnaVector2 point1 = new XnaVector2(centerX - offset, centerY);
+                XnaVector2 point2 = new XnaVector2(centerX - offset * 0.3f, centerY + offset * 0.5f);
+                XnaVector2 point3 = new XnaVector2(centerX + offset, centerY - offset * 0.5f);
 
                 // Draw checkmark using pixel texture
                 Texture2D pixel = GetPixelTexture();
@@ -1467,7 +1475,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// <summary>
         /// Draws a line using a pixel texture (simplified approach using rectangles).
         /// </summary>
-        private void DrawLine(Texture2D pixel, Vector2 start, Vector2 end, float thickness, Color color)
+        private void DrawLine(Texture2D pixel, XnaVector2 start, XnaVector2 end, float thickness, XnaColor color)
         {
             // Calculate line properties
             Vector2 direction = end - start;
@@ -1486,9 +1494,9 @@ namespace Andastra.Runtime.MonoGame.GUI
 
             // Draw line as rotated rectangle
             // Use a small rectangle and rotate it
-            Rectangle sourceRect = new Rectangle(0, 0, 1, 1);
-            Vector2 origin = new Vector2(0.5f, 0.5f);
-            Vector2 scale = new Vector2(length, thickness);
+            XnaRectangle sourceRect = new XnaRectangle(0, 0, 1, 1);
+            XnaVector2 origin = new XnaVector2(0.5f, 0.5f);
+            XnaVector2 scale = new XnaVector2(length, thickness);
 
             _spriteBatch.Draw(
                 pixel,
@@ -1498,7 +1506,7 @@ namespace Andastra.Runtime.MonoGame.GUI
                 angle,
                 origin,
                 scale,
-                SpriteEffects.None,
+                XnaSpriteEffects.None,
                 0);
         }
 
@@ -1508,16 +1516,16 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// Original implementation: Slider thumb position calculated from CURVALUE/MAXVALUE ratio
         /// Thumb position = (CURVALUE / MAXVALUE) × track length
         /// </summary>
-        private void RenderSlider(GUISlider slider, Vector2 position, Vector2 size)
+        private void RenderSlider(GUISlider slider, XnaVector2 position, XnaVector2 size)
         {
             // Render slider track
-            if (slider.Border != null && !slider.Border.Fill.IsBlank)
+            if (slider.Border != null && !slider.Border.Fill.IsBlank())
             {
                 Texture2D fillTexture = LoadTexture(slider.Border.Fill.ToString());
                 if (fillTexture != null)
                 {
-                    Color tint = Microsoft.Xna.Framework.Color.White;
-                    _spriteBatch.Draw(fillTexture, new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    XnaColor tint = Microsoft.Xna.Framework.Color.White;
+                    _spriteBatch.Draw(fillTexture, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
 
@@ -1537,7 +1545,7 @@ namespace Andastra.Runtime.MonoGame.GUI
                 thumb = slider.Thumb;
             }
 
-            if (thumb == null || thumb.Image.IsBlank)
+            if (thumb == null || thumb.Image.IsBlank())
             {
                 // No thumb texture defined - skip thumb rendering
                 return;
@@ -1582,8 +1590,8 @@ namespace Andastra.Runtime.MonoGame.GUI
                 float thumbX = position.X + (normalizedPosition * trackLength);
                 float thumbY = position.Y + (size.Y - thumbTexture.Height) / 2.0f; // Center vertically
 
-                thumbPosition = new Vector2(thumbX, thumbY);
-                thumbSize = new Vector2(thumbWidth, thumbTexture.Height);
+                thumbPosition = new XnaVector2(thumbX, thumbY);
+                thumbSize = new XnaVector2(thumbWidth, thumbTexture.Height);
             }
             else
             {
@@ -1593,8 +1601,8 @@ namespace Andastra.Runtime.MonoGame.GUI
                 float thumbX = position.X + (size.X - thumbTexture.Width) / 2.0f; // Center horizontally
                 float thumbY = position.Y + (normalizedPosition * trackLength);
 
-                thumbPosition = new Vector2(thumbX, thumbY);
-                thumbSize = new Vector2(thumbTexture.Width, thumbHeight);
+                thumbPosition = new XnaVector2(thumbX, thumbY);
+                thumbSize = new XnaVector2(thumbTexture.Width, thumbHeight);
             }
 
             // Apply thumb alignment if specified
@@ -1612,18 +1620,18 @@ namespace Andastra.Runtime.MonoGame.GUI
             }
 
             // Apply flip style if specified (typically unused, but support it)
-            SpriteEffects spriteEffects = SpriteEffects.None;
+            XnaSpriteEffects spriteEffects = XnaSpriteEffects.None;
             if (thumb.FlipStyle.HasValue)
             {
                 // FlipStyle: 0=none, 1=horizontal, 2=vertical, 3=both
                 int flipStyle = thumb.FlipStyle.Value;
                 if ((flipStyle & 1) != 0)
                 {
-                    spriteEffects |= SpriteEffects.FlipHorizontally;
+                    spriteEffects |= XnaSpriteEffects.FlipHorizontally;
                 }
                 if ((flipStyle & 2) != 0)
                 {
-                    spriteEffects |= SpriteEffects.FlipVertically;
+                    spriteEffects |= XnaSpriteEffects.FlipVertically;
                 }
             }
 
@@ -1631,7 +1639,7 @@ namespace Andastra.Runtime.MonoGame.GUI
             if (rotation != 0.0f)
             {
                 // Render with rotation
-                Vector2 thumbOrigin = new Vector2(thumbTexture.Width / 2.0f, thumbTexture.Height / 2.0f);
+                XnaVector2 thumbOrigin = new XnaVector2(thumbTexture.Width / 2.0f, thumbTexture.Height / 2.0f);
                 Vector2 thumbCenter = thumbPosition + thumbSize / 2.0f;
 
                 _spriteBatch.Draw(
@@ -1663,24 +1671,24 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// <summary>
         /// Renders a generic control (fallback).
         /// </summary>
-        private void RenderGenericControl(GUIControl control, Vector2 position, Vector2 size)
+        private void RenderGenericControl(GUIControl control, XnaVector2 position, XnaVector2 size)
         {
             // Render background if border is available
-            if (control.Border != null && !control.Border.Fill.IsBlank)
+            if (control.Border != null && !control.Border.Fill.IsBlank())
             {
                 Texture2D fillTexture = LoadTexture(control.Border.Fill.ToString());
                 if (fillTexture != null)
                 {
-                    Color tint = Microsoft.Xna.Framework.Color.White;
-                    _spriteBatch.Draw(fillTexture, new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    XnaColor tint = Microsoft.Xna.Framework.Color.White;
+                    _spriteBatch.Draw(fillTexture, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
             else if (control.Color.A > 0)
             {
                 // Render solid color background
                 Texture2D pixel = GetPixelTexture();
-                Color tint = new Microsoft.Xna.Framework.Color(control.Color.R, control.Color.G, control.Color.B, control.Color.A);
-                _spriteBatch.Draw(pixel, new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                XnaColor tint = new Microsoft.Xna.Framework.Color(control.Color.R, control.Color.G, control.Color.B, control.Color.A);
+                _spriteBatch.Draw(pixel, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
             }
         }
 
@@ -1785,13 +1793,31 @@ namespace Andastra.Runtime.MonoGame.GUI
             string key = fontResRef.ToLowerInvariant();
 
             // Check cache
-            if (_fontCache.TryGetValue(key, out OdysseyBitmapFont cached))
+            if (_fontCache.TryGetValue(key, out BaseBitmapFont cached))
             {
                 return cached;
             }
 
-            // Load font
-            OdysseyBitmapFont font = OdysseyBitmapFont.Load(fontResRef, _installation, _graphicsDevice);
+            // Load font using reflection to avoid circular dependency
+            BaseBitmapFont font = null;
+            try
+            {
+                System.Type odysseyFontType = System.Type.GetType("Andastra.Runtime.Games.Odyssey.Fonts.OdysseyBitmapFont, Andastra.Runtime.Games.Odyssey");
+                if (odysseyFontType != null)
+                {
+                    System.Reflection.MethodInfo loadMethod = odysseyFontType.GetMethod("Load", new System.Type[] { typeof(string), typeof(Installation), typeof(GraphicsDevice) });
+                    if (loadMethod != null)
+                    {
+                        object fontObj = loadMethod.Invoke(null, new object[] { fontResRef, _installation, _graphicsDevice });
+                        font = fontObj as BaseBitmapFont;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[KotorGuiManager] ERROR: Failed to load font {fontResRef} via reflection: {ex.Message}");
+            }
+
             if (font != null)
             {
                 _fontCache[key] = font;
@@ -1808,18 +1834,20 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// <param name="text">The text to render.</param>
         /// <param name="position">The position to render at.</param>
         /// <param name="color">The text color.</param>
-        private void RenderBitmapText([NotNull] BaseBitmapFont font, string text, Vector2 position, Color color)
+        private void RenderBitmapText([NotNull] BaseBitmapFont font, string text, XnaVector2 position, XnaColor color)
         {
             if (font == null || string.IsNullOrEmpty(text))
             {
                 return;
             }
 
-            // Cast to OdysseyBitmapFont for MonoGame-specific rendering
-            if (!(font is OdysseyBitmapFont odysseyFont))
+            // Get MonoGame texture from font for rendering
+            MonoGameTexture2D mgTexture = font.Texture as MonoGameTexture2D;
+            if (mgTexture == null)
             {
                 return;
             }
+            Texture2D fontTexture = mgTexture.Texture;
 
             float currentX = position.X;
             float currentY = position.Y;
@@ -1842,8 +1870,8 @@ namespace Andastra.Runtime.MonoGame.GUI
                     var g = glyph.Value;
                     // Render character glyph
                     _spriteBatch.Draw(
-                        odysseyFont.MonoGameTexture,
-                        new Rectangle((int)currentX, (int)currentY, (int)g.Width, (int)g.Height),
+                        fontTexture,
+                        new XnaRectangle((int)currentX, (int)currentY, (int)g.Width, (int)g.Height),
                         new Rectangle(g.SourceX, g.SourceY, g.SourceWidth, g.SourceHeight),
                         color);
 
@@ -1900,7 +1928,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// </summary>
         private class LoadedGui
         {
-            public GUI Gui { get; set; }
+            public GuiResource Gui { get; set; }
             public string Name { get; set; }
             public int Width { get; set; }
             public int Height { get; set; }

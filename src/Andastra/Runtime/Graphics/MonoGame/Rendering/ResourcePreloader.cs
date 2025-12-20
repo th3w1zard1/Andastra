@@ -209,7 +209,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
                 }
 
                 // Calculate priority based on distance and direction
-                Interfaces.Components.ITransformComponent transform = entity.GetComponent<Interfaces.Components.ITransformComponent>();
+                Andastra.Runtime.Core.Interfaces.Components.ITransformComponent transform = entity.GetComponent<Andastra.Runtime.Core.Interfaces.Components.ITransformComponent>();
                 if (transform == null)
                 {
                     continue;

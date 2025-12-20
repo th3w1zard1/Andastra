@@ -6,6 +6,7 @@ using Andastra.Parsing.Formats.MDL;
 using Andastra.Parsing.Formats.MDLData;
 using JetBrains.Annotations;
 using Andastra.Runtime.Graphics;
+using XnaVertexPositionColor = Microsoft.Xna.Framework.Graphics.VertexPositionColor;
 
 namespace Andastra.Runtime.MonoGame.Graphics
 {
@@ -47,7 +48,7 @@ namespace Andastra.Runtime.MonoGame.Graphics
 
             // Extract geometry from MDL
             var meshData = new MonoGameRoomMeshData();
-            var vertices = new List<VertexPositionColor>();
+            var vertices = new List<XnaVertexPositionColor>();
             var indices = new List<int>();
 
             // Extract basic geometry from the first trimesh node
@@ -61,9 +62,9 @@ namespace Andastra.Runtime.MonoGame.Graphics
             // Create vertex buffer using abstraction layer
             var vertexArray = vertices.ToArray();
             meshData.VertexBuffer = new MonoGameVertexBuffer(
-                new VertexBuffer(_graphicsDevice, typeof(VertexPositionColor), vertexArray.Length, BufferUsage.WriteOnly),
+                new VertexBuffer(_graphicsDevice, typeof(XnaVertexPositionColor), vertexArray.Length, BufferUsage.WriteOnly),
                 vertexArray.Length,
-                System.Runtime.InteropServices.Marshal.SizeOf<VertexPositionColor>()
+                System.Runtime.InteropServices.Marshal.SizeOf<XnaVertexPositionColor>()
             );
             meshData.VertexBuffer.SetData(vertexArray);
 
@@ -96,7 +97,7 @@ namespace Andastra.Runtime.MonoGame.Graphics
             Clear();
         }
 
-        private void ExtractBasicGeometry(MDL mdl, List<Andastra.Runtime.Graphics.VertexPositionColor> vertices, List<int> indices)
+        private void ExtractBasicGeometry(MDL mdl, List<XnaVertexPositionColor> vertices, List<int> indices)
         {
             if (mdl == null || mdl.Root == null)
             {
@@ -114,7 +115,7 @@ namespace Andastra.Runtime.MonoGame.Graphics
             }
         }
 
-        private void ExtractNodeGeometry(MDLNode node, Matrix parentTransform, List<Andastra.Runtime.Graphics.VertexPositionColor> vertices, List<int> indices)
+        private void ExtractNodeGeometry(MDLNode node, Matrix parentTransform, List<XnaVertexPositionColor> vertices, List<int> indices)
         {
             if (node == null)
             {
@@ -171,7 +172,7 @@ namespace Andastra.Runtime.MonoGame.Graphics
             }
         }
 
-        private void ExtractMeshGeometry(MDLMesh mesh, Matrix transform, List<Andastra.Runtime.Graphics.VertexPositionColor> vertices, List<int> indices)
+        private void ExtractMeshGeometry(MDLMesh mesh, Matrix transform, List<XnaVertexPositionColor> vertices, List<int> indices)
         {
             if (mesh == null || mesh.Vertices == null || mesh.Faces == null)
             {
@@ -179,7 +180,7 @@ namespace Andastra.Runtime.MonoGame.Graphics
             }
 
             int baseVertexIndex = vertices.Count;
-            Color meshColor = Color.Gray;
+            Microsoft.Xna.Framework.Color meshColor = Microsoft.Xna.Framework.Color.Gray;
 
             // Transform and add vertices
             foreach (System.Numerics.Vector3 vertex in mesh.Vertices)
@@ -189,8 +190,8 @@ namespace Andastra.Runtime.MonoGame.Graphics
                     new Microsoft.Xna.Framework.Vector3(vertex.X, vertex.Y, vertex.Z),
                     transform
                 );
-                vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(
-                    new System.Numerics.Vector3(transformedPos.X, transformedPos.Y, transformedPos.Z),
+                vertices.Add(new XnaVertexPositionColor(
+                    new Microsoft.Xna.Framework.Vector3(transformedPos.X, transformedPos.Y, transformedPos.Z),
                     meshColor
                 ));
             }
@@ -213,20 +214,20 @@ namespace Andastra.Runtime.MonoGame.Graphics
             }
         }
 
-        private void CreatePlaceholderBox(List<Andastra.Runtime.Graphics.VertexPositionColor> vertices, List<int> indices)
+        private void CreatePlaceholderBox(List<XnaVertexPositionColor> vertices, List<int> indices)
         {
             float size = 5f;
-            Color color = Color.Gray;
+            Microsoft.Xna.Framework.Color color = Microsoft.Xna.Framework.Color.Gray;
 
             // 8 vertices of a box
-            vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(new System.Numerics.Vector3(-size, -size, -size), color));
-            vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(new System.Numerics.Vector3(size, -size, -size), color));
-            vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(new System.Numerics.Vector3(size, size, -size), color));
-            vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(new System.Numerics.Vector3(-size, size, -size), color));
-            vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(new System.Numerics.Vector3(-size, -size, size), color));
-            vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(new System.Numerics.Vector3(size, -size, size), color));
-            vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(new System.Numerics.Vector3(size, size, size), color));
-            vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(new System.Numerics.Vector3(-size, size, size), color));
+            vertices.Add(new XnaVertexPositionColor(new Microsoft.Xna.Framework.Vector3(-size, -size, -size), color));
+            vertices.Add(new XnaVertexPositionColor(new Microsoft.Xna.Framework.Vector3(size, -size, -size), color));
+            vertices.Add(new XnaVertexPositionColor(new Microsoft.Xna.Framework.Vector3(size, size, -size), color));
+            vertices.Add(new XnaVertexPositionColor(new Microsoft.Xna.Framework.Vector3(-size, size, -size), color));
+            vertices.Add(new XnaVertexPositionColor(new Microsoft.Xna.Framework.Vector3(-size, -size, size), color));
+            vertices.Add(new XnaVertexPositionColor(new Microsoft.Xna.Framework.Vector3(size, -size, size), color));
+            vertices.Add(new XnaVertexPositionColor(new Microsoft.Xna.Framework.Vector3(size, size, size), color));
+            vertices.Add(new XnaVertexPositionColor(new Microsoft.Xna.Framework.Vector3(-size, size, size), color));
 
             // 12 triangles (2 per face, 6 faces)
             // Front face

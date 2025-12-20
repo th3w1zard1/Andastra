@@ -663,7 +663,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
             // - AnyHit shader: can be used for alpha testing
 
             // Create shaders (in real implementation, these would be loaded from compiled shader bytecode)
-            IShader rayGenShader = CreatePlaceholderShader(ShaderType.RayGen, "ShadowRayGen");
+            IShader rayGenShader = CreatePlaceholderShader(ShaderType.RayGeneration, "ShadowRayGen");
             IShader missShader = CreatePlaceholderShader(ShaderType.Miss, "ShadowMiss");
             IShader closestHitShader = CreatePlaceholderShader(ShaderType.ClosestHit, "ShadowClosestHit");
 

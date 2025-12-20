@@ -586,7 +586,8 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         ShaderResource = 1 << 3,
         UnorderedAccess = 1 << 4,
         IndirectArgument = 1 << 5,
-        AccelStructStorage = 1 << 6
+        AccelStructStorage = 1 << 6,
+        ShaderBindingTable = 1 << 7
     }
     
     public enum SamplerFilter { Point, Linear, Anisotropic }
