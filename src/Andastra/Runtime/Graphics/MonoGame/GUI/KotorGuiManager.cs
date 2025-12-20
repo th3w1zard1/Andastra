@@ -936,6 +936,9 @@ namespace Andastra.Runtime.MonoGame.GUI
 
         /// <summary>
         /// Renders a slider control.
+        /// Based on swkotor.exe and swkotor2.exe: Slider rendering with thumb positioning
+        /// Original implementation: Slider thumb position calculated from CURVALUE/MAXVALUE ratio
+        /// Thumb position = (CURVALUE / MAXVALUE) × track length
         /// </summary>
         private void RenderSlider(GUISlider slider, Vector2 position, Vector2 size)
         {
@@ -950,7 +953,143 @@ namespace Andastra.Runtime.MonoGame.GUI
                 }
             }
 
-            // TODO: Render slider thumb at current value position
+            // Render slider thumb at current value position
+            // Based on swkotor.exe: Slider thumb rendering
+            // Thumb position calculated from Value, MinValue, MaxValue ratio
+            // Direction: "horizontal" (0) = left-right, "vertical" (1) = top-bottom
+            
+            // Get thumb from Properties["THUMB"] or Thumb property
+            GUIScrollbarThumb thumb = null;
+            if (slider.Properties != null && slider.Properties.ContainsKey("THUMB") && slider.Properties["THUMB"] is GUIScrollbarThumb thumbFromProps)
+            {
+                thumb = thumbFromProps;
+            }
+            else if (slider.Thumb != null)
+            {
+                thumb = slider.Thumb;
+            }
+
+            if (thumb == null || thumb.Image.IsBlank)
+            {
+                // No thumb texture defined - skip thumb rendering
+                return;
+            }
+
+            // Calculate value range
+            float valueRange = slider.MaxValue - slider.MinValue;
+            if (valueRange <= 0.0f)
+            {
+                // Invalid range - cannot calculate position
+                return;
+            }
+
+            // Clamp current value to valid range
+            float currentValue = Math.Max(slider.MinValue, Math.Min(slider.MaxValue, slider.Value));
+            
+            // Calculate normalized position (0.0 to 1.0)
+            float normalizedPosition = (currentValue - slider.MinValue) / valueRange;
+
+            // Load thumb texture
+            Texture2D thumbTexture = LoadTexture(thumb.Image.ToString());
+            if (thumbTexture == null)
+            {
+                // Thumb texture not found - skip rendering
+                return;
+            }
+
+            // Determine slider direction
+            bool isHorizontal = slider.Direction == null || slider.Direction == "horizontal" || slider.Direction == "0";
+            
+            // Calculate thumb position and size
+            Vector2 thumbPosition;
+            Vector2 thumbSize;
+            
+            if (isHorizontal)
+            {
+                // Horizontal slider: thumb moves left-right
+                // Thumb width is typically a fixed size or proportional to track
+                // For simplicity, use a fixed thumb width (can be made configurable)
+                float thumbWidth = Math.Min(size.X * 0.1f, 20.0f); // 10% of track width or max 20 pixels
+                float trackLength = size.X - thumbWidth; // Available space for thumb movement
+                float thumbX = position.X + (normalizedPosition * trackLength);
+                float thumbY = position.Y + (size.Y - thumbTexture.Height) / 2.0f; // Center vertically
+                
+                thumbPosition = new Vector2(thumbX, thumbY);
+                thumbSize = new Vector2(thumbWidth, thumbTexture.Height);
+            }
+            else
+            {
+                // Vertical slider: thumb moves top-bottom
+                float thumbHeight = Math.Min(size.Y * 0.1f, 20.0f); // 10% of track height or max 20 pixels
+                float trackLength = size.Y - thumbHeight; // Available space for thumb movement
+                float thumbX = position.X + (size.X - thumbTexture.Width) / 2.0f; // Center horizontally
+                float thumbY = position.Y + (normalizedPosition * trackLength);
+                
+                thumbPosition = new Vector2(thumbX, thumbY);
+                thumbSize = new Vector2(thumbTexture.Width, thumbHeight);
+            }
+
+            // Apply thumb alignment if specified
+            // ALIGNMENT typically affects how the thumb is positioned relative to its calculated position
+            // For now, use the calculated position (can be enhanced with alignment support)
+            
+            // Render thumb texture
+            Color thumbTint = Microsoft.Xna.Framework.Color.White;
+            
+            // Apply rotation if specified (typically unused, but support it)
+            float rotation = 0.0f;
+            if (thumb.Rotate.HasValue)
+            {
+                rotation = thumb.Rotate.Value;
+            }
+            
+            // Apply flip style if specified (typically unused, but support it)
+            SpriteEffects spriteEffects = SpriteEffects.None;
+            if (thumb.FlipStyle.HasValue)
+            {
+                // FlipStyle: 0=none, 1=horizontal, 2=vertical, 3=both
+                int flipStyle = thumb.FlipStyle.Value;
+                if ((flipStyle & 1) != 0)
+                {
+                    spriteEffects |= SpriteEffects.FlipHorizontally;
+                }
+                if ((flipStyle & 2) != 0)
+                {
+                    spriteEffects |= SpriteEffects.FlipVertically;
+                }
+            }
+            
+            // Render thumb with optional rotation and flip
+            if (rotation != 0.0f)
+            {
+                // Render with rotation
+                Vector2 thumbOrigin = new Vector2(thumbTexture.Width / 2.0f, thumbTexture.Height / 2.0f);
+                Vector2 thumbCenter = thumbPosition + thumbSize / 2.0f;
+                
+                _spriteBatch.Draw(
+                    thumbTexture,
+                    thumbCenter,
+                    null,
+                    thumbTint,
+                    rotation,
+                    thumbOrigin,
+                    new Vector2(thumbSize.X / thumbTexture.Width, thumbSize.Y / thumbTexture.Height),
+                    spriteEffects,
+                    0.0f);
+            }
+            else
+            {
+                // Render without rotation (simpler and faster)
+                _spriteBatch.Draw(
+                    thumbTexture,
+                    new Rectangle((int)thumbPosition.X, (int)thumbPosition.Y, (int)thumbSize.X, (int)thumbSize.Y),
+                    null,
+                    thumbTint,
+                    0.0f,
+                    Vector2.Zero,
+                    spriteEffects,
+                    0.0f);
+            }
         }
 
         /// <summary>

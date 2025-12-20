@@ -5,11 +5,14 @@ using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Formats.TLK;
 using Andastra.Parsing.Resource;
+using Andastra.Parsing.Common;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Content.Loaders
 {
@@ -74,6 +77,12 @@ namespace Andastra.Runtime.Content.Loaders
     public class TemplateLoader
     {
         private readonly IGameResourceProvider _resourceProvider;
+        [CanBeNull]
+        private TLK _baseTlk;
+        [CanBeNull]
+        private TLK _customTlk;
+        private readonly object _tlkLoadLock = new object();
+        private bool _tlkLoadAttempted;
 
         public TemplateLoader(IGameResourceProvider resourceProvider)
         {
@@ -576,15 +585,161 @@ namespace Andastra.Runtime.Content.Loaders
             return 0f;
         }
 
+        /// <summary>
+        /// Gets a localized string from a GFF struct field.
+        /// Resolves LocalizedString fields using TLK lookup or embedded substrings.
+        /// Based on swkotor2.exe: LocalizedString resolution in template loading
+        /// Original implementation: FUN_005261b0 @ 0x005261b0 loads creature templates with LocalizedString fields
+        /// - FirstName, LastName fields use LocalizedString with StringRef pointing to TLK entries
+        /// - LocName, Description fields use LocalizedString with StringRef or embedded substrings
+        /// - TLK lookup: Uses dialog.tlk for base strings, custom TLK for modded strings (>= 0x01000000)
+        /// - Fallback: If StringRef == -1, uses embedded substrings from GFF (language/gender specific)
+        /// </summary>
         private string GetLocalizedString(GFFStruct gffStruct, string name)
         {
-            if (gffStruct.Exists(name))
+            if (!gffStruct.Exists(name))
             {
-                // GFF LocalizedString handling - try to get the string reference first
-                // TODO: SIMPLIFIED - For now, return empty as localization requires TLK lookup
                 return string.Empty;
             }
+
+            // Get LocalizedString from GFF field
+            LocalizedString locString;
+            if (!gffStruct.TryGetLocString(name, out locString))
+            {
+                return string.Empty;
+            }
+
+            // If StringRef is valid (>= 0), look up in TLK
+            if (locString.StringRef >= 0)
+            {
+                return LookupStringInTlk(locString.StringRef);
+            }
+
+            // If StringRef == -1, use embedded substrings from GFF
+            // Try to get string for current language (default to English if not available)
+            // Based on swkotor2.exe: LocalizedString with StringRef == -1 uses embedded substrings
+            // Priority: Current language/gender -> English/Male -> First available substring
+            string result = locString.Get(Language.English, Gender.Male, useFallback: true);
+            if (!string.IsNullOrEmpty(result))
+            {
+                return result;
+            }
+
+            // Fallback: return first available substring
+            foreach ((Language _, Gender _, string text) in locString)
+            {
+                if (!string.IsNullOrEmpty(text))
+                {
+                    return text;
+                }
+            }
+
             return string.Empty;
+        }
+
+        /// <summary>
+        /// Looks up a string reference in the TLK (talk table) files.
+        /// Based on swkotor2.exe: TLK string lookup system
+        /// Original implementation: Uses dialog.tlk for base strings, custom TLK for modded strings
+        /// - Custom TLK entries start at 0x01000000 (high bit set)
+        /// - Base TLK: dialog.tlk contains base game strings (0 to ~50,000)
+        /// - Custom TLK: Custom TLK files contain modded strings (0x01000000+)
+        /// - Returns empty string if StringRef is invalid or not found
+        /// </summary>
+        private string LookupStringInTlk(int stringRef)
+        {
+            // Invalid string reference
+            if (stringRef < 0)
+            {
+                return string.Empty;
+            }
+
+            // Ensure TLK files are loaded
+            EnsureTlkLoaded();
+
+            // Custom TLK entries start at 0x01000000 (high bit set)
+            const int CUSTOM_TLK_START = 0x01000000;
+
+            if (stringRef >= CUSTOM_TLK_START)
+            {
+                // Look up in custom TLK
+                if (_customTlk != null)
+                {
+                    int customRef = stringRef - CUSTOM_TLK_START;
+                    return _customTlk.String(customRef);
+                }
+            }
+            else
+            {
+                // Look up in base TLK
+                if (_baseTlk != null)
+                {
+                    return _baseTlk.String(stringRef);
+                }
+            }
+
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// Ensures TLK files are loaded (lazy loading on first use).
+        /// Based on swkotor2.exe: TLK loading system
+        /// Original implementation: Loads dialog.tlk at startup, custom TLK files from override directory
+        /// - Base TLK: dialog.tlk from installation root
+        /// - Custom TLK: Custom TLK files from override directory (optional)
+        /// - Lazy loading: Only loads TLK files when first needed for string lookup
+        /// </summary>
+        private void EnsureTlkLoaded()
+        {
+            if (_tlkLoadAttempted)
+            {
+                return;
+            }
+
+            lock (_tlkLoadLock)
+            {
+                if (_tlkLoadAttempted)
+                {
+                    return;
+                }
+
+                _tlkLoadAttempted = true;
+
+                try
+                {
+                    // Load base TLK (dialog.tlk)
+                    var baseTlkId = new ResourceIdentifier("dialog", ResourceType.TLK);
+                    byte[] baseTlkData = _resourceProvider.GetResourceBytesAsync(baseTlkId, CancellationToken.None).Result;
+                    if (baseTlkData != null && baseTlkData.Length > 0)
+                    {
+                        var baseTlkReader = new TLKBinaryReader(baseTlkData);
+                        _baseTlk = baseTlkReader.Load();
+                    }
+                }
+                catch
+                {
+                    // Base TLK not found or failed to load - continue without it
+                    _baseTlk = null;
+                }
+
+                try
+                {
+                    // Try to load custom TLK (dialogf.tlk or custom TLK files)
+                    // Custom TLK files are optional and may not exist
+                    var customTlkId = new ResourceIdentifier("dialogf", ResourceType.TLK);
+                    byte[] customTlkData = _resourceProvider.GetResourceBytesAsync(customTlkId, CancellationToken.None).Result;
+                    if (customTlkData != null && customTlkData.Length > 0)
+                    {
+                        var customTlkReader = new TLKBinaryReader(customTlkData);
+                        _customTlk = customTlkReader.Load();
+                    }
+                }
+                catch
+                {
+                    // Custom TLK not found or failed to load - continue without it
+                    _customTlk = null;
+                }
+            }
         }
 
         #endregion
