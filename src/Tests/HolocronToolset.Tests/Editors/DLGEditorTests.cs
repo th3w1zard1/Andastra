@@ -1350,14 +1350,100 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestDlgEditorNodeWidgetBuildVerification: Node widget build verification test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_dlg_editor_search_functionality (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1165-1200)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1165-1200
         // Original: def test_dlg_editor_search_functionality(qtbot, installation: HTInstallation): Test search functionality
         [Fact]
         public void TestDlgEditorSearchFunctionality()
         {
-            // TODO: STUB - Implement search functionality test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1165-1200
-            throw new NotImplementedException("TestDlgEditorSearchFunctionality: Search functionality test not yet implemented");
+            // Get installation if available (K2 preferred for DLG files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            // Create DLG editor and initialize
+            var editor = new DLGEditor(null, installation);
+            editor.New();
+
+            // Add root node (matching Python: editor.model.add_root_node())
+            var rootItem = editor.Model.AddRootNode();
+            rootItem.Should().NotBeNull("Root item should be created");
+
+            // Verify the root item has the required properties (matching Python assertions)
+            rootItem.Link.Should().NotBeNull("root_item.link should not be None");
+            rootItem.Link.Node.Should().NotBeNull("root_item.link.node should not be None");
+            rootItem.Link.Node.Text.Should().NotBeNull("root_item.link.node.text should not be None");
+
+            // Show find bar (matching Python: editor.show_find_bar())
+            var showFindBarMethod = typeof(DLGEditor).GetMethod("ShowFindBar", BindingFlags.NonPublic | BindingFlags.Instance);
+            showFindBarMethod.Should().NotBeNull("ShowFindBar method should exist");
+            showFindBarMethod.Invoke(editor, null);
+
+            // Verify find bar is visible (matching Python: assert editor.find_bar.isVisible())
+            var findBarField = typeof(DLGEditor).GetField("_findBar", BindingFlags.NonPublic | BindingFlags.Instance);
+            findBarField.Should().NotBeNull("_findBar field should exist");
+            var findBar = findBarField.GetValue(editor) as Avalonia.Controls.Panel;
+            findBar.Should().NotBeNull("Find bar should be initialized");
+            findBar.IsVisible.Should().BeTrue("Find bar should be visible after calling ShowFindBar");
+
+            // Get find input field (matching Python: editor.find_input.setText("Hello"))
+            var findInputField = typeof(DLGEditor).GetField("_findInput", BindingFlags.NonPublic | BindingFlags.Instance);
+            findInputField.Should().NotBeNull("_findInput field should exist");
+            var findInput = findInputField.GetValue(editor) as Avalonia.Controls.TextBox;
+            findInput.Should().NotBeNull("Find input should be initialized");
+
+            // Search for text (matching Python: editor.find_input.setText("Hello"); editor.handle_find())
+            findInput.Text = "Hello";
+            var handleFindMethod = typeof(DLGEditor).GetMethod("HandleFind", BindingFlags.NonPublic | BindingFlags.Instance);
+            handleFindMethod.Should().NotBeNull("HandleFind method should exist");
+            handleFindMethod.Invoke(editor, null);
+
+            // Verify search results (matching Python: assert len(editor.search_results) > 0 or editor.results_label.text() == "No results found")
+            var searchResultsField = typeof(DLGEditor).GetField("_searchResults", BindingFlags.NonPublic | BindingFlags.Instance);
+            searchResultsField.Should().NotBeNull("_searchResults field should exist");
+            var searchResults = searchResultsField.GetValue(editor) as System.Collections.Generic.List<DLGStandardItem>;
+
+            var resultsLabelField = typeof(DLGEditor).GetField("_resultsLabel", BindingFlags.NonPublic | BindingFlags.Instance);
+            resultsLabelField.Should().NotBeNull("_resultsLabel field should exist");
+            var resultsLabel = resultsLabelField.GetValue(editor) as Avalonia.Controls.TextBlock;
+            resultsLabel.Should().NotBeNull("Results label should be initialized");
+
+            // Should either have results or show "No results found"
+            bool hasResults = (searchResults != null && searchResults.Count > 0);
+            bool showsNoResults = (resultsLabel.Text == "No results found");
+            (hasResults || showsNoResults).Should().BeTrue("Should either have search results or show 'No results found'");
+
+            // Test search with no results (matching Python: editor.find_input.setText("NonexistentText12345"); editor.handle_find())
+            findInput.Text = "NonexistentText12345";
+            handleFindMethod.Invoke(editor, null);
+
+            // Should show no results (matching Python: should show no results or empty results)
+            var updatedSearchResults = searchResultsField.GetValue(editor) as System.Collections.Generic.List<DLGStandardItem>;
+            var updatedResultsLabel = resultsLabelField.GetValue(editor) as Avalonia.Controls.TextBlock;
+
+            bool hasNoResults = (updatedSearchResults == null || updatedSearchResults.Count == 0);
+            bool showsNoResultsMessage = (updatedResultsLabel.Text == "No results found");
+            (hasNoResults || showsNoResultsMessage).Should().BeTrue("Should show no results for nonexistent search text");
         }
 
         // TODO: STUB - Implement test_dlg_editor_search_with_operators (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1202-1227)
