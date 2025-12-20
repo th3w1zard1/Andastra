@@ -282,67 +282,6 @@ namespace Andastra.Runtime.Game.GUI
 
             return options;
         }
-        {
-            var options = new Dictionary<OptionsCategory, List<OptionItem>>();
-
-            // Graphics options
-            var graphicsOptions = new List<OptionItem>
-            {
-                new OptionItem("Window Width", OptionType.Numeric, () => settings.Width, v => settings.Width = (int)v, 320, 7680),
-                new OptionItem("Window Height", OptionType.Numeric, () => settings.Height, v => settings.Height = (int)v, 240, 4320),
-                new OptionItem("Fullscreen", OptionType.Boolean, () => settings.Fullscreen ? 1 : 0, v => settings.Fullscreen = v > 0, 0, 1),
-                new OptionItem("Debug Render", OptionType.Boolean, () => settings.DebugRender ? 1 : 0, v => settings.DebugRender = v > 0, 0, 1)
-            };
-            options[OptionsCategory.Graphics] = graphicsOptions;
-
-            // Audio options
-            var audioOptions = new List<OptionItem>
-            {
-                new OptionItem("Master Volume", OptionType.Numeric, () => (int)(settings.MasterVolume * 100),
-                    v => {
-                        settings.MasterVolume = v / 100.0f;
-                        if (soundPlayer != null) soundPlayer.SetMasterVolume(settings.MasterVolume);
-                    }, 0, 100),
-                new OptionItem("Music Volume", OptionType.Numeric, () => (int)(settings.MusicVolume * 100),
-                    v => {
-                        float volume = (float)v / 100.0f;
-                        settings.Audio.MusicVolume = volume;
-                        // Apply volume to music player immediately if available
-                        if (musicPlayer != null)
-                        {
-                            musicPlayer.Volume = volume;
-                        }
-                    }, 0, 100),
-                new OptionItem("SFX Volume", OptionType.Numeric, () => (int)(settings.EffectsVolume * 100),
-                    v => {
-                        settings.EffectsVolume = v / 100.0f;
-                        if (soundPlayer != null) soundPlayer.SetMasterVolume(settings.EffectsVolume);
-                    }, 0, 100),
-                new OptionItem("Voice Volume", OptionType.Numeric, () => (int)(settings.VoiceVolume * 100),
-                    v => {
-                        settings.VoiceVolume = v / 100.0f;
-                        // TODO: Implement voice volume control (requires IVoicePlayer interface)
-                    }, 0, 100)
-            };
-            options[OptionsCategory.Audio] = audioOptions;
-
-            // Game options
-            var gameOptions = new List<OptionItem>
-            {
-                new OptionItem("Skip Intro", OptionType.Boolean, () => settings.SkipIntro ? 1 : 0, v => settings.SkipIntro = v > 0, 0, 1)
-            };
-            options[OptionsCategory.Game] = gameOptions;
-
-            // Controls options (placeholder for future controls system)
-            var controlsOptions = new List<OptionItem>
-            {
-                new OptionItem("Mouse Sensitivity", OptionType.Numeric, () => 50, v => { /* TODO: Implement mouse sensitivity */ }, 1, 100),
-                new OptionItem("Invert Mouse Y", OptionType.Boolean, () => settings.InvertMouseY ? 1 : 0, v => settings.InvertMouseY = v > 0, 0, 1)
-            };
-            options[OptionsCategory.Controls] = controlsOptions;
-
-            return options;
-        }
 
         /// <summary>
         /// Applies settings from options to GameSettings.
