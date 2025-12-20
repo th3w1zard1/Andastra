@@ -810,11 +810,10 @@ namespace Andastra.Runtime.Game.Core
                     var gui3DRoomRes = resourceProvider.GetResource("gui3D_room", ResourceType.MDL);
                     if (gui3DRoomRes != null)
                     {
-                        using (var reader = new MDLBinaryReader(gui3DRoomRes))
-                        {
-                            _gui3DRoomModel = reader.Read();
-                            _gui3DRoomLoaded = true;
-                            Console.WriteLine("[Odyssey] gui3D_room model loaded successfully");
+                        // Use MDLAuto for loading (handles both binary and ASCII formats)
+                        _gui3DRoomModel = MDLAuto.Load(gui3DRoomRes);
+                        _gui3DRoomLoaded = true;
+                        Console.WriteLine("[Odyssey] gui3D_room model loaded successfully");
                             
                             // Determine menu variant based on gui3D_room condition (K2 only)
                             // Based on swkotor2.exe FUN_006d2350:120-150: Menu variant selection based on gui3D_room condition
@@ -1117,53 +1116,69 @@ namespace Andastra.Runtime.Game.Core
         }
         
         /// <summary>
-        /// Renders the main menu 3D character model.
-        /// Based on swkotor.exe FUN_0067c4c0: Renders 3D character model at camerahook position
-        /// Based on swkotor2.exe FUN_006d2350: Renders 3D character model with menu variant
+        /// Renders the main menu 3D scene including gui3D_room environment and character model.
+        /// Based on swkotor.exe FUN_0067c4c0: Renders 3D scene (gui3D_room) + character model at camerahook position
+        /// Based on swkotor2.exe FUN_006d2350: Renders complete 3D menu scene with menu variant
         /// </summary>
         private void RenderMainMenu3DModel()
         {
-            if (!_mainMenuModelLoaded || _mainMenuModelData == null)
+            // Render gui3D_room first (environment/scene)
+            if (_gui3DRoomLoaded && _gui3DRoomModelData != null)
+            {
+                RenderModelData(_gui3DRoomModelData, "gui3D_room");
+            }
+
+            // Render main menu character model
+            if (_mainMenuModelLoaded && _mainMenuModelData != null)
+            {
+                RenderModelData(_mainMenuModelData, "mainmenu");
+            }
+        }
+
+        /// <summary>
+        /// Renders a converted MDL model using MonoGame.
+        /// </summary>
+        /// <param name="modelData">The converted model data to render.</param>
+        /// <param name="modelName">Name of the model for logging/debugging.</param>
+        private void RenderModelData(MdlToMonoGameModelConverter.ConversionResult modelData, string modelName)
+        {
+            if (modelData == null || modelData.Meshes == null)
             {
                 return;
             }
-            
+
             // Only render if using MonoGame backend
             if (!(_graphicsDevice is Andastra.Runtime.Graphics.MonoGame.Graphics.MonoGameGraphicsDevice mgDevice))
             {
                 return;
             }
-            
+
             try
             {
-                // Set up render state for 3D rendering
-                // Enable depth testing and disable alpha blending for 3D model
-                _graphicsDevice.SetDepthStencilState(DepthStencilState.Default);
-                _graphicsDevice.SetBlendState(BlendState.Opaque);
-                _graphicsDevice.SetRasterizerState(RasterizerState.CullCounterClockwise);
-                
+                var device = mgDevice.Device;
+
                 // Render each mesh in the model
-                foreach (var mesh in _mainMenuModelData.Meshes)
+                foreach (var mesh in modelData.Meshes)
                 {
                     if (mesh.VertexBuffer == null || mesh.IndexBuffer == null || mesh.Effect == null)
                     {
                         continue;
                     }
-                    
+
                     // Set vertex and index buffers
-                    mgDevice.Device.SetVertexBuffer(mesh.VertexBuffer);
-                    mgDevice.Device.Indices = mesh.IndexBuffer;
-                    
+                    device.SetVertexBuffer(mesh.VertexBuffer);
+                    device.Indices = mesh.IndexBuffer;
+
                     // Set effect parameters
                     mesh.Effect.World = mesh.WorldTransform;
                     mesh.Effect.View = ConvertMatrix(_mainMenuViewMatrix);
                     mesh.Effect.Projection = ConvertMatrix(_mainMenuProjectionMatrix);
-                    
+
                     // Render the mesh
                     foreach (var pass in mesh.Effect.CurrentTechnique.Passes)
                     {
                         pass.Apply();
-                        mgDevice.Device.DrawIndexedPrimitives(
+                        device.DrawIndexedPrimitives(
                             Microsoft.Xna.Framework.Graphics.PrimitiveType.TriangleList,
                             0,
                             0,
@@ -1174,7 +1189,7 @@ namespace Andastra.Runtime.Game.Core
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[Odyssey] WARNING: Failed to render main menu 3D model: {ex.Message}");
+                Console.WriteLine($"[Odyssey] WARNING: Failed to render {modelName} model: {ex.Message}");
             }
         }
         
@@ -1201,11 +1216,11 @@ namespace Andastra.Runtime.Game.Core
             // Clear to dark space-like background (deep blue/black gradient effect)
             _graphicsDevice.Clear(new Color(15, 15, 25, 255));
 
-            // Render 3D character model (gui3D_room + menu variant) at camerahook position
-            // Based on swkotor.exe FUN_0067c4c0 lines 109-120: Loads gui3D_room and mainmenu model
-            // Based on swkotor2.exe FUN_006d2350: Renders 3D character model with menu variant
+            // Render 3D scene (gui3D_room + mainmenu character model) at camerahook position
+            // Based on swkotor.exe FUN_0067c4c0 lines 109-120: Loads and renders gui3D_room and mainmenu model
+            // Based on swkotor2.exe FUN_006d2350: Renders complete 3D menu scene with menu variant
             // Camera distance: 0x41b5ced9 (~22.7), attached to "camerahook"
-            // Render 3D model before GUI (3D scene renders first, then GUI on top)
+            // Render 3D scene before GUI (3D environment renders first, then GUI on top)
             if (_mainMenuModelLoaded && _mainMenuModelData != null)
             {
                 // Set up camera for menu 3D view
