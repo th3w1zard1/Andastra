@@ -63,22 +63,38 @@ namespace Andastra.Parsing.Tests.Formats
                 return;
             }
 
-            // Try to find Kaitai Struct compiler JAR
-            var jarPath = FindKaitaiCompilerJar();
-            if (string.IsNullOrEmpty(jarPath))
+            // Try to find Kaitai Struct compiler (executable or JAR)
+            string compilerPath = FindKaitaiCompiler();
+            if (string.IsNullOrEmpty(compilerPath))
             {
-                // Try to run setup script or skip
-                // In CI/CD this should be installed
-                return;
+                // Try JAR as fallback
+                var jarPath = FindKaitaiCompilerJar();
+                if (string.IsNullOrEmpty(jarPath))
+                {
+                    // Skip if compiler not available
+                    // In CI/CD this should be installed
+                    return;
+                }
+
+                compilerPath = jarPath;
             }
 
-            // Verify JAR exists and is accessible
-            File.Exists(jarPath).Should().BeTrue($"Kaitai Struct compiler JAR should exist at {jarPath}");
-
-            // Try to run compiler with --version or --help to verify it works
-            var testResult = RunCommand("java", $"-jar \"{jarPath}\" --help");
-            // --help may return non-zero, so we just check it doesn't crash
-            testResult.Output.Should().NotBeNullOrEmpty("Compiler should produce output when run");
+            // Verify compiler exists and is accessible
+            if (compilerPath.EndsWith(".jar"))
+            {
+                File.Exists(compilerPath).Should().BeTrue($"Kaitai Struct compiler JAR should exist at {compilerPath}");
+                // Try to run compiler with --help to verify it works
+                var testResult = RunCommand("java", $"-jar \"{compilerPath}\" --help");
+                // --help may return non-zero, so we just check it doesn't crash
+                testResult.Output.Should().NotBeNullOrEmpty("Compiler should produce output when run");
+            }
+            else
+            {
+                File.Exists(compilerPath).Should().BeTrue($"Kaitai Struct compiler should exist at {compilerPath}");
+                // Try to run compiler with --version to verify it works
+                var testResult = RunCommand(compilerPath, "--version");
+                testResult.ExitCode.Should().Be(0, "Compiler should execute successfully");
+            }
         }
 
         [Fact(Timeout = 300000)]
@@ -427,6 +443,55 @@ namespace Andastra.Parsing.Tests.Formats
 
             // Return the last result (which will be a failure)
             return result;
+        }
+
+        private string FindKaitaiCompiler()
+        {
+            // Try common locations and PATH
+            string[] possiblePaths = new[]
+            {
+                "kaitai-struct-compiler",
+                "ksc",
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "kaitai-struct-compiler", "kaitai-struct-compiler.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "kaitai-struct-compiler", "kaitai-struct-compiler.exe"),
+                "/usr/bin/kaitai-struct-compiler",
+                "/usr/local/bin/kaitai-struct-compiler",
+                "C:\\Program Files\\kaitai-struct-compiler\\kaitai-struct-compiler.exe"
+            };
+
+            foreach (string path in possiblePaths)
+            {
+                try
+                {
+                    var processInfo = new ProcessStartInfo
+                    {
+                        FileName = path,
+                        Arguments = "--version",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+
+                    using (var process = Process.Start(processInfo))
+                    {
+                        if (process != null)
+                        {
+                            process.WaitForExit(5000);
+                            if (process.ExitCode == 0)
+                            {
+                                return path;
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // Continue searching
+                }
+            }
+
+            return null;
         }
 
         private string FindKaitaiCompilerJar()
