@@ -12,6 +12,8 @@ using Andastra.Parsing.Extract;
 using Andastra.Parsing.Resource;
 using HolocronToolset.Data;
 using HolocronToolset.Utils;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 using FileResource = Andastra.Parsing.Extract.FileResource;
 
 namespace HolocronToolset.Dialogs
@@ -572,7 +574,22 @@ namespace HolocronToolset.Dialogs
             catch (Exception ex)
             {
                 System.Console.WriteLine($"Error opening resource: {ex}");
-                // TODO: Show error message when MessageBox is available
+                
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/window.py:344-352
+                // Original: QMessageBox(QMessageBox.Icon.Critical, tr("An unexpected error has occurred"), str(universal_simplify_exception(e)), ...).show()
+                // Note: Using ex.Message for error details (similar to universal_simplify_exception in PyKotor)
+                string errorMessage = ex.Message;
+                if (string.IsNullOrEmpty(errorMessage))
+                {
+                    errorMessage = ex.ToString();
+                }
+                
+                var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Error",
+                    $"Error opening resource:\n{errorMessage}",
+                    ButtonEnum.Ok,
+                    Icon.Error);
+                errorBox.ShowAsync();
             }
         }
 

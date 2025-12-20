@@ -21,6 +21,10 @@ namespace HolocronToolset.Widgets
         private Process _process;
         private int _promptStartPos;
 
+        // Event emitted when exit command is executed
+        // Allows parent widgets (e.g., NSSEditor) to handle terminal panel hiding/closing
+        public event EventHandler ExitRequested;
+
         // Public parameterless constructor for XAML
         public TerminalWidget()
         {
@@ -354,12 +358,9 @@ namespace HolocronToolset.Widgets
                 ChangeDirectory(command.Substring(3).Trim());
                 return;
             }
-            else if (command == "exit")
+            else if (command == "exit" || command == "quit")
             {
-                // Exit command - in a real terminal this might close the terminal
-                // For now, just output a message
-                WriteOutput("Use the close button to exit the terminal.\n");
-                WritePrompt();
+                HandleExitCommand();
                 return;
             }
 
@@ -424,6 +425,7 @@ namespace HolocronToolset.Widgets
 Available built-in commands:
   clear/cls  - Clear the terminal screen
   cd <path>  - Change the current directory
+  exit/quit  - Exit the terminal
   help       - Show this help message
   
 Keyboard shortcuts:
@@ -448,6 +450,68 @@ You can also run any system command directly.
                 WriteOutput("Holocron Toolset Terminal\n\n");
                 WritePrompt();
             }
+        }
+
+        // Matching PyKotor implementation pattern for terminal exit behavior
+        // Original: Terminal exit should close/hide the terminal panel
+        // Based on industry-standard IDE terminal behavior (VS Code, Visual Studio, etc.)
+        private void HandleExitCommand()
+        {
+            // Stop any running process
+            if (_process != null)
+            {
+                try
+                {
+                    // Check if process is still running before attempting to kill
+                    bool isRunning = false;
+                    try
+                    {
+                        isRunning = !_process.HasExited;
+                    }
+                    catch
+                    {
+                        // Process may have already exited or been disposed
+                        isRunning = false;
+                    }
+
+                    if (isRunning)
+                    {
+                        _process.Kill();
+                        _process.WaitForExit(1000); // Wait up to 1 second for graceful shutdown
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Log error but continue with exit
+                    System.Diagnostics.Debug.WriteLine($"Error stopping process during exit: {ex.Message}");
+                }
+                finally
+                {
+                    // Clean up process resources
+                    try
+                    {
+                        if (_process != null)
+                        {
+                            _process.Dispose();
+                            _process = null;
+                        }
+                    }
+                    catch
+                    {
+                        // Ignore disposal errors
+                    }
+                }
+            }
+
+            // Show exit message
+            WriteOutput("Terminal session closed.\n");
+
+            // Emit exit requested event for parent to handle (e.g., hide terminal panel)
+            ExitRequested?.Invoke(this, EventArgs.Empty);
+
+            // Hide the terminal widget itself as fallback
+            // Parent widgets can override this behavior by handling ExitRequested event
+            IsVisible = false;
         }
 
     }
