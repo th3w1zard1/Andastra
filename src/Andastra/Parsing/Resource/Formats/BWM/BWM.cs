@@ -197,29 +197,146 @@ namespace Andastra.Parsing.Formats.BWM
             return vertices;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bwm/bwm_data.py:313-346
-        // Original: def aabbs(self) -> list[BWMNodeAABB]
+        /// <summary>
+        /// Builds an AABB (Axis-Aligned Bounding Box) tree from the walkmesh faces.
+        /// 
+        /// WHAT IS AN AABB TREE?
+        /// 
+        /// An AABB tree is a way of organizing triangles into boxes so we can find them quickly.
+        /// Without it, we would have to check every single triangle to find which one contains a point,
+        /// which is very slow when there are thousands of triangles. With an AABB tree, we can find
+        /// triangles much faster (in O(log n) time instead of O(n) time).
+        /// 
+        /// HOW IT WORKS:
+        /// 
+        /// The tree is built using a recursive top-down approach:
+        /// 1. Start with all triangles in one big box (the root)
+        /// 2. Split the box in half along the longest axis (X, Y, or Z)
+        /// 3. Put triangles on the left side of the split into one box, triangles on the right side into another
+        /// 4. Recursively split each box until each box contains only one triangle (a leaf node)
+        /// 
+        /// THE TREE STRUCTURE:
+        /// 
+        /// - Internal nodes: Boxes that contain other boxes. They have Left and Right child pointers.
+        /// - Leaf nodes: Boxes that contain exactly one triangle. They have a Face pointer instead of children.
+        /// 
+        /// Each node stores:
+        /// - BbMin: The minimum corner of the bounding box (smallest X, Y, Z values)
+        /// - BbMax: The maximum corner of the bounding box (largest X, Y, Z values)
+        /// - Face: The triangle (only for leaf nodes, null for internal nodes)
+        /// - Sigplane: Which axis was used to split this node (X=1, Y=2, Z=3, or 0 for leaf nodes)
+        /// - Left: Pointer to the left child node (null for leaf nodes)
+        /// - Right: Pointer to the right child node (null for leaf nodes)
+        /// 
+        /// WHY ONLY AREA WALKMESHES GET AABB TREES:
+        /// 
+        /// - Area walkmeshes (WOK files) can have thousands of triangles, so an AABB tree is essential
+        ///   for fast spatial queries (finding which triangle contains a point, raycasting, etc.)
+        /// - Placeable/door walkmeshes (PWK/DWK files) are small (usually only a few triangles), so
+        ///   brute force is fast enough and building a tree would be unnecessary overhead
+        /// 
+        /// PERFORMANCE:
+        /// 
+        /// - Building the tree: O(n log n) time where n is the number of triangles
+        /// - Finding a triangle: O(log n) average case, O(n) worst case (degenerate tree)
+        /// - Without tree: O(n) always (must check every triangle)
+        /// - Speedup: 100x-1000x faster for large meshes (1000+ triangles)
+        /// 
+        /// EDGE CASES HANDLED:
+        /// 
+        /// - Empty walkmesh: Returns empty list
+        /// - Placeable/door walkmesh: Returns empty list (no tree needed)
+        /// - All triangles have same center: Creates single leaf node with first triangle
+        /// - Maximum recursion depth: Throws exception if recursion exceeds 128 levels
+        /// 
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bwm/bwm_data.py:313-346
+        /// Original: def aabbs(self) -> list[BWMNodeAABB]
+        /// </summary>
+        /// <returns>List of AABB tree nodes, or empty list if no tree can be built</returns>
         public List<BWMNodeAABB> Aabbs()
         {
             // PWK/DWK files don't have AABB trees (only WOK/AreaModel do)
+            // These walkmeshes are small (usually only a few triangles), so brute force is fast enough
             if (WalkmeshType == BWMType.PlaceableOrDoor)
             {
                 return new List<BWMNodeAABB>();
             }
 
             // Empty walkmeshes cannot generate AABB trees
+            // There are no triangles to organize into a tree
             if (Faces.Count == 0)
             {
                 return new List<BWMNodeAABB>();
             }
 
+            // Build the tree recursively starting from all faces
             List<BWMNodeAABB> aabbs = new List<BWMNodeAABB>();
             _AabbsRec(aabbs, new List<BWMFace>(Faces), 0);
             return aabbs;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bwm/bwm_data.py:348-480
-        // Original: def _aabbs_rec(self, aabbs: list[BWMNodeAABB], faces: list[BWMFace], rlevel: int = 0) -> BWMNodeAABB
+        /// <summary>
+        /// Recursively builds an AABB tree node from a list of faces.
+        /// 
+        /// WHAT THIS FUNCTION DOES:
+        /// 
+        /// This function takes a list of triangles and builds one node of the AABB tree. If there's
+        /// only one triangle, it creates a leaf node. If there are multiple triangles, it splits them
+        /// into two groups and recursively builds child nodes for each group.
+        /// 
+        /// THE ALGORITHM:
+        /// 
+        /// STEP 1: Calculate Bounding Box
+        /// - Find the minimum and maximum X, Y, Z values across all triangles
+        /// - This creates a box that contains all the triangles
+        /// 
+        /// STEP 2: Check if Leaf Node
+        /// - If there's only one triangle, create a leaf node with that triangle
+        /// - Return the leaf node (no children needed)
+        /// 
+        /// STEP 3: Find Split Axis
+        /// - Calculate the size of the bounding box in each direction (X, Y, Z)
+        /// - Choose the longest axis as the split axis (this gives the best balance)
+        /// - Example: If the box is 100 units wide (X), 50 units tall (Y), and 30 units deep (Z),
+        ///   we split along the X axis because it's the longest
+        /// 
+        /// STEP 4: Handle Coplanar Triangles
+        /// - If all triangles have the same center position along the split axis, we can't split them
+        /// - Try the next axis (Y if X failed, Z if Y failed, X if Z failed)
+        /// - If all three axes fail, create a single leaf node with the first triangle
+        /// 
+        /// STEP 5: Split Triangles
+        /// - Calculate the center of the bounding box along the split axis
+        /// - Put triangles with center < split center into the left group
+        /// - Put triangles with center >= split center into the right group
+        /// - If all triangles end up in one group, try the next axis
+        /// - If all three axes fail, create a single leaf node with the first triangle
+        /// 
+        /// STEP 6: Create Internal Node
+        /// - Create a new node with the bounding box and split axis
+        /// - Recursively build the left child from the left group
+        /// - Recursively build the right child from the right group
+        /// - Return the internal node
+        /// 
+        /// RECURSION DEPTH LIMIT:
+        /// 
+        /// The function has a maximum recursion depth of 128 levels. This prevents infinite recursion
+        /// in degenerate cases (like all triangles at the same position). If the limit is exceeded,
+        /// an exception is thrown.
+        /// 
+        /// PERFORMANCE:
+        /// 
+        /// - Time complexity: O(n log n) where n is the number of triangles
+        /// - Space complexity: O(n) for the tree structure
+        /// - The tree is balanced (roughly equal number of triangles in left and right subtrees)
+        /// 
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bwm/bwm_data.py:348-480
+        /// Original: def _aabbs_rec(self, aabbs: list[BWMNodeAABB], faces: list[BWMFace], rlevel: int = 0) -> BWMNodeAABB
+        /// </summary>
+        /// <param name="aabbs">List to store all tree nodes (for reference tracking)</param>
+        /// <param name="faces">List of triangles to organize into this node</param>
+        /// <param name="rlevel">Current recursion depth (starts at 0)</param>
+        /// <returns>The AABB tree node (leaf or internal)</returns>
         private BWMNodeAABB _AabbsRec(List<BWMNodeAABB> aabbs, List<BWMFace> faces, int rlevel = 0)
         {
             const int maxLevel = 128;
