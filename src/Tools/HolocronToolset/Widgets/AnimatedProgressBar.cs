@@ -3,7 +3,6 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Threading;
-using Avalonia.Media.Imaging;
 
 namespace HolocronToolset.Widgets
 {
@@ -92,37 +91,29 @@ namespace HolocronToolset.Widgets
             double lightBottom = height;
 
             // Matching PyKotor: Adjust light position if it starts before the progress bar
+            // In PyKotor: if light_rect.left() < rect.left(): light_rect.moveLeft(rect.left())
+            // We adjust to 0 (left edge of widget) instead
             if (lightLeft < 0)
             {
+                double adjust = -lightLeft;
                 lightLeft = 0;
-                lightRight = lightWidth;
+                lightRight = lightRight + adjust;
             }
 
             // Matching PyKotor: Adjust light position if it ends after the progress bar
+            // In PyKotor: if light_rect.right() > rect.right(): light_rect.moveRight(rect.right())
+            // We adjust to filledWidth (right edge of filled area) instead
             if (lightRight > filledWidth)
             {
+                double adjust = lightRight - filledWidth;
                 lightRight = filledWidth;
-                lightLeft = filledWidth - lightWidth;
-                if (lightLeft < 0)
-                {
-                    lightLeft = 0;
-                }
+                lightLeft = lightLeft - adjust;
             }
 
-            // Only draw if the light rectangle is within the filled area
-            if (lightLeft >= filledWidth || lightRight <= 0)
+            // Only draw if the light rectangle intersects the filled area
+            if (lightRight <= 0 || lightLeft >= filledWidth)
             {
                 return;
-            }
-
-            // Clamp light rectangle to filled width
-            if (lightLeft < 0)
-            {
-                lightLeft = 0;
-            }
-            if (lightRight > filledWidth)
-            {
-                lightRight = filledWidth;
             }
 
             // Matching PyKotor: chunk_radius: float = chunk_height / 2
@@ -140,27 +131,35 @@ namespace HolocronToolset.Widgets
                 new GradientStop(1.0, Color.FromArgb(0, 255, 255, 255)) // Transparent at the edges
             };
 
+            // Create the linear gradient brush with absolute coordinates
+            // Matching PyKotor: QLinearGradient(light_rect.left(), 0, light_rect.right(), 0)
             var gradientBrush = new LinearGradientBrush
             {
-                StartPoint = new RelativePoint(lightLeft, 0, RelativeUnit.Absolute),
-                EndPoint = new RelativePoint(lightRight, 0, RelativeUnit.Absolute),
+                StartPoint = new RelativePoint(new Point(lightLeft, 0), RelativeUnit.Absolute),
+                EndPoint = new RelativePoint(new Point(lightRight, 0), RelativeUnit.Absolute),
                 GradientStops = gradientStops
             };
 
-            // Create rounded rectangle geometry
+            // Create the rectangle for the shimmering effect
             // Matching PyKotor: painter.drawRoundedRect(light_rect, chunk_radius, chunk_radius)
             var lightRect = new Rect(lightLeft, lightTop, lightRight - lightLeft, lightBottom - lightTop);
-            
+
             // Create a rounded rectangle geometry using StreamGeometry
             var geometry = new StreamGeometry();
             using (var ctx = geometry.Open())
             {
-                // Draw rounded rectangle path
+                // Draw rounded rectangle path matching PyKotor's drawRoundedRect
                 double radius = chunkRadius;
                 double x = lightRect.X;
                 double y = lightRect.Y;
                 double w = lightRect.Width;
                 double h = lightRect.Height;
+
+                // Ensure we have valid dimensions
+                if (w <= 0 || h <= 0)
+                {
+                    return;
+                }
 
                 // Start from top-left corner (after rounding)
                 ctx.BeginFigure(new Point(x + radius, y), true);
@@ -193,6 +192,7 @@ namespace HolocronToolset.Widgets
             }
 
             // Clip to the filled width area to ensure shimmer only appears in progress area
+            // This matches PyKotor behavior where the shimmer is constrained to the filled portion
             var filledRect = new Rect(0, 0, filledWidth, height);
             using (context.PushClip(filledRect))
             {
