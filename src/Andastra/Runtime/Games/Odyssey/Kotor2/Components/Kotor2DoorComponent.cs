@@ -107,9 +107,20 @@ namespace Andastra.Runtime.Games.Odyssey.Kotor2.Components
         /// <summary>
         /// Initializes a new instance of the Kotor2DoorComponent class.
         /// </summary>
+        /// <remarks>
+        /// TSL Door Initialization:
+        /// - Based on swkotor2.exe door system
+        /// - TSL-specific fields: Min1HP, NotBlastable (loaded from UTD template)
+        /// - These fields are TSL-only and do not exist in KOTOR 1
+        /// - swkotor2.exe: FUN_00584f40 @ 0x00584f40 loads Min1HP and NotBlastable from UTD template
+        /// </remarks>
         public Kotor2DoorComponent()
             : base()
         {
+            // TSL specific initialization
+            // Min1HP and NotBlastable default to false (will be loaded from UTD template if present)
+            Min1HP = false;
+            NotBlastable = false;
         }
 
         /// <summary>
@@ -197,18 +208,47 @@ namespace Andastra.Runtime.Games.Odyssey.Kotor2.Components
         /// - Based on swkotor2.exe door bashing system
         /// - Located via string references: "gui_mp_bashdp" @ 0x007b5e04, "gui_mp_bashup" @ 0x007b5e14 (door bash GUI panels)
         /// - "gui_mp_bashd" @ 0x007b5e24, "gui_mp_bashu" @ 0x007b5e34 (door bash GUI elements)
-        /// - Original implementation: Applies damage minus hardness, destroys door when HP reaches 0
+        /// - swkotor2.exe: FUN_00584f40 @ 0x00584f40 loads Min1HP from UTD template
+        /// - TSL-specific behavior: Min1HP flag prevents door from dropping below 1 HP
+        /// - Original implementation: If Min1HP is true, door HP is clamped to minimum of 1
+        /// - Plot doors: Min1HP=1 makes door effectively indestructible (cannot be bashed open)
         /// - Hardness reduces damage taken (minimum 1 damage per hit, even if hardness exceeds damage)
         /// - Bash damage: Strength modifier + weapon damage (if weapon equipped) vs door Hardness
-        /// - Door destruction: When CurrentHP <= 0, door is marked as bashed (IsBashed=true), unlocked, and opened
-        /// - Open state: Set to 2 (destroyed state) when door is bashed open
+        /// - Door destruction: When CurrentHP <= 0 (and Min1HP is false), door is marked as bashed (IsBashed=true), unlocked, and opened
+        /// - Open state: Set to 2 (destroyed state) when door is bashed open (only if Min1HP is false)
         /// - Function: DoorEventHandling @ 0x004dcfb0 processes door bash damage events
         /// </remarks>
         public override void ApplyDamage(int damage)
         {
-            // KOTOR 2 uses DoorEventHandling @ 0x004dcfb0 for bash damage events
-            // Based on swkotor2.exe: DoorEventHandling @ 0x004dcfb0
-            base.ApplyDamage(damage);
+            if (damage <= 0)
+            {
+                return;
+            }
+
+            // Apply hardness reduction (minimum 1 damage)
+            int actualDamage = System.Math.Max(1, damage - Hardness);
+            int newHP = System.Math.Max(0, HitPoints - actualDamage);
+
+            // TSL-specific: Min1HP prevents door from dropping below 1 HP
+            // Based on swkotor2.exe: FUN_00584f40 @ 0x00584f40 loads Min1HP from UTD template
+            // Original implementation: If Min1HP is true, door cannot be destroyed (HP clamped to 1)
+            // Plot doors: Min1HP=1 makes door effectively indestructible
+            if (Min1HP && newHP < 1)
+            {
+                newHP = 1;
+            }
+
+            HitPoints = newHP;
+
+            // If door is destroyed (and Min1HP is false), mark as bashed and open
+            // Based on swkotor2.exe: DoorEventHandling @ 0x004dcfb0 processes door bash damage events
+            if (HitPoints <= 0)
+            {
+                IsBashed = true;
+                IsLocked = false;
+                IsOpen = true;
+                OpenState = 2; // Destroyed state
+            }
         }
     }
 }
