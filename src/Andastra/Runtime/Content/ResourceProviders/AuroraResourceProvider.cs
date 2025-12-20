@@ -437,6 +437,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
 
         private byte[] LookupHardcoded(ResourceIdentifier id)
         {
+            // TODO: implement hardcoded resource lookups and fully match 1:1 accuracy and exhaustively to nwn/nwn2/nwn:ee, providing commonalities here and implementing this function into subclasses for individual specifics.
             // Hardcoded resources are engine-specific fallbacks
             // Aurora Engine may have some hardcoded resources, but this is engine-specific
             // For now, return null - hardcoded resources can be added later if needed
@@ -504,15 +505,31 @@ namespace Andastra.Runtime.Content.ResourceProviders
         private string LocateInHak(ResourceIdentifier id)
         {
             // Search HAK files in reverse order (later HAK files override earlier ones)
+            // Based on nwmain.exe: CExoResMan resource lookup searches HAK files in load order
+            // HAK files are ERF format archives, resources are checked using ERF.Get()
             for (int i = _hakFiles.Count - 1; i >= 0; i--)
             {
                 string hakPath = _hakFiles[i];
                 if (File.Exists(hakPath))
                 {
-                    // TODO: Check if resource exists in HAK file
-                    // This requires HAK file parsing which is not yet implemented
-                    // For now, return HAK file path if it exists
-                    return hakPath;
+                    try
+                    {
+                        // HAK files are ERF format - check if resource exists in this HAK file
+                        // Based on nwmain.exe: CExoResMan checks resource existence in HAK archives
+                        var erf = ERFAuto.ReadErf(hakPath);
+                        byte[] resourceData = erf.Get(id.ResName, id.ResType);
+                        if (resourceData != null)
+                        {
+                            // Resource exists in this HAK file - return the HAK file path
+                            // The offset within the HAK file would be available from ERFResource if needed
+                            return hakPath;
+                        }
+                    }
+                    catch
+                    {
+                        // Skip corrupted or invalid HAK files
+                        continue;
+                    }
                 }
             }
 
