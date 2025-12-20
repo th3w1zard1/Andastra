@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Andastra.Runtime.Games.Common.Components;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Aurora.Components
 {
@@ -108,17 +109,109 @@ namespace Andastra.Runtime.Games.Aurora.Components
         /// <returns>IFeatData if found, null otherwise.</returns>
         /// <remarks>
         /// Based on nwmain.exe: Feat data lookup from feat.2da
-        /// Located via string references: Feat data in 2DA tables
-        /// Original implementation: Aurora uses C2DA class to access feat.2da table
-        /// TODO: Implement full Aurora FeatData class and lookup when Aurora data structures are complete
-        /// For now, returns null which makes feats always usable if creature has them (acceptable fallback)
+        /// - Located via string references: Feat data in 2DA tables
+        /// - Original implementation: Aurora uses C2DA class to access feat.2da table
+        /// - C2DA::Load2DArray @ 0x1401a73a0 loads feat.2da, C2DA::GetInteger/C2DA::GetString retrieve feat properties
+        /// - Supports both AuroraGameDataProvider and AuroraTwoDATableManager for flexibility
+        /// - Returns AuroraFeatData which implements IFeatData interface for daily usage tracking
         /// </remarks>
         protected override IFeatData GetFeatData(int featId, object gameDataProvider)
         {
-            // TODO: Implement Aurora FeatData lookup from AuroraTwoDATableManager
-            // For now, return null which will make feats always usable if creature has them
-            // This is acceptable as a fallback until Aurora data structures are fully implemented
+            if (gameDataProvider == null)
+            {
+                return null;
+            }
+
+            // Try AuroraGameDataProvider first (preferred interface)
+            Data.AuroraGameDataProvider auroraProvider = gameDataProvider as Data.AuroraGameDataProvider;
+            if (auroraProvider != null)
+            {
+                return auroraProvider.GetFeat(featId);
+            }
+
+            // Try AuroraTwoDATableManager (direct table access)
+            Data.AuroraTwoDATableManager tableManager = gameDataProvider as Data.AuroraTwoDATableManager;
+            if (tableManager != null)
+            {
+                // Use table manager to get feat data directly
+                // Based on nwmain.exe: C2DA::Load2DArray loads feat.2da table
+                Parsing.Formats.TwoDA.TwoDA table = tableManager.GetTable("feat");
+                if (table == null || featId < 0 || featId >= table.GetHeight())
+                {
+                    return null;
+                }
+
+                // Get row by feat ID (row index)
+                // Based on nwmain.exe: C2DA row access via index
+                Parsing.Formats.TwoDA.TwoDARow row = table.GetRow(featId);
+                if (row == null)
+                {
+                    return null;
+                }
+
+                // Extract feat data from 2DA row
+                // Based on nwmain.exe: C2DA::GetInteger, C2DA::GetString access feat.2da columns
+                int? usesPerDay = SafeGetInteger(row, "usesperday");
+                return new Data.AuroraFeatData
+                {
+                    RowIndex = featId,
+                    Label = row.Label(),
+                    Name = SafeGetString(row, "name") ?? string.Empty,
+                    Description = SafeGetString(row, "description") ?? string.Empty,
+                    DescriptionStrRef = SafeGetInteger(row, "description") ?? -1,
+                    Icon = SafeGetString(row, "icon") ?? string.Empty,
+                    FeatCategory = SafeGetInteger(row, "category") ?? 0,
+                    MaxRanks = SafeGetInteger(row, "maxrank") ?? 0,
+                    PrereqFeat1 = SafeGetInteger(row, "prereqfeat1") ?? -1,
+                    PrereqFeat2 = SafeGetInteger(row, "prereqfeat2") ?? -1,
+                    MinLevel = SafeGetInteger(row, "minlevel") ?? 1,
+                    MinLevelClass = SafeGetInteger(row, "minlevelclass") ?? -1,
+                    Selectable = (SafeGetInteger(row, "allclassescanuse") == 1) || (SafeGetInteger(row, "selectable") == 1),
+                    RequiresAction = SafeGetInteger(row, "requiresaction") == 1,
+                    UsesPerDay = usesPerDay ?? -1 // -1 = unlimited or special handling, 0+ = daily limit
+                };
+            }
+
+            // Unknown game data provider type
             return null;
+        }
+
+        /// <summary>
+        /// Safely gets a string value from a 2DA row, returning null if the column doesn't exist.
+        /// </summary>
+        /// <param name="row">The 2DA row.</param>
+        /// <param name="columnName">The column name.</param>
+        /// <returns>The string value, or null if the column doesn't exist.</returns>
+        [CanBeNull]
+        private static string SafeGetString(Parsing.Formats.TwoDA.TwoDARow row, string columnName)
+        {
+            try
+            {
+                return row.GetString(columnName);
+            }
+            catch (System.Collections.Generic.KeyNotFoundException)
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Safely gets an integer value from a 2DA row, returning null if the column doesn't exist.
+        /// </summary>
+        /// <param name="row">The 2DA row.</param>
+        /// <param name="columnName">The column name.</param>
+        /// <returns>The integer value, or null if the column doesn't exist or is invalid.</returns>
+        [CanBeNull]
+        private static int? SafeGetInteger(Parsing.Formats.TwoDA.TwoDARow row, string columnName)
+        {
+            try
+            {
+                return row.GetInteger(columnName);
+            }
+            catch (System.Collections.Generic.KeyNotFoundException)
+            {
+                return null;
+            }
         }
 
         /// <summary>

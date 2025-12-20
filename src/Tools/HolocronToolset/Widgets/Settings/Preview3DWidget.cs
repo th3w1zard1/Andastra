@@ -9,12 +9,13 @@ namespace HolocronToolset.Widgets.Settings
     // Original: class ModelRendererSettings(Settings):
     public partial class Preview3DWidget : UserControl
     {
-        private object _settings; // TODO: Use ModelRendererSettings type when available
+        private ModelRendererSettings _settings;
         private CheckBox _utcShowByDefault;
         private NumericUpDown _backgroundColour;
 
         public Preview3DWidget()
         {
+            _settings = new ModelRendererSettings();
             InitializeComponent();
             SetupUI();
             SetupValues();
@@ -62,20 +63,28 @@ namespace HolocronToolset.Widgets.Settings
 
         private void SetupValues()
         {
-            // TODO: Load values from ModelRendererSettings when available
+            // Matching PyKotor implementation: Load values from ModelRendererSettings
             if (_utcShowByDefault != null)
             {
-                _utcShowByDefault.IsChecked = false;
+                _utcShowByDefault.IsChecked = _settings.UtcShowByDefault;
             }
             if (_backgroundColour != null)
             {
-                _backgroundColour.Value = 0;
+                _backgroundColour.Value = _settings.BackgroundColour;
             }
         }
 
+        // Matching PyKotor implementation: Save values from UI controls to ModelRendererSettings
         public void Save()
         {
-            // TODO: Save values to ModelRendererSettings when available
+            if (_utcShowByDefault != null)
+            {
+                _settings.UtcShowByDefault = _utcShowByDefault.IsChecked ?? false;
+            }
+            if (_backgroundColour != null)
+            {
+                _settings.BackgroundColour = (int)(_backgroundColour.Value ?? 0);
+            }
         }
     }
 }
