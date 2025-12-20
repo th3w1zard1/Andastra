@@ -341,12 +341,12 @@ namespace Andastra.Parsing.Tests.Formats
             if (!File.Exists(TestTwoDAFile))
             {
                 // Create test file if needed
-                var twoda = new TwoDA(new List<string> { "col1", "col2", "col3" });
-                twoda.AddRow("0", new Dictionary<string, object> { { "col1", "abc" }, { "col2", "def" }, { "col3", "ghi" } });
-                twoda.AddRow("1", new Dictionary<string, object> { { "col1", "def" }, { "col2", "ghi" }, { "col3", "123" } });
-                twoda.AddRow("2", new Dictionary<string, object> { { "col1", "123" }, { "col2", "" }, { "col3", "abc" } });
+                var testTwoda = new TwoDA(new List<string> { "col1", "col2", "col3" });
+                testTwoda.AddRow("0", new Dictionary<string, object> { { "col1", "abc" }, { "col2", "def" }, { "col3", "ghi" } });
+                testTwoda.AddRow("1", new Dictionary<string, object> { { "col1", "def" }, { "col2", "ghi" }, { "col3", "123" } });
+                testTwoda.AddRow("2", new Dictionary<string, object> { { "col1", "123" }, { "col2", "" }, { "col3", "abc" } });
 
-                byte[] data = new TwoDABinaryWriter(twoda).Write();
+                byte[] data = new TwoDABinaryWriter(testTwoda).Write();
                 Directory.CreateDirectory(Path.GetDirectoryName(TestTwoDAFile));
                 File.WriteAllBytes(TestTwoDAFile, data);
             }
@@ -471,7 +471,7 @@ namespace Andastra.Parsing.Tests.Formats
                 }
             }
 
-            compiledCount.Should().BeGreaterThanOrEqualTo(12,
+            compiledCount.Should().BeGreaterOrEqualTo(12,
                 $"Should successfully compile TwoDA.ksy to at least 12 languages. Compiled to {compiledCount} languages.");
         }
 
