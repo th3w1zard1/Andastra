@@ -119,6 +119,11 @@ namespace HolocronToolset.Editors
         private NumericUpDown _waitFlagSpin;
         private NumericUpDown _fadeTypeSpin;
 
+        // UI Controls - Voice widget
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
+        // Original: QComboBox voiceComboBox
+        private ComboBox _voiceComboBox;
+
         // Flag to track if node is loaded into UI (prevents updates during loading)
         private bool _nodeLoadedIntoUi = false;
 
@@ -243,6 +248,16 @@ namespace HolocronToolset.Editors
             timingPanel.Children.Add(new TextBlock { Text = "Fade Type:" });
             timingPanel.Children.Add(_fadeTypeSpin);
             panel.Children.Add(timingPanel);
+
+            // Initialize voice combo box
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:365
+            // Original: self.ui.voiceComboBox.currentTextChanged.connect(self.on_node_update)
+            _voiceComboBox = new ComboBox { IsEditable = true };
+            _voiceComboBox.LostFocus += (s, e) => OnNodeUpdate();
+            var voicePanel = new StackPanel();
+            voicePanel.Children.Add(new TextBlock { Text = "Voice ResRef:" });
+            voicePanel.Children.Add(_voiceComboBox);
+            panel.Children.Add(voicePanel);
 
             // Initialize animation UI controls
             // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui:966-992
@@ -548,6 +563,10 @@ namespace HolocronToolset.Editors
         // Matching PyKotor implementation: editor.ui.script1Param1Spin
         public NumericUpDown Script1Param1Spin => _script1Param1Spin;
 
+        // Expose voice widget for testing
+        // Matching PyKotor implementation: editor.ui.voiceComboBox
+        public ComboBox VoiceComboBox => _voiceComboBox;
+
         /// <summary>
         /// Handles selection changes in the dialog tree.
         /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2364-2454
@@ -709,6 +728,14 @@ namespace HolocronToolset.Editors
             {
                 _fadeTypeSpin.Value = node.FadeType;
             }
+
+            // Load voice ResRef from node
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2429
+            // Original: self.ui.voiceComboBox.set_combo_box_text(str(item.link.node.vo_resref))
+            if (_voiceComboBox != null && node != null)
+            {
+                _voiceComboBox.Text = node.VoResRef?.ToString() ?? string.Empty;
+            }
         }
 
         /// <summary>
@@ -813,6 +840,15 @@ namespace HolocronToolset.Editors
             if (_fadeTypeSpin != null && node != null)
             {
                 node.FadeType = _fadeTypeSpin.Value.HasValue ? (int)_fadeTypeSpin.Value.Value : 0;
+            }
+
+            // Update voice ResRef in node
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2517
+            // Original: item.link.node.vo_resref = ResRef(self.ui.voiceComboBox.currentText())
+            if (_voiceComboBox != null && node != null)
+            {
+                string voiceText = _voiceComboBox.Text ?? string.Empty;
+                node.VoResRef = string.IsNullOrEmpty(voiceText) ? ResRef.FromBlank() : new ResRef(voiceText);
             }
         }
 
