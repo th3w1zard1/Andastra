@@ -4836,14 +4836,80 @@ void func2() {
                 "Breadcrumb should show Function: func2 when cursor moves back to func2");
         }
 
-        // TODO: STUB - Implement test_nss_editor_foldable_regions_large_file (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:2137-2163)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:2137-2163
         // Original: def test_nss_editor_foldable_regions_large_file(qtbot, installation: HTInstallation): Test foldable regions large file
         [Fact]
         public void TestNssEditorFoldableRegionsLargeFile()
         {
-            // TODO: STUB - Implement foldable regions large file test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:2137-2163
-            throw new NotImplementedException("TestNssEditorFoldableRegionsLargeFile: Foldable regions large file test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor2";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            // Matching Python: editor = NSSEditor(None, installation)
+            var editor = new NSSEditor(null, installation);
+
+            // Matching Python: editor.new()
+            editor.New();
+
+            // Matching Python: Create large script with many functions
+            // script_parts = []
+            // for i in range(50):
+            //     script_parts.append(f"""void function_{i}() {{
+            //     int var = {i};
+            //     if (var > 0) {{
+            //         var += 1;
+            //     }}
+            // }}""")
+            // large_script = "\n".join(script_parts)
+            var scriptParts = new List<string>();
+            for (int i = 0; i < 50; i++)
+            {
+                scriptParts.Add($@"void function_{i}() {{
+    int var = {i};
+    if (var > 0) {{
+        var += 1;
+    }}
+}}");
+            }
+            string largeScript = string.Join("\n", scriptParts);
+
+            // Matching Python: editor.ui.codeEdit.setPlainText(large_script)
+            var codeEdit = editor.CodeEdit;
+            codeEdit.Should().NotBeNull("Code editor should be initialized");
+            codeEdit.Text = largeScript;
+
+            // Matching Python: editor.ui.codeEdit._update_foldable_regions()
+            // Manually trigger foldable regions update (QTimer might not fire reliably in headless mode)
+            codeEdit.UpdateFoldableRegionsForTesting();
+
+            // Matching Python: assert hasattr(editor.ui.codeEdit, '_foldable_regions')
+            // Matching Python: assert len(editor.ui.codeEdit._foldable_regions) > 0, f"Expected foldable regions, got {editor.ui.codeEdit._foldable_regions}"
+            var foldableRegions = codeEdit.GetFoldableRegions();
+            foldableRegions.Should().NotBeNull("Foldable regions dictionary should exist");
+            foldableRegions.Should().NotBeEmpty($"Expected foldable regions, got {foldableRegions}");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:2165-2191

@@ -293,16 +293,6 @@ namespace HolocronToolset.Editors
                 _panelTabs.Items.Add(terminalTab);
             }
 
-            // Create grid splitter for resizing (Avalonia equivalent of QSplitter handle)
-            _gridSplitter = new GridSplitter
-            {
-                Height = 4,
-                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
-                Background = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.FromRgb(200, 200, 200)),
-                ShowsPreview = true
-            };
-            Grid.SetRow(_gridSplitter, 0);  // Place in first row, will be moved when panel is shown
-
             // Add main content to first row
             if (_mainContentContainer != null)
             {

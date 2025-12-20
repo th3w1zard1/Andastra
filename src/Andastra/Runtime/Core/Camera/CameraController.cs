@@ -36,7 +36,7 @@ namespace Andastra.Runtime.Core.Camera
     public class CameraController : ICameraController
     {
         private readonly IWorld _world;
-        private readonly MDLLoader _mdlLoader;
+        private readonly Andastra.Runtime.Content.MDL.MDLLoader _mdlLoader;
 
         /// <summary>
         /// Current camera mode.
