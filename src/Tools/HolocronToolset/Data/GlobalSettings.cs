@@ -103,5 +103,13 @@ namespace HolocronToolset.Data
             get => GetValue<bool>("showPreviewUTP", false);
             set => SetValue("showPreviewUTP", value);
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:60-67
+        // Original: settings.value("GlobalFont", "")
+        public string GlobalFont
+        {
+            get => GetValue<string>("GlobalFont", "");
+            set => SetValue("GlobalFont", value);
+        }
     }
 }

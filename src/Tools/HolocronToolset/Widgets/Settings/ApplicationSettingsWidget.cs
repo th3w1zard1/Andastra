@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
 using MsBox.Avalonia;
@@ -75,21 +77,110 @@ namespace HolocronToolset.Widgets.Settings
             PopulateAll();
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:52-56
-        // Original: def setup_font_settings(self):
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:57-67
+        // Original: def update_font_label(self):
         private void UpdateFontLabel()
         {
-            if (_currentFontLabel != null)
+            if (_currentFontLabel == null)
             {
-                _currentFontLabel.Text = "Current Font: Default";
+                return;
             }
+
+            string fontString = _settings.GlobalFont;
+            if (!string.IsNullOrEmpty(fontString))
+            {
+                try
+                {
+                    // Parse font string (format: "Family,Size,Style,Weight" or similar)
+                    // For simplicity, we'll store as "Family|Size|Style|Weight"
+                    var parts = fontString.Split('|');
+                    if (parts.Length >= 2)
+                    {
+                        string family = parts[0];
+                        if (double.TryParse(parts[1], out double size))
+                        {
+                            _currentFontLabel.Text = $"Current Font: {family}, {size} pt";
+                            return;
+                        }
+                    }
+                }
+                catch
+                {
+                    // If parsing fails, fall through to default
+                }
+            }
+
+            _currentFontLabel.Text = "Current Font: Default";
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:69-77
         // Original: def select_font(self):
-        private void SelectFont()
+        private async void SelectFont()
         {
-            // TODO: Implement font selection dialog when available
+            Window parentWindow = GetParentWindow();
+            if (parentWindow == null)
+            {
+                return;
+            }
+
+            // Get current font from application or settings
+            FontInfo currentFont = new FontInfo { FamilyName = "Arial", Size = 12, IsBold = false, IsItalic = false };
+            
+            // Try to load saved font from settings
+            string fontString = _settings.GlobalFont;
+            if (!string.IsNullOrEmpty(fontString))
+            {
+                try
+                {
+                    var parts = fontString.Split('|');
+                    if (parts.Length >= 2)
+                    {
+                        string family = parts[0];
+                        if (double.TryParse(parts[1], out double size))
+                        {
+                            currentFont = new FontInfo
+                            {
+                                FamilyName = family,
+                                Size = size,
+                                IsItalic = parts.Length >= 3 && parts[2] == "Italic",
+                                IsBold = parts.Length >= 4 && parts[3] == "Bold"
+                            };
+                        }
+                    }
+                }
+                catch
+                {
+                    // If parsing fails, use default
+                }
+            }
+
+            var dialog = new FontDialog(parentWindow);
+            dialog.SetCurrentFont(currentFont);
+            await dialog.ShowDialog(parentWindow);
+
+            if (dialog.DialogResult && dialog.SelectedFont != null)
+            {
+                FontInfo selectedFont = dialog.SelectedFont;
+
+                // Apply font globally to the application
+                // Matching PyKotor: QApplication.setFont(font)
+                if (Application.Current != null)
+                {
+                    // Set font properties as resources that can be used throughout the app
+                    Application.Current.Resources["SystemFontFamily"] = selectedFont.GetFontFamily();
+                    Application.Current.Resources["SystemFontSize"] = selectedFont.Size;
+                    Application.Current.Resources["SystemFontWeight"] = selectedFont.GetFontWeight();
+                    Application.Current.Resources["SystemFontStyle"] = selectedFont.GetFontStyle();
+                }
+
+                // Save font to settings
+                // Matching PyKotor: self.settings.settings.setValue("GlobalFont", font.toString())
+                string fontStringToSave = $"{selectedFont.FamilyName}|{selectedFont.Size}|{(selectedFont.IsItalic ? "Italic" : "Normal")}|{(selectedFont.IsBold ? "Bold" : "Normal")}";
+                _settings.GlobalFont = fontStringToSave;
+
+                // Update the label
+                UpdateFontLabel();
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:79-126
