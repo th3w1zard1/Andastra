@@ -42,7 +42,8 @@ namespace Andastra.Parsing.Tests.Formats
             "swift",
             "lua",
             "nim",
-            "perl"
+            "perl",
+            "visualbasic"
         };
 
         [Fact(Timeout = 300000)] // 5 minute timeout for compilation
@@ -167,6 +168,12 @@ namespace Andastra.Parsing.Tests.Formats
             TestCompileToLanguage("perl");
         }
 
+        [Fact(Timeout = 300000)]
+        public void TestCompileBWMToVisualBasic()
+        {
+            TestCompileToLanguage("visualbasic");
+        }
+
         [Fact(Timeout = 600000)] // 10 minute timeout for compiling all languages
         public void TestCompileBWMToAllLanguages()
         {
@@ -228,16 +235,16 @@ namespace Andastra.Parsing.Tests.Formats
                         .ToList();
                     files.Count.Should().BeGreaterThan(0,
                         $"Language {success.Key} should generate output files. Found: {string.Join(", ", files.Select(Path.GetFileName))}");
-                    
+
                     // Verify at least one parser file was generated (language-specific patterns)
-                    var hasParserFile = files.Any(f => 
-                        f.Contains("bwm") || f.Contains("Bwm") || f.Contains("BWM") ||
-                        f.EndsWith(".py") || f.EndsWith(".java") || f.EndsWith(".js") ||
-                        f.EndsWith(".cs") || f.EndsWith(".cpp") || f.EndsWith(".h") ||
-                        f.EndsWith(".go") || f.EndsWith(".rb") || f.EndsWith(".php") ||
-                        f.EndsWith(".rs") || f.EndsWith(".swift") || f.EndsWith(".lua") ||
-                        f.EndsWith(".nim") || f.EndsWith(".pm"));
-                    
+            var hasParserFile = files.Any(f => 
+                f.Contains("bwm") || f.Contains("Bwm") || f.Contains("BWM") ||
+                f.EndsWith(".py") || f.EndsWith(".java") || f.EndsWith(".js") ||
+                f.EndsWith(".cs") || f.EndsWith(".cpp") || f.EndsWith(".h") ||
+                f.EndsWith(".go") || f.EndsWith(".rb") || f.EndsWith(".php") ||
+                f.EndsWith(".rs") || f.EndsWith(".swift") || f.EndsWith(".lua") ||
+                f.EndsWith(".nim") || f.EndsWith(".pm") || f.EndsWith(".vb"));
+
                     hasParserFile.Should().BeTrue(
                         $"Language {success.Key} should generate parser files. Files: {string.Join(", ", files.Select(Path.GetFileName))}");
                 }
@@ -313,7 +320,7 @@ namespace Andastra.Parsing.Tests.Formats
             var files = Directory.GetFiles(outputDir, "*", SearchOption.AllDirectories)
                 .Where(f => !f.EndsWith("compile_output.txt") && !f.EndsWith("compile_error.txt"))
                 .ToList();
-            
+
             files.Count.Should().BeGreaterThan(0,
                 $"Language {language} should generate parser files. Found: {string.Join(", ", files.Select(Path.GetFileName))}");
 
@@ -324,8 +331,8 @@ namespace Andastra.Parsing.Tests.Formats
                 f.EndsWith(".cs") || f.EndsWith(".cpp") || f.EndsWith(".h") ||
                 f.EndsWith(".go") || f.EndsWith(".rb") || f.EndsWith(".php") ||
                 f.EndsWith(".rs") || f.EndsWith(".swift") || f.EndsWith(".lua") ||
-                f.EndsWith(".nim") || f.EndsWith(".pm"));
-            
+                f.EndsWith(".nim") || f.EndsWith(".pm") || f.EndsWith(".vb"));
+
             hasParserFile.Should().BeTrue(
                 $"Language {language} should generate parser files. Files: {string.Join(", ", files.Select(Path.GetFileName))}");
         }

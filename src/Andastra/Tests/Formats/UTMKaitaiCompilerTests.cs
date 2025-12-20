@@ -121,16 +121,10 @@ namespace Andastra.Parsing.Tests.Formats
             Directory.CreateDirectory(langOutputDir);
 
             // Compile UTM.ksy to target language
-            var processInfo = new ProcessStartInfo
-            {
-                FileName = compilerPath,
-                Arguments = $"-t {language} \"{UtmKsyPath}\" -d \"{langOutputDir}\"",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                WorkingDirectory = Path.GetDirectoryName(UtmKsyPath)
-            };
+            var processInfo = CreateCompilerProcessInfo(
+                compilerPath,
+                $"-t {language} \"{UtmKsyPath}\" -d \"{langOutputDir}\"",
+                Path.GetDirectoryName(UtmKsyPath));
 
             string stdout = "";
             string stderr = "";
@@ -675,29 +669,40 @@ namespace Andastra.Parsing.Tests.Formats
             return null;
         }
 
-        private static (int ExitCode, string Output, string Error) RunKaitaiCompiler(string ksyPath, string arguments, string outputDir)
+        private static ProcessStartInfo CreateCompilerProcessInfo(string compilerPath, string arguments, string workingDirectory = null)
         {
-            string compilerPath = FindKaitaiCompiler();
-            if (string.IsNullOrEmpty(compilerPath))
-            {
-                return (-1, "", "Kaitai Struct compiler not found");
-            }
-
             // Check if compiler path is a JAR file
-            bool isJar = compilerPath.EndsWith(".jar", StringComparison.OrdinalIgnoreCase) || 
-                        File.Exists(compilerPath) && Path.GetExtension(compilerPath).Equals(".jar", StringComparison.OrdinalIgnoreCase);
+            bool isJar = !string.IsNullOrEmpty(compilerPath) && 
+                         (compilerPath.EndsWith(".jar", StringComparison.OrdinalIgnoreCase) || 
+                          (File.Exists(compilerPath) && Path.GetExtension(compilerPath).Equals(".jar", StringComparison.OrdinalIgnoreCase)));
 
             if (isJar)
             {
                 // Use java -jar for JAR files
-                string fullArgs = $"-jar \"{compilerPath}\" {arguments} -d \"{outputDir}\" \"{ksyPath}\"";
-                return RunCommand("java", fullArgs);
+                return new ProcessStartInfo
+                {
+                    FileName = "java",
+                    Arguments = $"-jar \"{compilerPath}\" {arguments}",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    WorkingDirectory = workingDirectory ?? AppContext.BaseDirectory
+                };
             }
             else
             {
                 // Use compiler directly
-                string fullArgs = $"{arguments} -d \"{outputDir}\" \"{ksyPath}\"";
-                return RunCommand(compilerPath, fullArgs);
+                return new ProcessStartInfo
+                {
+                    FileName = compilerPath,
+                    Arguments = arguments,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    WorkingDirectory = workingDirectory ?? AppContext.BaseDirectory
+                };
             }
         }
 

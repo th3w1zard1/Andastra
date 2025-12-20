@@ -347,8 +347,8 @@ namespace Andastra.Parsing.Tests.Formats
         {
             var utd = new UTD();
             var name = new LocalizedString();
-            name.Set(Language.English, Gender.Male, "Test Door");
-            name.Set(Language.English, Gender.Female, "Test Door");
+            name.SetData(Language.English, Gender.Male, "Test Door");
+            name.SetData(Language.English, Gender.Female, "Test Door");
             utd.Name = name;
 
             var description = new LocalizedString();
