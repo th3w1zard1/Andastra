@@ -320,6 +320,19 @@ namespace HolocronToolset.Utils
         /// <summary>
         /// Gets the TopLevel window from the current Avalonia application.
         /// This is used to access StorageProvider for launching URIs and files.
+        /// 
+        /// Implements comprehensive fallback strategy matching PyKotor's QApplication.activeWindow() behavior:
+        /// 1. Try MainWindow from desktop lifetime (primary window)
+        /// 2. Try focused window from desktop.Windows (currently active window)
+        /// 3. Try visible window from desktop.Windows (any visible window)
+        /// 4. Try any window from desktop.Windows (last resort from application lifetime)
+        /// 5. Try focused window from WindowUtils tracked windows (toolset-managed windows)
+        /// 6. Try visible window from WindowUtils tracked windows (toolset-managed visible windows)
+        /// 7. Try any window from WindowUtils tracked windows (last resort from toolset tracking)
+        /// 
+        /// This ensures we can always find a valid TopLevel window for StorageProvider operations,
+        /// matching PyKotor's behavior where QApplication.activeWindow() returns the active window
+        /// or any available window if no window has focus.
         /// </summary>
         /// <returns>The TopLevel window if available, null otherwise</returns>
         private static TopLevel GetTopLevel()
@@ -334,16 +347,61 @@ namespace HolocronToolset.Utils
             // Try to get TopLevel from application lifetime
             if (app.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktopLifetime)
             {
-                // Return the main window (which is a TopLevel)
-                return desktopLifetime.MainWindow;
+                // Strategy 1: Try MainWindow first (primary window, matches PyKotor's main window behavior)
+                if (desktopLifetime.MainWindow != null)
+                {
+                    return desktopLifetime.MainWindow;
+                }
+
+                // Strategy 2: Try to find a focused window from desktop.Windows
+                // This matches PyKotor's QApplication.activeWindow() behavior
+                var focusedWindow = desktopLifetime.Windows.FirstOrDefault(w => w.IsFocused);
+                if (focusedWindow != null)
+                {
+                    return focusedWindow;
+                }
+
+                // Strategy 3: Try to find any visible window from desktop.Windows
+                // This handles cases where windows exist but none have focus
+                var visibleWindow = desktopLifetime.Windows.FirstOrDefault(w => w.IsVisible);
+                if (visibleWindow != null)
+                {
+                    return visibleWindow;
+                }
+
+                // Strategy 4: Try any window from desktop.Windows (last resort from application lifetime)
+                // This ensures we return something if windows exist but aren't visible/focused
+                if (desktopLifetime.Windows.Count > 0)
+                {
+                    return desktopLifetime.Windows[0];
+                }
             }
 
-            // Try to get TopLevel from any active window
-            // This handles cases where MainWindow might not be set yet
-            // FIXME: Note: Avalonia doesn't have Application.Windows, so we use TopLevel.GetTopLevel or focus tracking
-            // TODO: STUB - For now, we'll just return null if MainWindow isn't available
-            // The calling code should handle the null case gracefully
+            // Strategy 5: Try to find a focused window from WindowUtils tracked windows
+            // This handles toolset-managed windows that might not be in desktop.Windows
+            var trackedFocusedWindow = WindowUtils.GetFocusedWindow();
+            if (trackedFocusedWindow != null)
+            {
+                return trackedFocusedWindow;
+            }
 
+            // Strategy 6: Try to find any visible window from WindowUtils tracked windows
+            var trackedVisibleWindow = WindowUtils.GetVisibleWindow();
+            if (trackedVisibleWindow != null)
+            {
+                return trackedVisibleWindow;
+            }
+
+            // Strategy 7: Try any window from WindowUtils tracked windows (last resort)
+            // This ensures we return something if toolset-managed windows exist
+            var trackedWindows = WindowUtils.GetTrackedWindows();
+            if (trackedWindows.Count > 0)
+            {
+                return trackedWindows[0];
+            }
+
+            // No windows available - return null
+            // The calling code should handle the null case gracefully
             return null;
         }
     }

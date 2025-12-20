@@ -422,5 +422,33 @@ namespace HolocronToolset.Utils
         }
 
         public static int WindowCount => ToolsetWindows.Count;
+
+        /// <summary>
+        /// Gets all tracked toolset windows.
+        /// Used by MiscUtils.GetTopLevel() to find an active window when MainWindow is not available.
+        /// </summary>
+        /// <returns>A copy of the list of tracked windows</returns>
+        public static List<Window> GetTrackedWindows()
+        {
+            return new List<Window>(ToolsetWindows);
+        }
+
+        /// <summary>
+        /// Gets the currently focused window from tracked windows, if any.
+        /// </summary>
+        /// <returns>The focused window, or null if none is focused</returns>
+        public static Window GetFocusedWindow()
+        {
+            return ToolsetWindows.FirstOrDefault(w => w.IsFocused);
+        }
+
+        /// <summary>
+        /// Gets the first visible window from tracked windows, if any.
+        /// </summary>
+        /// <returns>The first visible window, or null if none are visible</returns>
+        public static Window GetVisibleWindow()
+        {
+            return ToolsetWindows.FirstOrDefault(w => w.IsVisible);
+        }
     }
 }
