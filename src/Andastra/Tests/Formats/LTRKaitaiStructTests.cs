@@ -264,12 +264,36 @@ namespace Andastra.Parsing.Tests.Formats
             Directory.CreateDirectory(langOutputDir);
 
             // Compile to target language
+            // If using JAR, need to use full classpath with all dependencies
+            string actualCompilerPath = compilerPath;
+            string arguments = "";
+            
+            if (compilerPath.EndsWith(".jar"))
+            {
+                // Use the main JAR with full classpath
+                var libDir = Path.GetDirectoryName(compilerPath);
+                if (libDir != null)
+                {
+                    var allJars = Directory.GetFiles(libDir, "*.jar");
+                    var classpath = string.Join(Path.PathSeparator.ToString(), allJars);
+                    actualCompilerPath = "java";
+                    arguments = $"-cp \"{classpath}\" io.kaitai.struct.JavaMain -t {language} \"{normalizedKsyPath}\" -d \"{langOutputDir}\"";
+                }
+                else
+                {
+                    actualCompilerPath = "java";
+                    arguments = $"-jar \"{compilerPath}\" -t {language} \"{normalizedKsyPath}\" -d \"{langOutputDir}\"";
+                }
+            }
+            else
+            {
+                arguments = $"-t {language} \"{normalizedKsyPath}\" -d \"{langOutputDir}\"";
+            }
+            
             var compileInfo = new ProcessStartInfo
             {
-                FileName = compilerPath.EndsWith(".jar") ? "java" : compilerPath,
-                Arguments = compilerPath.EndsWith(".jar")
-                    ? $"-jar \"{compilerPath}\" -t {language} \"{normalizedKsyPath}\" -d \"{langOutputDir}\""
-                    : $"-t {language} \"{normalizedKsyPath}\" -d \"{langOutputDir}\"",
+                FileName = actualCompilerPath,
+                Arguments = arguments,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -606,8 +630,8 @@ namespace Andastra.Parsing.Tests.Formats
             if (!File.Exists(TestLtrFile))
             {
                 // Create test file if needed
-                var ltr = new LTR();
-                byte[] data = LTRAuto.BytesLtr(ltr);
+                var testLtr = new LTR();
+                byte[] data = LTRAuto.BytesLtr(testLtr);
                 Directory.CreateDirectory(Path.GetDirectoryName(TestLtrFile));
                 File.WriteAllBytes(TestLtrFile, data);
             }

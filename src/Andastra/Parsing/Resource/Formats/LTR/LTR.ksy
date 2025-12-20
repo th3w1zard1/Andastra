@@ -31,14 +31,12 @@ seq:
     encoding: ASCII
     size: 4
     doc: File type signature. Must be "LTR " (space-padded) for LTR files.
-    valid: "LTR "
   
   - id: file_version
     type: str
     encoding: ASCII
     size: 4
     doc: File format version. Must be "V1.0" for LTR files.
-    valid: "V1.0"
   
   - id: letter_count
     type: u1
@@ -46,7 +44,6 @@ seq:
       Number of characters in the alphabet. Must be 26 (NWN) or 28 (KotOR).
       KotOR uses 28 characters: "abcdefghijklmnopqrstuvwxyz'-"
       NWN uses 26 characters: "abcdefghijklmnopqrstuvwxyz"
-    valid: [26, 28]
   
   - id: single_letter_block
     type: letter_block
