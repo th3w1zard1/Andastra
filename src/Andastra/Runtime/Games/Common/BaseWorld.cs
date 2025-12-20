@@ -126,6 +126,15 @@ namespace Andastra.Runtime.Games.Common
         public abstract IGameDataProvider GameDataProvider { get; }
 
         /// <summary>
+        /// Explicit implementation of IWorld.GameDataProvider to satisfy the interface requirement.
+        /// </summary>
+        /// <remarks>
+        /// IWorld uses object type to avoid Core depending on Games.Common.
+        /// This property returns the strongly-typed GameDataProvider cast to object.
+        /// </remarks>
+        object IWorld.GameDataProvider => GameDataProvider;
+
+        /// <summary>
         /// Gets an entity by its unique ObjectId.
         /// </summary>
         /// <remarks>
