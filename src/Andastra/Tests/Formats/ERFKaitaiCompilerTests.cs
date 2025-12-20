@@ -117,55 +117,24 @@ namespace Andastra.Parsing.Tests.Formats
         public void TestCompileErfKsyToLanguage(string language)
         {
             // Skip if compiler not available
-            string compilerPath = FindKaitaiCompiler();
-            if (string.IsNullOrEmpty(compilerPath))
+            var compileResult = CompileKsyToLanguage(ErfKsyPath, language);
+            if (!compileResult.Success && compileResult.ExitCode == -999)
             {
                 return; // Skip test if compiler not available
             }
 
-            // Create output directory for this language
+            // Compilation should succeed
+            compileResult.ExitCode.Should().Be(0,
+                $"kaitai-struct-compiler should compile ERF.ksy to {language} successfully. " +
+                $"STDOUT: {compileResult.Output}, STDERR: {compileResult.Error}");
+
+            // Verify output files were generated
             string langOutputDir = Path.Combine(CompilerOutputDir, language);
             if (Directory.Exists(langOutputDir))
             {
-                Directory.Delete(langOutputDir, true);
+                string[] generatedFiles = Directory.GetFiles(langOutputDir, "*", SearchOption.AllDirectories);
+                generatedFiles.Should().NotBeEmpty($"Compilation to {language} should generate output files");
             }
-            Directory.CreateDirectory(langOutputDir);
-
-            // Compile ERF.ksy to target language
-            var processInfo = new ProcessStartInfo
-            {
-                FileName = compilerPath,
-                Arguments = $"-t {language} \"{ErfKsyPath}\" -d \"{langOutputDir}\"",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                WorkingDirectory = Path.GetDirectoryName(ErfKsyPath)
-            };
-
-            string stdout = "";
-            string stderr = "";
-            int exitCode = -1;
-
-            using (var process = Process.Start(processInfo))
-            {
-                if (process != null)
-                {
-                    stdout = process.StandardOutput.ReadToEnd();
-                    stderr = process.StandardError.ReadToEnd();
-                    process.WaitForExit(60000); // 60 second timeout
-                    exitCode = process.ExitCode;
-                }
-            }
-
-            // Compilation should succeed
-            exitCode.Should().Be(0,
-                $"kaitai-struct-compiler should compile ERF.ksy to {language} successfully. " +
-                $"STDOUT: {stdout}, STDERR: {stderr}");
-
-            // Verify output files were generated
-            string[] generatedFiles = Directory.GetFiles(langOutputDir, "*", SearchOption.AllDirectories);
-            generatedFiles.Should().NotBeEmpty($"Compilation to {language} should generate output files");
         }
 
         [Fact(Timeout = 300000)]
@@ -831,7 +800,144 @@ namespace Andastra.Parsing.Tests.Formats
                 }
             }
 
+            // Try Java JAR as fallback
+            string jarPath = FindKaitaiCompilerJar();
+            if (!string.IsNullOrEmpty(jarPath) && File.Exists(jarPath))
+            {
+                // Verify Java is available
+                try
+                {
+                    var javaInfo = new ProcessStartInfo
+                    {
+                        FileName = "java",
+                        Arguments = "-version",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+
+                    using (var javaProcess = Process.Start(javaInfo))
+                    {
+                        if (javaProcess != null)
+                        {
+                            javaProcess.WaitForExit(5000);
+                            if (javaProcess.ExitCode == 0)
+                            {
+                                // Return special marker to indicate JAR usage
+                                return "JAVA_JAR:" + jarPath;
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // Java not available
+                }
+            }
+
             return null;
+        }
+
+        private static string FindKaitaiCompilerJar()
+        {
+            // Check environment variable first
+            string envJar = Environment.GetEnvironmentVariable("KAITAI_COMPILER_JAR");
+            if (!string.IsNullOrEmpty(envJar) && File.Exists(envJar))
+            {
+                return envJar;
+            }
+
+            // Check common locations for Kaitai Struct compiler JAR
+            string[] searchPaths = new[]
+            {
+                Path.Combine(AppContext.BaseDirectory, "kaitai-struct-compiler.jar"),
+                Path.Combine(AppContext.BaseDirectory, "..", "kaitai-struct-compiler.jar"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".kaitai", "kaitai-struct-compiler.jar"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "kaitai-struct-compiler.jar"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "kaitai-struct-compiler.jar"),
+            };
+
+            foreach (string path in searchPaths)
+            {
+                string normalized = Path.GetFullPath(path);
+                if (File.Exists(normalized))
+                {
+                    return normalized;
+                }
+            }
+
+            return null;
+        }
+
+        private (int ExitCode, string Output, string Error, bool Success) CompileKsyToLanguage(string ksyPath, string language)
+        {
+            string compilerPath = FindKaitaiCompiler();
+            if (string.IsNullOrEmpty(compilerPath))
+            {
+                return (-999, "", "Compiler not found", false);
+            }
+
+            // Create output directory for this language
+            string langOutputDir = Path.Combine(CompilerOutputDir, language);
+            if (Directory.Exists(langOutputDir))
+            {
+                Directory.Delete(langOutputDir, true);
+            }
+            Directory.CreateDirectory(langOutputDir);
+
+            ProcessStartInfo processInfo;
+            if (compilerPath.StartsWith("JAVA_JAR:"))
+            {
+                string jarPath = compilerPath.Substring("JAVA_JAR:".Length);
+                processInfo = new ProcessStartInfo
+                {
+                    FileName = "java",
+                    Arguments = $"-jar \"{jarPath}\" -t {language} \"{ksyPath}\" -d \"{langOutputDir}\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    WorkingDirectory = Path.GetDirectoryName(ksyPath)
+                };
+            }
+            else
+            {
+                processInfo = new ProcessStartInfo
+                {
+                    FileName = compilerPath,
+                    Arguments = $"-t {language} \"{ksyPath}\" -d \"{langOutputDir}\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    WorkingDirectory = Path.GetDirectoryName(ksyPath)
+                };
+            }
+
+            string stdout = "";
+            string stderr = "";
+            int exitCode = -1;
+
+            try
+            {
+                using (var process = Process.Start(processInfo))
+                {
+                    if (process != null)
+                    {
+                        stdout = process.StandardOutput.ReadToEnd();
+                        stderr = process.StandardError.ReadToEnd();
+                        process.WaitForExit(60000); // 60 second timeout
+                        exitCode = process.ExitCode;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return (-1, "", ex.Message, false);
+            }
+
+            return (exitCode, stdout, stderr, exitCode == 0);
         }
 
         private static void CreateTestErfFile(string path, ERFType erfType)
