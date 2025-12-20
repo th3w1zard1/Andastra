@@ -59,15 +59,24 @@ namespace Andastra.Runtime.Content.Converters
             foreach (BWMFace face in bwm.Faces)
             {
                 // Get or add each vertex
+                // Vertices are deduplicated - if the same vertex position appears in multiple faces,
+                // we reuse the same vertex index. This saves memory and ensures proper adjacency.
                 int v1Idx = GetOrAddVertex(vertexList, vertexMap, new Vector3(face.V1.X, face.V1.Y, face.V1.Z));
                 int v2Idx = GetOrAddVertex(vertexList, vertexMap, new Vector3(face.V2.X, face.V2.Y, face.V2.Z));
                 int v3Idx = GetOrAddVertex(vertexList, vertexMap, new Vector3(face.V3.X, face.V3.Y, face.V3.Z));
 
+                // Add face indices (3 indices per triangle)
                 faceIndices.Add(v1Idx);
                 faceIndices.Add(v2Idx);
                 faceIndices.Add(v3Idx);
 
-                // Convert surface material
+                // CRITICAL: Convert surface material - MUST be preserved for walkability!
+                // The material determines if the face is walkable. If this is not preserved,
+                // faces that should be walkable will become non-walkable, causing the bug where
+                // "levels/modules are NOT walkable despite having the right surface material."
+                // 
+                // Material is cast to int because NavigationMesh uses int[] for materials,
+                // while BWM uses SurfaceMaterial enum. The enum values match the material IDs (0-30).
                 surfaceMaterials.Add((int)face.Material);
             }
 
@@ -117,6 +126,8 @@ namespace Andastra.Runtime.Content.Converters
             foreach (BWMFace face in bwm.Faces)
             {
                 // Apply offset when converting vertices
+                // This is used when placing room walkmeshes in the world - the offset is the room's position.
+                // The vertices are translated by the offset to position them correctly in world space.
                 int v1Idx = GetOrAddVertexWithOffset(vertexList, vertexMap, new Vector3(face.V1.X, face.V1.Y, face.V1.Z), offset);
                 int v2Idx = GetOrAddVertexWithOffset(vertexList, vertexMap, new Vector3(face.V2.X, face.V2.Y, face.V2.Z), offset);
                 int v3Idx = GetOrAddVertexWithOffset(vertexList, vertexMap, new Vector3(face.V3.X, face.V3.Y, face.V3.Z), offset);
@@ -125,6 +136,9 @@ namespace Andastra.Runtime.Content.Converters
                 faceIndices.Add(v2Idx);
                 faceIndices.Add(v3Idx);
 
+                // CRITICAL: Convert surface material - MUST be preserved even when applying offset!
+                // The offset only affects vertex positions, NOT materials. Materials must remain unchanged
+                // to preserve walkability. If materials are lost or changed, faces become non-walkable.
                 surfaceMaterials.Add((int)face.Material);
             }
 
@@ -145,7 +159,69 @@ namespace Andastra.Runtime.Content.Converters
         /// <summary>
         /// Merges multiple NavigationMesh instances into a single mesh.
         /// Used to combine room walkmeshes for a complete area.
+        /// 
+        /// WHAT THIS FUNCTION DOES:
+        /// 
+        /// This function takes multiple navigation meshes (each representing a room or area) and combines
+        /// them into one big navigation mesh. This is needed because a game module is made up of multiple
+        /// rooms, and each room has its own walkmesh. To do pathfinding across the entire module, we need
+        /// to combine all the room walkmeshes into one.
+        /// 
+        /// HOW IT WORKS:
+        /// 
+        /// STEP 1: Combine Vertices
+        /// - Takes all vertices from all meshes and puts them into one big list
+        /// - Each mesh's vertices are added in order
+        /// - We keep track of how many vertices we've added so far (vertexOffset)
+        /// 
+        /// STEP 2: Reindex Face Indices
+        /// - Each face has three vertex indices pointing to vertices in that mesh's vertex array
+        /// - When we combine meshes, the vertex indices need to change because vertices are now in
+        ///   a different array
+        /// - For each face index, we add the vertexOffset to it: newIndex = oldIndex + vertexOffset
+        /// - This makes the face point to the correct vertex in the combined array
+        /// 
+        /// STEP 3: Preserve Internal Adjacencies
+        /// - Adjacency is encoded as: faceIndex * 3 + edgeIndex
+        /// - Each mesh has its own face indices (0, 1, 2, ...)
+        /// - When we combine meshes, face indices need to change
+        /// - We decode the adjacency: oldFaceIndex = adj / 3, edgeIndex = adj % 3
+        /// - We reindex: newFaceIndex = oldFaceIndex + faceOffset
+        /// - We re-encode: newAdj = newFaceIndex * 3 + edgeIndex
+        /// - This preserves connections between triangles within each mesh
+        /// 
+        /// STEP 4: Combine Materials
+        /// - Simply copies all materials from all meshes into one list
+        /// - Materials don't need reindexing because they're per-face, not per-vertex
+        /// 
+        /// STEP 5: Detect Cross-Mesh Adjacencies
+        /// - Finds edges that match between different meshes (e.g., where two rooms connect)
+        /// - Links these edges in the adjacency array so pathfinding can cross between meshes
+        /// - This is critical for allowing characters to walk from one room to another
+        /// 
+        /// STEP 6: Build Combined AABB Tree
+        /// - Creates a new AABB tree for the combined mesh
+        /// - This makes spatial queries (finding faces, raycasting) fast on the combined mesh
+        /// 
+        /// WHY REINDEXING IS NEEDED:
+        /// 
+        /// Each mesh has its own arrays with indices starting at 0. When we combine them:
+        /// - Mesh 1: vertices [0, 1, 2], faces [0, 1, 2]
+        /// - Mesh 2: vertices [0, 1, 2], faces [0, 1, 2]
+        /// - Combined: vertices [0, 1, 2, 3, 4, 5], faces [0, 1, 2, 3, 4, 5]
+        /// 
+        /// Mesh 2's face indices (0, 1, 2) need to become (3, 4, 5) to point to the correct vertices
+        /// in the combined array. This is what reindexing does.
+        /// 
+        /// EDGE CASES HANDLED:
+        /// 
+        /// - Empty mesh list: Returns empty navigation mesh
+        /// - Single mesh: Returns it unchanged (no merging needed)
+        /// - Adjacency with -1 (no neighbor): Preserved as -1
+        /// - Only walkable faces are connected in cross-mesh adjacencies
         /// </summary>
+        /// <param name="meshes">List of navigation meshes to merge</param>
+        /// <returns>A single navigation mesh containing all the combined data</returns>
         public static NavigationMesh Merge(IList<NavigationMesh> meshes)
         {
             if (meshes == null || meshes.Count == 0)
@@ -256,6 +332,56 @@ namespace Andastra.Runtime.Content.Converters
         /// Detects and connects matching edges between different meshes.
         /// Finds edges that share the same vertex positions (within tolerance) and links them in the adjacency array.
         /// Only connects walkable faces to ensure proper pathfinding connectivity.
+        /// 
+        /// WHAT THIS FUNCTION DOES:
+        /// 
+        /// When we merge multiple meshes (e.g., multiple room walkmeshes), each mesh has its own internal
+        /// adjacencies (connections between triangles within that mesh). However, we also need to connect
+        /// triangles that are on the boundaries between different meshes. For example, if two rooms connect
+        /// at a doorway, the triangles on the edge of room 1 need to be connected to the triangles on the
+        /// edge of room 2, so pathfinding can find a path from one room to the other.
+        /// 
+        /// HOW IT WORKS:
+        /// 
+        /// STEP 1: Build Edge-to-Face Mapping
+        /// - For each triangle, get its three edges (v0->v1, v1->v2, v2->v0)
+        /// - Create an EdgeKey for each edge (order-independent vertex pair with tolerance)
+        /// - Store which face and which edge index this is in a dictionary
+        /// - Only process walkable faces (non-walkable faces don't need pathfinding connections)
+        /// 
+        /// STEP 2: Find Matching Edges
+        /// - Look through the dictionary for edges that appear in multiple faces
+        /// - If an edge appears in exactly two faces from different meshes, they should be connected
+        /// - The EdgeKey uses tolerance to handle floating-point precision issues (vertices might be
+        ///   slightly different due to rounding errors)
+        /// 
+        /// STEP 3: Connect Matching Edges
+        /// - For each matching edge pair:
+        ///   - Get the two faces: face1 and face2
+        ///   - Get the edge indices: edge1 and edge2
+        ///   - Encode adjacency: face1's edge1 should point to face2's edge2
+        ///   - Encode adjacency: face2's edge2 should point to face1's edge1
+        ///   - Update the adjacency array with these connections
+        /// 
+        /// WHY TOLERANCE IS NEEDED:
+        /// 
+        /// Due to floating-point precision, two vertices that should be the same might have slightly
+        /// different coordinates (e.g., 1.0 vs 1.0000001). The tolerance (0.001 units) allows us to
+        /// treat vertices as "the same" if they're very close together.
+        /// 
+        /// WHY ONLY WALKABLE FACES:
+        /// 
+        /// Non-walkable faces (walls, obstacles) don't need pathfinding connections. Characters can't
+        /// walk through them, so there's no point in connecting them. Only walkable faces need to be
+        /// connected so pathfinding can find routes between them.
+        /// 
+        /// EDGE CASES HANDLED:
+        /// 
+        /// - Null arrays: Returns early
+        /// - Empty mesh: Returns early
+        /// - Edges that appear in more than 2 faces: Only connects the first two (others are ignored)
+        /// - Edges that appear in only 1 face: No connection needed (perimeter edge)
+        /// - Floating-point precision: Uses tolerance to match vertices
         /// </summary>
         /// <param name="vertices">Combined vertex array from all meshes</param>
         /// <param name="faceIndices">Combined face indices array</param>
