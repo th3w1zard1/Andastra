@@ -2,6 +2,8 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using Andastra.Parsing.Logger;
+using HolocronToolset.Utils;
 
 namespace HolocronToolset.NET
 {
@@ -57,15 +59,40 @@ namespace HolocronToolset.NET
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_init.py:30-44
         // Original: def on_app_crash(etype, exc, tback):
+        /// <summary>
+        /// Handles uncaught exceptions.
+        /// This function should be called when an uncaught exception occurs, set to AppDomain.CurrentDomain.UnhandledException.
+        /// Matching PyKotor: Uses RobustLogger().critical("Uncaught exception", exc_info=(etype, exc, tback))
+        /// </summary>
+        /// <param name="exception">The uncaught exception</param>
         public static void OnAppCrash(Exception exception)
         {
             if (exception is System.Threading.ThreadAbortException)
             {
                 return;
             }
-            // TODO: SIMPLIFIED - Log the exception - in a real implementation, this would use a logger
-            Console.Error.WriteLine($"Uncaught exception: {exception}");
-            Console.Error.WriteLine(exception.StackTrace);
+
+            // Get log directory and create logger with log file path
+            // Matching PyKotor implementation: RobustLogger() automatically uses get_log_directory()
+            RobustLogger logger;
+            try
+            {
+                string logDirectory = LogDirectoryHelper.GetLogDirectory();
+                string logFilePath = Path.Combine(logDirectory, "holocron_toolset.log");
+                logger = new RobustLogger(logFilePath);
+            }
+            catch (Exception ex)
+            {
+                // If log directory setup fails, use logger without file path (console only)
+                // This ensures we can still log the exception even if file logging fails
+                logger = new RobustLogger(null);
+                // Log the setup failure, but don't let it prevent the actual exception from being logged
+                System.Diagnostics.Debug.WriteLine($"Failed to setup log file path: {ex.Message}");
+            }
+
+            // Matching PyKotor: RobustLogger().critical("Uncaught exception", exc_info=(etype, exc, tback))
+            // Use Critical() method as in PyKotor, with excInfo=true to include full exception details
+            logger.Critical("Uncaught exception", excInfo: true, exception: exception);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_init.py:147-148
