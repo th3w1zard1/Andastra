@@ -19,107 +19,29 @@ doc: |
   - SFX (Sound effects): Contains a Bioware 470-byte obfuscation header followed by RIFF data
   - MP3-in-WAV: Special RIFF container with MP3 data (RIFF size = 50)
   
+  Note: This Kaitai Struct definition documents the core RIFF/WAVE structure. SFX and VO headers
+  (470-byte and 20-byte prefixes respectively) are handled by application-level deobfuscation.
+  
   References:
   - vendor/PyKotor/wiki/WAV-File-Format.md
   - vendor/reone/src/libs/audio/format/wavreader.cpp:30-56
   - vendor/xoreos/src/sound/decoders/wave.cpp:34-84
 
 seq:
-  - id: header_detection
-    type: header_detection
-    doc: Detect header type and read appropriate header
+  - id: riff_header
+    type: riff_header
+    doc: RIFF container header
   
-  - id: riff_wave
-    type: riff_wave
-    doc: RIFF/WAVE structure (present in all WAV files, after optional headers)
+  - id: chunks
+    type: chunk
+    repeat: until
+    repeat-until: _io.eof
+    doc: |
+      RIFF chunks in sequence (fmt, fact, data, etc.)
+      Parsed until end of file
+      Reference: vendor/xoreos/src/sound/decoders/wave.cpp:46-55
 
 types:
-  header_detection:
-    seq:
-      - id: first_four_bytes
-        type: u4
-        doc: First 4 bytes to detect header type
-    instances:
-      is_sfx:
-        value: (first_four_bytes & 0xFFFFFFFF) == 0xC460F3FF
-        doc: SFX header detected (0xFF 0xF3 0x60 0xC4 in little-endian)
-      is_vo:
-        value: (first_four_bytes & 0xFFFFFFFF) == 0x46464952
-        doc: VO header detected ("RIFF" = 0x46464952 in little-endian)
-      is_standard:
-        value: !is_sfx && (first_four_bytes & 0xFFFFFFFF) == 0x46464952
-        doc: Standard RIFF/WAVE (no obfuscation header)
-  
-  sfx_header:
-    seq:
-      - id: magic_byte1
-        type: u1
-        doc: Magic byte 0xFF (already read as first_byte)
-      
-      - id: magic_byte2
-        type: u1
-        doc: Magic byte 0xF3
-        valid: 0xF3
-      
-      - id: magic_byte3
-        type: u1
-        doc: Magic byte 0x60
-        valid: 0x60
-      
-      - id: magic_byte4
-        type: u1
-        doc: Magic byte 0xC4
-        valid: 0xC4
-      
-      - id: padding
-        type: str
-        size: 466
-        doc: |
-          Remaining 466 bytes of padding (typically zeros or 0x55 filler)
-          Total SFX header size is 470 bytes (0x1DA)
-          Reference: vendor/PyKotor/wiki/WAV-File-Format.md
-  
-  vo_header:
-    seq:
-      - id: magic_riff
-        type: str
-        encoding: ASCII
-        size: 4
-        doc: |
-          VO header magic: "RIFF" (first byte already read as first_byte)
-          Reference: vendor/PyKotor/src/pykotor/resource/formats/wav/wav_obfuscation.py:42-52
-        valid: "RIFF"
-      
-      - id: padding
-        type: str
-        size: 16
-        doc: |
-          Remaining 16 bytes of padding (typically zeros)
-          Total VO header size is 20 bytes
-          Reference: vendor/PyKotor/src/pykotor/resource/formats/wav/wav_obfuscation.py:127-134
-  
-  riff_wave:
-    seq:
-      - id: riff_header
-        type: riff_header
-        doc: RIFF container header
-      
-      - id: chunks
-        type: chunk
-        repeat: until
-        repeat-until: _io.eof
-        doc: |
-          RIFF chunks in sequence (fmt, fact, data, etc.)
-          Parsed until end of file
-          Reference: vendor/xoreos/src/sound/decoders/wave.cpp:46-55
-    
-    instances:
-      is_mp3_in_wav:
-        value: riff_header.riff_size == 50
-        doc: |
-          MP3-in-WAV format detected when RIFF size = 50
-          Reference: vendor/PyKotor/src/pykotor/resource/formats/wav/wav_obfuscation.py:60-64
-  
   riff_header:
     seq:
       - id: riff_id
@@ -142,6 +64,13 @@ types:
         size: 4
         doc: Format tag: "WAVE"
         valid: "WAVE"
+    
+    instances:
+      is_mp3_in_wav:
+        value: riff_size == 50
+        doc: |
+          MP3-in-WAV format detected when RIFF size = 50
+          Reference: vendor/PyKotor/src/pykotor/resource/formats/wav/wav_obfuscation.py:60-64
   
   chunk:
     seq:
