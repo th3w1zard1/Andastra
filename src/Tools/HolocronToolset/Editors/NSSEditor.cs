@@ -751,15 +751,27 @@ namespace HolocronToolset.Editors
             // This would need to parse the code, find symbol definitions, and navigate to them
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:686
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:3816-3822
         // Original: def _find_all_references_at_cursor(self):
         /// <summary>
         /// Finds all references to the symbol at the cursor.
         /// </summary>
         private void FindAllReferencesAtCursor()
         {
-            // TODO: Implement find all references
-            // This would need to parse the code, find all references to the symbol, and display them
+            if (_codeEdit == null)
+            {
+                return;
+            }
+
+            // Get word under cursor
+            string word = GetWordUnderCursor();
+            if (string.IsNullOrEmpty(word) || string.IsNullOrWhiteSpace(word))
+            {
+                return;
+            }
+
+            // Find all references
+            FindAllReferences(word);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:3806-3814
