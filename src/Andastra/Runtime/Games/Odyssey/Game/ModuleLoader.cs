@@ -361,14 +361,13 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 if (!string.IsNullOrEmpty(onModuleLoadScript))
                 {
                     // Create or get module entity for script execution
-                    IEntity moduleEntity = _world.GetEntityByTag(runtimeModule.ResRef, 0);
-                    if (moduleEntity == null)
+                    // Based on swkotor2.exe: Module entity created with fixed ObjectId 0x7F000002 for script execution
+                    // Module entity has IScriptHooksComponent for script execution, Tag set to module ResRef
+                    IEntity moduleEntity = CreateOrGetModuleEntity(runtimeModule);
+                    if (moduleEntity != null)
                     {
-                        // TODO: SIMPLIFIED - Create a temporary entity for module script execution
-                        moduleEntity = _world.CreateEntity(OdyObjectType.Invalid, System.Numerics.Vector3.Zero, 0f);
-                        moduleEntity.Tag = runtimeModule.ResRef;
+                        _world.EventBus.FireScriptEvent(moduleEntity, ScriptEvent.OnModuleLoad, null);
                     }
-                    _world.EventBus.FireScriptEvent(moduleEntity, ScriptEvent.OnModuleLoad, null);
                 }
 
                 // Fire OnModuleStart script event - fires after OnModuleLoad, before gameplay starts
@@ -378,18 +377,127 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 string onModuleStartScript = runtimeModule.GetScript(ScriptEvent.OnModuleStart);
                 if (!string.IsNullOrEmpty(onModuleStartScript))
                 {
-                    // Use same module entity
-                    IEntity moduleEntity = _world.GetEntityByTag(runtimeModule.ResRef, 0);
-                    if (moduleEntity == null)
+                    // Use same module entity (created during OnModuleLoad, or create if OnModuleLoad didn't run)
+                    // Based on swkotor2.exe: Module entity created with fixed ObjectId 0x7F000002 for script execution
+                    IEntity moduleEntity = CreateOrGetModuleEntity(runtimeModule);
+                    if (moduleEntity != null)
                     {
-                        moduleEntity = _world.CreateEntity(OdyObjectType.Invalid, System.Numerics.Vector3.Zero, 0f);
-                        moduleEntity.Tag = runtimeModule.ResRef;
+                        _world.EventBus.FireScriptEvent(moduleEntity, ScriptEvent.OnModuleStart, null);
                     }
-                    _world.EventBus.FireScriptEvent(moduleEntity, ScriptEvent.OnModuleStart, null);
                 }
             }
 
             Console.WriteLine("[ModuleLoader] Module loaded: " + moduleName);
+        }
+
+        /// <summary>
+        /// Creates or retrieves the module entity for script execution.
+        /// </summary>
+        /// <remarks>
+        /// Module Entity Creation:
+        /// Based on swkotor2.exe: Module object system for script execution
+        /// Located via string references: "Module" @ 0x007c1a70, "GetModule" NWScript function
+        /// Original implementation:
+        /// - Modules are special objects with fixed ObjectId 0x7F000002 (ModuleObjectId)
+        /// - Module ObjectId: 0x7F000002 (special object ID, between OBJECT_SELF 0x7F000001 and area IDs 0x7F000010+)
+        /// - Module entity is registered with world using module ResRef as Tag
+        /// - Module scripts execute with module entity as owner (OBJECT_SELF in script context)
+        /// - Module entity requires IScriptHooksComponent for script execution
+        /// - Module entity ObjectType is Invalid (modules are not regular game entities with physical representation)
+        /// - Module scripts are stored in RuntimeModule and copied to module entity's script hooks component
+        /// - Module entity persists for the lifetime of the module (until module is unloaded)
+        /// - Common across all engines: Odyssey, Aurora, Eclipse, Infinity all use fixed module object ID
+        /// 
+        /// Entity Properties:
+        /// - ObjectId: Fixed at 0x7F000002 (World.ModuleObjectId)
+        /// - ObjectType: Invalid (no Module ObjectType in enum, modules are special system entities)
+        /// - Tag: Module ResRef (used for GetEntityByTag lookups)
+        /// - Components: IScriptHooksComponent (required for script execution)
+        /// - Position: Vector3.Zero (modules have no physical position)
+        /// - AreaId: 0 (modules are not area entities)
+        /// </remarks>
+        private IEntity CreateOrGetModuleEntity(RuntimeModule runtimeModule)
+        {
+            if (runtimeModule == null || string.IsNullOrEmpty(runtimeModule.ResRef))
+            {
+                return null;
+            }
+
+            // Check if module entity with fixed ObjectId already exists (canonical check)
+            // Based on swkotor2.exe: Module entity has fixed ObjectId 0x7F000002
+            // Note: ClearWorld() is called at the start of LoadModule, so this should usually be null,
+            // but we check defensively in case the entity persists across module loads
+            IEntity existingModuleEntity = _world.GetEntity(World.ModuleObjectId);
+            if (existingModuleEntity != null)
+            {
+                // Verify it has the correct Tag
+                if (existingModuleEntity.Tag == runtimeModule.ResRef)
+                {
+                    return existingModuleEntity;
+                }
+                // If existing module entity has wrong Tag, destroy it and create a new one
+                // (This shouldn't happen in normal operation since ClearWorld destroys all entities)
+                _world.DestroyEntity(existingModuleEntity.ObjectId);
+            }
+
+            // Create new module entity with fixed ObjectId
+            // Based on swkotor2.exe: Module entity created with ObjectId 0x7F000002
+            // Entity constructor: Entity(uint objectId, ObjectType objectType)
+            var entity = new Entity(World.ModuleObjectId, OdyObjectType.Invalid);
+            entity.World = _world;
+            entity.Tag = runtimeModule.ResRef;
+            entity.Position = System.Numerics.Vector3.Zero;
+            entity.Facing = 0f;
+            entity.AreaId = 0;
+
+            // Initialize components for module entity
+            // Module entities need IScriptHooksComponent for script execution
+            // Based on swkotor2.exe: Module scripts require script hooks component
+            // ComponentInitializer.InitializeComponents adds IScriptHooksComponent to all entities
+            Systems.ComponentInitializer.InitializeComponents(entity);
+
+            // Ensure IScriptHooksComponent is present (ComponentInitializer should add it, but verify for safety)
+            if (!entity.HasComponent<IScriptHooksComponent>())
+            {
+                entity.AddComponent(new Components.ScriptHooksComponent());
+            }
+
+            // Load module scripts into script hooks component
+            // Based on swkotor2.exe: Module scripts (OnModuleLoad, OnModuleStart, etc.) stored in module entity
+            // This allows GetModule() NWScript function to access module scripts via GetScript()
+            IScriptHooksComponent scriptHooks = entity.GetComponent<IScriptHooksComponent>();
+            if (scriptHooks != null)
+            {
+                // Copy scripts from RuntimeModule to module entity's script hooks component
+                // Module scripts are executed with module entity as owner (OBJECT_SELF in script context)
+                if (!string.IsNullOrEmpty(runtimeModule.GetScript(ScriptEvent.OnModuleLoad)))
+                {
+                    scriptHooks.SetScript(ScriptEvent.OnModuleLoad, runtimeModule.GetScript(ScriptEvent.OnModuleLoad));
+                }
+                if (!string.IsNullOrEmpty(runtimeModule.GetScript(ScriptEvent.OnModuleStart)))
+                {
+                    scriptHooks.SetScript(ScriptEvent.OnModuleStart, runtimeModule.GetScript(ScriptEvent.OnModuleStart));
+                }
+                if (!string.IsNullOrEmpty(runtimeModule.GetScript(ScriptEvent.OnClientEnter)))
+                {
+                    scriptHooks.SetScript(ScriptEvent.OnClientEnter, runtimeModule.GetScript(ScriptEvent.OnClientEnter));
+                }
+                if (!string.IsNullOrEmpty(runtimeModule.GetScript(ScriptEvent.OnClientLeave)))
+                {
+                    scriptHooks.SetScript(ScriptEvent.OnClientLeave, runtimeModule.GetScript(ScriptEvent.OnClientLeave));
+                }
+                if (!string.IsNullOrEmpty(runtimeModule.GetScript(ScriptEvent.OnModuleHeartbeat)))
+                {
+                    scriptHooks.SetScript(ScriptEvent.OnModuleHeartbeat, runtimeModule.GetScript(ScriptEvent.OnModuleHeartbeat));
+                }
+            }
+
+            // Register module entity with world
+            // Based on swkotor2.exe: Module entity registered in world for GetEntityByTag and GetEntity lookups
+            // Module entity can be looked up by Tag (module ResRef) or by ObjectId (ModuleObjectId)
+            _world.RegisterEntity(entity);
+
+            return entity;
         }
 
         private void ClearWorld()
