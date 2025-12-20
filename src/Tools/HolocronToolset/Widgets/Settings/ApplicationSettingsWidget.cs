@@ -114,7 +114,7 @@ namespace HolocronToolset.Widgets.Settings
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/application.py:69-77
-        // Original: def select_font(self):
+        // Original: def select_font(self): QFontDialog.getFont(current_font, self)
         private async void SelectFont()
         {
             Window parentWindow = GetParentWindow();
@@ -123,63 +123,79 @@ namespace HolocronToolset.Widgets.Settings
                 return;
             }
 
-            // Get current font from application or settings
-            FontInfo currentFont = new FontInfo { FamilyName = "Arial", Size = 12, IsBold = false, IsItalic = false };
-            
-            // Try to load saved font from settings
+            // Get current font from settings or use default
+            Font currentFont = null;
             string fontString = _settings.GlobalFont;
             if (!string.IsNullOrEmpty(fontString))
             {
                 try
                 {
+                    // Parse font string (format: "Family|Size|Style|Weight")
                     var parts = fontString.Split('|');
                     if (parts.Length >= 2)
                     {
-                        string family = parts[0];
-                        if (double.TryParse(parts[1], out double size))
+                        string family = parts[0].Trim();
+                        if (double.TryParse(parts[1].Trim(), out double size))
                         {
-                            currentFont = new FontInfo
+                            var fontFamily = new FontFamily(family);
+                            FontWeight weight = FontWeight.Normal;
+                            FontStyle style = FontStyle.Normal;
+
+                            // Parse weight if available
+                            if (parts.Length >= 4 && int.TryParse(parts[3].Trim(), out int weightValue))
                             {
-                                FamilyName = family,
-                                Size = size,
-                                IsItalic = parts.Length >= 3 && parts[2] == "Italic",
-                                IsBold = parts.Length >= 4 && parts[3] == "Bold"
-                            };
+                                weight = weightValue >= 700 ? FontWeight.Bold : FontWeight.Normal;
+                            }
+
+                            // Parse style if available
+                            if (parts.Length >= 3)
+                            {
+                                string styleStr = parts[2].Trim().ToLowerInvariant();
+                                if (styleStr.Contains("italic"))
+                                {
+                                    style = FontStyle.Italic;
+                                }
+                            }
+
+                            currentFont = new Font(fontFamily, size, style, weight);
                         }
                     }
                 }
                 catch
                 {
-                    // If parsing fails, use default
+                    // Use default font if parsing fails
                 }
             }
 
-            var dialog = new FontDialog(parentWindow);
-            dialog.SetCurrentFont(currentFont);
-            await dialog.ShowDialog(parentWindow);
-
-            if (dialog.DialogResult && dialog.SelectedFont != null)
+            // Create and show font dialog
+            var fontDialog = new Dialogs.FontDialog(parentWindow);
+            if (currentFont != null)
             {
-                FontInfo selectedFont = dialog.SelectedFont;
+                fontDialog.SetCurrentFont(currentFont);
+            }
 
-                // Apply font globally to the application
-                // Matching PyKotor: QApplication.setFont(font)
-                if (Application.Current != null)
-                {
-                    // Set font properties as resources that can be used throughout the app
-                    Application.Current.Resources["SystemFontFamily"] = selectedFont.GetFontFamily();
-                    Application.Current.Resources["SystemFontSize"] = selectedFont.Size;
-                    Application.Current.Resources["SystemFontWeight"] = selectedFont.GetFontWeight();
-                    Application.Current.Resources["SystemFontStyle"] = selectedFont.GetFontStyle();
-                }
+            // Show dialog and wait for result
+            await fontDialog.ShowDialog(parentWindow);
 
-                // Save font to settings
+            // If user clicked OK, save the font
+            if (fontDialog.DialogResult && fontDialog.SelectedFont != null)
+            {
+                var selectedFont = fontDialog.SelectedFont;
+                
+                // Save font as string (format: "Family|Size|Style|Weight")
                 // Matching PyKotor: self.settings.settings.setValue("GlobalFont", font.toString())
-                string fontStringToSave = $"{selectedFont.FamilyName}|{selectedFont.Size}|{(selectedFont.IsItalic ? "Italic" : "Normal")}|{(selectedFont.IsBold ? "Bold" : "Normal")}";
+                string fontStringToSave = $"{selectedFont.FontFamily?.Name ?? "Arial"}|{selectedFont.FontSize}|" +
+                    $"{(selectedFont.FontStyle == FontStyle.Italic ? "Italic" : "Normal")}|" +
+                    $"{(selectedFont.FontWeight == FontWeight.Bold || selectedFont.FontWeight == FontWeight.SemiBold || selectedFont.FontWeight == FontWeight.ExtraBold ? "700" : "400")}";
+                
                 _settings.GlobalFont = fontStringToSave;
 
                 // Update the label
                 UpdateFontLabel();
+
+                // Note: In Avalonia, there's no direct Application.setFont() like Qt's QApplication.setFont()
+                // Fonts are typically applied via styles/resources. For now, we save the preference
+                // and it can be applied on application restart or via style system if needed.
             }
         }
 
