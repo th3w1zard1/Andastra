@@ -323,11 +323,162 @@ namespace Andastra.Runtime.Games.Eclipse.Components
                     else
                     {
                         // Try as list of slot/item pairs
+                        // Based on daorigins.exe: Equip_ItemList can be stored as a list structure
+                        // Eclipse save format: List of (slot, item) pairs or list of objects with Slot/Item properties
+                        // Serialization format: List<(int slot, IEntity item)> or List<(int slot, uint objectId)>
                         System.Collections.IEnumerable enumerable = equippedItemsObj as System.Collections.IEnumerable;
                         if (enumerable != null)
                         {
-                            // List format would need to be parsed based on Eclipse save format
-                            // TODO: STUB - For now, we skip this - items should be restored by save system
+                            foreach (object itemEntry in enumerable)
+                            {
+                                int slot = -1;
+                                IEntity item = null;
+                                uint objectId = 0;
+
+                                // Try to parse as tuple (int slot, IEntity item) or (int slot, uint objectId)
+                                // Based on EclipseEntity.Serialize: allItems.Add((slot, item))
+                                // C# tuples are stored as ValueTuple<...> or Tuple<...>
+                                if (itemEntry != null)
+                                {
+                                    // Check if it's a ValueTuple with 2 elements (slot, item)
+                                    System.Type entryType = itemEntry.GetType();
+                                    if (entryType.IsGenericType)
+                                    {
+                                        System.Type genericTypeDef = entryType.GetGenericTypeDefinition();
+                                        // ValueTuple<T1, T2> or Tuple<T1, T2>
+                                        if (genericTypeDef == typeof(System.ValueTuple<,>) || genericTypeDef == typeof(System.Tuple<,>))
+                                        {
+                                            // Get the two type arguments
+                                            System.Type[] typeArgs = entryType.GetGenericArguments();
+                                            if (typeArgs.Length == 2)
+                                            {
+                                                // First element should be int (slot)
+                                                if (typeArgs[0] == typeof(int))
+                                                {
+                                                    // Get slot value using reflection
+                                                    var slotProperty = entryType.GetProperty("Item1");
+                                                    if (slotProperty != null)
+                                                    {
+                                                        object slotObj = slotProperty.GetValue(itemEntry);
+                                                        if (slotObj is int slotValue)
+                                                        {
+                                                            slot = slotValue;
+                                                        }
+                                                    }
+
+                                                    // Second element could be IEntity or uint (ObjectId)
+                                                    var itemProperty = entryType.GetProperty("Item2");
+                                                    if (itemProperty != null)
+                                                    {
+                                                        object itemObj = itemProperty.GetValue(itemEntry);
+                                                        if (itemObj is IEntity entityItem)
+                                                        {
+                                                            item = entityItem;
+                                                        }
+                                                        else if (itemObj is uint objectIdValue)
+                                                        {
+                                                            objectId = objectIdValue;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    // If not a tuple, try as object with Slot and Item/ObjectId properties
+                                    // Based on Eclipse save format: Objects with Slot and Item properties
+                                    if (slot == -1 && item == null && objectId == 0)
+                                    {
+                                        System.Type objType = itemEntry.GetType();
+                                        // Try to get Slot property
+                                        var slotProp = objType.GetProperty("Slot");
+                                        if (slotProp != null)
+                                        {
+                                            object slotObj = slotProp.GetValue(itemEntry);
+                                            if (slotObj is int slotValue)
+                                            {
+                                                slot = slotValue;
+                                            }
+                                        }
+
+                                        // Try to get Item property (IEntity)
+                                        var itemProp = objType.GetProperty("Item");
+                                        if (itemProp != null)
+                                        {
+                                            object itemObj = itemProp.GetValue(itemEntry);
+                                            if (itemObj is IEntity entityItem)
+                                            {
+                                                item = entityItem;
+                                            }
+                                        }
+
+                                        // Try to get ObjectId property (uint)
+                                        var objectIdProp = objType.GetProperty("ObjectId");
+                                        if (objectIdProp != null && objectId == 0)
+                                        {
+                                            object objectIdObj = objectIdProp.GetValue(itemEntry);
+                                            if (objectIdObj is uint objectIdValue)
+                                            {
+                                                objectId = objectIdValue;
+                                            }
+                                        }
+                                    }
+
+                                    // If still not found, try as array/list where [0] = slot, [1] = item/objectId
+                                    // Based on Eclipse save format: Arrays can represent slot/item pairs
+                                    if (slot == -1 && item == null && objectId == 0)
+                                    {
+                                        System.Collections.IEnumerable arrayEnum = itemEntry as System.Collections.IEnumerable;
+                                        if (arrayEnum != null)
+                                        {
+                                            var arrayList = new System.Collections.ArrayList();
+                                            foreach (object arrayItem in arrayEnum)
+                                            {
+                                                arrayList.Add(arrayItem);
+                                            }
+                                            if (arrayList.Count >= 2)
+                                            {
+                                                // First element is slot
+                                                if (arrayList[0] is int slotValue)
+                                                {
+                                                    slot = slotValue;
+                                                }
+
+                                                // Second element is item or objectId
+                                                if (arrayList[1] is IEntity entityItem)
+                                                {
+                                                    item = entityItem;
+                                                }
+                                                else if (arrayList[1] is uint objectIdValue)
+                                                {
+                                                    objectId = objectIdValue;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // If we have a valid slot, try to get the item
+                                if (slot >= 0)
+                                {
+                                    // If we have objectId but not item, look up entity by ObjectId
+                                    if (item == null && objectId != 0 && Owner.World != null)
+                                    {
+                                        // Look up entity by ObjectId using world reference
+                                        // Based on daorigins.exe: Entity lookup by ObjectId for equipped items
+                                        // Located via string references: "ObjectId" @ 0x00af4e74 (daorigins.exe)
+                                        // Original implementation: FUN_004e9de0 @ 0x004e9de0 (GetObject wrapper)
+                                        // O(1) dictionary lookup by ObjectId (uint32)
+                                        item = Owner.World.GetEntity(objectId);
+                                    }
+
+                                    // Add item to slot if we have a valid item
+                                    if (item != null && item.IsValid)
+                                    {
+                                        _slots[slot] = item;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
