@@ -1966,13 +1966,149 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
         }
 
+        /// <summary>
+        /// Clears the depth/stencil attachment of a framebuffer.
+        /// 
+        /// Implementation: Uses Metal render pass with Clear load action for depth and/or stencil attachments.
+        /// Metal clears depth and stencil attachments when a render pass begins with MetalLoadAction.Clear.
+        /// 
+        /// Based on Metal API: MTLRenderPassDescriptor depthAttachment and stencilAttachment
+        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlrenderpassdescriptor
+        /// 
+        /// Note: In Metal, depth and stencil can share the same texture (combined format like D24S8),
+        /// but they are configured as separate attachments (depthAttachment and stencilAttachment) even when
+        /// they reference the same texture. This allows independent load/store actions and clear values.
+        /// </summary>
+        /// <param name="framebuffer">Framebuffer containing the depth/stencil attachment to clear.</param>
+        /// <param name="depth">Clear value for depth (0.0 to 1.0, typically 1.0 to clear to far plane).</param>
+        /// <param name="stencil">Clear value for stencil (0-255, typically 0).</param>
+        /// <param name="clearDepth">Whether to clear the depth buffer.</param>
+        /// <param name="clearStencil">Whether to clear the stencil buffer.</param>
         public void ClearDepthStencilAttachment(IFramebuffer framebuffer, float depth, byte stencil, bool clearDepth = true, bool clearStencil = true)
         {
             if (!_isOpen || framebuffer == null)
             {
                 return;
             }
-            // TODO: Implement depth/stencil clear
+            
+            // Validate framebuffer
+            MetalFramebuffer metalFramebuffer = framebuffer as MetalFramebuffer;
+            if (metalFramebuffer == null)
+            {
+                Console.WriteLine("[MetalCommandList] ClearDepthStencilAttachment: Framebuffer must be a MetalFramebuffer instance");
+                return;
+            }
+            
+            FramebufferDesc desc = metalFramebuffer.Desc;
+            
+            // Check if depth attachment exists
+            if (desc.DepthAttachment.Texture == null)
+            {
+                Console.WriteLine("[MetalCommandList] ClearDepthStencilAttachment: Framebuffer has no depth/stencil attachment");
+                return;
+            }
+            
+            MetalTexture metalTexture = desc.DepthAttachment.Texture as MetalTexture;
+            if (metalTexture == null)
+            {
+                Console.WriteLine("[MetalCommandList] ClearDepthStencilAttachment: Depth/stencil texture must be a MetalTexture instance");
+                return;
+            }
+            
+            IntPtr depthStencilTexture = metalTexture.NativeHandle;
+            if (depthStencilTexture == IntPtr.Zero)
+            {
+                Console.WriteLine("[MetalCommandList] ClearDepthStencilAttachment: Invalid depth/stencil texture native handle");
+                return;
+            }
+            
+            // Get the current command buffer from the backend
+            IntPtr commandBuffer = _backend.GetCurrentCommandBuffer();
+            if (commandBuffer == IntPtr.Zero)
+            {
+                Console.WriteLine("[MetalCommandList] ClearDepthStencilAttachment: No active command buffer");
+                return;
+            }
+            
+            // End any active encoders before creating render pass for clearing
+            // Metal allows only one encoder type to be active at a time per command buffer
+            if (_currentRenderCommandEncoder != IntPtr.Zero)
+            {
+                MetalNative.EndEncoding(_currentRenderCommandEncoder);
+                _currentRenderCommandEncoder = IntPtr.Zero;
+            }
+            
+            if (_currentBlitCommandEncoder != IntPtr.Zero)
+            {
+                MetalNative.EndEncoding(_currentBlitCommandEncoder);
+                MetalNative.ReleaseBlitCommandEncoder(_currentBlitCommandEncoder);
+                _currentBlitCommandEncoder = IntPtr.Zero;
+            }
+            
+            if (_currentAccelStructCommandEncoder != IntPtr.Zero)
+            {
+                MetalNative.EndAccelerationStructureCommandEncoding(_currentAccelStructCommandEncoder);
+                _currentAccelStructCommandEncoder = IntPtr.Zero;
+            }
+            
+            // Create render pass descriptor for clearing
+            IntPtr renderPassDescriptor = MetalNative.CreateRenderPassDescriptor();
+            if (renderPassDescriptor == IntPtr.Zero)
+            {
+                Console.WriteLine("[MetalCommandList] ClearDepthStencilAttachment: Failed to create render pass descriptor");
+                return;
+            }
+            
+            try
+            {
+                // Set depth attachment with Clear load action if clearing depth
+                if (clearDepth)
+                {
+                    // MetalLoadAction.Clear tells Metal to clear the depth texture to the specified clear value when the render pass begins
+                    // MetalStoreAction.Store tells Metal to store the result (the cleared depth value)
+                    MetalNative.SetRenderPassDepthAttachment(renderPassDescriptor, depthStencilTexture,
+                        MetalLoadAction.Clear, MetalStoreAction.Store, (double)depth);
+                }
+                else
+                {
+                    // If not clearing depth, use DontCare load action
+                    MetalNative.SetRenderPassDepthAttachment(renderPassDescriptor, depthStencilTexture,
+                        MetalLoadAction.DontCare, MetalStoreAction.DontCare, (double)depth);
+                }
+                
+                // Set stencil attachment with Clear load action if clearing stencil
+                // Note: Even when depth and stencil share the same texture, Metal requires setting both attachments separately
+                if (clearStencil)
+                {
+                    // MetalLoadAction.Clear tells Metal to clear the stencil texture to the specified clear value when the render pass begins
+                    // MetalStoreAction.Store tells Metal to store the result (the cleared stencil value)
+                    MetalNative.SetRenderPassStencilAttachment(renderPassDescriptor, depthStencilTexture,
+                        MetalLoadAction.Clear, MetalStoreAction.Store, (uint)stencil);
+                }
+                else
+                {
+                    // If not clearing stencil, use DontCare load action
+                    MetalNative.SetRenderPassStencilAttachment(renderPassDescriptor, depthStencilTexture,
+                        MetalLoadAction.DontCare, MetalStoreAction.DontCare, (uint)stencil);
+                }
+                
+                // Begin render pass - this will clear the depth/stencil texture to the specified values
+                IntPtr renderCommandEncoder = MetalNative.BeginRenderPass(commandBuffer, renderPassDescriptor);
+                if (renderCommandEncoder == IntPtr.Zero)
+                {
+                    Console.WriteLine("[MetalCommandList] ClearDepthStencilAttachment: Failed to begin render pass for clearing");
+                    return;
+                }
+                
+                // Immediately end the render pass to complete the clear operation
+                // The clear happens when the render pass begins, so ending it immediately completes the clear
+                MetalNative.EndEncoding(renderCommandEncoder);
+            }
+            finally
+            {
+                // Release render pass descriptor
+                MetalNative.ReleaseRenderPassDescriptor(renderPassDescriptor);
+            }
         }
 
         /// <summary>

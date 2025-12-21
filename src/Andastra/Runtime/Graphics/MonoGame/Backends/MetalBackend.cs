@@ -1480,6 +1480,14 @@ namespace Andastra.Runtime.MonoGame.Backends
             MetalLoadAction loadAction, MetalStoreAction storeAction, MetalClearColor clearColor);
 
         [DllImport(MetalFramework)]
+        public static extern void SetRenderPassDepthAttachment(IntPtr descriptor, IntPtr texture,
+            MetalLoadAction loadAction, MetalStoreAction storeAction, double clearDepth);
+
+        [DllImport(MetalFramework)]
+        public static extern void SetRenderPassStencilAttachment(IntPtr descriptor, IntPtr texture,
+            MetalLoadAction loadAction, MetalStoreAction storeAction, uint clearStencil);
+
+        [DllImport(MetalFramework)]
         public static extern IntPtr BeginRenderPass(IntPtr commandBuffer, IntPtr renderPassDescriptor);
 
         [DllImport(MetalFramework)]
