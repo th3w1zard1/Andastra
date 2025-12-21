@@ -99,6 +99,12 @@ namespace Andastra.Runtime.Games.Odyssey
         // Area variables are stored separately from entity variables and persist across area loads
         private Andastra.Runtime.Core.Save.LocalVariableSet _localVariables;
 
+        // Area entity for script execution context
+        // Based on swkotor2.exe: Area entities are created dynamically for script execution
+        // Area entities don't have physical presence but serve as script execution context
+        // Stored here for proper lifecycle management and cleanup
+        private IEntity _areaEntityForScripts;
+
         /// <summary>
         /// Creates a new Odyssey area.
         /// </summary>
@@ -2033,7 +2039,7 @@ namespace Andastra.Runtime.Games.Odyssey
                     }
 
                     // Remove from current area and add to target area
-                    // Note: This is simplified - full implementation would use area's AddEntity/RemoveEntity methods
+                    // TODO:  Note: This is simplified - full implementation would use area's AddEntity/RemoveEntity methods
                     Console.WriteLine($"[OdysseyArea] HandleDirectAreaTransition: Moved entity {entity.Tag ?? "null"} ({entity.ObjectId}) to area {targetAreaResRef}");
                 }
             }
@@ -2269,11 +2275,27 @@ namespace Andastra.Runtime.Games.Odyssey
                 return null;
             }
 
-            // First, try to get existing entity by area ResRef tag
+            // First, check if we already have a stored area entity reference
+            // This avoids redundant lookups and ensures we use the same entity instance
+            if (_areaEntityForScripts != null && _areaEntityForScripts.IsValid)
+            {
+                // Verify the stored entity is still registered with the world
+                IEntity verifiedEntity = world.GetEntity(_areaEntityForScripts.ObjectId);
+                if (verifiedEntity != null && verifiedEntity.IsValid)
+                {
+                    return _areaEntityForScripts;
+                }
+                // Stored entity is no longer valid - clear reference
+                _areaEntityForScripts = null;
+            }
+
+            // Try to get existing entity by area ResRef tag
             // Based on swkotor2.exe: Area scripts use area ResRef as entity tag for execution
             IEntity areaEntity = world.GetEntityByTag(_resRef, 0);
             if (areaEntity != null && areaEntity.IsValid)
             {
+                // Store reference for future use
+                _areaEntityForScripts = areaEntity;
                 return areaEntity;
             }
 
@@ -2283,6 +2305,8 @@ namespace Andastra.Runtime.Games.Odyssey
                 areaEntity = world.GetEntityByTag(_tag, 0);
                 if (areaEntity != null && areaEntity.IsValid)
                 {
+                    // Store reference for future use
+                    _areaEntityForScripts = areaEntity;
                     return areaEntity;
                 }
             }
@@ -2292,8 +2316,29 @@ namespace Andastra.Runtime.Games.Odyssey
             // Area entities don't have physical presence but serve as script execution context
             try
             {
-                // Generate unique ObjectId for area entity (use high range to avoid conflicts)
-                uint areaObjectId = 2000000; // High range for area entities
+                // Generate unique ObjectId for area entity using ResRef hash to ensure uniqueness
+                // Use high range (2000000+) to avoid conflicts with normal entities (1-1000000) and EntityFactory (1000000+)
+                // Hash ResRef to create deterministic but unique ObjectId per area
+                uint resRefHash = (uint)(_resRef?.GetHashCode() ?? 0);
+                // Ensure hash is in valid range and doesn't conflict with special ObjectIds (0x7F000000+)
+                // Map hash to range 2000000-0x7EFFFFFF (avoiding 0x7F000000 = OBJECT_INVALID)
+                uint areaObjectId = 2000000 + (resRefHash % 0x5EFFFFFF); // 2000000 to 0x7EFFFFFF range
+
+                // Check if ObjectId already exists in world (collision detection)
+                // If collision occurs, use sequential fallback
+                int collisionAttempts = 0;
+                while (world.GetEntity(areaObjectId) != null && collisionAttempts < 100)
+                {
+                    areaObjectId = 2000000 + ((resRefHash + (uint)collisionAttempts) % 0x5EFFFFFF);
+                    collisionAttempts++;
+                }
+
+                // If still colliding after 100 attempts, use simple counter fallback
+                if (world.GetEntity(areaObjectId) != null)
+                {
+                    // Use very high range as last resort (0x7E000000+)
+                    areaObjectId = 0x7E000000 + (resRefHash % 0x00FFFFFF);
+                }
 
                 // Create area entity with ResRef as tag
                 // Based on swkotor2.exe: Area entities use ObjectType.Area (if it exists) or ObjectType.Invalid
@@ -2301,17 +2346,27 @@ namespace Andastra.Runtime.Games.Odyssey
                 areaEntityObj.DisplayName = _displayName ?? _resRef;
                 areaEntityObj.SetData("IsAreaEntity", true); // Mark as area entity for script context
 
-                // Add area entity to world
-                // Note: Area entities are typically not added to world's entity list
-                // They exist only for script execution context
-                // In full implementation, this might need special handling
+                // Register area entity with world for proper lookup and lifecycle management
+                // Special handling: Area entities are registered but marked as script-only entities
+                // They are not part of normal entity collections but must be findable by GetEntityByTag
+                // Based on swkotor2.exe: Area entities are registered in world's entity lookup tables
+                // but are not added to area's entity collections (Creatures, Placeables, etc.)
+                world.RegisterEntity(areaEntityObj);
+
+                // Store reference for cleanup when area is unloaded
+                _areaEntityForScripts = areaEntityObj;
+
+                // Note: Area entities don't need AreaId set since they ARE the area context
+                // Setting AreaId would create circular reference (area entity belongs to area, but area entity IS the area)
+                // Scripts use area entity as execution context, not as an entity within an area
 
                 return areaEntityObj;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // If entity creation fails, return null
+                // If entity creation fails, log and return null
                 // Script execution will be skipped this frame
+                System.Console.WriteLine($"[OdysseyArea] Failed to create area entity for scripts: {ex.Message}");
                 return null;
             }
         }
@@ -2624,7 +2679,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Based on swkotor2.exe: Room meshes are loaded on-demand when needed for rendering.
         /// Located via string references: "Rooms" @ 0x007bd490, "RoomName" @ 0x007bd484
         /// Original implementation: Loads MDL/MDX files from module archives and creates renderable mesh data.
-        /// This implements the on-demand loading that was previously stubbed.
+        // TODO: / This implements the on-demand loading that was previously stubbed.
         /// </remarks>
         private IRoomMeshData LoadRoomMeshOnDemand(string modelResRef, IRoomMeshRenderer roomRenderer)
         {
@@ -2765,7 +2820,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <returns>Room index, or -1 if not found.</returns>
         /// <remarks>
         /// Based on swkotor2.exe: Room finding logic uses distance-based approach.
-        /// In a full implementation, this would check if position is inside room bounds.
+        // TODO: / In a full implementation, this would check if position is inside room bounds.
         /// </remarks>
         private int FindCurrentRoom(Vector3 position)
         {
@@ -2775,7 +2830,7 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // Find the room closest to the position (simple distance-based approach)
-            // In a full implementation, we'd check if position is inside room bounds
+            // TODO:  In a full implementation, we'd check if position is inside room bounds
             int closestRoomIndex = 0;
             float closestDistance = float.MaxValue;
 
@@ -2937,6 +2992,33 @@ namespace Andastra.Runtime.Games.Odyssey
                     disposableContext.Dispose();
                 }
                 _renderContext = null;
+            }
+
+            // Clean up area entity for script execution
+            // Based on swkotor2.exe: Area entities are destroyed when area is unloaded
+            // Area entities are registered with world but not in area's entity collections
+            // Must be explicitly unregistered and destroyed during area unload
+            if (_areaEntityForScripts != null && _areaEntityForScripts.IsValid)
+            {
+                // Unregister from world (removes from lookup tables)
+                if (_areaEntityForScripts.World != null)
+                {
+                    _areaEntityForScripts.World.UnregisterEntity(_areaEntityForScripts);
+                    // Destroy entity if world supports it
+                    if (_areaEntityForScripts.World is BaseWorld baseWorld)
+                    {
+                        baseWorld.DestroyEntity(_areaEntityForScripts.ObjectId);
+                    }
+                }
+                else
+                {
+                    // Entity not registered with world - destroy directly
+                    if (_areaEntityForScripts is Core.Entities.Entity concreteEntity)
+                    {
+                        concreteEntity.Destroy();
+                    }
+                }
+                _areaEntityForScripts = null;
             }
 
             // Clear all entity lists

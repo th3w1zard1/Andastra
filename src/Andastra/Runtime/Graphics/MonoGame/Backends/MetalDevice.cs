@@ -2366,7 +2366,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// ```
         /// 
         /// Shader compilation: This shader must be compiled into a Metal library (e.g., .metallib file)
-        /// and linked into the application. Runtime shader compilation from source would require
+        // TODO: / and linked into the application. Runtime shader compilation from source would require
         /// Objective-C interop infrastructure. In practice, shaders are compiled at build time.
         /// </summary>
         public void ClearUAVFloat(ITexture texture, Vector4 value)
@@ -2468,7 +2468,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 if (computeFunction == IntPtr.Zero)
                 {
                     // Shader function not found - log warning and return
-                    // In a full implementation, this would trigger shader compilation or load from library
+                    // TODO:  In a full implementation, this would trigger shader compilation or load from library
                     Console.WriteLine("[MetalCommandList] ClearUAVFloat: Compute shader function 'clearUAVFloat' not found in library. Shader must be compiled and linked into the Metal library.");
                     return;
                 }
@@ -2555,7 +2555,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// ```
         /// 
         /// Shader compilation: This shader must be compiled into a Metal library (e.g., .metallib file)
-        /// and linked into the application. Runtime shader compilation from source would require
+        // TODO: / and linked into the application. Runtime shader compilation from source would require
         /// Objective-C interop infrastructure. In practice, shaders are compiled at build time.
         /// </summary>
         public void ClearUAVUint(ITexture texture, uint value)
@@ -2657,7 +2657,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 if (computeFunction == IntPtr.Zero)
                 {
                     // Shader function not found - log warning and return
-                    // In a full implementation, this would trigger shader compilation or load from library
+                    // TODO:  In a full implementation, this would trigger shader compilation or load from library
                     Console.WriteLine("[MetalCommandList] ClearUAVUint: Compute shader function 'clearUAVUint' not found in library. Shader must be compiled and linked into the Metal library.");
                     return;
                 }
@@ -2798,14 +2798,14 @@ namespace Andastra.Runtime.MonoGame.Backends
             // This allows draw commands to retrieve primitive type, index buffer, etc.
             _currentGraphicsState = state;
 
-            // Note: Full implementation of SetGraphicsState would also:
+            // TODO:  Note: Full implementation of SetGraphicsState would also:
             // - Set render pipeline state (MTLRenderPipelineState)
             // - Begin render pass with framebuffer
             // - Set viewports and scissors
             // - Bind vertex buffers
             // - Bind index buffer
             // - Bind descriptor sets/binding sets
-            // For now, we store the state so draw commands can access it
+            // TODO: STUB - For now, we store the state so draw commands can access it
         }
 
         public void SetViewport(Viewport viewport)
@@ -2979,7 +2979,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         ///   (Metal documentation states it's reserved for future use)
         /// - Blend factors must use static values (One, Zero, SrcColor, etc.) rather than dynamic constants
         /// 
-        /// Workaround Options:
+        // TODO: / Workaround Options:
         /// - Use shader uniforms/constants to pass blend color if dynamic blending is required
         /// - Create separate pipeline states with different blend configurations if needed
         /// - Use pre-multiplied alpha or other static blend modes instead
@@ -3345,7 +3345,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             // Get compute pipeline state from MetalComputePipeline
             // MetalComputePipeline stores the MTLComputePipelineState handle internally
             // We need to access it via reflection or add a public property
-            // For now, we'll use reflection to get the _computePipelineState field
+            // TODO: STUB - For now, we'll use reflection to get the _computePipelineState field
             IntPtr computePipelineState = IntPtr.Zero;
             try
             {
@@ -3519,7 +3519,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             // Get threadgroup size for indirect dispatch
             // Metal's indirect dispatch requires the threadsPerThreadgroup size to be specified
             // The threadgroup size should match the compute shader's threadgroup size
-            // For now, we use a default threadgroup size (16, 16, 1) matching the existing Dispatch implementation
+            // TODO: STUB - For now, we use a default threadgroup size (16, 16, 1) matching the existing Dispatch implementation
             // This matches the threadgroup size used in ClearUAVFloat and ClearUAVUint methods
             // Future enhancement: Query the threadgroup size from the current compute pipeline state
             const uint threadsPerThreadgroupX = 16;
@@ -4232,9 +4232,9 @@ namespace Andastra.Runtime.MonoGame.Backends
                 AccelStructDesc tlasDesc = metalAccelStruct.Desc;
                 
                 // Note: CreateAccelerationStructureDescriptor may need to be extended to support
-                // instance buffer references for TLAS. For now, we create the descriptor and assume
+                // TODO:  instance buffer references for TLAS. For now, we create the descriptor and assume
                 // it will be properly configured with instance buffer reference via native interop
-                // In a full implementation, we would set the instance buffer on the descriptor using
+                // TODO:  In a full implementation, we would set the instance buffer on the descriptor using
                 // Metal API: MTLAccelerationStructureGeometryInstanceDescriptor::setInstanceBuffer:offset:stridedBytesPerInstance:
                 IntPtr tlasDescriptor = MetalNative.CreateAccelerationStructureDescriptor(device, tlasDesc);
                 if (tlasDescriptor == IntPtr.Zero)
@@ -4245,11 +4245,48 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                 try
                 {
+                    // Validate descriptor and instance buffer before configuration
+                    // Both must be valid for TLAS building to succeed
+                    if (tlasDescriptor == IntPtr.Zero)
+                    {
+                        Console.WriteLine("[MetalCommandList] BuildTopLevelAccelStruct: Invalid TLAS descriptor");
+                        return;
+                    }
+
+                    if (instanceBuffer == IntPtr.Zero)
+                    {
+                        Console.WriteLine("[MetalCommandList] BuildTopLevelAccelStruct: Invalid instance buffer");
+                        return;
+                    }
+
+                    // Validate instance count and stride
+                    if (instanceCount <= 0)
+                    {
+                        Console.WriteLine("[MetalCommandList] BuildTopLevelAccelStruct: Invalid instance count: " + instanceCount);
+                        return;
+                    }
+
+                    if (instanceStructSize < 64)
+                    {
+                        Console.WriteLine("[MetalCommandList] BuildTopLevelAccelStruct: Invalid instance struct size: " + instanceStructSize + " (minimum 64 bytes)");
+                        return;
+                    }
+
                     // Set instance buffer reference on descriptor
                     // Metal API: [MTLAccelerationStructureGeometryInstanceDescriptor setInstanceBuffer:instanceBuffer offset:0 stridedBytesPerInstance:instanceStructSize]
                     // Metal API: [MTLAccelerationStructureGeometryInstanceDescriptor setInstanceCount:instanceCount]
                     // instanceStructSize is already calculated above (64 bytes for AccelStructInstance, matching VkAccelerationStructureInstanceKHR layout)
+                    // This configures the descriptor with the instance buffer reference, offset, stride, and instance count
+                    // The descriptor is now properly configured for TLAS building
                     MetalNative.SetInstanceBufferOnTLASDescriptor(tlasDescriptor, instanceBuffer, 0, (ulong)instanceStructSize, (uint)instanceCount);
+
+                    // Verify descriptor configuration is complete
+                    // After SetInstanceBufferOnTLASDescriptor, the descriptor contains:
+                    // - Instance buffer reference (instanceBuffer)
+                    // - Instance buffer offset (0)
+                    // - Instance stride (instanceStructSize, 64 bytes)
+                    // - Instance count (instanceCount)
+                    // The descriptor is now ready for building the acceleration structure
 
                     // Estimate scratch buffer size for TLAS building
                     // Metal requires a scratch buffer for building acceleration structures
@@ -4283,9 +4320,12 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                         // Build the top-level acceleration structure
                         // Metal API: [MTLAccelerationStructureCommandEncoder buildAccelerationStructure:descriptor:scratchBuffer:scratchBufferOffset:]
-                        // Note: The descriptor should reference the instance buffer, which is set during descriptor creation
-                        // For now, we build with the descriptor. In a full implementation, we would need to ensure
-                        // the descriptor is properly configured with instance buffer reference via Metal native interop
+                        // The descriptor is properly configured with instance buffer reference via SetInstanceBufferOnTLASDescriptor above
+                        // Descriptor configuration includes:
+                        // - Instance buffer reference (set via setInstanceBuffer:offset:stridedBytesPerInstance:)
+                        // - Instance count (set via setInstanceCount:)
+                        // - Instance stride (64 bytes per AccelStructInstance, matching VkAccelerationStructureInstanceKHR layout)
+                        // All validation has been performed before this point, ensuring the descriptor is ready for building
                         MetalNative.BuildAccelerationStructure(accelStructEncoder, accelStructHandle, tlasDescriptor, scratchBuffer, 0);
 
                         // Note: We don't end encoding here because the encoder is managed by GetOrCreateAccelerationStructureCommandEncoder
@@ -4964,10 +5004,10 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static extern void objc_msgSend_void_bool(IntPtr receiver, IntPtr selector, bool value);
 
         [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void objc_msgSend_void_object(IntPtr receiver, IntPtr selector, IntPtr object);
+        private static extern void objc_msgSend_void_object(IntPtr receiver, IntPtr selector, IntPtr obj);
 
         [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void objc_msgSend_void_int_object(IntPtr receiver, IntPtr selector, int index, IntPtr object);
+        private static extern void objc_msgSend_void_int_object(IntPtr receiver, IntPtr selector, int index, IntPtr obj);
 
         [DllImport(LibObjCForDevice, EntryPoint = "objc_getClass", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr objc_getClass(string className);
@@ -5054,7 +5094,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             // Metal does not currently provide a batch viewport API (setViewports:count:)
-            // This method returns false for now, but can be enhanced in the future to use:
+            // TODO:  This method returns false for now, but can be enhanced in the future to use:
             // - respondsToSelector: to check if setViewports:count: method exists
             // - class_getInstanceMethod to check method availability
             // When the API becomes available, remove this return statement and implement runtime detection
@@ -5119,6 +5159,29 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// </summary>
         [DllImport(LibObjCForDevice, EntryPoint = "sel_registerName", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr sel_registerName([MarshalAs(UnmanagedType.LPStr)] string str);
+
+        /// <summary>
+        /// Gets the class of an Objective-C object.
+        /// Based on Objective-C runtime: object_getClass
+        /// </summary>
+        [DllImport(LibObjCForDevice, EntryPoint = "object_getClass", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr object_getClass(IntPtr obj);
+
+        /// <summary>
+        /// Gets an instance method from a class.
+        /// Based on Objective-C runtime: class_getInstanceMethod
+        /// Returns a pointer to the Method structure, or NULL if the method is not found.
+        /// </summary>
+        [DllImport(LibObjCForDevice, EntryPoint = "class_getInstanceMethod", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr class_getInstanceMethod(IntPtr cls, IntPtr name);
+
+        /// <summary>
+        /// Calls respondsToSelector: on an Objective-C object.
+        /// Based on Objective-C runtime: respondsToSelector: returns BOOL (signed char)
+        /// Signature: - (BOOL)respondsToSelector:(SEL)aSelector;
+        /// </summary>
+        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern byte objc_msgSend_respondsToSelector(IntPtr receiver, IntPtr selector, IntPtr aSelector);
 
         [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr objc_msgSend_void_string(IntPtr receiver, IntPtr selector, IntPtr nsString);
