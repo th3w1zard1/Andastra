@@ -465,6 +465,10 @@ namespace Andastra.Runtime.MonoGame.GUI
                     {
                         var button = _buttonList[_selectedButtonIndex];
                         FireButtonClicked(button.Tag, button.Id ?? -1);
+                        
+                        // Play click sound for keyboard-activated button
+                        PlayButtonClickSound();
+                        
                         Console.WriteLine($"[KotorGuiManager] Button activated via keyboard: {button.Tag} (ID: {button.Id})");
                     }
                 }
@@ -726,6 +730,9 @@ namespace Andastra.Runtime.MonoGame.GUI
                     // Fire the OnCheckBoxClicked event for external handlers
                     OnCheckBoxClicked?.Invoke(checkBox.Tag, newState);
 
+                    // Play click sound for checkbox
+                    PlayButtonClickSound();
+
                     Console.WriteLine($"[KotorGuiManager] Checkbox clicked: {checkBox.Tag} -> {(newState ? "checked" : "unchecked")}");
                     return; // Checkbox click handled, don't process buttons
                 }
@@ -753,6 +760,9 @@ namespace Andastra.Runtime.MonoGame.GUI
 
                     // Fire the OnButtonClicked event for external handlers
                     OnButtonClicked?.Invoke(button.Tag, button.Id ?? -1);
+
+                    // Play click sound for button
+                    PlayButtonClickSound();
 
                     Console.WriteLine($"[KotorGuiManager] Button clicked: {button.Tag} (ID: {button.Id})");
                     break; // Only handle first button hit

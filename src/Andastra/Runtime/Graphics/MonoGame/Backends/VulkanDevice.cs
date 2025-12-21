@@ -492,6 +492,15 @@ namespace Andastra.Runtime.MonoGame.Backends
             VK_IMAGE_ASPECT_METADATA_BIT = 0x00000008,
         }
 
+        // Vulkan clear depth stencil value structure
+        // Based on Vulkan API: https://docs.vulkan.org/spec/latest/chapters/clears.html#VkClearDepthStencilValue
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkClearDepthStencilValue
+        {
+            public float depth; // Clear value for depth aspect (0.0 to 1.0)
+            public uint stencil; // Clear value for stencil aspect
+        }
+
         [StructLayout(LayoutKind.Sequential)]
         private struct VkCommandPoolCreateInfo
         {
@@ -1860,12 +1869,13 @@ namespace Andastra.Runtime.MonoGame.Backends
                 if (desc.DepthAttachment.Texture != null)
                 {
                     VkFormat depthFormat = ConvertTextureFormatToVkFormat(desc.DepthAttachment.Texture.Desc.Format);
+                    VkSampleCountFlagBits depthSamples = ConvertToVkSampleCount(desc.DepthAttachment.Texture.Desc.SampleCount);
                     
                     attachments.Add(new VkAttachmentDescription
                     {
                         flags = 0,
                         format = depthFormat,
-                        samples = VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT, // TODO: Get from texture desc
+                        samples = depthSamples,
                         loadOp = VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_LOAD,
                         storeOp = VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_STORE,
                         stencilLoadOp = VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_DONT_CARE,

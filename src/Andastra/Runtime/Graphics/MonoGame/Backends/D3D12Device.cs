@@ -2350,6 +2350,10 @@ namespace Andastra.Runtime.MonoGame.Backends
             private readonly List<PendingBarrier> _pendingBarriers;
             private readonly Dictionary<object, ResourceState> _resourceStates;
 
+            // Raytracing state
+            private RaytracingState _raytracingState;
+            private bool _hasRaytracingState;
+
             // Barrier entry structure
             private struct PendingBarrier
             {
@@ -3702,7 +3706,17 @@ namespace Andastra.Runtime.MonoGame.Backends
                     IntPtr.Zero, // pCountBuffer: NULL for single dispatch (no count buffer)
                     0UL); // CountBufferOffset: 0 when pCountBuffer is NULL
             }
-            public void SetRaytracingState(RaytracingState state) { /* TODO: Set raytracing state */ }
+            public void SetRaytracingState(RaytracingState state)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open to set raytracing state");
+                }
+
+                // Store the raytracing state (contains pipeline and shader binding table)
+                _raytracingState = state;
+                _hasRaytracingState = true;
+            }
             public void DispatchRays(DispatchRaysArguments args) { /* TODO: DispatchRays */ }
             public void BuildBottomLevelAccelStruct(IAccelStruct accelStruct, GeometryDesc[] geometries)
             {
@@ -4223,6 +4237,108 @@ namespace Andastra.Runtime.MonoGame.Backends
             public IntPtr ScratchAccelerationStructureData;
         }
 
+        /// <summary>
+        /// GPU virtual address range.
+        /// Based on D3D12 API: D3D12_GPU_VIRTUAL_ADDRESS_RANGE
+        /// Used for shader binding tables that contain a single entry (ray generation shader table).
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_GPU_VIRTUAL_ADDRESS_RANGE
+        {
+            /// <summary>
+            /// GPU virtual address of the start of the range.
+            /// </summary>
+            public ulong StartAddress;
+
+            /// <summary>
+            /// Size of the range in bytes.
+            /// </summary>
+            public ulong SizeInBytes;
+        }
+
+        /// <summary>
+        /// GPU virtual address range with stride.
+        /// Based on D3D12 API: D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE
+        /// Used for shader binding tables that contain multiple entries (miss shader table, hit group table).
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE
+        {
+            /// <summary>
+            /// GPU virtual address of the start of the range.
+            /// </summary>
+            public ulong StartAddress;
+
+            /// <summary>
+            /// Size of the range in bytes (total size of all entries).
+            /// </summary>
+            public ulong SizeInBytes;
+
+            /// <summary>
+            /// Stride in bytes between entries (size of each shader binding table entry).
+            /// Typically 32 bytes (shader identifier) plus optional root arguments.
+            /// </summary>
+            public ulong StrideInBytes;
+        }
+
+        /// <summary>
+        /// Dispatch rays description.
+        /// Based on D3D12 API: D3D12_DISPATCH_RAYS_DESC
+        ///
+        /// Describes the parameters for dispatching raytracing work, including:
+        /// - Shader binding table addresses (ray generation, miss, hit group, callable)
+        /// - Dispatch dimensions (width, height, depth)
+        ///
+        /// The shader binding tables contain shader identifiers and optional root arguments
+        /// that are used by the raytracing pipeline to determine which shaders to execute.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_DISPATCH_RAYS_DESC
+        {
+            /// <summary>
+            /// GPU virtual address range for the ray generation shader table.
+            /// Required: Must contain at least one ray generation shader identifier.
+            /// </summary>
+            public D3D12_GPU_VIRTUAL_ADDRESS_RANGE RayGenerationShaderRecord;
+
+            /// <summary>
+            /// GPU virtual address range and stride for the miss shader table.
+            /// Optional: Can be empty (StartAddress = 0, SizeInBytes = 0) if no miss shaders are used.
+            /// </summary>
+            public D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE MissShaderTable;
+
+            /// <summary>
+            /// GPU virtual address range and stride for the hit group shader table.
+            /// Optional: Can be empty (StartAddress = 0, SizeInBytes = 0) if no hit groups are used.
+            /// </summary>
+            public D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE HitGroupTable;
+
+            /// <summary>
+            /// GPU virtual address range and stride for the callable shader table.
+            /// Optional: Can be empty (StartAddress = 0, SizeInBytes = 0) if no callable shaders are used.
+            /// Callable shaders are used for advanced raytracing features like shader libraries.
+            /// </summary>
+            public D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE CallableShaderTable;
+
+            /// <summary>
+            /// Width of the dispatch (number of rays in X dimension).
+            /// Must be > 0.
+            /// </summary>
+            public uint Width;
+
+            /// <summary>
+            /// Height of the dispatch (number of rays in Y dimension).
+            /// Must be > 0.
+            /// </summary>
+            public uint Height;
+
+            /// <summary>
+            /// Depth of the dispatch (number of rays in Z dimension).
+            /// Must be > 0.
+            /// </summary>
+            public uint Depth;
+        }
+
         // COM interface method delegate for BuildRaytracingAccelerationStructure
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void BuildRaytracingAccelerationStructureDelegate(
@@ -4230,6 +4346,12 @@ namespace Andastra.Runtime.MonoGame.Backends
             IntPtr pDesc,
             int numPostbuildInfoDescs,
             IntPtr pPostbuildInfoDescs);
+
+        // COM interface method delegate for DispatchRays
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void DispatchRaysDelegate(
+            IntPtr commandList,
+            IntPtr pDesc);
 
         // COM interface method delegate for GetGPUVirtualAddress
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]

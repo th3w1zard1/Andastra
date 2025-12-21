@@ -1244,7 +1244,7 @@ namespace HolocronToolset.Tests.Editors
             editor.ResrefEdit.Text = "combined_resref";
             if (editor.AppearanceSelect.ItemCount > 0)
             {
-                editor.AppearanceSelect.SelectedIndex = 1;
+                editor.AppearanceSelect.SetSelectedIndex(1);
             }
             editor.ConversationEdit.Text = "test_conv";
 
@@ -1284,7 +1284,7 @@ namespace HolocronToolset.Tests.Editors
             }
             if (editor.FactionSelect.ItemCount > 0)
             {
-                editor.FactionSelect.SelectedIndex = 1;
+                editor.FactionSelect.SetSelectedIndex(1);
             }
             editor.AnimationStateSpin.Value = 5;
             editor.CurrentHpSpin.Value = 50;
