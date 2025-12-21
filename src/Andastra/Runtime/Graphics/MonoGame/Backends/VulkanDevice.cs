@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using System.Text;
 using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
 using Andastra.Runtime.MonoGame.Rendering;
@@ -73,6 +74,46 @@ namespace Andastra.Runtime.MonoGame.Backends
             VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT = 0x00000020,
             VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT = 0x00000040,
             VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT = 0x00000080,
+        }
+
+        // Vulkan format feature flags
+        // Based on Vulkan API: https://docs.vulkan.org/spec/latest/chapters/formats.html#VkFormatFeatureFlags
+        [Flags]
+        private enum VkFormatFeatureFlags : uint
+        {
+            VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT = 0x00000001,
+            VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT = 0x00000002,
+            VK_FORMAT_FEATURE_STORAGE_IMAGE_ATOMIC_BIT = 0x00000004,
+            VK_FORMAT_FEATURE_UNIFORM_TEXEL_BUFFER_BIT = 0x00000008,
+            VK_FORMAT_FEATURE_STORAGE_TEXEL_BUFFER_BIT = 0x00000010,
+            VK_FORMAT_FEATURE_STORAGE_TEXEL_BUFFER_ATOMIC_BIT = 0x00000020,
+            VK_FORMAT_FEATURE_VERTEX_BUFFER_BIT = 0x00000040,
+            VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT = 0x00000080,
+            VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BLEND_BIT = 0x00000100,
+            VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT = 0x00000200,
+            VK_FORMAT_FEATURE_BLIT_SRC_BIT = 0x00000400,
+            VK_FORMAT_FEATURE_BLIT_DST_BIT = 0x00000800,
+            VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT = 0x00001000,
+            VK_FORMAT_FEATURE_TRANSFER_SRC_BIT = 0x00004000,
+            VK_FORMAT_FEATURE_TRANSFER_DST_BIT = 0x00008000,
+            VK_FORMAT_FEATURE_MIDPOINT_CHROMA_SAMPLES_BIT = 0x00020000,
+            VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_LINEAR_FILTER_BIT = 0x00040000,
+            VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_SEPARATE_RECONSTRUCTION_FILTER_BIT = 0x00080000,
+            VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_BIT = 0x00100000,
+            VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_FORCEABLE_BIT = 0x00200000,
+            VK_FORMAT_FEATURE_DISJOINT_BIT = 0x00400000,
+            VK_FORMAT_FEATURE_COSITED_CHROMA_SAMPLES_BIT = 0x00800000,
+            VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_MINMAX_BIT = 0x00010000,
+        }
+
+        // Vulkan format properties structure
+        // Based on Vulkan API: https://docs.vulkan.org/spec/latest/chapters/formats.html#VkFormatProperties
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkFormatProperties
+        {
+            public VkFormatFeatureFlags linearTilingFeatures;   // Format features supported with linear tiling
+            public VkFormatFeatureFlags optimalTilingFeatures;  // Format features supported with optimal tiling
+            public VkFormatFeatureFlags bufferFeatures;         // Format features supported for buffers
         }
 
         // Vulkan buffer usage flags
@@ -348,6 +389,17 @@ namespace Andastra.Runtime.MonoGame.Backends
             public IntPtr pTexelBufferView;
         }
 
+        // VK_KHR_acceleration_structure extension structure for writing acceleration structure descriptors
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkWriteDescriptorSetAccelerationStructureKHR.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkWriteDescriptorSetAccelerationStructureKHR
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public uint accelerationStructureCount;
+            public IntPtr pAccelerationStructures; // Array of VkAccelerationStructureKHR (IntPtr) handles
+        }
+
         [StructLayout(LayoutKind.Sequential)]
         private struct VkPipelineLayoutCreateInfo
         {
@@ -383,12 +435,61 @@ namespace Andastra.Runtime.MonoGame.Backends
             public IntPtr pInheritanceInfo;
         }
 
+        // VkCommandBufferAllocateInfo structure (Vulkan 1.0)
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkCommandBufferAllocateInfo.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkCommandBufferAllocateInfo
+        {
+            public VkStructureType sType; // Must be VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO (40)
+            public IntPtr pNext; // nullptr or pointer to extension-specific structure
+            public IntPtr commandPool; // VkCommandPool handle to allocate from
+            public VkCommandBufferLevel level; // VK_COMMAND_BUFFER_LEVEL_PRIMARY (0) or VK_COMMAND_BUFFER_LEVEL_SECONDARY (1)
+            public uint commandBufferCount; // Number of command buffers to allocate
+        }
+
         [StructLayout(LayoutKind.Sequential)]
         private struct VkMemoryRequirements
         {
             public ulong size;
             public ulong alignment;
             public uint memoryTypeBits;
+        }
+
+        // Vulkan memory type structure
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkMemoryType.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkMemoryType
+        {
+            public VkMemoryPropertyFlags propertyFlags;
+            public uint heapIndex;
+        }
+
+        // Vulkan memory heap structure
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkMemoryHeap.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkMemoryHeap
+        {
+            public ulong size;
+            public VkMemoryHeapFlags flags;
+        }
+
+        // Vulkan memory heap flags
+        [Flags]
+        private enum VkMemoryHeapFlags
+        {
+            VK_MEMORY_HEAP_DEVICE_LOCAL_BIT = 0x00000001,
+            VK_MEMORY_HEAP_MULTI_INSTANCE_BIT = 0x00000002,
+        }
+
+        // Vulkan physical device memory properties structure
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkPhysicalDeviceMemoryProperties.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkPhysicalDeviceMemoryProperties
+        {
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)]
+            public VkMemoryType[] memoryTypes;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
+            public VkMemoryHeap[] memoryHeaps;
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -399,6 +500,17 @@ namespace Andastra.Runtime.MonoGame.Backends
             public IntPtr pLabelName;
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
             public float[] color;
+        }
+
+        // Vulkan memory barrier structure (for general memory synchronization)
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkMemoryBarrier.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkMemoryBarrier
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public VkAccessFlags srcAccessMask;
+            public VkAccessFlags dstAccessMask;
         }
 
         // Vulkan buffer memory barrier structure
@@ -437,6 +549,16 @@ namespace Andastra.Runtime.MonoGame.Backends
             public VkExtent3D extent;
         }
 
+        // Vulkan buffer copy structure (for vkCmdCopyBuffer)
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkBufferCopy.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkBufferCopy
+        {
+            public ulong srcOffset;  // VkDeviceSize
+            public ulong dstOffset;  // VkDeviceSize
+            public ulong size;       // VkDeviceSize
+        }
+
         // Vulkan offset 3D structure
         [StructLayout(LayoutKind.Sequential)]
         private struct VkOffset3D
@@ -453,6 +575,20 @@ namespace Andastra.Runtime.MonoGame.Backends
         {
             public VkOffset2D offset;
             public VkExtent2D extent;
+        }
+
+        // Vulkan viewport structure
+        // VkViewport is used by vkCmdSetViewport to define viewport rectangles
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkViewport.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkViewport
+        {
+            public float x;        // X coordinate of the viewport's upper left corner
+            public float y;        // Y coordinate of the viewport's upper left corner
+            public float width;    // Width of the viewport
+            public float height;   // Height of the viewport
+            public float minDepth; // Minimum depth value for the viewport (typically 0.0)
+            public float maxDepth; // Maximum depth value for the viewport (typically 1.0)
         }
 
         // Vulkan image memory barrier structure (for image layout transitions)
@@ -490,6 +626,30 @@ namespace Andastra.Runtime.MonoGame.Backends
             VK_IMAGE_ASPECT_DEPTH_BIT = 0x00000002,
             VK_IMAGE_ASPECT_STENCIL_BIT = 0x00000004,
             VK_IMAGE_ASPECT_METADATA_BIT = 0x00000008,
+        }
+
+        // Vulkan clear depth stencil value structure
+        // Based on Vulkan API: https://docs.vulkan.org/spec/latest/chapters/clears.html#VkClearDepthStencilValue
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkClearDepthStencilValue
+        {
+            public float depth; // Clear value for depth aspect (0.0 to 1.0)
+            public uint stencil; // Clear value for stencil aspect
+        }
+
+        // Vulkan clear color value structure
+        // Based on Vulkan API: https://docs.vulkan.org/spec/latest/chapters/clears.html#VkClearColorValue
+        // Can represent float, int32, or uint32 clear values depending on format
+        // In C: union { float float32[4]; int32_t int32[4]; uint32_t uint32[4]; }
+        // Size is 16 bytes (4 values * 4 bytes each)
+        // We use fixed-size float fields to represent the union (most common case for color attachments)
+        [StructLayout(LayoutKind.Sequential, Size = 16)]
+        private struct VkClearColorValue
+        {
+            public float float32_0; // First float value
+            public float float32_1; // Second float value
+            public float float32_2; // Third float value
+            public float float32_3; // Fourth float value
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -607,18 +767,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         {
         }
 
-        private enum VkPipelineBindPoint
-        {
-            VK_PIPELINE_BIND_POINT_GRAPHICS = 0,
-            VK_PIPELINE_BIND_POINT_COMPUTE = 1,
-            VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR = 1000165000,
-        }
-
-        [Flags]
-        private enum VkDependencyFlags
-        {
-            VK_DEPENDENCY_BY_REGION_BIT = 0x00000001,
-        }
+        // VkPipelineBindPoint and VkDependencyFlags are defined later in the file to avoid duplicates
 
         [Flags]
         private enum VkFramebufferCreateFlags
@@ -698,6 +847,135 @@ namespace Andastra.Runtime.MonoGame.Backends
             public ulong size;
         }
 
+        // VK_KHR_acceleration_structure extension structures
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkAccelerationStructureBuildGeometryInfoKHR.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkAccelerationStructureBuildGeometryInfoKHR
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public VkAccelerationStructureTypeKHR type;
+            public VkBuildAccelerationStructureFlagsKHR flags;
+            public VkAccelerationStructureBuildTypeKHR buildType;
+            public IntPtr srcAccelerationStructure; // VkAccelerationStructureKHR (IntPtr)
+            public IntPtr dstAccelerationStructure; // VkAccelerationStructureKHR (IntPtr)
+            public uint geometryCount;
+            public IntPtr pGeometries; // Pointer to VkAccelerationStructureGeometryKHR array
+            public IntPtr ppGeometries; // Pointer to array of pointers to VkAccelerationStructureGeometryKHR (optional, null if pGeometries is used)
+            public ulong scratchDataDeviceAddress;
+        }
+
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkAccelerationStructureGeometryKHR.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkAccelerationStructureGeometryKHR
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public VkGeometryTypeKHR geometryType;
+            public VkAccelerationStructureGeometryDataKHR geometry;
+            public VkGeometryFlagsKHR flags;
+        }
+
+        // Union-like structure for geometry data (we use triangles only for BLAS)
+        [StructLayout(LayoutKind.Explicit, Size = 96)] // Size is the maximum of all union members
+        private struct VkAccelerationStructureGeometryDataKHR
+        {
+            [FieldOffset(0)]
+            public VkAccelerationStructureGeometryTrianglesDataKHR triangles;
+            [FieldOffset(0)]
+            public VkAccelerationStructureGeometryAabbsDataKHR aabbs;
+            [FieldOffset(0)]
+            public VkAccelerationStructureGeometryInstancesDataKHR instances;
+        }
+
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkAccelerationStructureGeometryTrianglesDataKHR.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkAccelerationStructureGeometryTrianglesDataKHR
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public VkFormat vertexFormat;
+            public ulong vertexDataDeviceAddress;
+            public ulong vertexStride;
+            public uint maxVertex;
+            public VkIndexType indexType;
+            public ulong indexDataDeviceAddress;
+            public ulong transformDataDeviceAddress;
+        }
+
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkAccelerationStructureGeometryAabbsDataKHR.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkAccelerationStructureGeometryAabbsDataKHR
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public ulong dataDeviceAddress;
+            public ulong stride;
+        }
+
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkAccelerationStructureGeometryInstancesDataKHR.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkAccelerationStructureGeometryInstancesDataKHR
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public VkBool32 arrayOfPointers;
+            public ulong dataDeviceAddress;
+        }
+
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkAccelerationStructureBuildRangeInfoKHR.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkAccelerationStructureBuildRangeInfoKHR
+        {
+            public uint primitiveCount;
+            public uint primitiveOffset;
+            public uint firstVertex;
+            public uint transformOffset;
+        }
+
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkAccelerationStructureBuildSizesInfoKHR.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkAccelerationStructureBuildSizesInfoKHR
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public ulong accelerationStructureSize;
+            public ulong updateScratchSize;
+            public ulong buildScratchSize;
+        }
+
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkAccelerationStructureCreateInfoKHR.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkAccelerationStructureCreateInfoKHR
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public ulong createFlags; // VkAccelerationStructureCreateFlagsKHR
+            public IntPtr buffer; // VkBuffer
+            public ulong offset;
+            public ulong size;
+            public VkAccelerationStructureTypeKHR type;
+            public ulong deviceAddress;
+        }
+
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkBufferDeviceAddressInfo.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkBufferDeviceAddressInfo
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public IntPtr buffer; // VkBuffer
+        }
+
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkAccelerationStructureDeviceAddressInfoKHR.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkAccelerationStructureDeviceAddressInfoKHR
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public IntPtr accelerationStructure; // VkAccelerationStructureKHR
+        }
+
         // Vulkan enums
         private enum VkStructureType
         {
@@ -750,14 +1028,34 @@ namespace Andastra.Runtime.MonoGame.Backends
             VK_STRUCTURE_TYPE_MEMORY_BARRIER = 46,
             VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO = 47,
             VK_STRUCTURE_TYPE_LOADER_DEVICE_CREATE_INFO = 48,
+            VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT = 1000128002,
             VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR = 1000165000,
-            VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR = 1000165001
+            VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR = 1000165001,
+            VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR = 1000396003,
+            VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR = 1000150000,
+            VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR = 1000150004,
+            VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR = 1000150005,
+            VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_AABBS_DATA_KHR = 1000150006,
+            VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR = 1000150017,
+            VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR = 1000150020,
+            VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO = 1000244001,
+            VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR = 1000150002
         }
 
         // Additional Vulkan enums
         private enum VkImageCreateFlags { }
         private enum VkImageType { VK_IMAGE_TYPE_2D = 1 }
-        private enum VkSampleCountFlagBits { VK_SAMPLE_COUNT_1_BIT = 1 }
+        [Flags]
+        private enum VkSampleCountFlagBits
+        {
+            VK_SAMPLE_COUNT_1_BIT = 0x00000001,
+            VK_SAMPLE_COUNT_2_BIT = 0x00000002,
+            VK_SAMPLE_COUNT_4_BIT = 0x00000004,
+            VK_SAMPLE_COUNT_8_BIT = 0x00000008,
+            VK_SAMPLE_COUNT_16_BIT = 0x00000010,
+            VK_SAMPLE_COUNT_32_BIT = 0x00000020,
+            VK_SAMPLE_COUNT_64_BIT = 0x00000040
+        }
         private enum VkImageTiling { VK_IMAGE_TILING_OPTIMAL = 0 }
         private enum VkSharingMode { VK_SHARING_MODE_EXCLUSIVE = 0 }
         private enum VkBufferCreateFlags { }
@@ -767,6 +1065,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private enum VkSamplerAddressMode { VK_SAMPLER_ADDRESS_MODE_REPEAT = 0, VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT = 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE = 2, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER = 3 }
         private enum VkBool32 { VK_FALSE = 0, VK_TRUE = 1 }
         private enum VkCompareOp { VK_COMPARE_OP_NEVER = 0, VK_COMPARE_OP_LESS = 1, VK_COMPARE_OP_EQUAL = 2, VK_COMPARE_OP_LESS_OR_EQUAL = 3, VK_COMPARE_OP_GREATER = 4, VK_COMPARE_OP_NOT_EQUAL = 5, VK_COMPARE_OP_GREATER_OR_EQUAL = 6, VK_COMPARE_OP_ALWAYS = 7 }
+        private enum VkIndexType { VK_INDEX_TYPE_UINT16 = 0, VK_INDEX_TYPE_UINT32 = 1 }
         private enum VkBorderColor { VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK = 0 }
         private enum VkShaderModuleCreateFlags { }
         private enum VkDescriptorSetLayoutCreateFlags { }
@@ -804,6 +1103,45 @@ namespace Andastra.Runtime.MonoGame.Backends
         private enum VkPipelineLayoutCreateFlags { }
         private enum VkCommandBufferLevel { VK_COMMAND_BUFFER_LEVEL_PRIMARY = 0 }
         private enum VkPipelineBindPoint { VK_PIPELINE_BIND_POINT_GRAPHICS = 0, VK_PIPELINE_BIND_POINT_COMPUTE = 1, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR = 1000165000 }
+
+        // VK_KHR_acceleration_structure extension enums
+        private enum VkAccelerationStructureTypeKHR
+        {
+            VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR = 0,
+            VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR = 1,
+            VK_ACCELERATION_STRUCTURE_TYPE_GENERIC_KHR = 2
+        }
+
+        private enum VkAccelerationStructureBuildTypeKHR
+        {
+            VK_ACCELERATION_STRUCTURE_BUILD_TYPE_HOST_KHR = 0,
+            VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR = 1,
+            VK_ACCELERATION_STRUCTURE_BUILD_TYPE_HOST_OR_DEVICE_KHR = 2
+        }
+
+        private enum VkGeometryTypeKHR
+        {
+            VK_GEOMETRY_TYPE_TRIANGLES_KHR = 0,
+            VK_GEOMETRY_TYPE_AABBS_KHR = 1,
+            VK_GEOMETRY_TYPE_INSTANCES_KHR = 2
+        }
+
+        [Flags]
+        private enum VkGeometryFlagsKHR
+        {
+            VK_GEOMETRY_OPAQUE_BIT_KHR = 0x00000001,
+            VK_GEOMETRY_NO_DUPLICATE_ANY_HIT_INVOCATION_BIT_KHR = 0x00000002
+        }
+
+        [Flags]
+        private enum VkBuildAccelerationStructureFlagsKHR
+        {
+            VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_KHR = 0x00000001,
+            VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_COMPACTION_BIT_KHR = 0x00000002,
+            VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR = 0x00000004,
+            VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_BUILD_BIT_KHR = 0x00000008,
+            VK_BUILD_ACCELERATION_STRUCTURE_LOW_MEMORY_BIT_KHR = 0x00000010
+        }
 
         // Vulkan dependency flags
         [Flags]
@@ -885,8 +1223,10 @@ namespace Andastra.Runtime.MonoGame.Backends
         private delegate VkResult vkDeviceWaitIdleDelegate(IntPtr device);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate VkResult vkCreateCommandPoolDelegate(IntPtr device, IntPtr pCreateInfo, IntPtr pAllocator, out IntPtr pCommandPool);
+        private delegate VkResult vkWaitForFencesDelegate(IntPtr device, uint fenceCount, IntPtr pFences, VkBool32 waitAll, ulong timeout);
+
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkCreateCommandPoolDelegate(IntPtr device, IntPtr pCreateInfo, IntPtr pAllocator, out IntPtr pCommandPool);
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate VkResult vkDestroyCommandPoolDelegate(IntPtr device, IntPtr commandPool, IntPtr pAllocator);
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
@@ -911,15 +1251,70 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkCmdDispatchIndirectDelegate(IntPtr commandBuffer, IntPtr buffer, ulong offset);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdDrawIndirectDelegate(IntPtr commandBuffer, IntPtr buffer, ulong offset, uint drawCount, uint stride);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdDrawIndexedIndirectDelegate(IntPtr commandBuffer, IntPtr buffer, ulong offset, uint drawCount, uint stride);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkCmdSetScissorDelegate(IntPtr commandBuffer, uint firstScissor, uint scissorCount, IntPtr pScissors);
+
+        // Delegate for vkCmdSetViewport
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetViewport.html
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdSetViewportDelegate(IntPtr commandBuffer, uint firstViewport, uint viewportCount, IntPtr pViewports);
+
+        // Delegate for vkCmdBindVertexBuffers
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBindVertexBuffers.html
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdBindVertexBuffersDelegate(IntPtr commandBuffer, uint firstBinding, uint bindingCount, IntPtr pBuffers, IntPtr pOffsets);
+
+        // Delegate for vkCmdBindIndexBuffer
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBindIndexBuffer.html
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdBindIndexBufferDelegate(IntPtr commandBuffer, IntPtr buffer, ulong offset, VkIndexType indexType);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdDrawDelegate(IntPtr commandBuffer, uint vertexCount, uint instanceCount, uint firstVertex, uint firstInstance);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdDrawIndexedDelegate(IntPtr commandBuffer, uint indexCount, uint instanceCount, uint firstIndex, int vertexOffset, uint firstInstance);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkCmdCopyImageDelegate(IntPtr commandBuffer, IntPtr srcImage, VkImageLayout srcImageLayout, IntPtr dstImage, VkImageLayout dstImageLayout, uint regionCount, IntPtr pRegions);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkCmdCopyBufferToImageDelegate(IntPtr commandBuffer, IntPtr srcBuffer, IntPtr dstImage, VkImageLayout dstImageLayout, uint regionCount, IntPtr pRegions);
+
+        // Delegate for vkCmdUpdateBuffer (for small buffer updates up to 65536 bytes)
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdUpdateBuffer.html
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdUpdateBufferDelegate(IntPtr commandBuffer, IntPtr dstBuffer, ulong dstOffset, ulong dataSize, IntPtr pData);
+
+        // Delegate for vkCmdCopyBuffer (for buffer-to-buffer copies)
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdCopyBuffer.html
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdCopyBufferDelegate(IntPtr commandBuffer, IntPtr srcBuffer, IntPtr dstBuffer, uint regionCount, IntPtr pRegions);
+
+        // Delegate for vkCmdClearDepthStencilImage
+        // Based on Vulkan API: https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdClearDepthStencilImage.html
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdClearDepthStencilImageDelegate(IntPtr commandBuffer, IntPtr image, VkImageLayout imageLayout, IntPtr pDepthStencil, uint rangeCount, IntPtr pRanges);
+
+        // Delegate for vkCmdClearColorImage
+        // Based on Vulkan API: https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdClearColorImage.html
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdClearColorImageDelegate(IntPtr commandBuffer, IntPtr image, VkImageLayout imageLayout, IntPtr pColor, uint rangeCount, IntPtr pRanges);
+
+        // Delegate for vkGetPhysicalDeviceFormatProperties
+        // Based on Vulkan API: https://docs.vulkan.org/refpages/latest/refpages/source/vkGetPhysicalDeviceFormatProperties.html
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkGetPhysicalDeviceFormatPropertiesDelegate(IntPtr physicalDevice, VkFormat format, out VkFormatProperties pFormatProperties);
+
+        // Delegate for vkGetPhysicalDeviceMemoryProperties
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetPhysicalDeviceMemoryProperties.html
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkGetPhysicalDeviceMemoryPropertiesDelegate(IntPtr physicalDevice, out VkPhysicalDeviceMemoryProperties pMemoryProperties);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate VkResult vkMapMemoryDelegate(IntPtr device, IntPtr memory, ulong offset, ulong size, uint flags, out IntPtr ppData);
@@ -985,6 +1380,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         private static vkQueueSubmitDelegate vkQueueSubmit;
         private static vkDeviceWaitIdleDelegate vkDeviceWaitIdle;
+        private static vkWaitForFencesDelegate vkWaitForFences;
 
         private static vkCreateCommandPoolDelegate vkCreateCommandPool;
         private static vkDestroyCommandPoolDelegate vkDestroyCommandPool;
@@ -999,6 +1395,8 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static vkCmdBindDescriptorSetsDelegate vkCmdBindDescriptorSets;
         private static vkCmdDispatchDelegate vkCmdDispatch;
         private static vkCmdDispatchIndirectDelegate vkCmdDispatchIndirect;
+        private static vkCmdDrawIndirectDelegate vkCmdDrawIndirect;
+        private static vkCmdDrawIndexedIndirectDelegate vkCmdDrawIndexedIndirect;
 
         private static vkCmdBeginDebugUtilsLabelEXTDelegate vkCmdBeginDebugUtilsLabelEXT;
         private static vkCmdEndDebugUtilsLabelEXTDelegate vkCmdEndDebugUtilsLabelEXT;
@@ -1007,7 +1405,18 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static vkCmdDrawDelegate vkCmdDraw;
         private static vkCmdDrawIndexedDelegate vkCmdDrawIndexed;
         private static vkCmdSetScissorDelegate vkCmdSetScissor;
+        private static vkCmdSetViewportDelegate vkCmdSetViewport;
+        private static vkCmdBindVertexBuffersDelegate vkCmdBindVertexBuffers;
+        private static vkCmdBindIndexBufferDelegate vkCmdBindIndexBuffer;
         private static vkCmdSetBlendConstantsDelegate vkCmdSetBlendConstants;
+        private static vkCmdClearDepthStencilImageDelegate vkCmdClearDepthStencilImage;
+        private static vkCmdClearColorImageDelegate vkCmdClearColorImage;
+        private static vkGetPhysicalDeviceFormatPropertiesDelegate vkGetPhysicalDeviceFormatProperties;
+        private static vkGetPhysicalDeviceMemoryPropertiesDelegate vkGetPhysicalDeviceMemoryProperties;
+        private static vkCmdUpdateBufferDelegate vkCmdUpdateBuffer;
+        private static vkCmdCopyBufferDelegate vkCmdCopyBuffer;
+        private static vkCmdCopyBufferToImageDelegate vkCmdCopyBufferToImage;
+        private static vkCmdCopyImageDelegate vkCmdCopyImage;
 
         // VK_KHR_ray_tracing_pipeline extension function delegates
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
@@ -1017,10 +1426,38 @@ namespace Andastra.Runtime.MonoGame.Backends
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkCmdTraceRaysKHRDelegate(IntPtr commandBuffer, ref VkStridedDeviceAddressRegionKHR pRaygenShaderBindingTable, ref VkStridedDeviceAddressRegionKHR pMissShaderBindingTable, ref VkStridedDeviceAddressRegionKHR pHitShaderBindingTable, ref VkStridedDeviceAddressRegionKHR pCallableShaderBindingTable, uint width, uint height, uint depth);
 
+        // VK_KHR_acceleration_structure extension function delegates
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBuildAccelerationStructuresKHR.html
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdBuildAccelerationStructuresKHRDelegate(IntPtr commandBuffer, uint infoCount, IntPtr pInfos, IntPtr ppBuildRangeInfos);
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetAccelerationStructureBuildSizesKHR.html
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkGetAccelerationStructureBuildSizesKHRDelegate(IntPtr device, VkAccelerationStructureBuildTypeKHR buildType, ref VkAccelerationStructureBuildGeometryInfoKHR pBuildInfo, IntPtr pMaxPrimitiveCounts, ref VkAccelerationStructureBuildSizesInfoKHR pSizeInfo);
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetBufferDeviceAddress.html
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate ulong vkGetBufferDeviceAddressKHRDelegate(IntPtr device, ref VkBufferDeviceAddressInfo pInfo);
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateAccelerationStructureKHR.html
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkCreateAccelerationStructureKHRDelegate(IntPtr device, ref VkAccelerationStructureCreateInfoKHR pCreateInfo, IntPtr pAllocator, out IntPtr pAccelerationStructure);
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkDestroyAccelerationStructureKHR.html
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkDestroyAccelerationStructureKHRDelegate(IntPtr device, IntPtr accelerationStructure, IntPtr pAllocator);
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetAccelerationStructureDeviceAddressKHR.html
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate ulong vkGetAccelerationStructureDeviceAddressKHRDelegate(IntPtr device, ref VkAccelerationStructureDeviceAddressInfoKHR pInfo);
+
         // VK_KHR_ray_tracing_pipeline extension function pointers (static for now - would be loaded via vkGetDeviceProcAddr in real implementation)
         private static vkCreateRayTracingPipelinesKHRDelegate vkCreateRayTracingPipelinesKHR;
         private static vkGetRayTracingShaderGroupHandlesKHRDelegate vkGetRayTracingShaderGroupHandlesKHR;
         private static vkCmdTraceRaysKHRDelegate vkCmdTraceRaysKHR;
+
+        // VK_KHR_acceleration_structure extension function pointers (loaded via vkGetDeviceProcAddr)
+        private static vkCmdBuildAccelerationStructuresKHRDelegate vkCmdBuildAccelerationStructuresKHR;
+        private static vkGetAccelerationStructureBuildSizesKHRDelegate vkGetAccelerationStructureBuildSizesKHR;
+        private static vkGetBufferDeviceAddressKHRDelegate vkGetBufferDeviceAddressKHR;
+        private static vkCreateAccelerationStructureKHRDelegate vkCreateAccelerationStructureKHR;
+        private static vkDestroyAccelerationStructureKHRDelegate vkDestroyAccelerationStructureKHR;
+        private static vkGetAccelerationStructureDeviceAddressKHRDelegate vkGetAccelerationStructureDeviceAddressKHR;
 
         // Helper methods for Vulkan interop
         private static void InitializeVulkanFunctions(IntPtr device)
@@ -1090,11 +1527,11 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static class NativeMethods
         {
             // Windows P/Invoke declarations
-            [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Ansi)]
-            public static extern IntPtr LoadLibrary(string lpFileName);
+            [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Ansi, EntryPoint = "LoadLibraryA")]
+            private static extern IntPtr LoadLibrary_Win32(string lpFileName);
 
-            [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Ansi, ExactSpelling = true)]
-            public static extern IntPtr GetProcAddress(IntPtr hModule, string lpProcName);
+            [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Ansi, ExactSpelling = true, EntryPoint = "GetProcAddress")]
+            private static extern IntPtr GetProcAddress_Win32(IntPtr hModule, string lpProcName);
 
             [DllImport("kernel32.dll", SetLastError = true)]
             [return: MarshalAs(UnmanagedType.Bool)]
@@ -1122,7 +1559,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 if (Environment.OSVersion.Platform == PlatformID.Win32NT)
                 {
-                    return LoadLibrary(libraryName);
+                    return LoadLibrary_Win32(libraryName);
                 }
                 else if (Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX)
                 {
@@ -1148,7 +1585,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                 if (Environment.OSVersion.Platform == PlatformID.Win32NT)
                 {
-                    return GetProcAddress(libraryHandle, functionName);
+                    return GetProcAddress_Win32(libraryHandle, functionName);
                 }
                 else if (Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX)
                 {
@@ -1191,6 +1628,11 @@ namespace Andastra.Runtime.MonoGame.Backends
         // Descriptor pool for descriptor set allocation
         private IntPtr _descriptorPool;
         private const uint DescriptorPoolMaxSets = 1000; // Maximum number of descriptor sets in pool
+
+        // Cached physical device memory properties (queried once during initialization)
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkPhysicalDeviceMemoryProperties.html
+        private VkPhysicalDeviceMemoryProperties _memoryProperties;
+        private bool _memoryPropertiesQueried;
         private const uint DescriptorPoolUniformBufferCount = 1000;
         private const uint DescriptorPoolStorageBufferCount = 1000;
         private const uint DescriptorPoolSampledImageCount = 1000;
@@ -1233,13 +1675,17 @@ namespace Andastra.Runtime.MonoGame.Backends
             _graphicsQueue = graphicsQueue;
             _computeQueue = computeQueue;
             _transferQueue = transferQueue;
-            _capabilities = capabilities ?? throw new ArgumentNullException(nameof(capabilities));
+            _capabilities = capabilities;
             _resources = new Dictionary<IntPtr, IResource>();
             _nextResourceHandle = 1;
             _currentFrameIndex = 0;
+            _memoryPropertiesQueried = false;
 
             // Initialize Vulkan function pointers
             InitializeVulkanFunctions(device);
+
+            // Query physical device memory properties
+            QueryPhysicalDeviceMemoryProperties();
 
             // Create command pools
             _graphicsCommandPool = CreateCommandPool(0); // graphics queue family
@@ -1344,7 +1790,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 },
                 mipLevels = (uint)desc.MipLevels,
                 arrayLayers = (uint)desc.ArraySize,
-                samples = VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT, // TODO: Convert from desc.SampleCount
+                samples = ConvertToVkSampleCount(desc.SampleCount),
                 tiling = VkImageTiling.VK_IMAGE_TILING_OPTIMAL,
                 usage = usageFlags,
                 sharingMode = VkSharingMode.VK_SHARING_MODE_EXCLUSIVE,
@@ -1387,14 +1833,34 @@ namespace Andastra.Runtime.MonoGame.Backends
         {
             switch (format)
             {
-                case TextureFormat.RGBA8_UNORM: return VkFormat.VK_FORMAT_R8G8B8A8_UNORM;
-                case TextureFormat.RGBA8_SRGB: return VkFormat.VK_FORMAT_R8G8B8A8_SRGB;
-                case TextureFormat.RGBA16_FLOAT: return VkFormat.VK_FORMAT_R16G16B16A16_SFLOAT;
-                case TextureFormat.RGBA32_FLOAT: return VkFormat.VK_FORMAT_R32G32B32A32_SFLOAT;
-                case TextureFormat.D24_UNORM_S8_UINT: return VkFormat.VK_FORMAT_D24_UNORM_S8_UINT;
-                case TextureFormat.D32_FLOAT: return VkFormat.VK_FORMAT_D32_SFLOAT;
-                case TextureFormat.D32_FLOAT_S8_UINT: return VkFormat.VK_FORMAT_D32_SFLOAT_S8_UINT;
+                case TextureFormat.R8G8B8A8_UNorm: return VkFormat.VK_FORMAT_R8G8B8A8_UNORM;
+                case TextureFormat.R8G8B8A8_UNorm_SRGB: return VkFormat.VK_FORMAT_R8G8B8A8_SRGB;
+                case TextureFormat.R16G16B16A16_Float: return VkFormat.VK_FORMAT_R16G16B16A16_SFLOAT;
+                case TextureFormat.R32G32B32A32_Float: return VkFormat.VK_FORMAT_R32G32B32A32_SFLOAT;
+                case TextureFormat.D24_UNorm_S8_UInt: return VkFormat.VK_FORMAT_D24_UNORM_S8_UINT;
+                case TextureFormat.D32_Float: return VkFormat.VK_FORMAT_D32_SFLOAT;
+                case TextureFormat.D32_Float_S8_UInt: return VkFormat.VK_FORMAT_D32_SFLOAT_S8_UINT;
                 default: return VkFormat.VK_FORMAT_UNDEFINED;
+            }
+        }
+
+        /// <summary>
+        /// Converts an integer sample count to Vulkan sample count flag bits.
+        /// Maps sample count values (1, 2, 4, 8, 16, 32, 64) to corresponding VkSampleCountFlagBits enum values.
+        /// Defaults to VK_SAMPLE_COUNT_1_BIT if the value is not a power-of-2 or is unsupported.
+        /// </summary>
+        private VkSampleCountFlagBits ConvertToVkSampleCount(int sampleCount)
+        {
+            switch (sampleCount)
+            {
+                case 1: return VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT;
+                case 2: return VkSampleCountFlagBits.VK_SAMPLE_COUNT_2_BIT;
+                case 4: return VkSampleCountFlagBits.VK_SAMPLE_COUNT_4_BIT;
+                case 8: return VkSampleCountFlagBits.VK_SAMPLE_COUNT_8_BIT;
+                case 16: return VkSampleCountFlagBits.VK_SAMPLE_COUNT_16_BIT;
+                case 32: return VkSampleCountFlagBits.VK_SAMPLE_COUNT_32_BIT;
+                case 64: return VkSampleCountFlagBits.VK_SAMPLE_COUNT_64_BIT;
+                default: return VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT;
             }
         }
 
@@ -1417,11 +1883,92 @@ namespace Andastra.Runtime.MonoGame.Backends
             return memory;
         }
 
-        private uint FindMemoryType(uint typeFilter, VkMemoryPropertyFlags properties)
+        /// <summary>
+        /// Finds a suitable memory type index that matches the given type filter and property flags.
+        /// </summary>
+        /// <param name="typeFilter">Bitmask of memory types that are suitable for the resource.</param>
+        /// <param name="properties">Required memory property flags (e.g., device-local, host-visible).</param>
+        /// <returns>Index of the first suitable memory type, or throws if none found.</returns>
+        /// <remarks>
+        /// Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkPhysicalDeviceMemoryProperties.html
+        /// The method searches through available memory types to find one that:
+        /// 1. Is included in the typeFilter bitmask (memoryTypeBits from VkMemoryRequirements)
+        /// 2. Has all the required property flags set
+        /// Prefers memory types with exact property matches, falling back to types with additional properties if needed.
+        /// </remarks>
+        internal uint FindMemoryType(uint typeFilter, VkMemoryPropertyFlags properties)
         {
-            // TODO: Query physical device memory properties and find suitable type
-            // For now, return a default - real implementation would query VkPhysicalDeviceMemoryProperties
-            return 0; // Assume type 0 is suitable
+            // Ensure memory properties have been queried
+            if (!_memoryPropertiesQueried)
+            {
+                QueryPhysicalDeviceMemoryProperties();
+            }
+
+            // Search through all 32 possible memory types
+            // Based on Vulkan spec: VkPhysicalDeviceMemoryProperties can have up to 32 memory types
+            for (uint i = 0; i < 32; i++)
+            {
+                // Check if this memory type is included in the type filter
+                // typeFilter is a bitmask where bit i indicates if memory type i is suitable
+                if ((typeFilter & (1u << (int)i)) != 0)
+                {
+                    // Check if this memory type has all required properties
+                    // The memory type's property flags must include all requested properties
+                    VkMemoryPropertyFlags typeProperties = _memoryProperties.memoryTypes[i].propertyFlags;
+                    if ((typeProperties & properties) == properties)
+                    {
+                        return i;
+                    }
+                }
+            }
+
+            // No suitable memory type found - this should not happen with valid Vulkan implementations
+            // but we need to handle it gracefully
+            throw new InvalidOperationException(
+                $"No suitable memory type found. Type filter: 0x{typeFilter:X8}, Required properties: {properties}. " +
+                "This may indicate a driver issue or incompatible memory requirements.");
+        }
+
+        /// <summary>
+        /// Queries the physical device memory properties and caches them.
+        /// </summary>
+        /// <remarks>
+        /// Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetPhysicalDeviceMemoryProperties.html
+        /// Memory properties are queried once during initialization and cached for performance.
+        /// The query is performed lazily on first use if not already queried.
+        /// </remarks>
+        private void QueryPhysicalDeviceMemoryProperties()
+        {
+            if (_physicalDevice == IntPtr.Zero)
+            {
+                throw new InvalidOperationException("Physical device handle is invalid");
+            }
+
+            // Load vkGetPhysicalDeviceMemoryProperties function pointer if not already loaded
+            if (vkGetPhysicalDeviceMemoryProperties == null)
+            {
+                IntPtr libHandle = NativeMethods.LoadLibrary(VulkanLibrary);
+                if (libHandle != IntPtr.Zero)
+                {
+                    IntPtr funcPtr = NativeMethods.GetProcAddress(libHandle, "vkGetPhysicalDeviceMemoryProperties");
+                    if (funcPtr != IntPtr.Zero)
+                    {
+                        vkGetPhysicalDeviceMemoryProperties = (vkGetPhysicalDeviceMemoryPropertiesDelegate)
+                            Marshal.GetDelegateForFunctionPointer(funcPtr, typeof(vkGetPhysicalDeviceMemoryPropertiesDelegate));
+                    }
+                }
+            }
+
+            if (vkGetPhysicalDeviceMemoryProperties == null)
+            {
+                throw new InvalidOperationException(
+                    "Failed to load vkGetPhysicalDeviceMemoryProperties. Vulkan library may not be available.");
+            }
+
+            // Query memory properties from physical device
+            // Based on Vulkan API: vkGetPhysicalDeviceMemoryProperties is an instance-level function
+            vkGetPhysicalDeviceMemoryProperties(_physicalDevice, out _memoryProperties);
+            _memoryPropertiesQueried = true;
         }
 
         public IBuffer CreateBuffer(BufferDesc desc)
@@ -1436,32 +1983,34 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ArgumentException("Buffer size must be greater than zero", nameof(desc));
             }
 
-            // Convert BufferUsage to VkBufferUsageFlags
+            // Convert BufferUsageFlags to VkBufferUsageFlags
             VkBufferUsageFlags usageFlags = 0;
 
-            if ((desc.Usage & BufferUsage.Vertex) != 0)
+            if ((desc.Usage & BufferUsageFlags.VertexBuffer) != 0)
             {
                 usageFlags |= VkBufferUsageFlags.VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
             }
-            if ((desc.Usage & BufferUsage.Index) != 0)
+            if ((desc.Usage & BufferUsageFlags.IndexBuffer) != 0)
             {
                 usageFlags |= VkBufferUsageFlags.VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
             }
-            if ((desc.Usage & BufferUsage.Constant) != 0)
+            if ((desc.Usage & BufferUsageFlags.ConstantBuffer) != 0)
             {
                 usageFlags |= VkBufferUsageFlags.VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
             }
-            if ((desc.Usage & BufferUsage.Shader) != 0)
+            if ((desc.Usage & BufferUsageFlags.ShaderResource) != 0)
             {
                 usageFlags |= VkBufferUsageFlags.VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+                // Scratch buffers and raytracing buffers need device address support
+                usageFlags |= VkBufferUsageFlags.VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
             }
-            if ((desc.Usage & BufferUsage.Indirect) != 0)
+            if ((desc.Usage & BufferUsageFlags.IndirectArgument) != 0)
             {
                 usageFlags |= VkBufferUsageFlags.VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT;
             }
 
             // Add transfer flags for staging if needed
-            if ((desc.Usage & (BufferUsage.Vertex | BufferUsage.Index | BufferUsage.Constant | BufferUsage.Shader)) != 0)
+            if ((desc.Usage & (BufferUsageFlags.VertexBuffer | BufferUsageFlags.IndexBuffer | BufferUsageFlags.ConstantBuffer | BufferUsageFlags.ShaderResource)) != 0)
             {
                 usageFlags |= VkBufferUsageFlags.VK_BUFFER_USAGE_TRANSFER_DST_BIT;
             }
@@ -1487,12 +2036,9 @@ namespace Andastra.Runtime.MonoGame.Backends
             vkGetBufferMemoryRequirements(_device, vkBuffer, out memoryRequirements);
 
             // Determine memory properties based on usage
+            // Note: Staging buffers would use host-visible memory, but BufferUsageFlags doesn't have a Staging flag
+            // For now, use device-local memory for all buffers
             VkMemoryPropertyFlags memoryProperties = VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-            if ((desc.Usage & BufferUsage.Staging) != 0)
-            {
-                memoryProperties = VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                                  VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-            }
 
             // Allocate memory
             IntPtr vkMemory = AllocateDeviceMemory(memoryRequirements, memoryProperties);
@@ -1538,7 +2084,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 addressModeU = vkAddressModeU,
                 addressModeV = vkAddressModeV,
                 addressModeW = vkAddressModeW,
-                mipLodBias = desc.MipLODBias,
+                mipLodBias = desc.MipLodBias,
                 anisotropyEnable = desc.MaxAnisotropy > 1.0f ? VkBool32.VK_TRUE : VkBool32.VK_FALSE,
                 maxAnisotropy = desc.MaxAnisotropy,
                 compareEnable = desc.CompareFunc != CompareFunc.Never ? VkBool32.VK_TRUE : VkBool32.VK_FALSE,
@@ -1671,14 +2217,236 @@ namespace Andastra.Runtime.MonoGame.Backends
             // Create pipeline layout from binding layouts
             IntPtr pipelineLayout = CreatePipelineLayout(desc.BindingLayouts);
 
-            // For now, we'll create a basic pipeline without render pass (assuming VK_KHR_dynamic_rendering)
-            // TODO: Full implementation would create VkRenderPass from framebuffer
+            // Create VkRenderPass from framebuffer if provided
+            // Based on Vulkan Render Pass Creation: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateRenderPass.html
+            IntPtr vkRenderPass = IntPtr.Zero;
+            if (framebuffer != null)
+            {
+                FramebufferDesc framebufferDesc = framebuffer.Desc;
+                vkRenderPass = CreateRenderPassFromFramebufferDesc(framebufferDesc);
+                
+                // Note: The render pass is not owned by the pipeline - it may be shared with the framebuffer
+                // In a full implementation, the pipeline would need to store the render pass for pipeline creation
+                // For now, we create it but don't use it in pipeline creation (pipeline creation is not fully implemented)
+            }
 
             IntPtr handle = new IntPtr(_nextResourceHandle++);
             var pipeline = new VulkanGraphicsPipeline(handle, desc, IntPtr.Zero, pipelineLayout, _device);
             _resources[handle] = pipeline;
 
+            // Note: vkRenderPass is created but not currently used in pipeline creation
+            // In a full implementation, VkGraphicsPipelineCreateInfo would include the render pass
+            // The render pass is stored in the framebuffer, so pipelines should reference it from there
+            // For now, we create it to match the framebuffer's render pass structure
+
             return pipeline;
+        }
+
+        /// <summary>
+        /// Creates a VkRenderPass from a framebuffer description.
+        /// Based on Vulkan Render Pass Creation: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateRenderPass.html
+        /// </summary>
+        private IntPtr CreateRenderPassFromFramebufferDesc(FramebufferDesc desc)
+        {
+            if (desc == null || vkCreateRenderPass == null)
+            {
+                return IntPtr.Zero;
+            }
+
+            // Build attachment descriptions from framebuffer attachments
+            List<VkAttachmentDescription> attachments = new List<VkAttachmentDescription>();
+            List<VkAttachmentReference> colorAttachmentRefs = new List<VkAttachmentReference>();
+            VkAttachmentReference depthAttachmentRef = new VkAttachmentReference
+            {
+                attachment = unchecked((uint)-1), // VK_ATTACHMENT_UNUSED
+                layout = VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED
+            };
+            bool hasDepthAttachment = false;
+
+            uint attachmentIndex = 0;
+
+            // Process color attachments
+            if (desc.ColorAttachments != null && desc.ColorAttachments.Length > 0)
+            {
+                foreach (var colorAttachment in desc.ColorAttachments)
+                {
+                    if (colorAttachment.Texture != null)
+                    {
+                        // Get texture format and sample count from texture description
+                        VkFormat format = ConvertToVkFormat(colorAttachment.Texture.Desc.Format);
+                        VkSampleCountFlagBits samples = ConvertToVkSampleCount(colorAttachment.Texture.Desc.SampleCount);
+
+                        attachments.Add(new VkAttachmentDescription
+                        {
+                            flags = 0,
+                            format = format,
+                            samples = samples,
+                            loadOp = VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_LOAD, // Default: load existing content
+                            storeOp = VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_STORE, // Store for next frame
+                            stencilLoadOp = VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+                            stencilStoreOp = VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_DONT_CARE,
+                            initialLayout = VkImageLayout.VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                            finalLayout = VkImageLayout.VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+                        });
+
+                        colorAttachmentRefs.Add(new VkAttachmentReference
+                        {
+                            attachment = attachmentIndex,
+                            layout = VkImageLayout.VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+                        });
+
+                        attachmentIndex++;
+                    }
+                }
+            }
+
+            // Process depth attachment
+            if (desc.DepthAttachment.Texture != null)
+            {
+                VkFormat depthFormat = ConvertTextureFormatToVkFormat(desc.DepthAttachment.Texture.Desc.Format);
+                VkSampleCountFlagBits depthSamples = ConvertToVkSampleCount(desc.DepthAttachment.Texture.Desc.SampleCount);
+
+                attachments.Add(new VkAttachmentDescription
+                {
+                    flags = 0,
+                    format = depthFormat,
+                    samples = depthSamples,
+                    loadOp = VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_LOAD,
+                    storeOp = VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_STORE,
+                    stencilLoadOp = VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+                    stencilStoreOp = VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_DONT_CARE,
+                    initialLayout = VkImageLayout.VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                    finalLayout = VkImageLayout.VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+                });
+
+                depthAttachmentRef = new VkAttachmentReference
+                {
+                    attachment = attachmentIndex,
+                    layout = VkImageLayout.VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+                };
+                hasDepthAttachment = true;
+                attachmentIndex++;
+            }
+
+            // Create subpass description
+            VkSubpassDescription subpass = new VkSubpassDescription
+            {
+                flags = 0,
+                pipelineBindPoint = VkPipelineBindPoint.VK_PIPELINE_BIND_POINT_GRAPHICS,
+                inputAttachmentCount = 0,
+                pInputAttachments = IntPtr.Zero,
+                colorAttachmentCount = (uint)colorAttachmentRefs.Count,
+                pColorAttachments = IntPtr.Zero, // Will be set after marshalling
+                pResolveAttachments = IntPtr.Zero,
+                pDepthStencilAttachment = IntPtr.Zero, // Will be set after marshalling
+                preserveAttachmentCount = 0,
+                pPreserveAttachments = IntPtr.Zero
+            };
+
+            // Create render pass if we have attachments
+            if (attachments.Count == 0)
+            {
+                return IntPtr.Zero; // No attachments, no render pass needed
+            }
+
+            IntPtr vkRenderPass = IntPtr.Zero;
+
+            try
+            {
+                // Marshal attachment descriptions
+                int attachmentDescSize = Marshal.SizeOf(typeof(VkAttachmentDescription));
+                IntPtr pAttachments = Marshal.AllocHGlobal(attachmentDescSize * attachments.Count);
+                try
+                {
+                    for (int i = 0; i < attachments.Count; i++)
+                    {
+                        IntPtr attachmentPtr = new IntPtr(pAttachments.ToInt64() + i * attachmentDescSize);
+                        Marshal.StructureToPtr(attachments[i], attachmentPtr, false);
+                    }
+
+                    // Marshal color attachment references
+                    IntPtr pColorAttachments = IntPtr.Zero;
+                    if (colorAttachmentRefs.Count > 0)
+                    {
+                        int colorRefSize = Marshal.SizeOf(typeof(VkAttachmentReference));
+                        pColorAttachments = Marshal.AllocHGlobal(colorRefSize * colorAttachmentRefs.Count);
+                        for (int i = 0; i < colorAttachmentRefs.Count; i++)
+                        {
+                            IntPtr colorRefPtr = new IntPtr(pColorAttachments.ToInt64() + i * colorRefSize);
+                            Marshal.StructureToPtr(colorAttachmentRefs[i], colorRefPtr, false);
+                        }
+                    }
+
+                    // Marshal depth attachment reference
+                    IntPtr pDepthStencilAttachment = IntPtr.Zero;
+                    if (hasDepthAttachment)
+                    {
+                        int depthRefSize = Marshal.SizeOf(typeof(VkAttachmentReference));
+                        pDepthStencilAttachment = Marshal.AllocHGlobal(depthRefSize);
+                        Marshal.StructureToPtr(depthAttachmentRef, pDepthStencilAttachment, false);
+                    }
+
+                    // Update subpass with marshalled pointers
+                    subpass.pColorAttachments = pColorAttachments;
+                    subpass.pDepthStencilAttachment = pDepthStencilAttachment;
+
+                    // Marshal subpass description
+                    int subpassSize = Marshal.SizeOf(typeof(VkSubpassDescription));
+                    IntPtr pSubpasses = Marshal.AllocHGlobal(subpassSize);
+                    try
+                    {
+                        Marshal.StructureToPtr(subpass, pSubpasses, false);
+
+                        // Create render pass create info
+                        VkRenderPassCreateInfo renderPassCreateInfo = new VkRenderPassCreateInfo
+                        {
+                            sType = VkStructureType.VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
+                            pNext = IntPtr.Zero,
+                            flags = 0,
+                            attachmentCount = (uint)attachments.Count,
+                            pAttachments = pAttachments,
+                            subpassCount = 1,
+                            pSubpasses = pSubpasses,
+                            dependencyCount = 0,
+                            pDependencies = IntPtr.Zero
+                        };
+
+                        // Create render pass
+                        VkResult result = vkCreateRenderPass(_device, ref renderPassCreateInfo, IntPtr.Zero, out vkRenderPass);
+                        if (result != VkResult.VK_SUCCESS)
+                        {
+                            throw new VulkanException($"vkCreateRenderPass failed with result: {result}");
+                        }
+                    }
+                    finally
+                    {
+                        if (pSubpasses != IntPtr.Zero)
+                        {
+                            Marshal.FreeHGlobal(pSubpasses);
+                        }
+                    }
+                }
+                finally
+                {
+                    if (pAttachments != IntPtr.Zero)
+                    {
+                        Marshal.FreeHGlobal(pAttachments);
+                    }
+                    // Note: pColorAttachments and pDepthStencilAttachment are freed when render pass is destroyed
+                    // These pointers are used by the render pass, so we cannot free them here
+                }
+            }
+            catch
+            {
+                // If render pass creation fails, clean up and rethrow
+                if (vkRenderPass != IntPtr.Zero)
+                {
+                    vkDestroyRenderPass(_device, vkRenderPass, IntPtr.Zero);
+                }
+                throw;
+            }
+
+            return vkRenderPass;
         }
 
         private IntPtr CreatePipelineLayout(IBindingLayout[] bindingLayouts)
@@ -1792,14 +2560,15 @@ namespace Andastra.Runtime.MonoGame.Backends
                     {
                         if (colorAttachment.Texture != null)
                         {
-                            // Get texture format and create attachment description
-                            VkFormat format = ConvertTextureFormatToVkFormat(colorAttachment.Texture.Desc.Format);
+                            // Get texture format and sample count from texture description
+                            VkFormat format = ConvertToVkFormat(colorAttachment.Texture.Desc.Format);
+                            VkSampleCountFlagBits samples = ConvertToVkSampleCount(colorAttachment.Texture.Desc.SampleCount);
                             
                             attachments.Add(new VkAttachmentDescription
                             {
                                 flags = 0,
                                 format = format,
-                                samples = VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT, // TODO: Get from texture desc
+                                samples = samples,
                                 loadOp = VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_LOAD, // Default: load existing content
                                 storeOp = VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_STORE, // Store for next frame
                                 stencilLoadOp = VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_DONT_CARE,
@@ -1823,12 +2592,13 @@ namespace Andastra.Runtime.MonoGame.Backends
                 if (desc.DepthAttachment.Texture != null)
                 {
                     VkFormat depthFormat = ConvertTextureFormatToVkFormat(desc.DepthAttachment.Texture.Desc.Format);
+                    VkSampleCountFlagBits depthSamples = ConvertToVkSampleCount(desc.DepthAttachment.Texture.Desc.SampleCount);
                     
                     attachments.Add(new VkAttachmentDescription
                     {
                         flags = 0,
                         format = depthFormat,
-                        samples = VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT, // TODO: Get from texture desc
+                        samples = depthSamples,
                         loadOp = VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_LOAD,
                         storeOp = VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_STORE,
                         stencilLoadOp = VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_DONT_CARE,
@@ -2223,6 +2993,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 case BindingType.Sampler: return VkDescriptorType.VK_DESCRIPTOR_TYPE_SAMPLER;
                 case BindingType.UnorderedAccess: return VkDescriptorType.VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
                 case BindingType.StructuredBuffer: return VkDescriptorType.VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+                case BindingType.AccelStruct: return VkDescriptorType.VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
                 default: return VkDescriptorType.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             }
         }
@@ -2444,6 +3215,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             List<VkWriteDescriptorSet> writeDescriptorSets = new List<VkWriteDescriptorSet>();
             List<IntPtr> imageInfoPtrs = new List<IntPtr>();
             List<IntPtr> bufferInfoPtrs = new List<IntPtr>();
+            List<IntPtr> accelStructInfoPtrs = new List<IntPtr>(); // For VkWriteDescriptorSetAccelerationStructureKHR structures
 
             try
             {
@@ -2543,28 +3315,69 @@ namespace Andastra.Runtime.MonoGame.Backends
                         case BindingType.AccelStruct:
                             // Acceleration structures require special handling with VkWriteDescriptorSetAccelerationStructureKHR
                             // This uses the VK_KHR_acceleration_structure extension
+                            // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkWriteDescriptorSetAccelerationStructureKHR.html
                             if (item.AccelStruct != null)
                             {
                                 // Get acceleration structure handle
                                 IntPtr accelStructHandle = GetAccelStructHandle(item.AccelStruct);
                                 if (accelStructHandle != IntPtr.Zero)
                                 {
-                                    // Acceleration structures are written using a chained structure
-                                    // VkWriteDescriptorSetAccelerationStructureKHR
-                                    // For now, we'll set up the write descriptor set with the acceleration structure type
-                                    // The actual acceleration structure handle would be set via pNext chain
-                                    // This requires VK_KHR_acceleration_structure extension structures
-                                    
-                                    // Note: Full implementation would require:
-                                    // 1. VkWriteDescriptorSetAccelerationStructureKHR structure
-                                    // 2. Chain it via pNext in VkWriteDescriptorSet
-                                    // 3. Set descriptorType to VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR
-                                    
+                                    // Set descriptor type for acceleration structure
                                     writeDescriptorSet.descriptorType = VkDescriptorType.VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
                                     
-                                    // TODO: Add VkWriteDescriptorSetAccelerationStructureKHR support when extension is available
-                                    // For now, we log that acceleration structure binding is partially implemented
-                                    Console.WriteLine($"[VulkanDevice] Acceleration structure binding for slot {item.Slot} - requires VK_KHR_acceleration_structure extension structures");
+                                    // Create VkWriteDescriptorSetAccelerationStructureKHR structure
+                                    // This structure is chained via pNext in VkWriteDescriptorSet
+                                    // The structure contains an array of acceleration structure handles
+                                    
+                                    // Allocate memory for array of acceleration structure handles (IntPtr array)
+                                    // For now, we support single acceleration structure per binding
+                                    IntPtr accelStructHandlesArray = IntPtr.Zero;
+                                    IntPtr accelStructInfoPtr = IntPtr.Zero;
+                                    
+                                    try
+                                    {
+                                        // Allocate memory for array of acceleration structure handles
+                                        accelStructHandlesArray = Marshal.AllocHGlobal(IntPtr.Size);
+                                        Marshal.WriteIntPtr(accelStructHandlesArray, accelStructHandle);
+                                        
+                                        // Create VkWriteDescriptorSetAccelerationStructureKHR structure
+                                        VkWriteDescriptorSetAccelerationStructureKHR accelStructInfo = new VkWriteDescriptorSetAccelerationStructureKHR
+                                        {
+                                            sType = VkStructureType.VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR,
+                                            pNext = IntPtr.Zero,
+                                            accelerationStructureCount = 1,
+                                            pAccelerationStructures = accelStructHandlesArray
+                                        };
+                                        
+                                        // Allocate memory for the acceleration structure info structure
+                                        accelStructInfoPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(VkWriteDescriptorSetAccelerationStructureKHR)));
+                                        Marshal.StructureToPtr(accelStructInfo, accelStructInfoPtr, false);
+                                        
+                                        // Add both allocations to cleanup list (order: structure first, then handles array)
+                                        // This ensures proper cleanup order
+                                        accelStructInfoPtrs.Add(accelStructInfoPtr);
+                                        accelStructInfoPtrs.Add(accelStructHandlesArray);
+                                        
+                                        // Chain the acceleration structure info via pNext in VkWriteDescriptorSet
+                                        writeDescriptorSet.pNext = accelStructInfoPtr;
+                                        
+                                        // Clear pointers to prevent double-free (they're now tracked in the list)
+                                        accelStructInfoPtr = IntPtr.Zero;
+                                        accelStructHandlesArray = IntPtr.Zero;
+                                    }
+                                    catch
+                                    {
+                                        // If allocation or marshalling fails, free what we allocated
+                                        if (accelStructInfoPtr != IntPtr.Zero)
+                                        {
+                                            Marshal.FreeHGlobal(accelStructInfoPtr);
+                                        }
+                                        if (accelStructHandlesArray != IntPtr.Zero)
+                                        {
+                                            Marshal.FreeHGlobal(accelStructHandlesArray);
+                                        }
+                                        Console.WriteLine($"[VulkanDevice] Failed to allocate memory for acceleration structure descriptor info for slot {item.Slot}");
+                                    }
                                 }
                             }
                             break;
@@ -2608,6 +3421,17 @@ namespace Andastra.Runtime.MonoGame.Backends
                     }
                 }
                 foreach (IntPtr ptr in bufferInfoPtrs)
+                {
+                    if (ptr != IntPtr.Zero)
+                    {
+                        Marshal.FreeHGlobal(ptr);
+                    }
+                }
+                // Free acceleration structure info structures
+                // Note: Each acceleration structure binding allocates two blocks:
+                // 1. The VkWriteDescriptorSetAccelerationStructureKHR structure
+                // 2. The array of acceleration structure handles (IntPtr array)
+                foreach (IntPtr ptr in accelStructInfoPtrs)
                 {
                     if (ptr != IntPtr.Zero)
                     {
@@ -2736,15 +3560,73 @@ namespace Andastra.Runtime.MonoGame.Backends
                     break;
             }
 
-            // TODO: Allocate VkCommandBuffer from command pool
-            // For now, we'll create a placeholder command buffer handle
-            IntPtr vkCommandBuffer = new IntPtr(_nextResourceHandle++); // Placeholder
+            // Validate command pool is valid
+            if (commandPool == IntPtr.Zero)
+            {
+                throw new InvalidOperationException($"Command pool for type {type} is not initialized");
+            }
 
-            IntPtr handle = new IntPtr(_nextResourceHandle++);
-            var commandList = new VulkanCommandList(handle, type, this, vkCommandBuffer, commandPool, _device);
-            _resources[handle] = commandList;
+            // Validate vkAllocateCommandBuffers function pointer is initialized
+            // vkAllocateCommandBuffers is a core Vulkan function, so it should be available
+            if (vkAllocateCommandBuffers == null)
+            {
+                throw new InvalidOperationException("vkAllocateCommandBuffers function pointer is not initialized");
+            }
 
-            return commandList;
+            // Allocate VkCommandBuffer from command pool
+            // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkAllocateCommandBuffers.html
+            // We allocate a single primary command buffer
+            VkCommandBufferAllocateInfo allocateInfo = new VkCommandBufferAllocateInfo
+            {
+                sType = VkStructureType.VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+                pNext = IntPtr.Zero,
+                commandPool = commandPool,
+                level = VkCommandBufferLevel.VK_COMMAND_BUFFER_LEVEL_PRIMARY, // Primary command buffer can be submitted to queues
+                commandBufferCount = 1 // Allocate a single command buffer
+            };
+
+            // Marshal structure to unmanaged memory
+            int allocateInfoSize = Marshal.SizeOf(typeof(VkCommandBufferAllocateInfo));
+            IntPtr allocateInfoPtr = Marshal.AllocHGlobal(allocateInfoSize);
+            try
+            {
+                Marshal.StructureToPtr(allocateInfo, allocateInfoPtr, false);
+
+                // Allocate memory for command buffer handle (VkCommandBuffer is a handle, so it's IntPtr-sized)
+                IntPtr commandBufferPtr = Marshal.AllocHGlobal(IntPtr.Size);
+                try
+                {
+                    // vkAllocateCommandBuffers signature:
+                    // VkResult vkAllocateCommandBuffers(
+                    //     VkDevice device,
+                    //     const VkCommandBufferAllocateInfo* pAllocateInfo,
+                    //     VkCommandBuffer* pCommandBuffers);
+                    VkResult result = vkAllocateCommandBuffers(_device, allocateInfoPtr, commandBufferPtr);
+                    CheckResult(result, "vkAllocateCommandBuffers");
+
+                    // Read the allocated command buffer handle
+                    IntPtr vkCommandBuffer = Marshal.ReadIntPtr(commandBufferPtr);
+                    if (vkCommandBuffer == IntPtr.Zero)
+                    {
+                        throw new InvalidOperationException("vkAllocateCommandBuffers returned a null command buffer handle");
+                    }
+
+                    // Create VulkanCommandList with the allocated command buffer
+                    IntPtr handle = new IntPtr(_nextResourceHandle++);
+                    var commandList = new VulkanCommandList(handle, type, this, vkCommandBuffer, commandPool, _device);
+                    _resources[handle] = commandList;
+
+                    return commandList;
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(commandBufferPtr);
+                }
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(allocateInfoPtr);
+            }
         }
 
         public ITexture CreateHandleForNativeTexture(IntPtr nativeHandle, TextureDesc desc)
@@ -2797,7 +3679,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             // Validate that required functions are available
             if (vkCreateAccelerationStructureKHR == null || vkGetAccelerationStructureBuildSizesKHR == null || vkGetBufferDeviceAddressKHR == null)
             {
-                throw new NotSupportedException("VK_KHR_acceleration_structure extension functions are not available. Ensure the extension is enabled and functions are loaded via vkGetDeviceProcAddr.");
+                throw new NotSupportedException("VK_KHR_acceleration_structure extension functions are not available. Ensure the extension is enabled and functions are loaded.");
             }
 
             // Determine acceleration structure type
@@ -2816,7 +3698,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             var bufferDesc = new BufferDesc
             {
                 ByteSize = (int)estimatedBufferSize,
-                Usage = BufferUsageFlags.ShaderResource | BufferUsageFlags.AccelStructStorage
+                Usage = BufferUsageFlags.ShaderResource | BufferUsageFlags.AccelerationStructureStorage
             };
 
             IBuffer accelBuffer = CreateBuffer(bufferDesc);
@@ -3239,7 +4121,6 @@ namespace Andastra.Runtime.MonoGame.Backends
                             CheckResult(result, "vkCreateRayTracingPipelinesKHR");
 
                             IntPtr vkPipeline = Marshal.ReadIntPtr(pipelinePtr);
-                            bool pipelineCreated = false;
 
                             try
                             {
@@ -3253,7 +4134,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                                 var sbtBufferDesc = new BufferDesc
                                 {
                                     ByteSize = (int)sbtSize,
-                                    Usage = BufferUsage.Shader
+                                    Usage = BufferUsageFlags.ShaderResource
                                 };
                                 IBuffer sbtBuffer = CreateBuffer(sbtBufferDesc);
 
@@ -3266,7 +4147,6 @@ namespace Andastra.Runtime.MonoGame.Backends
                                 var pipeline = new VulkanRaytracingPipeline(handle, desc, vkPipeline, pipelineLayout, sbtBuffer, _device);
                                 _resources[handle] = pipeline;
 
-                                pipelineCreated = true;
                                 return pipeline;
                             }
                             catch
@@ -3470,9 +4350,41 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ArgumentNullException(nameof(fence));
             }
 
-            // TODO: Extract VkFence from IFence implementation and call vkWaitForFences
-            // For now, this is a placeholder
-            throw new NotImplementedException("Fence waiting not implemented - requires IFence implementation with VkFence access");
+            // Extract VkFence handle from IFence implementation using reflection
+            // The VkFence handle is typically stored as NativeHandle or in a private field
+            IntPtr vkFence = ExtractVkFenceHandle(fence);
+            if (vkFence == IntPtr.Zero)
+            {
+                throw new ArgumentException("Failed to extract VkFence handle from IFence implementation. The fence must be a Vulkan fence with a valid native handle.", nameof(fence));
+            }
+
+            // Load vkWaitForFences function pointer if not already loaded
+            // vkWaitForFences is a core Vulkan function, so we can load it via vkGetDeviceProcAddr
+            if (vkWaitForFences == null)
+            {
+                // Load vkGetDeviceProcAddr first (if not already available)
+                // vkGetDeviceProcAddr signature: PFN_vkGetDeviceProcAddr(device, "functionName")
+                // For core functions like vkWaitForFences, vkGetDeviceProcAddr will return the function pointer
+                IntPtr funcPtr = VulkanLoaderHelper.GetProcAddress(VulkanLoaderHelper.LoadLibrary(VulkanLibrary), "vkWaitForFences");
+                if (funcPtr == IntPtr.Zero)
+                {
+                    // Fallback: Try loading via instance proc address (some implementations require this)
+                    // In practice, vkWaitForFences should be available via vkGetDeviceProcAddr
+                    throw new InvalidOperationException("Failed to load vkWaitForFences function from Vulkan library. Make sure Vulkan is properly initialized.");
+                }
+                vkWaitForFences = (vkWaitForFencesDelegate)Marshal.GetDelegateForFunctionPointer(funcPtr, typeof(vkWaitForFencesDelegate));
+            }
+
+            // Call vkWaitForFences
+            // waitAll = VK_TRUE to wait for all fences (we only have one fence, so this doesn't matter)
+            // timeout = UINT64_MAX (0xFFFFFFFFFFFFFFFF) to wait indefinitely
+            VkResult result = vkWaitForFences(_device, 1, new IntPtr(&vkFence), VkBool32.VK_TRUE, 0xFFFFFFFFFFFFFFFFUL);
+
+            // Check result
+            if (result != VkResult.VK_SUCCESS && result != VkResult.VK_TIMEOUT)
+            {
+                throw new InvalidOperationException($"vkWaitForFences failed with result: {result}");
+            }
         }
 
         #endregion
@@ -3514,8 +4426,115 @@ namespace Andastra.Runtime.MonoGame.Backends
                 return false;
             }
 
-            // TODO: Query physical device format properties
-            // For now, assume common formats are supported for common usages
+            // Query physical device format properties to determine actual format support
+            // Based on Vulkan API: https://docs.vulkan.org/refpages/latest/refpages/source/vkGetPhysicalDeviceFormatProperties.html
+            if (_physicalDevice == IntPtr.Zero)
+            {
+                // Physical device not available - fallback to basic format check
+                return IsFormatSupportedFallback(format, usage);
+            }
+
+            // Load vkGetPhysicalDeviceFormatProperties function pointer if not already loaded
+            if (vkGetPhysicalDeviceFormatProperties == null)
+            {
+                // vkGetPhysicalDeviceFormatProperties is an instance-level function, loaded via vkGetInstanceProcAddr
+                // For now, try loading via P/Invoke (in a real implementation, this would use vkGetInstanceProcAddr)
+                string vulkanLib = VulkanLibrary;
+                IntPtr libHandle = NativeMethods.LoadLibrary(vulkanLib);
+                if (libHandle != IntPtr.Zero)
+                {
+                    IntPtr funcPtr = NativeMethods.GetProcAddress(libHandle, "vkGetPhysicalDeviceFormatProperties");
+                    if (funcPtr != IntPtr.Zero)
+                    {
+                        vkGetPhysicalDeviceFormatProperties = (vkGetPhysicalDeviceFormatPropertiesDelegate)Marshal.GetDelegateForFunctionPointer(funcPtr, typeof(vkGetPhysicalDeviceFormatPropertiesDelegate));
+                    }
+                }
+            }
+
+            // If function pointer is still null, fall back to basic format check
+            if (vkGetPhysicalDeviceFormatProperties == null)
+            {
+                return IsFormatSupportedFallback(format, usage);
+            }
+
+            // Query format properties from physical device
+            VkFormatProperties formatProperties;
+            vkGetPhysicalDeviceFormatProperties(_physicalDevice, vkFormat, out formatProperties);
+
+            // Check format features based on usage flags
+            // We use optimalTilingFeatures for textures (most common case)
+            VkFormatFeatureFlags features = formatProperties.optimalTilingFeatures;
+
+            // Map TextureUsage flags to VkFormatFeatureFlags
+            // ShaderResource -> VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT
+            // RenderTarget -> VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT (for color) or VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT (for depth)
+            // UnorderedAccess -> VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT
+            // DepthStencil -> VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
+
+            // Check if format supports shader resource usage (sampled images)
+            if ((usage & TextureUsage.ShaderResource) != 0)
+            {
+                if ((features & VkFormatFeatureFlags.VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT) == 0)
+                {
+                    return false;
+                }
+            }
+
+            // Check if format supports render target usage (color attachment)
+            if ((usage & TextureUsage.RenderTarget) != 0)
+            {
+                // Determine if this is a depth/stencil format or color format
+                bool isDepthStencilFormat = format == TextureFormat.D24_UNORM_S8_UINT ||
+                                           format == TextureFormat.D32_FLOAT ||
+                                           format == TextureFormat.D32_FLOAT_S8_UINT;
+
+                if (isDepthStencilFormat)
+                {
+                    // Depth/stencil formats require DEPTH_STENCIL_ATTACHMENT_BIT
+                    if ((features & VkFormatFeatureFlags.VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT) == 0)
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    // Color formats require COLOR_ATTACHMENT_BIT
+                    if ((features & VkFormatFeatureFlags.VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT) == 0)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            // Check if format supports unordered access usage (storage images)
+            if ((usage & TextureUsage.UnorderedAccess) != 0)
+            {
+                if ((features & VkFormatFeatureFlags.VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT) == 0)
+                {
+                    return false;
+                }
+            }
+
+            // Check if format supports depth stencil usage
+            if ((usage & TextureUsage.DepthStencil) != 0)
+            {
+                if ((features & VkFormatFeatureFlags.VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT) == 0)
+                {
+                    return false;
+                }
+            }
+
+            // All requested usage flags are supported
+            return true;
+        }
+
+        /// <summary>
+        /// Fallback implementation for format support checking when physical device query is unavailable.
+        /// Uses heuristics based on common format support patterns.
+        /// </summary>
+        private bool IsFormatSupportedFallback(TextureFormat format, TextureUsage usage)
+        {
+            // Fallback: assume common formats are supported for common usages
             switch (format)
             {
                 case TextureFormat.RGBA8_UNORM:
@@ -3818,6 +4837,22 @@ namespace Andastra.Runtime.MonoGame.Backends
                 _device = device;
             }
 
+            /// <summary>
+            /// Gets the VkPipeline handle. Used internally for command list binding.
+            /// </summary>
+            internal IntPtr VkPipeline
+            {
+                get { return _vkPipeline; }
+            }
+
+            /// <summary>
+            /// Gets the VkPipelineLayout handle. Used internally for descriptor set binding.
+            /// </summary>
+            internal IntPtr VkPipelineLayout
+            {
+                get { return _vkPipelineLayout; }
+            }
+
             public void Dispose()
             {
                 if (_vkPipeline != IntPtr.Zero && _device != IntPtr.Zero)
@@ -3853,6 +4888,22 @@ namespace Andastra.Runtime.MonoGame.Backends
                 _device = device;
             }
 
+            /// <summary>
+            /// Gets the VkPipeline handle. Used internally for command list binding.
+            /// </summary>
+            internal IntPtr VkPipeline
+            {
+                get { return _vkPipeline; }
+            }
+
+            /// <summary>
+            /// Gets the VkPipelineLayout handle. Used internally for descriptor set binding.
+            /// </summary>
+            internal IntPtr VkPipelineLayout
+            {
+                get { return _vkPipelineLayout; }
+            }
+
             public void Dispose()
             {
                 if (_vkPipeline != IntPtr.Zero && _device != IntPtr.Zero)
@@ -3870,11 +4921,24 @@ namespace Andastra.Runtime.MonoGame.Backends
         {
             public FramebufferDesc Desc { get; }
             private readonly IntPtr _handle;
+            private readonly IntPtr _vkFramebuffer; // VkFramebuffer handle
+            private readonly IntPtr _vkRenderPass; // VkRenderPass handle (may be shared or framebuffer-specific)
+            private readonly IntPtr _device; // VkDevice handle for destruction
+            private readonly bool _ownsRenderPass; // Whether this framebuffer owns the render pass (not shared)
 
             public VulkanFramebuffer(IntPtr handle, FramebufferDesc desc)
+                : this(handle, desc, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, false)
+            {
+            }
+
+            public VulkanFramebuffer(IntPtr handle, FramebufferDesc desc, IntPtr vkFramebuffer, IntPtr vkRenderPass, IntPtr device, bool ownsRenderPass)
             {
                 _handle = handle;
                 Desc = desc;
+                _vkFramebuffer = vkFramebuffer;
+                _vkRenderPass = vkRenderPass;
+                _device = device;
+                _ownsRenderPass = ownsRenderPass;
             }
 
             public FramebufferInfo GetInfo()
@@ -3906,9 +4970,73 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             public void Dispose()
             {
-                // TODO: IMPLEMENT - Destroy VkFramebuffer and VkRenderPass
-                // - vkDestroyFramebuffer
-                // - vkDestroyRenderPass (if not shared)
+                // Destroy VkFramebuffer if it was created
+                // Based on Vulkan Framebuffer Management: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkDestroyFramebuffer.html
+                if (_vkFramebuffer != IntPtr.Zero && _device != IntPtr.Zero)
+                {
+                    try
+                    {
+                        if (vkDestroyFramebuffer != null)
+                        {
+                            VkResult result = vkDestroyFramebuffer(_device, _vkFramebuffer, IntPtr.Zero);
+                            if (result == VkResult.VK_SUCCESS)
+                            {
+                                Console.WriteLine("[VulkanDevice] Successfully destroyed VkFramebuffer");
+                            }
+                            else
+                            {
+                                Console.WriteLine($"[VulkanDevice] Warning: vkDestroyFramebuffer returned {result}");
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("[VulkanDevice] Warning: vkDestroyFramebuffer function pointer not initialized");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log error but continue cleanup - don't throw from Dispose
+                        Console.WriteLine($"[VulkanDevice] Error destroying VkFramebuffer: {ex.Message}");
+                        Console.WriteLine($"[VulkanDevice] Stack trace: {ex.StackTrace}");
+                    }
+                }
+
+                // Destroy VkRenderPass if this framebuffer owns it (not shared)
+                // Based on Vulkan Render Pass Management: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkDestroyRenderPass.html
+                // Note: Render passes can be shared between multiple framebuffers, so we only destroy if _ownsRenderPass is true
+                if (_ownsRenderPass && _vkRenderPass != IntPtr.Zero && _device != IntPtr.Zero)
+                {
+                    try
+                    {
+                        if (vkDestroyRenderPass != null)
+                        {
+                            VkResult result = vkDestroyRenderPass(_device, _vkRenderPass, IntPtr.Zero);
+                            if (result == VkResult.VK_SUCCESS)
+                            {
+                                Console.WriteLine("[VulkanDevice] Successfully destroyed VkRenderPass");
+                            }
+                            else
+                            {
+                                Console.WriteLine($"[VulkanDevice] Warning: vkDestroyRenderPass returned {result}");
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("[VulkanDevice] Warning: vkDestroyRenderPass function pointer not initialized");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log error but continue cleanup - don't throw from Dispose
+                        Console.WriteLine($"[VulkanDevice] Error destroying VkRenderPass: {ex.Message}");
+                        Console.WriteLine($"[VulkanDevice] Stack trace: {ex.StackTrace}");
+                    }
+                }
+                else if (_vkRenderPass != IntPtr.Zero && !_ownsRenderPass)
+                {
+                    // Render pass is shared, don't destroy it here
+                    Console.WriteLine("[VulkanDevice] VkRenderPass is shared, not destroying (will be destroyed by owner)");
+                }
             }
         }
 
@@ -3945,11 +5073,26 @@ namespace Andastra.Runtime.MonoGame.Backends
         {
             public IBindingLayout Layout { get; }
             private readonly IntPtr _handle;
+            private readonly IntPtr _vkDescriptorSet;
 
             public VulkanBindingSet(IntPtr handle, IBindingLayout layout, BindingSetDesc desc)
+                : this(handle, layout, desc, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero)
+            {
+            }
+
+            public VulkanBindingSet(IntPtr handle, IBindingLayout layout, BindingSetDesc desc, IntPtr vkDescriptorSet, IntPtr descriptorPool, IntPtr device)
             {
                 _handle = handle;
                 Layout = layout;
+                _vkDescriptorSet = vkDescriptorSet;
+            }
+
+            /// <summary>
+            /// Gets the VkDescriptorSet handle. Used internally for command list binding.
+            /// </summary>
+            internal IntPtr VkDescriptorSet
+            {
+                get { return _vkDescriptorSet; }
             }
 
             public void Dispose()
@@ -4077,6 +5220,9 @@ namespace Andastra.Runtime.MonoGame.Backends
             // Barrier tracking
             private readonly List<PendingBufferBarrier> _pendingBufferBarriers;
             private readonly Dictionary<object, ResourceState> _resourceStates;
+            
+            // Scratch buffer tracking for acceleration structure builds
+            private readonly List<IBuffer> _scratchBuffers;
 
             // Pending barrier entry for buffers
             private struct PendingBufferBarrier
@@ -4106,6 +5252,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 _isOpen = false;
                 _pendingBufferBarriers = new List<PendingBufferBarrier>();
                 _resourceStates = new Dictionary<object, ResourceState>();
+                _scratchBuffers = new List<IBuffer>();
             }
 
             public void Open()
@@ -4144,8 +5291,335 @@ namespace Andastra.Runtime.MonoGame.Backends
             // These are stubbed with TODO comments indicating Vulkan API calls needed
             // Implementation will be completed when Vulkan interop is added
 
-            public void WriteBuffer(IBuffer buffer, byte[] data, int destOffset = 0) { /* TODO: vkCmdUpdateBuffer or staging buffer */ }
-            public void WriteBuffer<T>(IBuffer buffer, T[] data, int destOffset = 0) where T : unmanaged { /* TODO: vkCmdUpdateBuffer or staging buffer */ }
+            /// <summary>
+            /// Writes byte array data to a buffer.
+            /// 
+            /// Uses vkCmdUpdateBuffer for small updates (<= 65536 bytes) or staging buffer + vkCmdCopyBuffer
+            /// for larger updates. The data is written starting at the specified destination offset.
+            /// 
+            /// Based on Vulkan API:
+            /// - vkCmdUpdateBuffer: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdUpdateBuffer.html
+            /// - vkCmdCopyBuffer: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdCopyBuffer.html
+            /// </summary>
+            /// <param name="buffer">Target buffer to write data to.</param>
+            /// <param name="data">Byte array containing the data to write.</param>
+            /// <param name="destOffset">Offset in bytes into the destination buffer where data will be written.</param>
+            public void WriteBuffer(IBuffer buffer, byte[] data, int destOffset = 0)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Cannot record commands when command list is closed");
+                }
+
+                if (buffer == null)
+                {
+                    throw new ArgumentNullException(nameof(buffer));
+                }
+
+                if (data == null || data.Length == 0)
+                {
+                    throw new ArgumentException("Data must not be null or empty", nameof(data));
+                }
+
+                if (destOffset < 0)
+                {
+                    throw new ArgumentException("Destination offset must be non-negative", nameof(destOffset));
+                }
+
+                // Get buffer handle
+                IntPtr bufferHandle = buffer.NativeHandle;
+                if (bufferHandle == IntPtr.Zero)
+                {
+                    throw new ArgumentException("Buffer has invalid native handle", nameof(buffer));
+                }
+
+                int dataSize = data.Length;
+                ulong destOffsetUlong = unchecked((ulong)destOffset);
+
+                // For small updates (<= 65536 bytes), use vkCmdUpdateBuffer (direct update from CPU memory)
+                // vkCmdUpdateBuffer is more efficient for small updates as it doesn't require a staging buffer
+                if (dataSize <= VK_MAX_UPDATE_BUFFER_SIZE)
+                {
+                    if (vkCmdUpdateBuffer == null)
+                    {
+                        throw new NotSupportedException("vkCmdUpdateBuffer is not available");
+                    }
+
+                    // Transition buffer to TRANSFER_DST state if needed
+                    SetBufferState(buffer, ResourceState.CopyDest);
+                    CommitBarriers();
+
+                    // Allocate unmanaged memory for data
+                    IntPtr dataPtr = Marshal.AllocHGlobal(dataSize);
+                    try
+                    {
+                        // Copy data to unmanaged memory
+                        Marshal.Copy(data, 0, dataPtr, dataSize);
+
+                        // vkCmdUpdateBuffer signature:
+                        // void vkCmdUpdateBuffer(
+                        //     VkCommandBuffer commandBuffer,
+                        //     VkBuffer dstBuffer,
+                        //     VkDeviceSize dstOffset,
+                        //     VkDeviceSize dataSize,
+                        //     const void* pData);
+                        vkCmdUpdateBuffer(_vkCommandBuffer, bufferHandle, destOffsetUlong, unchecked((ulong)dataSize), dataPtr);
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(dataPtr);
+                    }
+                }
+                else
+                {
+                    // For large updates (> 65536 bytes), use staging buffer + vkCmdCopyBuffer
+                    // This approach is required as vkCmdUpdateBuffer has a 65536 byte limit
+                    WriteBufferLarge(data, bufferHandle, destOffsetUlong, unchecked((ulong)dataSize), buffer);
+                }
+            }
+
+            /// <summary>
+            /// Writes typed array data to a buffer.
+            /// 
+            /// Converts the typed array to bytes and writes using the same mechanism as WriteBuffer(byte[]).
+            /// Uses vkCmdUpdateBuffer for small updates (<= 65536 bytes) or staging buffer + vkCmdCopyBuffer
+            /// for larger updates. The data is written starting at the specified destination offset.
+            /// 
+            /// Based on Vulkan API:
+            /// - vkCmdUpdateBuffer: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdUpdateBuffer.html
+            /// - vkCmdCopyBuffer: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdCopyBuffer.html
+            /// </summary>
+            /// <typeparam name="T">Unmanaged type for the array elements.</typeparam>
+            /// <param name="buffer">Target buffer to write data to.</param>
+            /// <param name="data">Typed array containing the data to write.</param>
+            /// <param name="destOffset">Offset in bytes into the destination buffer where data will be written.</param>
+            public void WriteBuffer<T>(IBuffer buffer, T[] data, int destOffset = 0) where T : unmanaged
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Cannot record commands when command list is closed");
+                }
+
+                if (buffer == null)
+                {
+                    throw new ArgumentNullException(nameof(buffer));
+                }
+
+                if (data == null || data.Length == 0)
+                {
+                    throw new ArgumentException("Data must not be null or empty", nameof(data));
+                }
+
+                if (destOffset < 0)
+                {
+                    throw new ArgumentException("Destination offset must be non-negative", nameof(destOffset));
+                }
+
+                // Calculate byte size
+                int elementSize = Marshal.SizeOf<T>();
+                int dataSize = data.Length * elementSize;
+                ulong destOffsetUlong = unchecked((ulong)destOffset);
+
+                // Get buffer handle
+                IntPtr bufferHandle = buffer.NativeHandle;
+                if (bufferHandle == IntPtr.Zero)
+                {
+                    throw new ArgumentException("Buffer has invalid native handle", nameof(buffer));
+                }
+
+                // Convert typed array to byte array using GCHandle for safe pinning (C# 7.3 compatible)
+                byte[] byteData = new byte[dataSize];
+                GCHandle srcHandle = GCHandle.Alloc(data, GCHandleType.Pinned);
+                GCHandle dstHandle = GCHandle.Alloc(byteData, GCHandleType.Pinned);
+                try
+                {
+                    IntPtr srcPtr = srcHandle.AddrOfPinnedObject();
+                    IntPtr dstPtr = dstHandle.AddrOfPinnedObject();
+                    unsafe
+                    {
+                        byte* srcBytePtr = (byte*)srcPtr.ToPointer();
+                        byte* dstBytePtr = (byte*)dstPtr.ToPointer();
+                        for (int i = 0; i < dataSize; i++)
+                        {
+                            dstBytePtr[i] = srcBytePtr[i];
+                        }
+                    }
+                }
+                finally
+                {
+                    if (srcHandle.IsAllocated) srcHandle.Free();
+                    if (dstHandle.IsAllocated) dstHandle.Free();
+                }
+
+                // For small updates (<= 65536 bytes), use vkCmdUpdateBuffer
+                if (dataSize <= VK_MAX_UPDATE_BUFFER_SIZE)
+                {
+                    if (vkCmdUpdateBuffer == null)
+                    {
+                        throw new NotSupportedException("vkCmdUpdateBuffer is not available");
+                    }
+
+                    // Transition buffer to TRANSFER_DST state if needed
+                    SetBufferState(buffer, ResourceState.CopyDest);
+                    CommitBarriers();
+
+                    // Allocate unmanaged memory for data
+                    IntPtr dataPtr = Marshal.AllocHGlobal(dataSize);
+                    try
+                    {
+                        // Copy data to unmanaged memory
+                        Marshal.Copy(byteData, 0, dataPtr, dataSize);
+
+                        // vkCmdUpdateBuffer signature:
+                        // void vkCmdUpdateBuffer(
+                        //     VkCommandBuffer commandBuffer,
+                        //     VkBuffer dstBuffer,
+                        //     VkDeviceSize dstOffset,
+                        //     VkDeviceSize dataSize,
+                        //     const void* pData);
+                        vkCmdUpdateBuffer(_vkCommandBuffer, bufferHandle, destOffsetUlong, unchecked((ulong)dataSize), dataPtr);
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(dataPtr);
+                    }
+                }
+                else
+                {
+                    // For large updates (> 65536 bytes), use staging buffer + vkCmdCopyBuffer
+                    WriteBufferLarge(byteData, bufferHandle, destOffsetUlong, unchecked((ulong)dataSize), buffer);
+                }
+            }
+
+            /// <summary>
+            /// Helper method for writing large buffer data (> 65536 bytes) using staging buffer.
+            /// Creates a staging buffer, copies data to it, then uses vkCmdCopyBuffer to copy to the destination buffer.
+            /// </summary>
+            private void WriteBufferLarge(byte[] data, IntPtr dstBuffer, ulong dstOffset, ulong dataSize, IBuffer buffer)
+            {
+                if (vkCreateBuffer == null || vkAllocateMemory == null || vkMapMemory == null || 
+                    vkUnmapMemory == null || vkCmdCopyBuffer == null || vkGetBufferMemoryRequirements == null || 
+                    vkBindBufferMemory == null || vkDestroyBuffer == null || vkFreeMemory == null)
+                {
+                    throw new NotSupportedException("Required Vulkan functions are not available");
+                }
+
+                // Create staging buffer for CPU-to-GPU transfer
+                // Staging buffers use host-visible memory for CPU access
+                VkBufferCreateInfo bufferCreateInfo = new VkBufferCreateInfo
+                {
+                    sType = VkStructureType.VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+                    pNext = IntPtr.Zero,
+                    flags = 0,
+                    size = dataSize,
+                    usage = VkBufferUsageFlags.VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                    sharingMode = VkSharingMode.VK_SHARING_MODE_EXCLUSIVE,
+                    queueFamilyIndexCount = 0,
+                    pQueueFamilyIndices = IntPtr.Zero
+                };
+
+                IntPtr stagingBuffer;
+                VkResult result = vkCreateBuffer(_vkDevice, ref bufferCreateInfo, IntPtr.Zero, out stagingBuffer);
+                if (result != VkResult.VK_SUCCESS || stagingBuffer == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException($"Failed to create staging buffer: {result}");
+                }
+
+                try
+                {
+                    // Get memory requirements for staging buffer
+                    VkMemoryRequirements memRequirements;
+                    vkGetBufferMemoryRequirements(_vkDevice, stagingBuffer, out memRequirements);
+
+                    // Allocate host-visible memory for staging buffer
+                    VkMemoryAllocateInfo allocateInfo = new VkMemoryAllocateInfo
+                    {
+                        sType = VkStructureType.VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+                        pNext = IntPtr.Zero,
+                        allocationSize = memRequirements.size,
+                        memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
+                    };
+
+                    IntPtr stagingMemory;
+                    result = vkAllocateMemory(_vkDevice, ref allocateInfo, IntPtr.Zero, out stagingMemory);
+                    if (result != VkResult.VK_SUCCESS || stagingMemory == IntPtr.Zero)
+                    {
+                        throw new InvalidOperationException($"Failed to allocate staging buffer memory: {result}");
+                    }
+
+                    try
+                    {
+                        // Bind memory to staging buffer
+                        result = vkBindBufferMemory(_vkDevice, stagingBuffer, stagingMemory, 0);
+                        if (result != VkResult.VK_SUCCESS)
+                        {
+                            throw new InvalidOperationException($"Failed to bind staging buffer memory: {result}");
+                        }
+
+                        // Map staging buffer memory and copy data
+                        IntPtr mappedData;
+                        result = vkMapMemory(_vkDevice, stagingMemory, 0, dataSize, 0, out mappedData);
+                        if (result != VkResult.VK_SUCCESS || mappedData == IntPtr.Zero)
+                        {
+                            throw new InvalidOperationException($"Failed to map staging buffer memory: {result}");
+                        }
+
+                        try
+                        {
+                            // Copy data to mapped memory
+                            Marshal.Copy(data, 0, mappedData, (int)dataSize);
+                        }
+                        finally
+                        {
+                            // Unmap memory (data is flushed if host-coherent)
+                            vkUnmapMemory(_vkDevice, stagingMemory);
+                        }
+
+                        // Transition destination buffer to TRANSFER_DST state if needed
+                        SetBufferState(buffer, ResourceState.CopyDest);
+                        CommitBarriers();
+
+                        // Create buffer copy region
+                        VkBufferCopy copyRegion = new VkBufferCopy
+                        {
+                            srcOffset = 0,
+                            dstOffset = dstOffset,
+                            size = dataSize
+                        };
+
+                        // Allocate memory for copy region and marshal structure
+                        int regionSize = Marshal.SizeOf<VkBufferCopy>();
+                        IntPtr regionPtr = Marshal.AllocHGlobal(regionSize);
+                        try
+                        {
+                            Marshal.StructureToPtr(copyRegion, regionPtr, false);
+
+                            // Execute copy command: vkCmdCopyBuffer
+                            // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdCopyBuffer.html
+                            vkCmdCopyBuffer(
+                                _vkCommandBuffer,
+                                stagingBuffer,
+                                dstBuffer,
+                                1,
+                                regionPtr);
+                        }
+                        finally
+                        {
+                            Marshal.FreeHGlobal(regionPtr);
+                        }
+                    }
+                    finally
+                    {
+                        // Free staging buffer memory
+                        vkFreeMemory(_vkDevice, stagingMemory, IntPtr.Zero);
+                    }
+                }
+                finally
+                {
+                    // Destroy staging buffer
+                    vkDestroyBuffer(_vkDevice, stagingBuffer, IntPtr.Zero);
+                }
+            }
             public void WriteTexture(ITexture texture, int mipLevel, int arraySlice, byte[] data)
             {
                 if (!_isOpen)
@@ -4363,15 +5837,11 @@ namespace Andastra.Runtime.MonoGame.Backends
                 }
             }
 
-            // Helper method to find memory type index
-            // This is a simplified version - real implementation would query physical device memory properties
+            // Helper method to find memory type index - delegates to parent device's implementation
             private uint FindMemoryType(uint typeFilter, VkMemoryPropertyFlags properties)
             {
-                // Simplified: return first matching type
-                // Real implementation would iterate through VkPhysicalDeviceMemoryProperties.memoryTypes
-                // and find the first type that matches both typeFilter and properties
-                // For now, return 0 as a placeholder (this would need proper memory type querying)
-                return 0;
+                // Use the parent device's FindMemoryType implementation which properly queries memory properties
+                return _device.FindMemoryType(typeFilter, properties);
             }
 
             // Overloaded TransitionImageLayout to support specific mip level and array slice
@@ -4430,7 +5900,108 @@ namespace Andastra.Runtime.MonoGame.Backends
                     Marshal.FreeHGlobal(barrierPtr);
                 }
             }
-            public void CopyBuffer(IBuffer dest, int destOffset, IBuffer src, int srcOffset, int size) { /* TODO: vkCmdCopyBuffer */ }
+            /// <summary>
+            /// Copies data from a source buffer to a destination buffer using GPU-side buffer copy.
+            /// 
+            /// This performs a GPU-side buffer-to-buffer copy operation using vkCmdCopyBuffer.
+            /// The copy operation is recorded into the command buffer and executed when the command buffer is submitted.
+            /// 
+            /// Buffer state transitions:
+            /// - Source buffer is transitioned to CopySource state (if needed)
+            /// - Destination buffer is transitioned to CopyDest state (if needed)
+            /// - Barriers are committed before the copy operation
+            /// 
+            /// Based on Vulkan API: vkCmdCopyBuffer
+            /// Vulkan API Reference: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdCopyBuffer.html
+            /// 
+            /// Vulkan Specification:
+            /// - vkCmdCopyBuffer signature: void vkCmdCopyBuffer(VkCommandBuffer commandBuffer, VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t regionCount, const VkBufferCopy* pRegions)
+            /// - VkBufferCopy structure contains: srcOffset (VkDeviceSize), dstOffset (VkDeviceSize), size (VkDeviceSize)
+            /// - Copy operation must be within the bounds of both buffers
+            /// - Source and destination buffers must be in appropriate states (CopySource and CopyDest)
+            /// </summary>
+            /// <param name="dest">Destination buffer to copy data to</param>
+            /// <param name="destOffset">Destination offset in bytes from the start of the destination buffer</param>
+            /// <param name="src">Source buffer to copy data from</param>
+            /// <param name="srcOffset">Source offset in bytes from the start of the source buffer</param>
+            /// <param name="size">Number of bytes to copy</param>
+            public void CopyBuffer(IBuffer dest, int destOffset, IBuffer src, int srcOffset, int size)
+            {
+                if (dest == null || src == null)
+                {
+                    throw new ArgumentNullException(dest == null ? nameof(dest) : nameof(src));
+                }
+
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Cannot record commands when command list is closed");
+                }
+
+                if (vkCmdCopyBuffer == null)
+                {
+                    throw new NotSupportedException("vkCmdCopyBuffer is not available");
+                }
+
+                // Validate size
+                if (size <= 0)
+                {
+                    throw new ArgumentException("Copy size must be greater than zero", nameof(size));
+                }
+
+                // Validate offsets are non-negative
+                if (destOffset < 0 || srcOffset < 0)
+                {
+                    throw new ArgumentException("Buffer offsets must be non-negative");
+                }
+
+                // Get native buffer handles
+                IntPtr srcBufferHandle = src.NativeHandle;
+                IntPtr dstBufferHandle = dest.NativeHandle;
+
+                if (srcBufferHandle == IntPtr.Zero || dstBufferHandle == IntPtr.Zero)
+                {
+                    throw new ArgumentException("Source or destination buffer has invalid native handle");
+                }
+
+                // Transition source buffer to CopySource state
+                SetBufferState(src, ResourceState.CopySource);
+                
+                // Transition destination buffer to CopyDest state
+                SetBufferState(dest, ResourceState.CopyDest);
+                
+                // Commit barriers before copy operation
+                CommitBarriers();
+
+                // Create buffer copy region structure
+                VkBufferCopy copyRegion = new VkBufferCopy
+                {
+                    srcOffset = unchecked((ulong)srcOffset),
+                    dstOffset = unchecked((ulong)destOffset),
+                    size = unchecked((ulong)size)
+                };
+
+                // Allocate memory for copy region and marshal structure
+                int regionSize = Marshal.SizeOf<VkBufferCopy>();
+                IntPtr regionPtr = Marshal.AllocHGlobal(regionSize);
+                try
+                {
+                    Marshal.StructureToPtr(copyRegion, regionPtr, false);
+
+                    // Execute copy command: vkCmdCopyBuffer
+                    // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdCopyBuffer.html
+                    // vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, regionCount, pRegions)
+                    vkCmdCopyBuffer(
+                        _vkCommandBuffer,
+                        srcBufferHandle,
+                        dstBufferHandle,
+                        1, // Single copy region
+                        regionPtr);
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(regionPtr);
+                }
+            }
             public void CopyTexture(ITexture dest, ITexture src)
             {
                 if (dest == null || src == null)
@@ -4615,8 +6186,241 @@ namespace Andastra.Runtime.MonoGame.Backends
                         return 0;
                 }
             }
-            public void ClearColorAttachment(IFramebuffer framebuffer, int attachmentIndex, Vector4 color) { /* TODO: vkCmdClearColorImage */ }
-            public void ClearDepthStencilAttachment(IFramebuffer framebuffer, float depth, byte stencil, bool clearDepth = true, bool clearStencil = true) { /* TODO: vkCmdClearDepthStencilImage */ }
+            /// <summary>
+            /// Clears a color attachment of a framebuffer.
+            /// Based on Vulkan API: https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdClearColorImage.html
+            /// Transitions the image to TRANSFER_DST_OPTIMAL layout, clears it, then transitions back to COLOR_ATTACHMENT_OPTIMAL.
+            /// </summary>
+            public void ClearColorAttachment(IFramebuffer framebuffer, int attachmentIndex, Vector4 color)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before clearing color attachment");
+                }
+
+                if (framebuffer == null)
+                {
+                    throw new ArgumentNullException(nameof(framebuffer));
+                }
+
+                if (attachmentIndex < 0)
+                {
+                    throw new ArgumentException("Attachment index must be non-negative", nameof(attachmentIndex));
+                }
+
+                // Get framebuffer description to access color attachments
+                FramebufferDesc desc = framebuffer.Desc;
+                if (desc.ColorAttachments == null || desc.ColorAttachments.Length == 0)
+                {
+                    throw new ArgumentException("Framebuffer does not have any color attachments", nameof(framebuffer));
+                }
+
+                if (attachmentIndex >= desc.ColorAttachments.Length)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(attachmentIndex), $"Attachment index {attachmentIndex} is out of range (framebuffer has {desc.ColorAttachments.Length} color attachments)");
+                }
+
+                FramebufferAttachment attachment = desc.ColorAttachments[attachmentIndex];
+                if (attachment.Texture == null)
+                {
+                    throw new ArgumentException($"Color attachment at index {attachmentIndex} does not have a texture", nameof(framebuffer));
+                }
+
+                ITexture colorTexture = attachment.Texture;
+                IntPtr image = colorTexture.NativeHandle;
+                if (image == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException($"Color texture at attachment index {attachmentIndex} does not have a valid native handle");
+                }
+
+                // Get texture description to determine format
+                TextureDesc textureDesc = colorTexture.Desc;
+
+                // Check if vkCmdClearColorImage is available
+                if (vkCmdClearColorImage == null)
+                {
+                    throw new NotSupportedException("vkCmdClearColorImage is not available");
+                }
+
+                // Transition image to TRANSFER_DST_OPTIMAL layout for clearing
+                // Note: For clearing operations, we assume the image might be in UNDEFINED layout (newly created)
+                // or COLOR_ATTACHMENT_OPTIMAL (already used as attachment)
+                // Transitioning from UNDEFINED is safe for initialization/clearing operations
+                TransitionImageLayout(image, VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED, VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, textureDesc, attachment.MipLevel, attachment.ArraySlice);
+
+                // Create clear color value structure
+                // VkClearColorValue is a union that can be float[4], int32[4], or uint32[4]
+                // For color attachments, we use float[4] (most common case)
+                VkClearColorValue clearValue = new VkClearColorValue
+                {
+                    float32_0 = color.X,
+                    float32_1 = color.Y,
+                    float32_2 = color.Z,
+                    float32_3 = color.W
+                };
+
+                // Create subresource range for the specific mip level and array slice
+                VkImageSubresourceRange subresourceRange = new VkImageSubresourceRange
+                {
+                    aspectMask = VkImageAspectFlags.VK_IMAGE_ASPECT_COLOR_BIT,
+                    baseMipLevel = unchecked((uint)attachment.MipLevel),
+                    levelCount = 1, // Single mip level
+                    baseArrayLayer = unchecked((uint)attachment.ArraySlice),
+                    layerCount = 1 // Single array layer
+                };
+
+                // Allocate memory for structures and marshal them
+                int clearValueSize = Marshal.SizeOf<VkClearColorValue>();
+                IntPtr clearValuePtr = Marshal.AllocHGlobal(clearValueSize);
+                int rangeSize = Marshal.SizeOf<VkImageSubresourceRange>();
+                IntPtr rangePtr = Marshal.AllocHGlobal(rangeSize);
+
+                try
+                {
+                    // Marshal structures to unmanaged memory
+                    Marshal.StructureToPtr(clearValue, clearValuePtr, false);
+                    Marshal.StructureToPtr(subresourceRange, rangePtr, false);
+
+                    // Call vkCmdClearColorImage
+                    // Signature: void vkCmdClearColorImage(
+                    //   VkCommandBuffer commandBuffer,
+                    //   VkImage image,
+                    //   VkImageLayout imageLayout,
+                    //   const VkClearColorValue* pColor,
+                    //   uint32_t rangeCount,
+                    //   const VkImageSubresourceRange* pRanges)
+                    vkCmdClearColorImage(
+                        _vkCommandBuffer,
+                        image,
+                        VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                        clearValuePtr,
+                        1, // Single range
+                        rangePtr);
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(clearValuePtr);
+                    Marshal.FreeHGlobal(rangePtr);
+                }
+
+                // Transition image back to COLOR_ATTACHMENT_OPTIMAL for use as attachment
+                TransitionImageLayout(image, VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VkImageLayout.VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, textureDesc, attachment.MipLevel, attachment.ArraySlice);
+            }
+            /// <summary>
+            /// Clears the depth/stencil attachment of a framebuffer.
+            /// Based on Vulkan API: https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdClearDepthStencilImage.html
+            /// Transitions the image to TRANSFER_DST_OPTIMAL layout, clears it, then transitions back to DEPTH_STENCIL_ATTACHMENT_OPTIMAL.
+            /// </summary>
+            public void ClearDepthStencilAttachment(IFramebuffer framebuffer, float depth, byte stencil, bool clearDepth = true, bool clearStencil = true)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before clearing depth/stencil attachment");
+                }
+
+                if (framebuffer == null)
+                {
+                    throw new ArgumentNullException(nameof(framebuffer));
+                }
+
+                // Get framebuffer description to access depth attachment
+                FramebufferDesc desc = framebuffer.Desc;
+                if (desc.DepthAttachment.Texture == null)
+                {
+                    throw new ArgumentException("Framebuffer does not have a depth attachment", nameof(framebuffer));
+                }
+
+                ITexture depthTexture = desc.DepthAttachment.Texture;
+                IntPtr image = depthTexture.NativeHandle;
+                if (image == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("Depth texture does not have a valid native handle");
+                }
+
+                // Get texture description to determine format and aspect flags
+                TextureDesc textureDesc = depthTexture.Desc;
+
+                // Determine aspect mask based on format and clear flags
+                VkImageAspectFlags aspectMask = 0;
+                if (clearDepth)
+                {
+                    aspectMask |= VkImageAspectFlags.VK_IMAGE_ASPECT_DEPTH_BIT;
+                }
+                if (clearStencil)
+                {
+                    // Only include stencil aspect if format supports it
+                    switch (textureDesc.Format)
+                    {
+                        case TextureFormat.D24_UNORM_S8_UINT:
+                        case TextureFormat.D32_FLOAT_S8X24_UINT:
+                            aspectMask |= VkImageAspectFlags.VK_IMAGE_ASPECT_STENCIL_BIT;
+                            break;
+                    }
+                }
+
+                if (aspectMask == 0)
+                {
+                    return; // Nothing to clear
+                }
+
+                // Check if vkCmdClearDepthStencilImage is available
+                if (vkCmdClearDepthStencilImage == null)
+                {
+                    throw new NotSupportedException("vkCmdClearDepthStencilImage is not available");
+                }
+
+                // Transition image to TRANSFER_DST_OPTIMAL layout for clearing
+                // Note: For clearing operations, we assume the image might be in UNDEFINED layout (newly created)
+                // or DEPTH_STENCIL_ATTACHMENT_OPTIMAL (already used as attachment)
+                // Transitioning from UNDEFINED is safe for initialization/clearing operations
+                TransitionImageLayout(image, VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED, VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, textureDesc, desc.DepthAttachment.MipLevel, desc.DepthAttachment.ArraySlice);
+
+                // Create clear value structure
+                VkClearDepthStencilValue clearValue = new VkClearDepthStencilValue
+                {
+                    depth = depth,
+                    stencil = stencil
+                };
+
+                // Create subresource range for the specific mip level and array slice
+                VkImageSubresourceRange subresourceRange = new VkImageSubresourceRange
+                {
+                    aspectMask = aspectMask,
+                    baseMipLevel = unchecked((uint)desc.DepthAttachment.MipLevel),
+                    levelCount = 1, // Single mip level
+                    baseArrayLayer = unchecked((uint)desc.DepthAttachment.ArraySlice),
+                    layerCount = 1 // Single array layer
+                };
+
+                // Allocate memory for structures and marshal them
+                int clearValueSize = Marshal.SizeOf<VkClearDepthStencilValue>();
+                IntPtr clearValuePtr = Marshal.AllocHGlobal(clearValueSize);
+                int rangeSize = Marshal.SizeOf<VkImageSubresourceRange>();
+                IntPtr rangePtr = Marshal.AllocHGlobal(rangeSize);
+
+                try
+                {
+                    Marshal.StructureToPtr(clearValue, clearValuePtr, false);
+                    Marshal.StructureToPtr(subresourceRange, rangePtr, false);
+
+                    // Call vkCmdClearDepthStencilImage
+                    vkCmdClearDepthStencilImage(
+                        _vkCommandBuffer,
+                        image,
+                        VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                        clearValuePtr,
+                        1, // Single range
+                        rangePtr);
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(clearValuePtr);
+                    Marshal.FreeHGlobal(rangePtr);
+                }
+
+                // Transition image back to DEPTH_STENCIL_ATTACHMENT_OPTIMAL for use as attachment
+                TransitionImageLayout(image, VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VkImageLayout.VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, textureDesc, desc.DepthAttachment.MipLevel, desc.DepthAttachment.ArraySlice);
+            }
             public void ClearUAVFloat(ITexture texture, Vector4 value) { /* TODO: vkCmdFillBuffer or compute shader */ }
             public void ClearUAVUint(ITexture texture, uint value) { /* TODO: vkCmdFillBuffer or compute shader */ }
             public void SetTextureState(ITexture texture, ResourceState state)
@@ -4857,13 +6661,687 @@ namespace Andastra.Runtime.MonoGame.Backends
                 }
             }
 
-            public void UAVBarrier(ITexture texture) { /* TODO: vkCmdMemoryBarrier */ }
-            public void UAVBarrier(IBuffer buffer) { /* TODO: vkCmdMemoryBarrier */ }
-            public void SetGraphicsState(GraphicsState state) { /* TODO: Set all graphics state */ }
-            public void SetViewport(Viewport viewport) { /* TODO: vkCmdSetViewport */ }
-            public void SetViewports(Viewport[] viewports) { /* TODO: vkCmdSetViewport */ }
-            public void SetScissor(Rectangle scissor) { /* TODO: vkCmdSetScissor */ }
-            public void SetScissors(Rectangle[] scissors) { /* TODO: vkCmdSetScissor */ }
+            /// <summary>
+            /// Inserts a UAV (Unordered Access View) barrier for a texture resource.
+            /// 
+            /// A UAV barrier ensures that all UAV writes to the texture have completed before
+            /// subsequent operations (compute shaders, pixel shaders, etc.) can read from the texture.
+            /// This is necessary when a texture is both written to and read from as a UAV in different
+            /// draw/dispatch calls within the same command list.
+            /// 
+            /// Based on Vulkan API: vkCmdPipelineBarrier with VkMemoryBarrier
+            /// Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdPipelineBarrier.html
+            /// Original implementation: Records a memory barrier command into the command buffer
+            /// UAV barriers use VkMemoryBarrier to synchronize all shader storage writes with subsequent reads
+            /// 
+            /// Note: UAV barriers differ from transition barriers - they don't change resource state,
+            /// they only synchronize access between UAV write and read operations.
+            /// </summary>
+            public void UAVBarrier(ITexture texture)
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (texture == null)
+                {
+                    return; // Null texture - nothing to barrier
+                }
+
+                if (_vkCommandBuffer == IntPtr.Zero)
+                {
+                    return; // Command buffer not initialized
+                }
+
+                if (vkCmdPipelineBarrier == null)
+                {
+                    return; // Cannot barrier without pipeline barrier function
+                }
+
+                // UAV barriers use memory barriers to synchronize all shader storage writes with reads
+                // Based on Vulkan specification: Memory barriers synchronize all memory accesses
+                // For UAV barriers, we need to ensure all shader writes complete before subsequent reads
+                VkMemoryBarrier memoryBarrier = new VkMemoryBarrier
+                {
+                    sType = VkStructureType.VK_STRUCTURE_TYPE_MEMORY_BARRIER,
+                    pNext = IntPtr.Zero,
+                    // Source: All shader writes to UAV resources (storage images/buffers)
+                    srcAccessMask = VkAccessFlags.VK_ACCESS_SHADER_WRITE_BIT,
+                    // Destination: All shader reads and writes from/to UAV resources
+                    dstAccessMask = VkAccessFlags.VK_ACCESS_SHADER_READ_BIT | VkAccessFlags.VK_ACCESS_SHADER_WRITE_BIT
+                };
+
+                // Allocate memory for memory barrier structure
+                int barrierSize = Marshal.SizeOf(typeof(VkMemoryBarrier));
+                IntPtr barrierPtr = Marshal.AllocHGlobal(barrierSize);
+
+                try
+                {
+                    // Marshal structure to unmanaged memory
+                    Marshal.StructureToPtr(memoryBarrier, barrierPtr, false);
+
+                    // Call vkCmdPipelineBarrier with memory barrier
+                    // Source stage: All stages that can write to UAVs (compute and fragment shaders)
+                    // Destination stage: All stages that can read from UAVs (compute and fragment shaders)
+                    vkCmdPipelineBarrier(
+                        _vkCommandBuffer,
+                        VkPipelineStageFlags.VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VkPipelineStageFlags.VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, // srcStageMask
+                        VkPipelineStageFlags.VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VkPipelineStageFlags.VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, // dstStageMask
+                        0, // dependencyFlags
+                        1, // memoryBarrierCount
+                        barrierPtr, // pMemoryBarriers
+                        0, // bufferMemoryBarrierCount
+                        IntPtr.Zero, // pBufferMemoryBarriers
+                        0, // imageMemoryBarrierCount
+                        IntPtr.Zero); // pImageMemoryBarriers
+                }
+                finally
+                {
+                    // Free allocated memory
+                    Marshal.FreeHGlobal(barrierPtr);
+                }
+            }
+
+            /// <summary>
+            /// Inserts a UAV (Unordered Access View) barrier for a buffer resource.
+            /// 
+            /// A UAV barrier ensures that all UAV writes to the buffer have completed before
+            /// subsequent operations (compute shaders, pixel shaders, etc.) can read from the buffer.
+            /// This is necessary when a buffer is both written to and read from as a UAV in different
+            /// draw/dispatch calls within the same command list.
+            /// 
+            /// Based on Vulkan API: vkCmdPipelineBarrier with VkMemoryBarrier
+            /// Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdPipelineBarrier.html
+            /// Original implementation: Records a memory barrier command into the command buffer
+            /// UAV barriers use VkMemoryBarrier to synchronize all shader storage writes with subsequent reads
+            /// 
+            /// Note: UAV barriers differ from transition barriers - they don't change resource state,
+            /// they only synchronize access between UAV write and read operations.
+            /// </summary>
+            public void UAVBarrier(IBuffer buffer)
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (buffer == null)
+                {
+                    return; // Null buffer - nothing to barrier
+                }
+
+                if (_vkCommandBuffer == IntPtr.Zero)
+                {
+                    return; // Command buffer not initialized
+                }
+
+                if (vkCmdPipelineBarrier == null)
+                {
+                    return; // Cannot barrier without pipeline barrier function
+                }
+
+                // UAV barriers use memory barriers to synchronize all shader storage writes with reads
+                // Based on Vulkan specification: Memory barriers synchronize all memory accesses
+                // For UAV barriers, we need to ensure all shader writes complete before subsequent reads
+                VkMemoryBarrier memoryBarrier = new VkMemoryBarrier
+                {
+                    sType = VkStructureType.VK_STRUCTURE_TYPE_MEMORY_BARRIER,
+                    pNext = IntPtr.Zero,
+                    // Source: All shader writes to UAV resources (storage images/buffers)
+                    srcAccessMask = VkAccessFlags.VK_ACCESS_SHADER_WRITE_BIT,
+                    // Destination: All shader reads and writes from/to UAV resources
+                    dstAccessMask = VkAccessFlags.VK_ACCESS_SHADER_READ_BIT | VkAccessFlags.VK_ACCESS_SHADER_WRITE_BIT
+                };
+
+                // Allocate memory for memory barrier structure
+                int barrierSize = Marshal.SizeOf(typeof(VkMemoryBarrier));
+                IntPtr barrierPtr = Marshal.AllocHGlobal(barrierSize);
+
+                try
+                {
+                    // Marshal structure to unmanaged memory
+                    Marshal.StructureToPtr(memoryBarrier, barrierPtr, false);
+
+                    // Call vkCmdPipelineBarrier with memory barrier
+                    // Source stage: All stages that can write to UAVs (compute and fragment shaders)
+                    // Destination stage: All stages that can read from UAVs (compute and fragment shaders)
+                    vkCmdPipelineBarrier(
+                        _vkCommandBuffer,
+                        VkPipelineStageFlags.VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VkPipelineStageFlags.VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, // srcStageMask
+                        VkPipelineStageFlags.VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VkPipelineStageFlags.VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, // dstStageMask
+                        0, // dependencyFlags
+                        1, // memoryBarrierCount
+                        barrierPtr, // pMemoryBarriers
+                        0, // bufferMemoryBarrierCount
+                        IntPtr.Zero, // pBufferMemoryBarriers
+                        0, // imageMemoryBarrierCount
+                        IntPtr.Zero); // pImageMemoryBarriers
+                }
+                finally
+                {
+                    // Free allocated memory
+                    Marshal.FreeHGlobal(barrierPtr);
+                }
+            }
+            /// <summary>
+            /// Sets all graphics pipeline state for rendering.
+            /// 
+            /// This method configures the complete graphics pipeline state including:
+            /// - Graphics pipeline binding
+            /// - Viewports and scissor rectangles
+            /// - Descriptor sets (shader resources)
+            /// - Vertex buffers
+            /// - Index buffer
+            /// 
+            /// Note: Framebuffer and render pass begin/end are typically handled separately,
+            /// as render passes define render targets and must be managed around draw calls.
+            /// 
+            /// Based on Vulkan API: vkCmdBindPipeline, vkCmdSetViewport, vkCmdSetScissor,
+            /// vkCmdBindDescriptorSets, vkCmdBindVertexBuffers, vkCmdBindIndexBuffer
+            /// Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBindPipeline.html
+            /// </summary>
+            /// <param name="state">Complete graphics state configuration</param>
+            public void SetGraphicsState(GraphicsState state)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before setting graphics state");
+                }
+
+                if (state.Pipeline == null)
+                {
+                    throw new ArgumentException("Graphics state must have a valid pipeline", nameof(state));
+                }
+
+                // Step 1: Bind graphics pipeline
+                VulkanGraphicsPipeline vulkanPipeline = state.Pipeline as VulkanGraphicsPipeline;
+                if (vulkanPipeline == null)
+                {
+                    throw new ArgumentException("Pipeline must be a VulkanGraphicsPipeline", nameof(state));
+                }
+
+                IntPtr vkPipelineHandle = vulkanPipeline.VkPipeline;
+                if (vkPipelineHandle == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("Graphics pipeline does not have a valid VkPipeline handle. Pipeline may not have been fully created.");
+                }
+
+                // Bind graphics pipeline
+                // Based on Vulkan API: vkCmdBindPipeline binds a graphics pipeline to the command buffer
+                // Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBindPipeline.html
+                if (vkCmdBindPipeline != null)
+                {
+                    vkCmdBindPipeline(_vkCommandBuffer, VkPipelineBindPoint.VK_PIPELINE_BIND_POINT_GRAPHICS, vkPipelineHandle);
+                }
+
+                // Step 2: Set viewports and scissors
+                if (state.Viewport.Viewports != null && state.Viewport.Viewports.Length > 0)
+                {
+                    SetViewports(state.Viewport.Viewports);
+                }
+
+                if (state.Viewport.Scissors != null && state.Viewport.Scissors.Length > 0)
+                {
+                    SetScissors(state.Viewport.Scissors);
+                }
+
+                // Step 3: Bind descriptor sets if provided
+                if (state.BindingSets != null && state.BindingSets.Length > 0 && vkCmdBindDescriptorSets != null)
+                {
+                    // Get pipeline layout from graphics pipeline
+                    IntPtr vkPipelineLayout = vulkanPipeline.VkPipelineLayout;
+                    if (vkPipelineLayout == IntPtr.Zero)
+                    {
+                        throw new InvalidOperationException("Graphics pipeline does not have a valid VkPipelineLayout handle.");
+                    }
+
+                    // Build array of descriptor set handles
+                    int descriptorSetCount = state.BindingSets.Length;
+                    IntPtr descriptorSetHandlesPtr = Marshal.AllocHGlobal(descriptorSetCount * IntPtr.Size);
+                    try
+                    {
+                        for (int i = 0; i < descriptorSetCount; i++)
+                        {
+                            VulkanBindingSet vulkanBindingSet = state.BindingSets[i] as VulkanBindingSet;
+                            if (vulkanBindingSet == null)
+                            {
+                                Marshal.FreeHGlobal(descriptorSetHandlesPtr);
+                                throw new ArgumentException($"Binding set at index {i} must be a VulkanBindingSet", nameof(state));
+                            }
+
+                            IntPtr vkDescriptorSet = vulkanBindingSet.VkDescriptorSet;
+                            if (vkDescriptorSet == IntPtr.Zero)
+                            {
+                                Marshal.FreeHGlobal(descriptorSetHandlesPtr);
+                                throw new InvalidOperationException($"Binding set at index {i} does not have a valid VkDescriptorSet handle.");
+                            }
+
+                            Marshal.WriteIntPtr(descriptorSetHandlesPtr, i * IntPtr.Size, vkDescriptorSet);
+                        }
+
+                        // Bind all descriptor sets in a single call
+                        // Based on Vulkan API: vkCmdBindDescriptorSets
+                        // Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBindDescriptorSets.html
+                        vkCmdBindDescriptorSets(
+                            _vkCommandBuffer,
+                            VkPipelineBindPoint.VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            vkPipelineLayout,
+                            0, // firstSet - starting set index
+                            (uint)descriptorSetCount,
+                            descriptorSetHandlesPtr,
+                            0, // dynamicOffsetCount
+                            IntPtr.Zero // pDynamicOffsets - would be populated if dynamic buffers present
+                        );
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(descriptorSetHandlesPtr);
+                    }
+                }
+
+                // Step 4: Bind vertex buffers if provided
+                if (state.VertexBuffers != null && state.VertexBuffers.Length > 0 && vkCmdBindVertexBuffers != null)
+                {
+                    int vertexBufferCount = state.VertexBuffers.Length;
+                    IntPtr bufferHandlesPtr = Marshal.AllocHGlobal(vertexBufferCount * IntPtr.Size);
+                    IntPtr offsetsPtr = Marshal.AllocHGlobal(vertexBufferCount * sizeof(ulong));
+                    try
+                    {
+                        for (int i = 0; i < vertexBufferCount; i++)
+                        {
+                            VulkanBuffer vulkanBuffer = state.VertexBuffers[i] as VulkanBuffer;
+                            if (vulkanBuffer == null)
+                            {
+                                Marshal.FreeHGlobal(bufferHandlesPtr);
+                                Marshal.FreeHGlobal(offsetsPtr);
+                                throw new ArgumentException($"Vertex buffer at index {i} must be a VulkanBuffer", nameof(state));
+                            }
+
+                            IntPtr vkBuffer = vulkanBuffer.VkBuffer;
+                            if (vkBuffer == IntPtr.Zero)
+                            {
+                                vkBuffer = vulkanBuffer.NativeHandle;
+                                if (vkBuffer == IntPtr.Zero)
+                                {
+                                    Marshal.FreeHGlobal(bufferHandlesPtr);
+                                    Marshal.FreeHGlobal(offsetsPtr);
+                                    throw new InvalidOperationException($"Vertex buffer at index {i} does not have a valid Vulkan handle.");
+                                }
+                            }
+
+                            Marshal.WriteIntPtr(bufferHandlesPtr, i * IntPtr.Size, vkBuffer);
+                            Marshal.WriteInt64(offsetsPtr, i * sizeof(ulong), 0UL); // Offset is 0 for now - could be extended
+                        }
+
+                        // Bind vertex buffers
+                        // Based on Vulkan API: vkCmdBindVertexBuffers
+                        // Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBindVertexBuffers.html
+                        vkCmdBindVertexBuffers(
+                            _vkCommandBuffer,
+                            0, // firstBinding - starting binding index
+                            (uint)vertexBufferCount,
+                            bufferHandlesPtr,
+                            offsetsPtr
+                        );
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(bufferHandlesPtr);
+                        Marshal.FreeHGlobal(offsetsPtr);
+                    }
+                }
+
+                // Step 5: Bind index buffer if provided
+                if (state.IndexBuffer != null && vkCmdBindIndexBuffer != null)
+                {
+                    VulkanBuffer vulkanIndexBuffer = state.IndexBuffer as VulkanBuffer;
+                    if (vulkanIndexBuffer == null)
+                    {
+                        throw new ArgumentException("Index buffer must be a VulkanBuffer", nameof(state));
+                    }
+
+                    IntPtr vkIndexBuffer = vulkanIndexBuffer.VkBuffer;
+                    if (vkIndexBuffer == IntPtr.Zero)
+                    {
+                        vkIndexBuffer = vulkanIndexBuffer.NativeHandle;
+                        if (vkIndexBuffer == IntPtr.Zero)
+                        {
+                            throw new InvalidOperationException("Index buffer does not have a valid Vulkan handle.");
+                        }
+                    }
+
+                    // Convert TextureFormat to VkIndexType
+                    // R16_UInt -> VK_INDEX_TYPE_UINT16, R32_UInt -> VK_INDEX_TYPE_UINT32
+                    VkIndexType indexType = VkIndexType.VK_INDEX_TYPE_UINT32; // Default to 32-bit indices
+                    if (state.IndexFormat == TextureFormat.R16_UInt)
+                    {
+                        indexType = VkIndexType.VK_INDEX_TYPE_UINT16;
+                    }
+                    else if (state.IndexFormat == TextureFormat.R32_UInt)
+                    {
+                        indexType = VkIndexType.VK_INDEX_TYPE_UINT32;
+                    }
+
+                    // Bind index buffer
+                    // Based on Vulkan API: vkCmdBindIndexBuffer
+                    // Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBindIndexBuffer.html
+                    vkCmdBindIndexBuffer(
+                        _vkCommandBuffer,
+                        vkIndexBuffer,
+                        0UL, // offset - buffer offset in bytes
+                        indexType
+                    );
+                }
+
+                // Note: Framebuffer is not bound here as it's typically managed via render pass begin/end
+                // The framebuffer is specified when beginning a render pass (vkCmdBeginRenderPass)
+                // This is a design choice in Vulkan to separate pipeline state from render target state
+            }
+            /// <summary>
+            /// Sets a single viewport using vkCmdSetViewport.
+            /// 
+            /// Defines the viewport rectangle that transforms normalized device coordinates to framebuffer coordinates.
+            /// The viewport rectangle defines the region of the framebuffer that will be rendered to, as well as the
+            /// depth range for the viewport.
+            /// 
+            /// Based on Vulkan API: vkCmdSetViewport
+            /// Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetViewport.html
+            /// </summary>
+            /// <param name="viewport">Viewport definition with position, size, and depth range.</param>
+            public void SetViewport(Viewport viewport)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before setting viewport");
+                }
+
+                if (_vkCommandBuffer == IntPtr.Zero)
+                {
+                    return; // Command buffer not initialized
+                }
+
+                if (vkCmdSetViewport == null)
+                {
+                    return; // Function not loaded
+                }
+
+                // vkCmdSetViewport signature:
+                // void vkCmdSetViewport(
+                //     VkCommandBuffer commandBuffer,
+                //     uint32_t firstViewport,
+                //     uint32_t viewportCount,
+                //     const VkViewport* pViewports);
+                //
+                // Convert Viewport (X, Y, Width, Height, MinDepth, MaxDepth) to VkViewport:
+                // - x = X
+                // - y = Y
+                // - width = Width
+                // - height = Height
+                // - minDepth = MinDepth
+                // - maxDepth = MaxDepth
+
+                VkViewport vkViewport = new VkViewport
+                {
+                    x = viewport.X,
+                    y = viewport.Y,
+                    width = viewport.Width,
+                    height = viewport.Height,
+                    minDepth = viewport.MinDepth,
+                    maxDepth = viewport.MaxDepth
+                };
+
+                // Marshal VkViewport to unmanaged memory
+                int viewportSize = Marshal.SizeOf(typeof(VkViewport));
+                IntPtr viewportPtr = Marshal.AllocHGlobal(viewportSize);
+                try
+                {
+                    Marshal.StructureToPtr(vkViewport, viewportPtr, false);
+
+                    // Call vkCmdSetViewport with firstViewport=0, viewportCount=1
+                    vkCmdSetViewport(_vkCommandBuffer, 0, 1, viewportPtr);
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(viewportPtr);
+                }
+            }
+
+            /// <summary>
+            /// Sets multiple viewports using vkCmdSetViewport.
+            /// 
+            /// Defines an array of viewport rectangles that transform normalized device coordinates to framebuffer coordinates.
+            /// Multiple viewports can be used for multi-viewport rendering (requires VK_KHR_multiview extension).
+            /// Each viewport defines the region of the framebuffer that will be rendered to, as well as the depth range.
+            /// 
+            /// Based on Vulkan API: vkCmdSetViewport
+            /// Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetViewport.html
+            /// </summary>
+            /// <param name="viewports">Array of viewport definitions with position, size, and depth range.</param>
+            public void SetViewports(Viewport[] viewports)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before setting viewports");
+                }
+
+                if (_vkCommandBuffer == IntPtr.Zero)
+                {
+                    return; // Command buffer not initialized
+                }
+
+                if (vkCmdSetViewport == null)
+                {
+                    return; // Function not loaded
+                }
+
+                if (viewports == null || viewports.Length == 0)
+                {
+                    return; // No viewports to set
+                }
+
+                // vkCmdSetViewport signature:
+                // void vkCmdSetViewport(
+                //     VkCommandBuffer commandBuffer,
+                //     uint32_t firstViewport,
+                //     uint32_t viewportCount,
+                //     const VkViewport* pViewports);
+                //
+                // Convert Viewport[] (X, Y, Width, Height, MinDepth, MaxDepth) to VkViewport[]:
+                // - x = X
+                // - y = Y
+                // - width = Width
+                // - height = Height
+                // - minDepth = MinDepth
+                // - maxDepth = MaxDepth
+
+                // Convert Viewport[] to VkViewport[]
+                int viewportSize = Marshal.SizeOf(typeof(VkViewport));
+                IntPtr viewportsPtr = Marshal.AllocHGlobal(viewportSize * viewports.Length);
+                try
+                {
+                    // Marshal each viewport to unmanaged memory
+                    IntPtr currentViewportPtr = viewportsPtr;
+                    for (int i = 0; i < viewports.Length; i++)
+                    {
+                        VkViewport vkViewport = new VkViewport
+                        {
+                            x = viewports[i].X,
+                            y = viewports[i].Y,
+                            width = viewports[i].Width,
+                            height = viewports[i].Height,
+                            minDepth = viewports[i].MinDepth,
+                            maxDepth = viewports[i].MaxDepth
+                        };
+
+                        Marshal.StructureToPtr(vkViewport, currentViewportPtr, false);
+                        currentViewportPtr = new IntPtr(currentViewportPtr.ToInt64() + viewportSize);
+                    }
+
+                    // Call vkCmdSetViewport with firstViewport=0, viewportCount=viewports.Length
+                    vkCmdSetViewport(_vkCommandBuffer, 0, unchecked((uint)viewports.Length), viewportsPtr);
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(viewportsPtr);
+                }
+            }
+            /// <summary>
+            /// Sets a single scissor rectangle using vkCmdSetScissor.
+            /// 
+            /// Defines the scissor rectangle that clips rendering to a specific region of the framebuffer.
+            /// All rendering outside this rectangle is discarded. The scissor rectangle is defined in
+            /// framebuffer coordinates, with (0,0) at the top-left corner.
+            /// 
+            /// Based on Vulkan API: vkCmdSetScissor
+            /// Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetScissor.html
+            /// </summary>
+            /// <param name="scissor">Rectangle defining the scissor region in framebuffer coordinates.</param>
+            public void SetScissor(Rectangle scissor)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before setting scissor");
+                }
+
+                if (_vkCommandBuffer == IntPtr.Zero)
+                {
+                    return; // Command buffer not initialized
+                }
+
+                if (vkCmdSetScissor == null)
+                {
+                    return; // Function not loaded
+                }
+
+                // vkCmdSetScissor signature:
+                // void vkCmdSetScissor(
+                //     VkCommandBuffer commandBuffer,
+                //     uint32_t firstScissor,
+                //     uint32_t scissorCount,
+                //     const VkRect2D* pScissors);
+                //
+                // Convert Rectangle (X, Y, Width, Height) to VkRect2D (offset, extent):
+                // - offset.x = X
+                // - offset.y = Y
+                // - extent.width = Width
+                // - extent.height = Height
+
+                VkRect2D vkRect = new VkRect2D
+                {
+                    offset = new VkOffset2D
+                    {
+                        x = scissor.X,
+                        y = scissor.Y
+                    },
+                    extent = new VkExtent2D
+                    {
+                        width = unchecked((uint)System.Math.Max(0, scissor.Width)),
+                        height = unchecked((uint)System.Math.Max(0, scissor.Height))
+                    }
+                };
+
+                // Marshal VkRect2D to unmanaged memory
+                int rectSize = Marshal.SizeOf(typeof(VkRect2D));
+                IntPtr rectPtr = Marshal.AllocHGlobal(rectSize);
+                try
+                {
+                    Marshal.StructureToPtr(vkRect, rectPtr, false);
+
+                    // Call vkCmdSetScissor with firstScissor=0, scissorCount=1
+                    vkCmdSetScissor(_vkCommandBuffer, 0, 1, rectPtr);
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(rectPtr);
+                }
+            }
+
+            /// <summary>
+            /// Sets multiple scissor rectangles using vkCmdSetScissor.
+            /// 
+            /// Defines an array of scissor rectangles that clip rendering. Each viewport (if multiple
+            /// viewports are used) can have its own scissor rectangle. The scissor rectangles are defined
+            /// in framebuffer coordinates, with (0,0) at the top-left corner.
+            /// 
+            /// Based on Vulkan API: vkCmdSetScissor
+            /// Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetScissor.html
+            /// </summary>
+            /// <param name="scissors">Array of rectangles defining the scissor regions in framebuffer coordinates.</param>
+            public void SetScissors(Rectangle[] scissors)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before setting scissors");
+                }
+
+                if (_vkCommandBuffer == IntPtr.Zero)
+                {
+                    return; // Command buffer not initialized
+                }
+
+                if (vkCmdSetScissor == null)
+                {
+                    return; // Function not loaded
+                }
+
+                if (scissors == null || scissors.Length == 0)
+                {
+                    return; // No scissor rectangles to set
+                }
+
+                // vkCmdSetScissor signature:
+                // void vkCmdSetScissor(
+                //     VkCommandBuffer commandBuffer,
+                //     uint32_t firstScissor,
+                //     uint32_t scissorCount,
+                //     const VkRect2D* pScissors);
+                //
+                // Convert Rectangle array to VkRect2D array:
+                // - offset.x = X
+                // - offset.y = Y
+                // - extent.width = Width
+                // - extent.height = Height
+
+                // Convert Rectangle array to VkRect2D array
+                VkRect2D[] vkRects = new VkRect2D[scissors.Length];
+                for (int i = 0; i < scissors.Length; i++)
+                {
+                    vkRects[i] = new VkRect2D
+                    {
+                        offset = new VkOffset2D
+                        {
+                            x = scissors[i].X,
+                            y = scissors[i].Y
+                        },
+                        extent = new VkExtent2D
+                        {
+                            width = unchecked((uint)System.Math.Max(0, scissors[i].Width)),
+                            height = unchecked((uint)System.Math.Max(0, scissors[i].Height))
+                        }
+                    };
+                }
+
+                // Marshal VkRect2D array to unmanaged memory
+                int rectSize = Marshal.SizeOf(typeof(VkRect2D));
+                IntPtr rectsPtr = Marshal.AllocHGlobal(rectSize * vkRects.Length);
+                try
+                {
+                    IntPtr currentRectPtr = rectsPtr;
+                    for (int i = 0; i < vkRects.Length; i++)
+                    {
+                        Marshal.StructureToPtr(vkRects[i], currentRectPtr, false);
+                        currentRectPtr = new IntPtr(currentRectPtr.ToInt64() + rectSize);
+                    }
+
+                    // Call vkCmdSetScissor with firstScissor=0, scissorCount=scissors.Length
+                    vkCmdSetScissor(_vkCommandBuffer, 0, unchecked((uint)scissors.Length), rectsPtr);
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(rectsPtr);
+                }
+            }
             public void SetBlendConstant(Vector4 color) { /* TODO: vkCmdSetBlendConstants */ }
             public void SetStencilRef(uint reference) { /* TODO: vkCmdSetStencilReference */ }
             public void Draw(DrawArguments args)
@@ -4903,9 +7381,81 @@ namespace Andastra.Runtime.MonoGame.Backends
                     firstVertex,
                     firstInstance);
             }
-            public void DrawIndexed(DrawArguments args) { /* TODO: vkCmdDrawIndexed */ }
+            /// <summary>
+            /// Draws indexed primitives using vkCmdDrawIndexed.
+            /// 
+            /// Performs an indexed draw call, using indices from the currently bound index buffer
+            /// to reference vertices from the vertex buffer. The index buffer must be bound before
+            /// calling this method (via SetIndexBuffer or SetGraphicsState).
+            /// 
+            /// Based on Vulkan API: vkCmdDrawIndexed
+            /// Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdDrawIndexed.html
+            /// Original implementation: Records an indexed draw command into the command buffer
+            /// 
+            /// vkCmdDrawIndexed signature:
+            /// void vkCmdDrawIndexed(
+            ///     VkCommandBuffer commandBuffer,
+            ///     uint32_t indexCount,
+            ///     uint32_t instanceCount,
+            ///     uint32_t firstIndex,
+            ///     int32_t vertexOffset,
+            ///     uint32_t firstInstance);
+            /// 
+            /// Maps from DrawArguments:
+            /// - indexCount: args.VertexCount (for indexed draws, VertexCount represents the number of indices to draw)
+            /// - instanceCount: args.InstanceCount (defaults to 1 if 0 or negative)
+            /// - firstIndex: args.StartIndexLocation (offset into index buffer, in indices)
+            /// - vertexOffset: args.BaseVertexLocation (offset added to each vertex index before indexing into vertex buffer)
+            /// - firstInstance: args.StartInstanceLocation (first instance ID to draw)
+            /// 
+            /// Note: The index buffer format (16-bit or 32-bit) is determined when the index buffer is bound.
+            /// The graphics pipeline and vertex/index buffers must be bound before calling this method.
+            /// </summary>
+            public void DrawIndexed(DrawArguments args)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before drawing");
+                }
+
+                if (args.VertexCount <= 0)
+                {
+                    return; // Nothing to draw
+                }
+
+                // Validate vkCmdDrawIndexed function pointer
+                if (vkCmdDrawIndexed == null)
+                {
+                    throw new InvalidOperationException("vkCmdDrawIndexed function is not available. Vulkan may not be properly initialized.");
+                }
+
+                // Map DrawArguments to vkCmdDrawIndexed parameters
+                // indexCount: Number of indices to draw (args.VertexCount for indexed draws)
+                uint indexCount = unchecked((uint)args.VertexCount);
+                
+                // instanceCount: Number of instances to draw (defaults to 1 if 0 or negative)
+                uint instanceCount = args.InstanceCount > 0 ? unchecked((uint)args.InstanceCount) : 1u;
+                
+                // firstIndex: Offset into index buffer, in indices (args.StartIndexLocation)
+                uint firstIndex = unchecked((uint)System.Math.Max(0, args.StartIndexLocation));
+                
+                // vertexOffset: Offset added to each vertex index before indexing into vertex buffer (args.BaseVertexLocation)
+                // Note: This is an int32_t in Vulkan, so it can be negative (allows negative vertex offsets)
+                int vertexOffset = args.BaseVertexLocation;
+                
+                // firstInstance: First instance ID to draw (args.StartInstanceLocation)
+                uint firstInstance = unchecked((uint)System.Math.Max(0, args.StartInstanceLocation));
+
+                // Call vkCmdDrawIndexed to record the indexed draw command
+                vkCmdDrawIndexed(
+                    _vkCommandBuffer,
+                    indexCount,
+                    instanceCount,
+                    firstIndex,
+                    vertexOffset,
+                    firstInstance);
+            }
             public void DrawIndirect(IBuffer argumentBuffer, int offset, int drawCount, int stride) { /* TODO: vkCmdDrawIndirect */ }
-            public void DrawIndexedIndirect(IBuffer argumentBuffer, int offset, int drawCount, int stride) { /* TODO: vkCmdDrawIndexedIndirect */ }
             public void SetComputeState(ComputeState state)
             {
                 if (!_isOpen)
@@ -4926,12 +7476,19 @@ namespace Andastra.Runtime.MonoGame.Backends
                 }
 
                 // Extract VkPipeline handle from VulkanComputePipeline
-                // The _handle field in VulkanComputePipeline is the VkPipeline handle
-                // This would be done via native interop when Vulkan bindings are available
-                // For now, we structure the code to work with the handle when interop is added
+                // The VkPipeline property exposes the native VkPipeline handle created during pipeline creation
+                IntPtr vkPipelineHandle = vulkanPipeline.VkPipeline;
+                if (vkPipelineHandle == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("Compute pipeline does not have a valid VkPipeline handle. Pipeline may not have been fully created.");
+                }
 
                 // Bind compute pipeline
-                vkCmdBindPipeline(_vkCommandBuffer, VkPipelineBindPoint.VK_PIPELINE_BIND_POINT_COMPUTE, IntPtr.Zero); // TODO: Get actual pipeline handle
+                // Based on Vulkan API: vkCmdBindPipeline binds a compute pipeline to the command buffer
+                // Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBindPipeline.html
+                // Note: vkCmdBindPipeline returns void in the actual Vulkan API (command recording functions don't return errors)
+                // Validation happens when the command buffer is submitted to a queue
+                vkCmdBindPipeline(_vkCommandBuffer, VkPipelineBindPoint.VK_PIPELINE_BIND_POINT_COMPUTE, vkPipelineHandle);
 
                 // Step 2: Bind descriptor sets if provided
                 if (state.BindingSets != null && state.BindingSets.Length > 0)
@@ -5060,29 +7617,504 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                 vkCmdDispatchIndirect(_vkCommandBuffer, vkBuffer, (ulong)offset);
             }
-            public void SetRaytracingState(RaytracingState state) { /* TODO: Set raytracing state */ }
-            public void DispatchRays(DispatchRaysArguments args) { /* TODO: vkCmdTraceRaysKHR */ }
-            public void BuildBottomLevelAccelStruct(IAccelStruct accelStruct, GeometryDesc[] geometries) { /* TODO: vkCmdBuildAccelerationStructuresKHR */ }
-            public void BuildTopLevelAccelStruct(IAccelStruct accelStruct, AccelStructInstance[] instances) { /* TODO: vkCmdBuildAccelerationStructuresKHR */ }
-            public void CompactBottomLevelAccelStruct(IAccelStruct dest, IAccelStruct src) { /* TODO: vkCmdCopyAccelerationStructureKHR */ }
+
+            // Raytracing Commands
+            public void SetRaytracingState(RaytracingState state)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before setting raytracing state");
+                }
+                // TODO: STUB - Implement Vulkan raytracing state setup (vkCmdBindPipeline with raytracing pipeline)
+            }
+
+            public void DispatchRays(DispatchRaysArguments args)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before dispatching rays");
+                }
+                // TODO: STUB - Implement vkCmdTraceRaysKHR
+            }
+
+            public void BuildBottomLevelAccelStruct(IAccelStruct accelStruct, GeometryDesc[] geometries)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before building acceleration structure");
+                }
+
+                if (accelStruct == null)
+                {
+                    throw new ArgumentNullException(nameof(accelStruct));
+                }
+
+                if (geometries == null || geometries.Length == 0)
+                {
+                    throw new ArgumentException("Geometries array cannot be null or empty", nameof(geometries));
+                }
+
+                // Validate that acceleration structure functions are available
+                if (vkCmdBuildAccelerationStructuresKHR == null || 
+                    vkGetAccelerationStructureBuildSizesKHR == null ||
+                    vkGetBufferDeviceAddressKHR == null ||
+                    vkCreateAccelerationStructureKHR == null)
+                {
+                    throw new NotSupportedException("VK_KHR_acceleration_structure extension functions are not available");
+                }
+
+                // Cast to VulkanAccelStruct to access internal handles
+                VulkanAccelStruct vulkanAccelStruct = accelStruct as VulkanAccelStruct;
+                if (vulkanAccelStruct == null)
+                {
+                    throw new ArgumentException("Acceleration structure must be a VulkanAccelStruct", nameof(accelStruct));
+                }
+
+                // Convert GeometryDesc[] to Vulkan structures
+                // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBuildAccelerationStructuresKHR.html
+                uint geometryCount = (uint)geometries.Length;
+                List<VkAccelerationStructureGeometryKHR> vkGeometries = new List<VkAccelerationStructureGeometryKHR>();
+                List<VkAccelerationStructureBuildRangeInfoKHR> buildRanges = new List<VkAccelerationStructureBuildRangeInfoKHR>();
+                List<IntPtr> geometryDataPtrs = new List<IntPtr>(); // For cleanup
+                List<IntPtr> trianglesDataPtrs = new List<IntPtr>(); // For cleanup
+
+                try
+                {
+                    // Convert each geometry
+                    for (int i = 0; i < geometries.Length; i++)
+                    {
+                        GeometryDesc geom = geometries[i];
+                        
+                        if (geom.Type == GeometryType.Triangles)
+                        {
+                            GeometryTriangles triangles = geom.Triangles;
+
+                        // Get device addresses for buffers
+                        ulong vertexBufferAddress = 0UL;
+                        ulong indexBufferAddress = 0UL;
+                        ulong transformBufferAddress = 0UL;
+
+                        if (triangles.VertexBuffer != null)
+                        {
+                            VulkanBuffer vulkanVertexBuffer = triangles.VertexBuffer as VulkanBuffer;
+                            if (vulkanVertexBuffer != null)
+                            {
+                                IntPtr vkBuffer = vulkanVertexBuffer.VkBuffer;
+                                if (vkBuffer != IntPtr.Zero)
+                                {
+                                    VkBufferDeviceAddressInfo bufferInfo = new VkBufferDeviceAddressInfo
+                                    {
+                                        sType = VkStructureType.VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
+                                        pNext = IntPtr.Zero,
+                                        buffer = vkBuffer
+                                    };
+                                    vertexBufferAddress = vkGetBufferDeviceAddressKHR(_device, ref bufferInfo);
+                                    if (triangles.VertexOffset > 0)
+                                    {
+                                        vertexBufferAddress += (ulong)triangles.VertexOffset;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (triangles.IndexBuffer != null)
+                        {
+                            VulkanBuffer vulkanIndexBuffer = triangles.IndexBuffer as VulkanBuffer;
+                            if (vulkanIndexBuffer != null)
+                            {
+                                IntPtr vkBuffer = vulkanIndexBuffer.VkBuffer;
+                                if (vkBuffer != IntPtr.Zero)
+                                {
+                                    VkBufferDeviceAddressInfo bufferInfo = new VkBufferDeviceAddressInfo
+                                    {
+                                        sType = VkStructureType.VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
+                                        pNext = IntPtr.Zero,
+                                        buffer = vkBuffer
+                                    };
+                                    indexBufferAddress = vkGetBufferDeviceAddressKHR(_device, ref bufferInfo);
+                                    if (triangles.IndexOffset > 0)
+                                    {
+                                        indexBufferAddress += (ulong)triangles.IndexOffset;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (triangles.TransformBuffer != null)
+                        {
+                            VulkanBuffer vulkanTransformBuffer = triangles.TransformBuffer as VulkanBuffer;
+                            if (vulkanTransformBuffer != null)
+                            {
+                                IntPtr vkBuffer = vulkanTransformBuffer.VkBuffer;
+                                if (vkBuffer != IntPtr.Zero)
+                                {
+                                    VkBufferDeviceAddressInfo bufferInfo = new VkBufferDeviceAddressInfo
+                                    {
+                                        sType = VkStructureType.VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
+                                        pNext = IntPtr.Zero,
+                                        buffer = vkBuffer
+                                    };
+                                    transformBufferAddress = vkGetBufferDeviceAddressKHR(_device, ref bufferInfo);
+                                    if (triangles.TransformOffset > 0)
+                                    {
+                                        transformBufferAddress += (ulong)triangles.TransformOffset;
+                                    }
+                                }
+                            }
+                        }
+
+                        // Convert vertex format to VkFormat
+                        VkFormat vertexFormat = ConvertToVkFormat(triangles.VertexFormat);
+                        if (vertexFormat == VkFormat.VK_FORMAT_UNDEFINED)
+                        {
+                            // Fallback: assume float3 format (R32G32B32_SFLOAT = 106)
+                            vertexFormat = (VkFormat)106; // VK_FORMAT_R32G32B32_SFLOAT
+                        }
+
+                        // Convert index format
+                        VkIndexType indexType = VkIndexType.VK_INDEX_TYPE_UINT32;
+                        if (triangles.IndexFormat == TextureFormat.R16_UInt)
+                        {
+                            indexType = VkIndexType.VK_INDEX_TYPE_UINT16;
+                        }
+
+                        // Create triangles data structure
+                        VkAccelerationStructureGeometryTrianglesDataKHR trianglesData = new VkAccelerationStructureGeometryTrianglesDataKHR
+                        {
+                            sType = VkStructureType.VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR,
+                            pNext = IntPtr.Zero,
+                            vertexFormat = vertexFormat,
+                            vertexDataDeviceAddress = vertexBufferAddress,
+                            vertexStride = (ulong)triangles.VertexStride,
+                            maxVertex = (uint)(triangles.VertexCount > 0 ? triangles.VertexCount - 1 : 0),
+                            indexType = indexType,
+                            indexDataDeviceAddress = indexBufferAddress,
+                            transformDataDeviceAddress = transformBufferAddress
+                        };
+
+                        // Create geometry structure
+                        VkGeometryFlagsKHR geometryFlags = VkGeometryFlagsKHR.VK_GEOMETRY_OPAQUE_BIT_KHR;
+                        if ((geom.Flags & GeometryFlags.NoDuplicateAnyHit) != 0)
+                        {
+                            geometryFlags |= VkGeometryFlagsKHR.VK_GEOMETRY_NO_DUPLICATE_ANY_HIT_INVOCATION_BIT_KHR;
+                        }
+
+                        // Create geometry structure with triangles data in union
+                        // The union structure allows direct field access via FieldOffset
+                        VkAccelerationStructureGeometryDataKHR geometryData = new VkAccelerationStructureGeometryDataKHR();
+                        geometryData.triangles = trianglesData; // Direct assignment works because of FieldOffset(0)
+
+                        VkAccelerationStructureGeometryKHR vkGeometry = new VkAccelerationStructureGeometryKHR
+                        {
+                            sType = VkStructureType.VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR,
+                            pNext = IntPtr.Zero,
+                            geometryType = VkGeometryTypeKHR.VK_GEOMETRY_TYPE_TRIANGLES_KHR,
+                            geometry = geometryData,
+                            flags = geometryFlags
+                        };
+
+                        vkGeometries.Add(vkGeometry);
+
+                        // Create build range info
+                        VkAccelerationStructureBuildRangeInfoKHR buildRange = new VkAccelerationStructureBuildRangeInfoKHR
+                        {
+                            primitiveCount = (uint)(triangles.IndexCount > 0 ? triangles.IndexCount / 3 : triangles.VertexCount / 3),
+                            primitiveOffset = 0,
+                            firstVertex = 0,
+                            transformOffset = 0
+                        };
+                        buildRanges.Add(buildRange);
+                        }
+                        else if (geom.Type == GeometryType.AABBs)
+                        {
+                            GeometryAABBs aabbs = geom.AABBs;
+                            
+                            // Get device address for AABB buffer
+                            ulong aabbBufferAddress = 0UL;
+                            if (aabbs.Buffer != null)
+                            {
+                                VulkanBuffer vulkanAabbBuffer = aabbs.Buffer as VulkanBuffer;
+                                if (vulkanAabbBuffer != null)
+                                {
+                                    IntPtr vkBuffer = vulkanAabbBuffer.VkBuffer;
+                                    if (vkBuffer != IntPtr.Zero)
+                                    {
+                                        VkBufferDeviceAddressInfo bufferInfo = new VkBufferDeviceAddressInfo
+                                        {
+                                            sType = VkStructureType.VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
+                                            pNext = IntPtr.Zero,
+                                            buffer = vkBuffer
+                                        };
+                                        aabbBufferAddress = vkGetBufferDeviceAddressKHR(_device, ref bufferInfo);
+                                        if (aabbs.Offset > 0)
+                                        {
+                                            aabbBufferAddress += (ulong)aabbs.Offset;
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            // Create AABBs data structure
+                            // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkAccelerationStructureGeometryAabbsDataKHR.html
+                            VkAccelerationStructureGeometryAabbsDataKHR aabbsData = new VkAccelerationStructureGeometryAabbsDataKHR
+                            {
+                                sType = VkStructureType.VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_AABBS_DATA_KHR,
+                                pNext = IntPtr.Zero,
+                                dataDeviceAddress = aabbBufferAddress,
+                                stride = (ulong)(aabbs.Stride > 0 ? aabbs.Stride : 24) // Default stride is 24 bytes (6 floats: min.x, min.y, min.z, max.x, max.y, max.z)
+                            };
+                            
+                            // Create geometry structure
+                            VkGeometryFlagsKHR geometryFlags = VkGeometryFlagsKHR.VK_GEOMETRY_OPAQUE_BIT_KHR;
+                            if ((geom.Flags & GeometryFlags.NoDuplicateAnyHit) != 0)
+                            {
+                                geometryFlags |= VkGeometryFlagsKHR.VK_GEOMETRY_NO_DUPLICATE_ANY_HIT_INVOCATION_BIT_KHR;
+                            }
+                            
+                            // Create geometry structure with AABBs data in union
+                            VkAccelerationStructureGeometryDataKHR geometryData = new VkAccelerationStructureGeometryDataKHR();
+                            geometryData.aabbs = aabbsData; // Direct assignment works because of FieldOffset(0)
+                            
+                            VkAccelerationStructureGeometryKHR vkGeometry = new VkAccelerationStructureGeometryKHR
+                            {
+                                sType = VkStructureType.VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR,
+                                pNext = IntPtr.Zero,
+                                geometryType = VkGeometryTypeKHR.VK_GEOMETRY_TYPE_AABBS_KHR,
+                                geometry = geometryData,
+                                flags = geometryFlags
+                            };
+                            
+                            vkGeometries.Add(vkGeometry);
+                            
+                            // Create build range info for AABBs
+                            // For AABBs, primitiveCount is the number of AABB primitives
+                            VkAccelerationStructureBuildRangeInfoKHR buildRange = new VkAccelerationStructureBuildRangeInfoKHR
+                            {
+                                primitiveCount = (uint)aabbs.Count,
+                                primitiveOffset = 0,
+                                firstVertex = 0,
+                                transformOffset = 0
+                            };
+                            buildRanges.Add(buildRange);
+                        }
+                        else
+                        {
+                            throw new NotSupportedException($"Geometry type {geom.Type} is not supported for BLAS. Only Triangles and AABBs are supported.");
+                        }
+                    }
+
+                    // Create build geometry info
+                    VkBuildAccelerationStructureFlagsKHR buildFlags = VkBuildAccelerationStructureFlagsKHR.VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
+                    // TODO: Add support for other build flags from AccelStructDesc
+
+                    // Allocate memory for geometry array
+                    int geometrySize = Marshal.SizeOf(typeof(VkAccelerationStructureGeometryKHR));
+                    IntPtr geometriesPtr = Marshal.AllocHGlobal((int)(geometryCount * geometrySize));
+                    geometryDataPtrs.Add(geometriesPtr);
+                    try
+                    {
+                        // Copy geometries to unmanaged memory
+                        for (int i = 0; i < vkGeometries.Count; i++)
+                        {
+                            IntPtr geomPtr = new IntPtr(geometriesPtr.ToInt64() + i * geometrySize);
+                            Marshal.StructureToPtr(vkGeometries[i], geomPtr, false);
+                        }
+
+                        // Create build geometry info
+                        VkAccelerationStructureBuildGeometryInfoKHR buildInfo = new VkAccelerationStructureBuildGeometryInfoKHR
+                        {
+                            sType = VkStructureType.VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR,
+                            pNext = IntPtr.Zero,
+                            type = VkAccelerationStructureTypeKHR.VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR,
+                            flags = buildFlags,
+                            buildType = VkAccelerationStructureBuildTypeKHR.VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
+                            srcAccelerationStructure = IntPtr.Zero, // New build
+                            dstAccelerationStructure = vulkanAccelStruct.VkAccelStruct,
+                            geometryCount = geometryCount,
+                            pGeometries = geometriesPtr,
+                            ppGeometries = IntPtr.Zero,
+                            scratchDataDeviceAddress = 0UL // Will be set after getting sizes
+                        };
+
+                        // Get build sizes
+                        uint[] maxPrimitiveCounts = new uint[geometryCount];
+                        for (int i = 0; i < buildRanges.Count; i++)
+                        {
+                            maxPrimitiveCounts[i] = buildRanges[i].primitiveCount;
+                        }
+
+                        IntPtr maxPrimitiveCountsPtr = Marshal.AllocHGlobal(maxPrimitiveCounts.Length * sizeof(uint));
+                        try
+                        {
+                            Marshal.Copy(maxPrimitiveCounts, 0, maxPrimitiveCountsPtr, maxPrimitiveCounts.Length);
+
+                            VkAccelerationStructureBuildSizesInfoKHR sizeInfo = new VkAccelerationStructureBuildSizesInfoKHR
+                            {
+                                sType = VkStructureType.VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR,
+                                pNext = IntPtr.Zero,
+                                accelerationStructureSize = 0,
+                                updateScratchSize = 0,
+                                buildScratchSize = 0
+                            };
+
+                            vkGetAccelerationStructureBuildSizesKHR(
+                                _device,
+                                VkAccelerationStructureBuildTypeKHR.VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
+                                ref buildInfo,
+                                maxPrimitiveCountsPtr,
+                                ref sizeInfo);
+
+                            // Allocate scratch buffer for acceleration structure build
+                            // Scratch buffer is temporary memory used during the build process
+                            // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetBufferDeviceAddressKHR.html
+                            ulong scratchBufferAddress = 0UL;
+                            if (sizeInfo.buildScratchSize > 0)
+                            {
+                                // Create scratch buffer with required usage flags
+                                BufferDesc scratchBufferDesc = new BufferDesc
+                                {
+                                    ByteSize = (int)sizeInfo.buildScratchSize,
+                                    Usage = BufferUsageFlags.ShaderResource | BufferUsageFlags.IndirectArgument
+                                };
+                                
+                                IBuffer scratchBuffer = _device.CreateBuffer(scratchBufferDesc);
+                                _scratchBuffers.Add(scratchBuffer);
+                                
+                                // Get device address for scratch buffer
+                                VulkanBuffer vulkanScratchBuffer = scratchBuffer as VulkanBuffer;
+                                if (vulkanScratchBuffer != null)
+                                {
+                                    IntPtr vkScratchBuffer = vulkanScratchBuffer.VkBuffer;
+                                    if (vkScratchBuffer != IntPtr.Zero)
+                                    {
+                                        VkBufferDeviceAddressInfo scratchBufferInfo = new VkBufferDeviceAddressInfo
+                                        {
+                                            sType = VkStructureType.VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
+                                            pNext = IntPtr.Zero,
+                                            buffer = vkScratchBuffer
+                                        };
+                                        scratchBufferAddress = vkGetBufferDeviceAddressKHR(_device, ref scratchBufferInfo);
+                                    }
+                                }
+                            }
+                            
+                            buildInfo.scratchDataDeviceAddress = scratchBufferAddress;
+
+                            // Allocate memory for build range info pointers array
+                            IntPtr[] buildRangeInfoPointers = new IntPtr[geometryCount];
+                            IntPtr[] buildRangeInfoPtrs = new IntPtr[geometryCount];
+                            for (int i = 0; i < buildRanges.Count; i++)
+                            {
+                                IntPtr rangePtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(VkAccelerationStructureBuildRangeInfoKHR)));
+                                Marshal.StructureToPtr(buildRanges[i], rangePtr, false);
+                                buildRangeInfoPtrs[i] = rangePtr;
+                                buildRangeInfoPointers[i] = rangePtr;
+                            }
+
+                            IntPtr buildRangeInfoArrayPtr = Marshal.AllocHGlobal((int)(geometryCount * IntPtr.Size));
+                            try
+                            {
+                                Marshal.Copy(buildRangeInfoPointers, 0, buildRangeInfoArrayPtr, buildRangeInfoPointers.Length);
+
+                                // Marshal buildInfo to unmanaged memory
+                                IntPtr buildInfoPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(VkAccelerationStructureBuildGeometryInfoKHR)));
+                                try
+                                {
+                                    Marshal.StructureToPtr(buildInfo, buildInfoPtr, false);
+
+                                    // Build acceleration structure
+                                    // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBuildAccelerationStructuresKHR.html
+                                    vkCmdBuildAccelerationStructuresKHR(
+                                        _vkCommandBuffer,
+                                        1, // infoCount
+                                        buildInfoPtr, // pInfos (pointer to array of VkAccelerationStructureBuildGeometryInfoKHR)
+                                        buildRangeInfoArrayPtr); // ppBuildRangeInfos (pointer to array of pointers to VkAccelerationStructureBuildRangeInfoKHR arrays)
+                                }
+                                finally
+                                {
+                                    Marshal.FreeHGlobal(buildInfoPtr);
+                                }
+
+                                // Cleanup build range info pointers
+                                for (int i = 0; i < buildRangeInfoPtrs.Length; i++)
+                                {
+                                    if (buildRangeInfoPtrs[i] != IntPtr.Zero)
+                                    {
+                                        Marshal.FreeHGlobal(buildRangeInfoPtrs[i]);
+                                    }
+                                }
+                            }
+                            finally
+                            {
+                                Marshal.FreeHGlobal(buildRangeInfoArrayPtr);
+                            }
+                        }
+                        finally
+                        {
+                            Marshal.FreeHGlobal(maxPrimitiveCountsPtr);
+                        }
+                    }
+                    finally
+                    {
+                        // Cleanup is handled in outer finally block
+                    }
+                }
+                finally
+                {
+                    // Cleanup allocated memory
+                    foreach (IntPtr ptr in geometryDataPtrs)
+                    {
+                        if (ptr != IntPtr.Zero)
+                        {
+                            Marshal.FreeHGlobal(ptr);
+                        }
+                    }
+                    foreach (IntPtr ptr in trianglesDataPtrs)
+                    {
+                        if (ptr != IntPtr.Zero)
+                        {
+                            Marshal.FreeHGlobal(ptr);
+                        }
+                    }
+                }
+            }
+
+            public void BuildTopLevelAccelStruct(IAccelStruct accelStruct, AccelStructInstance[] instances)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before building acceleration structure");
+                }
+                // TODO: STUB - Implement vkCmdBuildAccelerationStructuresKHR for TLAS
+            }
+
+            public void CompactBottomLevelAccelStruct(IAccelStruct dest, IAccelStruct src)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before compacting acceleration structure");
+                }
+                // TODO: STUB - Implement vkCmdCopyAccelerationStructureKHR for compaction
+            }
+
+            // Debug Commands
             public void BeginDebugEvent(string name, Vector4 color)
             {
                 if (!_isOpen)
                 {
                     throw new InvalidOperationException("Command list must be open before beginning debug event");
                 }
-
+                if (vkCmdBeginDebugUtilsLabelEXT == null)
+                {
+                    return; // Extension not available
+                }
                 if (string.IsNullOrEmpty(name))
                 {
-                    throw new ArgumentException("Debug event name cannot be null or empty", nameof(name));
+                    name = "";
                 }
-
-                // Pin the string for native interop
-                byte[] nameBytes = System.Text.Encoding.UTF8.GetBytes(name + "\0");
-                GCHandle nameHandle = GCHandle.Alloc(nameBytes, GCHandleType.Pinned);
+                GCHandle nameHandle = GCHandle.Alloc(Encoding.UTF8.GetBytes(name + "\0"), GCHandleType.Pinned);
                 try
                 {
-                    // Create debug label structure
                     float[] colorArray = new float[4] { color.X, color.Y, color.Z, color.W };
                     VkDebugUtilsLabelEXT labelInfo = new VkDebugUtilsLabelEXT
                     {
@@ -5091,12 +8123,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                         pLabelName = nameHandle.AddrOfPinnedObject(),
                         color = colorArray
                     };
-
-                    // Call Vulkan function if available
-                    if (vkCmdBeginDebugUtilsLabelEXT != null)
-                    {
-                        vkCmdBeginDebugUtilsLabelEXT(_vkCommandBuffer, ref labelInfo);
-                    }
+                    vkCmdBeginDebugUtilsLabelEXT(_vkCommandBuffer, ref labelInfo);
                 }
                 finally
                 {
@@ -5110,8 +8137,6 @@ namespace Andastra.Runtime.MonoGame.Backends
                 {
                     throw new InvalidOperationException("Command list must be open before ending debug event");
                 }
-
-                // Call Vulkan function if available
                 if (vkCmdEndDebugUtilsLabelEXT != null)
                 {
                     vkCmdEndDebugUtilsLabelEXT(_vkCommandBuffer);
@@ -5124,18 +8149,17 @@ namespace Andastra.Runtime.MonoGame.Backends
                 {
                     throw new InvalidOperationException("Command list must be open before inserting debug marker");
                 }
-
+                if (vkCmdInsertDebugUtilsLabelEXT == null)
+                {
+                    return; // Extension not available
+                }
                 if (string.IsNullOrEmpty(name))
                 {
-                    throw new ArgumentException("Debug marker name cannot be null or empty", nameof(name));
+                    name = "";
                 }
-
-                // Pin the string for native interop
-                byte[] nameBytes = System.Text.Encoding.UTF8.GetBytes(name + "\0");
-                GCHandle nameHandle = GCHandle.Alloc(nameBytes, GCHandleType.Pinned);
+                GCHandle nameHandle = GCHandle.Alloc(Encoding.UTF8.GetBytes(name + "\0"), GCHandleType.Pinned);
                 try
                 {
-                    // Create debug label structure
                     float[] colorArray = new float[4] { color.X, color.Y, color.Z, color.W };
                     VkDebugUtilsLabelEXT labelInfo = new VkDebugUtilsLabelEXT
                     {
@@ -5144,12 +8168,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                         pLabelName = nameHandle.AddrOfPinnedObject(),
                         color = colorArray
                     };
-
-                    // Call Vulkan function if available
-                    if (vkCmdInsertDebugUtilsLabelEXT != null)
-                    {
-                        vkCmdInsertDebugUtilsLabelEXT(_vkCommandBuffer, ref labelInfo);
-                    }
+                    vkCmdInsertDebugUtilsLabelEXT(_vkCommandBuffer, ref labelInfo);
                 }
                 finally
                 {
@@ -5159,28 +8178,24 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             public void Dispose()
             {
-                if (_vkCommandBuffer != IntPtr.Zero && _vkCommandPool != IntPtr.Zero && _vkDevice != IntPtr.Zero)
+                // Clean up scratch buffers allocated for acceleration structure builds
+                foreach (IBuffer scratchBuffer in _scratchBuffers)
                 {
-                    vkFreeCommandBuffers(_vkDevice, _vkCommandPool, 1, ref _vkCommandBuffer);
+                    if (scratchBuffer != null)
+                    {
+                        scratchBuffer.Dispose();
+                    }
                 }
+                _scratchBuffers.Clear();
+                
+                // Command buffers are managed by the command pool and device
+                // They are automatically freed when the command pool is destroyed
+                // No explicit cleanup needed for command buffers themselves
+                // Based on Vulkan Command Buffer Management: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkFreeCommandBuffers.html
             }
         }
 
         #endregion
     }
 }
-
-
-
-
-
-        #endregion
-    }
-}
-
-
-
-    }
-}
-
 
