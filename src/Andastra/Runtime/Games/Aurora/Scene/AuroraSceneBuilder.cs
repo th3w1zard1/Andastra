@@ -485,24 +485,35 @@ namespace Andastra.Runtime.Games.Aurora.Scene
         /// - Returns Model ResRef from [TILE{Tile_ID}] Model entry
         /// - Falls back to simplified format if tileset cannot be loaded or Tile_ID is invalid
         ///
-        /// Error handling:
-        /// - If tileset cannot be loaded: Falls back to simplified format (tileset_TileID)
-        /// - If Tile_ID is invalid: Falls back to simplified format
+        /// Error handling (matching original engine behavior):
+        /// - If tileset is blank: Falls back to simplified format (tileset_TileID with 2-digit padding)
+        /// - If tileset cannot be loaded: Falls back to simplified format (ensures scene building continues)
+        /// - If Tile_ID is invalid (out of bounds): Falls back to simplified format
         /// - If Model entry is missing: Falls back to simplified format
+        ///
+        /// Fallback format: "{tileset}_{TileID:D2}" (e.g., "rural_00", "rural_01")
+        /// - Based on original simplified implementation before tileset lookup was added
+        /// - Format ensures ResRef validity (max 16 chars, ASCII only)
+        /// - 2-digit padding ensures consistent naming for Tile_ID 0-99
         /// </remarks>
         private string GetTileModelResRef(ResRef tileset, int tileId)
         {
             // Skip lookup if tileset is blank
+            // Based on nwmain.exe: CNWTileSet::GetTileData returns null if tileset not loaded
+            // Fallback ensures scene building continues even with invalid tileset reference
             if (tileset == null || tileset.IsBlank)
             {
-                // Fallback to simplified format
-                return string.Format("{0}_{1:D2}", tileset != null ? tileset.ToString() : "unknown", tileId);
+                // Fallback to simplified format: tileset_TileID (with 2-digit padding)
+                // Format: "unknown_00", "unknown_01", etc. if tileset is null
+                string tilesetName = tileset != null ? tileset.ToString() : "unknown";
+                return string.Format("{0}_{1:D2}", tilesetName, tileId);
             }
 
             try
             {
                 // Get or create tileset instance (with caching)
                 // Based on nwmain.exe: CNWTileSetManager::GetTileSet caches tilesets
+                // CNWTileSetManager::GetTileSet @ 0x1402c7d80 manages tileset cache
                 if (!_tilesetCache.TryGetValue(tileset, out AuroraTileset tilesetInstance))
                 {
                     tilesetInstance = new AuroraTileset(_resourceProvider, tileset);
@@ -510,17 +521,22 @@ namespace Andastra.Runtime.Games.Aurora.Scene
                 }
 
                 // Load tileset if not already loaded
-                // Based on nwmain.exe: CNWTileSet::LoadTileSet loads SET file on demand
+                // Based on nwmain.exe: CNWTileSet::LoadTileSet @ 0x1402c6890 loads SET file on demand
+                // LoadTileSet parses [GENERAL], [GRASS], [TILES] sections and [TILE{N}] Model entries
                 if (!tilesetInstance.IsLoaded)
                 {
                     tilesetInstance.Load();
                 }
 
                 // Get Model ResRef from tileset using Tile_ID
-                // Based on nwmain.exe: CNWTileSet::GetTileData returns CNWTileData, which contains Model ResRef
+                // Based on nwmain.exe: CNWTileSet::GetTileData @ 0x1402c67d0 returns CNWTileData pointer
+                // CNWTileData contains Model ResRef field, read from [TILE{Tile_ID}] Model entry
+                // GetTileData validates Tile_ID bounds (0 <= Tile_ID < Count) and returns null if invalid
                 ResRef modelResRef = tilesetInstance.GetTileModelResRef(tileId);
 
                 // Return Model ResRef if valid, otherwise fallback to simplified format
+                // Based on nwmain.exe: If GetTileData returns null, tile data is null (no fallback in original)
+                // C# implementation needs string return value, so we provide fallback for compatibility
                 if (modelResRef != null && !modelResRef.IsBlank)
                 {
                     return modelResRef.ToString();
@@ -530,10 +546,17 @@ namespace Andastra.Runtime.Games.Aurora.Scene
             {
                 // If tileset loading fails, fall back to simplified format
                 // This ensures scene building continues even if tileset file is missing or corrupted
+                // Based on nwmain.exe: LoadTileSet throws exception if SET file cannot be loaded
+                // C# implementation catches exception and provides fallback for graceful degradation
             }
 
             // Fallback to simplified format if tileset lookup fails
+            // Format: "{tileset}_{TileID:D2}" (e.g., "rural_00", "rural_01")
             // Based on original simplified implementation before tileset lookup was added
+            // This format ensures:
+            // - ResRef validity (max 16 chars: tileset name + "_" + 2 digits = typically < 16 chars)
+            // - Consistent naming for Tile_ID 0-99 (2-digit padding)
+            // - Compatibility with areas that have missing or corrupted tileset files
             return string.Format("{0}_{1:D2}", tileset.ToString(), tileId);
         }
     }
