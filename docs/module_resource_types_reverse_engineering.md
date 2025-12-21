@@ -424,15 +424,39 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 
 ### DDS Textures
 
-**Question**: Are DDS textures supported?
+**Question**: Are DDS textures supported? What priority do they have? Can they be in modules?
 
-**Answer**: **YES** - DDS handler exists and uses the same search mechanism:
+**Answer**: 
 
-- **Handler**: swkotor.exe: 0x00710530, swkotor2.exe: 0x00783b60
+**✅ YES - DDS is fully supported** with the following characteristics:
+
+- **Handler**: swkotor.exe: 0x00710530 (`LoadDDSTexture`), swkotor2.exe: 0x00783b60
 - **Type ID**: 2033 (0x7f1)
-- **Loading**: Calls `FUN_004074d0` with type 0x7f1, which searches all locations including modules
+- **Resource Search**: Uses `FUN_004074d0` with type 0x7f1, which searches **all locations including modules, override, and BIF files**
 
-**However**: Texture loading priority (`FUN_004b8300`) only checks TGA → TPC, not DDS. DDS may be used in specific contexts or require explicit loading.
+**Priority**: **DDS has NO priority in the automatic texture loading chain**
+
+- **Main texture loader** (`FUN_00596670` at swkotor.exe: 0x00596670) only checks:
+  1. **TGA** (type 3) - checked first
+  2. **TPC** (type 0xbbf/3007) - checked if TGA not found
+  3. **DDS is NOT checked** in this automatic priority chain
+
+- **DDS loading**: DDS textures are loaded via separate explicit path (`FUN_0070e400` at swkotor.exe: 0x0070e400), not through the automatic TGA→TPC fallback system
+
+**Module Support**: **✅ YES - DDS files CAN be placed in modules**
+
+- DDS handler uses the standard resource search mechanism (`FUN_004074d0` → `FUN_00407230`) which searches:
+  - Modules (ERF files)
+  - Override directory
+  - BIF files
+  - All standard resource locations
+
+**Usage**: DDS textures work when:
+- Explicitly loaded via DDS-specific loading functions
+- Used in specific contexts that call DDS loader directly
+- **NOT** automatically loaded as fallback when TGA/TPC are missing
+
+**Conclusion**: DDS is a first-class texture format that can be used from modules, but it's not part of the automatic texture loading priority system. It requires explicit loading or specific context usage.
 
 ### WAV/OGG Audio
 

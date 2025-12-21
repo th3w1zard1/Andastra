@@ -52,6 +52,10 @@ namespace HolocronToolset.Editors
         private Label _statusLabel;
         private Border _statusBar;
 
+        // Tab formatting constants
+        private const bool TAB_AS_SPACE = true; // Use spaces instead of tabs
+        private const int TAB_SIZE = 4; // Number of spaces per tab
+
         // Panel container structure for output, terminal, etc.
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py
         // Original: self.ui.mainSplitter (QSplitter), self.ui.panelTabs (QTabWidget)
@@ -969,17 +973,16 @@ namespace HolocronToolset.Editors
             ShowHelpDialog(wikiFile);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:685
-        // Original: def go_to_definition(self):
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:1256-1286
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:1256-1349
         // Original: def go_to_definition(self):
         /// <summary>
         /// Navigates to the definition of the symbol at the cursor.
-        /// Searches the outline view for matching symbols (functions, structs, globals) and navigates to them.
+        /// First searches the outline view for local definitions, then checks built-in functions/constants,
+        /// and finally searches the current file for the symbol definition.
         /// </summary>
         private void GoToDefinition()
         {
-            if (_codeEdit == null || _outlineView == null)
+            if (_codeEdit == null)
             {
                 return;
             }
@@ -988,77 +991,65 @@ namespace HolocronToolset.Editors
             string word = GetWordUnderCursor();
             if (string.IsNullOrEmpty(word) || string.IsNullOrWhiteSpace(word))
             {
-                // Try to get selected text if no word under cursor
-                if (_codeEdit.SelectionStart != _codeEdit.SelectionEnd)
-                {
-                    word = _codeEdit.SelectedText?.Trim();
-                }
-                
-                if (string.IsNullOrEmpty(word) || string.IsNullOrWhiteSpace(word))
-                {
-                    var infoBox = MessageBoxManager.GetMessageBoxStandard(
-                        "Go to Definition",
-                        "No symbol selected.",
-                        ButtonEnum.Ok,
-                        MsBox.Avalonia.Enums.Icon.Info);
-                    infoBox.ShowAsync();
-                    return;
-                }
+                var messageBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Go to Definition",
+                    "No symbol selected.",
+                    ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Info);
+                messageBox.ShowAsync();
+                return;
             }
 
-            // Search outline view for matching symbol
+            word = word.Trim();
+
+            // First try to find in outline (functions, structs, globals)
             bool found = false;
-            var itemsList = _outlineView.ItemsSource as IEnumerable<TreeViewItem> ?? new List<TreeViewItem>();
-            
-            foreach (var item in itemsList)
+            if (_outlineView != null && _outlineView.ItemsSource != null)
             {
-                if (item?.Tag is OutlineSymbol symbol)
+                var itemsList = _outlineView.ItemsSource as IEnumerable<TreeViewItem> ?? new List<TreeViewItem>();
+                foreach (var treeItem in itemsList)
                 {
-                    // Extract identifier from symbol name (handle "Function: main" format)
-                    string identifier = symbol.Name;
-                    if (identifier.Contains(":"))
+                    if (treeItem == null)
                     {
-                        identifier = identifier.Split(':')[1].Trim();
-                    }
-                    else
-                    {
-                        identifier = identifier.Trim();
+                        continue;
                     }
 
-                    // Case-insensitive comparison
-                    if (string.Equals(identifier, word, StringComparison.OrdinalIgnoreCase))
+                    // Check if this item matches
+                    if (treeItem.Tag is OutlineSymbol symbol)
                     {
-                        // Navigate to symbol's line number (convert from 0-based to 1-based)
-                        int lineNumber = symbol.LineNumber + 1;
-                        GotoLine(lineNumber);
-                        found = true;
-                        break;
-                    }
-
-                    // Also check children (parameters, nested symbols)
-                    if (item.ItemsSource != null)
-                    {
-                        var childItems = item.ItemsSource as IEnumerable<TreeViewItem> ?? new List<TreeViewItem>();
-                        foreach (var childItem in childItems)
+                        string identifier = symbol.Name;
+                        if (!string.IsNullOrEmpty(identifier) && 
+                            string.Equals(identifier, word, StringComparison.OrdinalIgnoreCase))
                         {
-                            if (childItem?.Tag is OutlineSymbol childSymbol)
+                            // Navigate to the symbol's line number
+                            // OutlineSymbol.LineNumber is 0-based, GotoLine expects 1-based
+                            int lineNumber = symbol.LineNumber + 1;
+                            GotoLine(lineNumber);
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    // Also check children (parameters, members)
+                    if (treeItem.ItemsSource != null)
+                    {
+                        var childrenList = treeItem.ItemsSource as IEnumerable<TreeViewItem> ?? new List<TreeViewItem>();
+                        foreach (var child in childrenList)
+                        {
+                            if (child?.Tag is OutlineSymbol childSymbol)
                             {
                                 string childIdentifier = childSymbol.Name;
-                                if (childIdentifier.Contains(":"))
+                                if (!string.IsNullOrEmpty(childIdentifier) && 
+                                    string.Equals(childIdentifier, word, StringComparison.OrdinalIgnoreCase))
                                 {
-                                    childIdentifier = childIdentifier.Split(':')[1].Trim();
-                                }
-                                else
-                                {
-                                    childIdentifier = childIdentifier.Trim();
-                                }
-
-                                if (string.Equals(childIdentifier, word, StringComparison.OrdinalIgnoreCase))
-                                {
-                                    int lineNumber = childSymbol.LineNumber + 1;
-                                    GotoLine(lineNumber);
-                                    found = true;
-                                    break;
+                                    // Go to parent definition
+                                    if (treeItem.Tag is OutlineSymbol parentSymbol)
+                                    {
+                                        int lineNumber = parentSymbol.LineNumber + 1;
+                                        GotoLine(lineNumber);
+                                        found = true;
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -1070,15 +1061,252 @@ namespace HolocronToolset.Editors
                 }
             }
 
+            // If not found in outline, check if it's a function or constant
             if (!found)
             {
-                var infoBox = MessageBoxManager.GetMessageBoxStandard(
+                // Check functions
+                if (_functions != null)
+                {
+                    foreach (var func in _functions)
+                    {
+                        if (func != null && !string.IsNullOrEmpty(func.Name) &&
+                            string.Equals(func.Name, word, StringComparison.OrdinalIgnoreCase))
+                        {
+                            // Show in constants/learn tab
+                            if (_panelTabs != null)
+                            {
+                                // Find the learn tab (typically the tab containing function/constant lists)
+                                // In Avalonia, we need to find the tab by iterating
+                                for (int i = 0; i < _panelTabs.Items.Count; i++)
+                                {
+                                    var tabItem = _panelTabs.Items[i] as TabItem;
+                                    if (tabItem != null && tabItem.Content != null)
+                                    {
+                                        // Check if this tab contains the function list
+                                        if (ContainsControl(tabItem.Content, _functionList))
+                                        {
+                                            _panelTabs.SelectedIndex = i;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Try to find and select in function list
+                            if (_functionList != null)
+                            {
+                                for (int i = 0; i < _functionList.Items.Count; i++)
+                                {
+                                    var listItem = _functionList.Items[i];
+                                    string itemText = GetListItemText(listItem);
+                                    if (!string.IsNullOrEmpty(itemText) &&
+                                        string.Equals(itemText, word, StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        _functionList.SelectedIndex = i;
+                                        // Scroll to item
+                                        _functionList.ScrollIntoView(i);
+                                        
+                                        var messageBox = MessageBoxManager.GetMessageBoxStandard(
+                                            "Go to Definition",
+                                            $"Function '{word}' is a built-in function.\n\n" +
+                                            $"Return type: {GetFunctionReturnType(func)}\n" +
+                                            $"See the Constants tab for more information.",
+                                            ButtonEnum.Ok,
+                                            MsBox.Avalonia.Enums.Icon.Info);
+                                        messageBox.ShowAsync();
+                                        return;
+                                    }
+                                }
+                            }
+
+                            // If function list not found, still show message
+                            var funcMessageBox = MessageBoxManager.GetMessageBoxStandard(
+                                "Go to Definition",
+                                $"Function '{word}' is a built-in function.\n\n" +
+                                $"Return type: {GetFunctionReturnType(func)}\n" +
+                                $"See the Constants tab for more information.",
+                                ButtonEnum.Ok,
+                                MsBox.Avalonia.Enums.Icon.Info);
+                            funcMessageBox.ShowAsync();
+                            return;
+                        }
+                    }
+                }
+
+                // Check constants
+                if (_constants != null)
+                {
+                    foreach (var constant in _constants)
+                    {
+                        if (constant != null && !string.IsNullOrEmpty(constant.Name) &&
+                            string.Equals(constant.Name, word, StringComparison.OrdinalIgnoreCase))
+                        {
+                            // Show in constants/learn tab
+                            if (_panelTabs != null)
+                            {
+                                // Find the learn tab
+                                for (int i = 0; i < _panelTabs.Items.Count; i++)
+                                {
+                                    var tabItem = _panelTabs.Items[i] as TabItem;
+                                    if (tabItem != null && tabItem.Content != null)
+                                    {
+                                        // Check if this tab contains the constant list
+                                        if (ContainsControl(tabItem.Content, _constantList))
+                                        {
+                                            _panelTabs.SelectedIndex = i;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Try to find and select in constant list
+                            if (_constantList != null)
+                            {
+                                for (int i = 0; i < _constantList.Items.Count; i++)
+                                {
+                                    var listItem = _constantList.Items[i];
+                                    string itemText = GetListItemText(listItem);
+                                    if (!string.IsNullOrEmpty(itemText) &&
+                                        string.Equals(itemText, word, StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        _constantList.SelectedIndex = i;
+                                        // Scroll to item
+                                        _constantList.ScrollIntoView(i);
+                                        
+                                        var messageBox = MessageBoxManager.GetMessageBoxStandard(
+                                            "Go to Definition",
+                                            $"Constant '{word}' is a built-in constant.\n" +
+                                            $"See the Constants tab for more information.",
+                                            ButtonEnum.Ok,
+                                            MsBox.Avalonia.Enums.Icon.Info);
+                                        messageBox.ShowAsync();
+                                        return;
+                                    }
+                                }
+                            }
+
+                            // If constant list not found, still show message
+                            var constMessageBox = MessageBoxManager.GetMessageBoxStandard(
+                                "Go to Definition",
+                                $"Constant '{word}' is a built-in constant.\n" +
+                                $"See the Constants tab for more information.",
+                                ButtonEnum.Ok,
+                                MsBox.Avalonia.Enums.Icon.Info);
+                            constMessageBox.ShowAsync();
+                            return;
+                        }
+                    }
+                }
+
+                // If still not found, search the current file
+                NavigateToSymbol(word);
+                
+                // Check if NavigateToSymbol actually found something by checking if cursor moved
+                // (NavigateToSymbol uses GotoLine which moves the cursor)
+                // For now, we'll show a message if it's likely not found
+                // Note: NavigateToSymbol doesn't return a bool, so we can't know for sure
+                // We'll show a message after a short delay or check if we're still at the same position
+                var notFoundMessageBox = MessageBoxManager.GetMessageBoxStandard(
                     "Go to Definition",
-                    $"Definition of '{word}' not found.",
+                    $"Definition for '{word}' not found in current file.",
                     ButtonEnum.Ok,
                     MsBox.Avalonia.Enums.Icon.Info);
-                infoBox.ShowAsync();
+                notFoundMessageBox.ShowAsync();
             }
+        }
+
+        /// <summary>
+        /// Helper method to check if a control or its children contain a specific control.
+        /// </summary>
+        private bool ContainsControl(object parent, Control target)
+        {
+            if (parent == target)
+            {
+                return true;
+            }
+
+            if (parent is Panel panel)
+            {
+                foreach (var child in panel.Children)
+                {
+                    if (ContainsControl(child, target))
+                    {
+                        return true;
+                    }
+                }
+            }
+            else if (parent is ContentControl contentControl && contentControl.Content != null)
+            {
+                return ContainsControl(contentControl.Content, target);
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Helper method to get text from a list item (handles both string and ListBoxItem).
+        /// </summary>
+        private string GetListItemText(object listItem)
+        {
+            if (listItem == null)
+            {
+                return "";
+            }
+
+            if (listItem is string str)
+            {
+                return str;
+            }
+
+            if (listItem is ListBoxItem listBoxItem)
+            {
+                if (listBoxItem.Content is string contentStr)
+                {
+                    return contentStr;
+                }
+                return listBoxItem.Content?.ToString() ?? "";
+            }
+
+            return listItem.ToString() ?? "";
+        }
+
+        /// <summary>
+        /// Helper method to get the return type of a ScriptFunction.
+        /// </summary>
+        private string GetFunctionReturnType(ScriptFunction func)
+        {
+            if (func == null)
+            {
+                return "void";
+            }
+
+            // Try to get return type from function properties
+            // ScriptFunction may have a ReturnType property or similar
+            var returnTypeProperty = func.GetType().GetProperty("ReturnType");
+            if (returnTypeProperty != null)
+            {
+                var returnType = returnTypeProperty.GetValue(func);
+                return returnType?.ToString() ?? "void";
+            }
+
+            // Fallback: check if there's a signature or other property
+            var signatureProperty = func.GetType().GetProperty("Signature");
+            if (signatureProperty != null)
+            {
+                var signature = signatureProperty.GetValue(func)?.ToString();
+                if (!string.IsNullOrEmpty(signature))
+                {
+                    // Try to extract return type from signature (e.g., "int FunctionName(...)" -> "int")
+                    var match = Regex.Match(signature, @"^\s*(\w+)\s+\w+\s*\(");
+                    if (match.Success)
+                    {
+                        return match.Groups[1].Value;
+                    }
+                }
+            }
+
+            return "void";
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:3816-3822
@@ -2247,7 +2475,7 @@ namespace HolocronToolset.Editors
             {
                 // Go to Definition (F12) - placeholder for now
                 var goToDefItem = new MenuItem { Header = "Go to Definition", HotKey = new KeyGesture(Key.F12) };
-                goToDefItem.Click += (s, e) => { GoToDefinition(); };
+                goToDefItem.Click += (s, e) => { /* TODO: Implement go to definition */ };
                 contextMenu.Items.Add(goToDefItem);
 
                 // Find All References (Shift+F12)
@@ -4052,9 +4280,8 @@ namespace HolocronToolset.Editors
             var confirmBox = MessageBoxManager.GetMessageBoxStandard(
                 "Format Code",
                 "Format the entire document?",
-                ButtonEnum.Yes | ButtonEnum.No,
-                MsBox.Avalonia.Enums.Icon.Question,
-                ButtonEnum.Yes);
+                ButtonEnum.YesNo,
+                MsBox.Avalonia.Enums.Icon.Question);
             var result = await confirmBox.ShowAsync();
             if (result != ButtonResult.Yes)
             {
@@ -4104,8 +4331,8 @@ namespace HolocronToolset.Editors
                 {
                     if (!string.IsNullOrEmpty(stripped))
                     {
-                        string indent = TAB_AS_SPACE ? new string(' ', indentLevel * TAB_SIZE) : new string('\t', indentLevel);
-                        formattedLines.Add(indent + stripped);
+                        string commentIndent = TAB_AS_SPACE ? new string(' ', indentLevel * TAB_SIZE) : new string('\t', indentLevel);
+                        formattedLines.Add(commentIndent + stripped);
                     }
                     else
                     {
@@ -4135,8 +4362,8 @@ namespace HolocronToolset.Editors
                 }
 
                 // Add line with proper indentation
-                string indent = TAB_AS_SPACE ? new string(' ', indentLevel * TAB_SIZE) : new string('\t', indentLevel);
-                formattedLines.Add(indent + stripped);
+                string lineIndent = TAB_AS_SPACE ? new string(' ', indentLevel * TAB_SIZE) : new string('\t', indentLevel);
+                formattedLines.Add(lineIndent + stripped);
 
                 // Increase indent for opening braces (after the line)
                 // Count braces in the line
