@@ -7455,7 +7455,155 @@ namespace Andastra.Runtime.MonoGame.Backends
                     vertexOffset,
                     firstInstance);
             }
-            public void DrawIndirect(IBuffer argumentBuffer, int offset, int drawCount, int stride) { /* TODO: vkCmdDrawIndirect */ }
+            /// <summary>
+            /// Draws primitives using indirect arguments from a buffer.
+            /// Records a vkCmdDrawIndirect command that reads draw parameters from the specified buffer.
+            /// 
+            /// The buffer must contain an array of VkDrawIndirectCommand structures, each containing:
+            /// - vertexCount (uint32): Number of vertices to draw
+            /// - instanceCount (uint32): Number of instances to draw
+            /// - firstVertex (uint32): Index of the first vertex to use
+            /// - firstInstance (uint32): Instance ID of the first instance to draw
+            /// 
+            /// Each VkDrawIndirectCommand is 16 bytes (4 uint32 values).
+            /// 
+            /// Vulkan API: vkCmdDrawIndirect(commandBuffer, buffer, offset, drawCount, stride)
+            /// Vulkan API Reference: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdDrawIndirect.html
+            /// 
+            /// Requirements:
+            /// - Command buffer must be in recording state (Begin() called)
+            /// - Graphics pipeline must be bound (SetGraphicsState called)
+            /// - Vertex buffers must be bound (via SetGraphicsState or BindVertexBuffers)
+            /// - Buffer must have been created with VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT flag
+            /// - Offset must be aligned to 4 bytes
+            /// - Stride must be 0 (tightly packed) or at least sizeof(VkDrawIndirectCommand) = 16 bytes
+            /// </summary>
+            /// <param name="argumentBuffer">Buffer containing the indirect draw commands (VkDrawIndirectCommand structures)</param>
+            /// <param name="offset">Byte offset into the buffer where the first draw command begins (must be 4-byte aligned)</param>
+            /// <param name="drawCount">Number of draw commands to execute (number of VkDrawIndirectCommand structures to process)</param>
+            /// <param name="stride">Byte stride between consecutive draw commands. If 0, commands are tightly packed (16 bytes each). Otherwise must be at least 16 bytes.</param>
+            /// <exception cref="InvalidOperationException">Thrown if command buffer is not in recording state, or if vkCmdDrawIndirect function pointer is not initialized</exception>
+            /// <exception cref="ArgumentNullException">Thrown if argumentBuffer is null</exception>
+            /// <exception cref="ArgumentException">Thrown if buffer is not a VulkanBuffer instance or doesn't have a valid handle, or if stride is invalid</exception>
+            /// <exception cref="ArgumentOutOfRangeException">Thrown if offset or drawCount is negative</exception>
+            public void DrawIndirect(IBuffer argumentBuffer, int offset, int drawCount, int stride)
+            {
+                // Validate command buffer is in recording state
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before drawing indirect. Call Begin() first.");
+                }
+
+                // Validate argument buffer is not null
+                if (argumentBuffer == null)
+                {
+                    throw new ArgumentNullException(nameof(argumentBuffer), "Argument buffer cannot be null");
+                }
+
+                // Get Vulkan buffer handle from IBuffer
+                // Cast to VulkanBuffer to access the native VkBuffer handle
+                var vulkanBuffer = argumentBuffer as VulkanBuffer;
+                if (vulkanBuffer == null)
+                {
+                    throw new ArgumentException("Buffer must be a VulkanBuffer instance. Other buffer implementations are not supported.", nameof(argumentBuffer));
+                }
+
+                // Extract VkBuffer handle from VulkanBuffer
+                // The VkBuffer property exposes the native VkBuffer handle created during buffer creation
+                IntPtr vkBuffer = vulkanBuffer.VkBuffer;
+                if (vkBuffer == IntPtr.Zero)
+                {
+                    // Fallback to NativeHandle if VkBuffer is not available
+                    // This provides compatibility if the buffer was created differently
+                    vkBuffer = vulkanBuffer.NativeHandle;
+                    if (vkBuffer == IntPtr.Zero)
+                    {
+                        throw new ArgumentException("Buffer does not have a valid Vulkan handle. Buffer may not have been fully created or has been disposed.", nameof(argumentBuffer));
+                    }
+                }
+
+                // Validate offset is non-negative and properly aligned
+                // Vulkan requires indirect draw buffer offsets to be aligned to 4 bytes
+                // This is a hardware requirement for efficient memory access
+                if (offset < 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(offset), "Offset must be non-negative");
+                }
+
+                if ((offset % 4) != 0)
+                {
+                    throw new ArgumentException($"Offset must be aligned to 4 bytes for indirect drawing. Current offset: {offset}", nameof(offset));
+                }
+
+                // Validate draw count is non-negative
+                // A draw count of 0 means no draws will be executed (valid but no-op)
+                if (drawCount < 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(drawCount), "Draw count must be non-negative");
+                }
+
+                // Validate stride
+                // Stride must be either 0 (tightly packed, 16 bytes per command) or at least sizeof(VkDrawIndirectCommand) = 16 bytes
+                // Stride of 0 is the most common case and indicates tightly packed commands
+                // Non-zero stride allows for custom layouts with additional data between commands
+                const int VkDrawIndirectCommandSize = 16; // sizeof(VkDrawIndirectCommand) = 4 * uint32 = 16 bytes
+                if (stride < 0)
+                {
+                    throw new ArgumentException($"Stride must be non-negative. Current stride: {stride}", nameof(stride));
+                }
+
+                if (stride > 0 && stride < VkDrawIndirectCommandSize)
+                {
+                    throw new ArgumentException($"Stride must be either 0 (tightly packed) or at least {VkDrawIndirectCommandSize} bytes. Current stride: {stride}", nameof(stride));
+                }
+
+                // Ensure graphics pipeline is bound before drawing
+                // Note: We don't explicitly check this here as it's a runtime validation that will be caught
+                // when the command buffer is submitted. However, the application should call SetGraphicsState
+                // before calling DrawIndirect. The indirect buffer contains:
+                // - vertexCount (uint32) - 4 bytes at offset
+                // - instanceCount (uint32) - 4 bytes at offset + 4
+                // - firstVertex (uint32) - 4 bytes at offset + 8
+                // - firstInstance (uint32) - 4 bytes at offset + 12
+                // Total: 16 bytes per draw indirect command (VkDrawIndirectCommand)
+                // 
+                // The buffer layout for drawCount > 1 with stride:
+                // [Command 0: 16 bytes][padding if stride > 16][Command 1: 16 bytes][padding if stride > 16][...]
+                // If stride == 0, commands are tightly packed with no padding.
+
+                // Validate vkCmdDrawIndirect function pointer is initialized
+                // This function pointer is loaded during Vulkan initialization via vkGetDeviceProcAddr
+                if (vkCmdDrawIndirect == null)
+                {
+                    throw new InvalidOperationException("vkCmdDrawIndirect function pointer not initialized. Call InitializeVulkanFunctions first. This indicates Vulkan may not be properly initialized.");
+                }
+
+                // Record the indirect draw command to the command buffer
+                // This command will be executed when the command buffer is submitted to a graphics queue
+                // 
+                // Vulkan API signature:
+                // void vkCmdDrawIndirect(
+                //     VkCommandBuffer commandBuffer,
+                //     VkBuffer buffer,
+                //     VkDeviceSize offset,
+                //     uint32_t drawCount,
+                //     uint32_t stride);
+                //
+                // Parameters:
+                // - commandBuffer: The command buffer to record the command into (this._vkCommandBuffer)
+                // - buffer: The buffer containing the draw commands (vkBuffer)
+                // - offset: Byte offset into the buffer (offset)
+                // - drawCount: Number of draw commands to execute (drawCount)
+                // - stride: Byte stride between commands (stride, or 0 for tightly packed)
+                //
+                // Vulkan API Reference: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdDrawIndirect.html
+                vkCmdDrawIndirect(
+                    _vkCommandBuffer,      // Command buffer to record into
+                    vkBuffer,              // Buffer containing VkDrawIndirectCommand structures
+                    (ulong)offset,         // Byte offset into buffer (VkDeviceSize = ulong)
+                    (uint)drawCount,       // Number of draw commands to execute (uint32_t)
+                    (uint)stride);         // Byte stride between commands (uint32_t, 0 = tightly packed)
+            }
             public void SetComputeState(ComputeState state)
             {
                 if (!_isOpen)
