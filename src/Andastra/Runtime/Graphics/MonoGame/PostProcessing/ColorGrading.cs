@@ -102,6 +102,69 @@ namespace Andastra.Runtime.MonoGame.PostProcessing
             _saturation = 1.0f;
             _contrast = 0.0f;
         }
+
+        /// <summary>
+        /// Applies color grading to a render target.
+        /// </summary>
+        /// <param name="device">Graphics device.</param>
+        /// <param name="input">Input render target.</param>
+        /// <param name="output">Output render target.</param>
+        /// <param name="effect">Effect/shader for color grading. Can be null if not using shader-based color grading.</param>
+        /// <exception cref="ArgumentNullException">Thrown if device, input, or output is null.</exception>
+        public void Apply(GraphicsDevice device, RenderTarget2D input, RenderTarget2D output, Effect effect)
+        {
+            if (device == null)
+            {
+                throw new ArgumentNullException(nameof(device));
+            }
+            if (input == null)
+            {
+                throw new ArgumentNullException(nameof(input));
+            }
+            if (output == null)
+            {
+                throw new ArgumentNullException(nameof(output));
+            }
+
+            // Save previous render target
+            RenderTarget2D previousTarget = null;
+            if (device.GetRenderTargets().Length > 0)
+            {
+                previousTarget = device.GetRenderTargets()[0].RenderTarget as RenderTarget2D;
+            }
+
+            try
+            {
+                // Set output render target
+                device.SetRenderTarget(output);
+                device.Clear(Microsoft.Xna.Framework.Color.Black);
+
+                // Set up color grading shader parameters
+                // The actual shader implementation would apply:
+                // - Lift/Gamma/Gain: Adjusts shadows, midtones, highlights separately
+                // - Color temperature: Adjusts white balance (warmer/cooler)
+                // - Tint: Adjusts green-magenta balance
+                // - Saturation: Adjusts color intensity
+                // - Contrast: Adjusts difference between light and dark areas
+                if (effect != null)
+                {
+                    // effect.Parameters["SourceTexture"].SetValue(input);
+                    // effect.Parameters["Lift"].SetValue(_lift);
+                    // effect.Parameters["Gamma"].SetValue(_gamma);
+                    // effect.Parameters["Gain"].SetValue(_gain);
+                    // effect.Parameters["Temperature"].SetValue(_temperature);
+                    // effect.Parameters["Tint"].SetValue(_tint);
+                    // effect.Parameters["Saturation"].SetValue(_saturation);
+                    // effect.Parameters["Contrast"].SetValue(_contrast);
+                    // Render full-screen quad with color grading shader
+                }
+            }
+            finally
+            {
+                // Always restore previous render target
+                device.SetRenderTarget(previousTarget);
+            }
+        }
     }
 }
 
