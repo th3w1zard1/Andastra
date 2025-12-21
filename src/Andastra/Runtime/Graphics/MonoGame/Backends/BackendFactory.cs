@@ -350,6 +350,9 @@ namespace Andastra.Runtime.MonoGame.Backends
                 case GraphicsBackend.OpenGL:
                     return new OpenGLBackend();
 
+                case GraphicsBackend.OpenGLES:
+                    return new OpenGLESBackend();
+
                 // case GraphicsBackend.Metal:
                 //     return new MetalBackend();
 

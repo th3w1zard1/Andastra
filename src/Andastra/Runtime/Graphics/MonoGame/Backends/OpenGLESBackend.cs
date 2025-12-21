@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
 using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
 using Andastra.Runtime.MonoGame.Rendering;
@@ -400,7 +399,8 @@ namespace Andastra.Runtime.MonoGame.Backends
                     uint uploadFormat = format;
 
                     // OpenGL ES does not support BGRA format - must convert to RGBA
-                    if (format == GL_BGRA_EXT || format == GL_BGRA)
+                    // Check if format indicates BGRA (B8G8R8A8 formats)
+                    if (data.Format == TextureFormat.B8G8R8A8_UNorm || data.Format == TextureFormat.B8G8R8A8_UNorm_SRGB)
                     {
                         uploadData = ConvertBGRAToRGBA(mipmap.Data);
                         uploadFormat = GL_RGBA;
