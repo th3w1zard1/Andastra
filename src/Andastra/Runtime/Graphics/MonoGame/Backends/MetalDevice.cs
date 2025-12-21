@@ -2012,6 +2012,92 @@ namespace Andastra.Runtime.MonoGame.Backends
         // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1516251-setviewport
         [DllImport("/System/Library/Frameworks/Metal.framework/Metal")]
         public static extern void SetViewport(IntPtr renderCommandEncoder, MetalViewport viewport);
+
+        // Objective-C runtime for calling Metal debug methods
+        // Metal debug methods (pushDebugGroup:, popDebugGroup) are Objective-C instance methods
+        // These require using objc_msgSend to call them from C#
+        // On 64-bit systems, objc_msgSend returns a value even for void methods, so we declare it as IntPtr
+        private const string LibObjC = "/usr/lib/libobjc.A.dylib";
+
+        [DllImport(LibObjC, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr objc_msgSend_void(IntPtr receiver, IntPtr selector);
+
+        [DllImport(LibObjC, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr objc_msgSend_void_string(IntPtr receiver, IntPtr selector, IntPtr nsString);
+
+        [DllImport(LibObjC, EntryPoint = "sel_registerName")]
+        private static extern IntPtr sel_registerName([MarshalAs(UnmanagedType.LPStr)] string str);
+
+        [DllImport("/System/Library/Frameworks/Foundation.framework/Foundation", EntryPoint = "CFStringCreateWithCString")]
+        private static extern IntPtr CFStringCreateWithCString(IntPtr allocator, [MarshalAs(UnmanagedType.LPStr)] string cStr, uint encoding);
+
+        private const uint kCFStringEncodingUTF8 = 0x08000100;
+
+        /// <summary>
+        /// Creates an NSString from a C# string for use with Objective-C methods.
+        /// The caller is responsible for releasing the NSString using CFRelease.
+        /// </summary>
+        private static IntPtr CreateNSString(string str)
+        {
+            if (string.IsNullOrEmpty(str))
+            {
+                return IntPtr.Zero;
+            }
+            return CFStringCreateWithCString(IntPtr.Zero, str, kCFStringEncodingUTF8);
+        }
+
+        /// <summary>
+        /// Releases a CFString/NSString created with CreateNSString.
+        /// </summary>
+        [DllImport("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation", EntryPoint = "CFRelease")]
+        private static extern void CFRelease(IntPtr cf);
+
+        /// <summary>
+        /// Pushes a debug group onto a Metal command buffer or command encoder.
+        /// Based on Metal API: -[MTLCommandBuffer pushDebugGroup:] and -[MTLRenderCommandEncoder pushDebugGroup:]
+        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlcommandbuffer/1458038-pushdebuggroup
+        /// </summary>
+        public static void PushDebugGroup(IntPtr commandBufferOrEncoder, string debugGroupName)
+        {
+            if (commandBufferOrEncoder == IntPtr.Zero || string.IsNullOrEmpty(debugGroupName))
+            {
+                return;
+            }
+
+            IntPtr nsString = CreateNSString(debugGroupName);
+            if (nsString == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                IntPtr selector = sel_registerName("pushDebugGroup:");
+                // objc_msgSend returns a value even for void methods, we ignore it
+                objc_msgSend_void_string(commandBufferOrEncoder, selector, nsString);
+            }
+            finally
+            {
+                CFRelease(nsString);
+            }
+        }
+
+        /// <summary>
+        /// Pops a debug group from a Metal command buffer or command encoder.
+        /// Based on Metal API: -[MTLCommandBuffer popDebugGroup] and -[MTLRenderCommandEncoder popDebugGroup]
+        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlcommandbuffer/1458040-popdebuggroup
+        /// </summary>
+        public static void PopDebugGroup(IntPtr commandBufferOrEncoder)
+        {
+            if (commandBufferOrEncoder == IntPtr.Zero)
+            {
+                return;
+            }
+
+            IntPtr selector = sel_registerName("popDebugGroup");
+            // objc_msgSend returns a value even for void methods, we ignore it
+            objc_msgSend_void(commandBufferOrEncoder, selector);
+        }
     }
 
     #endregion

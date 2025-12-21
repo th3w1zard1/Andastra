@@ -1573,6 +1573,22 @@ namespace Andastra.Runtime.MonoGame.Backends
         [DllImport(MetalFramework)]
         public static extern void ReleaseComputeCommandEncoder(IntPtr encoder);
 
+        // Blit command encoder
+        // Based on Metal API: MTLCommandBuffer::blitCommandEncoder()
+        // Metal API Reference: https://developer.apple.com/documentation/metal/mtlcommandbuffer/1443003-blitcommandencoder
+        [DllImport(MetalFramework)]
+        public static extern IntPtr CreateBlitCommandEncoder(IntPtr commandBuffer);
+
+        [DllImport(MetalFramework)]
+        public static extern void ReleaseBlitCommandEncoder(IntPtr encoder);
+
+        // Texture copying via blit command encoder
+        // Based on Metal API: MTLBlitCommandEncoder::copyFromTexture:sourceSlice:sourceLevel:sourceOrigin:sourceSize:toTexture:destinationSlice:destinationLevel:destinationOrigin:
+        // Metal API Reference: https://developer.apple.com/documentation/metal/mtlblitcommandencoder/1400769-copyfromtexture
+        [DllImport(MetalFramework)]
+        public static extern void CopyFromTexture(IntPtr blitEncoder, IntPtr sourceTexture, uint sourceSlice, uint sourceLevel,
+            MetalOrigin sourceOrigin, MetalSize sourceSize, IntPtr destinationTexture, uint destinationSlice, uint destinationLevel, MetalOrigin destinationOrigin);
+
         // Device queries
         [DllImport(MetalFramework)]
         [return: MarshalAs(UnmanagedType.LPStr)]
