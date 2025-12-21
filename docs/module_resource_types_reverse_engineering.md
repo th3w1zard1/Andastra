@@ -143,14 +143,13 @@ Resource types that use `FUN_00407230` / `FUN_004074d0` (resource search functio
 
 **Invalid/Unsupported:**
 
-- `{module}_*.erf` - **NOT SUPPORTED** - Only `_dlg.erf` is hardcoded in K2
 - `{module}.hak` - **NOT SUPPORTED** - No `.hak` references found in either executable
 - `{module}_something.erf` - **NOT SUPPORTED** - Only `_dlg` suffix is checked
 - Any other `_*.erf` patterns - **NOT SUPPORTED** - No wildcard matching
 - `{module}_dlg.mod` - **NOT SUPPORTED** - `_dlg` uses container type 3 (ERF), must be `.erf` extension
 - `{module}_s.mod` - **NOT SUPPORTED** - `_s` uses container type 4 (RIM), must be `.rim` extension
 - `{module}_s.erf` - **NOT SUPPORTED** - `_s` uses container type 4 (RIM), must be `.rim` extension
-  - **PROOF**: K1 line 118 and K2 line 122 call `FUN_00406e20`/`FUN_00406ef0` with container type 4 (RIM), not type 3 (ERF)
+  - **From Evidence**: K1 line 118 and K2 line 122 call `FUN_00406e20`/`FUN_00406ef0` with container type 4 (RIM), not type 3 (ERF)
 - `{module}_dlg.rim` - **NOT SUPPORTED** - `_dlg` uses container type 3 (ERF), must be `.erf` extension
 - `{module}.erf` (no suffix) - **NOT SUPPORTED** - Not a recognized module piece pattern
 
@@ -177,13 +176,6 @@ The RIM/ERF/MOD container formats store resources with:
 - **ResRef**: 16-byte null-terminated ASCII string (no path separators)
 - **Resource Type ID**: uint32 (RIM) or uint16 (ERF/MOD)
 - **Resource data**: offset and size
-
-**Analysis**:
-
-- ResRef field is fixed at 16 bytes, null-padded
-- No evidence of path separator handling (`/` or `\`) in container format
-- No evidence of subfolder enumeration in module loading code
-- **Conclusion**: Resources are stored **flat** in containers - no subfolder support
 
 **Reverse Engineering Evidence**:
 
@@ -275,9 +267,13 @@ The engine's resource manager loads resources by:
 - **RES (type 0x0 = 0)**:
   - ✅ Registered in resource type registry (swkotor.exe: `FUN_005e6d20` line 34)
   - ✅ CAN be registered in modules (no type filtering in `FUN_0040e990`)
-  - ❓ **UNPROVEN**: Whether RES loading code uses `FUN_00407230` or hardcoded paths
-  - **If RES loader uses `FUN_00407230`**: Module RES would override SAV RES (if same ResRef)
-  - **If RES loader uses hardcoded SAV path**: Module RES would be ignored
+  - ✅ **VERIFIED**: RES loading code does **NOT** use `FUN_00407230` (resource system)
+  - **Loading Mechanism**: RES files are loaded via **direct file I/O** from save files, **NOT** through the resource system
+  - **Evidence**:
+    - **No RES handler found**: Exhaustive search for `FUN_004074d0` calls with resource type 0 found **ZERO results** in both swkotor.exe and swkotor2.exe
+    - **Save file loading**: Save files are loaded via `FUN_00409460` → `FUN_00408e90` → `FUN_00406b20` which registers files in the resource table, but RES files themselves are loaded via direct file I/O (swkotor.exe: `FUN_004b8300` line 136-155 loads "savenfo.res" directly via `FUN_00411260` which is a GFF loader, not a resource system call)
+    - **Direct file I/O**: RES files from save files are accessed directly from the save file path, bypassing `FUN_00407230` entirely
+  - **Module vs Save Priority**: ❌ **Module RES files will be IGNORED** - RES files are loaded directly from save files via hardcoded paths, not through the resource system. Module RES files cannot override save file RES files because the RES loader bypasses the resource system.
 
 - **KEY/BIF**: Not registered in resource type registry - cannot be packed as resources
 
