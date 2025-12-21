@@ -1651,17 +1651,16 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// <summary>
         /// D3D12_VIEWPORT structure for viewport setting.
         /// Based on DirectX 12 Viewports: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_viewport
-        /// D3D12_VIEWPORT uses FLOAT (32-bit float) for all fields.
         /// </summary>
         [StructLayout(LayoutKind.Sequential)]
         private struct D3D12_VIEWPORT
         {
-            public float TopLeftX;    // FLOAT - X coordinate of the left hand side of the viewport
-            public float TopLeftY;    // FLOAT - Y coordinate of the top of the viewport
-            public float Width;       // FLOAT - Width of the viewport
-            public float Height;      // FLOAT - Height of the viewport
-            public float MinDepth;    // FLOAT - Minimum depth of the viewport (typically 0.0)
-            public float MaxDepth;    // FLOAT - Maximum depth of the viewport (typically 1.0)
+            public double TopLeftX;    // FLOAT as double for alignment
+            public double TopLeftY;    // FLOAT as double for alignment
+            public double Width;       // FLOAT as double for alignment
+            public double Height;      // FLOAT as double for alignment
+            public double MinDepth;    // FLOAT as double for alignment
+            public double MaxDepth;    // FLOAT as double for alignment
         }
 
         /// <summary>
@@ -7319,6 +7318,14 @@ namespace Andastra.Runtime.MonoGame.Backends
         // D3D12 Elements Layout
         private const uint D3D12_ELEMENTS_LAYOUT_ARRAY = 0;
         private const uint D3D12_ELEMENTS_LAYOUT_ARRAY_OF_POINTERS = 1;
+
+        // D3D12 Raytracing Instance Flags
+        // Based on D3D12 API: D3D12_RAYTRACING_INSTANCE_FLAGS
+        private const uint D3D12_RAYTRACING_INSTANCE_FLAG_NONE = 0;
+        private const uint D3D12_RAYTRACING_INSTANCE_FLAG_TRIANGLE_CULL_DISABLE = 0x1;
+        private const uint D3D12_RAYTRACING_INSTANCE_FLAG_TRIANGLE_FRONT_COUNTERCLOCKWISE = 0x2;
+        private const uint D3D12_RAYTRACING_INSTANCE_FLAG_FORCE_OPAQUE = 0x4;
+        private const uint D3D12_RAYTRACING_INSTANCE_FLAG_FORCE_NON_OPAQUE = 0x8;
 
         #endregion
 
