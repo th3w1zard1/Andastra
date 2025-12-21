@@ -5,6 +5,7 @@ using Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
+using Andastra.Runtime.Games.Common;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Core.Actions
@@ -173,7 +174,7 @@ namespace Andastra.Runtime.Core.Actions
             {
                 // Convert property type to effect using itempropdef.2da lookup when available
                 // Falls back to comprehensive hardcoded mappings based on Aurora engine standard
-                Effect effect = ConvertPropertyToEffect(property);
+                Effect effect = ConvertPropertyToEffect(property, caster.World);
                 if (effect != null)
                 {
                     effectSystem.ApplyEffect(target, effect, caster);
@@ -210,7 +211,7 @@ namespace Andastra.Runtime.Core.Actions
         /// - Falls back to comprehensive hardcoded mappings if 2DA table is not available
         /// - Supports all Aurora engine property types (0-58+)
         /// </remarks>
-        private Combat.Effect ConvertPropertyToEffect(ItemProperty property)
+        private Combat.Effect ConvertPropertyToEffect(ItemProperty property, IWorld world)
         {
             if (property == null)
             {
@@ -218,7 +219,7 @@ namespace Andastra.Runtime.Core.Actions
             }
 
             // Try to access itempropdef.2da through world's resource system
-            TwoDA itempropDefTable = TryGetItemPropDefTable(property);
+            TwoDA itempropDefTable = TryGetItemPropDefTable(property, world);
 
             if (itempropDefTable != null)
             {
@@ -235,14 +236,45 @@ namespace Andastra.Runtime.Core.Actions
         /// <summary>
         /// Attempts to load itempropdef.2da table from the world's resource system.
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Item properties map to effect types via itempropdef.2da
+        /// - Located via string references: "ItemPropDef" @ 0x007c4c20, "itempropdef.2da" in resource system
+        /// - Original implementation: Accesses itempropdef.2da through game data provider
+        /// - Uses IWorld.GameDataProvider to access 2DA tables in engine-agnostic way
+        /// - swkotor2.exe: Item property definitions are loaded from itempropdef.2da via C2DA/2DA system
+        /// </remarks>
         [CanBeNull]
-        private TwoDA TryGetItemPropDefTable(ItemProperty property)
+        private TwoDA TryGetItemPropDefTable(ItemProperty property, IWorld world)
         {
-            // Try to access 2DA table through IWorld if it exposes a resource provider
-            // This is engine-specific, so we use reflection or a service interface if available
-            // TODO: STUB - For now, return null to use hardcoded fallback
-            // Future: Add IGameDataProvider interface to IWorld for engine-agnostic 2DA access
-            return null;
+            if (property == null || world == null)
+            {
+                return null;
+            }
+
+            // Access 2DA table through IWorld's GameDataProvider
+            // This provides engine-agnostic access to game data tables
+            // Based on swkotor2.exe: Item properties are looked up in itempropdef.2da via game data system
+            // Original implementation: Uses game data provider to load itempropdef.2da table
+            IGameDataProvider gameDataProvider = world.GameDataProvider;
+            if (gameDataProvider == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                // Get itempropdef.2da table from game data provider
+                // Table name is "itempropdef" (without .2da extension)
+                // Based on swkotor2.exe: itempropdef.2da is loaded via game data system
+                TwoDA table = gameDataProvider.GetTable("itempropdef");
+                return table;
+            }
+            catch
+            {
+                // If table loading fails (e.g., table doesn't exist or error loading), return null
+                // The hardcoded fallback will handle property-to-effect conversion
+                return null;
+            }
         }
 
         /// <summary>
