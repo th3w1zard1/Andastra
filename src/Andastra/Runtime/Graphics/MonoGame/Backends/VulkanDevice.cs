@@ -1446,6 +1446,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static vkCmdBindVertexBuffersDelegate vkCmdBindVertexBuffers;
         private static vkCmdBindIndexBufferDelegate vkCmdBindIndexBuffer;
         private static vkCmdSetBlendConstantsDelegate vkCmdSetBlendConstants;
+        private static vkCmdSetStencilReferenceDelegate vkCmdSetStencilReference;
         private static vkCmdClearDepthStencilImageDelegate vkCmdClearDepthStencilImage;
         private static vkCmdClearColorImageDelegate vkCmdClearColorImage;
         private static vkGetPhysicalDeviceFormatPropertiesDelegate vkGetPhysicalDeviceFormatProperties;
