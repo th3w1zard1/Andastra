@@ -1839,46 +1839,43 @@ namespace HolocronToolset.Editors
             var contextMenu = new ContextMenu();
             comboBox.ContextMenu = contextMenu;
 
-            // Handle right-click to build dynamic menu
-            // In Avalonia, we use PointerPressed event to detect right-click
-            comboBox.PointerPressed += (sender, e) =>
+            // Handle context menu opening to build dynamic menu
+            // In Avalonia, we populate the menu when it's about to open
+            contextMenu.Opening += (sender, e) =>
             {
-                if (e.GetCurrentPoint(comboBox).Properties.IsRightButtonPressed)
+                if (contextMenu == null || _installation == null)
                 {
-                    if (contextMenu == null || _installation == null)
-                    {
-                        return;
-                    }
-
-                    // Clear existing items
-                    contextMenu.Items.Clear();
-
-                    // Get widget text (script name)
-                    string widgetText = comboBox.SelectedItem?.ToString() ?? comboBox.Text ?? string.Empty;
-                    widgetText = widgetText.Trim();
-
-                    // Add "Open in Editor" action (if script name is set)
-                    var openInEditorItem = new MenuItem
-                    {
-                        Header = "Open in Editor",
-                        IsEnabled = !string.IsNullOrEmpty(widgetText)
-                    };
-                    if (!string.IsNullOrEmpty(widgetText))
-                    {
-                        openInEditorItem.Click += (s, ev) => OpenScriptInEditor(comboBox, widgetText);
-                    }
-                    contextMenu.Items.Add(openInEditorItem);
-
-                    // Add "Create New Script" action
-                    var createNewItem = new MenuItem { Header = "Create New Script" };
-                    createNewItem.Click += (s, ev) => CreateNewScript(comboBox);
-                    contextMenu.Items.Add(createNewItem);
-
-                    contextMenu.Items.Add(new Separator());
-
-                    // Build file context menu (File... submenu with all locations)
-                    BuildFileContextMenu(contextMenu, widgetText, resrefTypes);
+                    return;
                 }
+
+                // Clear existing items
+                contextMenu.Items.Clear();
+
+                // Get widget text (script name)
+                string widgetText = comboBox.SelectedItem?.ToString() ?? comboBox.Text ?? string.Empty;
+                widgetText = widgetText.Trim();
+
+                // Add "Open in Editor" action (if script name is set)
+                var openInEditorItem = new MenuItem
+                {
+                    Header = "Open in Editor",
+                    IsEnabled = !string.IsNullOrEmpty(widgetText)
+                };
+                if (!string.IsNullOrEmpty(widgetText))
+                {
+                    openInEditorItem.Click += (s, ev) => OpenScriptInEditor(comboBox, widgetText);
+                }
+                contextMenu.Items.Add(openInEditorItem);
+
+                // Add "Create New Script" action
+                var createNewItem = new MenuItem { Header = "Create New Script" };
+                createNewItem.Click += (s, ev) => CreateNewScript(comboBox);
+                contextMenu.Items.Add(createNewItem);
+
+                contextMenu.Items.Add(new Separator());
+
+                // Build file context menu (File... submenu with all locations)
+                BuildFileContextMenu(contextMenu, widgetText, resrefTypes);
             };
         }
 
