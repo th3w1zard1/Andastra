@@ -343,7 +343,7 @@ namespace Andastra.Runtime.Games.Aurora.Journal
                     };
                     
                     // Add to entries list (base class stores entries globally, but we track creatureId)
-                    base._entries.Add(entry);
+                    _entries.Add(entry);
 
                     // Update quest state for this creature
                     Dictionary<string, int> creatureStates;
