@@ -237,13 +237,41 @@ namespace Andastra.Runtime.Core.Perception
                     if (_world.CurrentArea.NavigationMesh.Raycast(subjectPos, direction, distance, out hitPoint, out hitFace))
                     {
                         // Something is blocking - check if it's a door that might be open
-                        // TODO: STUB - For now, assume walls fully block hearing, doors partially block
-                        float hitDist = Vector3.Distance(subjectPos, hitPoint);
-                        float targetDist = Vector3.Distance(subjectPos, targetPos);
-                        // Allow some tolerance for doors (assume doors don't fully block if within 1 unit)
-                        if (targetDist - hitDist > 1.0f)
+                        // Based on swkotor2.exe: Sound occlusion through walls and doors
+                        // Located via string references: Door entity checks in perception system
+                        // Original implementation: Doors that are open allow sound to pass, closed doors and walls block sound
+                        // Check for door entities near the hit point
+                        const float doorCheckRadius = 2.0f; // Check for doors within 2 units of hit point
+                        IEnumerable<IEntity> nearbyDoors = _world.GetEntitiesInRadius(hitPoint, doorCheckRadius, ObjectType.Door);
+                        
+                        bool foundDoor = false;
+                        foreach (IEntity doorEntity in nearbyDoors)
                         {
-                            // Significant occlusion detected
+                            if (doorEntity == null || !doorEntity.IsValid)
+                            {
+                                continue;
+                            }
+                            
+                            // Found a door entity near the hit point
+                            foundDoor = true;
+                            
+                            // Check if door is open
+                            IDoorComponent doorComponent = doorEntity.GetComponent<IDoorComponent>();
+                            if (doorComponent != null && doorComponent.IsOpen)
+                            {
+                                // Door is open - allow sound to pass through
+                                return true;
+                            }
+                            else
+                            {
+                                // Door is closed - block sound
+                                return false;
+                            }
+                        }
+                        
+                        // No door found at hit point - it's a wall, fully block sound
+                        if (!foundDoor)
+                        {
                             return false;
                         }
                     }
