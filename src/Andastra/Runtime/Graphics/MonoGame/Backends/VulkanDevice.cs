@@ -882,7 +882,13 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static vkCmdTraceRaysKHRDelegate vkCmdTraceRaysKHR;
 
         // VK_KHR_acceleration_structure extension function pointers (loaded via vkGetDeviceProcAddr when extension is available)
+        // Note: Extension functions are device-specific, but stored as static for simplicity.
+        // In a production implementation, these could be stored per-device for multi-device scenarios.
         private static vkDestroyAccelerationStructureKHRDelegate vkDestroyAccelerationStructureKHR;
+
+        // P/Invoke declaration for vkGetDeviceProcAddr (used to load extension functions)
+        [DllImport(VulkanLibrary, EntryPoint = "vkGetDeviceProcAddr", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr vkGetDeviceProcAddr(IntPtr device, [MarshalAs(UnmanagedType.LPStr)] string pName);
 
         // Helper methods for Vulkan interop
         private static void InitializeVulkanFunctions(IntPtr device)
@@ -890,6 +896,19 @@ namespace Andastra.Runtime.MonoGame.Backends
             // Load Vulkan functions - in a real implementation, these would be loaded via vkGetDeviceProcAddr
             // For this example, we'll assume they're available through P/Invoke
             // This is a simplified version - real implementation would need proper function loading
+
+            // Load VK_KHR_acceleration_structure extension functions if available
+            if (device != IntPtr.Zero)
+            {
+                // Attempt to load vkDestroyAccelerationStructureKHR from the device
+                // This function is part of VK_KHR_acceleration_structure extension
+                IntPtr funcPtr = vkGetDeviceProcAddr(device, "vkDestroyAccelerationStructureKHR");
+                if (funcPtr != IntPtr.Zero)
+                {
+                    vkDestroyAccelerationStructureKHR = Marshal.GetDelegateForFunctionPointer<vkDestroyAccelerationStructureKHRDelegate>(funcPtr);
+                }
+                // If funcPtr is IntPtr.Zero, the extension is not available and vkDestroyAccelerationStructureKHR will remain null
+            }
         }
 
         private static void CheckResult(VkResult result, string operation)
@@ -3138,7 +3157,23 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             public void Dispose()
             {
-                // TODO: vkDestroyAccelerationStructureKHR when extension is available
+                // Destroy acceleration structure if extension is available and handle is valid
+                if (_vkAccelStruct != IntPtr.Zero && _device != IntPtr.Zero && vkDestroyAccelerationStructureKHR != null)
+                {
+                    try
+                    {
+                        // Call vkDestroyAccelerationStructureKHR to destroy the acceleration structure
+                        // pAllocator is null (uses default allocator)
+                        vkDestroyAccelerationStructureKHR(_device, _vkAccelStruct, IntPtr.Zero);
+                    }
+                    catch
+                    {
+                        // Ignore errors during destruction - device may already be destroyed
+                        // This matches the pattern used in other Dispose methods in the codebase
+                    }
+                }
+
+                // Dispose the backing buffer that contains the acceleration structure memory
                 _backingBuffer?.Dispose();
             }
         }
@@ -4061,5 +4096,6 @@ namespace Andastra.Runtime.MonoGame.Backends
 
     }
 }
+
 
 
