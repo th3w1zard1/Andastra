@@ -1407,6 +1407,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private IntPtr _clearUAVUintComputePipelineState; // id<MTLComputePipelineState> - cached pipeline state for clearing UAV with uint
         private static bool? _supportsBatchViewports; // Cached result for batch viewport API availability
         private GraphicsState _currentGraphicsState; // Current graphics state for draw commands
+        private uint _currentStencilRef; // Current stencil reference value (default: 0)
 
         public MetalCommandList(IntPtr handle, CommandListType type, MetalBackend backend)
         {
@@ -1421,6 +1422,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             _clearUAVFloatComputePipelineState = IntPtr.Zero;
             _clearUAVUintComputePipelineState = IntPtr.Zero;
             _currentGraphicsState = default(GraphicsState); // Initialize to default state
+            _currentStencilRef = 0; // Initialize stencil reference to default value (0)
         }
 
         public void Open()
@@ -2975,17 +2977,23 @@ namespace Andastra.Runtime.MonoGame.Backends
                 return;
             }
 
+            // Store the stencil reference value for potential re-application when render command encoder is recreated
+            _currentStencilRef = reference;
+
             // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1515697-setstencilreferencevalue
             // Render command encoder must be available (SetGraphicsState must be called first to begin render pass)
             if (_currentRenderCommandEncoder == IntPtr.Zero)
             {
                 // Render command encoder not available - SetGraphicsState must be called first to begin render pass
+                // The stencil reference value is stored and will be applied when the render command encoder becomes available
                 return;
             }
 
             // Set stencil reference value on the active render command encoder
             // Metal API: MTLRenderCommandEncoder::setStencilReferenceValue(_:)
             // The reference value is used in stencil comparison operations for both front and back-facing primitives
+            // Based on swkotor2.exe: DirectX 9 render state D3DRS_STENCILREF (0x0080b0e0)
+            // Original game sets stencil reference value via IDirect3DDevice9::SetRenderState(D3DRS_STENCILREF, value)
             MetalNative.SetStencilReferenceValue(_currentRenderCommandEncoder, reference);
         }
 
