@@ -134,9 +134,22 @@ namespace Andastra.Parsing.Formats.LIP
             LIPShape rightShape = shapes.Item2;
             float factor = shapes.Item3;
 
-            // TODO: STUB - For now, just return the shape we're closest to
-            // In a full implementation, this would do proper shape interpolation
-            return factor > 0.5f ? rightShape : leftShape;
+            // Determine the appropriate shape based on interpolation factor
+            // Factor ranges from 0.0 (at left keyframe) to 1.0 (at right keyframe)
+            // Since LIPShape is a discrete enum, we select the shape we're closest to in time
+            // When factor is exactly 0.5, we prefer the left shape for consistency
+            // This matches the PyKotor reference implementation behavior
+            // Note: True interpolation between discrete mouth shapes would require a transition matrix
+            // that defines intermediate shapes, but the time-based selection approach is standard
+            // for lip-sync data where shapes represent distinct phonemes
+            if (factor > 0.5f)
+            {
+                return rightShape;
+            }
+            else
+            {
+                return leftShape;
+            }
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lip/lip_data.py:423-426
