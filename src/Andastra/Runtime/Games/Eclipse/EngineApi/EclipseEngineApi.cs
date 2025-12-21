@@ -2111,32 +2111,40 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 return Variable.FromInt(0);
             }
             
-            // Check if object is the current area
-            // Since IArea doesn't have ObjectId, we check by comparing ResRef or Tag
-            // For Eclipse, areas are special objects, so we check if the objectId matches a special area ID
-            // In practice, areas are accessed via CurrentArea, not as entities with ObjectIds
-            // This function returns true if the object is conceptually an area
-            if (objectId == ObjectInvalid)
+            // Check if objectId corresponds to an area
+            // Areas are registered in the world with ObjectIds starting from 0x7F000010
+            // Based on daorigins.exe/DragonAge2.exe: Areas have ObjectIds assigned when registered
+            // Located via World.cs: RegisterArea assigns AreaId from _nextAreaId counter (starts at 0x7F000010)
+            // Original implementation: GetIsArea checks if objectId is a valid area ObjectId
+            // Areas are accessed via GetArea() which returns area ObjectId, not as entities
+            if (ctx != null && ctx.World != null)
             {
-                return Variable.FromInt(0);
+                // Check if objectId corresponds to a registered area
+                // World.GetArea(objectId) returns the area if objectId is a valid area ObjectId
+                // Based on World.cs: GetArea(uint areaId) does dictionary lookup by AreaId
+                // If GetArea returns a non-null area, then objectId is an area ObjectId
+                IArea area = ctx.World.GetArea(objectId);
+                if (area != null)
+                {
+                    // objectId is a valid area ObjectId - return true
+                    return Variable.FromInt(1);
+                }
+                
+                // Also check if objectId matches current area's ObjectId
+                // This handles the case where the current area might not be in the areas dictionary yet
+                // but we still want to recognize it as an area
+                if (ctx.World.CurrentArea != null)
+                {
+                    uint currentAreaId = ctx.World.GetAreaId(ctx.World.CurrentArea);
+                    if (currentAreaId != 0 && objectId == currentAreaId)
+                    {
+                        // objectId matches current area's ObjectId - return true
+                        return Variable.FromInt(1);
+                    }
+                }
             }
             
-            // Check if this is a special area object ID (areas might have special IDs)
-            // TODO: STUB - For now, if objectId matches current area's conceptual ID, return true
-            if (ctx != null && ctx.World != null && ctx.World.CurrentArea != null)
-            {
-                // Areas don't have ObjectIds in the interface, so we can't directly compare
-                // Return false for now - areas are typically accessed via CurrentArea, not as object parameters
-                // This may need adjustment based on how Eclipse actually handles area objects
-            }
-            
-            // Check if object has area-specific data
-            Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
-            if (entity != null && entity.HasData("IsArea"))
-            {
-                return Variable.FromInt(1);
-            }
-            
+            // objectId does not correspond to an area
             return Variable.FromInt(0);
         }
 
