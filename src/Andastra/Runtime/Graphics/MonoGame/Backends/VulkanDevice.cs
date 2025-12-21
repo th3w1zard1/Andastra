@@ -187,6 +187,16 @@ namespace Andastra.Runtime.MonoGame.Backends
             VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_KHR = 0x00400000,
         }
 
+        // Vulkan stencil face flags
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkStencilFaceFlagBits.html
+        [Flags]
+        private enum VkStencilFaceFlags
+        {
+            VK_STENCIL_FACE_FRONT_BIT = 0x00000001,
+            VK_STENCIL_FACE_BACK_BIT = 0x00000002,
+            VK_STENCIL_FACE_FRONT_AND_BACK = 0x00000003,
+        }
+
         // Vulkan image layout
         private enum VkImageLayout
         {
@@ -1368,6 +1378,11 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkCmdSetBlendConstantsDelegate(IntPtr commandBuffer, IntPtr blendConstants);
+
+        // Delegate for vkCmdSetStencilReference
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetStencilReference.html
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdSetStencilReferenceDelegate(IntPtr commandBuffer, VkStencilFaceFlags faceMask, uint reference);
 
         // Function pointers storage
         private static vkCreateImageDelegate vkCreateImage;
@@ -5257,6 +5272,14 @@ namespace Andastra.Runtime.MonoGame.Backends
                 get { return _vkPipeline; }
             }
 
+            /// <summary>
+            /// Gets the VkPipelineLayout handle. Used internally for descriptor set binding.
+            /// </summary>
+            internal IntPtr VkPipelineLayout
+            {
+                get { return _vkPipelineLayout; }
+            }
+
             public void Dispose()
             {
                 if (_vkPipeline != IntPtr.Zero && _device != IntPtr.Zero)
@@ -7700,7 +7723,48 @@ namespace Andastra.Runtime.MonoGame.Backends
                     Marshal.FreeHGlobal(blendConstantsPtr);
                 }
             }
-            public void SetStencilRef(uint reference) { /* TODO: vkCmdSetStencilReference */ }
+            /// <summary>
+            /// Sets the stencil reference value for stencil operations.
+            /// 
+            /// The stencil reference value is used in stencil compare operations when
+            /// the stencil compare operation is VK_COMPARE_OP_EQUAL, VK_COMPARE_OP_NOT_EQUAL,
+            /// VK_COMPARE_OP_LESS, VK_COMPARE_OP_LESS_OR_EQUAL, VK_COMPARE_OP_GREATER, or
+            /// VK_COMPARE_OP_GREATER_OR_EQUAL.
+            /// 
+            /// Based on Vulkan API: vkCmdSetStencilReference
+            /// Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetStencilReference.html
+            /// swkotor2.exe: N/A - Original game used DirectX 9, not Vulkan
+            /// </summary>
+            /// <param name="reference">Stencil reference value (0-255).</param>
+            public void SetStencilRef(uint reference)
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (_vkCommandBuffer == IntPtr.Zero)
+                {
+                    return; // Command buffer not initialized
+                }
+
+                if (vkCmdSetStencilReference == null)
+                {
+                    return; // Function not loaded
+                }
+
+                // vkCmdSetStencilReference signature:
+                // void vkCmdSetStencilReference(
+                //     VkCommandBuffer commandBuffer,
+                //     VkStencilFaceFlags faceMask,
+                //     uint32_t reference);
+                //
+                // Set stencil reference for both front and back faces to match D3D12 behavior
+                // where OMSetStencilRef sets the reference value for both faces
+
+                // Call vkCmdSetStencilReference with both front and back faces
+                vkCmdSetStencilReference(_vkCommandBuffer, VkStencilFaceFlags.VK_STENCIL_FACE_FRONT_AND_BACK, reference);
+            }
             public void Draw(DrawArguments args)
             {
                 if (!_isOpen)
@@ -8130,7 +8194,97 @@ namespace Andastra.Runtime.MonoGame.Backends
                 {
                     throw new InvalidOperationException("Command list must be open before setting raytracing state");
                 }
-                // TODO: STUB - Implement Vulkan raytracing state setup (vkCmdBindPipeline with raytracing pipeline)
+
+                // Validate that vkCmdBindPipeline function is available
+                if (vkCmdBindPipeline == null)
+                {
+                    throw new InvalidOperationException("vkCmdBindPipeline function pointer not initialized. Call InitializeVulkanFunctions first.");
+                }
+
+                // Validate pipeline is provided
+                if (state.Pipeline == null)
+                {
+                    throw new ArgumentException("Raytracing pipeline is required", nameof(state));
+                }
+
+                // Cast pipeline to VulkanRaytracingPipeline to access Vulkan-specific handles
+                VulkanRaytracingPipeline vulkanPipeline = state.Pipeline as VulkanRaytracingPipeline;
+                if (vulkanPipeline == null)
+                {
+                    throw new ArgumentException("Raytracing pipeline must be a VulkanRaytracingPipeline", nameof(state));
+                }
+
+                // Get VkPipeline handle from the raytracing pipeline
+                IntPtr vkPipelineHandle = vulkanPipeline.VkPipeline;
+                if (vkPipelineHandle == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("Raytracing pipeline does not have a valid VkPipeline handle. Pipeline may not have been fully created.");
+                }
+
+                // Bind raytracing pipeline
+                // Based on Vulkan API: vkCmdBindPipeline binds a raytracing pipeline to the command buffer
+                // Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBindPipeline.html
+                // VK_KHR_ray_tracing_pipeline extension: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_KHR_ray_tracing_pipeline.html
+                vkCmdBindPipeline(_vkCommandBuffer, VkPipelineBindPoint.VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, vkPipelineHandle);
+
+                // Step 2: Bind descriptor sets if provided
+                if (state.BindingSets != null && state.BindingSets.Length > 0 && vkCmdBindDescriptorSets != null)
+                {
+                    // Get pipeline layout from raytracing pipeline
+                    IntPtr vkPipelineLayout = vulkanPipeline.VkPipelineLayout;
+                    if (vkPipelineLayout == IntPtr.Zero)
+                    {
+                        throw new InvalidOperationException("Raytracing pipeline does not have a valid VkPipelineLayout handle.");
+                    }
+
+                    // Build array of descriptor set handles
+                    int descriptorSetCount = state.BindingSets.Length;
+                    IntPtr descriptorSetHandlesPtr = Marshal.AllocHGlobal(descriptorSetCount * IntPtr.Size);
+                    try
+                    {
+                        for (int i = 0; i < descriptorSetCount; i++)
+                        {
+                            VulkanBindingSet vulkanBindingSet = state.BindingSets[i] as VulkanBindingSet;
+                            if (vulkanBindingSet == null)
+                            {
+                                Marshal.FreeHGlobal(descriptorSetHandlesPtr);
+                                throw new ArgumentException($"Binding set at index {i} must be a VulkanBindingSet", nameof(state));
+                            }
+
+                            IntPtr vkDescriptorSet = vulkanBindingSet.VkDescriptorSet;
+                            if (vkDescriptorSet == IntPtr.Zero)
+                            {
+                                Marshal.FreeHGlobal(descriptorSetHandlesPtr);
+                                throw new InvalidOperationException($"Binding set at index {i} does not have a valid VkDescriptorSet handle.");
+                            }
+
+                            Marshal.WriteIntPtr(descriptorSetHandlesPtr, i * IntPtr.Size, vkDescriptorSet);
+                        }
+
+                        // Bind all descriptor sets in a single call
+                        // Based on Vulkan API: vkCmdBindDescriptorSets
+                        // Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBindDescriptorSets.html
+                        vkCmdBindDescriptorSets(
+                            _vkCommandBuffer,
+                            VkPipelineBindPoint.VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR,
+                            vkPipelineLayout,
+                            0, // firstSet - starting set index
+                            (uint)descriptorSetCount,
+                            descriptorSetHandlesPtr,
+                            0, // dynamicOffsetCount
+                            IntPtr.Zero // pDynamicOffsets - would be populated if dynamic buffers present
+                        );
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(descriptorSetHandlesPtr);
+                    }
+                }
+
+                // Step 3: Store raytracing state for use in DispatchRays
+                // The shader binding table and other state information is needed when dispatching rays
+                _raytracingState = state;
+                _hasRaytracingState = true;
             }
 
             public void DispatchRays(DispatchRaysArguments args)
