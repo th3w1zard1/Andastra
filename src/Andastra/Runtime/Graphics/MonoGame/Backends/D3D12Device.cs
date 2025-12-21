@@ -1883,6 +1883,17 @@ namespace Andastra.Runtime.MonoGame.Backends
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void OMSetRenderTargetsDelegate(IntPtr commandList, uint NumRenderTargetDescriptors, IntPtr pRenderTargetDescriptors, byte RTsSingleHandleToDescriptorRange, IntPtr pDepthStencilDescriptor);
 
+        // COM interface method delegate for OMSetBlendFactor
+        // Based on DirectX 12 OMSetBlendFactor: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-omsetblendfactor
+        // BlendFactor is a pointer to a float[4] array containing RGBA blend factors
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void OMSetBlendFactorDelegate(IntPtr commandList, IntPtr BlendFactor);
+
+        // COM interface method delegate for OMSetStencilRef
+        // Based on DirectX 12 Output Merger Stencil Reference: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-omsetstencilref
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void OMSetStencilRefDelegate(IntPtr commandList, uint StencilRef);
+
         // COM interface method delegate for SetDescriptorHeaps
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void SetDescriptorHeapsDelegate(IntPtr commandList, uint NumDescriptorHeaps, IntPtr ppDescriptorHeaps);
@@ -6585,12 +6596,12 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             /// <summary>
-            /// Calls ID3D12GraphicsCommandList::OMSetBlendFactor through COM vtable.
-            /// VTable index 48 for ID3D12GraphicsCommandList.
-            /// Based on DirectX 12 Blend Factor: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-omsetblendfactor
+            /// Calls ID3D12GraphicsCommandList::OMSetStencilRef through COM vtable.
+            /// VTable index 46 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Output Merger Stencil Reference: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-omsetstencilref
             /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
             /// </summary>
-            private unsafe void CallOMSetBlendFactor(IntPtr commandList, IntPtr BlendFactor)
+            private unsafe void CallOMSetStencilRef(IntPtr commandList, uint StencilRef)
             {
                 // Platform check: DirectX 12 COM is Windows-only
                 if (Environment.OSVersion.Platform != PlatformID.Win32NT)
@@ -6605,14 +6616,14 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                 // Get vtable pointer
                 IntPtr* vtable = *(IntPtr**)commandList;
-                // OMSetBlendFactor is at index 48 in ID3D12GraphicsCommandList vtable
-                IntPtr methodPtr = vtable[48];
+                // OMSetStencilRef is at index 46 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[46];
 
                 // Create delegate from function pointer
-                OMSetBlendFactorDelegate omsetBlendFactor =
-                    (OMSetBlendFactorDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(OMSetBlendFactorDelegate));
+                OMSetStencilRefDelegate omsetStencilRef =
+                    (OMSetStencilRefDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(OMSetStencilRefDelegate));
 
-                omsetBlendFactor(commandList, BlendFactor);
+                omsetStencilRef(commandList, StencilRef);
             }
 
             // COM interface method delegate for ClearDepthStencilView
@@ -7817,9 +7828,84 @@ namespace Andastra.Runtime.MonoGame.Backends
                     Marshal.FreeHGlobal(rectsPtr);
                 }
             }
-            public void SetBlendConstant(Vector4 color) { /* TODO: OMSetBlendFactor */ }
+            /// <summary>
+            /// Sets the blend constant color used for blending operations.
+            /// Converts Vector4 color to float[4] array and calls OMSetBlendFactor.
+            /// Based on DirectX 12 Blend Factor: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-omsetblendfactor
+            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+            /// </summary>
+            public unsafe void SetBlendConstant(Vector4 color)
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    return; // Command list not initialized
+                }
+
+                // Convert Vector4 color to float[4] array (RGBA format for OMSetBlendFactor)
+                // DirectX 12 OMSetBlendFactor expects float[4] in RGBA order
+                float[] blendFactor = new float[4] { color.X, color.Y, color.Z, color.W };
+
+                // Pin the array to get a pointer for the native call
+                fixed (float* blendFactorPtr = blendFactor)
+                {
+                    IntPtr blendFactorIntPtr = new IntPtr(blendFactorPtr);
+                    CallOMSetBlendFactor(_d3d12CommandList, blendFactorIntPtr);
+                }
+            }
             public void SetStencilRef(uint reference) { /* TODO: OMSetStencilRef */ }
-            public void Draw(DrawArguments args) { /* TODO: DrawInstanced */ }
+            /// <summary>
+            /// Draws non-indexed primitives using instanced drawing.
+            /// In DirectX 12, all non-indexed drawing is done through DrawInstanced.
+            /// Based on DirectX 12 DrawInstanced: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-drawinstanced
+            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+            /// </summary>
+            public void Draw(DrawArguments args)
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    return; // Command list not initialized
+                }
+
+                // Validate arguments
+                // VertexCountPerInstance must be greater than 0
+                if (args.VertexCount <= 0)
+                {
+                    // In non-indexed drawing context, VertexCount represents the vertex count per instance
+                    // Silently return if invalid - caller should ensure valid arguments
+                    return;
+                }
+
+                // InstanceCount defaults to 1 if not specified (0 or negative)
+                uint instanceCount = args.InstanceCount > 0 ? unchecked((uint)args.InstanceCount) : 1U;
+
+                // StartVertexLocation can be negative or any value
+                // It will be used as-is by the GPU
+                uint startVertexLocation = unchecked((uint)args.StartVertexLocation);
+                uint startInstanceLocation = unchecked((uint)args.StartInstanceLocation);
+
+                // Call DrawInstanced through COM vtable
+                // Parameters:
+                // - VertexCountPerInstance: args.VertexCount (vertex count per instance)
+                // - InstanceCount: args.InstanceCount (defaults to 1)
+                // - StartVertexLocation: args.StartVertexLocation
+                // - StartInstanceLocation: args.StartInstanceLocation
+                CallDrawInstanced(
+                    _d3d12CommandList,
+                    unchecked((uint)args.VertexCount), // VertexCountPerInstance
+                    instanceCount,                      // InstanceCount
+                    startVertexLocation,                // StartVertexLocation
+                    startInstanceLocation);             // StartInstanceLocation
+            }
             /// <summary>
             /// Draws indexed primitives using instanced drawing.
             /// In DirectX 12, all indexed drawing is done through DrawIndexedInstanced.
@@ -9046,6 +9132,14 @@ namespace Andastra.Runtime.MonoGame.Backends
             IntPtr commandList,
             IntPtr pDesc);
 
+        // COM interface method delegate for CopyRaytracingAccelerationStructure
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void CopyRaytracingAccelerationStructureDelegate(
+            IntPtr commandList,
+            ulong DestAccelerationStructureData,
+            ulong SourceAccelerationStructureData,
+            uint Mode);
+
         // COM interface method delegate for GetGPUVirtualAddress
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate ulong GetGPUVirtualAddressDelegate(IntPtr resource);
@@ -9108,6 +9202,45 @@ namespace Andastra.Runtime.MonoGame.Backends
                 (DispatchRaysDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(DispatchRaysDelegate));
 
             dispatchRays(commandList, pDesc);
+        }
+
+        /// <summary>
+        /// Calls ID3D12GraphicsCommandList4::CopyRaytracingAccelerationStructure through COM vtable.
+        /// VTable index 99 for ID3D12GraphicsCommandList4 (inherits from ID3D12GraphicsCommandList).
+        /// Based on D3D12 DXR API: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist4-copyraytracingaccelerationstructure
+        /// Copies a source acceleration structure to destination memory while applying the specified transformation.
+        /// For compaction, Mode must be D3D12_RAYTRACING_ACCELERATION_STRUCTURE_COPY_MODE_COMPACT and
+        /// the source must have been built with D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_COMPACTION.
+        /// </summary>
+        private unsafe void CallCopyRaytracingAccelerationStructure(IntPtr commandList, ulong destGpuVa, ulong srcGpuVa, uint mode)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            if (commandList == IntPtr.Zero)
+            {
+                return;
+            }
+
+            if (destGpuVa == 0UL || srcGpuVa == 0UL)
+            {
+                return;
+            }
+
+            // Get vtable pointer
+            IntPtr* vtable = *(IntPtr**)commandList;
+            // CopyRaytracingAccelerationStructure is at index 99 in ID3D12GraphicsCommandList4 vtable
+            // (after BuildRaytracingAccelerationStructure at 97 and DispatchRays at 98)
+            IntPtr methodPtr = vtable[99];
+
+            // Create delegate from function pointer
+            CopyRaytracingAccelerationStructureDelegate copyAccelStruct =
+                (CopyRaytracingAccelerationStructureDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CopyRaytracingAccelerationStructureDelegate));
+
+            copyAccelStruct(commandList, destGpuVa, srcGpuVa, mode);
         }
 
         // COM interface method delegate for CreateCommandSignature
