@@ -117,20 +117,23 @@ The AABB nodes are stored sequentially in the file starting at `aabb_offset`. Th
 
 ## Child Index Encoding: The Critical Detail
 
-The child indices stored in each AABB node (at offsets 0x24 and 0x28) can be interpreted in multiple ways:
+Think of the AABB nodes as stored in a list: node 0, node 1, node 2, node 3, and so on. When a parent node needs to point to a child node, it stores the position number in the list.
 
-1. **0-based array index**: Direct index into AABB node array (node 0, node 1, node 2, etc.)
-2. **1-based array index**: Index + 1 (node 1, node 2, node 3, etc. - incorrect for this format)
-3. **Byte offset multiplier**: Index * node_size (used by xoreos, but still requires 0-based indices)
+There are different ways to count positions:
+1. **0-based counting**: Start counting at 0. First item is 0, second is 1, third is 2. This is how arrays work in most programming languages.
+2. **1-based counting**: Start counting at 1. First item is 1, second is 2, third is 3. This is how humans normally count.
 
-**The game engine uses interpretation #1 (0-based array indices).**
+The game engine uses 0-based counting. So if a parent node's left child is the 6th node in the list (at position 5, because we start counting from 0), the child index should be `5`, not `6`.
 
-This means:
+What happens if you use the wrong counting:
+- If you write `6` when it should be `5`, the game will look at the 7th node instead of the 6th node
+- This means it's looking at the wrong child node
+- The entire tree becomes broken - parent nodes point to wrong children
+- When searching the tree, the game follows the wrong path
+- The game can't find any walkable triangles
+- Your character can't move
 
-- If a node's left child is at array position 5, the left child index should be `5` (not `6`)
-- The game engine reads this index and directly accesses `aabb_array[5]` to get the child node
-- If the index was `6` instead, the engine would access `aabb_array[6]`, which is the wrong node
-- This causes the entire tree traversal to fail, resulting in inability to find walkable faces
+This is exactly what happened with PyKotor - it was writing `6` when it should have written `5` (or `n+1` when it should have written `n`).
 
 ---
 
