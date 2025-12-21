@@ -146,12 +146,12 @@ The engine's resource manager loads resources by:
 2. Has a valid resource type ID
 3. Can be parsed by the appropriate loader
 
-**However**, the **convention** (not a hard requirement) is:
+**Observed Resource Type Distribution** (from actual game modules - not enforced by engine):
 
-- **`.rim` (MAIN)**: ARE, IFO, GIT only
-- **`_s.rim` (DATA)**: FAC, LYT, NCS, PTH, UTC, UTD, UTE, UTI, UTM, UTP, UTS, UTT, UTW, DLG (K1)
-- **`_dlg.erf` (K2_DLG)**: DLG only (K2)
-- **`.mod` (MOD)**: All resource types
+- **`.rim` (MAIN)**: Typically contains ARE, IFO, GIT
+- **`_s.rim` (DATA)**: Typically contains FAC, LYT, NCS, PTH, UTC, UTD, UTE, UTI, UTM, UTP, UTS, UTT, UTW, DLG (K1)
+- **`_dlg.erf` (K2_DLG)**: Typically contains DLG (K2)
+- **`.mod` (MOD)**: Can contain any resource type
 
 **Reverse Engineering Evidence**:
 
@@ -198,14 +198,29 @@ The engine's resource manager loads resources by:
 - **Media files**: ✅ **YES** - No type filtering
 - **Any resource type**: ✅ **YES** - Engine accepts any type ID stored in containers
 
-**CANNOT or SHOULD NOT be packed** (engine limitations or conventions):
+**Edge Cases - What Actually Works** (based on code structure):
 
-- **TLK**: Talk tables are global, not module-specific (TODO: Gain Certainty by going through ghidra mcp - Search for TLK loading code and verify if engine would load TLK from modules. Check string references to "dialog.tlk" and TLK resource type handlers)
-- **KEY/BIF**: Chitin key/archive files (not module containers)
-- **MOD/RIM/ERF/SAV**: Nested containers not supported
-- **HAK/NWM**: Aurora/NWN formats, not KotOR
-- **RES**: Save data format, not module content
-- **DDS**: Not found in texture loading code - likely not supported or uses different path
+- **TLK (type 0x7e2 = 2018)**: 
+  - ✅ Registered in resource type registry (swkotor.exe: `FUN_005e6d20` line 91, swkotor2.exe: `FUN_00632510` line 90)
+  - ✅ CAN be registered in modules (no type filtering in `FUN_0040e990`)
+  - ❓ **UNPROVEN**: Whether TLK loading code uses `FUN_00407230` (resource search) or hardcoded paths
+  - **If TLK loader uses `FUN_00407230`**: Module TLK would be found and loaded
+  - **If TLK loader uses hardcoded path**: Module TLK would be ignored
+
+- **RES (type 0x0 = 0)**:
+  - ✅ Registered in resource type registry (swkotor.exe: `FUN_005e6d20` line 34)
+  - ✅ CAN be registered in modules (no type filtering in `FUN_0040e990`)
+  - ❓ **UNPROVEN**: Whether RES loading code uses `FUN_00407230` or hardcoded paths
+  - **If RES loader uses `FUN_00407230`**: Module RES would override SAV RES (if same ResRef)
+  - **If RES loader uses hardcoded SAV path**: Module RES would be ignored
+
+- **KEY/BIF**: Not registered in resource type registry - cannot be packed as resources
+
+- **MOD/RIM/ERF/SAV**: Registered as container types (0x7db, 0xbba, 0x7d5, 0x7df) but engine doesn't recursively load nested containers
+
+- **HAK/NWM**: Not registered in resource type registry - cannot be packed as resources
+
+- **DDS**: Not registered in resource type registry - cannot be packed as resources
 
 **Note on TPC/TGA**: **YES, these CAN be containerized** in modules. The proof:
 
@@ -217,7 +232,6 @@ The engine's resource manager loads resources by:
   - `FUN_00408bc0` calls `FUN_00407230` which searches all locations including modules
 - **Texture Priority**: TGA → TPC (no DDS support in this code path)
 
-- **DDS**: Not found in texture loading code - TODO: Gain Certainty by going through ghidra mcp - Search for DDS texture loading by examining `FUN_004b8300` (swkotor.exe: 0x004b8300) and `FUN_00408bc0` (swkotor.exe: 0x00408bc0), search for string references to "DDS" or DDS-related texture loading code. Verify if DDS is not supported or uses different path
 
 ### Known Resource Types from Andastra
 
@@ -645,7 +659,7 @@ if (iVar7 == 0) {
 
 - **ANY resource type** - Same as modules, patch.erf accepts any resource type ID
 - **Common uses**: Bug fixes, patches, updated textures/models, updated scripts
-- **Typical contents**: Updated 2DA files, fixed NCS scripts, updated textures, updated models
+- **Typical contents**: Fixed NCS scripts, updated textures, updated models
 
 **Reverse Engineering Evidence**:
 
