@@ -11387,7 +11387,121 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                 return d3d12Flags;
             }
-            public void CompactBottomLevelAccelStruct(IAccelStruct dest, IAccelStruct src) { /* TODO: CopyRaytracingAccelerationStructure */ }
+            /// <summary>
+            /// Compacts a bottom-level acceleration structure to reduce memory usage.
+            /// Based on D3D12 DXR API: ID3D12GraphicsCommandList4::CopyRaytracingAccelerationStructure
+            /// D3D12 DXR API Reference: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist4-copyraytracingaccelerationstructure
+            /// 
+            /// Compaction reduces the memory footprint of acceleration structures by removing internal padding
+            /// and optimization data that isn't needed for ray traversal. This is useful for reducing memory
+            /// usage when acceleration structures are built but no longer need to be updated.
+            /// 
+            /// Requirements:
+            /// - Source acceleration structure must have been built with ALLOW_COMPACTION flag
+            /// - Source acceleration structure must be fully built (not in build state)
+            /// - Destination acceleration structure must be created with a buffer large enough for compacted data
+            /// - Compacted size can be obtained from post-build info emitted during build, or estimated
+            /// 
+            /// Implementation:
+            /// 1. Validates that source was built with ALLOW_COMPACTION flag
+            /// 2. Gets GPU virtual addresses for source and destination buffers
+            /// 3. Calls CopyRaytracingAccelerationStructure with COMPACT mode
+            /// 4. The compacted acceleration structure is written to the destination buffer
+            /// 
+            /// Note: After compaction, the source acceleration structure can be disposed to free memory.
+            /// The destination acceleration structure contains the compacted version and can be used for ray tracing.
+            /// </summary>
+            /// <param name="dest">Destination acceleration structure (must be created with buffer sized for compacted data).</param>
+            /// <param name="src">Source acceleration structure (must be built with ALLOW_COMPACTION flag).</param>
+            /// <exception cref="InvalidOperationException">Thrown if command list is not open, or if acceleration structures are invalid.</exception>
+            /// <exception cref="ArgumentException">Thrown if acceleration structures are not bottom-level, or if source wasn't built with ALLOW_COMPACTION.</exception>
+            public void CompactBottomLevelAccelStruct(IAccelStruct dest, IAccelStruct src)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open to record compaction commands");
+                }
+
+                if (dest == null)
+                {
+                    throw new ArgumentNullException(nameof(dest));
+                }
+
+                if (src == null)
+                {
+                    throw new ArgumentNullException(nameof(src));
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("Command list is not initialized");
+                }
+
+                // Validate that both are bottom-level acceleration structures
+                if (dest.IsTopLevel)
+                {
+                    throw new ArgumentException("Destination acceleration structure must be bottom-level for compaction", nameof(dest));
+                }
+
+                if (src.IsTopLevel)
+                {
+                    throw new ArgumentException("Source acceleration structure must be bottom-level for compaction", nameof(src));
+                }
+
+                // Cast to D3D12AccelStruct to access internal data
+                D3D12AccelStruct d3d12Dest = dest as D3D12AccelStruct;
+                D3D12AccelStruct d3d12Src = src as D3D12AccelStruct;
+
+                if (d3d12Dest == null)
+                {
+                    throw new ArgumentException("Destination acceleration structure must be a D3D12 acceleration structure", nameof(dest));
+                }
+
+                if (d3d12Src == null)
+                {
+                    throw new ArgumentException("Source acceleration structure must be a D3D12 acceleration structure", nameof(src));
+                }
+
+                // Validate that source was built with ALLOW_COMPACTION flag
+                // Based on D3D12 API: Compaction requires ALLOW_COMPACTION build flag
+                if ((src.Desc.BuildFlags & AccelStructBuildFlags.AllowCompaction) == 0)
+                {
+                    throw new ArgumentException("Source acceleration structure must be built with AllowCompaction flag to support compaction", nameof(src));
+                }
+
+                // Get GPU virtual addresses for source and destination buffers
+                ulong srcGpuVa = src.DeviceAddress;
+                ulong destGpuVa = dest.DeviceAddress;
+
+                if (srcGpuVa == 0UL)
+                {
+                    throw new InvalidOperationException("Source acceleration structure does not have a valid device address. Acceleration structure must be built before compaction.");
+                }
+
+                if (destGpuVa == 0UL)
+                {
+                    throw new InvalidOperationException("Destination acceleration structure does not have a valid device address. Acceleration structure must be created before compaction.");
+                }
+
+                // Validate that destination buffer is large enough
+                // Note: In a full implementation, we would check the compacted size from post-build info
+                // For now, we assume the destination buffer was created with the appropriate size
+                // The caller is responsible for ensuring the destination buffer is large enough
+                // Typical compacted size is 50-70% of the original size, but can vary
+
+                try
+                {
+                    // Call ID3D12GraphicsCommandList4::CopyRaytracingAccelerationStructure with COMPACT mode
+                    // Based on D3D12 DXR API: CopyRaytracingAccelerationStructure copies the source acceleration
+                    // structure to the destination while applying the specified transformation (compaction in this case)
+                    // Mode: D3D12_RAYTRACING_ACCELERATION_STRUCTURE_COPY_MODE_COMPACT = 1
+                    CallCopyRaytracingAccelerationStructure(_d3d12CommandList, destGpuVa, srcGpuVa, D3D12_RAYTRACING_ACCELERATION_STRUCTURE_COPY_MODE_COMPACT);
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException($"Failed to compact bottom-level acceleration structure: {ex.Message}", ex);
+                }
+            }
 
             /// <summary>
             /// Begins a debug event region in the command list.
