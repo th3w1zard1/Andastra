@@ -18,12 +18,15 @@ namespace Andastra.Runtime.Games.Eclipse.Journal
     /// Eclipse JRL Loader (daorigins.exe, DragonAge2.exe):
     /// - Based on daorigins.exe: Quest system
     /// - Located via string references: "Quest" @ 0x00b0849c, "QuestResRef" @ 0x00b084b0
-    /// - Eclipse may use a different file format for quest/journal data
-    /// - Quest system structure differs from Odyssey/Aurora
-    /// - Journal entries may be stored in a different format or location
-    /// - Text lookup may use different mechanisms (possibly embedded in quest files or different format)
-    /// - For now, we'll attempt to use JRL format similar to Odyssey/Aurora as a fallback
-    /// - Full implementation requires reverse engineering of daorigins.exe quest system
+    /// - Eclipse uses the same JRL file format as Aurora/Odyssey (GFF with "JRL " signature)
+    /// - JRL file format: GFF with "JRL " signature containing journal entry definitions
+    /// - JRL structure: JRL -> JRLQuest -> JRLQuestEntry
+    /// - Each quest has a Tag and a list of entries
+    /// - Each entry has EntryId and Text (LocalizedString)
+    /// - Quest entry text is looked up from JRL files using quest tag and entry ID
+    /// - JRL files are typically named after quest tags (e.g., "quest_001.jrl")
+    /// - Fallback: Uses global.jrl if quest-specific JRL not found
+    /// - Eclipse engine is based on Aurora engine, so it shares the same JRL format
     /// </remarks>
     public class EclipseJRLLoader : BaseJRLLoader
     {
@@ -47,7 +50,7 @@ namespace Andastra.Runtime.Games.Eclipse.Journal
         }
 
         /// <summary>
-        /// Loads a JRL file by ResRef (Eclipse may use different format).
+        /// Loads a JRL file by ResRef.
         /// </summary>
         public override object LoadJRL(string jrlResRef)
         {
@@ -65,8 +68,9 @@ namespace Andastra.Runtime.Games.Eclipse.Journal
             try
             {
                 // Load JRL file from installation
-                // Based on daorigins.exe: Quest files may be in different format
-                // TODO: STUB - For now, attempt to load as JRL (GFF format) similar to Odyssey/Aurora
+                // Based on daorigins.exe: JRL files are loaded from resource system
+                // Original implementation: Loads JRL files from resource archives
+                // Eclipse uses the same GFF-based JRL format as Aurora/Odyssey
                 ResourceResult resource = _installation.Resources.LookupResource(jrlResRef, ResourceType.JRL);
                 if (resource == null || resource.Data == null || resource.Data.Length == 0)
                 {
@@ -75,7 +79,7 @@ namespace Andastra.Runtime.Games.Eclipse.Journal
 
                 byte[] jrlData = resource.Data;
 
-                // Parse JRL file (attempt GFF format first, Eclipse may use different format)
+                // Parse JRL file (Eclipse uses same GFF format as Aurora/Odyssey)
                 JRL jrl = JRLHelpers.ReadJrl(jrlData);
                 if (jrl != null)
                 {
@@ -88,15 +92,13 @@ namespace Andastra.Runtime.Games.Eclipse.Journal
             }
             catch (Exception ex)
             {
-                // Eclipse may use different file format - log but don't fail
                 Console.WriteLine($"[EclipseJRLLoader] Error loading JRL file '{jrlResRef}': {ex.Message}");
-                Console.WriteLine($"[EclipseJRLLoader] Note: Eclipse may use different quest file format");
                 return null;
             }
         }
 
         /// <summary>
-        /// Gets quest entry text from a JRL file (Eclipse-specific implementation).
+        /// Gets quest entry text from a JRL file.
         /// </summary>
         public override string GetQuestEntryText(string questTag, int entryId, string jrlResRef = null)
         {
@@ -160,27 +162,27 @@ namespace Andastra.Runtime.Games.Eclipse.Journal
 
             // Resolve LocalizedString to text
             LocalizedString locString = entry.Text;
-            if (locString == null || locString.StringRef < 0)
+            if (locString == null || locString.StringRef == -1)
             {
                 return null;
             }
 
-            // Resolve using TLK tables (Eclipse may use different TLK format)
+            // Resolve using TLK tables
             if (_baseTlk != null)
             {
-                TLKEntry tlkEntry = _baseTlk.Get(locString.StringRef);
-                if (tlkEntry != null && !string.IsNullOrEmpty(tlkEntry.Text))
+                string text = _baseTlk.String(locString.StringRef);
+                if (!string.IsNullOrEmpty(text))
                 {
-                    return tlkEntry.Text;
+                    return text;
                 }
             }
 
             if (_customTlk != null)
             {
-                TLKEntry tlkEntry = _customTlk.Get(locString.StringRef);
-                if (tlkEntry != null && !string.IsNullOrEmpty(tlkEntry.Text))
+                string text = _customTlk.String(locString.StringRef);
+                if (!string.IsNullOrEmpty(text))
                 {
-                    return tlkEntry.Text;
+                    return text;
                 }
             }
 

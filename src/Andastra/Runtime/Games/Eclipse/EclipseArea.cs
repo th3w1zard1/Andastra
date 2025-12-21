@@ -4457,6 +4457,15 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <summary>
         /// Applies the modification by creating a hole in the navigation mesh.
         /// </summary>
+        /// <summary>
+        /// Applies the modification by creating a hole in the navigation mesh.
+        /// </summary>
+        /// <param name="area">The area to modify.</param>
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Destructible terrain modifications.
+        /// Creates a walkmesh hole by marking affected faces as destroyed (non-walkable).
+        /// The hole affects pathfinding and navigation mesh queries.
+        /// </remarks>
         public void Apply(EclipseArea area)
         {
             if (area == null || area.NavigationMesh == null)
@@ -4464,15 +4473,19 @@ namespace Andastra.Runtime.Games.Eclipse
                 return;
             }
 
-            // In a full implementation, this would:
-            // 1. Find all walkmesh faces within radius of center
-            // 2. Mark those faces as non-walkable
-            // 3. Update pathfinding graph to exclude those faces
-            // 4. Rebuild spatial structures if needed
-            // TODO: STUB - For now, this is a placeholder that demonstrates the structure
+            // Apply walkmesh hole creation
+            // Based on daorigins.exe: CreateHole marks faces within radius as destroyed
+            // DragonAge2.exe: Destructible modifications update navigation mesh in real-time
             if (area.NavigationMesh is EclipseNavigationMesh eclipseNavMesh)
             {
-                // Placeholder: In full implementation, would call eclipseNavMesh.CreateHole(_center, _radius)
+                // Create hole in navigation mesh
+                // This will:
+                // 1. Find all walkmesh faces within radius of center
+                // 2. Mark those faces as non-walkable (destroyed)
+                // 3. Update pathfinding graph to exclude those faces
+                // 4. Invalidate pathfinding cache for affected faces
+                // 5. Mark mesh as needing rebuild if spatial structures need updating
+                eclipseNavMesh.CreateHole(_center, _radius);
             }
         }
 

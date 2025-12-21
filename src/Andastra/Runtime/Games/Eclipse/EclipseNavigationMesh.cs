@@ -3441,6 +3441,96 @@ namespace Andastra.Runtime.Games.Eclipse
         }
 
         /// <summary>
+        /// Creates a hole in the walkmesh by marking faces within radius as non-walkable.
+        /// </summary>
+        /// <param name="center">Center position of the hole.</param>
+        /// <param name="radius">Radius of the hole.</param>
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Destructible terrain modifications.
+        /// Creates a walkmesh hole by marking affected faces as destroyed.
+        /// Affected faces become non-walkable and are excluded from pathfinding.
+        /// </remarks>
+        public void CreateHole(Vector3 center, float radius)
+        {
+            if (radius <= 0.0f)
+            {
+                return;
+            }
+
+            // Find all faces within radius
+            var affectedFaces = new List<int>();
+            float radiusSq = radius * radius;
+
+            if (_staticAabbRoot != null)
+            {
+                FindFacesInRadiusAabb(_staticAabbRoot, center, radius, affectedFaces);
+            }
+            else
+            {
+                // Brute force search fallback
+                for (int i = 0; i < _staticFaceCount; i++)
+                {
+                    Vector3 faceCenter = GetStaticFaceCenter(i);
+                    float distSq = Vector3Extensions.DistanceSquared2D(center, faceCenter);
+                    if (distSq <= radiusSq)
+                    {
+                        affectedFaces.Add(i);
+                    }
+                }
+            }
+
+            // Mark each affected face as destroyed
+            // Based on daorigins.exe: Destructible modifications mark faces as non-walkable
+            foreach (int faceIndex in affectedFaces)
+            {
+                // Check if face already has a modification
+                if (_modificationByFaceId.ContainsKey(faceIndex))
+                {
+                    // Update existing modification to mark as destroyed
+                    DestructibleModification existingMod = _modificationByFaceId[faceIndex];
+                    existingMod.IsDestroyed = true;
+                    existingMod.ModificationTime = 0.0f; // Mark as destroyed immediately
+                    _modificationByFaceId[faceIndex] = existingMod;
+
+                    // Update in list (find and replace)
+                    for (int i = 0; i < _destructibleModifications.Count; i++)
+                    {
+                        if (_destructibleModifications[i].FaceId == faceIndex)
+                        {
+                            _destructibleModifications[i] = existingMod;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    // Create new modification marking face as destroyed
+                    DestructibleModification mod = new DestructibleModification
+                    {
+                        FaceId = faceIndex,
+                        IsDestroyed = true,
+                        ModifiedVertices = null, // No geometry modification, just marking as destroyed
+                        ModificationTime = 0.0f // Marked as destroyed immediately
+                    };
+
+                    _destructibleModifications.Add(mod);
+                    _modificationByFaceId[faceIndex] = mod;
+                }
+
+                // Invalidate face for pathfinding cache
+                _invalidatedFaces.Add(faceIndex);
+            }
+
+            // Mark mesh as needing rebuild if any faces were affected
+            if (affectedFaces.Count > 0)
+            {
+                _meshNeedsRebuild = true;
+                // Cover points may need regeneration if walkable area changed
+                _coverPointsDirty = true;
+            }
+        }
+
+        /// <summary>
         /// Finds faces within radius using AABB tree.
         /// </summary>
         private void FindFacesInRadiusAabb(AabbNode node, Vector3 center, float radius, List<int> faces)
