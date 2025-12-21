@@ -76,30 +76,247 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
         /// <summary>
         /// Analyze NSS source to determine which symbols are actually used.
         /// Matches nwnnsscomp.exe's selective loading behavior.
+        /// 
+        /// Implementation uses token-based analysis for accurate symbol extraction:
+        /// - Uses NssLexer to properly tokenize source code
+        /// - Skips comments and string literals
+        /// - Identifies function calls by identifier followed by open paren
+        /// - Identifies constants by pattern matching and context
+        /// - Handles different contexts (declarations vs usage)
+        /// 
+        /// Based on nwnnsscomp.exe: Two-pass compilation with selective symbol loading.
+        /// First pass analyzes symbol usage, second pass filters symbols to include only used ones.
         /// </summary>
         private static SymbolUsage AnalyzeSymbolUsage(string source)
         {
             var usage = new SymbolUsage();
-            var lines = source.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-
-            foreach (var line in lines)
+            
+            // Use NssLexer for proper tokenization (matches nwnnsscomp.exe tokenization)
+            var lexer = new NssLexer();
+            int lexResult = lexer.Analyse(source);
+            
+            if (lexResult != 0 || lexer.Tokens == null)
             {
-                var trimmed = line.Trim();
-
-                // Parse #include directives
-                if (trimmed.StartsWith("#include"))
+                // Lexer failed - fall back to line-based analysis for includes only
+                var lines = source.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var line in lines)
                 {
-                    var includeFile = ExtractIncludeFileName(trimmed);
-                    if (!string.IsNullOrEmpty(includeFile) && !usage.includeFiles.Contains(includeFile))
+                    var trimmed = line.Trim();
+                    if (trimmed.StartsWith("#include"))
                     {
-                        usage.includeFiles.Add(includeFile);
+                        var includeFile = ExtractIncludeFileName(trimmed);
+                        if (!string.IsNullOrEmpty(includeFile) && !usage.includeFiles.Contains(includeFile))
+                        {
+                            usage.includeFiles.Add(includeFile);
+                        }
                     }
                 }
-                else
+                return usage;
+            }
+
+            // Track context for better symbol identification
+            bool inFunctionDeclaration = false;
+            bool inStructDeclaration = false;
+            int braceDepth = 0;
+            int parenDepth = 0;
+            
+            // Known NSS keywords that should not be treated as symbols
+            var keywords = new HashSet<string>
+            {
+                "void", "int", "float", "string", "object", "vector", "action", "effect",
+                "event", "itemproperty", "location", "talent", "struct", "if", "else",
+                "for", "while", "do", "switch", "case", "default", "break", "continue",
+                "return", "true", "false", "OBJECT_SELF", "OBJECT_INVALID"
+            };
+
+            // Process tokens to extract symbols
+            for (int i = 0; i < lexer.Tokens.Count; i++)
+            {
+                var token = lexer.Tokens[i];
+                
+                // Skip comments and string literals (they don't contain symbols)
+                if (token is NssComment || (token is NssLiteral literal && literal.LiteralType == NssLiteralType.String))
                 {
-                    // Look for function calls and constant usage
-                    // This is a simplified analysis - in practice, nwnnsscomp.exe does full AST analysis
-                    ExtractSymbolUsage(trimmed, usage);
+                    continue;
+                }
+
+                // Track preprocessor directives (#include)
+                if (token is NssPreprocessor preprocessor)
+                {
+                    if (preprocessor.PreprocessorType == NssPreprocessorType.Include)
+                    {
+                        var includeFile = ExtractIncludeFileName(preprocessor.Data);
+                        if (!string.IsNullOrEmpty(includeFile) && !usage.includeFiles.Contains(includeFile))
+                        {
+                            usage.includeFiles.Add(includeFile);
+                        }
+                    }
+                    continue;
+                }
+
+                // Track brace depth to understand scope
+                if (token is NssSeparator separator)
+                {
+                    if (separator.Separator == NssSeparators.OpenCurlyBrace)
+                    {
+                        braceDepth++;
+                    }
+                    else if (separator.Separator == NssSeparators.CloseCurlyBrace)
+                    {
+                        braceDepth--;
+                        if (braceDepth == 0)
+                        {
+                            inFunctionDeclaration = false;
+                            inStructDeclaration = false;
+                        }
+                    }
+                    else if (separator.Separator == NssSeparators.OpenParen)
+                    {
+                        parenDepth++;
+                    }
+                    else if (separator.Separator == NssSeparators.CloseParen)
+                    {
+                        parenDepth--;
+                    }
+                    continue;
+                }
+
+                // Track keywords that indicate declarations
+                if (token is NssKeyword keyword)
+                {
+                    if (keyword.Keyword == NssKeywords.Struct)
+                    {
+                        inStructDeclaration = true;
+                    }
+                    else if (keyword.Keyword == NssKeywords.Void || keyword.Keyword == NssKeywords.Int ||
+                             keyword.Keyword == NssKeywords.Float || keyword.Keyword == NssKeywords.String ||
+                             keyword.Keyword == NssKeywords.Object || keyword.Keyword == NssKeywords.Vector ||
+                             keyword.Keyword == NssKeywords.Action || keyword.Keyword == NssKeywords.Effect ||
+                             keyword.Keyword == NssKeywords.Event || keyword.Keyword == NssKeywords.ItemProperty ||
+                             keyword.Keyword == NssKeywords.Location || keyword.Keyword == NssKeywords.Talent)
+                    {
+                        // Type keyword - next identifier might be a function declaration
+                        // Check if next non-whitespace token is an identifier followed by open paren
+                        if (i + 1 < lexer.Tokens.Count)
+                        {
+                            int nextIdx = i + 1;
+                            // Skip whitespace/separators
+                            while (nextIdx < lexer.Tokens.Count && 
+                                   (lexer.Tokens[nextIdx] is NssSeparator sep && 
+                                    (sep.Separator == NssSeparators.Space || sep.Separator == NssSeparators.Tab || sep.Separator == NssSeparators.NewLine)))
+                            {
+                                nextIdx++;
+                            }
+                            
+                            if (nextIdx < lexer.Tokens.Count && lexer.Tokens[nextIdx] is NssIdentifier)
+                            {
+                                // Check if followed by open paren (function declaration)
+                                int parenIdx = nextIdx + 1;
+                                while (parenIdx < lexer.Tokens.Count && 
+                                       (lexer.Tokens[parenIdx] is NssSeparator sep2 && 
+                                        (sep2.Separator == NssSeparators.Space || sep2.Separator == NssSeparators.Tab || sep2.Separator == NssSeparators.NewLine)))
+                                {
+                                    parenIdx++;
+                                }
+                                
+                                if (parenIdx < lexer.Tokens.Count && 
+                                    lexer.Tokens[parenIdx] is NssSeparator sep3 && 
+                                    sep3.Separator == NssSeparators.OpenParen)
+                                {
+                                    inFunctionDeclaration = true;
+                                }
+                            }
+                        }
+                    }
+                    continue;
+                }
+
+                // Process identifiers to extract function calls and constants
+                if (token is NssIdentifier identifier)
+                {
+                    string identName = identifier.Identifier;
+                    
+                    if (string.IsNullOrEmpty(identName) || keywords.Contains(identName))
+                    {
+                        continue;
+                    }
+
+                    // Check if this is a function call (identifier followed by open paren)
+                    // Skip if we're in a function declaration (this would be the function name itself)
+                    if (!inFunctionDeclaration && !inStructDeclaration)
+                    {
+                        // Look ahead for open paren (skip whitespace)
+                        int nextIdx = i + 1;
+                        while (nextIdx < lexer.Tokens.Count && 
+                               (lexer.Tokens[nextIdx] is NssSeparator sep && 
+                                (sep.Separator == NssSeparators.Space || sep.Separator == NssSeparators.Tab || sep.Separator == NssSeparators.NewLine)))
+                        {
+                            nextIdx++;
+                        }
+                        
+                        if (nextIdx < lexer.Tokens.Count && 
+                            lexer.Tokens[nextIdx] is NssSeparator sep2 && 
+                            sep2.Separator == NssSeparators.OpenParen)
+                        {
+                            // This is a function call
+                            if (!usage.usedFunctions.Contains(identName))
+                            {
+                                usage.usedFunctions.Add(identName);
+                            }
+                            continue;
+                        }
+                    }
+
+                    // Check if this is a constant
+                    // Constants in NSS are typically:
+                    // 1. All uppercase with underscores (e.g., OBJECT_SELF, EVENT_TYPE_ACTIVATE)
+                    // 2. TRUE/FALSE (handled as keywords, but check anyway)
+                    // 3. Named constants from script definitions
+                    bool isConstant = false;
+                    
+                    // Pattern: All uppercase letters, digits, and underscores
+                    if (identName.Length > 0 && 
+                        identName.All(c => char.IsUpper(c) || char.IsDigit(c) || c == '_') &&
+                        identName.Any(c => char.IsUpper(c)))
+                    {
+                        isConstant = true;
+                    }
+                    
+                    // Additional check: If it's used in a context that suggests a constant
+                    // (e.g., after comparison operators, in switch cases, etc.)
+                    if (!isConstant && i > 0)
+                    {
+                        var prevToken = lexer.Tokens[i - 1];
+                        // Check if previous token suggests constant usage
+                        if (prevToken is NssOperator op)
+                        {
+                            // Constants often appear after comparison operators
+                            // Check for comparison operators: ==, !=, <, >, <=, >=
+                            if (op.Operator == NssOperators.Equals || 
+                                op.Operator == NssOperators.NotEqual ||
+                                op.Operator == NssOperators.LessThan ||
+                                op.Operator == NssOperators.GreaterThan ||
+                                op.Operator == NssOperators.LessThanOrEqual ||
+                                op.Operator == NssOperators.GreaterThanOrEqual)
+                            {
+                                isConstant = true;
+                            }
+                        }
+                        else if (prevToken is NssKeyword kw && 
+                                 (kw.Keyword == NssKeywords.Case || kw.Keyword == NssKeywords.Switch))
+                        {
+                            // Constants in switch cases
+                            isConstant = true;
+                        }
+                    }
+
+                    if (isConstant)
+                    {
+                        if (!usage.usedConstants.Contains(identName))
+                        {
+                            usage.usedConstants.Add(identName);
+                        }
+                    }
                 }
             }
 
@@ -120,35 +337,6 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
             return filename.EndsWith(".nss") ? filename.Substring(0, filename.Length - 4) : filename;
         }
 
-        private static void ExtractSymbolUsage(string line, SymbolUsage usage)
-        {
-            // Simplified symbol extraction - looks for function calls and constants
-            // nwnnsscomp.exe does full semantic analysis, but this approximates the behavior
-            var words = line.Split(new[] { ' ', '(', ')', ',', ';', '=', '!', '+', '-', '*', '/', '%', '&', '|', '^', '<', '>', '?' },
-                                 StringSplitOptions.RemoveEmptyEntries);
-
-            foreach (var word in words)
-            {
-                if (!string.IsNullOrEmpty(word) && char.IsLetter(word[0]))
-                {
-                    // Check if it's a function call (followed by parentheses)
-                    if (line.Contains(word + "("))
-                    {
-                        if (!usage.usedFunctions.Contains(word))
-                            usage.usedFunctions.Add(word);
-                    }
-                    else
-                    {
-                        // Assume it's a constant if it's all uppercase or starts with specific prefixes
-                        if (word.All(c => char.IsUpper(c) || char.IsDigit(c) || c == '_'))
-                        {
-                            if (!usage.usedConstants.Contains(word))
-                                usage.usedConstants.Add(word);
-                        }
-                    }
-                }
-            }
-        }
 
         private static List<ScriptFunction> FilterUsedFunctions(List<ScriptFunction> allFunctions, List<string> usedNames)
         {
