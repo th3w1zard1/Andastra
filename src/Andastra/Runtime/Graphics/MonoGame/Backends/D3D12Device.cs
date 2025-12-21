@@ -559,18 +559,291 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ArgumentException("Binding layout must have at least one item", nameof(desc));
             }
 
-            // TODO: IMPLEMENT - Create D3D12 root signature
-            // - Convert BindingLayoutItems to D3D12_ROOT_PARAMETER or D3D12_ROOT_DESCRIPTOR_TABLE
-            // - Convert to D3D12_ROOT_SIGNATURE_DESC
-            // - Call D3D12SerializeRootSignature
-            // - Call ID3D12Device::CreateRootSignature
-            // - Wrap in D3D12BindingLayout and return
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                throw new PlatformNotSupportedException("DirectX 12 binding layouts are only supported on Windows");
+            }
 
-            IntPtr handle = new IntPtr(_nextResourceHandle++);
-            var layout = new D3D12BindingLayout(handle, desc, IntPtr.Zero, _device, this);
-            _resources[handle] = layout;
+            // Convert BindingLayoutItems to D3D12 root parameters
+            // Group items by type into descriptor tables for efficiency
+            var rootParameters = new List<D3D12_ROOT_PARAMETER>();
+            var descriptorRanges = new List<List<D3D12_DESCRIPTOR_RANGE>>();
+            var rangePointers = new List<IntPtr>();
 
-            return layout;
+            // Group items by binding type and shader visibility
+            var groupedItems = new Dictionary<uint, List<BindingLayoutItem>>(); // Key: (ShaderVisibility << 16) | BindingType
+
+            foreach (var item in desc.Items)
+            {
+                uint bindingType = ConvertBindingTypeToD3D12RangeType(item.Type);
+                uint shaderVisibility = ConvertShaderStageFlagsToD3D12Visibility(item.Stages);
+                uint key = (shaderVisibility << 16) | bindingType;
+
+                if (!groupedItems.ContainsKey(key))
+                {
+                    groupedItems[key] = new List<BindingLayoutItem>();
+                }
+                groupedItems[key].Add(item);
+            }
+
+            // Create descriptor tables for each group
+            foreach (var group in groupedItems)
+            {
+                uint shaderVisibility = (group.Key >> 16) & 0xFFFF;
+                uint bindingType = group.Key & 0xFFFF;
+                var items = group.Value;
+
+                // Sort items by slot
+                items.Sort((a, b) => a.Slot.CompareTo(b.Slot));
+
+                // Create descriptor ranges for this group
+                var ranges = new List<D3D12_DESCRIPTOR_RANGE>();
+                uint currentOffset = 0;
+                foreach (var item in items)
+                {
+                    var range = new D3D12_DESCRIPTOR_RANGE
+                    {
+                        RangeType = bindingType,
+                        NumDescriptors = (uint)item.Count,
+                        BaseShaderRegister = (uint)item.Slot,
+                        RegisterSpace = 0, // Default register space
+                        OffsetInDescriptorsFromTableStart = currentOffset
+                    };
+                    ranges.Add(range);
+                    currentOffset += (uint)item.Count;
+                }
+
+                if (ranges.Count > 0)
+                {
+                    // Allocate memory for descriptor ranges array
+                    int rangesSize = Marshal.SizeOf(typeof(D3D12_DESCRIPTOR_RANGE)) * ranges.Count;
+                    IntPtr rangesPtr = Marshal.AllocHGlobal(rangesSize);
+                    for (int i = 0; i < ranges.Count; i++)
+                    {
+                        IntPtr rangePtr = new IntPtr(rangesPtr.ToInt64() + i * Marshal.SizeOf(typeof(D3D12_DESCRIPTOR_RANGE)));
+                        Marshal.StructureToPtr(ranges[i], rangePtr, false);
+                    }
+
+                    rangePointers.Add(rangesPtr);
+                    descriptorRanges.Add(ranges);
+
+                    // Create root parameter for this descriptor table
+                    var rootParam = new D3D12_ROOT_PARAMETER
+                    {
+                        ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE,
+                        ShaderVisibility = shaderVisibility
+                    };
+                    rootParam.DescriptorTable.NumDescriptorRanges = (uint)ranges.Count;
+                    rootParam.DescriptorTable.pDescriptorRanges = rangesPtr;
+
+                    rootParameters.Add(rootParam);
+                }
+            }
+
+            // Create root signature description
+            int rootParamsSize = Marshal.SizeOf(typeof(D3D12_ROOT_PARAMETER)) * rootParameters.Count;
+            IntPtr rootParamsPtr = Marshal.AllocHGlobal(rootParamsSize);
+            try
+            {
+                for (int i = 0; i < rootParameters.Count; i++)
+                {
+                    IntPtr paramPtr = new IntPtr(rootParamsPtr.ToInt64() + i * Marshal.SizeOf(typeof(D3D12_ROOT_PARAMETER)));
+                    Marshal.StructureToPtr(rootParameters[i], paramPtr, false);
+                }
+
+                var rootSignatureDesc = new D3D12_ROOT_SIGNATURE_DESC
+                {
+                    NumParameters = (uint)rootParameters.Count,
+                    pParameters = rootParamsPtr,
+                    NumStaticSamplers = 0,
+                    pStaticSamplers = IntPtr.Zero,
+                    Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
+                };
+
+                // Serialize root signature
+                IntPtr pRootSignatureDesc = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(D3D12_ROOT_SIGNATURE_DESC)));
+                try
+                {
+                    Marshal.StructureToPtr(rootSignatureDesc, pRootSignatureDesc, false);
+
+                    IntPtr blobPtr;
+                    IntPtr errorBlobPtr;
+                    int hr = D3D12SerializeRootSignature(pRootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1_0, out blobPtr, out errorBlobPtr);
+
+                    if (hr < 0)
+                    {
+                        // Free allocated memory
+                        foreach (var ptr in rangePointers)
+                        {
+                            Marshal.FreeHGlobal(ptr);
+                        }
+                        throw new InvalidOperationException($"D3D12SerializeRootSignature failed with HRESULT 0x{hr:X8}");
+                    }
+
+                    if (errorBlobPtr != IntPtr.Zero)
+                    {
+                        // Log error blob if available (would need ID3DBlob interface to read)
+                        // For now, just release it
+                        ReleaseComObject(errorBlobPtr);
+                    }
+
+                    if (blobPtr == IntPtr.Zero)
+                    {
+                        // Free allocated memory
+                        foreach (var ptr in rangePointers)
+                        {
+                            Marshal.FreeHGlobal(ptr);
+                        }
+                        throw new InvalidOperationException("D3D12SerializeRootSignature returned null blob");
+                    }
+
+                    // Get blob size (ID3DBlob::GetBufferSize is at vtable index 3)
+                    IntPtr* blobVtable = *(IntPtr**)blobPtr;
+                    IntPtr getBufferSizePtr = blobVtable[3];
+                    GetBufferSizeDelegate getBufferSize = (GetBufferSizeDelegate)Marshal.GetDelegateForFunctionPointer(getBufferSizePtr, typeof(GetBufferSizeDelegate));
+                    IntPtr blobSize = getBufferSize(blobPtr);
+
+                    // Get blob buffer (ID3DBlob::GetBufferPointer is at vtable index 4)
+                    IntPtr getBufferPointerPtr = blobVtable[4];
+                    GetBufferPointerDelegate getBufferPointer = (GetBufferPointerDelegate)Marshal.GetDelegateForFunctionPointer(getBufferPointerPtr, typeof(GetBufferPointerDelegate));
+                    IntPtr blobBuffer = getBufferPointer(blobPtr);
+
+                    // Create root signature
+                    Guid iidRootSignature = new Guid(0xc54a6b66, 0x72df, 0x4ee8, 0x8b, 0xe5, 0xa9, 0x46, 0xa1, 0x42, 0x92, 0x14); // IID_ID3D12RootSignature
+                    IntPtr rootSignaturePtr = Marshal.AllocHGlobal(IntPtr.Size);
+                    try
+                    {
+                        hr = CallCreateRootSignature(_device, blobBuffer, blobSize, ref iidRootSignature, rootSignaturePtr);
+                        if (hr < 0)
+                        {
+                            ReleaseComObject(blobPtr);
+                            // Free allocated memory
+                            foreach (var ptr in rangePointers)
+                            {
+                                Marshal.FreeHGlobal(ptr);
+                            }
+                            throw new InvalidOperationException($"CreateRootSignature failed with HRESULT 0x{hr:X8}");
+                        }
+
+                        IntPtr rootSignature = Marshal.ReadIntPtr(rootSignaturePtr);
+                        if (rootSignature == IntPtr.Zero)
+                        {
+                            ReleaseComObject(blobPtr);
+                            // Free allocated memory
+                            foreach (var ptr in rangePointers)
+                            {
+                                Marshal.FreeHGlobal(ptr);
+                            }
+                            throw new InvalidOperationException("CreateRootSignature returned null root signature pointer");
+                        }
+
+                        // Release blob (no longer needed after root signature is created)
+                        ReleaseComObject(blobPtr);
+
+                        // Wrap in D3D12BindingLayout and return
+                        IntPtr handle = new IntPtr(_nextResourceHandle++);
+                        var layout = new D3D12BindingLayout(handle, desc, rootSignature, _device, this);
+                        _resources[handle] = layout;
+
+                        // Store range pointers for cleanup on disposal (would need to track these in D3D12BindingLayout)
+                        // For now, we'll free them immediately after root signature creation
+                        // In a full implementation, these would be stored and freed when the layout is disposed
+                        foreach (var ptr in rangePointers)
+                        {
+                            Marshal.FreeHGlobal(ptr);
+                        }
+
+                        return layout;
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(rootSignaturePtr);
+                    }
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(pRootSignatureDesc);
+                }
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(rootParamsPtr);
+            }
+        }
+
+        // Helper delegates for ID3DBlob interface
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate IntPtr GetBufferSizeDelegate(IntPtr blob);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate IntPtr GetBufferPointerDelegate(IntPtr blob);
+
+        /// <summary>
+        /// Converts BindingType to D3D12_DESCRIPTOR_RANGE_TYPE.
+        /// </summary>
+        private uint ConvertBindingTypeToD3D12RangeType(BindingType type)
+        {
+            switch (type)
+            {
+                case BindingType.ConstantBuffer:
+                    return D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+                case BindingType.Texture:
+                    return D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+                case BindingType.Sampler:
+                    return D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
+                case BindingType.RWTexture:
+                case BindingType.RWBuffer:
+                    return D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+                case BindingType.StructuredBuffer:
+                    return D3D12_DESCRIPTOR_RANGE_TYPE_SRV; // Structured buffers are SRVs
+                case BindingType.AccelStruct:
+                    return D3D12_DESCRIPTOR_RANGE_TYPE_SRV; // Acceleration structures are SRVs
+                default:
+                    return D3D12_DESCRIPTOR_RANGE_TYPE_SRV; // Default to SRV
+            }
+        }
+
+        /// <summary>
+        /// Converts ShaderStageFlags to D3D12_SHADER_VISIBILITY.
+        /// </summary>
+        private uint ConvertShaderStageFlagsToD3D12Visibility(ShaderStageFlags stages)
+        {
+            // If all graphics stages are present, use ALL
+            if ((stages & ShaderStageFlags.AllGraphics) == ShaderStageFlags.AllGraphics)
+            {
+                return D3D12_SHADER_VISIBILITY_ALL;
+            }
+
+            // Check individual stages (priority order: Pixel > Geometry > Domain > Hull > Vertex)
+            if ((stages & ShaderStageFlags.Pixel) != 0)
+            {
+                return D3D12_SHADER_VISIBILITY_PIXEL;
+            }
+            if ((stages & ShaderStageFlags.Geometry) != 0)
+            {
+                return D3D12_SHADER_VISIBILITY_GEOMETRY;
+            }
+            if ((stages & ShaderStageFlags.Domain) != 0)
+            {
+                return D3D12_SHADER_VISIBILITY_DOMAIN;
+            }
+            if ((stages & ShaderStageFlags.Hull) != 0)
+            {
+                return D3D12_SHADER_VISIBILITY_HULL;
+            }
+            if ((stages & ShaderStageFlags.Vertex) != 0)
+            {
+                return D3D12_SHADER_VISIBILITY_VERTEX;
+            }
+            if ((stages & ShaderStageFlags.Compute) != 0)
+            {
+                return D3D12_SHADER_VISIBILITY_ALL; // Compute shaders use ALL visibility
+            }
+
+            // Default to ALL if no specific stage is set
+            return D3D12_SHADER_VISIBILITY_ALL;
+        }
         }
 
         public IBindingSet CreateBindingSet(IBindingLayout layout, BindingSetDesc desc)
@@ -2853,6 +3126,78 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // Note: We don't free pDescPtr here because the structure contains pointers to other allocated memory
                 // that will be freed by FreeGraphicsPipelineStateDesc
             }
+        }
+
+        /// <summary>
+        /// Calls ID3D12Device::CreateRootSignature through COM vtable.
+        /// VTable index 47 for ID3D12Device.
+        /// Based on DirectX 12 Root Signatures: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createrootsignature
+        /// </summary>
+        private unsafe int CallCreateRootSignature(IntPtr device, IntPtr pBlobWithRootSignature, IntPtr blobLengthInBytes, ref Guid riid, IntPtr ppvRootSignature)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return unchecked((int)0x80004001); // E_NOTIMPL - Not implemented on this platform
+            }
+
+            if (device == IntPtr.Zero || pBlobWithRootSignature == IntPtr.Zero || ppvRootSignature == IntPtr.Zero)
+            {
+                return unchecked((int)0x80070057); // E_INVALIDARG
+            }
+
+            // Get vtable pointer (first field of COM object)
+            IntPtr* vtable = *(IntPtr**)device;
+            // CreateRootSignature is at index 47 in ID3D12Device vtable
+            IntPtr methodPtr = vtable[47];
+
+            if (methodPtr == IntPtr.Zero)
+            {
+                return unchecked((int)0x80004002); // E_NOINTERFACE
+            }
+
+            // Create delegate from function pointer (C# 7.3 compatible)
+            CreateRootSignatureDelegate createRootSignature =
+                (CreateRootSignatureDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CreateRootSignatureDelegate));
+
+            return createRootSignature(device, pBlobWithRootSignature, blobLengthInBytes, ref riid, ppvRootSignature);
+        }
+
+        /// <summary>
+        /// Releases a COM object by calling IUnknown::Release.
+        /// All COM interfaces inherit from IUnknown, which has Release at vtable index 2.
+        /// Based on COM Reference Counting: https://docs.microsoft.com/en-us/windows/win32/api/unknwn/nf-unknwn-iunknown-release
+        /// </summary>
+        private unsafe void ReleaseComObject(IntPtr comObject)
+        {
+            if (comObject == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            // Get vtable pointer (first field of COM object)
+            IntPtr* vtable = *(IntPtr**)comObject;
+            if (vtable == null)
+            {
+                return;
+            }
+
+            // Release is at index 2 in IUnknown vtable
+            IntPtr releasePtr = vtable[2];
+            if (releasePtr == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Create delegate from function pointer
+            ReleaseDelegate release = (ReleaseDelegate)Marshal.GetDelegateForFunctionPointer(releasePtr, typeof(ReleaseDelegate));
+            release(comObject);
         }
 
         /// <summary>
