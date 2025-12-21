@@ -302,39 +302,10 @@ namespace Andastra.Runtime.MonoGame.Rendering
             }
 
             // Apply tone mapping using the ToneMapping processor
+            // ToneMapping.Apply handles rendering with shader (if provided) or fallback rendering
+            // The method sets up the render target, configures shader parameters, and renders
+            // a full-screen quad using SpriteBatch with the tone mapping effect
             _toneMapping.Apply(_graphicsDevice, hdrInput, _toneMappingOutput, effect);
-
-            // If tone mapping didn't render anything (no shader), use SpriteBatch as fallback
-            // TODO: STUB - In a full implementation, the ToneMapping.Apply would handle rendering with shader
-            // TODO: STUB - For now, we'll ensure something is rendered by using SpriteBatch
-            RenderTarget2D previousTarget = null;
-            if (_graphicsDevice.GetRenderTargets().Length > 0)
-            {
-                previousTarget = _graphicsDevice.GetRenderTargets()[0].RenderTarget as RenderTarget2D;
-            }
-
-            try
-            {
-                _graphicsDevice.SetRenderTarget(_toneMappingOutput);
-                _graphicsDevice.Clear(Color.Black);
-
-                _spriteBatch.Begin(
-                    SpriteSortMode.Immediate,
-                    BlendState.Opaque,
-                    SamplerState.LinearClamp,
-                    DepthStencilState.None,
-                    RasterizerState.CullNone,
-                    effect
-                );
-
-                Rectangle destRect = new Rectangle(0, 0, width, height);
-                _spriteBatch.Draw(hdrInput, destRect, Color.White);
-                _spriteBatch.End();
-            }
-            finally
-            {
-                _graphicsDevice.SetRenderTarget(previousTarget);
-            }
 
             return _toneMappingOutput;
         }

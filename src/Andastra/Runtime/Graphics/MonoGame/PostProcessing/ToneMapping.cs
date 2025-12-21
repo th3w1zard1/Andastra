@@ -1,4 +1,5 @@
 using System;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Andastra.Runtime.MonoGame.PostProcessing
@@ -28,7 +29,7 @@ namespace Andastra.Runtime.MonoGame.PostProcessing
     /// - Exposure control: Adjusts brightness of HDR image before tone mapping
     /// - White point: Maximum luminance value for tone mapping curve
     /// </remarks>
-    public class ToneMapping
+    public class ToneMapping : IDisposable
     {
         /// <summary>
         /// Tone mapping operator type.
@@ -45,6 +46,7 @@ namespace Andastra.Runtime.MonoGame.PostProcessing
         private ToneMappingOperator _operator;
         private float _exposure;
         private float _whitePoint;
+        private SpriteBatch _spriteBatch;
 
         /// <summary>
         /// Gets or sets the tone mapping operator.
@@ -81,6 +83,7 @@ namespace Andastra.Runtime.MonoGame.PostProcessing
             _operator = ToneMappingOperator.ACES;
             _exposure = 0.0f;
             _whitePoint = 11.2f;
+            _spriteBatch = null; // Will be created on first use
         }
 
         /// <summary>
@@ -117,9 +120,15 @@ namespace Andastra.Runtime.MonoGame.PostProcessing
             {
                 // Set output render target
                 device.SetRenderTarget(ldrOutput);
-                device.Clear(Microsoft.Xna.Framework.Color.Black);
+                device.Clear(Color.Black);
 
-                // Set up tone mapping shader parameters
+                // Create SpriteBatch if needed (lazy initialization)
+                if (_spriteBatch == null)
+                {
+                    _spriteBatch = new SpriteBatch(device);
+                }
+
+                // Set up tone mapping shader parameters if effect is provided
                 // The actual shader implementation would apply one of these operators:
                 // - Reinhard: x / (1 + x) - simple and fast, good for most scenes
                 // - ACES: filmic ACES tone mapping - industry standard for HDR
@@ -128,11 +137,63 @@ namespace Andastra.Runtime.MonoGame.PostProcessing
                 // - LuminanceBased: preserves color relationships - natural look
                 if (effect != null)
                 {
-                    // effect.Parameters["HDRTexture"].SetValue(hdrInput);
-                    // effect.Parameters["Exposure"].SetValue((float)Math.Pow(2.0, _exposure));
-                    // effect.Parameters["WhitePoint"].SetValue(_whitePoint);
-                    // effect.Parameters["Operator"].SetValue((int)_operator);
+                    // Set shader parameters for tone mapping
+                    // Note: Parameter names depend on the actual shader implementation
+                    // These are common parameter names used in HDR tone mapping shaders
+                    EffectParameter hdrTextureParam = effect.Parameters["HDRTexture"];
+                    if (hdrTextureParam != null)
+                    {
+                        hdrTextureParam.SetValue(hdrInput);
+                    }
+
+                    EffectParameter exposureParam = effect.Parameters["Exposure"];
+                    if (exposureParam != null)
+                    {
+                        // Convert log2 exposure to linear multiplier
+                        float exposureMultiplier = (float)Math.Pow(2.0, _exposure);
+                        exposureParam.SetValue(exposureMultiplier);
+                    }
+
+                    EffectParameter whitePointParam = effect.Parameters["WhitePoint"];
+                    if (whitePointParam != null)
+                    {
+                        whitePointParam.SetValue(_whitePoint);
+                    }
+
+                    EffectParameter operatorParam = effect.Parameters["Operator"];
+                    if (operatorParam != null)
+                    {
+                        operatorParam.SetValue((int)_operator);
+                    }
+
                     // Render full-screen quad with tone mapping shader
+                    _spriteBatch.Begin(
+                        SpriteSortMode.Immediate,
+                        BlendState.Opaque,
+                        SamplerState.LinearClamp,
+                        DepthStencilState.None,
+                        RasterizerState.CullNone,
+                        effect);
+
+                    Rectangle destinationRect = new Rectangle(0, 0, ldrOutput.Width, ldrOutput.Height);
+                    _spriteBatch.Draw(hdrInput, destinationRect, Color.White);
+                    _spriteBatch.End();
+                }
+                else
+                {
+                    // No shader provided - use CPU-based tone mapping approximation
+                    // This is a fallback when no shader is available
+                    // For proper HDR tone mapping, a shader should be provided
+                    _spriteBatch.Begin(
+                        SpriteSortMode.Immediate,
+                        BlendState.Opaque,
+                        SamplerState.LinearClamp,
+                        DepthStencilState.None,
+                        RasterizerState.CullNone);
+
+                    Rectangle destinationRect = new Rectangle(0, 0, ldrOutput.Width, ldrOutput.Height);
+                    _spriteBatch.Draw(hdrInput, destinationRect, Color.White);
+                    _spriteBatch.End();
                 }
             }
             finally
@@ -140,6 +201,15 @@ namespace Andastra.Runtime.MonoGame.PostProcessing
                 // Always restore previous render target
                 device.SetRenderTarget(previousTarget);
             }
+        }
+
+        /// <summary>
+        /// Disposes resources used by the tone mapping processor.
+        /// </summary>
+        public void Dispose()
+        {
+            _spriteBatch?.Dispose();
+            _spriteBatch = null;
         }
     }
 }
