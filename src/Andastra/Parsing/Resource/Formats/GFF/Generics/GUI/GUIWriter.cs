@@ -134,14 +134,17 @@ namespace Andastra.Parsing.Resource.Generics.GUI
             // Extent (position and size)
             WriteExtent(gffStruct, control);
 
-            // Common values for Progress and Slider
-            if (control.CurrentValue.HasValue)
+            // Common values for Progress and Slider (only if not overridden by specific control types)
+            if (control.GuiType != GUIControlType.Progress && control.GuiType != GUIControlType.Slider)
             {
-                gffStruct.SetInt32("CURVALUE", control.CurrentValue.Value);
-            }
-            if (control.MaxValue.HasValue)
-            {
-                gffStruct.SetInt32("MAXVALUE", control.MaxValue.Value);
+                if (control.CurrentValue.HasValue)
+                {
+                    gffStruct.SetInt32("CURVALUE", control.CurrentValue.Value);
+                }
+                if (control.MaxValue.HasValue)
+                {
+                    gffStruct.SetInt32("MAXVALUE", control.MaxValue.Value);
+                }
             }
 
             // Progress bar specific
@@ -255,9 +258,9 @@ namespace Andastra.Parsing.Resource.Generics.GUI
             if (border.Color != null)
             {
                 borderStruct.SetVector3("COLOR", new Vector3(border.Color.R, border.Color.G, border.Color.B));
-                if (border.Color.A != null && border.Color.A != 1.0f)
+                if (border.Color.A != 1.0f)
                 {
-                    borderStruct.SetSingle("ALPHA", border.Color.A.Value);
+                    borderStruct.SetSingle("ALPHA", border.Color.A);
                 }
             }
             borderStruct.SetResRef("CORNER", border.Corner);
@@ -364,9 +367,9 @@ namespace Andastra.Parsing.Resource.Generics.GUI
             if (border.Color != null)
             {
                 borderStruct.SetVector3("COLOR", new Vector3(border.Color.R, border.Color.G, border.Color.B));
-                if (border.Color.A != null && border.Color.A != 1.0f)
+                if (border.Color.A != 1.0f)
                 {
-                    borderStruct.SetSingle("ALPHA", border.Color.A.Value);
+                    borderStruct.SetSingle("ALPHA", border.Color.A);
                 }
             }
             borderStruct.SetResRef("CORNER", border.Corner);
@@ -600,9 +603,9 @@ namespace Andastra.Parsing.Resource.Generics.GUI
             }
             if (scroll.Color != null)
             {
-                if (scroll.Color.A != null && scroll.Color.A != 1.0f)
+                if (scroll.Color.A != 1.0f)
                 {
-                    scrollStruct.SetSingle("ALPHA", scroll.Color.A.Value);
+                    scrollStruct.SetSingle("ALPHA", scroll.Color.A);
                 }
                 scrollStruct.SetVector3("COLOR", new Vector3(scroll.Color.R, scroll.Color.G, scroll.Color.B));
             }
@@ -621,6 +624,10 @@ namespace Andastra.Parsing.Resource.Generics.GUI
                 gffStruct.SetUInt8("STARTFROMLEFT", (byte)progressBar.StartFromLeft);
             }
             
+            // Write MAXVALUE and CURVALUE for progress bar
+            gffStruct.SetInt32("MAXVALUE", (int)progressBar.MaxValue);
+            gffStruct.SetInt32("CURVALUE", progressBar.CurrentValue);
+            
             // Write PROGRESS struct - note that GUIProgressBar.Progress is float? but we need GUIProgress struct
             // Check if there's a Progress struct in the base class Progress property
             var baseControl = (GUIControl)progressBar;
@@ -630,9 +637,9 @@ namespace Andastra.Parsing.Resource.Generics.GUI
                 if (baseControl.Progress.Color != null)
                 {
                     progressStruct.SetVector3("COLOR", new Vector3(baseControl.Progress.Color.R, baseControl.Progress.Color.G, baseControl.Progress.Color.B));
-                    if (baseControl.Progress.Color.A != null && baseControl.Progress.Color.A != 1.0f)
+                    if (baseControl.Progress.Color.A != 1.0f)
                     {
-                        progressStruct.SetSingle("ALPHA", baseControl.Progress.Color.A.Value);
+                        progressStruct.SetSingle("ALPHA", baseControl.Progress.Color.A);
                     }
                 }
                 progressStruct.SetResRef("CORNER", baseControl.Progress.Corner);
@@ -659,6 +666,10 @@ namespace Andastra.Parsing.Resource.Generics.GUI
         /// </summary>
         private void WriteSliderProperties(GFFStruct gffStruct, GUISlider slider)
         {
+            // Write MAXVALUE and CURVALUE for slider (stored as int in GFF)
+            gffStruct.SetInt32("MAXVALUE", (int)slider.MaxValue);
+            gffStruct.SetInt32("CURVALUE", (int)slider.Value);
+            
             var baseControl = (GUIControl)slider;
             if (baseControl.Thumb != null)
             {

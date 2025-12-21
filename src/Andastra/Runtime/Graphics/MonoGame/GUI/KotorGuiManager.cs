@@ -216,6 +216,9 @@ namespace Andastra.Runtime.MonoGame.GUI
                 // Store loaded GUI
                 _loadedGuis[guiName] = loadedGui;
                 _currentGui = loadedGui;
+                
+                // Rebuild button list for keyboard navigation
+                _buttonList = null;
 
                 // Note: RIM file loading (e.g., "RIMS:MAINMENU") is handled automatically by InstallationResourceManager
                 // Based on swkotor.exe FUN_0067c4c0 @ 0x0067c4c0:65-69 and swkotor2.exe FUN_006d2350 @ 0x006d2350:76-80

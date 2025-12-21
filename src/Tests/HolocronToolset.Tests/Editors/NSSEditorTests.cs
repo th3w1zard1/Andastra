@@ -1144,6 +1144,8 @@ void helper() {
             // Matching Python: editor.ui.snippetList.addItem(item)
             var snippetList = editor.SnippetList;
             snippetList.Should().NotBeNull("Snippet list should be initialized");
+            // Clear existing snippets first (matching Python behavior where list starts empty)
+            snippetList.Items.Clear();
             foreach (var (name, code) in snippets)
             {
                 var item = new Avalonia.Controls.ListBoxItem

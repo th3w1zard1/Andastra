@@ -40,14 +40,36 @@ namespace Andastra.Parsing.Common
         /// Main module archive containing core module files.
         /// Contains: IFO (module info), ARE (area data), GIT (dynamic area info)
         /// File naming: &lt;modulename&gt;.rim
+        /// Note: Only loaded in simple mode (flag at offset 0x54 == 0)
+        /// swkotor.exe: FUN_004094a0 line 32-42
         /// </summary>
         MAIN,  // .rim
+
+        /// <summary>
+        /// Area-specific module archive (complex mode).
+        /// Contains: ARE (area data) and related area resources
+        /// File naming: &lt;modulename&gt;_a.rim
+        /// Behavior: REPLACES .rim in complex mode
+        /// swkotor.exe: FUN_004094a0 line 61, 159
+        /// </summary>
+        AREA,  // _a.rim
+
+        /// <summary>
+        /// Extended area module archive (complex mode).
+        /// Contains: ARE (area data) and extended area resources
+        /// File naming: &lt;modulename&gt;_adx.rim
+        /// Behavior: REPLACES .rim if _a.rim not found
+        /// swkotor.exe: FUN_004094a0 line 74, 85
+        /// </summary>
+        AREA_EXTENDED,  // _adx.rim
 
         /// <summary>
         /// Data module archive containing module resources.
         /// Contains: UTC, UTD, UTE, UTI, UTM, UTP, UTS, UTT, UTW, FAC, LYT, NCS, PTH
         /// File naming: &lt;modulename&gt;_s.rim
+        /// Behavior: ADDS to base (only if .mod not found)
         /// Note: In KotOR 2, DLG files are NOT in _s.rim (see K2_DLG)
+        /// swkotor.exe: FUN_004094a0 line 107, 118
         /// </summary>
         DATA,  // _s.rim
 
@@ -55,7 +77,9 @@ namespace Andastra.Parsing.Common
         /// KotOR 2 dialog archive containing dialog files.
         /// Contains: DLG (dialog) files
         /// File naming: &lt;modulename&gt;_dlg.erf
+        /// Behavior: ADDS to base (only if .mod not found, K2 only)
         /// Note: KotOR 1 stores DLG files in _s.rim, KotOR 2 uses separate _dlg.erf
+        /// swkotor2.exe: FUN_004096b0 line 128, 147
         /// </summary>
         K2_DLG,  // _dlg.erf
 
@@ -63,7 +87,9 @@ namespace Andastra.Parsing.Common
         /// Community override module archive (single-file format).
         /// Contains: All module resources in a single ERF archive
         /// File naming: &lt;modulename&gt;.mod
+        /// Behavior: REPLACES all other files (skips _s.rim/_dlg.erf)
         /// Priority: Takes precedence over .rim/_s.rim/_dlg.erf files
+        /// swkotor.exe: FUN_004094a0 line 95, 136
         /// </summary>
         MOD  // .mod
     }
@@ -76,10 +102,14 @@ namespace Andastra.Parsing.Common
             {
                 case KModuleType.MAIN:
                     return ".rim";
+                case KModuleType.AREA:
+                    return "_a.rim";
+                case KModuleType.AREA_EXTENDED:
+                    return "_adx.rim";
                 case KModuleType.DATA:
                     return "_s.rim";
                 case KModuleType.K2_DLG:
-                    return "_dlg.erf";
+                    return "_dlg.erf";  // TSL only
                 case KModuleType.MOD:
                     return ".mod";
                 default:
@@ -555,27 +585,54 @@ namespace Andastra.Parsing.Common
             if (fileGroup.UsesModOverride)
             {
                 // .mod file overrides all rim-like files
+                // swkotor.exe: FUN_004094a0 line 136: Loads .mod, skips _s.rim
                 _dotMod = true;
                 if (fileGroup.ModFile != null && File.Exists(fileGroup.ModFile))
                 {
                     _capsules[KModuleType.MOD.ToString()] = new ModuleFullOverridePiece(fileGroup.ModFile);
                 }
             }
-            else
+            else if (fileGroup.UseComplexMode)
             {
-                // Use rim-like files (composite module)
+                // Complex mode: Load _a.rim or _adx.rim (replaces .rim), then _s.rim and _dlg.erf
+                // swkotor.exe: FUN_004094a0 line 49-216
                 _dotMod = false;
-                if (fileGroup.MainRimFile != null && File.Exists(fileGroup.MainRimFile))
+                
+                // Step 1: Load _a.rim if exists (REPLACES .rim)
+                // swkotor.exe: FUN_004094a0 line 159
+                if (fileGroup.AreaRimFile != null && File.Exists(fileGroup.AreaRimFile))
                 {
-                    _capsules[KModuleType.MAIN.ToString()] = new ModuleLinkPiece(fileGroup.MainRimFile);
+                    _capsules[KModuleType.AREA.ToString()] = new ModuleLinkPiece(fileGroup.AreaRimFile);
                 }
+                // Step 2: Load _adx.rim if _a.rim not found (REPLACES .rim)
+                // swkotor.exe: FUN_004094a0 line 85
+                else if (fileGroup.AreaExtendedRimFile != null && File.Exists(fileGroup.AreaExtendedRimFile))
+                {
+                    _capsules[KModuleType.AREA_EXTENDED.ToString()] = new ModuleLinkPiece(fileGroup.AreaExtendedRimFile);
+                }
+                
+                // Step 3: Load _s.rim if exists (ADDS to base)
+                // swkotor.exe: FUN_004094a0 line 118 (only if .mod not found)
                 if (fileGroup.DataRimFile != null && File.Exists(fileGroup.DataRimFile))
                 {
                     _capsules[KModuleType.DATA.ToString()] = new ModuleDataPiece(fileGroup.DataRimFile);
                 }
+                
+                // Step 4: Load _dlg.erf if exists (K2 only, ADDS to base)
+                // swkotor2.exe: FUN_004096b0 line 147 (only if .mod not found)
                 if (fileGroup.DlgErfFile != null && File.Exists(fileGroup.DlgErfFile))
                 {
                     _capsules[KModuleType.K2_DLG.ToString()] = new ModuleDLGPiece(fileGroup.DlgErfFile);
+                }
+            }
+            else
+            {
+                // Simple mode: Just load .rim file directly
+                // swkotor.exe: FUN_004094a0 line 32-42
+                _dotMod = false;
+                if (fileGroup.MainRimFile != null && File.Exists(fileGroup.MainRimFile))
+                {
+                    _capsules[KModuleType.MAIN.ToString()] = new ModuleLinkPiece(fileGroup.MainRimFile);
                 }
             }
 
@@ -609,6 +666,14 @@ namespace Andastra.Parsing.Common
                 root = root.Substring(0, root.Length - 2);
             }
             if (casefoldRoot.EndsWith("_dlg"))
+            {
+                root = root.Substring(0, root.Length - 4);
+            }
+            if (casefoldRoot.EndsWith("_a"))
+            {
+                root = root.Substring(0, root.Length - 2);
+            }
+            if (casefoldRoot.EndsWith("_adx"))
             {
                 root = root.Substring(0, root.Length - 4);
             }
@@ -647,6 +712,7 @@ namespace Andastra.Parsing.Common
             ModulePieceResource relevantCapsule = null;
             if (_dotMod)
             {
+                // .mod overrides all
                 if (_capsules.TryGetValue(KModuleType.MOD.ToString(), out ModulePieceResource modCapsule))
                 {
                     relevantCapsule = modCapsule;
@@ -658,7 +724,20 @@ namespace Andastra.Parsing.Common
             }
             else
             {
-                _capsules.TryGetValue(KModuleType.MAIN.ToString(), out relevantCapsule);
+                // Complex mode: Check for _a.rim or _adx.rim first (replaces .rim)
+                // Simple mode: Just .rim
+                if (_capsules.TryGetValue(KModuleType.AREA.ToString(), out ModulePieceResource areaCapsule))
+                {
+                    relevantCapsule = areaCapsule;
+                }
+                else if (_capsules.TryGetValue(KModuleType.AREA_EXTENDED.ToString(), out ModulePieceResource areaExtCapsule))
+                {
+                    relevantCapsule = areaExtCapsule;
+                }
+                else if (_capsules.TryGetValue(KModuleType.MAIN.ToString(), out ModulePieceResource mainCapsule))
+                {
+                    relevantCapsule = mainCapsule;
+                }
             }
 
             if (relevantCapsule == null)

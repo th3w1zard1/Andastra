@@ -653,6 +653,138 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         #endregion
 
+        #region D3D12 Resource Barrier Structures
+
+        // DirectX 12 Resource Barrier Type
+        private const uint D3D12_RESOURCE_BARRIER_TYPE_TRANSITION = 0;
+        private const uint D3D12_RESOURCE_BARRIER_TYPE_ALIASING = 1;
+        private const uint D3D12_RESOURCE_BARRIER_TYPE_UAV = 2;
+
+        // DirectX 12 Resource Barrier Flags
+        private const uint D3D12_RESOURCE_BARRIER_FLAG_NONE = 0;
+        private const uint D3D12_RESOURCE_BARRIER_FLAG_BEGIN_ONLY = 0x1;
+        private const uint D3D12_RESOURCE_BARRIER_FLAG_END_ONLY = 0x2;
+
+        // DirectX 12 Resource States (D3D12_RESOURCE_STATES)
+        private const uint D3D12_RESOURCE_STATE_COMMON = 0;
+        private const uint D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER = 0x1;
+        private const uint D3D12_RESOURCE_STATE_INDEX_BUFFER = 0x2;
+        private const uint D3D12_RESOURCE_STATE_RENDER_TARGET = 0x4;
+        private const uint D3D12_RESOURCE_STATE_UNORDERED_ACCESS = 0x8;
+        private const uint D3D12_RESOURCE_STATE_DEPTH_WRITE = 0x10;
+        private const uint D3D12_RESOURCE_STATE_DEPTH_READ = 0x20;
+        private const uint D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE = 0x40;
+        private const uint D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE = 0x80;
+        private const uint D3D12_RESOURCE_STATE_STREAM_OUT = 0x100;
+        private const uint D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT = 0x200;
+        private const uint D3D12_RESOURCE_STATE_COPY_DEST = 0x400;
+        private const uint D3D12_RESOURCE_STATE_COPY_SOURCE = 0x800;
+        private const uint D3D12_RESOURCE_STATE_RESOLVE_DEST = 0x1000;
+        private const uint D3D12_RESOURCE_STATE_RESOLVE_SOURCE = 0x2000;
+        private const uint D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE = 0x400000;
+        private const uint D3D12_RESOURCE_STATE_GENERIC_READ = 0x2755;
+
+        /// <summary>
+        /// D3D12_RESOURCE_BARRIER structure for resource state transitions.
+        /// Based on DirectX 12 Resource Barriers: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_resource_barrier
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_RESOURCE_BARRIER
+        {
+            public uint Type; // D3D12_RESOURCE_BARRIER_TYPE
+            public uint Flags; // D3D12_RESOURCE_BARRIER_FLAGS
+            public D3D12_RESOURCE_TRANSITION_BARRIER Transition;
+        }
+
+        /// <summary>
+        /// D3D12_RESOURCE_TRANSITION_BARRIER structure.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_RESOURCE_TRANSITION_BARRIER
+        {
+            public IntPtr pResource; // ID3D12Resource*
+            public uint Subresource; // UINT
+            public uint StateBefore; // D3D12_RESOURCE_STATES
+            public uint StateAfter; // D3D12_RESOURCE_STATES
+        }
+
+        /// <summary>
+        /// D3D12_RESOURCE_UAV_BARRIER structure for UAV barriers.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_RESOURCE_UAV_BARRIER
+        {
+            public IntPtr pResource; // ID3D12Resource*
+        }
+
+        // COM interface method delegate for ResourceBarrier
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void ResourceBarrierDelegate(IntPtr commandList, uint numBarriers, IntPtr pBarriers);
+
+        /// <summary>
+        /// Maps ResourceState enum to D3D12_RESOURCE_STATES flags.
+        /// Based on DirectX 12 Resource States: https://docs.microsoft.com/en-us/windows/win32/direct3d12/using-resource-barriers-to-synchronize-resource-states-in-directx-12
+        /// </summary>
+        private static uint MapResourceStateToD3D12(ResourceState state)
+        {
+            switch (state)
+            {
+                case ResourceState.Common:
+                    return D3D12_RESOURCE_STATE_COMMON;
+
+                case ResourceState.VertexBuffer:
+                    return D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
+
+                case ResourceState.IndexBuffer:
+                    return D3D12_RESOURCE_STATE_INDEX_BUFFER;
+
+                case ResourceState.ConstantBuffer:
+                    return D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
+
+                case ResourceState.ShaderResource:
+                    // Shader resource can be accessed by both pixel and non-pixel shaders
+                    return D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+
+                case ResourceState.UnorderedAccess:
+                    return D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+
+                case ResourceState.RenderTarget:
+                    return D3D12_RESOURCE_STATE_RENDER_TARGET;
+
+                case ResourceState.DepthWrite:
+                    return D3D12_RESOURCE_STATE_DEPTH_WRITE;
+
+                case ResourceState.DepthRead:
+                    return D3D12_RESOURCE_STATE_DEPTH_READ;
+
+                case ResourceState.IndirectArgument:
+                    return D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT;
+
+                case ResourceState.CopyDest:
+                    return D3D12_RESOURCE_STATE_COPY_DEST;
+
+                case ResourceState.CopySource:
+                    return D3D12_RESOURCE_STATE_COPY_SOURCE;
+
+                case ResourceState.Present:
+                    return D3D12_RESOURCE_STATE_COMMON; // Present typically transitions to/from COMMON
+
+                case ResourceState.AccelStructRead:
+                    return D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
+
+                case ResourceState.AccelStructWrite:
+                    return D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
+
+                case ResourceState.AccelStructBuildInput:
+                    return D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE; // BLAS build inputs are typically SRVs
+
+                default:
+                    return D3D12_RESOURCE_STATE_COMMON;
+            }
+        }
+
+        #endregion
+
         #region Resource Interface
 
         private interface IResource : IDisposable
@@ -938,7 +1070,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             private readonly IBuffer _sbtBuffer;
             private readonly IntPtr _device5;
 
-            public D3D12RaytracingPipeline(IntPtr handle, RaytracingPipelineDesc desc, IntPtr d3d12StateObject, IntPtr properties, IBuffer sbtBuffer, IntPtr device5)
+            public D3D12RaytracingPipeline(IntPtr handle, Interfaces.RaytracingPipelineDesc desc, IntPtr d3d12StateObject, IntPtr properties, IBuffer sbtBuffer, IntPtr device5)
             {
                 _handle = handle;
                 Desc = desc;
@@ -967,6 +1099,19 @@ namespace Andastra.Runtime.MonoGame.Backends
             private readonly IntPtr _d3d12Device;
             private bool _isOpen;
 
+            // Barrier tracking
+            private readonly List<PendingBarrier> _pendingBarriers;
+            private readonly Dictionary<object, ResourceState> _resourceStates;
+
+            // Barrier entry structure
+            private struct PendingBarrier
+            {
+                public IntPtr Resource;
+                public uint Subresource;
+                public uint StateBefore;
+                public uint StateAfter;
+            }
+
             public D3D12CommandList(IntPtr handle, CommandListType type, D3D12Device device, IntPtr d3d12CommandList, IntPtr d3d12Device)
             {
                 _handle = handle;
@@ -975,6 +1120,8 @@ namespace Andastra.Runtime.MonoGame.Backends
                 _d3d12CommandList = d3d12CommandList;
                 _d3d12Device = d3d12Device;
                 _isOpen = false;
+                _pendingBarriers = new List<PendingBarrier>();
+                _resourceStates = new Dictionary<object, ResourceState>();
             }
 
             public void Open()

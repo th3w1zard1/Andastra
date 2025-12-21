@@ -101,18 +101,32 @@ namespace Andastra.Runtime.Games.Eclipse
                 body.Position += body.Velocity * clampedDeltaTime;
 
                 // Update rotation based on angular velocity
-                // In a full implementation, this would update quaternion rotation
-                // TODO: STUB - For now, we track angular velocity for state preservation
+                // daorigins.exe: 0x008e55f0 - Transform/quaternion rotation updates
+                // DragonAge2.exe: Enhanced angular velocity integration with quaternions
+                if (body.AngularVelocity.LengthSquared() > 0.0001f)
+                {
+                    Vector3 angularVel = body.AngularVelocity;
+                    Quaternion angularQuat = new Quaternion(angularVel.X, angularVel.Y, angularVel.Z, 0.0f);
+                    Quaternion deltaRotation = Quaternion.Multiply(angularQuat, body.Rotation);
+                    deltaRotation = Quaternion.Multiply(deltaRotation, 0.5f * clampedDeltaTime);
+                    body.Rotation = Quaternion.Add(body.Rotation, deltaRotation);
+                    body.Rotation = Quaternion.Normalize(body.Rotation);
+                }
             }
 
-            // Update constraints
-            // In a full implementation, this would solve constraint equations
-            foreach (var constraintList in _entityConstraints.Values)
+            // Solve constraints using iterative constraint solver
+            // daorigins.exe: Constraint solving in physics simulation step
+            // DragonAge2.exe: Enhanced iterative constraint solver with multiple iterations
+            // PhysX-style iterative impulse-based constraint solver
+            const int constraintIterations = 10; // Standard PhysX uses 10-20 iterations
+            for (int iteration = 0; iteration < constraintIterations; iteration++)
             {
-                foreach (PhysicsConstraint constraint in constraintList)
+                foreach (var constraintList in _entityConstraints.Values)
                 {
-                    // Constraint solving would happen here
-                    // TODO: STUB - For now, we preserve constraint data for state saving
+                    foreach (PhysicsConstraint constraint in constraintList)
+                    {
+                        SolveConstraint(constraint, clampedDeltaTime);
+                    }
                 }
             }
         }
@@ -432,11 +446,17 @@ namespace Andastra.Runtime.Games.Eclipse
         private class RigidBodyData
         {
             public Vector3 Position { get; set; }
+            public Quaternion Rotation { get; set; }
             public Vector3 Velocity { get; set; }
             public Vector3 AngularVelocity { get; set; }
             public float Mass { get; set; }
             public Vector3 HalfExtents { get; set; }
             public bool IsDynamic { get; set; }
+
+            public RigidBodyData()
+            {
+                Rotation = Quaternion.Identity;
+            }
         }
 
         /// <summary>

@@ -237,10 +237,13 @@ namespace Andastra.Parsing.Installation
 
             string lowerName = fileName.ToLowerInvariant();
 
-            // Module containers:
-            // - <root>.mod
-            // - <root>.rim and <root>_s.rim
-            // - (TSL) <root>_dlg.erf
+            // Module containers (from swkotor.exe: FUN_004094a0 and swkotor2.exe: FUN_004096b0):
+            // - <root>.mod (override archive)
+            // - <root>.rim (main archive, simple mode only)
+            // - <root>_a.rim (area-specific RIM, complex mode)
+            // - <root>_adx.rim (extended area RIM, complex mode)
+            // - <root>_s.rim (data archive)
+            // - (TSL) <root>_dlg.erf (dialog archive, K2 only)
             if (lowerName.EndsWith(".mod"))
                 return true;
             if (lowerName.EndsWith(".rim"))
@@ -372,7 +375,8 @@ namespace Andastra.Parsing.Installation
         /// </summary>
         public bool HasFiles()
         {
-            return ModFile != null || MainRimFile != null || DataRimFile != null || DlgErfFile != null;
+            return ModFile != null || MainRimFile != null || AreaRimFile != null || 
+                   AreaExtendedRimFile != null || DataRimFile != null || DlgErfFile != null;
         }
     }
 }

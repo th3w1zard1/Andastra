@@ -32,11 +32,33 @@ namespace Andastra.Parsing.Tests.Formats
             }
 
             // Test reading GUI file
-            GUI gui = new GUIReader(BinaryTestFile).Load();
-            ValidateIO(gui);
+            GUI originalGui = new GUIReader(BinaryTestFile).Load();
+            ValidateIO(originalGui);
 
-            // Test writing and reading back (if writer exists)
-            // TODO: STUB - For now, we test that we can read the file correctly
+            // Test writing and reading back - comprehensive round-trip test
+            string tempOutputFile = Path.Combine(Path.GetTempPath(), "test_gui_roundtrip.gui");
+            try
+            {
+                // Write GUI to temporary file
+                new GUIWriter(originalGui).WriteToFile(tempOutputFile);
+
+                // Verify file was created
+                File.Exists(tempOutputFile).Should().BeTrue("GUI file should be written successfully");
+
+                // Read the written file back
+                GUI roundTripGui = new GUIReader(tempOutputFile).Load();
+
+                // Validate round-trip GUI matches original
+                ValidateRoundTrip(originalGui, roundTripGui);
+            }
+            finally
+            {
+                // Clean up temporary file
+                if (File.Exists(tempOutputFile))
+                {
+                    File.Delete(tempOutputFile);
+                }
+            }
         }
 
         [Fact(Timeout = 120000)]
@@ -897,6 +919,221 @@ namespace Andastra.Parsing.Tests.Formats
             gui.Should().NotBeNull("GUI should not be null");
             gui.Tag.Should().NotBeNull("GUI Tag should not be null");
             gui.Controls.Should().NotBeNull("GUI Controls list should not be null");
+        }
+
+        /// <summary>
+        /// Validates that a round-trip GUI matches the original GUI.
+        /// Compares all properties recursively to ensure data integrity.
+        /// </summary>
+        private static void ValidateRoundTrip(GUI original, GUI roundTrip)
+        {
+            // Validate root properties
+            roundTrip.Tag.Should().Be(original.Tag, "GUI Tag should match after round-trip");
+            roundTrip.Controls.Count.Should().Be(original.Controls.Count, "GUI Controls count should match after round-trip");
+
+            // Validate all controls recursively
+            var originalControls = GetAllControls(original);
+            var roundTripControls = GetAllControls(roundTrip);
+
+            originalControls.Count.Should().Be(roundTripControls.Count, "Total control count should match after round-trip");
+
+            for (int i = 0; i < originalControls.Count; i++)
+            {
+                ValidateControlRoundTrip(originalControls[i], roundTripControls[i], $"Control {i}");
+            }
+        }
+
+        /// <summary>
+        /// Validates that a control matches after round-trip.
+        /// </summary>
+        private static void ValidateControlRoundTrip(GUIControl original, GUIControl roundTrip, string context)
+        {
+            roundTrip.GuiType.Should().Be(original.GuiType, $"{context}: Control type should match");
+            roundTrip.Id.Should().Be(original.Id, $"{context}: ID should match");
+            roundTrip.Tag.Should().Be(original.Tag, $"{context}: Tag should match");
+            roundTrip.ParentTag.Should().Be(original.ParentTag, $"{context}: ParentTag should match");
+            roundTrip.ParentId.Should().Be(original.ParentId, $"{context}: ParentId should match");
+            roundTrip.Locked.Should().Be(original.Locked, $"{context}: Locked should match");
+
+            // Validate Extent
+            roundTrip.Extent.X.Should().BeApproximately(original.Extent.X, 0.01f, $"{context}: Extent X should match");
+            roundTrip.Extent.Y.Should().BeApproximately(original.Extent.Y, 0.01f, $"{context}: Extent Y should match");
+            roundTrip.Extent.Z.Should().BeApproximately(original.Extent.Z, 0.01f, $"{context}: Extent Z (width) should match");
+            roundTrip.Extent.W.Should().BeApproximately(original.Extent.W, 0.01f, $"{context}: Extent W (height) should match");
+
+            // Validate Color
+            if (original.Color != null)
+            {
+                roundTrip.Color.Should().NotBeNull($"{context}: Round-trip Color should not be null if original is not null");
+                roundTrip.Color.R.Should().BeApproximately(original.Color.R, 0.001f, $"{context}: Color R should match");
+                roundTrip.Color.G.Should().BeApproximately(original.Color.G, 0.001f, $"{context}: Color G should match");
+                roundTrip.Color.B.Should().BeApproximately(original.Color.B, 0.001f, $"{context}: Color B should match");
+            }
+
+            // Validate Border
+            ValidateBorderRoundTrip(original.Border, roundTrip.Border, $"{context}: Border");
+
+            // Validate Hilight
+            ValidateBorderRoundTrip(original.Hilight, roundTrip.Hilight, $"{context}: Hilight");
+
+            // Validate Selected
+            ValidateSelectedRoundTrip(original.Selected, roundTrip.Selected, $"{context}: Selected");
+
+            // Validate HilightSelected
+            ValidateHilightSelectedRoundTrip(original.HilightSelected, roundTrip.HilightSelected, $"{context}: HilightSelected");
+
+            // Validate Text
+            ValidateTextRoundTrip(original.GuiText, roundTrip.GuiText, $"{context}: Text");
+
+            // Validate MoveTo
+            ValidateMoveToRoundTrip(original.Moveto, roundTrip.Moveto, $"{context}: MoveTo");
+
+            // Validate control-specific properties
+            if (original.GuiType == GUIControlType.ListBox)
+            {
+                var originalListBox = (GUIListBox)original;
+                var roundTripListBox = (GUIListBox)roundTrip;
+                roundTripListBox.Padding.Should().Be(originalListBox.Padding, $"{context}: ListBox Padding should match");
+                roundTripListBox.Looping.Should().Be(originalListBox.Looping, $"{context}: ListBox Looping should match");
+                roundTripListBox.MaxValue.Should().Be(originalListBox.MaxValue, $"{context}: ListBox MaxValue should match");
+            }
+            else if (original.GuiType == GUIControlType.Slider)
+            {
+                var originalSlider = (GUISlider)original;
+                var roundTripSlider = (GUISlider)roundTrip;
+                roundTripSlider.MaxValue.Should().BeApproximately(originalSlider.MaxValue, 0.01f, $"{context}: Slider MaxValue should match");
+                roundTripSlider.Value.Should().BeApproximately(originalSlider.Value, 0.01f, $"{context}: Slider Value should match");
+                roundTripSlider.Direction.Should().Be(originalSlider.Direction, $"{context}: Slider Direction should match");
+            }
+            else if (original.GuiType == GUIControlType.Progress)
+            {
+                var originalProgress = (GUIProgressBar)original;
+                var roundTripProgress = (GUIProgressBar)roundTrip;
+                roundTripProgress.MaxValue.Should().BeApproximately(originalProgress.MaxValue, 0.01f, $"{context}: ProgressBar MaxValue should match");
+                roundTripProgress.CurrentValue.Should().Be(originalProgress.CurrentValue, $"{context}: ProgressBar CurrentValue should match");
+                roundTripProgress.StartFromLeft.Should().Be(originalProgress.StartFromLeft, $"{context}: ProgressBar StartFromLeft should match");
+            }
+            else if (original.GuiType == GUIControlType.CheckBox)
+            {
+                var originalCheckBox = (GUICheckBox)original;
+                var roundTripCheckBox = (GUICheckBox)roundTrip;
+                roundTripCheckBox.IsSelected.Should().Be(originalCheckBox.IsSelected, $"{context}: CheckBox IsSelected should match");
+            }
+            else if (original.GuiType == GUIControlType.Button)
+            {
+                var originalButton = (GUIButton)original;
+                var roundTripButton = (GUIButton)roundTrip;
+                roundTripButton.Text.Should().Be(originalButton.Text, $"{context}: Button Text should match");
+                roundTripButton.Pulsing.Should().Be(originalButton.Pulsing, $"{context}: Button Pulsing should match");
+            }
+            else if (original.GuiType == GUIControlType.Label)
+            {
+                var originalLabel = (GUILabel)original;
+                var roundTripLabel = (GUILabel)roundTrip;
+                roundTripLabel.Text.Should().Be(originalLabel.Text, $"{context}: Label Text should match");
+                roundTripLabel.Alignment.Should().Be(originalLabel.Alignment, $"{context}: Label Alignment should match");
+            }
+            else if (original.GuiType == GUIControlType.Panel)
+            {
+                var originalPanel = (GUIPanel)original;
+                var roundTripPanel = (GUIPanel)roundTrip;
+                roundTripPanel.Alpha.Should().BeApproximately(originalPanel.Alpha, 0.001f, $"{context}: Panel Alpha should match");
+            }
+
+            // Validate children recursively
+            roundTrip.Children.Count.Should().Be(original.Children.Count, $"{context}: Children count should match");
+            for (int i = 0; i < original.Children.Count; i++)
+            {
+                ValidateControlRoundTrip(original.Children[i], roundTrip.Children[i], $"{context} -> Child {i}");
+            }
+        }
+
+        private static void ValidateBorderRoundTrip(GUIBorder original, GUIBorder roundTrip, string context)
+        {
+            if (original == null)
+            {
+                roundTrip.Should().BeNull($"{context} should be null if original is null");
+                return;
+            }
+
+            roundTrip.Should().NotBeNull($"{context} should not be null if original is not null");
+            roundTrip.Corner.ToString().Should().Be(original.Corner.ToString(), $"{context}: Corner should match");
+            roundTrip.Edge.ToString().Should().Be(original.Edge.ToString(), $"{context}: Edge should match");
+            roundTrip.Fill.ToString().Should().Be(original.Fill.ToString(), $"{context}: Fill should match");
+            roundTrip.Dimension.Should().Be(original.Dimension, $"{context}: Dimension should match");
+            roundTrip.FillStyle.Should().Be(original.FillStyle, $"{context}: FillStyle should match");
+            roundTrip.InnerOffset.Should().Be(original.InnerOffset, $"{context}: InnerOffset should match");
+            roundTrip.InnerOffsetY.Should().Be(original.InnerOffsetY, $"{context}: InnerOffsetY should match");
+            roundTrip.Pulsing.Should().Be(original.Pulsing, $"{context}: Pulsing should match");
+        }
+
+        private static void ValidateSelectedRoundTrip(GUISelected original, GUISelected roundTrip, string context)
+        {
+            if (original == null)
+            {
+                roundTrip.Should().BeNull($"{context} should be null if original is null");
+                return;
+            }
+
+            roundTrip.Should().NotBeNull($"{context} should not be null if original is not null");
+            roundTrip.Corner.ToString().Should().Be(original.Corner.ToString(), $"{context}: Corner should match");
+            roundTrip.Edge.ToString().Should().Be(original.Edge.ToString(), $"{context}: Edge should match");
+            roundTrip.Fill.ToString().Should().Be(original.Fill.ToString(), $"{context}: Fill should match");
+            roundTrip.Dimension.Should().Be(original.Dimension, $"{context}: Dimension should match");
+            roundTrip.FillStyle.Should().Be(original.FillStyle, $"{context}: FillStyle should match");
+            roundTrip.InnerOffset.Should().Be(original.InnerOffset, $"{context}: InnerOffset should match");
+            roundTrip.InnerOffsetY.Should().Be(original.InnerOffsetY, $"{context}: InnerOffsetY should match");
+            roundTrip.Pulsing.Should().Be(original.Pulsing, $"{context}: Pulsing should match");
+        }
+
+        private static void ValidateHilightSelectedRoundTrip(GUIHilightSelected original, GUIHilightSelected roundTrip, string context)
+        {
+            if (original == null)
+            {
+                roundTrip.Should().BeNull($"{context} should be null if original is null");
+                return;
+            }
+
+            roundTrip.Should().NotBeNull($"{context} should not be null if original is not null");
+            roundTrip.Corner.ToString().Should().Be(original.Corner.ToString(), $"{context}: Corner should match");
+            roundTrip.Edge.ToString().Should().Be(original.Edge.ToString(), $"{context}: Edge should match");
+            roundTrip.Fill.ToString().Should().Be(original.Fill.ToString(), $"{context}: Fill should match");
+            roundTrip.Dimension.Should().Be(original.Dimension, $"{context}: Dimension should match");
+            roundTrip.FillStyle.Should().Be(original.FillStyle, $"{context}: FillStyle should match");
+            roundTrip.InnerOffset.Should().Be(original.InnerOffset, $"{context}: InnerOffset should match");
+            roundTrip.InnerOffsetY.Should().Be(original.InnerOffsetY, $"{context}: InnerOffsetY should match");
+            roundTrip.Pulsing.Should().Be(original.Pulsing, $"{context}: Pulsing should match");
+        }
+
+        private static void ValidateTextRoundTrip(GUIText original, GUIText roundTrip, string context)
+        {
+            if (original == null)
+            {
+                roundTrip.Should().BeNull($"{context} should be null if original is null");
+                return;
+            }
+
+            roundTrip.Should().NotBeNull($"{context} should not be null if original is not null");
+            roundTrip.Text.Should().Be(original.Text, $"{context}: Text should match");
+            roundTrip.StrRef.Should().Be(original.StrRef, $"{context}: StrRef should match");
+            roundTrip.Font.ToString().Should().Be(original.Font.ToString(), $"{context}: Font should match");
+            roundTrip.Alignment.Should().Be(original.Alignment, $"{context}: Alignment should match");
+            roundTrip.Pulsing.Should().Be(original.Pulsing, $"{context}: Pulsing should match");
+        }
+
+        private static void ValidateMoveToRoundTrip(GUIMoveTo original, GUIMoveTo roundTrip, string context)
+        {
+            if (original == null)
+            {
+                roundTrip.Should().BeNull($"{context} should be null if original is null");
+                return;
+            }
+
+            roundTrip.Should().NotBeNull($"{context} should not be null if original is not null");
+            roundTrip.Up.Should().Be(original.Up, $"{context}: Up should match");
+            roundTrip.Down.Should().Be(original.Down, $"{context}: Down should match");
+            roundTrip.Left.Should().Be(original.Left, $"{context}: Left should match");
+            roundTrip.Right.Should().Be(original.Right, $"{context}: Right should match");
         }
 
         private static void ValidateNestedControls(GUIControl control)
