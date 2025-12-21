@@ -7332,6 +7332,47 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             /// <summary>
+            /// Calls ID3D12GraphicsCommandList::ClearUnorderedAccessViewUint through COM vtable.
+            /// VTable index 50 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Clear Operations: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-clearunorderedaccessviewuint
+            /// </summary>
+            private unsafe void CallClearUnorderedAccessViewUint(IntPtr commandList, IntPtr ViewGPUHandleInCurrentHeap, IntPtr ViewCPUHandle, IntPtr pResource, uint[] Values, uint NumRects, IntPtr pRects)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero || ViewCPUHandle == IntPtr.Zero || pResource == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                if (Values == null || Values.Length < 4)
+                {
+                    return; // Invalid values array
+                }
+
+                // Pin the values array and pass pointer to native function
+                // DirectX 12 ClearUnorderedAccessViewUint expects const UINT Values[4]
+                // We pin the array to get a stable pointer for the native call
+                fixed (uint* valuesPtr = Values)
+                {
+                    // Get vtable pointer
+                    IntPtr* vtable = *(IntPtr**)commandList;
+                    // ClearUnorderedAccessViewUint is at index 50 in ID3D12GraphicsCommandList vtable
+                    IntPtr methodPtr = vtable[50];
+
+                    // Create delegate from function pointer
+                    ClearUnorderedAccessViewUintDelegate clearUavUint =
+                        (ClearUnorderedAccessViewUintDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(ClearUnorderedAccessViewUintDelegate));
+
+                    clearUavUint(commandList, ViewGPUHandleInCurrentHeap, ViewCPUHandle, pResource, new IntPtr(valuesPtr), NumRects, pRects);
+                }
+            }
+
+            /// <summary>
             /// Calls ID3D12GraphicsCommandList::RSSetScissorRects through COM vtable.
             /// VTable index 51 for ID3D12GraphicsCommandList.
             /// Based on DirectX 12 Rasterizer State: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-rssetscissorrects
@@ -9745,6 +9786,61 @@ namespace Andastra.Runtime.MonoGame.Backends
             public D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS Inputs;
             public IntPtr SourceAccelerationStructureData;
             public IntPtr ScratchAccelerationStructureData;
+        }
+
+        /// <summary>
+        /// Raytracing acceleration structure prebuild information.
+        /// Based on D3D12 API: D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO
+        /// Returned by ID3D12Device5::GetRaytracingAccelerationStructurePrebuildInfo.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO
+        {
+            /// <summary>
+            /// Size in bytes required for the acceleration structure result buffer.
+            /// </summary>
+            public ulong ResultDataMaxSizeInBytes;
+
+            /// <summary>
+            /// Size in bytes required for the scratch buffer during acceleration structure build.
+            /// </summary>
+            public ulong ScratchDataSizeInBytes;
+
+            /// <summary>
+            /// Size in bytes required for the scratch buffer during acceleration structure update.
+            /// </summary>
+            public ulong UpdateScratchDataSizeInBytes;
+        }
+
+        /// <summary>
+        /// Raytracing instance description for top-level acceleration structures.
+        /// Based on D3D12 API: D3D12_RAYTRACING_INSTANCE_DESC
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        private struct D3D12_RAYTRACING_INSTANCE_DESC
+        {
+            /// <summary>
+            /// 3x4 row-major transform matrix (12 floats = 48 bytes).
+            /// </summary>
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 12)]
+            public float[] Transform;
+
+            /// <summary>
+            /// Packed fields: InstanceID (24 bits), InstanceMask (8 bits), Flags (8 bits).
+            /// Bit layout: [InstanceID:24][InstanceMask:8][Flags:8]
+            /// </summary>
+            public uint InstanceID_InstanceMask_Flags;
+
+            /// <summary>
+            /// Packed fields: InstanceShaderBindingTableRecordOffset (24 bits), Flags (8 bits).
+            /// Bit layout: [InstanceShaderBindingTableRecordOffset:24][Flags:8]
+            /// </summary>
+            public uint InstanceShaderBindingTableRecordOffset_Flags;
+
+            /// <summary>
+            /// GPU virtual address of the bottom-level acceleration structure.
+            /// </summary>
+            public ulong AccelerationStructure;
         }
 
         /// <summary>
