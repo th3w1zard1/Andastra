@@ -174,6 +174,12 @@ namespace Andastra.Parsing.Common
                 return restype == ResourceType.ARE || restype == ResourceType.IFO || restype == ResourceType.GIT;
             }
 
+            // _a.rim and _adx.rim contain ARE resources (swkotor.exe: FUN_004094a0 line 61, 74 - checks for ARE type 0xbba)
+            if (type == KModuleType.AREA || type == KModuleType.AREA_EXTENDED)
+            {
+                return restype == ResourceType.ARE || restype == ResourceType.IFO || restype == ResourceType.GIT;
+            }
+
             if (type == KModuleType.DATA)
             {
                 return restype == ResourceType.FAC ||
