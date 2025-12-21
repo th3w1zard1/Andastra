@@ -1334,9 +1334,12 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                     // If the last child is a plain expression (AVarRef, AConst, etc.) that's not part of
                     // a larger expression, convert it to an expression statement
                     // But don't do this for function calls (AActionExp) as they're usually part of expressions
+                    // Also don't wrap AConditionalExp, ABinaryExp, or AUnaryExp as they're used by JZ/JNZ for if statements
+                    // and other control structures that need to extract them
                     if (typeof(AExpression).IsInstanceOfType(last) && !typeof(ScriptNode.AActionExp).IsInstanceOfType(last)
                           && !typeof(AModifyExp).IsInstanceOfType(last) && !typeof(AUnaryModExp).IsInstanceOfType(last)
-                          && !typeof(AReturnStatement).IsInstanceOfType(last))
+                          && !typeof(AReturnStatement).IsInstanceOfType(last) && !typeof(AConditionalExp).IsInstanceOfType(last)
+                          && !typeof(ABinaryExp).IsInstanceOfType(last) && !typeof(AUnaryExp).IsInstanceOfType(last))
                     {
                         AExpression expr = (AExpression)this.RemoveLastExp(true);
                         if (expr != null)
