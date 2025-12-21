@@ -4245,11 +4245,11 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                 try
                 {
-                    // TODO: Set instance buffer reference on descriptor
-                    // Metal API: [MTLAccelerationStructureGeometryInstanceDescriptor setInstanceBuffer:instanceBuffer offset:0]
+                    // Set instance buffer reference on descriptor
+                    // Metal API: [MTLAccelerationStructureGeometryInstanceDescriptor setInstanceBuffer:instanceBuffer offset:0 stridedBytesPerInstance:instanceStructSize]
                     // Metal API: [MTLAccelerationStructureGeometryInstanceDescriptor setInstanceCount:instanceCount]
-                    // This requires additional native interop functions to set properties on the descriptor
-                    // For now, we assume the descriptor creation handles this, or it will be extended in the future
+                    // instanceStructSize is already calculated above (64 bytes for AccelStructInstance, matching VkAccelerationStructureInstanceKHR layout)
+                    MetalNative.SetInstanceBufferOnTLASDescriptor(tlasDescriptor, instanceBuffer, 0, (ulong)instanceStructSize, (uint)instanceCount);
 
                     // Estimate scratch buffer size for TLAS building
                     // Metal requires a scratch buffer for building acceleration structures
@@ -4735,6 +4735,43 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
         }
 
+        /// <summary>
+        /// Sets the instance buffer reference and instance count on a TLAS acceleration structure descriptor.
+        /// Based on Metal API: MTLAccelerationStructureGeometryInstanceDescriptor::setInstanceBuffer:offset:stridedBytesPerInstance:
+        /// and MTLAccelerationStructureGeometryInstanceDescriptor::setInstanceCount:
+        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlaccelerationstructuregeometryinstancedescriptor
+        /// </summary>
+        /// <param name="descriptor">TLAS acceleration structure descriptor (MTLAccelerationStructureGeometryInstanceDescriptor)</param>
+        /// <param name="instanceBuffer">Metal buffer containing instance data (MTLBuffer)</param>
+        /// <param name="instanceOffset">Offset into instance buffer in bytes (typically 0)</param>
+        /// <param name="instanceStride">Stride between instances in bytes (typically 64 for AccelStructInstance)</param>
+        /// <param name="instanceCount">Number of instances</param>
+        public static void SetInstanceBufferOnTLASDescriptor(IntPtr descriptor, IntPtr instanceBuffer, ulong instanceOffset, ulong instanceStride, uint instanceCount)
+        {
+            if (descriptor == IntPtr.Zero || instanceBuffer == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                // Metal API: [descriptor setInstanceBuffer:instanceBuffer offset:instanceOffset stridedBytesPerInstance:instanceStride]
+                // Method signature: - (void)setInstanceBuffer:(id<MTLBuffer>)buffer offset:(NSUInteger)offset stridedBytesPerInstance:(NSUInteger)stride
+                IntPtr setInstanceBufferSelector = sel_registerName("setInstanceBuffer:offset:stridedBytesPerInstance:");
+                objc_msgSend_void_uint_ulong_ulong(descriptor, setInstanceBufferSelector, instanceBuffer, instanceOffset, instanceStride);
+
+                // Metal API: [descriptor setInstanceCount:instanceCount]
+                // Method signature: - (void)setInstanceCount:(NSUInteger)count
+                IntPtr setInstanceCountSelector = sel_registerName("setInstanceCount:");
+                objc_msgSend_void_ulong(descriptor, setInstanceCountSelector, (ulong)instanceCount);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalNative] SetInstanceBufferOnTLASDescriptor: Exception: {ex.Message}");
+                Console.WriteLine($"[MetalNative] SetInstanceBufferOnTLASDescriptor: Stack trace: {ex.StackTrace}");
+            }
+        }
+
         // Helper functions for triangle geometry descriptor manipulation
         // These use Objective-C runtime to interact with MTLAccelerationStructureTriangleGeometryDescriptor
         
@@ -4752,6 +4789,9 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
         private static extern void objc_msgSend_void_uint_ulong(IntPtr receiver, IntPtr selector, IntPtr buffer, ulong offset);
+
+        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void objc_msgSend_void_uint_ulong_ulong(IntPtr receiver, IntPtr selector, IntPtr buffer, ulong offset, ulong stride);
 
         private static IntPtr CreateTriangleGeometryDescriptor()
         {
