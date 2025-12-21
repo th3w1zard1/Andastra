@@ -444,8 +444,13 @@ namespace Andastra.Runtime.Games.Aurora
         /// 
         /// Note: Aurora tiles have height transition data stored per-tile.
         /// The Tile.Height property indicates the number of height transitions, but actual
-        /// height values would need to be sampled from tile geometry data when available.
-        /// TODO: STUB - For now, we use a simplified approach that projects to tile center height.
+        /// height values are sampled from tile geometry data (walkmesh) when available.
+        /// 
+        /// Implementation details:
+        /// - Samples height at the actual position within the tile using GetTileHeightAtPosition
+        /// - For tile boundaries, interpolates heights from adjacent tiles for smooth transitions
+        /// - Falls back to simplified height transition model when walkmesh data is unavailable
+        /// - Based on nwmain.exe: CNWTileSurfaceMesh::GetHeightAtPoint @ 0x1402bedf0
         /// </remarks>
         public bool GetHeightAtPoint(Vector3 point, out float height)
         {
@@ -496,12 +501,13 @@ namespace Andastra.Runtime.Games.Aurora
 
             if (onBoundaryX || onBoundaryZ)
             {
-                // Interpolate height from current tile and adjacent tiles
+                // Interpolate height from current tile and adjacent tiles using actual positions
+                // Based on nwmain.exe: Tile boundary height interpolation for smooth transitions
                 float totalHeight = 0.0f;
                 float totalWeight = 0.0f;
 
-                // Sample current tile
-                float currentTileHeight = GetTileHeight(tileX, tileY);
+                // Sample current tile at actual position
+                float currentTileHeight = GetTileHeightAtPosition(tileX, tileY, normalizedX, normalizedZ);
                 if (currentTileHeight != float.MinValue)
                 {
                     float weight = 1.0f;
@@ -510,9 +516,10 @@ namespace Andastra.Runtime.Games.Aurora
                 }
 
                 // Sample adjacent tiles for interpolation
+                // For adjacent tiles, calculate the corresponding normalized position
                 int[] dx = { -1, 1, 0, 0, -1, -1, 1, 1 };
                 int[] dy = { 0, 0, -1, 1, -1, 1, -1, 1 };
-                float[] weights = { 0.5f, 0.5f, 0.5f, 0.5f, 0.25f, 0.25f, 0.25f, 0.25f };
+                float[] baseWeights = { 0.5f, 0.5f, 0.5f, 0.5f, 0.25f, 0.25f, 0.25f, 0.25f };
 
                 for (int i = 0; i < dx.Length; i++)
                 {
@@ -524,14 +531,46 @@ namespace Andastra.Runtime.Games.Aurora
                         AuroraTile neighborTile = _tiles[neighborY, neighborX];
                         if (neighborTile.IsLoaded)
                         {
-                            float neighborHeight = GetTileHeight(neighborX, neighborY);
+                            // Calculate normalized position in the adjacent tile
+                            // For tiles to the left (dx = -1), position is at right edge (1.0 - normalizedX)
+                            // For tiles to the right (dx = 1), position is at left edge (normalizedX - 1.0)
+                            // For tiles above (dy = -1), position is at bottom edge (1.0 - normalizedZ)
+                            // For tiles below (dy = 1), position is at top edge (normalizedZ - 1.0)
+                            float neighborNormX = normalizedX;
+                            float neighborNormZ = normalizedZ;
+                            
+                            if (dx[i] < 0) // Left neighbor
+                            {
+                                neighborNormX = 1.0f + normalizedX; // Position extends into left tile
+                            }
+                            else if (dx[i] > 0) // Right neighbor
+                            {
+                                neighborNormX = normalizedX - 1.0f; // Position extends into right tile
+                            }
+                            
+                            if (dy[i] < 0) // Up neighbor (negative Y)
+                            {
+                                neighborNormZ = 1.0f + normalizedZ; // Position extends into up tile
+                            }
+                            else if (dy[i] > 0) // Down neighbor (positive Y)
+                            {
+                                neighborNormZ = normalizedZ - 1.0f; // Position extends into down tile
+                            }
+                            
+                            // Clamp to valid range [0.0, 1.0]
+                            neighborNormX = Math.Max(0.0f, Math.Min(1.0f, neighborNormX));
+                            neighborNormZ = Math.Max(0.0f, Math.Min(1.0f, neighborNormZ));
+                            
+                            // Sample height at the corresponding position in the adjacent tile
+                            float neighborHeight = GetTileHeightAtPosition(neighborX, neighborY, neighborNormX, neighborNormZ);
                             if (neighborHeight != float.MinValue)
                             {
                                 // Weight decreases with distance from boundary
-                                float distanceX = Math.Abs(normalizedX - (dx[i] > 0 ? 1.0f : (dx[i] < 0 ? 0.0f : normalizedX)));
-                                float distanceZ = Math.Abs(normalizedZ - (dy[i] > 0 ? 1.0f : (dy[i] < 0 ? 0.0f : normalizedZ)));
-                                float distance = (float)Math.Sqrt(distanceX * distanceX + distanceZ * distanceZ);
-                                float weight = weights[i] * (1.0f - Math.Min(1.0f, distance));
+                                // Calculate distance from current point to tile edge
+                                float edgeDistanceX = dx[i] < 0 ? normalizedX : (dx[i] > 0 ? (1.0f - normalizedX) : 0.0f);
+                                float edgeDistanceZ = dy[i] < 0 ? normalizedZ : (dy[i] > 0 ? (1.0f - normalizedZ) : 0.0f);
+                                float edgeDistance = (float)Math.Sqrt(edgeDistanceX * edgeDistanceX + edgeDistanceZ * edgeDistanceZ);
+                                float weight = baseWeights[i] * Math.Max(0.0f, 1.0f - edgeDistance * 10.0f); // Scale by 10 for 0.1 boundary threshold
 
                                 totalHeight += neighborHeight * weight;
                                 totalWeight += weight;
@@ -547,8 +586,9 @@ namespace Andastra.Runtime.Games.Aurora
                 }
             }
 
-            // For points well within tile, use tile center height
-            float tileHeight = GetTileHeight(tileX, tileY);
+            // For points well within tile, sample height at actual position (not just tile center)
+            // Based on nwmain.exe: CNWTileSurfaceMesh::GetHeightAtPoint samples at actual position
+            float tileHeight = GetTileHeightAtPosition(tileX, tileY, normalizedX, normalizedZ);
             if (tileHeight != float.MinValue)
             {
                 height = tileHeight;
@@ -579,6 +619,35 @@ namespace Andastra.Runtime.Games.Aurora
         /// </remarks>
         private float GetTileHeight(int tileX, int tileY)
         {
+            return GetTileHeightAtPosition(tileX, tileY, 0.5f, 0.5f);
+        }
+
+        /// <summary>
+        /// Gets the height of a tile at a specific normalized position within the tile.
+        /// </summary>
+        /// <param name="tileX">Tile X coordinate.</param>
+        /// <param name="tileY">Tile Y coordinate.</param>
+        /// <param name="normalizedX">Normalized X coordinate within tile (0.0 to 1.0, where 0.5 is center).</param>
+        /// <param name="normalizedZ">Normalized Z coordinate within tile (0.0 to 1.0, where 0.5 is center).</param>
+        /// <returns>The height at the specified position, or float.MinValue if not found.</returns>
+        /// <remarks>
+        /// Based on nwmain.exe: CNWTileSurfaceMesh::GetHeightAtPoint @ 0x1402bedf0
+        /// Samples height from walkmesh geometry at the specified normalized position within the tile.
+        /// 
+        /// Implementation:
+        /// 1. If tileset loader and tileset resref are available, samples height from actual walkmesh geometry at the specified position
+        /// 2. Otherwise, falls back to simplified model based on height transitions
+        /// 
+        /// Walkmesh sampling:
+        /// - Loads tile model from tileset using TileId
+        /// - Loads walkmesh (WOK file) for the tile model
+        /// - Samples height at the specified normalized position using barycentric interpolation
+        /// - Falls back to average face height if point is not within any face
+        /// 
+        /// This method provides accurate height sampling at any point within the tile, not just the center.
+        /// </remarks>
+        private float GetTileHeightAtPosition(int tileX, int tileY, float normalizedX, float normalizedZ)
+        {
             if (!IsTileValid(tileX, tileY))
             {
                 return float.MinValue;
@@ -590,11 +659,17 @@ namespace Andastra.Runtime.Games.Aurora
                 return float.MinValue;
             }
 
+            // Clamp normalized coordinates to valid range [0.0, 1.0]
+            normalizedX = Math.Max(0.0f, Math.Min(1.0f, normalizedX));
+            normalizedZ = Math.Max(0.0f, Math.Min(1.0f, normalizedZ));
+
             // Try to sample height from walkmesh geometry if tileset loader is available
             if (_tilesetLoader != null && !string.IsNullOrEmpty(_tilesetResRef))
             {
-                // Sample height at tile center (0.5, 0.5 in normalized tile coordinates)
-                float walkmeshHeight = _tilesetLoader.GetTileHeight(_tilesetResRef, tile.TileId, 0.5f, 0.5f);
+                // Sample height at the specified normalized position within the tile
+                // Based on nwmain.exe: CNWTileSurfaceMesh::GetHeightAtPoint @ 0x1402bedf0
+                // Uses barycentric interpolation to get accurate height at any point within the tile
+                float walkmeshHeight = _tilesetLoader.GetTileHeight(_tilesetResRef, tile.TileId, normalizedX, normalizedZ);
                 if (walkmeshHeight != float.MinValue)
                 {
                     return walkmeshHeight;
@@ -606,6 +681,7 @@ namespace Andastra.Runtime.Games.Aurora
             // Based on nwmain.exe: Height transitions correspond to elevation changes
             // Each height transition typically represents a 0.5 unit elevation change
             // This is a reasonable approximation when walkmesh data is not available
+            // Note: This fallback doesn't account for position within tile, only uses tile center height
             float baseHeight = 0.0f;
             float heightPerTransition = 0.5f;
             float tileHeight = baseHeight + (tile.Height * heightPerTransition);
