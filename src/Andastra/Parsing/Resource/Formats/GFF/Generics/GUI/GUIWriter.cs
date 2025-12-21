@@ -81,12 +81,6 @@ namespace Andastra.Parsing.Resource.Generics.GUI
         /// </summary>
         private void WriteControl(GUIControl control, GFFStruct gffStruct)
         {
-            WriteControl(control, gffStruct);
-        }
-
-        private void WriteControlToStruct(GUIControl control, GFFStruct gffStruct)
-        {
-
             // Basic properties
             gffStruct.SetInt32("CONTROLTYPE", (int)control.GuiType);
             if (control.Id.HasValue)
@@ -229,7 +223,7 @@ namespace Andastra.Parsing.Resource.Generics.GUI
                 var childControlsList = new GFFList();
                 foreach (var child in control.Children)
                 {
-                    var childStruct = childControlsList.Add(6); // Struct type 6 for GUI controls
+                    var childStruct = childControlsList.Add(0);
                     WriteControl(child, childStruct);
                 }
                 gffStruct.SetList("CONTROLS", childControlsList);
@@ -242,7 +236,8 @@ namespace Andastra.Parsing.Resource.Generics.GUI
         /// </summary>
         private void WriteExtent(GFFStruct gffStruct, GUIControl control)
         {
-            var extentStruct = gffStruct.Acquire<GFFStruct>("EXTENT", new GFFStruct(0));extentStruct.SetInt32("LEFT", (int)control.Extent.X);
+            var extentStruct = gffStruct.Acquire<GFFStruct>("EXTENT", new GFFStruct(0));
+            extentStruct.SetInt32("LEFT", (int)control.Extent.X);
             extentStruct.SetInt32("TOP", (int)control.Extent.Y);
             extentStruct.SetInt32("WIDTH", (int)control.Extent.Z);
             extentStruct.SetInt32("HEIGHT", (int)control.Extent.W);
@@ -254,7 +249,7 @@ namespace Andastra.Parsing.Resource.Generics.GUI
         /// </summary>
         private void WriteBorder(GFFStruct gffStruct, GUIBorder border)
         {
-            var borderStruct = new GFFStruct(0);
+            var borderStruct = gffStruct.Acquire<GFFStruct>("BORDER", new GFFStruct(0));
             if (border.Color != null)
             {
                 borderStruct.SetVector3("COLOR", new Vector3(border.Color.R, border.Color.G, border.Color.B));
