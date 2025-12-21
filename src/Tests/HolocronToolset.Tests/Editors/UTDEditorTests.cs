@@ -449,7 +449,7 @@ namespace HolocronToolset.Tests.Editors
             {
                 for (int i = 0; i < Math.Min(5, editor.AppearanceSelect.ItemCount); i++)
                 {
-                    editor.AppearanceSelect.SelectedIndex = i;
+                    editor.AppearanceSelect.SetSelectedIndex(i);
 
                     // Save and verify
                     var (data, _) = editor.Build();
@@ -629,7 +629,7 @@ namespace HolocronToolset.Tests.Editors
             {
                 for (int i = 0; i < Math.Min(5, editor.FactionSelect.ItemCount); i++)
                 {
-                    editor.FactionSelect.SelectedIndex = i;
+                    editor.FactionSelect.SetSelectedIndex(i);
 
                     // Save and verify
                     var (data, _) = editor.Build();

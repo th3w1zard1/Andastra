@@ -136,17 +136,105 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // LASTMODULE: Last module ResRef
-            // Try to extract from CurrentAreaInstance or infer from area
-            if (saveData.CurrentAreaInstance != null)
+            // Based on swkotor2.exe: SerializeSaveNfo @ 0x004eb750
+            // Original implementation: LASTMODULE is the ResRef of the currently loaded module
+            // Extraction priority:
+            // 1. Direct from saveData.CurrentModule (most reliable)
+            // 2. From CurrentAreaInstance via reflection (if area has Module property)
+            // 3. From ModuleAreaMappings by finding which module contains the current area
+            // 4. Fallback to empty string if all methods fail
+            string lastModule = string.Empty;
+
+            // Priority 1: Use CurrentModule if available (most direct)
+            if (!string.IsNullOrEmpty(saveData.CurrentModule))
             {
-                // Module name might be stored in area or we can infer from area ResRef
-                // TODO: STUB - For now, use empty string if not available - caller should provide module name
-                nfo.LastModule = string.Empty;
+                lastModule = saveData.CurrentModule;
             }
-            else
+            // Priority 2: Try to extract from CurrentAreaInstance using reflection
+            else if (saveData.CurrentAreaInstance != null)
             {
-                nfo.LastModule = string.Empty;
+                try
+                {
+                    // Try to get module name from area instance via reflection
+                    // Some area implementations have a Module property that references the parent module
+                    var moduleProperty = saveData.CurrentAreaInstance.GetType().GetProperty("Module");
+                    if (moduleProperty != null)
+                    {
+                        object moduleObj = moduleProperty.GetValue(saveData.CurrentAreaInstance);
+                        if (moduleObj != null)
+                        {
+                            var resRefProperty = moduleObj.GetType().GetProperty("ResRef");
+                            if (resRefProperty != null)
+                            {
+                                object resRefObj = resRefProperty.GetValue(moduleObj);
+                                if (resRefObj != null)
+                                {
+                                    lastModule = resRefObj.ToString();
+                                }
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // Reflection failed - try next method
+                }
+
+                // Priority 3: Infer from ModuleAreaMappings by finding which module contains this area
+                if (string.IsNullOrEmpty(lastModule) && saveData.ModuleAreaMappings != null && saveData.ModuleAreaMappings.Count > 0)
+                {
+                    string areaResRef = saveData.CurrentAreaInstance.ResRef;
+                    if (!string.IsNullOrEmpty(areaResRef))
+                    {
+                        // Search through ModuleAreaMappings to find which module contains this area
+                        foreach (var kvp in saveData.ModuleAreaMappings)
+                        {
+                            string moduleResRef = kvp.Key;
+                            List<string> areaList = kvp.Value;
+                            if (areaList != null && areaList.Contains(areaResRef, StringComparer.OrdinalIgnoreCase))
+                            {
+                                lastModule = moduleResRef;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // Priority 4: Try to infer from CurrentArea string if available
+                if (string.IsNullOrEmpty(lastModule) && !string.IsNullOrEmpty(saveData.CurrentArea))
+                {
+                    // If CurrentArea matches an area in ModuleAreaMappings, use that module
+                    if (saveData.ModuleAreaMappings != null && saveData.ModuleAreaMappings.Count > 0)
+                    {
+                        foreach (var kvp in saveData.ModuleAreaMappings)
+                        {
+                            string moduleResRef = kvp.Key;
+                            List<string> areaList = kvp.Value;
+                            if (areaList != null && areaList.Contains(saveData.CurrentArea, StringComparer.OrdinalIgnoreCase))
+                            {
+                                lastModule = moduleResRef;
+                                break;
+                            }
+                        }
+                    }
+                }
             }
+            // Priority 5: Try to infer from CurrentArea string if CurrentAreaInstance is null
+            else if (!string.IsNullOrEmpty(saveData.CurrentArea) && saveData.ModuleAreaMappings != null && saveData.ModuleAreaMappings.Count > 0)
+            {
+                foreach (var kvp in saveData.ModuleAreaMappings)
+                {
+                    string moduleResRef = kvp.Key;
+                    List<string> areaList = kvp.Value;
+                    if (areaList != null && areaList.Contains(saveData.CurrentArea, StringComparer.OrdinalIgnoreCase))
+                    {
+                        lastModule = moduleResRef;
+                        break;
+                    }
+                }
+            }
+
+            nfo.LastModule = lastModule ?? string.Empty;
 
             // SAVEGAMENAME: Display name of the save
             nfo.SavegameName = saveData.SaveName ?? string.Empty;

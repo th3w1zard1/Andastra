@@ -4850,11 +4850,9 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // Bind compute pipeline
                 // Based on Vulkan API: vkCmdBindPipeline binds a compute pipeline to the command buffer
                 // Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBindPipeline.html
-                VkResult result = vkCmdBindPipeline(_vkCommandBuffer, VkPipelineBindPoint.VK_PIPELINE_BIND_POINT_COMPUTE, vkPipelineHandle);
-                if (result != VkResult.VK_SUCCESS)
-                {
-                    throw new InvalidOperationException($"Failed to bind compute pipeline: {result}");
-                }
+                // Note: vkCmdBindPipeline returns void in the actual Vulkan API (command recording functions don't return errors)
+                // Validation happens when the command buffer is submitted to a queue
+                vkCmdBindPipeline(_vkCommandBuffer, VkPipelineBindPoint.VK_PIPELINE_BIND_POINT_COMPUTE, vkPipelineHandle);
 
                 // Step 2: Bind descriptor sets if provided
                 if (state.BindingSets != null && state.BindingSets.Length > 0)
