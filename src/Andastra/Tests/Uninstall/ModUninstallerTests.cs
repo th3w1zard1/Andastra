@@ -48,29 +48,6 @@ namespace Andastra.Parsing.Tests.Uninstall
             }
         }
 
-        /// <summary>
-        /// Ensures a backup folder has at least one dummy file so it's not considered empty.
-        /// This is required because GetMostRecentBackup filters out empty folders.
-        /// </summary>
-        /// <param name="backupFolderPath">Path to the backup folder</param>
-        /// <param name="fileName">Optional name for the dummy file (default: "dummy.txt")</param>
-        /// <returns>Path to the created dummy file</returns>
-        private string EnsureBackupFolderHasFile(string backupFolderPath, string fileName = "dummy.txt")
-        {
-            if (!Directory.Exists(backupFolderPath))
-            {
-                Directory.CreateDirectory(backupFolderPath);
-            }
-
-            string dummyFilePath = Path.Combine(backupFolderPath, fileName);
-            if (!File.Exists(dummyFilePath))
-            {
-                File.WriteAllText(dummyFilePath, "dummy content for backup folder");
-            }
-
-            return dummyFilePath;
-        }
-
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void IsValidBackupFolder_ValidFormat_ReturnsTrue()
         {
@@ -125,9 +102,34 @@ namespace Andastra.Parsing.Tests.Uninstall
             string backup2 = Path.Combine(_backupDir, "2024-01-16_10.20.30");
             string backup3 = Path.Combine(_backupDir, "2024-01-14_08.15.00");
 
-            EnsureBackupFolderHasFile(backup1, "file1.txt");
-            EnsureBackupFolderHasFile(backup2, "file2.txt");
-            EnsureBackupFolderHasFile(backup3, "file3.txt");
+            Directory.CreateDirectory(backup1);
+            Directory.CreateDirectory(backup2);
+            Directory.CreateDirectory(backup3);
+
+            // Create realistic backup folder structures with files and subdirectories
+            // Backup 1: Contains files in root and Override subdirectory (matching real backup structure)
+            string backup1Override = Path.Combine(backup1, "Override");
+            Directory.CreateDirectory(backup1Override);
+            File.WriteAllText(Path.Combine(backup1, "dialog.tlk"), "backup content 1");
+            File.WriteAllText(Path.Combine(backup1Override, "mod_file1.2da"), "backup 2da content 1");
+            File.WriteAllText(Path.Combine(backup1Override, "mod_file1.mod"), "backup mod content 1");
+
+            // Backup 2: Contains files in root, Override subdirectory, and StreamMusic subdirectory
+            string backup2Override = Path.Combine(backup2, "Override");
+            string backup2StreamMusic = Path.Combine(backup2, "StreamMusic");
+            Directory.CreateDirectory(backup2Override);
+            Directory.CreateDirectory(backup2StreamMusic);
+            File.WriteAllText(Path.Combine(backup2, "dialog.tlk"), "backup content 2");
+            File.WriteAllText(Path.Combine(backup2Override, "mod_file2.2da"), "backup 2da content 2");
+            File.WriteAllText(Path.Combine(backup2Override, "mod_file2.mod"), "backup mod content 2");
+            File.WriteAllText(Path.Combine(backup2StreamMusic, "mod_music.mp3"), "backup music content 2");
+
+            // Backup 3: Contains files in root and Override subdirectory
+            string backup3Override = Path.Combine(backup3, "Override");
+            Directory.CreateDirectory(backup3Override);
+            File.WriteAllText(Path.Combine(backup3, "dialog.tlk"), "backup content 3");
+            File.WriteAllText(Path.Combine(backup3Override, "mod_file3.2da"), "backup 2da content 3");
+            File.WriteAllText(Path.Combine(backup3Override, "mod_file3.mod"), "backup mod content 3");
 
             var backupPath = new CaseAwarePath(_backupDir);
 
@@ -292,47 +294,3 @@ namespace Andastra.Parsing.Tests.Uninstall
 
     }
 }
-
-
-            // Act
-            bool result = uninstaller.UninstallSelectedMod(
-                showErrorDialog: null,
-                showYesNoDialog: (title, msg) => true, // Confirm
-                showYesNoCancelDialog: (title, msg) => false // Don't delete backup
-            );
-
-            // Assert
-            result.Should().BeTrue();
-            File.Exists(fileToDelete).Should().BeFalse();
-            File.Exists(Path.Combine(_gameDir, "test_file.txt")).Should().BeTrue();
-        }
-
-        [Fact(Timeout = 120000)] // 2 minutes timeout
-        public void UninstallSelectedMod_WithoutUserConfirmation_ReturnsFalse()
-        {
-            // Arrange
-            string backupFolder = Path.Combine(_backupDir, "2024-01-15_14.30.45");
-            Directory.CreateDirectory(backupFolder);
-            File.WriteAllText(Path.Combine(backupFolder, "test.txt"), "test");
-
-            var logger = new PatchLogger();
-            var uninstaller = new ModUninstaller(
-                new CaseAwarePath(_backupDir),
-                new CaseAwarePath(_gameDir),
-                logger
-            );
-
-            // Act
-            bool result = uninstaller.UninstallSelectedMod(
-                showErrorDialog: null,
-                showYesNoDialog: (title, msg) => false, // Cancel
-                showYesNoCancelDialog: null
-            );
-
-            // Assert
-            result.Should().BeFalse();
-        }
-
-    }
-}
-
