@@ -67,6 +67,10 @@ namespace Andastra.Runtime.MonoGame.Raytracing
         private readonly Dictionary<IntPtr, ITexture> _textureHandleMap;
         private readonly Dictionary<IntPtr, TextureInfo> _textureInfoCache; // Cache texture dimensions
         
+        // Buffer handle tracking - maps IntPtr handles to IBuffer objects
+        // This allows us to look up buffers when building acceleration structures
+        private readonly Dictionary<IntPtr, IBuffer> _bufferHandleMap;
+        
         // Statistics
         private RaytracingStatistics _lastStats;
 
@@ -117,6 +121,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
             _historyBufferHeights = new Dictionary<IntPtr, int>();
             _textureHandleMap = new Dictionary<IntPtr, ITexture>();
             _textureInfoCache = new Dictionary<IntPtr, TextureInfo>();
+            _bufferHandleMap = new Dictionary<IntPtr, IBuffer>();
             _currentDenoiserType = DenoiserType.None;
         }
 
@@ -217,6 +222,9 @@ namespace Andastra.Runtime.MonoGame.Raytracing
             // Clean up texture tracking
             _textureHandleMap.Clear();
             _textureInfoCache.Clear();
+            
+            // Clean up buffer tracking
+            _bufferHandleMap.Clear();
 
             _initialized = false;
             _enabled = false;
@@ -348,22 +356,86 @@ namespace Andastra.Runtime.MonoGame.Raytracing
             // - Create acceleration structure
             // - Build BLAS using command list
 
-            // Create geometry description
-            // Note: This assumes geometry has vertex/index buffers already created
-            // In a real implementation, we'd need to get these from the MeshGeometry
+            // Get vertex and index buffers from handles
+            IBuffer vertexBuffer = GetBufferFromHandle(geometry.VertexBuffer);
+            IBuffer indexBuffer = GetBufferFromHandle(geometry.IndexBuffer);
+
+            if (vertexBuffer == null || indexBuffer == null)
+            {
+                Console.WriteLine("[NativeRT] BuildBottomLevelAS: Vertex or index buffer not found. Buffers must be registered using RegisterBufferHandle before building BLAS.");
+                Console.WriteLine($"[NativeRT] BuildBottomLevelAS: VertexBuffer handle: {geometry.VertexBuffer}, IndexBuffer handle: {geometry.IndexBuffer}");
+                return IntPtr.Zero;
+            }
+
+            // Validate buffer sizes match geometry counts
+            int expectedVertexBufferSize = geometry.VertexCount * geometry.VertexStride;
+            if (vertexBuffer.Desc.ByteSize < expectedVertexBufferSize)
+            {
+                Console.WriteLine($"[NativeRT] BuildBottomLevelAS: Vertex buffer size mismatch. Expected at least {expectedVertexBufferSize} bytes, got {vertexBuffer.Desc.ByteSize} bytes");
+                return IntPtr.Zero;
+            }
+
+            // Determine index format from buffer size
+            // R32_UInt: 4 bytes per index, R16_UInt: 2 bytes per index
+            TextureFormat indexFormat = TextureFormat.R32_UInt;
+            int expectedIndexBufferSize32 = geometry.IndexCount * 4; // 32-bit indices
+            int expectedIndexBufferSize16 = geometry.IndexCount * 2; // 16-bit indices
+            
+            if (indexBuffer.Desc.ByteSize >= expectedIndexBufferSize32)
+            {
+                indexFormat = TextureFormat.R32_UInt;
+            }
+            else if (indexBuffer.Desc.ByteSize >= expectedIndexBufferSize16)
+            {
+                indexFormat = TextureFormat.R16_UInt;
+            }
+            else
+            {
+                Console.WriteLine($"[NativeRT] BuildBottomLevelAS: Index buffer size too small. Expected at least {expectedIndexBufferSize16} bytes (16-bit) or {expectedIndexBufferSize32} bytes (32-bit), got {indexBuffer.Desc.ByteSize} bytes");
+                return IntPtr.Zero;
+            }
+
+            // Determine vertex format from stride
+            // Common formats:
+            // - 12 bytes (3 floats) = R32G32B32_Float (position only)
+            // - 16 bytes (4 floats) = R32G32B32A32_Float (position + something)
+            // - 32 bytes = R32G32B32A32_Float + R32G32B32A32_Float (position + normal + uv + tangent)
+            // For raytracing BLAS, we typically only need positions (first 12 bytes)
+            TextureFormat vertexFormat = TextureFormat.R32G32B32_Float;
+            if (geometry.VertexStride >= 16)
+            {
+                // If stride is 16 or more, we might have position (12 bytes) + something (4 bytes)
+                // For BLAS, we typically only use the first 12 bytes (position)
+                vertexFormat = TextureFormat.R32G32B32_Float;
+            }
+            else if (geometry.VertexStride == 12)
+            {
+                vertexFormat = TextureFormat.R32G32B32_Float;
+            }
+            else
+            {
+                Console.WriteLine($"[NativeRT] BuildBottomLevelAS: Warning - Unusual vertex stride: {geometry.VertexStride} bytes. Using R32G32B32_Float format (assuming positions in first 12 bytes)");
+                vertexFormat = TextureFormat.R32G32B32_Float;
+            }
+
+            // Create geometry description with actual buffers
             GeometryDesc geometryDesc = new GeometryDesc
             {
                 Type = GeometryType.Triangles,
                 Flags = geometry.IsOpaque ? GeometryFlags.Opaque : GeometryFlags.None,
                 Triangles = new GeometryTriangles
                 {
-                    // These would come from geometry.VertexBuffer, geometry.IndexBuffer
-                    // TODO: STUB - For now, we create a placeholder - in real implementation these must be provided
+                    VertexBuffer = vertexBuffer,
+                    VertexOffset = 0, // Start at beginning of buffer
                     VertexCount = geometry.VertexCount,
+                    VertexStride = geometry.VertexStride,
+                    VertexFormat = vertexFormat,
+                    IndexBuffer = indexBuffer,
+                    IndexOffset = 0, // Start at beginning of buffer
                     IndexCount = geometry.IndexCount,
-                    VertexFormat = TextureFormat.R32G32B32_Float, // Typical vertex format
-                    VertexStride = 12, // 3 floats * 4 bytes
-                    IndexFormat = TextureFormat.R32_UInt
+                    IndexFormat = indexFormat,
+                    TransformBuffer = null, // No per-geometry transform
+                    TransformOffset = 0
                 }
             };
 
@@ -2171,6 +2243,70 @@ namespace Andastra.Runtime.MonoGame.Raytracing
             _textureInfoCache.Remove(handle);
             
             Console.WriteLine($"[NativeRT] UnregisterTextureHandle: Unregistered texture handle {handle}");
+        }
+
+        /// <summary>
+        /// Gets an IBuffer object from an IntPtr buffer handle.
+        /// Uses the buffer handle map (for buffers registered via RegisterBufferHandle).
+        /// </summary>
+        private IBuffer GetBufferFromHandle(IntPtr bufferHandle)
+        {
+            if (bufferHandle == IntPtr.Zero || _device == null)
+            {
+                return null;
+            }
+
+            // Check our buffer handle map (for buffers we've registered)
+            if (_bufferHandleMap.TryGetValue(bufferHandle, out IBuffer mappedBuffer))
+            {
+                return mappedBuffer;
+            }
+
+            // Buffer not found in registry
+            Console.WriteLine($"[NativeRT] GetBufferFromHandle: Could not resolve buffer handle {bufferHandle}");
+            Console.WriteLine($"[NativeRT] GetBufferFromHandle: Use RegisterBufferHandle to register buffers before use");
+            
+            return null;
+        }
+
+        /// <summary>
+        /// Registers a buffer handle mapping.
+        /// This allows the raytracing system to look up IBuffer objects from IntPtr handles.
+        /// Call this method when you have both the handle and the IBuffer object.
+        /// </summary>
+        public void RegisterBufferHandle(IntPtr handle, IBuffer buffer)
+        {
+            if (handle == IntPtr.Zero)
+            {
+                Console.WriteLine("[NativeRT] RegisterBufferHandle: Invalid handle (IntPtr.Zero)");
+                return;
+            }
+
+            if (buffer == null)
+            {
+                Console.WriteLine("[NativeRT] RegisterBufferHandle: Invalid buffer (null)");
+                return;
+            }
+
+            _bufferHandleMap[handle] = buffer;
+            
+            Console.WriteLine($"[NativeRT] RegisterBufferHandle: Registered buffer handle {handle} -> size: {buffer.Desc.ByteSize} bytes");
+        }
+
+        /// <summary>
+        /// Unregisters a buffer handle mapping.
+        /// Call this when a buffer is destroyed to clean up the mapping.
+        /// </summary>
+        public void UnregisterBufferHandle(IntPtr handle)
+        {
+            if (handle == IntPtr.Zero)
+            {
+                return;
+            }
+
+            _bufferHandleMap.Remove(handle);
+            
+            Console.WriteLine($"[NativeRT] UnregisterBufferHandle: Unregistered buffer handle {handle}");
         }
 
         public void Dispose()
