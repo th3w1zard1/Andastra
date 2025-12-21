@@ -1418,9 +1418,9 @@ if (iVar7 == 0) {
 | **BMU** | ❌ NO | N/A | No handler exists |
 | **OGG** | ❌ NO | N/A | No handler exists |
 | **MP3** | ❌ NO | N/A | Not a game resource type |
-| **MVE** | ❓ UNKNOWN | N/A | Likely direct file I/O, not resource system |
-| **MPG** | ❓ UNKNOWN | N/A | Likely direct file I/O, not resource system |
-| **BIK** | ❓ UNKNOWN | N/A | Likely direct file I/O, not resource system |
+| **MVE** | ❌ NO | N/A | Direct file I/O via MOVIES: alias, NOT resource system (swkotor.exe: FUN_005e7a90 0x005e7a90) |
+| **MPG** | ❌ NO | N/A | Direct file I/O via MOVIES: alias, NOT resource system (swkotor.exe: FUN_005e7a90 0x005e7a90) |
+| **BIK** | ❌ NO | N/A | Direct file I/O via MOVIES: alias, NOT resource system (swkotor.exe: FUN_005fbbf0 0x005fbbf0, FUN_005e68d0 0x005e68d0) |
 | **WMV** | ❌ NO | N/A | No handler exists |
 | **MP4** | ❌ NO | N/A | Not supported |
 
