@@ -381,19 +381,33 @@ Based on `ResourceType.cs`, the following resource types are defined:
 
 - `MVE` (2) - Video files
   - **Handler**: ❌ **NOT FOUND** - No handler in resource system
-  - **Loading**: Likely direct directory access from `movies/` directory
-  - **Module Support**: ❌ **NO** - No resource system handler
-  - **Override Support**: ❓ **UNKNOWN** - May work if placed in `movies/` directory
+  - **Loading**: ✅ **CONFIRMED** - Direct directory access from `movies/` directory via directory alias system
+  - **Evidence**: 
+    - swkotor.exe: `FUN_005e7a90` (0x005e7a90, lines 203-209) sets up "MOVIES:" directory alias to ".\\movies"
+    - No handler found that calls `FUN_004074d0` with resource type 2
+  - **Module Support**: ❌ **NO** - No resource system handler, uses direct file I/O
+  - **Override Support**: ❌ **NO** - Cannot be placed in Override directory. Must be placed in `movies/` directory for direct file I/O access
 - `MPG` (9) - MPEG video
   - **Handler**: ❌ **NOT FOUND** - No handler in resource system
-  - **Loading**: Likely direct directory access from `movies/` directory
-  - **Module Support**: ❌ **NO** - No resource system handler
-  - **Override Support**: ❓ **UNKNOWN** - May work if placed in `movies/` directory
+  - **Loading**: ✅ **CONFIRMED** - Direct directory access from `movies/` directory via directory alias system
+  - **Evidence**:
+    - swkotor.exe: `FUN_005e7a90` (0x005e7a90, lines 203-209) sets up "MOVIES:" directory alias to ".\\movies"
+    - No handler found that calls `FUN_004074d0` with resource type 9
+  - **Module Support**: ❌ **NO** - No resource system handler, uses direct file I/O
+  - **Override Support**: ❌ **NO** - Cannot be placed in Override directory. Must be placed in `movies/` directory for direct file I/O access
 - `BIK` (2063) - Bink video
-  - **Handler**: ❌ **NOT FOUND** - No handler in resource system
-  - **Loading**: Likely direct directory access from `movies/` directory
-  - **Module Support**: ❌ **NO** - No resource system handler
-  - **Override Support**: ❓ **UNKNOWN** - May work if placed in `movies/` directory
+  - **Handler**: ✅ **FOUND** - Uses directory alias system, NOT resource system
+  - **Loading**: ✅ **CONFIRMED** - Direct directory access from `movies/` directory via directory alias system
+  - **Evidence**:
+    - swkotor.exe: Resource type 2063 (0x80f) registered in resource type registry at `FUN_005e6d20` (0x005e6d20, line 91)
+    - swkotor2.exe: Resource type 2063 (0x80f) registered in resource type registry at `FUN_00632510` (0x00632510, line 90)
+    - swkotor.exe: `FUN_005e7a90` (0x005e7a90, lines 203-209) sets up "MOVIES:" directory alias to ".\\movies"
+    - swkotor.exe: `FUN_005fbbf0` (0x005fbbf0, line 58) loads BIK files using "MOVIES:%s" format and calls `FUN_005e68d0` (0x005e68d0) with resource type 2063
+    - swkotor.exe: `FUN_005e68d0` → `FUN_005eb840` (0x005eb840) → `FUN_005e68a0` (0x005e68a0) → `FUN_005eb6b0` (0x005eb6b0)
+    - swkotor.exe: `FUN_005eb6b0` uses `FUN_005e6660` (directory alias resolver), **NOT** `FUN_004074d0` (resource system)
+    - swkotor.exe: `FUN_00602d40` (0x00602d40, line 7) uses hardcoded ".\\movies\\55.bik" path (direct file I/O)
+  - **Module Support**: ❌ **NO** - Uses directory alias system (MOVIES:), NOT resource system (`FUN_004074d0`)
+  - **Override Support**: ❌ **NO** - Cannot be placed in Override directory. Must be placed in `movies/` directory for direct file I/O access
 - `WMV` (12) - Windows Media Video
   - **Handler**: ❌ **NOT FOUND** - No handler in resource system
   - **Module Support**: ❌ **NO** - No handler exists
@@ -437,9 +451,9 @@ Based on `ResourceType.cs`, the following resource types are defined:
 | **BMU** | ❌ NO | ❌ NO | ❓ UNKNOWN | No handler exists |
 | **OGG** | ❌ NO | ❌ NO | ❓ UNKNOWN | No handler exists |
 | **MP3** | ❌ NO | ❌ NO | ❓ UNKNOWN | Not a game resource type |
-| **MVE** | ❓ UNKNOWN | ❌ NO | ✅ YES (movies/) | Direct file I/O, not resource system |
-| **MPG** | ❓ UNKNOWN | ❌ NO | ✅ YES (movies/) | Direct file I/O, not resource system |
-| **BIK** | ❓ UNKNOWN | ❌ NO | ✅ YES (movies/) | Direct file I/O, not resource system |
+| **MVE** | ❌ NO | ❌ NO | ✅ YES (movies/) | Direct file I/O via MOVIES: alias, not resource system (swkotor.exe: FUN_005e7a90 0x005e7a90) |
+| **MPG** | ❌ NO | ❌ NO | ✅ YES (movies/) | Direct file I/O via MOVIES: alias, not resource system (swkotor.exe: FUN_005e7a90 0x005e7a90) |
+| **BIK** | ❌ NO | ❌ NO | ✅ YES (movies/) | Direct file I/O via MOVIES: alias, not resource system (swkotor.exe: FUN_005fbbf0 0x005fbbf0, FUN_005e68d0 0x005e68d0) |
 | **WMV** | ❌ NO | ❌ NO | ❓ UNKNOWN | No handler exists |
 | **MP4** | ❌ NO | ❌ NO | ❌ NO | Not supported |
 
