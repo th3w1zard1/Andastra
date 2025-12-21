@@ -3100,6 +3100,16 @@ namespace Andastra.Runtime.MonoGame.Backends
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
             private delegate void RSSetScissorRectsDelegate(IntPtr commandList, uint NumRects, IntPtr pRects);
 
+            // COM interface method delegate for BeginEvent
+            // Based on DirectX 12 Debug Events: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-beginevent
+            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+            private delegate void BeginEventDelegate(IntPtr commandList, uint Metadata, IntPtr pData, uint Size);
+
+            // COM interface method delegate for EndEvent
+            // Based on DirectX 12 Debug Events: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-endevent
+            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+            private delegate void EndEventDelegate(IntPtr commandList);
+
             /// <summary>
             /// Calls ID3D12GraphicsCommandList::ClearDepthStencilView through COM vtable.
             /// VTable index 48 for ID3D12GraphicsCommandList.
