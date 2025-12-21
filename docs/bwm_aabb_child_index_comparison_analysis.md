@@ -27,29 +27,45 @@ This document provides an exhaustive analysis of how different implementations h
 
 ### Purpose
 
-An AABB tree is a spatial acceleration structure used to speed up spatial queries on walkmesh data. Without an AABB tree, finding which triangle contains a point requires checking every triangle (O(n) complexity). With an AABB tree, the search time becomes logarithmic (O(log n) average case).
+A walkmesh is made of triangles. The game needs to quickly find which triangle a character is standing on, or which triangle a mouse click hit. Without an AABB tree, the game would have to check every single triangle one by one until it finds the right one. This is slow when there are hundreds or thousands of triangles.
+
+An AABB tree is like a filing system. Instead of looking through every drawer, you start with big categories, then narrow down to smaller categories, then find the exact file you need. This makes searching much faster.
+
+### What Does AABB Mean?
+
+AABB stands for "Axis-Aligned Bounding Box." This is just a box that wraps around triangles. The box is aligned to the X, Y, and Z axes (not rotated). Imagine a cardboard box that perfectly fits around a group of triangles.
+
+### How It Works
+
+The tree starts with one big box that contains all triangles. This big box is split into two smaller boxes. Each smaller box is split into two even smaller boxes, and so on, until you reach boxes that contain just one triangle.
+
+When the game needs to find a triangle:
+1. Start at the top (big box)
+2. Check which of the two child boxes contains the point you're looking for
+3. Go to that child box
+4. Repeat until you reach a box with just one triangle
+5. Check if the point is actually in that triangle
+
+This is much faster than checking every triangle.
 
 ### Use Cases
 
-1. **Point Queries**: Finding which triangle contains a given (x, y, z) point
-   - Used for: Character positioning, height calculation, collision detection
+1. **Where is the character standing?**: When you move, the game finds which triangle is under your feet and uses it to calculate your height and whether you can walk there.
 
-2. **Ray Casting**: Finding where a ray intersects the walkmesh
-   - Used for: Mouse clicks (movement commands), projectile collisions, line-of-sight checks
+2. **Where did I click?**: When you click the ground to move, the game finds which triangle you clicked on and moves your character there.
 
-3. **Spatial Searches**: Finding all triangles within a bounding box
-   - Used for: Area queries, proximity checks
+3. **Can I shoot this?**: When casting spells or shooting, the game checks if the projectile hits the ground or walls.
 
 ### Structure
 
-Each AABB node contains:
+Each AABB node stores:
 
-- **Bounding Box**: Minimum and maximum corners (6 floats: minX, minY, minZ, maxX, maxY, maxZ)
-- **Face Index**: If leaf node, index of the triangle contained (-1 if internal node)
-- **Most Significant Plane**: Split axis indicator (0=leaf, 1=X, 2=Y, 3=Z, -1/-2/-3 for negative axes)
-- **Child Indices**: Two indices pointing to left and right child nodes (0xFFFFFFFF = no child)
+- **Bounding Box**: Six numbers describing a box - the smallest X, smallest Y, smallest Z, largest X, largest Y, and largest Z coordinates
+- **Face Index**: If this node contains just one triangle, this number says which triangle it is. If it contains multiple triangles (has children), this is -1.
+- **Most Significant Plane**: This says which direction the box was split - X direction, Y direction, or Z direction
+- **Child Indices**: Two numbers that point to the left child node and right child node. If there are no children, both numbers are 0xFFFFFFFF (a special "no child" marker).
 
-The tree structure is hierarchical: internal nodes contain bounding boxes that enclose child nodes, and leaf nodes contain bounding boxes for individual triangles.
+The tree is like a family tree: parent nodes have child nodes, and child nodes can have their own children, until you reach the bottom where nodes have no children (leaf nodes that contain just one triangle).
 
 ---
 
@@ -110,6 +126,7 @@ The child indices stored in each AABB node (at offsets 0x24 and 0x28) can be int
 **The game engine uses interpretation #1 (0-based array indices).**
 
 This means:
+
 - If a node's left child is at array position 5, the left child index should be `5` (not `6`)
 - The game engine reads this index and directly accesses `aabb_array[5]` to get the child node
 - If the index was `6` instead, the engine would access `aabb_array[6]`, which is the wrong node
@@ -132,6 +149,7 @@ This means:
 **Purpose**: BWM file writing function (confirmed by error string: "ERROR: opening a Binary walkmesh file for writeing that already exists")
 
 **Decompiled Structure** (lines 69-79):
+
 ```c
 // Writes header
 _fwrite(local_a0, 0x88, 1, pFVar2);  // Header (136 bytes = 0x88)
@@ -795,7 +813,7 @@ The approach works, but it's non-standard. The battle-tested mainstream implemen
 
 **Key Code**: `src/Andastra/Runtime/Content/Converters/BwmToNavigationMeshConverter.cs`
 
-**Strategy**: 
+**Strategy**:
 
 1. Uses Andastra.Parsing's `bwm.Aabbs()` which generates AABB tree on-the-fly
 2. Converts `BWMNodeAABB` objects to `NavigationMesh.AabbNode` objects
@@ -811,6 +829,73 @@ The approach works, but it's non-standard. The battle-tested mainstream implemen
 **Performance Consideration**:
 
 The user noted that O(n) performance is acceptable. The AABB tree generation is O(n log n), which is fine for typical walkmesh sizes (hundreds to thousands of faces). The tree is generated once when loading the walkmesh, not per-frame.
+
+---
+
+## Room Link Methodologies: KOTORMax vs KotorBlender - Understanding the "Sadism" Comment
+
+### What Are Room Links?
+
+Before explaining the difference, we need to understand what "room links" are. In KotOR modules, rooms are separate 3D models connected by doorways. The walkmesh (BWM) for each room needs to know which edges connect to other rooms so characters can walk between them. These connections are called "room links" or "transitions."
+
+The game engine stores room links as per-edge transition indices in the BWM file. Each triangle has three edges, and each edge can optionally have a transition index pointing to another room. When a character tries to cross an edge with a transition, the engine teleports them to the linked room.
+
+### How KOTORMax Does It: Edge Selection
+
+KOTORMax uses a tool called the "Room Link Editor" (`kx_roomlinker.ms`). Here's how it works:
+
+1. **You select edges directly**: You enter edge selection mode in 3DS Max and click on the edges that connect rooms (like doorways).
+
+2. **Tool applies the link**: You pick a room number from a list and click "Apply." The tool automatically converts your edge selection into vertex color data stored in a special map channel (`kx_roomlinkChannel`).
+
+3. **Under the hood**: The tool stores this information as vertex colors. Each vertex gets a color based on which room it links to. The green channel stores the room number (value = 100 + room_number, so room 5 becomes green=105).
+
+4. **Export reads the colors**: When exporting, the `do_aabb` function reads these vertex colors and converts them back to the room link format in the ASCII WOK file.
+
+**Key advantage**: You work with edges visually - you see the edges, select them, and the tool handles the technical details.
+
+### How KotorBlender Does It: Direct Vertex Painting
+
+KotorBlender (created by seedhartha) uses a different approach based on the conversation context:
+
+1. **You paint vertex colors manually**: Instead of selecting edges, you manually paint colors onto vertices using Blender's vertex paint mode.
+
+2. **You must know the encoding**: You need to understand that the green color channel encodes room numbers. You paint vertices with specific colors: red=0, blue=0, green=(100 + room_number).
+
+3. **More manual work**: For every edge that connects rooms, you must:
+   - Switch to vertex paint mode
+   - Select the correct color (based on room number math)
+   - Carefully paint only the vertices that belong to connecting edges
+   - Make sure you don't paint the wrong vertices
+
+4. **Error-prone**: If you paint the wrong color or miss a vertex, the room link won't work. If you paint too many vertices, you create incorrect links. The system requires precise manual painting.
+
+**Key disadvantage**: You're doing low-level vertex color manipulation manually, which is tedious and error-prone.
+
+### Why DarthParametric Calls It "Sadistic"
+
+DarthParametric's comment ("For some reason - I can only assume sadism - seedhartha decided to use vertex painting to define room links") reflects frustration with this approach:
+
+1. **More work for the user**: Vertex painting every connecting edge manually is much more work than just selecting edges and clicking "Apply."
+
+2. **Harder to get right**: Selecting edges visually is intuitive - you can see the doorway edges clearly. Painting vertices requires careful attention to which vertices belong to which edges, and it's easy to make mistakes.
+
+3. **Less user-friendly**: Edge selection is a standard 3D modeling operation that most users understand. Vertex color painting for data encoding is an obscure technique that requires understanding the encoding scheme.
+
+4. **More tedious**: For a module with many rooms and connections, manually painting vertex colors for every doorway becomes extremely tedious. KOTORMax's edge selection approach is much faster.
+
+### The Technical Reality
+
+Both approaches ultimately store the same data (vertex colors in a map channel encoding room transitions), but:
+
+- **KOTORMax**: Hides the complexity - you select edges, tool handles the encoding
+- **KotorBlender**: Exposes the complexity - you must manually encode the data through vertex painting
+
+This is why experienced modders prefer KOTORMax for module creation - it's simply more practical and less error-prone. The "sadism" comment is hyperbole expressing frustration that KotorBlender chose the harder, more manual approach when a simpler solution (edge selection) existed.
+
+### Why This Matters for Indoor Map Builder
+
+The Indoor Map Builder (HolocronToolset) uses a different approach entirely - it builds modules programmatically without requiring manual vertex painting or edge selection. Instead, it uses proximity-based hook matching to automatically connect rooms. However, if users want to edit walkmesh data manually, understanding these different methodologies helps explain why some workflows are preferred over others.
 
 ---
 
