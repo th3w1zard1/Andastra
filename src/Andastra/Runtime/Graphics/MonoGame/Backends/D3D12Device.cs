@@ -2318,6 +2318,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         #region D3D12 Sampler Structures and Constants
 
         // DirectX 12 Descriptor Heap Types
+        private const uint D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV = 0;
         private const uint D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER = 1;
         private const uint D3D12_DESCRIPTOR_HEAP_TYPE_RTV = 2;
         private const uint D3D12_DESCRIPTOR_HEAP_TYPE_DSV = 3;
@@ -3360,6 +3361,166 @@ namespace Andastra.Runtime.MonoGame.Backends
                 (CreateCommandListDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CreateCommandListDelegate));
 
             return createCommandList(device, nodeMask, type, pCommandAllocator, pInitialState, ref riid, ppCommandList);
+        }
+
+        /// <summary>
+        /// Calls ID3D12Device::CreateFence through COM vtable.
+        /// VTable index 11 for ID3D12Device.
+        /// Based on DirectX 12 Fence Creation: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createfence
+        /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+        /// </summary>
+        private unsafe int CallCreateFence(IntPtr device, ulong initialValue, uint flags, ref Guid riid, IntPtr ppFence)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return unchecked((int)0x80004001); // E_NOTIMPL - Not implemented on this platform
+            }
+
+            if (device == IntPtr.Zero || ppFence == IntPtr.Zero)
+            {
+                return unchecked((int)0x80070057); // E_INVALIDARG
+            }
+
+            // Get vtable pointer
+            IntPtr* vtable = *(IntPtr**)device;
+            if (vtable == null)
+            {
+                return unchecked((int)0x80004003); // E_POINTER
+            }
+
+            // CreateFence is at index 11 in ID3D12Device vtable
+            IntPtr methodPtr = vtable[11];
+            if (methodPtr == IntPtr.Zero)
+            {
+                return unchecked((int)0x80004002); // E_NOINTERFACE
+            }
+
+            // Create delegate from function pointer
+            CreateFenceDelegate createFence =
+                (CreateFenceDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CreateFenceDelegate));
+
+            return createFence(device, initialValue, flags, ref riid, ppFence);
+        }
+
+        /// <summary>
+        /// Calls ID3D12CommandQueue::Signal through COM vtable.
+        /// VTable index 5 for ID3D12CommandQueue (after IUnknown and ExecuteCommandLists).
+        /// Based on DirectX 12 Command Queue Signaling: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12commandqueue-signal
+        /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+        /// </summary>
+        private unsafe ulong CallSignalFence(IntPtr commandQueue, IntPtr fence, ulong value)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return 0;
+            }
+
+            if (commandQueue == IntPtr.Zero || fence == IntPtr.Zero)
+            {
+                return 0;
+            }
+
+            // Get vtable pointer
+            IntPtr* vtable = *(IntPtr**)commandQueue;
+            if (vtable == null)
+            {
+                return 0;
+            }
+
+            // Signal is at index 5 in ID3D12CommandQueue vtable
+            IntPtr methodPtr = vtable[5];
+            if (methodPtr == IntPtr.Zero)
+            {
+                return 0;
+            }
+
+            // Create delegate from function pointer
+            SignalDelegate signal =
+                (SignalDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(SignalDelegate));
+
+            return signal(commandQueue, fence, value);
+        }
+
+        /// <summary>
+        /// Calls ID3D12Fence::GetCompletedValue through COM vtable.
+        /// VTable index 3 for ID3D12Fence (after IUnknown methods).
+        /// Based on DirectX 12 Fence Queries: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12fence-getcompletedvalue
+        /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+        /// </summary>
+        private unsafe ulong CallGetFenceCompletedValue(IntPtr fence)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return 0;
+            }
+
+            if (fence == IntPtr.Zero)
+            {
+                return 0;
+            }
+
+            // Get vtable pointer
+            IntPtr* vtable = *(IntPtr**)fence;
+            if (vtable == null)
+            {
+                return 0;
+            }
+
+            // GetCompletedValue is at index 3 in ID3D12Fence vtable (after IUnknown: QueryInterface, AddRef, Release)
+            IntPtr methodPtr = vtable[3];
+            if (methodPtr == IntPtr.Zero)
+            {
+                return 0;
+            }
+
+            // Create delegate from function pointer
+            GetCompletedValueDelegate getCompletedValue =
+                (GetCompletedValueDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(GetCompletedValueDelegate));
+
+            return getCompletedValue(fence);
+        }
+
+        /// <summary>
+        /// Calls ID3D12Fence::SetEventOnCompletion through COM vtable.
+        /// VTable index 4 for ID3D12Fence (after GetCompletedValue).
+        /// Based on DirectX 12 Fence Synchronization: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12fence-seteventoncompletion
+        /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+        /// </summary>
+        private unsafe int CallSetEventOnCompletion(IntPtr fence, ulong value, IntPtr hEvent)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return unchecked((int)0x80004001); // E_NOTIMPL - Not implemented on this platform
+            }
+
+            if (fence == IntPtr.Zero || hEvent == IntPtr.Zero)
+            {
+                return unchecked((int)0x80070057); // E_INVALIDARG
+            }
+
+            // Get vtable pointer
+            IntPtr* vtable = *(IntPtr**)fence;
+            if (vtable == null)
+            {
+                return unchecked((int)0x80004003); // E_POINTER
+            }
+
+            // SetEventOnCompletion is at index 4 in ID3D12Fence vtable (after GetCompletedValue)
+            IntPtr methodPtr = vtable[4];
+            if (methodPtr == IntPtr.Zero)
+            {
+                return unchecked((int)0x80004002); // E_NOINTERFACE
+            }
+
+            // Create delegate from function pointer
+            SetEventOnCompletionDelegate setEventOnCompletion =
+                (SetEventOnCompletionDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(SetEventOnCompletionDelegate));
+
+            return setEventOnCompletion(fence, value, hEvent);
         }
 
         /// <summary>
@@ -9659,6 +9820,112 @@ namespace Andastra.Runtime.MonoGame.Backends
             // ExecuteCommandLists is at index 4 in ID3D12CommandQueue vtable
             // (after IUnknown: QueryInterface, AddRef, Release, UpdateTileMappings)
             IntPtr methodPtr = vtable[4];
+
+            // Create delegate from function pointer
+            ExecuteCommandListsDelegate executeCommandLists =
+                (ExecuteCommandListsDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(ExecuteCommandListsDelegate));
+
+            executeCommandLists(commandQueue, numCommandLists, ppCommandLists);
+        }
+
+        /// <summary>
+        /// Converts AccelStructBuildFlags to D3D12 raytracing acceleration structure build flags.
+        /// Based on D3D12 API: D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS
+        /// </summary>
+        internal uint ConvertAccelStructBuildFlagsToD3D12(AccelStructBuildFlags flags)
+        {
+            uint d3d12Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_NONE;
+
+            if ((flags & AccelStructBuildFlags.AllowUpdate) != 0)
+            {
+                d3d12Flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_UPDATE;
+            }
+
+            if ((flags & AccelStructBuildFlags.AllowCompaction) != 0)
+            {
+                d3d12Flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_COMPACTION;
+            }
+
+            if ((flags & AccelStructBuildFlags.PreferFastTrace) != 0)
+            {
+                d3d12Flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
+            }
+
+            if ((flags & AccelStructBuildFlags.PreferFastBuild) != 0)
+            {
+                d3d12Flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_BUILD;
+            }
+
+            if ((flags & AccelStructBuildFlags.MinimizeMemory) != 0)
+            {
+                d3d12Flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_MINIMIZE_MEMORY;
+            }
+
+            return d3d12Flags;
+        }
+
+        /// <summary>
+        /// Converts GeometryFlags to D3D12 raytracing geometry flags.
+        /// Based on D3D12 API: D3D12_RAYTRACING_GEOMETRY_FLAGS
+        /// </summary>
+        internal uint ConvertGeometryFlagsToD3D12(GeometryFlags flags)
+        {
+            uint d3d12Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_NONE;
+
+            if ((flags & GeometryFlags.Opaque) != 0)
+            {
+                d3d12Flags |= D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
+            }
+
+            if ((flags & GeometryFlags.NoDuplicateAnyHit) != 0)
+            {
+                d3d12Flags |= D3D12_RAYTRACING_GEOMETRY_FLAG_NO_DUPLICATE_ANYHIT_INVOCATION;
+            }
+
+            return d3d12Flags;
+        }
+
+        /// <summary>
+        /// Converts TextureFormat to D3D12 raytracing index format.
+        /// Based on D3D12 API: D3D12_RAYTRACING_INDEX_FORMAT
+        /// </summary>
+        internal uint ConvertIndexFormatToD3D12(TextureFormat format)
+        {
+            switch (format)
+            {
+                case TextureFormat.R16_UInt:
+                    return D3D12_RAYTRACING_INDEX_FORMAT_UINT16;
+                case TextureFormat.R32_UInt:
+                    return D3D12_RAYTRACING_INDEX_FORMAT_UINT32;
+                default:
+                    // Default to 32-bit if format is unknown
+                    return D3D12_RAYTRACING_INDEX_FORMAT_UINT32;
+            }
+        }
+
+        /// <summary>
+        /// Converts TextureFormat to D3D12 raytracing vertex format.
+        /// Based on D3D12 API: D3D12_RAYTRACING_VERTEX_FORMAT
+        /// </summary>
+        internal uint ConvertVertexFormatToD3D12(TextureFormat format)
+        {
+            // D3D12 raytracing supports Float3 and Float2 vertex formats
+            // Most common vertex formats map to Float3
+            switch (format)
+            {
+                case TextureFormat.R32G32_Float:
+                    return D3D12_RAYTRACING_VERTEX_FORMAT_FLOAT2;
+                case TextureFormat.R32G32B32_Float:
+                case TextureFormat.R32G32B32A32_Float:
+                default:
+                    // Default to Float3 for most formats
+                    return D3D12_RAYTRACING_VERTEX_FORMAT_FLOAT3;
+            }
+        }
+
+        #endregion
+    }
+}
 
             // Create delegate from function pointer
             ExecuteCommandListsDelegate executeCommandLists =
