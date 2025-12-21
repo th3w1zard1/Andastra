@@ -3726,8 +3726,170 @@ namespace Andastra.Runtime.MonoGame.Backends
                 }
             }
 
-            public void UAVBarrier(ITexture texture) { /* TODO: vkCmdMemoryBarrier */ }
-            public void UAVBarrier(IBuffer buffer) { /* TODO: vkCmdMemoryBarrier */ }
+            public void UAVBarrier(ITexture texture)
+            {
+                if (texture == null)
+                {
+                    return;
+                }
+
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (vkCmdPipelineBarrier == null)
+                {
+                    return; // Function not available
+                }
+
+                // Get VkImage handle from texture
+                // NativeHandle should contain the VkImage handle for VulkanTexture instances
+                IntPtr image = texture.NativeHandle;
+                if (image == IntPtr.Zero)
+                {
+                    return; // Invalid texture handle
+                }
+
+                // UAV barriers ensure all previous UAV writes are visible before subsequent reads/writes
+                // Storage images (UAVs) use VK_IMAGE_LAYOUT_GENERAL layout
+                VkImageAspectFlags aspectMask = GetImageAspectFlags(texture.Desc.Format);
+
+                VkImageSubresourceRange subresourceRange = new VkImageSubresourceRange
+                {
+                    aspectMask = aspectMask,
+                    baseMipLevel = 0,
+                    levelCount = (uint)Math.Max(1, texture.Desc.MipLevels),
+                    baseArrayLayer = 0,
+                    layerCount = (uint)Math.Max(1, texture.Desc.ArraySize)
+                };
+
+                // Create image memory barrier for UAV synchronization
+                // Source: All previous shader writes to this UAV
+                // Destination: All subsequent shader reads/writes to this UAV
+                VkImageMemoryBarrier barrier = new VkImageMemoryBarrier
+                {
+                    sType = VkStructureType.VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+                    pNext = IntPtr.Zero,
+                    srcAccessMask = VkAccessFlags.VK_ACCESS_SHADER_WRITE_BIT, // All previous UAV writes
+                    dstAccessMask = VkAccessFlags.VK_ACCESS_SHADER_READ_BIT | VkAccessFlags.VK_ACCESS_SHADER_WRITE_BIT, // Subsequent UAV reads/writes
+                    oldLayout = VkImageLayout.VK_IMAGE_LAYOUT_GENERAL, // Storage images use GENERAL layout
+                    newLayout = VkImageLayout.VK_IMAGE_LAYOUT_GENERAL, // No layout change, just memory barrier
+                    srcQueueFamilyIndex = unchecked((uint)-1), // VK_QUEUE_FAMILY_IGNORED
+                    dstQueueFamilyIndex = unchecked((uint)-1), // VK_QUEUE_FAMILY_IGNORED
+                    image = image,
+                    subresourceRange = subresourceRange
+                };
+
+                // Allocate memory for barrier structure
+                int barrierSize = Marshal.SizeOf<VkImageMemoryBarrier>();
+                IntPtr barrierPtr = Marshal.AllocHGlobal(barrierSize);
+                try
+                {
+                    Marshal.StructureToPtr(barrier, barrierPtr, false);
+
+                    // Pipeline stages where UAV writes can occur (all shader stages)
+                    VkPipelineStageFlags srcStageMask = VkPipelineStageFlags.VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT |
+                                                        VkPipelineStageFlags.VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT |
+                                                        VkPipelineStageFlags.VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
+
+                    // Pipeline stages where UAV reads/writes can occur (same as source)
+                    VkPipelineStageFlags dstStageMask = srcStageMask;
+
+                    // Execute pipeline barrier
+                    vkCmdPipelineBarrier(
+                        _vkCommandBuffer,
+                        srcStageMask,
+                        dstStageMask,
+                        0, // dependencyFlags
+                        0, // memoryBarrierCount
+                        IntPtr.Zero, // pMemoryBarriers
+                        0, // bufferMemoryBarrierCount
+                        IntPtr.Zero, // pBufferMemoryBarriers
+                        1, // imageMemoryBarrierCount
+                        barrierPtr); // pImageMemoryBarriers
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(barrierPtr);
+                }
+            }
+
+            public void UAVBarrier(IBuffer buffer)
+            {
+                if (buffer == null)
+                {
+                    return;
+                }
+
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (vkCmdPipelineBarrier == null)
+                {
+                    return; // Function not available
+                }
+
+                // Get VkBuffer handle from buffer
+                // NativeHandle should contain the VkBuffer handle for VulkanBuffer instances
+                IntPtr vkBuffer = buffer.NativeHandle;
+                if (vkBuffer == IntPtr.Zero)
+                {
+                    return; // Invalid buffer handle
+                }
+
+                // UAV barriers ensure all previous UAV writes are visible before subsequent reads/writes
+                // Create buffer memory barrier for UAV synchronization
+                // Source: All previous shader writes to this UAV
+                // Destination: All subsequent shader reads/writes to this UAV
+                VkBufferMemoryBarrier barrier = new VkBufferMemoryBarrier
+                {
+                    sType = VkStructureType.VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
+                    pNext = IntPtr.Zero,
+                    srcAccessMask = VkAccessFlags.VK_ACCESS_SHADER_WRITE_BIT, // All previous UAV writes
+                    dstAccessMask = VkAccessFlags.VK_ACCESS_SHADER_READ_BIT | VkAccessFlags.VK_ACCESS_SHADER_WRITE_BIT, // Subsequent UAV reads/writes
+                    srcQueueFamilyIndex = unchecked((uint)-1), // VK_QUEUE_FAMILY_IGNORED
+                    dstQueueFamilyIndex = unchecked((uint)-1), // VK_QUEUE_FAMILY_IGNORED
+                    buffer = vkBuffer,
+                    offset = 0, // Start of buffer
+                    size = unchecked((ulong)-1) // VK_WHOLE_SIZE - entire buffer
+                };
+
+                // Allocate memory for barrier structure
+                int barrierSize = Marshal.SizeOf<VkBufferMemoryBarrier>();
+                IntPtr barrierPtr = Marshal.AllocHGlobal(barrierSize);
+                try
+                {
+                    Marshal.StructureToPtr(barrier, barrierPtr, false);
+
+                    // Pipeline stages where UAV writes can occur (all shader stages)
+                    VkPipelineStageFlags srcStageMask = VkPipelineStageFlags.VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT |
+                                                        VkPipelineStageFlags.VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT |
+                                                        VkPipelineStageFlags.VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
+
+                    // Pipeline stages where UAV reads/writes can occur (same as source)
+                    VkPipelineStageFlags dstStageMask = srcStageMask;
+
+                    // Execute pipeline barrier
+                    vkCmdPipelineBarrier(
+                        _vkCommandBuffer,
+                        srcStageMask,
+                        dstStageMask,
+                        0, // dependencyFlags
+                        0, // memoryBarrierCount
+                        IntPtr.Zero, // pMemoryBarriers
+                        1, // bufferMemoryBarrierCount
+                        barrierPtr, // pBufferMemoryBarriers
+                        0, // imageMemoryBarrierCount
+                        IntPtr.Zero); // pImageMemoryBarriers
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(barrierPtr);
+                }
+            }
             public void SetGraphicsState(GraphicsState state) { /* TODO: Set all graphics state */ }
             public void SetViewport(Viewport viewport) { /* TODO: vkCmdSetViewport */ }
             public void SetViewports(Viewport[] viewports) { /* TODO: vkCmdSetViewport */ }
