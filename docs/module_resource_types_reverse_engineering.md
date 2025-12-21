@@ -140,21 +140,47 @@ The engine's resource manager loads resources by:
 
 ### Resource Types: What CAN and CANNOT Be Packed
 
-**CAN be packed into modules** (engine will load them):
+**PROOF: Engine loads ANY resource type from modules - NO filtering**
 
-- **All GFF-based types**: ARE, IFO, GIT, UTC, UTI, UTD, UTE, UTP, UTS, UTT, UTW, DLG, JRL, PTH, FAC, CUT, GUI, GIC, BTI, BTC, BTD, BTE, BTP, BTM, BTT, CNV
-- **All binary formats**: MDL, MDX, TPC, TGA, TXI, WOK, DWK, PWK, NCS, SSF, LIP, VIS, LYT, TwoDA (but see note below)
-- **Media files**: WAV, BMU, OGG, MVE, MPG, BIK
-- **Textures**: **TPC, TGA** - **YES, these CAN be packed** (container format accepts any resource type)
-- **2D Arrays**: **TwoDA** - **YES, technically CAN be packed** (but see convention note below)
-- **Models**: MDL, MDX, PLH, MDB, MAT
-- **Scripts**: NCS, NSS (though NSS is typically not in modules)
-- **Other**: FNT, TTF, LTR, ITP, DFT
+**Exact instructions proving no type filtering:**
 
-**Critical Finding**: The engine's resource manager (`FUN_00406e20` / `FUN_00406ef0`) does **NOT filter resource types** when loading from modules. It will attempt to load **ANY** resource type stored in a module container, including:
-- **TPC/TGA textures** - Can be containerized in modules
-- **TwoDA files** - Can be containerized (though convention says otherwise)
-- **Any other resource type** - As long as the type ID is valid and the data can be parsed
+1. **RIM Loader** (`FUN_0040f990` swkotor.exe: 0x0040f990, case 4):
+   - Line 85: `FUN_0040e990(param_1,local_4c,iStack_1c,uStack_18);`
+   - Iterates through ALL entries in RIM file
+   - Calls `FUN_0040e990` for EVERY entry, passing resource type `iStack_1c` directly
+   - **NO type checking or filtering**
+
+2. **MOD Loader** (`FUN_0040f3c0` swkotor.exe: 0x0040f3c0, case 3):
+   - Line 85: `FUN_0040e990(param_1,local_c8,iStack_cc,uStack_d0);`
+   - Iterates through ALL entries in MOD file
+   - Calls `FUN_0040e990` for EVERY entry, passing resource type `iStack_cc` directly
+   - **NO type checking or filtering**
+
+3. **Resource Registration** (`FUN_0040e990` swkotor.exe: 0x0040e990):
+   - Line 99: `*(short *)(*(int *)((int)this + 0x10) + 0x1a + iVar5) = (short)param_2;`
+   - Stores resource type `param_2` directly into resource table
+   - **NO type validation or filtering**
+   - Only checks for duplicate ResRef+Type combinations
+
+4. **2DA Loader** (`FUN_00413b40` swkotor.exe: 0x00413b40):
+   - Line 43: `puVar3 = (undefined4 *)FUN_004074d0(DAT_007a39e8,param_1,0x7e1);`
+   - Searches resource table for type `0x7e1` (2017 = TwoDA)
+   - **Does NOT check source** - will load from modules, override, or chitin
+   - **PROVES 2DA CAN be loaded from modules**
+
+**Conclusion**: The engine loads **ALL resource types** from modules with **ZERO filtering**. Any resource type stored in a RIM/ERF/MOD container will be:
+1. Registered in the resource table (via `FUN_0040e990`)
+2. Available for loading by type-specific loaders (e.g., `FUN_00413b40` for 2DA)
+3. Loaded regardless of type (TPC, TGA, 2DA, etc.)
+
+**CAN be packed into modules** (PROVEN by code analysis):
+
+- **TwoDA (0x7e1)**: ✅ **YES** - `FUN_00413b40` loads from resource table, no source filtering
+- **TPC/TGA textures**: ✅ **YES** - No type filtering in RIM/MOD loaders
+- **All GFF-based types**: ✅ **YES** - No type filtering
+- **All binary formats**: ✅ **YES** - No type filtering
+- **Media files**: ✅ **YES** - No type filtering
+- **Any resource type**: ✅ **YES** - Engine accepts any type ID stored in containers
 
 **CANNOT or SHOULD NOT be packed** (engine limitations or conventions):
 
