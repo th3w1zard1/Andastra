@@ -1565,21 +1565,66 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
                 return;
             }
 
-            // In a real implementation, this would write actual shader identifiers
-            // retrieved from the raytracing pipeline state object
-            // For D3D12: GetShaderIdentifier() from ID3D12StateObjectProperties
-            // For Vulkan: vkGetRayTracingShaderGroupHandlesKHR
-            
+            // Get shader identifiers from the raytracing pipeline
             // Shader identifiers are opaque handles that identify shaders within the pipeline
             // They are written to the SBT buffer at specific offsets
-            
-            // Placeholder: In production, this would be:
-            // byte[] rayGenId = _shadowPipeline.GetShaderIdentifier("ShadowRayGen");
-            // byte[] missId = _shadowPipeline.GetShaderIdentifier("ShadowMiss");
-            // byte[] hitGroupId = _shadowPipeline.GetShaderIdentifier("ShadowHitGroup");
-            // Then write these to the SBT buffer at the appropriate offsets
-            
-            Console.WriteLine("[NativeRT] Shader binding table created (shader identifiers must be written for full functionality)");
+            byte[] rayGenId = _shadowPipeline.GetShaderIdentifier("ShadowRayGen");
+            byte[] missId = _shadowPipeline.GetShaderIdentifier("ShadowMiss");
+            byte[] hitGroupId = _shadowPipeline.GetShaderIdentifier("ShadowHitGroup");
+
+            // Shader identifier size is typically 32 bytes (D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES)
+            // SBT record size is 64 bytes to allow for additional data (local root signature arguments, etc.)
+            const int shaderIdentifierSize = 32;
+            const int sbtRecordSize = 64;
+
+            // Create command list to write to the SBT buffer
+            ICommandList commandList = _device.CreateCommandList(CommandListType.Graphics);
+            commandList.Open();
+
+            // Write RayGen shader identifier at offset 0
+            if (rayGenId != null && rayGenId.Length >= shaderIdentifierSize)
+            {
+                byte[] rayGenRecord = new byte[sbtRecordSize];
+                Array.Copy(rayGenId, 0, rayGenRecord, 0, Math.Min(rayGenId.Length, shaderIdentifierSize));
+                // Remaining bytes are zero-initialized (for local root signature arguments, etc.)
+                commandList.WriteBuffer(_shadowShaderBindingTable, rayGenRecord, 0);
+            }
+
+            // Write Miss shader identifier at offset sbtRecordSize (64)
+            if (missId != null && missId.Length >= shaderIdentifierSize)
+            {
+                byte[] missRecord = new byte[sbtRecordSize];
+                Array.Copy(missId, 0, missRecord, 0, Math.Min(missId.Length, shaderIdentifierSize));
+                // Remaining bytes are zero-initialized
+                commandList.WriteBuffer(_shadowShaderBindingTable, missRecord, sbtRecordSize);
+            }
+
+            // Write HitGroup shader identifier at offset sbtRecordSize * 2 (128)
+            if (hitGroupId != null && hitGroupId.Length >= shaderIdentifierSize)
+            {
+                byte[] hitGroupRecord = new byte[sbtRecordSize];
+                Array.Copy(hitGroupId, 0, hitGroupRecord, 0, Math.Min(hitGroupId.Length, shaderIdentifierSize));
+                // Remaining bytes are zero-initialized
+                commandList.WriteBuffer(_shadowShaderBindingTable, hitGroupRecord, sbtRecordSize * 2);
+            }
+
+            // Close and execute the command list to write the data to the GPU buffer
+            commandList.Close();
+            _device.ExecuteCommandList(commandList);
+            commandList.Dispose();
+
+            // Log success or warnings
+            if (rayGenId != null && missId != null && hitGroupId != null)
+            {
+                Console.WriteLine("[NativeRT] Shader binding table populated with shader identifiers");
+            }
+            else
+            {
+                Console.WriteLine("[NativeRT] Shader binding table partially populated - some shader identifiers not available");
+                if (rayGenId == null) Console.WriteLine("[NativeRT] Warning: ShadowRayGen shader identifier not found");
+                if (missId == null) Console.WriteLine("[NativeRT] Warning: ShadowMiss shader identifier not found");
+                if (hitGroupId == null) Console.WriteLine("[NativeRT] Warning: ShadowHitGroup shader identifier not found");
+            }
         }
 
         private void UpdateShadowConstants(ShadowRayParams parameters, int width, int height)

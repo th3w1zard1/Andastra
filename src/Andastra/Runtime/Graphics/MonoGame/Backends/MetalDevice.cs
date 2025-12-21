@@ -1248,6 +1248,26 @@ namespace Andastra.Runtime.MonoGame.Backends
             _raytracingPipelineState = raytracingPipelineState;
         }
 
+        public byte[] GetShaderIdentifier(string exportName)
+        {
+            if (string.IsNullOrEmpty(exportName))
+            {
+                return null;
+            }
+
+            if (_raytracingPipelineState == IntPtr.Zero)
+            {
+                return null;
+            }
+
+            // Metal raytracing uses MPSRayIntersector which works differently than D3D12/Vulkan
+            // Shader identifiers in Metal are typically function pointers or indices
+            // For now, return null as Metal raytracing implementation is not fully complete
+            // TODO: Implement Metal shader identifier retrieval when Metal raytracing is fully implemented
+            // This would require MPSRayIntersector API calls to get function identifiers
+            return null;
+        }
+
         public void Dispose()
         {
             if (!_disposed)

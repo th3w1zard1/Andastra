@@ -1651,16 +1651,17 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// <summary>
         /// D3D12_VIEWPORT structure for viewport setting.
         /// Based on DirectX 12 Viewports: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_viewport
+        /// D3D12_VIEWPORT uses FLOAT (32-bit float) for all fields.
         /// </summary>
         [StructLayout(LayoutKind.Sequential)]
         private struct D3D12_VIEWPORT
         {
-            public double TopLeftX;    // FLOAT as double for alignment
-            public double TopLeftY;    // FLOAT as double for alignment
-            public double Width;       // FLOAT as double for alignment
-            public double Height;      // FLOAT as double for alignment
-            public double MinDepth;    // FLOAT as double for alignment
-            public double MaxDepth;    // FLOAT as double for alignment
+            public float TopLeftX;    // FLOAT - X coordinate of the left hand side of the viewport
+            public float TopLeftY;    // FLOAT - Y coordinate of the top of the viewport
+            public float Width;       // FLOAT - Width of the viewport
+            public float Height;      // FLOAT - Height of the viewport
+            public float MinDepth;    // FLOAT - Minimum depth of the viewport (typically 0.0)
+            public float MaxDepth;    // FLOAT - Maximum depth of the viewport (typically 1.0)
         }
 
         /// <summary>

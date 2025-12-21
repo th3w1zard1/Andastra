@@ -249,6 +249,14 @@ namespace Andastra.Runtime.MonoGame.Interfaces
     public interface IRaytracingPipeline : IDisposable
     {
         RaytracingPipelineDesc Desc { get; }
+        
+        /// <summary>
+        /// Gets the shader identifier for a shader or hit group in the pipeline.
+        /// Shader identifiers are opaque handles used in the shader binding table.
+        /// </summary>
+        /// <param name="exportName">The export name of the shader or hit group (e.g., "ShadowRayGen", "ShadowMiss", "ShadowHitGroup").</param>
+        /// <returns>Shader identifier bytes (typically 32 bytes for D3D12, variable for Vulkan). Returns null if the export name is not found.</returns>
+        byte[] GetShaderIdentifier(string exportName);
     }
     
     /// <summary>
