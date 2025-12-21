@@ -448,27 +448,123 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
 
         /// <summary>
         /// Creates an OpenGL cube map texture from TPC data (6 faces).
+        /// Implements full cube map support using GL_TEXTURE_CUBE_MAP target.
+        /// Matches nwmain.exe cube map texture creation.
         /// </summary>
         private IntPtr CreateOpenGLCubeMapFromTpc(TPC tpc, string debugName)
         {
-            // Cube maps require GL_TEXTURE_CUBE_MAP extension
-            // TODO: STUB - For now, we'll create a standard 2D texture from the first face
-            // Full cube map support would require GL_TEXTURE_CUBE_MAP target
-            Console.WriteLine($"[NwnEeGraphicsBackend] CreateOpenGLCubeMapFromTpc: Cube map support not fully implemented, using first face");
-            if (tpc.Layers.Count > 0)
+            if (tpc == null || tpc.Layers.Count != 6)
             {
-                // Create a new TPC with just the first layer
-                // The format will be determined from the layer data when parsing
-                TPC singleFaceTpc = new TPC();
-                singleFaceTpc.Layers.Add(tpc.Layers[0]);
-                singleFaceTpc.AlphaTest = tpc.AlphaTest;
-                singleFaceTpc.IsCubeMap = false; // Single face is not a cube map
-                singleFaceTpc.IsAnimated = tpc.IsAnimated;
-                singleFaceTpc.Txi = tpc.Txi;
-                singleFaceTpc.TxiObject = tpc.TxiObject;
-                return CreateOpenGLTextureFromTpc(singleFaceTpc, debugName);
+                Console.WriteLine($"[NwnEeGraphicsBackend] CreateOpenGLCubeMapFromTpc: Invalid cube map data (expected 6 layers, got {tpc?.Layers.Count ?? 0})");
+                return IntPtr.Zero;
             }
-            return IntPtr.Zero;
+
+            // Ensure OpenGL context is current
+            if (wglGetCurrentContext() != _glContext)
+            {
+                if (!wglMakeCurrent(_glDevice, _glContext))
+                {
+                    Console.WriteLine("[NwnEeGraphicsBackend] CreateOpenGLCubeMapFromTpc: Failed to make OpenGL context current");
+                    return IntPtr.Zero;
+                }
+            }
+
+            // Get dimensions from first face, first mipmap
+            TPCLayer firstLayer = tpc.Layers[0];
+            if (firstLayer.Mipmaps.Count == 0)
+            {
+                Console.WriteLine("[NwnEeGraphicsBackend] CreateOpenGLCubeMapFromTpc: First layer has no mipmaps");
+                return IntPtr.Zero;
+            }
+
+            TPCMipmap baseMipmap = firstLayer.Mipmaps[0];
+            int width = baseMipmap.Width;
+            int height = baseMipmap.Height;
+
+            // Step 1: Generate texture name
+            uint textureId = 0;
+            glGenTextures(1, ref textureId);
+            if (textureId == 0)
+            {
+                Console.WriteLine("[NwnEeGraphicsBackend] CreateOpenGLCubeMapFromTpc: glGenTextures failed");
+                return IntPtr.Zero;
+            }
+
+            // Step 2: Bind cube map texture
+            glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
+
+            // Step 3: Set cube map texture parameters
+            // Cube maps use CLAMP_TO_EDGE for wrapping (standard for environment maps)
+            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, (int)GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, (int)GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
+
+            // Apply TXI parameters if available
+            if (tpc.TxiObject != null)
+            {
+                ApplyTxiParameters(tpc.TxiObject);
+            }
+
+            // Step 4: Upload all 6 faces with their mipmap chains
+            // Cube map face order matches TPC layer order:
+            // Layer 0: Positive X (Right)
+            // Layer 1: Negative X (Left)
+            // Layer 2: Positive Y (Top)
+            // Layer 3: Negative Y (Bottom)
+            // Layer 4: Positive Z (Front)
+            // Layer 5: Negative Z (Back)
+            uint[] cubeMapTargets = new uint[]
+            {
+                GL_TEXTURE_CUBE_MAP_POSITIVE_X,
+                GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
+                GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
+                GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
+                GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
+                GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
+            };
+
+            for (int face = 0; face < 6 && face < tpc.Layers.Count; face++)
+            {
+                TPCLayer layer = tpc.Layers[face];
+                uint faceTarget = cubeMapTargets[face];
+
+                // Upload all mipmaps for this face
+                for (int mipLevel = 0; mipLevel < layer.Mipmaps.Count; mipLevel++)
+                {
+                    TPCMipmap mipmap = layer.Mipmaps[mipLevel];
+                    byte[] rgbaData = ConvertMipmapToRgba(mipmap);
+
+                    // Pin RGBA data for OpenGL upload
+                    GCHandle handle = GCHandle.Alloc(rgbaData, GCHandleType.Pinned);
+                    try
+                    {
+                        IntPtr dataPtr = handle.AddrOfPinnedObject();
+                        glTexImage2D(faceTarget, mipLevel, (int)GL_RGBA8, mipmap.Width, mipmap.Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, dataPtr);
+                    }
+                    finally
+                    {
+                        handle.Free();
+                    }
+                }
+            }
+
+            // Step 5: Unbind texture
+            glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+
+            // Store texture in resource tracking
+            IntPtr resourceHandle = AllocateHandle();
+            var originalInfo = new OriginalEngineResourceInfo
+            {
+                Handle = resourceHandle,
+                NativeHandle = new IntPtr(textureId),
+                ResourceType = OriginalEngineResourceType.OpenGLTexture,
+                DebugName = debugName
+            };
+            _originalResources[resourceHandle] = originalInfo;
+
+            Console.WriteLine($"[NwnEeGraphicsBackend] CreateOpenGLCubeMapFromTpc: Successfully created cube map texture '{debugName}' (ID={textureId}, {width}x{height})");
+            return new IntPtr(textureId);
         }
 
         /// <summary>
@@ -944,6 +1040,13 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
         // These are declared in BaseOriginalEngineGraphicsBackend, but we need to access them
         // We'll use the protected members from the base class
         private const uint GL_TEXTURE_2D = 0x0DE1;
+        private const uint GL_TEXTURE_CUBE_MAP = 0x8513;
+        private const uint GL_TEXTURE_CUBE_MAP_POSITIVE_X = 0x8515;
+        private const uint GL_TEXTURE_CUBE_MAP_NEGATIVE_X = 0x8516;
+        private const uint GL_TEXTURE_CUBE_MAP_POSITIVE_Y = 0x8517;
+        private const uint GL_TEXTURE_CUBE_MAP_NEGATIVE_Y = 0x8518;
+        private const uint GL_TEXTURE_CUBE_MAP_POSITIVE_Z = 0x8519;
+        private const uint GL_TEXTURE_CUBE_MAP_NEGATIVE_Z = 0x851A;
         private const uint GL_RGBA = 0x1908;
         private const uint GL_RGBA8 = 0x8058;
         private const uint GL_UNSIGNED_BYTE = 0x1401;
