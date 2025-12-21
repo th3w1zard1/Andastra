@@ -664,6 +664,295 @@ namespace Andastra.Runtime.Scripting.EngineApi
         }
 
         #endregion
+
+        #region Action Functions
+
+        /// <summary>
+        /// AssignCommand(object oActionSubject, action aActionToAssign) - Assigns an action to a target entity
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: ExecuteCommandAssignCommand @ routine ID 6
+        /// Located via function dispatch table: CNWSVirtualMachineCommands::InitializeCommands @ 0x14054de30
+        /// Original implementation: Pops action and object from stack, adds action to target entity's action queue
+        /// - If oActionSubject is invalid, action is not assigned (silent failure)
+        /// - Action is added to end of target entity's action queue
+        /// - Action executes when target entity processes its action queue
+        /// - Common across all engines: Odyssey, Aurora, Eclipse all use same pattern
+        /// </remarks>
+        protected Variable Func_AssignCommand(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
+            Core.Interfaces.IAction action = args.Count > 1 ? args[1].AsAction() : null;
+
+            if (action == null)
+            {
+                return Variable.Void();
+            }
+
+            Core.Interfaces.IEntity target = ResolveObject(targetId, ctx);
+            if (target == null || !target.IsValid)
+            {
+                return Variable.Void();
+            }
+
+            // Get action queue component from target entity
+            Core.Interfaces.Components.IActionQueueComponent actionQueue = target.GetComponent<Core.Interfaces.Components.IActionQueueComponent>();
+            if (actionQueue != null)
+            {
+                actionQueue.Add(action);
+            }
+            else
+            {
+                // If no action queue, execute action immediately
+                action.Owner = target;
+                action.Update(target, 0f);
+                action.Dispose();
+            }
+
+            return Variable.Void();
+        }
+
+        /// <summary>
+        /// DelayCommand(float fSeconds, action aActionToDelay) - Schedules an action to execute after a delay
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: ExecuteCommandDelayCommand @ routine ID 7
+        /// Located via function dispatch table: CNWSVirtualMachineCommands::InitializeCommands @ 0x14054de30
+        /// Original implementation: Pops action and delay from stack, schedules action with DelayScheduler
+        /// - Delay is in seconds (float)
+        /// - Action is scheduled to execute on caller entity after delay expires
+        /// - STORE_STATE opcode in NCS VM stores stack/local state for DelayCommand closure semantics
+        /// - When delay expires, DelayScheduler queues action to caller entity's action queue
+        /// - Common across all engines: Odyssey, Aurora, Eclipse all use DelayScheduler pattern
+        /// </remarks>
+        protected Variable Func_DelayCommand(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            float delaySeconds = args.Count > 0 ? args[0].AsFloat() : 0f;
+            Core.Interfaces.IAction action = args.Count > 1 ? args[1].AsAction() : null;
+
+            if (action == null || ctx.Caller == null || ctx.World == null)
+            {
+                return Variable.Void();
+            }
+
+            if (delaySeconds < 0f)
+            {
+                delaySeconds = 0f;
+            }
+
+            // Get DelayScheduler from world
+            Core.Interfaces.IDelayScheduler delayScheduler = ctx.World.DelayScheduler;
+            if (delayScheduler != null)
+            {
+                // Schedule action with DelayScheduler
+                // DelayScheduler will queue action to caller entity's action queue when delay expires
+                delayScheduler.ScheduleDelay(delaySeconds, action, ctx.Caller);
+            }
+            else
+            {
+                // If no DelayScheduler, execute action immediately (fallback)
+                action.Owner = ctx.Caller;
+                action.Update(ctx.Caller, 0f);
+                action.Dispose();
+            }
+
+            return Variable.Void();
+        }
+
+        /// <summary>
+        /// ExecuteScript(string sScript, object oTarget, int nScriptVar = -1) - Executes a script on a target entity
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: ExecuteCommandExecuteScript @ routine ID 8
+        /// Located via function dispatch table: CNWSVirtualMachineCommands::InitializeCommands @ 0x14054de30
+        /// Original implementation: Pops script name, target object, and script var from stack, executes script on target
+        /// - sScript: Script resource reference (ResRef) to execute
+        /// - oTarget: Target entity to execute script on (defaults to OBJECT_SELF if invalid)
+        /// - nScriptVar: Script variable value (returned by GetRunScriptVar, defaults to -1)
+        /// - Script executes with target as caller (OBJECT_SELF in script)
+        /// - Returns 0 (FALSE) if script not found or execution fails, 1 (TRUE) on success
+        /// - Common across all engines: Odyssey, Aurora, Eclipse all use script executor pattern
+        /// </remarks>
+        protected Variable Func_ExecuteScript(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            string scriptResRef = args.Count > 0 ? args[0].AsString() : string.Empty;
+            uint targetId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
+            int scriptVar = args.Count > 2 ? args[2].AsInt() : -1;
+
+            if (string.IsNullOrEmpty(scriptResRef) || ctx.World == null)
+            {
+                return Variable.FromInt(0);
+            }
+
+            // Resolve target entity (defaults to caller if invalid)
+            Core.Interfaces.IEntity target = ResolveObject(targetId, ctx);
+            if (target == null)
+            {
+                target = ctx.Caller;
+            }
+
+            if (target == null || !target.IsValid)
+            {
+                return Variable.FromInt(0);
+            }
+
+            try
+            {
+                // Get ScriptExecutor from world using reflection (similar to ActionCastSpellAtLocation)
+                // This is a workaround until IWorld exposes ScriptExecutor directly
+                System.Type worldType = ctx.World.GetType();
+                System.Reflection.PropertyInfo scriptExecutorProperty = worldType.GetProperty("ScriptExecutor");
+                if (scriptExecutorProperty == null)
+                {
+                    System.Reflection.FieldInfo scriptExecutorField = worldType.GetField("ScriptExecutor", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (scriptExecutorField != null)
+                    {
+                        object scriptExecutor = scriptExecutorField.GetValue(ctx.World);
+                        if (scriptExecutor != null)
+                        {
+                            // ExecuteScript(IEntity caller, string scriptResRef, IEntity triggerer)
+                            System.Reflection.MethodInfo executeMethod = scriptExecutor.GetType().GetMethod("ExecuteScript", new System.Type[] { typeof(Core.Interfaces.IEntity), typeof(string), typeof(Core.Interfaces.IEntity) });
+                            if (executeMethod != null)
+                            {
+                                // Execute script with target as caller, original caller as triggerer
+                                object result = executeMethod.Invoke(scriptExecutor, new object[] { target, scriptResRef, ctx.Caller });
+                                int returnValue = result != null ? (int)result : 0;
+                                
+                                // Track instruction count if action queue component exists
+                                Core.Interfaces.Components.IActionQueueComponent actionQueue = target.GetComponent<Core.Interfaces.Components.IActionQueueComponent>();
+                                if (actionQueue != null)
+                                {
+                                    // Try to get instruction count from script executor if available
+                                    System.Reflection.PropertyInfo instructionsProperty = scriptExecutor.GetType().GetProperty("InstructionsExecuted");
+                                    if (instructionsProperty != null)
+                                    {
+                                        int instructionsExecuted = (int)instructionsProperty.GetValue(scriptExecutor);
+                                        if (instructionsExecuted > 0)
+                                        {
+                                            actionQueue.AddInstructionCount(instructionsExecuted);
+                                        }
+                                    }
+                                }
+                                
+                                return Variable.FromInt(returnValue);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    object scriptExecutor = scriptExecutorProperty.GetValue(ctx.World);
+                    if (scriptExecutor != null)
+                    {
+                        // ExecuteScript(IEntity caller, string scriptResRef, IEntity triggerer)
+                        System.Reflection.MethodInfo executeMethod = scriptExecutor.GetType().GetMethod("ExecuteScript", new System.Type[] { typeof(Core.Interfaces.IEntity), typeof(string), typeof(Core.Interfaces.IEntity) });
+                        if (executeMethod != null)
+                        {
+                            // Execute script with target as caller, original caller as triggerer
+                            object result = executeMethod.Invoke(scriptExecutor, new object[] { target, scriptResRef, ctx.Caller });
+                            int returnValue = result != null ? (int)result : 0;
+                            
+                            // Track instruction count if action queue component exists
+                            Core.Interfaces.Components.IActionQueueComponent actionQueue = target.GetComponent<Core.Interfaces.Components.IActionQueueComponent>();
+                            if (actionQueue != null)
+                            {
+                                // Try to get instruction count from script executor if available
+                                System.Reflection.PropertyInfo instructionsProperty = scriptExecutor.GetType().GetProperty("InstructionsExecuted");
+                                if (instructionsProperty != null)
+                                {
+                                    int instructionsExecuted = (int)instructionsProperty.GetValue(scriptExecutor);
+                                    if (instructionsExecuted > 0)
+                                    {
+                                        actionQueue.AddInstructionCount(instructionsExecuted);
+                                    }
+                                }
+                            }
+                            
+                            return Variable.FromInt(returnValue);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[BaseEngineApi] Error executing script {0}: {1}", scriptResRef, ex.Message);
+            }
+
+            return Variable.FromInt(0);
+        }
+
+        /// <summary>
+        /// ClearAllActions() - Clears all actions from the caller
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: ExecuteCommandClearAllActions @ routine ID 9
+        /// Located via function dispatch table: CNWSVirtualMachineCommands::InitializeCommands @ 0x14054de30
+        /// Original implementation: Clears action queue for caller entity
+        /// - Only works on entities with action queue component (creatures, doors, placeables)
+        /// - Clears current action and all pending actions
+        /// - Common across all engines: Odyssey, Aurora, Eclipse all use same pattern
+        /// </remarks>
+        protected Variable Func_ClearAllActions(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            Core.Interfaces.IEntity caller = ctx.Caller;
+            if (caller != null && caller.IsValid)
+            {
+                Core.Interfaces.Components.IActionQueueComponent actionQueue = caller.GetComponent<Core.Interfaces.Components.IActionQueueComponent>();
+                if (actionQueue != null)
+                {
+                    actionQueue.Clear();
+                }
+            }
+            return Variable.Void();
+        }
+
+        /// <summary>
+        /// SetFacing(float fDirection) - Sets the facing direction of the caller
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: ExecuteCommandSetFacing @ routine ID 10
+        /// Located via function dispatch table: CNWSVirtualMachineCommands::InitializeCommands @ 0x14054de30
+        /// Original implementation: Pops facing angle from stack, sets caller entity's facing direction
+        /// - fDirection: Facing angle in degrees (0.0-360.0), where 0.0 = East, 90.0 = North, 180.0 = West, 270.0 = South
+        /// - Facing is expressed as anticlockwise degrees from Due East
+        /// - Converts degrees to radians for internal storage
+        /// - Only works on entities with transform component
+        /// - Common across all engines: Odyssey, Aurora, Eclipse all use transform component pattern
+        /// </remarks>
+        protected Variable Func_SetFacing(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            float facingDegrees = args.Count > 0 ? args[0].AsFloat() : 0f;
+            Core.Interfaces.IEntity caller = ctx.Caller;
+
+            if (caller == null || !caller.IsValid)
+            {
+                return Variable.Void();
+            }
+
+            // Normalize facing to 0-360 range
+            while (facingDegrees < 0f)
+            {
+                facingDegrees += 360f;
+            }
+            while (facingDegrees >= 360f)
+            {
+                facingDegrees -= 360f;
+            }
+
+            // Convert degrees to radians
+            float facingRadians = facingDegrees * (float)Math.PI / 180f;
+
+            // Get transform component and set facing
+            Core.Interfaces.Components.ITransformComponent transform = caller.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+            if (transform != null)
+            {
+                transform.Facing = facingRadians;
+            }
+
+            return Variable.Void();
+        }
+
+        #endregion
     }
 }
 

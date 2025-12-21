@@ -194,6 +194,20 @@ namespace Andastra.Runtime.Scripting.Interfaces
             return null;
         }
 
+        /// <summary>
+        /// Extracts an Action object from this Variable.
+        /// Returns the Action if this Variable contains one, otherwise returns null.
+        /// Based on swkotor.exe and swkotor2.exe: Action extraction from Variable type system
+        /// </summary>
+        public Core.Interfaces.IAction AsAction()
+        {
+            if (Type == VariableType.Action)
+            {
+                return ComplexValue as Core.Interfaces.IAction;
+            }
+            return null;
+        }
+
         public override string ToString()
         {
             switch (Type)
