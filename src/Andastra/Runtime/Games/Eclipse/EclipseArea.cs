@@ -3949,8 +3949,70 @@ namespace Andastra.Runtime.Games.Eclipse
                                                 directionalLight.SpecularColor = directionalLight.DiffuseColor;
                                             }
                                         }
-                                        // Area lights are not well-supported by BasicEffect, skip them
-                                        // TODO:  Full implementation would require advanced shaders
+                                        else if (light.Type == LightType.Area)
+                                        {
+                                            // Area light: approximate as directional light from area light center to room center
+                                            // This is an approximation - true area lights require advanced shaders for proper
+                                            // soft shadows and shape-based lighting, but we can approximate the effect
+                                            // Based on daorigins.exe/DragonAge2.exe: Area lights approximated for basic rendering
+                                            // Area lights emit light from a rectangular area, producing soft shadows
+                                            // For BasicEffect approximation: treat as directional light with area-size-based attenuation
+                                            
+                                            Vector3 lightToRoom = Vector3.Normalize(room.Position - light.Position);
+                                            directionalLight.Direction = new Microsoft.Xna.Framework.Vector3(
+                                                lightToRoom.X,
+                                                lightToRoom.Y,
+                                                lightToRoom.Z
+                                            );
+                                            
+                                            // Calculate distance attenuation (inverse square falloff like point lights)
+                                            float distance = Vector3.Distance(light.Position, room.Position);
+                                            float distanceAttenuation = 1.0f / (1.0f + (distance * distance) / (light.Radius * light.Radius));
+                                            
+                                            // Calculate area-based attenuation
+                                            // Larger area lights appear brighter and have softer falloff
+                                            // Area size affects how "diffuse" the light source appears
+                                            // Use area dimensions to scale the effective intensity
+                                            float areaSize = light.AreaWidth * light.AreaHeight;
+                                            float areaFactor = 1.0f + (areaSize * 0.1f); // Scale factor based on area size (larger = brighter)
+                                            
+                                            // Calculate cosine of angle between light direction and light-to-room vector
+                                            // Area lights emit light primarily in their direction
+                                            float cosAngle = Vector3.Dot(Vector3.Normalize(-light.Direction), lightToRoom);
+                                            
+                                            // Area lights have wider emission cone than spot lights
+                                            // Approximate as a 180-degree hemisphere (cosAngle > 0 means light reaches the surface)
+                                            float directionalAttenuation = 1.0f;
+                                            if (cosAngle < 0.0f)
+                                            {
+                                                // Surface is behind the area light, no light contribution
+                                                directionalAttenuation = 0.0f;
+                                            }
+                                            else
+                                            {
+                                                // Smooth falloff based on angle (lambertian-like falloff)
+                                                // This approximates the soft emission characteristics of area lights
+                                                directionalAttenuation = cosAngle;
+                                            }
+                                            
+                                            // Combine all attenuation factors
+                                            Vector3 lightColor = light.Color * light.Intensity * distanceAttenuation * areaFactor * directionalAttenuation;
+                                            
+                                            directionalLight.DiffuseColor = new Microsoft.Xna.Framework.Vector3(
+                                                Math.Min(1.0f, lightColor.X),
+                                                Math.Min(1.0f, lightColor.Y),
+                                                Math.Min(1.0f, lightColor.Z)
+                                            );
+                                            directionalLight.SpecularColor = directionalLight.DiffuseColor;
+                                            
+                                            // Note: True area light rendering would require:
+                                            // - Multiple light samples across the area surface
+                                            // - Soft shadow calculations (PCF or VSM)
+                                            // - Proper area light BRDF integration
+                                            // - Custom shaders with area light support
+                                            // This approximation provides reasonable results for BasicEffect but cannot
+                                            // accurately represent the soft shadows and shape-based lighting of true area lights
+                                        }
                                         
                                         lightsApplied++;
                                     }
@@ -4359,8 +4421,70 @@ namespace Andastra.Runtime.Games.Eclipse
                                                 directionalLight.SpecularColor = directionalLight.DiffuseColor;
                                             }
                                         }
-                                        // Area lights are not well-supported by BasicEffect, skip them
-                                        // TODO:  Full implementation would require advanced shaders
+                                        else if (light.Type == LightType.Area)
+                                        {
+                                            // Area light: approximate as directional light from area light center to static object center
+                                            // This is an approximation - true area lights require advanced shaders for proper
+                                            // soft shadows and shape-based lighting, but we can approximate the effect
+                                            // Based on daorigins.exe/DragonAge2.exe: Area lights approximated for basic rendering
+                                            // Area lights emit light from a rectangular area, producing soft shadows
+                                            // For BasicEffect approximation: treat as directional light with area-size-based attenuation
+                                            
+                                            Vector3 lightToObject = Vector3.Normalize(staticObject.Position - light.Position);
+                                            directionalLight.Direction = new Microsoft.Xna.Framework.Vector3(
+                                                lightToObject.X,
+                                                lightToObject.Y,
+                                                lightToObject.Z
+                                            );
+                                            
+                                            // Calculate distance attenuation (inverse square falloff like point lights)
+                                            float distance = Vector3.Distance(light.Position, staticObject.Position);
+                                            float distanceAttenuation = 1.0f / (1.0f + (distance * distance) / (light.Radius * light.Radius));
+                                            
+                                            // Calculate area-based attenuation
+                                            // Larger area lights appear brighter and have softer falloff
+                                            // Area size affects how "diffuse" the light source appears
+                                            // Use area dimensions to scale the effective intensity
+                                            float areaSize = light.AreaWidth * light.AreaHeight;
+                                            float areaFactor = 1.0f + (areaSize * 0.1f); // Scale factor based on area size (larger = brighter)
+                                            
+                                            // Calculate cosine of angle between light direction and light-to-object vector
+                                            // Area lights emit light primarily in their direction
+                                            float cosAngle = Vector3.Dot(Vector3.Normalize(-light.Direction), lightToObject);
+                                            
+                                            // Area lights have wider emission cone than spot lights
+                                            // Approximate as a 180-degree hemisphere (cosAngle > 0 means light reaches the surface)
+                                            float directionalAttenuation = 1.0f;
+                                            if (cosAngle < 0.0f)
+                                            {
+                                                // Surface is behind the area light, no light contribution
+                                                directionalAttenuation = 0.0f;
+                                            }
+                                            else
+                                            {
+                                                // Smooth falloff based on angle (lambertian-like falloff)
+                                                // This approximates the soft emission characteristics of area lights
+                                                directionalAttenuation = cosAngle;
+                                            }
+                                            
+                                            // Combine all attenuation factors
+                                            Vector3 lightColor = light.Color * light.Intensity * distanceAttenuation * areaFactor * directionalAttenuation;
+                                            
+                                            directionalLight.DiffuseColor = new Microsoft.Xna.Framework.Vector3(
+                                                Math.Min(1.0f, lightColor.X),
+                                                Math.Min(1.0f, lightColor.Y),
+                                                Math.Min(1.0f, lightColor.Z)
+                                            );
+                                            directionalLight.SpecularColor = directionalLight.DiffuseColor;
+                                            
+                                            // Note: True area light rendering would require:
+                                            // - Multiple light samples across the area surface
+                                            // - Soft shadow calculations (PCF or VSM)
+                                            // - Proper area light BRDF integration
+                                            // - Custom shaders with area light support
+                                            // This approximation provides reasonable results for BasicEffect but cannot
+                                            // accurately represent the soft shadows and shape-based lighting of true area lights
+                                        }
                                         
                                         lightsApplied++;
                                     }
