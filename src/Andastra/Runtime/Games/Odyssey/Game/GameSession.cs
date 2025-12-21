@@ -231,9 +231,12 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             _perceptionManager = new PerceptionManager(_world, _world.EffectSystem);
 
             // Create entity template factory for party system
-            // Factory will be updated when module is loaded (see LoadModuleAsync)
-            // TODO: STUB - For now, create without module (will be updated later)
-            IEntityTemplateFactory templateFactory = null;
+            // Based on swkotor2.exe: Party members are created from UTC templates stored in module
+            // Located via string references: "TemplateResRef" @ 0x007bd00c
+            // Original implementation: Party members use TemplateResRef to load UTC templates from module archives
+            // Use lazy template factory that retrieves module from ModuleLoader on demand
+            // This allows factory to be created before module is loaded (required for constructor initialization order)
+            IEntityTemplateFactory templateFactory = new Loading.LazyOdysseyEntityTemplateFactory(_moduleLoader.EntityFactory, _moduleLoader);
             _partySystem = new PartySystem(_world, templateFactory);
             _combatManager = new CombatManager(_world, _factionManager, _partySystem);
 
@@ -648,20 +651,9 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 _world.SetCurrentModule(module);
                 _moduleTransitionSystem?.SetCurrentModule(moduleName);
 
-                // Update party system with template factory for current module
-                // Based on swkotor2.exe: Party members are created from UTC templates stored in module
-                // Located via string references: "TemplateResRef" @ 0x007bd00c
-                // Original implementation: Party members use TemplateResRef to load UTC templates from module archives
-                // Create template factory with current module for party member spawning
-                if (_moduleLoader != null && _moduleLoader.EntityFactory != null)
-                {
-                    Andastra.Parsing.Common.Module parsingModule = _moduleLoader.GetCurrentModule();
-                    if (parsingModule != null)
-                    {
-                        var templateFactory = new Loading.OdysseyEntityTemplateFactory(_moduleLoader.EntityFactory, parsingModule);
-                        _partySystem?.SetTemplateFactory(templateFactory);
-                    }
-                }
+                // Template factory is already set up in constructor using LazyOdysseyEntityTemplateFactory
+                // The lazy factory will automatically use the current module from ModuleLoader when needed
+                // No need to update it here - it will retrieve the module on-demand during template creation
 
                 // Set world's current area
                 if (!string.IsNullOrEmpty(module.EntryArea))
@@ -955,10 +947,26 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 // BAB and saves are calculated based on class progression tables
                 // Level 1 BAB is typically +0 or +1 depending on class
                 // Saves start at +0, +0, +0 for most classes at level 1, or +2 for good saves
-                // Full implementation would use classes.2da attackbonustable and savingthrowtable
-                // TODO: STUB - For now, set base values (will be calculated properly from class data)
-                statsComp.SetBaseAttackBonus(0); // Will be calculated from class BAB table
-                statsComp.SetBaseSaves(0, 0, 0); // Will be calculated from class save table
+                // Uses classes.2da attackbonustable and savingthrowtable
+                if (classData != null && _gameDataManager != null)
+                {
+                    // Get BAB from attack bonus table
+                    int baseAttackBonus = GetAttackBonusFromTable(classData.AttackBonusTable, 1, _gameDataManager);
+                    statsComp.SetBaseAttackBonus(baseAttackBonus);
+
+                    // Get saves from saving throw table
+                    int fortSave = 0;
+                    int reflexSave = 0;
+                    int willSave = 0;
+                    GetSavingThrowsFromTable(classData.SavingThrowTable, 1, _gameDataManager, out fortSave, out reflexSave, out willSave);
+                    statsComp.SetBaseSaves(fortSave, reflexSave, willSave);
+                }
+                else
+                {
+                    // Fallback: Set default values if class data unavailable
+                    statsComp.SetBaseAttackBonus(0);
+                    statsComp.SetBaseSaves(0, 0, 0);
+                }
             }
 
             // Add starting feats from class
@@ -1491,6 +1499,178 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             }
 
             return controller;
+        }
+
+        /// <summary>
+        /// Gets the base attack bonus for a given level from an attack bonus table.
+        /// </summary>
+        /// <param name="tableName">Name of the attack bonus table (e.g., "BAB_FAST", "BAB_SLOW").</param>
+        /// <param name="level">Character level (1-based).</param>
+        /// <param name="gameDataManager">GameDataManager to look up the table.</param>
+        /// <returns>The base attack bonus for the level, or 0 if table not found.</returns>
+        /// <remarks>
+        /// Based on swkotor.exe, swkotor2.exe: Attack bonus table lookup
+        /// Attack bonus tables (e.g., BAB_FAST.2da, BAB_SLOW.2da) contain BAB progression
+        /// Table structure: Row 0 = level 1, Row 1 = level 2, etc.
+        /// Columns typically: Level, BAB value
+        /// </remarks>
+        private int GetAttackBonusFromTable(string tableName, int level, Data.GameDataManager gameDataManager)
+        {
+            if (string.IsNullOrEmpty(tableName) || gameDataManager == null || level < 1)
+            {
+                return 0;
+            }
+
+            try
+            {
+                // Look up the attack bonus table
+                Parsing.Formats.TwoDA.TwoDA table = gameDataManager.GetTable(tableName);
+                if (table == null)
+                {
+                    Console.WriteLine($"[GameSession] GetAttackBonusFromTable: Table '{tableName}' not found");
+                    return 0;
+                }
+
+                // Level is 1-based, table rows are 0-based
+                int rowIndex = level - 1;
+                if (rowIndex < 0 || rowIndex >= table.GetHeight())
+                {
+                    Console.WriteLine($"[GameSession] GetAttackBonusFromTable: Level {level} out of range for table '{tableName}' (height: {table.GetHeight()})");
+                    return 0;
+                }
+
+                // Get row for this level
+                Parsing.Formats.TwoDA.TwoDARow row = table.GetRow(rowIndex);
+                if (row == null)
+                {
+                    return 0;
+                }
+
+                // Get BAB value from row
+                // Column name may vary: "BAB", "Value", or just the first numeric column
+                int? babValue = row.GetInteger("BAB");
+                if (!babValue.HasValue)
+                {
+                    babValue = row.GetInteger("Value");
+                }
+                if (!babValue.HasValue)
+                {
+                    // Try to get first integer column
+                    var columns = row.GetColumnNames();
+                    foreach (string colName in columns)
+                    {
+                        if (colName != "Label" && colName != "Name")
+                        {
+                            babValue = row.GetInteger(colName);
+                            if (babValue.HasValue)
+                            {
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                return babValue ?? 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[GameSession] GetAttackBonusFromTable: Exception reading table '{tableName}': {ex.Message}");
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// Gets the saving throw values for a given level from a saving throw table.
+        /// </summary>
+        /// <param name="tableName">Name of the saving throw table (e.g., "SAVE_GOOD", "SAVE_BAD").</param>
+        /// <param name="level">Character level (1-based).</param>
+        /// <param name="gameDataManager">GameDataManager to look up the table.</param>
+        /// <param name="fortSave">Output: Fortitude save value.</param>
+        /// <param name="reflexSave">Output: Reflex save value.</param>
+        /// <param name="willSave">Output: Will save value.</param>
+        /// <remarks>
+        /// Based on swkotor.exe, swkotor2.exe: Saving throw table lookup
+        /// Saving throw tables (e.g., SAVE_GOOD.2da, SAVE_BAD.2da) contain save progression
+        /// Table structure: Row 0 = level 1, Row 1 = level 2, etc.
+        /// Columns typically: Level, Fort, Reflex, Will
+        /// Good saves: +2 at level 1, +1 per 2 levels
+        /// Bad saves: +0 at level 1, +1 per 3 levels
+        /// </remarks>
+        private void GetSavingThrowsFromTable(string tableName, int level, Data.GameDataManager gameDataManager, out int fortSave, out int reflexSave, out int willSave)
+        {
+            fortSave = 0;
+            reflexSave = 0;
+            willSave = 0;
+
+            if (string.IsNullOrEmpty(tableName) || gameDataManager == null || level < 1)
+            {
+                return;
+            }
+
+            try
+            {
+                // Look up the saving throw table
+                Parsing.Formats.TwoDA.TwoDA table = gameDataManager.GetTable(tableName);
+                if (table == null)
+                {
+                    Console.WriteLine($"[GameSession] GetSavingThrowsFromTable: Table '{tableName}' not found");
+                    return;
+                }
+
+                // Level is 1-based, table rows are 0-based
+                int rowIndex = level - 1;
+                if (rowIndex < 0 || rowIndex >= table.GetHeight())
+                {
+                    Console.WriteLine($"[GameSession] GetSavingThrowsFromTable: Level {level} out of range for table '{tableName}' (height: {table.GetHeight()})");
+                    return;
+                }
+
+                // Get row for this level
+                Parsing.Formats.TwoDA.TwoDARow row = table.GetRow(rowIndex);
+                if (row == null)
+                {
+                    return;
+                }
+
+                // Get save values from row
+                // Column names may vary: "Fort", "Reflex", "Will" or "FORT", "REFLEX", "WILL"
+                int? fort = row.GetInteger("Fort") ?? row.GetInteger("FORT");
+                int? reflex = row.GetInteger("Reflex") ?? row.GetInteger("REFLEX");
+                int? will = row.GetInteger("Will") ?? row.GetInteger("WILL");
+
+                // If column names don't match, try numeric column indices
+                if (!fort.HasValue || !reflex.HasValue || !will.HasValue)
+                {
+                    var columns = row.GetColumnNames();
+                    int colIndex = 0;
+                    foreach (string colName in columns)
+                    {
+                        if (colName != "Label" && colName != "Name" && colName != "Level")
+                        {
+                            int? value = row.GetInteger(colName);
+                            if (value.HasValue)
+                            {
+                                if (colIndex == 0) fort = value;
+                                else if (colIndex == 1) reflex = value;
+                                else if (colIndex == 2)
+                                {
+                                    will = value;
+                                    break;
+                                }
+                                colIndex++;
+                            }
+                        }
+                    }
+                }
+
+                fortSave = fort ?? 0;
+                reflexSave = reflex ?? 0;
+                willSave = will ?? 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[GameSession] GetSavingThrowsFromTable: Exception reading table '{tableName}': {ex.Message}");
+            }
         }
 
         #endregion
