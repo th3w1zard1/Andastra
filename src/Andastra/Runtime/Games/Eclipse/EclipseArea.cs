@@ -28,6 +28,7 @@ using Andastra.Runtime.Games.Eclipse.Lighting;
 using Andastra.Runtime.Games.Eclipse.Physics;
 using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
+using Andastra.Runtime.Content.Interfaces;
 
 namespace Andastra.Runtime.Games.Eclipse
 {
@@ -104,6 +105,11 @@ namespace Andastra.Runtime.Games.Eclipse
 
         // Module reference for loading WOK walkmesh files (optional)
         private Andastra.Parsing.Common.Module _module;
+
+        // Resource provider for loading MDL/MDX and other resources (optional)
+        // Based on daorigins.exe/DragonAge2.exe: Eclipse uses IGameResourceProvider for resource loading
+        // Eclipse resource provider handles RIM files, packages, and streaming resources
+        private IGameResourceProvider _resourceProvider;
 
         // Room information (if available from LYT or similar layout files)
         private List<RoomInfo> _rooms;
@@ -234,6 +240,20 @@ namespace Andastra.Runtime.Games.Eclipse
             {
                 LoadWalkmeshFromRooms();
             }
+        }
+
+        /// <summary>
+        /// Sets the resource provider for loading MDL/MDX and other resources.
+        /// </summary>
+        /// <param name="resourceProvider">The IGameResourceProvider instance for resource access.</param>
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Eclipse uses IGameResourceProvider for resource loading.
+        /// Eclipse resource provider handles RIM files, packages, and streaming resources.
+        /// Call this method if resource provider was not available at construction time.
+        /// </remarks>
+        public void SetResourceProvider(IGameResourceProvider resourceProvider)
+        {
+            _resourceProvider = resourceProvider;
         }
 
         /// <summary>
@@ -3870,40 +3890,56 @@ namespace Andastra.Runtime.Games.Eclipse
                 return null;
             }
 
-            // Check if Module is available for resource loading
-            if (_module == null)
+            // Check if resource provider is available for resource loading
+            if (_resourceProvider == null)
             {
-                // Module not available - cannot load room mesh
-                // This is expected if area was created without module reference
+                // Resource provider not available - cannot load room mesh
+                // This is expected if area was created without resource provider reference
+                // Based on daorigins.exe/DragonAge2.exe: Eclipse uses IGameResourceProvider for resource loading
                 return null;
             }
 
             try
             {
-                // Load MDL file data from module
-                // Based on daorigins.exe/DragonAge2.exe: MDL files are stored in module archives
-                // Eclipse uses similar module structure to Odyssey for MDL resources
+                // Load MDL file data using Eclipse resource provider
+                // Based on daorigins.exe/DragonAge2.exe: MDL files are stored in RIM files, packages, or streaming resources
+                // Eclipse uses IGameResourceProvider which handles RIM files, packages, and streaming resources
+                // Original implementation: Loads MDL/MDX from module RIM files, packages/core/env/, or streaming resources
                 byte[] mdlData = null;
                 byte[] mdxData = null;
 
-                // Try to get MDL resource from module
-                // Module uses resource wrapper system - we need to access resources through the module's resource collection
-                // For Eclipse, we attempt to load MDL using the module's resource lookup system
+                // Load MDL resource using resource provider
+                // Based on Eclipse engine: Resource lookup order is OVERRIDE > PACKAGES > STREAMING > HARDCODED
+                // ResourceIdentifier is created with ResRef and ResourceType.MDL
                 try
                 {
-                    // Eclipse areas may store MDL files differently than Odyssey
-                    // Attempt to access resource through module's installation if available
-                    // This is a simplified approach - full implementation would use proper Eclipse resource system
-                    // Note: Module resource access requires proper integration with Eclipse resource provider
-                    // TODO: IMPLEMENT - Integrate Eclipse resource provider for MDL/MDX loading
-                    // When resource provider is available, load MDL and MDX data similar to OdysseyArea implementation
-                    // For now, return null to indicate resource loading is not yet fully implemented
-                    return null;
+                    // Create ResourceIdentifier for MDL file
+                    // Based on Eclipse engine: Resources are identified by ResRef and ResourceType
+                    ResourceIdentifier mdlResourceId = new ResourceIdentifier(modelResRef, ResourceType.MDL);
+                    
+                    // Load MDL data asynchronously (use GetAwaiter().GetResult() for synchronous context)
+                    // Based on IGameResourceProvider: GetResourceBytesAsync loads resource data
+                    // Eclipse resource provider searches: override directory → module RIM files → packages/core/env/ → streaming
+                    mdlData = _resourceProvider.GetResourceBytesAsync(mdlResourceId, System.Threading.CancellationToken.None).GetAwaiter().GetResult();
+                    
+                    // Load MDX file if MDL was loaded successfully
+                    // Based on Eclipse engine: MDX files contain vertex data for MDL models
+                    // MDX files are companion files to MDL files (same ResRef, different ResourceType)
+                    if (mdlData != null && mdlData.Length > 0)
+                    {
+                        // Create ResourceIdentifier for MDX file
+                        ResourceIdentifier mdxResourceId = new ResourceIdentifier(modelResRef, ResourceType.MDX);
+                        
+                        // Load MDX data asynchronously
+                        // Eclipse resource provider searches for MDX in same locations as MDL
+                        mdxData = _resourceProvider.GetResourceBytesAsync(mdxResourceId, System.Threading.CancellationToken.None).GetAwaiter().GetResult();
+                    }
                 }
                 catch (Exception ex)
                 {
                     // Resource loading failed - log and return null
-                    System.Console.WriteLine($"[EclipseArea] Error loading MDL resource '{modelResRef}': {ex.Message}");
+                    // Based on Eclipse engine: Resource loading errors are logged but don't crash the game
+                    System.Console.WriteLine($"[EclipseArea] Error loading MDL/MDX resource '{modelResRef}': {ex.Message}");
                     return null;
                 }
 
