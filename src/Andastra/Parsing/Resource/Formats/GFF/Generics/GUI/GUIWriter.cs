@@ -232,7 +232,7 @@ namespace Andastra.Parsing.Resource.Generics.GUI
                 foreach (var child in control.Children)
                 {
                     var childStruct = childControlsList.Add(0);
-                    WriteControl(child, childStruct);
+                    WriteControlToStruct(child, childStruct);
                 }
                 gffStruct.SetList("CONTROLS", childControlsList);
             }
@@ -509,7 +509,7 @@ namespace Andastra.Parsing.Resource.Generics.GUI
         /// </summary>
         private void WriteProtoItem(GFFStruct gffStruct, GUIProtoItem proto)
         {
-            var protoStruct = new GFFStruct(0);
+            var protoStruct = gffStruct.Acquire<GFFStruct>("PROTOITEM", new GFFStruct(0));
             protoStruct.SetInt32("CONTROLTYPE", (int)GUIControlType.ProtoItem);
             protoStruct.SetString("TAG", "PROTOITEM");
             if (!string.IsNullOrEmpty(proto.ParentTag))
@@ -539,8 +539,6 @@ namespace Andastra.Parsing.Resource.Generics.GUI
             {
                 WriteBorder(protoStruct, proto.Border);
             }
-
-            gffStruct.SetStruct("PROTOITEM", protoStruct);
         }
 
         /// <summary>
