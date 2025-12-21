@@ -106,6 +106,15 @@ namespace Andastra.Runtime.MonoGame.Backends
         private IntPtr _drawIndirectCommandSignature;
         private IntPtr _drawIndexedIndirectCommandSignature;
 
+        // DSV descriptor heap fields
+        private IntPtr _dsvDescriptorHeap;
+        private IntPtr _dsvHeapCpuStartHandle;
+        private uint _dsvHeapDescriptorIncrementSize;
+        private int _dsvHeapCapacity;
+        private int _dsvHeapNextIndex;
+        private const int DefaultDsvHeapCapacity = 1024;
+        private readonly Dictionary<IntPtr, IntPtr> _textureDsvHandles; // Cache of texture -> DSV handle mappings
+
         public GraphicsCapabilities Capabilities
         {
             get { return _capabilities; }
@@ -1090,6 +1099,11 @@ namespace Andastra.Runtime.MonoGame.Backends
         // COM interface method delegate for Close (ID3D12CommandList::Close)
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate int CloseDelegate(IntPtr commandList);
+
+        // COM interface method delegate for DrawIndexedInstanced
+        // Based on DirectX 12 DrawIndexedInstanced: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-drawindexedinstanced
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void DrawIndexedInstancedDelegate(IntPtr commandList, uint IndexCountPerInstance, uint InstanceCount, uint StartIndexLocation, int BaseVertexLocation, uint StartInstanceLocation);
 
         // D3D12 GPU descriptor handle structure
         [StructLayout(LayoutKind.Sequential)]
@@ -3055,6 +3069,37 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             /// <summary>
+            /// Calls ID3D12GraphicsCommandList::DrawIndexedInstanced through COM vtable.
+            /// VTable index 101 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 DrawIndexedInstanced: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-drawindexedinstanced
+            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+            /// </summary>
+            private unsafe void CallDrawIndexedInstanced(IntPtr commandList, uint IndexCountPerInstance, uint InstanceCount, uint StartIndexLocation, int BaseVertexLocation, uint StartInstanceLocation)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // DrawIndexedInstanced is at index 101 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[101];
+
+                // Create delegate from function pointer
+                DrawIndexedInstancedDelegate drawIndexedInstanced =
+                    (DrawIndexedInstancedDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(DrawIndexedInstancedDelegate));
+
+                drawIndexedInstanced(commandList, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
+            }
+
+            /// <summary>
             /// Calls ID3D12GraphicsCommandList::SetPipelineState through COM vtable.
             /// VTable index 40 for ID3D12GraphicsCommandList.
             /// Based on DirectX 12 Pipeline State: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-setpipelinestate
@@ -3496,7 +3541,503 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             public void UAVBarrier(ITexture texture) { /* TODO: UAVBarrier */ }
             public void UAVBarrier(IBuffer buffer) { /* TODO: UAVBarrier */ }
-            public void SetGraphicsState(GraphicsState state) { /* TODO: Set all graphics state */ }
+            public void SetGraphicsState(GraphicsState state)
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (state.Pipeline == null)
+                {
+                    throw new ArgumentException("Graphics state must have a valid pipeline", nameof(state));
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    return; // Command list not initialized
+                }
+
+                // Cast to D3D12 implementation to access native handles
+                D3D12GraphicsPipeline d3d12Pipeline = state.Pipeline as D3D12GraphicsPipeline;
+                if (d3d12Pipeline == null)
+                {
+                    throw new ArgumentException("Pipeline must be a D3D12GraphicsPipeline", nameof(state));
+                }
+
+                // Step 1: Set the graphics pipeline state
+                // ID3D12GraphicsCommandList::SetPipelineState sets the pipeline state object (PSO)
+                // This includes shaders, blend state, depth-stencil state, rasterizer state, etc.
+                IntPtr pipelineState = d3d12Pipeline.GetPipelineState();
+                if (pipelineState != IntPtr.Zero)
+                {
+                    CallSetPipelineState(_d3d12CommandList, pipelineState);
+                }
+
+                // Step 2: Set the graphics root signature
+                // ID3D12GraphicsCommandList::SetGraphicsRootSignature sets the root signature
+                // The root signature defines the layout of root parameters (constants, descriptors, etc.)
+                IntPtr rootSignature = d3d12Pipeline.GetRootSignature();
+                if (rootSignature != IntPtr.Zero)
+                {
+                    CallSetGraphicsRootSignature(_d3d12CommandList, rootSignature);
+                }
+
+                // Step 3: Set framebuffer render targets
+                // ID3D12GraphicsCommandList::OMSetRenderTargets sets render targets and depth-stencil view
+                if (state.Framebuffer != null)
+                {
+                    D3D12Framebuffer d3d12Framebuffer = state.Framebuffer as D3D12Framebuffer;
+                    if (d3d12Framebuffer != null)
+                    {
+                        FramebufferDesc fbDesc = d3d12Framebuffer.Desc;
+                        
+                        // Get render target views for color attachments
+                        uint numRenderTargets = 0;
+                        IntPtr renderTargetDescriptorsPtr = IntPtr.Zero;
+                        byte rtsSingleHandle = 0; // FALSE - using array of handles
+
+                        if (fbDesc.ColorAttachments != null && fbDesc.ColorAttachments.Length > 0)
+                        {
+                            numRenderTargets = unchecked((uint)fbDesc.ColorAttachments.Length);
+                            
+                            // Allocate memory for array of CPU descriptor handles
+                            // D3D12_CPU_DESCRIPTOR_HANDLE is a struct with one IntPtr field
+                            int handleSize = Marshal.SizeOf<D3D12_CPU_DESCRIPTOR_HANDLE>();
+                            renderTargetDescriptorsPtr = Marshal.AllocHGlobal(handleSize * (int)numRenderTargets);
+
+                            try
+                            {
+                                // Get or create RTV handles for each color attachment
+                                for (uint i = 0; i < numRenderTargets; i++)
+                                {
+                                    FramebufferAttachment attachment = fbDesc.ColorAttachments[i];
+                                    if (attachment.Texture == null)
+                                    {
+                                        continue;
+                                    }
+
+                                    // Get or create RTV handle for this texture
+                                    // Note: GetOrCreateRtvHandle may need to be implemented
+                                    // For now, we'll use a placeholder approach
+                                    // TODO: Implement GetOrCreateRtvHandle method on D3D12Device
+                                    IntPtr rtvHandle = _device.GetOrCreateRtvHandle(attachment.Texture, attachment.MipLevel, attachment.ArraySlice);
+                                    if (rtvHandle == IntPtr.Zero)
+                                    {
+                                        // Skip invalid RTV handles
+                                        continue;
+                                    }
+
+                                    // Create CPU descriptor handle structure
+                                    D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = new D3D12_CPU_DESCRIPTOR_HANDLE
+                                    {
+                                        ptr = rtvHandle
+                                    };
+
+                                    // Marshal handle to array
+                                    IntPtr handlePtr = new IntPtr(renderTargetDescriptorsPtr.ToInt64() + (i * handleSize));
+                                    Marshal.StructureToPtr(cpuHandle, handlePtr, false);
+                                }
+                            }
+                            catch
+                            {
+                                // If allocation or marshalling fails, free memory and skip render target setup
+                                if (renderTargetDescriptorsPtr != IntPtr.Zero)
+                                {
+                                    Marshal.FreeHGlobal(renderTargetDescriptorsPtr);
+                                }
+                                renderTargetDescriptorsPtr = IntPtr.Zero;
+                                numRenderTargets = 0;
+                            }
+                        }
+
+                        // Get depth-stencil view handle if depth attachment exists
+                        IntPtr depthStencilDescriptorPtr = IntPtr.Zero;
+                        if (fbDesc.DepthAttachment.Texture != null)
+                        {
+                            IntPtr dsvHandle = _device.GetOrCreateDsvHandle(fbDesc.DepthAttachment.Texture, fbDesc.DepthAttachment.MipLevel, fbDesc.DepthAttachment.ArraySlice);
+                            if (dsvHandle != IntPtr.Zero)
+                            {
+                                // Allocate memory for depth-stencil descriptor handle
+                                int dsvHandleSize = Marshal.SizeOf<D3D12_CPU_DESCRIPTOR_HANDLE>();
+                                depthStencilDescriptorPtr = Marshal.AllocHGlobal(dsvHandleSize);
+                                
+                                D3D12_CPU_DESCRIPTOR_HANDLE dsvCpuHandle = new D3D12_CPU_DESCRIPTOR_HANDLE
+                                {
+                                    ptr = dsvHandle
+                                };
+                                Marshal.StructureToPtr(dsvCpuHandle, depthStencilDescriptorPtr, false);
+                            }
+                        }
+
+                        try
+                        {
+                            // Set render targets
+                            // Note: If numRenderTargets is 0, pRenderTargetDescriptors can be NULL
+                            CallOMSetRenderTargets(
+                                _d3d12CommandList,
+                                numRenderTargets,
+                                renderTargetDescriptorsPtr,
+                                rtsSingleHandle,
+                                depthStencilDescriptorPtr);
+                        }
+                        finally
+                        {
+                            // Free allocated memory
+                            if (renderTargetDescriptorsPtr != IntPtr.Zero)
+                            {
+                                Marshal.FreeHGlobal(renderTargetDescriptorsPtr);
+                            }
+                            if (depthStencilDescriptorPtr != IntPtr.Zero)
+                            {
+                                Marshal.FreeHGlobal(depthStencilDescriptorPtr);
+                            }
+                        }
+                    }
+                }
+
+                // Step 4: Set viewports
+                // ID3D12GraphicsCommandList::RSSetViewports sets viewport rectangles
+                if (state.Viewport.Viewports != null && state.Viewport.Viewports.Length > 0)
+                {
+                    Viewport[] viewports = state.Viewport.Viewports;
+                    int viewportSize = Marshal.SizeOf<D3D12_VIEWPORT>();
+                    IntPtr viewportsPtr = Marshal.AllocHGlobal(viewportSize * viewports.Length);
+
+                    try
+                    {
+                        // Convert Viewport[] to D3D12_VIEWPORT[]
+                        for (int i = 0; i < viewports.Length; i++)
+                        {
+                            Viewport vp = viewports[i];
+                            D3D12_VIEWPORT d3d12Viewport = new D3D12_VIEWPORT
+                            {
+                                TopLeftX = vp.X,
+                                TopLeftY = vp.Y,
+                                Width = vp.Width,
+                                Height = vp.Height,
+                                MinDepth = vp.MinDepth,
+                                MaxDepth = vp.MaxDepth
+                            };
+
+                            IntPtr viewportPtr = new IntPtr(viewportsPtr.ToInt64() + (i * viewportSize));
+                            Marshal.StructureToPtr(d3d12Viewport, viewportPtr, false);
+                        }
+
+                        CallRSSetViewports(_d3d12CommandList, unchecked((uint)viewports.Length), viewportsPtr);
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(viewportsPtr);
+                    }
+                }
+
+                // Step 5: Set scissor rectangles
+                // ID3D12GraphicsCommandList::RSSetScissorRects sets scissor rectangles
+                if (state.Viewport.Scissors != null && state.Viewport.Scissors.Length > 0)
+                {
+                    Rectangle[] scissors = state.Viewport.Scissors;
+                    int rectSize = Marshal.SizeOf<D3D12_RECT>();
+                    IntPtr rectsPtr = Marshal.AllocHGlobal(rectSize * scissors.Length);
+
+                    try
+                    {
+                        // Convert Rectangle[] to D3D12_RECT[]
+                        for (int i = 0; i < scissors.Length; i++)
+                        {
+                            Rectangle scissor = scissors[i];
+                            D3D12_RECT d3d12Rect = new D3D12_RECT
+                            {
+                                left = scissor.X,
+                                top = scissor.Y,
+                                right = scissor.X + scissor.Width,
+                                bottom = scissor.Y + scissor.Height
+                            };
+
+                            IntPtr rectPtr = new IntPtr(rectsPtr.ToInt64() + (i * rectSize));
+                            Marshal.StructureToPtr(d3d12Rect, rectPtr, false);
+                        }
+
+                        CallRSSetScissorRects(_d3d12CommandList, unchecked((uint)scissors.Length), rectsPtr);
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(rectsPtr);
+                    }
+                }
+
+                // Step 6: Set descriptor heaps (required before setting root descriptor tables)
+                // ID3D12GraphicsCommandList::SetDescriptorHeaps sets the descriptor heaps to use
+                if (state.BindingSets != null && state.BindingSets.Length > 0)
+                {
+                    // Collect descriptor heaps from all binding sets
+                    var descriptorHeaps = new System.Collections.Generic.List<IntPtr>();
+                    var seenHeaps = new System.Collections.Generic.HashSet<IntPtr>();
+
+                    foreach (IBindingSet bindingSet in state.BindingSets)
+                    {
+                        D3D12BindingSet d3d12BindingSet = bindingSet as D3D12BindingSet;
+                        if (d3d12BindingSet == null)
+                        {
+                            continue; // Skip non-D3D12 binding sets
+                        }
+
+                        // Get descriptor heap from binding set
+                        IntPtr descriptorHeap = d3d12BindingSet.GetDescriptorHeap();
+                        if (descriptorHeap != IntPtr.Zero && !seenHeaps.Contains(descriptorHeap))
+                        {
+                            descriptorHeaps.Add(descriptorHeap);
+                            seenHeaps.Add(descriptorHeap);
+                        }
+                    }
+
+                    // Set descriptor heaps if we have any
+                    if (descriptorHeaps.Count > 0)
+                    {
+                        int heapSize = Marshal.SizeOf(typeof(IntPtr));
+                        IntPtr heapsPtr = Marshal.AllocHGlobal(heapSize * descriptorHeaps.Count);
+                        try
+                        {
+                            for (int i = 0; i < descriptorHeaps.Count; i++)
+                            {
+                                IntPtr heapPtr = new IntPtr(heapsPtr.ToInt64() + (i * heapSize));
+                                Marshal.WriteIntPtr(heapPtr, descriptorHeaps[i]);
+                            }
+
+                            CallSetDescriptorHeaps(_d3d12CommandList, unchecked((uint)descriptorHeaps.Count), heapsPtr);
+                        }
+                        finally
+                        {
+                            Marshal.FreeHGlobal(heapsPtr);
+                        }
+                    }
+
+                    // Step 7: Bind descriptor sets as root descriptor tables
+                    // In D3D12, each binding set maps to one root parameter index in the root signature
+                    // For now, we assume sequential root parameter indices starting from 0
+                    // TODO: Get actual root parameter indices from binding layout or root signature
+                    for (uint i = 0; i < state.BindingSets.Length; i++)
+                    {
+                        D3D12BindingSet d3d12BindingSet = state.BindingSets[i] as D3D12BindingSet;
+                        if (d3d12BindingSet == null)
+                        {
+                            continue; // Skip non-D3D12 binding sets
+                        }
+
+                        // Get GPU descriptor handle from binding set
+                        D3D12_GPU_DESCRIPTOR_HANDLE handle = d3d12BindingSet.GetGpuDescriptorHandle();
+                        if (handle.ptr != 0)
+                        {
+                            CallSetGraphicsRootDescriptorTable(_d3d12CommandList, i, handle);
+                        }
+                    }
+                }
+
+                // Step 8: Set vertex buffers
+                // ID3D12GraphicsCommandList::IASetVertexBuffers sets vertex buffer bindings
+                if (state.VertexBuffers != null && state.VertexBuffers.Length > 0)
+                {
+                    IBuffer[] vertexBuffers = state.VertexBuffers;
+                    GraphicsPipelineDesc pipelineDesc = d3d12Pipeline.Desc;
+                    InputLayoutDesc inputLayout = pipelineDesc.InputLayout;
+
+                    // Calculate strides for each vertex buffer
+                    // Stride can come from InputLayout (calculate from attributes) or buffer's StructStride
+                    uint[] strides = new uint[vertexBuffers.Length];
+                    for (int i = 0; i < vertexBuffers.Length; i++)
+                    {
+                        if (vertexBuffers[i] == null)
+                        {
+                            strides[i] = 0;
+                            continue;
+                        }
+
+                        BufferDesc bufferDesc = vertexBuffers[i].Desc;
+                        
+                        // Try to get stride from buffer's StructStride if available
+                        if (bufferDesc.StructStride > 0)
+                        {
+                            strides[i] = unchecked((uint)bufferDesc.StructStride);
+                        }
+                        else if (inputLayout.Attributes != null)
+                        {
+                            // Calculate stride from input layout attributes for this buffer index
+                            uint maxOffset = 0;
+                            uint maxSize = 0;
+                            
+                            foreach (VertexAttributeDesc attr in inputLayout.Attributes)
+                            {
+                                if (attr.BufferIndex == i)
+                                {
+                                    // Calculate size of this attribute based on format
+                                    uint attrSize = GetFormatSize(attr.Format);
+                                    uint attrEnd = unchecked((uint)attr.Offset + attrSize);
+                                    
+                                    if (attrEnd > maxOffset + maxSize)
+                                    {
+                                        maxOffset = unchecked((uint)attr.Offset);
+                                        maxSize = attrSize;
+                                    }
+                                }
+                            }
+
+                            // Stride is the maximum offset + size, rounded up to next 4-byte boundary for alignment
+                            strides[i] = (maxOffset + maxSize + 3) & ~3U; // Align to 4 bytes
+                            
+                            // If no attributes found, use a default stride based on buffer size
+                            if (strides[i] == 0 && bufferDesc.ByteSize > 0)
+                            {
+                                // Default to 16 bytes per vertex (common for position + normal + texcoord)
+                                strides[i] = 16;
+                            }
+                        }
+                        else
+                        {
+                            // No input layout, use default stride
+                            strides[i] = 16; // Default stride
+                        }
+                    }
+
+                    // Create vertex buffer views
+                    int vbViewSize = Marshal.SizeOf<D3D12_VERTEX_BUFFER_VIEW>();
+                    IntPtr vbViewsPtr = Marshal.AllocHGlobal(vbViewSize * vertexBuffers.Length);
+
+                    try
+                    {
+                        for (int i = 0; i < vertexBuffers.Length; i++)
+                        {
+                            if (vertexBuffers[i] == null)
+                            {
+                                continue;
+                            }
+
+                            D3D12Buffer d3d12Buffer = vertexBuffers[i] as D3D12Buffer;
+                            if (d3d12Buffer == null)
+                            {
+                                continue; // Skip non-D3D12 buffers
+                            }
+
+                            // Get GPU virtual address for vertex buffer
+                            IntPtr bufferResource = vertexBuffers[i].NativeHandle;
+                            ulong bufferGpuVa = _device.GetGpuVirtualAddress(bufferResource);
+                            if (bufferGpuVa == 0UL)
+                            {
+                                continue; // Skip invalid buffers
+                            }
+
+                            BufferDesc bufferDesc = vertexBuffers[i].Desc;
+                            D3D12_VERTEX_BUFFER_VIEW vbView = new D3D12_VERTEX_BUFFER_VIEW
+                            {
+                                BufferLocation = bufferGpuVa,
+                                SizeInBytes = unchecked((uint)bufferDesc.ByteSize),
+                                StrideInBytes = strides[i]
+                            };
+
+                            IntPtr vbViewPtr = new IntPtr(vbViewsPtr.ToInt64() + (i * vbViewSize));
+                            Marshal.StructureToPtr(vbView, vbViewPtr, false);
+                        }
+
+                        // Set vertex buffers starting at slot 0
+                        CallIASetVertexBuffers(_d3d12CommandList, 0, unchecked((uint)vertexBuffers.Length), vbViewsPtr);
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(vbViewsPtr);
+                    }
+                }
+
+                // Step 9: Set index buffer
+                // ID3D12GraphicsCommandList::IASetIndexBuffer sets the index buffer binding
+                if (state.IndexBuffer != null)
+                {
+                    D3D12Buffer d3d12IndexBuffer = state.IndexBuffer as D3D12Buffer;
+                    if (d3d12IndexBuffer != null)
+                    {
+                        // Get GPU virtual address for index buffer
+                        IntPtr indexBufferResource = state.IndexBuffer.NativeHandle;
+                        ulong indexBufferGpuVa = _device.GetGpuVirtualAddress(indexBufferResource);
+                        if (indexBufferGpuVa != 0UL)
+                        {
+                            BufferDesc indexBufferDesc = state.IndexBuffer.Desc;
+
+                            // Convert TextureFormat to DXGI_FORMAT for index buffer
+                            // DXGI_FORMAT_R16_UINT = 56, DXGI_FORMAT_R32_UINT = 57
+                            uint indexFormat = 57; // Default to R32_UINT
+                            if (state.IndexFormat == TextureFormat.R16_UInt)
+                            {
+                                indexFormat = 56; // DXGI_FORMAT_R16_UINT
+                            }
+                            else if (state.IndexFormat == TextureFormat.R32_UInt)
+                            {
+                                indexFormat = 57; // DXGI_FORMAT_R32_UINT
+                            }
+
+                            D3D12_INDEX_BUFFER_VIEW ibView = new D3D12_INDEX_BUFFER_VIEW
+                            {
+                                BufferLocation = indexBufferGpuVa,
+                                SizeInBytes = unchecked((uint)indexBufferDesc.ByteSize),
+                                Format = indexFormat
+                            };
+
+                            // Allocate memory for index buffer view
+                            int ibViewSize = Marshal.SizeOf<D3D12_INDEX_BUFFER_VIEW>();
+                            IntPtr ibViewPtr = Marshal.AllocHGlobal(ibViewSize);
+
+                            try
+                            {
+                                Marshal.StructureToPtr(ibView, ibViewPtr, false);
+                                CallIASetIndexBuffer(_d3d12CommandList, ibViewPtr);
+                            }
+                            finally
+                            {
+                                Marshal.FreeHGlobal(ibViewPtr);
+                            }
+                        }
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Gets the size in bytes for a texture format.
+            /// Helper method for calculating vertex attribute sizes.
+            /// </summary>
+            private uint GetFormatSize(TextureFormat format)
+            {
+                switch (format)
+                {
+                    case TextureFormat.R8_UNorm:
+                    case TextureFormat.R8_UInt:
+                    case TextureFormat.R8_SInt:
+                        return 1;
+                    case TextureFormat.R8G8_UNorm:
+                    case TextureFormat.R8G8_UInt:
+                    case TextureFormat.R8G8_SInt:
+                    case TextureFormat.R16_UNorm:
+                    case TextureFormat.R16_UInt:
+                    case TextureFormat.R16_SInt:
+                    case TextureFormat.R16_Float:
+                        return 2;
+                    case TextureFormat.R8G8B8A8_UNorm:
+                    case TextureFormat.R8G8B8A8_UInt:
+                    case TextureFormat.R8G8B8A8_SInt:
+                    case TextureFormat.R32_UInt:
+                    case TextureFormat.R32_SInt:
+                    case TextureFormat.R32_Float:
+                        return 4;
+                    case TextureFormat.R32G32_Float:
+                    case TextureFormat.R32G32_UInt:
+                    case TextureFormat.R32G32_SInt:
+                        return 8;
+                    case TextureFormat.R32G32B32_Float:
+                        return 12;
+                    case TextureFormat.R32G32B32A32_Float:
+                    case TextureFormat.R32G32B32A32_UInt:
+                    case TextureFormat.R32G32B32A32_SInt:
+                        return 16;
+                    default:
+                        return 4; // Default to 4 bytes
+                }
+            }
             public void SetViewport(Viewport viewport) { /* TODO: RSSetViewports */ }
             public void SetViewports(Viewport[] viewports) { /* TODO: RSSetViewports */ }
             
@@ -3607,7 +4148,57 @@ namespace Andastra.Runtime.MonoGame.Backends
             public void SetBlendConstant(Vector4 color) { /* TODO: OMSetBlendFactor */ }
             public void SetStencilRef(uint reference) { /* TODO: OMSetStencilRef */ }
             public void Draw(DrawArguments args) { /* TODO: DrawInstanced */ }
-            public void DrawIndexed(DrawArguments args) { /* TODO: DrawIndexedInstanced */ }
+            /// <summary>
+            /// Draws indexed primitives using instanced drawing.
+            /// In DirectX 12, all indexed drawing is done through DrawIndexedInstanced.
+            /// Based on DirectX 12 DrawIndexedInstanced: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-drawindexedinstanced
+            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+            /// </summary>
+            public void DrawIndexed(DrawArguments args)
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    return; // Command list not initialized
+                }
+
+                // Validate arguments
+                // IndexCountPerInstance must be greater than 0
+                if (args.VertexCount <= 0)
+                {
+                    // In indexed drawing context, VertexCount represents the index count per instance
+                    // Silently return if invalid - caller should ensure valid arguments
+                    return;
+                }
+
+                // InstanceCount defaults to 1 if not specified (0 or negative)
+                uint instanceCount = args.InstanceCount > 0 ? unchecked((uint)args.InstanceCount) : 1U;
+
+                // StartIndexLocation and BaseVertexLocation can be negative or any value
+                // They will be used as-is by the GPU
+                uint startIndexLocation = unchecked((uint)args.StartIndexLocation);
+                int baseVertexLocation = args.BaseVertexLocation;
+                uint startInstanceLocation = unchecked((uint)args.StartInstanceLocation);
+
+                // Call DrawIndexedInstanced through COM vtable
+                // Parameters:
+                // - IndexCountPerInstance: args.VertexCount (index count per instance)
+                // - InstanceCount: args.InstanceCount (defaults to 1)
+                // - StartIndexLocation: args.StartIndexLocation
+                // - BaseVertexLocation: args.BaseVertexLocation
+                // - StartInstanceLocation: args.StartInstanceLocation
+                CallDrawIndexedInstanced(
+                    _d3d12CommandList,
+                    unchecked((uint)args.VertexCount), // IndexCountPerInstance
+                    instanceCount,                      // InstanceCount
+                    startIndexLocation,                 // StartIndexLocation
+                    baseVertexLocation,                 // BaseVertexLocation
+                    startInstanceLocation);             // StartInstanceLocation
+            }
             public void DrawIndirect(IBuffer argumentBuffer, int offset, int drawCount, int stride)
             {
                 if (!_isOpen)
