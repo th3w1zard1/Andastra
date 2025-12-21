@@ -9,6 +9,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
+using Avalonia;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.MDLData;
 using Andastra.Parsing.Resource;
@@ -518,35 +519,66 @@ namespace HolocronToolset.Editors
         /// <param name="width">Width of the image.</param>
         /// <param name="height">Height of the image.</param>
         /// <returns>RGBA pixel data as byte array, or null if extraction fails.</returns>
-        private byte[] ExtractRgbaFromBitmap(Bitmap bitmap, int width, int height)
+        private unsafe byte[] ExtractRgbaFromBitmap(Bitmap bitmap, int width, int height)
         {
             try
             {
-                // Create a copy of the bitmap to ensure we can access pixel data
-                // Avalonia bitmaps use BGRA format internally
-                using (var lockedBitmap = bitmap.Lock())
+                // Convert Bitmap to WriteableBitmap to access pixel data
+                // Avalonia's regular Bitmap may not support Lock() in all versions
+                WriteableBitmap writeableBitmap;
+                if (bitmap is WriteableBitmap wb)
                 {
-                    byte[] rgbaData = new byte[width * height * 4];
-
-                    // Read pixel data row by row
-                    for (int y = 0; y < height; y++)
+                    writeableBitmap = wb;
+                }
+                else
+                {
+                    // Create a WriteableBitmap by rendering the original bitmap
+                    writeableBitmap = new WriteableBitmap(
+                        new PixelSize(width, height),
+                        new Vector(96, 96),
+                        PixelFormat.Rgba8888,
+                        AlphaFormat.Premul);
+                    using (var context = writeableBitmap.CreateDrawingContext())
                     {
-                        var row = lockedBitmap.GetRowBytes(y);
-                        for (int x = 0; x < width; x++)
-                        {
-                            int srcIndex = x * 4; // BGRA format: 4 bytes per pixel
-                            int dstIndex = (y * width + x) * 4; // RGBA format: 4 bytes per pixel
+                        context.DrawImage(bitmap, new Rect(0, 0, width, height));
+                    }
+                }
 
-                            // Convert BGRA to RGBA
-                            rgbaData[dstIndex + 0] = row[srcIndex + 2]; // R (was B)
-                            rgbaData[dstIndex + 1] = row[srcIndex + 1]; // G
-                            rgbaData[dstIndex + 2] = row[srcIndex + 0]; // B (was R)
-                            rgbaData[dstIndex + 3] = row[srcIndex + 3]; // A
+                // Extract pixel data using Lock()
+                byte[] rgbaData = new byte[width * height * 4];
+                using (var lockedBitmap = writeableBitmap.Lock())
+                {
+                    int rowStride = lockedBitmap.RowBytes;
+                    unsafe
+                    {
+                        byte* pixelPtr = (byte*)lockedBitmap.Address;
+
+                        // Read pixel data row by row
+                        for (int y = 0; y < height; y++)
+                        {
+                            for (int x = 0; x < width; x++)
+                            {
+                                // Calculate pixel offset (RGBA format, 4 bytes per pixel)
+                                int pixelOffset = y * rowStride + x * 4;
+                                int dstIndex = (y * width + x) * 4;
+
+                                // Avalonia uses RGBA8888 format, so data is already in RGBA order
+                                rgbaData[dstIndex + 0] = pixelPtr[pixelOffset + 0]; // R
+                                rgbaData[dstIndex + 1] = pixelPtr[pixelOffset + 1]; // G
+                                rgbaData[dstIndex + 2] = pixelPtr[pixelOffset + 2]; // B
+                                rgbaData[dstIndex + 3] = pixelPtr[pixelOffset + 3]; // A
+                            }
                         }
                     }
-
-                    return rgbaData;
                 }
+
+                // Clean up if we created a new WriteableBitmap
+                if (!(bitmap is WriteableBitmap))
+                {
+                    writeableBitmap.Dispose();
+                }
+
+                return rgbaData;
             }
             catch (Exception ex)
             {
