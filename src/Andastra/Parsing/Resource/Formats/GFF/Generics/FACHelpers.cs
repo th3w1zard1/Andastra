@@ -28,7 +28,10 @@ namespace Andastra.Parsing.Resource.Generics
                     faction.Name = factionStruct.Acquire<string>("FactionName", string.Empty);
                     
                     // Engine default: 0 (swkotor2.exe:0x005acf30 line 47, swkotor.exe:0x0052b5c0 line 47)
-                    faction.ParentId = factionStruct.Acquire<int>("FactionParentID", 0);
+                    // Standard factions use 0xFFFFFFFF (-1) for no parent
+                    int parentIdVal = factionStruct.Acquire<int>("FactionParentID", -1);
+                    // Handle both signed and unsigned representations of 0xFFFFFFFF
+                    faction.ParentId = (parentIdVal == -1 || parentIdVal == 0xFFFFFFFF) ? unchecked((int)0xFFFFFFFF) : parentIdVal;
                     
                     // Engine default: 0, but if field missing defaults to 1 (swkotor2.exe:0x005acf30 lines 48-52, swkotor.exe:0x0052b5c0 lines 48-52)
                     ushort globalValue = factionStruct.Acquire<ushort>("FactionGlobal", 0);
@@ -82,7 +85,15 @@ namespace Andastra.Parsing.Resource.Generics
                 FACFaction faction = fac.Factions[i];
                 GFFStruct factionStruct = factionList.Add(i);
                 factionStruct.SetString("FactionName", faction.Name);
-                factionStruct.SetInt32("FactionParentID", faction.ParentId);
+                // FactionParentID as uint32, handle 0xFFFFFFFF correctly
+                if (faction.ParentId == unchecked((int)0xFFFFFFFF))
+                {
+                    factionStruct.SetUInt32("FactionParentID", 0xFFFFFFFF);
+                }
+                else
+                {
+                    factionStruct.SetUInt32("FactionParentID", (uint)faction.ParentId);
+                }
                 factionStruct.SetUInt16("FactionGlobal", (ushort)(faction.IsGlobal ? 1 : 0));
             }
 

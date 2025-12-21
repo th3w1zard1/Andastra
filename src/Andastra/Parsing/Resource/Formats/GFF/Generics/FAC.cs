@@ -41,7 +41,8 @@ namespace Andastra.Parsing.Resource.Generics
         public string Name { get; set; } = string.Empty;
 
         // Engine default: 0 (swkotor2.exe:0x005acf30 line 47, swkotor.exe:0x0052b5c0 line 47)
-        public int ParentId { get; set; }
+        // Standard factions use 0xFFFFFFFF (-1) for no parent
+        public int ParentId { get; set; } = unchecked((int)0xFFFFFFFF);
 
         // Engine default: 0, but if field missing defaults to 1 (swkotor2.exe:0x005acf30 lines 48-52, swkotor.exe:0x0052b5c0 lines 48-52)
         public bool IsGlobal { get; set; }
