@@ -74,20 +74,6 @@ namespace Andastra.Runtime.MonoGame.Backends
             // This is a placeholder structure
         }
 
-        // ID3D12StateObjectProperties interface for retrieving shader identifiers
-        // GUID: {de5fa827-9bf9-4f26-89ff-d7f56fde3860}
-        private static readonly Guid IID_ID3D12StateObjectProperties = new Guid(0xde5fa827, 0x9bf9, 0x4f26, 0x89, 0xff, 0xd7, 0xf5, 0x6f, 0xde, 0x38, 0x60);
-
-        [ComImport]
-        [Guid("de5fa827-9bf9-4f26-89ff-d7f56fde3860")]
-        [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-        private interface ID3D12StateObjectProperties
-        {
-            // GetShaderIdentifier returns a pointer to 32 bytes of shader identifier data
-            // The pointer is valid for the lifetime of the state object
-            IntPtr GetShaderIdentifier([MarshalAs(UnmanagedType.LPWStr)] string pExportName);
-        }
-
         // DirectX 12 function pointers for P/Invoke (simplified - full implementation requires extensive declarations)
         // In a complete implementation, these would be loaded via GetProcAddress or use SharpDX/Vortice wrapper
 
@@ -3530,13 +3516,70 @@ namespace Andastra.Runtime.MonoGame.Backends
             private readonly IntPtr _handle;
             private readonly IntPtr _rootSignature;
             private readonly IntPtr _device;
+            private readonly uint _rootParameterIndex;
 
             public D3D12BindingLayout(IntPtr handle, BindingLayoutDesc desc, IntPtr rootSignature, IntPtr device)
+                : this(handle, desc, rootSignature, device, CalculateRootParameterIndex(desc))
+            {
+            }
+
+            public D3D12BindingLayout(IntPtr handle, BindingLayoutDesc desc, IntPtr rootSignature, IntPtr device, uint rootParameterIndex)
             {
                 _handle = handle;
                 Desc = desc;
                 _rootSignature = rootSignature;
                 _device = device;
+                _rootParameterIndex = rootParameterIndex;
+            }
+
+            /// <summary>
+            /// Gets the root parameter index for this binding layout in the root signature.
+            /// In DirectX 12, each binding layout maps to one root parameter (typically a descriptor table).
+            /// The root parameter index is determined by the order in which root parameters are defined in the root signature.
+            /// Based on DirectX 12 Root Parameters: https://docs.microsoft.com/en-us/windows/win32/direct3d12/root-signatures
+            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+            /// </summary>
+            public uint GetRootParameterIndex()
+            {
+                return _rootParameterIndex;
+            }
+
+            /// <summary>
+            /// Calculates the root parameter index from the binding layout descriptor.
+            /// Uses the minimum slot number from binding layout items as the root parameter index.
+            /// This is a common pattern where the slot number corresponds to the root parameter index.
+            /// When root signature creation is fully implemented, this should be set explicitly during root signature creation.
+            /// </summary>
+            private static uint CalculateRootParameterIndex(BindingLayoutDesc desc)
+            {
+                if (desc.Items == null || desc.Items.Length == 0)
+                {
+                    return 0;
+                }
+
+                // Find the minimum slot number - this typically corresponds to the root parameter index
+                int minSlot = int.MaxValue;
+                for (int i = 0; i < desc.Items.Length; i++)
+                {
+                    if (desc.Items[i].Slot < minSlot)
+                    {
+                        minSlot = desc.Items[i].Slot;
+                    }
+                }
+
+                // If no valid slot found, default to 0
+                if (minSlot == int.MaxValue)
+                {
+                    return 0;
+                }
+
+                // Ensure non-negative and cast to uint
+                if (minSlot < 0)
+                {
+                    return 0;
+                }
+
+                return unchecked((uint)minSlot);
             }
 
             public void Dispose()

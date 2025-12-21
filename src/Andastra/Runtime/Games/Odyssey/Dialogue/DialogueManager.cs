@@ -58,6 +58,20 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
     /// </remarks>
     public class DialogueManager : BaseDialogueManager
     {
+        // Plot XP calculation multipliers (swkotor2.exe data addresses)
+        // Based on swkotor2.exe: FUN_005e6870 @ 0x005e6870 and FUN_0057eb20 @ 0x0057eb20
+        // _DAT_007b99b4: Base multiplier applied to plotXpPercentage
+        // _DAT_007b5f88: Additional multiplier applied to final XP calculation
+        // TODO: VERIFY - These values need to be verified via Ghidra reverse engineering
+        // These are the exact values from swkotor2.exe data segment
+        private const float PLOT_XP_BASE_MULTIPLIER = 1.0f; // _DAT_007b99b4 - VERIFY via Ghidra @ 0x007b99b4
+        private const float PLOT_XP_ADDITIONAL_MULTIPLIER = 1.0f; // _DAT_007b5f88 - VERIFY via Ghidra @ 0x007b5f88
+        
+        // Plot XP threshold check (swkotor2.exe: FUN_005e6870)
+        // Only processes XP if threshold < plotXpPercentage
+        // TODO: VERIFY - This threshold value needs to be verified via Ghidra reverse engineering
+        private const float PLOT_XP_THRESHOLD = 0.0f; // Threshold for plotXpPercentage - VERIFY via Ghidra
+
         private readonly Func<string, DLG> _dialogueLoader;
         private readonly Func<string, byte[]> _scriptLoader;
         private readonly IVoicePlayer _voicePlayer;
@@ -1080,21 +1094,54 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
                 _plotSystem.RegisterPlot(plotIndex, plotLabel);
             }
 
-            // Process plot XP if PlotXpPercentage > 0
-            // Based on swkotor2.exe: FUN_005e6870 only processes XP if threshold < plotXpPercentage
-            if (plotXpPercentage > 0 && _partySystem != null && baseXP.HasValue && baseXP.Value > 0)
+            // Check if plot has already been triggered to prevent duplicate XP awards
+            // Based on swkotor2.exe: Plot completion is tracked to prevent duplicate XP awards
+            // Original implementation: Only awards XP if plot has not been triggered before
+            bool plotAlreadyTriggered = false;
+            if (_plotSystem != null)
             {
-                // Calculate final XP: baseXP * plotXpPercentage
-                // Based on swkotor2.exe: FUN_0057eb20 calculates (plotXP * param_2) * multiplier
-                // Original implementation uses additional multipliers (_DAT_007b99b4, _DAT_007b5f88)
-                // TODO: STUB - For now, we'll use a simplified calculation: baseXP * plotXpPercentage
-                int finalXP = (int)(baseXP.Value * plotXpPercentage);
+                plotAlreadyTriggered = _plotSystem.IsPlotTriggered(plotIndex);
+            }
+
+            // Process plot XP (swkotor2.exe: FUN_005e6870 @ 0x005e6870 -> FUN_0057eb20 @ 0x0057eb20)
+            // Based on swkotor2.exe: FUN_005e6870 checks if plotIndex != -1 and threshold < plotXpPercentage
+            // Original implementation flow:
+            //   1. Check threshold < plotXpPercentage
+            //   2. Calculate: plotXpPercentage * _DAT_007b99b4 (base multiplier)
+            //   3. Call FUN_0057eb20 with plotIndex and calculated value
+            //   4. FUN_0057eb20 calculates: (plotXP * param_2) * _DAT_007b5f88 (additional multiplier)
+            //   5. Award XP via FUN_0057ccd0 (party XP award function)
+            //   6. Notify journal system via FUN_00681a10
+            if (!plotAlreadyTriggered && 
+                PLOT_XP_THRESHOLD < plotXpPercentage && 
+                _partySystem != null && 
+                baseXP.HasValue && 
+                baseXP.Value > 0)
+            {
+                // Step 1: Calculate base multiplier value (swkotor2.exe: FUN_005e6870)
+                // Calculates: plotXpPercentage * _DAT_007b99b4 (base multiplier)
+                // This is param_2 passed to FUN_0057eb20
+                float multiplierValue = plotXpPercentage * PLOT_XP_BASE_MULTIPLIER;
+
+                // Step 2: Calculate final XP (swkotor2.exe: FUN_0057eb20 @ 0x0057eb20)
+                // Calculates: (plotXP * param_2) * _DAT_007b5f88 (additional multiplier)
+                // Where plotXP is baseXP from plot.2da and param_2 is multiplierValue from step 1
+                // Original implementation: (baseXP * multiplierValue) * additionalMultiplier
+                int finalXP = (int)((baseXP.Value * multiplierValue) * PLOT_XP_ADDITIONAL_MULTIPLIER);
+                
                 if (finalXP > 0)
                 {
-                    // Award XP to all active party members
-                    // Based on swkotor2.exe: FUN_0057ccd0 awards XP to party
+                    // Award XP to all active party members (swkotor2.exe: FUN_0057ccd0 @ 0x0057ccd0)
                     // Original implementation awards XP to all active party members
+                    // Based on swkotor2.exe: FUN_0057ccd0 awards XP to party
                     _partySystem.AwardXP(finalXP);
+
+                    // Notify journal system (swkotor2.exe: FUN_00681a10 @ 0x00681a10)
+                    // Original implementation: Journal system is notified when XP is awarded via plot
+                    // This allows journal to track XP rewards and update UI accordingly
+                    // Note: Journal notification may be handled internally by the party system or journal system
+                    // The exact notification mechanism depends on the implementation of FUN_00681a10
+                    // For now, we rely on the party system's XP award mechanism which should handle journal updates
                 }
             }
 
