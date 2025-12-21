@@ -64,8 +64,8 @@ namespace Andastra.Parsing.Extract.SaveData
                     // Try ERF first (most common), then RIM
                     try
                     {
-                        ERF cachedErf = ERFAuto.ReadErf(res.Data);
-                        CachedModules[ident] = cachedErf;
+                        ERF nestedErf = ERFAuto.ReadErf(res.Data);
+                        CachedModules[ident] = nestedErf;
                     }
                     catch
                     {

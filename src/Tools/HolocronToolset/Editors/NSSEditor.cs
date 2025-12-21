@@ -1366,15 +1366,15 @@ namespace HolocronToolset.Editors
                     if (dialogResult == true)
                     {
                         string resname = dialog.ResName();
-                        ResourceType restype = dialog.ResType();
-                        byte[] data = dialog.Data();
+                        ResourceType selectedRestype = dialog.ResType();
+                        byte[] selectedData = dialog.Data();
                         
                         // Matching PyKotor: assert resname is not None, assert restype is not None, assert data is not None
-                        if (resname != null && restype != null && data != null)
+                        if (resname != null && selectedRestype != null && selectedData != null)
                         {
                             // Load the selected resource
                             // Matching PyKotor: self.load(r_filepath, resname, restype, data)
-                            Load(filePath, resname, restype, data);
+                            Load(filePath, resname, selectedRestype, selectedData);
                         }
                     }
                 }

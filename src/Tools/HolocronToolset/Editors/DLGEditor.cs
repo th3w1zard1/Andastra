@@ -654,7 +654,7 @@ namespace HolocronToolset.Editors
             _dialogTree.ContextRequested += (sender, e) =>
             {
                 // Get the item at the pointer position
-                var point = e.TryGetPosition(_dialogTree);
+                Avalonia.Point? point = e.TryGetPosition(_dialogTree, out Avalonia.Point pos) ? pos : (Avalonia.Point?)null;
                 if (!point.HasValue)
                 {
                     return;
@@ -784,16 +784,16 @@ namespace HolocronToolset.Editors
             playSoundItem.Click += (s, e) =>
             {
                 // Matching PyKotor: play_sound_action.triggered.connect(lambda: (self.play_sound("" if item.link is None else str(item.link.node.sound)) and None) or None)
-                string soundResref = item.Link?.Node?.Sound?.ToString() ?? "";
-                if (!string.IsNullOrEmpty(soundResref))
+                string soundResrefValue = item.Link?.Node?.Sound?.ToString() ?? "";
+                if (!string.IsNullOrEmpty(soundResrefValue))
                 {
-                    PlaySound(soundResref, new[] { SearchLocation.SOUND, SearchLocation.VOICE });
+                    PlaySound(soundResrefValue, new[] { SearchLocation.SOUND, SearchLocation.VOICE });
                 }
             };
             // Matching PyKotor: play_sound_action.setEnabled(bool(self.ui.soundComboBox.currentText().strip()))
             // Note: We check the node's sound property directly since we don't have a separate soundComboBox UI control
-            string soundResref = item.Link?.Node?.Sound?.ToString() ?? "";
-            playSoundItem.IsEnabled = !string.IsNullOrWhiteSpace(soundResref);
+            string soundResrefForEnable = item.Link?.Node?.Sound?.ToString() ?? "";
+            playSoundItem.IsEnabled = !string.IsNullOrWhiteSpace(soundResrefForEnable);
             playSubMenuItems.Add(playSoundItem);
 
             // Matching PyKotor: play_voice_action: _QAction | None = play_menu.addAction("Play Voice")
@@ -804,20 +804,21 @@ namespace HolocronToolset.Editors
             playVoiceItem.Click += (s, e) =>
             {
                 // Matching PyKotor: play_voice_action.triggered.connect(lambda: (self.play_sound("" if item.link is None else str(item.link.node.vo_resref)) and None) or None)
-                string voiceResref = item.Link?.Node?.VoResref?.ToString() ?? "";
-                if (!string.IsNullOrEmpty(voiceResref))
+                // Note: DLGNode has VoResRef property (with capital R)
+                string voiceResrefValue = item.Link?.Node?.VoResRef?.ToString() ?? "";
+                if (!string.IsNullOrEmpty(voiceResrefValue))
                 {
-                    PlaySound(voiceResref, new[] { SearchLocation.VOICE });
+                    PlaySound(voiceResrefValue, new[] { SearchLocation.VOICE });
                 }
             };
             // Matching PyKotor: play_voice_action.setEnabled(bool(self.ui.voiceComboBox.currentText().strip()))
-            // Note: We check the node's vo_resref property directly
-            string voiceResrefForEnable = item.Link?.Node?.VoResref?.ToString() ?? "";
+            // Note: We check the node's VoResRef property directly
+            string voiceResrefForEnable = item.Link?.Node?.VoResRef?.ToString() ?? "";
             playVoiceItem.IsEnabled = !string.IsNullOrWhiteSpace(voiceResrefForEnable);
             playSubMenuItems.Add(playVoiceItem);
 
             // Matching PyKotor: play_menu.setEnabled(bool(self.ui.soundComboBox.currentText().strip() or self.ui.voiceComboBox.currentText().strip()))
-            playMenu.IsEnabled = !string.IsNullOrWhiteSpace(soundResref) || !string.IsNullOrWhiteSpace(voiceResrefForEnable);
+            playMenu.IsEnabled = !string.IsNullOrWhiteSpace(soundResrefForEnable) || !string.IsNullOrWhiteSpace(voiceResrefForEnable);
             foreach (var subItem in playSubMenuItems)
             {
                 playMenu.Items.Add(subItem);
