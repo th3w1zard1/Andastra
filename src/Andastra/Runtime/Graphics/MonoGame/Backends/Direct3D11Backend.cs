@@ -1137,24 +1137,134 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         /// <summary>
         /// Checks if a texture format is compressed (DXT/BC formats).
+        /// 
+        /// Compressed formats use block-based compression where each block is 4x4 pixels.
+        /// DXT formats are represented as BC (Block Compressed) in D3D11:
+        /// - DXT1 = BC1
+        /// - DXT3 = BC2
+        /// - DXT5 = BC3
+        /// 
+        /// Based on Direct3D 11 API: Block-compressed texture formats
+        /// DXGI_FORMAT documentation: https://docs.microsoft.com/en-us/windows/win32/api/dxgiformat/ne-dxgiformat-dxgi_format
+        /// Block compression formats: BC1-BC7, ASTC (for mobile/Metal compatibility)
         /// </summary>
         private bool IsCompressedFormat(TextureFormat format)
         {
-            // DXT formats are typically represented as BC (Block Compressed) in D3D11
-            // TODO: STUB - For now, we'll check for common compressed format patterns
-            // When the format enum is extended, this should check for BC1-BC7 formats
-            return false; // Placeholder - will be updated when compressed format support is added
+            switch (format)
+            {
+                // BC1/DXT1 formats (8 bytes per 4x4 block)
+                case TextureFormat.BC1:
+                case TextureFormat.BC1_UNorm:
+                case TextureFormat.BC1_UNorm_SRGB:
+                
+                // BC2/DXT3 formats (16 bytes per 4x4 block)
+                case TextureFormat.BC2:
+                case TextureFormat.BC2_UNorm:
+                case TextureFormat.BC2_UNorm_SRGB:
+                
+                // BC3/DXT5 formats (16 bytes per 4x4 block)
+                case TextureFormat.BC3:
+                case TextureFormat.BC3_UNorm:
+                case TextureFormat.BC3_UNorm_SRGB:
+                
+                // BC4 formats (8 bytes per 4x4 block, single channel)
+                case TextureFormat.BC4:
+                case TextureFormat.BC4_UNorm:
+                
+                // BC5 formats (16 bytes per 4x4 block, two channels)
+                case TextureFormat.BC5:
+                case TextureFormat.BC5_UNorm:
+                
+                // BC6H formats (16 bytes per 4x4 block, HDR)
+                case TextureFormat.BC6H:
+                case TextureFormat.BC6H_UFloat:
+                
+                // BC7 formats (16 bytes per 4x4 block, high quality)
+                case TextureFormat.BC7:
+                case TextureFormat.BC7_UNorm:
+                case TextureFormat.BC7_UNorm_SRGB:
+                
+                // ASTC compressed formats (for Metal/mobile compatibility, variable block sizes)
+                case TextureFormat.ASTC_4x4:
+                case TextureFormat.ASTC_5x5:
+                case TextureFormat.ASTC_6x6:
+                case TextureFormat.ASTC_8x8:
+                case TextureFormat.ASTC_10x10:
+                case TextureFormat.ASTC_12x12:
+                    return true;
+                    
+                default:
+                    return false;
+            }
         }
 
         /// <summary>
         /// Gets the block size in bytes for a compressed texture format.
-        /// DXT1/BC1: 8 bytes per 4x4 block
-        /// DXT3/DXT5/BC2/BC3: 16 bytes per 4x4 block
+        /// 
+        /// Block-compressed formats use 4x4 pixel blocks:
+        /// - BC1/DXT1: 8 bytes per block
+        /// - BC2/DXT3: 16 bytes per block
+        /// - BC3/DXT5: 16 bytes per block
+        /// - BC4: 8 bytes per block (single channel)
+        /// - BC5: 16 bytes per block (two channels)
+        /// - BC6H: 16 bytes per block (HDR)
+        /// - BC7: 16 bytes per block (high quality)
+        /// - ASTC formats: 16 bytes per block (all ASTC variants)
+        /// 
+        /// Based on Direct3D 11 API: Block compression format specifications
+        /// DXGI_FORMAT documentation: https://docs.microsoft.com/en-us/windows/win32/api/dxgiformat/ne-dxgiformat-dxgi_format
         /// </summary>
         private int GetCompressedBlockSize(TextureFormat format)
         {
-            // Placeholder - will be implemented when compressed format support is added
-            return 16; // Default to DXT3/DXT5 block size
+            switch (format)
+            {
+                // BC1/DXT1: 8 bytes per 4x4 block
+                case TextureFormat.BC1:
+                case TextureFormat.BC1_UNorm:
+                case TextureFormat.BC1_UNorm_SRGB:
+                
+                // BC4: 8 bytes per 4x4 block (single channel)
+                case TextureFormat.BC4:
+                case TextureFormat.BC4_UNorm:
+                    return 8;
+                
+                // BC2/DXT3: 16 bytes per 4x4 block
+                case TextureFormat.BC2:
+                case TextureFormat.BC2_UNorm:
+                case TextureFormat.BC2_UNorm_SRGB:
+                
+                // BC3/DXT5: 16 bytes per 4x4 block
+                case TextureFormat.BC3:
+                case TextureFormat.BC3_UNorm:
+                case TextureFormat.BC3_UNorm_SRGB:
+                
+                // BC5: 16 bytes per 4x4 block (two channels)
+                case TextureFormat.BC5:
+                case TextureFormat.BC5_UNorm:
+                
+                // BC6H: 16 bytes per 4x4 block (HDR)
+                case TextureFormat.BC6H:
+                case TextureFormat.BC6H_UFloat:
+                
+                // BC7: 16 bytes per 4x4 block (high quality)
+                case TextureFormat.BC7:
+                case TextureFormat.BC7_UNorm:
+                case TextureFormat.BC7_UNorm_SRGB:
+                
+                // ASTC formats: 16 bytes per block (all ASTC variants use 16-byte blocks)
+                case TextureFormat.ASTC_4x4:
+                case TextureFormat.ASTC_5x5:
+                case TextureFormat.ASTC_6x6:
+                case TextureFormat.ASTC_8x8:
+                case TextureFormat.ASTC_10x10:
+                case TextureFormat.ASTC_12x12:
+                    return 16;
+                    
+                default:
+                    // Default to 16 bytes if format is compressed but not recognized
+                    // (should not happen if IsCompressedFormat is called first)
+                    return 16;
+            }
         }
 
         #region D3D11 Constants
