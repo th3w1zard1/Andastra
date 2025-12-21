@@ -58,6 +58,9 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         // Frame statistics
         private FrameStatistics _lastFrameStats;
+        
+        // Frame tracking for multi-buffering
+        private int _currentFrameIndex;
 
         public GraphicsBackend BackendType
         {
@@ -91,6 +94,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         {
             _resources = new Dictionary<IntPtr, ResourceInfo>();
             _nextResourceHandle = 1;
+            _currentFrameIndex = 0;
         }
 
         /// <summary>
@@ -272,6 +276,9 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             // Reset frame statistics
             _lastFrameStats = new FrameStatistics();
+            
+            // Frame index is advanced at EndFrame() for proper multi-buffering
+            // This ensures frame index corresponds to the frame being rendered
         }
 
         public void EndFrame()
@@ -319,6 +326,11 @@ namespace Andastra.Runtime.MonoGame.Backends
                 MetalNative.ReleaseCommandBuffer(_currentCommandBuffer);
                 _currentCommandBuffer = IntPtr.Zero;
             }
+            
+            // Advance frame index for multi-buffering
+            // Metal typically uses triple buffering for optimal performance
+            // Frame index cycles through 0, 1, 2 for resource management
+            _currentFrameIndex = (_currentFrameIndex + 1) % 3;
         }
 
         public void Resize(int width, int height)
@@ -665,6 +677,23 @@ namespace Andastra.Runtime.MonoGame.Backends
         public FrameStatistics GetFrameStatistics()
         {
             return _lastFrameStats;
+        }
+
+        /// <summary>
+        /// Gets the current frame index for multi-buffering.
+        /// </summary>
+        /// <returns>Current frame index (0, 1, or 2 for triple buffering).</returns>
+        /// <remarks>
+        /// Frame Index Tracking:
+        /// - Used for multi-buffering resource management
+        /// - Cycles through 0, 1, 2 for triple buffering
+        /// - Incremented at EndFrame() to track which frame buffer is currently active
+        /// - Metal uses triple buffering by default for optimal performance
+        /// - Frame index is used to manage per-frame resources (constant buffers, etc.)
+        /// </remarks>
+        public int GetCurrentFrameIndex()
+        {
+            return _currentFrameIndex;
         }
 
         public IDevice GetDevice()

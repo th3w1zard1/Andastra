@@ -542,9 +542,15 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         public int GetCurrentFrameIndex()
         {
-            // Return frame index for multi-buffering
-            // Metal doesn't have explicit frame indexing, use backend's frame tracking
-            return 0; // TODO: Implement frame tracking if needed
+            if (!IsValid)
+            {
+                return 0;
+            }
+
+            // Return frame index from backend's frame tracking
+            // Metal backend tracks frame index for multi-buffering (triple buffering: 0, 1, 2)
+            // Frame index is used for per-frame resource management (constant buffers, etc.)
+            return _backend.GetCurrentFrameIndex();
         }
 
         #endregion
