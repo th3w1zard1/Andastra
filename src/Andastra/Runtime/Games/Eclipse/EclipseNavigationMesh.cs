@@ -47,6 +47,31 @@ namespace Andastra.Runtime.Games.Eclipse
         private readonly AabbNode _staticAabbRoot;
         private readonly int _staticFaceCount;
 
+        /// <summary>
+        /// Gets the vertices of the navigation mesh.
+        /// </summary>
+        public IReadOnlyList<Vector3> Vertices => _staticVertices;
+
+        /// <summary>
+        /// Gets the face indices of the navigation mesh.
+        /// </summary>
+        public IReadOnlyList<int> FaceIndices => _staticFaceIndices;
+
+        /// <summary>
+        /// Gets the adjacency information for the navigation mesh.
+        /// </summary>
+        public IReadOnlyList<int> Adjacency => _staticAdjacency;
+
+        /// <summary>
+        /// Gets the surface materials for the navigation mesh.
+        /// </summary>
+        public IReadOnlyList<int> SurfaceMaterials => _staticSurfaceMaterials;
+
+        /// <summary>
+        /// Gets the face count of the navigation mesh.
+        /// </summary>
+        public int FaceCount => _staticFaceCount;
+
         // Dynamic obstacles (movable objects, physics bodies)
         private readonly List<DynamicObstacle> _dynamicObstacles;
         private readonly Dictionary<int, DynamicObstacle> _obstacleById;
@@ -1223,8 +1248,10 @@ namespace Andastra.Runtime.Games.Eclipse
             }
 
             // Internal node - test children
-            Vector3 leftHit = Vector3.Zero, rightHit = Vector3.Zero;
-            int leftFace = -1, rightFace = -1;
+            Vector3 leftHit = Vector3.Zero;
+            Vector3 rightHit = Vector3.Zero;
+            int leftFace = -1;
+            int rightFace = -1;
             bool leftHitResult = false;
             bool rightHitResult = false;
 

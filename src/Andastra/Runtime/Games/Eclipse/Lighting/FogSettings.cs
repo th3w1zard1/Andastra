@@ -1,5 +1,5 @@
 using System.Numerics;
-using FogMode = Andastra.Runtime.Graphics.MonoGame.Interfaces.FogMode;
+using Andastra.Runtime.MonoGame.Interfaces;
 
 namespace Andastra.Runtime.Games.Eclipse.Lighting
 {
