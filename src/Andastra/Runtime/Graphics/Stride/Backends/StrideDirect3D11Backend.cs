@@ -379,7 +379,7 @@ namespace Andastra.Runtime.Stride.Backends
                 // 3. Querying for fallback layer support
 
                 // Initialize fallback device using native D3D11 device
-                // In a full implementation, this would use P/Invoke to call:
+                // TODO:  In a full implementation, this would use P/Invoke to call:
                 // D3D12CreateRaytracingFallbackDevice(IUnknown* pD3D12Device, ...)
                 // However, since we're on D3D11, the fallback layer provides a compatibility layer
 
@@ -1421,7 +1421,7 @@ namespace Andastra.Runtime.Stride.Backends
         /// Uses the RayGen shader bytecode as the primary library content.
         /// 
         /// Note: In a full production implementation, all shaders (RayGen, Miss, ClosestHit, AnyHit)
-        /// would be combined into a single DXIL library bytecode. For now, we use the RayGen shader
+        // TODO: / would be combined into a single DXIL library bytecode. For now, we use the RayGen shader
         /// as the library content, which is sufficient when shaders are compiled separately and
         /// then combined, or when using a single library containing all shaders.
         /// 
@@ -1944,10 +1944,17 @@ namespace Andastra.Runtime.Stride.Backends
         /// <summary>
         /// Gets the GPU virtual address for a buffer handle.
         /// The DXR fallback layer uses GPU virtual addresses for acceleration structure operations.
+        ///
+        /// For DirectX 11 with DXR fallback layer, we query the buffer for ID3D12Resource interface
+        /// (which the fallback layer provides) and then call GetGPUVirtualAddress through the COM vtable.
+        /// This allows us to get GPU virtual addresses even though D3D11 doesn't natively support them.
+        ///
+        /// Based on DirectX 12 Resources: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12resource-getgpuvirtualaddress
+        /// DXR Fallback Layer: https://github.com/microsoft/DirectX-Graphics-Samples/tree/master/Libraries/D3D12RaytracingFallback
         /// </summary>
         /// <param name="bufferHandle">Handle to the buffer</param>
         /// <returns>GPU virtual address, or IntPtr.Zero if the buffer is invalid</returns>
-        private IntPtr GetGpuVirtualAddress(IntPtr bufferHandle)
+        private unsafe IntPtr GetGpuVirtualAddress(IntPtr bufferHandle)
         {
             if (bufferHandle == IntPtr.Zero)
             {
@@ -1961,10 +1968,66 @@ namespace Andastra.Runtime.Stride.Backends
                 return IntPtr.Zero;
             }
 
-            // For DirectX 11, we need to query the GPU virtual address from the buffer
-            // In a full implementation, this would use ID3D11Buffer::GetGPUVirtualAddress()
-            // or similar API. For now, we use the native handle as a placeholder.
-            // The fallback layer will handle the actual address translation.
+            if (info.NativeHandle == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            // Platform check: DirectX COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                // On non-Windows platforms, return native handle as fallback
+                return info.NativeHandle;
+            }
+
+            // For DirectX 11 with DXR fallback layer, query the buffer for ID3D12Resource interface
+            // The fallback layer wraps D3D11 resources and provides D3D12-like interfaces
+            IntPtr d3d12Resource = IntPtr.Zero;
+
+            try
+            {
+                // QueryInterface is at vtable index 0 in IUnknown
+                // QueryInterface signature: HRESULT QueryInterface(REFIID riid, void** ppvObject)
+                IntPtr* vtable = *(IntPtr**)info.NativeHandle;
+                IntPtr queryInterfacePtr = vtable[0]; // QueryInterface is at index 0
+
+                QueryInterfaceDelegate queryInterface =
+                    Marshal.GetDelegateForFunctionPointer<QueryInterfaceDelegate>(queryInterfacePtr);
+
+                // Query for ID3D12Resource interface
+                Guid iidId3d12Resource = IID_ID3D12Resource;
+                int hr = queryInterface(info.NativeHandle, ref iidId3d12Resource, out d3d12Resource);
+                if (hr == 0 && d3d12Resource != IntPtr.Zero) // S_OK = 0
+                {
+                    // Successfully obtained ID3D12Resource interface
+                    // Now call GetGPUVirtualAddress through the COM vtable
+                    // GetGPUVirtualAddress is at index 8 in ID3D12Resource vtable
+                    IntPtr* d3d12Vtable = *(IntPtr**)d3d12Resource;
+                    IntPtr getGpuVaPtr = d3d12Vtable[8];
+
+                    GetGpuVirtualAddressDelegate getGpuVa =
+                        Marshal.GetDelegateForFunctionPointer<GetGpuVirtualAddressDelegate>(getGpuVaPtr);
+
+                    ulong gpuVirtualAddress = getGpuVa(d3d12Resource);
+
+                    // Release the ID3D12Resource interface (AddRef/Release at vtable indices 1/2)
+                    IntPtr releasePtr = d3d12Vtable[2]; // Release is at index 2
+                    ReleaseDelegate release =
+                        Marshal.GetDelegateForFunctionPointer<ReleaseDelegate>(releasePtr);
+                    release(d3d12Resource);
+
+                    return new IntPtr((long)gpuVirtualAddress);
+                }
+            }
+            catch
+            {
+                // If COM interface query fails, fall back to native handle
+                // This can happen if the buffer doesn't support ID3D12Resource interface
+                // or if we're not using the DXR fallback layer
+            }
+
+            // Fallback: return native handle as placeholder
+            // The DXR fallback layer may handle address translation internally
             return info.NativeHandle;
         }
 
@@ -1983,8 +2046,8 @@ namespace Andastra.Runtime.Stride.Backends
             }
 
             // Return the native command list pointer
-            // In a full implementation, this would query the fallback command list
-            // from the fallback device. For now, we use the Stride command list.
+            // TODO:  In a full implementation, this would query the fallback command list
+            // TODO:  from the fallback device. For now, we use the Stride command list.
             return _commandList?.NativeCommandList ?? IntPtr.Zero;
         }
 
@@ -2631,6 +2694,37 @@ namespace Andastra.Runtime.Stride.Backends
         /// Used for QueryInterface when creating state objects.
         /// </summary>
         private static readonly System.Guid IID_ID3D12StateObject = new System.Guid("47016943-fca8-4594-93ea-af258b55346d");
+
+        /// <summary>
+        /// Interface ID for ID3D12Resource.
+        /// Used for QueryInterface when querying buffers for GPU virtual address support.
+        /// </summary>
+        private static readonly System.Guid IID_ID3D12Resource = new System.Guid("696442be-a72e-4059-bc79-5b5c98040fad");
+
+        #region COM Interface Delegates
+
+        /// <summary>
+        /// COM interface method delegate for QueryInterface (IUnknown::QueryInterface).
+        /// VTable index 0 for IUnknown.
+        /// </summary>
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int QueryInterfaceDelegate(IntPtr comObject, ref Guid riid, out IntPtr ppvObject);
+
+        /// <summary>
+        /// COM interface method delegate for Release (IUnknown::Release).
+        /// VTable index 2 for IUnknown.
+        /// </summary>
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate uint ReleaseDelegate(IntPtr comObject);
+
+        /// <summary>
+        /// COM interface method delegate for GetGPUVirtualAddress (ID3D12Resource::GetGPUVirtualAddress).
+        /// VTable index 8 for ID3D12Resource.
+        /// </summary>
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate ulong GetGpuVirtualAddressDelegate(IntPtr resource);
+
+        #endregion
 
         /// <summary>
         /// Placeholder interface for ID3D12StateObject.
