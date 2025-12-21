@@ -5084,7 +5084,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 try
                 {
                     // Create resource description for staging buffer
-                    D3D12_RESOURCE_DESC bufferDesc = new D3D12_RESOURCE_DESC
+                    D3D12_RESOURCE_DESC stagingBufferDesc = new D3D12_RESOURCE_DESC
                     {
                         Dimension = D3D12_RESOURCE_DIMENSION_BUFFER,
                         Alignment = 0,
@@ -5119,7 +5119,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     {
                         // Marshal structures to unmanaged memory
                         Marshal.StructureToPtr(heapProperties, heapPropertiesPtr, false);
-                        Marshal.StructureToPtr(bufferDesc, resourceDescPtr, false);
+                        Marshal.StructureToPtr(stagingBufferDesc, resourceDescPtr, false);
 
                         // IID_ID3D12Resource
                         Guid iidResource = new Guid("696442be-a72e-4059-bc79-5b5c98040fad");
