@@ -927,7 +927,8 @@ namespace HolocronToolset.Widgets
 
         /// <summary>
         /// Gets the character index from a point in the TextBox.
-        /// Uses TextBox's built-in hit testing if available, otherwise calculates manually.
+        /// Uses Avalonia's TextLayout.HitTestPoint for accurate character position calculation
+        /// based on actual font metrics and text layout.
         /// </summary>
         private int GetCharacterIndexFromPoint(Point point)
         {
@@ -936,18 +937,122 @@ namespace HolocronToolset.Widgets
                 return 0;
             }
 
-            // For Avalonia TextBox, we need to calculate character position from point
-            // This is a simplified implementation - in a real scenario, you'd use TextLayout.HitTestPoint
-            // TODO: STUB - For now, we'll use a basic approximation based on font metrics
+            // Ensure the control has been measured and laid out
+            if (Bounds.Width <= 0 || Bounds.Height <= 0)
+            {
+                // Fallback to simple calculation if not yet laid out
+                return GetCharacterIndexFromPointFallback(point);
+            }
 
-            // Get approximate character width (this is a simplification)
-            // In a real implementation, you'd measure actual character widths
-            double charWidth = 8.0; // Approximate character width in pixels (monospace font)
-            double lineHeight = 20.0; // Approximate line height in pixels
+            try
+            {
+                // Create TextLayout with the text and current font properties
+                // This provides accurate hit testing based on actual font metrics
+                Typeface typeface = new Typeface(
+                    FontFamily ?? FontFamily.Default,
+                    FontStyle,
+                    FontWeight,
+                    FontStretch
+                );
+
+                // Get the available width for text layout (use Bounds.Width or a large value for no wrapping)
+                double maxWidth = double.PositiveInfinity;
+                if (TextWrapping == Avalonia.Media.TextWrapping.Wrap)
+                {
+                    maxWidth = Bounds.Width;
+                }
+
+                // Create TextLayout with proper text source
+                TextLayout textLayout = new TextLayout(
+                    Text,
+                    typeface,
+                    FontSize,
+                    Foreground ?? Brushes.Black,
+                    maxWidth: maxWidth,
+                    textAlignment: TextAlignment.Left,
+                    textWrapping: TextWrapping,
+                    textTrimming: TextTrimming.None,
+                    maxLines: 0,
+                    lineHeight: LineHeight
+                );
+
+                // Use HitTestPoint to get the character index at the specified point
+                // The point is relative to the TextBox, so we need to account for padding
+                // TextBox typically has some internal padding, but for code editors we usually want
+                // the point relative to the text content area
+                TextHitTestResult hitTestResult = textLayout.HitTestPoint(point);
+
+                // Get the character index from the hit test result
+                int charIndex = hitTestResult.TextPosition;
+
+                // Clamp to valid range
+                if (charIndex < 0)
+                {
+                    charIndex = 0;
+                }
+                else if (charIndex > Text.Length)
+                {
+                    charIndex = Text.Length;
+                }
+
+                return charIndex;
+            }
+            catch (Exception)
+            {
+                // Fallback to simple calculation if TextLayout creation fails
+                return GetCharacterIndexFromPointFallback(point);
+            }
+        }
+
+        /// <summary>
+        /// Fallback method for getting character index from point when TextLayout is not available.
+        /// Uses font metrics to calculate approximate position.
+        /// </summary>
+        private int GetCharacterIndexFromPointFallback(Point point)
+        {
+            if (string.IsNullOrEmpty(Text))
+            {
+                return 0;
+            }
+
+            // Calculate character width from font metrics
+            // For monospace fonts, all characters have the same width
+            // For variable-width fonts, we use an average width
+            double charWidth;
+            double lineHeight;
+
+            // Try to get accurate metrics from font
+            if (FontSize > 0 && !double.IsNaN(FontSize))
+            {
+                // Approximate character width: for monospace fonts, it's roughly FontSize * 0.6
+                // For variable-width fonts, we use a similar approximation
+                // This is a reasonable approximation for code editors which typically use monospace fonts
+                charWidth = FontSize * 0.6;
+                
+                // Line height is typically FontSize * 1.2 to 1.5, depending on line spacing
+                // Use LineHeight property if available, otherwise calculate from FontSize
+                if (LineHeight > 0 && !double.IsNaN(LineHeight))
+                {
+                    lineHeight = LineHeight;
+                }
+                else
+                {
+                    lineHeight = FontSize * 1.2;
+                }
+            }
+            else
+            {
+                // Fallback to default values if font size is not set
+                charWidth = 8.0;
+                lineHeight = 20.0;
+            }
 
             // Calculate approximate line number
             int lineNumber = (int)(point.Y / lineHeight);
-            if (lineNumber < 0) lineNumber = 0;
+            if (lineNumber < 0)
+            {
+                lineNumber = 0;
+            }
 
             // Split text into lines
             string[] lines = Text.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
@@ -958,17 +1063,23 @@ namespace HolocronToolset.Widgets
 
             // Calculate character position in line
             int charInLine = (int)(point.X / charWidth);
-            if (charInLine < 0) charInLine = 0;
+            if (charInLine < 0)
+            {
+                charInLine = 0;
+            }
 
             // Calculate absolute character index
             int charIndex = 0;
+            string newline = Text.Contains("\r\n") ? "\r\n" : (Text.Contains("\n") ? "\n" : "\r");
+            int newlineLength = newline.Length;
+
             for (int i = 0; i < lineNumber && i < lines.Length; i++)
             {
                 charIndex += lines[i].Length;
-                // Add newline length (1 for \n, 2 for \r\n)
+                // Add newline length
                 if (i < lines.Length - 1)
                 {
-                    charIndex += Text.Contains("\r\n") ? 2 : 1;
+                    charIndex += newlineLength;
                 }
             }
 

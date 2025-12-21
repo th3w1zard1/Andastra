@@ -3455,6 +3455,373 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         }
 
         /// <summary>
+        /// Helper method to get disposition value between two entities
+        /// </summary>
+        /// <remarks>
+        /// Based on Eclipse engine: Disposition calculation
+        /// Disposition represents relationship status (0-100, where 0-10=hostile, 11-89=neutral, 90-100=friendly)
+        /// </remarks>
+        private int GetDispositionValue(Core.Interfaces.IEntity entity, Core.Interfaces.IEntity target, IExecutionContext ctx)
+        {
+            if (entity == null || target == null)
+            {
+                return 50; // Neutral if entities are null
+            }
+            
+            IFactionComponent faction = entity.GetComponent<IFactionComponent>();
+            if (faction == null)
+            {
+                return 50; // Neutral if no faction component
+            }
+            
+            // Use faction reputation as disposition
+            if (ctx != null && ctx.World != null && ctx.World.FactionManager != null)
+            {
+                // Check if world has a faction manager that can get reputation
+                var factionManager = ctx.World.FactionManager;
+                if (factionManager is Runtime.Engines.Eclipse.Systems.EclipseFactionManager eclipseFactionManager)
+                {
+                    return eclipseFactionManager.GetReputation(entity, target);
+                }
+            }
+            
+            // Fallback: Check if hostile/friendly
+            if (faction.IsHostile(target))
+            {
+                return 5; // Hostile (middle of hostile range)
+            }
+            else if (faction.IsFriendly(target))
+            {
+                return 95; // Friendly (middle of friendly range)
+            }
+            return 50; // Neutral
+        }
+        
+        /// <summary>
+        /// Helper method to get reputation value between two entities
+        /// </summary>
+        /// <remarks>
+        /// Based on Eclipse engine: Reputation calculation
+        /// Reputation represents relationship status (0-100, where 0-10=hostile, 11-89=neutral, 90-100=friendly)
+        /// </remarks>
+        private int GetReputationValue(Core.Interfaces.IEntity entity, Core.Interfaces.IEntity target, IExecutionContext ctx)
+        {
+            // Reputation and disposition are the same in Eclipse engine
+            return GetDispositionValue(entity, target, ctx);
+        }
+        
+        /// <summary>
+        /// Helper method to get reaction type between two entities
+        /// </summary>
+        /// <remarks>
+        /// Based on Eclipse engine: Reaction type calculation
+        /// Returns: 0=hostile, 1=neutral, 2=friendly
+        /// </remarks>
+        private int GetReactionType(Core.Interfaces.IEntity entity, Core.Interfaces.IEntity target, IExecutionContext ctx)
+        {
+            if (entity == null || target == null)
+            {
+                return 1; // Neutral
+            }
+            
+            IFactionComponent faction = entity.GetComponent<IFactionComponent>();
+            if (faction == null)
+            {
+                return 1; // Neutral
+            }
+            
+            int reputation = GetReputationValue(entity, target, ctx);
+            if (reputation <= 10)
+            {
+                return 0; // Hostile
+            }
+            else if (reputation >= 90)
+            {
+                return 2; // Friendly
+            }
+            return 1; // Neutral
+        }
+        
+        /// <summary>
+        /// Helper method to check if there is line of sight between two positions
+        /// </summary>
+        /// <remarks>
+        /// Based on Eclipse engine: Line of sight calculation
+        /// Uses raycast or similar method to determine if positions are visible to each other
+        /// </remarks>
+        private bool HasLineOfSight(Vector3 from, Vector3 to, IExecutionContext ctx)
+        {
+            if (ctx == null || ctx.World == null)
+            {
+                return false;
+            }
+            
+            // Simple distance check for now - full implementation would use raycast
+            // TODO: FIXME - Implement proper raycast-based line of sight check
+            // Original engine uses raycast to check for obstacles between positions
+            float distance = Vector3.Distance(from, to);
+            if (distance > 100.0f) // Max sight range
+            {
+                return false;
+            }
+            
+            // For now, assume line of sight if within range
+            // Proper implementation should use world raycast system
+            return true;
+        }
+        
+        /// <summary>
+        /// Helper method to check if entity has item by ID or tag
+        /// </summary>
+        private bool HasItemByIdOrTag(Core.Interfaces.IEntity entity, int itemIdOrTag, IExecutionContext ctx)
+        {
+            IInventoryComponent inventory = entity.GetComponent<IInventoryComponent>();
+            if (inventory == null)
+            {
+                return false;
+            }
+            
+            // Check all items in inventory
+            foreach (Core.Interfaces.IEntity item in inventory.GetAllItems())
+            {
+                if (item == null)
+                {
+                    continue;
+                }
+                
+                // Check by item ID (stored in entity data)
+                int itemId = item.GetData<int>("ItemId", -1);
+                if (itemId == itemIdOrTag)
+                {
+                    return true;
+                }
+                
+                // Check by tag (if itemIdOrTag is a tag index, would need lookup - for now skip)
+            }
+            
+            return false;
+        }
+        
+        /// <summary>
+        /// Helper method to check if entity has a feat
+        /// </summary>
+        private bool HasFeat(Core.Interfaces.IEntity entity, int featId, IExecutionContext ctx)
+        {
+            // Check if entity has feat in feat list (stored in entity data)
+            List<int> featList = entity.GetData<List<int>>("FeatList", null);
+            if (featList != null)
+            {
+                return featList.Contains(featId);
+            }
+            
+            // Also check stats component if it supports feats
+            IStatsComponent stats = entity.GetComponent<IStatsComponent>();
+            if (stats != null)
+            {
+                // Some engines store feats in stats component
+                bool hasFeat = entity.GetData<bool>($"HasFeat_{featId}", false);
+                if (hasFeat)
+                {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+        
+        /// <summary>
+        /// Helper method to check if entity has a talent
+        /// </summary>
+        private bool HasTalent(Core.Interfaces.IEntity entity, int talentId, IExecutionContext ctx)
+        {
+            // Check if entity has talent in talent list (stored in entity data)
+            List<int> talentList = entity.GetData<List<int>>("TalentList", null);
+            if (talentList != null)
+            {
+                return talentList.Contains(talentId);
+            }
+            
+            return false;
+        }
+        
+        /// <summary>
+        /// Helper method to check if entity has an effect
+        /// </summary>
+        private bool HasEffect(Core.Interfaces.IEntity entity, int effectId, IExecutionContext ctx)
+        {
+            // Check if entity has effect in effect list (stored in entity data)
+            List<int> effectList = entity.GetData<List<int>>("EffectList", null);
+            if (effectList != null)
+            {
+                return effectList.Contains(effectId);
+            }
+            
+            return false;
+        }
+        
+        /// <summary>
+        /// Helper method to check if entity has a variable
+        /// </summary>
+        private bool HasVariable(Core.Interfaces.IEntity entity, int variableId, IExecutionContext ctx)
+        {
+            // Check if entity has variable (stored in entity data)
+            string varKey = $"Variable_{variableId}";
+            return entity.HasData(varKey);
+        }
+        
+        /// <summary>
+        /// Helper method to check if entity has a local variable
+        /// </summary>
+        private bool HasLocalVariable(Core.Interfaces.IEntity entity, int variableId, IExecutionContext ctx)
+        {
+            // Local variables are stored on entity
+            string varKey = $"LocalVariable_{variableId}";
+            return entity.HasData(varKey);
+        }
+        
+        /// <summary>
+        /// Helper method to check if global variable exists
+        /// </summary>
+        private bool HasGlobalVariable(int variableId, IExecutionContext ctx)
+        {
+            if (ctx == null || ctx.World == null)
+            {
+                return false;
+            }
+            
+            // Global variables are stored in world or module
+            string varKey = $"GlobalVariable_{variableId}";
+            // Would need access to world's variable storage
+            // For now, return false
+            return false;
+        }
+        
+        /// <summary>
+        /// Helper method to get variable value
+        /// </summary>
+        private int GetVariableValue(Core.Interfaces.IEntity entity, int variableId, IExecutionContext ctx)
+        {
+            string varKey = $"Variable_{variableId}";
+            return entity.GetData<int>(varKey, 0);
+        }
+        
+        /// <summary>
+        /// Helper method to get local variable value
+        /// </summary>
+        private int GetLocalVariableValue(Core.Interfaces.IEntity entity, int variableId, IExecutionContext ctx)
+        {
+            string varKey = $"LocalVariable_{variableId}";
+            return entity.GetData<int>(varKey, 0);
+        }
+        
+        /// <summary>
+        /// Helper method to get global variable value
+        /// </summary>
+        private int GetGlobalVariableValue(int variableId, IExecutionContext ctx)
+        {
+            if (ctx == null || ctx.World == null)
+            {
+                return 0;
+            }
+            
+            // Global variables are stored in world or module
+            // For now, return 0
+            return 0;
+        }
+        
+        /// <summary>
+        /// Helper method to get feat count
+        /// </summary>
+        private int GetFeatCount(Core.Interfaces.IEntity entity, IExecutionContext ctx)
+        {
+            List<int> featList = entity.GetData<List<int>>("FeatList", null);
+            if (featList != null)
+            {
+                return featList.Count;
+            }
+            return 0;
+        }
+        
+        /// <summary>
+        /// Helper method to get spell count
+        /// </summary>
+        private int GetSpellCount(Core.Interfaces.IEntity entity, IExecutionContext ctx)
+        {
+            IStatsComponent stats = entity.GetComponent<IStatsComponent>();
+            if (stats == null)
+            {
+                return 0;
+            }
+            
+            // Count spells - would need to iterate through all spell IDs
+            // For now, check entity data
+            List<int> spellList = entity.GetData<List<int>>("SpellList", null);
+            if (spellList != null)
+            {
+                return spellList.Count;
+            }
+            
+            // Fallback: count spells by checking HasSpell for common spell IDs
+            int count = 0;
+            for (int i = 0; i < 1000; i++) // Check up to 1000 spell IDs
+            {
+                if (stats.HasSpell(i))
+                {
+                    count++;
+                }
+            }
+            return count;
+        }
+        
+        /// <summary>
+        /// Helper method to get talent count
+        /// </summary>
+        private int GetTalentCount(Core.Interfaces.IEntity entity, IExecutionContext ctx)
+        {
+            List<int> talentList = entity.GetData<List<int>>("TalentList", null);
+            if (talentList != null)
+            {
+                return talentList.Count;
+            }
+            return 0;
+        }
+        
+        /// <summary>
+        /// Helper method to get effect count
+        /// </summary>
+        private int GetEffectCount(Core.Interfaces.IEntity entity, IExecutionContext ctx)
+        {
+            List<int> effectList = entity.GetData<List<int>>("EffectList", null);
+            if (effectList != null)
+            {
+                return effectList.Count;
+            }
+            return 0;
+        }
+        
+        /// <summary>
+        /// Helper method to get item count
+        /// </summary>
+        private int GetItemCount(Core.Interfaces.IEntity entity, IExecutionContext ctx)
+        {
+            IInventoryComponent inventory = entity.GetComponent<IInventoryComponent>();
+            if (inventory == null)
+            {
+                return 0;
+            }
+            
+            int count = 0;
+            foreach (Core.Interfaces.IEntity item in inventory.GetAllItems())
+            {
+                if (item != null)
+                {
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        /// <summary>
         /// Helper method to register function names for debugging
         /// </summary>
         private void RegisterFunctionName(int routineId, string name)

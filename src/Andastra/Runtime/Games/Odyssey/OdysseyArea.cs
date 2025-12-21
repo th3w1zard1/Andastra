@@ -21,6 +21,8 @@ using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces.Components;
 using RuntimeObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 using Andastra.Parsing.Formats.MDL;
+using Andastra.Parsing.Formats.MDLData;
+using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 
 namespace Andastra.Runtime.Games.Odyssey
@@ -2436,9 +2438,24 @@ namespace Andastra.Runtime.Games.Odyssey
                         // Based on swkotor2.exe: Room meshes are loaded from MDL files referenced in LYT file
                         // Located via string references: "Rooms" @ 0x007bd490, "RoomName" @ 0x007bd484
                         // Original implementation: Loads room MDL models from module archives when needed for rendering
+                        // swkotor2.exe: FUN_004e3ff0 @ 0x004e3ff0 - Room mesh loading function
                         meshData = LoadRoomMeshOnDemand(room.ModelName, roomRenderer);
                         if (meshData != null)
                         {
+                            // Cache the loaded mesh for future use
+                            _roomMeshes[room.ModelName] = meshData;
+                        }
+                        else
+                        {
+                            // Failed to load mesh, skip this room
+                            continue;
+                        }
+                    }
+
+                    if (meshData == null || meshData.VertexBuffer == null || meshData.IndexBuffer == null)
+                    {
+                        continue;
+                    }
                             // Cache the loaded mesh
                             _roomMeshes[room.ModelName] = meshData;
                         }

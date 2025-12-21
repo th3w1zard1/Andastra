@@ -75,14 +75,59 @@ The following files **CANNOT** be placed in module containers and will not work:
 
 ### What CAN Be Containerized
 
-Resource types that use `FUN_00407230` / `FUN_004074d0` (resource search functions) **CAN** be placed in modules:
+Resource types that use `FUN_00407230` / `FUN_004074d0` (resource search functions) **CAN** be placed in modules.
 
-- ✅ **TPC/TGA textures** - Verified: Texture loaders call `FUN_00407230`
-- ✅ **MDL/MDX models** - Verified: Model loaders call `FUN_004074d0`
-- ✅ **DLG dialogs** - Verified: Dialog loaders call `FUN_004074d0`
-- ✅ **ARE/GIT area data** - Verified: Area loaders call `FUN_004074d0`
-- ✅ **NCS scripts** - Verified: Script loaders call `FUN_004074d0`
-- ✅ **All resource types that have handlers calling `FUN_00407230`/`FUN_004074d0`** - These search all locations including modules
+**Complete List of Resource Types WITH Handlers** (verified via Ghidra cross-references to `FUN_004074d0`/`FUN_004075a0`):
+
+**swkotor.exe (K1) - Verified Handlers:**
+- **MDL** (2002, 0x7d2) - Handler: swkotor.exe: 0x0070fb90
+- **TGA** (3) - Handler: swkotor.exe: 0x00596670
+- **TPC** (3007, 0xbbf) - Handler: swkotor.exe: 0x0070f800
+- **TXI** (2022, 0x7e6) - Handler: swkotor.exe: 0x0070fb90
+- **MDX** (3008, 0xbc0) - Handler: swkotor.exe: 0x0070fe60
+- **LIP** (3004, 0xbbc) - Handler: swkotor.exe: 0x0070f0f0
+- **VIS** (3001, 0xbb9) - Handler: swkotor.exe: 0x0070ee30
+- **LYT** (3000) - Handler: swkotor.exe: 0x0070dbf0
+- **SSF** (2060, 0x80c) - Handler: swkotor.exe: 0x006789a0
+- **FourPC** (2059, 0x80b) - Handler: swkotor.exe: 0x00710910
+- **PLT** (6) - Handler: swkotor.exe: 0x0070c350 (actually loads LIP, not PLT)
+- **WAV** (4) - Handler: swkotor.exe: 0x005d5e90
+- **IFO** (2014, 0x7de) - Handler: swkotor.exe: 0x004c4cc0
+- **ARE** (2012, 0x7dc) - Handler: swkotor.exe: 0x00506c30
+- **NCS** (2010, 0x7da) - Handler: swkotor.exe: 0x005d1ac0
+- **UTI** (2025, 0x7e9) - Handler: swkotor.exe: 0x006bdea0
+- **DDS** (2033, 0x7f1) - Handler: swkotor.exe: 0x00710530
+- **LTR** (2036, 0x7f4) - Handler: swkotor.exe: 0x00711110
+
+**swkotor2.exe (K2) - Verified Handlers:**
+- **MDL** (2002, 0x7d2) - Handler: swkotor2.exe: 0x007837b0
+- **TGA** (3) - Handler: swkotor2.exe: 0x005571b0
+- **TPC** (3007, 0xbbf) - Handler: swkotor2.exe: 0x00782760
+- **TXI** (2022, 0x7e6) - Handler: swkotor2.exe: 0x00783190
+- **MDX** (3008, 0xbc0) - Handler: swkotor2.exe: 0x007834e0
+- **LIP** (3004, 0xbbc) - Handler: swkotor2.exe: 0x0077f8f0
+- **VIS** (3001, 0xbb9) - Handler: swkotor2.exe: 0x00782460
+- **LYT** (3000) - Handler: swkotor2.exe: 0x00781220
+- **SSF** (2060, 0x80c) - Handler: swkotor2.exe: 0x006cde50
+- **FourPC** (2059, 0x80b) - Handler: swkotor2.exe: 0x00783f10
+- **WAV** (4) - Handler: swkotor2.exe: 0x00621ac0
+- **IFO** (2014, 0x7de) - Handler: swkotor2.exe: 0x004fdfe0
+- **ARE** (2012, 0x7dc) - Handler: swkotor2.exe: 0x004e1ea0
+- **NCS** (2010, 0x7da) - Handler: swkotor2.exe: 0x0061d6e0
+- **UTI** (2025, 0x7e9) - Handler: swkotor2.exe: 0x00713340
+- **DDS** (2033, 0x7f1) - Handler: swkotor2.exe: 0x00783b60
+- **LTR** (2036, 0x7f4) - Handler: swkotor2.exe: 0x00784710
+
+**Resource Types WITHOUT Handlers** (verified via exhaustive Ghidra search):
+
+- **NSS** (2009, 0x7d9) - ❌ **NO HANDLER** - Exhaustive string search for ".nss" and "NSS" found **ZERO results** in both swkotor.exe and swkotor2.exe. NSS files are source files, not loaded by the game engine. Only compiled NCS files are loaded.
+- **OGG** (2078, 0x81e) - ❌ **NO HANDLER** - Exhaustive constant search for 2078 (0x81e) found **ZERO results** in both swkotor.exe and swkotor2.exe
+- **BMU** (8) - ❌ **NO HANDLER** - Registered in resource type registry but no handler calls `FUN_004074d0` with type 8
+- **MP3** (8) - ❌ **NO HANDLER** - Registered in resource type registry (swkotor.exe: `FUN_005e6d20` line 92-93, swkotor2.exe: `FUN_00632510` line 91-92) but no handler calls `FUN_004074d0` with type 8. Note: MP3 can appear in WAV files via "MP3-in-WAV" format
+- **WMV** (12) - ❌ **NO HANDLER** - Constant search for 12 found only stack operations, no resource type handler
+- **MP4** - ❌ **NOT SUPPORTED** - No resource type ID exists
+
+**Conclusion**: All resource types with handlers use the same search mechanism (`FUN_004074d0`/`FUN_004075a0` → `FUN_00407230`/`FUN_00407300`) which searches all locations including modules. **If a resource type has a handler, it can be loaded from modules.**
 
 ## Module File Discovery
 

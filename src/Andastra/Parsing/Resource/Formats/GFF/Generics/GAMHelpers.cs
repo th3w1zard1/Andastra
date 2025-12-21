@@ -142,23 +142,24 @@ namespace Andastra.Parsing.Resource.Generics
         /// </remarks>
         public static GFF DismantleGam(GAM gam, Game game)
         {
-            // Validate game type - GAM format is only used by Aurora and Infinity, NOT Odyssey
+            // Validate game type - GAM format is only used by Aurora and Infinity Engine, NOT Odyssey
+            // Odyssey uses NFO format for save games, not GAM format
             if (game.IsOdyssey())
             {
                 throw new ArgumentException(
                     $"GAM format is not supported for Odyssey engine (KOTOR). Odyssey uses NFO format for save games. " +
-                    $"GAM format is only supported for Aurora (NWN) and  (, , ). " +
+                    $"GAM format is only supported for Aurora (Neverwinter Nights) and Infinity Engine games (Baldur's Gate, Icewind Dale, Planescape: Torment). " +
                     $"Provided game: {game}",
                     nameof(game));
             }
 
-            // TODO: STUB - For now, only Aurora is supported ( games not in Game enum yet)
-            // When  games are added to Game enum, remove this check
+            // Currently only Aurora is supported (Infinity Engine games not yet in Game enum)
+            // When Infinity Engine games (BG, IWD, PST) are added to Game enum, this validation will be updated
             if (!game.IsAurora())
             {
                 throw new ArgumentException(
-                    $"GAM format is only supported for Aurora (NWN) and  games. " +
-                    $"Currently only Aurora (NWN, NWN2) is supported as  games are not yet in the Game enum. " +
+                    $"GAM format is only supported for Aurora (Neverwinter Nights, NWN2) and Infinity Engine games. " +
+                    $"Currently only Aurora is supported as Infinity Engine games are not yet in the Game enum. " +
                     $"Provided game: {game}",
                     nameof(game));
             }

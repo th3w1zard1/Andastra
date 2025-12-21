@@ -371,12 +371,12 @@ namespace Andastra.Runtime.Games.Aurora.Journal
             // Based on nwmain.exe: CNWSCreature::ReloadJournalEntries removes existing entries for creature
             // We need to remove entries from the base class's _entries list that belong to this creature
             // Since _entries is protected in base class, we access it directly
-            for (int i = base._entries.Count - 1; i >= 0; i--)
+            for (int i = _entries.Count - 1; i >= 0; i--)
             {
-                AuroraJournalEntry entry = base._entries[i] as AuroraJournalEntry;
+                AuroraJournalEntry entry = _entries[i] as AuroraJournalEntry;
                 if (entry != null && entry.CreatureId == creatureId)
                 {
-                    base._entries.RemoveAt(i);
+                    _entries.RemoveAt(i);
                 }
             }
         }

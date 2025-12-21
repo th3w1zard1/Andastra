@@ -196,6 +196,194 @@ namespace Andastra.Runtime.Games.Aurora
         }
 
         /// <summary>
+        /// Gets the height of a tile by sampling from its walkmesh geometry.
+        /// </summary>
+        /// <param name="tilesetResRef">The tileset resource reference.</param>
+        /// <param name="tileId">The tile ID (index into tileset).</param>
+        /// <param name="sampleX">X coordinate within tile (0.0 to 1.0, where 0.5 is center).</param>
+        /// <param name="sampleZ">Z coordinate within tile (0.0 to 1.0, where 0.5 is center).</param>
+        /// <returns>The height at the sample point, or float.MinValue if not found.</returns>
+        /// <remarks>
+        /// Based on nwmain.exe: CNWTileSurfaceMesh height sampling
+        /// - Gets tile model from tileset
+        /// - Loads walkmesh (WOK file) for the tile model
+        /// - Samples height from walkmesh face at the specified point
+        /// - Uses tile center (0.5, 0.5) for default height calculation
+        /// - Falls back to simplified height transition model if walkmesh can't be loaded
+        /// </remarks>
+        public float GetTileHeight(string tilesetResRef, int tileId, float sampleX = 0.5f, float sampleZ = 0.5f)
+        {
+            if (tileId < 0)
+            {
+                return float.MinValue;
+            }
+
+            // Get tile model from tileset
+            string modelName = GetTileModel(tilesetResRef, tileId);
+            if (string.IsNullOrEmpty(modelName))
+            {
+                return float.MinValue;
+            }
+
+            try
+            {
+                // Load walkmesh (WOK file) for the tile model
+                // Walkmesh filename is model name with .wok extension
+                if (_resourceLoader == null)
+                {
+                    // No resource loader available
+                    return float.MinValue;
+                }
+
+                byte[] wokData = _resourceLoader(modelName + ".wok");
+                if (wokData == null || wokData.Length == 0)
+                {
+                    // Walkmesh not found
+                    return float.MinValue;
+                }
+
+                // Parse walkmesh
+                BWM walkmesh = BWMAuto.ReadBwm(wokData);
+                if (walkmesh == null || walkmesh.Faces == null || walkmesh.Faces.Count == 0)
+                {
+                    return float.MinValue;
+                }
+
+                // Convert sample coordinates (0.0-1.0) to world coordinates within tile
+                // Tile size is 10.0 units, so sample point is at (sampleX * 10.0, sampleZ * 10.0)
+                // Walkmesh coordinates are relative to tile origin
+                float worldX = sampleX * 10.0f;
+                float worldZ = sampleZ * 10.0f;
+
+                // Find the walkmesh face that contains the sample point
+                // Based on nwmain.exe: CNWTileSurfaceMesh::GetHeightAtPoint
+                // Samples height by finding face containing point and interpolating from vertices
+                float bestHeight = float.MinValue;
+                float minDistance = float.MaxValue;
+
+                foreach (var face in walkmesh.Faces)
+                {
+                    if (face.Vertices == null || face.Vertices.Count < 3)
+                    {
+                        continue;
+                    }
+
+                    // Check if point is within face bounds (simple bounding box check first)
+                    float minX = float.MaxValue, maxX = float.MinValue;
+                    float minZ = float.MaxValue, maxZ = float.MinValue;
+                    foreach (var vertex in face.Vertices)
+                    {
+                        if (vertex.X < minX) minX = vertex.X;
+                        if (vertex.X > maxX) maxX = vertex.X;
+                        if (vertex.Z < minZ) minZ = vertex.Z;
+                        if (vertex.Z > maxZ) maxZ = vertex.Z;
+                    }
+
+                    // Quick bounding box rejection
+                    if (worldX < minX || worldX > maxX || worldZ < minZ || worldZ > maxZ)
+                    {
+                        continue;
+                    }
+
+                    // Check if point is inside face using barycentric coordinates
+                    // For triangle faces, use barycentric interpolation
+                    if (face.Vertices.Count == 3)
+                    {
+                        var v0 = face.Vertices[0];
+                        var v1 = face.Vertices[1];
+                        var v2 = face.Vertices[2];
+
+                        // Compute barycentric coordinates
+                        float denom = (v1.Z - v2.Z) * (v0.X - v2.X) + (v2.X - v1.X) * (v0.Z - v2.Z);
+                        if (Math.Abs(denom) < 0.0001f)
+                        {
+                            continue; // Degenerate triangle
+                        }
+
+                        float a = ((v1.Z - v2.Z) * (worldX - v2.X) + (v2.X - v1.X) * (worldZ - v2.Z)) / denom;
+                        float b = ((v2.Z - v0.Z) * (worldX - v2.X) + (v0.X - v2.X) * (worldZ - v2.Z)) / denom;
+                        float c = 1.0f - a - b;
+
+                        // Point is inside triangle if all barycentric coordinates are >= 0
+                        if (a >= 0.0f && b >= 0.0f && c >= 0.0f)
+                        {
+                            // Interpolate height using barycentric coordinates
+                            float height = a * v0.Y + b * v1.Y + c * v2.Y;
+                            return height;
+                        }
+                    }
+                    else
+                    {
+                        // For non-triangle faces, use distance to face center as fallback
+                        // Calculate face center
+                        float centerX = 0.0f, centerZ = 0.0f, centerY = 0.0f;
+                        foreach (var vertex in face.Vertices)
+                        {
+                            centerX += vertex.X;
+                            centerZ += vertex.Z;
+                            centerY += vertex.Y;
+                        }
+                        centerX /= face.Vertices.Count;
+                        centerZ /= face.Vertices.Count;
+                        centerY /= face.Vertices.Count;
+
+                        // Calculate distance from sample point to face center
+                        float dx = worldX - centerX;
+                        float dz = worldZ - centerZ;
+                        float distance = (float)Math.Sqrt(dx * dx + dz * dz);
+
+                        // Use closest face
+                        if (distance < minDistance)
+                        {
+                            minDistance = distance;
+                            bestHeight = centerY;
+                        }
+                    }
+                }
+
+                // If we found a face by distance, return its height
+                if (bestHeight != float.MinValue)
+                {
+                    return bestHeight;
+                }
+
+                // Fallback: Calculate average height of all walkable faces
+                float totalHeight = 0.0f;
+                int faceCount = 0;
+                foreach (var face in walkmesh.Faces)
+                {
+                    if (face.Vertices == null || face.Vertices.Count == 0)
+                    {
+                        continue;
+                    }
+
+                    // Calculate face average height
+                    float faceHeight = 0.0f;
+                    foreach (var vertex in face.Vertices)
+                    {
+                        faceHeight += vertex.Y;
+                    }
+                    faceHeight /= face.Vertices.Count;
+
+                    totalHeight += faceHeight;
+                    faceCount++;
+                }
+
+                if (faceCount > 0)
+                {
+                    return totalHeight / faceCount;
+                }
+
+                return float.MinValue;
+            }
+            catch
+            {
+                // Failed to load/parse walkmesh
+                return float.MinValue;
+            }
+        }
+
+        /// <summary>
         /// Clears the tileset cache.
         /// </summary>
         public void ClearCache()

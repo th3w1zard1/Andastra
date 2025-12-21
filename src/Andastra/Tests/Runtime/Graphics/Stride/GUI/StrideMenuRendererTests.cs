@@ -57,7 +57,8 @@ namespace Andastra.Tests.Runtime.Stride.GUI
         public void IsInitialized_AfterConstruction_ShouldBeTrue()
         {
             // Arrange
-            var graphicsDevice = CreateTestGraphicsDeviceOrSkip();
+            Game game;
+            var graphicsDevice = CreateTestGraphicsDeviceOrSkip(out game);
             if (graphicsDevice == null)
             {
                 // Skip test if GraphicsDevice creation fails (e.g., no GPU in headless CI environment)
@@ -74,13 +75,18 @@ namespace Andastra.Tests.Runtime.Stride.GUI
             }
             finally
             {
-                // Cleanup - dispose graphics device
+                // Cleanup
                 try
                 {
-                    if (graphicsDevice != null && graphicsDevice.Game != null)
-                    {
-                        graphicsDevice.Game.Dispose();
-                    }
+                    renderer?.Dispose();
+                }
+                catch
+                {
+                    // Ignore disposal errors
+                }
+                try
+                {
+                    game?.Dispose();
                 }
                 catch
                 {
@@ -92,75 +98,67 @@ namespace Andastra.Tests.Runtime.Stride.GUI
         [Fact]
         public void IsVisible_Initially_ShouldBeFalse()
         {
-            // Arrange
-            var graphicsDevice = CreateTestGraphicsDeviceOrSkip();
-            if (graphicsDevice == null)
+            // Arrange - Create Stride GraphicsDevice for testing using helper method
+            var game = GraphicsTestHelper.CreateTestStrideGame();
+            if (game == null)
             {
-                // Skip test if GraphicsDevice creation fails
+                // Skip test if GraphicsDevice creation fails (e.g., no GPU in headless CI environment)
                 return;
             }
 
             try
             {
-                // Act
+                var graphicsDevice = game.GraphicsDevice;
+                if (graphicsDevice == null)
+                {
+                    return;
+                }
+
+                // Act - Create StrideMenuRenderer with GraphicsDevice
                 var renderer = new StrideMenuRenderer(graphicsDevice);
 
-                // Assert
-                renderer.IsVisible.Should().BeFalse("StrideMenuRenderer should not be visible initially");
+                // Assert - Menu should not be visible initially
+                renderer.IsVisible.Should().BeFalse("StrideMenuRenderer should not be visible initially (default state is hidden)");
             }
             finally
             {
-                // Cleanup
-                try
-                {
-                    if (graphicsDevice != null && graphicsDevice.Game != null)
-                    {
-                        graphicsDevice.Game.Dispose();
-                    }
-                }
-                catch
-                {
-                    // Ignore cleanup errors
-                }
+                // Cleanup - Dispose of Game instance (which will clean up GraphicsDevice)
+                GraphicsTestHelper.CleanupTestStrideGame(game);
             }
         }
 
         [Fact]
         public void SetVisible_True_ShouldSetIsVisibleToTrue()
         {
-            // Arrange
-            var graphicsDevice = CreateTestGraphicsDeviceOrSkip();
-            if (graphicsDevice == null)
+            // Arrange - Create Stride GraphicsDevice for testing using helper method
+            var game = GraphicsTestHelper.CreateTestStrideGame();
+            if (game == null)
             {
-                // Skip test if GraphicsDevice creation fails
+                // Skip test if GraphicsDevice creation fails (e.g., no GPU in headless CI environment)
                 return;
             }
 
             try
             {
+                var graphicsDevice = game.GraphicsDevice;
+                if (graphicsDevice == null)
+                {
+                    return;
+                }
+
                 var renderer = new StrideMenuRenderer(graphicsDevice);
                 renderer.IsVisible.Should().BeFalse("Initial state should be invisible");
 
-                // Act
+                // Act - Set visibility to true
                 renderer.SetVisible(true);
 
-                // Assert
-                renderer.IsVisible.Should().BeTrue("IsVisible should be true after SetVisible(true)");
+                // Assert - Menu should now be visible
+                renderer.IsVisible.Should().BeTrue("StrideMenuRenderer should be visible after SetVisible(true)");
             }
             finally
             {
-                // Cleanup
-                try
-                {
-                    if (graphicsDevice != null && graphicsDevice.Game != null)
-                    {
-                        graphicsDevice.Game.Dispose();
-                    }
-                }
-                catch
-                {
-                    // Ignore cleanup errors
-                }
+                // Cleanup - Dispose of Game instance (which will clean up GraphicsDevice)
+                GraphicsTestHelper.CleanupTestStrideGame(game);
             }
         }
 
@@ -281,6 +279,44 @@ namespace Andastra.Tests.Runtime.Stride.GUI
                     // Ignore cleanup errors
                 }
             }
+        }
+
+        /// <summary>
+        /// Creates a Stride GraphicsDevice for testing using GraphicsTestHelper, or skips the test if creation fails.
+        /// </summary>
+        /// <param name="game">Output parameter that receives the Game instance for proper cleanup.</param>
+        /// <returns>GraphicsDevice instance, or null if creation fails (test should be skipped).</returns>
+        /// <remarks>
+        /// Stride GraphicsDevice Creation for Tests:
+        /// - Uses GraphicsTestHelper.CreateTestStrideGame() to create a minimal Game instance
+        /// - Returns null if device creation fails (e.g., no GPU in headless CI environments)
+        /// - Sets the out parameter to the Game instance so tests can properly dispose it
+        /// - Tests should check for null and return early if device creation fails
+        /// - Tests should dispose the Game instance in a finally block for proper resource cleanup
+        /// </remarks>
+        private GraphicsDevice CreateTestGraphicsDeviceOrSkip(out Game game)
+        {
+            game = GraphicsTestHelper.CreateTestStrideGame();
+            if (game != null && game.GraphicsDevice != null)
+            {
+                return game.GraphicsDevice;
+            }
+            
+            // If creation failed, ensure game is null and return null
+            if (game != null)
+            {
+                try
+                {
+                    game.Dispose();
+                }
+                catch
+                {
+                    // Ignore disposal errors during cleanup
+                }
+                game = null;
+            }
+            
+            return null;
         }
     }
 }

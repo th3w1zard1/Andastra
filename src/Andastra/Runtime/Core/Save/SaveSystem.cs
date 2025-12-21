@@ -404,9 +404,9 @@ namespace Andastra.Runtime.Core.Save
             if (module != null && !string.IsNullOrEmpty(module.ResRef))
             {
                 // Initialize the mapping for this module if not already present
-                if (!saveData.ModuleAreaMapping.ContainsKey(module.ResRef))
+                if (!saveData.ModuleAreaMappings.ContainsKey(module.ResRef))
                 {
-                    saveData.ModuleAreaMapping[module.ResRef] = new List<string>();
+                    saveData.ModuleAreaMappings[module.ResRef] = new List<string>();
                 }
 
                 // Get all areas from the module
@@ -419,9 +419,9 @@ namespace Andastra.Runtime.Core.Save
                     foreach (string areaResRef in runtimeModule.AreaList)
                     {
                         if (!string.IsNullOrEmpty(areaResRef) && 
-                            !saveData.ModuleAreaMapping[module.ResRef].Contains(areaResRef))
+                            !saveData.ModuleAreaMappings[module.ResRef].Contains(areaResRef))
                         {
-                            saveData.ModuleAreaMapping[module.ResRef].Add(areaResRef);
+                            saveData.ModuleAreaMappings[module.ResRef].Add(areaResRef);
                         }
                     }
                 }
@@ -432,9 +432,9 @@ namespace Andastra.Runtime.Core.Save
                     {
                         if (area != null && !string.IsNullOrEmpty(area.ResRef))
                         {
-                            if (!saveData.ModuleAreaMapping[module.ResRef].Contains(area.ResRef))
+                            if (!saveData.ModuleAreaMappings[module.ResRef].Contains(area.ResRef))
                             {
-                                saveData.ModuleAreaMapping[module.ResRef].Add(area.ResRef);
+                                saveData.ModuleAreaMappings[module.ResRef].Add(area.ResRef);
                             }
                         }
                     }
@@ -1588,10 +1588,10 @@ namespace Andastra.Runtime.Core.Save
                 // Original implementation: Module IFO contains Mod_Area_list field (GFF List) with area ResRefs
                 // Located via string references: "Mod_Area_list" @ 0x007be748 (swkotor2.exe)
                 // The mapping is populated when saving by extracting the area list from the module
-                if (CurrentSave != null && CurrentSave.ModuleAreaMapping != null)
+                if (CurrentSave != null && CurrentSave.ModuleAreaMappings != null)
                 {
                     List<string> areaList;
-                    if (CurrentSave.ModuleAreaMapping.TryGetValue(moduleResRef, out areaList))
+                    if (CurrentSave.ModuleAreaMappings.TryGetValue(moduleResRef, out areaList))
                     {
                         // Check if the area ResRef is in the module's area list
                         // Use case-insensitive comparison to match original game behavior

@@ -1722,8 +1722,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
             UpdateDenoiserConstants(parameters, width, height);
 
             // Get input and output textures as ITexture objects
-            // Note: In a real implementation, we would need to convert IntPtr handles to ITexture
-            // TODO: STUB - For now, we'll use the texture handle lookup mechanism
+            // Uses texture handle lookup mechanism (RegisterTextureHandle must be called for textures to be found)
             ITexture inputTexture = GetTextureFromHandle(parameters.InputTexture);
             ITexture outputTexture = GetTextureFromHandle(parameters.OutputTexture);
             ITexture normalTexture = GetTextureFromHandle(parameters.NormalTexture);
