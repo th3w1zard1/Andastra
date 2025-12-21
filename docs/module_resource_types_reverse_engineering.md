@@ -117,7 +117,7 @@ Resource types that use `FUN_00407230` / `FUN_004074d0` (resource search functio
   - `FUN_006cfa70` (swkotor.exe: 0x006cfa70) - Module enumeration/discovery
 
 - **swkotor2.exe**: String `"_s.rim"` at address `0x007cc0c0`, referenced by:
-  - `FUN_006d1a50` (swkotor2.exe: 0x006d1a50) - Module enumeration/discovery  
+  - `FUN_006d1a50` (swkotor2.exe: 0x006d1a50) - Module enumeration/discovery
   - `FUN_0073dcb0` (swkotor2.exe: 0x0073dcb0) - Module enumeration/discovery
 
 **Conclusion**: Both K1 and K2 support `_s.rim` files as optional data archives.
@@ -274,6 +274,7 @@ The engine's resource manager loads resources by:
     - **Save file loading**: Save files are loaded via `FUN_00409460` → `FUN_00408e90` → `FUN_00406b20` which registers files in the resource table, but RES files themselves are loaded via direct file I/O (swkotor.exe: `FUN_004b8300` line 136-155 loads "savenfo.res" directly via `FUN_00411260` which is a GFF loader, not a resource system call)
     - **Direct file I/O**: RES files from save files are accessed directly from the save file path, bypassing `FUN_00407230` entirely
   - **Module vs Save Priority**: ❌ **Module RES files will be IGNORED** - RES files are loaded directly from save files via hardcoded paths, not through the resource system. Module RES files cannot override save file RES files because the RES loader bypasses the resource system.
+  - **Priority vs Override/Patch.erf**: ❌ **Override/Patch.erf RES files are IGNORED** - RES files in override or patch.erf will NOT override save file RES files because the RES loader bypasses the resource system entirely. Only RES files in save files are loaded.
 
 - **KEY/BIF**: Not registered in resource type registry - cannot be packed as resources
 
@@ -521,6 +522,53 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 - See "Files Loaded Outside Resource System" section above for details
 
 **Note**: TLK files are global (not module-specific) and are loaded from a fixed location (root directory) via direct file I/O, not through the resource search mechanism.
+
+### RES, PT, NFO Priority: Save Files vs Modules/Override/Patch.erf
+
+**Question**: If the same `.res`, `PARTYTABLE.res`, or `savenfo.res` exists in `patch.erf`, `override`, or modules, how does the engine prioritize these sources relative to save file resources?
+
+**Answer**: **It depends on the file type** - RES and NFO bypass the resource system, PT uses the resource system.
+
+#### RES Files (Resource Type 0)
+
+**Priority**: ❌ **Module/Override/Patch.erf RES files are IGNORED**
+
+**Evidence**:
+- swkotor.exe: `FUN_004b8300` line 136-155 loads "savenfo.res" directly via `FUN_00411260` (GFF loader)
+- `FUN_00411260` does not call `FUN_00407230` (resource system)
+- RES files are accessed directly from save file path, bypassing resource system entirely
+
+**Conclusion**: RES files in modules, override, or patch.erf will **NOT** override save file RES files. Only RES files in save files are loaded.
+
+#### PT Files (PARTYTABLE.res)
+
+**Priority**: ✅ **Module/Override/Patch.erf PT files WILL override save file PT files**
+
+**Evidence**:
+- swkotor.exe: `FUN_00565d20` (0x00565d20) loads PARTYTABLE
+- swkotor.exe: `FUN_00565d20` line 51: Calls `FUN_00410630` with "PARTYTABLE" and "PT  " signature
+- swkotor.exe: `FUN_00410630` line 48: Calls `FUN_00407680` with resource type
+- swkotor.exe: `FUN_00407680` line 12: Calls `FUN_00407230` (resource system search function)
+
+**Complete Priority Order** (from `FUN_00407230`):
+1. **Override Directory** (Location 3, Source Type 2) - Highest priority
+2. **Module Containers** (Location 2, Source Type 3) - `.mod` files
+3. **Module RIM Files** (Location 1, Source Type 4) - `.rim`, `_s.rim`, `_a.rim`, `_adx.rim`
+4. **Chitin Archives** (Location 0, Source Type 1) - **Includes patch.erf** (K1 only)
+5. **Save Files** (GAMEINPROGRESS: directory) - Lowest priority
+
+**Conclusion**: If PARTYTABLE.res exists in override, modules, or patch.erf, it will be loaded **BEFORE** the save file version.
+
+#### NFO Files (savenfo.res)
+
+**Priority**: ❌ **Module/Override/Patch.erf NFO files are IGNORED**
+
+**Evidence**:
+- swkotor.exe: `FUN_004b8300` line 136-155 loads "savenfo.res" directly via `FUN_00411260` (GFF loader)
+- `FUN_00411260` does not call `FUN_00407230` (resource system)
+- NFO files are accessed directly from save file path, bypassing resource system entirely
+
+**Conclusion**: NFO files in modules, override, or patch.erf will **NOT** override save file NFO files. Only NFO files in save files are loaded.
 
 ### DDS Textures
 
@@ -837,7 +885,7 @@ Each resource type has a handler that calls `FUN_004074d0` when a resource is ne
 
 **Function Chain**:
 
-```
+```sh
 FUN_00406e20 (0x00406e20) - Opens RIM file
   → FUN_00410260 (0x00410260) - Loads resources from RIM
     → FUN_00407230 (0x00407230) - Searches for resources still in demand
