@@ -5,8 +5,10 @@ using System.Numerics;
 using System.Text;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Extract.SaveData;
 using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Formats.RIM;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Runtime.Core.Save;
@@ -219,37 +221,74 @@ namespace Andastra.Runtime.Content.Save
         // Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750
         // Located via string reference: "MOD V1.0" @ 0x007be0d4
         // Original implementation: Creates ERF archive with "MOD V1.0" signature, adds GLOBALVARS.res (GFF),
-        // PARTYTABLE.res (GFF), and module state files ([module]_s.rim) for each visited area
+        // PARTYTABLE.res (GFF), cached modules (nested ERF/RIM), INVENTORY.res, REPUTE.fac, AVAILNPC*.utc
+        // Uses SaveNestedCapsule to handle nested modules and cached entities
         public byte[] SerializeSaveArchive(SaveGameData saveData)
         {
-            // Use Andastra.Parsing ERF writer
-            var erf = new ERF(ERFType.MOD, true); // MOD type is used for save files
+            // Use SaveNestedCapsule to handle nested modules and cached entities
+            // Create a temporary directory path for SaveNestedCapsule (it will write to savegame.sav)
+            string tempPath = Path.GetTempPath();
+            var nestedCapsule = new SaveNestedCapsule(tempPath);
+
+            // Load existing save if it exists (to preserve cached modules and other resources)
+            // This is important for maintaining nested module state
+            string savePath = GetSavePathFromData(saveData);
+            if (!string.IsNullOrEmpty(savePath) && Directory.Exists(savePath))
+            {
+                nestedCapsule = new SaveNestedCapsule(savePath);
+                nestedCapsule.Load();
+            }
 
             // Add GLOBALVARS.res
             byte[] globalVarsData = SerializeGlobalVariables(saveData.GlobalVariables);
-            erf.SetData("GLOBALVARS", ResourceType.GFF, globalVarsData);
+            nestedCapsule.SetResource(new ResourceIdentifier("GLOBALVARS", ResourceType.GFF), globalVarsData);
 
             // Add PARTYTABLE.res
             byte[] partyTableData = SerializePartyTable(saveData.PartyState);
-            erf.SetData("PARTYTABLE", ResourceType.GFF, partyTableData);
+            nestedCapsule.SetResource(new ResourceIdentifier("PARTYTABLE", ResourceType.GFF), partyTableData);
 
-            // Add module state files
-            if (saveData.AreaStates != null)
+            // Add INVENTORY.res (from party state - player inventory items)
+            byte[] inventoryData = SerializeInventory(saveData.PartyState);
+            if (inventoryData != null)
             {
-                foreach (KeyValuePair<string, AreaState> kvp in saveData.AreaStates)
-                {
-                    string areaResRef = kvp.Key;
-                    AreaState areaState = kvp.Value;
+                nestedCapsule.SetInventory(inventoryData);
+            }
 
-                    string stateFileName = areaResRef + "_s";
-                    byte[] stateData = SerializeAreaState(areaState);
-                    erf.SetData(stateFileName, ResourceType.RIM, stateData);
-                }
+            // Add REPUTE.fac (faction reputation)
+            byte[] reputeData = SerializeRepute(saveData);
+            if (reputeData != null)
+            {
+                nestedCapsule.SetRepute(reputeData);
+            }
+
+            // Add AVAILNPC*.utc files (cached companion characters)
+            SerializeCachedCharacters(nestedCapsule, saveData.PartyState);
+
+            // Add cached modules (nested ERF/RIM files for previously visited areas)
+            SerializeCachedModules(nestedCapsule, saveData.AreaStates);
+
+            // Serialize nested capsule to ERF bytes
+            // SaveNestedCapsule.Save() writes to disk, but we need bytes
+            // So we'll manually build the ERF from nested capsule resources
+            var erf = new ERF(ERFType.MOD, true); // MOD type is used for save files
+
+            foreach (var kvp in nestedCapsule.IterSerializedResources())
+            {
+                erf.SetData(kvp.Key.ResName, kvp.Key.ResType, kvp.Value);
             }
 
             // Write ERF using Andastra.Parsing writer
             var writer = new ERFBinaryWriter(erf);
             return writer.Write();
+        }
+
+        // Helper to get save path from SaveGameData (if available)
+        private string GetSavePathFromData(SaveGameData saveData)
+        {
+            // SaveGameData doesn't have a path property, so we can't determine it here
+            // This is a limitation - we'd need the save path passed in
+            // For now, return null and let the caller handle path management
+            return null;
         }
 
         // Deserialize save game archive from ERF format
@@ -328,7 +367,7 @@ namespace Andastra.Runtime.Content.Save
         {
             // Create a temporary GlobalVars instance and populate it from state
             var globalVars = new Andastra.Parsing.Extract.SaveData.GlobalVars(Path.GetTempPath());
-            
+
             // Populate from state
             foreach (var kvp in state.Booleans)
             {
@@ -348,11 +387,11 @@ namespace Andastra.Runtime.Content.Save
                 var vec4 = new System.Numerics.Vector4(kvp.Value.Position.X, kvp.Value.Position.Y, kvp.Value.Position.Z, kvp.Value.Facing);
                 globalVars.SetLocation(kvp.Key, vec4);
             }
-            
+
             // Serialize to GFF format
             GFF gff = new GFF(GFFContent.GVT);
             GFFStruct root = gff.Root;
-            
+
             // Booleans: pack bits LSB first
             int boolCount = globalVars.GlobalBools.Count;
             int boolBytes = (boolCount + 7) / 8;
@@ -373,7 +412,7 @@ namespace Andastra.Runtime.Content.Save
                 root.SetList("CatBoolean", catBool);
                 root.SetBinary("ValBoolean", valBool);
             }
-            
+
             // Locations: 12 floats per entry
             if (globalVars.GlobalLocations.Count > 0)
             {
@@ -397,7 +436,7 @@ namespace Andastra.Runtime.Content.Save
                     root.SetBinary("ValLocation", ms.ToArray());
                 }
             }
-            
+
             // Numbers: one byte each
             if (globalVars.GlobalNumbers.Count > 0)
             {
@@ -413,7 +452,7 @@ namespace Andastra.Runtime.Content.Save
                     root.SetBinary("ValNumber", ms.ToArray());
                 }
             }
-            
+
             // Strings: parallel lists
             if (globalVars.GlobalStrings.Count > 0)
             {
@@ -427,7 +466,7 @@ namespace Andastra.Runtime.Content.Save
                 root.SetList("CatString", catStr);
                 root.SetList("ValString", valStr);
             }
-            
+
             return new GFFBinaryWriter(gff).Write();
         }
 
@@ -1895,6 +1934,100 @@ namespace Andastra.Runtime.Content.Save
             {
                 return 0;
             }
+        }
+
+        #endregion
+
+        #region Inventory, Repute, Cached Characters, Cached Modules
+
+        // Serialize inventory (INVENTORY.res) - player inventory items
+        // Based on swkotor.exe: Inventory is stored as a GFF file in savegame.sav
+        // Located via string reference: "INVENTORY" @ (needs verification)
+        private byte[] SerializeInventory(PartyState partyState)
+        {
+            // TODO: STUB - Implement inventory serialization
+            // Inventory is stored as a GFF file with item data
+            // Need to serialize player inventory items from PartyState
+            return null;
+        }
+
+        // Serialize repute (REPUTE.fac) - faction reputation
+        // Based on swkotor.exe: Repute is stored as a FAC file in savegame.sav
+        // Located via string reference: "REPUTE" @ (needs verification)
+        private byte[] SerializeRepute(SaveGameData saveData)
+        {
+            // TODO: STUB - Implement repute serialization
+            // Repute is stored as a FAC file with faction reputation data
+            // Need to serialize faction reputation from SaveGameData
+            return null;
+        }
+
+        // Serialize cached characters (AVAILNPC*.utc) - companion character templates
+        // Based on swkotor.exe: Cached characters are stored as UTC files in savegame.sav
+        // Located via string reference: "AVAILNPC" @ (needs verification)
+        private void SerializeCachedCharacters(SaveNestedCapsule nestedCapsule, PartyState partyState)
+        {
+            // TODO: STUB - Implement cached character serialization
+            // Cached characters are stored as UTC files (AVAILNPC*.utc) in savegame.sav
+            // Need to serialize companion character templates from PartyState.AvailableMembers
+            // Each companion should be serialized as a UTC file with ResRef "AVAILNPC" + index
+        }
+
+        // Serialize cached modules (nested ERF/RIM files) - previously visited areas
+        // Based on swkotor.exe: Cached modules are stored as ERF/RIM files (ResourceType.SAV) in savegame.sav
+        // Located via string reference: Module state files are stored as [module]_s.rim in savegame.sav
+        private void SerializeCachedModules(SaveNestedCapsule nestedCapsule, Dictionary<string, AreaState> areaStates)
+        {
+            if (areaStates == null)
+            {
+                return;
+            }
+
+            // Each area state should have a cached module (ERF/RIM) containing the area's state
+            foreach (KeyValuePair<string, AreaState> kvp in areaStates)
+            {
+                string areaResRef = kvp.Key;
+                AreaState areaState = kvp.Value;
+
+                // Cached modules are stored as ResourceType.SAV (2057) with ResRef = areaResRef
+                // The data inside is either ERF or RIM format
+                // For now, we'll serialize as RIM (most common format for area state)
+                byte[] moduleData = SerializeAreaStateAsModule(areaState);
+                if (moduleData != null)
+                {
+                    // Try to parse as RIM first, then ERF
+                    try
+                    {
+                        var rim = RIMAuto.ReadRim(moduleData);
+                        nestedCapsule.SetCachedRimModule(areaResRef, rim);
+                    }
+                    catch
+                    {
+                        // Not RIM format, try ERF
+                        try
+                        {
+                            var erf = ERFAuto.ReadErf(moduleData);
+                            nestedCapsule.SetCachedModule(areaResRef, erf);
+                        }
+                        catch
+                        {
+                            // Neither RIM nor ERF - store as raw data
+                            var ident = new ResourceIdentifier(areaResRef, ResourceType.SAV);
+                            nestedCapsule.SetResource(ident, moduleData);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Serialize area state as a module (ERF/RIM format)
+        // Based on swkotor.exe: Area state is stored as [module]_s.rim in savegame.sav
+        private byte[] SerializeAreaStateAsModule(AreaState areaState)
+        {
+            // TODO: STUB - Implement area state to module serialization
+            // Area state should be serialized as a RIM file containing the area's state
+            // This includes area GIT data, cached entities, etc.
+            return null;
         }
 
         #endregion
