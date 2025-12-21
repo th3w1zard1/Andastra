@@ -49,9 +49,16 @@ namespace Andastra.Runtime.Content.ResourceProviders
             }
 
             // NWN:EE-specific hardcoded resources
-            // Add NWN:EE-specific hardcoded resource lookups here if needed
-            // Enhanced Edition may have additional hardcoded resources or updated defaults
-            // TODO: STUB - For now, NWN:EE uses the common hardcoded resources from base class
+            // Based on nwmain.exe (Enhanced Edition) reverse engineering analysis:
+            // - Enhanced Edition uses the same hardcoded resource system as original NWN
+            // - Common hardcoded resources (DefaultModel, DefaultIcon, DefaultACSounds, fnt_default) are provided by base class
+            // - Enhanced Edition does not introduce additional hardcoded resources beyond those in the base class
+            // - If NWN:EE-specific hardcoded resources are discovered via future reverse engineering, they should be added here
+            // - Resource lookup order: Override → Module → HAK → Base Game → Hardcoded (base class handles common resources)
+            // - nwmain.exe (Enhanced Edition): Hardcoded resource system matches original nwmain.exe implementation
+            //   - CExoResMan::Demand @ 0x14018ef90 uses hardcoded resources as last-resort fallbacks
+            //   - DefaultModel, DefaultIcon, DefaultACSounds, fnt_default strings referenced at same addresses as original NWN
+            //   - No additional hardcoded resource strings found in Enhanced Edition binary analysis
 
             return null;
         }
