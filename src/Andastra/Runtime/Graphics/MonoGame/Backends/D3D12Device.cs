@@ -76,22 +76,48 @@ namespace Andastra.Runtime.MonoGame.Backends
             // TODO:  This is a placeholder structure
         }
 
+        /// <summary>
+        /// ID3D12StateObject COM interface for DirectX 12 raytracing pipelines.
+        /// This interface inherits from IUnknown and has no methods of its own.
+        /// All methods are accessed via COM vtable:
+        /// - VTable index 0: IUnknown::QueryInterface - Query for other interfaces (e.g., ID3D12StateObjectProperties)
+        /// - VTable index 1: IUnknown::AddRef - Increment reference count
+        /// - VTable index 2: IUnknown::Release - Decrement reference count and release if count reaches zero
+        ///
+        /// Based on DirectX 12 DXR API: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nn-d3d12-id3d12stateobject
+        /// ID3D12StateObject is created via ID3D12Device5::CreateStateObject and represents a raytracing pipeline state object.
+        /// </summary>
         [ComImport]
         [Guid("47016943-fca8-4594-93ea-af258bdc7b77")]
         [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
         private interface ID3D12StateObject
         {
-            // ID3D12StateObject methods
-            // TODO:  This is a placeholder structure - actual methods accessed via vtable
+            // ID3D12StateObject has no methods beyond IUnknown (QueryInterface, AddRef, Release)
+            // Methods are accessed via COM vtable using delegates (QueryInterfaceDelegate, ReleaseDelegate)
+            // See CallStateObjectRelease() and CallStateObjectQueryInterface() helper methods
         }
 
+        /// <summary>
+        /// ID3D12StateObjectProperties COM interface for querying raytracing pipeline properties.
+        /// This interface is queried from ID3D12StateObject via QueryInterface.
+        /// Methods are accessed via COM vtable:
+        /// - VTable index 0: IUnknown::QueryInterface
+        /// - VTable index 1: IUnknown::AddRef
+        /// - VTable index 2: IUnknown::Release
+        /// - VTable index 3: GetShaderIdentifier - Get shader identifier for a shader export name
+        /// - VTable index 4: GetPipelineStackSize - Get the pipeline stack size
+        ///
+        /// Based on DirectX 12 DXR API: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nn-d3d12-id3d12stateobjectproperties
+        /// </summary>
         [ComImport]
         [Guid("de5fa827-91bf-4fb9-b601-5c105e1558dc")]
         [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
         private interface ID3D12StateObjectProperties
         {
-            // ID3D12StateObjectProperties methods
-            // TODO:  This is a placeholder structure - actual methods accessed via vtable
+            // ID3D12StateObjectProperties methods are accessed via COM vtable using delegates
+            // GetShaderIdentifier is at vtable index 3 (after IUnknown methods)
+            // GetPipelineStackSize is at vtable index 4
+            // See GetShaderIdentifierDelegate and CallStateObjectPropertiesGetShaderIdentifier() helper methods
         }
 
         // TODO:  DirectX 12 function pointers for P/Invoke (simplified - full implementation requires extensive declarations)
@@ -7000,8 +7026,9 @@ namespace Andastra.Runtime.MonoGame.Backends
             private readonly IntPtr _properties;
             private readonly IBuffer _sbtBuffer;
             private readonly IntPtr _device5;
+            private readonly D3D12Device _parentDevice;
 
-            public D3D12RaytracingPipeline(IntPtr handle, Interfaces.RaytracingPipelineDesc desc, IntPtr d3d12StateObject, IntPtr properties, IBuffer sbtBuffer, IntPtr device5)
+            public D3D12RaytracingPipeline(IntPtr handle, Interfaces.RaytracingPipelineDesc desc, IntPtr d3d12StateObject, IntPtr properties, IBuffer sbtBuffer, IntPtr device5, D3D12Device parentDevice)
             {
                 _handle = handle;
                 Desc = desc;
@@ -7009,14 +7036,42 @@ namespace Andastra.Runtime.MonoGame.Backends
                 _properties = properties;
                 _sbtBuffer = sbtBuffer;
                 _device5 = device5;
+                _parentDevice = parentDevice;
             }
 
             public void Dispose()
             {
-                // TODO: Release D3D12 state object
-                // - Call ID3D12StateObject::Release()
-                // - Release properties interface
-                // - Release SBT buffer
+                // Release D3D12 state object via COM IUnknown::Release
+                if (_d3d12StateObject != IntPtr.Zero && _parentDevice != null)
+                {
+                    try
+                    {
+                        // Release the state object (decrements reference count, destroys if count reaches zero)
+                        // This is safe to call multiple times - Release() handles the reference counting
+                        _parentDevice.CallStateObjectRelease(_d3d12StateObject);
+                    }
+                    catch
+                    {
+                        // Ignore errors during release - object may already be destroyed
+                    }
+                }
+
+                // Release properties interface if it was queried separately
+                if (_properties != IntPtr.Zero && _properties != _d3d12StateObject && _parentDevice != null)
+                {
+                    try
+                    {
+                        // Properties interface was queried via QueryInterface, so it has its own reference
+                        // Release it separately
+                        _parentDevice.CallStateObjectRelease(_properties);
+                    }
+                    catch
+                    {
+                        // Ignore errors during release
+                    }
+                }
+
+                // Release SBT buffer
                 _sbtBuffer?.Dispose();
             }
         }
@@ -12242,6 +12297,120 @@ namespace Andastra.Runtime.MonoGame.Backends
                 (GetGPUVirtualAddressDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(GetGPUVirtualAddressDelegate));
 
             return getGpuVa(resource);
+        }
+
+        /// <summary>
+        /// Releases an ID3D12StateObject COM interface by calling IUnknown::Release.
+        /// VTable index 2 for IUnknown (all COM interfaces inherit from IUnknown).
+        /// Based on COM Reference Counting: https://docs.microsoft.com/en-us/windows/win32/api/unknwn/nf-unknwn-iunknown-release
+        /// </summary>
+        /// <param name="stateObject">Pointer to ID3D12StateObject COM interface</param>
+        /// <returns>Remaining reference count after release (0 if object was destroyed)</returns>
+        internal unsafe uint CallStateObjectRelease(IntPtr stateObject)
+        {
+            if (stateObject == IntPtr.Zero)
+            {
+                return 0;
+            }
+
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return 0;
+            }
+
+            // Get vtable pointer (first field of COM object)
+            IntPtr* vtable = *(IntPtr**)stateObject;
+            // IUnknown::Release is at index 2 in all COM interface vtables
+            IntPtr methodPtr = vtable[2];
+
+            // Create delegate from function pointer
+            ReleaseDelegate release = (ReleaseDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(ReleaseDelegate));
+
+            return release(stateObject);
+        }
+
+        /// <summary>
+        /// Queries an ID3D12StateObject for another interface (e.g., ID3D12StateObjectProperties).
+        /// Calls IUnknown::QueryInterface through COM vtable.
+        /// VTable index 0 for IUnknown (all COM interfaces inherit from IUnknown).
+        /// Based on COM QueryInterface: https://docs.microsoft.com/en-us/windows/win32/api/unknwn/nf-unknwn-iunknown-queryinterface
+        /// </summary>
+        /// <param name="stateObject">Pointer to ID3D12StateObject COM interface</param>
+        /// <param name="riid">Interface ID to query for (e.g., IID_ID3D12StateObjectProperties)</param>
+        /// <param name="ppvObject">Output pointer to the queried interface</param>
+        /// <returns>HRESULT: S_OK (0) on success, E_NOINTERFACE or other error code on failure</returns>
+        private unsafe int CallStateObjectQueryInterface(IntPtr stateObject, ref Guid riid, out IntPtr ppvObject)
+        {
+            ppvObject = IntPtr.Zero;
+
+            if (stateObject == IntPtr.Zero)
+            {
+                return unchecked((int)0x80004003); // E_POINTER
+            }
+
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return unchecked((int)0x80004001); // E_NOTIMPL
+            }
+
+            // Get vtable pointer (first field of COM object)
+            IntPtr* vtable = *(IntPtr**)stateObject;
+            // IUnknown::QueryInterface is at index 0 in all COM interface vtables
+            IntPtr methodPtr = vtable[0];
+
+            // Create delegate from function pointer
+            QueryInterfaceDelegate queryInterface = (QueryInterfaceDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(QueryInterfaceDelegate));
+
+            // Allocate unmanaged memory for output pointer
+            IntPtr ppvObjectPtr = Marshal.AllocHGlobal(IntPtr.Size);
+            try
+            {
+                int hr = queryInterface(stateObject, ref riid, ppvObjectPtr);
+                if (hr == 0) // S_OK
+                {
+                    ppvObject = Marshal.ReadIntPtr(ppvObjectPtr);
+                }
+                return hr;
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(ppvObjectPtr);
+            }
+        }
+
+        /// <summary>
+        /// Gets the shader identifier for a shader export name from ID3D12StateObjectProperties.
+        /// Calls ID3D12StateObjectProperties::GetShaderIdentifier through COM vtable.
+        /// VTable index 3 for ID3D12StateObjectProperties (after IUnknown methods: QueryInterface=0, AddRef=1, Release=2).
+        /// Based on D3D12 DXR API: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12stateobjectproperties-getshaderidentifier
+        /// </summary>
+        /// <param name="properties">Pointer to ID3D12StateObjectProperties COM interface</param>
+        /// <param name="pExportName">Pointer to null-terminated string containing the shader export name</param>
+        /// <returns>Pointer to shader identifier data (32 bytes), or IntPtr.Zero if export name not found</returns>
+        private unsafe IntPtr CallStateObjectPropertiesGetShaderIdentifier(IntPtr properties, IntPtr pExportName)
+        {
+            if (properties == IntPtr.Zero || pExportName == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return IntPtr.Zero;
+            }
+
+            // Get vtable pointer (first field of COM object)
+            IntPtr* vtable = *(IntPtr**)properties;
+            // GetShaderIdentifier is at index 3 in ID3D12StateObjectProperties vtable (after IUnknown: 0=QueryInterface, 1=AddRef, 2=Release)
+            IntPtr methodPtr = vtable[3];
+
+            // Create delegate from function pointer
+            GetShaderIdentifierDelegate getShaderIdentifier = (GetShaderIdentifierDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(GetShaderIdentifierDelegate));
+
+            return getShaderIdentifier(properties, pExportName);
         }
 
         /// <summary>
