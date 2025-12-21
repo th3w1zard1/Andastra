@@ -1617,9 +1617,29 @@ namespace Andastra.Runtime.Core.Save
             }
 
             // Check if the module contains this area
-            // IModule.GetArea() returns null if the area is not in the module
-            IArea area = module.GetArea(areaResRef);
-            return area != null;
+            // Prefer using RuntimeModule.AreaList if available (matches the saved mapping structure)
+            // Otherwise fall back to IModule.GetArea() for other IModule implementations
+            Core.Module.RuntimeModule runtimeModule = module as Core.Module.RuntimeModule;
+            if (runtimeModule != null && runtimeModule.AreaList != null)
+            {
+                // Use AreaList directly (same source as the saved mapping)
+                // Based on swkotor2.exe: Mod_Area_list contains ordered list of area ResRefs
+                foreach (string mappedAreaResRef in runtimeModule.AreaList)
+                {
+                    if (string.Equals(mappedAreaResRef, areaResRef, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            else
+            {
+                // Fall back to GetArea() for other IModule implementations
+                // IModule.GetArea() returns null if the area is not in the module
+                IArea area = module.GetArea(areaResRef);
+                return area != null;
+            }
         }
 
         /// <summary>
