@@ -506,7 +506,8 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 **Evidence**:
 
 - TLK loading uses direct file I/O from game root directory
-- Reone codebase shows `findFileIgnoreCase(gameDir, "dialog.tlk")` - direct filesystem search
+- Function `FUN_005e6680` (swkotor.exe: 0x005e6680) uses direct file I/O, not resource system (`FUN_004074d0`/`FUN_00407230`)
+- String references to `"dialog.tlk"` found in executable
 - TLK is loaded during initialization, not through resource system
 - See "Files Loaded Outside Resource System" section above for details
 
