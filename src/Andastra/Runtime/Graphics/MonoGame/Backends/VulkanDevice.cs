@@ -3316,6 +3316,78 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// <returns>Vulkan shader stage flags</returns>
         private VkShaderStageFlags ConvertShaderStageFlagsToVk(ShaderStageFlags stages)
         {
+            VkShaderStageFlags vkFlags = 0;
+            if ((stages & ShaderStageFlags.Vertex) != 0) vkFlags |= VkShaderStageFlags.VK_SHADER_STAGE_VERTEX_BIT;
+            if ((stages & ShaderStageFlags.Hull) != 0) vkFlags |= VkShaderStageFlags.VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+            if ((stages & ShaderStageFlags.Domain) != 0) vkFlags |= VkShaderStageFlags.VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+            if ((stages & ShaderStageFlags.Geometry) != 0) vkFlags |= VkShaderStageFlags.VK_SHADER_STAGE_GEOMETRY_BIT;
+            if ((stages & ShaderStageFlags.Pixel) != 0) vkFlags |= VkShaderStageFlags.VK_SHADER_STAGE_FRAGMENT_BIT;
+            if ((stages & ShaderStageFlags.Compute) != 0) vkFlags |= VkShaderStageFlags.VK_SHADER_STAGE_COMPUTE_BIT;
+            if ((stages & ShaderStageFlags.RayGen) != 0) vkFlags |= VkShaderStageFlags.VK_SHADER_STAGE_RAYGEN_BIT_KHR;
+            if ((stages & ShaderStageFlags.Miss) != 0) vkFlags |= VkShaderStageFlags.VK_SHADER_STAGE_MISS_BIT_KHR;
+            if ((stages & ShaderStageFlags.ClosestHit) != 0) vkFlags |= VkShaderStageFlags.VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
+            if ((stages & ShaderStageFlags.AnyHit) != 0) vkFlags |= VkShaderStageFlags.VK_SHADER_STAGE_ANY_HIT_BIT_KHR;
+            return vkFlags;
+        }
+
+        /// <summary>
+        /// Converts AccelStructBuildFlags to VkBuildAccelerationStructureFlagsKHR.
+        /// Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkBuildAccelerationStructureFlagsKHR.html
+        /// </summary>
+        /// <param name="buildFlags">The build flags from AccelStructDesc.</param>
+        /// <returns>Vulkan acceleration structure build flags.</returns>
+        /// <remarks>
+        /// Flag mappings:
+        /// - AllowUpdate (1) -> VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_KHR (0x00000001)
+        /// - AllowCompaction (2) -> VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_COMPACTION_BIT_KHR (0x00000002)
+        /// - PreferFastTrace (4) -> VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR (0x00000004)
+        /// - PreferFastBuild (8) -> VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_BUILD_BIT_KHR (0x00000008)
+        /// - MinimizeMemory (16) -> VK_BUILD_ACCELERATION_STRUCTURE_LOW_MEMORY_BIT_KHR (0x00000010)
+        /// 
+        /// Default behavior: If no flags are set, defaults to PREFER_FAST_TRACE_BIT_KHR for optimal ray tracing performance.
+        /// </remarks>
+        private VkBuildAccelerationStructureFlagsKHR ConvertAccelStructBuildFlagsToVkFlags(AccelStructBuildFlags buildFlags)
+        {
+            VkBuildAccelerationStructureFlagsKHR vkFlags = 0;
+
+            // Map each flag from AccelStructBuildFlags to corresponding Vulkan flag
+            // Based on Vulkan API specification for VkBuildAccelerationStructureFlagsKHR
+            
+            if ((buildFlags & AccelStructBuildFlags.AllowUpdate) != 0)
+            {
+                vkFlags |= VkBuildAccelerationStructureFlagsKHR.VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_KHR;
+            }
+
+            if ((buildFlags & AccelStructBuildFlags.AllowCompaction) != 0)
+            {
+                vkFlags |= VkBuildAccelerationStructureFlagsKHR.VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_COMPACTION_BIT_KHR;
+            }
+
+            if ((buildFlags & AccelStructBuildFlags.PreferFastTrace) != 0)
+            {
+                vkFlags |= VkBuildAccelerationStructureFlagsKHR.VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
+            }
+
+            if ((buildFlags & AccelStructBuildFlags.PreferFastBuild) != 0)
+            {
+                vkFlags |= VkBuildAccelerationStructureFlagsKHR.VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_BUILD_BIT_KHR;
+            }
+
+            if ((buildFlags & AccelStructBuildFlags.MinimizeMemory) != 0)
+            {
+                vkFlags |= VkBuildAccelerationStructureFlagsKHR.VK_BUILD_ACCELERATION_STRUCTURE_LOW_MEMORY_BIT_KHR;
+            }
+
+            // Default behavior: If no flags are set, use PREFER_FAST_TRACE for optimal ray tracing performance
+            // This matches the original behavior where PREFER_FAST_TRACE was always set
+            if (vkFlags == 0)
+            {
+                vkFlags = VkBuildAccelerationStructureFlagsKHR.VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
+            }
+
+            return vkFlags;
+        }
+        {
             if (stages == ShaderStageFlags.None)
             {
                 return 0;
@@ -4137,11 +4209,9 @@ namespace Andastra.Runtime.MonoGame.Backends
                             }
                             
                             // Create build geometry info
-                            VkBuildAccelerationStructureFlagsKHR buildFlags = VkBuildAccelerationStructureFlagsKHR.VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
-                            if ((desc.BuildFlags & AccelStructBuildFlags.AllowUpdate) != 0)
-                            {
-                                buildFlags |= VkBuildAccelerationStructureFlagsKHR.VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_KHR;
-                            }
+                            // Convert AccelStructBuildFlags to Vulkan build flags
+                            // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkBuildAccelerationStructureFlagsKHR.html
+                            VkBuildAccelerationStructureFlagsKHR buildFlags = ConvertAccelStructBuildFlagsToVkFlags(desc.BuildFlags);
                             
                             VkAccelerationStructureBuildGeometryInfoKHR buildInfo = new VkAccelerationStructureBuildGeometryInfoKHR
                             {
@@ -9259,8 +9329,9 @@ namespace Andastra.Runtime.MonoGame.Backends
                     }
 
                     // Create build geometry info
-                    VkBuildAccelerationStructureFlagsKHR buildFlags = VkBuildAccelerationStructureFlagsKHR.VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
-                    // TODO: Add support for other build flags from AccelStructDesc
+                    // Convert AccelStructBuildFlags to Vulkan build flags
+                    // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkBuildAccelerationStructureFlagsKHR.html
+                    VkBuildAccelerationStructureFlagsKHR buildFlags = ConvertAccelStructBuildFlagsToVkFlags(desc.BuildFlags);
 
                     // Allocate memory for geometry array
                     int geometrySize = Marshal.SizeOf(typeof(VkAccelerationStructureGeometryKHR));
@@ -9560,12 +9631,16 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                         // Create build geometry info
                         // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkAccelerationStructureBuildGeometryInfoKHR.html
+                        // Convert AccelStructBuildFlags to Vulkan build flags
+                        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkBuildAccelerationStructureFlagsKHR.html
+                        VkBuildAccelerationStructureFlagsKHR buildFlags = ConvertAccelStructBuildFlagsToVkFlags(desc.BuildFlags);
+                        
                         VkAccelerationStructureBuildGeometryInfoKHR buildInfo = new VkAccelerationStructureBuildGeometryInfoKHR
                         {
                             sType = VkStructureType.VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR,
                             pNext = IntPtr.Zero,
                             type = VkAccelerationStructureTypeKHR.VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR,
-                            flags = VkBuildAccelerationStructureFlagsKHR.VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR,
+                            flags = buildFlags,
                             buildType = VkAccelerationStructureBuildTypeKHR.VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
                             srcAccelerationStructure = IntPtr.Zero, // Building new, not updating
                             dstAccelerationStructure = vulkanAccelStruct.VkAccelStruct,
