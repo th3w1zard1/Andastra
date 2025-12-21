@@ -438,6 +438,16 @@ namespace Andastra.Runtime.MonoGame.Backends
             public VkExtent3D extent;
         }
 
+        // Vulkan buffer copy structure (for vkCmdCopyBuffer)
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkBufferCopy.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkBufferCopy
+        {
+            public ulong srcOffset;  // VkDeviceSize
+            public ulong dstOffset;  // VkDeviceSize
+            public ulong size;       // VkDeviceSize
+        }
+
         // Vulkan offset 3D structure
         [StructLayout(LayoutKind.Sequential)]
         private struct VkOffset3D
@@ -943,6 +953,16 @@ namespace Andastra.Runtime.MonoGame.Backends
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkCmdCopyBufferToImageDelegate(IntPtr commandBuffer, IntPtr srcBuffer, IntPtr dstImage, VkImageLayout dstImageLayout, uint regionCount, IntPtr pRegions);
 
+        // Delegate for vkCmdUpdateBuffer (for small buffer updates up to 65536 bytes)
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdUpdateBuffer.html
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdUpdateBufferDelegate(IntPtr commandBuffer, IntPtr dstBuffer, ulong dstOffset, ulong dataSize, IntPtr pData);
+
+        // Delegate for vkCmdCopyBuffer (for buffer-to-buffer copies)
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdCopyBuffer.html
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdCopyBufferDelegate(IntPtr commandBuffer, IntPtr srcBuffer, IntPtr dstBuffer, uint regionCount, IntPtr pRegions);
+
         // Delegate for vkCmdClearDepthStencilImage
         // Based on Vulkan API: https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdClearDepthStencilImage.html
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
@@ -1039,6 +1059,10 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static vkCmdSetScissorDelegate vkCmdSetScissor;
         private static vkCmdSetBlendConstantsDelegate vkCmdSetBlendConstants;
         private static vkCmdClearDepthStencilImageDelegate vkCmdClearDepthStencilImage;
+        private static vkCmdUpdateBufferDelegate vkCmdUpdateBuffer;
+        private static vkCmdCopyBufferDelegate vkCmdCopyBuffer;
+        private static vkCmdCopyBufferToImageDelegate vkCmdCopyBufferToImage;
+        private static vkCmdCopyImageDelegate vkCmdCopyImage;
 
         // VK_KHR_ray_tracing_pipeline extension function delegates
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
@@ -1264,7 +1288,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             _graphicsQueue = graphicsQueue;
             _computeQueue = computeQueue;
             _transferQueue = transferQueue;
-            _capabilities = capabilities ?? throw new ArgumentNullException(nameof(capabilities));
+            _capabilities = capabilities;
             _resources = new Dictionary<IntPtr, IResource>();
             _nextResourceHandle = 1;
             _currentFrameIndex = 0;
@@ -1418,11 +1442,11 @@ namespace Andastra.Runtime.MonoGame.Backends
         {
             switch (format)
             {
-                case TextureFormat.RGBA8_UNORM: return VkFormat.VK_FORMAT_R8G8B8A8_UNORM;
-                case TextureFormat.RGBA8_SRGB: return VkFormat.VK_FORMAT_R8G8B8A8_SRGB;
-                case TextureFormat.RGBA16_FLOAT: return VkFormat.VK_FORMAT_R16G16B16A16_SFLOAT;
-                case TextureFormat.RGBA32_FLOAT: return VkFormat.VK_FORMAT_R32G32B32A32_SFLOAT;
-                case TextureFormat.D24_UNORM_S8_UINT: return VkFormat.VK_FORMAT_D24_UNORM_S8_UINT;
+                case TextureFormat.R8G8B8A8_UNorm: return VkFormat.VK_FORMAT_R8G8B8A8_UNORM;
+                case TextureFormat.R8G8B8A8_UNorm_SRGB: return VkFormat.VK_FORMAT_R8G8B8A8_SRGB;
+                case TextureFormat.R16G16B16A16_Float: return VkFormat.VK_FORMAT_R16G16B16A16_SFLOAT;
+                case TextureFormat.R32G32B32A32_Float: return VkFormat.VK_FORMAT_R32G32B32A32_SFLOAT;
+                case TextureFormat.D24_UNorm_S8_UInt: return VkFormat.VK_FORMAT_D24_UNORM_S8_UINT;
                 case TextureFormat.D32_FLOAT: return VkFormat.VK_FORMAT_D32_SFLOAT;
                 case TextureFormat.D32_FLOAT_S8_UINT: return VkFormat.VK_FORMAT_D32_SFLOAT_S8_UINT;
                 default: return VkFormat.VK_FORMAT_UNDEFINED;
@@ -4442,8 +4466,335 @@ namespace Andastra.Runtime.MonoGame.Backends
             // These are stubbed with TODO comments indicating Vulkan API calls needed
             // Implementation will be completed when Vulkan interop is added
 
-            public void WriteBuffer(IBuffer buffer, byte[] data, int destOffset = 0) { /* TODO: vkCmdUpdateBuffer or staging buffer */ }
-            public void WriteBuffer<T>(IBuffer buffer, T[] data, int destOffset = 0) where T : unmanaged { /* TODO: vkCmdUpdateBuffer or staging buffer */ }
+            /// <summary>
+            /// Writes byte array data to a buffer.
+            /// 
+            /// Uses vkCmdUpdateBuffer for small updates (<= 65536 bytes) or staging buffer + vkCmdCopyBuffer
+            /// for larger updates. The data is written starting at the specified destination offset.
+            /// 
+            /// Based on Vulkan API:
+            /// - vkCmdUpdateBuffer: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdUpdateBuffer.html
+            /// - vkCmdCopyBuffer: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdCopyBuffer.html
+            /// </summary>
+            /// <param name="buffer">Target buffer to write data to.</param>
+            /// <param name="data">Byte array containing the data to write.</param>
+            /// <param name="destOffset">Offset in bytes into the destination buffer where data will be written.</param>
+            public void WriteBuffer(IBuffer buffer, byte[] data, int destOffset = 0)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Cannot record commands when command list is closed");
+                }
+
+                if (buffer == null)
+                {
+                    throw new ArgumentNullException(nameof(buffer));
+                }
+
+                if (data == null || data.Length == 0)
+                {
+                    throw new ArgumentException("Data must not be null or empty", nameof(data));
+                }
+
+                if (destOffset < 0)
+                {
+                    throw new ArgumentException("Destination offset must be non-negative", nameof(destOffset));
+                }
+
+                // Get buffer handle
+                IntPtr bufferHandle = buffer.NativeHandle;
+                if (bufferHandle == IntPtr.Zero)
+                {
+                    throw new ArgumentException("Buffer has invalid native handle", nameof(buffer));
+                }
+
+                int dataSize = data.Length;
+                ulong destOffsetUlong = unchecked((ulong)destOffset);
+
+                // For small updates (<= 65536 bytes), use vkCmdUpdateBuffer (direct update from CPU memory)
+                // vkCmdUpdateBuffer is more efficient for small updates as it doesn't require a staging buffer
+                if (dataSize <= VK_MAX_UPDATE_BUFFER_SIZE)
+                {
+                    if (vkCmdUpdateBuffer == null)
+                    {
+                        throw new NotSupportedException("vkCmdUpdateBuffer is not available");
+                    }
+
+                    // Transition buffer to TRANSFER_DST state if needed
+                    SetBufferState(buffer, ResourceState.CopyDest);
+                    CommitBarriers();
+
+                    // Allocate unmanaged memory for data
+                    IntPtr dataPtr = Marshal.AllocHGlobal(dataSize);
+                    try
+                    {
+                        // Copy data to unmanaged memory
+                        Marshal.Copy(data, 0, dataPtr, dataSize);
+
+                        // vkCmdUpdateBuffer signature:
+                        // void vkCmdUpdateBuffer(
+                        //     VkCommandBuffer commandBuffer,
+                        //     VkBuffer dstBuffer,
+                        //     VkDeviceSize dstOffset,
+                        //     VkDeviceSize dataSize,
+                        //     const void* pData);
+                        vkCmdUpdateBuffer(_vkCommandBuffer, bufferHandle, destOffsetUlong, unchecked((ulong)dataSize), dataPtr);
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(dataPtr);
+                    }
+                }
+                else
+                {
+                    // For large updates (> 65536 bytes), use staging buffer + vkCmdCopyBuffer
+                    // This approach is required as vkCmdUpdateBuffer has a 65536 byte limit
+                    WriteBufferLarge(data, bufferHandle, destOffsetUlong, unchecked((ulong)dataSize), buffer);
+                }
+            }
+
+            /// <summary>
+            /// Writes typed array data to a buffer.
+            /// 
+            /// Converts the typed array to bytes and writes using the same mechanism as WriteBuffer(byte[]).
+            /// Uses vkCmdUpdateBuffer for small updates (<= 65536 bytes) or staging buffer + vkCmdCopyBuffer
+            /// for larger updates. The data is written starting at the specified destination offset.
+            /// 
+            /// Based on Vulkan API:
+            /// - vkCmdUpdateBuffer: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdUpdateBuffer.html
+            /// - vkCmdCopyBuffer: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdCopyBuffer.html
+            /// </summary>
+            /// <typeparam name="T">Unmanaged type for the array elements.</typeparam>
+            /// <param name="buffer">Target buffer to write data to.</param>
+            /// <param name="data">Typed array containing the data to write.</param>
+            /// <param name="destOffset">Offset in bytes into the destination buffer where data will be written.</param>
+            public void WriteBuffer<T>(IBuffer buffer, T[] data, int destOffset = 0) where T : unmanaged
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Cannot record commands when command list is closed");
+                }
+
+                if (buffer == null)
+                {
+                    throw new ArgumentNullException(nameof(buffer));
+                }
+
+                if (data == null || data.Length == 0)
+                {
+                    throw new ArgumentException("Data must not be null or empty", nameof(data));
+                }
+
+                if (destOffset < 0)
+                {
+                    throw new ArgumentException("Destination offset must be non-negative", nameof(destOffset));
+                }
+
+                // Calculate byte size
+                int elementSize = Marshal.SizeOf<T>();
+                int dataSize = data.Length * elementSize;
+                ulong destOffsetUlong = unchecked((ulong)destOffset);
+
+                // Get buffer handle
+                IntPtr bufferHandle = buffer.NativeHandle;
+                if (bufferHandle == IntPtr.Zero)
+                {
+                    throw new ArgumentException("Buffer has invalid native handle", nameof(buffer));
+                }
+
+                // Convert typed array to byte array using GCHandle for safe pinning (C# 7.3 compatible)
+                byte[] byteData = new byte[dataSize];
+                GCHandle srcHandle = GCHandle.Alloc(data, GCHandleType.Pinned);
+                GCHandle dstHandle = GCHandle.Alloc(byteData, GCHandleType.Pinned);
+                try
+                {
+                    IntPtr srcPtr = srcHandle.AddrOfPinnedObject();
+                    IntPtr dstPtr = dstHandle.AddrOfPinnedObject();
+                    unsafe
+                    {
+                        byte* srcBytePtr = (byte*)srcPtr.ToPointer();
+                        byte* dstBytePtr = (byte*)dstPtr.ToPointer();
+                        for (int i = 0; i < dataSize; i++)
+                        {
+                            dstBytePtr[i] = srcBytePtr[i];
+                        }
+                    }
+                }
+                finally
+                {
+                    if (srcHandle.IsAllocated) srcHandle.Free();
+                    if (dstHandle.IsAllocated) dstHandle.Free();
+                }
+
+                // For small updates (<= 65536 bytes), use vkCmdUpdateBuffer
+                if (dataSize <= VK_MAX_UPDATE_BUFFER_SIZE)
+                {
+                    if (vkCmdUpdateBuffer == null)
+                    {
+                        throw new NotSupportedException("vkCmdUpdateBuffer is not available");
+                    }
+
+                    // Transition buffer to TRANSFER_DST state if needed
+                    SetBufferState(buffer, ResourceState.CopyDest);
+                    CommitBarriers();
+
+                    // Allocate unmanaged memory for data
+                    IntPtr dataPtr = Marshal.AllocHGlobal(dataSize);
+                    try
+                    {
+                        // Copy data to unmanaged memory
+                        Marshal.Copy(byteData, 0, dataPtr, dataSize);
+
+                        // vkCmdUpdateBuffer signature:
+                        // void vkCmdUpdateBuffer(
+                        //     VkCommandBuffer commandBuffer,
+                        //     VkBuffer dstBuffer,
+                        //     VkDeviceSize dstOffset,
+                        //     VkDeviceSize dataSize,
+                        //     const void* pData);
+                        vkCmdUpdateBuffer(_vkCommandBuffer, bufferHandle, destOffsetUlong, unchecked((ulong)dataSize), dataPtr);
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(dataPtr);
+                    }
+                }
+                else
+                {
+                    // For large updates (> 65536 bytes), use staging buffer + vkCmdCopyBuffer
+                    WriteBufferLarge(byteData, bufferHandle, destOffsetUlong, unchecked((ulong)dataSize), buffer);
+                }
+            }
+
+            /// <summary>
+            /// Helper method for writing large buffer data (> 65536 bytes) using staging buffer.
+            /// Creates a staging buffer, copies data to it, then uses vkCmdCopyBuffer to copy to the destination buffer.
+            /// </summary>
+            private void WriteBufferLarge(byte[] data, IntPtr dstBuffer, ulong dstOffset, ulong dataSize, IBuffer buffer)
+            {
+                if (vkCreateBuffer == null || vkAllocateMemory == null || vkMapMemory == null || 
+                    vkUnmapMemory == null || vkCmdCopyBuffer == null || vkGetBufferMemoryRequirements == null || 
+                    vkBindBufferMemory == null || vkDestroyBuffer == null || vkFreeMemory == null)
+                {
+                    throw new NotSupportedException("Required Vulkan functions are not available");
+                }
+
+                // Create staging buffer for CPU-to-GPU transfer
+                // Staging buffers use host-visible memory for CPU access
+                VkBufferCreateInfo bufferCreateInfo = new VkBufferCreateInfo
+                {
+                    sType = VkStructureType.VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+                    pNext = IntPtr.Zero,
+                    flags = 0,
+                    size = dataSize,
+                    usage = VkBufferUsageFlags.VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                    sharingMode = VkSharingMode.VK_SHARING_MODE_EXCLUSIVE,
+                    queueFamilyIndexCount = 0,
+                    pQueueFamilyIndices = IntPtr.Zero
+                };
+
+                IntPtr stagingBuffer;
+                VkResult result = vkCreateBuffer(_vkDevice, ref bufferCreateInfo, IntPtr.Zero, out stagingBuffer);
+                if (result != VkResult.VK_SUCCESS || stagingBuffer == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException($"Failed to create staging buffer: {result}");
+                }
+
+                try
+                {
+                    // Get memory requirements for staging buffer
+                    VkMemoryRequirements memRequirements;
+                    vkGetBufferMemoryRequirements(_vkDevice, stagingBuffer, out memRequirements);
+
+                    // Allocate host-visible memory for staging buffer
+                    VkMemoryAllocateInfo allocateInfo = new VkMemoryAllocateInfo
+                    {
+                        sType = VkStructureType.VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+                        pNext = IntPtr.Zero,
+                        allocationSize = memRequirements.size,
+                        memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
+                    };
+
+                    IntPtr stagingMemory;
+                    result = vkAllocateMemory(_vkDevice, ref allocateInfo, IntPtr.Zero, out stagingMemory);
+                    if (result != VkResult.VK_SUCCESS || stagingMemory == IntPtr.Zero)
+                    {
+                        throw new InvalidOperationException($"Failed to allocate staging buffer memory: {result}");
+                    }
+
+                    try
+                    {
+                        // Bind memory to staging buffer
+                        result = vkBindBufferMemory(_vkDevice, stagingBuffer, stagingMemory, 0);
+                        if (result != VkResult.VK_SUCCESS)
+                        {
+                            throw new InvalidOperationException($"Failed to bind staging buffer memory: {result}");
+                        }
+
+                        // Map staging buffer memory and copy data
+                        IntPtr mappedData;
+                        result = vkMapMemory(_vkDevice, stagingMemory, 0, dataSize, 0, out mappedData);
+                        if (result != VkResult.VK_SUCCESS || mappedData == IntPtr.Zero)
+                        {
+                            throw new InvalidOperationException($"Failed to map staging buffer memory: {result}");
+                        }
+
+                        try
+                        {
+                            // Copy data to mapped memory
+                            Marshal.Copy(data, 0, mappedData, (int)dataSize);
+                        }
+                        finally
+                        {
+                            // Unmap memory (data is flushed if host-coherent)
+                            vkUnmapMemory(_vkDevice, stagingMemory);
+                        }
+
+                        // Transition destination buffer to TRANSFER_DST state if needed
+                        SetBufferState(buffer, ResourceState.CopyDest);
+                        CommitBarriers();
+
+                        // Create buffer copy region
+                        VkBufferCopy copyRegion = new VkBufferCopy
+                        {
+                            srcOffset = 0,
+                            dstOffset = dstOffset,
+                            size = dataSize
+                        };
+
+                        // Allocate memory for copy region and marshal structure
+                        int regionSize = Marshal.SizeOf<VkBufferCopy>();
+                        IntPtr regionPtr = Marshal.AllocHGlobal(regionSize);
+                        try
+                        {
+                            Marshal.StructureToPtr(copyRegion, regionPtr, false);
+
+                            // Execute copy command: vkCmdCopyBuffer
+                            // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdCopyBuffer.html
+                            vkCmdCopyBuffer(
+                                _vkCommandBuffer,
+                                stagingBuffer,
+                                dstBuffer,
+                                1,
+                                regionPtr);
+                        }
+                        finally
+                        {
+                            Marshal.FreeHGlobal(regionPtr);
+                        }
+                    }
+                    finally
+                    {
+                        // Free staging buffer memory
+                        vkFreeMemory(_vkDevice, stagingMemory, IntPtr.Zero);
+                    }
+                }
+                finally
+                {
+                    // Destroy staging buffer
+                    vkDestroyBuffer(_vkDevice, stagingBuffer, IntPtr.Zero);
+                }
+            }
             public void WriteTexture(ITexture texture, int mipLevel, int arraySlice, byte[] data)
             {
                 if (!_isOpen)
@@ -5830,6 +6181,14 @@ namespace Andastra.Runtime.MonoGame.Backends
                 {
                     nameHandle.Free();
                 }
+            }
+
+            public void Dispose()
+            {
+                // Command buffers are managed by the command pool and device
+                // They are automatically freed when the command pool is destroyed
+                // No explicit cleanup needed for command buffers themselves
+                // Based on Vulkan Command Buffer Management: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkFreeCommandBuffers.html
             }
         }
 
