@@ -3546,7 +3546,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             // Validate that required functions are available
             if (vkCreateAccelerationStructureKHR == null || vkGetAccelerationStructureBuildSizesKHR == null || vkGetBufferDeviceAddressKHR == null)
             {
-                throw new NotSupportedException("VK_KHR_acceleration_structure extension functions are not available. Ensure the extension is enabled and functions are loaded.");
+                throw new NotSupportedException("VK_KHR_acceleration_structure extension functions are not available. Ensure the extension is enabled and functions are loaded via vkGetDeviceProcAddr.");
             }
 
             // Determine acceleration structure type
@@ -3628,10 +3628,25 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             // Get acceleration structure device address
-            // Based on Vulkan API: vkGetAccelerationStructureDeviceAddressKHR returns device address
-            // Note: This function needs to be loaded separately - for now, we'll use the buffer address as a placeholder
-            // In a full implementation, we would load vkGetAccelerationStructureDeviceAddressKHR and call it here
-            ulong accelStructDeviceAddress = bufferDeviceAddress; // Placeholder - would use vkGetAccelerationStructureDeviceAddressKHR
+            // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetAccelerationStructureDeviceAddressKHR.html
+            ulong accelStructDeviceAddress = 0UL;
+            if (vkGetAccelerationStructureDeviceAddressKHR != null)
+            {
+                VkAccelerationStructureDeviceAddressInfoKHR addressInfo = new VkAccelerationStructureDeviceAddressInfoKHR
+                {
+                    sType = VkStructureType.VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR,
+                    pNext = IntPtr.Zero,
+                    accelerationStructure = vkAccelStruct
+                };
+                accelStructDeviceAddress = vkGetAccelerationStructureDeviceAddressKHR(_device, ref addressInfo);
+            }
+            else
+            {
+                // Fallback: Use buffer address as approximation (not ideal, but allows basic functionality)
+                // In production, vkGetAccelerationStructureDeviceAddressKHR should always be available
+                accelStructDeviceAddress = bufferDeviceAddress;
+                System.Console.WriteLine("[VulkanDevice] Warning: vkGetAccelerationStructureDeviceAddressKHR not available, using buffer address as fallback");
+            }
 
             IntPtr handle = new IntPtr(_nextResourceHandle++);
             var accelStruct = new VulkanAccelStruct(handle, desc, vkAccelStruct, accelBuffer, accelStructDeviceAddress, _device);
