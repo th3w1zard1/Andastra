@@ -956,9 +956,9 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 InputElement element = layout.Elements[i];
                 MetalNative.SetVertexDescriptorAttribute(vertexDescriptor, (uint)i,
-                    ConvertTextureFormat(element.Format), element.Slot, element.AlignedByteOffset);
+                    ConvertTextureFormat(element.Format), (uint)element.Slot, (uint)element.AlignedByteOffset);
                 MetalNative.SetVertexDescriptorLayout(vertexDescriptor, (uint)element.Slot,
-                    element.AlignedByteOffset, 0); // stride would be calculated
+                    (uint)element.AlignedByteOffset, 0U); // stride would be calculated
             }
 
             return vertexDescriptor;

@@ -134,10 +134,10 @@ namespace Andastra.Runtime.MonoGame.Lighting
         /// </summary>
         private static LightProbe ConvertProbe(BaseLightProbeSystem.LightProbe probe)
         {
-            System.Numerics.Vector3[] shCoeffs = null;
+            XnaVector3[] shCoeffs = null;
             if (probe.SHCoefficients != null)
             {
-                shCoeffs = new System.Numerics.Vector3[probe.SHCoefficients.Length];
+                shCoeffs = new XnaVector3[probe.SHCoefficients.Length];
                 for (int i = 0; i < probe.SHCoefficients.Length; i++)
                 {
                     shCoeffs[i] = ConvertVector3(probe.SHCoefficients[i]);

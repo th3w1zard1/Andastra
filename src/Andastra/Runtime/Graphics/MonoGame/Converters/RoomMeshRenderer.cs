@@ -254,16 +254,16 @@ namespace Andastra.Runtime.MonoGame.Converters
                 Texture1 = mesh.Texture1 ?? "NULL",
                 Texture2 = mesh.Texture2 ?? "NULL",
                 DiffuseColor = new Color(
-                    (byte)(MathHelper.Clamp(mesh.Diffuse.X, 0.0f, 1.0f) * 255),
-                    (byte)(MathHelper.Clamp(mesh.Diffuse.Y, 0.0f, 1.0f) * 255),
-                    (byte)(MathHelper.Clamp(mesh.Diffuse.Z, 0.0f, 1.0f) * 255),
-                    255
+                    MathHelper.Clamp(mesh.Diffuse.X, 0.0f, 1.0f),
+                    MathHelper.Clamp(mesh.Diffuse.Y, 0.0f, 1.0f),
+                    MathHelper.Clamp(mesh.Diffuse.Z, 0.0f, 1.0f),
+                    1.0f
                 ),
                 AmbientColor = new Color(
-                    (byte)(MathHelper.Clamp(mesh.Ambient.X, 0.0f, 1.0f) * 255),
-                    (byte)(MathHelper.Clamp(mesh.Ambient.Y, 0.0f, 1.0f) * 255),
-                    (byte)(MathHelper.Clamp(mesh.Ambient.Z, 0.0f, 1.0f) * 255),
-                    255
+                    MathHelper.Clamp(mesh.Ambient.X, 0.0f, 1.0f),
+                    MathHelper.Clamp(mesh.Ambient.Y, 0.0f, 1.0f),
+                    MathHelper.Clamp(mesh.Ambient.Z, 0.0f, 1.0f),
+                    1.0f
                 ),
                 Alpha = MathHelper.Clamp(mesh.Alpha, 0.0f, 1.0f),
                 StartIndex = baseIndexIndex,

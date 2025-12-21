@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -21,6 +20,7 @@ using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.MonoGame.Converters;
 using Andastra.Runtime.MonoGame.Graphics;
 using Andastra.Runtime.Graphics;
+using GraphicsVector2 = Andastra.Runtime.Graphics.Vector2;
 using Andastra.Runtime.Graphics.MonoGame.Graphics;
 using JetBrains.Annotations;
 
@@ -139,7 +139,7 @@ namespace Andastra.Runtime.MonoGame.GUI
             _spriteBatch = new SpriteBatch(device);
             _loadedGuis = new Dictionary<string, LoadedGui>(StringComparer.OrdinalIgnoreCase);
             _textureCache = new Dictionary<string, Texture2D>(StringComparer.OrdinalIgnoreCase);
-            _fontCache = new Dictionary<string, BitmapFont>(StringComparer.OrdinalIgnoreCase);
+            _fontCache = new Dictionary<string, BaseBitmapFont>(StringComparer.OrdinalIgnoreCase);
             _previousMouseState = Mouse.GetState();
             _previousKeyboardState = Keyboard.GetState();
         }
@@ -188,7 +188,7 @@ namespace Andastra.Runtime.MonoGame.GUI
 
                 // Parse GUI file using GUIReader
                 GUIReader guiReader = new GUIReader(resourceResult.Data);
-                GUI gui = guiReader.Load();
+                GuiResource gui = guiReader.Load();
 
                 if (gui == null || gui.Controls == null || gui.Controls.Count == 0)
                 {
@@ -411,7 +411,7 @@ namespace Andastra.Runtime.MonoGame.GUI
             UpdateHighlightedButton(currentMouseState.X, currentMouseState.Y);
 
             // Handle mouse clicks on buttons
-            if (_previousMouseState.LeftButton == ButtonState.Released && currentMouseState.LeftButton == ButtonState.Pressed)
+            if (_previousMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released && currentMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
             {
                 HandleMouseClick(currentMouseState.X, currentMouseState.Y);
             }
@@ -431,7 +431,7 @@ namespace Andastra.Runtime.MonoGame.GUI
                 return;
             }
 
-            _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone);
+            _spriteBatch.Begin(Microsoft.Xna.Framework.Graphics.SpriteSortMode.Deferred, Microsoft.Xna.Framework.Graphics.BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone);
 
             // Render all controls recursively
             foreach (var control in _currentGui.Gui.Controls)
@@ -719,7 +719,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         private void RenderPanel(GUIPanel panel, XnaVector2 position, XnaVector2 size)
         {
             // Render panel background using border fill texture if available
-            if (panel.Border != null && !panel.Border.Fill.IsBlank)
+            if (panel.Border != null && !panel.Border.Fill.IsBlank())
             {
                 Texture2D fillTexture = LoadTexture(panel.Border.Fill.ToString());
                 if (fillTexture != null)
@@ -732,7 +732,7 @@ namespace Andastra.Runtime.MonoGame.GUI
             else
             {
                 // Render solid color background if no texture
-                Color bgColor = panel.Color;
+                ParsingColor bgColor = panel.Color;
                 if (bgColor.A > 0)
                 {
                     Texture2D pixel = GetPixelTexture();
@@ -772,7 +772,7 @@ namespace Andastra.Runtime.MonoGame.GUI
             }
 
             // Render button background
-            if (borderToUse != null && !borderToUse.Fill.IsBlank)
+            if (borderToUse != null && !borderToUse.Fill.IsBlank())
             {
                 Texture2D fillTexture = LoadTexture(borderToUse.Fill.ToString());
                 if (fillTexture != null)
@@ -781,7 +781,7 @@ namespace Andastra.Runtime.MonoGame.GUI
                     _spriteBatch.Draw(fillTexture, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
-            else if (button.Border != null && !button.Border.Fill.IsBlank)
+            else if (button.Border != null && !button.Border.Fill.IsBlank())
             {
                 Texture2D fillTexture = LoadTexture(button.Border.Fill.ToString());
                 if (fillTexture != null)
@@ -793,7 +793,7 @@ namespace Andastra.Runtime.MonoGame.GUI
             else
             {
                 // Render solid color background
-                Color bgColor = button.Color;
+                ParsingColor bgColor = button.Color;
                 if (bgColor.A > 0)
                 {
                     Texture2D pixel = GetPixelTexture();
@@ -806,7 +806,7 @@ namespace Andastra.Runtime.MonoGame.GUI
             if (button.GuiText != null && !string.IsNullOrEmpty(button.GuiText.Text))
             {
                 string text = button.GuiText.Text;
-                Color textColor = new Microsoft.Xna.Framework.Color(
+                XnaColor textColor = new Microsoft.Xna.Framework.Color(
                     button.GuiText.Color.R,
                     button.GuiText.Color.G,
                     button.GuiText.Color.B,
@@ -817,13 +817,16 @@ namespace Andastra.Runtime.MonoGame.GUI
                 if (font != null)
                 {
                     // Measure text size
-                    Vector2 textSize = font.MeasureString(text);
+                    GraphicsVector2 textSize = font.MeasureString(text);
 
                     // Calculate text position based on alignment
-                    Vector2 textPos = CalculateTextPosition(button.GuiText.Alignment, position, size, textSize);
+                    XnaVector2 textPos = CalculateTextPosition(button.GuiText.Alignment, position, size, new XnaVector2(textSize.X, textSize.Y)); 
+                        new GraphicsVector2(position.X, position.Y), 
+                        new GraphicsVector2(size.X, size.Y), 
+                        new GraphicsVector2(textSize.X, textSize.Y));
 
-                    // Render text using bitmap font
-                    RenderBitmapText(font, text, textPos, textColor);
+                    // Render text using bitmap font (convert Graphics.Vector2 to XnaVector2)
+                    RenderBitmapText(font, text, new XnaVector2(textPos.X, textPos.Y), textColor);
                 }
             }
         }
@@ -834,7 +837,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         private void RenderLabel(GUILabel label, XnaVector2 position, XnaVector2 size)
         {
             // Render label background if it has a border
-            if (label.Border != null && !label.Border.Fill.IsBlank)
+            if (label.Border != null && !label.Border.Fill.IsBlank())
             {
                 Texture2D fillTexture = LoadTexture(label.Border.Fill.ToString());
                 if (fillTexture != null)
@@ -848,7 +851,7 @@ namespace Andastra.Runtime.MonoGame.GUI
             if (label.GuiText != null && !string.IsNullOrEmpty(label.GuiText.Text))
             {
                 string text = label.GuiText.Text;
-                Color textColor = new Microsoft.Xna.Framework.Color(
+                XnaColor textColor = new Microsoft.Xna.Framework.Color(
                     label.GuiText.Color.R,
                     label.GuiText.Color.G,
                     label.GuiText.Color.B,
@@ -859,13 +862,16 @@ namespace Andastra.Runtime.MonoGame.GUI
                 if (font != null)
                 {
                     // Measure text size
-                    Vector2 textSize = font.MeasureString(text);
+                    System.Numerics.Vector2 textSize = font.MeasureString(text);
 
-                    // Calculate text position based on alignment
-                    Vector2 textPos = CalculateTextPosition(label.GuiText.Alignment, position, size, textSize);
+                    // Calculate text position based on alignment (convert to Graphics.Vector2)
+                    GraphicsVector2 textPos = CalculateTextPosition(label.GuiText.Alignment, 
+                        new GraphicsVector2(position.X, position.Y), 
+                        new GraphicsVector2(size.X, size.Y), 
+                        new GraphicsVector2(textSize.X, textSize.Y));
 
-                    // Render text using bitmap font
-                    RenderBitmapText(font, text, textPos, textColor);
+                    // Render text using bitmap font (convert Graphics.Vector2 to XnaVector2)
+                    RenderBitmapText(font, text, new XnaVector2(textPos.X, textPos.Y), textColor);
                 }
             }
         }
@@ -878,7 +884,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         private void RenderListBox(GUIListBox listBox, XnaVector2 position, XnaVector2 size)
         {
             // Render list box background
-            if (listBox.Border != null && !listBox.Border.Fill.IsBlank)
+            if (listBox.Border != null && !listBox.Border.Fill.IsBlank())
             {
                 Texture2D fillTexture = LoadTexture(listBox.Border.Fill.ToString());
                 if (fillTexture != null)
@@ -1137,7 +1143,7 @@ namespace Andastra.Runtime.MonoGame.GUI
             }
 
             // Render proto item background
-            if (borderToUse != null && !borderToUse.Fill.IsBlank)
+            if (borderToUse != null && !borderToUse.Fill.IsBlank())
             {
                 Texture2D fillTexture = LoadTexture(borderToUse.Fill.ToString());
                 if (fillTexture != null)
@@ -1146,7 +1152,7 @@ namespace Andastra.Runtime.MonoGame.GUI
                     _spriteBatch.Draw(fillTexture, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
-            else if (protoItem.Border != null && !protoItem.Border.Fill.IsBlank)
+            else if (protoItem.Border != null && !protoItem.Border.Fill.IsBlank())
             {
                 Texture2D fillTexture = LoadTexture(protoItem.Border.Fill.ToString());
                 if (fillTexture != null)
@@ -1158,7 +1164,7 @@ namespace Andastra.Runtime.MonoGame.GUI
             else
             {
                 // Render solid color background if available
-                Color bgColor = protoItem.Color;
+                ParsingColor bgColor = protoItem.Color;
                 if (bgColor.A > 0)
                 {
                     Texture2D pixel = GetPixelTexture();
@@ -1198,13 +1204,16 @@ namespace Andastra.Runtime.MonoGame.GUI
                 if (font != null)
                 {
                     // Measure text size
-                    Vector2 textSize = font.MeasureString(itemText);
+                    System.Numerics.Vector2 textSize = font.MeasureString(itemText);
 
-                    // Calculate text position based on alignment
-                    Vector2 textPos = CalculateTextPosition(alignment, position, size, textSize);
+                    // Calculate text position based on alignment (convert to Graphics.Vector2)
+                    GraphicsVector2 textPos = CalculateTextPosition(alignment, 
+                        new GraphicsVector2(position.X, position.Y), 
+                        new GraphicsVector2(size.X, size.Y), 
+                        new GraphicsVector2(textSize.X, textSize.Y));
 
-                    // Render text using bitmap font
-                    RenderBitmapText(font, itemText, textPos, textColor);
+                    // Render text using bitmap font (convert Graphics.Vector2 to XnaVector2)
+                    RenderBitmapText(font, itemText, new XnaVector2(textPos.X, textPos.Y), textColor);
                 }
             }
         }
@@ -1233,13 +1242,13 @@ namespace Andastra.Runtime.MonoGame.GUI
             XnaVector2 scrollbarSize = new XnaVector2(scrollbarWidth, scrollbarHeight);
 
             // Render scrollbar background if available
-            if (scrollBar.Border != null && !scrollBar.Border.Fill.IsBlank)
+            if (scrollBar.Border != null && !scrollBar.Border.Fill.IsBlank())
             {
                 Texture2D scrollbarBgTexture = LoadTexture(scrollBar.Border.Fill.ToString());
                 if (scrollbarBgTexture != null)
                 {
-                    Color tint = Microsoft.Xna.Framework.Color.White;
-                    _spriteBatch.Draw(scrollbarBgTexture, new Rectangle((int)scrollbarPosition.X, (int)scrollbarPosition.Y, (int)scrollbarSize.X, (int)scrollbarSize.Y), tint);
+                    XnaColor tint = Microsoft.Xna.Framework.Color.White;
+                    _spriteBatch.Draw(scrollbarBgTexture, new XnaRectangle((int)scrollbarPosition.X, (int)scrollbarPosition.Y, (int)scrollbarSize.X, (int)scrollbarSize.Y), tint);
                 }
             }
 
@@ -1261,7 +1270,7 @@ namespace Andastra.Runtime.MonoGame.GUI
                     float thumbY = scrollbarPosition.Y + (scrollRatio * availableTrackHeight);
 
                     // Render thumb
-                    Color thumbTint = Microsoft.Xna.Framework.Color.White;
+                    XnaColor thumbTint = Microsoft.Xna.Framework.Color.White;
                     XnaRectangle thumbRect = new XnaRectangle((int)scrollbarPosition.X, (int)thumbY, (int)scrollbarSize.X, (int)thumbHeight);
                     _spriteBatch.Draw(thumbTexture, thumbRect, thumbTint);
                 }
@@ -1292,7 +1301,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         private void RenderProgressBar(GUIProgressBar progressBar, XnaVector2 position, XnaVector2 size)
         {
             // Render progress bar background
-            if (progressBar.Border != null && !progressBar.Border.Fill.IsBlank)
+            if (progressBar.Border != null && !progressBar.Border.Fill.IsBlank())
             {
                 Texture2D fillTexture = LoadTexture(progressBar.Border.Fill.ToString());
                 if (fillTexture != null)
@@ -1308,7 +1317,7 @@ namespace Andastra.Runtime.MonoGame.GUI
                 float progress = (float)progressBar.CurrentValue / progressBar.MaxValue;
                 int fillWidth = (int)(size.X * progress);
 
-                if (fillWidth > 0 && progressBar.Progress.Fill != null && !progressBar.Progress.Fill.IsBlank)
+                if (fillWidth > 0 && progressBar.Progress.Fill != null && !progressBar.Progress.Fill.IsBlank())
                 {
                     Texture2D progressTexture = LoadTexture(progressBar.Progress.Fill.ToString());
                     if (progressTexture != null)
@@ -1351,7 +1360,7 @@ namespace Andastra.Runtime.MonoGame.GUI
             }
 
             // Render checkbox background
-            if (borderToUse != null && !borderToUse.Fill.IsBlank)
+            if (borderToUse != null && !borderToUse.Fill.IsBlank())
             {
                 Texture2D fillTexture = LoadTexture(borderToUse.Fill.ToString());
                 if (fillTexture != null)
@@ -1360,7 +1369,7 @@ namespace Andastra.Runtime.MonoGame.GUI
                     _spriteBatch.Draw(fillTexture, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
-            else if (checkBox.Border != null && !checkBox.Border.Fill.IsBlank)
+            else if (checkBox.Border != null && !checkBox.Border.Fill.IsBlank())
             {
                 Texture2D fillTexture = LoadTexture(checkBox.Border.Fill.ToString());
                 if (fillTexture != null)
