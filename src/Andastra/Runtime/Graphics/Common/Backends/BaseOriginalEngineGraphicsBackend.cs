@@ -21,7 +21,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
     /// - Eclipse: Dragon Age Origins, Dragon Age 2
     /// - Odyssey: KOTOR 1, KOTOR 2
     /// - Aurora: Neverwinter Nights Enhanced Edition
-    /// - Infinity:  1,  2
+    /// - Infinity: Baldur's Gate 1, Baldur's Gate 2, Icewind Dale, Planescape: Torment
     /// </summary>
     /// <remarks>
     /// Original Engine Graphics Backend:
@@ -31,7 +31,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
     ///   * Aurora (NWN:EE): OpenGL ONLY (nwmain.exe imports OPENGL32.DLL, GLU32.DLL)
     ///   * Eclipse (DA:O): DirectX 9 (daorigins.exe dynamically loads d3d9.dll, Direct3DCreate9)
     ///   * Eclipse (DA2): DirectX 11 primary with DirectX 9 fallback (DragonAge2.exe loads d3d11.dll/dxgi.dll, UseDirectX11Renderer flag)
-    ///   * Infinity (/): TBD (requires further analysis)
+    ///   * Infinity (BG1/BG2/IWD/PST): DirectDraw (Baldur.exe/bgmain.exe use ddraw.dll, DirectDrawCreate)
     /// - Graphics initialization: Matches original engine initialization code from game executables
     /// - Located via reverse engineering: DirectX/OpenGL calls, rendering pipeline, shader usage
     /// - This implementation: Direct 1:1 match of original engine rendering code
@@ -828,7 +828,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
 
             // Step 4: Load texture data (matching swkotor.exe: FUN_00427c90)
-            // Note: For now, we create an empty texture. Actual data loading should be done separately.
+            // TODO:  Note: For now, we create an empty texture. Actual data loading should be done separately.
             uint format = ConvertTextureFormatToOpenGL(desc.Format);
             glTexImage2D(GL_TEXTURE_2D, 0, (int)format, desc.Width, desc.Height, 0, format, GL_UNSIGNED_BYTE, IntPtr.Zero);
 
@@ -917,7 +917,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
             glBindBuffer(target, bufferId);
 
             // Step 3: Upload buffer data (if provided)
-            // Note: For now, we create an empty buffer. Actual data upload should be done separately.
+            // TODO:  Note: For now, we create an empty buffer. Actual data upload should be done separately.
             glBufferData(target, (IntPtr)desc.SizeInBytes, IntPtr.Zero, GL_STATIC_DRAW);
 
             // Unbind buffer
