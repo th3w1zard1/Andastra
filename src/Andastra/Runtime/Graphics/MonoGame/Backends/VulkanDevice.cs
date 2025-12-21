@@ -1036,6 +1036,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR = 1000150004,
             VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR = 1000150005,
             VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_AABBS_DATA_KHR = 1000150006,
+            VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_INSTANCES_DATA_KHR = 1000150007,
             VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR = 1000150017,
             VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR = 1000150020,
             VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO = 1000244001,
@@ -1141,6 +1142,15 @@ namespace Andastra.Runtime.MonoGame.Backends
             VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR = 0x00000004,
             VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_BUILD_BIT_KHR = 0x00000008,
             VK_BUILD_ACCELERATION_STRUCTURE_LOW_MEMORY_BIT_KHR = 0x00000010
+        }
+
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkCopyAccelerationStructureModeKHR.html
+        private enum VkCopyAccelerationStructureModeKHR
+        {
+            VK_COPY_ACCELERATION_STRUCTURE_MODE_CLONE_KHR = 0,
+            VK_COPY_ACCELERATION_STRUCTURE_MODE_COMPACT_KHR = 1,
+            VK_COPY_ACCELERATION_STRUCTURE_MODE_SERIALIZE_KHR = 2,
+            VK_COPY_ACCELERATION_STRUCTURE_MODE_DESERIALIZE_KHR = 3
         }
 
         // Vulkan dependency flags
@@ -6477,7 +6487,121 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // Transition image back to DEPTH_STENCIL_ATTACHMENT_OPTIMAL for use as attachment
                 TransitionImageLayout(image, VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VkImageLayout.VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, textureDesc, desc.DepthAttachment.MipLevel, desc.DepthAttachment.ArraySlice);
             }
-            public void ClearUAVFloat(ITexture texture, Vector4 value) { /* TODO: vkCmdFillBuffer or compute shader */ }
+            /// <summary>
+            /// Clears an unordered access view (UAV) texture to a float Vector4 value.
+            /// 
+            /// Implementation: Uses vkCmdClearColorImage with VK_IMAGE_LAYOUT_GENERAL layout.
+            /// UAV textures in Vulkan use GENERAL layout, which is the standard layout for
+            /// storage images that can be read/written by compute shaders.
+            /// 
+            /// Based on Vulkan API: https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdClearColorImage.html
+            /// Vulkan spec: vkCmdClearColorImage can be used with VK_IMAGE_LAYOUT_GENERAL layout
+            /// for storage images (UAVs).
+            /// </summary>
+            public void ClearUAVFloat(ITexture texture, Vector4 value)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before clearing UAV texture");
+                }
+
+                if (texture == null)
+                {
+                    throw new ArgumentNullException(nameof(texture));
+                }
+
+                // Get native VkImage handle from texture
+                IntPtr image = texture.NativeHandle;
+                if (image == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("Texture does not have a valid native handle");
+                }
+
+                // Get texture description to determine format and dimensions
+                TextureDesc textureDesc = texture.Desc;
+
+                // Validate texture has storage usage (required for UAV)
+                if ((textureDesc.Usage & TextureUsage.Storage) == 0)
+                {
+                    throw new ArgumentException("Texture must have Storage usage flag to be used as a UAV", nameof(texture));
+                }
+
+                // Check if vkCmdClearColorImage is available
+                if (vkCmdClearColorImage == null)
+                {
+                    throw new NotSupportedException("vkCmdClearColorImage is not available");
+                }
+
+                // Transition image to GENERAL layout if not already in it
+                // GENERAL is the standard layout for UAVs (storage images) in Vulkan
+                // We check current layout from resource state tracking, but for simplicity
+                // we transition from UNDEFINED or current layout to GENERAL
+                // Note: In a full implementation, we would track the current layout per texture
+                // For now, we transition assuming the texture might be in UNDEFINED or GENERAL layout
+                TransitionImageLayout(image, VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED, VkImageLayout.VK_IMAGE_LAYOUT_GENERAL, textureDesc, 0, 0);
+
+                // Create clear color value structure
+                // VkClearColorValue is a union that can be float[4], int32[4], or uint32[4]
+                // For float UAVs, we use float[4]
+                VkClearColorValue clearValue = new VkClearColorValue
+                {
+                    float32_0 = value.X,
+                    float32_1 = value.Y,
+                    float32_2 = value.Z,
+                    float32_3 = value.W
+                };
+
+                // Create subresource range for the entire texture
+                // For UAV clearing, we typically clear the entire texture (all mips, all array layers)
+                // If specific mip/array slice clearing is needed, it can be added as parameters later
+                VkImageSubresourceRange subresourceRange = new VkImageSubresourceRange
+                {
+                    aspectMask = VkImageAspectFlags.VK_IMAGE_ASPECT_COLOR_BIT,
+                    baseMipLevel = 0, // Start from base mip level
+                    levelCount = unchecked((uint)textureDesc.MipLevels), // All mip levels
+                    baseArrayLayer = 0, // Start from base array layer
+                    layerCount = unchecked((uint)textureDesc.ArraySize) // All array layers
+                };
+
+                // Allocate memory for structures and marshal them
+                int clearValueSize = Marshal.SizeOf<VkClearColorValue>();
+                IntPtr clearValuePtr = Marshal.AllocHGlobal(clearValueSize);
+                int rangeSize = Marshal.SizeOf<VkImageSubresourceRange>();
+                IntPtr rangePtr = Marshal.AllocHGlobal(rangeSize);
+
+                try
+                {
+                    // Marshal structures to unmanaged memory
+                    Marshal.StructureToPtr(clearValue, clearValuePtr, false);
+                    Marshal.StructureToPtr(subresourceRange, rangePtr, false);
+
+                    // Call vkCmdClearColorImage
+                    // Signature: void vkCmdClearColorImage(
+                    //   VkCommandBuffer commandBuffer,
+                    //   VkImage image,
+                    //   VkImageLayout imageLayout,  // VK_IMAGE_LAYOUT_GENERAL for UAVs
+                    //   const VkClearColorValue* pColor,
+                    //   uint32_t rangeCount,
+                    //   const VkImageSubresourceRange* pRanges)
+                    vkCmdClearColorImage(
+                        _vkCommandBuffer,
+                        image,
+                        VkImageLayout.VK_IMAGE_LAYOUT_GENERAL, // GENERAL layout for UAVs
+                        clearValuePtr,
+                        1, // Single range
+                        rangePtr);
+                }
+                finally
+                {
+                    // Free allocated memory
+                    Marshal.FreeHGlobal(clearValuePtr);
+                    Marshal.FreeHGlobal(rangePtr);
+                }
+
+                // Note: We keep the image in GENERAL layout after clearing
+                // This is the correct layout for UAVs and allows subsequent compute shader access
+                // No transition back is needed
+            }
             public void ClearUAVUint(ITexture texture, uint value) { /* TODO: vkCmdFillBuffer or compute shader */ }
             public void SetTextureState(ITexture texture, ResourceState state)
             {
@@ -8625,7 +8749,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                             pNext = IntPtr.Zero,
                             type = VkAccelerationStructureTypeKHR.VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR,
                             flags = VkBuildAccelerationStructureFlagsKHR.VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR,
-                            mode = VkBuildAccelerationStructureModeKHR.VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR,
+                            buildType = VkAccelerationStructureBuildTypeKHR.VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
                             srcAccelerationStructure = IntPtr.Zero, // Building new, not updating
                             dstAccelerationStructure = vulkanAccelStruct.VkAccelStruct,
                             geometryCount = 1, // Single geometry containing all instances
