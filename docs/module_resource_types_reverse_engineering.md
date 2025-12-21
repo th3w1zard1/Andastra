@@ -200,7 +200,7 @@ The engine's resource manager loads resources by:
 
 **Edge Cases - What Actually Works** (based on code structure):
 
-- **TLK (type 0x7e2 = 2018)**: 
+- **TLK (type 0x7e2 = 2018)**:
   - ✅ Registered in resource type registry (swkotor.exe: `FUN_005e6d20` line 91, swkotor2.exe: `FUN_00632510` line 90)
   - ✅ CAN be registered in modules (no type filtering in `FUN_0040e990`)
   - ❓ **UNPROVEN**: Whether TLK loading code uses `FUN_00407230` (resource search) or hardcoded paths
@@ -231,7 +231,6 @@ The engine's resource manager loads resources by:
   - Then tries TPC (type 0xbbf = 3007) via `FUN_00408bc0`
   - `FUN_00408bc0` calls `FUN_00407230` which searches all locations including modules
 - **Texture Priority**: TGA → TPC (no DDS support in this code path)
-
 
 ### Known Resource Types from Andastra
 
@@ -524,12 +523,24 @@ if (iVar7 == 0) {
 
 **Result**: **FIRST resource registered wins**. Later duplicates are ignored.
 
-**Resource Resolution Priority**:
+**Resource Resolution Priority** (exact behavior):
 
-- If same resource exists in `.rim` and `_s.rim`: **`.rim` wins** (registered first when flag is 0, or loaded before `_s.rim` in other paths)
-- If same resource exists in `.rim` and `.mod`: **`.mod` wins** (registered after `.rim`, overrides it)
-- If same resource exists in `_a.rim`/`_adx.rim` and `.rim`: **`.rim` wins** (main `.rim` loads first, area files supplement it)
+- **Same resource in `.rim` and `_s.rim`**: `.rim` wins (registered first when flag is 0, or loaded before `_s.rim` in other paths)
+- **Same resource in `.rim` and `.mod`**: `.mod` wins (registered after `.rim`, overrides it)
+- **Same resource in `_a.rim`/`_adx.rim` and `.rim`**: `.rim` wins (main `.rim` loads first, area files supplement it)
 - **CRITICAL**: When `.mod` exists, `.rim` and `_s.rim` are NOT loaded - `.mod` completely replaces them
+
+**Edge Cases**:
+
+- **Flag == 0, only `.rim` exists**: Only `.rim` is loaded, function returns immediately
+- **Flag == 0, `.rim` + `_a.rim` exist**: Only `.rim` is loaded (flag == 0 bypasses `_a.rim` check)
+- **Flag != 0, `.rim` + `_a.rim` exist**: Both `.rim` and `_a.rim` are loaded (`.rim` loads first, `_a.rim` supplements)
+- **Flag != 0, `.mod` exists**: Only `.mod` is loaded, `.rim` and `_s.rim` are NOT loaded
+- **Flag != 0, `.mod` + `_a.rim` exist**: Only `.mod` is loaded, `_a.rim` is NOT loaded (`.mod` check happens before `_a.rim` check)
+- **Flag != 0, `.rim` + `_s.rim` exist, no `.mod`**: Both `.rim` and `_s.rim` are loaded (`.rim` loads first, `_s.rim` supplements)
+- **Flag != 0, `.rim` + `_a.rim` + `_adx.rim` exist**: All three are loaded (`.rim` first, then `_a.rim`, then `_adx.rim`)
+- **Flag != 0, `.rim` + `_a.rim` + `_adx.rim` + `_s.rim` exist**: All four are loaded (`.rim` first, then `_a.rim`, then `_adx.rim`, then `_s.rim`)
+- **Duplicate resources**: First registered wins, later duplicates are ignored (checked in `FUN_0040e990` line 36)
 
 ### K2 (swkotor2.exe) - `FUN_004096b0`
 
@@ -695,8 +706,8 @@ if (iVar7 == 0) {
 6. **Resource types**: ✅ Engine accepts ANY resource type in modules (no filtering)
    - Container format allows any resource type ID
    - Engine resource manager loads any type stored in containers
-   - **TPC/TGA CAN be containerized** - This is a "game changer" for modding
-   - Convention: Follow `KModuleType.Contains()` for compatibility, but engine is permissive
+   - **TPC/TGA CAN be containerized** - Engine loads these from modules
+   - Engine behavior: Accepts any resource type ID stored in containers, regardless of container type
 
 7. **Valid file combinations**:
    - K1: `.mod` (override), `.rim`, `.rim` + `_s.rim`, `.rim` + `_a.rim`, `.rim` + `_adx.rim`, `.rim` + `_a.rim` + `_adx.rim`
@@ -713,11 +724,11 @@ The current `ModuleFileDiscovery.cs` correctly handles:
 - `_dlg.erf` support (K2 only) - **CONFIRMED via reverse engineering**
 - Case-insensitive filename matching
 
-The `KModuleType.Contains()` method in `Module.cs` implements the **conventional** resource type distribution (not a hard engine requirement):
+The `KModuleType.Contains()` method in `Module.cs` implements the **observed** resource type distribution from actual game modules:
 
-- **MAIN (.rim)**: ARE, IFO, GIT only
-- **DATA (_s.rim)**: FAC, LYT, NCS, PTH, UTC, UTD, UTE, UTI, UTM, UTP, UTS, UTT, UTW, DLG (K1)
-- **K2_DLG (_dlg.erf)**: DLG only (K2)
-- **MOD (.mod)**: All resource types
+- **MAIN (.rim)**: ARE, IFO, GIT (observed in game modules)
+- **DATA (_s.rim)**: FAC, LYT, NCS, PTH, UTC, UTD, UTE, UTI, UTM, UTP, UTS, UTT, UTW, DLG (K1, observed in game modules)
+- **K2_DLG (_dlg.erf)**: DLG (K2, observed in game modules)
+- **MOD (.mod)**: Any resource type (engine accepts all types)
 
-**Important**: The engine is permissive - it will load any resource type from any module container. Following the convention ensures compatibility with tooling and modding practices.
+**Engine Behavior**: The engine loads any resource type from any module container. The distribution above reflects what is typically found in game modules, not an engine requirement.
