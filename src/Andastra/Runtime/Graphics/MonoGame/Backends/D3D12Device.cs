@@ -116,6 +116,15 @@ namespace Andastra.Runtime.MonoGame.Backends
         private readonly Dictionary<IntPtr, IntPtr> _textureDsvHandles; // Cache of texture -> DSV handle mappings
         private readonly Dictionary<IntPtr, IntPtr> _textureRtvHandles; // Cache of texture -> RTV handle mappings
 
+        // UAV descriptor heap fields
+        private IntPtr _uavDescriptorHeap;
+        private IntPtr _uavHeapCpuStartHandle;
+        private uint _uavHeapDescriptorIncrementSize;
+        private int _uavHeapCapacity;
+        private int _uavHeapNextIndex;
+        private const int DefaultUavHeapCapacity = 1024;
+        private readonly Dictionary<IntPtr, IntPtr> _textureUavHandles; // Cache of texture -> UAV handle mappings
+
         public GraphicsCapabilities Capabilities
         {
             get { return _capabilities; }
@@ -155,6 +164,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             _currentFrameIndex = 0;
             _textureDsvHandles = new Dictionary<IntPtr, IntPtr>();
             _textureRtvHandles = new Dictionary<IntPtr, IntPtr>();
+            _textureUavHandles = new Dictionary<IntPtr, IntPtr>();
         }
 
         #region Resource Creation
