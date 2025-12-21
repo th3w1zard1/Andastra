@@ -3148,7 +3148,66 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // Call ID3D12GraphicsCommandList::Dispatch
                 CallDispatch(_d3d12CommandList, unchecked((uint)groupCountX), unchecked((uint)groupCountY), unchecked((uint)groupCountZ));
             }
-            public void DispatchIndirect(IBuffer argumentBuffer, int offset) { /* TODO: ExecuteIndirect */ }
+            public void DispatchIndirect(IBuffer argumentBuffer, int offset)
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (argumentBuffer == null)
+                {
+                    throw new ArgumentNullException(nameof(argumentBuffer));
+                }
+
+                if (offset < 0)
+                {
+                    throw new ArgumentException("Offset must be non-negative", nameof(offset));
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    return; // Command list not initialized
+                }
+
+                // Get the native D3D12 resource handle from the buffer
+                IntPtr argumentResource = argumentBuffer.NativeHandle;
+                if (argumentResource == IntPtr.Zero)
+                {
+                    throw new ArgumentException("Argument buffer has invalid native handle", nameof(argumentBuffer));
+                }
+
+                // Get or create the dispatch indirect command signature
+                // Command signatures are cached per device to avoid repeated creation
+                IntPtr commandSignature = _device.CreateDispatchIndirectCommandSignature();
+                if (commandSignature == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("Failed to create or retrieve dispatch indirect command signature");
+                }
+
+                // Get GPU virtual address of the argument buffer
+                ulong argumentBufferGpuVa = _device.GetGpuVirtualAddress(argumentResource);
+                if (argumentBufferGpuVa == 0UL)
+                {
+                    throw new InvalidOperationException("Failed to get GPU virtual address for argument buffer");
+                }
+
+                // Calculate the GPU virtual address with offset
+                ulong argumentBufferOffsetGpuVa = argumentBufferGpuVa + unchecked((ulong)offset);
+
+                // For single dispatch indirect (no count buffer), MaxCommandCount is 1
+                // The count buffer is NULL (IntPtr.Zero) and CountBufferOffset is 0
+                // Based on DirectX 12 ExecuteIndirect: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-executeindirect
+                // swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+                _device.CallExecuteIndirect(
+                    _d3d12CommandList,
+                    commandSignature,
+                    1, // MaxCommandCount: 1 for single dispatch
+                    argumentResource, // pArgumentBuffer: resource containing D3D12_DISPATCH_ARGUMENTS
+                    argumentBufferOffsetGpuVa, // ArgumentBufferOffset: offset into argument buffer
+                    IntPtr.Zero, // pCountBuffer: NULL for single dispatch (no count buffer)
+                    0UL); // CountBufferOffset: 0 when pCountBuffer is NULL
+            }
             public void SetRaytracingState(RaytracingState state) { /* TODO: Set raytracing state */ }
             public void DispatchRays(DispatchRaysArguments args) { /* TODO: DispatchRays */ }
             public void BuildBottomLevelAccelStruct(IAccelStruct accelStruct, GeometryDesc[] geometries)
@@ -3616,6 +3675,168 @@ namespace Andastra.Runtime.MonoGame.Backends
                 (GetGPUVirtualAddressDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(GetGPUVirtualAddressDelegate));
 
             return getGpuVa(resource);
+        }
+
+        // COM interface method delegate for CreateCommandSignature
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int CreateCommandSignatureDelegate(
+            IntPtr device,
+            IntPtr pDesc,
+            IntPtr pRootSignature,
+            ref Guid riid,
+            out IntPtr ppCommandSignature);
+
+        // COM interface method delegate for ExecuteIndirect
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void ExecuteIndirectDelegate(
+            IntPtr commandList,
+            IntPtr pCommandSignature,
+            uint MaxCommandCount,
+            IntPtr pArgumentBuffer,
+            ulong ArgumentBufferOffset,
+            IntPtr pCountBuffer,
+            ulong CountBufferOffset);
+
+        /// <summary>
+        /// Creates a command signature for DispatchIndirect.
+        /// Based on D3D12 API: ID3D12Device::CreateCommandSignature
+        /// VTable index 27 for ID3D12Device.
+        /// Command signatures describe the structure of indirect arguments in GPU buffers.
+        /// </summary>
+        internal unsafe IntPtr CreateDispatchIndirectCommandSignature()
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return IntPtr.Zero;
+            }
+
+            if (_device == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            // If already created, return cached signature
+            if (_dispatchIndirectCommandSignature != IntPtr.Zero)
+            {
+                return _dispatchIndirectCommandSignature;
+            }
+
+            // Create indirect argument description for Dispatch
+            // D3D12_DISPATCH_ARGUMENTS contains 3 uints (ThreadGroupCountX, Y, Z)
+            var argumentDesc = new D3D12_INDIRECT_ARGUMENT_DESC
+            {
+                Type = D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH,
+                ConstantRootParameterIndex = 0,
+                ConstantNum32BitValuesToSet = 0,
+                VertexBufferSlot = IntPtr.Zero
+            };
+
+            // Create command signature description
+            // ByteStride is the size of D3D12_DISPATCH_ARGUMENTS (12 bytes: 3 uints)
+            var commandSignatureDesc = new D3D12_COMMAND_SIGNATURE_DESC
+            {
+                ByteStride = (uint)Marshal.SizeOf(typeof(D3D12_DISPATCH_ARGUMENTS)),
+                NumArgumentDescs = 1,
+                pArgumentDescs = IntPtr.Zero, // Will be set after marshaling
+                NodeMask = 0
+            };
+
+            // Allocate memory for argument description
+            int argumentDescSize = Marshal.SizeOf(typeof(D3D12_INDIRECT_ARGUMENT_DESC));
+            IntPtr argumentDescPtr = Marshal.AllocHGlobal(argumentDescSize);
+            try
+            {
+                Marshal.StructureToPtr(argumentDesc, argumentDescPtr, false);
+                commandSignatureDesc.pArgumentDescs = argumentDescPtr;
+
+                // Allocate memory for command signature description
+                int descSize = Marshal.SizeOf(typeof(D3D12_COMMAND_SIGNATURE_DESC));
+                IntPtr descPtr = Marshal.AllocHGlobal(descSize);
+                try
+                {
+                    Marshal.StructureToPtr(commandSignatureDesc, descPtr, false);
+
+                    // Get vtable pointer
+                    IntPtr* vtable = *(IntPtr**)_device;
+                    // CreateCommandSignature is at index 27 in ID3D12Device vtable
+                    IntPtr methodPtr = vtable[27];
+
+                    // Create delegate from function pointer
+                    CreateCommandSignatureDelegate createCommandSignature =
+                        (CreateCommandSignatureDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CreateCommandSignatureDelegate));
+
+                    // IID_ID3D12CommandSignature
+                    Guid iidCommandSignature = new Guid(0xc36a797c, 0xec80, 0x4f0a, 0x89, 0x85, 0xa7, 0xb2, 0x47, 0x50, 0x85, 0xa1);
+
+                    IntPtr commandSignature;
+                    int hr = createCommandSignature(_device, descPtr, IntPtr.Zero, ref iidCommandSignature, out commandSignature);
+
+                    // Check HRESULT
+                    if (hr == 0) // S_OK
+                    {
+                        _dispatchIndirectCommandSignature = commandSignature;
+                        return commandSignature;
+                    }
+                    else
+                    {
+                        // Failed to create command signature
+                        return IntPtr.Zero;
+                    }
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(descPtr);
+                }
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(argumentDescPtr);
+            }
+        }
+
+        /// <summary>
+        /// Calls ID3D12GraphicsCommandList::ExecuteIndirect through COM vtable.
+        /// VTable index 98 for ID3D12GraphicsCommandList.
+        /// Based on DirectX 12 ExecuteIndirect: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-executeindirect
+        /// </summary>
+        internal unsafe void CallExecuteIndirect(
+            IntPtr commandList,
+            IntPtr pCommandSignature,
+            uint MaxCommandCount,
+            IntPtr pArgumentBuffer,
+            ulong ArgumentBufferOffset,
+            IntPtr pCountBuffer,
+            ulong CountBufferOffset)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            if (commandList == IntPtr.Zero || pCommandSignature == IntPtr.Zero || pArgumentBuffer == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Get vtable pointer
+            IntPtr* vtable = *(IntPtr**)commandList;
+            // ExecuteIndirect is at index 98 in ID3D12GraphicsCommandList vtable
+            IntPtr methodPtr = vtable[98];
+
+            // Create delegate from function pointer
+            ExecuteIndirectDelegate executeIndirect =
+                (ExecuteIndirectDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(ExecuteIndirectDelegate));
+
+            executeIndirect(
+                commandList,
+                pCommandSignature,
+                MaxCommandCount,
+                pArgumentBuffer,
+                ArgumentBufferOffset,
+                pCountBuffer,
+                CountBufferOffset);
         }
 
         /// <summary>
