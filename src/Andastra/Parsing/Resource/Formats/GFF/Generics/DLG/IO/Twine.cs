@@ -21,6 +21,97 @@ namespace Andastra.Parsing.Resource.Generics.DLG.IO
     public static class Twine
     {
         /// <summary>
+        /// Parses a color string from Twine format.
+        /// Supports multiple color formats:
+        /// - Hex colors: #RRGGBB, #RRGGBBAA, #RGB, #RGBA (for HTML format)
+        /// - Space-separated floats: "r g b a" or "r g b" (for JSON format, alpha defaults to 1.0)
+        /// Based on PyKotor: HTML uses Color.from_hex_string(), JSON uses space-separated "r g b a" format
+        /// </summary>
+        /// <param name="colorStr">Color string to parse</param>
+        /// <returns>Parsed Color object, or null if parsing fails</returns>
+        private static Color ParseTwineColorString(string colorStr)
+        {
+            if (string.IsNullOrWhiteSpace(colorStr))
+            {
+                return null;
+            }
+            
+            colorStr = colorStr.Trim();
+            
+            // Try hex format first (for HTML format)
+            // Based on PyKotor: HTML format uses Color.from_hex_string(color)
+            if (colorStr.StartsWith("#") || 
+                (colorStr.Length >= 3 && colorStr.Length <= 8 && IsHexString(colorStr)))
+            {
+                try
+                {
+                    // Color.FromHexString handles # prefix and various hex formats
+                    return Color.FromHexString(colorStr);
+                }
+                catch (ArgumentException)
+                {
+                    // Invalid hex format, try space-separated format below
+                }
+            }
+            
+            // Try space-separated float format (for JSON format)
+            // Based on PyKotor: JSON format uses "r g b a" or "r g b" (alpha defaults to 1.0)
+            // Example: "1 0 0 1" or "0.5 0.3 0.2" or "1.0 0.0 0.0 1.0"
+            var components = colorStr.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+            if (components.Length == 3 || components.Length == 4)
+            {
+                try
+                {
+                    if (float.TryParse(components[0], out float r) &&
+                        float.TryParse(components[1], out float g) &&
+                        float.TryParse(components[2], out float b))
+                    {
+                        float a = 1.0f; // Default alpha
+                        if (components.Length == 4 && float.TryParse(components[3], out float parsedA))
+                        {
+                            a = parsedA;
+                        }
+                        
+                        // Clamp values to valid range [0.0, 1.0]
+                        r = Math.Max(0.0f, Math.Min(1.0f, r));
+                        g = Math.Max(0.0f, Math.Min(1.0f, g));
+                        b = Math.Max(0.0f, Math.Min(1.0f, b));
+                        a = Math.Max(0.0f, Math.Min(1.0f, a));
+                        
+                        return new Color(r, g, b, a);
+                    }
+                }
+                catch
+                {
+                    // Invalid format, return null below
+                }
+            }
+            
+            // Failed to parse
+            return null;
+        }
+        
+        /// <summary>
+        /// Checks if a string contains only hexadecimal characters.
+        /// </summary>
+        private static bool IsHexString(string str)
+        {
+            if (string.IsNullOrEmpty(str))
+            {
+                return false;
+            }
+            
+            foreach (char c in str)
+            {
+                if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+        
+        /// <summary>
         /// Reads a Twine file and converts it to a DLG.
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/io/twine.py:59-72
         /// </summary>
@@ -122,6 +213,8 @@ namespace Andastra.Parsing.Resource.Generics.DLG.IO
             };
 
             // Get tag colors
+            // Based on PyKotor: JSON format stores colors as strings in "r g b a" or "r g b" format
+            // Example: "tag-colors": {"entry": "1 0 0 1", "reply": "0 1 0 1"}
             if (root.TryGetProperty("tag-colors", out var tagColorsProp) && tagColorsProp.ValueKind == JsonValueKind.Object)
             {
                 foreach (var prop in tagColorsProp.EnumerateObject())
@@ -129,8 +222,17 @@ namespace Andastra.Parsing.Resource.Generics.DLG.IO
                     string colorStr = prop.Value.GetString();
                     if (!string.IsNullOrEmpty(colorStr))
                     {
-                        // Parse color string (simplified - would need proper color parsing)
-                        twineMetadata.TagColors[prop.Name] = Color.FromBgrInteger(0); // Placeholder
+                        // Parse color string (supports hex and space-separated float formats)
+                        Color parsedColor = ParseTwineColorString(colorStr);
+                        if (parsedColor != null)
+                        {
+                            twineMetadata.TagColors[prop.Name] = parsedColor;
+                        }
+                        else
+                        {
+                            // Fallback to default color if parsing fails
+                            twineMetadata.TagColors[prop.Name] = Color.FromBgrInteger(0);
+                        }
                     }
                 }
             }
@@ -342,14 +444,26 @@ namespace Andastra.Parsing.Resource.Generics.DLG.IO
             }
 
             // Get tag colors
+            // Based on PyKotor: HTML format uses hex colors, parsed via Color.from_hex_string(color)
+            // Example: <tw-tag name="entry" color="#ff0000" />
             foreach (var tag in storyData.Descendants("tw-tag"))
             {
                 string name = tag.Attribute("name")?.Value?.Trim() ?? "";
                 string color = tag.Attribute("color")?.Value?.Trim() ?? "";
                 if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(color))
                 {
-                    // Parse color (simplified - would need proper color parsing)
-                    twineMetadata.TagColors[name] = Color.FromBgrInteger(0); // Placeholder
+                    // Parse color string (supports hex and space-separated float formats)
+                    // HTML format typically uses hex, but we support both for compatibility
+                    Color parsedColor = ParseTwineColorString(color);
+                    if (parsedColor != null)
+                    {
+                        twineMetadata.TagColors[name] = parsedColor;
+                    }
+                    else
+                    {
+                        // Fallback to default color if parsing fails
+                        twineMetadata.TagColors[name] = Color.FromBgrInteger(0);
+                    }
                 }
             }
 
