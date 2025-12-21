@@ -1,4 +1,5 @@
 using System;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Andastra.Runtime.MonoGame.PostProcessing
@@ -16,7 +17,7 @@ namespace Andastra.Runtime.MonoGame.PostProcessing
     /// - Look-up tables (LUTs)
     /// - Presets
     /// </summary>
-    public class ColorGrading
+    public class ColorGrading : IDisposable
     {
         private float _lift;
         private float _gamma;
@@ -25,6 +26,7 @@ namespace Andastra.Runtime.MonoGame.PostProcessing
         private float _tint;
         private float _saturation;
         private float _contrast;
+        private SpriteBatch _spriteBatch;
 
         /// <summary>
         /// Gets or sets the lift value (shadow adjustment).
@@ -101,10 +103,14 @@ namespace Andastra.Runtime.MonoGame.PostProcessing
             _tint = 0.0f;
             _saturation = 1.0f;
             _contrast = 0.0f;
+            _spriteBatch = null; // Will be created on first use
         }
 
         /// <summary>
         /// Applies color grading to a render target.
+        /// Handles rendering with shader (if provided) or fallback rendering.
+        /// The method sets up the render target, configures shader parameters, and renders
+        /// a full-screen quad using SpriteBatch with the color grading effect.
         /// </summary>
         /// <param name="device">Graphics device.</param>
         /// <param name="input">Input render target.</param>
@@ -137,26 +143,113 @@ namespace Andastra.Runtime.MonoGame.PostProcessing
             {
                 // Set output render target
                 device.SetRenderTarget(output);
-                device.Clear(Microsoft.Xna.Framework.Color.Black);
+                device.Clear(Color.Black);
 
-                // Set up color grading shader parameters
+                // Create SpriteBatch if needed (lazy initialization)
+                if (_spriteBatch == null)
+                {
+                    _spriteBatch = new SpriteBatch(device);
+                }
+
+                // Set up color grading shader parameters if effect is provided
                 // The actual shader implementation would apply:
                 // - Lift/Gamma/Gain: Adjusts shadows, midtones, highlights separately
-                // - Color temperature: Adjusts white balance (warmer/cooler)
-                // - Tint: Adjusts green-magenta balance
-                // - Saturation: Adjusts color intensity
-                // - Contrast: Adjusts difference between light and dark areas
+                //   * Lift: Adds/subtracts from shadows (typically -1 to 1 range)
+                //   * Gamma: Adjusts midtones (typically 0.1 to 5.0 range, 1.0 = no change)
+                //   * Gain: Multiplies highlights (typically 0.0 to 5.0 range, 1.0 = no change)
+                // - Color temperature: Adjusts white balance (warmer/cooler, -100 to 100 range)
+                // - Tint: Adjusts green-magenta balance (-100 to 100 range)
+                // - Saturation: Adjusts color intensity (-1.0 = grayscale, 1.0 = fully saturated)
+                // - Contrast: Adjusts difference between light and dark areas (-1.0 to 1.0 range)
                 if (effect != null)
                 {
-                    // effect.Parameters["SourceTexture"].SetValue(input);
-                    // effect.Parameters["Lift"].SetValue(_lift);
-                    // effect.Parameters["Gamma"].SetValue(_gamma);
-                    // effect.Parameters["Gain"].SetValue(_gain);
-                    // effect.Parameters["Temperature"].SetValue(_temperature);
-                    // effect.Parameters["Tint"].SetValue(_tint);
-                    // effect.Parameters["Saturation"].SetValue(_saturation);
-                    // effect.Parameters["Contrast"].SetValue(_contrast);
+                    // Set shader parameters for color grading
+                    // Note: Parameter names depend on the actual shader implementation
+                    // These are common parameter names used in color grading shaders
+                    EffectParameter sourceTextureParam = effect.Parameters["SourceTexture"];
+                    if (sourceTextureParam != null)
+                    {
+                        sourceTextureParam.SetValue(input);
+                    }
+
+                    // Alternative parameter name for source texture
+                    EffectParameter inputTextureParam = effect.Parameters["InputTexture"];
+                    if (inputTextureParam != null && sourceTextureParam == null)
+                    {
+                        inputTextureParam.SetValue(input);
+                    }
+
+                    EffectParameter liftParam = effect.Parameters["Lift"];
+                    if (liftParam != null)
+                    {
+                        liftParam.SetValue(_lift);
+                    }
+
+                    EffectParameter gammaParam = effect.Parameters["Gamma"];
+                    if (gammaParam != null)
+                    {
+                        gammaParam.SetValue(_gamma);
+                    }
+
+                    EffectParameter gainParam = effect.Parameters["Gain"];
+                    if (gainParam != null)
+                    {
+                        gainParam.SetValue(_gain);
+                    }
+
+                    EffectParameter temperatureParam = effect.Parameters["Temperature"];
+                    if (temperatureParam != null)
+                    {
+                        temperatureParam.SetValue(_temperature);
+                    }
+
+                    EffectParameter tintParam = effect.Parameters["Tint"];
+                    if (tintParam != null)
+                    {
+                        tintParam.SetValue(_tint);
+                    }
+
+                    EffectParameter saturationParam = effect.Parameters["Saturation"];
+                    if (saturationParam != null)
+                    {
+                        saturationParam.SetValue(_saturation);
+                    }
+
+                    EffectParameter contrastParam = effect.Parameters["Contrast"];
+                    if (contrastParam != null)
+                    {
+                        contrastParam.SetValue(_contrast);
+                    }
+
                     // Render full-screen quad with color grading shader
+                    _spriteBatch.Begin(
+                        SpriteSortMode.Immediate,
+                        BlendState.Opaque,
+                        SamplerState.LinearClamp,
+                        DepthStencilState.None,
+                        RasterizerState.CullNone,
+                        effect);
+
+                    Rectangle destinationRect = new Rectangle(0, 0, output.Width, output.Height);
+                    _spriteBatch.Draw(input, destinationRect, Color.White);
+                    _spriteBatch.End();
+                }
+                else
+                {
+                    // No shader provided - use CPU-based color grading approximation
+                    // This is a fallback when no shader is available
+                    // For proper color grading, a shader should be provided
+                    // The fallback simply copies the input to output without any color adjustments
+                    _spriteBatch.Begin(
+                        SpriteSortMode.Immediate,
+                        BlendState.Opaque,
+                        SamplerState.LinearClamp,
+                        DepthStencilState.None,
+                        RasterizerState.CullNone);
+
+                    Rectangle destinationRect = new Rectangle(0, 0, output.Width, output.Height);
+                    _spriteBatch.Draw(input, destinationRect, Color.White);
+                    _spriteBatch.End();
                 }
             }
             finally
@@ -164,6 +257,15 @@ namespace Andastra.Runtime.MonoGame.PostProcessing
                 // Always restore previous render target
                 device.SetRenderTarget(previousTarget);
             }
+        }
+
+        /// <summary>
+        /// Disposes resources used by the color grading processor.
+        /// </summary>
+        public void Dispose()
+        {
+            _spriteBatch?.Dispose();
+            _spriteBatch = null;
         }
     }
 }

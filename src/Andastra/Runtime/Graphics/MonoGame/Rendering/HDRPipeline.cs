@@ -199,7 +199,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
         private float CalculateLuminance(RenderTarget2D hdrInput)
         {
             // Downsample HDR input to luminance target using progressive downsampling
-            // This is a simplified approach - a full implementation would use a luminance shader
+            // TODO:  This is a simplified approach - a full implementation would use a luminance shader
             // that calculates luminance (Y = 0.2126*R + 0.7152*G + 0.0722*B) during downsampling
 
             RenderTarget2D previousTarget = null;
@@ -335,39 +335,10 @@ namespace Andastra.Runtime.MonoGame.Rendering
             }
 
             // Apply color grading using the ColorGrading processor
+            // ColorGrading.Apply handles rendering with shader (if provided) or fallback rendering
+            // The method sets up the render target, configures shader parameters, and renders
+            // a full-screen quad using SpriteBatch with the color grading effect
             _colorGrading.Apply(_graphicsDevice, input, _colorGradingOutput, effect);
-
-            // If color grading didn't render anything (no shader), use SpriteBatch as fallback
-            // In a full implementation, the ColorGrading.Apply would handle rendering with shader
-            // For now, we'll ensure something is rendered by using SpriteBatch
-            RenderTarget2D previousTarget = null;
-            if (_graphicsDevice.GetRenderTargets().Length > 0)
-            {
-                previousTarget = _graphicsDevice.GetRenderTargets()[0].RenderTarget as RenderTarget2D;
-            }
-
-            try
-            {
-                _graphicsDevice.SetRenderTarget(_colorGradingOutput);
-                _graphicsDevice.Clear(Color.Black);
-
-                _spriteBatch.Begin(
-                    SpriteSortMode.Immediate,
-                    BlendState.Opaque,
-                    SamplerState.LinearClamp,
-                    DepthStencilState.None,
-                    RasterizerState.CullNone,
-                    effect
-                );
-
-                Rectangle destRect = new Rectangle(0, 0, width, height);
-                _spriteBatch.Draw(input, destRect, Color.White);
-                _spriteBatch.End();
-            }
-            finally
-            {
-                _graphicsDevice.SetRenderTarget(previousTarget);
-            }
 
             return _colorGradingOutput;
         }
