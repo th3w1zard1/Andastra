@@ -921,6 +921,10 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkCmdDispatchIndirectDelegate(IntPtr commandBuffer, IntPtr buffer, ulong offset);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdDrawIndirectDelegate(IntPtr commandBuffer, IntPtr buffer, ulong offset, uint drawCount, uint stride);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdDrawIndexedIndirectDelegate(IntPtr commandBuffer, IntPtr buffer, ulong offset, uint drawCount, uint stride);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkCmdSetScissorDelegate(IntPtr commandBuffer, uint firstScissor, uint scissorCount, IntPtr pScissors);
@@ -1009,6 +1013,8 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static vkCmdBindDescriptorSetsDelegate vkCmdBindDescriptorSets;
         private static vkCmdDispatchDelegate vkCmdDispatch;
         private static vkCmdDispatchIndirectDelegate vkCmdDispatchIndirect;
+        private static vkCmdDrawIndirectDelegate vkCmdDrawIndirect;
+        private static vkCmdDrawIndexedIndirectDelegate vkCmdDrawIndexedIndirect;
 
         private static vkCmdBeginDebugUtilsLabelEXTDelegate vkCmdBeginDebugUtilsLabelEXT;
         private static vkCmdEndDebugUtilsLabelEXTDelegate vkCmdEndDebugUtilsLabelEXT;
@@ -1822,14 +1828,15 @@ namespace Andastra.Runtime.MonoGame.Backends
                     {
                         if (colorAttachment.Texture != null)
                         {
-                            // Get texture format and create attachment description
+                            // Get texture format and sample count from texture description
                             VkFormat format = ConvertToVkFormat(colorAttachment.Texture.Desc.Format);
+                            VkSampleCountFlagBits samples = ConvertToVkSampleCount(colorAttachment.Texture.Desc.SampleCount);
                             
                             attachments.Add(new VkAttachmentDescription
                             {
                                 flags = 0,
                                 format = format,
-                                samples = VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT, // TODO: Get from texture desc
+                                samples = samples,
                                 loadOp = VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_LOAD, // Default: load existing content
                                 storeOp = VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_STORE, // Store for next frame
                                 stencilLoadOp = VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_DONT_CARE,
@@ -3814,11 +3821,24 @@ namespace Andastra.Runtime.MonoGame.Backends
         {
             public FramebufferDesc Desc { get; }
             private readonly IntPtr _handle;
+            private readonly IntPtr _vkFramebuffer; // VkFramebuffer handle
+            private readonly IntPtr _vkRenderPass; // VkRenderPass handle (may be shared or framebuffer-specific)
+            private readonly IntPtr _device; // VkDevice handle for destruction
+            private readonly bool _ownsRenderPass; // Whether this framebuffer owns the render pass (not shared)
 
             public VulkanFramebuffer(IntPtr handle, FramebufferDesc desc)
+                : this(handle, desc, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, false)
+            {
+            }
+
+            public VulkanFramebuffer(IntPtr handle, FramebufferDesc desc, IntPtr vkFramebuffer, IntPtr vkRenderPass, IntPtr device, bool ownsRenderPass)
             {
                 _handle = handle;
                 Desc = desc;
+                _vkFramebuffer = vkFramebuffer;
+                _vkRenderPass = vkRenderPass;
+                _device = device;
+                _ownsRenderPass = ownsRenderPass;
             }
 
             public FramebufferInfo GetInfo()
@@ -3850,9 +3870,73 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             public void Dispose()
             {
-                // TODO: IMPLEMENT - Destroy VkFramebuffer and VkRenderPass
-                // - vkDestroyFramebuffer
-                // - vkDestroyRenderPass (if not shared)
+                // Destroy VkFramebuffer if it was created
+                // Based on Vulkan Framebuffer Management: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkDestroyFramebuffer.html
+                if (_vkFramebuffer != IntPtr.Zero && _device != IntPtr.Zero)
+                {
+                    try
+                    {
+                        if (vkDestroyFramebuffer != null)
+                        {
+                            VkResult result = vkDestroyFramebuffer(_device, _vkFramebuffer, IntPtr.Zero);
+                            if (result == VkResult.VK_SUCCESS)
+                            {
+                                Console.WriteLine("[VulkanDevice] Successfully destroyed VkFramebuffer");
+                            }
+                            else
+                            {
+                                Console.WriteLine($"[VulkanDevice] Warning: vkDestroyFramebuffer returned {result}");
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("[VulkanDevice] Warning: vkDestroyFramebuffer function pointer not initialized");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log error but continue cleanup - don't throw from Dispose
+                        Console.WriteLine($"[VulkanDevice] Error destroying VkFramebuffer: {ex.Message}");
+                        Console.WriteLine($"[VulkanDevice] Stack trace: {ex.StackTrace}");
+                    }
+                }
+
+                // Destroy VkRenderPass if this framebuffer owns it (not shared)
+                // Based on Vulkan Render Pass Management: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkDestroyRenderPass.html
+                // Note: Render passes can be shared between multiple framebuffers, so we only destroy if _ownsRenderPass is true
+                if (_ownsRenderPass && _vkRenderPass != IntPtr.Zero && _device != IntPtr.Zero)
+                {
+                    try
+                    {
+                        if (vkDestroyRenderPass != null)
+                        {
+                            VkResult result = vkDestroyRenderPass(_device, _vkRenderPass, IntPtr.Zero);
+                            if (result == VkResult.VK_SUCCESS)
+                            {
+                                Console.WriteLine("[VulkanDevice] Successfully destroyed VkRenderPass");
+                            }
+                            else
+                            {
+                                Console.WriteLine($"[VulkanDevice] Warning: vkDestroyRenderPass returned {result}");
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("[VulkanDevice] Warning: vkDestroyRenderPass function pointer not initialized");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log error but continue cleanup - don't throw from Dispose
+                        Console.WriteLine($"[VulkanDevice] Error destroying VkRenderPass: {ex.Message}");
+                        Console.WriteLine($"[VulkanDevice] Stack trace: {ex.StackTrace}");
+                    }
+                }
+                else if (_vkRenderPass != IntPtr.Zero && !_ownsRenderPass)
+                {
+                    // Render pass is shared, don't destroy it here
+                    Console.WriteLine("[VulkanDevice] VkRenderPass is shared, not destroying (will be destroyed by owner)");
+                }
             }
         }
 
