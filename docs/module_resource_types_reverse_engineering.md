@@ -343,15 +343,18 @@ if (iVar7 == 0) {
 ### K1 (swkotor.exe) - `FUN_004094a0`
 
 **Flag at Offset 0x54**: Controls loading mode
+
 - **Flag == 0**: Simple mode - loads `.rim` file directly (line 32-42)
 - **Flag != 0**: Complex mode - checks for area files (`_a.rim`, `_adx.rim`), then `.mod`, then `_s.rim` (lines 49-164)
 
 **Complete Loading Flow** (lines 32-211):
 
 **When flag at offset 0x54 == 0 (Simple Mode)**:
+
 1. **`.rim`** (line 42: `FUN_00406e20(param_1,aiStack_38,4,0)`) - Loaded directly, function returns
 
 **When flag at offset 0x54 != 0 (Complex Mode)**:
+
 1. **Check for `_a.rim`** (lines 50-62):
    - Constructs filename: `{module}_a.rim`
    - Searches for ARE resource type `0xbba` (3002) in `_a.rim`
@@ -409,15 +412,18 @@ if (iVar7 == 0) {
 ### K2 (swkotor2.exe) - `FUN_004096b0`
 
 **Flag at Offset 0x54**: Controls loading mode (same as K1)
+
 - **Flag == 0**: Simple mode - loads `.rim` file directly (line 36-46)
 - **Flag != 0**: Complex mode - checks for area files (`_a.rim`, `_adx.rim`), then `.mod`, then `_s.rim` + `_dlg.erf` (lines 53-187)
 
 **Complete Loading Flow** (lines 36-250):
 
 **When flag at offset 0x54 == 0 (Simple Mode)**:
+
 1. **`.rim`** (line 46: `FUN_00406ef0(param_1,aiStack_58,4,0)`) - Loaded directly, function returns
 
 **When flag at offset 0x54 != 0 (Complex Mode)**:
+
 1. **Check for `_a.rim`** (lines 54-66):
    - Constructs filename: `{module}_a.rim`
    - Searches for ARE resource type `0xbba` (3002) in `_a.rim`
@@ -521,17 +527,20 @@ if (iVar7 == 0) {
 **Loading**: `patch.erf` is loaded as part of global resource initialization, separate from module loading. It is loaded into the resource table with the same priority as chitin resources.
 
 **Priority Order** (for resources in patch.erf):
+
 1. Override directory (highest priority)
 2. Module files (`.mod`, `.rim`, `_s.rim`, `_dlg.erf`)
 3. **patch.erf** (loaded with chitin resources)
 4. Chitin BIF archives (lowest priority)
 
 **What Can Be Put in patch.erf**:
+
 - **ANY resource type** - Same as modules, patch.erf accepts any resource type ID
 - **Common uses**: Bug fixes, patches, updated textures/models, updated scripts
 - **Typical contents**: Updated 2DA files, fixed NCS scripts, updated textures, updated models
 
 **Reverse Engineering Evidence**:
+
 - `patch.erf` is referenced in Andastra codebase (`InstallationResourceManager.cs` line 543)
 - Loaded via `GetPatchErfResources()` method for K1 installations only
 - Treated as part of core resources (loaded with chitin resources)
