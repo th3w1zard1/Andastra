@@ -810,10 +810,14 @@ namespace Andastra.Runtime.Games.Odyssey
                 abilityModStruct.SetInt32("CHA", statsComponent.GetAbilityModifier(Ability.Charisma));
 
                 // Serialize known spells (if any)
-                // Note: This is a simplified implementation - full version would iterate through all spell IDs
+                // Iterate through all known spells and serialize them as a list of structs
+                // Each spell is stored as a GFFStruct with a "SpellId" field containing the spell ID (row index in spells.2da)
                 var spellsList = root.Acquire<GFFList>("KnownSpells", new GFFList());
-                // In a full implementation, we would iterate through all possible spell IDs and check HasSpell
-                // TODO: STUB - For now, we serialize an empty list as a placeholder for the structure
+                foreach (int spellId in statsComponent.GetKnownSpells())
+                {
+                    var spellStruct = spellsList.Add();
+                    spellStruct.SetInt32("SpellId", spellId);
+                }
             }
 
             // Serialize door component
