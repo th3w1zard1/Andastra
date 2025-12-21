@@ -627,13 +627,13 @@ namespace Andastra.Parsing.Tests.Formats
             }
 
             // Step 3: Compare results across languages
-            // For now, we validate that at least one parser executed successfully
+            // TODO: STUB - For now, we validate that at least one parser executed successfully
             // and that the basic structure is correct
             var successfulParsers = parserResults.Where(r => r.Value.Success).ToList();
             if (successfulParsers.Count > 0)
             {
                 // Validate that all successful parsers agree on basic structure
-                // (Full comparison would require parsing the output, which is language-specific)
+                // TODO:  (Full comparison would require parsing the output, which is language-specific)
                 foreach (var result in successfulParsers)
                 {
                     result.Value.ParsedData.Should().NotBeNullOrEmpty(
@@ -849,6 +849,10 @@ console.log('FileVersion: ' + parsed.fileVersion);
             }
         }
 
+        /// <summary>
+        /// Executes the generated Java parser to parse a UTE file.
+        /// Compiles the Java parser and executes it with proper classpath setup.
+        /// </summary>
         private ParserExecutionResult ExecuteJavaParser(string outputDir, string testFile)
         {
             // Look for the generated Java parser
@@ -863,14 +867,268 @@ console.log('FileVersion: ' + parsed.fileVersion);
                 };
             }
 
-            // Java execution is more complex (requires compilation), so we'll skip it for now
-            // and just validate that files were generated
-            return new ParserExecutionResult
+            // Check if Java is available
+            var javaCheck = RunCommand("java", "-version");
+            if (javaCheck.ExitCode != 0)
             {
-                Success = true,
-                ErrorMessage = null,
-                ParsedData = $"Java parser files generated: {javaFiles.Length} files"
+                return new ParserExecutionResult
+                {
+                    Success = false,
+                    ErrorMessage = "Java runtime not available",
+                    ParsedData = null
+                };
+            }
+
+            // Check if javac is available
+            var javacCheck = RunCommand("javac", "-version");
+            if (javacCheck.ExitCode != 0)
+            {
+                return new ParserExecutionResult
+                {
+                    Success = false,
+                    ErrorMessage = "Java compiler (javac) not available",
+                    ParsedData = null
+                };
+            }
+
+            // Find the main parser class (usually Ute.java or similar)
+            var mainParser = javaFiles.FirstOrDefault(f => Path.GetFileName(f).ToLower().Contains("ute"));
+            if (mainParser == null)
+            {
+                // Try to find any Java file that looks like a main parser
+                mainParser = javaFiles.FirstOrDefault(f => 
+                    !Path.GetFileName(f).ToLower().Contains("kaitai") &&
+                    !Path.GetFileName(f).ToLower().Contains("test"));
+                if (mainParser == null)
+                {
+                    mainParser = javaFiles[0]; // Use first Java file found
+                }
+            }
+
+            // Find Kaitai Struct runtime JAR
+            string kaitaiRuntimeJar = FindKaitaiStructRuntimeJar();
+            if (string.IsNullOrEmpty(kaitaiRuntimeJar))
+            {
+                // Try to compile without runtime (may work if runtime is in classpath)
+                // But we'll still try to find it
+                kaitaiRuntimeJar = "";
+            }
+
+            // Create a temporary directory for compilation
+            string compileDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            Directory.CreateDirectory(compileDir);
+
+            try
+            {
+                // Copy all Java files to compile directory
+                foreach (var javaFile in javaFiles)
+                {
+                    string destFile = Path.Combine(compileDir, Path.GetFileName(javaFile));
+                    File.Copy(javaFile, destFile, true);
+                }
+
+                // Create a test Java class that uses the parser
+                string testClassName = "UteParserTest";
+                string testClassFile = Path.Combine(compileDir, testClassName + ".java");
+                string parserClassName = Path.GetFileNameWithoutExtension(mainParser);
+                string parserPackage = ExtractJavaPackage(mainParser);
+
+                string testClassContent = $@"import java.io.*;
+{(string.IsNullOrEmpty(parserPackage) ? "" : $"import {parserPackage}.{parserClassName};")}
+
+public class {testClassName} {{
+    public static void main(String[] args) {{
+        try {{
+            File file = new File(args[0]);
+            FileInputStream fis = new FileInputStream(file);
+            byte[] data = new byte[(int)file.length()];
+            fis.read(data);
+            fis.close();
+            
+            {(string.IsNullOrEmpty(parserPackage) ? parserClassName : $"{parserPackage}.{parserClassName}")} ute = new {(string.IsNullOrEmpty(parserPackage) ? parserClassName : $"{parserPackage}.{parserClassName}")}(new io.kaitai.struct.ByteBufferKaitaiStream(data));
+            
+            System.out.println(""SUCCESS"");
+            System.out.println(""FileType: "" + ute.fileType());
+            System.out.println(""FileVersion: "" + ute.fileVersion());
+        }} catch (Exception e) {{
+            System.err.println(""ERROR: "" + e.getMessage());
+            e.printStackTrace();
+            System.exit(1);
+        }}
+    }}
+}}";
+
+                File.WriteAllText(testClassFile, testClassContent);
+
+                // Compile Java files
+                // Build classpath: include Kaitai Struct runtime if found
+                string classpath = string.IsNullOrEmpty(kaitaiRuntimeJar) 
+                    ? compileDir 
+                    : $"{compileDir}{Path.PathSeparator}{kaitaiRuntimeJar}";
+
+                // Compile all Java files together (including generated parser files and test class)
+                // Build list of all Java files to compile
+                var allJavaFiles = new List<string>();
+                foreach (var javaFile in javaFiles)
+                {
+                    allJavaFiles.Add(Path.Combine(compileDir, Path.GetFileName(javaFile)));
+                }
+                allJavaFiles.Add(testClassFile);
+
+                // Compile all files at once
+                string allFilesArg = string.Join(" ", allJavaFiles.Select(f => $"\"{f}\""));
+                var compileResult = RunCommand("javac", $"-cp \"{classpath}\" -d \"{compileDir}\" {allFilesArg}");
+
+                if (compileResult.ExitCode != 0)
+                {
+                    // Try compiling without explicit classpath (runtime might be in default classpath)
+                    compileResult = RunCommand("javac", $"-d \"{compileDir}\" {allFilesArg}");
+                    if (compileResult.ExitCode != 0)
+                    {
+                        return new ParserExecutionResult
+                        {
+                            Success = false,
+                            ErrorMessage = $"Java compilation failed: {compileResult.Error}. Output: {compileResult.Output}",
+                            ParsedData = compileResult.Output
+                        };
+                    }
+                }
+
+                // Execute the compiled Java class
+                string classpathForExecution = string.IsNullOrEmpty(kaitaiRuntimeJar)
+                    ? compileDir
+                    : $"{compileDir}{Path.PathSeparator}{kaitaiRuntimeJar}";
+
+                var executeResult = RunCommand("java", $"-cp \"{classpathForExecution}\" {testClassName} \"{testFile}\"");
+
+                if (executeResult.ExitCode == 0 && executeResult.Output.Contains("SUCCESS"))
+                {
+                    return new ParserExecutionResult
+                    {
+                        Success = true,
+                        ErrorMessage = null,
+                        ParsedData = executeResult.Output
+                    };
+                }
+                else
+                {
+                    // Try without explicit classpath
+                    executeResult = RunCommand("java", $"-cp \"{compileDir}\" {testClassName} \"{testFile}\"");
+                    if (executeResult.ExitCode == 0 && executeResult.Output.Contains("SUCCESS"))
+                    {
+                        return new ParserExecutionResult
+                        {
+                            Success = true,
+                            ErrorMessage = null,
+                            ParsedData = executeResult.Output
+                        };
+                    }
+
+                    return new ParserExecutionResult
+                    {
+                        Success = false,
+                        ErrorMessage = $"Java parser execution failed: {executeResult.Error}. Output: {executeResult.Output}",
+                        ParsedData = executeResult.Output
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ParserExecutionResult
+                {
+                    Success = false,
+                    ErrorMessage = $"Exception during Java parser execution: {ex.Message}",
+                    ParsedData = ex.ToString()
+                };
+            }
+            finally
+            {
+                // Cleanup compile directory
+                try
+                {
+                    if (Directory.Exists(compileDir))
+                    {
+                        Directory.Delete(compileDir, true);
+                    }
+                }
+                catch
+                {
+                    // Ignore cleanup errors
+                }
+            }
+        }
+
+        /// <summary>
+        /// Extracts the Java package name from a Java source file.
+        /// </summary>
+        private string ExtractJavaPackage(string javaFile)
+        {
+            try
+            {
+                string content = File.ReadAllText(javaFile);
+                // Look for package declaration: package com.example;
+                int packageIndex = content.IndexOf("package ", StringComparison.Ordinal);
+                if (packageIndex >= 0)
+                {
+                    int start = packageIndex + 8; // "package ".Length
+                    int end = content.IndexOf(';', start);
+                    if (end > start)
+                    {
+                        return content.Substring(start, end - start).Trim();
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore errors
+            }
+            return "";
+        }
+
+        /// <summary>
+        /// Finds the Kaitai Struct runtime JAR file.
+        /// </summary>
+        private string FindKaitaiStructRuntimeJar()
+        {
+            // Check environment variable first
+            var envJar = Environment.GetEnvironmentVariable("KAITAI_RUNTIME_JAR");
+            if (!string.IsNullOrEmpty(envJar) && File.Exists(envJar))
+            {
+                return envJar;
+            }
+
+            // Check common locations for Kaitai Struct runtime JAR
+            var searchPaths = new[]
+            {
+                Path.Combine(AppContext.BaseDirectory, "kaitai-struct-runtime.jar"),
+                Path.Combine(AppContext.BaseDirectory, "..", "kaitai-struct-runtime.jar"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".kaitai", "kaitai-struct-runtime.jar"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "kaitai-struct-runtime.jar"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "kaitai-struct-runtime.jar"),
+                // Maven local repository
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".m2", "repository", "io", "kaitai", "kaitai-struct-runtime", "0.9", "kaitai-struct-runtime-0.9.jar"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".m2", "repository", "io", "kaitai", "kaitai-struct-runtime", "0.10", "kaitai-struct-runtime-0.10.jar"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".m2", "repository", "io", "kaitai", "kaitai-struct-runtime", "0.11", "kaitai-struct-runtime-0.11.jar"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".m2", "repository", "io", "kaitai", "kaitai-struct-runtime", "0.12", "kaitai-struct-runtime-0.12.jar"),
             };
+
+            foreach (var path in searchPaths)
+            {
+                try
+                {
+                    var normalized = Path.GetFullPath(path);
+                    if (File.Exists(normalized))
+                    {
+                        return normalized;
+                    }
+                }
+                catch
+                {
+                    // Ignore path errors
+                }
+            }
+
+            return null;
         }
 
         private ParserExecutionResult ExecuteCSharpParser(string outputDir, string testFile)
@@ -887,7 +1145,7 @@ console.log('FileVersion: ' + parsed.fileVersion);
                 };
             }
 
-            // C# execution would require compilation, so we'll skip it for now
+            // TODO:  C# execution would require compilation, so we'll skip it for now
             // and just validate that files were generated
             return new ParserExecutionResult
             {
