@@ -1,7 +1,6 @@
 using System;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Games.Common;
-using Andastra.Runtime.Graphics.MonoGame.GUI;
 using Andastra.Parsing.Resource.Generics.GUI;
 
 namespace Andastra.Runtime.Games.Odyssey.UI

@@ -18,6 +18,7 @@
     <ProjectReference Include="..\..\..\AvRichTextBox\AvRichTextBox\AvRichTextBox.csproj" />
     <ProjectReference Include="..\Rte\Rte.csproj" />
     <ProjectReference Include="..\ViewModels\ViewModels.csproj" />
+    <ProjectReference Include="..\Update\Update.csproj" />
   </ItemGroup>
 
 </Project>

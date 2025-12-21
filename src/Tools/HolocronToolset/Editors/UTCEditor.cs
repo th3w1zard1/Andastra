@@ -1453,7 +1453,10 @@ namespace HolocronToolset.Editors
             // Open DLG editor
             // Matching PyKotor: open_resource_editor(filepath, resname, ResourceType.DLG, data, self._installation, self)
             HolocronToolset.Editors.WindowUtils.OpenResourceEditor(
-                new ResourceResult(resname, ResourceType.DLG, filepath, data),
+                filepath,
+                resname,
+                ResourceType.DLG,
+                data,
                 _installation,
                 this);
         }
@@ -1477,7 +1480,7 @@ namespace HolocronToolset.Editors
             
             if (_filepath != null)
             {
-                if (Andastra.Parsing.Tools.Misc.IsSavFile(_filepath))
+                if (Andastra.Parsing.Tools.FileHelpers.IsSavFile(_filepath))
                 {
                     // Search capsules inside the .sav outer capsule
                     // Matching PyKotor: capsules_to_search = [Capsule(res.filepath()) for res in Capsule(self._filepath) if is_capsule_file(res.filename()) and res.inside_capsule]
@@ -1488,7 +1491,7 @@ namespace HolocronToolset.Editors
                         {
                             // Check if the resource name (resname + extension) is a capsule file
                             string resourceFilename = $"{res.ResName}.{res.ResType.Extension}";
-                            if (Andastra.Parsing.Tools.Misc.IsCapsuleFile(resourceFilename))
+                            if (Andastra.Parsing.Tools.FileHelpers.IsCapsuleFile(resourceFilename))
                             {
                                 // The resource is inside a capsule (since we're iterating through a capsule)
                                 // Construct the nested capsule path: outerCapsulePath/resourceFilename
@@ -1509,7 +1512,7 @@ namespace HolocronToolset.Editors
                         // Failed to load outer capsule
                     }
                 }
-                else if (Andastra.Parsing.Tools.Misc.IsCapsuleFile(_filepath))
+                else if (Andastra.Parsing.Tools.FileHelpers.IsCapsuleFile(_filepath))
                 {
                     // Get capsules matching the module
                     // Matching PyKotor: capsules_to_search = Module.get_capsules_tuple_matching(self._installation, self._filepath.name)

@@ -2615,11 +2615,11 @@ namespace HolocronToolset.Editors
                     DockPanel.SetDock(_statusBar, Dock.Bottom);
                 }
             }
-            else if (Content != null)
+            else if (Content is Control existingContent)
             {
                 // Wrap existing content in DockPanel and add status bar
                 var newDockPanel = new DockPanel();
-                newDockPanel.Children.Add(Content);
+                newDockPanel.Children.Add(existingContent);
                 newDockPanel.Children.Add(_statusBar);
                 DockPanel.SetDock(_statusBar, Dock.Bottom);
                 Content = newDockPanel;

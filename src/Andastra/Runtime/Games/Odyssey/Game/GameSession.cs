@@ -30,7 +30,7 @@ using Andastra.Runtime.Core;
 using Andastra.Runtime.Core.Journal;
 using Andastra.Runtime.Core.Plot;
 using Andastra.Parsing.Installation;
-using CharacterCreationData = Andastra.Runtime.Game.Core.CharacterCreationData;
+using Andastra.Runtime.Game.Core;
 
 namespace Andastra.Runtime.Engines.Odyssey.Game
 {

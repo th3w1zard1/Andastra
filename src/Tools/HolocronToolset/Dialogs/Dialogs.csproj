@@ -62,6 +62,7 @@
     <Compile Include="..\Editors\WAVEditor.cs" />
     <Compile Include="..\Editors\ERFEditor.cs" />
     <Compile Include="..\Editors\MDLEditor.cs" />
+    <Compile Include="..\Editors\TXTEditor.cs" />
     <Compile Include="..\Editors\Actions\*.cs" />
   </ItemGroup>
 

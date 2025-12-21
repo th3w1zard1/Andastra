@@ -8,7 +8,7 @@ using Andastra.Parsing.Resource;
 using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Formats.TXI;
 using Andastra.Runtime.Games.Common;
-using Andastra.Runtime.Graphics.MonoGame.Converters;
+using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.MonoGame.Graphics;
 using JetBrains.Annotations;
 
