@@ -5450,7 +5450,108 @@ namespace Andastra.Runtime.MonoGame.Backends
                     Marshal.FreeHGlobal(barrierPtr);
                 }
             }
-            public void CopyBuffer(IBuffer dest, int destOffset, IBuffer src, int srcOffset, int size) { /* TODO: vkCmdCopyBuffer */ }
+            /// <summary>
+            /// Copies data from a source buffer to a destination buffer using GPU-side buffer copy.
+            /// 
+            /// This performs a GPU-side buffer-to-buffer copy operation using vkCmdCopyBuffer.
+            /// The copy operation is recorded into the command buffer and executed when the command buffer is submitted.
+            /// 
+            /// Buffer state transitions:
+            /// - Source buffer is transitioned to CopySource state (if needed)
+            /// - Destination buffer is transitioned to CopyDest state (if needed)
+            /// - Barriers are committed before the copy operation
+            /// 
+            /// Based on Vulkan API: vkCmdCopyBuffer
+            /// Vulkan API Reference: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdCopyBuffer.html
+            /// 
+            /// Vulkan Specification:
+            /// - vkCmdCopyBuffer signature: void vkCmdCopyBuffer(VkCommandBuffer commandBuffer, VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t regionCount, const VkBufferCopy* pRegions)
+            /// - VkBufferCopy structure contains: srcOffset (VkDeviceSize), dstOffset (VkDeviceSize), size (VkDeviceSize)
+            /// - Copy operation must be within the bounds of both buffers
+            /// - Source and destination buffers must be in appropriate states (CopySource and CopyDest)
+            /// </summary>
+            /// <param name="dest">Destination buffer to copy data to</param>
+            /// <param name="destOffset">Destination offset in bytes from the start of the destination buffer</param>
+            /// <param name="src">Source buffer to copy data from</param>
+            /// <param name="srcOffset">Source offset in bytes from the start of the source buffer</param>
+            /// <param name="size">Number of bytes to copy</param>
+            public void CopyBuffer(IBuffer dest, int destOffset, IBuffer src, int srcOffset, int size)
+            {
+                if (dest == null || src == null)
+                {
+                    throw new ArgumentNullException(dest == null ? nameof(dest) : nameof(src));
+                }
+
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Cannot record commands when command list is closed");
+                }
+
+                if (vkCmdCopyBuffer == null)
+                {
+                    throw new NotSupportedException("vkCmdCopyBuffer is not available");
+                }
+
+                // Validate size
+                if (size <= 0)
+                {
+                    throw new ArgumentException("Copy size must be greater than zero", nameof(size));
+                }
+
+                // Validate offsets are non-negative
+                if (destOffset < 0 || srcOffset < 0)
+                {
+                    throw new ArgumentException("Buffer offsets must be non-negative");
+                }
+
+                // Get native buffer handles
+                IntPtr srcBufferHandle = src.NativeHandle;
+                IntPtr dstBufferHandle = dest.NativeHandle;
+
+                if (srcBufferHandle == IntPtr.Zero || dstBufferHandle == IntPtr.Zero)
+                {
+                    throw new ArgumentException("Source or destination buffer has invalid native handle");
+                }
+
+                // Transition source buffer to CopySource state
+                SetBufferState(src, ResourceState.CopySource);
+                
+                // Transition destination buffer to CopyDest state
+                SetBufferState(dest, ResourceState.CopyDest);
+                
+                // Commit barriers before copy operation
+                CommitBarriers();
+
+                // Create buffer copy region structure
+                VkBufferCopy copyRegion = new VkBufferCopy
+                {
+                    srcOffset = unchecked((ulong)srcOffset),
+                    dstOffset = unchecked((ulong)destOffset),
+                    size = unchecked((ulong)size)
+                };
+
+                // Allocate memory for copy region and marshal structure
+                int regionSize = Marshal.SizeOf<VkBufferCopy>();
+                IntPtr regionPtr = Marshal.AllocHGlobal(regionSize);
+                try
+                {
+                    Marshal.StructureToPtr(copyRegion, regionPtr, false);
+
+                    // Execute copy command: vkCmdCopyBuffer
+                    // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdCopyBuffer.html
+                    // vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, regionCount, pRegions)
+                    vkCmdCopyBuffer(
+                        _vkCommandBuffer,
+                        srcBufferHandle,
+                        dstBufferHandle,
+                        1, // Single copy region
+                        regionPtr);
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(regionPtr);
+                }
+            }
             public void CopyTexture(ITexture dest, ITexture src)
             {
                 if (dest == null || src == null)
