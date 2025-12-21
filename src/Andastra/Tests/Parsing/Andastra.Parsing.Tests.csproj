@@ -30,5 +30,3 @@
     <ProjectReference Include="..\..\Parsing\Andastra.Parsing.csproj" />
   </ItemGroup>
 </Project>
-
-
