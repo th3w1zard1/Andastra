@@ -105,27 +105,36 @@ namespace Andastra.Parsing.TSLPatcher
                     value = value.Substring(1, value.Length - 2);
                 }
 
-                // ConfigObj handles lists automatically
-                // TODO: STUB - For now, treat as single value
+                // ConfigObj handles lists automatically - duplicate keys become lists
+                // Matching PyKotor implementation: ConfigObj automatically converts duplicate keys to lists
                 if (!section.ContainsKey(key))
                 {
+                    // First occurrence - store as single value
                     section[key] = value;
                 }
                 else
                 {
-                    // Key exists - check if it's a list or merge strategy
+                    // Key exists - check if it's already a list or convert to list
                     object existing = section[key];
                     if (existing is List<string> existingList)
                     {
+                        // Already a list - add value if not already present
                         if (!existingList.Contains(value))
                         {
                             existingList.Add(value);
                         }
                     }
-                    // Convert to list if different values
-                    else if (!existing.Equals(value))
+                    else
                     {
-                        section[key] = new List<string> { existing.ToString(), value };
+                        // Convert single value to list when duplicate key is found
+                        // This matches ConfigObj behavior: duplicate keys automatically become lists
+                        string existingValue = existing.ToString();
+                        if (existingValue != value)
+                        {
+                            // Different values - convert to list with both values
+                            section[key] = new List<string> { existingValue, value };
+                        }
+                        // If values are the same, keep as single value (no need to create list)
                     }
                 }
             }
@@ -255,7 +264,50 @@ namespace Andastra.Parsing.TSLPatcher
                     int eqIndex = trimmed.IndexOf('=');
                     string key = trimmed.Substring(0, eqIndex).Trim();
                     string value = trimmed.Substring(eqIndex + 1).Trim();
-                    config[currentSection][key] = value;
+                    
+                    // Remove quotes if present
+                    if (value.Length >= 2 && value.StartsWith("\"") && value.EndsWith("\""))
+                    {
+                        value = value.Substring(1, value.Length - 2);
+                    }
+                    else if (value.Length >= 2 && value.StartsWith("'") && value.EndsWith("'"))
+                    {
+                        value = value.Substring(1, value.Length - 2);
+                    }
+                    
+                    // ConfigObj handles lists automatically - duplicate keys become lists
+                    // Matching PyKotor implementation: ConfigObj automatically converts duplicate keys to lists
+                    Dictionary<string, object> section = config[currentSection];
+                    if (!section.ContainsKey(key))
+                    {
+                        // First occurrence - store as single value
+                        section[key] = value;
+                    }
+                    else
+                    {
+                        // Key exists - check if it's already a list or convert to list
+                        object existing = section[key];
+                        if (existing is List<string> existingList)
+                        {
+                            // Already a list - add value if not already present
+                            if (!existingList.Contains(value))
+                            {
+                                existingList.Add(value);
+                            }
+                        }
+                        else
+                        {
+                            // Convert single value to list when duplicate key is found
+                            // This matches ConfigObj behavior: duplicate keys automatically become lists
+                            string existingValue = existing.ToString();
+                            if (existingValue != value)
+                            {
+                                // Different values - convert to list with both values
+                                section[key] = new List<string> { existingValue, value };
+                            }
+                            // If values are the same, keep as single value (no need to create list)
+                        }
+                    }
                 }
             }
 
