@@ -1016,6 +1016,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         private static vkQueueSubmitDelegate vkQueueSubmit;
         private static vkDeviceWaitIdleDelegate vkDeviceWaitIdle;
+        private static vkWaitForFencesDelegate vkWaitForFences;
 
         private static vkCreateCommandPoolDelegate vkCreateCommandPool;
         private static vkDestroyCommandPoolDelegate vkDestroyCommandPool;
