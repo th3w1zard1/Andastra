@@ -338,6 +338,25 @@ namespace Andastra.Runtime.MonoGame.Backends
             return _lastFrameStats;
         }
 
+        public IDevice GetDevice()
+        {
+            if (!_initialized || !_capabilities.SupportsRaytracing)
+            {
+                return null;
+            }
+
+            // TODO: IMPLEMENT - Create and return IDevice wrapper around native Vulkan device
+            // For now, Device implementations need to be created. The IDevice interface provides
+            // NVRHI-style abstractions for raytracing resources (acceleration structures, raytracing pipelines, etc.).
+            // This would wrap the native VkDevice with VK_KHR_ray_tracing_pipeline extension and provide IDevice interface.
+            // 
+            // Implementation would be:
+            // - Create VulkanDevice class implementing IDevice
+            // - Wrap native _device handle and provide IDevice methods
+            // - Cache device instance and return it here
+            return null;
+        }
+
         private bool CreateInstance()
         {
             // VkApplicationInfo

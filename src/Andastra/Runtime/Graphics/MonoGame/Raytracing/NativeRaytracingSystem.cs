@@ -129,10 +129,13 @@ namespace Andastra.Runtime.MonoGame.Raytracing
             // Get device from backend if not provided
             if (_device == null)
             {
-                // Try to get device from backend - this may need to be implemented in backend
-                // TODO: STUB - For now, we require device to be passed in constructor
-                Console.WriteLine("[NativeRT] Error: IDevice must be provided for raytracing");
-                return false;
+                _device = _backend.GetDevice();
+                if (_device == null)
+                {
+                    Console.WriteLine("[NativeRT] Error: Failed to get IDevice from backend. Raytracing requires a device interface.");
+                    Console.WriteLine("[NativeRT] Backend may not support raytracing or device creation failed.");
+                    return false;
+                }
             }
 
             _settings = settings;

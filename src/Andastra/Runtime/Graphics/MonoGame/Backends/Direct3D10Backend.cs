@@ -336,6 +336,13 @@ namespace Andastra.Runtime.MonoGame.Backends
             return _lastFrameStats;
         }
 
+        public IDevice GetDevice()
+        {
+            // DX10 does not support raytracing
+            // Return null as per interface documentation
+            return null;
+        }
+
         #region D3D10 Specific Methods
 
         /// <summary>

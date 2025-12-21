@@ -667,6 +667,13 @@ namespace Andastra.Runtime.MonoGame.Backends
             return _lastFrameStats;
         }
 
+        public IDevice GetDevice()
+        {
+            // Metal does not currently support hardware raytracing (would require Metal Ray Tracing API)
+            // Return null as Metal backend doesn't expose raytracing capabilities yet
+            return null;
+        }
+
         #region Metal Specific Methods
 
         /// <summary>

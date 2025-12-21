@@ -207,6 +207,14 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         /// Gets performance statistics for the last frame.
         /// </summary>
         FrameStatistics GetFrameStatistics();
+
+        /// <summary>
+        /// Gets the raytracing-capable device interface.
+        /// Returns an IDevice instance that provides access to raytracing resources and operations.
+        /// This device can be used for creating acceleration structures, raytracing pipelines, and other raytracing-specific resources.
+        /// </summary>
+        /// <returns>IDevice instance if available, null if raytracing is not supported or device creation failed.</returns>
+        IDevice GetDevice();
     }
 
     /// <summary>
