@@ -530,7 +530,8 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             IntPtr handle = new IntPtr(_nextResourceHandle++);
             IntPtr commandList = new IntPtr(_nextResourceHandle++); // Placeholder
-            var cmdList = new D3D12CommandList(handle, type, this, commandList, _device);
+            IntPtr commandAllocator = new IntPtr(_nextResourceHandle++); // Placeholder - TODO: Create actual command allocator
+            var cmdList = new D3D12CommandList(handle, type, this, commandList, commandAllocator, _device);
             _resources[handle] = cmdList;
 
             return cmdList;
@@ -2726,16 +2727,55 @@ namespace Andastra.Runtime.MonoGame.Backends
                 _hasRaytracingState = false;
             }
 
+            /// <summary>
+            /// Opens the command list for recording commands.
+            /// Resets the command allocator and command list before starting a new recording session.
+            /// Based on DirectX 12 Command List Recording: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-reset
+            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+            /// </summary>
             public void Open()
             {
                 if (_isOpen)
                 {
-                    return;
+                    return; // Already open, no need to reset
                 }
 
-                // TODO: Reset command list and allocator
-                // - Call ID3D12CommandAllocator::Reset
-                // - Call ID3D12GraphicsCommandList::Reset with allocator and PSO (if any)
+                // Reset command allocator first
+                // Command allocator must be reset before resetting the command list
+                // This makes the memory available for reuse by the command list
+                if (_d3d12CommandAllocator != IntPtr.Zero)
+                {
+                    int allocatorHr = CallCommandAllocatorReset(_d3d12CommandAllocator);
+                    if (allocatorHr < 0)
+                    {
+                        // HRESULT indicates failure
+                        // According to D3D12 documentation, Reset can fail if:
+                        // - The command allocator is being used by a command list that hasn't been executed yet
+                        // - Device was removed
+                        // We continue anyway - the error will be caught when resetting the command list
+                    }
+                }
+
+                // Reset command list with allocator and optional initial PSO
+                // pInitialState can be NULL (IntPtr.Zero) to reset without setting a PSO
+                // The PSO will be set later via SetGraphicsState or SetComputeState
+                if (_d3d12CommandList != IntPtr.Zero && _d3d12CommandAllocator != IntPtr.Zero)
+                {
+                    // Reset command list with allocator and no initial PSO (NULL)
+                    // PSO will be set explicitly when graphics/compute state is set
+                    int commandListHr = CallCommandListReset(_d3d12CommandList, _d3d12CommandAllocator, IntPtr.Zero);
+                    if (commandListHr < 0)
+                    {
+                        // HRESULT indicates failure
+                        // According to D3D12 documentation, Reset can fail if:
+                        // - The command list is still being executed by the GPU
+                        // - The command allocator hasn't been reset (we reset it above, but check anyway)
+                        // - Device was removed
+                        // - Invalid allocator or command list pointers
+                        // We still mark as open to allow caller to proceed, but operations may fail
+                        // The error will be caught when trying to record commands
+                    }
+                }
 
                 // Clear barrier tracking for new recording session
                 _pendingBarriers.Clear();
@@ -3187,6 +3227,68 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             /// <summary>
+            /// Calls ID3D12CommandAllocator::Reset through COM vtable.
+            /// VTable index 3 for ID3D12CommandAllocator (first method after IUnknown: QueryInterface, AddRef, Release).
+            /// Based on DirectX 12 Command Allocator Reset: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12commandallocator-reset
+            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+            /// </summary>
+            private unsafe int CallCommandAllocatorReset(IntPtr commandAllocator)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return (int)HRESULT.E_FAIL;
+                }
+
+                if (commandAllocator == IntPtr.Zero)
+                {
+                    return (int)HRESULT.E_INVALIDARG;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandAllocator;
+                // Reset is at index 3 in ID3D12CommandAllocator vtable (after IUnknown methods)
+                IntPtr methodPtr = vtable[3];
+
+                // Create delegate from function pointer
+                CommandAllocatorResetDelegate resetAllocator =
+                    (CommandAllocatorResetDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CommandAllocatorResetDelegate));
+
+                return resetAllocator(commandAllocator);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::Reset through COM vtable.
+            /// VTable index 4 for ID3D12GraphicsCommandList (first method after IUnknown: QueryInterface, AddRef, Release, GetDevice).
+            /// Based on DirectX 12 Command List Reset: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-reset
+            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+            /// </summary>
+            private unsafe int CallCommandListReset(IntPtr commandList, IntPtr pAllocator, IntPtr pInitialState)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return (int)HRESULT.E_FAIL;
+                }
+
+                if (commandList == IntPtr.Zero || pAllocator == IntPtr.Zero)
+                {
+                    return (int)HRESULT.E_INVALIDARG;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // Reset is at index 4 in ID3D12GraphicsCommandList vtable (after IUnknown methods and GetDevice)
+                IntPtr methodPtr = vtable[4];
+
+                // Create delegate from function pointer
+                CommandListResetDelegate resetCommandList =
+                    (CommandListResetDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CommandListResetDelegate));
+
+                return resetCommandList(commandList, pAllocator, pInitialState);
+            }
+
+            /// <summary>
             /// Calls ID3D12GraphicsCommandList::ResourceBarrier through COM vtable.
             /// VTable index 44 for ID3D12GraphicsCommandList.
             /// Based on DirectX 12 Resource Barriers: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-resourcebarrier
@@ -3216,3 +3318,2917 @@ namespace Andastra.Runtime.MonoGame.Backends
                 resourceBarrier(commandList, numBarriers, pBarriers);
             }
 
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::CopyTextureRegion through COM vtable.
+            /// VTable index 45 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Texture Copy: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-copytextureregion
+            /// </summary>
+            private unsafe void CallCopyTextureRegion(
+                IntPtr commandList,
+                IntPtr pDst,
+                uint DstX,
+                uint DstY,
+                uint DstZ,
+                IntPtr pSrc,
+                IntPtr pSrcBox)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero || pDst == IntPtr.Zero || pSrc == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // CopyTextureRegion is at index 45 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[45];
+
+                // Create delegate from function pointer
+                CopyTextureRegionDelegate copyTextureRegion =
+                    (CopyTextureRegionDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CopyTextureRegionDelegate));
+
+                copyTextureRegion(commandList, pDst, DstX, DstY, DstZ, pSrc, pSrcBox);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::CopyBufferRegion through COM vtable.
+            /// VTable index 46 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Buffer Copy: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-copybufferregion
+            /// 
+            /// CopyBufferRegion copies a region of data from one buffer to another.
+            /// Signature: void CopyBufferRegion(
+            ///   ID3D12Resource* pDstBuffer,
+            ///   UINT64 DstOffset,
+            ///   ID3D12Resource* pSrcBuffer,
+            ///   UINT64 SrcOffset,
+            ///   UINT64 NumBytes)
+            /// </summary>
+            private unsafe void CallCopyBufferRegion(
+                IntPtr commandList,
+                IntPtr pDstBuffer,
+                ulong DstOffset,
+                IntPtr pSrcBuffer,
+                ulong SrcOffset,
+                ulong NumBytes)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero || pDstBuffer == IntPtr.Zero || pSrcBuffer == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // CopyBufferRegion is at index 46 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[46];
+
+                // Create delegate from function pointer
+                CopyBufferRegionDelegate copyBufferRegion =
+                    (CopyBufferRegionDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CopyBufferRegionDelegate));
+
+                copyBufferRegion(commandList, pDstBuffer, DstOffset, pSrcBuffer, SrcOffset, NumBytes);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::Dispatch through COM vtable.
+            /// VTable index 97 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Compute Shader Dispatch: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-dispatch
+            /// </summary>
+            private unsafe void CallDispatch(IntPtr commandList, uint threadGroupCountX, uint threadGroupCountY, uint threadGroupCountZ)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // Dispatch is at index 97 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[97];
+
+                // Create delegate from function pointer
+                DispatchDelegate dispatch =
+                    (DispatchDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(DispatchDelegate));
+
+                dispatch(commandList, threadGroupCountX, threadGroupCountY, threadGroupCountZ);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::DrawIndexedInstanced through COM vtable.
+            /// VTable index 101 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 DrawIndexedInstanced: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-drawindexedinstanced
+            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+            /// </summary>
+            private unsafe void CallDrawIndexedInstanced(IntPtr commandList, uint IndexCountPerInstance, uint InstanceCount, uint StartIndexLocation, int BaseVertexLocation, uint StartInstanceLocation)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // DrawIndexedInstanced is at index 101 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[101];
+
+                // Create delegate from function pointer
+                DrawIndexedInstancedDelegate drawIndexedInstanced =
+                    (DrawIndexedInstancedDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(DrawIndexedInstancedDelegate));
+
+                drawIndexedInstanced(commandList, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::SetPipelineState through COM vtable.
+            /// VTable index 40 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Pipeline State: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-setpipelinestate
+            /// </summary>
+            private unsafe void CallSetPipelineState(IntPtr commandList, IntPtr pPipelineState)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero || pPipelineState == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // SetPipelineState is at index 40 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[40];
+
+                // Create delegate from function pointer
+                SetPipelineStateDelegate setPipelineState =
+                    (SetPipelineStateDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(SetPipelineStateDelegate));
+
+                setPipelineState(commandList, pPipelineState);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::SetComputeRootSignature through COM vtable.
+            /// VTable index 46 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Root Signature: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-setcomputerootsignature
+            /// </summary>
+            private unsafe void CallSetComputeRootSignature(IntPtr commandList, IntPtr pRootSignature)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero || pRootSignature == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // SetComputeRootSignature is at index 46 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[46];
+
+                // Create delegate from function pointer
+                SetComputeRootSignatureDelegate setRootSignature =
+                    (SetComputeRootSignatureDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(SetComputeRootSignatureDelegate));
+
+                setRootSignature(commandList, pRootSignature);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::SetComputeRootDescriptorTable through COM vtable.
+            /// VTable index 47 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Root Parameters: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-setcomputerootdescriptortable
+            /// </summary>
+            private unsafe void CallSetComputeRootDescriptorTable(IntPtr commandList, uint RootParameterIndex, D3D12_GPU_DESCRIPTOR_HANDLE BaseDescriptor)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // SetComputeRootDescriptorTable is at index 47 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[47];
+
+                // Create delegate from function pointer
+                SetComputeRootDescriptorTableDelegate setRootDescriptorTable =
+                    (SetComputeRootDescriptorTableDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(SetComputeRootDescriptorTableDelegate));
+
+                setRootDescriptorTable(commandList, RootParameterIndex, BaseDescriptor);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::SetDescriptorHeaps through COM vtable.
+            /// VTable index 38 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Descriptor Heaps: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-setdescriptorheaps
+            /// </summary>
+            private unsafe void CallSetDescriptorHeaps(IntPtr commandList, uint NumDescriptorHeaps, IntPtr ppDescriptorHeaps)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero || ppDescriptorHeaps == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // SetDescriptorHeaps is at index 38 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[38];
+
+                // Create delegate from function pointer
+                SetDescriptorHeapsDelegate setDescriptorHeaps =
+                    (SetDescriptorHeapsDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(SetDescriptorHeapsDelegate));
+
+                setDescriptorHeaps(commandList, NumDescriptorHeaps, ppDescriptorHeaps);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::SetGraphicsRootSignature through COM vtable.
+            /// VTable index 43 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Root Signature: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-setgraphicsrootsignature
+            /// </summary>
+            private unsafe void CallSetGraphicsRootSignature(IntPtr commandList, IntPtr pRootSignature)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero || pRootSignature == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // SetGraphicsRootSignature is at index 43 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[43];
+
+                // Create delegate from function pointer
+                SetGraphicsRootSignatureDelegate setRootSignature =
+                    (SetGraphicsRootSignatureDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(SetGraphicsRootSignatureDelegate));
+
+                setRootSignature(commandList, pRootSignature);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::SetGraphicsRootDescriptorTable through COM vtable.
+            /// VTable index 44 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Root Parameters: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-setgraphicsrootdescriptortable
+            /// </summary>
+            private unsafe void CallSetGraphicsRootDescriptorTable(IntPtr commandList, uint RootParameterIndex, D3D12_GPU_DESCRIPTOR_HANDLE BaseDescriptor)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // SetGraphicsRootDescriptorTable is at index 44 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[44];
+
+                // Create delegate from function pointer
+                SetGraphicsRootDescriptorTableDelegate setRootDescriptorTable =
+                    (SetGraphicsRootDescriptorTableDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(SetGraphicsRootDescriptorTableDelegate));
+
+                setRootDescriptorTable(commandList, RootParameterIndex, BaseDescriptor);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::RSSetViewports through COM vtable.
+            /// VTable index 42 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Viewports: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-rssetviewports
+            /// </summary>
+            private unsafe void CallRSSetViewports(IntPtr commandList, uint NumViewports, IntPtr pViewports)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero || pViewports == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // RSSetViewports is at index 42 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[42];
+
+                // Create delegate from function pointer
+                RSSetViewportsDelegate rssetViewports =
+                    (RSSetViewportsDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(RSSetViewportsDelegate));
+
+                rssetViewports(commandList, NumViewports, pViewports);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::IASetVertexBuffers through COM vtable.
+            /// VTable index 36 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Vertex Buffers: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-iasetvertexbuffers
+            /// </summary>
+            private unsafe void CallIASetVertexBuffers(IntPtr commandList, uint StartSlot, uint NumViews, IntPtr pViews)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero || pViews == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // IASetVertexBuffers is at index 36 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[36];
+
+                // Create delegate from function pointer
+                IASetVertexBuffersDelegate iasetVertexBuffers =
+                    (IASetVertexBuffersDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(IASetVertexBuffersDelegate));
+
+                iasetVertexBuffers(commandList, StartSlot, NumViews, pViews);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::IASetIndexBuffer through COM vtable.
+            /// VTable index 37 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Index Buffers: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-iasetindexbuffer
+            /// </summary>
+            private unsafe void CallIASetIndexBuffer(IntPtr commandList, IntPtr pView)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // IASetIndexBuffer is at index 37 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[37];
+
+                // Create delegate from function pointer
+                IASetIndexBufferDelegate iasetIndexBuffer =
+                    (IASetIndexBufferDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(IASetIndexBufferDelegate));
+
+                iasetIndexBuffer(commandList, pView);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::OMSetRenderTargets through COM vtable.
+            /// VTable index 45 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Render Targets: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-omsetrendertargets
+            /// </summary>
+            private unsafe void CallOMSetRenderTargets(IntPtr commandList, uint NumRenderTargetDescriptors, IntPtr pRenderTargetDescriptors, byte RTsSingleHandleToDescriptorRange, IntPtr pDepthStencilDescriptor)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // OMSetRenderTargets is at index 45 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[45];
+
+                // Create delegate from function pointer
+                OMSetRenderTargetsDelegate omsetRenderTargets =
+                    (OMSetRenderTargetsDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(OMSetRenderTargetsDelegate));
+
+                omsetRenderTargets(commandList, NumRenderTargetDescriptors, pRenderTargetDescriptors, RTsSingleHandleToDescriptorRange, pDepthStencilDescriptor);
+            }
+
+            // COM interface method delegate for ClearDepthStencilView
+            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+            private delegate void ClearDepthStencilViewDelegate(IntPtr commandList, IntPtr DepthStencilView, uint ClearFlags, float Depth, byte Stencil, uint NumRects, IntPtr pRects);
+
+            // COM interface method delegate for RSSetScissorRects
+            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+            private delegate void RSSetScissorRectsDelegate(IntPtr commandList, uint NumRects, IntPtr pRects);
+
+            // COM interface method delegate for BeginEvent
+            // Based on DirectX 12 Debug Events: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-beginevent
+            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+            private delegate void BeginEventDelegate(IntPtr commandList, uint Metadata, IntPtr pData, uint Size);
+
+            // COM interface method delegate for EndEvent
+            // Based on DirectX 12 Debug Events: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-endevent
+            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+            private delegate void EndEventDelegate(IntPtr commandList);
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::ClearDepthStencilView through COM vtable.
+            /// VTable index 48 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Clear Operations: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-cleardepthstencilview
+            /// </summary>
+            private unsafe void CallClearDepthStencilView(IntPtr commandList, IntPtr DepthStencilView, uint ClearFlags, float Depth, byte Stencil, uint NumRects, IntPtr pRects)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero || DepthStencilView == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // ClearDepthStencilView is at index 48 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[48];
+
+                // Create delegate from function pointer
+                ClearDepthStencilViewDelegate clearDsv =
+                    (ClearDepthStencilViewDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(ClearDepthStencilViewDelegate));
+
+                clearDsv(commandList, DepthStencilView, ClearFlags, Depth, Stencil, NumRects, pRects);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::RSSetScissorRects through COM vtable.
+            /// VTable index 51 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Rasterizer State: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-rssetscissorrects
+            /// </summary>
+            private unsafe void CallRSSetScissorRects(IntPtr commandList, uint NumRects, IntPtr pRects)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // RSSetScissorRects is at index 51 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[51];
+
+                // Create delegate from function pointer
+                RSSetScissorRectsDelegate setScissorRects =
+                    (RSSetScissorRectsDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(RSSetScissorRectsDelegate));
+
+                setScissorRects(commandList, NumRects, pRects);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::BeginEvent through COM vtable.
+            /// VTable index 57 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Debug Events: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-beginevent
+            /// Note: This method is used internally by PIX event runtime. Event name is encoded as UTF-8 bytes.
+            /// </summary>
+            private unsafe void CallBeginEvent(IntPtr commandList, uint metadata, IntPtr pData, uint size)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // BeginEvent is at index 57 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[57];
+
+                // Create delegate from function pointer
+                BeginEventDelegate beginEvent =
+                    (BeginEventDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(BeginEventDelegate));
+
+                beginEvent(commandList, metadata, pData, size);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::EndEvent through COM vtable.
+            /// VTable index 58 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Debug Events: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-endevent
+            /// Note: This method is used internally by PIX event runtime to mark the end of an event region.
+            /// </summary>
+            private unsafe void CallEndEvent(IntPtr commandList)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // EndEvent is at index 58 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[58];
+
+                // Create delegate from function pointer
+                EndEventDelegate endEvent =
+                    (EndEventDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(EndEventDelegate));
+
+                endEvent(commandList);
+            }
+
+            public void UAVBarrier(ITexture texture) { /* TODO: UAVBarrier */ }
+            public void UAVBarrier(IBuffer buffer) { /* TODO: UAVBarrier */ }
+            public void SetGraphicsState(GraphicsState state)
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (state.Pipeline == null)
+                {
+                    throw new ArgumentException("Graphics state must have a valid pipeline", nameof(state));
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    return; // Command list not initialized
+                }
+
+                // Cast to D3D12 implementation to access native handles
+                D3D12GraphicsPipeline d3d12Pipeline = state.Pipeline as D3D12GraphicsPipeline;
+                if (d3d12Pipeline == null)
+                {
+                    throw new ArgumentException("Pipeline must be a D3D12GraphicsPipeline", nameof(state));
+                }
+
+                // Step 1: Set the graphics pipeline state
+                // ID3D12GraphicsCommandList::SetPipelineState sets the pipeline state object (PSO)
+                // This includes shaders, blend state, depth-stencil state, rasterizer state, etc.
+                IntPtr pipelineState = d3d12Pipeline.GetPipelineState();
+                if (pipelineState != IntPtr.Zero)
+                {
+                    CallSetPipelineState(_d3d12CommandList, pipelineState);
+                }
+
+                // Step 2: Set the graphics root signature
+                // ID3D12GraphicsCommandList::SetGraphicsRootSignature sets the root signature
+                // The root signature defines the layout of root parameters (constants, descriptors, etc.)
+                IntPtr rootSignature = d3d12Pipeline.GetRootSignature();
+                if (rootSignature != IntPtr.Zero)
+                {
+                    CallSetGraphicsRootSignature(_d3d12CommandList, rootSignature);
+                }
+
+                // Step 3: Set framebuffer render targets
+                // ID3D12GraphicsCommandList::OMSetRenderTargets sets render targets and depth-stencil view
+                if (state.Framebuffer != null)
+                {
+                    D3D12Framebuffer d3d12Framebuffer = state.Framebuffer as D3D12Framebuffer;
+                    if (d3d12Framebuffer != null)
+                    {
+                        FramebufferDesc fbDesc = d3d12Framebuffer.Desc;
+                        
+                        // Get render target views for color attachments
+                        uint numRenderTargets = 0;
+                        IntPtr renderTargetDescriptorsPtr = IntPtr.Zero;
+                        byte rtsSingleHandle = 0; // FALSE - using array of handles
+
+                        if (fbDesc.ColorAttachments != null && fbDesc.ColorAttachments.Length > 0)
+                        {
+                            numRenderTargets = unchecked((uint)fbDesc.ColorAttachments.Length);
+                            
+                            // Allocate memory for array of CPU descriptor handles
+                            // D3D12_CPU_DESCRIPTOR_HANDLE is a struct with one IntPtr field
+                            int handleSize = Marshal.SizeOf<D3D12_CPU_DESCRIPTOR_HANDLE>();
+                            renderTargetDescriptorsPtr = Marshal.AllocHGlobal(handleSize * (int)numRenderTargets);
+
+                            try
+                            {
+                                // Get or create RTV handles for each color attachment
+                                for (uint i = 0; i < numRenderTargets; i++)
+                                {
+                                    FramebufferAttachment attachment = fbDesc.ColorAttachments[i];
+                                    if (attachment.Texture == null)
+                                    {
+                                        continue;
+                                    }
+
+                                    // Get or create RTV handle for this texture
+                                    IntPtr rtvHandle = _device.GetOrCreateRtvHandle(attachment.Texture, attachment.MipLevel, attachment.ArraySlice);
+                                    if (rtvHandle == IntPtr.Zero)
+                                    {
+                                        // Skip invalid RTV handles
+                                        continue;
+                                    }
+
+                                    // Create CPU descriptor handle structure
+                                    D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = new D3D12_CPU_DESCRIPTOR_HANDLE
+                                    {
+                                        ptr = rtvHandle
+                                    };
+
+                                    // Marshal handle to array
+                                    IntPtr handlePtr = new IntPtr(renderTargetDescriptorsPtr.ToInt64() + (i * handleSize));
+                                    Marshal.StructureToPtr(cpuHandle, handlePtr, false);
+                                }
+                            }
+                            catch
+                            {
+                                // If allocation or marshalling fails, free memory and skip render target setup
+                                if (renderTargetDescriptorsPtr != IntPtr.Zero)
+                                {
+                                    Marshal.FreeHGlobal(renderTargetDescriptorsPtr);
+                                }
+                                renderTargetDescriptorsPtr = IntPtr.Zero;
+                                numRenderTargets = 0;
+                            }
+                        }
+
+                        // Get depth-stencil view handle if depth attachment exists
+                        IntPtr depthStencilDescriptorPtr = IntPtr.Zero;
+                        if (fbDesc.DepthAttachment.Texture != null)
+                        {
+                            IntPtr dsvHandle = _device.GetOrCreateDsvHandle(fbDesc.DepthAttachment.Texture, fbDesc.DepthAttachment.MipLevel, fbDesc.DepthAttachment.ArraySlice);
+                            if (dsvHandle != IntPtr.Zero)
+                            {
+                                // Allocate memory for depth-stencil descriptor handle
+                                int dsvHandleSize = Marshal.SizeOf<D3D12_CPU_DESCRIPTOR_HANDLE>();
+                                depthStencilDescriptorPtr = Marshal.AllocHGlobal(dsvHandleSize);
+                                
+                                D3D12_CPU_DESCRIPTOR_HANDLE dsvCpuHandle = new D3D12_CPU_DESCRIPTOR_HANDLE
+                                {
+                                    ptr = dsvHandle
+                                };
+                                Marshal.StructureToPtr(dsvCpuHandle, depthStencilDescriptorPtr, false);
+                            }
+                        }
+
+                        try
+                        {
+                            // Set render targets
+                            // Note: If numRenderTargets is 0, pRenderTargetDescriptors can be NULL
+                            CallOMSetRenderTargets(
+                                _d3d12CommandList,
+                                numRenderTargets,
+                                renderTargetDescriptorsPtr,
+                                rtsSingleHandle,
+                                depthStencilDescriptorPtr);
+                        }
+                        finally
+                        {
+                            // Free allocated memory
+                            if (renderTargetDescriptorsPtr != IntPtr.Zero)
+                            {
+                                Marshal.FreeHGlobal(renderTargetDescriptorsPtr);
+                            }
+                            if (depthStencilDescriptorPtr != IntPtr.Zero)
+                            {
+                                Marshal.FreeHGlobal(depthStencilDescriptorPtr);
+                            }
+                        }
+                    }
+                }
+
+                // Step 4: Set viewports
+                // ID3D12GraphicsCommandList::RSSetViewports sets viewport rectangles
+                if (state.Viewport.Viewports != null && state.Viewport.Viewports.Length > 0)
+                {
+                    Viewport[] viewports = state.Viewport.Viewports;
+                    int viewportSize = Marshal.SizeOf<D3D12_VIEWPORT>();
+                    IntPtr viewportsPtr = Marshal.AllocHGlobal(viewportSize * viewports.Length);
+
+                    try
+                    {
+                        // Convert Viewport[] to D3D12_VIEWPORT[]
+                        for (int i = 0; i < viewports.Length; i++)
+                        {
+                            Viewport vp = viewports[i];
+                            D3D12_VIEWPORT d3d12Viewport = new D3D12_VIEWPORT
+                            {
+                                TopLeftX = vp.X,
+                                TopLeftY = vp.Y,
+                                Width = vp.Width,
+                                Height = vp.Height,
+                                MinDepth = vp.MinDepth,
+                                MaxDepth = vp.MaxDepth
+                            };
+
+                            IntPtr viewportPtr = new IntPtr(viewportsPtr.ToInt64() + (i * viewportSize));
+                            Marshal.StructureToPtr(d3d12Viewport, viewportPtr, false);
+                        }
+
+                        CallRSSetViewports(_d3d12CommandList, unchecked((uint)viewports.Length), viewportsPtr);
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(viewportsPtr);
+                    }
+                }
+
+                // Step 5: Set scissor rectangles
+                // ID3D12GraphicsCommandList::RSSetScissorRects sets scissor rectangles
+                if (state.Viewport.Scissors != null && state.Viewport.Scissors.Length > 0)
+                {
+                    Rectangle[] scissors = state.Viewport.Scissors;
+                    int rectSize = Marshal.SizeOf<D3D12_RECT>();
+                    IntPtr rectsPtr = Marshal.AllocHGlobal(rectSize * scissors.Length);
+
+                    try
+                    {
+                        // Convert Rectangle[] to D3D12_RECT[]
+                        for (int i = 0; i < scissors.Length; i++)
+                        {
+                            Rectangle scissor = scissors[i];
+                            D3D12_RECT d3d12Rect = new D3D12_RECT
+                            {
+                                left = scissor.X,
+                                top = scissor.Y,
+                                right = scissor.X + scissor.Width,
+                                bottom = scissor.Y + scissor.Height
+                            };
+
+                            IntPtr rectPtr = new IntPtr(rectsPtr.ToInt64() + (i * rectSize));
+                            Marshal.StructureToPtr(d3d12Rect, rectPtr, false);
+                        }
+
+                        CallRSSetScissorRects(_d3d12CommandList, unchecked((uint)scissors.Length), rectsPtr);
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(rectsPtr);
+                    }
+                }
+
+                // Step 6: Set descriptor heaps (required before setting root descriptor tables)
+                // ID3D12GraphicsCommandList::SetDescriptorHeaps sets the descriptor heaps to use
+                if (state.BindingSets != null && state.BindingSets.Length > 0)
+                {
+                    // Collect descriptor heaps from all binding sets
+                    var descriptorHeaps = new System.Collections.Generic.List<IntPtr>();
+                    var seenHeaps = new System.Collections.Generic.HashSet<IntPtr>();
+
+                    foreach (IBindingSet bindingSet in state.BindingSets)
+                    {
+                        D3D12BindingSet d3d12BindingSet = bindingSet as D3D12BindingSet;
+                        if (d3d12BindingSet == null)
+                        {
+                            continue; // Skip non-D3D12 binding sets
+                        }
+
+                        // Get descriptor heap from binding set
+                        IntPtr descriptorHeap = d3d12BindingSet.GetDescriptorHeap();
+                        if (descriptorHeap != IntPtr.Zero && !seenHeaps.Contains(descriptorHeap))
+                        {
+                            descriptorHeaps.Add(descriptorHeap);
+                            seenHeaps.Add(descriptorHeap);
+                        }
+                    }
+
+                    // Set descriptor heaps if we have any
+                    if (descriptorHeaps.Count > 0)
+                    {
+                        int heapSize = Marshal.SizeOf(typeof(IntPtr));
+                        IntPtr heapsPtr = Marshal.AllocHGlobal(heapSize * descriptorHeaps.Count);
+                        try
+                        {
+                            for (int i = 0; i < descriptorHeaps.Count; i++)
+                            {
+                                IntPtr heapPtr = new IntPtr(heapsPtr.ToInt64() + (i * heapSize));
+                                Marshal.WriteIntPtr(heapPtr, descriptorHeaps[i]);
+                            }
+
+                            CallSetDescriptorHeaps(_d3d12CommandList, unchecked((uint)descriptorHeaps.Count), heapsPtr);
+                        }
+                        finally
+                        {
+                            Marshal.FreeHGlobal(heapsPtr);
+                        }
+                    }
+
+                    // Step 7: Bind descriptor sets as root descriptor tables
+                    // In D3D12, each binding set maps to one root parameter index in the root signature
+                    // For now, we assume sequential root parameter indices starting from 0
+                    // TODO: Get actual root parameter indices from binding layout or root signature
+                    for (uint i = 0; i < state.BindingSets.Length; i++)
+                    {
+                        D3D12BindingSet d3d12BindingSet = state.BindingSets[i] as D3D12BindingSet;
+                        if (d3d12BindingSet == null)
+                        {
+                            continue; // Skip non-D3D12 binding sets
+                        }
+
+                        // Get GPU descriptor handle from binding set
+                        D3D12_GPU_DESCRIPTOR_HANDLE handle = d3d12BindingSet.GetGpuDescriptorHandle();
+                        if (handle.ptr != 0)
+                        {
+                            CallSetGraphicsRootDescriptorTable(_d3d12CommandList, i, handle);
+                        }
+                    }
+                }
+
+                // Step 8: Set vertex buffers
+                // ID3D12GraphicsCommandList::IASetVertexBuffers sets vertex buffer bindings
+                if (state.VertexBuffers != null && state.VertexBuffers.Length > 0)
+                {
+                    IBuffer[] vertexBuffers = state.VertexBuffers;
+                    GraphicsPipelineDesc pipelineDesc = d3d12Pipeline.Desc;
+                    InputLayoutDesc inputLayout = pipelineDesc.InputLayout;
+
+                    // Calculate strides for each vertex buffer
+                    // Stride can come from InputLayout (calculate from attributes) or buffer's StructStride
+                    uint[] strides = new uint[vertexBuffers.Length];
+                    for (int i = 0; i < vertexBuffers.Length; i++)
+                    {
+                        if (vertexBuffers[i] == null)
+                        {
+                            strides[i] = 0;
+                            continue;
+                        }
+
+                        BufferDesc bufferDesc = vertexBuffers[i].Desc;
+                        
+                        // Try to get stride from buffer's StructStride if available
+                        if (bufferDesc.StructStride > 0)
+                        {
+                            strides[i] = unchecked((uint)bufferDesc.StructStride);
+                        }
+                        else if (inputLayout.Attributes != null)
+                        {
+                            // Calculate stride from input layout attributes for this buffer index
+                            uint maxOffset = 0;
+                            uint maxSize = 0;
+                            
+                            foreach (VertexAttributeDesc attr in inputLayout.Attributes)
+                            {
+                                if (attr.BufferIndex == i)
+                                {
+                                    // Calculate size of this attribute based on format
+                                    uint attrSize = GetFormatSize(attr.Format);
+                                    uint attrEnd = unchecked((uint)attr.Offset + attrSize);
+                                    
+                                    if (attrEnd > maxOffset + maxSize)
+                                    {
+                                        maxOffset = unchecked((uint)attr.Offset);
+                                        maxSize = attrSize;
+                                    }
+                                }
+                            }
+
+                            // Stride is the maximum offset + size, rounded up to next 4-byte boundary for alignment
+                            strides[i] = (maxOffset + maxSize + 3) & ~3U; // Align to 4 bytes
+                            
+                            // If no attributes found, use a default stride based on buffer size
+                            if (strides[i] == 0 && bufferDesc.ByteSize > 0)
+                            {
+                                // Default to 16 bytes per vertex (common for position + normal + texcoord)
+                                strides[i] = 16;
+                            }
+                        }
+                        else
+                        {
+                            // No input layout, use default stride
+                            strides[i] = 16; // Default stride
+                        }
+                    }
+
+                    // Create vertex buffer views
+                    int vbViewSize = Marshal.SizeOf<D3D12_VERTEX_BUFFER_VIEW>();
+                    IntPtr vbViewsPtr = Marshal.AllocHGlobal(vbViewSize * vertexBuffers.Length);
+
+                    try
+                    {
+                        for (int i = 0; i < vertexBuffers.Length; i++)
+                        {
+                            if (vertexBuffers[i] == null)
+                            {
+                                continue;
+                            }
+
+                            D3D12Buffer d3d12Buffer = vertexBuffers[i] as D3D12Buffer;
+                            if (d3d12Buffer == null)
+                            {
+                                continue; // Skip non-D3D12 buffers
+                            }
+
+                            // Get GPU virtual address for vertex buffer
+                            IntPtr bufferResource = vertexBuffers[i].NativeHandle;
+                            ulong bufferGpuVa = _device.GetGpuVirtualAddress(bufferResource);
+                            if (bufferGpuVa == 0UL)
+                            {
+                                continue; // Skip invalid buffers
+                            }
+
+                            BufferDesc bufferDesc = vertexBuffers[i].Desc;
+                            D3D12_VERTEX_BUFFER_VIEW vbView = new D3D12_VERTEX_BUFFER_VIEW
+                            {
+                                BufferLocation = bufferGpuVa,
+                                SizeInBytes = unchecked((uint)bufferDesc.ByteSize),
+                                StrideInBytes = strides[i]
+                            };
+
+                            IntPtr vbViewPtr = new IntPtr(vbViewsPtr.ToInt64() + (i * vbViewSize));
+                            Marshal.StructureToPtr(vbView, vbViewPtr, false);
+                        }
+
+                        // Set vertex buffers starting at slot 0
+                        CallIASetVertexBuffers(_d3d12CommandList, 0, unchecked((uint)vertexBuffers.Length), vbViewsPtr);
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(vbViewsPtr);
+                    }
+                }
+
+                // Step 9: Set index buffer
+                // ID3D12GraphicsCommandList::IASetIndexBuffer sets the index buffer binding
+                if (state.IndexBuffer != null)
+                {
+                    D3D12Buffer d3d12IndexBuffer = state.IndexBuffer as D3D12Buffer;
+                    if (d3d12IndexBuffer != null)
+                    {
+                        // Get GPU virtual address for index buffer
+                        IntPtr indexBufferResource = state.IndexBuffer.NativeHandle;
+                        ulong indexBufferGpuVa = _device.GetGpuVirtualAddress(indexBufferResource);
+                        if (indexBufferGpuVa != 0UL)
+                        {
+                            BufferDesc indexBufferDesc = state.IndexBuffer.Desc;
+
+                            // Convert TextureFormat to DXGI_FORMAT for index buffer
+                            // DXGI_FORMAT_R16_UINT = 56, DXGI_FORMAT_R32_UINT = 57
+                            uint indexFormat = 57; // Default to R32_UINT
+                            if (state.IndexFormat == TextureFormat.R16_UInt)
+                            {
+                                indexFormat = 56; // DXGI_FORMAT_R16_UINT
+                            }
+                            else if (state.IndexFormat == TextureFormat.R32_UInt)
+                            {
+                                indexFormat = 57; // DXGI_FORMAT_R32_UINT
+                            }
+
+                            D3D12_INDEX_BUFFER_VIEW ibView = new D3D12_INDEX_BUFFER_VIEW
+                            {
+                                BufferLocation = indexBufferGpuVa,
+                                SizeInBytes = unchecked((uint)indexBufferDesc.ByteSize),
+                                Format = indexFormat
+                            };
+
+                            // Allocate memory for index buffer view
+                            int ibViewSize = Marshal.SizeOf<D3D12_INDEX_BUFFER_VIEW>();
+                            IntPtr ibViewPtr = Marshal.AllocHGlobal(ibViewSize);
+
+                            try
+                            {
+                                Marshal.StructureToPtr(ibView, ibViewPtr, false);
+                                CallIASetIndexBuffer(_d3d12CommandList, ibViewPtr);
+                            }
+                            finally
+                            {
+                                Marshal.FreeHGlobal(ibViewPtr);
+                            }
+                        }
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Gets the size in bytes for a texture format.
+            /// Helper method for calculating vertex attribute sizes.
+            /// </summary>
+            private uint GetFormatSize(TextureFormat format)
+            {
+                switch (format)
+                {
+                    case TextureFormat.R8_UNorm:
+                    case TextureFormat.R8_UInt:
+                    case TextureFormat.R8_SInt:
+                        return 1;
+                    case TextureFormat.R8G8_UNorm:
+                    case TextureFormat.R8G8_UInt:
+                    case TextureFormat.R8G8_SInt:
+                    case TextureFormat.R16_UNorm:
+                    case TextureFormat.R16_UInt:
+                    case TextureFormat.R16_SInt:
+                    case TextureFormat.R16_Float:
+                        return 2;
+                    case TextureFormat.R8G8B8A8_UNorm:
+                    case TextureFormat.R8G8B8A8_UInt:
+                    case TextureFormat.R8G8B8A8_SInt:
+                    case TextureFormat.R32_UInt:
+                    case TextureFormat.R32_SInt:
+                    case TextureFormat.R32_Float:
+                        return 4;
+                    case TextureFormat.R32G32_Float:
+                    case TextureFormat.R32G32_UInt:
+                    case TextureFormat.R32G32_SInt:
+                        return 8;
+                    case TextureFormat.R32G32B32_Float:
+                        return 12;
+                    case TextureFormat.R32G32B32A32_Float:
+                    case TextureFormat.R32G32B32A32_UInt:
+                    case TextureFormat.R32G32B32A32_SInt:
+                        return 16;
+                    default:
+                        return 4; // Default to 4 bytes
+                }
+            }
+            public void SetViewport(Viewport viewport) { /* TODO: RSSetViewports */ }
+            public void SetViewports(Viewport[] viewports) { /* TODO: RSSetViewports */ }
+            
+            /// <summary>
+            /// Sets a single scissor rectangle.
+            /// Converts Rectangle (X, Y, Width, Height) to D3D12_RECT (left, top, right, bottom).
+            /// Based on DirectX 12 Scissor Rectangles: https://docs.microsoft.com/en-us/windows/win32/direct3d12/scissor-rectangles
+            /// </summary>
+            public void SetScissor(Rectangle scissor)
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    return; // Command list not initialized
+                }
+
+                // Convert Rectangle to D3D12_RECT
+                // Rectangle uses (X, Y, Width, Height), D3D12_RECT uses (left, top, right, bottom)
+                D3D12_RECT d3d12Rect = new D3D12_RECT
+                {
+                    left = scissor.X,
+                    top = scissor.Y,
+                    right = scissor.X + scissor.Width,
+                    bottom = scissor.Y + scissor.Height
+                };
+
+                // Allocate unmanaged memory for the rect
+                int rectSize = Marshal.SizeOf(typeof(D3D12_RECT));
+                IntPtr rectPtr = Marshal.AllocHGlobal(rectSize);
+
+                try
+                {
+                    // Marshal structure to unmanaged memory
+                    Marshal.StructureToPtr(d3d12Rect, rectPtr, false);
+
+                    // Call RSSetScissorRects with a single rect
+                    CallRSSetScissorRects(_d3d12CommandList, 1, rectPtr);
+                }
+                finally
+                {
+                    // Free allocated memory
+                    Marshal.FreeHGlobal(rectPtr);
+                }
+            }
+
+            /// <summary>
+            /// Sets multiple scissor rectangles.
+            /// Converts Rectangle[] (X, Y, Width, Height) to D3D12_RECT[] (left, top, right, bottom).
+            /// Based on DirectX 12 Scissor Rectangles: https://docs.microsoft.com/en-us/windows/win32/direct3d12/scissor-rectangles
+            /// </summary>
+            public void SetScissors(Rectangle[] scissors)
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    return; // Command list not initialized
+                }
+
+                // Handle null or empty array
+                if (scissors == null || scissors.Length == 0)
+                {
+                    // Setting 0 rects disables scissor test for all viewports
+                    CallRSSetScissorRects(_d3d12CommandList, 0, IntPtr.Zero);
+                    return;
+                }
+
+                // Convert Rectangle[] to D3D12_RECT[]
+                // Rectangle uses (X, Y, Width, Height), D3D12_RECT uses (left, top, right, bottom)
+                int rectSize = Marshal.SizeOf(typeof(D3D12_RECT));
+                IntPtr rectsPtr = Marshal.AllocHGlobal(rectSize * scissors.Length);
+
+                try
+                {
+                    // Convert each rectangle and marshal to unmanaged memory
+                    IntPtr currentRectPtr = rectsPtr;
+                    for (int i = 0; i < scissors.Length; i++)
+                    {
+                        Rectangle scissor = scissors[i];
+                        D3D12_RECT d3d12Rect = new D3D12_RECT
+                        {
+                            left = scissor.X,
+                            top = scissor.Y,
+                            right = scissor.X + scissor.Width,
+                            bottom = scissor.Y + scissor.Height
+                        };
+
+                        Marshal.StructureToPtr(d3d12Rect, currentRectPtr, false);
+                        currentRectPtr = new IntPtr(currentRectPtr.ToInt64() + rectSize);
+                    }
+
+                    // Call RSSetScissorRects with all rects
+                    CallRSSetScissorRects(_d3d12CommandList, unchecked((uint)scissors.Length), rectsPtr);
+                }
+                finally
+                {
+                    // Free allocated memory
+                    Marshal.FreeHGlobal(rectsPtr);
+                }
+            }
+            public void SetBlendConstant(Vector4 color) { /* TODO: OMSetBlendFactor */ }
+            public void SetStencilRef(uint reference) { /* TODO: OMSetStencilRef */ }
+            public void Draw(DrawArguments args) { /* TODO: DrawInstanced */ }
+            /// <summary>
+            /// Draws indexed primitives using instanced drawing.
+            /// In DirectX 12, all indexed drawing is done through DrawIndexedInstanced.
+            /// Based on DirectX 12 DrawIndexedInstanced: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-drawindexedinstanced
+            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+            /// </summary>
+            public void DrawIndexed(DrawArguments args)
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    return; // Command list not initialized
+                }
+
+                // Validate arguments
+                // IndexCountPerInstance must be greater than 0
+                if (args.VertexCount <= 0)
+                {
+                    // In indexed drawing context, VertexCount represents the index count per instance
+                    // Silently return if invalid - caller should ensure valid arguments
+                    return;
+                }
+
+                // InstanceCount defaults to 1 if not specified (0 or negative)
+                uint instanceCount = args.InstanceCount > 0 ? unchecked((uint)args.InstanceCount) : 1U;
+
+                // StartIndexLocation and BaseVertexLocation can be negative or any value
+                // They will be used as-is by the GPU
+                uint startIndexLocation = unchecked((uint)args.StartIndexLocation);
+                int baseVertexLocation = args.BaseVertexLocation;
+                uint startInstanceLocation = unchecked((uint)args.StartInstanceLocation);
+
+                // Call DrawIndexedInstanced through COM vtable
+                // Parameters:
+                // - IndexCountPerInstance: args.VertexCount (index count per instance)
+                // - InstanceCount: args.InstanceCount (defaults to 1)
+                // - StartIndexLocation: args.StartIndexLocation
+                // - BaseVertexLocation: args.BaseVertexLocation
+                // - StartInstanceLocation: args.StartInstanceLocation
+                CallDrawIndexedInstanced(
+                    _d3d12CommandList,
+                    unchecked((uint)args.VertexCount), // IndexCountPerInstance
+                    instanceCount,                      // InstanceCount
+                    startIndexLocation,                 // StartIndexLocation
+                    baseVertexLocation,                 // BaseVertexLocation
+                    startInstanceLocation);             // StartInstanceLocation
+            }
+            public void DrawIndirect(IBuffer argumentBuffer, int offset, int drawCount, int stride)
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (argumentBuffer == null)
+                {
+                    throw new ArgumentNullException(nameof(argumentBuffer));
+                }
+
+                if (offset < 0)
+                {
+                    throw new ArgumentException("Offset must be non-negative", nameof(offset));
+                }
+
+                if (drawCount <= 0)
+                {
+                    throw new ArgumentException("Draw count must be positive", nameof(drawCount));
+                }
+
+                if (stride <= 0)
+                {
+                    throw new ArgumentException("Stride must be positive", nameof(stride));
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    return; // Command list not initialized
+                }
+
+                // Get the native D3D12 resource handle from the buffer
+                IntPtr argumentResource = argumentBuffer.NativeHandle;
+                if (argumentResource == IntPtr.Zero)
+                {
+                    throw new ArgumentException("Argument buffer has invalid native handle", nameof(argumentBuffer));
+                }
+
+                // Get or create the draw indirect command signature
+                // Command signatures are cached per device to avoid repeated creation
+                IntPtr commandSignature = _device.CreateDrawIndirectCommandSignature();
+                if (commandSignature == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("Failed to create or retrieve draw indirect command signature");
+                }
+
+                // Validate stride matches the command signature stride
+                // D3D12_DRAW_ARGUMENTS is 16 bytes (4 uints)
+                int expectedStride = Marshal.SizeOf(typeof(D3D12_DRAW_ARGUMENTS));
+                if (stride != expectedStride)
+                {
+                    throw new ArgumentException($"Stride {stride} does not match expected stride {expectedStride} for D3D12_DRAW_ARGUMENTS", nameof(stride));
+                }
+
+                // Get GPU virtual address of the argument buffer
+                ulong argumentBufferGpuVa = _device.GetGpuVirtualAddress(argumentResource);
+                if (argumentBufferGpuVa == 0UL)
+                {
+                    throw new InvalidOperationException("Failed to get GPU virtual address for argument buffer");
+                }
+
+                // Calculate the GPU virtual address with offset
+                ulong argumentBufferOffsetGpuVa = argumentBufferGpuVa + unchecked((ulong)offset);
+
+                // For multi-draw indirect, MaxCommandCount is drawCount
+                // The count buffer is NULL (IntPtr.Zero) and CountBufferOffset is 0 when not using count buffer
+                // Based on DirectX 12 ExecuteIndirect: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-executeindirect
+                // swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+                _device.CallExecuteIndirect(
+                    _d3d12CommandList,
+                    commandSignature,
+                    unchecked((uint)drawCount), // MaxCommandCount: number of draw commands to execute
+                    argumentResource, // pArgumentBuffer: resource containing D3D12_DRAW_ARGUMENTS array
+                    argumentBufferOffsetGpuVa, // ArgumentBufferOffset: offset into argument buffer
+                    IntPtr.Zero, // pCountBuffer: NULL (not using count buffer for this implementation)
+                    0UL); // CountBufferOffset: 0 when pCountBuffer is NULL
+            }
+
+            public void DrawIndexedIndirect(IBuffer argumentBuffer, int offset, int drawCount, int stride)
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (argumentBuffer == null)
+                {
+                    throw new ArgumentNullException(nameof(argumentBuffer));
+                }
+
+                if (offset < 0)
+                {
+                    throw new ArgumentException("Offset must be non-negative", nameof(offset));
+                }
+
+                if (drawCount <= 0)
+                {
+                    throw new ArgumentException("Draw count must be positive", nameof(drawCount));
+                }
+
+                if (stride <= 0)
+                {
+                    throw new ArgumentException("Stride must be positive", nameof(stride));
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    return; // Command list not initialized
+                }
+
+                // Get the native D3D12 resource handle from the buffer
+                IntPtr argumentResource = argumentBuffer.NativeHandle;
+                if (argumentResource == IntPtr.Zero)
+                {
+                    throw new ArgumentException("Argument buffer has invalid native handle", nameof(argumentBuffer));
+                }
+
+                // Get or create the draw indexed indirect command signature
+                // Command signatures are cached per device to avoid repeated creation
+                IntPtr commandSignature = _device.CreateDrawIndexedIndirectCommandSignature();
+                if (commandSignature == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("Failed to create or retrieve draw indexed indirect command signature");
+                }
+
+                // Validate stride matches the command signature stride
+                // D3D12_DRAW_INDEXED_ARGUMENTS is 20 bytes (4 uints + 1 int)
+                int expectedStride = Marshal.SizeOf(typeof(D3D12_DRAW_INDEXED_ARGUMENTS));
+                if (stride != expectedStride)
+                {
+                    throw new ArgumentException($"Stride {stride} does not match expected stride {expectedStride} for D3D12_DRAW_INDEXED_ARGUMENTS", nameof(stride));
+                }
+
+                // Get GPU virtual address of the argument buffer
+                ulong argumentBufferGpuVa = _device.GetGpuVirtualAddress(argumentResource);
+                if (argumentBufferGpuVa == 0UL)
+                {
+                    throw new InvalidOperationException("Failed to get GPU virtual address for argument buffer");
+                }
+
+                // Calculate the GPU virtual address with offset
+                ulong argumentBufferOffsetGpuVa = argumentBufferGpuVa + unchecked((ulong)offset);
+
+                // For multi-draw indexed indirect, MaxCommandCount is drawCount
+                // The count buffer is NULL (IntPtr.Zero) and CountBufferOffset is 0 when not using count buffer
+                // Based on DirectX 12 ExecuteIndirect: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-executeindirect
+                // swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+                _device.CallExecuteIndirect(
+                    _d3d12CommandList,
+                    commandSignature,
+                    unchecked((uint)drawCount), // MaxCommandCount: number of draw indexed commands to execute
+                    argumentResource, // pArgumentBuffer: resource containing D3D12_DRAW_INDEXED_ARGUMENTS array
+                    argumentBufferOffsetGpuVa, // ArgumentBufferOffset: offset into argument buffer
+                    IntPtr.Zero, // pCountBuffer: NULL (not using count buffer for this implementation)
+                    0UL); // CountBufferOffset: 0 when pCountBuffer is NULL
+            }
+            public void SetComputeState(ComputeState state)
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (state.Pipeline == null)
+                {
+                    throw new ArgumentException("Compute state must have a valid pipeline", nameof(state));
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    return; // Command list not initialized
+                }
+
+                // Cast to D3D12 implementation to access native handles
+                D3D12ComputePipeline d3d12Pipeline = state.Pipeline as D3D12ComputePipeline;
+                if (d3d12Pipeline == null)
+                {
+                    throw new ArgumentException("Pipeline must be a D3D12ComputePipeline", nameof(state));
+                }
+
+                // Step 1: Set the compute pipeline state
+                // ID3D12GraphicsCommandList::SetPipelineState sets the pipeline state object (PSO)
+                // This includes the compute shader and any pipeline state configuration
+                IntPtr pipelineState = d3d12Pipeline.GetPipelineState();
+                if (pipelineState != IntPtr.Zero)
+                {
+                    CallSetPipelineState(_d3d12CommandList, pipelineState);
+                }
+
+                // Step 2: Set the compute root signature
+                // ID3D12GraphicsCommandList::SetComputeRootSignature sets the root signature
+                // The root signature defines the layout of root parameters (constants, descriptors, etc.)
+                IntPtr rootSignature = d3d12Pipeline.GetRootSignature();
+                if (rootSignature != IntPtr.Zero)
+                {
+                    CallSetComputeRootSignature(_d3d12CommandList, rootSignature);
+                }
+
+                // Step 3: Bind descriptor sets (binding sets) if provided
+                // In D3D12, descriptor sets are bound via root descriptor tables
+                // Each binding set maps to a root parameter index in the root signature
+                if (state.BindingSets != null && state.BindingSets.Length > 0)
+                {
+                    // Collect descriptor heaps from all binding sets
+                    // D3D12 requires all descriptor heaps to be set before binding descriptor tables
+                    var descriptorHeaps = new System.Collections.Generic.List<IntPtr>();
+                    var seenHeaps = new System.Collections.Generic.HashSet<IntPtr>();
+
+                    foreach (IBindingSet bindingSet in state.BindingSets)
+                    {
+                        D3D12BindingSet d3d12BindingSet = bindingSet as D3D12BindingSet;
+                        if (d3d12BindingSet == null)
+                        {
+                            continue; // Skip non-D3D12 binding sets
+                        }
+
+                        // Get descriptor heap from binding set
+                        // TODO: Add GetDescriptorHeap() method to D3D12BindingSet to access _descriptorHeap
+                        // For now, we'll need to add an accessor method
+                        // IntPtr descriptorHeap = d3d12BindingSet.GetDescriptorHeap();
+                        // if (descriptorHeap != IntPtr.Zero && !seenHeaps.Contains(descriptorHeap))
+                        // {
+                        //     descriptorHeaps.Add(descriptorHeap);
+                        //     seenHeaps.Add(descriptorHeap);
+                        // }
+                    }
+
+                    // Set descriptor heaps if we have any
+                    // ID3D12GraphicsCommandList::SetDescriptorHeaps sets the descriptor heaps to use
+                    // This must be called before setting root descriptor tables
+                    if (descriptorHeaps.Count > 0)
+                    {
+                        int heapSize = Marshal.SizeOf(typeof(IntPtr));
+                        IntPtr heapsPtr = Marshal.AllocHGlobal(heapSize * descriptorHeaps.Count);
+                        try
+                        {
+                            for (int i = 0; i < descriptorHeaps.Count; i++)
+                            {
+                                IntPtr heapPtr = new IntPtr(heapsPtr.ToInt64() + (i * heapSize));
+                                Marshal.WriteIntPtr(heapPtr, descriptorHeaps[i]);
+                            }
+
+                            CallSetDescriptorHeaps(_d3d12CommandList, unchecked((uint)descriptorHeaps.Count), heapsPtr);
+                        }
+                        finally
+                        {
+                            Marshal.FreeHGlobal(heapsPtr);
+                        }
+                    }
+
+                    // Bind each binding set as a root descriptor table
+                    // In D3D12, each binding set typically maps to one root parameter index
+                    // The root parameter index is determined by the root signature layout
+                    // For now, we assume sequential root parameter indices starting from 0
+                    // TODO: Get actual root parameter indices from binding layout or root signature
+                    for (uint i = 0; i < state.BindingSets.Length; i++)
+                    {
+                        D3D12BindingSet d3d12BindingSet = state.BindingSets[i] as D3D12BindingSet;
+                        if (d3d12BindingSet == null)
+                        {
+                            continue; // Skip non-D3D12 binding sets
+                        }
+
+                        // Get GPU descriptor handle from binding set
+                        // The GPU descriptor handle points to the start of the descriptor table in the heap
+                        // Based on DirectX 12 Root Parameters: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-setcomputerootdescriptortable
+                        // swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+                        D3D12_GPU_DESCRIPTOR_HANDLE handle = d3d12BindingSet.GetGpuDescriptorHandle();
+                        if (handle.ptr != 0)
+                        {
+                            CallSetComputeRootDescriptorTable(_d3d12CommandList, i, handle);
+                        }
+                    }
+                }
+            }
+            public void Dispatch(int groupCountX, int groupCountY = 1, int groupCountZ = 1)
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (groupCountX <= 0 || groupCountY <= 0 || groupCountZ <= 0)
+                {
+                    return; // Invalid thread group counts
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    return; // Command list not initialized
+                }
+
+                // Call ID3D12GraphicsCommandList::Dispatch
+                CallDispatch(_d3d12CommandList, unchecked((uint)groupCountX), unchecked((uint)groupCountY), unchecked((uint)groupCountZ));
+            }
+            public void DispatchIndirect(IBuffer argumentBuffer, int offset)
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (argumentBuffer == null)
+                {
+                    throw new ArgumentNullException(nameof(argumentBuffer));
+                }
+
+                if (offset < 0)
+                {
+                    throw new ArgumentException("Offset must be non-negative", nameof(offset));
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    return; // Command list not initialized
+                }
+
+                // Get the native D3D12 resource handle from the buffer
+                IntPtr argumentResource = argumentBuffer.NativeHandle;
+                if (argumentResource == IntPtr.Zero)
+                {
+                    throw new ArgumentException("Argument buffer has invalid native handle", nameof(argumentBuffer));
+                }
+
+                // Get or create the dispatch indirect command signature
+                // Command signatures are cached per device to avoid repeated creation
+                IntPtr commandSignature = _device.CreateDispatchIndirectCommandSignature();
+                if (commandSignature == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("Failed to create or retrieve dispatch indirect command signature");
+                }
+
+                // Get GPU virtual address of the argument buffer
+                ulong argumentBufferGpuVa = _device.GetGpuVirtualAddress(argumentResource);
+                if (argumentBufferGpuVa == 0UL)
+                {
+                    throw new InvalidOperationException("Failed to get GPU virtual address for argument buffer");
+                }
+
+                // Calculate the GPU virtual address with offset
+                ulong argumentBufferOffsetGpuVa = argumentBufferGpuVa + unchecked((ulong)offset);
+
+                // For single dispatch indirect (no count buffer), MaxCommandCount is 1
+                // The count buffer is NULL (IntPtr.Zero) and CountBufferOffset is 0
+                // Based on DirectX 12 ExecuteIndirect: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-executeindirect
+                // swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+                _device.CallExecuteIndirect(
+                    _d3d12CommandList,
+                    commandSignature,
+                    1, // MaxCommandCount: 1 for single dispatch
+                    argumentResource, // pArgumentBuffer: resource containing D3D12_DISPATCH_ARGUMENTS
+                    argumentBufferOffsetGpuVa, // ArgumentBufferOffset: offset into argument buffer
+                    IntPtr.Zero, // pCountBuffer: NULL for single dispatch (no count buffer)
+                    0UL); // CountBufferOffset: 0 when pCountBuffer is NULL
+            }
+            public void SetRaytracingState(RaytracingState state)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open to set raytracing state");
+                }
+
+                // Store the raytracing state (contains pipeline and shader binding table)
+                _raytracingState = state;
+                _hasRaytracingState = true;
+            }
+            public void DispatchRays(DispatchRaysArguments args)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open to dispatch rays");
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("Command list is not initialized");
+                }
+
+                // Validate dispatch dimensions
+                if (args.Width <= 0 || args.Height <= 0 || args.Depth <= 0)
+                {
+                    throw new ArgumentException($"Invalid dispatch dimensions: Width={args.Width}, Height={args.Height}, Depth={args.Depth}. All dimensions must be greater than zero.");
+                }
+
+                // Check that raytracing state is set
+                if (!_hasRaytracingState)
+                {
+                    throw new InvalidOperationException("Raytracing state must be set before dispatching rays. Call SetRaytracingState first.");
+                }
+
+                // Get shader binding table from raytracing state
+                ShaderBindingTable shaderTable = _raytracingState.ShaderTable;
+
+                // Validate that shader binding table buffer is set (required for ray generation shader)
+                if (shaderTable.Buffer == null)
+                {
+                    throw new InvalidOperationException("Shader binding table buffer is required for DispatchRays");
+                }
+
+                // Get GPU virtual addresses for shader binding table buffers
+                // The buffer's NativeHandle should contain the ID3D12Resource* pointer
+                IntPtr rayGenBufferResource = shaderTable.Buffer.NativeHandle;
+                if (rayGenBufferResource == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("Ray generation shader binding table buffer has invalid native handle");
+                }
+
+                // Get GPU virtual address for ray generation shader table
+                // StartAddress = buffer base address + offset
+                ulong rayGenBaseGpuVa = _device.GetGpuVirtualAddress(rayGenBufferResource);
+                if (rayGenBaseGpuVa == 0UL)
+                {
+                    throw new InvalidOperationException("Failed to get GPU virtual address for ray generation shader binding table buffer");
+                }
+
+                ulong rayGenGpuVa = rayGenBaseGpuVa + shaderTable.RayGenOffset;
+                ulong rayGenSize = shaderTable.RayGenSize;
+
+                // Validate ray generation shader table size
+                if (rayGenSize == 0UL)
+                {
+                    throw new InvalidOperationException("Ray generation shader table size cannot be zero");
+                }
+
+                // Get miss shader table GPU virtual address (optional)
+                ulong missGpuVa = 0UL;
+                ulong missSize = 0UL;
+                ulong missStride = 0UL;
+                if (shaderTable.MissSize > 0UL)
+                {
+                    // Miss shader table uses the same buffer but different offset
+                    missGpuVa = rayGenBaseGpuVa + shaderTable.MissOffset;
+                    missSize = shaderTable.MissSize;
+                    missStride = shaderTable.MissStride > 0UL ? shaderTable.MissStride : missSize;
+                }
+
+                // Get hit group shader table GPU virtual address (optional)
+                ulong hitGroupGpuVa = 0UL;
+                ulong hitGroupSize = 0UL;
+                ulong hitGroupStride = 0UL;
+                if (shaderTable.HitGroupSize > 0UL)
+                {
+                    // Hit group shader table uses the same buffer but different offset
+                    hitGroupGpuVa = rayGenBaseGpuVa + shaderTable.HitGroupOffset;
+                    hitGroupSize = shaderTable.HitGroupSize;
+                    hitGroupStride = shaderTable.HitGroupStride > 0UL ? shaderTable.HitGroupStride : hitGroupSize;
+                }
+
+                // Get callable shader table GPU virtual address (optional, typically not used)
+                ulong callableGpuVa = 0UL;
+                ulong callableSize = 0UL;
+                ulong callableStride = 0UL;
+                if (shaderTable.CallableSize > 0UL)
+                {
+                    // Callable shader table uses the same buffer but different offset
+                    callableGpuVa = rayGenBaseGpuVa + shaderTable.CallableOffset;
+                    callableSize = shaderTable.CallableSize;
+                    callableStride = shaderTable.CallableStride > 0UL ? shaderTable.CallableStride : callableSize;
+                }
+
+                // Build D3D12_DISPATCH_RAYS_DESC structure
+                D3D12_DISPATCH_RAYS_DESC dispatchRaysDesc = new D3D12_DISPATCH_RAYS_DESC
+                {
+                    // Ray generation shader table (required)
+                    RayGenerationShaderRecord = new D3D12_GPU_VIRTUAL_ADDRESS_RANGE
+                    {
+                        StartAddress = rayGenGpuVa,
+                        SizeInBytes = rayGenSize
+                    },
+
+                    // Miss shader table (optional)
+                    MissShaderTable = new D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE
+                    {
+                        StartAddress = missGpuVa,
+                        SizeInBytes = missSize,
+                        StrideInBytes = missStride
+                    },
+
+                    // Hit group shader table (optional)
+                    HitGroupTable = new D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE
+                    {
+                        StartAddress = hitGroupGpuVa,
+                        SizeInBytes = hitGroupSize,
+                        StrideInBytes = hitGroupStride
+                    },
+
+                    // Callable shader table (optional)
+                    CallableShaderTable = new D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE
+                    {
+                        StartAddress = callableGpuVa,
+                        SizeInBytes = callableSize,
+                        StrideInBytes = callableStride
+                    },
+
+                    // Dispatch dimensions
+                    Width = unchecked((uint)args.Width),
+                    Height = unchecked((uint)args.Height),
+                    Depth = unchecked((uint)args.Depth)
+                };
+
+                // Marshal structure to unmanaged memory
+                int descSize = Marshal.SizeOf(typeof(D3D12_DISPATCH_RAYS_DESC));
+                IntPtr descPtr = Marshal.AllocHGlobal(descSize);
+                try
+                {
+                    Marshal.StructureToPtr(dispatchRaysDesc, descPtr, false);
+
+                    // Commit any pending barriers before dispatching rays
+                    CommitBarriers();
+
+                    // Call ID3D12GraphicsCommandList4::DispatchRays
+                    _device.CallDispatchRays(_d3d12CommandList, descPtr);
+                }
+                finally
+                {
+                    // Free allocated memory
+                    Marshal.FreeHGlobal(descPtr);
+                }
+            }
+            public void BuildBottomLevelAccelStruct(IAccelStruct accelStruct, GeometryDesc[] geometries)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open to record build commands");
+                }
+
+                if (accelStruct == null)
+                {
+                    throw new ArgumentNullException(nameof(accelStruct));
+                }
+
+                if (geometries == null || geometries.Length == 0)
+                {
+                    throw new ArgumentException("At least one geometry must be provided", nameof(geometries));
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("Command list is not initialized");
+                }
+
+                // Validate that this is a bottom-level acceleration structure
+                if (accelStruct.IsTopLevel)
+                {
+                    throw new ArgumentException("Acceleration structure must be bottom-level for BuildBottomLevelAccelStruct", nameof(accelStruct));
+                }
+
+                // Cast to D3D12AccelStruct to access internal data
+                D3D12AccelStruct d3d12AccelStruct = accelStruct as D3D12AccelStruct;
+                if (d3d12AccelStruct == null)
+                {
+                    throw new ArgumentException("Acceleration structure must be a D3D12 acceleration structure", nameof(accelStruct));
+                }
+
+                // Validate geometries - all must be triangles for BLAS
+                for (int i = 0; i < geometries.Length; i++)
+                {
+                    if (geometries[i].Type != GeometryType.Triangles)
+                    {
+                        throw new ArgumentException($"Geometry at index {i} must be of type Triangles for bottom-level acceleration structures", nameof(geometries));
+                    }
+
+                    var triangles = geometries[i].Triangles;
+                    if (triangles.VertexBuffer == null)
+                    {
+                        throw new ArgumentException($"Geometry at index {i} must have a vertex buffer", nameof(geometries));
+                    }
+
+                    if (triangles.VertexCount <= 0)
+                    {
+                        throw new ArgumentException($"Geometry at index {i} must have a positive vertex count", nameof(geometries));
+                    }
+
+                    if (triangles.VertexStride <= 0)
+                    {
+                        throw new ArgumentException($"Geometry at index {i} must have a positive vertex stride", nameof(geometries));
+                    }
+                }
+
+                try
+                {
+                    // Convert GeometryDesc[] to D3D12_RAYTRACING_GEOMETRY_DESC[]
+                    int geometryCount = geometries.Length;
+                    int geometryDescSize = Marshal.SizeOf(typeof(D3D12_RAYTRACING_GEOMETRY_DESC));
+                    IntPtr geometryDescsPtr = Marshal.AllocHGlobal(geometryDescSize * geometryCount);
+
+                    try
+                    {
+                        IntPtr currentGeometryPtr = geometryDescsPtr;
+                        for (int i = 0; i < geometryCount; i++)
+                        {
+                            var geometry = geometries[i];
+                            var triangles = geometry.Triangles;
+
+                            // Get GPU virtual addresses for buffers
+                            IntPtr vertexBufferResource = triangles.VertexBuffer.NativeHandle;
+                            if (vertexBufferResource == IntPtr.Zero)
+                            {
+                                throw new ArgumentException($"Geometry at index {i} has an invalid vertex buffer", nameof(geometries));
+                            }
+
+                            ulong vertexBufferGpuVa = _device.GetGpuVirtualAddress(vertexBufferResource);
+                            if (vertexBufferGpuVa == 0UL)
+                            {
+                                throw new InvalidOperationException($"Failed to get GPU virtual address for vertex buffer in geometry at index {i}");
+                            }
+
+                            // Calculate vertex buffer start address with offset
+                            ulong vertexBufferStartAddress = vertexBufferGpuVa + (ulong)triangles.VertexOffset;
+
+                            // Handle index buffer (optional for some geometries)
+                            IntPtr indexBufferGpuVa = IntPtr.Zero;
+                            uint indexCount = 0;
+                            uint indexFormat = D3D12_RAYTRACING_INDEX_FORMAT_UINT32;
+
+                            if (triangles.IndexBuffer != null)
+                            {
+                                IntPtr indexBufferResource = triangles.IndexBuffer.NativeHandle;
+                                if (indexBufferResource != IntPtr.Zero)
+                                {
+                                    ulong indexBufferGpuVaUlong = _device.GetGpuVirtualAddress(indexBufferResource);
+                                    if (indexBufferGpuVaUlong != 0UL)
+                                    {
+                                        indexBufferGpuVa = new IntPtr((long)(indexBufferGpuVaUlong + (ulong)triangles.IndexOffset));
+                                        indexCount = (uint)triangles.IndexCount;
+                                        indexFormat = _device.ConvertIndexFormatToD3D12(triangles.IndexFormat);
+                                    }
+                                }
+                            }
+
+                            // Handle transform buffer (optional)
+                            IntPtr transformBufferGpuVa = IntPtr.Zero;
+                            if (triangles.TransformBuffer != null)
+                            {
+                                IntPtr transformBufferResource = triangles.TransformBuffer.NativeHandle;
+                                if (transformBufferResource != IntPtr.Zero)
+                                {
+                                    ulong transformBufferGpuVaUlong = _device.GetGpuVirtualAddress(transformBufferResource);
+                                    if (transformBufferGpuVaUlong != 0UL)
+                                    {
+                                        transformBufferGpuVa = new IntPtr((long)(transformBufferGpuVaUlong + (ulong)triangles.TransformOffset));
+                                    }
+                                }
+                            }
+
+                            // Build D3D12_RAYTRACING_GEOMETRY_TRIANGLES_DESC
+                            var trianglesDesc = new D3D12_RAYTRACING_GEOMETRY_TRIANGLES_DESC
+                            {
+                                Transform3x4 = transformBufferGpuVa,
+                                IndexFormat = indexFormat,
+                                VertexFormat = _device.ConvertVertexFormatToD3D12(triangles.VertexFormat),
+                                IndexCount = indexCount,
+                                VertexCount = (uint)triangles.VertexCount,
+                                IndexBuffer = indexBufferGpuVa,
+                                VertexBuffer = new D3D12_GPU_VIRTUAL_ADDRESS_AND_STRIDE
+                                {
+                                    StartAddress = new IntPtr((long)vertexBufferStartAddress),
+                                    StrideInBytes = (uint)triangles.VertexStride
+                                }
+                            };
+
+                            // Build D3D12_RAYTRACING_GEOMETRY_DESC
+                            var geometryDesc = new D3D12_RAYTRACING_GEOMETRY_DESC
+                            {
+                                Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES,
+                                Flags = _device.ConvertGeometryFlagsToD3D12(geometry.Flags),
+                                Triangles = trianglesDesc
+                            };
+
+                            // Marshal structure to unmanaged memory
+                            Marshal.StructureToPtr(geometryDesc, currentGeometryPtr, false);
+                            currentGeometryPtr = new IntPtr(currentGeometryPtr.ToInt64() + geometryDescSize);
+                        }
+
+                        // Get build flags from acceleration structure descriptor
+                        uint buildFlags = _device.ConvertAccelStructBuildFlagsToD3D12(accelStruct.Desc.BuildFlags);
+
+                        // Build D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS
+                        var buildInputs = new D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS
+                        {
+                            Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL,
+                            Flags = buildFlags,
+                            NumDescs = (uint)geometryCount,
+                            DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY,
+                            pGeometryDescs = geometryDescsPtr
+                        };
+
+                        // Get GPU virtual address for destination buffer
+                        // Use the DeviceAddress from the acceleration structure which should be set during creation
+                        ulong destGpuVa = accelStruct.DeviceAddress;
+                        if (destGpuVa == 0UL)
+                        {
+                            throw new InvalidOperationException("Acceleration structure does not have a valid device address. Acceleration structure must be created before building.");
+                        }
+
+                        // Calculate estimated scratch buffer size based on geometry data
+                        // D3D12 scratch buffer size is typically similar to or slightly larger than result buffer size
+                        // For BLAS with triangles: conservative estimate is ~32 bytes per triangle for scratch space
+                        // This is a reasonable estimate when GetRaytracingAccelerationStructurePrebuildInfo is not available
+                        ulong totalTriangles = 0UL;
+                        for (int i = 0; i < geometries.Length; i++)
+                        {
+                            if (geometries[i].Triangles.IndexCount > 0)
+                            {
+                                totalTriangles += (ulong)(geometries[i].Triangles.IndexCount / 3);
+                            }
+                            else
+                            {
+                                // If no indices, estimate triangles from vertices (assuming triangle list)
+                                totalTriangles += (ulong)(geometries[i].Triangles.VertexCount / 3);
+                            }
+                        }
+
+                        // Conservative estimate: 32 bytes per triangle for scratch buffer
+                        // Minimum 256KB to ensure we have enough space for small geometries
+                        ulong estimatedScratchSize = (totalTriangles * 32UL);
+                        if (estimatedScratchSize < 256UL * 1024UL)
+                        {
+                            estimatedScratchSize = 256UL * 1024UL; // Minimum 256KB
+                        }
+
+                        // Round up to next 256-byte alignment (D3D12 requirement)
+                        estimatedScratchSize = (estimatedScratchSize + 255UL) & ~255UL;
+
+                        // Get or allocate scratch buffer from acceleration structure
+                        IBuffer scratchBuffer = d3d12AccelStruct.GetOrAllocateScratchBuffer(_device, estimatedScratchSize);
+                        if (scratchBuffer == null || scratchBuffer.NativeHandle == IntPtr.Zero)
+                        {
+                            throw new InvalidOperationException("Failed to allocate scratch buffer for acceleration structure building");
+                        }
+
+                        // Get GPU virtual address for scratch buffer
+                        ulong scratchGpuVa = d3d12AccelStruct.ScratchBufferDeviceAddress;
+                        if (scratchGpuVa == 0UL)
+                        {
+                            throw new InvalidOperationException("Scratch buffer does not have a valid device address");
+                        }
+
+                        // Build D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC
+                        // Note: The Inputs field is embedded by value in the structure
+                        var buildDesc = new D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC
+                        {
+                            DestAccelerationStructureData = new IntPtr((long)destGpuVa),
+                            Inputs = buildInputs,
+                            SourceAccelerationStructureData = IntPtr.Zero, // Building from scratch (no update)
+                            ScratchAccelerationStructureData = new IntPtr((long)scratchGpuVa)
+                        };
+
+                        // Marshal build description to unmanaged memory
+                        int buildDescSize = Marshal.SizeOf(typeof(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC));
+                        IntPtr buildDescPtr = Marshal.AllocHGlobal(buildDescSize);
+
+                        try
+                        {
+                            Marshal.StructureToPtr(buildDesc, buildDescPtr, false);
+
+                            // Call ID3D12GraphicsCommandList4::BuildRaytracingAccelerationStructure
+                            CallBuildRaytracingAccelerationStructure(_d3d12CommandList, buildDescPtr, 0, IntPtr.Zero);
+                        }
+                        finally
+                        {
+                            Marshal.FreeHGlobal(buildDescPtr);
+                        }
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(geometryDescsPtr);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException($"Failed to build bottom-level acceleration structure: {ex.Message}", ex);
+                }
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList4::BuildRaytracingAccelerationStructure through COM vtable.
+            /// VTable index 97 for ID3D12GraphicsCommandList4 (inherits from ID3D12GraphicsCommandList).
+            /// Based on D3D12 DXR API: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist4-buildraytracingaccelerationstructure
+            /// </summary>
+            private unsafe void CallBuildRaytracingAccelerationStructure(IntPtr commandList, IntPtr pDesc, int numPostbuildInfoDescs, IntPtr pPostbuildInfoDescs)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero || pDesc == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // BuildRaytracingAccelerationStructure is at index 97 in ID3D12GraphicsCommandList4 vtable
+                IntPtr methodPtr = vtable[97];
+
+                // Create delegate from function pointer
+                BuildRaytracingAccelerationStructureDelegate buildAccelStruct =
+                    (BuildRaytracingAccelerationStructureDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(BuildRaytracingAccelerationStructureDelegate));
+
+                buildAccelStruct(commandList, pDesc, numPostbuildInfoDescs, pPostbuildInfoDescs);
+            }
+            public void BuildTopLevelAccelStruct(IAccelStruct accelStruct, AccelStructInstance[] instances) { /* TODO: BuildRaytracingAccelerationStructure */ }
+            public void CompactBottomLevelAccelStruct(IAccelStruct dest, IAccelStruct src) { /* TODO: CopyRaytracingAccelerationStructure */ }
+
+            /// <summary>
+            /// Begins a debug event region in the command list.
+            /// Based on DirectX 12 Debug Events: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-beginevent
+            /// Encodes event name as UTF-8 and passes to ID3D12GraphicsCommandList::BeginEvent.
+            /// Color parameter is provided for cross-platform compatibility but D3D12 BeginEvent uses name only.
+            /// </summary>
+            public void BeginDebugEvent(string name, Vector4 color)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before beginning debug event");
+                }
+
+                if (string.IsNullOrEmpty(name))
+                {
+                    throw new ArgumentException("Debug event name cannot be null or empty", nameof(name));
+                }
+
+                // Encode event name as UTF-8 bytes (null-terminated for D3D12/PIX compatibility)
+                byte[] nameBytes = System.Text.Encoding.UTF8.GetBytes(name + "\0");
+                GCHandle nameHandle = GCHandle.Alloc(nameBytes, GCHandleType.Pinned);
+                try
+                {
+                    // Call BeginEvent via vtable
+                    // Metadata is 0 for standard event markers (PIX uses this internally)
+                    // pData points to UTF-8 encoded event name
+                    // Size is the length of the name bytes including null terminator
+                    CallBeginEvent(_d3d12CommandList, 0, nameHandle.AddrOfPinnedObject(), (uint)nameBytes.Length);
+                }
+                finally
+                {
+                    nameHandle.Free();
+                }
+            }
+
+            /// <summary>
+            /// Ends a debug event region in the command list.
+            /// Based on DirectX 12 Debug Events: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-endevent
+            /// Must be paired with a preceding BeginDebugEvent call on the same command list.
+            /// </summary>
+            public void EndDebugEvent()
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before ending debug event");
+                }
+
+                // Call EndEvent via vtable
+                CallEndEvent(_d3d12CommandList);
+            }
+
+            public void InsertDebugMarker(string name, Vector4 color) { /* TODO: SetMarker */ }
+
+            /// <summary>
+            /// Gets the native ID3D12GraphicsCommandList pointer.
+            /// Internal method for use by D3D12Device to execute command lists.
+            /// </summary>
+            internal IntPtr GetNativeCommandListPointer()
+            {
+                return _d3d12CommandList;
+            }
+
+            public void Dispose()
+            {
+                // Command lists are returned to allocator, not destroyed individually
+            }
+        }
+
+        #endregion
+
+        #region D3D12 Raytracing Structures and Constants
+
+        // D3D12 Raytracing Acceleration Structure Types
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL = 0;
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL = 1;
+
+        // D3D12 Raytracing Acceleration Structure Build Flags
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_NONE = 0;
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_UPDATE = 0x1;
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_COMPACTION = 0x2;
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE = 0x4;
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_BUILD = 0x8;
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_MINIMIZE_MEMORY = 0x10;
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PERFORM_UPDATE = 0x20;
+
+        // D3D12 Raytracing Geometry Types
+        private const uint D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES = 0;
+        private const uint D3D12_RAYTRACING_GEOMETRY_TYPE_PROCEDURAL_PRIMITIVE_AABBS = 1;
+
+        // D3D12 Raytracing Geometry Flags
+        private const uint D3D12_RAYTRACING_GEOMETRY_FLAG_NONE = 0;
+        private const uint D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE = 0x1;
+        private const uint D3D12_RAYTRACING_GEOMETRY_FLAG_NO_DUPLICATE_ANYHIT_INVOCATION = 0x2;
+
+        // D3D12 Raytracing Index Formats
+        private const uint D3D12_RAYTRACING_INDEX_FORMAT_UINT16 = 0;
+        private const uint D3D12_RAYTRACING_INDEX_FORMAT_UINT32 = 1;
+
+        // D3D12 Raytracing Vertex Formats
+        private const uint D3D12_RAYTRACING_VERTEX_FORMAT_FLOAT3 = 0;
+        private const uint D3D12_RAYTRACING_VERTEX_FORMAT_FLOAT2 = 1;
+
+        // D3D12 Elements Layout
+        private const uint D3D12_ELEMENTS_LAYOUT_ARRAY = 0;
+        private const uint D3D12_ELEMENTS_LAYOUT_ARRAY_OF_POINTERS = 1;
+
+        #endregion
+
+        #region D3D12 ExecuteIndirect Structures and Constants
+
+        // D3D12 Indirect Argument Types
+        // Based on D3D12 API: D3D12_INDIRECT_ARGUMENT_TYPE
+        private const uint D3D12_INDIRECT_ARGUMENT_TYPE_DRAW = 0;
+        private const uint D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED = 1;
+        private const uint D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH = 2;
+        private const uint D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW = 3;
+        private const uint D3D12_INDIRECT_ARGUMENT_TYPE_INDEX_BUFFER_VIEW = 4;
+        private const uint D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT = 5;
+        private const uint D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT_BUFFER_VIEW = 6;
+        private const uint D3D12_INDIRECT_ARGUMENT_TYPE_SHADER_RESOURCE_VIEW = 7;
+        private const uint D3D12_INDIRECT_ARGUMENT_TYPE_UNORDERED_ACCESS_VIEW = 8;
+        private const uint D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH_RAYS = 9;
+        private const uint D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH_MESH = 10;
+
+        /// <summary>
+        /// Indirect argument description.
+        /// Based on D3D12 API: D3D12_INDIRECT_ARGUMENT_DESC
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_INDIRECT_ARGUMENT_DESC
+        {
+            public uint Type;
+            // Union: Constant, VertexBuffer, IndexBuffer, or Dispatch
+            // For Dispatch: uses union field as padding (no additional data needed)
+            public uint ConstantRootParameterIndex;
+            public uint ConstantNum32BitValuesToSet;
+            public IntPtr VertexBufferSlot;
+        }
+
+        /// <summary>
+        /// Command signature description.
+        /// Based on D3D12 API: D3D12_COMMAND_SIGNATURE_DESC
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_COMMAND_SIGNATURE_DESC
+        {
+            public uint ByteStride;
+            public uint NumArgumentDescs;
+            public IntPtr pArgumentDescs;
+            public uint NodeMask;
+        }
+
+        /// <summary>
+        /// Dispatch arguments structure (matches GPU buffer layout).
+        /// Based on D3D12 API: D3D12_DISPATCH_ARGUMENTS
+        /// This structure must match the layout in the GPU buffer exactly.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_DISPATCH_ARGUMENTS
+        {
+            public uint ThreadGroupCountX;
+            public uint ThreadGroupCountY;
+            public uint ThreadGroupCountZ;
+        }
+
+        /// <summary>
+        /// GPU virtual address and stride structure.
+        /// Based on D3D12 API: D3D12_GPU_VIRTUAL_ADDRESS_AND_STRIDE
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_GPU_VIRTUAL_ADDRESS_AND_STRIDE
+        {
+            public IntPtr StartAddress;
+            public uint StrideInBytes;
+        }
+
+        /// <summary>
+        /// Raytracing geometry triangles description.
+        /// Based on D3D12 API: D3D12_RAYTRACING_GEOMETRY_TRIANGLES_DESC
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_RAYTRACING_GEOMETRY_TRIANGLES_DESC
+        {
+            public IntPtr Transform3x4;
+            public uint IndexFormat;
+            public uint VertexFormat;
+            public uint IndexCount;
+            public uint VertexCount;
+            public IntPtr IndexBuffer;
+            public D3D12_GPU_VIRTUAL_ADDRESS_AND_STRIDE VertexBuffer;
+        }
+
+        /// <summary>
+        /// Raytracing geometry description.
+        /// Based on D3D12 API: D3D12_RAYTRACING_GEOMETRY_DESC
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_RAYTRACING_GEOMETRY_DESC
+        {
+            public uint Type;
+            public uint Flags;
+            public D3D12_RAYTRACING_GEOMETRY_TRIANGLES_DESC Triangles;
+        }
+
+        /// <summary>
+        /// Build raytracing acceleration structure inputs.
+        /// Based on D3D12 API: D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS
+        {
+            public uint Type;
+            public uint Flags;
+            public uint NumDescs;
+            public uint DescsLayout;
+            public IntPtr pGeometryDescs;
+        }
+
+        /// <summary>
+        /// Build raytracing acceleration structure description.
+        /// Based on D3D12 API: D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC
+        {
+            public IntPtr DestAccelerationStructureData;
+            public D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS Inputs;
+            public IntPtr SourceAccelerationStructureData;
+            public IntPtr ScratchAccelerationStructureData;
+        }
+
+        /// <summary>
+        /// GPU virtual address range.
+        /// Based on D3D12 API: D3D12_GPU_VIRTUAL_ADDRESS_RANGE
+        /// Used for shader binding tables that contain a single entry (ray generation shader table).
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_GPU_VIRTUAL_ADDRESS_RANGE
+        {
+            /// <summary>
+            /// GPU virtual address of the start of the range.
+            /// </summary>
+            public ulong StartAddress;
+
+            /// <summary>
+            /// Size of the range in bytes.
+            /// </summary>
+            public ulong SizeInBytes;
+        }
+
+        /// <summary>
+        /// GPU virtual address range with stride.
+        /// Based on D3D12 API: D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE
+        /// Used for shader binding tables that contain multiple entries (miss shader table, hit group table).
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE
+        {
+            /// <summary>
+            /// GPU virtual address of the start of the range.
+            /// </summary>
+            public ulong StartAddress;
+
+            /// <summary>
+            /// Size of the range in bytes (total size of all entries).
+            /// </summary>
+            public ulong SizeInBytes;
+
+            /// <summary>
+            /// Stride in bytes between entries (size of each shader binding table entry).
+            /// Typically 32 bytes (shader identifier) plus optional root arguments.
+            /// </summary>
+            public ulong StrideInBytes;
+        }
+
+        /// <summary>
+        /// Dispatch rays description.
+        /// Based on D3D12 API: D3D12_DISPATCH_RAYS_DESC
+        ///
+        /// Describes the parameters for dispatching raytracing work, including:
+        /// - Shader binding table addresses (ray generation, miss, hit group, callable)
+        /// - Dispatch dimensions (width, height, depth)
+        ///
+        /// The shader binding tables contain shader identifiers and optional root arguments
+        /// that are used by the raytracing pipeline to determine which shaders to execute.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_DISPATCH_RAYS_DESC
+        {
+            /// <summary>
+            /// GPU virtual address range for the ray generation shader table.
+            /// Required: Must contain at least one ray generation shader identifier.
+            /// </summary>
+            public D3D12_GPU_VIRTUAL_ADDRESS_RANGE RayGenerationShaderRecord;
+
+            /// <summary>
+            /// GPU virtual address range and stride for the miss shader table.
+            /// Optional: Can be empty (StartAddress = 0, SizeInBytes = 0) if no miss shaders are used.
+            /// </summary>
+            public D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE MissShaderTable;
+
+            /// <summary>
+            /// GPU virtual address range and stride for the hit group shader table.
+            /// Optional: Can be empty (StartAddress = 0, SizeInBytes = 0) if no hit groups are used.
+            /// </summary>
+            public D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE HitGroupTable;
+
+            /// <summary>
+            /// GPU virtual address range and stride for the callable shader table.
+            /// Optional: Can be empty (StartAddress = 0, SizeInBytes = 0) if no callable shaders are used.
+            /// Callable shaders are used for advanced raytracing features like shader libraries.
+            /// </summary>
+            public D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE CallableShaderTable;
+
+            /// <summary>
+            /// Width of the dispatch (number of rays in X dimension).
+            /// Must be > 0.
+            /// </summary>
+            public uint Width;
+
+            /// <summary>
+            /// Height of the dispatch (number of rays in Y dimension).
+            /// Must be > 0.
+            /// </summary>
+            public uint Height;
+
+            /// <summary>
+            /// Depth of the dispatch (number of rays in Z dimension).
+            /// Must be > 0.
+            /// </summary>
+            public uint Depth;
+        }
+
+        // COM interface method delegate for BuildRaytracingAccelerationStructure
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void BuildRaytracingAccelerationStructureDelegate(
+            IntPtr commandList,
+            IntPtr pDesc,
+            int numPostbuildInfoDescs,
+            IntPtr pPostbuildInfoDescs);
+
+        // COM interface method delegate for DispatchRays
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void DispatchRaysDelegate(
+            IntPtr commandList,
+            IntPtr pDesc);
+
+        // COM interface method delegate for GetGPUVirtualAddress
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate ulong GetGPUVirtualAddressDelegate(IntPtr resource);
+
+        /// <summary>
+        /// Gets the GPU virtual address of a resource.
+        /// Based on D3D12 API: ID3D12Resource::GetGPUVirtualAddress
+        /// VTable index 8 for ID3D12Resource.
+        /// </summary>
+        internal unsafe ulong GetGpuVirtualAddress(IntPtr resource)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return 0UL;
+            }
+
+            if (resource == IntPtr.Zero)
+            {
+                return 0UL;
+            }
+
+            // Get vtable pointer
+            IntPtr* vtable = *(IntPtr**)resource;
+            // GetGPUVirtualAddress is at index 8 in ID3D12Resource vtable
+            IntPtr methodPtr = vtable[8];
+
+            // Create delegate from function pointer
+            GetGPUVirtualAddressDelegate getGpuVa =
+                (GetGPUVirtualAddressDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(GetGPUVirtualAddressDelegate));
+
+            return getGpuVa(resource);
+        }
+
+        /// <summary>
+        /// Calls ID3D12GraphicsCommandList4::DispatchRays through COM vtable.
+        /// VTable index 98 for ID3D12GraphicsCommandList4 (inherits from ID3D12GraphicsCommandList).
+        /// Based on D3D12 DXR API: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist4-dispatchrays
+        /// </summary>
+        internal unsafe void CallDispatchRays(IntPtr commandList, IntPtr pDesc)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            if (commandList == IntPtr.Zero || pDesc == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Get vtable pointer
+            IntPtr* vtable = *(IntPtr**)commandList;
+            // DispatchRays is at index 98 in ID3D12GraphicsCommandList4 vtable (after BuildRaytracingAccelerationStructure which is 97)
+            IntPtr methodPtr = vtable[98];
+
+            // Create delegate from function pointer
+            DispatchRaysDelegate dispatchRays =
+                (DispatchRaysDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(DispatchRaysDelegate));
+
+            dispatchRays(commandList, pDesc);
+        }
+
+        // COM interface method delegate for CreateCommandSignature
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int CreateCommandSignatureDelegate(
+            IntPtr device,
+            IntPtr pDesc,
+            IntPtr pRootSignature,
+            ref Guid riid,
+            out IntPtr ppCommandSignature);
+
+        // COM interface method delegate for ExecuteIndirect
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void ExecuteIndirectDelegate(
+            IntPtr commandList,
+            IntPtr pCommandSignature,
+            uint MaxCommandCount,
+            IntPtr pArgumentBuffer,
+            ulong ArgumentBufferOffset,
+            IntPtr pCountBuffer,
+            ulong CountBufferOffset);
+
+        /// <summary>
+        /// Creates a command signature for DispatchIndirect.
+        /// Based on D3D12 API: ID3D12Device::CreateCommandSignature
+        /// VTable index 27 for ID3D12Device.
+        /// Command signatures describe the structure of indirect arguments in GPU buffers.
+        /// </summary>
+        internal unsafe IntPtr CreateDispatchIndirectCommandSignature()
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return IntPtr.Zero;
+            }
+
+            if (_device == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            // If already created, return cached signature
+            if (_dispatchIndirectCommandSignature != IntPtr.Zero)
+            {
+                return _dispatchIndirectCommandSignature;
+            }
+
+            // Create indirect argument description for Dispatch
+            // D3D12_DISPATCH_ARGUMENTS contains 3 uints (ThreadGroupCountX, Y, Z)
+            var argumentDesc = new D3D12_INDIRECT_ARGUMENT_DESC
+            {
+                Type = D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH,
+                ConstantRootParameterIndex = 0,
+                ConstantNum32BitValuesToSet = 0,
+                VertexBufferSlot = IntPtr.Zero
+            };
+
+            // Create command signature description
+            // ByteStride is the size of D3D12_DISPATCH_ARGUMENTS (12 bytes: 3 uints)
+            var commandSignatureDesc = new D3D12_COMMAND_SIGNATURE_DESC
+            {
+                ByteStride = (uint)Marshal.SizeOf(typeof(D3D12_DISPATCH_ARGUMENTS)),
+                NumArgumentDescs = 1,
+                pArgumentDescs = IntPtr.Zero, // Will be set after marshaling
+                NodeMask = 0
+            };
+
+            // Allocate memory for argument description
+            int argumentDescSize = Marshal.SizeOf(typeof(D3D12_INDIRECT_ARGUMENT_DESC));
+            IntPtr argumentDescPtr = Marshal.AllocHGlobal(argumentDescSize);
+            try
+            {
+                Marshal.StructureToPtr(argumentDesc, argumentDescPtr, false);
+                commandSignatureDesc.pArgumentDescs = argumentDescPtr;
+
+                // Allocate memory for command signature description
+                int descSize = Marshal.SizeOf(typeof(D3D12_COMMAND_SIGNATURE_DESC));
+                IntPtr descPtr = Marshal.AllocHGlobal(descSize);
+                try
+                {
+                    Marshal.StructureToPtr(commandSignatureDesc, descPtr, false);
+
+                    // Get vtable pointer
+                    IntPtr* vtable = *(IntPtr**)_device;
+                    // CreateCommandSignature is at index 27 in ID3D12Device vtable
+                    IntPtr methodPtr = vtable[27];
+
+                    // Create delegate from function pointer
+                    CreateCommandSignatureDelegate createCommandSignature =
+                        (CreateCommandSignatureDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CreateCommandSignatureDelegate));
+
+                    // IID_ID3D12CommandSignature
+                    Guid iidCommandSignature = new Guid(0xc36a797c, 0xec80, 0x4f0a, 0x89, 0x85, 0xa7, 0xb2, 0x47, 0x50, 0x85, 0xa1);
+
+                    IntPtr commandSignature;
+                    int hr = createCommandSignature(_device, descPtr, IntPtr.Zero, ref iidCommandSignature, out commandSignature);
+
+                    // Check HRESULT
+                    if (hr == 0) // S_OK
+                    {
+                        _dispatchIndirectCommandSignature = commandSignature;
+                        return commandSignature;
+                    }
+                    else
+                    {
+                        // Failed to create command signature
+                        return IntPtr.Zero;
+                    }
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(descPtr);
+                }
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(argumentDescPtr);
+            }
+        }
+
+        /// <summary>
+        /// Creates or retrieves cached command signature for DrawIndirect.
+        /// Command signatures describe the structure of indirect arguments in GPU buffers.
+        /// Based on DirectX 12 CreateCommandSignature: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createcommandsignature
+        /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+        /// </summary>
+        internal unsafe IntPtr CreateDrawIndirectCommandSignature()
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return IntPtr.Zero;
+            }
+
+            if (_device == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            // If already created, return cached signature
+            if (_drawIndirectCommandSignature != IntPtr.Zero)
+            {
+                return _drawIndirectCommandSignature;
+            }
+
+            // Create indirect argument description for Draw
+            // D3D12_DRAW_ARGUMENTS contains 4 uints (VertexCountPerInstance, InstanceCount, StartVertexLocation, StartInstanceLocation)
+            var argumentDesc = new D3D12_INDIRECT_ARGUMENT_DESC
+            {
+                Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW,
+                ConstantRootParameterIndex = 0,
+                ConstantNum32BitValuesToSet = 0,
+                VertexBufferSlot = IntPtr.Zero
+            };
+
+            // Create command signature description
+            // ByteStride is the size of D3D12_DRAW_ARGUMENTS (16 bytes: 4 uints)
+            var commandSignatureDesc = new D3D12_COMMAND_SIGNATURE_DESC
+            {
+                ByteStride = (uint)Marshal.SizeOf(typeof(D3D12_DRAW_ARGUMENTS)),
+                NumArgumentDescs = 1,
+                pArgumentDescs = IntPtr.Zero, // Will be set after marshaling
+                NodeMask = 0
+            };
+
+            // Allocate memory for argument description
+            int argumentDescSize = Marshal.SizeOf(typeof(D3D12_INDIRECT_ARGUMENT_DESC));
+            IntPtr argumentDescPtr = Marshal.AllocHGlobal(argumentDescSize);
+            try
+            {
+                Marshal.StructureToPtr(argumentDesc, argumentDescPtr, false);
+                commandSignatureDesc.pArgumentDescs = argumentDescPtr;
+
+                // Allocate memory for command signature description
+                int descSize = Marshal.SizeOf(typeof(D3D12_COMMAND_SIGNATURE_DESC));
+                IntPtr descPtr = Marshal.AllocHGlobal(descSize);
+                try
+                {
+                    Marshal.StructureToPtr(commandSignatureDesc, descPtr, false);
+
+                    // Get vtable pointer
+                    IntPtr* vtable = *(IntPtr**)_device;
+                    // CreateCommandSignature is at index 27 in ID3D12Device vtable
+                    IntPtr methodPtr = vtable[27];
+
+                    // Create delegate from function pointer
+                    CreateCommandSignatureDelegate createCommandSignature =
+                        (CreateCommandSignatureDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CreateCommandSignatureDelegate));
+
+                    // IID_ID3D12CommandSignature
+                    Guid iidCommandSignature = new Guid(0xc36a797c, 0xec80, 0x4f0a, 0x89, 0x85, 0xa7, 0xb2, 0x47, 0x50, 0x85, 0xa1);
+
+                    IntPtr commandSignature;
+                    int hr = createCommandSignature(_device, descPtr, IntPtr.Zero, ref iidCommandSignature, out commandSignature);
+
+                    // Check HRESULT
+                    if (hr == 0) // S_OK
+                    {
+                        _drawIndirectCommandSignature = commandSignature;
+                        return commandSignature;
+                    }
+                    else
+                    {
+                        // Failed to create command signature
+                        return IntPtr.Zero;
+                    }
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(descPtr);
+                }
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(argumentDescPtr);
+            }
+        }
+
+        /// <summary>
+        /// Creates or retrieves cached command signature for DrawIndexedIndirect.
+        /// Command signatures describe the structure of indirect arguments in GPU buffers.
+        /// Based on DirectX 12 CreateCommandSignature: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createcommandsignature
+        /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+        /// </summary>
+        internal unsafe IntPtr CreateDrawIndexedIndirectCommandSignature()
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return IntPtr.Zero;
+            }
+
+            if (_device == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            // If already created, return cached signature
+            if (_drawIndexedIndirectCommandSignature != IntPtr.Zero)
+            {
+                return _drawIndexedIndirectCommandSignature;
+            }
+
+            // Create indirect argument description for DrawIndexed
+            // D3D12_DRAW_INDEXED_ARGUMENTS contains 5 values (IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation)
+            var argumentDesc = new D3D12_INDIRECT_ARGUMENT_DESC
+            {
+                Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED,
+                ConstantRootParameterIndex = 0,
+                ConstantNum32BitValuesToSet = 0,
+                VertexBufferSlot = IntPtr.Zero
+            };
+
+            // Create command signature description
+            // ByteStride is the size of D3D12_DRAW_INDEXED_ARGUMENTS (20 bytes: 4 uints + 1 int)
+            var commandSignatureDesc = new D3D12_COMMAND_SIGNATURE_DESC
+            {
+                ByteStride = (uint)Marshal.SizeOf(typeof(D3D12_DRAW_INDEXED_ARGUMENTS)),
+                NumArgumentDescs = 1,
+                pArgumentDescs = IntPtr.Zero, // Will be set after marshaling
+                NodeMask = 0
+            };
+
+            // Allocate memory for argument description
+            int argumentDescSize = Marshal.SizeOf(typeof(D3D12_INDIRECT_ARGUMENT_DESC));
+            IntPtr argumentDescPtr = Marshal.AllocHGlobal(argumentDescSize);
+            try
+            {
+                Marshal.StructureToPtr(argumentDesc, argumentDescPtr, false);
+                commandSignatureDesc.pArgumentDescs = argumentDescPtr;
+
+                // Allocate memory for command signature description
+                int descSize = Marshal.SizeOf(typeof(D3D12_COMMAND_SIGNATURE_DESC));
+                IntPtr descPtr = Marshal.AllocHGlobal(descSize);
+                try
+                {
+                    Marshal.StructureToPtr(commandSignatureDesc, descPtr, false);
+
+                    // Get vtable pointer
+                    IntPtr* vtable = *(IntPtr**)_device;
+                    // CreateCommandSignature is at index 27 in ID3D12Device vtable
+                    IntPtr methodPtr = vtable[27];
+
+                    // Create delegate from function pointer
+                    CreateCommandSignatureDelegate createCommandSignature =
+                        (CreateCommandSignatureDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CreateCommandSignatureDelegate));
+
+                    // IID_ID3D12CommandSignature
+                    Guid iidCommandSignature = new Guid(0xc36a797c, 0xec80, 0x4f0a, 0x89, 0x85, 0xa7, 0xb2, 0x47, 0x50, 0x85, 0xa1);
+
+                    IntPtr commandSignature;
+                    int hr = createCommandSignature(_device, descPtr, IntPtr.Zero, ref iidCommandSignature, out commandSignature);
+
+                    // Check HRESULT
+                    if (hr == 0) // S_OK
+                    {
+                        _drawIndexedIndirectCommandSignature = commandSignature;
+                        return commandSignature;
+                    }
+                    else
+                    {
+                        // Failed to create command signature
+                        return IntPtr.Zero;
+                    }
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(descPtr);
+                }
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(argumentDescPtr);
+            }
+        }
+
+        /// <summary>
+        /// Calls ID3D12GraphicsCommandList::ExecuteIndirect through COM vtable.
+        /// VTable index 98 for ID3D12GraphicsCommandList.
+        /// Based on DirectX 12 ExecuteIndirect: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-executeindirect
+        /// </summary>
+        private unsafe void CallExecuteIndirect(
+            IntPtr commandList,
+            IntPtr pCommandSignature,
+            uint MaxCommandCount,
+            IntPtr pArgumentBuffer,
+            ulong ArgumentBufferOffset,
+            IntPtr pCountBuffer,
+            ulong CountBufferOffset)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            if (commandList == IntPtr.Zero || pCommandSignature == IntPtr.Zero || pArgumentBuffer == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Get vtable pointer
+            IntPtr* vtable = *(IntPtr**)commandList;
+            // ExecuteIndirect is at index 98 in ID3D12GraphicsCommandList vtable
+            IntPtr methodPtr = vtable[98];
+
+            // Create delegate from function pointer
+            ExecuteIndirectDelegate executeIndirect =
+                (ExecuteIndirectDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(ExecuteIndirectDelegate));
+
+            executeIndirect(
+                commandList,
+                pCommandSignature,
+                MaxCommandCount,
+                pArgumentBuffer,
+                ArgumentBufferOffset,
+                pCountBuffer,
+                CountBufferOffset);
+        }
+
+        /// <summary>
+        /// Converts AccelStructBuildFlags to D3D12 raytracing acceleration structure build flags.
+        /// Based on D3D12 API: D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS
+        /// </summary>
+        internal uint ConvertAccelStructBuildFlagsToD3D12(AccelStructBuildFlags flags)
+        {
+            uint d3d12Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_NONE;
+
+            if ((flags & AccelStructBuildFlags.AllowUpdate) != 0)
+            {
+                d3d12Flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_UPDATE;
+            }
+
+            if ((flags & AccelStructBuildFlags.AllowCompaction) != 0)
+            {
+                d3d12Flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_COMPACTION;
+            }
+
+            if ((flags & AccelStructBuildFlags.PreferFastTrace) != 0)
+            {
+                d3d12Flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
+            }
+
+            if ((flags & AccelStructBuildFlags.PreferFastBuild) != 0)
+            {
+                d3d12Flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_BUILD;
+            }
+
+            if ((flags & AccelStructBuildFlags.MinimizeMemory) != 0)
+            {
+                d3d12Flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_MINIMIZE_MEMORY;
+            }
+
+            return d3d12Flags;
+        }
+
+        /// <summary>
+        /// Converts GeometryFlags to D3D12 raytracing geometry flags.
+        /// Based on D3D12 API: D3D12_RAYTRACING_GEOMETRY_FLAGS
+        /// </summary>
+        internal uint ConvertGeometryFlagsToD3D12(GeometryFlags flags)
+        {
+            uint d3d12Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_NONE;
+
+            if ((flags & GeometryFlags.Opaque) != 0)
+            {
+                d3d12Flags |= D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
+            }
+
+            if ((flags & GeometryFlags.NoDuplicateAnyHit) != 0)
+            {
+                d3d12Flags |= D3D12_RAYTRACING_GEOMETRY_FLAG_NO_DUPLICATE_ANYHIT_INVOCATION;
+            }
+
+            return d3d12Flags;
+        }
+
+        /// <summary>
+        /// Converts TextureFormat to D3D12 raytracing index format.
+        /// Based on D3D12 API: D3D12_RAYTRACING_INDEX_FORMAT
+        /// </summary>
+        internal uint ConvertIndexFormatToD3D12(TextureFormat format)
+        {
+            switch (format)
+            {
+                case TextureFormat.R16_UInt:
+                    return D3D12_RAYTRACING_INDEX_FORMAT_UINT16;
+                case TextureFormat.R32_UInt:
+                    return D3D12_RAYTRACING_INDEX_FORMAT_UINT32;
+                default:
+                    // Default to 32-bit if format is unknown
+                    return D3D12_RAYTRACING_INDEX_FORMAT_UINT32;
+            }
+        }
+
+        /// <summary>
+        /// Converts TextureFormat to D3D12 raytracing vertex format.
+        /// Based on D3D12 API: D3D12_RAYTRACING_VERTEX_FORMAT
+        /// </summary>
+        internal uint ConvertVertexFormatToD3D12(TextureFormat format)
+        {
+            // D3D12 raytracing supports Float3 and Float2 vertex formats
+            // Most common vertex formats map to Float3
+            switch (format)
+            {
+                case TextureFormat.R32G32_Float:
+                    return D3D12_RAYTRACING_VERTEX_FORMAT_FLOAT2;
+                case TextureFormat.R32G32B32_Float:
+                case TextureFormat.R32G32B32A32_Float:
+                default:
+                    // Default to Float3 for most formats
+                    return D3D12_RAYTRACING_VERTEX_FORMAT_FLOAT3;
+            }
+        }
+
+        #endregion
+    }
+}
