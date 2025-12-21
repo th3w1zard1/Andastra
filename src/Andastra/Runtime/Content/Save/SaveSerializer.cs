@@ -2093,12 +2093,316 @@ namespace Andastra.Runtime.Content.Save
 
         // Serialize area state as a module (ERF/RIM format)
         // Based on swkotor.exe: Area state is stored as [module]_s.rim in savegame.sav
+        // Located via string reference: Module state files are stored as [module]_s.rim in savegame.sav
+        // Original implementation: Area state is serialized as a RIM file containing a GFF resource with the area state data
+        // The RIM file contains one resource: the area ResRef as a GFF file (ResourceType.GFF)
+        // This GFF contains all entity states, destroyed entities, spawned entities, and local variables
         private byte[] SerializeAreaStateAsModule(AreaState areaState)
         {
-            // TODO: STUB - Implement area state to module serialization
-            // Area state should be serialized as a RIM file containing the area's state
-            // This includes area GIT data, cached entities, etc.
-            return null;
+            if (areaState == null)
+            {
+                return null;
+            }
+
+            // Create RIM archive
+            var rim = new RIM();
+
+            // Serialize area state to GFF format
+            // The area state GFF contains all the entity states and area-specific data
+            byte[] areaStateGffData = SerializeAreaStateToGff(areaState);
+
+            if (areaStateGffData != null && areaStateGffData.Length > 0)
+            {
+                // Add area state GFF to RIM archive
+                // Resource name is the area ResRef, type is GFF
+                // Based on swkotor2.exe: Area state stored as GFF resource in RIM with ResRef = area ResRef
+                string areaResRef = areaState.AreaResRef ?? "area";
+                rim.SetData(areaResRef, ResourceType.GFF, areaStateGffData);
+            }
+
+            // Serialize RIM to bytes
+            // Based on Andastra.Parsing RIMBinaryWriter implementation
+            var writer = new RIMBinaryWriter(rim);
+            return writer.Write();
+        }
+
+        /// <summary>
+        /// Serializes area state to GFF format.
+        /// Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 saves entity states to GFF format
+        /// Creates a GFF with area state data including entity states, destroyed entities, spawned entities, and local variables.
+        /// </summary>
+        private byte[] SerializeAreaStateToGff(AreaState areaState)
+        {
+            if (areaState == null)
+            {
+                return null;
+            }
+
+            // Create GFF for area state
+            // Note: This is not an ARE file, but a custom GFF structure for area state
+            // ARE files contain static area properties, while this GFF contains dynamic state
+            var gff = new GFF(GFFContent.ARE); // Use ARE content type for area-related data
+            var root = gff.Root;
+
+            // Area ResRef
+            root.SetString("AreaResRef", areaState.AreaResRef ?? "");
+
+            // Visited flag
+            root.SetUInt8("Visited", areaState.Visited ? (byte)1 : (byte)0);
+
+            // Serialize entity state lists
+            SerializeEntityStateListToGff(root, "CreatureList", areaState.CreatureStates);
+            SerializeEntityStateListToGff(root, "DoorList", areaState.DoorStates);
+            SerializeEntityStateListToGff(root, "PlaceableList", areaState.PlaceableStates);
+            SerializeEntityStateListToGff(root, "TriggerList", areaState.TriggerStates);
+            SerializeEntityStateListToGff(root, "StoreList", areaState.StoreStates);
+            SerializeEntityStateListToGff(root, "SoundList", areaState.SoundStates);
+            SerializeEntityStateListToGff(root, "WaypointList", areaState.WaypointStates);
+            SerializeEntityStateListToGff(root, "EncounterList", areaState.EncounterStates);
+            SerializeEntityStateListToGff(root, "CameraList", areaState.CameraStates);
+
+            // Destroyed entity IDs
+            if (areaState.DestroyedEntityIds != null && areaState.DestroyedEntityIds.Count > 0)
+            {
+                var destroyedList = root.Acquire<GFFList>("DestroyedList", new GFFList());
+                foreach (uint entityId in areaState.DestroyedEntityIds)
+                {
+                    GFFStruct item = destroyedList.Add();
+                    item.SetUInt32("ObjectId", entityId);
+                }
+            }
+
+            // Spawned entities
+            if (areaState.SpawnedEntities != null && areaState.SpawnedEntities.Count > 0)
+            {
+                var spawnedList = root.Acquire<GFFList>("SpawnedList", new GFFList());
+                foreach (SpawnedEntityState spawnedEntity in areaState.SpawnedEntities)
+                {
+                    GFFStruct item = spawnedList.Add();
+                    SerializeEntityStateToGff(item, spawnedEntity);
+                    item.SetString("BlueprintResRef", spawnedEntity.BlueprintResRef ?? "");
+                    item.SetString("SpawnedBy", spawnedEntity.SpawnedBy ?? "");
+                }
+            }
+
+            // Local variables
+            if (areaState.LocalVariables != null && !areaState.LocalVariables.IsEmpty)
+            {
+                var localVarsStruct = root.Acquire<GFFStruct>("LocalVars", new GFFStruct());
+                SerializeLocalVariablesToGff(localVarsStruct, areaState.LocalVariables);
+            }
+
+            // Serialize GFF to bytes
+            return new GFFBinaryWriter(gff).Write();
+        }
+
+        /// <summary>
+        /// Serializes a list of entity states to a GFF list.
+        /// </summary>
+        private void SerializeEntityStateListToGff(GFFStruct root, string listName, List<EntityState> entityStates)
+        {
+            if (entityStates == null || entityStates.Count == 0)
+            {
+                return;
+            }
+
+            var list = root.Acquire<GFFList>(listName, new GFFList());
+            foreach (EntityState entityState in entityStates)
+            {
+                GFFStruct item = list.Add();
+                SerializeEntityStateToGff(item, entityState);
+            }
+        }
+
+        /// <summary>
+        /// Serializes an entity state to a GFF struct.
+        /// Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 saves entity states to GFF format
+        /// </summary>
+        private void SerializeEntityStateToGff(GFFStruct structData, EntityState entityState)
+        {
+            if (entityState == null)
+            {
+                return;
+            }
+
+            // Tag
+            structData.SetString("Tag", entityState.Tag ?? "");
+
+            // ObjectId
+            structData.SetUInt32("ObjectId", entityState.ObjectId);
+
+            // ObjectType
+            structData.SetUInt32("ObjectType", (uint)(int)entityState.ObjectType);
+
+            // TemplateResRef
+            if (!string.IsNullOrEmpty(entityState.TemplateResRef))
+            {
+                structData.SetResRef("TemplateResRef", ResRef.FromString(entityState.TemplateResRef));
+            }
+
+            // Position
+            structData.SetVector3("Position", new Andastra.Parsing.Common.Vector3(
+                entityState.Position.X,
+                entityState.Position.Y,
+                entityState.Position.Z));
+
+            // Facing
+            structData.SetSingle("Facing", entityState.Facing);
+
+            // HP
+            structData.SetInt32("CurrentHP", entityState.CurrentHP);
+            structData.SetInt32("MaxHP", entityState.MaxHP);
+
+            // Flags
+            structData.SetUInt8("IsDestroyed", entityState.IsDestroyed ? (byte)1 : (byte)0);
+            structData.SetUInt8("IsPlot", entityState.IsPlot ? (byte)1 : (byte)0);
+            structData.SetUInt8("IsOpen", entityState.IsOpen ? (byte)1 : (byte)0);
+            structData.SetUInt8("IsLocked", entityState.IsLocked ? (byte)1 : (byte)0);
+            structData.SetInt32("AnimationState", entityState.AnimationState);
+
+            // Local variables
+            if (entityState.LocalVariables != null && !entityState.LocalVariables.IsEmpty)
+            {
+                var localVarsStruct = structData.Acquire<GFFStruct>("LocalVars", new GFFStruct());
+                SerializeLocalVariablesToGff(localVarsStruct, entityState.LocalVariables);
+            }
+
+            // Active effects
+            if (entityState.ActiveEffects != null && entityState.ActiveEffects.Count > 0)
+            {
+                var effectsList = structData.Acquire<GFFList>("Effects", new GFFList());
+                foreach (SavedEffect effect in entityState.ActiveEffects)
+                {
+                    GFFStruct effectStruct = effectsList.Add();
+                    effectStruct.SetInt32("EffectType", effect.EffectType);
+                    effectStruct.SetInt32("SubType", effect.SubType);
+                    effectStruct.SetInt32("DurationType", effect.DurationType);
+                    effectStruct.SetSingle("RemainingDuration", effect.RemainingDuration);
+                    effectStruct.SetUInt32("CreatorId", effect.CreatorId);
+                    effectStruct.SetInt32("SpellId", effect.SpellId);
+
+                    // Effect parameters (if any)
+                    if (effect.IntParams != null && effect.IntParams.Count > 0)
+                    {
+                        var intParamsList = effectStruct.Acquire<GFFList>("IntParams", new GFFList());
+                        foreach (int param in effect.IntParams)
+                        {
+                            GFFStruct paramStruct = intParamsList.Add();
+                            paramStruct.SetInt32("Value", param);
+                        }
+                    }
+
+                    if (effect.FloatParams != null && effect.FloatParams.Count > 0)
+                    {
+                        var floatParamsList = effectStruct.Acquire<GFFList>("FloatParams", new GFFList());
+                        foreach (float param in effect.FloatParams)
+                        {
+                            GFFStruct paramStruct = floatParamsList.Add();
+                            paramStruct.SetSingle("Value", param);
+                        }
+                    }
+
+                    if (effect.StringParams != null && effect.StringParams.Count > 0)
+                    {
+                        var stringParamsList = effectStruct.Acquire<GFFList>("StringParams", new GFFList());
+                        foreach (string param in effect.StringParams)
+                        {
+                            GFFStruct paramStruct = stringParamsList.Add();
+                            paramStruct.SetString("Value", param ?? "");
+                        }
+                    }
+
+                    if (effect.ObjectParams != null && effect.ObjectParams.Count > 0)
+                    {
+                        var objectParamsList = effectStruct.Acquire<GFFList>("ObjectParams", new GFFList());
+                        foreach (uint param in effect.ObjectParams)
+                        {
+                            GFFStruct paramStruct = objectParamsList.Add();
+                            paramStruct.SetUInt32("Value", param);
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Serializes local variables to a GFF struct.
+        /// </summary>
+        private void SerializeLocalVariablesToGff(GFFStruct varsStruct, LocalVariableSet localVars)
+        {
+            if (localVars == null)
+            {
+                return;
+            }
+
+            // Int variables
+            if (localVars.Ints != null && localVars.Ints.Count > 0)
+            {
+                var intList = varsStruct.Acquire<GFFList>("Ints", new GFFList());
+                foreach (var kvp in localVars.Ints)
+                {
+                    GFFStruct item = intList.Add();
+                    item.SetString("Name", kvp.Key ?? "");
+                    item.SetInt32("Value", kvp.Value);
+                }
+            }
+
+            // Float variables
+            if (localVars.Floats != null && localVars.Floats.Count > 0)
+            {
+                var floatList = varsStruct.Acquire<GFFList>("Floats", new GFFList());
+                foreach (var kvp in localVars.Floats)
+                {
+                    GFFStruct item = floatList.Add();
+                    item.SetString("Name", kvp.Key ?? "");
+                    item.SetSingle("Value", kvp.Value);
+                }
+            }
+
+            // String variables
+            if (localVars.Strings != null && localVars.Strings.Count > 0)
+            {
+                var stringList = varsStruct.Acquire<GFFList>("Strings", new GFFList());
+                foreach (var kvp in localVars.Strings)
+                {
+                    GFFStruct item = stringList.Add();
+                    item.SetString("Name", kvp.Key ?? "");
+                    item.SetString("Value", kvp.Value ?? "");
+                }
+            }
+
+            // Object variables
+            if (localVars.Objects != null && localVars.Objects.Count > 0)
+            {
+                var objectList = varsStruct.Acquire<GFFList>("Objects", new GFFList());
+                foreach (var kvp in localVars.Objects)
+                {
+                    GFFStruct item = objectList.Add();
+                    item.SetString("Name", kvp.Key ?? "");
+                    item.SetUInt32("Value", kvp.Value);
+                }
+            }
+
+            // Location variables
+            if (localVars.Locations != null && localVars.Locations.Count > 0)
+            {
+                var locationList = varsStruct.Acquire<GFFList>("Locations", new GFFList());
+                foreach (var kvp in localVars.Locations)
+                {
+                    GFFStruct item = locationList.Add();
+                    item.SetString("Name", kvp.Key ?? "");
+                    if (kvp.Value != null)
+                    {
+                        var locationStruct = item.Acquire<GFFStruct>("Location", new GFFStruct());
+                        locationStruct.SetString("AreaResRef", kvp.Value.AreaResRef ?? "");
+                        locationStruct.SetVector3("Position", new Andastra.Parsing.Common.Vector3(
+                            kvp.Value.Position.X,
+                            kvp.Value.Position.Y,
+                            kvp.Value.Position.Z));
+                        locationStruct.SetSingle("Facing", kvp.Value.Facing);
+                    }
+                }
+            }
         }
 
         #endregion
