@@ -1314,29 +1314,46 @@ if (iVar7 == 0) {
 
 **When flag at offset 0x54 != 0 (Complex Mode)**:
 
+**VERIFIED** (swkotor.exe: `FUN_004094a0` at 0x004094a0):
+
+**Decompiled Code Flow** (lines 32-211):
+
+0. **Load `.rim`** (lines 32-42, BEFORE checks):
+   - **`.rim` is loaded FIRST** in complex mode, before any area file checks
+   - Line 42: `FUN_00406e20(param_1,aiStack_38,4,0)` - Opens and loads `.rim` file (container type 4 = RIM)
+   - All resources in `.rim` are registered in resource table
+   - **This happens BEFORE** the `_a.rim`/`_adx.rim` checks
+
 1. **Check for `_a.rim`** (lines 50-62):
    - Constructs filename: `{module}_a.rim`
-   - Searches for ARE resource type `0xbba` (3002) in `_a.rim`
+   - Searches for ARE resource type `0xbba` (3002) in `_a.rim` using `FUN_00407230`
    - **If found**: Loads `_a.rim` (line 159: `FUN_00406e20(param_1,aiStack_38,4,0)`) - Sets flag bit 0x10
+   - Resources in `_a.rim` are registered (duplicates from `.rim` are ignored via `FUN_0040e990`)
    - **If not found**: Continues to check `_adx.rim`
 
 2. **Check for `_adx.rim`** (lines 64-88):
    - Constructs filename: `{module}_adx.rim`
-   - Searches for ARE resource type `0xbba` (3002) in `_adx.rim`
+   - Searches for ARE resource type `0xbba` (3002) in `_adx.rim` using `FUN_00407230`
    - **If found**: Loads `_adx.rim` (line 85: `FUN_00406e20(param_1,aiStack_38,4,0)`) - Sets flag bit 0x20
+   - Resources in `_adx.rim` are registered (duplicates from `.rim`/`_a.rim` are ignored)
    - **If not found**: Continues to check `.mod`
 
 3. **Load Override Directory** (line 91: `FUN_00406e20(param_1,aiStack_48,2,0)`) - Loads MODULES: directory (type 2 = DIR/Override)
+   - Override files are registered (Override has highest priority in resource search, not registration order)
 
 4. **Check for `.mod`** (line 95: `FUN_00407230(param_1,aiStack_28,0x7db,aiStack_50,aiStack_48)`):
    - Searches for resource type `0x7db` (2011 = MOD) in MODULES: directory
-   - **If `.mod` exists**: Loads `.mod` (line 136: `FUN_00406e20(param_1,aiStack_38,3,2)`) - Sets flag bit 0x2, **OVERRIDES** `.rim` entries
+   - **If `.mod` exists**: Loads `.mod` (line 136: `FUN_00406e20(param_1,aiStack_38,3,2)`) - Sets flag bit 0x2
+   - Resources in `.mod` are registered via `FUN_0040e990`
+   - **Duplicate Handling**: `.mod` resources with same ResRef+Type as `.rim` **REPLACE** existing entries (not ignored)
+   - **CRITICAL**: When `.mod` exists, `_s.rim` is NOT loaded (check at line 100: `if (iVar5 == 0)`)
    - **If `.mod` doesn't exist**: Continues to check `_s.rim`
 
-5. **Check for `_s.rim`** (lines 97-124):
+5. **Check for `_s.rim`** (lines 97-124, **ONLY if `.mod` doesn't exist**):
    - Constructs filename: `{module}_s.rim`
-   - Searches for ARE resource type `0xbba` (3002) in `_s.rim`
-   - **If found**: Loads `_s.rim` (line 118: `FUN_00406e20(param_1,aiStack_38,4,0)`) - Sets flag bit 0x8, **ADDS** to `.rim` entries
+   - Searches for ARE resource type `0xbba` (3002) in `_s.rim` using `FUN_00407230`
+   - **If found**: Loads `_s.rim` (line 118: `FUN_00406e20(param_1,aiStack_38,4,0)`) - Sets flag bit 0x8
+   - Resources in `_s.rim` are registered (duplicates from `.rim`/`_a.rim`/`_adx.rim` are ignored)
 
 6. **Load CURRENTGAME: directory** (lines 166-200):
    - Only if flag at offset 0x58 == 0 AND previous load succeeded
@@ -1411,34 +1428,53 @@ if (iVar7 == 0) {
 
 **When flag at offset 0x54 != 0 (Complex Mode)**:
 
+**VERIFIED** (swkotor2.exe: `FUN_004096b0` at 0x004096b0):
+
+**Decompiled Code Flow** (lines 36-250):
+
+0. **Load `.rim`** (lines 36-46, BEFORE checks):
+   - **`.rim` is loaded FIRST** in complex mode, before any area file checks
+   - Line 46: `FUN_00406ef0(param_1,aiStack_58,4,0)` - Opens and loads `.rim` file (container type 4 = RIM)
+   - All resources in `.rim` are registered in resource table
+   - **This happens BEFORE** the `_a.rim`/`_adx.rim` checks
+
 1. **Check for `_a.rim`** (lines 54-66):
    - Constructs filename: `{module}_a.rim`
-   - Searches for ARE resource type `0xbba` (3002) in `_a.rim`
+   - Searches for ARE resource type `0xbba` (3002) in `_a.rim` using `FUN_00407300`
    - **If found**: Loads `_a.rim` (line 182: `FUN_00406ef0(param_1,aiStack_58,4,0)`) - Sets flag bit 0x10
+   - Resources in `_a.rim` are registered (duplicates from `.rim` are ignored via `FUN_0040e990`)
    - **If not found**: Continues to check `_adx.rim`
 
 2. **Check for `_adx.rim`** (lines 68-92):
    - Constructs filename: `{module}_adx.rim`
-   - Searches for ARE resource type `0xbba` (3002) in `_adx.rim`
+   - Searches for ARE resource type `0xbba` (3002) in `_adx.rim` using `FUN_00407300`
    - **If found**: Loads `_adx.rim` (line 89: `FUN_00406ef0(param_1,aiStack_58,4,0)`) - Sets flag bit 0x20
+   - Resources in `_adx.rim` are registered (duplicates from `.rim`/`_a.rim` are ignored)
    - **If not found**: Continues to check `.mod`
 
 3. **Load Override Directory** (line 95: `FUN_00406ef0(param_1,aiStack_60,2,0)`) - Loads MODULES: directory (type 2 = DIR/Override)
+   - Override files are registered (Override has highest priority in resource search, not registration order)
 
 4. **Check for `.mod`** (line 99: `FUN_00407300(param_1,aiStack_30,0x7db,apuStack_6c,aiStack_60)`):
    - Searches for resource type `0x7db` (2011 = MOD) in MODULES: directory
-   - **If `.mod` exists**: Loads `.mod` (line 161: `FUN_00406ef0(param_1,aiStack_58,3,2)`) - Sets flag bit 0x2, **OVERRIDES** `.rim` entries
+   - **If `.mod` exists**: Loads `.mod` (line 161: `FUN_00406ef0(param_1,aiStack_58,3,2)`) - Sets flag bit 0x2
+   - Resources in `.mod` are registered via `FUN_0040e990`
+   - **Duplicate Handling**: `.mod` resources with same ResRef+Type as `.rim` **REPLACE** existing entries (not ignored)
+   - **CRITICAL**: When `.mod` exists, `_s.rim` and `_dlg.erf` are NOT loaded (check at line 100: `if (iVar5 == 0)`)
    - **If `.mod` doesn't exist**: Continues to check `_s.rim`
 
-5. **Check for `_s.rim`** (lines 101-127):
+5. **Check for `_s.rim`** (lines 101-127, **ONLY if `.mod` doesn't exist**):
    - Constructs filename: `{module}_s.rim`
-   - Searches for ARE resource type `0xbba` (3002) in `_s.rim`
-   - **If found**: Loads `_s.rim` (line 122: `FUN_00406ef0(param_1,aiStack_58,4,0)`) - Sets flag bit 0x8, **ADDS** to `.rim` entries
+   - Searches for ARE resource type `0xbba` (3002) in `_s.rim` using `FUN_00407300`
+   - **If found**: Loads `_s.rim` (line 122: `FUN_00406ef0(param_1,aiStack_58,4,0)`) - Sets flag bit 0x8
+   - Resources in `_s.rim` are registered (duplicates from `.rim`/`_a.rim`/`_adx.rim` are ignored)
 
-6. **Load `_dlg.erf`** (lines 128-149):
+6. **Load `_dlg.erf`** (lines 128-149, **ONLY if `.mod` doesn't exist**, K2 only):
    - **ONLY if `.mod` doesn't exist** (inside the `if (iVar5 == 0)` block at line 100)
    - Constructs filename: `{module}_dlg.erf` (line 128: `FUN_00630a90(aiStack_30,"_dlg")`)
-   - Loads `_dlg.erf` (line 147: `FUN_00406ef0(param_1,piVar3,3,2)`) - Container type 3 (ERF), **ADDS** to `.rim` and `_s.rim` entries
+   - Loads `_dlg.erf` (line 147: `FUN_00406ef0(param_1,piVar3,3,2)`) - Container type 3 (ERF)
+   - Resources in `_dlg.erf` are registered via `FUN_0040e990` (duplicates from `.rim`/`_a.rim`/`_adx.rim`/`_s.rim` are ignored)
+   - **No ARE check** - `_dlg.erf` is loaded as an ERF container, all resources are registered regardless of type
 
 7. **Load CURRENTGAME: directory** (lines 189-250):
    - Only if flag at offset 0x58 == 0 AND previous load succeeded
