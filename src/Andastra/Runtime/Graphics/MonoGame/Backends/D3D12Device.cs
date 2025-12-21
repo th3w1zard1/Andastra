@@ -84,17 +84,6 @@ namespace Andastra.Runtime.MonoGame.Backends
         private int _samplerHeapNextIndex;
         private const int DefaultSamplerHeapCapacity = 2048;
 
-        // DSV descriptor heap management
-        private IntPtr _dsvDescriptorHeap;
-        private IntPtr _dsvHeapCpuStartHandle;
-        private uint _dsvHeapDescriptorIncrementSize;
-        private int _dsvHeapCapacity;
-        private int _dsvHeapNextIndex;
-        private const int DefaultDsvHeapCapacity = 256;
-
-        // Cache for texture DSV handles to avoid recreating descriptors
-        private readonly Dictionary<IntPtr, IntPtr> _textureDsvHandles;
-
         public GraphicsCapabilities Capabilities
         {
             get { return _capabilities; }
@@ -128,7 +117,6 @@ namespace Andastra.Runtime.MonoGame.Backends
             _resources = new Dictionary<IntPtr, IResource>();
             _nextResourceHandle = 1;
             _currentFrameIndex = 0;
-            _textureDsvHandles = new Dictionary<IntPtr, IntPtr>();
         }
 
         #region Resource Creation
@@ -697,16 +685,6 @@ namespace Andastra.Runtime.MonoGame.Backends
             _samplerHeapCapacity = 0;
             _samplerHeapNextIndex = 0;
 
-            // Release DSV descriptor heap
-            _dsvDescriptorHeap = IntPtr.Zero;
-            _dsvHeapCpuStartHandle = IntPtr.Zero;
-            _dsvHeapDescriptorIncrementSize = 0;
-            _dsvHeapCapacity = 0;
-            _dsvHeapNextIndex = 0;
-
-            // Clear DSV handle cache
-            _textureDsvHandles.Clear();
-
             // Note: We don't release _device or _device5 here as they're owned by Direct3D12Backend
             // The backend will handle device cleanup in its Shutdown method
 
@@ -873,18 +851,10 @@ namespace Andastra.Runtime.MonoGame.Backends
         #region D3D12 Sampler Structures and Constants
 
         // DirectX 12 Descriptor Heap Types
-        private const uint D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV = 0;
         private const uint D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER = 1;
-        private const uint D3D12_DESCRIPTOR_HEAP_TYPE_RTV = 2;
-        private const uint D3D12_DESCRIPTOR_HEAP_TYPE_DSV = 3;
 
         // DirectX 12 Descriptor Heap Flags
         private const uint D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE = 0x1;
-        private const uint D3D12_DESCRIPTOR_HEAP_FLAG_NONE = 0x0;
-
-        // DirectX 12 Clear Flags
-        private const uint D3D12_CLEAR_FLAG_DEPTH = 0x1;
-        private const uint D3D12_CLEAR_FLAG_STENCIL = 0x2;
 
         // DirectX 12 Filter Types
         private const uint D3D12_FILTER_MIN_MAG_MIP_POINT = 0x00000000;
@@ -1648,7 +1618,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         private class D3D12RaytracingPipeline : IRaytracingPipeline, IResource
         {
-            public RaytracingPipelineDesc Desc { get; }
+            public Interfaces.RaytracingPipelineDesc Desc { get; }
             private readonly IntPtr _handle;
             private readonly IntPtr _d3d12StateObject;
             private readonly IntPtr _properties;
@@ -1723,7 +1693,6 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // Clear barrier tracking for new recording session
                 _pendingBarriers.Clear();
                 _resourceStates.Clear();
-                _currentRaytracingState = null;
 
                 _isOpen = true;
             }
@@ -2012,279 +1981,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             public void DispatchIndirect(IBuffer argumentBuffer, int offset) { /* TODO: ExecuteIndirect */ }
             public void SetRaytracingState(RaytracingState state) { /* TODO: Set raytracing state */ }
             public void DispatchRays(DispatchRaysArguments args) { /* TODO: DispatchRays */ }
-            public void BuildBottomLevelAccelStruct(IAccelStruct accelStruct, GeometryDesc[] geometries)
-            {
-                if (!_isOpen)
-                {
-                    throw new InvalidOperationException("Command list must be open to record build commands");
-                }
-
-                if (accelStruct == null)
-                {
-                    throw new ArgumentNullException(nameof(accelStruct));
-                }
-
-                if (geometries == null || geometries.Length == 0)
-                {
-                    throw new ArgumentException("At least one geometry must be provided", nameof(geometries));
-                }
-
-                if (_d3d12CommandList == IntPtr.Zero)
-                {
-                    throw new InvalidOperationException("Command list is not initialized");
-                }
-
-                // Validate that this is a bottom-level acceleration structure
-                if (accelStruct.IsTopLevel)
-                {
-                    throw new ArgumentException("Acceleration structure must be bottom-level for BuildBottomLevelAccelStruct", nameof(accelStruct));
-                }
-
-                // Cast to D3D12AccelStruct to access internal data
-                D3D12AccelStruct d3d12AccelStruct = accelStruct as D3D12AccelStruct;
-                if (d3d12AccelStruct == null)
-                {
-                    throw new ArgumentException("Acceleration structure must be a D3D12 acceleration structure", nameof(accelStruct));
-                }
-
-                // Validate geometries - all must be triangles for BLAS
-                for (int i = 0; i < geometries.Length; i++)
-                {
-                    if (geometries[i].Type != GeometryType.Triangles)
-                    {
-                        throw new ArgumentException($"Geometry at index {i} must be of type Triangles for bottom-level acceleration structures", nameof(geometries));
-                    }
-
-                    var triangles = geometries[i].Triangles;
-                    if (triangles.VertexBuffer == null)
-                    {
-                        throw new ArgumentException($"Geometry at index {i} must have a vertex buffer", nameof(geometries));
-                    }
-
-                    if (triangles.VertexCount <= 0)
-                    {
-                        throw new ArgumentException($"Geometry at index {i} must have a positive vertex count", nameof(geometries));
-                    }
-
-                    if (triangles.VertexStride <= 0)
-                    {
-                        throw new ArgumentException($"Geometry at index {i} must have a positive vertex stride", nameof(geometries));
-                    }
-                }
-
-                try
-                {
-                    // Convert GeometryDesc[] to D3D12_RAYTRACING_GEOMETRY_DESC[]
-                    int geometryCount = geometries.Length;
-                    int geometryDescSize = Marshal.SizeOf(typeof(D3D12_RAYTRACING_GEOMETRY_DESC));
-                    IntPtr geometryDescsPtr = Marshal.AllocHGlobal(geometryDescSize * geometryCount);
-
-                    try
-                    {
-                        IntPtr currentGeometryPtr = geometryDescsPtr;
-                        for (int i = 0; i < geometryCount; i++)
-                        {
-                            var geometry = geometries[i];
-                            var triangles = geometry.Triangles;
-
-                            // Get GPU virtual addresses for buffers
-                            IntPtr vertexBufferResource = triangles.VertexBuffer.NativeHandle;
-                            if (vertexBufferResource == IntPtr.Zero)
-                            {
-                                throw new ArgumentException($"Geometry at index {i} has an invalid vertex buffer", nameof(geometries));
-                            }
-
-                            ulong vertexBufferGpuVa = GetGpuVirtualAddress(vertexBufferResource);
-                            if (vertexBufferGpuVa == 0UL)
-                            {
-                                throw new InvalidOperationException($"Failed to get GPU virtual address for vertex buffer in geometry at index {i}");
-                            }
-
-                            // Calculate vertex buffer start address with offset
-                            ulong vertexBufferStartAddress = vertexBufferGpuVa + (ulong)triangles.VertexOffset;
-
-                            // Handle index buffer (optional for some geometries)
-                            IntPtr indexBufferGpuVa = IntPtr.Zero;
-                            uint indexCount = 0;
-                            uint indexFormat = D3D12_RAYTRACING_INDEX_FORMAT_UINT32;
-
-                            if (triangles.IndexBuffer != null)
-                            {
-                                IntPtr indexBufferResource = triangles.IndexBuffer.NativeHandle;
-                                if (indexBufferResource != IntPtr.Zero)
-                                {
-                                    ulong indexBufferGpuVaUlong = GetGpuVirtualAddress(indexBufferResource);
-                                    if (indexBufferGpuVaUlong != 0UL)
-                                    {
-                                        indexBufferGpuVa = new IntPtr((long)(indexBufferGpuVaUlong + (ulong)triangles.IndexOffset));
-                                        indexCount = (uint)triangles.IndexCount;
-                                        indexFormat = ConvertIndexFormatToD3D12(triangles.IndexFormat);
-                                    }
-                                }
-                            }
-
-                            // Handle transform buffer (optional)
-                            IntPtr transformBufferGpuVa = IntPtr.Zero;
-                            if (triangles.TransformBuffer != null)
-                            {
-                                IntPtr transformBufferResource = triangles.TransformBuffer.NativeHandle;
-                                if (transformBufferResource != IntPtr.Zero)
-                                {
-                                    ulong transformBufferGpuVaUlong = GetGpuVirtualAddress(transformBufferResource);
-                                    if (transformBufferGpuVaUlong != 0UL)
-                                    {
-                                        transformBufferGpuVa = new IntPtr((long)(transformBufferGpuVaUlong + (ulong)triangles.TransformOffset));
-                                    }
-                                }
-                            }
-
-                            // Build D3D12_RAYTRACING_GEOMETRY_TRIANGLES_DESC
-                            var trianglesDesc = new D3D12_RAYTRACING_GEOMETRY_TRIANGLES_DESC
-                            {
-                                Transform3x4 = transformBufferGpuVa,
-                                IndexFormat = indexFormat,
-                                VertexFormat = ConvertVertexFormatToD3D12(triangles.VertexFormat),
-                                IndexCount = indexCount,
-                                VertexCount = (uint)triangles.VertexCount,
-                                IndexBuffer = indexBufferGpuVa,
-                                VertexBuffer = new D3D12_GPU_VIRTUAL_ADDRESS_AND_STRIDE
-                                {
-                                    StartAddress = new IntPtr((long)vertexBufferStartAddress),
-                                    StrideInBytes = (uint)triangles.VertexStride
-                                }
-                            };
-
-                            // Build D3D12_RAYTRACING_GEOMETRY_DESC
-                            var geometryDesc = new D3D12_RAYTRACING_GEOMETRY_DESC
-                            {
-                                Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES,
-                                Flags = ConvertGeometryFlagsToD3D12(geometry.Flags),
-                                Triangles = trianglesDesc
-                            };
-
-                            // Marshal structure to unmanaged memory
-                            Marshal.StructureToPtr(geometryDesc, currentGeometryPtr, false);
-                            currentGeometryPtr = new IntPtr(currentGeometryPtr.ToInt64() + geometryDescSize);
-                        }
-
-                        // Get build flags from acceleration structure descriptor
-                        uint buildFlags = ConvertAccelStructBuildFlagsToD3D12(accelStruct.Desc.BuildFlags);
-
-                        // Build D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS
-                        var buildInputs = new D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS
-                        {
-                            Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL,
-                            Flags = buildFlags,
-                            NumDescs = (uint)geometryCount,
-                            DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY,
-                            pGeometryDescs = geometryDescsPtr
-                        };
-
-                        // Get GPU virtual addresses for scratch and destination buffers
-                        // Note: D3D12AccelStruct stores the backing buffer which contains the result
-                        // We need to get the GPU virtual address from the backing buffer
-                        IBuffer backingBuffer = null;
-                        try
-                        {
-                            // Use reflection to access private _backingBuffer field
-                            var backingBufferField = typeof(D3D12AccelStruct).GetField("_backingBuffer", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                            if (backingBufferField != null)
-                            {
-                                backingBuffer = backingBufferField.GetValue(d3d12AccelStruct) as IBuffer;
-                            }
-                        }
-                        catch
-                        {
-                            // Reflection failed, try alternative approach
-                        }
-
-                        if (backingBuffer == null || backingBuffer.NativeHandle == IntPtr.Zero)
-                        {
-                            throw new InvalidOperationException("Acceleration structure does not have a valid backing buffer. Acceleration structure must be created before building.");
-                        }
-
-                        ulong destGpuVa = GetGpuVirtualAddress(backingBuffer.NativeHandle);
-                        if (destGpuVa == 0UL)
-                        {
-                            throw new InvalidOperationException("Failed to get GPU virtual address for acceleration structure result buffer");
-                        }
-
-                        // For scratch buffer, we need to use a scratch buffer from the acceleration structure
-                        // In a full implementation, the scratch buffer should be allocated during CreateAccelStruct
-                        // For now, we'll use the result buffer as scratch (this is not ideal but allows the code to compile)
-                        // TODO: FIXME - Scratch buffer should be properly allocated and tracked
-                        ulong scratchGpuVa = destGpuVa; // Temporary - should use actual scratch buffer
-
-                        // Build D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC
-                        int buildDescSize = Marshal.SizeOf(typeof(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC));
-                        IntPtr buildDescPtr = Marshal.AllocHGlobal(buildDescSize + Marshal.SizeOf(typeof(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS)));
-
-                        try
-                        {
-                            // Build inputs are embedded in the build desc structure
-                            // We need to marshal buildInputs to the correct offset
-                            IntPtr buildInputsPtr = new IntPtr(buildDescPtr.ToInt64() + IntPtr.Size); // After DestAccelerationStructureData pointer
-                            Marshal.StructureToPtr(buildInputs, buildInputsPtr, false);
-
-                            var buildDesc = new D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC
-                            {
-                                DestAccelerationStructureData = new IntPtr((long)destGpuVa),
-                                Inputs = buildInputs, // This will be copied by value
-                                SourceAccelerationStructureData = IntPtr.Zero, // Building from scratch
-                                ScratchAccelerationStructureData = new IntPtr((long)scratchGpuVa)
-                            };
-
-                            // Marshal build description
-                            Marshal.StructureToPtr(buildDesc, buildDescPtr, false);
-
-                            // Call ID3D12GraphicsCommandList4::BuildRaytracingAccelerationStructure
-                            CallBuildRaytracingAccelerationStructure(_d3d12CommandList, buildDescPtr, 0, IntPtr.Zero);
-                        }
-                        finally
-                        {
-                            Marshal.FreeHGlobal(buildDescPtr);
-                        }
-                    }
-                    finally
-                    {
-                        Marshal.FreeHGlobal(geometryDescsPtr);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    throw new InvalidOperationException($"Failed to build bottom-level acceleration structure: {ex.Message}", ex);
-                }
-            }
-
-            /// <summary>
-            /// Calls ID3D12GraphicsCommandList4::BuildRaytracingAccelerationStructure through COM vtable.
-            /// VTable index 97 for ID3D12GraphicsCommandList4 (inherits from ID3D12GraphicsCommandList).
-            /// Based on D3D12 DXR API: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist4-buildraytracingaccelerationstructure
-            /// </summary>
-            private unsafe void CallBuildRaytracingAccelerationStructure(IntPtr commandList, IntPtr pDesc, int numPostbuildInfoDescs, IntPtr pPostbuildInfoDescs)
-            {
-                // Platform check: DirectX 12 COM is Windows-only
-                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-                {
-                    return;
-                }
-
-                if (commandList == IntPtr.Zero || pDesc == IntPtr.Zero)
-                {
-                    return;
-                }
-
-                // Get vtable pointer
-                IntPtr* vtable = *(IntPtr**)commandList;
-                // BuildRaytracingAccelerationStructure is at index 97 in ID3D12GraphicsCommandList4 vtable
-                IntPtr methodPtr = vtable[97];
-
-                // Create delegate from function pointer
-                BuildRaytracingAccelerationStructureDelegate buildAccelStruct =
-                    (BuildRaytracingAccelerationStructureDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(BuildRaytracingAccelerationStructureDelegate));
-
-                buildAccelStruct(commandList, pDesc, numPostbuildInfoDescs, pPostbuildInfoDescs);
-            }
+            public void BuildBottomLevelAccelStruct(IAccelStruct accelStruct, GeometryDesc[] geometries) { /* TODO: BuildRaytracingAccelerationStructure */ }
             public void BuildTopLevelAccelStruct(IAccelStruct accelStruct, AccelStructInstance[] instances) { /* TODO: BuildRaytracingAccelerationStructure */ }
             public void CompactBottomLevelAccelStruct(IAccelStruct dest, IAccelStruct src) { /* TODO: CopyRaytracingAccelerationStructure */ }
             public void BeginDebugEvent(string name, Vector4 color) { /* TODO: BeginEvent */ }
@@ -2294,247 +1991,6 @@ namespace Andastra.Runtime.MonoGame.Backends
             public void Dispose()
             {
                 // Command lists are returned to allocator, not destroyed individually
-            }
-        }
-
-        #endregion
-
-        #region D3D12 Raytracing Structures and Constants
-
-        // D3D12 Raytracing Acceleration Structure Types
-        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL = 0;
-        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL = 1;
-
-        // D3D12 Raytracing Acceleration Structure Build Flags
-        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_NONE = 0;
-        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_UPDATE = 0x1;
-        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_COMPACTION = 0x2;
-        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE = 0x4;
-        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_BUILD = 0x8;
-        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_MINIMIZE_MEMORY = 0x10;
-        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PERFORM_UPDATE = 0x20;
-
-        // D3D12 Raytracing Geometry Types
-        private const uint D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES = 0;
-        private const uint D3D12_RAYTRACING_GEOMETRY_TYPE_PROCEDURAL_PRIMITIVE_AABBS = 1;
-
-        // D3D12 Raytracing Geometry Flags
-        private const uint D3D12_RAYTRACING_GEOMETRY_FLAG_NONE = 0;
-        private const uint D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE = 0x1;
-        private const uint D3D12_RAYTRACING_GEOMETRY_FLAG_NO_DUPLICATE_ANYHIT_INVOCATION = 0x2;
-
-        // D3D12 Raytracing Index Formats
-        private const uint D3D12_RAYTRACING_INDEX_FORMAT_UINT16 = 0;
-        private const uint D3D12_RAYTRACING_INDEX_FORMAT_UINT32 = 1;
-
-        // D3D12 Raytracing Vertex Formats
-        private const uint D3D12_RAYTRACING_VERTEX_FORMAT_FLOAT3 = 0;
-        private const uint D3D12_RAYTRACING_VERTEX_FORMAT_FLOAT2 = 1;
-
-        // D3D12 Elements Layout
-        private const uint D3D12_ELEMENTS_LAYOUT_ARRAY = 0;
-        private const uint D3D12_ELEMENTS_LAYOUT_ARRAY_OF_POINTERS = 1;
-
-        /// <summary>
-        /// GPU virtual address and stride structure.
-        /// Based on D3D12 API: D3D12_GPU_VIRTUAL_ADDRESS_AND_STRIDE
-        /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
-        private struct D3D12_GPU_VIRTUAL_ADDRESS_AND_STRIDE
-        {
-            public IntPtr StartAddress;
-            public uint StrideInBytes;
-        }
-
-        /// <summary>
-        /// Raytracing geometry triangles description.
-        /// Based on D3D12 API: D3D12_RAYTRACING_GEOMETRY_TRIANGLES_DESC
-        /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
-        private struct D3D12_RAYTRACING_GEOMETRY_TRIANGLES_DESC
-        {
-            public IntPtr Transform3x4;
-            public uint IndexFormat;
-            public uint VertexFormat;
-            public uint IndexCount;
-            public uint VertexCount;
-            public IntPtr IndexBuffer;
-            public D3D12_GPU_VIRTUAL_ADDRESS_AND_STRIDE VertexBuffer;
-        }
-
-        /// <summary>
-        /// Raytracing geometry description.
-        /// Based on D3D12 API: D3D12_RAYTRACING_GEOMETRY_DESC
-        /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
-        private struct D3D12_RAYTRACING_GEOMETRY_DESC
-        {
-            public uint Type;
-            public uint Flags;
-            public D3D12_RAYTRACING_GEOMETRY_TRIANGLES_DESC Triangles;
-        }
-
-        /// <summary>
-        /// Build raytracing acceleration structure inputs.
-        /// Based on D3D12 API: D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS
-        /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
-        private struct D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS
-        {
-            public uint Type;
-            public uint Flags;
-            public uint NumDescs;
-            public uint DescsLayout;
-            public IntPtr pGeometryDescs;
-        }
-
-        /// <summary>
-        /// Build raytracing acceleration structure description.
-        /// Based on D3D12 API: D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC
-        /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
-        private struct D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC
-        {
-            public IntPtr DestAccelerationStructureData;
-            public D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS Inputs;
-            public IntPtr SourceAccelerationStructureData;
-            public IntPtr ScratchAccelerationStructureData;
-        }
-
-        // COM interface method delegate for BuildRaytracingAccelerationStructure
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate void BuildRaytracingAccelerationStructureDelegate(
-            IntPtr commandList,
-            IntPtr pDesc,
-            int numPostbuildInfoDescs,
-            IntPtr pPostbuildInfoDescs);
-
-        // COM interface method delegate for GetGPUVirtualAddress
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate ulong GetGPUVirtualAddressDelegate(IntPtr resource);
-
-        /// <summary>
-        /// Gets the GPU virtual address of a resource.
-        /// Based on D3D12 API: ID3D12Resource::GetGPUVirtualAddress
-        /// VTable index 8 for ID3D12Resource.
-        /// </summary>
-        private unsafe ulong GetGpuVirtualAddress(IntPtr resource)
-        {
-            // Platform check: DirectX 12 COM is Windows-only
-            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-            {
-                return 0UL;
-            }
-
-            if (resource == IntPtr.Zero)
-            {
-                return 0UL;
-            }
-
-            // Get vtable pointer
-            IntPtr* vtable = *(IntPtr**)resource;
-            // GetGPUVirtualAddress is at index 8 in ID3D12Resource vtable
-            IntPtr methodPtr = vtable[8];
-
-            // Create delegate from function pointer
-            GetGPUVirtualAddressDelegate getGpuVa =
-                (GetGPUVirtualAddressDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(GetGPUVirtualAddressDelegate));
-
-            return getGpuVa(resource);
-        }
-
-        /// <summary>
-        /// Converts AccelStructBuildFlags to D3D12 raytracing acceleration structure build flags.
-        /// Based on D3D12 API: D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS
-        /// </summary>
-        private uint ConvertAccelStructBuildFlagsToD3D12(AccelStructBuildFlags flags)
-        {
-            uint d3d12Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_NONE;
-
-            if ((flags & AccelStructBuildFlags.AllowUpdate) != 0)
-            {
-                d3d12Flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_UPDATE;
-            }
-
-            if ((flags & AccelStructBuildFlags.AllowCompaction) != 0)
-            {
-                d3d12Flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_COMPACTION;
-            }
-
-            if ((flags & AccelStructBuildFlags.PreferFastTrace) != 0)
-            {
-                d3d12Flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
-            }
-
-            if ((flags & AccelStructBuildFlags.PreferFastBuild) != 0)
-            {
-                d3d12Flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_BUILD;
-            }
-
-            if ((flags & AccelStructBuildFlags.MinimizeMemory) != 0)
-            {
-                d3d12Flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_MINIMIZE_MEMORY;
-            }
-
-            return d3d12Flags;
-        }
-
-        /// <summary>
-        /// Converts GeometryFlags to D3D12 raytracing geometry flags.
-        /// Based on D3D12 API: D3D12_RAYTRACING_GEOMETRY_FLAGS
-        /// </summary>
-        private uint ConvertGeometryFlagsToD3D12(GeometryFlags flags)
-        {
-            uint d3d12Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_NONE;
-
-            if ((flags & GeometryFlags.Opaque) != 0)
-            {
-                d3d12Flags |= D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
-            }
-
-            if ((flags & GeometryFlags.NoDuplicateAnyHit) != 0)
-            {
-                d3d12Flags |= D3D12_RAYTRACING_GEOMETRY_FLAG_NO_DUPLICATE_ANYHIT_INVOCATION;
-            }
-
-            return d3d12Flags;
-        }
-
-        /// <summary>
-        /// Converts TextureFormat to D3D12 raytracing index format.
-        /// Based on D3D12 API: D3D12_RAYTRACING_INDEX_FORMAT
-        /// </summary>
-        private uint ConvertIndexFormatToD3D12(TextureFormat format)
-        {
-            switch (format)
-            {
-                case TextureFormat.R16_UInt:
-                    return D3D12_RAYTRACING_INDEX_FORMAT_UINT16;
-                case TextureFormat.R32_UInt:
-                    return D3D12_RAYTRACING_INDEX_FORMAT_UINT32;
-                default:
-                    // Default to 32-bit if format is unknown
-                    return D3D12_RAYTRACING_INDEX_FORMAT_UINT32;
-            }
-        }
-
-        /// <summary>
-        /// Converts TextureFormat to D3D12 raytracing vertex format.
-        /// Based on D3D12 API: D3D12_RAYTRACING_VERTEX_FORMAT
-        /// </summary>
-        private uint ConvertVertexFormatToD3D12(TextureFormat format)
-        {
-            // D3D12 raytracing supports Float3 and Float2 vertex formats
-            // Most common vertex formats map to Float3
-            switch (format)
-            {
-                case TextureFormat.R32G32_Float:
-                    return D3D12_RAYTRACING_VERTEX_FORMAT_FLOAT2;
-                case TextureFormat.R32G32B32_Float:
-                case TextureFormat.R32G32B32A32_Float:
-                default:
-                    // Default to Float3 for most formats
-                    return D3D12_RAYTRACING_VERTEX_FORMAT_FLOAT3;
             }
         }
 
