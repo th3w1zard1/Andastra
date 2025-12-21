@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Andastra.Runtime.Core.Actions;
+using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Scripting.Interfaces;
 
 namespace Andastra.Runtime.Scripting.EngineApi
@@ -646,6 +649,393 @@ namespace Andastra.Runtime.Scripting.EngineApi
                 return Variable.FromString("(" + vec.X + ", " + vec.Y + ", " + vec.Z + ")");
             }
             return Variable.FromString("(0, 0, 0)");
+        }
+
+        /// <summary>
+        /// AssignCommand(object oActionSubject, action aActionToAssign) - Assigns an action to an object
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: ExecuteCommandAssignCommand @ 0x140510a50 (routine ID 6)
+        /// Located via function dispatch table: CNWSVirtualMachineCommands::InitializeCommands @ 0x14054de30
+        /// Original implementation (from decompiled 0x140510a50):
+        ///   - Pops object from stack (CVirtualMachine::StackPopObject)
+        ///   - Pops command script from stack (CVirtualMachine::StackPopCommand_Internal)
+        ///   - Gets CGameObject from object array
+        ///   - Calls CServerAIMaster::AddEventDeltaTime with delta time 0 (executes immediately)
+        ///   - Action type: DAT_140dfc148 (0x1 = ACTION_SCRIPT)
+        ///   - Uses execution context's caller ObjectId (from this+0xc)
+        /// Function signature: void AssignCommand(object oActionSubject, action aActionToAssign)
+        /// Common across all engines: Odyssey, Aurora, Eclipse all use action queue system
+        /// </remarks>
+        protected Variable Func_AssignCommand(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // Based on nwmain.exe: ExecuteCommandAssignCommand @ 0x140510a50
+            // Original: Pops object and command script, adds to AI master with delta time 0
+            if (args.Count < 2)
+            {
+                return Variable.Void();
+            }
+
+            uint objectId = args[0].AsObjectId();
+            string scriptResRef = args[1].AsString();
+
+            if (objectId == ObjectInvalid || string.IsNullOrEmpty(scriptResRef))
+            {
+                return Variable.Void();
+            }
+
+            Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            if (entity == null)
+            {
+                return Variable.Void();
+            }
+
+            // Get action queue component and add action to execute script immediately
+            // Original implementation adds to AI master event queue with delta time 0
+            IActionQueueComponent actionQueue = entity.GetComponent<IActionQueueComponent>();
+            if (actionQueue != null)
+            {
+                // Create action to execute script (equivalent to ACTION_SCRIPT type 0x1)
+                var scriptAction = new ActionExecuteScript(scriptResRef, ctx);
+                actionQueue.Add(scriptAction);
+            }
+
+            return Variable.Void();
+        }
+
+        /// <summary>
+        /// DelayCommand(float fDelay, action aActionToDelay) - Delays an action by the specified time
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: ExecuteCommandDelayCommand @ 0x1405159a0 (routine ID 7)
+        /// Located via function dispatch table: CNWSVirtualMachineCommands::InitializeCommands @ 0x14054de30
+        /// Original implementation (from decompiled 0x1405159a0):
+        ///   - Pops float (delay in seconds) from stack (CVirtualMachine::StackPopFloat)
+        ///   - Pops command script from stack (CVirtualMachine::StackPopCommand_Internal)
+        ///   - Converts delay to calendar day and time of day using CWorldTimer
+        ///   - Calls CServerAIMaster::AddEventDeltaTime with calculated delta time
+        ///   - Uses execution context's caller ObjectId (from this+0xc)
+        /// Function signature: void DelayCommand(float fDelay, action aActionToDelay)
+        /// Common across all engines: Odyssey, Aurora, Eclipse all use delay scheduler system
+        /// </remarks>
+        protected Variable Func_DelayCommand(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // Based on nwmain.exe: ExecuteCommandDelayCommand @ 0x1405159a0
+            // Original: Pops float delay and command script, converts to calendar day/time, adds to AI master
+            if (args.Count < 2)
+            {
+                return Variable.Void();
+            }
+
+            float delay = args[0].AsFloat();
+            string scriptResRef = args[1].AsString();
+
+            if (delay < 0f || string.IsNullOrEmpty(scriptResRef))
+            {
+                return Variable.Void();
+            }
+
+            // Get the caller entity (original uses this+0xc for execution context's caller ObjectId)
+            Core.Interfaces.IEntity caller = ctx.Caller;
+            if (caller == null)
+            {
+                return Variable.Void();
+            }
+
+            // Schedule delayed script execution via delay scheduler
+            // Original implementation uses CServerAIMaster::AddEventDeltaTime with calculated calendar day/time
+            if (ctx.World != null && ctx.World.DelayScheduler != null)
+            {
+                ctx.World.DelayScheduler.Schedule(delay, () =>
+                {
+                    IScriptExecutor scriptExecutor = GetScriptExecutor(ctx);
+                    if (scriptExecutor != null)
+                    {
+                        scriptExecutor.ExecuteScript(scriptResRef, caller, ctx.Caller);
+                    }
+                });
+            }
+
+            return Variable.Void();
+        }
+
+        /// <summary>
+        /// ExecuteScript(string sScript, object oTarget = OBJECT_SELF) - Executes a script on a target
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: ExecuteCommandExecuteScript @ 0x14051d5c0 (routine ID 8)
+        /// Located via function dispatch table: CNWSVirtualMachineCommands::InitializeCommands @ 0x14054de30
+        /// Original implementation (from decompiled 0x14051d5c0):
+        ///   - Note: Original function is a stub that calls FUN_140c10370 (memory free function)
+        ///   - Actual script execution is handled by the NCS VM through ACTION opcode system
+        ///   - Script execution is synchronous and blocks until script completes
+        /// Function signature: void ExecuteScript(string sScript, object oTarget = OBJECT_SELF)
+        /// Common across all engines: Odyssey, Aurora, Eclipse all use script executor system
+        /// </remarks>
+        protected Variable Func_ExecuteScript(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // Based on nwmain.exe: ExecuteCommandExecuteScript @ 0x14051d5c0
+            // Original: Stub function, actual execution handled by script executor
+            if (args.Count < 1)
+            {
+                return Variable.Void();
+            }
+
+            string scriptResRef = args[0].AsString();
+            uint objectId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
+
+            if (string.IsNullOrEmpty(scriptResRef))
+            {
+                return Variable.Void();
+            }
+
+            Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            if (entity == null)
+            {
+                return Variable.Void();
+            }
+
+            // Execute script immediately via script executor
+            IScriptExecutor scriptExecutor = GetScriptExecutor(ctx);
+            if (scriptExecutor != null)
+            {
+                scriptExecutor.ExecuteScript(scriptResRef, entity, ctx.Triggerer);
+            }
+
+            return Variable.Void();
+        }
+
+        /// <summary>
+        /// ClearAllActions(int bClearCombatState = FALSE, object oTarget = OBJECT_SELF) - Clears all actions from an object
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: ExecuteCommandClearAllActions @ 0x140511df0 (routine ID 9)
+        /// Located via function dispatch table: CNWSVirtualMachineCommands::InitializeCommands @ 0x14054de30
+        /// Original implementation (from decompiled 0x140511df0):
+        ///   - Pops optional integer (bClearCombatState flag) from stack (CVirtualMachine::StackPopInteger)
+        ///   - Pops optional object from stack (CVirtualMachine::StackPopObject), defaults to execution context caller
+        ///   - Gets CGameObject from object array
+        ///   - Calls CNWSObject::ClearAllActions to clear action queue
+        ///   - If object is CNWSCreature and bClearCombatState is true, calls CNWSCreature::SetCombatState(0)
+        ///   - Clears various object references (combat target, movement target, etc.) if set
+        /// Function signature: void ClearAllActions(int bClearCombatState = FALSE, object oTarget = OBJECT_SELF)
+        /// Common across all engines: Odyssey, Aurora, Eclipse all use action queue component system
+        /// </remarks>
+        protected Variable Func_ClearAllActions(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // Based on nwmain.exe: ExecuteCommandClearAllActions @ 0x140511df0
+            // Original: Pops optional clear combat flag and object, clears all actions, optionally clears combat state
+            int clearCombatState = args.Count > 0 ? args[0].AsInt() : 0;
+            uint objectId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
+
+            Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            if (entity == null)
+            {
+                return Variable.Void();
+            }
+
+            // Clear all actions from action queue
+            IActionQueueComponent actionQueue = entity.GetComponent<IActionQueueComponent>();
+            if (actionQueue != null)
+            {
+                actionQueue.Clear();
+            }
+
+            // If clearCombatState is true, clear combat state (original checks if object is CNWSCreature)
+            // Note: Combat state clearing would be handled by combat system if available
+            // Original implementation calls CNWSCreature::SetCombatState(0) if object is a creature
+            if (clearCombatState != 0)
+            {
+                // Combat state clearing would be implemented by engine-specific combat system
+                // For now, actions are cleared which effectively stops combat actions
+            }
+
+            return Variable.Void();
+        }
+
+        /// <summary>
+        /// SetFacing(float fDirection, object oTarget = OBJECT_SELF) - Sets the facing direction of an object
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: ExecuteCommandSetFacing @ 0x140541400 (routine ID 10)
+        /// Located via function dispatch table: CNWSVirtualMachineCommands::InitializeCommands @ 0x14054de30
+        /// Original implementation (from decompiled 0x140541400):
+        ///   - If param_1 == 10 (routine ID 10): Pops float (facing angle in degrees) from stack
+        ///   - If param_1 == 0x8f: Pops vector (target location) from stack, calculates facing from position to vector
+        ///   - Pops optional object from stack (CVirtualMachine::StackPopObject), defaults to execution context caller
+        ///   - Gets CGameObject from object array
+        ///   - Converts facing angle to direction vector (normalized Vector2)
+        ///   - Calls CNWSObject::SetOrientation or CNWSPlaceable::SetOrientation to set facing
+        ///   - Facing is stored as normalized direction vector (X, Y components, Z is typically 0)
+        /// Function signature: void SetFacing(float fDirection, object oTarget = OBJECT_SELF)
+        /// - fDirection: Facing angle in degrees (0 = East, 90 = North, 180 = West, 270 = South)
+        /// Common across all engines: Odyssey, Aurora, Eclipse all use transform component system
+        /// </remarks>
+        protected Variable Func_SetFacing(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // Based on nwmain.exe: ExecuteCommandSetFacing @ 0x140541400
+            // Original: Pops float (facing angle in degrees) or vector, and optional object, sets facing direction
+            if (args.Count < 1)
+            {
+                return Variable.Void();
+            }
+
+            float facingDegrees = args[0].AsFloat();
+            uint objectId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
+
+            Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            if (entity == null)
+            {
+                return Variable.Void();
+            }
+
+            // Convert facing angle from degrees to radians
+            // Original engines store facing as normalized direction vector, but our transform uses radians
+            float facingRadians = facingDegrees * (float)Math.PI / 180f;
+
+            // Normalize to 0-2π range (handle negative angles and angles > 360)
+            while (facingRadians < 0f)
+            {
+                facingRadians += 2f * (float)Math.PI;
+            }
+            while (facingRadians >= 2f * (float)Math.PI)
+            {
+                facingRadians -= 2f * (float)Math.PI;
+            }
+
+            // Set facing via transform component
+            ITransformComponent transform = entity.GetComponent<ITransformComponent>();
+            if (transform != null)
+            {
+                transform.Facing = facingRadians;
+            }
+
+            return Variable.Void();
+        }
+
+        /// <summary>
+        /// Gets the script executor from the execution context.
+        /// </summary>
+        /// <remarks>
+        /// Helper method to access script executor for ExecuteScript functionality.
+        /// Script executor is typically available through the world or engine API.
+        /// </remarks>
+        private IScriptExecutor GetScriptExecutor(IExecutionContext ctx)
+        {
+            if (ctx == null || ctx.World == null)
+            {
+                return null;
+            }
+
+            // Try to get script executor from world (engine-specific implementations provide this)
+            // Fallback: Use reflection to find ExecuteScript method if direct access not available
+            System.Reflection.PropertyInfo scriptExecutorProp = ctx.World.GetType().GetProperty("ScriptExecutor");
+            if (scriptExecutorProp != null)
+            {
+                return scriptExecutorProp.GetValue(ctx.World) as IScriptExecutor;
+            }
+
+            // Alternative: Check if world has ExecuteScript method directly
+            System.Reflection.MethodInfo executeMethod = ctx.World.GetType().GetMethod("ExecuteScript", 
+                new System.Type[] { typeof(string), typeof(Core.Interfaces.IEntity), typeof(Core.Interfaces.IEntity) });
+            if (executeMethod != null)
+            {
+                // Return a wrapper that delegates to the world's ExecuteScript method
+                return new ScriptExecutorWrapper(ctx.World, executeMethod);
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Wrapper class to adapt world's ExecuteScript method to IScriptExecutor interface.
+        /// </summary>
+        private class ScriptExecutorWrapper : IScriptExecutor
+        {
+            private readonly Core.Interfaces.IWorld _world;
+            private readonly System.Reflection.MethodInfo _executeMethod;
+
+            public ScriptExecutorWrapper(Core.Interfaces.IWorld world, System.Reflection.MethodInfo executeMethod)
+            {
+                _world = world;
+                _executeMethod = executeMethod;
+            }
+
+            public int ExecuteScript(string scriptResRef, Core.Interfaces.IEntity owner, Core.Interfaces.IEntity triggerer)
+            {
+                if (_executeMethod != null)
+                {
+                    object result = _executeMethod.Invoke(_world, new object[] { scriptResRef, owner, triggerer });
+                    return result != null ? (int)result : 0;
+                }
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// Action class for executing scripts via action queue.
+        /// </summary>
+        /// <remarks>
+        /// Internal action class used by AssignCommand to queue script execution.
+        /// Based on nwmain.exe: ACTION_SCRIPT type (0x1) in action queue system.
+        /// </remarks>
+        /// <summary>
+        /// Action class for executing scripts via action queue.
+        /// </summary>
+        /// <remarks>
+        /// Internal action class used by AssignCommand to queue script execution.
+        /// Based on nwmain.exe: ACTION_SCRIPT type (0x1) in action queue system.
+        /// </remarks>
+        private class ActionExecuteScript : ActionBase
+        {
+            private readonly string _scriptResRef;
+            private readonly IExecutionContext _context;
+            private bool _executed;
+
+            public ActionExecuteScript(string scriptResRef, IExecutionContext context)
+                : base(ActionType.DoCommand)
+            {
+                _scriptResRef = scriptResRef;
+                _context = context;
+                _executed = false;
+            }
+
+            public override ActionStatus Update(IEntity entity, float deltaTime)
+            {
+                if (!_executed && !string.IsNullOrEmpty(_scriptResRef))
+                {
+                    IScriptExecutor scriptExecutor = GetScriptExecutorInternal(_context);
+                    if (scriptExecutor != null)
+                    {
+                        scriptExecutor.ExecuteScript(_scriptResRef, entity, _context.Caller);
+                    }
+                    _executed = true;
+                }
+                return _executed ? ActionStatus.Complete : ActionStatus.InProgress;
+            }
+
+            private IScriptExecutor GetScriptExecutorInternal(IExecutionContext ctx)
+            {
+                if (ctx == null || ctx.World == null)
+                {
+                    return null;
+                }
+
+                System.Reflection.PropertyInfo scriptExecutorProp = ctx.World.GetType().GetProperty("ScriptExecutor");
+                if (scriptExecutorProp != null)
+                {
+                    return scriptExecutorProp.GetValue(ctx.World) as IScriptExecutor;
+                }
+
+                System.Reflection.MethodInfo executeMethod = ctx.World.GetType().GetMethod("ExecuteScript", 
+                    new System.Type[] { typeof(string), typeof(IEntity), typeof(IEntity) });
+                if (executeMethod != null)
+                {
+                    return new ScriptExecutorWrapper(ctx.World, executeMethod);
+                }
+
+                return null;
+            }
         }
 
         protected Core.Interfaces.IEntity ResolveObject(uint objectId, IExecutionContext ctx)
