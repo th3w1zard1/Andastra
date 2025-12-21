@@ -697,11 +697,39 @@ namespace Andastra.Runtime.MonoGame.Backends
             _resources.Clear();
 
             // Release sampler descriptor heap if it was created
-            // Note: In D3D12, descriptor heaps are COM objects and need to be released via Release()
-            // However, since we're using IntPtr, we would need to call Release() through COM vtable
-            // For now, we just clear the handle - the backend may handle cleanup
-            // TODO: Implement proper COM Release() call for descriptor heap if needed
-            _samplerDescriptorHeap = IntPtr.Zero;
+            // Note: In D3D12, descriptor heaps are COM objects (ID3D12DescriptorHeap) and need to be released via IUnknown::Release()
+            // Based on DirectX 12 Descriptor Heap Management: https://docs.microsoft.com/en-us/windows/win32/direct3d12/descriptor-heaps
+            // Descriptor heaps are COM objects that must be properly released to prevent memory leaks
+            if (_samplerDescriptorHeap != IntPtr.Zero)
+            {
+                try
+                {
+                    // Release the COM object through IUnknown::Release() vtable call
+                    // This decrements the reference count and frees the object when count reaches zero
+                    uint refCount = ReleaseComObject(_samplerDescriptorHeap);
+                    if (refCount > 0)
+                    {
+                        Console.WriteLine($"[D3D12Device] Descriptor heap still has {refCount} references after Release()");
+                    }
+                    else
+                    {
+                        Console.WriteLine("[D3D12Device] Successfully released sampler descriptor heap");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Log error but continue cleanup - don't throw from Dispose
+                    Console.WriteLine($"[D3D12Device] Error releasing sampler descriptor heap: {ex.Message}");
+                    Console.WriteLine($"[D3D12Device] Stack trace: {ex.StackTrace}");
+                }
+                finally
+                {
+                    // Always clear the handle even if Release() failed
+                    _samplerDescriptorHeap = IntPtr.Zero;
+                }
+            }
+            
+            // Clear descriptor heap state
             _samplerHeapCpuStartHandle = IntPtr.Zero;
             _samplerHeapDescriptorIncrementSize = 0;
             _samplerHeapCapacity = 0;
