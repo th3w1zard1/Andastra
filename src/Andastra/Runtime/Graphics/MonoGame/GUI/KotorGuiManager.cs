@@ -1372,7 +1372,7 @@ namespace Andastra.Runtime.MonoGame.GUI
             else
             {
                 // Render solid color background
-                Color bgColor = checkBox.Color;
+                ParsingColor bgColor = checkBox.Color;
                 if (bgColor.A > 0)
                 {
                     Texture2D pixel = GetPixelTexture();
@@ -1462,7 +1462,7 @@ namespace Andastra.Runtime.MonoGame.GUI
 
                 // Draw checkmark using pixel texture
                 Texture2D pixel = GetPixelTexture();
-                Color checkmarkColor = Microsoft.Xna.Framework.Color.White;
+                XnaColor checkmarkColor = Microsoft.Xna.Framework.Color.White;
 
                 // Draw line 1 (bottom-left to center)
                 DrawLine(pixel, point1, point2, lineThickness, checkmarkColor);
@@ -1478,7 +1478,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         private void DrawLine(Texture2D pixel, XnaVector2 start, XnaVector2 end, float thickness, XnaColor color)
         {
             // Calculate line properties
-            Vector2 direction = end - start;
+            XnaVector2 direction = end - start;
             float length = direction.Length();
 
             if (length <= 0)
@@ -1487,7 +1487,7 @@ namespace Andastra.Runtime.MonoGame.GUI
             }
 
             // Normalize direction
-            direction = Vector2.Normalize(direction);
+            direction = XnaVector2.Normalize(direction);
 
             // Calculate angle for rotation
             float angle = (float)Math.Atan2(direction.Y, direction.X);
@@ -1577,8 +1577,8 @@ namespace Andastra.Runtime.MonoGame.GUI
             bool isHorizontal = slider.Direction == null || slider.Direction == "horizontal" || slider.Direction == "0";
 
             // Calculate thumb position and size
-            Vector2 thumbPosition;
-            Vector2 thumbSize;
+            XnaVector2 thumbPosition;
+            XnaVector2 thumbSize;
 
             if (isHorizontal)
             {
@@ -1610,7 +1610,7 @@ namespace Andastra.Runtime.MonoGame.GUI
             // For now, use the calculated position (can be enhanced with alignment support)
 
             // Render thumb texture
-            Color thumbTint = Microsoft.Xna.Framework.Color.White;
+            XnaColor thumbTint = Microsoft.Xna.Framework.Color.White;
 
             // Apply rotation if specified (typically unused, but support it)
             float rotation = 0.0f;
@@ -1640,7 +1640,7 @@ namespace Andastra.Runtime.MonoGame.GUI
             {
                 // Render with rotation
                 XnaVector2 thumbOrigin = new XnaVector2(thumbTexture.Width / 2.0f, thumbTexture.Height / 2.0f);
-                Vector2 thumbCenter = thumbPosition + thumbSize / 2.0f;
+                XnaVector2 thumbCenter = thumbPosition + thumbSize / 2.0f;
 
                 _spriteBatch.Draw(
                     thumbTexture,
@@ -1649,7 +1649,7 @@ namespace Andastra.Runtime.MonoGame.GUI
                     thumbTint,
                     rotation,
                     thumbOrigin,
-                    new Vector2(thumbSize.X / thumbTexture.Width, thumbSize.Y / thumbTexture.Height),
+                    new XnaVector2(thumbSize.X / thumbTexture.Width, thumbSize.Y / thumbTexture.Height),
                     spriteEffects,
                     0.0f);
             }
@@ -1658,11 +1658,11 @@ namespace Andastra.Runtime.MonoGame.GUI
                 // Render without rotation (simpler and faster)
                 _spriteBatch.Draw(
                     thumbTexture,
-                    new Rectangle((int)thumbPosition.X, (int)thumbPosition.Y, (int)thumbSize.X, (int)thumbSize.Y),
+                    new XnaRectangle((int)thumbPosition.X, (int)thumbPosition.Y, (int)thumbSize.X, (int)thumbSize.Y),
                     null,
                     thumbTint,
                     0.0f,
-                    Vector2.Zero,
+                    XnaVector2.Zero,
                     spriteEffects,
                     0.0f);
             }
@@ -1922,7 +1922,7 @@ namespace Andastra.Runtime.MonoGame.GUI
                     _spriteBatch.Draw(
                         fontTexture,
                         new XnaRectangle((int)currentX, (int)currentY, (int)g.Width, (int)g.Height),
-                        new Rectangle(g.SourceX, g.SourceY, g.SourceWidth, g.SourceHeight),
+                        new XnaRectangle(g.SourceX, g.SourceY, g.SourceWidth, g.SourceHeight),
                         color);
 
                     currentX += g.Width + font.SpacingR;
