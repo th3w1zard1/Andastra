@@ -763,7 +763,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                     Debug($"DEBUG NcsToAstConverter: No entry stub pattern found at {globalsEnd}, entry stub ends at {entryStubEnd}");
                 }
 
-                // TODO:  CRITICAL: Ensure mainStart is ALWAYS after globals and entry stub
+                // CRITICAL: Ensure mainStart is ALWAYS after globals and entry stub
                 // If entryJsrTarget points to globals range (0 to entryStubEnd), ignore it
                 // Also ignore if entryJsrTarget points to the last RETN (likely wrong target)
                 // The last RETN is typically at instructions.Count - 1
@@ -806,8 +806,19 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 else if (alternativeMainStart >= 0)
                 {
                     // Use alternative main start from JSR at 0
-                    mainStart = alternativeMainStart;
-                    Debug($"DEBUG NcsToAstConverter: Using alternative mainStart {alternativeMainStart} (JSR at 0 target, entry JSR targets last RETN)");
+                    // CRITICAL: Ensure mainStart is ALWAYS after globals and entry stub
+                    // If alternativeMainStart is before entryStubEnd, we must use entryStubEnd instead
+                    // This ensures the invariant that mainStart >= entryStubEnd is maintained
+                    if (alternativeMainStart < entryStubEnd)
+                    {
+                        Debug($"DEBUG NcsToAstConverter: alternativeMainStart {alternativeMainStart} is before entryStubEnd {entryStubEnd}, correcting to entryStubEnd to ensure mainStart is after globals and entry stub");
+                        mainStart = entryStubEnd;
+                    }
+                    else
+                    {
+                        mainStart = alternativeMainStart;
+                        Debug($"DEBUG NcsToAstConverter: Using alternative mainStart {alternativeMainStart} (JSR at 0 target, entry JSR targets last RETN, after entry stub at {entryStubEnd})");
+                    }
                 }
                 else if (entryJsrTargetIsLastRetn2 && entryJsrTarget >= 0 && entryJsrTarget >= entryStubEnd)
                 {
@@ -824,21 +835,37 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                     {
                         // Only cleanup code after entry stub - main code is before entry stub (after globals initialization)
                         // Entry stub is just a wrapper, actual main code starts at SAVEBP+1
-                        mainStart = savebpIndex + 1;
-                        mainStartIsAfterSavebp = true; // Mark that mainStart was intentionally set to SAVEBP+1
-                        Debug($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} is last RETN, code after entry stub at {entryStubEnd} is cleanup code - entry stub is wrapper, main code starts at SAVEBP+1 ({mainStart})");
+                        // CRITICAL: However, mainStart must ALWAYS be after entryStubEnd, so if SAVEBP+1 is before entryStubEnd,
+                        // we must use entryStubEnd instead. This ensures mainStart is always after globals and entry stub.
+                        int potentialMainStart = savebpIndex + 1;
+                        if (potentialMainStart <= entryStubEnd)
+                        {
+                            // SAVEBP+1 is within globals/entry stub range - must use entryStubEnd instead
+                            mainStart = entryStubEnd;
+                            Debug($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} is last RETN, code after entry stub at {entryStubEnd} is cleanup code, but SAVEBP+1 ({potentialMainStart}) is before entryStubEnd ({entryStubEnd}) - using entryStubEnd as mainStart to ensure it's after globals and entry stub");
+                        }
+                        else
+                        {
+                            // SAVEBP+1 is after entry stub - safe to use it
+                            mainStart = potentialMainStart;
+                            mainStartIsAfterSavebp = true; // Mark that mainStart was intentionally set to SAVEBP+1
+                            Debug($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} is last RETN, code after entry stub at {entryStubEnd} is cleanup code - entry stub is wrapper, main code starts at SAVEBP+1 ({mainStart})");
+                        }
                     }
                     else
                     {
                         // There's actual main code after entry stub - use entryStubEnd as mainStart
                         // This handles cases where entry stub wraps main but main code continues after stub
+                        // CRITICAL: entryStubEnd is exactly the boundary, so we use it as mainStart (it's the first instruction after the stub)
                         mainStart = entryStubEnd;
                         Debug($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} is last RETN, code after entry stub at {entryStubEnd} is real main code - using entryStubEnd ({mainStart}) as mainStart");
                     }
                 }
                 else
                 {
-                    // TODO:  entryJsrTarget is invalid, points to globals, or points to last RETN before entry stub - use entryStubEnd
+                    // entryJsrTarget is invalid, points to globals, or points to last RETN before entry stub - use entryStubEnd
+                    // CRITICAL: entryStubEnd is exactly the boundary between globals/entry stub and main code
+                    // This ensures mainStart is always at or after the entry stub end
                     mainStart = entryStubEnd;
                     if (entryJsrTargetIsLastRetn)
                     {
@@ -849,10 +876,29 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                         Debug($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} invalid or in globals range, using entryStubEnd {entryStubEnd} as mainStart");
                     }
                 }
+
+                // CRITICAL VALIDATION: Ensure mainStart is ALWAYS after globals and entry stub (>= entryStubEnd)
+                // This is a final safety check to guarantee the invariant after all assignment paths
+                if (mainStart < entryStubEnd)
+                {
+                    Debug($"DEBUG NcsToAstConverter: WARNING - mainStart ({mainStart}) is before entryStubEnd ({entryStubEnd}), correcting to entryStubEnd to ensure it's after globals and entry stub");
+                    mainStart = entryStubEnd;
+                }
+                else if (mainStart == entryStubEnd)
+                {
+                    // This is valid - entryStubEnd is the first instruction after the entry stub
+                    Debug($"DEBUG NcsToAstConverter: mainStart ({mainStart}) equals entryStubEnd ({entryStubEnd}) - this is correct (first instruction after entry stub)");
+                }
+                else
+                {
+                    Debug($"DEBUG NcsToAstConverter: mainStart ({mainStart}) is after entryStubEnd ({entryStubEnd}) - this is correct");
+                }
             }
             else
             {
                 // No SAVEBP - no globals, main starts at 0 or entryJsrTarget
+                // CRITICAL: In this case, there's no entry stub, so mainStart can be 0 or entryJsrTarget
+                // No validation needed here since there's no entry stub to be after
                 if (entryJsrTarget >= 0 && entryJsrTarget > 0)
                 {
                     mainStart = entryJsrTarget;
