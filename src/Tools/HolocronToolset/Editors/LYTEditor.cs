@@ -8,12 +8,18 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
 using Andastra.Parsing;
-using Andastra.Parsing.Formats.LYT;
-using Andastra.Parsing.Formats.MDL;
-using Andastra.Parsing.Formats.TPC;
+using Andastra.Parsing.Formats.MDLData;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Tools;
 using HolocronToolset.Data;
+using Andastra.Parsing.Resource.Formats.LYT;
+using Andastra.Parsing.Formats.MDLData;
+using MDLAuto = Andastra.Parsing.Formats.MDL.MDLAuto;
+using ResRef = Andastra.Parsing.Common.ResRef;
+using TPCAuto = Andastra.Parsing.Formats.TPC.TPCAuto;
+using TPC = Andastra.Parsing.Formats.TPC.TPC;
+using TPCMipmap = Andastra.Parsing.Formats.TPC.TPCMipmap;
+using TPCBinaryWriter = Andastra.Parsing.Formats.TPC.TPCBinaryWriter;
 
 namespace HolocronToolset.Editors
 {
@@ -76,7 +82,7 @@ namespace HolocronToolset.Editors
         // Original: def add_room(self):
         public void AddRoom()
         {
-            var room = new LYTRoom("default_room", new Vector3(0, 0, 0));
+            var room = new LYTRoom(new ResRef("default_room"), new Vector3(0, 0, 0));
             _lyt.Rooms.Add(room);
             UpdateScene();
         }
@@ -90,7 +96,7 @@ namespace HolocronToolset.Editors
                 return;
             }
 
-            var track = new LYTTrack("default_track", new Vector3(0, 0, 0));
+            var track = new LYTTrack(new ResRef("default_track"), new Vector3(0, 0, 0));
 
             // Find path through connected rooms
             var startRoom = _lyt.Rooms[0];
@@ -120,7 +126,7 @@ namespace HolocronToolset.Editors
             }
 
             // Simple pathfinding - check if rooms are connected
-            if (start.Connections.Contains(end))
+            if (start.Connections != null && start.Connections.Contains(end))
             {
                 return new List<LYTRoom> { start, end };
             }
@@ -145,17 +151,15 @@ namespace HolocronToolset.Editors
                     return path;
                 }
 
-                foreach (var nextRoom in currentRoom.Connections)
+                if (currentRoom.Connections != null)
                 {
-                    if (visited.Contains(nextRoom))
+                    foreach (var nextRoom in currentRoom.Connections.Where(conn => !visited.Contains(conn)))
                     {
-                        continue;
+                        visited.Add(nextRoom);
+                        var newPath = new List<LYTRoom>(path) { nextRoom };
+                        var priority = newPath.Count + (nextRoom.Position - end.Position).Length();
+                        queue.Add(Tuple.Create(priority, nextRoom, newPath));
                     }
-
-                    visited.Add(nextRoom);
-                    var newPath = new List<LYTRoom>(path) { nextRoom };
-                    var priority = newPath.Count + (nextRoom.Position - end.Position).Length();
-                    queue.Add(Tuple.Create(priority, nextRoom, newPath));
                 }
             }
 
@@ -166,7 +170,7 @@ namespace HolocronToolset.Editors
         // Original: def add_obstacle(self):
         public void AddObstacle()
         {
-            var obstacle = new LYTObstacle("default_obstacle", new Vector3(0, 0, 0));
+            var obstacle = new LYTObstacle(new ResRef("default_obstacle"), new Vector3(0, 0, 0));
             _lyt.Obstacles.Add(obstacle);
             UpdateScene();
         }
@@ -659,7 +663,7 @@ namespace HolocronToolset.Editors
                     bool modelExists = false;
                     foreach (var room in _lyt.Rooms)
                     {
-                        if (room.Model.Equals(targetResref, StringComparison.OrdinalIgnoreCase))
+                        if (room.Model == new Andastra.Parsing.Common.ResRef(targetResref))
                         {
                             modelExists = true;
                             break;
@@ -670,7 +674,7 @@ namespace HolocronToolset.Editors
                     {
                         // Add a new room entry with the imported model at origin
                         // User can reposition it later in the editor
-                        var newRoom = new LYTRoom(targetResref, new Vector3(0, 0, 0));
+                        var newRoom = new LYTRoom(new Andastra.Parsing.Common.ResRef(targetResref), new Vector3(0, 0, 0));
                         _lyt.Rooms.Add(newRoom);
                         System.Console.WriteLine($"Added room entry for imported model: {targetResref} at position (0, 0, 0)");
                         UpdateScene();
