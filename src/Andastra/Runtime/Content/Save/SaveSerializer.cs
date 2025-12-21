@@ -2013,14 +2013,74 @@ namespace Andastra.Runtime.Content.Save
         }
 
         // Serialize repute (REPUTE.fac) - faction reputation
-        // Based on swkotor.exe: Repute is stored as a FAC file in savegame.sav
-        // Located via string reference: "REPUTE" @ (needs verification)
+        // Based on swkotor2.exe: Repute is stored as a FAC file in savegame.sav
+        // Located via string reference: "REPUTE" @ 0x007c290c (faction reputation field)
+        // Original implementation: REPUTE.fac contains faction relationships (FactionList and RepList)
+        // FAC structure: GFF with "FAC " signature containing:
+        //   - FactionList: List of factions (FactionName, FactionParentID, FactionGlobal)
+        //   - RepList: List of reputation entries (FactionID1, FactionID2, FactionRep)
+        // Reputation values: 0-100 range (0-10 = hostile, 11-89 = neutral, 90-100 = friendly)
+        // Engine reference: swkotor2.exe:0x005ad1a0 (RepList loading), swkotor2.exe:0x005acf30 (FactionList loading)
         private byte[] SerializeRepute(SaveGameData saveData)
         {
-            // TODO: STUB - Implement repute serialization
-            // Repute is stored as a FAC file with faction reputation data
-            // Need to serialize faction reputation from SaveGameData
-            return null;
+            if (saveData == null)
+            {
+                return null;
+            }
+
+            // Create FAC object for serialization
+            // NOTE: SaveGameData does not currently include faction reputation data.
+            // This implementation creates an empty FAC structure (valid GFF with empty lists).
+            // When SaveGameData is extended with reputation data, populate fac.Factions and fac.Reputations
+            // from SaveGameData before serializing.
+            var fac = new Andastra.Parsing.Resource.Generics.FAC();
+
+            // TODO: When SaveGameData includes faction reputation data, implement:
+            //   1. Populate fac.Factions from saveData.Factions (List<FactionData>)
+            //      - Each FactionData should have: Name (string), ParentId (int), IsGlobal (bool)
+            //      - Create FACFaction objects and add to fac.Factions
+            //   2. Populate fac.Reputations from saveData.FactionReputations (Dictionary<int, Dictionary<int, int>>)
+            //      - Key: FactionId1, Value: Dictionary<FactionId2, Reputation>
+            //      - Only serialize if Reputation != 100 (default value)
+            //      - Based on swkotor2.exe:0x005ad1a0 line 21 - engine only writes if != 100
+            //      - Create FACReputation objects and add to fac.Reputations
+            //
+            // Example implementation:
+            //   if (saveData.Factions != null)
+            //   {
+            //       foreach (var factionData in saveData.Factions)
+            //       {
+            //           fac.Factions.Add(new FACFaction
+            //           {
+            //               Name = factionData.Name ?? "",
+            //               ParentId = factionData.ParentId,
+            //               IsGlobal = factionData.IsGlobal
+            //           });
+            //       }
+            //   }
+            //   if (saveData.FactionReputations != null)
+            //   {
+            //       foreach (var kvp1 in saveData.FactionReputations)
+            //       {
+            //           foreach (var kvp2 in kvp1.Value)
+            //           {
+            //               if (kvp2.Value != 100)
+            //               {
+            //                   fac.Reputations.Add(new FACReputation
+            //                   {
+            //                       FactionId1 = kvp1.Key,
+            //                       FactionId2 = kvp2.Key,
+            //                       Reputation = kvp2.Value
+            //                   });
+            //               }
+            //           }
+            //       }
+            //   }
+
+            // Serialize FAC to bytes using FACHelpers
+            // Based on swkotor2.exe: FAC file format with "FAC " signature
+            // FACHelpers.BytesFac handles GFF serialization with correct content type
+            return Andastra.Parsing.Resource.Generics.FACHelpers.BytesFac(fac, ResourceType.FAC);
         }
 
         // Serialize cached characters (AVAILNPC*.utc) - companion character templates
