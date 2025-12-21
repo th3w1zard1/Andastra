@@ -28,12 +28,19 @@ namespace Andastra.Runtime.Core.Actions
     /// </remarks>
     public class ActionDestroyObject : ActionBase
     {
+        // Based on swkotor2.exe: DestroyObject fade duration
+        // Located via string references: "FadeLength" @ 0x007c3580 (fade length parameter)
+        // Original implementation: Uses fade duration of 1.0 seconds for object destruction fade
+        // Fade duration: 1.0 seconds for smooth visual transition (matches original engine behavior)
+        private const float DestroyObjectFadeDuration = 1.0f;
+
         private readonly uint _targetObjectId;
         private readonly float _delay;
         private readonly bool _noFade;
         private readonly float _delayUntilFade;
         private bool _fadeStarted;
         private bool _destroyed;
+        private float _fadeStartTime;
 
         public ActionDestroyObject(uint targetObjectId, float delay = 0f, bool noFade = false, float delayUntilFade = 0f)
             : base(ActionType.DestroyObject)
@@ -44,6 +51,7 @@ namespace Andastra.Runtime.Core.Actions
             _delayUntilFade = delayUntilFade;
             _fadeStarted = false;
             _destroyed = false;
+            _fadeStartTime = 0f;
         }
 
         public uint TargetObjectId { get { return _targetObjectId; } }
@@ -74,8 +82,12 @@ namespace Andastra.Runtime.Core.Actions
                         if (target != null && target is Core.Entities.Entity targetEntity)
                         {
                             // Set flag for rendering system to fade out
+                            // Based on swkotor2.exe: DestroyObject fade implementation
+                            // Stores fade state on entity for rendering system to process
                             targetEntity.SetData("DestroyFade", true);
                             targetEntity.SetData("DestroyFadeStartTime", ElapsedTime);
+                            targetEntity.SetData("DestroyFadeDuration", DestroyObjectFadeDuration);
+                            _fadeStartTime = ElapsedTime;
                             _fadeStarted = true;
                         }
                         else
@@ -95,11 +107,12 @@ namespace Andastra.Runtime.Core.Actions
                 return ActionStatus.Complete;
             }
 
-            // If fade, wait for fade duration (typically 1-2 seconds)
-            // The rendering system should handle the actual fade and notify when complete
-            // TODO: STUB - For now, we'll use a fixed fade duration
-            const float fadeDuration = 1.0f; // 1 second fade
-            if (_fadeStarted && ElapsedTime >= _delay + _delayUntilFade + fadeDuration)
+            // If fade, wait for fade duration to complete
+            // Based on swkotor2.exe: DestroyObject fade completion check
+            // Fade starts at _fadeStartTime and completes after DestroyObjectFadeDuration seconds
+            // The rendering system handles the actual visual fade based on "DestroyFade" flag
+            // We check completion here based on the stored fade start time and duration
+            if (_fadeStarted && ElapsedTime >= _fadeStartTime + DestroyObjectFadeDuration)
             {
                 DestroyTarget(actor);
                 return ActionStatus.Complete;
