@@ -196,6 +196,96 @@ namespace Andastra.Runtime.Games.Aurora
         }
 
         /// <summary>
+        /// Determines if a tile is walkable by checking its walkmesh for walkable surface materials.
+        /// </summary>
+        /// <param name="tilesetResRef">The tileset resource reference.</param>
+        /// <param name="tileId">The tile ID (index into tileset).</param>
+        /// <returns>True if the tile has at least one walkable face, false otherwise.</returns>
+        /// <remarks>
+        /// Based on nwmain.exe: CNWTileSurfaceMesh walkability determination
+        /// - Gets tile model from tileset
+        /// - Loads walkmesh (WOK file) for the tile model
+        /// - Checks if any faces have walkable surface materials
+        /// - A tile is walkable if at least one face has a walkable material
+        /// - Falls back to false if walkmesh can't be loaded (tile is not walkable)
+        /// - Based on nwmain.exe: CNWTileSet::GetTileData() validation and walkmesh face material checks
+        /// - Walkability is determined by surface material IDs matching walkable material set
+        /// - Surface materials are checked using SurfaceMaterialExtensions.Walkable() which matches
+        ///   the hardcoded walkable material list in the original engine
+        /// </remarks>
+        public bool GetTileWalkability(string tilesetResRef, int tileId)
+        {
+            if (tileId < 0)
+            {
+                return false; // Invalid tile ID - not walkable
+            }
+
+            // Get tile model from tileset
+            string modelName = GetTileModel(tilesetResRef, tileId);
+            if (string.IsNullOrEmpty(modelName))
+            {
+                return false; // No model - not walkable
+            }
+
+            try
+            {
+                // Load walkmesh (WOK file) for the tile model
+                // Walkmesh filename is model name with .wok extension
+                if (_resourceLoader == null)
+                {
+                    // No resource loader available - cannot determine walkability
+                    return false;
+                }
+
+                byte[] wokData = _resourceLoader(modelName + ".wok");
+                if (wokData == null || wokData.Length == 0)
+                {
+                    // Walkmesh not found - tile is not walkable
+                    return false;
+                }
+
+                // Parse walkmesh
+                BWM walkmesh = BWMAuto.ReadBwm(wokData);
+                if (walkmesh == null || walkmesh.Faces == null || walkmesh.Faces.Count == 0)
+                {
+                    // No walkmesh or no faces - tile is not walkable
+                    return false;
+                }
+
+                // Check if any face has a walkable surface material
+                // Based on nwmain.exe: CNWTileSurfaceMesh walkability checks
+                // The engine checks each face's material against the walkable material set
+                foreach (var face in walkmesh.Faces)
+                {
+                    if (face == null)
+                    {
+                        continue;
+                    }
+
+                    // Get surface material from face
+                    // Material is stored as SurfaceMaterial enum value
+                    SurfaceMaterial material = face.Material;
+
+                    // Check if material is walkable using SurfaceMaterialExtensions.Walkable()
+                    // This matches the hardcoded walkable material list in the original engine
+                    if (material.Walkable())
+                    {
+                        // Found at least one walkable face - tile is walkable
+                        return true;
+                    }
+                }
+
+                // No walkable faces found - tile is not walkable
+                return false;
+            }
+            catch
+            {
+                // Failed to load/parse walkmesh - tile is not walkable
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Gets the height of a tile by sampling from its walkmesh geometry.
         /// </summary>
         /// <param name="tilesetResRef">The tileset resource reference.</param>

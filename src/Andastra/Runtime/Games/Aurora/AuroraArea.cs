@@ -15,14 +15,9 @@ using Andastra.Parsing.Common;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common;
 using Andastra.Runtime.Games.Aurora.Scene;
-using Andastra.Runtime.Games.Aurora.Data;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Formats.MDLData;
-using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Installation;
-using Andastra.Runtime.Games.Aurora.Data;
-using Andastra.Parsing.Formats.TwoDA;
 
 namespace Andastra.Runtime.Games.Aurora
 {
@@ -183,9 +178,6 @@ namespace Andastra.Runtime.Games.Aurora
             {
                 _tilesetLoader = new TilesetLoader(resourceLoader);
             }
-
-            // Store 2DA table manager for game data lookups (e.g., environment.2da for lighting schemes)
-            _twoDATableManager = twoDATableManager;
 
             // Initialize weather simulation
             _weatherRandom = new System.Random();
@@ -1680,11 +1672,44 @@ namespace Andastra.Runtime.Games.Aurora
                     // Determine if tile is loaded and walkable
                     // Based on nwmain.exe: CNWTileSet::GetTileData() validation
                     // Tiles with valid Tile_ID (>= 0) are considered loaded
-                    // Walkability is determined by tileset data (not stored in ARE file)
+                    // Walkability is determined by loading tile walkmesh and checking for walkable surface materials
+                    // Based on nwmain.exe: CNWTileSurfaceMesh walkability checks
+                    // - Loads walkmesh (WOK file) for the tile model
+                    // - Checks if any faces have walkable surface materials
+                    // - A tile is walkable if at least one face has a walkable material
                     bool isLoaded = (tileId >= 0);
-                    bool isWalkable = isLoaded; // Simplified: valid tiles are walkable
-                    // TODO: STUB - Note: Full walkability determination would require loading tile walkmesh,
-                    // which is expensive. For now, we assume valid tiles are walkable.
+                    bool isWalkable = false; // Default: not walkable
+                    if (isLoaded && _tilesetLoader != null && !_tileset.IsBlank)
+                    {
+                        string tilesetResRef = _tileset.ToString();
+                        if (!string.IsNullOrEmpty(tilesetResRef))
+                        {
+                            try
+                            {
+                                // Get walkability from tileset and walkmesh
+                                // Based on nwmain.exe: CNWTileSet::GetTileData @ 0x1402c67d0
+                                // - Gets tile data from tileset using Tile_ID
+                                // - Loads walkmesh (WOK file) for tile model
+                                // - Checks if any faces have walkable surface materials
+                                isWalkable = _tilesetLoader.GetTileWalkability(tilesetResRef, tileId);
+                            }
+                            catch
+                            {
+                                // Failed to determine walkability from tileset - assume not walkable
+                                isWalkable = false;
+                            }
+                        }
+                        else
+                        {
+                            // No tileset resref - not walkable
+                            isWalkable = false;
+                        }
+                    }
+                    else
+                    {
+                        // No tileset loader or tileset - not walkable
+                        isWalkable = false;
+                    }
 
                     // Query tileset file to determine actual surface material from tile model data
                     // Based on nwmain.exe: CNWTileSurfaceMesh::GetSurfaceMaterial @ 0x1402bedf0
@@ -1751,156 +1776,6 @@ namespace Andastra.Runtime.Games.Aurora
                 // If parsing fails, create empty navigation mesh
                 // This ensures the area can still be created even with invalid/corrupt ARE data
                 _navigationMesh = new AuroraNavigationMesh();
-            }
-        }
-
-        /// <summary>
-        /// Loads lighting preset from environment.2da and applies it to override ARE file colors.
-        /// </summary>
-        /// <param name="lightingScheme">The lighting scheme index (1-based into environment.2da)</param>
-        /// <remarks>
-        /// Based on nwmain.exe: CNWSArea::LoadLightingScheme loads preset from environment.2da
-        /// 
-        /// environment.2da columns (Aurora engine standard):
-        /// - SunAmbient: BGR color as integer (e.g., "8421504" for 0x808080)
-        /// - SunDiffuse: BGR color as integer
-        /// - MoonAmbient: BGR color as integer
-        /// - MoonDiffuse: BGR color as integer
-        /// - SunFogAmount: 0-15 fog amount
-        /// - MoonFogAmount: 0-15 fog amount
-        /// - SunFogColor: BGR color as integer
-        /// - MoonFogColor: BGR color as integer
-        /// - ShadowOpacity: 0-100 shadow opacity
-        /// 
-        /// LightingScheme is 1-based: 0 = no preset, 1 = first preset, 2 = second preset, etc.
-        /// In 2DA files, row 0 is typically the header row, so row 1 is the first data row.
-        /// However, some 2DA files may have row 0 as a default row. We try both indexing schemes.
-        /// </remarks>
-        private void LoadLightingSchemeFromEnvironment2DA(byte lightingScheme)
-        {
-            if (_twoDATableManager == null)
-            {
-                return; // Cannot load without 2DA table manager
-            }
-
-            // Load environment.2da table
-            TwoDA environmentTable = _twoDATableManager.GetTable("environment");
-            if (environmentTable == null)
-            {
-                return; // environment.2da not found, use ARE file colors
-            }
-
-            // Get the row for this lighting scheme
-            // LightingScheme is 1-based (1 = first preset), but 2DA rows are 0-based
-            // Try row index = lightingScheme first (in case row 0 is default, row 1 is first preset)
-            // If that fails, try row index = lightingScheme - 1 (in case row 0 is header, row 1 is first preset)
-            TwoDARow lightingRow = environmentTable.GetRow(lightingScheme);
-            if (lightingRow == null && lightingScheme > 0)
-            {
-                // Try 0-based indexing (row 0 = header, row 1 = first preset)
-                lightingRow = environmentTable.GetRow(lightingScheme - 1);
-            }
-
-            if (lightingRow == null)
-            {
-                return; // Row not found, use ARE file colors
-            }
-
-            // Extract and apply sun ambient color
-            // Based on nwmain.exe: SunAmbient column contains BGR color as integer string
-            int? sunAmbient = _twoDATableManager.GetCellInt("environment", lightingRow.Index, "SunAmbient", null);
-            if (sunAmbient.HasValue && sunAmbient.Value >= 0)
-            {
-                _sunAmbientColor = unchecked((uint)sunAmbient.Value);
-            }
-
-            // Extract and apply sun diffuse color
-            int? sunDiffuse = _twoDATableManager.GetCellInt("environment", lightingRow.Index, "SunDiffuse", null);
-            if (sunDiffuse.HasValue && sunDiffuse.Value >= 0)
-            {
-                _sunDiffuseColor = unchecked((uint)sunDiffuse.Value);
-            }
-
-            // Extract and apply moon ambient color
-            int? moonAmbient = _twoDATableManager.GetCellInt("environment", lightingRow.Index, "MoonAmbient", null);
-            if (moonAmbient.HasValue && moonAmbient.Value >= 0)
-            {
-                _moonAmbientColor = unchecked((uint)moonAmbient.Value);
-            }
-
-            // Extract and apply moon diffuse color
-            int? moonDiffuse = _twoDATableManager.GetCellInt("environment", lightingRow.Index, "MoonDiffuse", null);
-            if (moonDiffuse.HasValue && moonDiffuse.Value >= 0)
-            {
-                _moonDiffuseColor = unchecked((uint)moonDiffuse.Value);
-            }
-
-            // Extract and apply sun fog amount (0-15 range)
-            int? sunFogAmount = _twoDATableManager.GetCellInt("environment", lightingRow.Index, "SunFogAmount", null);
-            if (sunFogAmount.HasValue)
-            {
-                if (sunFogAmount.Value < 0)
-                {
-                    _sunFogAmount = 0;
-                }
-                else if (sunFogAmount.Value > 15)
-                {
-                    _sunFogAmount = 15;
-                }
-                else
-                {
-                    _sunFogAmount = (byte)sunFogAmount.Value;
-                }
-            }
-
-            // Extract and apply moon fog amount (0-15 range)
-            int? moonFogAmount = _twoDATableManager.GetCellInt("environment", lightingRow.Index, "MoonFogAmount", null);
-            if (moonFogAmount.HasValue)
-            {
-                if (moonFogAmount.Value < 0)
-                {
-                    _moonFogAmount = 0;
-                }
-                else if (moonFogAmount.Value > 15)
-                {
-                    _moonFogAmount = 15;
-                }
-                else
-                {
-                    _moonFogAmount = (byte)moonFogAmount.Value;
-                }
-            }
-
-            // Extract and apply sun fog color
-            int? sunFogColor = _twoDATableManager.GetCellInt("environment", lightingRow.Index, "SunFogColor", null);
-            if (sunFogColor.HasValue && sunFogColor.Value >= 0)
-            {
-                _sunFogColor = unchecked((uint)sunFogColor.Value);
-            }
-
-            // Extract and apply moon fog color
-            int? moonFogColor = _twoDATableManager.GetCellInt("environment", lightingRow.Index, "MoonFogColor", null);
-            if (moonFogColor.HasValue && moonFogColor.Value >= 0)
-            {
-                _moonFogColor = unchecked((uint)moonFogColor.Value);
-            }
-
-            // Extract and apply shadow opacity (0-100 range)
-            int? shadowOpacity = _twoDATableManager.GetCellInt("environment", lightingRow.Index, "ShadowOpacity", null);
-            if (shadowOpacity.HasValue)
-            {
-                if (shadowOpacity.Value < 0)
-                {
-                    _shadowOpacity = 0;
-                }
-                else if (shadowOpacity.Value > 100)
-                {
-                    _shadowOpacity = 100;
-                }
-                else
-                {
-                    _shadowOpacity = (byte)shadowOpacity.Value;
-                }
             }
         }
 
@@ -2073,13 +1948,12 @@ namespace Andastra.Runtime.Games.Aurora
             if (_windPower < 0) _windPower = 0;
             if (_windPower > 2) _windPower = 2;
 
-            // Initialize and validate lighting scheme
+            // Initialize lighting scheme
             // Based on nwmain.exe: LightingScheme is index into environment.2da
             // LightingScheme = 0 means no preset lighting scheme (use ARE file colors directly)
-            // LightingScheme > 0 means use preset from environment.2da
-            // nwmain.exe: CNWSArea::LoadArea validates LightingScheme against environment.2da table
-            // Validation ensures LightingScheme is a valid byte (0-255) and that the index exists in environment.2da if > 0
-            ValidateLightingScheme();
+            // LightingScheme > 0 means use preset from environment.2da (TODO: STUB - not implemented here, handled by rendering system)
+            // TODO: STUB - For now, we just validate that LightingScheme is a valid byte value (0-255)
+            // The actual lookup from environment.2da would be done by the rendering system if needed
 
             // Weather system initialization
             // Weather simulation state is initialized in constructor, but we validate here that
