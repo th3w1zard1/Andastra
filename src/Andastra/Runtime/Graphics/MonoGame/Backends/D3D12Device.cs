@@ -84,6 +84,12 @@ namespace Andastra.Runtime.MonoGame.Backends
         private int _samplerHeapNextIndex;
         private const int DefaultSamplerHeapCapacity = 2048;
 
+        // Command signature cache for indirect execution
+        // Command signatures are expensive to create, so we cache them per device
+        private IntPtr _dispatchIndirectCommandSignature;
+        private IntPtr _drawIndirectCommandSignature;
+        private IntPtr _drawIndexedIndirectCommandSignature;
+
         public GraphicsCapabilities Capabilities
         {
             get { return _capabilities; }
@@ -857,6 +863,19 @@ namespace Andastra.Runtime.MonoGame.Backends
         private struct D3D12_GPU_DESCRIPTOR_HANDLE
         {
             public ulong ptr;
+        }
+
+        /// <summary>
+        /// D3D12_RECT structure for scissor rectangles.
+        /// Based on DirectX 12 Scissor Rects: https://docs.microsoft.com/en-us/windows/win32/api/windef/ns-windef-rect
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_RECT
+        {
+            public int left;   // LONG
+            public int top;    // LONG
+            public int right;  // LONG
+            public int bottom; // LONG
         }
 
         // COM interface method delegate for CopyTextureRegion
@@ -2810,6 +2829,10 @@ namespace Andastra.Runtime.MonoGame.Backends
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
             private delegate void ClearDepthStencilViewDelegate(IntPtr commandList, IntPtr DepthStencilView, uint ClearFlags, float Depth, byte Stencil, uint NumRects, IntPtr pRects);
 
+            // COM interface method delegate for RSSetScissorRects
+            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+            private delegate void RSSetScissorRectsDelegate(IntPtr commandList, uint NumRects, IntPtr pRects);
+
             /// <summary>
             /// Calls ID3D12GraphicsCommandList::ClearDepthStencilView through COM vtable.
             /// VTable index 48 for ID3D12GraphicsCommandList.
@@ -2840,13 +2863,146 @@ namespace Andastra.Runtime.MonoGame.Backends
                 clearDsv(commandList, DepthStencilView, ClearFlags, Depth, Stencil, NumRects, pRects);
             }
 
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::RSSetScissorRects through COM vtable.
+            /// VTable index 51 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Rasterizer State: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-rssetscissorrects
+            /// </summary>
+            private unsafe void CallRSSetScissorRects(IntPtr commandList, uint NumRects, IntPtr pRects)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // RSSetScissorRects is at index 51 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[51];
+
+                // Create delegate from function pointer
+                RSSetScissorRectsDelegate setScissorRects =
+                    (RSSetScissorRectsDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(RSSetScissorRectsDelegate));
+
+                setScissorRects(commandList, NumRects, pRects);
+            }
+
             public void UAVBarrier(ITexture texture) { /* TODO: UAVBarrier */ }
             public void UAVBarrier(IBuffer buffer) { /* TODO: UAVBarrier */ }
             public void SetGraphicsState(GraphicsState state) { /* TODO: Set all graphics state */ }
             public void SetViewport(Viewport viewport) { /* TODO: RSSetViewports */ }
             public void SetViewports(Viewport[] viewports) { /* TODO: RSSetViewports */ }
-            public void SetScissor(Rectangle scissor) { /* TODO: RSSetScissorRects */ }
-            public void SetScissors(Rectangle[] scissors) { /* TODO: RSSetScissorRects */ }
+            
+            /// <summary>
+            /// Sets a single scissor rectangle.
+            /// Converts Rectangle (X, Y, Width, Height) to D3D12_RECT (left, top, right, bottom).
+            /// Based on DirectX 12 Scissor Rectangles: https://docs.microsoft.com/en-us/windows/win32/direct3d12/scissor-rectangles
+            /// </summary>
+            public void SetScissor(Rectangle scissor)
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    return; // Command list not initialized
+                }
+
+                // Convert Rectangle to D3D12_RECT
+                // Rectangle uses (X, Y, Width, Height), D3D12_RECT uses (left, top, right, bottom)
+                D3D12_RECT d3d12Rect = new D3D12_RECT
+                {
+                    left = scissor.X,
+                    top = scissor.Y,
+                    right = scissor.X + scissor.Width,
+                    bottom = scissor.Y + scissor.Height
+                };
+
+                // Allocate unmanaged memory for the rect
+                int rectSize = Marshal.SizeOf(typeof(D3D12_RECT));
+                IntPtr rectPtr = Marshal.AllocHGlobal(rectSize);
+
+                try
+                {
+                    // Marshal structure to unmanaged memory
+                    Marshal.StructureToPtr(d3d12Rect, rectPtr, false);
+
+                    // Call RSSetScissorRects with a single rect
+                    CallRSSetScissorRects(_d3d12CommandList, 1, rectPtr);
+                }
+                finally
+                {
+                    // Free allocated memory
+                    Marshal.FreeHGlobal(rectPtr);
+                }
+            }
+
+            /// <summary>
+            /// Sets multiple scissor rectangles.
+            /// Converts Rectangle[] (X, Y, Width, Height) to D3D12_RECT[] (left, top, right, bottom).
+            /// Based on DirectX 12 Scissor Rectangles: https://docs.microsoft.com/en-us/windows/win32/direct3d12/scissor-rectangles
+            /// </summary>
+            public void SetScissors(Rectangle[] scissors)
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    return; // Command list not initialized
+                }
+
+                // Handle null or empty array
+                if (scissors == null || scissors.Length == 0)
+                {
+                    // Setting 0 rects disables scissor test for all viewports
+                    CallRSSetScissorRects(_d3d12CommandList, 0, IntPtr.Zero);
+                    return;
+                }
+
+                // Convert Rectangle[] to D3D12_RECT[]
+                // Rectangle uses (X, Y, Width, Height), D3D12_RECT uses (left, top, right, bottom)
+                int rectSize = Marshal.SizeOf(typeof(D3D12_RECT));
+                IntPtr rectsPtr = Marshal.AllocHGlobal(rectSize * scissors.Length);
+
+                try
+                {
+                    // Convert each rectangle and marshal to unmanaged memory
+                    IntPtr currentRectPtr = rectsPtr;
+                    for (int i = 0; i < scissors.Length; i++)
+                    {
+                        Rectangle scissor = scissors[i];
+                        D3D12_RECT d3d12Rect = new D3D12_RECT
+                        {
+                            left = scissor.X,
+                            top = scissor.Y,
+                            right = scissor.X + scissor.Width,
+                            bottom = scissor.Y + scissor.Height
+                        };
+
+                        Marshal.StructureToPtr(d3d12Rect, currentRectPtr, false);
+                        currentRectPtr = new IntPtr(currentRectPtr.ToInt64() + rectSize);
+                    }
+
+                    // Call RSSetScissorRects with all rects
+                    CallRSSetScissorRects(_d3d12CommandList, unchecked((uint)scissors.Length), rectsPtr);
+                }
+                finally
+                {
+                    // Free allocated memory
+                    Marshal.FreeHGlobal(rectsPtr);
+                }
+            }
             public void SetBlendConstant(Vector4 color) { /* TODO: OMSetBlendFactor */ }
             public void SetStencilRef(uint reference) { /* TODO: OMSetStencilRef */ }
             public void Draw(DrawArguments args) { /* TODO: DrawInstanced */ }
