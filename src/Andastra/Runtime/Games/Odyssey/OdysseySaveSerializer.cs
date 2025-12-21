@@ -7,6 +7,7 @@ using System.Text;
 using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
+using Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Games.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.ERF;
@@ -2461,8 +2462,22 @@ namespace Andastra.Runtime.Games.Odyssey
 
             // Extract effects component (active effects/buffs/debuffs)
             // Based on swkotor2.exe: FUN_005226d0 saves active effects on entities
-            // TODO: STUB - Note: Full implementation would require IEffectsComponent interface
-            // TODO: STUB - For now, we'll skip effects as they're not directly accessible via standard interfaces
+            // Extract active effects from entity using world's EffectSystem
+            if (entity.World != null && entity.World.EffectSystem != null)
+            {
+                var activeEffects = entity.World.EffectSystem.GetEffects(entity);
+                foreach (var activeEffect in activeEffects)
+                {
+                    if (activeEffect != null && activeEffect.Effect != null)
+                    {
+                        SavedEffect savedEffect = ConvertActiveEffectToSavedEffect(activeEffect);
+                        if (savedEffect != null)
+                        {
+                            entityState.ActiveEffects.Add(savedEffect);
+                        }
+                    }
+                }
+            }
 
             // Extract template ResRef if available
             // Based on swkotor2.exe: TemplateResRef is stored in entity's template data

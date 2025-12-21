@@ -847,10 +847,27 @@ namespace Andastra.Runtime.Games.Eclipse
                     writer.Write(statsComponent.GetAbilityModifier(Ability.Wisdom));
                     writer.Write(statsComponent.GetAbilityModifier(Ability.Charisma));
 
-                    // Serialize known spells (simplified - serialize spell IDs)
-                    // Note: In a full implementation, we would iterate through all possible spell IDs
-                    // TODO: STUB - For now, we serialize an empty count as a placeholder
-                    writer.Write(0); // Known spell count
+                    // Serialize known spells (spell IDs)
+                    // Based on daorigins.exe and DragonAge2.exe: Known spells/talents/abilities are serialized as spell ID list
+                    // Eclipse uses talents/abilities system instead of spells, but spell IDs map to talent/ability IDs
+                    // Spell IDs are row indices in spells.2da (or talents.2da/abilities.2da for Eclipse)
+                    var eclipseStats = statsComponent as Components.EclipseStatsComponent;
+                    if (eclipseStats != null)
+                    {
+                        // Get all known spells from the stats component
+                        var knownSpells = new List<int>(eclipseStats.GetKnownSpells());
+                        writer.Write(knownSpells.Count);
+                        foreach (int spellId in knownSpells)
+                        {
+                            writer.Write(spellId);
+                        }
+                    }
+                    else
+                    {
+                        // Fallback: If stats component doesn't support GetKnownSpells, serialize empty list
+                        // This can happen with other StatsComponent implementations that don't track spells
+                        writer.Write(0); // Known spell count
+                    }
                 }
 
                 // Serialize Inventory component
@@ -1278,10 +1295,14 @@ namespace Andastra.Runtime.Games.Eclipse
 
                     // Read known spells
                     int spellCount = reader.ReadInt32();
+                    var knownSpellIds = new List<int>();
                     for (int i = 0; i < spellCount; i++)
                     {
                         int spellId = reader.ReadInt32();
-                        // Would restore spell knowledge here if StatsComponent supported it
+                        if (spellId >= 0) // Validate spell ID (must be non-negative)
+                        {
+                            knownSpellIds.Add(spellId);
+                        }
                     }
 
                     var statsComponent = GetComponent<IStatsComponent>();
@@ -1305,7 +1326,16 @@ namespace Andastra.Runtime.Games.Eclipse
                             eclipseStats.WalkSpeed = walkSpeed;
                             eclipseStats.RunSpeed = runSpeed;
                             eclipseStats.Level = level;
+                            
+                            // Restore known spells/talents/abilities
+                            // Based on daorigins.exe and DragonAge2.exe: Known spells are restored from save data
+                            // Eclipse uses talents/abilities system instead of spells, but spell IDs map to talent/ability IDs
+                            foreach (int spellId in knownSpellIds)
+                            {
+                                eclipseStats.AddSpell(spellId);
+                            }
                         }
+                    }
                         // ArmorClass is read-only and calculated, so we can't set it directly
                         // It's calculated from base + modifiers + armor + effects
 

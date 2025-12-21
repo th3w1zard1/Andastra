@@ -123,15 +123,70 @@ namespace HolocronToolset.Editors
             {
                 AvaloniaXamlLoader.Load(this);
                 xamlLoaded = true;
+
+                // Try to find controls from XAML
+                _nameEdit = this.FindControl<LocalizedStringEdit>("nameEdit");
+                _tagEdit = this.FindControl<TextBox>("tagEdit");
+                _tagGenerateBtn = this.FindControl<Button>("tagGenerateBtn");
+                _resrefEdit = this.FindControl<TextBox>("resrefEdit");
+                _resrefGenerateBtn = this.FindControl<Button>("resrefGenerateBtn");
+                _appearanceSelect = this.FindControl<ComboBox>("appearanceSelect");
+                _conversationEdit = this.FindControl<TextBox>("conversationEdit");
+                _conversationModifyBtn = this.FindControl<Button>("conversationModifyBtn");
+                _min1HpCheckbox = this.FindControl<CheckBox>("min1HpCheckbox");
+                _plotCheckbox = this.FindControl<CheckBox>("plotCheckbox");
+                _staticCheckbox = this.FindControl<CheckBox>("staticCheckbox");
+                _notBlastableCheckbox = this.FindControl<CheckBox>("notBlastableCheckbox");
+                _factionSelect = this.FindControl<ComboBox>("factionSelect");
+                _animationStateSpin = this.FindControl<NumericUpDown>("animationStateSpin");
+                _currentHpSpin = this.FindControl<NumericUpDown>("currentHpSpin");
+                _maxHpSpin = this.FindControl<NumericUpDown>("maxHpSpin");
+                _hardnessSpin = this.FindControl<NumericUpDown>("hardnessSpin");
+                _fortitudeSpin = this.FindControl<NumericUpDown>("fortitudeSpin");
+                _reflexSpin = this.FindControl<NumericUpDown>("reflexSpin");
+                _willSpin = this.FindControl<NumericUpDown>("willSpin");
+                _needKeyCheckbox = this.FindControl<CheckBox>("needKeyCheckbox");
+                _removeKeyCheckbox = this.FindControl<CheckBox>("removeKeyCheckbox");
+                _keyEdit = this.FindControl<TextBox>("keyEdit");
+                _lockedCheckbox = this.FindControl<CheckBox>("lockedCheckbox");
+                _openLockSpin = this.FindControl<NumericUpDown>("openLockSpin");
+                _difficultySpin = this.FindControl<NumericUpDown>("difficultySpin");
+                _difficultyModSpin = this.FindControl<NumericUpDown>("difficultyModSpin");
+                _commentsEdit = this.FindControl<TextBox>("commentsEdit");
+
+                // Find script fields from XAML
+                string[] scriptNames = { "OnClick", "OnClosed", "OnDamaged", "OnDeath", "OnOpenFailed",
+                    "OnHeartbeat", "OnMelee", "OnOpen", "OnUnlock", "OnUserDefined", "OnPower" };
+                foreach (string scriptName in scriptNames)
+                {
+                    string controlName = scriptName.ToLowerInvariant() + "Edit";
+                    var scriptEdit = this.FindControl<TextBox>(controlName);
+                    if (scriptEdit != null)
+                    {
+                        _scriptFields[scriptName] = scriptEdit;
+                    }
+                }
+
+                // Set installation on LocalizedStringEdit if found
+                if (_nameEdit != null && _installation != null)
+                {
+                    _nameEdit.SetInstallation(_installation);
+                }
             }
             catch
             {
-                // XAML not available - will use programmatic UI
+                // XAML not available or controls not found - will use programmatic UI
+                xamlLoaded = false;
             }
 
             if (!xamlLoaded)
             {
                 SetupProgrammaticUI();
+            }
+            else
+            {
+                // XAML loaded, set up signals
+                SetupSignals();
             }
         }
 
@@ -304,11 +359,27 @@ namespace HolocronToolset.Editors
             Content = scrollViewer;
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:84-105
+        // Original: def _setup_signals(self):
+        private void SetupSignals()
+        {
+            // Wire up event handlers for buttons
+            if (_tagGenerateBtn != null)
+            {
+                _tagGenerateBtn.Click += (s, e) => GenerateTag();
+            }
+            if (_resrefGenerateBtn != null)
+            {
+                _resrefGenerateBtn.Click += (s, e) => GenerateResref();
+            }
+            if (_conversationModifyBtn != null)
+            {
+                _conversationModifyBtn.Click += (s, e) => EditConversation();
+            }
+        }
+
         private void SetupUI()
         {
-            // Try to find controls from XAML if available
-            // TODO: STUB - For now, programmatic UI is set up in SetupProgrammaticUI
-            
             if (_installation == null)
             {
                 return;

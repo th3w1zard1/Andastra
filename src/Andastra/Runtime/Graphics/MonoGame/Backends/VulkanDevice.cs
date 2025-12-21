@@ -597,6 +597,12 @@ namespace Andastra.Runtime.MonoGame.Backends
         private delegate void vkCmdDispatchDelegate(IntPtr commandBuffer, uint groupCountX, uint groupCountY, uint groupCountZ);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdDrawDelegate(IntPtr commandBuffer, uint vertexCount, uint instanceCount, uint firstVertex, uint firstInstance);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdDrawIndexedDelegate(IntPtr commandBuffer, uint indexCount, uint instanceCount, uint firstIndex, int vertexOffset, uint firstInstance);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkCmdBeginDebugUtilsLabelEXTDelegate(IntPtr commandBuffer, ref VkDebugUtilsLabelEXT pLabelInfo);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
@@ -2131,6 +2137,13 @@ namespace Andastra.Runtime.MonoGame.Backends
                 vkDestroyCommandPool(_device, _transferCommandPool, IntPtr.Zero);
             }
 
+            // Destroy descriptor pool
+            if (_descriptorPool != IntPtr.Zero)
+            {
+                vkDestroyDescriptorPool(_device, _descriptorPool, IntPtr.Zero);
+                Console.WriteLine("[VulkanDevice] Destroyed descriptor pool");
+            }
+
             // Note: We don't destroy _device here as it's owned by VulkanBackend
             // The backend will handle device cleanup in its Shutdown method
 
@@ -2447,6 +2460,14 @@ namespace Andastra.Runtime.MonoGame.Backends
                 Desc = desc;
                 _vkDescriptorSetLayout = vkDescriptorSetLayout;
                 _device = device;
+            }
+
+            /// <summary>
+            /// Gets the VkDescriptorSetLayout handle. Used internally for descriptor set allocation.
+            /// </summary>
+            internal IntPtr VkDescriptorSetLayout
+            {
+                get { return _vkDescriptorSetLayout; }
             }
 
             public void Dispose()
@@ -3088,6 +3109,14 @@ namespace Andastra.Runtime.MonoGame.Backends
         #endregion
     }
 }
+
+
+
+        #endregion
+    }
+}
+
+
 
 
 

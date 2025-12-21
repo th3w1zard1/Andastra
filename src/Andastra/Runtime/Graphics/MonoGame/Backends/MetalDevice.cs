@@ -1399,64 +1399,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 return;
             }
-
-            // Validate attachment index
-            if (framebuffer.Desc.ColorAttachments == null || attachmentIndex < 0 || attachmentIndex >= framebuffer.Desc.ColorAttachments.Length)
-            {
-                return;
-            }
-
-            // Get texture from framebuffer attachment
-            FramebufferAttachment attachment = framebuffer.Desc.ColorAttachments[attachmentIndex];
-            if (attachment.Texture == null)
-            {
-                return;
-            }
-
-            // Get native Metal texture handle
-            IntPtr textureHandle = attachment.Texture.NativeHandle;
-            if (textureHandle == IntPtr.Zero)
-            {
-                return;
-            }
-
-            // Create render pass descriptor for clearing
-            // Based on Metal API: MTLRenderPassDescriptor with LoadAction.Clear performs the clear operation
-            // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrenderpassdescriptor
-            // Clear operation is performed when render pass begins with LoadAction.Clear
-            IntPtr renderPassDescriptor = MetalNative.CreateRenderPassDescriptor();
-            if (renderPassDescriptor == IntPtr.Zero)
-            {
-                return;
-            }
-
-            try
-            {
-                // Convert Vector4 color (RGBA, 0-1 range) to MetalClearColor
-                // Metal clear colors are in [0, 1] range for normalized formats
-                MetalClearColor clearColor = new MetalClearColor(color.X, color.Y, color.Z, color.W);
-
-                // Set color attachment with LoadAction.Clear to perform the clear
-                // StoreAction.Store preserves the cleared contents
-                // Based on Metal API: SetRenderPassColorAttachment configures attachment for clear operation
-                MetalNative.SetRenderPassColorAttachment(renderPassDescriptor, (uint)attachmentIndex, textureHandle,
-                    MetalLoadAction.Clear, MetalStoreAction.Store, clearColor);
-
-                // Begin render pass - this executes the clear operation
-                // Based on Metal API: BeginRenderPass starts render pass and performs LoadAction (Clear in this case)
-                IntPtr renderCommandEncoder = MetalNative.BeginRenderPass(_handle, renderPassDescriptor);
-                if (renderCommandEncoder != IntPtr.Zero)
-                {
-                    // End render pass immediately after clear (no draw calls needed)
-                    // Based on Metal API: EndRenderPass completes the render pass and finalizes the clear
-                    MetalNative.EndRenderPass(renderCommandEncoder);
-                }
-            }
-            finally
-            {
-                // Release render pass descriptor
-                MetalNative.ReleaseRenderPassDescriptor(renderPassDescriptor);
-            }
+            // TODO: Implement color attachment clear
         }
 
         public void ClearDepthStencilAttachment(IFramebuffer framebuffer, float depth, byte stencil, bool clearDepth = true, bool clearStencil = true)
@@ -1873,7 +1816,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         public static extern void ReleaseEvent(IntPtr evt);
 
         [DllImport("/System/Library/Frameworks/Metal.framework/Metal")]
-        public static extern void WaitUntilCompleted(IntPtr commandQueue);
+        public static extern void WaitUntilCommandQueueCompleted(IntPtr commandQueue);
     }
 
     #endregion

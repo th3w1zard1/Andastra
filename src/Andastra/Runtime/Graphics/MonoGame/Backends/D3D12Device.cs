@@ -721,6 +721,10 @@ namespace Andastra.Runtime.MonoGame.Backends
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void ResourceBarrierDelegate(IntPtr commandList, uint numBarriers, IntPtr pBarriers);
 
+        // COM interface method delegate for Dispatch
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void DispatchDelegate(IntPtr commandList, uint threadGroupCountX, uint threadGroupCountY, uint threadGroupCountZ);
+
         /// <summary>
         /// Maps ResourceState enum to D3D12_RESOURCE_STATES flags.
         /// Based on DirectX 12 Resource States: https://docs.microsoft.com/en-us/windows/win32/direct3d12/using-resource-barriers-to-synchronize-resource-states-in-directx-12

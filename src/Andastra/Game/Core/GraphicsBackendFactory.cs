@@ -27,14 +27,33 @@ namespace Andastra.Runtime.Game.Core
         /// <returns>An instance of the graphics backend.</returns>
         public static IGraphicsBackend CreateBackend(GraphicsBackendType backendType)
         {
-            switch (backendType)
+            try
             {
-                case GraphicsBackendType.MonoGame:
+                switch (backendType)
+                {
+                    case GraphicsBackendType.MonoGame:
+                        return new Andastra.Runtime.MonoGame.Graphics.MonoGameGraphicsBackend();
+                    case GraphicsBackendType.Stride:
+                        return new Andastra.Runtime.Graphics.Stride.Graphics.StrideGraphicsBackend();
+                    default:
+                        throw new ArgumentException("Unknown graphics backend type: " + backendType, nameof(backendType));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to create {backendType} backend: {ex.Message}");
+                Console.WriteLine("Falling back to MonoGame backend...");
+
+                // Fallback to MonoGame
+                try
+                {
                     return new Andastra.Runtime.MonoGame.Graphics.MonoGameGraphicsBackend();
-                case GraphicsBackendType.Stride:
-                    return new Andastra.Runtime.Graphics.Stride.Graphics.StrideGraphicsBackend();
-                default:
-                    throw new ArgumentException("Unknown graphics backend type: " + backendType, nameof(backendType));
+                }
+                catch (Exception fallbackEx)
+                {
+                    Console.WriteLine($"Fallback to MonoGame also failed: {fallbackEx.Message}");
+                    throw new InvalidOperationException("No graphics backend available", fallbackEx);
+                }
             }
         }
     }

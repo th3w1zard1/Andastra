@@ -316,22 +316,22 @@ namespace Andastra.Runtime.MonoGame.Remix
             };
         }
 
+        private RemixDevice _remixDevice;
+
         public IDevice GetDevice()
         {
-            // TODO: STUB - Implement IDevice creation for RTX Remix
-            // RTX Remix provides path tracing via D3D9 interception, but does not expose
-            // a standard IDevice interface. This may need a custom RemixDevice wrapper
-            // that adapts Remix's API to the IDevice interface
-            // For now, return null as the device creation is not yet implemented
             if (!_remixActive || _device == IntPtr.Zero)
             {
                 return null;
             }
 
-            // TODO: STUB - Create and return actual IDevice implementation for Remix
-            // This will require implementing a RemixDevice class that wraps Remix's
-            // raytracing functionality and provides the IDevice interface
-            return null;
+            // Create RemixDevice instance if not already created
+            if (_remixDevice == null)
+            {
+                _remixDevice = new RemixDevice(_device, _capabilities, this);
+            }
+
+            return _remixDevice;
         }
 
         #region D3D9 Draw Commands
@@ -557,6 +557,642 @@ namespace Andastra.Runtime.MonoGame.Remix
         Point = 1,
         Spot = 2,
         Directional = 3
+    }
+
+    /// <summary>
+    /// RTX Remix device wrapper implementing IDevice interface.
+    /// 
+    /// RTX Remix works by intercepting D3D9 API calls and performing path tracing
+    /// behind the scenes. This device wrapper adapts the IDevice interface to work
+    /// with Remix's interception model.
+    /// 
+    /// Many modern features (raytracing pipelines, acceleration structures) are
+    /// handled automatically by Remix through D3D9 call interception, so these
+    /// methods are stubbed or return null.
+    /// </summary>
+    public class RemixDevice : IDevice
+    {
+        private readonly IntPtr _d3d9Device;
+        private readonly GraphicsCapabilities _capabilities;
+        private readonly Direct3D9Wrapper _wrapper;
+        private bool _disposed;
+
+        public GraphicsCapabilities Capabilities
+        {
+            get { return _capabilities; }
+        }
+
+        public GraphicsBackend Backend
+        {
+            get { return GraphicsBackend.Direct3D9Remix; }
+        }
+
+        public bool IsValid
+        {
+            get { return !_disposed && _d3d9Device != IntPtr.Zero; }
+        }
+
+        internal RemixDevice(IntPtr d3d9Device, GraphicsCapabilities capabilities, Direct3D9Wrapper wrapper)
+        {
+            if (d3d9Device == IntPtr.Zero)
+            {
+                throw new ArgumentException("D3D9 device handle must be valid", nameof(d3d9Device));
+            }
+
+            _d3d9Device = d3d9Device;
+            _capabilities = capabilities ?? throw new ArgumentNullException(nameof(capabilities));
+            _wrapper = wrapper ?? throw new ArgumentNullException(nameof(wrapper));
+        }
+
+        #region Resource Creation
+
+        public ITexture CreateTexture(TextureDesc desc)
+        {
+            if (!IsValid)
+            {
+                throw new ObjectDisposedException(nameof(RemixDevice));
+            }
+
+            // D3D9 texture creation via IDirect3DDevice9::CreateTexture
+            // Remix intercepts this call and creates path-traced textures
+            // For now, return a stub texture that wraps the D3D9 texture handle
+            // Full implementation would require COM interop with IDirect3DTexture9
+            
+            // TODO: IMPLEMENT - Create D3D9 texture via COM interop
+            // - Convert TextureDesc to D3D9 D3DFORMAT
+            // - Call IDirect3DDevice9::CreateTexture
+            // - Wrap in RemixTexture and return
+            
+            throw new NotImplementedException("D3D9 texture creation via COM interop not yet implemented");
+        }
+
+        public IBuffer CreateBuffer(BufferDesc desc)
+        {
+            if (!IsValid)
+            {
+                throw new ObjectDisposedException(nameof(RemixDevice));
+            }
+
+            // D3D9 buffer creation via IDirect3DDevice9::CreateVertexBuffer/IndexBuffer
+            // Remix intercepts these calls for geometry capture
+            // Full implementation would require COM interop
+            
+            // TODO: IMPLEMENT - Create D3D9 buffer via COM interop
+            // - Determine buffer type (vertex/index) from BufferDesc.Usage
+            // - Call IDirect3DDevice9::CreateVertexBuffer or CreateIndexBuffer
+            // - Wrap in RemixBuffer and return
+            
+            throw new NotImplementedException("D3D9 buffer creation via COM interop not yet implemented");
+        }
+
+        public ISampler CreateSampler(SamplerDesc desc)
+        {
+            if (!IsValid)
+            {
+                throw new ObjectDisposedException(nameof(RemixDevice));
+            }
+
+            // D3D9 samplers are set via IDirect3DDevice9::SetSamplerState
+            // No separate sampler objects in D3D9 - state is set directly on device
+            // Return a stub sampler that stores the state for later use
+            
+            // TODO: IMPLEMENT - Create RemixSampler that stores sampler state
+            // - Convert SamplerDesc to D3D9 sampler state values
+            // - Wrap in RemixSampler and return
+            
+            throw new NotImplementedException("D3D9 sampler creation not yet implemented");
+        }
+
+        public IShader CreateShader(ShaderDesc desc)
+        {
+            if (!IsValid)
+            {
+                throw new ObjectDisposedException(nameof(RemixDevice));
+            }
+
+            // D3D9 shaders are created via IDirect3DDevice9::CreateVertexShader/PixelShader
+            // Remix intercepts shader creation for material analysis
+            // Full implementation would require COM interop and shader bytecode conversion
+            
+            // TODO: IMPLEMENT - Create D3D9 shader via COM interop
+            // - Convert shader bytecode if needed (HLSL to D3D9 bytecode)
+            // - Call IDirect3DDevice9::CreateVertexShader or CreatePixelShader
+            // - Wrap in RemixShader and return
+            
+            throw new NotImplementedException("D3D9 shader creation via COM interop not yet implemented");
+        }
+
+        public IGraphicsPipeline CreateGraphicsPipeline(GraphicsPipelineDesc desc, IFramebuffer framebuffer)
+        {
+            if (!IsValid)
+            {
+                throw new ObjectDisposedException(nameof(RemixDevice));
+            }
+
+            // D3D9 doesn't have PSOs - state is set directly on device
+            // Remix captures state changes for path tracing
+            // Return a stub pipeline that stores state for later application
+            
+            // TODO: IMPLEMENT - Create RemixGraphicsPipeline that stores pipeline state
+            // - Store shaders, blend state, raster state, depth/stencil state
+            // - Apply state via IDirect3DDevice9::Set* methods when pipeline is bound
+            
+            throw new NotImplementedException("D3D9 graphics pipeline creation not yet implemented");
+        }
+
+        public IComputePipeline CreateComputePipeline(ComputePipelineDesc desc)
+        {
+            if (!IsValid)
+            {
+                throw new ObjectDisposedException(nameof(RemixDevice));
+            }
+
+            // D3D9 doesn't support compute shaders
+            throw new NotSupportedException("D3D9 does not support compute shaders");
+        }
+
+        public IFramebuffer CreateFramebuffer(FramebufferDesc desc)
+        {
+            if (!IsValid)
+            {
+                throw new ObjectDisposedException(nameof(RemixDevice));
+            }
+
+            // D3D9 render targets are set via IDirect3DDevice9::SetRenderTarget
+            // No separate framebuffer objects - state is set directly on device
+            // Return a stub framebuffer that stores render target configuration
+            
+            // TODO: IMPLEMENT - Create RemixFramebuffer that stores render target configuration
+            // - Store color attachments and depth attachment
+            // - Apply via IDirect3DDevice9::SetRenderTarget when framebuffer is bound
+            
+            throw new NotImplementedException("D3D9 framebuffer creation not yet implemented");
+        }
+
+        public IBindingLayout CreateBindingLayout(BindingLayoutDesc desc)
+        {
+            if (!IsValid)
+            {
+                throw new ObjectDisposedException(nameof(RemixDevice));
+            }
+
+            // D3D9 doesn't have binding layouts - resources are bound directly
+            // Return a stub layout for compatibility
+            
+            // TODO: IMPLEMENT - Create RemixBindingLayout that stores binding slots
+            // - Store binding information for later use in binding sets
+            
+            throw new NotImplementedException("D3D9 binding layout creation not yet implemented");
+        }
+
+        public IBindingSet CreateBindingSet(IBindingLayout layout, BindingSetDesc desc)
+        {
+            if (!IsValid)
+            {
+                throw new ObjectDisposedException(nameof(RemixDevice));
+            }
+
+            // D3D9 doesn't have binding sets - resources are bound directly
+            // Return a stub binding set for compatibility
+            
+            // TODO: IMPLEMENT - Create RemixBindingSet that stores resource bindings
+            // - Store textures, buffers, samplers for later binding
+            
+            throw new NotImplementedException("D3D9 binding set creation not yet implemented");
+        }
+
+        public ICommandList CreateCommandList(CommandListType type = CommandListType.Graphics)
+        {
+            if (!IsValid)
+            {
+                throw new ObjectDisposedException(nameof(RemixDevice));
+            }
+
+            // D3D9 doesn't have command lists - commands execute immediately
+            // Return a stub command list that records commands for later execution
+            // In practice, Remix intercepts D3D9 calls directly
+            
+            // TODO: IMPLEMENT - Create RemixCommandList that records D3D9 commands
+            // - Record commands for deferred execution
+            // - Execute via IDirect3DDevice9 methods when command list is executed
+            
+            throw new NotImplementedException("D3D9 command list creation not yet implemented");
+        }
+
+        public ITexture CreateHandleForNativeTexture(IntPtr nativeHandle, TextureDesc desc)
+        {
+            if (!IsValid)
+            {
+                throw new ObjectDisposedException(nameof(RemixDevice));
+            }
+
+            // Wrap an existing D3D9 texture handle (e.g., from swap chain)
+            // Remix can intercept rendering to this texture
+            
+            // TODO: IMPLEMENT - Create RemixTexture from existing D3D9 texture handle
+            // - Query IDirect3DTexture9 interface from native handle
+            // - Wrap in RemixTexture and return
+            
+            throw new NotImplementedException("D3D9 native texture handle wrapping not yet implemented");
+        }
+
+        #endregion
+
+        #region Raytracing Resources
+
+        public IAccelStruct CreateAccelStruct(AccelStructDesc desc)
+        {
+            if (!IsValid)
+            {
+                throw new ObjectDisposedException(nameof(RemixDevice));
+            }
+
+            // RTX Remix builds acceleration structures automatically from D3D9 geometry
+            // No explicit acceleration structure creation needed
+            // Return a stub that indicates Remix will handle it
+            
+            // TODO: IMPLEMENT - Create RemixAccelStruct stub
+            // - Remix builds AS from intercepted DrawPrimitive/DrawIndexedPrimitive calls
+            // - This is mainly for API compatibility
+            
+            throw new NotImplementedException("Remix acceleration structure creation handled automatically by interception");
+        }
+
+        public IRaytracingPipeline CreateRaytracingPipeline(RaytracingPipelineDesc desc)
+        {
+            if (!IsValid)
+            {
+                throw new ObjectDisposedException(nameof(RemixDevice));
+            }
+
+            // RTX Remix uses its own path tracing pipeline
+            // No explicit raytracing pipeline creation needed
+            // Return a stub that indicates Remix will handle it
+            
+            // TODO: IMPLEMENT - Create RemixRaytracingPipeline stub
+            // - Remix uses its own path tracing shaders
+            // - This is mainly for API compatibility
+            
+            throw new NotImplementedException("Remix raytracing pipeline handled automatically by interception");
+        }
+
+        #endregion
+
+        #region Command Execution
+
+        public void ExecuteCommandList(ICommandList commandList)
+        {
+            if (!IsValid)
+            {
+                throw new ObjectDisposedException(nameof(RemixDevice));
+            }
+
+            // D3D9 commands execute immediately, so this is a no-op
+            // Remix intercepts commands as they're issued
+            
+            // TODO: IMPLEMENT - Execute recorded commands from RemixCommandList
+            // - Play back recorded D3D9 commands via IDirect3DDevice9 methods
+            
+            throw new NotImplementedException("D3D9 command list execution not yet implemented");
+        }
+
+        public void ExecuteCommandLists(ICommandList[] commandLists)
+        {
+            if (!IsValid)
+            {
+                throw new ObjectDisposedException(nameof(RemixDevice));
+            }
+
+            // Execute multiple command lists
+            foreach (var cmdList in commandLists)
+            {
+                ExecuteCommandList(cmdList);
+            }
+        }
+
+        public void WaitIdle()
+        {
+            if (!IsValid)
+            {
+                throw new ObjectDisposedException(nameof(RemixDevice));
+            }
+
+            // D3D9: Wait for GPU to finish via IDirect3DQuery9
+            // TODO: IMPLEMENT - Create D3D9 query and wait for completion
+            // - Create IDirect3DQuery9 with D3DQUERYTYPE_EVENT
+            // - Issue query and wait for completion
+        }
+
+        public void Signal(IFence fence, ulong value)
+        {
+            if (!IsValid)
+            {
+                throw new ObjectDisposedException(nameof(RemixDevice));
+            }
+
+            // D3D9 doesn't have fences - use queries instead
+            throw new NotSupportedException("D3D9 does not support fences - use queries instead");
+        }
+
+        public void WaitFence(IFence fence, ulong value)
+        {
+            if (!IsValid)
+            {
+                throw new ObjectDisposedException(nameof(RemixDevice));
+            }
+
+            // D3D9 doesn't have fences - use queries instead
+            throw new NotSupportedException("D3D9 does not support fences - use queries instead");
+        }
+
+        #endregion
+
+        #region Queries
+
+        public int GetConstantBufferAlignment()
+        {
+            // D3D9 constant buffers are 16-byte aligned
+            return 16;
+        }
+
+        public int GetTextureAlignment()
+        {
+            // D3D9 textures are typically 4-byte aligned
+            return 4;
+        }
+
+        public bool IsFormatSupported(TextureFormat format, TextureUsage usage)
+        {
+            // D3D9 format support check via IDirect3D9::CheckDeviceFormat
+            // For now, return true for common formats
+            // TODO: IMPLEMENT - Query D3D9 device for format support
+            return true;
+        }
+
+        public int GetCurrentFrameIndex()
+        {
+            // D3D9 doesn't have explicit frame indexing
+            // Return 0 for single-buffered, or track manually for multi-buffering
+            return 0;
+        }
+
+        #endregion
+
+        public void Dispose()
+        {
+            if (!_disposed)
+            {
+                _disposed = true;
+                // D3D9 device is owned by Direct3D9Wrapper, don't release it here
+            }
+        }
+
+        #region Remix Resource Stub Classes
+
+        /// <summary>
+        /// Stub texture implementation for Remix.
+        /// Stores texture descriptor and D3D9 texture handle.
+        /// </summary>
+        private class RemixTexture : ITexture
+        {
+            public TextureDesc Desc { get; }
+            public IntPtr NativeHandle { get; }
+
+            internal RemixTexture(TextureDesc desc, IntPtr nativeHandle)
+            {
+                Desc = desc;
+                NativeHandle = nativeHandle;
+            }
+
+            public void Dispose()
+            {
+                // D3D9 texture release handled by Direct3D9Wrapper
+            }
+        }
+
+        /// <summary>
+        /// Stub buffer implementation for Remix.
+        /// Stores buffer descriptor and D3D9 buffer handle.
+        /// </summary>
+        private class RemixBuffer : IBuffer
+        {
+            public BufferDesc Desc { get; }
+            public IntPtr NativeHandle { get; }
+
+            internal RemixBuffer(BufferDesc desc, IntPtr nativeHandle)
+            {
+                Desc = desc;
+                NativeHandle = nativeHandle;
+            }
+
+            public void Dispose()
+            {
+                // D3D9 buffer release handled by Direct3D9Wrapper
+            }
+        }
+
+        /// <summary>
+        /// Stub sampler implementation for Remix.
+        /// Stores sampler descriptor (D3D9 samplers are state-based, not objects).
+        /// </summary>
+        private class RemixSampler : ISampler
+        {
+            public SamplerDesc Desc { get; }
+
+            internal RemixSampler(SamplerDesc desc)
+            {
+                Desc = desc;
+            }
+
+            public void Dispose()
+            {
+                // D3D9 samplers are state-based, no cleanup needed
+            }
+        }
+
+        /// <summary>
+        /// Stub shader implementation for Remix.
+        /// Stores shader descriptor and D3D9 shader handle.
+        /// </summary>
+        private class RemixShader : IShader
+        {
+            public ShaderDesc Desc { get; }
+            public ShaderType Type { get; }
+
+            internal RemixShader(ShaderDesc desc, ShaderType type)
+            {
+                Desc = desc;
+                Type = type;
+            }
+
+            public void Dispose()
+            {
+                // D3D9 shader release handled by Direct3D9Wrapper
+            }
+        }
+
+        /// <summary>
+        /// Stub graphics pipeline implementation for Remix.
+        /// Stores pipeline state (D3D9 doesn't have PSOs, state is set directly).
+        /// </summary>
+        private class RemixGraphicsPipeline : IGraphicsPipeline
+        {
+            public GraphicsPipelineDesc Desc { get; }
+
+            internal RemixGraphicsPipeline(GraphicsPipelineDesc desc)
+            {
+                Desc = desc;
+            }
+
+            public void Dispose()
+            {
+                // D3D9 pipelines are state-based, no cleanup needed
+            }
+        }
+
+        /// <summary>
+        /// Stub framebuffer implementation for Remix.
+        /// Stores framebuffer configuration (D3D9 render targets are set directly).
+        /// </summary>
+        private class RemixFramebuffer : IFramebuffer
+        {
+            public FramebufferDesc Desc { get; }
+
+            internal RemixFramebuffer(FramebufferDesc desc)
+            {
+                Desc = desc;
+            }
+
+            public FramebufferInfo GetInfo()
+            {
+                var info = new FramebufferInfo();
+                if (Desc.ColorAttachments != null && Desc.ColorAttachments.Length > 0)
+                {
+                    var firstColor = Desc.ColorAttachments[0];
+                    if (firstColor.Texture != null)
+                    {
+                        info.Width = firstColor.Texture.Desc.Width;
+                        info.Height = firstColor.Texture.Desc.Height;
+                        info.ColorFormats = new TextureFormat[Desc.ColorAttachments.Length];
+                        for (int i = 0; i < Desc.ColorAttachments.Length; i++)
+                        {
+                            if (Desc.ColorAttachments[i].Texture != null)
+                            {
+                                info.ColorFormats[i] = Desc.ColorAttachments[i].Texture.Desc.Format;
+                            }
+                        }
+                        info.SampleCount = firstColor.Texture.Desc.SampleCount;
+                    }
+                }
+                if (Desc.DepthAttachment.Texture != null)
+                {
+                    info.DepthFormat = Desc.DepthAttachment.Texture.Desc.Format;
+                }
+                return info;
+            }
+
+            public void Dispose()
+            {
+                // D3D9 framebuffers are state-based, no cleanup needed
+            }
+        }
+
+        /// <summary>
+        /// Stub binding layout implementation for Remix.
+        /// Stores binding layout descriptor (D3D9 doesn't have binding layouts).
+        /// </summary>
+        private class RemixBindingLayout : IBindingLayout
+        {
+            public BindingLayoutDesc Desc { get; }
+
+            internal RemixBindingLayout(BindingLayoutDesc desc)
+            {
+                Desc = desc;
+            }
+
+            public void Dispose()
+            {
+                // D3D9 binding layouts are conceptual, no cleanup needed
+            }
+        }
+
+        /// <summary>
+        /// Stub binding set implementation for Remix.
+        /// Stores binding set descriptor (D3D9 resources are bound directly).
+        /// </summary>
+        private class RemixBindingSet : IBindingSet
+        {
+            public IBindingLayout Layout { get; }
+
+            internal RemixBindingSet(IBindingLayout layout)
+            {
+                Layout = layout;
+            }
+
+            public void Dispose()
+            {
+                // D3D9 binding sets are conceptual, no cleanup needed
+            }
+        }
+
+        /// <summary>
+        /// Stub command list implementation for Remix.
+        /// Records D3D9 commands for deferred execution (D3D9 normally executes immediately).
+        /// </summary>
+        private class RemixCommandList : ICommandList
+        {
+            // TODO: IMPLEMENT - Store recorded D3D9 commands
+            // For now, this is a placeholder
+
+            public void Dispose()
+            {
+                // Command list cleanup
+            }
+        }
+
+        /// <summary>
+        /// Stub acceleration structure implementation for Remix.
+        /// Remix builds acceleration structures automatically from intercepted geometry.
+        /// </summary>
+        private class RemixAccelStruct : IAccelStruct
+        {
+            public AccelStructDesc Desc { get; }
+            public bool IsTopLevel { get; }
+            public ulong DeviceAddress { get; }
+
+            internal RemixAccelStruct(AccelStructDesc desc)
+            {
+                Desc = desc;
+                IsTopLevel = desc.IsTopLevel;
+                DeviceAddress = 0; // Remix manages AS addresses internally
+            }
+
+            public void Dispose()
+            {
+                // Remix manages acceleration structures, no cleanup needed
+            }
+        }
+
+        /// <summary>
+        /// Stub raytracing pipeline implementation for Remix.
+        /// Remix uses its own path tracing pipeline automatically.
+        /// </summary>
+        private class RemixRaytracingPipeline : IRaytracingPipeline
+        {
+            public RaytracingPipelineDesc Desc { get; }
+
+            internal RemixRaytracingPipeline(RaytracingPipelineDesc desc)
+            {
+                Desc = desc;
+            }
+
+            public void Dispose()
+            {
+                // Remix manages raytracing pipelines, no cleanup needed
+            }
+        }
+
+        #endregion
     }
 }
 
