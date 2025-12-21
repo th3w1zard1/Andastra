@@ -20,13 +20,15 @@ namespace Andastra.Parsing.Installation
     public class InstallationResourceManager
     {
         private readonly string _installPath;
+        private readonly Game _game;
         private readonly Dictionary<string, Chitin> _chitinCache = new Dictionary<string, Chitin>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, LazyCapsule> _capsuleCache = new Dictionary<string, LazyCapsule>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, List<FileResource>> _overrideCache = new Dictionary<string, List<FileResource>>(StringComparer.OrdinalIgnoreCase);
 
-        public InstallationResourceManager(string installPath)
+        public InstallationResourceManager(string installPath, Game game)
         {
             _installPath = installPath ?? throw new ArgumentNullException(nameof(installPath));
+            _game = game;
         }
 
         /// <summary>
@@ -157,18 +159,9 @@ namespace Andastra.Parsing.Installation
             if (!Directory.Exists(modulesPath))
                 return;
 
-            // Find all module files matching the module root
+            // Find the exact set of module files for this root, respecting .mod override behavior.
             string moduleRoot = Installation.GetModuleRoot(moduleName);
-            var moduleFiles = Directory.GetFiles(modulesPath)
-                .Where(f =>
-                {
-                    string ext = Path.GetExtension(f).ToLowerInvariant();
-                    if (ext != ".rim" && ext != ".mod" && ext != ".erf")
-                        return false;
-                    string fileRoot = Installation.GetModuleRoot(Path.GetFileName(f));
-                    return fileRoot.Equals(moduleRoot, StringComparison.OrdinalIgnoreCase);
-                })
-                .ToList();
+            List<string> moduleFiles = ModuleFileDiscovery.GetModuleFilePaths(modulesPath, moduleRoot, _game);
 
             // Remove from cache
             foreach (string moduleFile in moduleFiles)
@@ -284,23 +277,26 @@ namespace Andastra.Parsing.Installation
             if (!Directory.Exists(modulesPath))
                 return results;
 
-            // Get all module files
-            var moduleFiles = Directory.GetFiles(modulesPath)
-                .Where(f =>
-                {
-                    string ext = Path.GetExtension(f).ToLowerInvariant();
-                    return ext == ".rim" || ext == ".mod" || ext == ".erf";
-                })
-                .ToList();
-
-            // Filter by module root if specified
+            List<string> moduleFiles;
             if (!string.IsNullOrWhiteSpace(moduleRoot))
             {
-                moduleFiles = moduleFiles.Where(f =>
-                {
-                    string fileRoot = Installation.GetModuleRoot(Path.GetFileName(f));
-                    return fileRoot.Equals(moduleRoot, StringComparison.OrdinalIgnoreCase);
-                }).ToList();
+                // When moduleRoot is known, respect engine module piece selection:
+                // - Prefer <root>.mod and ignore rim-like pieces
+                // - Otherwise use <root>.rim + optional <root>_s.rim + (K2) <root>_dlg.erf
+                moduleFiles = ModuleFileDiscovery.GetModuleFilePaths(modulesPath, moduleRoot, _game);
+            }
+            else
+            {
+                // No module root specified: search all recognized module containers in modules directory.
+                moduleFiles = Directory.GetFiles(modulesPath)
+                    .Where(f => ModuleFileDiscovery.IsModuleFile(Path.GetFileName(f)))
+                    .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+            }
+
+            if (moduleFiles.Count == 0)
+            {
+                return results;
             }
 
             // Search each module file

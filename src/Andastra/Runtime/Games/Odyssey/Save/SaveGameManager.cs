@@ -11,7 +11,6 @@ using Andastra.Parsing.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Save;
-using SaveGameData = Andastra.Runtime.Core.Save.SaveGameData;
 using Andastra.Runtime.Games.Common.Save;
 
 namespace Andastra.Runtime.Games.Odyssey.Save

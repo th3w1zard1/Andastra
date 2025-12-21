@@ -74,7 +74,7 @@ namespace Andastra.Parsing.Installation
             _game = DetermineGame(path)
                 ?? throw new InvalidOperationException($"Could not determine game type for path: {path}");
 
-            _resourceManager = new InstallationResourceManager(path);
+            _resourceManager = new InstallationResourceManager(path, _game);
         }
 
         /// <summary>
@@ -232,14 +232,25 @@ namespace Andastra.Parsing.Installation
             if (string.IsNullOrEmpty(moduleName))
                 return string.Empty;
 
-            // Remove extension
+            // IMPORTANT: Module roots may contain underscores (e.g. "tar_m02aa").
+            // Only strip known *trailing* suffixes used by the engine:
+            // - "<root>_s.rim"   -> "<root>"
+            // - "<root>_dlg.erf" -> "<root>"
+            // - "<root>.rim/mod" -> "<root>"
             string nameWithoutExt = System.IO.Path.GetFileNameWithoutExtension(moduleName);
-
-            // Remove suffix like _s, _dlg, etc.
-            int underscoreIndex = nameWithoutExt.IndexOf('_');
-            if (underscoreIndex > 0)
+            if (string.IsNullOrEmpty(nameWithoutExt))
             {
-                return nameWithoutExt.Substring(0, underscoreIndex);
+                return string.Empty;
+            }
+
+            // Strip known suffixes (case-insensitive)
+            if (nameWithoutExt.EndsWith("_s", StringComparison.OrdinalIgnoreCase))
+            {
+                return nameWithoutExt.Substring(0, nameWithoutExt.Length - 2);
+            }
+            if (nameWithoutExt.EndsWith("_dlg", StringComparison.OrdinalIgnoreCase))
+            {
+                return nameWithoutExt.Substring(0, nameWithoutExt.Length - 4);
             }
 
             return nameWithoutExt;
@@ -336,60 +347,23 @@ namespace Andastra.Parsing.Installation
 
         /// <summary>
         /// Gets all module roots available in the installation.
+        /// Uses ModuleFileDiscovery to match exact swkotor.exe/swkotor2.exe behavior.
         /// </summary>
         public List<string> GetModuleRoots()
         {
             string modulesPath = GetModulesPath(_path);
-            if (!Directory.Exists(modulesPath))
-            {
-                return new List<string>();
-            }
-
-            var roots = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            foreach (string file in Directory.GetFiles(modulesPath))
-            {
-                string ext = System.IO.Path.GetExtension(file).ToLowerInvariant();
-                if (ext == ".rim" || ext == ".mod" || ext == ".erf")
-                {
-                    string root = GetModuleRoot(System.IO.Path.GetFileName(file));
-                    if (!string.IsNullOrEmpty(root))
-                    {
-                        roots.Add(root);
-                    }
-                }
-            }
-
+            HashSet<string> roots = ModuleFileDiscovery.DiscoverAllModuleRoots(modulesPath);
             return roots.OrderBy(r => r).ToList();
         }
 
         /// <summary>
-        /// Gets all module files for a specific module root.
+        /// Gets all module files for a specific module root, respecting priority rules.
+        /// Uses ModuleFileDiscovery to match exact swkotor.exe/swkotor2.exe behavior.
         /// </summary>
         public List<string> GetModuleFiles(string moduleRoot)
         {
             string modulesPath = GetModulesPath(_path);
-            if (!Directory.Exists(modulesPath))
-            {
-                return new List<string>();
-            }
-
-            var files = new List<string>();
-
-            foreach (string file in Directory.GetFiles(modulesPath))
-            {
-                string ext = System.IO.Path.GetExtension(file).ToLowerInvariant();
-                if (ext == ".rim" || ext == ".mod" || ext == ".erf")
-                {
-                    string root = GetModuleRoot(System.IO.Path.GetFileName(file));
-                    if (root.Equals(moduleRoot, StringComparison.OrdinalIgnoreCase))
-                    {
-                        files.Add(file);
-                    }
-                }
-            }
-
-            return files;
+            return ModuleFileDiscovery.GetModuleFilePaths(modulesPath, moduleRoot, _game);
         }
 
         /// <summary>

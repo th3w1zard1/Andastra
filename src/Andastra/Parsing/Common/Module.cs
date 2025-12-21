@@ -518,38 +518,42 @@ namespace Andastra.Parsing.Common
             _cachedModId = null;
 
             // Build all capsules relevant to this root in the provided installation
+            // Use ModuleFileDiscovery to match exact swkotor.exe/swkotor2.exe behavior
             string modulesPath = Andastra.Parsing.Installation.Installation.GetModulesPath(_installation.Path);
-            if (_dotMod)
+            Andastra.Parsing.Installation.ModuleFileGroup fileGroup = 
+                Andastra.Parsing.Installation.ModuleFileDiscovery.DiscoverModuleFiles(modulesPath, _root, _installation.Game);
+
+            if (fileGroup == null || !fileGroup.HasFiles())
             {
-                string modFilepath = Path.Combine(modulesPath, _root + KModuleType.MOD.GetExtension());
-                if (File.Exists(modFilepath))
+                // No module files found - create empty capsules (will fail on access)
+                // This matches original behavior where missing files cause errors on access
+                return;
+            }
+
+            if (fileGroup.UsesModOverride)
+            {
+                // .mod file overrides all rim-like files
+                _dotMod = true;
+                if (fileGroup.ModFile != null && File.Exists(fileGroup.ModFile))
                 {
-                    _capsules[KModuleType.MOD.ToString()] = new ModuleFullOverridePiece(modFilepath);
-                }
-                else
-                {
-                    _dotMod = false;
-                    string mainFilepath = Path.Combine(modulesPath, _root + KModuleType.MAIN.GetExtension());
-                    string dataFilepath = Path.Combine(modulesPath, _root + KModuleType.DATA.GetExtension());
-                    _capsules[KModuleType.MAIN.ToString()] = new ModuleLinkPiece(mainFilepath);
-                    _capsules[KModuleType.DATA.ToString()] = new ModuleDataPiece(dataFilepath);
-                    if (_installation.Game.IsK2())
-                    {
-                        string dlgFilepath = Path.Combine(modulesPath, _root + KModuleType.K2_DLG.GetExtension());
-                        _capsules[KModuleType.K2_DLG.ToString()] = new ModuleDLGPiece(dlgFilepath);
-                    }
+                    _capsules[KModuleType.MOD.ToString()] = new ModuleFullOverridePiece(fileGroup.ModFile);
                 }
             }
             else
             {
-                string mainFilepath = Path.Combine(modulesPath, _root + KModuleType.MAIN.GetExtension());
-                string dataFilepath = Path.Combine(modulesPath, _root + KModuleType.DATA.GetExtension());
-                _capsules[KModuleType.MAIN.ToString()] = new ModuleLinkPiece(mainFilepath);
-                _capsules[KModuleType.DATA.ToString()] = new ModuleDataPiece(dataFilepath);
-                if (_installation.Game.IsK2())
+                // Use rim-like files (composite module)
+                _dotMod = false;
+                if (fileGroup.MainRimFile != null && File.Exists(fileGroup.MainRimFile))
                 {
-                    string dlgFilepath = Path.Combine(modulesPath, _root + KModuleType.K2_DLG.GetExtension());
-                    _capsules[KModuleType.K2_DLG.ToString()] = new ModuleDLGPiece(dlgFilepath);
+                    _capsules[KModuleType.MAIN.ToString()] = new ModuleLinkPiece(fileGroup.MainRimFile);
+                }
+                if (fileGroup.DataRimFile != null && File.Exists(fileGroup.DataRimFile))
+                {
+                    _capsules[KModuleType.DATA.ToString()] = new ModuleDataPiece(fileGroup.DataRimFile);
+                }
+                if (fileGroup.DlgErfFile != null && File.Exists(fileGroup.DlgErfFile))
+                {
+                    _capsules[KModuleType.K2_DLG.ToString()] = new ModuleDLGPiece(fileGroup.DlgErfFile);
                 }
             }
 
