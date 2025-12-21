@@ -1926,14 +1926,68 @@ namespace HolocronToolset.Tests.Editors
             contextMenu.Items.Count().Should().BeGreaterThan(0, "Context menu should have at least one item");
         }
 
-        // TODO: STUB - Implement test_dlg_editor_context_menu_creation (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1411-1439)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1411-1439
         // Original: def test_dlg_editor_context_menu_creation(qtbot, installation: HTInstallation): Test context menu creation
         [Fact]
         public void TestDlgEditorContextMenuCreation()
         {
-            // TODO: STUB - Implement context menu creation test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1411-1439
-            throw new NotImplementedException("TestDlgEditorContextMenuCreation: Context menu creation test not yet implemented");
+            // Matching PyKotor: editor = DLGEditor(None, installation)
+            HTInstallation installation = null;
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (!string.IsNullOrEmpty(k2Path) && System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            // Matching PyKotor: editor = DLGEditor(None, installation)
+            var editor = new DLGEditor(null, installation);
+            // Matching PyKotor: editor.new()
+            editor.New();
+
+            // Matching PyKotor: editor.model.add_root_node()
+            var rootItem = editor.Model.AddRootNode();
+            rootItem.Should().NotBeNull("Root item should be created");
+
+            // Matching PyKotor: root_item = editor.model.item(0, 0)
+            // Matching PyKotor: assert isinstance(root_item, DLGStandardItem)
+            rootItem.Should().BeOfType<DLGStandardItem>("Root item should be a DLGStandardItem");
+
+            // Matching PyKotor: menu = editor._get_link_context_menu(editor.ui.dialogTree, root_item)
+            var menu = editor.GetLinkContextMenu(editor.DialogTree, rootItem);
+            menu.Should().NotBeNull("Context menu should be created");
+
+            // Matching PyKotor: action_texts = [action.text() for action in menu.actions() if action.text()]
+            // Matching PyKotor: assert any("Edit Text" in t for t in action_texts)
+            // Matching PyKotor: assert any("Copy" in t for t in action_texts)
+            // Matching PyKotor: assert any("Add" in t for t in action_texts)
+            // Matching PyKotor: assert any("Remove" in t or "Delete" in t for t in action_texts)
+            var menuItemHeaders = new List<string>();
+            foreach (MenuItem menuItem in menu.Items)
+            {
+                if (menuItem.Header != null && menuItem.Header.ToString() != "-")
+                {
+                    menuItemHeaders.Add(menuItem.Header.ToString());
+                }
+            }
+
+            // Check for essential actions
+            menuItemHeaders.Should().Contain(h => h.Contains("Edit Text"), "Context menu should contain 'Edit Text' action");
+            menuItemHeaders.Should().Contain(h => h.Contains("Copy"), "Context menu should contain 'Copy' action");
+            menuItemHeaders.Should().Contain(h => h.Contains("Add"), "Context menu should contain 'Add' action");
+            menuItemHeaders.Should().Contain(h => h.Contains("Remove") || h.Contains("Delete"), "Context menu should contain 'Remove' or 'Delete' action");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1441-1466
