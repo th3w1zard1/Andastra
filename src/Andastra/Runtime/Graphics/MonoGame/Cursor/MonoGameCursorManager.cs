@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Andastra.Runtime.Graphics;
-using Vector2 = System.Numerics.Vector2;
+using GraphicsVector2 = Andastra.Runtime.Graphics.Vector2;
 
 namespace Andastra.Runtime.MonoGame.Graphics.Cursor
 {
@@ -23,7 +23,7 @@ namespace Andastra.Runtime.MonoGame.Graphics.Cursor
         private readonly Dictionary<CursorType, ICursor> _cursorCache;
         private CursorType _currentCursorType;
         private bool _isPressed;
-        private Vector2 _position;
+        private GraphicsVector2 _position;
         private bool _disposed;
 
         public MonoGameCursorManager(IGraphicsDevice graphicsDevice)
@@ -31,7 +31,7 @@ namespace Andastra.Runtime.MonoGame.Graphics.Cursor
             _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException("graphicsDevice");
             _cursorCache = new Dictionary<CursorType, ICursor>();
             _currentCursorType = CursorType.Default;
-            _position = Vector2.Zero;
+            _position = new GraphicsVector2(0, 0);
         }
 
         public ICursor CurrentCursor
@@ -49,7 +49,7 @@ namespace Andastra.Runtime.MonoGame.Graphics.Cursor
             set { _isPressed = value; }
         }
 
-        public Vector2 Position
+        public GraphicsVector2 Position
         {
             get { return _position; }
             set { _position = value; }

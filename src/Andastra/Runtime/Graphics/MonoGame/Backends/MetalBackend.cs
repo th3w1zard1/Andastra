@@ -669,19 +669,46 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         public IDevice GetDevice()
         {
-            // TODO: STUB - Implement IDevice creation for Metal raytracing
-            // When raytracing is enabled on Metal 3.0+ devices, this should create and return
-            // a MetalDevice instance that implements IDevice and provides access to Metal raytracing
-            // For now, return null as the device creation is not yet implemented
+            // Create and return MetalDevice instance for raytracing operations
+            // MetalDevice implements IDevice interface and provides access to Metal 3.0 raytracing APIs
             if (!_initialized || !_supportsRaytracing || !_raytracingEnabled || _device == IntPtr.Zero)
             {
                 return null;
             }
 
-            // TODO: STUB - Create and return actual IDevice implementation
-            // This will require implementing a MetalDevice class that wraps MTLDevice
-            // and provides the IDevice interface for raytracing operations
-            return null;
+            try
+            {
+                return new MetalDevice(this);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalBackend] Failed to create MetalDevice: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Gets the native Metal device handle. Internal use for MetalDevice.
+        /// </summary>
+        internal IntPtr GetMetalDevice()
+        {
+            return _device;
+        }
+
+        /// <summary>
+        /// Gets the native Metal command queue handle. Internal use for MetalDevice.
+        /// </summary>
+        internal IntPtr GetCommandQueue()
+        {
+            return _commandQueue;
+        }
+
+        /// <summary>
+        /// Gets the native Metal default library handle. Internal use for MetalDevice.
+        /// </summary>
+        internal IntPtr GetDefaultLibrary()
+        {
+            return _defaultLibrary;
         }
 
         #region Metal Specific Methods

@@ -405,7 +405,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             return accelStruct;
         }
 
-        public IRaytracingPipeline CreateRaytracingPipeline(RaytracingPipelineDesc desc)
+        public IRaytracingPipeline CreateRaytracingPipeline(Interfaces.RaytracingPipelineDesc desc)
         {
             if (!IsValid)
             {

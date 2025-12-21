@@ -12,6 +12,7 @@ using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.ERF;
 using Andastra.Runtime.Core.Save;
 using Andastra.Runtime.Engines.Odyssey.Data;
+using Andastra.Runtime.Engines.Odyssey.Components;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
@@ -275,14 +276,79 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // PORTRAIT0-2: Player portrait resource references
-            // Convert Portrait byte[] to ResRef if possible
-            // Note: Portrait in SaveGameData is byte[], but NFOData expects ResRef
-            // TODO: STUB - For now, if Portrait is provided, we'd need to extract ResRef from it
-            // This is typically stored as a TPC or similar format
-            // TODO: STUB - For now, leave as blank ResRef - portrait loading would require format parsing
+            // Based on swkotor2.exe: SerializeSaveNfo @ 0x004eb750
+            // Portrait order: PORTRAIT0 = leader, PORTRAIT1/2 = selected party members (excluding leader)
+            // Portraits are stored as ResRefs extracted from portraits.2da using PortraitId from creature components
+            // Original implementation: Gets PortraitId from each party member's UTC data, looks up ResRef in portraits.2da
             nfo.Portrait0 = ResRef.FromBlank();
             nfo.Portrait1 = ResRef.FromBlank();
             nfo.Portrait2 = ResRef.FromBlank();
+
+            if (saveData.PartyState != null && _gameDataManager != null)
+            {
+                try
+                {
+                    // Get leader portrait (PORTRAIT0)
+                    if (saveData.PartyState.Leader != null)
+                    {
+                        CreatureComponent leaderCreature = saveData.PartyState.Leader.GetComponent<CreatureComponent>();
+                        if (leaderCreature != null && leaderCreature.PortraitId >= 0)
+                        {
+                            GameDataManager.PortraitData leaderPortrait = _gameDataManager.GetPortrait(leaderCreature.PortraitId);
+                            if (leaderPortrait != null && !string.IsNullOrEmpty(leaderPortrait.BaseResRef))
+                            {
+                                nfo.Portrait0 = ResRef.FromString(leaderPortrait.BaseResRef);
+                            }
+                        }
+                    }
+
+                    // Get selected party member portraits (PORTRAIT1, PORTRAIT2)
+                    // Order: First two selected members that are not the leader
+                    int portraitIndex = 1; // Start at PORTRAIT1
+                    if (saveData.PartyState.Members != null)
+                    {
+                        string leaderTag = saveData.PartyState.Leader?.Tag;
+                        foreach (IEntity member in saveData.PartyState.Members)
+                        {
+                            // Skip if we've filled both portrait slots
+                            if (portraitIndex > 2)
+                            {
+                                break;
+                            }
+
+                            // Skip leader (already in PORTRAIT0)
+                            if (member == null || (leaderTag != null && string.Equals(member.Tag, leaderTag, System.StringComparison.OrdinalIgnoreCase)))
+                            {
+                                continue;
+                            }
+
+                            // Get portrait from creature component
+                            CreatureComponent memberCreature = member.GetComponent<CreatureComponent>();
+                            if (memberCreature != null && memberCreature.PortraitId >= 0)
+                            {
+                                GameDataManager.PortraitData memberPortrait = _gameDataManager.GetPortrait(memberCreature.PortraitId);
+                                if (memberPortrait != null && !string.IsNullOrEmpty(memberPortrait.BaseResRef))
+                                {
+                                    if (portraitIndex == 1)
+                                    {
+                                        nfo.Portrait1 = ResRef.FromString(memberPortrait.BaseResRef);
+                                    }
+                                    else if (portraitIndex == 2)
+                                    {
+                                        nfo.Portrait2 = ResRef.FromString(memberPortrait.BaseResRef);
+                                    }
+                                    portraitIndex++;
+                                }
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // If portrait extraction fails, leave as blank ResRefs (graceful degradation)
+                    // This can happen if GameDataManager is not initialized or portraits.2da is missing
+                }
+            }
 
             // PCNAME: Player character name from party system
             string pcName = string.Empty;

@@ -79,6 +79,8 @@ namespace Andastra.Runtime.MonoGame.GUI
         private MouseState _previousMouseState;
         private KeyboardState _previousKeyboardState;
         private string _highlightedButtonTag;
+        private int _selectedButtonIndex = -1; // For keyboard navigation
+        private List<GUIButton> _buttonList; // Ordered list of buttons for keyboard navigation
 
         /// <summary>
         /// Event fired when a GUI button is clicked.
@@ -394,6 +396,7 @@ namespace Andastra.Runtime.MonoGame.GUI
 
         /// <summary>
         /// Updates GUI input handling (mouse/keyboard).
+        /// Based on swkotor.exe and swkotor2.exe: Keyboard navigation with arrow keys and Enter
         /// </summary>
         /// <param name="gameTime">Current game time.</param>
         public override void Update(object gameTime)
@@ -401,14 +404,71 @@ namespace Andastra.Runtime.MonoGame.GUI
             if (_currentGui == null)
             {
                 _highlightedButtonTag = null;
+                _selectedButtonIndex = -1;
                 return;
             }
 
             MouseState currentMouseState = Mouse.GetState();
             KeyboardState currentKeyboardState = Keyboard.GetState();
 
-            // Update highlighted button based on mouse position
+            // Build button list for keyboard navigation if not already built
+            if (_buttonList == null || _buttonList.Count == 0)
+            {
+                BuildButtonList();
+            }
+
+            // Handle keyboard navigation
+            // Based on swkotor.exe and swkotor2.exe: Arrow keys navigate buttons, Enter/Space activates
+            if (_buttonList != null && _buttonList.Count > 0)
+            {
+                // Arrow key navigation
+                if (_previousKeyboardState.IsKeyUp(Microsoft.Xna.Framework.Input.Keys.Up) && currentKeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.Up))
+                {
+                    // Move selection up
+                    if (_selectedButtonIndex > 0)
+                    {
+                        _selectedButtonIndex--;
+                    }
+                    else
+                    {
+                        _selectedButtonIndex = _buttonList.Count - 1; // Wrap to bottom
+                    }
+                    UpdateSelectedButton();
+                }
+                else if (_previousKeyboardState.IsKeyUp(Microsoft.Xna.Framework.Input.Keys.Down) && currentKeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.Down))
+                {
+                    // Move selection down
+                    if (_selectedButtonIndex < _buttonList.Count - 1)
+                    {
+                        _selectedButtonIndex++;
+                    }
+                    else
+                    {
+                        _selectedButtonIndex = 0; // Wrap to top
+                    }
+                    UpdateSelectedButton();
+                }
+                // Enter/Space to activate selected button
+                else if ((_previousKeyboardState.IsKeyUp(Microsoft.Xna.Framework.Input.Keys.Enter) && currentKeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.Enter)) ||
+                         (_previousKeyboardState.IsKeyUp(Microsoft.Xna.Framework.Input.Keys.Space) && currentKeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.Space)))
+                {
+                    if (_selectedButtonIndex >= 0 && _selectedButtonIndex < _buttonList.Count)
+                    {
+                        var button = _buttonList[_selectedButtonIndex];
+                        FireButtonClicked(button.Tag, button.Id ?? -1);
+                        Console.WriteLine($"[KotorGuiManager] Button activated via keyboard: {button.Tag} (ID: {button.Id})");
+                    }
+                }
+            }
+
+            // Update highlighted button based on mouse position (mouse takes priority)
             UpdateHighlightedButton(currentMouseState.X, currentMouseState.Y);
+
+            // If mouse moved, reset keyboard selection
+            if (currentMouseState.X != _previousMouseState.X || currentMouseState.Y != _previousMouseState.Y)
+            {
+                _selectedButtonIndex = -1;
+            }
 
             // Handle mouse clicks on buttons
             if (_previousMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released && currentMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
@@ -418,6 +478,49 @@ namespace Andastra.Runtime.MonoGame.GUI
 
             _previousMouseState = currentMouseState;
             _previousKeyboardState = currentKeyboardState;
+        }
+
+        /// <summary>
+        /// Builds an ordered list of buttons for keyboard navigation.
+        /// Buttons are ordered by Y position (top to bottom), then X position (left to right).
+        /// </summary>
+        private void BuildButtonList()
+        {
+            if (_currentGui == null || _currentGui.ButtonMap == null)
+            {
+                _buttonList = new List<GUIButton>();
+                return;
+            }
+
+            _buttonList = new List<GUIButton>(_currentGui.ButtonMap.Values);
+            // Sort by Y position (top to bottom), then X position (left to right)
+            _buttonList.Sort((a, b) =>
+            {
+                int yCompare = a.Position.Y.CompareTo(b.Position.Y);
+                if (yCompare != 0)
+                {
+                    return yCompare;
+                }
+                return a.Position.X.CompareTo(b.Position.X);
+            });
+        }
+
+        /// <summary>
+        /// Updates the highlighted button based on keyboard selection.
+        /// </summary>
+        private void UpdateSelectedButton()
+        {
+            if (_buttonList == null || _selectedButtonIndex < 0 || _selectedButtonIndex >= _buttonList.Count)
+            {
+                _highlightedButtonTag = null;
+                return;
+            }
+
+            var selectedButton = _buttonList[_selectedButtonIndex];
+            if (selectedButton != null && !string.IsNullOrEmpty(selectedButton.Tag))
+            {
+                _highlightedButtonTag = selectedButton.Tag;
+            }
         }
 
         /// <summary>

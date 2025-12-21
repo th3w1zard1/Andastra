@@ -134,7 +134,25 @@ namespace HolocronToolset.Widgets
                 wordEnd = GetWordAtCursorEnd();
                 if (wordStart == -1 || wordEnd == -1 || wordStart >= wordEnd)
                 {
+                    // Cursor is not on a word - cannot select next occurrence
                     return false;
+                }
+                // Verify that cursor is actually on a word character (not just adjacent to one)
+                // The cursor must be within the word boundaries (including at start or end)
+                if (SelectionStart < wordStart || SelectionStart > wordEnd)
+                {
+                    // Cursor is not within the word boundaries
+                    return false;
+                }
+                // Also verify that the character at cursor is actually a word character
+                // (not a space or other non-word character between words)
+                if (SelectionStart >= 0 && SelectionStart < Text.Length)
+                {
+                    if (!IsWordCharacter(Text[SelectionStart]))
+                    {
+                        // Cursor is on a non-word character (space, punctuation, etc.)
+                        return false;
+                    }
                 }
                 searchText = Text.Substring(wordStart, wordEnd - wordStart);
 
@@ -144,6 +162,10 @@ namespace HolocronToolset.Widgets
 
                 // Start searching after the end of the word at cursor
                 searchStartIndex = wordEnd;
+                
+                // Add the current selection to extra selections for highlighting (matching VS Code behavior)
+                _extraSelections.Clear();
+                _extraSelections.Add(new Tuple<int, int>(wordStart, wordEnd));
             }
             else
             {
@@ -175,6 +197,22 @@ namespace HolocronToolset.Widgets
                 // Select the found occurrence
                 SelectionStart = nextIndex;
                 SelectionEnd = nextIndex + searchText.Length;
+                
+                // Update extra selections to include all occurrences (matching VS Code behavior)
+                // This allows highlighting all occurrences while navigating between them
+                _extraSelections.Clear();
+                int searchPos = 0;
+                while (true)
+                {
+                    int pos = Text.IndexOf(searchText, searchPos, StringComparison.Ordinal);
+                    if (pos == -1)
+                    {
+                        break;
+                    }
+                    _extraSelections.Add(new Tuple<int, int>(pos, pos + searchText.Length));
+                    searchPos = pos + 1;
+                }
+                
                 return true;
             }
 

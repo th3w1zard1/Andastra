@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Andastra.Parsing.Formats.LTR;
 using Andastra.Parsing.Tests.Common;
 using FluentAssertions;

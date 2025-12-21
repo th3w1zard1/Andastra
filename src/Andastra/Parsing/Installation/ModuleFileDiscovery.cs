@@ -12,24 +12,26 @@ namespace Andastra.Parsing.Installation
     /// 
     /// Based on reverse engineering of swkotor.exe/swkotor2.exe module loading system.
     /// 
-    /// Priority Rules:
-    /// 1. If {moduleRoot}.mod exists, use ONLY the .mod file (overrides all rim-like files)
-    /// 2. If no .mod exists, combine all rim-like files:
-    ///    - {moduleRoot}.rim (main archive, required)
-    ///    - {moduleRoot}_s.rim (data archive, optional)
-    ///    - {moduleRoot}_dlg.erf (dialog archive, K2 only, optional)
+    /// Loading Modes (swkotor.exe: FUN_004094a0, swkotor2.exe: FUN_004096b0):
+    /// - Simple Mode (flag at offset 0x54 == 0): Loads .rim file directly, returns immediately
+    /// - Complex Mode (flag at offset 0x54 != 0): Checks for area files (_a.rim, _adx.rim), then .mod, then _s.rim/_dlg.erf
     /// 
-    /// Reverse engineering notes (clean-room behavioral):
-    /// - The engine enumerates the MODULES directory using a wildcard file glob (effectively "*.*")
-    ///   and then filters by naming rules in code. This is why full ".mod"/".rim"/".erf" literals
-    ///   are not consistently present as standalone strings in the binaries.
-    ///   - swkotor.exe: `FUN_005e8cf0` (directory enumerator; FindFirstFileA over "*.*" when extension string is empty)
-    ///   - swkotor2.exe: `FUN_006345d0` (same behavior)
-    /// - `_s.rim` is explicitly treated as a special suffix in both games:
-    ///   - swkotor.exe: `FUN_0067bc40` / `FUN_006cfa70` reference `"_s.rim"` and strip suffix for root normalization.
-    ///   - swkotor2.exe: `FUN_006d1a50` / `FUN_0073dcb0` do the same.
-    /// - `.hak` is not used by KotOR/KotOR2 module loading (no `.hak` string presence in either exe; HAK is Aurora/NWN).
-    /// - `_dlg.erf` is treated as an exact, hardcoded suffix in TSL (no evidence of a wildcard `_*.erf` rule in exes).
+    /// Complex Mode Priority Rules (exact order from Ghidra decompilation):
+    /// 1. Check for {moduleRoot}_a.rim (area-specific RIM) - if found, loads it (REPLACES .rim)
+    /// 2. Check for {moduleRoot}_adx.rim (extended area RIM) - if _a.rim not found, loads it (REPLACES .rim)
+    /// 3. Check for {moduleRoot}.mod - if found, loads it (REPLACES all other files, skips _s.rim/_dlg.erf)
+    /// 4. Check for {moduleRoot}_s.rim - only if .mod NOT found (ADDS to base)
+    /// 5. Check for {moduleRoot}_dlg.erf (K2 only) - only if .mod NOT found (ADDS to base)
+    /// 
+    /// Note: .rim is NOT loaded in complex mode - only _a.rim or _adx.rim are loaded as replacements
+    /// 
+    /// Reverse engineering evidence:
+    /// - swkotor.exe: FUN_004094a0 line 32: `if (*(int *)((int)param_1 + 0x54) == 0)` - simple mode check
+    /// - swkotor.exe: FUN_004094a0 line 61: Checks for _a.rim (ARE type 0xbba)
+    /// - swkotor.exe: FUN_004094a0 line 74: Checks for _adx.rim (ARE type 0xbba)
+    /// - swkotor.exe: FUN_004094a0 line 95: Checks for .mod (MOD type 0x7db)
+    /// - swkotor.exe: FUN_004094a0 line 107: Checks for _s.rim (ARE type 0xbba, only if .mod not found)
+    /// - swkotor2.exe: FUN_004096b0 line 128: Hardcoded "_dlg" check for _dlg.erf
     /// </summary>
     public static class ModuleFileDiscovery
     {
@@ -45,12 +47,14 @@ namespace Andastra.Parsing.Installation
 
         /// <summary>
         /// Discovers all module files for a given module root, respecting priority rules.
+        /// Implements exact behavior from swkotor.exe: FUN_004094a0 and swkotor2.exe: FUN_004096b0
         /// </summary>
         /// <param name="modulesPath">Path to the modules directory</param>
         /// <param name="moduleRoot">Module root name (e.g., "001EBO")</param>
         /// <param name="game">Game type (K1 or K2)</param>
+        /// <param name="useComplexMode">If true, uses complex mode (checks for _a.rim, _adx.rim). If false, uses simple mode (just .rim). Default: auto-detect based on file existence</param>
         /// <returns>ModuleFileGroup containing discovered files, or null if no files found</returns>
-        public static ModuleFileGroup DiscoverModuleFiles(string modulesPath, string moduleRoot, Game game)
+        public static ModuleFileGroup DiscoverModuleFiles(string modulesPath, string moduleRoot, Game game, bool? useComplexMode = null)
         {
             if (string.IsNullOrEmpty(modulesPath) || !Directory.Exists(modulesPath))
             {
@@ -74,48 +78,119 @@ namespace Andastra.Parsing.Installation
                 }
             }
 
-            // Check for .mod file first (highest priority - overrides all rim-like files)
-            string modFileName = moduleRoot + ".mod";
-            string modPath = TryGetFilePathByName(fileNameToPath, modFileName);
+            // Check for area files to determine if we should use complex mode
+            // swkotor.exe: FUN_004094a0 line 61: Checks for ARE type 0xbba in _a.rim
+            string areaRimPath = TryGetFilePathByName(fileNameToPath, moduleRoot + "_a.rim");
+            string areaExtendedRimPath = TryGetFilePathByName(fileNameToPath, moduleRoot + "_adx.rim");
+            
+            // Auto-detect complex mode: if _a.rim or _adx.rim exists, use complex mode
+            // Otherwise, check if .rim exists for simple mode
+            bool complexMode = useComplexMode ?? (areaRimPath != null || areaExtendedRimPath != null);
+            
+            // Simple Mode (swkotor.exe: FUN_004094a0 line 32-42)
+            // Just load .rim file directly, return immediately
+            if (!complexMode)
+            {
+                string mainRimPath = TryGetFilePathByName(fileNameToPath, moduleRoot + ".rim");
+                if (mainRimPath == null)
+                {
+                    return null;
+                }
+
+                return new ModuleFileGroup
+                {
+                    ModuleRoot = moduleRoot,
+                    ModFile = null,
+                    MainRimFile = mainRimPath,
+                    AreaRimFile = null,
+                    AreaExtendedRimFile = null,
+                    DataRimFile = null,
+                    DlgErfFile = null,
+                    UsesModOverride = false,
+                    UseComplexMode = false
+                };
+            }
+
+            // Complex Mode (swkotor.exe: FUN_004094a0 line 49-216)
+            // Exact sequence from Ghidra decompilation:
+            
+            // Step 1: Check for _a.rim (line 61)
+            // If found, load it (line 159) - REPLACES .rim
+            // If not found, continue to _adx.rim
+            
+            // Step 2: Check for _adx.rim (line 74)
+            // If found, load it (line 85) - REPLACES .rim (only if _a.rim not found)
+            
+            // Step 3: Check for .mod (line 95)
+            // If found, load it (line 136) - REPLACES all other files, SKIPS _s.rim
+            string modPath = TryGetFilePathByName(fileNameToPath, moduleRoot + ".mod");
             if (modPath != null)
             {
                 // .mod file exists - use only this file, ignore all rim-like files
+                // swkotor.exe: FUN_004094a0 line 136: Loads .mod, skips _s.rim check
                 return new ModuleFileGroup
                 {
                     ModuleRoot = moduleRoot,
                     ModFile = modPath,
                     MainRimFile = null,
+                    AreaRimFile = areaRimPath,  // Still discovered but not loaded when .mod exists
+                    AreaExtendedRimFile = areaExtendedRimPath,  // Still discovered but not loaded when .mod exists
                     DataRimFile = null,
                     DlgErfFile = null,
-                    UsesModOverride = true
+                    UsesModOverride = true,
+                    UseComplexMode = true
                 };
             }
 
-            // No .mod file - discover rim-like files
-            string mainRimPath = TryGetFilePathByName(fileNameToPath, moduleRoot + ".rim");
+            // Step 4: Check for _s.rim (line 107) - only if .mod NOT found
+            // If found, load it (line 118) - ADDS to base
             string dataRimPath = TryGetFilePathByName(fileNameToPath, moduleRoot + "_s.rim");
+            
+            // Step 5: Check for _dlg.erf (K2 only, line 128) - only if .mod NOT found
+            // If found, load it (line 147) - ADDS to base
             string dlgErfPath = null;
-
-            // K2 only: check for _dlg.erf file
             if (game.IsK2())
             {
                 dlgErfPath = TryGetFilePathByName(fileNameToPath, moduleRoot + "_dlg.erf");
             }
 
-            // Without a .mod file, the main .rim is required for a loadable module.
-            if (mainRimPath == null)
+            // In complex mode, .rim is NOT loaded - only _a.rim or _adx.rim are loaded as replacements
+            // swkotor.exe: FUN_004094a0 line 32: Simple mode loads .rim, complex mode does not
+            // If neither _a.rim nor _adx.rim exists, we still need at least one file
+            if (areaRimPath == null && areaExtendedRimPath == null && dataRimPath == null && dlgErfPath == null)
             {
-                return null;
+                // Fallback: check for .rim if no area files exist (shouldn't happen in complex mode, but handle gracefully)
+                string mainRimPath = TryGetFilePathByName(fileNameToPath, moduleRoot + ".rim");
+                if (mainRimPath == null)
+                {
+                    return null;
+                }
+                
+                return new ModuleFileGroup
+                {
+                    ModuleRoot = moduleRoot,
+                    ModFile = null,
+                    MainRimFile = mainRimPath,
+                    AreaRimFile = null,
+                    AreaExtendedRimFile = null,
+                    DataRimFile = null,
+                    DlgErfFile = null,
+                    UsesModOverride = false,
+                    UseComplexMode = false  // Fallback to simple mode
+                };
             }
 
             return new ModuleFileGroup
             {
                 ModuleRoot = moduleRoot,
                 ModFile = null,
-                MainRimFile = mainRimPath,
-                DataRimFile = dataRimPath,
-                DlgErfFile = dlgErfPath,
-                UsesModOverride = false
+                MainRimFile = null,  // NOT loaded in complex mode
+                AreaRimFile = areaRimPath,  // Loaded if exists (REPLACES .rim)
+                AreaExtendedRimFile = areaExtendedRimPath,  // Loaded if _a.rim not found (REPLACES .rim)
+                DataRimFile = dataRimPath,  // Loaded if .mod not found (ADDS to base)
+                DlgErfFile = dlgErfPath,  // Loaded if .mod not found (K2 only, ADDS to base)
+                UsesModOverride = false,
+                UseComplexMode = true
             };
         }
 
@@ -177,12 +252,13 @@ namespace Andastra.Parsing.Installation
         }
 
         /// <summary>
-        /// Gets all module file paths for a module root, in priority order.
+        /// Gets all module file paths for a module root, in priority order (registration order).
+        /// Matches exact loading order from swkotor.exe: FUN_004094a0 and swkotor2.exe: FUN_004096b0
         /// </summary>
         /// <param name="modulesPath">Path to the modules directory</param>
         /// <param name="moduleRoot">Module root name</param>
         /// <param name="game">Game type</param>
-        /// <returns>List of file paths in priority order (highest priority first)</returns>
+        /// <returns>List of file paths in registration order (first registered = lowest priority, last registered = highest priority)</returns>
         public static List<string> GetModuleFilePaths(string modulesPath, string moduleRoot, Game game)
         {
             ModuleFileGroup group = DiscoverModuleFiles(modulesPath, moduleRoot, game);
@@ -195,26 +271,50 @@ namespace Andastra.Parsing.Installation
 
             if (group.UsesModOverride)
             {
-                // .mod file overrides all
+                // .mod file overrides all - only this file is loaded
+                // swkotor.exe: FUN_004094a0 line 136: Loads .mod, skips _s.rim
                 if (group.ModFile != null)
                 {
                     paths.Add(group.ModFile);
                 }
             }
-            else
+            else if (group.UseComplexMode)
             {
-                // Rim-like files in order: main, data, dlg
-                if (group.MainRimFile != null)
+                // Complex mode: Load in exact order from Ghidra decompilation
+                // Order: _a.rim -> _adx.rim -> _s.rim -> _dlg.erf
+                // Note: .rim is NOT loaded in complex mode
+                
+                // Step 1: _a.rim (swkotor.exe: FUN_004094a0 line 159)
+                if (group.AreaRimFile != null)
                 {
-                    paths.Add(group.MainRimFile);
+                    paths.Add(group.AreaRimFile);
                 }
+                
+                // Step 2: _adx.rim (swkotor.exe: FUN_004094a0 line 85) - only if _a.rim not found
+                if (group.AreaRimFile == null && group.AreaExtendedRimFile != null)
+                {
+                    paths.Add(group.AreaExtendedRimFile);
+                }
+                
+                // Step 3: _s.rim (swkotor.exe: FUN_004094a0 line 118) - only if .mod not found
                 if (group.DataRimFile != null)
                 {
                     paths.Add(group.DataRimFile);
                 }
+                
+                // Step 4: _dlg.erf (swkotor2.exe: FUN_004096b0 line 147) - only if .mod not found (K2 only)
                 if (group.DlgErfFile != null)
                 {
                     paths.Add(group.DlgErfFile);
+                }
+            }
+            else
+            {
+                // Simple mode: Just .rim file
+                // swkotor.exe: FUN_004094a0 line 42: Loads .rim directly
+                if (group.MainRimFile != null)
+                {
+                    paths.Add(group.MainRimFile);
                 }
             }
 
@@ -224,26 +324,46 @@ namespace Andastra.Parsing.Installation
 
     /// <summary>
     /// Represents a group of module files for a single module root.
+    /// Matches exact behavior from swkotor.exe: FUN_004094a0 and swkotor2.exe: FUN_004096b0
     /// </summary>
     public class ModuleFileGroup
     {
         public string ModuleRoot { get; set; }
         public string ModFile { get; set; }
-        public string MainRimFile { get; set; }
-        public string DataRimFile { get; set; }
-        public string DlgErfFile { get; set; }
+        public string MainRimFile { get; set; }  // .rim file (only loaded in simple mode)
+        public string AreaRimFile { get; set; }  // _a.rim file (replaces .rim in complex mode)
+        public string AreaExtendedRimFile { get; set; }  // _adx.rim file (replaces .rim if _a.rim not found)
+        public string DataRimFile { get; set; }  // _s.rim file (adds to base)
+        public string DlgErfFile { get; set; }  // _dlg.erf file (K2 only, adds to base)
         public bool UsesModOverride { get; set; }
+        public bool UseComplexMode { get; set; }  // True if _a.rim or _adx.rim exists (complex mode)
 
         /// <summary>
-        /// Gets all file paths in this group.
+        /// Gets all file paths in this group in registration order (matching Ghidra decompilation).
         /// </summary>
         public List<string> GetAllFiles()
         {
             var files = new List<string>();
-            if (ModFile != null) files.Add(ModFile);
-            if (MainRimFile != null) files.Add(MainRimFile);
-            if (DataRimFile != null) files.Add(DataRimFile);
-            if (DlgErfFile != null) files.Add(DlgErfFile);
+            
+            if (UsesModOverride)
+            {
+                // .mod overrides all
+                if (ModFile != null) files.Add(ModFile);
+            }
+            else if (UseComplexMode)
+            {
+                // Complex mode order: _a.rim -> _adx.rim -> _s.rim -> _dlg.erf
+                if (AreaRimFile != null) files.Add(AreaRimFile);
+                if (AreaExtendedRimFile != null) files.Add(AreaExtendedRimFile);
+                if (DataRimFile != null) files.Add(DataRimFile);
+                if (DlgErfFile != null) files.Add(DlgErfFile);
+            }
+            else
+            {
+                // Simple mode: just .rim
+                if (MainRimFile != null) files.Add(MainRimFile);
+            }
+            
             return files;
         }
 
