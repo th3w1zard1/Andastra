@@ -297,7 +297,7 @@ namespace Andastra.Parsing.Resource.Generics.GUI
             {
                 textStruct.SetString("TEXT", text.Text);
             }
-            textStruct.SetUInt32("STRREF", (uint)(text.StrRef == -1 ? 0xFFFFFFFF : text.StrRef));
+            textStruct.SetUInt32("STRREF", (uint)(text.StrRef == -1 ? 0xFFFFFFFFU : (uint)text.StrRef));
             if (text.Pulsing.HasValue)
             {
                 textStruct.SetUInt8("PULSING", (byte)text.Pulsing.Value);
@@ -312,7 +312,6 @@ namespace Andastra.Parsing.Resource.Generics.GUI
                     textStruct.SetSingle("ALPHA", text.Color.A);
                 }
             }
-            gffStruct.SetStruct("TEXT", textStruct);
         }
 
         /// <summary>
@@ -355,7 +354,6 @@ namespace Andastra.Parsing.Resource.Generics.GUI
             {
                 hilightStruct.SetUInt8("PULSING", (byte)hilight.Pulsing.Value);
             }
-            gffStruct.SetStruct("HILIGHT", hilightStruct);
         }
 
         /// <summary>
