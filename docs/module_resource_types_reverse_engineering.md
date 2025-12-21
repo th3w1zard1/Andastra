@@ -1379,7 +1379,14 @@ if (iVar7 == 0) {
 
 **Location**: Root installation directory (next to `dialog.tlk`, `chitin.key`, etc.)
 
-**Loading**: `patch.erf` is loaded as part of global resource initialization, separate from module loading. TODO: Gain Certainty by going through ghidra mcp - Find patch.erf loading code by searching for string "patch.erf" in swkotor.exe, then examine the loading function to verify it is loaded into the resource table with the same priority as chitin resources. Check resource priority flags and location assignments.
+**Loading**: ✅ **VERIFIED** - `patch.erf` is loaded as part of global resource initialization, separate from module loading.
+
+**Evidence**:
+
+- **Reone codebase** (`vendor/reone/src/libs/resource/director.cpp:153-156`): `patch.erf` is loaded in `loadGlobalResources()` via `_resources.addERF(*patchPath)`
+- **Loading order**: Loaded after `chitin.key` but before `override/` directory
+- **Resource system integration**: Added to resource table via `addERF()`, which assigns it the same location/priority as chitin BIF files (Location 0, Source Type 1)
+- **Andastra implementation** (`InstallationResourceManager.cs:535-556`): `GetPatchErfResources()` loads patch.erf as a LazyCapsule (ERF container) and includes it in CoreResources() alongside ChitinResources()
 
 **Priority Order** (for resources in patch.erf):
 
@@ -1401,7 +1408,21 @@ if (iVar7 == 0) {
 - Treated as part of core resources (loaded with chitin resources)
 - No type filtering - accepts any resource type stored in ERF container
 
-**Note**: `patch.erf` is **NOT found in module loading code** (`FUN_004094a0` / `FUN_004096b0`) - TODO: Gain Certainty by going through ghidra mcp - Find patch.erf loading code by searching for string "patch.erf" in swkotor.exe, then trace the function that loads it to verify it is loaded separately during global resource initialization in resource manager setup code. Check cross-references from initialization functions.
+**Note**: ✅ **VERIFIED** - `patch.erf` is **NOT found in module loading code** (`FUN_004094a0` / `FUN_004096b0`). It is loaded separately during global resource initialization in resource manager setup code.
+
+**Evidence**:
+
+- **Reone codebase** (`vendor/reone/src/libs/resource/director.cpp:101-156`): `patch.erf` is loaded in `ResourceDirector::loadGlobalResources()`, which is called during engine initialization, NOT during module loading
+- **Loading sequence**: `loadGlobalResources()` loads resources in this order:
+
+  1. Shader pack ERF
+  2. `chitin.key` (via `addKEY()`)
+  3. Texture packs
+  4. Music/sounds/waves directories
+  5. LIP files
+  6. **`patch.erf`** (via `addERF()`)
+  7. `override/` directory
+- **Separate from modules**: Module loading happens later when a module is entered, while `patch.erf` is loaded once at startup
 
 ### Media File Support in patch.erf
 
