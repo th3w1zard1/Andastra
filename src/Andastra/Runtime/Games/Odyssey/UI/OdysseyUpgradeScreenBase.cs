@@ -990,7 +990,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// - Adds item to character's inventory
         /// - If inventory is full, item entity is destroyed
         /// </remarks>
-        private bool CreateItemFromTemplateAndAddToInventory(string templateResRef, IEntity character)
+        protected bool CreateItemFromTemplateAndAddToInventory(string templateResRef, IEntity character)
         {
             if (string.IsNullOrEmpty(templateResRef) || _world == null)
             {

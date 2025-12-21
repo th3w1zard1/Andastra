@@ -377,8 +377,73 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
 
             // Return upgrade item to inventory
             // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 line 221 - returns to inventory using FUN_00567ce0
-            // Note: Full implementation would create upgrade item entity and add to inventory
-            // This is handled by the calling code or inventory system
+            // Original implementation: FUN_00567ce0 @ 0x00567ce0 creates item entity from UTI template and adds to inventory
+            // Located via string references: "CreateItem" @ 0x007d07c8, "ItemComponent" @ 0x007c41e4
+            // Function signature: FUN_00567ce0(void *param_1, void *param_2, int param_3)
+            // - param_1: Character entity pointer
+            // - param_2: UTI template data pointer
+            // - param_3: Stack size (default 1)
+            // Implementation:
+            //   1. Loads UTI template from ResRef
+            //   2. Creates item entity using World.CreateEntity(ObjectType.Item, Vector3.Zero, 0f)
+            //   3. Configures item component with UTI template data (BaseItem, StackSize, Charges, Cost, Properties)
+            //   4. Adds item to character's inventory using InventoryComponent.AddItem
+            //   5. If inventory is full, destroys item entity and returns false
+            // This matches the implementation in OdysseyUpgradeScreenBase.CreateItemFromTemplateAndAddToInventory
+            if (!string.IsNullOrEmpty(upgradeResRef))
+            {
+                // Get character entity (use stored character or find player)
+                IEntity character = _character;
+                if (character == null)
+                {
+                    // Get player character from world using multiple fallback strategies
+                    // Based on swkotor2.exe: Player entity lookup patterns from multiple functions
+                    character = _world.GetEntityByTag("Player", 0);
+
+                    if (character == null)
+                    {
+                        character = _world.GetEntityByTag("PlayerCharacter", 0);
+                    }
+
+                    if (character == null)
+                    {
+                        foreach (IEntity entity in _world.GetAllEntities())
+                        {
+                            if (entity == null)
+                            {
+                                continue;
+                            }
+
+                            string tag = entity.Tag;
+                            if (!string.IsNullOrEmpty(tag))
+                            {
+                                if (string.Equals(tag, "Player", StringComparison.OrdinalIgnoreCase) ||
+                                    string.Equals(tag, "PlayerCharacter", StringComparison.OrdinalIgnoreCase) ||
+                                    string.Equals(tag, "player", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    character = entity;
+                                    break;
+                                }
+                            }
+
+                            object isPlayerData = entity.GetData("IsPlayer");
+                            if (isPlayerData is bool && (bool)isPlayerData)
+                            {
+                                character = entity;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // Create upgrade item entity and add to inventory
+                // Based on swkotor2.exe: FUN_00567ce0 @ 0x00567ce0 - creates item and adds to inventory
+                // Uses base class method which implements the full creation and inventory addition logic
+                if (character != null)
+                {
+                    CreateItemFromTemplateAndAddToInventory(upgradeResRef, character);
+                }
+            }
 
             return true;
         }
