@@ -4,12 +4,32 @@ using System.Numerics;
 using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
 using Andastra.Runtime.MonoGame.Lighting;
+using Andastra.Runtime.MonoGame.Graphics;
+using Microsoft.Xna.Framework.Graphics;
 using DynamicLight = Andastra.Runtime.MonoGame.Lighting.DynamicLight;
 using EclipseILightingSystem = Andastra.Runtime.Games.Eclipse.ILightingSystem;
 using EclipseIUpdatable = Andastra.Runtime.Games.Eclipse.IUpdatable;
 
 namespace Andastra.Runtime.Games.Eclipse.Lighting
 {
+    /// <summary>
+    /// Light grid entry structure (offset + count per cluster) for GPU buffer.
+    /// Matches ClusteredLightCulling.LightGridEntry for consistency.
+    /// </summary>
+    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+    internal struct LightGridEntry
+    {
+        /// <summary>
+        /// Offset into the light index buffer where this cluster's lights start.
+        /// </summary>
+        public uint Offset;
+
+        /// <summary>
+        /// Number of lights in this cluster.
+        /// </summary>
+        public uint Count;
+    }
+
     /// <summary>
     /// Eclipse Engine (Dragon Age) lighting system implementation.
     /// </summary>
@@ -50,6 +70,12 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
         // Cluster data for light culling
         private int[] _clusterLightCounts;
         private int[] _clusterLightIndices;
+
+        // GPU buffers for cluster data (optional - only created if GraphicsDevice is provided)
+        private GraphicsDevice _graphicsDevice;
+        private MonoGameGraphicsBuffer _lightIndexBuffer;
+        private MonoGameGraphicsBuffer _lightGridBuffer;
+        private bool _buffersDirty = true;
 
         // Fog state
         private FogSettings _fog;
@@ -124,25 +150,59 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
         }
 
         /// <summary>
+        /// Gets or sets the graphics device for GPU buffer support.
+        /// Setting this will create GPU buffers if they don't exist.
+        /// </summary>
+        public GraphicsDevice GraphicsDevice
+        {
+            get { return _graphicsDevice; }
+            set
+            {
+                if (_graphicsDevice != value)
+                {
+                    _graphicsDevice = value;
+                    if (_graphicsDevice != null && (_lightIndexBuffer == null || _lightGridBuffer == null))
+                    {
+                        CreateGpuBuffers();
+                        _buffersDirty = true;
+                    }
+                    else if (_graphicsDevice == null)
+                    {
+                        DisposeGpuBuffers();
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Creates a new Eclipse lighting system.
         /// </summary>
         /// <param name="maxLights">Maximum number of dynamic lights supported (default: 1024).</param>
+        /// <param name="graphicsDevice">Optional graphics device for GPU buffer support. If null, GPU buffers will not be created.</param>
         /// <remarks>
         /// Initializes the lighting system with default values.
         /// Lighting properties should be configured from ARE file data after construction.
+        /// If graphicsDevice is provided, GPU buffers will be created for efficient cluster data upload.
         /// </remarks>
-        public EclipseLightingSystem(int maxLights = 1024)
+        public EclipseLightingSystem(int maxLights = 1024, GraphicsDevice graphicsDevice = null)
         {
             MaxLights = maxLights;
             _lights = new List<DynamicLight>(maxLights);
             _lightMap = new Dictionary<uint, DynamicLight>(maxLights);
             _entityLightMap = new Dictionary<uint, List<DynamicLight>>();
             _lightEntityMap = new Dictionary<DynamicLight, uint>();
+            _graphicsDevice = graphicsDevice;
 
             // Allocate cluster data
             int totalClusters = ClusterCountX * ClusterCountY * ClusterCountZ;
             _clusterLightCounts = new int[totalClusters];
             _clusterLightIndices = new int[totalClusters * MaxLightsPerCluster];
+
+            // Create GPU buffers if graphics device is available
+            if (_graphicsDevice != null)
+            {
+                CreateGpuBuffers();
+            }
 
             // Initialize default fog
             _fog = new FogSettings
@@ -493,22 +553,22 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
             // Update sun shadow map if it casts shadows
             if (_sunLight != null && _sunLight.Enabled && _sunLight.CastShadows && _sunShadows)
             {
-                // In a full implementation, this would:
+                // TODO:  In a full implementation, this would:
                 // 1. Calculate shadow map view/projection matrix based on sun direction
                 // 2. Render shadow map from sun's perspective
                 // 3. Update shadow map texture
-                // For now, we mark it as needing updates
+                // TODO: STUB - For now, we mark it as needing updates
                 _sunLight.UpdateGpuData();
             }
 
             // Update moon shadow map if it casts shadows
             if (_moonLight != null && _moonLight.Enabled && _moonLight.CastShadows && _moonShadows)
             {
-                // In a full implementation, this would:
+                // TODO:  In a full implementation, this would:
                 // 1. Calculate shadow map view/projection matrix based on moon direction
                 // 2. Render shadow map from moon's perspective
                 // 3. Update shadow map texture
-                // For now, we mark it as needing updates
+                // TODO: STUB - For now, we mark it as needing updates
                 _moonLight.UpdateGpuData();
             }
         }
@@ -848,6 +908,7 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
 
             // Clear cluster data
             Array.Clear(_clusterLightCounts, 0, _clusterLightCounts.Length);
+            Array.Clear(_clusterLightIndices, 0, _clusterLightIndices.Length);
 
             // Assign lights to clusters based on AABB intersection
             foreach (DynamicLight light in _lights)
@@ -865,6 +926,7 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
             }
 
             _clustersDirty = false;
+            _buffersDirty = true;
         }
 
         /// <summary>
@@ -878,9 +940,12 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
                 light.UpdateGpuData();
             }
 
-            // Upload cluster assignment data
-            // Upload light data buffer
-            // In a full implementation, this would upload to GPU buffers
+            // Upload cluster assignment data to GPU buffers if graphics device is available
+            if (_graphicsDevice != null && _buffersDirty)
+            {
+                UploadClusterDataToGpu();
+                _buffersDirty = false;
+            }
         }
 
         /// <summary>
@@ -1004,6 +1069,91 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
             int offset = clusterIdx * MaxLightsPerCluster + count;
             _clusterLightIndices[offset] = (int)light.LightId;
             _clusterLightCounts[clusterIdx] = count + 1;
+            _buffersDirty = true;
+        }
+
+        /// <summary>
+        /// Creates GPU buffers for cluster light data.
+        /// </summary>
+        private void CreateGpuBuffers()
+        {
+            if (_graphicsDevice == null)
+            {
+                return;
+            }
+
+            DisposeGpuBuffers();
+
+            int totalClusters = ClusterCountX * ClusterCountY * ClusterCountZ;
+            int maxLightIndices = totalClusters * MaxLightsPerCluster;
+
+            // Create light index buffer (stores light indices per cluster)
+            // Using uint (4 bytes) for light indices
+            _lightIndexBuffer = new MonoGameGraphicsBuffer(
+                _graphicsDevice,
+                maxLightIndices,
+                sizeof(uint),
+                isDynamic: true
+            );
+
+            // Create light grid buffer (offset + count per cluster)
+            int lightGridStride = System.Runtime.InteropServices.Marshal.SizeOf(typeof(LightGridEntry));
+            _lightGridBuffer = new MonoGameGraphicsBuffer(
+                _graphicsDevice,
+                totalClusters,
+                lightGridStride,
+                isDynamic: true
+            );
+        }
+
+        /// <summary>
+        /// Disposes GPU buffers.
+        /// </summary>
+        private void DisposeGpuBuffers()
+        {
+            _lightIndexBuffer?.Dispose();
+            _lightIndexBuffer = null;
+
+            _lightGridBuffer?.Dispose();
+            _lightGridBuffer = null;
+        }
+
+        /// <summary>
+        /// Uploads cluster assignment data to GPU buffers.
+        /// Converts CPU cluster data (_clusterLightCounts, _clusterLightIndices) to GPU-friendly format.
+        /// </summary>
+        private void UploadClusterDataToGpu()
+        {
+            if (_graphicsDevice == null || _lightIndexBuffer == null || _lightGridBuffer == null)
+            {
+                return;
+            }
+
+            int totalClusters = ClusterCountX * ClusterCountY * ClusterCountZ;
+
+            // Build light index buffer: convert int[] to uint[]
+            uint[] lightIndices = new uint[_clusterLightIndices.Length];
+            for (int i = 0; i < _clusterLightIndices.Length; i++)
+            {
+                lightIndices[i] = (uint)_clusterLightIndices[i];
+            }
+            _lightIndexBuffer.SetData(lightIndices);
+
+            // Build light grid buffer: create LightGridEntry for each cluster
+            LightGridEntry[] lightGrid = new LightGridEntry[totalClusters];
+            uint currentOffset = 0;
+
+            for (int i = 0; i < totalClusters; i++)
+            {
+                int count = _clusterLightCounts[i];
+                lightGrid[i] = new LightGridEntry
+                {
+                    Offset = currentOffset,
+                    Count = (uint)count
+                };
+                currentOffset += (uint)count;
+            }
+            _lightGridBuffer.SetData(lightGrid);
         }
 
         /// <summary>
@@ -1048,7 +1198,7 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
             _moonLight = null;
 
             // Release GPU buffers
-            // In a full implementation, this would release GPU resources
+            DisposeGpuBuffers();
 
             _disposed = true;
         }
