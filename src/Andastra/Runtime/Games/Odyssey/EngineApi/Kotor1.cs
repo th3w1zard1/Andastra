@@ -6269,15 +6269,19 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
                     // For placeables, doors, and other objects with animation components:
                     // They may also have spawn animations, but typically just fade in
                     // Based on swkotor2.exe: Most non-creature objects just fade in without specific animations
+                    // However, placeables with animation components may have an appear animation (animation ID 0)
                     if (objectType == 4) // OBJECT_TYPE_PLACEABLE
                     {
                         IAnimationComponent animationComponent = entity.GetComponent<IAnimationComponent>();
                         if (animationComponent != null)
                         {
-                            // Placeables may have an appear animation, but it's less common
-                            // TODO: STUB - For now, just fade in (rendering system handles the visual fade)
-                            // If placeable has a specific appear animation, it would be animation ID 0 or a specific ID
-                            // This can be extended if needed based on model data
+                            // Placeables may have an appear animation (animation ID 0), similar to creatures
+                            // Based on swkotor2.exe: Placeables with appear animations play animation ID 0 while fading in
+                            // Animation ID 0 is typically the first animation in the model's animation array
+                            // If animation ID 0 doesn't exist, entity will just fade in without animation
+                            // Animation plays once (not looping) and completes as fade-in finishes
+                            // swkotor2.exe: Placeable appear animation behavior matches creature spawn animation pattern
+                            animationComponent.PlayAnimation(0, 1.0f, false); // Animation ID 0, normal speed, no loop
                         }
                     }
 
