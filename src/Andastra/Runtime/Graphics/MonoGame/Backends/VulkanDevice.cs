@@ -977,6 +977,8 @@ namespace Andastra.Runtime.MonoGame.Backends
             VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR = 1000396003,
             VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR = 1000150000,
             VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR = 1000150004,
+            VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR = 1000150005,
+            VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_AABBS_DATA_KHR = 1000150006,
             VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR = 1000150017,
             VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR = 1000150020,
             VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO = 1000244001
@@ -1841,6 +1843,8 @@ namespace Andastra.Runtime.MonoGame.Backends
             if ((desc.Usage & BufferUsageFlags.ShaderResource) != 0)
             {
                 usageFlags |= VkBufferUsageFlags.VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+                // Scratch buffers and raytracing buffers need device address support
+                usageFlags |= VkBufferUsageFlags.VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
             }
             if ((desc.Usage & BufferUsageFlags.IndirectArgument) != 0)
             {
@@ -4958,6 +4962,9 @@ namespace Andastra.Runtime.MonoGame.Backends
             // Barrier tracking
             private readonly List<PendingBufferBarrier> _pendingBufferBarriers;
             private readonly Dictionary<object, ResourceState> _resourceStates;
+            
+            // Scratch buffer tracking for acceleration structure builds
+            private readonly List<IBuffer> _scratchBuffers;
 
             // Pending barrier entry for buffers
             private struct PendingBufferBarrier
@@ -4987,6 +4994,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 _isOpen = false;
                 _pendingBufferBarriers = new List<PendingBufferBarrier>();
                 _resourceStates = new Dictionary<object, ResourceState>();
+                _scratchBuffers = new List<IBuffer>();
             }
 
             public void Open()
@@ -7263,12 +7271,9 @@ namespace Andastra.Runtime.MonoGame.Backends
                     {
                         GeometryDesc geom = geometries[i];
                         
-                        if (geom.Type != GeometryType.Triangles)
+                        if (geom.Type == GeometryType.Triangles)
                         {
-                            throw new NotSupportedException($"Geometry type {geom.Type} is not yet supported. Only Triangles are supported for BLAS.");
-                        }
-
-                        GeometryTriangles triangles = geom.Triangles;
+                            GeometryTriangles triangles = geom.Triangles;
 
                         // Get device addresses for buffers
                         ulong vertexBufferAddress = 0UL;
@@ -7405,6 +7410,83 @@ namespace Andastra.Runtime.MonoGame.Backends
                             transformOffset = 0
                         };
                         buildRanges.Add(buildRange);
+                        }
+                        else if (geom.Type == GeometryType.AABBs)
+                        {
+                            GeometryAABBs aabbs = geom.AABBs;
+                            
+                            // Get device address for AABB buffer
+                            ulong aabbBufferAddress = 0UL;
+                            if (aabbs.Buffer != null)
+                            {
+                                VulkanBuffer vulkanAabbBuffer = aabbs.Buffer as VulkanBuffer;
+                                if (vulkanAabbBuffer != null)
+                                {
+                                    IntPtr vkBuffer = vulkanAabbBuffer.VkBuffer;
+                                    if (vkBuffer != IntPtr.Zero)
+                                    {
+                                        VkBufferDeviceAddressInfo bufferInfo = new VkBufferDeviceAddressInfo
+                                        {
+                                            sType = VkStructureType.VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
+                                            pNext = IntPtr.Zero,
+                                            buffer = vkBuffer
+                                        };
+                                        aabbBufferAddress = vkGetBufferDeviceAddressKHR(_device, ref bufferInfo);
+                                        if (aabbs.Offset > 0)
+                                        {
+                                            aabbBufferAddress += (ulong)aabbs.Offset;
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            // Create AABBs data structure
+                            // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkAccelerationStructureGeometryAabbsDataKHR.html
+                            VkAccelerationStructureGeometryAabbsDataKHR aabbsData = new VkAccelerationStructureGeometryAabbsDataKHR
+                            {
+                                sType = VkStructureType.VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_AABBS_DATA_KHR,
+                                pNext = IntPtr.Zero,
+                                dataDeviceAddress = aabbBufferAddress,
+                                stride = (ulong)(aabbs.Stride > 0 ? aabbs.Stride : 24) // Default stride is 24 bytes (6 floats: min.x, min.y, min.z, max.x, max.y, max.z)
+                            };
+                            
+                            // Create geometry structure
+                            VkGeometryFlagsKHR geometryFlags = VkGeometryFlagsKHR.VK_GEOMETRY_OPAQUE_BIT_KHR;
+                            if ((geom.Flags & GeometryFlags.NoDuplicateAnyHit) != 0)
+                            {
+                                geometryFlags |= VkGeometryFlagsKHR.VK_GEOMETRY_NO_DUPLICATE_ANY_HIT_INVOCATION_BIT_KHR;
+                            }
+                            
+                            // Create geometry structure with AABBs data in union
+                            VkAccelerationStructureGeometryDataKHR geometryData = new VkAccelerationStructureGeometryDataKHR();
+                            geometryData.aabbs = aabbsData; // Direct assignment works because of FieldOffset(0)
+                            
+                            VkAccelerationStructureGeometryKHR vkGeometry = new VkAccelerationStructureGeometryKHR
+                            {
+                                sType = VkStructureType.VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR,
+                                pNext = IntPtr.Zero,
+                                geometryType = VkGeometryTypeKHR.VK_GEOMETRY_TYPE_AABBS_KHR,
+                                geometry = geometryData,
+                                flags = geometryFlags
+                            };
+                            
+                            vkGeometries.Add(vkGeometry);
+                            
+                            // Create build range info for AABBs
+                            // For AABBs, primitiveCount is the number of AABB primitives
+                            VkAccelerationStructureBuildRangeInfoKHR buildRange = new VkAccelerationStructureBuildRangeInfoKHR
+                            {
+                                primitiveCount = (uint)aabbs.Count,
+                                primitiveOffset = 0,
+                                firstVertex = 0,
+                                transformOffset = 0
+                            };
+                            buildRanges.Add(buildRange);
+                        }
+                        else
+                        {
+                            throw new NotSupportedException($"Geometry type {geom.Type} is not supported for BLAS. Only Triangles and AABBs are supported.");
+                        }
                     }
 
                     // Create build geometry info
@@ -7468,14 +7550,41 @@ namespace Andastra.Runtime.MonoGame.Backends
                                 maxPrimitiveCountsPtr,
                                 ref sizeInfo);
 
-                            // TODO: PLACEHOLDER - Allocate scratch buffer and get device address
-                            // For now, we'll assume the acceleration structure was pre-allocated with sufficient size
-                            // In a full implementation, we would:
-                            // 1. Create a scratch buffer with sizeInfo.buildScratchSize
-                            // 2. Get its device address using vkGetBufferDeviceAddressKHR
-                            // 3. Set buildInfo.scratchDataDeviceAddress
-                            // Note: Scratch buffer must have VK_BUFFER_USAGE_STORAGE_BUFFER_BIT and VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
-                            buildInfo.scratchDataDeviceAddress = 0UL; // Placeholder - requires scratch buffer allocation
+                            // Allocate scratch buffer for acceleration structure build
+                            // Scratch buffer is temporary memory used during the build process
+                            // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetBufferDeviceAddressKHR.html
+                            ulong scratchBufferAddress = 0UL;
+                            if (sizeInfo.buildScratchSize > 0)
+                            {
+                                // Create scratch buffer with required usage flags
+                                BufferDesc scratchBufferDesc = new BufferDesc
+                                {
+                                    ByteSize = (int)sizeInfo.buildScratchSize,
+                                    Usage = BufferUsageFlags.ShaderResource | BufferUsageFlags.IndirectArgument
+                                };
+                                
+                                IBuffer scratchBuffer = _device.CreateBuffer(scratchBufferDesc);
+                                _scratchBuffers.Add(scratchBuffer);
+                                
+                                // Get device address for scratch buffer
+                                VulkanBuffer vulkanScratchBuffer = scratchBuffer as VulkanBuffer;
+                                if (vulkanScratchBuffer != null)
+                                {
+                                    IntPtr vkScratchBuffer = vulkanScratchBuffer.VkBuffer;
+                                    if (vkScratchBuffer != IntPtr.Zero)
+                                    {
+                                        VkBufferDeviceAddressInfo scratchBufferInfo = new VkBufferDeviceAddressInfo
+                                        {
+                                            sType = VkStructureType.VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
+                                            pNext = IntPtr.Zero,
+                                            buffer = vkScratchBuffer
+                                        };
+                                        scratchBufferAddress = vkGetBufferDeviceAddressKHR(_device, ref scratchBufferInfo);
+                                    }
+                                }
+                            }
+                            
+                            buildInfo.scratchDataDeviceAddress = scratchBufferAddress;
 
                             // Allocate memory for build range info pointers array
                             IntPtr[] buildRangeInfoPointers = new IntPtr[geometryCount];
@@ -7655,6 +7764,16 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             public void Dispose()
             {
+                // Clean up scratch buffers allocated for acceleration structure builds
+                foreach (IBuffer scratchBuffer in _scratchBuffers)
+                {
+                    if (scratchBuffer != null)
+                    {
+                        scratchBuffer.Dispose();
+                    }
+                }
+                _scratchBuffers.Clear();
+                
                 // Command buffers are managed by the command pool and device
                 // They are automatically freed when the command pool is destroyed
                 // No explicit cleanup needed for command buffers themselves
