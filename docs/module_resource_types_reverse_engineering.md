@@ -254,99 +254,7 @@ The engine's resource manager loads resources by:
 2. Available for loading by type-specific loaders
 3. Loaded regardless of type (TPC, TGA, etc.)
 
-**CAN be packed into modules** (PROVEN by code analysis):
-
-- **TPC/TGA textures**: ✅ **YES** - No type filtering in RIM/MOD loaders
-- **All GFF-based types**: ✅ **YES** - No type filtering
-- **All binary formats**: ✅ **YES** - No type filtering
-- **Media files**: ✅ **YES** - No type filtering
-- **Any resource type**: ✅ **YES** - Engine accepts any type ID stored in containers
-
-**Edge Cases - What Actually Works** (based on code structure):
-
-- **TLK (type 0x7e2 = 2018)**:
-  - ✅ Registered in resource type registry (swkotor.exe: `FUN_005e6d20` line 91, swkotor2.exe: `FUN_00632510` line 90)
-  - ✅ CAN be registered in modules (no type filtering in `FUN_0040e990`)
-  - ❌ **CONFIRMED**: TLK loading uses direct file I/O from game root directory (`dialog.tlk`), NOT resource system
-  - **Module Support**: ❌ **NO** - TLK files in modules will be ignored (see "Files Loaded Outside Resource System" section)
-
-- **RES (type 0x0 = 0)**:
-  - ✅ Registered in resource type registry (swkotor.exe: `FUN_005e6d20` line 34)
-  - ✅ CAN be registered in modules (no type filtering in `FUN_0040e990`)
-  - ❓ **UNPROVEN**: Whether RES loading code uses `FUN_00407230` or hardcoded paths
-  - **If RES loader uses `FUN_00407230`**: Module RES would override SAV RES (if same ResRef)
-  - **If RES loader uses hardcoded SAV path**: Module RES would be ignored
-
-- **KEY/BIF**: Not registered in resource type registry - cannot be packed as resources
-
-- **MOD/RIM/ERF/SAV**: Registered as container types (0x7db, 0xbba, 0x7d5, 0x7df) but engine doesn't recursively load nested containers
-
-- **HAK/NWM**: Not registered in resource type registry - cannot be packed as resources
-
-- **DDS**: Not registered in resource type registry - cannot be packed as resources
-
-**Note on TPC/TGA**: **YES, these CAN be containerized** in modules. The proof:
-
-- RIM/MOD loaders (`FUN_0040f990` / `FUN_0040f3c0`) iterate through ALL entries
-- No type filtering - every entry is registered in the resource table
-- Texture loaders (`FUN_004b8300` line 187-190) search through resource table:
-  - First tries TGA (type 3) via `FUN_00408bc0`
-  - Then tries TPC (type 0xbbf = 3007) via `FUN_00408bc0`
-  - `FUN_00408bc0` calls `FUN_00407230` which searches all locations including modules
-- **Texture Priority**: TGA → TPC (no DDS support in this code path)
-
-### Known Resource Types from Andastra
-
-Based on `ResourceType.cs`, the following resource types are defined:
-
-**Core Game Resources** (VERIFIED via Ghidra - Resource type handlers call `FUN_004074d0` which searches all locations including modules):
-
-- `ARE` (2012) - Area data
-- `IFO` (2014) - Module info
-- `GIT` (2023) - Area instance data
-- `DLG` (2029) - Dialog trees
-- `UTI` (2025) - Item templates
-- `UTC` (2027) - Creature templates
-- `UTD` (2042) - Door templates
-- `UTP` (2044) - Placeable templates
-- `UTS` (2035) - Sound templates
-- `UTT` (2032) - Trigger templates
-- `UTW` (2058) - Waypoint templates
-- `UTM` (2051) - Merchant templates
-- `JRL` (2056) - Journal entries
-- `PTH` (3003) - Pathfinding data
-- `WOK` (2016) - Walkmesh data
-- `DWK` (2052) - Door walkmesh
-- `PWK` (2053) - Placeable walkmesh
-- `MDL` (2002) - 3D models
-- `MDX` (3008) - Model animations
-- `TPC` (3007) - Textures
-- `TGA` (3) - Texture images
-- `TXI` (2022) - Texture info
-- `NCS` (2010) - Compiled scripts
-- `NSS` (2009) - Script source
-  - **VERIFIED**: NSS (type 2009, 0x7d9) IS registered in resource type registry (swkotor.exe: `FUN_005e6d20` line 69-70, swkotor2.exe: `FUN_00632510` line 68-69)
-  - **VERIFIED**: NO handler calls `FUN_004074d0`/`FUN_004075a0` with type 0x7d9 - no runtime loader exists
-  - **Module Support**: ⚠️ **REGISTERED BUT NOT LOADED** - NSS files can be stored in modules and will be registered in the resource table, but the engine has no runtime loader for NSS. NSS must be compiled to NCS (type 2010) before use. The engine only loads NCS at runtime, not NSS source files.
-- `SSF` (2060) - Soundset files
-- `LIP` (3004) - Lip sync data
-- `VIS` (3001) - Visibility data
-- `LYT` (3000) - Layout data
-- `FAC` (2038) - Faction data
-- `GUI` (2047) - GUI definitions
-- `CUT` (2074) - Cutscene data
-
-**TODO: Gain Certainty by going through ghidra mcp - Verify which of these are truly unsupported by examining resource type handlers and module loading code. Check for string references to these file types and verify if they're filtered or rejected. Unlikely/Unsupported in Modules**:
-
-- `RES` (0) - Save data (SAV containers only)
-- `SAV` (2057) - Save game containers
-- `KEY` (9999) - Chitin key files
-- `BIF` (9998) - BIF archives
-- `MOD` (2011) - Module containers (nested modules not supported)
-- `RIM` (3002) - RIM containers (nested RIMs not supported)
-- `ERF` (9997) - ERF containers (nested ERFs not supported)
-- `HAK` (2061) - HAK archives (Aurora/NWN only, not KotOR)
-- `NWM` (2062) - NWM modules (Aurora/NWN only)
+**CRITICAL**: The following sections list ONLY resource types that the game **ACTUALLY LOADS AND USES** from modules. Resource types that can be "stored" or "registered" but are not loaded by the game are listed in "Resource Types NOT Loaded from Modules" section below.
 
 ## Resource Type Support Verification (Ghidra Analysis)
 
@@ -933,11 +841,11 @@ if (iVar7 == 0) {
      - **K1**: ❌ NOT supported - Only top-level override files are loaded (`FUN_0040f200` calls `FUN_005e6640` with `param_5=0`)
      - **K2**: ✅ Supported - Subfolders ARE searched, but **root override files have priority** (`FUN_00410d20` lines 158-200)
 
-6. **Resource types**: ✅ Engine accepts ANY resource type in modules (no filtering)
-   - Container format allows any resource type ID
-   - Engine resource manager loads any type stored in containers
-   - **TPC/TGA CAN be containerized** - Engine loads these from modules
-   - Engine behavior: Accepts any resource type ID stored in containers, regardless of container type
+6. **Resource types**: ✅ Engine loads verified resource types from modules (see "Resource Types Loaded from Modules" section)
+   - Container format allows any resource type ID to be stored
+   - Engine resource manager only loads resource types that have verified handlers calling `FUN_004074d0`/`FUN_004075a0`
+   - **TPC/TGA ARE loaded from modules** - Verified handlers exist
+   - **NSS/TLK are NOT loaded from modules** - No handlers or handlers bypass resource system
 
 7. **Valid file combinations**:
    - K1: `.mod` (override), `.rim`, `.rim` + `_s.rim`, `.rim` + `_a.rim`, `.rim` + `_adx.rim`, `.rim` + `_a.rim` + `_adx.rim`
