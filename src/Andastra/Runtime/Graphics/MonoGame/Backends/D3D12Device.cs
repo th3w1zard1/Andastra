@@ -695,11 +695,6 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new NotSupportedException("Raytracing is not supported on this device");
             }
 
-            if (desc == null)
-            {
-                throw new ArgumentNullException(nameof(desc));
-            }
-
             if (_device5 == IntPtr.Zero)
             {
                 throw new InvalidOperationException("ID3D12Device5 is not available for raytracing");
@@ -1576,14 +1571,6 @@ namespace Andastra.Runtime.MonoGame.Backends
             uint DstZ,
             IntPtr pSrc,
             IntPtr pSrcBox);
-
-        // COM interface method delegate for ID3D12Resource::Map
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate int MapResourceDelegate(IntPtr resource, uint subresource, IntPtr pReadRange, out IntPtr ppData);
-
-        // COM interface method delegate for ID3D12Resource::Unmap
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate void UnmapResourceDelegate(IntPtr resource, uint subresource, IntPtr pWrittenRange);
 
         // COM interface method delegate for CopyBufferRegion
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
@@ -3804,10 +3791,6 @@ namespace Andastra.Runtime.MonoGame.Backends
                         Marshal.FreeHGlobal(srcLocationPtr);
                         Marshal.FreeHGlobal(dstLocationPtr);
                     }
-
-                    // Transition texture back to appropriate state for use (e.g., SHADER_RESOURCE)
-                    SetTextureState(texture, ResourceState.ShaderResource);
-                    CommitBarriers();
                 }
                 finally
                 {
