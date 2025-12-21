@@ -2579,6 +2579,118 @@ namespace Andastra.Runtime.MonoGame.Backends
             // objc_msgSend returns a value even for void methods, we ignore it
             objc_msgSend_void(commandBufferOrEncoder, selector);
         }
+
+        // Buffer copying via blit command encoder
+        // Based on Metal API: MTLBlitCommandEncoder::copyFromBuffer:sourceOffset:toBuffer:destinationOffset:size:
+        // Metal API Reference: https://developer.apple.com/documentation/metal/mtlblitcommandencoder/1400774-copyfrombuffer
+        // Method signature: - (void)copyFromBuffer:(id<MTLBuffer>)sourceBuffer sourceOffset:(NSUInteger)sourceOffset toBuffer:(id<MTLBuffer>)destinationBuffer destinationOffset:(NSUInteger)destinationOffset size:(NSUInteger)size;
+        // Note: On 64-bit systems, NSUInteger is 64-bit (ulong), not 32-bit (uint)
+        [DllImport(LibObjC, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void objc_msgSend_copyFromBuffer(IntPtr receiver, IntPtr selector, IntPtr sourceBuffer, ulong sourceOffset, IntPtr destinationBuffer, ulong destinationOffset, ulong size);
+
+        /// <summary>
+        /// Copies data from one buffer to another using a Metal blit command encoder.
+        /// Based on Metal API: MTLBlitCommandEncoder::copyFromBuffer:sourceOffset:toBuffer:destinationOffset:size:
+        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlblitcommandencoder/1400774-copyfrombuffer
+        /// </summary>
+        /// <param name="blitEncoder">Metal blit command encoder handle</param>
+        /// <param name="sourceBuffer">Source buffer handle</param>
+        /// <param name="sourceOffset">Source offset in bytes</param>
+        /// <param name="destinationBuffer">Destination buffer handle</param>
+        /// <param name="destinationOffset">Destination offset in bytes</param>
+        /// <param name="size">Size in bytes to copy</param>
+        public static void CopyFromBuffer(IntPtr blitEncoder, IntPtr sourceBuffer, ulong sourceOffset, IntPtr destinationBuffer, ulong destinationOffset, ulong size)
+        {
+            if (blitEncoder == IntPtr.Zero || sourceBuffer == IntPtr.Zero || destinationBuffer == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                // Register selector for copyFromBuffer:sourceOffset:toBuffer:destinationOffset:size:
+                IntPtr selector = sel_registerName("copyFromBuffer:sourceOffset:toBuffer:destinationOffset:size:");
+                
+                // Call the method
+                // Note: On 64-bit systems, NSUInteger is 64-bit (ulong)
+                objc_msgSend_copyFromBuffer(blitEncoder, selector, sourceBuffer, sourceOffset, destinationBuffer, destinationOffset, size);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalNative] CopyFromBuffer: Exception: {ex.Message}");
+                Console.WriteLine($"[MetalNative] CopyFromBuffer: Stack trace: {ex.StackTrace}");
+            }
+        }
+
+        // Buffer contents access for CPU writes
+        // Based on Metal API: MTLBuffer::contents()
+        // Metal API Reference: https://developer.apple.com/documentation/metal/mtlbuffer/1515376-contents
+        // Method signature: - (void *)contents;
+        [DllImport(LibObjC, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr objc_msgSend_contents(IntPtr receiver, IntPtr selector);
+
+        /// <summary>
+        /// Gets a pointer to the contents of a Metal buffer for CPU access.
+        /// Only valid for buffers with shared or managed storage mode.
+        /// Based on Metal API: MTLBuffer::contents()
+        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlbuffer/1515376-contents
+        /// </summary>
+        /// <param name="buffer">Metal buffer handle</param>
+        /// <returns>Pointer to buffer contents, or IntPtr.Zero if invalid</returns>
+        public static IntPtr GetBufferContents(IntPtr buffer)
+        {
+            if (buffer == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            try
+            {
+                IntPtr selector = sel_registerName("contents");
+                return objc_msgSend_contents(buffer, selector);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalNative] GetBufferContents: Exception: {ex.Message}");
+                return IntPtr.Zero;
+            }
+        }
+
+        // Create buffer with explicit resource options (for staging buffers)
+        // Based on Metal API: MTLDevice::newBufferWithLength:options:
+        // Metal API Reference: https://developer.apple.com/documentation/metal/mtldevice/1433429-newbufferwithlength
+        // Method signature: - (id<MTLBuffer>)newBufferWithLength:(NSUInteger)length options:(MTLResourceOptions)options;
+        [DllImport(LibObjC, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr objc_msgSend_CreateBufferWithOptions(IntPtr receiver, IntPtr selector, ulong length, uint options);
+
+        /// <summary>
+        /// Creates a Metal buffer with explicit resource options.
+        /// Used for creating staging buffers with shared storage mode for CPU writes.
+        /// Based on Metal API: MTLDevice::newBufferWithLength:options:
+        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtldevice/1433429-newbufferwithlength
+        /// </summary>
+        /// <param name="device">Metal device handle</param>
+        /// <param name="length">Buffer length in bytes</param>
+        /// <param name="options">Resource options (e.g., StorageModeShared for CPU access)</param>
+        /// <returns>Metal buffer handle, or IntPtr.Zero if creation failed</returns>
+        public static IntPtr CreateBufferWithOptions(IntPtr device, ulong length, uint options)
+        {
+            if (device == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            try
+            {
+                IntPtr selector = sel_registerName("newBufferWithLength:options:");
+                return objc_msgSend_CreateBufferWithOptions(device, selector, length, options);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalNative] CreateBufferWithOptions: Exception: {ex.Message}");
+                return IntPtr.Zero;
+            }
+        }
     }
 
     #endregion
