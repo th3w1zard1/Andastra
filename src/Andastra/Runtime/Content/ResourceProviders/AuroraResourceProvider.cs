@@ -1192,36 +1192,110 @@ endmodel
         /// Default Font (FNT):
         /// - Default font used when font resource cannot be found
         /// - Based on nwmain.exe: "fnt_default" and "fnt_default_hr" string references in font loading code
-        /// - Returns a minimal valid FNT file as fallback
+        /// - Returns a complete valid FNT file as fallback
+        /// - FNT format: Binary format with font metadata, metrics, and texture reference
+        /// - Based on Aurora engine font system: Fonts are texture-based (TGA files) with metadata in FNT
         /// - Game-specific implementations can override this to provide game-specific default fonts
+        /// 
+        /// FNT File Format Structure (Aurora Engine):
+        /// - Header (4 bytes): Magic "FNT " (0x46 0x4E 0x54 0x20)
+        /// - Version (4 bytes): Format version (1 = V1.0)
+        /// - Font Name (16 bytes): ResRef of font (null-terminated, padded)
+        /// - Texture ResRef (16 bytes): ResRef of font texture (TGA file, null-terminated, padded)
+        /// - Font Height (4 bytes, float): Font height in pixels
+        /// - Font Width (4 bytes, float): Average character width in pixels
+        /// - Baseline Height (4 bytes, float): Baseline offset from top
+        /// - Spacing R (4 bytes, float): Horizontal spacing between characters
+        /// - Spacing B (4 bytes, float): Vertical spacing between lines
+        /// - Character Count (4 bytes, uint32): Number of characters in font (typically 256 for ASCII)
+        /// - Texture Width (4 bytes, uint32): Font texture width in pixels
+        /// - Texture Height (4 bytes, uint32): Font texture height in pixels
+        /// - Characters Per Row (4 bytes, uint32): Characters per row in texture grid
+        /// - Characters Per Column (4 bytes, uint32): Characters per column in texture grid
+        /// - Reserved (128 bytes): Reserved for future use
+        /// Total size: 224 bytes minimum
+        /// 
+        /// Based on vendor/xoreos/src/graphics/aurora/texturefont.cpp: TextureFont loads fonts from textures
+        /// Based on vendor/reone/src/libs/resource/provider/fonts.cpp: Fonts loaded by ResRef, actual resource is texture
         /// </remarks>
         protected virtual byte[] GetHardcodedDefaultFont(string fontName)
         {
-            // Minimal valid FNT file: Basic font definition
-            // FNT format: Binary format with font metrics and glyph data
-            // This is a minimal valid FNT that provides basic font rendering capability
-            // Note: Actual FNT format is complex, this is a placeholder that indicates font exists
-            // Game-specific implementations should provide actual FNT data
-            
-            // TODO: STUB - For now, return a minimal FNT structure
-            // FNT header structure (simplified):
-            byte[] fntData = new byte[256]; // Minimal FNT file size
-            
-            // FNT magic/version (placeholder)
-            fntData[0] = 0x46; // 'F'
-            fntData[1] = 0x4E; // 'N'
-            fntData[2] = 0x54; // 'T'
-            fntData[3] = 0x01; // Version
-            
-            // Font name (truncated to fit)
-            string name = fontName.Length > 32 ? fontName.Substring(0, 32) : fontName;
-            byte[] nameBytes = System.Text.Encoding.ASCII.GetBytes(name);
-            System.Buffer.BlockCopy(nameBytes, 0, fntData, 4, nameBytes.Length);
-            
-            // Basic font metrics (placeholder values)
-            // Height, baseline, etc. would be set here in a real implementation
-            
-            return fntData;
+            // Complete FNT file structure
+            // Based on Aurora engine font system: FNT contains metadata, actual font is texture-based
+            using (var stream = new System.IO.MemoryStream())
+            using (var writer = new System.IO.BinaryWriter(stream))
+            {
+                // Header: Magic "FNT " (0x46 0x4E 0x54 0x20)
+                writer.Write((byte)0x46); // 'F'
+                writer.Write((byte)0x4E); // 'N'
+                writer.Write((byte)0x54); // 'T'
+                writer.Write((byte)0x20); // ' ' (space)
+                
+                // Version: 1 (V1.0)
+                writer.Write((uint)1);
+                
+                // Font Name: ResRef (16 bytes, null-terminated, padded with zeros)
+                // Default fonts: "fnt_default" or "fnt_default_hr"
+                string fontResRef = fontName.Length > 15 ? fontName.Substring(0, 15) : fontName;
+                byte[] fontNameBytes = System.Text.Encoding.ASCII.GetBytes(fontResRef);
+                writer.Write(fontNameBytes);
+                if (fontNameBytes.Length < 16)
+                {
+                    writer.Write(new byte[16 - fontNameBytes.Length]); // Pad with zeros
+                }
+                
+                // Texture ResRef: Font texture (TGA file) - same as font name for default fonts
+                // Aurora fonts use TGA textures, so texture ResRef matches font ResRef
+                byte[] textureNameBytes = System.Text.Encoding.ASCII.GetBytes(fontResRef);
+                writer.Write(textureNameBytes);
+                if (textureNameBytes.Length < 16)
+                {
+                    writer.Write(new byte[16 - textureNameBytes.Length]); // Pad with zeros
+                }
+                
+                // Font metrics (floats, 4 bytes each)
+                // Default values for standard 16x16 font
+                float fontHeight = 16.0f;
+                float fontWidth = 16.0f;
+                float baselineHeight = 14.0f; // Baseline slightly below top
+                float spacingR = 0.0f; // No extra horizontal spacing
+                float spacingB = 0.0f; // No extra vertical spacing
+                
+                // Adjust for high-resolution font if requested
+                if (fontName.EndsWith("_hr", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    fontHeight = 32.0f;
+                    fontWidth = 32.0f;
+                    baselineHeight = 28.0f;
+                }
+                
+                writer.Write(fontHeight);
+                writer.Write(fontWidth);
+                writer.Write(baselineHeight);
+                writer.Write(spacingR);
+                writer.Write(spacingB);
+                
+                // Character Count: 256 (standard ASCII font)
+                writer.Write((uint)256);
+                
+                // Texture dimensions (uint32, 4 bytes each)
+                // Default font texture: 256x256 for 16x16 grid (16 chars per row/column)
+                // High-res font texture: 512x512 for 32x32 grid (16 chars per row/column)
+                uint textureWidth = fontName.EndsWith("_hr", System.StringComparison.OrdinalIgnoreCase) ? (uint)512 : (uint)256;
+                uint textureHeight = textureWidth;
+                uint charsPerRow = 16;
+                uint charsPerCol = 16;
+                
+                writer.Write(textureWidth);
+                writer.Write(textureHeight);
+                writer.Write(charsPerRow);
+                writer.Write(charsPerCol);
+                
+                // Reserved: 128 bytes for future use
+                writer.Write(new byte[128]);
+                
+                return stream.ToArray();
+            }
         }
 
         private string LocateResourceInLocation(ResourceIdentifier id, SearchLocation location)
