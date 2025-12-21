@@ -272,14 +272,31 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
 
     public class ForLoopBlock : Statement
     {
-        public Expression Initializer { get; }
+        [CanBeNull] public Expression Initializer { get; }
+        [CanBeNull] public Statement InitialStatement { get; }
         public Expression Condition { get; }
         public Expression Iteration { get; }
         public CodeBlock Block { get; }
 
+        /// <summary>
+        /// Constructor for for loop with Expression initializer.
+        /// </summary>
         public ForLoopBlock(Expression initializer, Expression condition, Expression iteration, CodeBlock block)
         {
             Initializer = initializer;
+            InitialStatement = null;
+            Condition = condition;
+            Iteration = iteration;
+            Block = block;
+        }
+
+        /// <summary>
+        /// Constructor for for loop with Statement initializer (e.g., variable declaration).
+        /// </summary>
+        public ForLoopBlock(Statement initialStatement, Expression condition, Expression iteration, CodeBlock block)
+        {
+            Initializer = null;
+            InitialStatement = initialStatement;
             Condition = condition;
             Iteration = iteration;
             Block = block;
@@ -291,11 +308,22 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
             block.MarkBreakScope();
 
             // Handle initializer - PyKotor supports both Statement and Expression
-            // Matching PyKotor classes.py lines 2711-2725
-            if (Initializer != null)
+            // Matching PyKotor classes.py lines 2716-2730
+            // NWScript for loop syntax allows either:
+            // - for (expression; condition; iteration) { ... }  (expression initializer)
+            // - for (declaration_statement; condition; iteration) { ... }  (statement initializer, typically variable declaration)
+            if (InitialStatement != null)
             {
-                // TODO: STUB - For now, we only support Expression initializers in C#
-                // If we need Statement support (for variable declarations), we'd need to check type
+                // For declaration statements (and other statements), compile them directly
+                // Statements don't leave values on the stack, so no cleanup needed
+                // Matching PyKotor classes.py line 2719: self.initial.compile(...) for Statement
+                InitialStatement.Compile(ncs, root, block, returnInstruction, breakInstruction, continueInstruction);
+            }
+            else if (Initializer != null)
+            {
+                // For expressions, compile and clean up stack
+                // Expressions may leave values on the stack that need to be cleaned up
+                // Matching PyKotor classes.py lines 2722-2730: expression compilation and cleanup
                 int tempStackBefore = block.TempStack;
                 DynamicDataType initType = Initializer.Compile(ncs, root, block);
                 // Check if expression added to temp_stack
@@ -305,6 +333,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
                     block.TempStack += initType.Size(root);
                 }
                 // Clean up the result from stack
+                // For loop initializers are executed once before the loop, and their result is discarded
                 ncs.Add(NCSInstructionType.MOVSP, new List<object> { -initType.Size(root) });
                 block.TempStack -= initType.Size(root);
             }
