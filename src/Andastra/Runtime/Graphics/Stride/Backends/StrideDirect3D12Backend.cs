@@ -937,7 +937,7 @@ namespace Andastra.Runtime.Stride.Backends
             // Verify this is a sampler heap (not a texture heap)
             // Sampler heaps use D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER
             // We can verify by checking if the heap was created with sampler type
-            // For now, we'll assume if it's in _bindlessHeaps and not a texture heap, it's a sampler heap
+            // TODO: STUB - For now, we'll assume if it's in _bindlessHeaps and not a texture heap, it's a sampler heap
 
             // Check if sampler is already in the heap
             if (_samplerToHeapIndex.TryGetValue(sampler, out int existingIndex))
@@ -977,7 +977,7 @@ namespace Andastra.Runtime.Stride.Backends
             // D3D12_SAMPLER_DESC structure
             // Note: In DirectX 12, samplers are descriptors created directly in descriptor heaps
             // The sampler parameter is a handle to sampler state information
-            // For now, we'll use default sampler settings; in a full implementation,
+            // TODO: STUB - For now, we'll use default sampler settings; in a full implementation,
             // we would extract the sampler description from the sampler handle
             try
             {
@@ -2099,7 +2099,7 @@ namespace Andastra.Runtime.Stride.Backends
             // ...
             // [47] CreateDescriptorHeap (offset varies by D3D12 version, typically around index 47-50)
 
-            // For now, use a simplified approach: try the P/Invoke first, fallback to vtable if needed
+            // TODO: STUB - For now, use a simplified approach: try the P/Invoke first, fallback to vtable if needed
             // In production, you would calculate the exact vtable offset or use a proper COM interop library
 
             try
@@ -2108,11 +2108,11 @@ namespace Andastra.Runtime.Stride.Backends
             }
             catch (DllNotFoundException)
             {
-                // Fallback: Use vtable calling convention
+                // TODO: STUB - Fallback: Use vtable calling convention
                 // This requires calculating the vtable offset for CreateDescriptorHeap
                 // For DirectX 12, CreateDescriptorHeap is typically at vtable index 47
                 // We'll use a more reliable approach with proper error handling
-                Console.WriteLine("[StrideDX12] CreateDescriptorHeap: P/Invoke failed, vtable fallback not implemented");
+                Console.WriteLine("[StrideDX12] CreateDescriptorHeap: P/Invoke failed, TODO: STUB - vtable fallback not implemented");
                 return unchecked((int)0x80070057); // E_INVALIDARG
             }
         }
@@ -3037,7 +3037,7 @@ namespace Andastra.Runtime.Stride.Backends
 
             // Stride's GraphicsDevice may have a NativeCommandQueue property
             // If not available, we'll need to create/access it through the device
-            // For now, return IntPtr.Zero and handle gracefully in the readback code
+            // TODO: STUB - For now, return IntPtr.Zero and handle gracefully in the readback code
             // In a full implementation, this would query Stride for the command queue handle
             
             return IntPtr.Zero; // Will be handled by using Stride's WaitIdle for synchronization
@@ -3057,7 +3057,7 @@ namespace Andastra.Runtime.Stride.Backends
             // The format parameter could be extended in the future to specify which feedback type to use
             switch (format)
             {
-                // For now, we map standard formats to the default sampler feedback format
+                // TODO: STUB - For now, we map standard formats to the default sampler feedback format
                 // In the future, TextureFormat enum could include specific sampler feedback format types
                 default:
                     // DXGI_FORMAT_SAMPLER_FEEDBACK_MIN_MIP_OPAQUE = 189

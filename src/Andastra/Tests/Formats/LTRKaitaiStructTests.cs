@@ -642,7 +642,7 @@ namespace Andastra.Parsing.Tests.Formats
             // 1. Compiling LTR.ksy to multiple languages
             // 2. Running the generated parsers on the test file
             // 3. Comparing results across languages
-            // For now, we validate the structure matches expectations
+            // TODO: STUB - For now, we validate the structure matches expectations
 
             LTR ltr = new LTRBinaryReader(TestLtrFile).Load();
 

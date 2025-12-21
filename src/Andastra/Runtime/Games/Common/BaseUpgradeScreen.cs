@@ -401,7 +401,7 @@ namespace Andastra.Runtime.Games.Common
             // - Ability score bonuses
             // - Other property-based stat modifications
 
-            // Note: Full stat calculation would require:
+            // TODO: STUB - Note: Full stat calculation would require:
             // 1. Base item stats from baseitems.2da
             // 2. Property effect calculation (from itempropdef.2da)
             // 3. Cumulative bonus application

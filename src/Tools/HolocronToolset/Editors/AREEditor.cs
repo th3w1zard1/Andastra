@@ -1768,7 +1768,7 @@ namespace HolocronToolset.Editors
                 _tagGenerateButton.Click += (s, e) => GenerateTag();
             }
 
-            // Note: Minimap update signals are not implemented yet as minimap renderer is not available
+            // TODO: STUB - Minimap update signals are not implemented yet as minimap renderer is not available
             // Matching Python lines 79-87 would connect map-related spinboxes to redoMinimap
             // These will be implemented when minimap renderer is available
 
@@ -1819,7 +1819,7 @@ namespace HolocronToolset.Editors
                 _lightningCheck.IsEnabled = isTsl;
             }
 
-            // Note: setup_file_context_menu equivalent would be handled by SetupScriptComboBoxContextMenu
+            // TODO: STUB - setup_file_context_menu equivalent would be handled by SetupScriptComboBoxContextMenu
             // which is called from SetupSignals
         }
 

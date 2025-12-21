@@ -153,7 +153,7 @@ namespace Andastra.Runtime.Games.Eclipse.Scene
             // Create AreaSection for each room
             // Based on Eclipse engine: Rooms define area sections for audio zones
             // Room geometry comes from separate model files (not in ARE)
-            // For now, we create sections with room names as identifiers
+            // TODO: STUB - For now, we create sections with room names as identifiers
             // ModelResRef will be set when geometry is loaded (from VIS files or other layout data)
             foreach (ARERoom room in are.Rooms)
             {

@@ -29,7 +29,7 @@ namespace Andastra.Parsing.Diff
         /// </summary>
         public static string DetermineTslpatchdataSource(string file1Path, string file2Path)
         {
-            // For now, implement 2-way logic (use vanilla/base version)
+            // TODO: STUB - For now, implement 2-way logic (use vanilla/base version)
             return $"vanilla ({file1Path.Replace('\\', '/')})";
         }
 

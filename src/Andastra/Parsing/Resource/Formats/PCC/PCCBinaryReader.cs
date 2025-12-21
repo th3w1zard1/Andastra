@@ -57,7 +57,7 @@ namespace Andastra.Parsing.Formats.PCC
                 {
                     // Check if it might be a different UE3 version or format
                     // Some packages may have headers that start differently
-                    // For now, we'll be lenient and try to parse anyway
+                    // TODO: STUB - For now, we'll be lenient and try to parse anyway
                     Reader.Seek(0);
                 }
                 else

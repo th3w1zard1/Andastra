@@ -131,7 +131,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
                 // 2. Apply separable Gaussian blur horizontally
                 // 3. Apply separable Gaussian blur vertically
                 // 4. Blend result with original color buffer
-                // For now, this provides the framework and resource management
+                // TODO: STUB - For now, this provides the framework and resource management
                 
                 if (effect != null && depthBuffer != null && normalBuffer != null)
                 {

@@ -1607,7 +1607,7 @@ namespace Andastra.Runtime.MonoGame.GUI
 
             // Apply thumb alignment if specified
             // ALIGNMENT typically affects how the thumb is positioned relative to its calculated position
-            // For now, use the calculated position (can be enhanced with alignment support)
+            // TODO: STUB - For now, use the calculated position (can be enhanced with alignment support)
 
             // Render thumb texture
             XnaColor thumbTint = Microsoft.Xna.Framework.Color.White;

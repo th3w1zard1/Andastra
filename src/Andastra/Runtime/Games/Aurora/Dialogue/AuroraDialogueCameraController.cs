@@ -168,8 +168,8 @@ namespace Andastra.Runtime.Games.Aurora.Dialogue
                     // In the original engine, the client directly restores the camera position via network message
                     CameraController.SetCinematicMode(_storedPosition, _storedLookAtPosition);
                     // Note: We need to wait for Update() to be called to set the position
-                    // For now, we'll switch to free mode immediately - the position will be close to stored position
-                    // Full position restoration would require internal API access or a frame delay
+                    // TODO: STUB - For now, we'll switch to free mode immediately - the position will be close to stored position
+                    // TODO: STUB - Full position restoration would require internal API access or a frame delay
                     CameraController.SetFreeMode();
                     CameraController.FieldOfView = _storedFieldOfView;
                     // Note: Perfect position/up vector restoration for free mode requires CameraController API enhancement

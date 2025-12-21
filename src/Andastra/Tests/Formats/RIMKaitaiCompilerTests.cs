@@ -73,7 +73,7 @@ namespace Andastra.Parsing.Tests.Formats
             if (kscCheck2.ExitCode != 0)
             {
                 // Try with .jar extension or check if it's in PATH
-                // For now, we'll skip if not found - in CI/CD this should be installed
+                // TODO: STUB - For now, we'll skip if not found - in CI/CD this should be installed
                 return;
             }
 

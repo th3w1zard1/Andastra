@@ -262,4 +262,4 @@ When mods are uninstalled and saves are reused, the following issues occur:
 2. **Selective component removal** (remove cached modules, inventory items, etc.)
 3. **Resource validation** (check for missing templates, etc.)
 4. **EventQueue cleanup** (clear corrupted EventQueue from cached modules)
-5. **Integration with other edi
+5. **Integration with other editors** (GITEditor, etc.) to handle cached data

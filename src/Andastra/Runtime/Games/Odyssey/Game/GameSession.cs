@@ -232,7 +232,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
 
             // Create entity template factory for party system
             // Factory will be updated when module is loaded (see LoadModuleAsync)
-            // For now, create without module (will be updated later)
+            // TODO: STUB - For now, create without module (will be updated later)
             IEntityTemplateFactory templateFactory = null;
             _partySystem = new PartySystem(_world, templateFactory);
             _combatManager = new CombatManager(_world, _factionManager, _partySystem);
@@ -945,7 +945,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 int skillPointsPerLevel = classData?.SkillsPerLevel ?? 2;
                 // Starting skills: Class base + INT modifier
                 // Full implementation would track skill point allocation from character creation
-                // For now, set skills to INT modifier (will be overridden by proper skill allocation)
+                // TODO: STUB - For now, set skills to INT modifier (will be overridden by proper skill allocation)
                 for (int i = 0; i < 8; i++)
                 {
                     statsComp.SetSkillRank(i, intModifier);
@@ -956,7 +956,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 // Level 1 BAB is typically +0 or +1 depending on class
                 // Saves start at +0, +0, +0 for most classes at level 1, or +2 for good saves
                 // Full implementation would use classes.2da attackbonustable and savingthrowtable
-                // For now, set base values (will be calculated properly from class data)
+                // TODO: STUB - For now, set base values (will be calculated properly from class data)
                 statsComp.SetBaseAttackBonus(0); // Will be calculated from class BAB table
                 statsComp.SetBaseSaves(0, 0, 0); // Will be calculated from class save table
             }

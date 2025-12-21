@@ -1247,7 +1247,7 @@ void helper() {
             // Matching Python: editor._filter_snippets()
             // Note: Filtering might not be implemented yet, so we verify the snippet list exists and can be filtered
             // In a full implementation, filtering would hide/show items based on search text
-            // For now, we verify that snippets are accessible and the list is functional
+            // TODO: STUB - For now, we verify that snippets are accessible and the list is functional
             var snippetSearchEditField = typeof(NSSEditor).GetField("_snippetSearchEdit", BindingFlags.NonPublic | BindingFlags.Instance);
             if (snippetSearchEditField != null)
             {
@@ -1281,7 +1281,7 @@ void helper() {
             }
 
             // Matching Python: assert visible_count >= 1
-            // Note: If filtering is not implemented, all items will be visible, which is also acceptable
+            // Note: TODO: STUB - Iffiltering is not implemented, all items will be visible, which is also acceptable
             visibleCount.Should().BeGreaterThanOrEqualTo(1, "At least one snippet should be visible after filtering");
         }
 

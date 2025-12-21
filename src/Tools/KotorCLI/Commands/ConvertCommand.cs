@@ -24,12 +24,12 @@ namespace KotorCLI.Commands
             convertCommand.Add(targetsArgument);
             var cleanOption = new Option<bool>("--clean", "Clear the cache before converting");
             convertCommand.Options.Add(cleanOption);
-            
+
             convertCommand.SetAction(parseResult =>
             {
                 var targets = parseResult.GetValue(targetsArgument) ?? Array.Empty<string>();
                 var clean = parseResult.GetValue(cleanOption);
-                
+
                 var logger = new StandardLogger();
                 var exitCode = Execute(targets, clean, logger);
                 Environment.Exit(exitCode);
@@ -143,10 +143,10 @@ namespace KotorCLI.Commands
                                 }
                             }
 
-                            // Note: JSON GFF reading not yet implemented in Andastra.Parsing
+                            // TODO: STUB - Note: JSON GFF reading not yet implemented in Andastra.Parsing
                             // TODO: STUB - For now, we'll log a warning and skip
-                            logger.Warning($"JSON GFF reading not yet implemented. Skipping {Path.GetFileName(jsonFile)}");
-                            logger.Warning("Convert command requires JSON GFF support to be implemented in Andastra.Parsing");
+                            logger.Warning($"TODO: STUB - JSON GFF reading not yet implemented. Skipping {Path.GetFileName(jsonFile)}");
+                            logger.Warning("TODO: STUB - Convert command requires JSON GFF support to be implemented in Andastra.Parsing");
 
                             // TODO: When JSON GFF reading is available:
                             // var gff = GFFAuto.ReadGff(jsonFile, fileFormat: ResourceType.GFF_JSON);

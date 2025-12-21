@@ -309,7 +309,7 @@ namespace Andastra.Runtime.Tooling
     /// <remarks>
     /// Based on swkotor2.exe: Engine API function implementations
     /// Provides implementations for common functions like PrintString, Random, etc.
-    /// Functions not implemented will return default values (0, empty string, OBJECT_INVALID, etc.)
+    /// TODO: STUB - Functions not implemented will return default values (0, empty string, OBJECT_INVALID, etc.)
     /// </remarks>
     public class MockEngineApi : BaseEngineApi
     {

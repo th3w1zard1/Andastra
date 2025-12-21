@@ -143,7 +143,7 @@ namespace Andastra.Runtime.Stride.Audio
                 {
                     var emitter = new AudioEmitter();
                     // Get speaker position from entity (would need IWorld or position component)
-                    // For now, set to origin - full implementation would get actual position
+                    // TODO: STUB - For now, set to origin - full implementation would get actual position
                     emitter.Position = Vector3.Zero;
                     _currentVoiceInstance.Apply3D(emitter);
                 }
@@ -281,7 +281,7 @@ namespace Andastra.Runtime.Stride.Audio
                 // This is a workaround for the circular dependency
                 var dummySource = new DummyDynamicSoundSourceForInit(audioEngine, listener);
                 // Note: This creates infinite recursion, so we need a different approach
-                // For now, we'll handle this in the actual implementation
+                // TODO: STUB - For now, we'll handle this in the actual implementation
                 return null; // This will cause an issue, but we'll handle it differently
             }
 

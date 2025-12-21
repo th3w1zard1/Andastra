@@ -152,7 +152,7 @@ namespace Andastra.Parsing.Resource.Generics
                     nameof(game));
             }
 
-            // For now, only Aurora is supported ( games not in Game enum yet)
+            // TODO: STUB - For now, only Aurora is supported ( games not in Game enum yet)
             // When  games are added to Game enum, remove this check
             if (!game.IsAurora())
             {
@@ -276,7 +276,7 @@ namespace Andastra.Parsing.Resource.Generics
         private static bool Is(Game game)
         {
             //  games would be added to Game enum in the future
-            // For now, return false as  games are not in the enum yet
+            // TODO: STUB - For now, return false as  games are not in the enum yet
             // This method is prepared for future  support
             return false;
         }

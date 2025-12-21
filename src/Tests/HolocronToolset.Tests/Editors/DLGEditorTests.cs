@@ -2707,7 +2707,7 @@ namespace HolocronToolset.Tests.Editors
             // by checking that KeysDown is updated when keys are pressed/released
 
             // Note: In a full UI test environment, we would simulate key events
-            // For now, we verify that the infrastructure exists
+            // TODO: STUB - For now, we verify that the infrastructure exists
             Assert.True(true, "Key press handling infrastructure verified - OnKeyDown and OnKeyUp methods exist");
         }
 
@@ -3784,7 +3784,7 @@ namespace HolocronToolset.Tests.Editors
                 {
                     // Select the first item (simulate tree selection)
                     // In a full implementation, we would set the tree view selection
-                    // For now, we'll directly test the UI controls
+                    // TODO: STUB - For now, we'll directly test the UI controls
 
                     // Test various param1 values (TSL only, but test that UI updates in-memory model)
                     // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2490-2496
@@ -4163,7 +4163,7 @@ namespace HolocronToolset.Tests.Editors
                 {
                     // Select the first item (simulate tree selection)
                     // In a full implementation, we would set the tree view selection
-                    // For now, we'll directly test the UI controls
+                    // TODO: STUB - For now, we'll directly test the UI controls
 
                     // Test quest values
                     string[] testQuests = { "test_quest", "quest_001", "" };
@@ -4191,7 +4191,7 @@ namespace HolocronToolset.Tests.Editors
 
                                 // Verify quest value is loaded back
                                 // Note: In a full implementation, we would select the item in the tree view
-                                // For now, we verify the node directly
+                                // TODO: STUB - For now, we verify the node directly
                                 if (editor.Model.RowCount > 0)
                                 {
                                     var reloadedItem = editor.Model.Item(0, 0);

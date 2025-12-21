@@ -590,7 +590,7 @@ namespace Andastra.Runtime.Games.Eclipse
             // Based on Dragon Age Origins: ItemUpgrade system checks item properties for upgrade compatibility
             // Based on Dragon Age 2: UpgradePrereqType @ 0x00c0583c checks prerequisites
 
-            // For now, we'll use a basic compatibility check:
+            // TODO: STUB - For now, we'll use a basic compatibility check:
             // - Upgrade items should have properties that can be applied to the target item
             // - Item types should be compatible (weapon upgrades for weapons, armor upgrades for armor)
             // - Full implementation would check UpgradePrereqType (Dragon Age 2) and other prerequisites
@@ -607,7 +607,7 @@ namespace Andastra.Runtime.Games.Eclipse
             int targetBaseItem = targetItem.BaseItem;
             int upgradeBaseItem = upgradeItem.BaseItem;
 
-            // For now, allow any upgrade item with properties to be considered compatible
+            // TODO: STUB - For now, allow any upgrade item with properties to be considered compatible
             // Full implementation would check:
             // - UpgradePrereqType (Dragon Age 2) for prerequisite checking
             // - Item type compatibility (weapon/armor/etc.)
@@ -660,7 +660,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     if (loaded)
                     {
                         // Get loaded GUI from manager (if exposed, otherwise load directly)
-                        // For now, we'll also load directly for compatibility
+                        // TODO: STUB - For now, we'll also load directly for compatibility
                     }
                 }
 
@@ -810,7 +810,7 @@ namespace Andastra.Runtime.Games.Eclipse
             // Get available upgrades for all slots
             // Based on Eclipse upgrade system: Upgrade lists are populated when item is selected
             // The actual list population happens when user selects a slot
-            // For now, this is a placeholder - full implementation would populate list boxes
+            // TODO: STUB - For now, this is a placeholder - full implementation would populate list boxes
         }
 
         /// <summary>
@@ -875,7 +875,7 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Get selected upgrade from GUI controls
             // Based on Eclipse upgrade system: Selected upgrade is retrieved from list box or slot selection
-            // For now, this is a placeholder - full implementation would:
+            // TODO: STUB - For now, this is a placeholder - full implementation would:
             // 1. Get selected upgrade slot from UI
             // 2. Get selected upgrade ResRef from list box
             // 3. Call ApplyUpgrade with item, slot, and ResRef
@@ -898,7 +898,7 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Get selected upgrade slot from GUI controls
             // Based on Eclipse upgrade system: Selected upgrade slot is retrieved from UI
-            // For now, this is a placeholder - full implementation would:
+            // TODO: STUB - For now, this is a placeholder - full implementation would:
             // 1. Get selected upgrade slot from UI
             // 2. Call RemoveUpgrade with item and slot
             // 3. Refresh display

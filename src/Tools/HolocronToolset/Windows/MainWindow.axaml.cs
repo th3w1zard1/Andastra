@@ -521,7 +521,7 @@ namespace HolocronToolset.Windows
         private void OnExtractResources(List<FileResource> resources)
         {
             // Extract resources - will be implemented when file dialogs are available
-            // For now, just log
+            // TODO: STUB - For now, just log
             System.Console.WriteLine($"Extracting {resources?.Count ?? 0} resources");
         }
 
@@ -876,16 +876,16 @@ namespace HolocronToolset.Windows
                 return;
             }
 
-            // Module designer will be implemented when available
-            System.Console.WriteLine("Module Designer not yet implemented");
+            // TODO: STUB - Module designer will be implemented when available
+            System.Console.WriteLine("TODO: STUB - Module Designer not yet implemented");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:2166-2177
         // Original: def open_from_file(self):
         private void OpenFromFile()
         {
-            // File dialog will be implemented when available
-            System.Console.WriteLine("Open from file not yet implemented");
+            // TODO: STUB - Open from file dialog will be implemented when available
+            System.Console.WriteLine("TODO: STUB - Open from file not yet implemented");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:873-875
@@ -997,7 +997,7 @@ namespace HolocronToolset.Windows
 
                 // Load saves for the new directory and update the widget
                 // Note: In PyKotor, this calls active.load_saves() and checks if new_save_dir_path is in active.saves
-                // For now, we'll refresh the saves list with the new directory
+                // TODO: STUB - For now, we'll refresh the saves list with the new directory
                 RefreshSavesList(reload: true);
             }
             catch (Exception ex)

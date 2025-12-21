@@ -78,7 +78,7 @@ namespace KotorDiff.Cache
             }
 
             // YAML metadata saving can be added when YAML library is available
-            // For now, just log
+            // TODO: STUB - For now, just log
             logFunc($"Saved diff cache to: {cacheFile}");
             logFunc($"  Cached {filesList.Count} file comparisons");
             logFunc($"  Cache data directory: {cacheDir}");
@@ -98,7 +98,7 @@ namespace KotorDiff.Cache
             }
 
             // YAML metadata loading can be added when YAML library is available
-            // For now, return empty cache
+            // TODO: STUB - For now, return empty cache
             var cache = new DiffCache();
 
             // Determine data directory paths

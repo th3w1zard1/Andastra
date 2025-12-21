@@ -1186,7 +1186,7 @@ namespace Andastra.Runtime.Games.Odyssey
                     // Both NavigationMesh and OdysseyNavigationMesh implement INavigationMesh
                     // For Odyssey areas, we can use NavigationMesh directly since it has all required functionality
                     // OdysseyNavigationMesh is a wrapper that provides Odyssey-specific extensions if needed
-                    // For now, we use NavigationMesh directly as it's fully functional
+                    // TODO: STUB - For now, we use NavigationMesh directly as it's fully functional
                     _navigationMesh = combinedNavMesh;
                 }
                 else
@@ -2389,7 +2389,7 @@ namespace Andastra.Runtime.Games.Odyssey
                     (_fogColor & 0xFF) / 255.0f
                 );
                 // Note: BasicEffect fog support depends on implementation
-                // For now, we'll set fog parameters if the effect supports it
+                // TODO: STUB - For now, we'll set fog parameters if the effect supports it
             }
 
             // Apply ambient lighting
@@ -2431,8 +2431,8 @@ namespace Andastra.Runtime.Games.Odyssey
                     if (!_roomMeshes.TryGetValue(room.ModelName, out meshData))
                     {
                         // Try to load mesh using room renderer
-                        // Note: MDL loading would require access to resource system
-                        // For now, we'll skip rooms that haven't been pre-loaded
+                        // TODO: STUB - Note: MDL loading would require access to resource system
+                        // TODO: STUB - For now, we'll skip rooms that haven't been pre-loaded
                         continue;
                     }
 

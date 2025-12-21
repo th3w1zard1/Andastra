@@ -109,7 +109,7 @@ namespace Andastra.Runtime.Engines.Aurora.EngineApi
             // Action functions - delegate to base class where available
             // Note: AssignCommand, DelayCommand, ExecuteScript, ClearAllActions, SetFacing
             // are common across engines but may have engine-specific implementations
-            // For now, these are not in BaseEngineApi, so they will be unimplemented until added
+            // TODO: STUB - For now, these are not in BaseEngineApi, so they will be unimplemented until added
 
             // Object functions - delegate to base class (common across all engines)
             _functionDispatch[27] = Func_GetPosition;

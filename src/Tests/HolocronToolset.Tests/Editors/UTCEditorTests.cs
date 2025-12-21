@@ -3171,7 +3171,7 @@ namespace HolocronToolset.Tests.Editors
             // Check specific feats if available
             if (featList.Items != null && featList.Items.Count > 0)
             {
-                // Note: Full implementation would require checking/unchecking items
+                // TODO: STUB - Note: Full implementation would require checking/unchecking items
                 // This is a simplified test that verifies the list exists and can be accessed
                 featList.Items.Count.Should().BeGreaterThan(0, "Feat list should have items");
             }
@@ -3462,7 +3462,7 @@ namespace HolocronToolset.Tests.Editors
             // Check a feat if available
             if (featList.Items != null && featList.Items.Count > 0)
             {
-                // Note: Full implementation would require checking/unchecking items and verifying summary updates
+                // TODO: STUB - Note: Full implementation would require checking/unchecking items and verifying summary updates
                 // This is a simplified test that verifies the list exists
                 featList.Items.Count.Should().BeGreaterThan(0, "Feat list should have items");
             }
@@ -3491,7 +3491,7 @@ namespace HolocronToolset.Tests.Editors
             // Check a power if available
             if (powerList.Items != null && powerList.Items.Count > 0)
             {
-                // Note: Full implementation would require checking/unchecking items and verifying summary updates
+                // TODO: STUB - Note: Full implementation would require checking/unchecking items and verifying summary updates
                 // This is a simplified test that verifies the list exists
                 powerList.Items.Count.Should().BeGreaterThan(0, "Power list should have items");
             }

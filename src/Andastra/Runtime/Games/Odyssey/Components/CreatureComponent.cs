@@ -395,13 +395,13 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
         /// Based on swkotor.exe, swkotor2.exe: Special feat usage calculation
         /// Located via string references: Class-level-based feat usage in creature data
         /// Original implementation: Some feats (e.g., Stunning Fist) have uses per day = class level
-        /// For now, we assume special feats are always usable if the creature has them
+        /// TODO: STUB - For now, we assume special feats are always usable if the creature has them
         /// Full implementation would check specific feat types and calculate uses based on class levels
         /// </remarks>
         private bool IsSpecialFeatUsable(int featId, Data.GameDataManager gameDataManager)
         {
             // Special feats with UsesPerDay = -1 typically have uses based on class levels
-            // For now, we assume they're always usable if the creature has the feat
+            // TODO: STUB - For now, we assume they're always usable if the creature has the feat
             // Full implementation would check specific feat types:
             // - Stunning Fist: Uses per day = monk level
             // - Other special feats may have different calculations

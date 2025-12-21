@@ -122,7 +122,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             // - Output: reflections blended into color buffer
 
             // Would use Stride's Effect system or custom compute shader
-            // For now, placeholder implementation
+            // TODO: STUB - For now, placeholder implementation
 
             Console.WriteLine($"[StrideSSR] Rendering reflections: {_maxIterations} iterations, max distance {_maxDistance}");
         }

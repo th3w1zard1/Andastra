@@ -6275,7 +6275,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
                         if (animationComponent != null)
                         {
                             // Placeables may have an appear animation, but it's less common
-                            // For now, just fade in (rendering system handles the visual fade)
+                            // TODO: STUB - For now, just fade in (rendering system handles the visual fade)
                             // If placeable has a specific appear animation, it would be animation ID 0 or a specific ID
                             // This can be extended if needed based on model data
                         }

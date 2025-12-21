@@ -433,7 +433,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// Note: Aurora tiles have height transition data stored per-tile.
         /// The Tile.Height property indicates the number of height transitions, but actual
         /// height values would need to be sampled from tile geometry data when available.
-        /// For now, we use a simplified approach that projects to tile center height.
+        /// TODO: STUB - For now, we use a simplified approach that projects to tile center height.
         /// </remarks>
         public bool GetHeightAtPoint(Vector3 point, out float height)
         {
@@ -556,7 +556,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// The Tile.Height property indicates the number of height transitions.
         /// 
         /// For a full implementation, this would sample from actual tile geometry data.
-        /// For now, we use a simplified approach based on tile height transitions.
+        /// TODO: STUB - For now, we use a simplified approach based on tile height transitions.
         /// </remarks>
         private float GetTileHeight(int tileX, int tileY)
         {
@@ -572,7 +572,7 @@ namespace Andastra.Runtime.Games.Aurora
             }
 
             // Tile.Height indicates number of height transitions
-            // For now, we use a simplified model where height transitions
+            // TODO: STUB - For now, we use a simplified model where height transitions
             // correspond to elevation changes. In a full implementation,
             // this would sample from actual tile geometry/walkmesh data.
             // 

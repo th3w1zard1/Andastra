@@ -88,7 +88,7 @@ namespace Andastra.Runtime.Games.Odyssey.Collision
             // Get bounding box dimensions from GameDataProvider
             // Based on swkotor2.exe: FUN_005479f0 gets width and height from entity structure
             // Width stored at offset 0x380 + 0x14, height at offset 0x380 + 0xbc
-            // For now, we use hitradius from appearance.2da as the base radius
+            // TODO: STUB - For now, we use hitradius from appearance.2da as the base radius
             // The original engine uses width and height separately, but we approximate with radius
             float radius = 0.5f; // Default radius
 

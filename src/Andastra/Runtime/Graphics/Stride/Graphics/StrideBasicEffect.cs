@@ -43,7 +43,7 @@ namespace Andastra.Runtime.Stride.Graphics
             
             // Create effect instance for shader parameter management
             // Note: In a full implementation, this would load a custom BasicEffect shader
-            // For now, we create a placeholder that can be extended with actual shader loading
+            // TODO: STUB - For now, we create a placeholder that can be extended with actual shader loading
             _effectInstance = new EffectInstance(null);
             
             // Mark parameters as dirty to ensure initial setup
@@ -235,7 +235,7 @@ namespace Andastra.Runtime.Stride.Graphics
                 {
                     // In a full implementation, this would use:
                     // parameter.Set(name, strideMatrix);
-                    // For now, we track the parameter for when a shader is loaded
+                    // TODO: STUB - For now, we track the parameter for when a shader is loaded
                 }
             }
             catch (Exception ex)
@@ -381,7 +381,7 @@ namespace Andastra.Runtime.Stride.Graphics
 
                 // In a full implementation, this would update the material's
                 // MaterialDescriptor with these values
-                // For now, we prepare the data for when material system is fully integrated
+                // TODO: STUB - For now, we prepare the data for when material system is fully integrated
             }
             catch (Exception ex)
             {

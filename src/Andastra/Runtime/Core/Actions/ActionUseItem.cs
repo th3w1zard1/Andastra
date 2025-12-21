@@ -240,7 +240,7 @@ namespace Andastra.Runtime.Core.Actions
         {
             // Try to access 2DA table through IWorld if it exposes a resource provider
             // This is engine-specific, so we use reflection or a service interface if available
-            // For now, return null to use hardcoded fallback
+            // TODO: STUB - For now, return null to use hardcoded fallback
             // Future: Add IGameDataProvider interface to IWorld for engine-agnostic 2DA access
             return null;
         }

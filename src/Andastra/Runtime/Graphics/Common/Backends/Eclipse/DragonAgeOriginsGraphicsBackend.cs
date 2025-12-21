@@ -151,7 +151,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // - Character rendering (player, NPCs, creatures)
             // - Particle effects
             // - Lighting and shadows
-            // For now, this is a placeholder that matches the structure
+            // TODO: STUB - For now, this is a placeholder that matches the structure
             RenderDragonAgeOriginsScene();
 
             // 5. Render UI overlay
@@ -160,7 +160,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // - HUD elements (health bars, minimap, etc.)
             // - Dialogue boxes
             // - Menu overlays
-            // For now, this is a placeholder that matches the structure
+            // TODO: STUB - For now, this is a placeholder that matches the structure
             RenderDragonAgeOriginsUI();
 
             // EndScene and Present are called by base class in OnEndFrame()

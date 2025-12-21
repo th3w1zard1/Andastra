@@ -199,7 +199,7 @@ namespace Andastra.Runtime.MonoGame.Converters
                     else if (generateMipmaps)
                     {
                         // Generate mipmap by downsampling base level
-                        // For now, use the base mipmap (full implementation would downsample)
+                        // TODO: STUB - For now, use the base mipmap (full implementation would downsample)
                         TPCMipmap baseMip = layer.Mipmaps[0];
                         rgbaData = ConvertMipmapToRgba(baseMip);
                         // Resize to current mipmap size (simplified - full implementation would properly downsample)

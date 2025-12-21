@@ -417,7 +417,7 @@ namespace Andastra.Parsing.Tools
                     return (true, "Valid TPC file");
                 }
 
-                return (true, "File exists (format validation not implemented)");
+                return (true, "TODO: STUB - File exists (format validation not implemented)");
             }
             catch (Exception e)
             {

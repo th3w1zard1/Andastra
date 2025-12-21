@@ -181,7 +181,7 @@ namespace Andastra.Runtime.Core.Party
             if (stats != null)
             {
                 // Would need class levels tracking
-                // For now, estimate from XP
+                // TODO: STUB - For now, estimate from XP
                 int level = 1;
                 int xpNeeded = 2000; // Level 2
                 while (XP >= xpNeeded && level < 20)

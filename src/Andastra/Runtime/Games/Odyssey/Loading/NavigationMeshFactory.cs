@@ -196,7 +196,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
             try
             {
                 // WOK files are usually stored with the module
-                // For now, try to load from installation
+                // TODO: STUB - For now, try to load from installation
                 Installation installation = module.Installation;
                 if (installation == null)
                 {

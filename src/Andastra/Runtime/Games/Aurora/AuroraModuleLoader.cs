@@ -1912,7 +1912,7 @@ namespace Andastra.Runtime.Games.Aurora
                 // Feats
                 // Based on nwmain.exe: CNWSCreatureStats::LoadCreatureStats loads FeatList from UTC
                 // Aurora uses two feat lists: FeatList (normal) and BonusFeatList (bonus)
-                // For now, we put all feats in FeatList (normal feats)
+                // TODO: STUB - For now, we put all feats in FeatList (normal feats)
                 // Full implementation would distinguish between normal and bonus feats based on feat data
                 creatureComponent.FeatList.Clear();
                 foreach (int featId in utc.Feats)
@@ -2051,7 +2051,7 @@ namespace Andastra.Runtime.Games.Aurora
 
                 // Note: Additional properties from GIT (StoreGold, IdentifyPrice, MaxBuyPrice, BlackMarket, BM_MarkDown, WillNotBuy, WillOnlyBuy)
                 // are not in the UTM format for Odyssey, but may be in Aurora UTM format or loaded from GIT store struct
-                // For now, we set defaults matching nwmain.exe behavior:
+                // TODO: STUB - For now, we set defaults matching nwmain.exe behavior:
                 // - StoreGold: -1 (unlimited, default from nwmain.exe line 63)
                 // - IdentifyPrice: 100 (default from nwmain.exe line 65)
                 // - MaxBuyPrice: -1 (no limit, default from nwmain.exe line 67)
@@ -2159,7 +2159,7 @@ namespace Andastra.Runtime.Games.Aurora
             {
                 // Try to add IScriptHooksComponent if entity supports component addition
                 // Note: Entity component system may require component to be added during entity creation
-                // For now, if component doesn't exist, we'll skip script execution
+                // TODO: STUB - For now, if component doesn't exist, we'll skip script execution
                 // In a full implementation, ComponentInitializer should ensure all entities have IScriptHooksComponent
                 System.Diagnostics.Debug.WriteLine($"[AuroraModuleLoader] Module entity missing IScriptHooksComponent - scripts will not execute");
                 return;
@@ -2208,7 +2208,7 @@ namespace Andastra.Runtime.Games.Aurora
                     foreach (IEntity creature in creatures)
                     {
                         // Check if entity is player character (implementation may vary)
-                        // For now, use first creature as fallback (actual implementation should check IsPC flag or similar)
+                        // TODO: STUB - For now, use first creature as fallback (actual implementation should check IsPC flag or similar)
                         playerCharacter = creature;
                         break; // Use first creature found (should be player character in single-player)
                     }

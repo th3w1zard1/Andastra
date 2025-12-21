@@ -108,7 +108,7 @@ namespace KotorDiff.Resolution
                 }
             }
 
-            // For now, delegate to the 2-way function if exactly 2 installations
+            // TODO: STUB - For now, delegate to the 2-way function if exactly 2 installations
             // This is a compatibility shim while we complete the full n-way implementation
             if (convertedPaths.Count == 2)
             {

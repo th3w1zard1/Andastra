@@ -813,7 +813,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 // Note: This is a simplified implementation - full version would iterate through all spell IDs
                 var spellsList = root.Acquire<GFFList>("KnownSpells", new GFFList());
                 // In a full implementation, we would iterate through all possible spell IDs and check HasSpell
-                // For now, we serialize an empty list as a placeholder for the structure
+                // TODO: STUB - For now, we serialize an empty list as a placeholder for the structure
             }
 
             // Serialize door component

@@ -149,7 +149,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
                 // 1. Set shader parameters (depthBuffer, normalBuffer, shadowDistance, shadowThickness, sampleCount)
                 // 2. Render full-screen quad with contact shadow shader
                 // 3. The shader performs screen-space ray-marching to detect contact shadows
-                // For now, this provides the framework and resource management
+                // TODO: STUB - For now, this provides the framework and resource management
                 
                 if (effect != null)
                 {

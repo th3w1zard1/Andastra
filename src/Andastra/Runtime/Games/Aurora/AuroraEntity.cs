@@ -748,7 +748,7 @@ namespace Andastra.Runtime.Games.Aurora
                 // Note: This is a simplified implementation - full version would iterate through all spell IDs
                 var spellsList = root.Acquire<GFFList>("KnownSpells", new GFFList());
                 // In a full implementation, we would iterate through all possible spell IDs and check HasSpell
-                // For now, we serialize an empty list as a placeholder for the structure
+                // TODO: STUB - For now, we serialize an empty list as a placeholder for the structure
             }
 
             // Serialize door component
@@ -1217,7 +1217,7 @@ namespace Andastra.Runtime.Games.Aurora
                 {
                     var spellsList = root.GetList("KnownSpells");
                     // In a full implementation, we would iterate through spell entries and restore them
-                    // For now, we skip the spell data
+                    // TODO: STUB - For now, we skip the spell data
                 }
             }
 

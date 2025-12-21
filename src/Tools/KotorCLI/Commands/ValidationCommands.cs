@@ -40,7 +40,7 @@ namespace KotorCLI.Commands
                 var name = parseResult.GetValue(check2DaName);
                 var install = parseResult.GetValue(check2DaInstall);
                 var logger = new StandardLogger();
-                logger.Info("check-2da not yet implemented");
+                logger.Info("TODO: STUB - check-2da not yet implemented");
                 Environment.Exit(0);
             });
             rootCommand.Add(check2DaCmd);

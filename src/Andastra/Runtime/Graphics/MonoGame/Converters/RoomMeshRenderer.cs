@@ -222,7 +222,7 @@ namespace Andastra.Runtime.MonoGame.Converters
             if (node.Reference != null)
             {
                 // Reference nodes link to external models - would need to load referenced model
-                // For now, we skip them as they require additional model loading
+                // TODO: STUB - For now, we skip them as they require additional model loading
             }
 
             // Process children recursively

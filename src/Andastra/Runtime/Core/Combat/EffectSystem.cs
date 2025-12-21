@@ -404,7 +404,7 @@ namespace Andastra.Runtime.Core.Combat
                     // Located via string references: "ArmorClass" @ 0x007c42a8, "EffectACIncrease" @ routine 115
                     // Original implementation: AC effects add to total AC (10 + DEX + Armor + Natural + Deflection + Effects)
                     // Game-specific implementations should use reflection or extension methods to call bonus tracking
-                    // For now, this is handled by the concrete StatsComponent implementation querying EffectSystem
+                    // TODO: STUB - For now, this is handled by the concrete StatsComponent implementation querying EffectSystem
                     break;
 
                 case EffectType.AttackIncrease:
@@ -414,7 +414,7 @@ namespace Andastra.Runtime.Core.Combat
                     // Located via string references: "EffectAttackIncrease" @ routine 118
                     // Original implementation: Attack effects add to total attack (BAB + STR/DEX + Effects)
                     // Game-specific implementations should use reflection or extension methods to call bonus tracking
-                    // For now, this is handled by the concrete StatsComponent implementation querying EffectSystem
+                    // TODO: STUB - For now, this is handled by the concrete StatsComponent implementation querying EffectSystem
                     break;
 
                 case EffectType.DamageIncrease:

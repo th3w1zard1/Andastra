@@ -237,7 +237,7 @@ namespace Andastra.Runtime.Core.Perception
                     if (_world.CurrentArea.NavigationMesh.Raycast(subjectPos, direction, distance, out hitPoint, out hitFace))
                     {
                         // Something is blocking - check if it's a door that might be open
-                        // For now, assume walls fully block hearing, doors partially block
+                        // TODO: STUB - For now, assume walls fully block hearing, doors partially block
                         float hitDist = Vector3.Distance(subjectPos, hitPoint);
                         float targetDist = Vector3.Distance(subjectPos, targetPos);
                         // Allow some tolerance for doors (assume doors don't fully block if within 1 unit)

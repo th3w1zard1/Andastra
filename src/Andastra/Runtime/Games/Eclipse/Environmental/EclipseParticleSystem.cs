@@ -227,7 +227,7 @@ namespace Andastra.Runtime.Games.Eclipse.Environmental
             // - Update particle lifetimes and remove expired particles
             // - Update particle rendering data
 
-            // For now, simulate particle count (would be actual particle count in full implementation)
+            // TODO: STUB - For now, simulate particle count (would be actual particle count in full implementation)
             _particleCount = _isActive ? 100 : 0;
         }
     }

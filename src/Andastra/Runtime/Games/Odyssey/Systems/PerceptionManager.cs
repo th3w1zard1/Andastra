@@ -850,7 +850,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
                         {
                             // Combat sounds can be heard through some obstacles
                             // Use a more lenient line of sight check (shorter distance or different algorithm)
-                            // For now, we'll allow combat sounds to be heard if distance is reasonable
+                            // TODO: STUB - For now, we'll allow combat sounds to be heard if distance is reasonable
                             // This is a simplification - original engine may have more complex sound propagation
                             float distSq = Vector3.DistanceSquared(creaturePos, targetPos);
                             float dist = (float)Math.Sqrt(distSq);

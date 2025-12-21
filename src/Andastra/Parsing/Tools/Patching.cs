@@ -225,7 +225,7 @@ namespace Andastra.Parsing.Tools
             try
             {
                 // Generic resource conversion - these functions need to be ported
-                // For now, log that conversion is needed
+                // TODO: STUB - For now, log that conversion is needed
                 LogMessage(config, $"GFF conversion for {resource.ResType.Name} not yet fully implemented - requires generic resource read/write functions");
             }
             catch (Exception ex) when (ex is IOException || ex is ArgumentException)
@@ -263,7 +263,7 @@ namespace Andastra.Parsing.Tools
             }
 
             // Translator interface would need to be defined
-            // For now, log that translation is needed
+            // TODO: STUB - For now, log that translation is needed
             LogMessage(config, "Translation processing not fully implemented - requires translator instance");
         }
 

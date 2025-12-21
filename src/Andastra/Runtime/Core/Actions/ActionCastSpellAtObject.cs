@@ -289,7 +289,7 @@ namespace Andastra.Runtime.Core.Actions
                 }
             }
 
-            // For now, apply a basic visual effect
+            // TODO: STUB - For now, apply a basic visual effect
             // Full implementation would:
             // 1. Look up spell effects from spells.2da or spell scripts
             // 2. Create appropriate Effect objects based on spell type

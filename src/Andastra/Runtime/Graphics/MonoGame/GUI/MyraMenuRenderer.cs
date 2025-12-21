@@ -100,7 +100,7 @@ namespace Andastra.Runtime.MonoGame.GUI
                 // Initialize Myra environment
                 // Myra can work with or without a Game instance
                 // If Game instance is needed, it should be set via MyraEnvironment.Game
-                // For now, we'll initialize without Game instance and handle rendering manually
+                // TODO: STUB - For now, we'll initialize without Game instance and handle rendering manually
                 
                 // Create the desktop (root container for all UI widgets)
                 // Desktop manages the UI hierarchy and rendering

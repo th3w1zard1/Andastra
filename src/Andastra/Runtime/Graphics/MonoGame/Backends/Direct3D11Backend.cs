@@ -768,7 +768,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             // };
             // ID3D11Device::CreateTexture2D(&texDesc, NULL, &texture)
 
-            // For now, create a placeholder since the actual D3D11 device is not yet implemented
+            // TODO: STUB - For now, create a placeholder since the actual D3D11 device is not yet implemented
             // When the DirectX 11 implementation is complete, this will create the actual texture
             info.NativeTexture = new IntPtr(1); // Placeholder - will be replaced with actual ID3D11Texture2D* when D3D11 is implemented
 
@@ -882,7 +882,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private bool IsCompressedFormat(TextureFormat format)
         {
             // DXT formats are typically represented as BC (Block Compressed) in D3D11
-            // For now, we'll check for common compressed format patterns
+            // TODO: STUB - For now, we'll check for common compressed format patterns
             // When the format enum is extended, this should check for BC1-BC7 formats
             return false; // Placeholder - will be updated when compressed format support is added
         }
@@ -957,7 +957,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             // - Finally, they call UnlockRect to commit the changes
             // - DirectX 11's UpdateSubresource is the equivalent operation, but copies data directly without locking
 
-            // For now, this is a placeholder implementation
+            // TODO: STUB - For now, this is a placeholder implementation
             // When the DirectX 11 implementation is complete, this will call the actual UpdateSubresource API
             // The actual implementation will use P/Invoke or a DirectX 11 interop library (e.g., SharpDX, Vortice.Windows)
             // to call ID3D11DeviceContext::UpdateSubresource
@@ -971,7 +971,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             // Placeholder: In the actual implementation, this would be:
             // _immediateContext->UpdateSubresource(texture, mipLevel, &box, data, rowPitch, depthPitch);
-            // For now, we'll just validate the parameters and return success
+            // TODO: STUB - For now, we'll just validate the parameters and return success
             // The actual texture upload will happen when the DirectX 11 implementation is complete
 
             return true;

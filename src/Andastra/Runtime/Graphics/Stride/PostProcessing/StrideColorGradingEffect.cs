@@ -139,7 +139,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             // 4. Blend: lerp(adjustedColor, lutColor, strength)
 
             // Would use Stride's Effect system
-            // For now, placeholder implementation
+            // TODO: STUB - For now, placeholder implementation
 
             Console.WriteLine($"[StrideColorGrading] Applying: contrast {_contrast:F2}, saturation {_saturation:F2}, LUT strength {_strength:F2}");
         }

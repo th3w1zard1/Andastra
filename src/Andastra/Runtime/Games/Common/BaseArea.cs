@@ -406,7 +406,7 @@ namespace Andastra.Runtime.Games.Common
                 }
 
                 // In a full implementation, this would query IModule.GetAreas() to find the area
-                // For now, we check if it's the current area or return null if not found
+                // TODO: STUB - For now, we check if it's the current area or return null if not found
             }
 
             // Area streaming: Load target area if not already loaded
@@ -416,8 +416,8 @@ namespace Andastra.Runtime.Games.Common
             // 3. Register area with world
             // 4. Return loaded area
 
-            // For now, return current area if target matches, or null if not found
-            // This is a simplified implementation - full area streaming would require IModuleLoader integration
+            // TODO: STUB - For now, return current area if target matches, or null if not found
+            // TODO: STUB - This is a simplified implementation - full area streaming would require IModuleLoader integration
             if (world.CurrentArea != null && string.Equals(world.CurrentArea.ResRef, targetAreaResRef, StringComparison.OrdinalIgnoreCase))
             {
                 return world.CurrentArea;
@@ -425,7 +425,7 @@ namespace Andastra.Runtime.Games.Common
 
             // If target area is not current area and not loaded, we would need to load it
             // This requires IModuleLoader which may not be available in this context
-            // For now, return null to indicate area not found/not loaded
+            // TODO: STUB - For now, return null to indicate area not found/not loaded
             // Full implementation would integrate with module loading system
             return null;
         }

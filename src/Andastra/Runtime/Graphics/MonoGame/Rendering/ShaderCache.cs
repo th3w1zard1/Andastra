@@ -127,7 +127,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
                     // Placeholder - would use actual shader compilation API
                     // Effect effect = new Effect(_graphicsDevice, shaderSource);
                     
-                    // For now, return null (would be actual compiled effect)
+                    // TODO: STUB - For now, return null (would be actual compiled effect)
                     entry.CompiledEffect = null; // effect;
                     entry.CompiledBytecode = null; // Get compiled bytecode
                     entry.LastModified = DateTime.UtcNow;

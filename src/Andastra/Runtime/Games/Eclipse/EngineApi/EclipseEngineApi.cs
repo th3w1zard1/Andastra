@@ -469,7 +469,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             
             // Create creature entity using IWorld.CreateEntity
             // Note: Eclipse uses template-based spawning, but IWorld.CreateEntity uses ObjectType
-            // For now, create as ObjectType.Creature - template loading would need IEntityTemplate system
+            // TODO: STUB - For now, create as ObjectType.Creature - template loading would need IEntityTemplate system
             Core.Interfaces.IEntity creature = ctx.World.CreateEntity(Core.Enums.ObjectType.Creature, position, facingRadians);
             if (creature != null)
             {
@@ -2120,7 +2120,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             }
             
             // Check if this is a special area object ID (areas might have special IDs)
-            // For now, if objectId matches current area's conceptual ID, return true
+            // TODO: STUB - For now, if objectId matches current area's conceptual ID, return true
             if (ctx != null && ctx.World != null && ctx.World.CurrentArea != null)
             {
                 // Areas don't have ObjectIds in the interface, so we can't directly compare
@@ -2289,7 +2289,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                         // Check if entity should be considered dead
                         // CombatSystem doesn't have OnEntityDamaged, but we can check if entity is dead
                         // The combat system will handle death through its normal update cycle
-                        // For now, we've applied the damage - combat system will detect death on next update
+                        // TODO: STUB - For now, we've applied the damage - combat system will detect death on next update
                     }
                 }
             }
@@ -2702,7 +2702,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 {
                     // Check if creature has ability (spell/talent/feat ID)
                     // In full implementation, this would check ability list from stats component
-                    // For now, check if ability ID is stored in entity data
+                    // TODO: STUB - For now, check if ability ID is stored in entity data
                     string abilityKey = "HasAbility_" + ability;
                     if (creature.HasData(abilityKey))
                     {
@@ -2736,7 +2736,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 {
                     // Get spell level from stats component
                     // In full implementation, this would look up spell level from spell list
-                    // For now, check if spell level is stored in entity data
+                    // TODO: STUB - For now, check if spell level is stored in entity data
                     string spellKey = "SpellLevel_" + spell;
                     if (creature.HasData(spellKey))
                     {
@@ -2771,14 +2771,14 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             {
                 // IArea doesn't have ObjectId, so we return a special area object ID
                 // Areas are special objects in Eclipse - use a special ID based on ResRef
-                // For now, return a placeholder ID - this may need adjustment based on actual Eclipse implementation
+                // TODO: STUB - For now, return a placeholder ID - this may need adjustment based on actual Eclipse implementation
                 uint areaObjectId = 0x7F000010; // Special area object ID range
                 return Variable.FromObject(areaObjectId);
             }
             
             // Search for area by tag (areas are typically loaded modules)
             // In full implementation, this would search loaded areas
-            // For now, return invalid if not current area
+            // TODO: STUB - For now, return invalid if not current area
             return Variable.FromObject(ObjectInvalid);
         }
 
@@ -2953,7 +2953,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     
                 default:
                     // Other criteria types require more complex implementation
-                    // For now, accept all entities (criteria not fully implemented)
+                    // TODO: STUB - For now, accept all entities (criteria not fully implemented)
                     return true;
             }
         }

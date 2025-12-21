@@ -137,7 +137,7 @@ namespace Andastra.Runtime.Games.Odyssey
             if (saveData.CurrentAreaInstance != null)
             {
                 // Module name might be stored in area or we can infer from area ResRef
-                // For now, use empty string if not available - caller should provide module name
+                // TODO: STUB - For now, use empty string if not available - caller should provide module name
                 nfo.LastModule = string.Empty;
             }
             else
@@ -276,9 +276,9 @@ namespace Andastra.Runtime.Games.Odyssey
             // PORTRAIT0-2: Player portrait resource references
             // Convert Portrait byte[] to ResRef if possible
             // Note: Portrait in SaveGameData is byte[], but NFOData expects ResRef
-            // For now, if Portrait is provided, we'd need to extract ResRef from it
+            // TODO: STUB - For now, if Portrait is provided, we'd need to extract ResRef from it
             // This is typically stored as a TPC or similar format
-            // For now, leave as blank ResRef - portrait loading would require format parsing
+            // TODO: STUB - For now, leave as blank ResRef - portrait loading would require format parsing
             nfo.Portrait0 = ResRef.FromBlank();
             nfo.Portrait1 = ResRef.FromBlank();
             nfo.Portrait2 = ResRef.FromBlank();
@@ -2202,7 +2202,7 @@ namespace Andastra.Runtime.Games.Odyssey
 
             // Note: Stores, Encounters, and Cameras are not directly accessible via IArea interface
             // They would need to be added to AreaState separately if available from the area implementation
-            // For now, StoreStates, EncounterStates, and CameraStates remain empty
+            // TODO: STUB - For now, StoreStates, EncounterStates, and CameraStates remain empty
 
             foreach (IEntity sound in area.Sounds)
             {
@@ -2234,13 +2234,13 @@ namespace Andastra.Runtime.Games.Odyssey
             if (odysseyArea != null)
             {
                 // OdysseyArea doesn't expose Encounters directly, but we can check for encounter entities
-                // For now, we'll skip encounters as they're not directly accessible via IArea interface
-                // Full implementation would require access to OdysseyArea's internal encounter collection
+                // TODO: STUB - For now, we'll skip encounters as they're not directly accessible via IArea interface
+                // TODO: STUB - Full implementation would require access to OdysseyArea's internal encounter collection
             }
 
             // Extract cameras (KOTOR-specific, if area supports them)
             // Based on swkotor2.exe: Camera entities are stored in area's camera collection
-            // For now, we'll skip cameras as they're not directly accessible via IArea interface
+            // TODO: STUB - For now, we'll skip cameras as they're not directly accessible via IArea interface
 
             // Note: Destroyed entities and spawned entities are typically tracked separately
             // by the save system and would be added to areaState.DestroyedEntityIds and
@@ -2394,12 +2394,12 @@ namespace Andastra.Runtime.Games.Odyssey
 
             // Extract effects component (active effects/buffs/debuffs)
             // Based on swkotor2.exe: FUN_005226d0 saves active effects on entities
-            // Note: Full implementation would require IEffectsComponent interface
-            // For now, we'll skip effects as they're not directly accessible via standard interfaces
+            // TODO: STUB - Note: Full implementation would require IEffectsComponent interface
+            // TODO: STUB - For now, we'll skip effects as they're not directly accessible via standard interfaces
 
             // Extract template ResRef if available
             // Based on swkotor2.exe: TemplateResRef is stored in entity's template data
-            // For now, we'll leave TemplateResRef empty as it's not directly accessible via IEntity interface
+            // TODO: STUB - For now, we'll leave TemplateResRef empty as it's not directly accessible via IEntity interface
 
             return entityState;
         }
@@ -3460,8 +3460,8 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // Use entity's Deserialize method if available, or apply directly via reflection
-            // For now, we'll use the entity's variable system if accessible
-            // Note: Full implementation would require access to entity's variable storage
+            // TODO: STUB - For now, we'll use the entity's variable system if accessible
+            // TODO: STUB - Note: Full implementation would require access to entity's variable storage
             // This is a placeholder that would need to be completed when variable system is fully implemented
 
             // Try to get ScriptHooks component which may contain variable storage
@@ -3497,7 +3497,7 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // Use entity's effect system to apply effects
-            // Note: Full implementation would require access to entity's effect storage
+            // TODO: STUB - Note: Full implementation would require access to entity's effect storage
             // This is a placeholder that would need to be completed when effect system is fully implemented
             // Effects would be applied via IEffectComponent or similar interface
         }
@@ -3598,9 +3598,9 @@ namespace Andastra.Runtime.Games.Odyssey
 
             // Spawn each dynamically created entity
             // Based on swkotor2.exe: Entities are spawned from BlueprintResRef
-            // Note: Full implementation would require access to entity factory and world
+            // TODO: STUB - Note: Full implementation would require access to entity factory and world
             // This is a placeholder that would need to be completed when entity spawning is fully implemented
-            // For now, we log that entities need to be spawned
+            // TODO: STUB - For now, we log that entities need to be spawned
             foreach (SpawnedEntityState spawnedState in spawnedEntities)
             {
                 if (spawnedState == null || string.IsNullOrEmpty(spawnedState.BlueprintResRef))
@@ -3639,7 +3639,7 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // Area local variables would be stored in area's variable system
-            // Note: Full implementation would require access to area's variable storage
+            // TODO: STUB - Note: Full implementation would require access to area's variable storage
             // This is a placeholder that would need to be completed when area variable system is fully implemented
             // Variables would be stored via IArea's variable system or similar interface
         }
@@ -3899,7 +3899,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 // Create entity
                 // Based on swkotor2.exe: Entities are created with ObjectId, ObjectType, Tag
                 // Note: Full entity creation with components requires EntityFactory or World.CreateEntity
-                // For now, create basic OdysseyEntity - caller should register with world and restore components
+                // TODO: STUB - For now, create basic OdysseyEntity - caller should register with world and restore components
                 OdysseyEntity entity = new OdysseyEntity(objectId, objectType, tag);
 
                 // Restore AreaId if present
@@ -4166,7 +4166,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 if (string.IsNullOrEmpty(moduleName) && !string.IsNullOrEmpty(saveData.CurrentArea))
                 {
                     // Module name might be derivable from area name
-                    // For now, use a default or skip module state
+                    // TODO: STUB - For now, use a default or skip module state
                 }
 
                 // Serialize area state if we have module name

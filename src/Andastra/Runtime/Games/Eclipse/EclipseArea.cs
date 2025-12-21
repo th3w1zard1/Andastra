@@ -1461,7 +1461,7 @@ namespace Andastra.Runtime.Games.Eclipse
             // 6. Create audio zones from definitions
             // 7. Set default weather based on area properties
 
-            // For now, set default weather (no weather) and create default audio zone
+            // TODO: STUB - For now, set default weather (no weather) and create default audio zone
             // Default audio zone covers entire area with no reverb (outdoor/open space)
             if (_audioZoneSystem != null)
             {
@@ -1489,7 +1489,7 @@ namespace Andastra.Runtime.Games.Eclipse
             // 4. Set up weather transitions based on time or script events
             // 5. Create particle emitters for interactive elements (torches, fires, etc.)
 
-            // For now, this is a placeholder that demonstrates the structure
+            // TODO: STUB - For now, this is a placeholder that demonstrates the structure
             // Full implementation would create interactive elements from area data
         }
 
@@ -2045,7 +2045,7 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Determine collision shape half extents
             // In a full implementation, this would query entity's renderable component for mesh bounds
-            // For now, use default size based on entity type
+            // TODO: STUB - For now, use default size based on entity type
             Vector3 halfExtents = new Vector3(0.5f, 0.5f, 0.5f); // Default 1x1x1 unit box
 
             // Get mass from entity data or use default
@@ -2374,7 +2374,7 @@ namespace Andastra.Runtime.Games.Eclipse
             if (_lightingSystem != null)
             {
                 // In a full implementation, lighting system would provide ambient color
-                // For now, use default ambient color
+                // TODO: STUB - For now, use default ambient color
             }
             basicEffect.AmbientLightColor = ambientColor;
             basicEffect.LightingEnabled = true;
@@ -2385,7 +2385,7 @@ namespace Andastra.Runtime.Games.Eclipse
             // - Static terrain geometry
             // - Destructible environment objects
             // - Interactive elements
-            // For now, this is a placeholder that would be expanded with actual geometry rendering
+            // TODO: STUB - For now, this is a placeholder that would be expanded with actual geometry rendering
             RenderStaticGeometry(graphicsDevice, basicEffect, viewMatrix, projectionMatrix, cameraPosition);
 
             // Entity pass: Render entities with lighting
@@ -2402,7 +2402,7 @@ namespace Andastra.Runtime.Games.Eclipse
             // - Render to intermediate render targets
             // - Apply bloom, tone mapping, color grading
             // - Composite final image
-            // For now, this is a placeholder for post-processing pipeline
+            // TODO: STUB - For now, this is a placeholder for post-processing pipeline
             ApplyPostProcessing(graphicsDevice, basicEffect, viewMatrix, projectionMatrix);
         }
 
@@ -2428,8 +2428,8 @@ namespace Andastra.Runtime.Games.Eclipse
             // - Handle destructible geometry modifications
             // - Use frustum culling for performance
             //
-            // For now, this is a placeholder that demonstrates the structure
-            // Actual geometry rendering would require:
+            // TODO: STUB - For now, this is a placeholder that demonstrates the structure
+            // TODO: STUB - Actual geometry rendering would require:
             // - Geometry data from area files
             // - Material system for textures and shaders
             // - Shadow mapping system
@@ -2543,7 +2543,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 // - Point lights (torches, fires, etc.)
                 // - Spot lights (lanterns, etc.)
                 // - Shadow maps for each light
-                // For now, use default lighting
+                // TODO: STUB - For now, use default lighting
             }
 
             // Render entity model
@@ -2552,7 +2552,7 @@ namespace Andastra.Runtime.Games.Eclipse
             // - Render model with appropriate materials
             // - Apply entity-specific effects
             // - Handle transparency and alpha blending
-            // For now, this is a placeholder
+            // TODO: STUB - For now, this is a placeholder
             // Actual entity rendering would use IEntityModelRenderer or similar
         }
 
@@ -2579,12 +2579,12 @@ namespace Andastra.Runtime.Games.Eclipse
                 if (effect != null && effect.IsActive)
                 {
                     // Render effect
-                    // In a full implementation, each effect type would have its own rendering:
+                    // TODO: STUB - In a full implementation, each effect type would have its own rendering:
                     // - Particle effects: Render particle systems
                     // - Weather effects: Render weather particles and overlays
                     // - Environmental effects: Render environmental overlays
-                    // For now, effects are updated but not rendered (rendering would require effect-specific renderers)
-                    // Effects that implement IRenderable would be rendered here
+                    // TODO: STUB - For now, effects are updated but not rendered (rendering would require effect-specific renderers)
+                    // TODO: STUB - Effects that implement IRenderable would be rendered here
                 }
             }
         }
@@ -2605,7 +2605,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// 1. Render scene to intermediate render target
         /// 2. Apply post-processing passes (bloom, tone mapping, etc.)
         /// 3. Composite final image to back buffer
-        /// For now, this is a placeholder
+        /// TODO: STUB - For now, this is a placeholder
         /// </remarks>
         private void ApplyPostProcessing(
             IGraphicsDevice graphicsDevice,
@@ -2614,14 +2614,14 @@ namespace Andastra.Runtime.Games.Eclipse
             Matrix4x4 projectionMatrix)
         {
             // Eclipse post-processing pipeline
-            // In a full implementation, this would:
+            // TODO: STUB - In a full implementation, this would:
             // - Extract bright areas for bloom
             // - Apply bloom effect
             // - Apply HDR tone mapping
             // - Apply color grading
             // - Composite final image
-            // For now, this is a placeholder
-            // Post-processing would require:
+            // TODO: STUB - For now, this is a placeholder
+            // TODO: STUB - Post-processing would require:
             // - Intermediate render targets
             // - Post-processing shaders
             // - Effect chain system
@@ -2893,7 +2893,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 // 2. Update dynamic obstacle list
                 // 3. Recalculate pathfinding graph
                 // 4. Update walkability flags for affected faces
-                // For now, this is a placeholder that marks the mesh as needing update
+                // TODO: STUB - For now, this is a placeholder that marks the mesh as needing update
             }
         }
 
@@ -2913,7 +2913,7 @@ namespace Andastra.Runtime.Games.Eclipse
             // 2. Update rigid body positions/velocities
             // 3. Recalculate constraints
             // 4. Update physics world bounds
-            // For now, this is a placeholder
+            // TODO: STUB - For now, this is a placeholder
         }
 
         /// <summary>
@@ -2932,7 +2932,7 @@ namespace Andastra.Runtime.Games.Eclipse
             // 2. Update shadow maps if needed
             // 3. Recalculate global illumination
             // 4. Update light culling
-            // For now, this is a placeholder
+            // TODO: STUB - For now, this is a placeholder
         }
     }
 
@@ -3310,7 +3310,7 @@ namespace Andastra.Runtime.Games.Eclipse
             // 2. Mark those faces as non-walkable
             // 3. Update pathfinding graph to exclude those faces
             // 4. Rebuild spatial structures if needed
-            // For now, this is a placeholder that demonstrates the structure
+            // TODO: STUB - For now, this is a placeholder that demonstrates the structure
             if (area.NavigationMesh is EclipseNavigationMesh eclipseNavMesh)
             {
                 // Placeholder: In full implementation, would call eclipseNavMesh.CreateHole(_center, _radius)
@@ -3479,7 +3479,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     if (_propertyValue is string displayName)
                     {
                         // In a full implementation, EclipseArea would have a DisplayName setter
-                        // For now, we'll need to add a method or use reflection
+                        // TODO: STUB - For now, we'll need to add a method or use reflection
                         // Since DisplayName is read-only, we'd need to add a SetDisplayName method
                     }
                     break;
@@ -3488,7 +3488,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     if (_propertyValue is string tag)
                     {
                         // In a full implementation, EclipseArea would have a Tag setter
-                        // For now, we'll need to add a method or use reflection
+                        // TODO: STUB - For now, we'll need to add a method or use reflection
                         // Since Tag is read-only, we'd need to add a SetTag method
                     }
                     break;

@@ -185,7 +185,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
             }
 
             // For DirectX 9, we would use D3DXCreateTextureFromFileInMemory or similar
-            // For now, we focus on OpenGL implementation (NWN:EE primarily uses OpenGL)
+            // TODO: STUB - For now, we focus on OpenGL implementation (NWN:EE primarily uses OpenGL)
             if (!_useOpenGL)
             {
                 Console.WriteLine("[NwnEeGraphicsBackend] LoadAuroraTexture: DirectX 9 texture loading not yet implemented");
@@ -452,7 +452,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
         private IntPtr CreateOpenGLCubeMapFromTpc(TPC tpc, string debugName)
         {
             // Cube maps require GL_TEXTURE_CUBE_MAP extension
-            // For now, we'll create a standard 2D texture from the first face
+            // TODO: STUB - For now, we'll create a standard 2D texture from the first face
             // Full cube map support would require GL_TEXTURE_CUBE_MAP target
             Console.WriteLine($"[NwnEeGraphicsBackend] CreateOpenGLCubeMapFromTpc: Cube map support not fully implemented, using first face");
             if (tpc.Layers.Count > 0)
@@ -543,7 +543,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
             // - wrapping (wrap S/T)
             // - mipmap generation
             // - anisotropic filtering
-            // For now, we use default values. Full TXI parameter parsing would be implemented here.
+            // TODO: STUB - For now, we use default values. Full TXI parameter parsing would be implemented here.
             // This matches nwmain.exe TXI parameter application.
         }
 

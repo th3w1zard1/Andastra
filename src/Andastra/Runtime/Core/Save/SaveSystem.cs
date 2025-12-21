@@ -1322,11 +1322,11 @@ namespace Andastra.Runtime.Core.Save
                 return null;
             }
 
-            // Note: Full implementation would require:
+            // TODO: STUB - Note: Full implementation would require:
             // 1. Access to entity factory to create items from template ResRefs
             // 2. Module context to load item templates
             // 3. Ability to restore item upgrades and properties
-            // For now, this is a placeholder that indicates the item needs to be restored
+            // TODO: STUB - For now, this is a placeholder that indicates the item needs to be restored
             // The actual item restoration would be handled by the entity factory when loading the save
             
             // In a complete implementation, this would:
@@ -1543,10 +1543,10 @@ namespace Andastra.Runtime.Core.Save
                 // they were valid when saved. This is a limitation when checking module state
                 // for modules that are not currently loaded.
                 // 
-                // Note: A more complete implementation would maintain a module-to-area mapping
+                // TODO: STUB - Note: A more complete implementation would maintain a module-to-area mapping
                 // in the save data or load the module IFO to check Mod_Area_list, but that
                 // would require additional infrastructure (module loader access, IFO parsing).
-                // For now, we return false if the module is not loaded, as we cannot verify.
+                // TODO: STUB - For now, we return false if the module is not loaded, as we cannot verify.
                 return false;
             }
 

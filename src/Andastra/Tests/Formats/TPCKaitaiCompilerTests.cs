@@ -716,7 +716,7 @@ namespace Andastra.Parsing.Tests.Formats
         {
             // Skip if no test files available (would need actual TPC files)
             // This is a structure test - actual file tests would be in integration tests
-            // For now, we verify the round-trip logic works with synthetic data
+            // TODO: STUB - For now, we verify the round-trip logic works with synthetic data
 
             var testTpc = CreateTestTPC();
             byte[] originalBytes = TPCAuto.BytesTpc(testTpc, ResourceType.TPC);
@@ -929,7 +929,7 @@ namespace Andastra.Parsing.Tests.Formats
             // 2. Python runtime (for Python parser) or C# compilation (for C# parser)
             // 3. Actual test TPC files
             //
-            // For now, we structure the test to verify:
+            // TODO: STUB - For now, we structure the test to verify:
             // - Both parsers can compile/load
             // - Key structural elements match
 

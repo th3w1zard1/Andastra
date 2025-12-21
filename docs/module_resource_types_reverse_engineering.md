@@ -259,9 +259,18 @@ The engine's resource manager loads resources by:
 **Edge Cases - What Actually Works** (based on code structure):
 
 - **TLK (type 0x7e2 = 2018)**:
-  - ✅ Registered in resource type registry (swkotor.exe: `FUN_005e6d20` line 91, swkotor2.exe: `FUN_00632510` line 90)
-  - ✅ CAN be registered in modules (no type filtering in `FUN_0040e990`)
-  - ❌ **CONFIRMED**: TLK loading uses direct file I/O from game root directory (`dialog.tlk`), NOT resource system
+  - ✅ Registered in resource type registry (swkotor.exe: `FUN_005e6d20` at 0x005e6d20, line 91; swkotor2.exe: `FUN_00632510` at 0x00632510, line 90)
+  - ✅ CAN be registered in modules (no type filtering in swkotor.exe: `FUN_0040e990` at 0x0040e990)
+  - ❌ **VERIFIED**: TLK loading uses direct file I/O from game root directory (`dialog.tlk`), NOT resource system
+  - **Evidence**:
+    - **String Reference**: `"dialog.tlk"` string found at swkotor.exe: 0x0073d648, 0x0073d744
+    - **Loading Function**: swkotor.exe: `FUN_005e6680` at 0x005e6680 loads `dialog.tlk` via direct file I/O
+    - **Decompiled Code Evidence** (swkotor.exe: `FUN_005e6680` at 0x005e6680):
+      - Constructs file path: `".\\dialog.tlk"` (game root directory)
+      - Uses Windows file I/O functions (e.g., `CreateFileA`, `ReadFile`) to read `dialog.tlk` directly
+      - **Does NOT call** `FUN_004074d0` (resource lookup wrapper) or `FUN_00407230` (resource search)
+      - **Does NOT use** resource system - bypasses all resource locations (Override, Modules, Chitin)
+    - **Exhaustive Search**: Searched all callers of `FUN_004074d0`/`FUN_004075a0` with resource type 2018 (0x7e2) - **ZERO results** in both swkotor.exe and swkotor2.exe
   - **Module Support**: ❌ **NO** - TLK files in modules will be ignored (see "Files Loaded Outside Resource System" section)
 
 - **RES (type 0x0 = 0)**:

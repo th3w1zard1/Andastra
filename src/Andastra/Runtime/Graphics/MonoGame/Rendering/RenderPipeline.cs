@@ -117,7 +117,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
             // 2. Determine pass dependencies (e.g., shadows before lighting)
             // 3. Create graph nodes for each pass
             // 4. Set up resource barriers and transitions
-            // For now, the framework is in place and ready for integration
+            // TODO: STUB - For now, the framework is in place and ready for integration
         }
 
         /// <summary>

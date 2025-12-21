@@ -97,7 +97,7 @@ namespace Andastra.Runtime.Core.Actions
 
             // If fade, wait for fade duration (typically 1-2 seconds)
             // The rendering system should handle the actual fade and notify when complete
-            // For now, we'll use a fixed fade duration
+            // TODO: STUB - For now, we'll use a fixed fade duration
             const float fadeDuration = 1.0f; // 1 second fade
             if (_fadeStarted && ElapsedTime >= _delay + _delayUntilFade + fadeDuration)
             {

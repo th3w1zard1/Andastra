@@ -677,7 +677,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
 
                 case GraphicsBackend.OpenGLES:
                     // OpenGL ES is typically handled by OpenGL backend with ES profile
-                    // For now, fall back to OpenGL backend
+                    // TODO: STUB - For now, fall back to OpenGL backend
                     Console.WriteLine("[OdysseyRenderer] OpenGL ES requested, using OpenGL backend");
                     return new OpenGLBackend();
 

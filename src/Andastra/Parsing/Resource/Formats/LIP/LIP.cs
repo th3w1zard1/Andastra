@@ -134,7 +134,7 @@ namespace Andastra.Parsing.Formats.LIP
             LIPShape rightShape = shapes.Item2;
             float factor = shapes.Item3;
 
-            // For now, just return the shape we're closest to
+            // TODO: STUB - For now, just return the shape we're closest to
             // In a full implementation, this would do proper shape interpolation
             return factor > 0.5f ? rightShape : leftShape;
         }

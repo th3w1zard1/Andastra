@@ -223,7 +223,7 @@ namespace Andastra.Runtime.Stride.Culling
                         
                         // Read texture data - Stride uses Color4[] for most formats
                         // For depth buffers, we may need to use a different approach
-                        // For now, read as Color4 and extract red channel (assuming R32_Float stored in red)
+                        // TODO: STUB - For now, read as Color4 and extract red channel (assuming R32_Float stored in red)
                         var colorData = new Color4[_width * _height];
                         _hiZBuffer.GetData(context, colorData);
                         

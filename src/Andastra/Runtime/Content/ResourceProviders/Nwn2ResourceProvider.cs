@@ -48,7 +48,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
 
             // NWN2-specific hardcoded resources
             // Add NWN2-specific hardcoded resource lookups here if needed
-            // For now, NWN2 uses the common hardcoded resources from base class
+            // TODO: STUB - For now, NWN2 uses the common hardcoded resources from base class
 
             return null;
         }

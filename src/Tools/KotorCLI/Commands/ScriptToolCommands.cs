@@ -21,7 +21,7 @@ namespace KotorCLI.Commands
                 var input = parseResult.GetValue(decompileInput);
                 var output = parseResult.GetValue(decompileOutput);
                 var logger = new StandardLogger();
-                logger.Info("decompile not yet implemented");
+                logger.Info("TODO: STUB - decompile not yet implemented");
                 Environment.Exit(0);
             });
             rootCommand.Add(decompileCmd);
@@ -36,7 +36,7 @@ namespace KotorCLI.Commands
                 var input = parseResult.GetValue(disassembleInput);
                 var output = parseResult.GetValue(disassembleOutput);
                 var logger = new StandardLogger();
-                logger.Info("disassemble not yet implemented");
+                logger.Info("TODO: STUB - disassemble not yet implemented");
                 Environment.Exit(0);
             });
             rootCommand.Add(disassembleCmd);
@@ -57,7 +57,7 @@ namespace KotorCLI.Commands
                 var includes = parseResult.GetValue(includeOption);
                 var debug = parseResult.GetValue(debugOption);
                 var logger = new StandardLogger();
-                logger.Info("assemble not yet implemented (use NSSComp tool or compile command)");
+                logger.Info("TODO: STUB - assemble not yet implemented (use NSSComp tool or compile command)");
                 Environment.Exit(0);
             });
             rootCommand.Add(assembleCmd);

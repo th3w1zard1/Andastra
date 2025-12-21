@@ -31,7 +31,7 @@ namespace Andastra.Runtime.Games.Aurora.Components
             FeatList = new List<int>();
             BonusFeatList = new List<int>();
             // ClassList is initialized in base class, but we need to ensure it's the right type
-            // For now, base class uses BaseCreatureClass which is compatible
+            // TODO: STUB - For now, base class uses BaseCreatureClass which is compatible
         }
 
 

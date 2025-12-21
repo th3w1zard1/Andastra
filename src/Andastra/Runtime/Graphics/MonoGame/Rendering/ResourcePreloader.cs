@@ -295,7 +295,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
 
             // Extract sound resources from sound component (if exists)
             // Note: Sound components may not exist in all engines, check if available
-            // For now, we'll skip sound extraction as it requires engine-specific components
+            // TODO: STUB - For now, we'll skip sound extraction as it requires engine-specific components
 
             // Extract script resources from script hooks component
             IScriptHooksComponent scriptHooks = entity.GetComponent<IScriptHooksComponent>();

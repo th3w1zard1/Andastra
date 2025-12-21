@@ -316,7 +316,7 @@ namespace Andastra.Parsing.Tests.Formats
             // 1. Compiling SSF.ksy to multiple languages
             // 2. Running the generated parsers on the test file
             // 3. Comparing results across languages
-            // For now, we validate the structure matches expectations
+            // TODO: STUB - For now, we validate the structure matches expectations
 
             SSF ssf = new SSFBinaryReader(TestSsfFile).Load();
 

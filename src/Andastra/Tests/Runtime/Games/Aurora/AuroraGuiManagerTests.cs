@@ -267,7 +267,7 @@ namespace Andastra.Tests.Runtime.Games.Aurora
             };
 
             // Convert to GFF and then to bytes
-            // For now, return empty array as creating full GFF is complex
+            // TODO: STUB - For now, return empty array as creating full GFF is complex
             // In real tests, you'd use GFFAuto.BytesGff()
             return new byte[0]; // Placeholder - would need full GFF serialization
         }

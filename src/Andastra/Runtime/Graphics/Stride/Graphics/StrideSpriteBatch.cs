@@ -21,7 +21,7 @@ namespace Andastra.Runtime.Stride.Graphics
             _spriteBatch = spriteBatch ?? throw new System.ArgumentNullException(nameof(spriteBatch));
             // Store GraphicsDevice reference for accessing ImmediateContext
             // SpriteBatch is created with GraphicsDevice, so we need to get it from the constructor
-            // For now, we'll get it from the GraphicsContext when needed
+            // TODO: STUB - For now, we'll get it from the GraphicsContext when needed
             _graphicsDevice = spriteBatch.GraphicsDevice;
         }
 

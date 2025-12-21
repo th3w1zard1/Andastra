@@ -66,7 +66,7 @@ namespace Andastra.Runtime.Games.Eclipse.Journal
             {
                 // Load JRL file from installation
                 // Based on daorigins.exe: Quest files may be in different format
-                // For now, attempt to load as JRL (GFF format) similar to Odyssey/Aurora
+                // TODO: STUB - For now, attempt to load as JRL (GFF format) similar to Odyssey/Aurora
                 ResourceResult resource = _installation.Resources.LookupResource(jrlResRef, ResourceType.JRL);
                 if (resource == null || resource.Data == null || resource.Data.Length == 0)
                 {

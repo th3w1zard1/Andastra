@@ -72,7 +72,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
                     // 1. Combine vertex/index buffers
                     // 2. Adjust draw ranges
                     // 3. Use instancing if appropriate
-                    // For now, we mark them as mergeable and remove duplicates
+                    // TODO: STUB - For now, we mark them as mergeable and remove duplicates
                     // The actual merging would happen during command execution
                     commands.RemoveAt(i + 1);
                     i--; // Check again since we removed an element

@@ -625,7 +625,7 @@ namespace Andastra.Runtime.Games.Odyssey
             // In a full implementation, the source entity would be passed through event data
             // and we'd check its LinkedTo field to position at waypoint
 
-            // For now, position is preserved and will be projected to walkmesh in ProjectEntityToTargetArea
+            // TODO: STUB - For now, position is preserved and will be projected to walkmesh in ProjectEntityToTargetArea
         }
 
         /// <summary>
@@ -1403,7 +1403,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 Console.WriteLine($"[OdysseyEventDispatcher] HandleDestroyObjectEvent: Entity {entity.Tag ?? "null"} ({entity.ObjectId}) is not dead, handling object destruction");
                 
                 // Check if entity has OnDestroy script (if supported by object type)
-                // For now, object destruction is handled by the entity's destruction system
+                // TODO: STUB - For now, object destruction is handled by the entity's destruction system
                 // Future: May fire OnDestroy script event if entity type supports it
             }
         }

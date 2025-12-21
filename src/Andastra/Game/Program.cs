@@ -77,7 +77,7 @@ namespace Andastra.Runtime.Game
                 else if (selectedGame != Game.K1)
                 {
                     // For non-KOTOR games, we'll need to handle differently
-                    // For now, show error
+                    // TODO: STUB - For now, show error
                     var errorApp = new Application(Eto.Platform.Detect);
                     MessageBox.Show(
                         $"Game {selectedGame} is not yet fully supported. Only KotOR 1 and KotOR 2 are currently supported.",

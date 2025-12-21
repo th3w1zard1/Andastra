@@ -55,7 +55,7 @@ namespace Andastra.Runtime.Core.Actions
         private BaseCreatureCollisionDetector CreateCollisionDetector()
         {
             // Factory method: Create engine-specific collision detector
-            // For now, default to Odyssey detector (can be made engine-agnostic via world type checking)
+            // TODO: STUB - For now, default to Odyssey detector (can be made engine-agnostic via world type checking)
             // REMINDER: Andastra.Runtime.Core cannot depend on Andastra.Runtime.Games, so use default implementation
             // Engine-specific implementations should override this method
             return new DefaultCreatureCollisionDetector();

@@ -298,8 +298,8 @@ namespace Andastra.Runtime.Games.Eclipse.Components
                                     // Try to get entity by ObjectId if stored as uint
                                     if (itemObj is uint objectId)
                                     {
-                                        // Entity lookup would require world reference
-                                        // For now, we skip this - items should be restored by save system
+                                        // TODO: STUB - Entity lookup would require world reference
+                                        // TODO: STUB - For now, we skip this - items should be restored by save system
                                     }
                                     else if (itemObj is IEntity item)
                                     {
@@ -316,7 +316,7 @@ namespace Andastra.Runtime.Games.Eclipse.Components
                         if (enumerable != null)
                         {
                             // List format would need to be parsed based on Eclipse save format
-                            // For now, we skip this - items should be restored by save system
+                            // TODO: STUB - For now, we skip this - items should be restored by save system
                         }
                     }
                 }

@@ -849,7 +849,7 @@ namespace Andastra.Runtime.Games.Eclipse
 
                     // Serialize known spells (simplified - serialize spell IDs)
                     // Note: In a full implementation, we would iterate through all possible spell IDs
-                    // For now, we serialize an empty count as a placeholder
+                    // TODO: STUB - For now, we serialize an empty count as a placeholder
                     writer.Write(0); // Known spell count
                 }
 
@@ -1237,7 +1237,7 @@ namespace Andastra.Runtime.Games.Eclipse
                         transformComponent.Position = new System.Numerics.Vector3(x, y, z);
                         transformComponent.Facing = facing;
                         transformComponent.Scale = new System.Numerics.Vector3(scaleX, scaleY, scaleZ);
-                        // Parent reference restoration would require entity lookup by ObjectId
+                        // TODO: STUB - Parent reference restoration would require entity lookup by ObjectId
                         // This is handled by the save system after all entities are deserialized
                     }
                 }

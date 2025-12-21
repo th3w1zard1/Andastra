@@ -99,7 +99,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             // - Output: LDR color buffer [0, 1]
 
             // Would use Stride's Effect system with different shader variants per operator
-            // For now, placeholder implementation
+            // TODO: STUB - For now, placeholder implementation
 
             Console.WriteLine($"[StrideToneMapping] Applying {_operator}: exposure {exposure:F2}, gamma {_gamma:F2}, white point {_whitePoint:F2}");
         }

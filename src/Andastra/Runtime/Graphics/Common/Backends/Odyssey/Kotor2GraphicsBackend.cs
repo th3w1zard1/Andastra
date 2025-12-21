@@ -532,7 +532,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
 
                 // Create and bind vertex programs (matching swkotor2.exe lines 231-299)
                 // This would create vertex program objects with embedded shader strings
-                // For now, this is a placeholder matching the function structure
+                // TODO: STUB - For now, this is a placeholder matching the function structure
             }
 
             return true;
@@ -897,7 +897,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             // Matching swkotor2.exe: FUN_00423b80 @ 0x00423b80
             // This function performs additional OpenGL setup
             // The actual implementation would call FUN_00461220, FUN_00461200, and FUN_004235b0
-            // For now, this is a placeholder matching the function structure
+            // TODO: STUB - For now, this is a placeholder matching the function structure
         }
 
         /// <summary>
@@ -993,7 +993,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             // This function creates a hidden window for secondary OpenGL contexts
 
             // The actual implementation would use wglChoosePixelFormatARB to create a window
-            // For now, this is a placeholder matching the function structure
+            // TODO: STUB - For now, this is a placeholder matching the function structure
             // In the real implementation, this would create a window with specific pixel format attributes
 
             WndProcDelegate wndProc = (hWnd, uMsg, wParam, lParam) => DefWindowProcA(hWnd, uMsg, wParam, lParam);
@@ -1056,7 +1056,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             // Matching swkotor2.exe: FUN_0076dba0 @ 0x0076dba0
             // This function generates a random value using floating-point operations
             // The actual implementation uses x87 FPU instructions
-            // For now, this is a simplified version using System.Random
+            // TODO: STUB - For now, this is a simplified version using System.Random
 
             Random random = new Random();
             return (ulong)random.Next();
@@ -1109,7 +1109,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 result = ((_kotor2ExtensionFlags & combinedFlags) == combinedFlags) ? 1u : 0u;
                 _kotor2CapabilityFlag2 = result;
                 // Additional check would be performed here (FUN_00475520)
-                // For now, this is a placeholder
+                // TODO: STUB - For now, this is a placeholder
             }
             return result;
         }
@@ -1340,7 +1340,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             // KOTOR 2 scene rendering
             // Matches swkotor2.exe rendering code exactly
             // This would implement the full rendering pipeline
-            // For now, this is a placeholder matching the function structure
+            // TODO: STUB - For now, this is a placeholder matching the function structure
 
             // Make sure the primary context is current
             if (_kotor2PrimaryContext != IntPtr.Zero && _kotor2PrimaryDC != IntPtr.Zero)

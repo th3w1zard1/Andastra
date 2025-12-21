@@ -798,7 +798,7 @@ namespace Andastra.Runtime.Games.Aurora.Save
             if (saveData.PartyState != null && saveData.PartyState.PlayerCharacter != null)
             {
                 // Player character ResRef would need to be stored in PartyState
-                // For now, use PlayerName if available
+                // TODO: STUB - For now, use PlayerName if available
                 if (!string.IsNullOrEmpty(saveData.PlayerName))
                 {
                     gam.PlayerCharacter = ResRef.FromString(saveData.PlayerName);

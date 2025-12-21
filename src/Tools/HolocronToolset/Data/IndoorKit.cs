@@ -1171,7 +1171,7 @@ namespace HolocronToolset.Data
             width = Math.Max(width, 256);
             height = Math.Max(height, 256);
 
-            // For now, return null as placeholder - actual image rendering using Avalonia
+            // TODO: STUB - For now, return null as placeholder - actual image rendering using Avalonia
             // RenderTargetBitmap will be implemented when rendering infrastructure is available
             // The image will be created with Format_RGB888, filled with black, then walkmesh
             // faces will be drawn with white (walkable) or gray (non-walkable) colors,

@@ -44,7 +44,7 @@ namespace KotorDiff
                 }
                 else
                 {
-                    // GUI mode not implemented yet - fall back to CLI
+                    // TODO: STUB - GUI mode not implemented yet - fall back to CLI
                     Console.WriteLine("[Warning] GUI not available, cannot run in GUI mode without command-line arguments.");
                     Console.WriteLine("[Info] Use --help to see CLI options");
                     return 0;

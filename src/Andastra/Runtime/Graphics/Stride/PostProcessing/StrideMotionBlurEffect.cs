@@ -111,7 +111,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             // - Output: Motion-blurred color buffer
 
             // Would use Stride's Effect system
-            // For now, placeholder implementation
+            // TODO: STUB - For now, placeholder implementation
 
             var effectiveIntensity = _intensity * deltaTime * 60.0f; // Normalize to 60fps
             var clampedVelocity = Math.Min(_maxVelocity, effectiveIntensity * 100.0f);

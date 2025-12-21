@@ -39,7 +39,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             switch (routineId)
             {
                 // DA2-specific function overrides would go here
-                // For now, all functions are common between DAO and DA2, so delegate to base
+                // TODO: STUB - For now, all functions are common between DAO and DA2, so delegate to base
                 
                 default:
                     // Delegate to base class for common Eclipse functions

@@ -51,7 +51,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
             // NWN:EE-specific hardcoded resources
             // Add NWN:EE-specific hardcoded resource lookups here if needed
             // Enhanced Edition may have additional hardcoded resources or updated defaults
-            // For now, NWN:EE uses the common hardcoded resources from base class
+            // TODO: STUB - For now, NWN:EE uses the common hardcoded resources from base class
 
             return null;
         }

@@ -162,7 +162,7 @@ namespace Andastra.Parsing.Tests.Generator
             Directory.CreateDirectory(tslpatchdata);
             // Note: Validation requires at least one path to be a valid KOTOR Installation
             // This test would need a mock Installation or should test a different scenario
-            // For now, we'll test that it throws when no valid installation is provided
+            // TODO: STUB - For now, we'll test that it throws when no valid installation is provided
             var paths = new List<object> { tslpatchdata };
 
             // Act & Assert

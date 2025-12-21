@@ -144,7 +144,7 @@ description = ""Default target""
             if (!string.IsNullOrEmpty(initFile))
             {
                 // TODO: Call unpack command to unpack initial file
-                logger.Info($"Note: Unpacking initial file not yet implemented. File: {initFile}");
+                logger.Info($"TODO: STUB - Note: Unpacking initial file not yet implemented. File: {initFile}");
             }
 
             logger.Info($"\nPackage initialized successfully in {targetDir}");

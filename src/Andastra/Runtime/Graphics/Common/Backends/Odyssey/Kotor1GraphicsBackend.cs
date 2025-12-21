@@ -1979,7 +1979,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                                     *textureArrayPtrPtr = textureArrayPtr.ToInt32();
                                     
                                     // Initialize array with texture IDs
-                                    // For now, use the same texture ID for all mip levels
+                                    // TODO: STUB - For now, use the same texture ID for all mip levels
                                     // In a full implementation, each mip level would have its own texture ID
                                     uint* textureArray = (uint*)textureArrayPtr;
                                     for (int i = 0; i < mipCount; i++)

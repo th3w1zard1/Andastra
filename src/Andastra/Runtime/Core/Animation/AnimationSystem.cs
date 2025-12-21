@@ -27,7 +27,7 @@ namespace Andastra.Runtime.Core.Animation
     /// - Non-looping animations complete when AnimationTime reaches animation duration
     /// - Looping animations wrap AnimationTime back to 0.0 when reaching duration
     /// - Animation durations are typically stored in MDX animation data (not tracked here, assumed infinite for now)
-    /// - Animation completion events could be fired here (not implemented yet)
+    /// - TODO: STUB - Animation completion events could be fired here (not implemented yet)
     /// </remarks>
     public class AnimationSystem
     {

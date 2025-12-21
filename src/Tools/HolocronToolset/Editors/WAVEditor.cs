@@ -295,7 +295,7 @@ namespace HolocronToolset.Editors
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py:535-536
             // Original: self.mediaPlayer.player.stop()
             // Original: self._cleanup_temp_file()
-            // Stop player if available (not implemented in C# yet, but cleanup temp file)
+            // Stop player if available (TODO: STUB - not implemented in C# yet, but cleanup temp file)
             CleanupTempFile();
             base.OnClosing(e);
         }

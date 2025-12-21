@@ -559,7 +559,7 @@ namespace Andastra.Parsing.Tests.Formats
             // 1. Compiling UTE.ksy to multiple languages
             // 2. Running the generated parsers on the test file
             // 3. Comparing results across languages
-            // For now, we validate the structure matches expectations
+            // TODO: STUB - For now, we validate the structure matches expectations
 
             GFF parsedGff = GFFAuto.ReadGff(TestUteFile, 0, null);
             UTE constructedUte = UTEHelpers.ConstructUte(parsedGff);

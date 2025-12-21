@@ -294,7 +294,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
             // Matching PyKotor classes.py lines 2711-2725
             if (Initializer != null)
             {
-                // For now, we only support Expression initializers in C#
+                // TODO: STUB - For now, we only support Expression initializers in C#
                 // If we need Statement support (for variable declarations), we'd need to check type
                 int tempStackBefore = block.TempStack;
                 DynamicDataType initType = Initializer.Compile(ncs, root, block);

@@ -316,7 +316,7 @@ namespace KotorDiff.Diff
                             // For installations, use folder-based search which works for all cases
                             // Installation.Resource() method can be used for specific lookups when needed
                             // Reference cache can be used for optimization when available
-                            logFunc($"Installation-based search not yet implemented, using folder search");
+                            logFunc($"TODO: STUB - Installation-based search not yet implemented, using folder search");
                             isInstallation = false;
                         }
 
@@ -672,7 +672,7 @@ namespace KotorDiff.Diff
             // Get the GFF field to 2DA mapping
             // Note: ReferenceCacheHelpers.GffFieldTo2daMapping() currently returns empty dict
             // This will be populated from TwoDARegistry when gff_field_mapping() is implemented
-            // For now, we check all field paths directly which works correctly
+            // TODO: STUB - For now, we check all field paths directly which works correctly
             Dictionary<string, ResourceIdentifier> gffFieldTo2daMapping = ReferenceCacheHelpers.GffFieldTo2daMapping();
 
             // Build reverse mapping: 2da_filename -> list of field names that reference it

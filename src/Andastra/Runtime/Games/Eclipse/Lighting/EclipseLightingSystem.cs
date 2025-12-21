@@ -283,11 +283,11 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
 
             // Update light transforms if needed
             // In a full implementation, this would update lights that follow entities
-            // For now, static lights don't need per-frame updates
+            // TODO: STUB - For now, static lights don't need per-frame updates
 
             // Update shadow maps if dirty
             // In a full implementation, this would regenerate shadow maps for directional lights
-            // For now, shadow maps are static
+            // TODO: STUB - For now, shadow maps are static
 
             // Mark clusters as dirty if lights changed
             if (_clustersDirty)

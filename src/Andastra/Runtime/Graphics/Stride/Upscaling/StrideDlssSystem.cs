@@ -530,7 +530,7 @@ namespace Andastra.Runtime.Stride.Upscaling
                 if (device != IntPtr.Zero)
                 {
                     // NGX capability query would be done during initialization
-                    // For now, if we have an NVIDIA GPU and NGX DLL exists, assume DLSS is available
+                    // TODO: STUB - For now, if we have an NVIDIA GPU and NGX DLL exists, assume DLSS is available
                     return true;
                 }
             }

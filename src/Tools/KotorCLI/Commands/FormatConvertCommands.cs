@@ -83,7 +83,7 @@ namespace KotorCLI.Commands
                 var input = parseResult.GetValue(inputArg);
                 var output = parseResult.GetValue(outputOpt);
                 var logger = new StandardLogger();
-                logger.Warning("JSON to GFF conversion not yet implemented in Andastra.Parsing");
+                logger.Warning("TODO: STUB - JSON to GFF conversion not yet implemented in Andastra.Parsing");
                 Environment.Exit(1);
             });
             rootCommand.Add(cmd);
@@ -163,7 +163,7 @@ namespace KotorCLI.Commands
                 var input = parseResult.GetValue(inputArg);
                 var output = parseResult.GetValue(outputOpt);
                 var logger = new StandardLogger();
-                logger.Info("tlk2xml not yet implemented");
+                logger.Info("TODO: STUB - tlk2xml not yet implemented");
                 Environment.Exit(0);
             });
             rootCommand.Add(cmd);
@@ -181,7 +181,7 @@ namespace KotorCLI.Commands
                 var input = parseResult.GetValue(inputArg);
                 var output = parseResult.GetValue(outputOpt);
                 var logger = new StandardLogger();
-                logger.Info("xml2tlk not yet implemented");
+                logger.Info("TODO: STUB - xml2tlk not yet implemented");
                 Environment.Exit(0);
             });
             rootCommand.Add(cmd);
@@ -199,7 +199,7 @@ namespace KotorCLI.Commands
                 var input = parseResult.GetValue(inputArg);
                 var output = parseResult.GetValue(outputOpt);
                 var logger = new StandardLogger();
-                logger.Info("ssf2xml not yet implemented");
+                logger.Info("TODO: STUB - ssf2xml not yet implemented");
                 Environment.Exit(0);
             });
             rootCommand.Add(cmd);
@@ -217,7 +217,7 @@ namespace KotorCLI.Commands
                 var input = parseResult.GetValue(inputArg);
                 var output = parseResult.GetValue(outputOpt);
                 var logger = new StandardLogger();
-                logger.Info("xml2ssf not yet implemented");
+                logger.Info("TODO: STUB - xml2ssf not yet implemented");
                 Environment.Exit(0);
             });
             rootCommand.Add(cmd);

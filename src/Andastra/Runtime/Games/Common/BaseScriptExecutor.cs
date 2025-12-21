@@ -241,7 +241,7 @@ namespace Andastra.Runtime.Games.Common
             
             // Try to get triggerer from current execution context if available
             // This is engine-specific: Some engines maintain execution context stack
-            // For now, we'll use the entity as both caller and triggerer
+            // TODO: STUB - For now, we'll use the entity as both caller and triggerer
             // Engine-specific subclasses can override to provide better context capture
             
             // Create ActionDoCommand that executes the script

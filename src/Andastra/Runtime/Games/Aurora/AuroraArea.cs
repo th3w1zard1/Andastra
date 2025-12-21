@@ -1642,7 +1642,7 @@ namespace Andastra.Runtime.Games.Aurora
                     // Walkability is determined by tileset data (not stored in ARE file)
                     bool isLoaded = (tileId >= 0);
                     bool isWalkable = isLoaded; // Simplified: valid tiles are walkable
-                    // Note: Full walkability determination would require loading tile walkmesh,
+                    // TODO: STUB - Note: Full walkability determination would require loading tile walkmesh,
                     // which is expensive. For now, we assume valid tiles are walkable.
 
                     // Query tileset file to determine actual surface material from tile model data
@@ -1842,8 +1842,8 @@ namespace Andastra.Runtime.Games.Aurora
             // Initialize lighting scheme
             // Based on nwmain.exe: LightingScheme is index into environment.2da
             // LightingScheme = 0 means no preset lighting scheme (use ARE file colors directly)
-            // LightingScheme > 0 means use preset from environment.2da (not implemented here, handled by rendering system)
-            // For now, we just validate that LightingScheme is a valid byte value (0-255)
+            // LightingScheme > 0 means use preset from environment.2da (TODO: STUB - not implemented here, handled by rendering system)
+            // TODO: STUB - For now, we just validate that LightingScheme is a valid byte value (0-255)
             // The actual lookup from environment.2da would be done by the rendering system if needed
 
             // Weather system initialization
@@ -2040,8 +2040,8 @@ namespace Andastra.Runtime.Games.Aurora
             UpdateAreaHeartbeat(deltaTime);
 
             // Process tile-based area logic (animations, lighting)
-            // Note: Full tile animation system would require tileset data access
-            // For now, we update tile state tracking that's already implemented
+            // TODO: STUB - Note: Full tile animation system would require tileset data access
+            // TODO: STUB - For now, we update tile state tracking that's already implemented
             // Tile animations and lighting are handled by rendering system
         }
 
@@ -2172,7 +2172,7 @@ namespace Andastra.Runtime.Games.Aurora
 
             // Update lighting colors based on time of day
             // This would typically blend between sun and moon colors
-            // For now, we update the IsNight flag which is used by rendering system
+            // TODO: STUB - For now, we update the IsNight flag which is used by rendering system
             // Full lighting color interpolation would be handled by graphics backend
         }
 
@@ -2514,7 +2514,7 @@ namespace Andastra.Runtime.Games.Aurora
                     (fogColor & 0xFF) / 255.0f
                 );
                 // Note: BasicEffect fog support depends on implementation
-                // For now, we'll set fog parameters if the effect supports it
+                // TODO: STUB - For now, we'll set fog parameters if the effect supports it
             }
         }
 
@@ -2565,7 +2565,7 @@ namespace Andastra.Runtime.Games.Aurora
                 {
                     // Try to load mesh using room renderer
                     // Note: This requires MDL model loading, which may not be available
-                    // For now, we'll skip tiles that haven't been pre-loaded
+                    // TODO: STUB - For now, we'll skip tiles that haven't been pre-loaded
                     // Full implementation would load MDL models from tile model ResRef
                     continue;
                 }
@@ -2653,7 +2653,7 @@ namespace Andastra.Runtime.Games.Aurora
             {
                 // Lightning flash is a full-screen brightness effect
                 // Based on nwmain.exe: Lightning flash is rendered as screen overlay
-                // For now, this is a placeholder - full implementation would render lightning flash
+                // TODO: STUB - For now, this is a placeholder - full implementation would render lightning flash
             }
         }
 
@@ -2688,7 +2688,7 @@ namespace Andastra.Runtime.Games.Aurora
 
                 // Render effect based on its type
                 // Based on nwmain.exe: CNWSArea::RenderAreaEffects renders effect geometry
-                // For now, this is a placeholder - full implementation would render effect-specific geometry
+                // TODO: STUB - For now, this is a placeholder - full implementation would render effect-specific geometry
                 // Effect rendering would depend on effect type (particles, meshes, sprites, etc.)
             }
         }
@@ -2755,7 +2755,7 @@ namespace Andastra.Runtime.Games.Aurora
             {
                 // Create resource provider for scene builder
                 // Note: We need a resource provider, but we may not have one available
-                // For now, create a simple provider that uses the tileset loader's resource loader
+                // TODO: STUB - For now, create a simple provider that uses the tileset loader's resource loader
                 IGameResourceProvider resourceProvider = null;
                 if (_tilesetLoader != null)
                 {

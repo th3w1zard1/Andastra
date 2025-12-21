@@ -198,7 +198,7 @@ namespace Andastra.Parsing.Merge
             };
 
             // Note: This would need to be implemented based on Module's internal search mechanism
-            // For now, we'll add the queries as dependencies
+            // TODO: STUB - For now, we'll add the queries as dependencies
             foreach (var query in queries)
             {
                 linkedResources.Add(query);

@@ -182,7 +182,7 @@ namespace Andastra.Parsing.Resource
                 }
 
                 // Other resource types would need to be validated here
-                // For now, return the data as-is
+                // TODO: STUB - For now, return the data as-is
                 return data;
             }
             catch (Exception e)
@@ -235,7 +235,7 @@ namespace Andastra.Parsing.Resource
                 try
                 {
                     // LazyCapsule.as_cached() needs to be implemented
-                    // For now, try to load as ERF or RIM
+                    // TODO: STUB - For now, try to load as ERF or RIM
                     return ERFAuto.ReadErf(lazyCapsule.FilePath);
                 }
                 catch

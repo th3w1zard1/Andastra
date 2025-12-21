@@ -672,7 +672,7 @@ namespace Andastra.Runtime.Games.Eclipse
             result = point;
             height = point.Y;
 
-            // For now, project to base height of level
+            // TODO: STUB - For now, project to base height of level
             // In full implementation, this would check level-specific geometry
             height = level.BaseHeight;
             result = new Vector3(point.X, point.Y, level.BaseHeight);
@@ -1605,7 +1605,7 @@ namespace Andastra.Runtime.Games.Eclipse
             // 2. Check line of sight from threats to position
             // 3. Calculate exposure based on distance and cover availability
 
-            // For now, use a simple heuristic: positions far from start/end are more exposed
+            // TODO: STUB - For now, use a simple heuristic: positions far from start/end are more exposed
             float distFromStart = Vector3.Distance(position, start);
             float distFromEnd = Vector3.Distance(position, end);
             float avgDist = (distFromStart + distFromEnd) / 2.0f;
@@ -1637,7 +1637,7 @@ namespace Andastra.Runtime.Games.Eclipse
             // 2. Check if position provides cover from known threats
             // 3. Calculate bonus based on cover quality
 
-            // For now, use a simple heuristic: check if position is near geometry that could provide cover
+            // TODO: STUB - For now, use a simple heuristic: check if position is near geometry that could provide cover
             // This is a placeholder - full implementation would use FindCoverPoints
             const float coverSearchRadius = 3.0f;
             float bonus = 0.0f;
@@ -1699,7 +1699,7 @@ namespace Andastra.Runtime.Games.Eclipse
             float distanceHeuristic = Vector3.Distance(fromCenter, toCenter);
 
             // Tactical modifiers (optional, can be added based on threats)
-            // For now, use simple distance heuristic
+            // TODO: STUB - For now, use simple distance heuristic
             return distanceHeuristic;
         }
 

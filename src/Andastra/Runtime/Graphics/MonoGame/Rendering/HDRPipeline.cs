@@ -171,7 +171,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
             // Apply color grading
             // RenderTarget2D graded = ApplyColorGrading(toneMapped, effect);
 
-            // For now, return input as framework is in place
+            // TODO: STUB - For now, return input as framework is in place
             return hdrInput;
         }
 

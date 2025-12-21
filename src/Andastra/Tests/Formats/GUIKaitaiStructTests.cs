@@ -890,7 +890,7 @@ namespace Andastra.Parsing.Tests.Formats
         {
             // Create a minimal valid GUI file using GFF structure
             // This is a simplified version - in practice, you'd use GFFAuto
-            // For now, we'll create a minimal valid GFF file with GUI signature
+            // TODO: STUB - For now, we'll create a minimal valid GFF file with GUI signature
             using (var fs = File.Create(path))
             {
                 // Write GFF header (56 bytes)

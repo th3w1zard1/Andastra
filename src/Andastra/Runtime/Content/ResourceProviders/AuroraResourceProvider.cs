@@ -470,7 +470,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
         {
             // Base game resources are typically in data directory or core game archives
             // Aurora Engine may use different base game resource locations
-            // For now, check common locations
+            // TODO: STUB - For now, check common locations
             string[] basePaths = new[]
             {
                 Path.Combine(_installationPath, "data"),
@@ -763,7 +763,7 @@ endmodel
             // Note: Actual FNT format is complex, this is a placeholder that indicates font exists
             // Game-specific implementations should provide actual FNT data
             
-            // For now, return a minimal FNT structure
+            // TODO: STUB - For now, return a minimal FNT structure
             // FNT header structure (simplified):
             byte[] fntData = new byte[256]; // Minimal FNT file size
             

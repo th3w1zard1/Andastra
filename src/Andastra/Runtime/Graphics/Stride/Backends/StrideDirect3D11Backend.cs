@@ -450,7 +450,7 @@ namespace Andastra.Runtime.Stride.Backends
                 {
                     // Fallback layer DLL not found, but this doesn't necessarily mean failure
                     // The library might be delay-loaded or available through other means
-                    // For now, we'll assume it's available if we meet the OS requirements
+                    // TODO: STUB - For now, we'll assume it's available if we meet the OS requirements
                     // and have a valid D3D11 device with compute shader support
 
                     // Check if we can at least use compute shaders (required for software raytracing)
@@ -1077,7 +1077,7 @@ namespace Andastra.Runtime.Stride.Backends
 
                     // Set shader imports if provided
                     // Note: In a full implementation, we would need to export shader names from the DXIL library
-                    // For now, we create the hit group structure even if shader names aren't set
+                    // TODO: STUB - For now, we create the hit group structure even if shader names aren't set
                     // The fallback layer will handle shader lookup
 
                     hitGroupDescPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(D3D12_HIT_GROUP_DESC)));
@@ -1212,7 +1212,7 @@ namespace Andastra.Runtime.Stride.Backends
         private D3D12_SHADER_BYTECODE CreateDxilLibrary(Andastra.Runtime.Graphics.Common.Interfaces.RaytracingPipelineDesc desc)
         {
             // In a full implementation, we would combine all shader bytecode into a single DXIL library.
-            // For now, we use the RayGen shader as the primary shader bytecode.
+            // TODO: STUB - For now, we use the RayGen shader as the primary shader bytecode.
             // The fallback layer will handle shader lookup and binding.
 
             // Allocate memory for the shader bytecode
@@ -1825,7 +1825,7 @@ namespace Andastra.Runtime.Stride.Backends
 
             // Default stride is 32 bytes (shader identifier size)
             // In a full implementation, we would query the actual stride from the SBT structure
-            // For now, we use a standard stride of 32 bytes (D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES)
+            // TODO: STUB - For now, we use a standard stride of 32 bytes (D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES)
             const uint D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES = 32;
             return D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
         }

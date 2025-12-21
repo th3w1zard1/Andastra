@@ -337,7 +337,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         {
             // Stride supports D3D11, D3D12, and Vulkan
             // We need to detect which one is in use
-            // For now, default to D3D12 as it's the most common for DLSS
+            // TODO: STUB - For now, default to D3D12 as it's the most common for DLSS
             // In a real implementation, this would query the device type
             return NgxBackend.DirectX12;
         }

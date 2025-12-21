@@ -24,7 +24,7 @@ namespace KotorCLI.Commands
                 var output = parseResult.GetValue(textureOutput);
                 var txi = parseResult.GetValue(txiOption);
                 var logger = new StandardLogger();
-                logger.Info("texture-convert not yet implemented");
+                logger.Info("TODO: STUB - texture-convert not yet implemented");
                 Environment.Exit(0);
             });
             rootCommand.Add(textureCmd);
@@ -39,7 +39,7 @@ namespace KotorCLI.Commands
                 var input = parseResult.GetValue(soundInput);
                 var output = parseResult.GetValue(soundOutput);
                 var logger = new StandardLogger();
-                logger.Info("sound-convert not yet implemented");
+                logger.Info("TODO: STUB - sound-convert not yet implemented");
                 Environment.Exit(0);
             });
             rootCommand.Add(soundCmd);
@@ -57,7 +57,7 @@ namespace KotorCLI.Commands
                 var output = parseResult.GetValue(modelOutput);
                 var toAscii = parseResult.GetValue(toAsciiOption);
                 var logger = new StandardLogger();
-                logger.Info("model-convert not yet implemented");
+                logger.Info("TODO: STUB - model-convert not yet implemented");
                 Environment.Exit(0);
             });
             rootCommand.Add(modelCmd);

@@ -88,7 +88,7 @@ namespace KotorCLI.Commands
                         if (verbose)
                         {
                             // TODO: List source files when verbose mode is enabled
-                            logger.Info("  Source files: (verbose listing not yet implemented)");
+                            logger.Info("TODO: STUB -   Source files: (verbose listing not yet implemented)");
                         }
                     }
                 }

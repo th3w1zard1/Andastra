@@ -266,7 +266,7 @@ namespace Andastra.Runtime.Core.Actions
                             effectSystem.ApplyEffect(groundVfxEntity, groundVisualEffect, caster);
                             // Schedule entity destruction after a short delay to allow visual effect to display
                             // Based on swkotor2.exe: Ground visual effects persist for their duration from visualeffects.2da
-                            // For now, destroy after 2 seconds (actual duration should come from visualeffects.2da)
+                            // TODO: STUB - For now, destroy after 2 seconds (actual duration should come from visualeffects.2da)
                             caster.World.DelayScheduler?.ScheduleAction(2.0f, () =>
                             {
                                 if (groundVfxEntity.IsValid)
@@ -333,7 +333,7 @@ namespace Andastra.Runtime.Core.Actions
                                 
                                 // Projectile will be handled by rendering/movement system
                                 // On impact, projectile applies spell effects to entities at target location
-                                // For now, schedule impact after travel time (distance / speed)
+                                // TODO: STUB - For now, schedule impact after travel time (distance / speed)
                                 Vector3 toTarget = targetLocation - projectileStart;
                                 toTarget.Y = 0;
                                 float distance = toTarget.Length();
@@ -464,7 +464,7 @@ namespace Andastra.Runtime.Core.Actions
                 // 3. Handle spell-specific effects (damage, healing, status effects) from spells.2da
                 // Based on swkotor2.exe: Spell effects are applied to entities in range
                 // Spell effects come from impact scripts (impactscript column) which apply damage/healing/status effects
-                // For now, we apply visual effects and execute impact scripts; full effect resolution requires script execution
+                // TODO: STUB - For now, we apply visual effects and execute impact scripts; full effect resolution requires script execution
                 foreach (IEntity target in entitiesInRange)
                 {
                     if (target == null || !target.IsValid)

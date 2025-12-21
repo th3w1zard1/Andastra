@@ -155,7 +155,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
                 // 2. Clip and reject history samples that don't match current frame
                 // 3. Blend current frame with valid history samples
                 // 4. Store result in history buffer for next frame
-                // For now, this provides the framework and resource management
+                // TODO: STUB - For now, this provides the framework and resource management
 
                 if (effect != null && _velocityBuffer != null)
                 {

@@ -102,7 +102,7 @@ namespace Andastra.Runtime.Games.Eclipse
 
                 // Update rotation based on angular velocity
                 // In a full implementation, this would update quaternion rotation
-                // For now, we track angular velocity for state preservation
+                // TODO: STUB - For now, we track angular velocity for state preservation
             }
 
             // Update constraints
@@ -112,7 +112,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 foreach (PhysicsConstraint constraint in constraintList)
                 {
                     // Constraint solving would happen here
-                    // For now, we preserve constraint data for state saving
+                    // TODO: STUB - For now, we preserve constraint data for state saving
                 }
             }
         }

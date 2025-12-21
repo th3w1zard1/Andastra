@@ -638,7 +638,7 @@ namespace Andastra.Parsing.Tests.Formats
             // 1. Compiling JRL.ksy to multiple languages
             // 2. Running the generated parsers on the test file
             // 3. Comparing results across languages
-            // For now, we validate the structure matches expectations
+            // TODO: STUB - For now, we validate the structure matches expectations
 
             GFF parsedGff = GFFAuto.ReadGff(TestJrlFile, 0, null, ResourceType.JRL);
             JRL parsedJrl = JRLHelpers.ConstructJrl(parsedGff);

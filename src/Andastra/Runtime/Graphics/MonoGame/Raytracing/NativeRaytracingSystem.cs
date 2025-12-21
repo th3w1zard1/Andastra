@@ -130,7 +130,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
             if (_device == null)
             {
                 // Try to get device from backend - this may need to be implemented in backend
-                // For now, we require device to be passed in constructor
+                // TODO: STUB - For now, we require device to be passed in constructor
                 Console.WriteLine("[NativeRT] Error: IDevice must be provided for raytracing");
                 return false;
             }
@@ -344,7 +344,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                 Triangles = new GeometryTriangles
                 {
                     // These would come from geometry.VertexBuffer, geometry.IndexBuffer
-                    // For now, we create a placeholder - in real implementation these must be provided
+                    // TODO: STUB - For now, we create a placeholder - in real implementation these must be provided
                     VertexCount = geometry.VertexCount,
                     IndexCount = geometry.IndexCount,
                     VertexFormat = TextureFormat.R32G32B32_Float, // Typical vertex format
@@ -591,14 +591,14 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                 case DenoiserType.NvidiaRealTimeDenoiser:
                     // NVIDIA Real-Time Denoiser (NRD) would be used here
                     // NRD requires external library integration
-                    // For now, fall back to temporal denoising
+                    // TODO: STUB - For now, fall back to temporal denoising
                     ApplyTemporalDenoising(parameters, width, height);
                     break;
 
                 case DenoiserType.IntelOpenImageDenoise:
                     // Intel Open Image Denoise (OIDN) would be used here
                     // OIDN requires external library integration
-                    // For now, fall back to spatial denoising
+                    // TODO: STUB - For now, fall back to spatial denoising
                     ApplySpatialDenoising(parameters, width, height);
                     break;
             }
@@ -754,7 +754,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
         private IShader CreatePlaceholderShader(ShaderType type, string name)
         {
             // In a real implementation, this would load compiled shader bytecode
-            // For now, we create a placeholder that indicates shaders need to be provided
+            // TODO: STUB - For now, we create a placeholder that indicates shaders need to be provided
             // The actual shader bytecode would come from:
             // - Compiled HLSL/DXIL for D3D12
             // - Compiled SPIR-V for Vulkan
@@ -831,7 +831,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
             };
 
             // Write SBT records (in real implementation, this would contain actual shader identifiers)
-            // For now, we'll write placeholder data - the actual shader identifiers would be
+            // TODO: STUB - For now, we'll write placeholder data - the actual shader identifiers would be
             // retrieved from the pipeline state object after creation
             WriteShaderBindingTable();
 
@@ -967,7 +967,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
             // However, since binding sets are typically immutable, we may need to recreate it
             // or use push descriptors if supported
             
-            // For now, we'll note that the binding set should be updated with the output texture
+            // TODO: STUB - For now, we'll note that the binding set should be updated with the output texture
             // The actual implementation depends on whether the backend supports push descriptors
             // or requires recreating the binding set each frame
             
@@ -982,7 +982,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
         private System.Nullable<(int Width, int Height)> GetTextureInfo(IntPtr textureHandle)
         {
             // In a real implementation, this would query the backend for texture information
-            // For now, we'll return null and use default resolution
+            // TODO: STUB - For now, we'll return null and use default resolution
             // The backend would need to provide a method like:
             // ITexture texture = _backend.GetTextureFromHandle(textureHandle);
             // if (texture != null) return (texture.Desc.Width, texture.Desc.Height);
@@ -1057,7 +1057,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                 case DenoiserType.NvidiaRealTimeDenoiser:
                     // NVIDIA Real-Time Denoiser (NRD) initialization
                     // NRD requires external library integration - would initialize here
-                    // For now, we'll use compute shader fallback
+                    // TODO: STUB - For now, we'll use compute shader fallback
                     Console.WriteLine("[NativeRT] Using NVIDIA Real-Time Denoiser (compute shader fallback)");
                     CreateDenoiserPipelines();
                     break;
@@ -1065,7 +1065,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                 case DenoiserType.IntelOpenImageDenoise:
                     // Intel Open Image Denoise (OIDN) initialization
                     // OIDN requires external library integration - would initialize here
-                    // For now, we'll use compute shader fallback
+                    // TODO: STUB - For now, we'll use compute shader fallback
                     Console.WriteLine("[NativeRT] Using Intel Open Image Denoise (compute shader fallback)");
                     CreateDenoiserPipelines();
                     break;
@@ -1215,7 +1215,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
 
             // Create compute shaders for denoising
             // In a real implementation, these would load compiled shader bytecode
-            // For now, we create placeholders - shader bytecode must be provided
+            // TODO: STUB - For now, we create placeholders - shader bytecode must be provided
             IShader temporalShader = CreatePlaceholderComputeShader("TemporalDenoiser");
             IShader spatialShader = CreatePlaceholderComputeShader("SpatialDenoiser");
 
@@ -1243,7 +1243,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
             // In a real implementation, this would load compiled compute shader bytecode
             // For D3D12: DXIL bytecode
             // For Vulkan: SPIR-V bytecode
-            // For now, return null to indicate shaders need to be provided
+            // TODO: STUB - For now, return null to indicate shaders need to be provided
             Console.WriteLine($"[NativeRT] Warning: Compute shader requested for {name}. Shader bytecode must be provided for full functionality.");
             return null;
         }
@@ -1312,7 +1312,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
 
             // Get input and output textures as ITexture objects
             // Note: In a real implementation, we would need to convert IntPtr handles to ITexture
-            // For now, we'll use the texture handle lookup mechanism
+            // TODO: STUB - For now, we'll use the texture handle lookup mechanism
             ITexture inputTexture = GetTextureFromHandle(parameters.InputTexture);
             ITexture outputTexture = GetTextureFromHandle(parameters.OutputTexture);
             ITexture normalTexture = GetTextureFromHandle(parameters.NormalTexture);
@@ -1638,7 +1638,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
         private ITexture GetTextureFromHandle(IntPtr textureHandle)
         {
             // In a real implementation, this would query the backend/device for the texture
-            // For now, we return null - this requires backend support for texture handle lookup
+            // TODO: STUB - For now, we return null - this requires backend support for texture handle lookup
             // The backend would need to provide a method like:
             // return _device.GetTextureFromHandle(textureHandle);
             // or

@@ -240,7 +240,7 @@ namespace Andastra.Runtime.Games.Aurora.Journal
             // This is a simplified implementation - full implementation would scan script variables
             // and reload entries from JRL files matching quest tags
 
-            // For now, we'll just clear the creature's quest states and let them be re-established
+            // TODO: STUB - For now, we'll just clear the creature's quest states and let them be re-established
             if (_creatureQuestStates.ContainsKey(creatureId))
             {
                 _creatureQuestStates[creatureId].Clear();

@@ -454,7 +454,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // Try loading as resource reference (ResRef)
             // Based on DragonAge2.exe: Textures can be loaded from game resources
             // Dragon Age 2 uses resource system to load textures from ERF archives
-            // For now, try common texture paths and extensions
+            // TODO: STUB - For now, try common texture paths and extensions
             string[] extensions = { ".dds", ".DDS" };
             foreach (string ext in extensions)
             {

@@ -320,13 +320,13 @@ namespace Andastra.Runtime.Games.Aurora
                 case ModuleEventType.OnPlayerEquipItem:
                     // Note: OnPlayerEquipItem may not have direct ScriptEvent mapping
                     // This may need to be handled via OnActivateItem or custom event
-                    // For now, return 0 to indicate no direct mapping
+                    // TODO: STUB - For now, return 0 to indicate no direct mapping
                     return 0;
 
                 case ModuleEventType.OnPlayerUnequipItem:
                     // Note: OnPlayerUnequipItem may not have direct ScriptEvent mapping
                     // This may need to be handled via OnUnacquireItem or custom event
-                    // For now, return 0 to indicate no direct mapping
+                    // TODO: STUB - For now, return 0 to indicate no direct mapping
                     return 0;
 
                 default:

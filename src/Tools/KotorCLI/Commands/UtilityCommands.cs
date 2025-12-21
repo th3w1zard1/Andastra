@@ -24,7 +24,7 @@ namespace KotorCLI.Commands
                 var file2 = parseResult.GetValue(file2Arg);
                 var output = parseResult.GetValue(outputOpt);
                 var logger = new StandardLogger();
-                logger.Info("diff not yet implemented");
+                logger.Info("TODO: STUB - diff not yet implemented");
                 Environment.Exit(0);
             });
             rootCommand.Add(diffCmd);
@@ -45,7 +45,7 @@ namespace KotorCLI.Commands
                 var caseSensitive = parseResult.GetValue(caseSensitiveOption);
                 var lineNumbers = parseResult.GetValue(lineNumbersOption);
                 var logger = new StandardLogger();
-                logger.Info("grep not yet implemented");
+                logger.Info("TODO: STUB - grep not yet implemented");
                 Environment.Exit(0);
             });
             rootCommand.Add(grepCmd);
@@ -57,7 +57,7 @@ namespace KotorCLI.Commands
             {
                 var file = parseResult.GetValue(statsFileArg);
                 var logger = new StandardLogger();
-                logger.Info("stats not yet implemented");
+                logger.Info("TODO: STUB - stats not yet implemented");
                 Environment.Exit(0);
             });
             rootCommand.Add(statsCmd);
@@ -69,7 +69,7 @@ namespace KotorCLI.Commands
             {
                 var file = parseResult.GetValue(validateFileArg);
                 var logger = new StandardLogger();
-                logger.Info("validate not yet implemented");
+                logger.Info("TODO: STUB - validate not yet implemented");
                 Environment.Exit(0);
             });
             rootCommand.Add(validateCmd);
@@ -87,7 +87,7 @@ namespace KotorCLI.Commands
                 var source = parseResult.GetValue(sourceArg);
                 var output = parseResult.GetValue(outputOpt);
                 var logger = new StandardLogger();
-                logger.Info("merge not yet implemented");
+                logger.Info("TODO: STUB - merge not yet implemented");
                 Environment.Exit(0);
             });
             rootCommand.Add(mergeCmd);

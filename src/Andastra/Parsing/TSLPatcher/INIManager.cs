@@ -106,7 +106,7 @@ namespace Andastra.Parsing.TSLPatcher
                 }
 
                 // ConfigObj handles lists automatically
-                // For now, treat as single value
+                // TODO: STUB - For now, treat as single value
                 if (!section.ContainsKey(key))
                 {
                     section[key] = value;

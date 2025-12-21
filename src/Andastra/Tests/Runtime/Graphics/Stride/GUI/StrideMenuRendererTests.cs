@@ -53,7 +53,7 @@ namespace Andastra.Tests.Runtime.Stride.GUI
         public void IsInitialized_AfterConstruction_ShouldBeTrue()
         {
             // Note: This test requires actual Stride GraphicsDevice
-            // For now, we'll skip if device creation fails
+            // TODO: STUB - For now, we'll skip if device creation fails
             // In a real scenario, you'd use Stride's headless test setup
         }
 
@@ -61,35 +61,35 @@ namespace Andastra.Tests.Runtime.Stride.GUI
         public void IsVisible_Initially_ShouldBeFalse()
         {
             // Note: This test requires actual Stride GraphicsDevice
-            // For now, we'll skip if device creation fails
+            // TODO: STUB - For now, we'll skip if device creation fails
         }
 
         [Fact]
         public void SetVisible_True_ShouldSetIsVisibleToTrue()
         {
             // Note: This test requires actual Stride GraphicsDevice
-            // For now, we'll skip if device creation fails
+            // TODO: STUB - For now, we'll skip if device creation fails
         }
 
         [Fact]
         public void UpdateViewport_ShouldUpdateViewport()
         {
             // Note: This test requires actual Stride GraphicsDevice
-            // For now, we'll skip if device creation fails
+            // TODO: STUB - For now, we'll skip if device creation fails
         }
 
         [Fact]
         public void Draw_WhenNotVisible_ShouldNotThrow()
         {
             // Note: This test requires actual Stride GraphicsDevice
-            // For now, we'll skip if device creation fails
+            // TODO: STUB - For now, we'll skip if device creation fails
         }
 
         [Fact]
         public void Dispose_ShouldNotThrow()
         {
             // Note: This test requires actual Stride GraphicsDevice
-            // For now, we'll skip if device creation fails
+            // TODO: STUB - For now, we'll skip if device creation fails
         }
     }
 }

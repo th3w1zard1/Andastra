@@ -1087,7 +1087,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
                 // Calculate final XP: baseXP * plotXpPercentage
                 // Based on swkotor2.exe: FUN_0057eb20 calculates (plotXP * param_2) * multiplier
                 // Original implementation uses additional multipliers (_DAT_007b99b4, _DAT_007b5f88)
-                // For now, we'll use a simplified calculation: baseXP * plotXpPercentage
+                // TODO: STUB - For now, we'll use a simplified calculation: baseXP * plotXpPercentage
                 int finalXP = (int)(baseXP.Value * plotXpPercentage);
                 if (finalXP > 0)
                 {

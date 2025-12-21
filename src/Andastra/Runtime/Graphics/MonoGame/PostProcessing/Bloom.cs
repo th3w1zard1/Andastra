@@ -183,7 +183,7 @@ namespace Andastra.Runtime.MonoGame.PostProcessing
                 }
 
                 // Step 3: Combine with original (would be done in final compositing pass)
-                // For now, return the final blurred result as framework
+                // TODO: STUB - For now, return the final blurred result as framework
             }
             finally
             {
