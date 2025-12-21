@@ -475,6 +475,13 @@ namespace Andastra.Runtime.MonoGame.Backends
             return _lastFrameStats;
         }
 
+        public IDevice GetDevice()
+        {
+            // DX11 does not natively support raytracing (DXR requires DX12)
+            // Return null as per interface documentation
+            return null;
+        }
+
         #region D3D11 Specific Methods
 
         /// <summary>

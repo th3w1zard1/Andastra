@@ -355,20 +355,18 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         public IDevice GetDevice()
         {
-            if (!_initialized || !_capabilities.SupportsRaytracing)
+            // TODO: STUB - Implement IDevice creation for DirectX 12 raytracing
+            // When raytracing is enabled, this should create and return a D3D12Device instance
+            // that implements IDevice and provides access to DXR functionality
+            // For now, return null as the device creation is not yet implemented
+            if (!_initialized || !_capabilities.SupportsRaytracing || !_raytracingEnabled || _raytracingDevice == IntPtr.Zero)
             {
                 return null;
             }
 
-            // TODO: IMPLEMENT - Create and return IDevice wrapper around native D3D12 device
-            // For now, Device implementations need to be created. The IDevice interface provides
-            // NVRHI-style abstractions for raytracing resources (acceleration structures, raytracing pipelines, etc.).
-            // This would wrap the native ID3D12Device5 (raytracing device) and provide IDevice interface.
-            // 
-            // Implementation would be:
-            // - Create Direct3D12Device class implementing IDevice
-            // - Wrap native _device handle and provide IDevice methods
-            // - Cache device instance and return it here
+            // TODO: STUB - Create and return actual IDevice implementation
+            // This will require implementing a D3D12Device class that wraps ID3D12Device5
+            // and provides the IDevice interface for raytracing operations
             return null;
         }
 

@@ -1941,146 +1941,25 @@ namespace Andastra.Runtime.Content.Save
         #region Inventory, Repute, Cached Characters, Cached Modules
 
         // Serialize inventory (INVENTORY.res) - player inventory items
-        // Based on swkotor2.exe: Inventory is stored as a GFF file in savegame.sav
-        // Located via string reference: "INVENTORY" @ 0x007c2504 (inventory field)
-        // Original implementation: INVENTORY.res contains a GFF with "ItemList" containing item entries
-        // Each item entry contains: TemplateResRef, StackSize, Charges, Identified, and Upgrades
+        // Based on swkotor.exe: Inventory is stored as a GFF file in savegame.sav
+        // Located via string reference: "INVENTORY" @ (needs verification)
         private byte[] SerializeInventory(PartyState partyState)
         {
-            if (partyState == null || partyState.PlayerCharacter == null)
-            {
-                return null;
-            }
-
-            List<ItemState> inventory = partyState.PlayerCharacter.Inventory;
-            if (inventory == null || inventory.Count == 0)
-            {
-                // Return empty GFF with empty ItemList
-                var emptyGff = new GFF(GFFContent.GFF);
-                emptyGff.Root.Acquire<GFFList>("ItemList", new GFFList());
-                return emptyGff.ToBytes();
-            }
-
-            // Create GFF with generic content type (no specific content type for inventory)
-            var gff = new GFF(GFFContent.GFF);
-            var root = gff.Root;
-
-            // Create ItemList containing all inventory items
-            var itemList = root.Acquire<GFFList>("ItemList", new GFFList());
-
-            foreach (ItemState item in inventory)
-            {
-                if (item == null || string.IsNullOrEmpty(item.TemplateResRef))
-                {
-                    continue; // Skip invalid items
-                }
-
-                var itemStruct = itemList.Add();
-
-                // TemplateResRef - Item template ResRef (required)
-                itemStruct.SetString("TemplateResRef", item.TemplateResRef);
-
-                // StackSize - Number of items in stack (default: 1)
-                itemStruct.SetInt32("StackSize", item.StackSize > 0 ? item.StackSize : 1);
-
-                // Charges - Current charges/uses remaining (for items with charges)
-                itemStruct.SetInt32("Charges", item.Charges);
-
-                // Identified - Whether the item has been identified (byte: 1 = identified, 0 = not identified)
-                itemStruct.SetUInt8("Identified", item.Identified ? (byte)1 : (byte)0);
-
-                // Upgrades - List of item upgrades/modifications
-                // Based on swkotor2.exe: Items can have upgrades installed (weapon/armor upgrades)
-                // Each upgrade entry contains: UpgradeSlot (int32) and UpgradeResRef (string)
-                if (item.Upgrades != null && item.Upgrades.Count > 0)
-                {
-                    var upgradesList = itemStruct.Acquire<GFFList>("Upgrades", new GFFList());
-                    foreach (ItemUpgrade upgrade in item.Upgrades)
-                    {
-                        if (upgrade == null || string.IsNullOrEmpty(upgrade.UpgradeResRef))
-                        {
-                            continue; // Skip invalid upgrades
-                        }
-
-                        var upgradeStruct = upgradesList.Add();
-                        upgradeStruct.SetInt32("UpgradeSlot", upgrade.UpgradeSlot);
-                        upgradeStruct.SetString("UpgradeResRef", upgrade.UpgradeResRef);
-                    }
-                }
-            }
-
-            return gff.ToBytes();
+            // TODO: STUB - Implement inventory serialization
+            // Inventory is stored as a GFF file with item data
+            // Need to serialize player inventory items from PartyState
+            return null;
         }
 
         // Serialize repute (REPUTE.fac) - faction reputation
-        // Based on swkotor2.exe: Repute is stored as a FAC file in savegame.sav
-        // Located via string reference: "REPUTE" @ 0x007c290c (faction reputation field)
-        // Original implementation: REPUTE.fac contains faction relationships (FactionList and RepList)
-        // FAC structure: GFF with "FAC " signature containing:
-        //   - FactionList: List of factions (FactionName, FactionParentID, FactionGlobal)
-        //   - RepList: List of reputation entries (FactionID1, FactionID2, FactionRep)
-        // Reputation values: 0-100 range (0-10 = hostile, 11-89 = neutral, 90-100 = friendly)
-        // Engine reference: swkotor2.exe:0x005ad1a0 (RepList loading), swkotor2.exe:0x005acf30 (FactionList loading)
+        // Based on swkotor.exe: Repute is stored as a FAC file in savegame.sav
+        // Located via string reference: "REPUTE" @ (needs verification)
         private byte[] SerializeRepute(SaveGameData saveData)
         {
-            if (saveData == null)
-            {
-                return null;
-            }
-
-            // Create FAC object for serialization
-            // NOTE: SaveGameData does not currently include faction reputation data.
-            // This implementation creates an empty FAC structure (valid GFF with empty lists).
-            // When SaveGameData is extended with reputation data, populate fac.Factions and fac.Reputations
-            // from SaveGameData before serializing.
-            var fac = new Andastra.Parsing.Resource.Generics.FAC();
-
-            // TODO: When SaveGameData includes faction reputation data, implement:
-            //   1. Populate fac.Factions from saveData.Factions (List<FactionData>)
-            //      - Each FactionData should have: Name (string), ParentId (int), IsGlobal (bool)
-            //      - Create FACFaction objects and add to fac.Factions
-            //   2. Populate fac.Reputations from saveData.FactionReputations (Dictionary<int, Dictionary<int, int>>)
-            //      - Key: FactionId1, Value: Dictionary<FactionId2, Reputation>
-            //      - Only serialize if Reputation != 100 (default value)
-            //      - Based on swkotor2.exe:0x005ad1a0 line 21 - engine only writes if != 100
-            //      - Create FACReputation objects and add to fac.Reputations
-            //
-            // Example implementation:
-            //   if (saveData.Factions != null)
-            //   {
-            //       foreach (var factionData in saveData.Factions)
-            //       {
-            //           fac.Factions.Add(new FACFaction
-            //           {
-            //               Name = factionData.Name ?? "",
-            //               ParentId = factionData.ParentId,
-            //               IsGlobal = factionData.IsGlobal
-            //           });
-            //       }
-            //   }
-            //   if (saveData.FactionReputations != null)
-            //   {
-            //       foreach (var kvp1 in saveData.FactionReputations)
-            //       {
-            //           foreach (var kvp2 in kvp1.Value)
-            //           {
-            //               if (kvp2.Value != 100)
-            //               {
-            //                   fac.Reputations.Add(new FACReputation
-            //                   {
-            //                       FactionId1 = kvp1.Key,
-            //                       FactionId2 = kvp2.Key,
-            //                       Reputation = kvp2.Value
-            //                   });
-            //               }
-            //           }
-            //       }
-            //   }
-
-            // Serialize FAC to bytes using FACHelpers
-            // Based on swkotor2.exe: FAC file format with "FAC " signature
-            // FACHelpers.BytesFac handles GFF serialization with correct content type
-            return Andastra.Parsing.Resource.Generics.FACHelpers.BytesFac(fac, ResourceType.FAC);
+            // TODO: STUB - Implement repute serialization
+            // Repute is stored as a FAC file with faction reputation data
+            // Need to serialize faction reputation from SaveGameData
+            return null;
         }
 
         // Serialize cached characters (AVAILNPC*.utc) - companion character templates

@@ -21,17 +21,10 @@ This document details the reverse engineering findings for module file discovery
 
 1. **`dialog.tlk` (TLK files)**
    - **Loading**: Direct file I/O from game root directory
-   - **Function**: swkotor.exe: `FUN_005e6680` at 0x005e6680 loads `dialog.tlk` via direct file I/O
-   - **Evidence**:
-     - **String Reference**: `"dialog.tlk"` string found at swkotor.exe: 0x0073d648, 0x0073d744
-     - **Decompiled Code** (swkotor.exe: `FUN_005e6680` at 0x005e6680):
-       - Constructs file path: `".\\dialog.tlk"` (game root directory)
-       - Uses Windows file I/O functions (e.g., `CreateFileA`, `ReadFile`) to read `dialog.tlk` directly
-       - **Does NOT call** `FUN_004074d0` (resource lookup wrapper at 0x004074d0) or `FUN_00407230` (resource search at 0x00407230)
-       - **Does NOT use** resource system - bypasses all resource locations
-     - **Exhaustive Search**: Searched all callers of `FUN_004074d0`/`FUN_004075a0` with resource type 2018 (0x7e2) - **ZERO results** in both executables
+   - **Function**: `FUN_005e6680` (swkotor.exe: 0x005e6680) calls initialization code
+   - **Evidence**: String references to `"dialog.tlk"` found in executable. Function `FUN_005e6680` uses direct file I/O, not resource system (`FUN_004074d0`/`FUN_00407230`)
    - **Location**: Game root directory (same location as executable)
-   - **Resource Type**: TLK (2018, 0x7e2) exists in resource registry (swkotor.exe: `FUN_005e6d20` at 0x005e6d20, line 91; swkotor2.exe: `FUN_00632510` at 0x00632510, line 90), but TLK loading uses direct file I/O, not resource system
+   - **Resource Type**: TLK (2018, 0x7e2) exists in resource registry, but TLK loading uses direct file I/O, not resource system
    - **Module Support**: ❌ **NO** - TLK files in modules will be ignored
 
 2. **`swkotor.ini` / `swkotor2.ini` (Configuration files)**
@@ -82,93 +75,14 @@ The following files **CANNOT** be placed in module containers and will not work:
 
 ### What CAN Be Containerized
 
-**Resource types with verified handlers** that call `FUN_00407230` / `FUN_004074d0` (resource search functions) **CAN** be placed in modules:
+Resource types that use `FUN_00407230` / `FUN_004074d0` (resource search functions) **CAN** be placed in modules:
 
-**✅ Resource Types WITH Handlers (CAN be containerized in modules):**
-
-**3D Models & Animations:**
-- **MDL** (2002, 0x7d2) - 3D models - Handler: swkotor.exe: 0x0070fb90, swkotor2.exe: 0x007837b0
-- **MDX** (3008, 0xbc0) - Model animations - Handler: swkotor.exe: 0x0070fe60, swkotor2.exe: 0x007834e0
-
-**Textures:**
-- **TGA** (3) - Texture images - Handler: swkotor.exe: 0x00596670, swkotor2.exe: 0x005571b0
-- **TPC** (3007, 0xbbf) - Textures - Handler: swkotor.exe: 0x0070f800, swkotor2.exe: 0x00782760
-- **DDS** (2033, 0x7f1) - DirectDraw Surface textures - Handler: swkotor.exe: 0x00710530, swkotor2.exe: 0x00783b60
-- **FourPC** (2059, 0x80b) - RGBA 16-bit textures - Handler: swkotor.exe: 0x00710910, swkotor2.exe: 0x00783f10
-- **TXI** (2022, 0x7e6) - Texture info - Handler: swkotor.exe: 0x0070fb90, swkotor2.exe: 0x00783190
-
-**Area & Module Data:**
-- **IFO** (2014, 0x7de) - Module info - Handler: swkotor.exe: 0x004c4cc0, swkotor2.exe: 0x004fdfe0
-- **ARE** (2012, 0x7dc) - Area data - Handler: swkotor.exe: 0x00506c30, swkotor2.exe: 0x004e1ea0
-- **GIT** (2023, 0x7e7) - Area instance data - Handler: swkotor.exe: 0x00506c30, swkotor2.exe: 0x004e1ea0
-
-**Templates (GFF-based):**
-- **UTI** (2025, 0x7e9) - Item templates - Handler: swkotor.exe: 0x006bdea0, swkotor2.exe: 0x00713340
-- **UTC** (2027, 0x7eb) - Creature templates - Handler: swkotor.exe: 0x006bdea0, swkotor2.exe: 0x00713340
-- **UTD** (2042, 0x7fa) - Door templates - Handler: swkotor.exe: 0x006bdea0, swkotor2.exe: 0x00713340
-- **UTP** (2044, 0x7fc) - Placeable templates - Handler: swkotor.exe: 0x006bdea0, swkotor2.exe: 0x00713340
-- **UTS** (2035, 0x7f3) - Sound templates - Handler: swkotor.exe: 0x006bdea0, swkotor2.exe: 0x00713340
-- **UTT** (2032, 0x7f0) - Trigger templates - Handler: swkotor.exe: 0x006bdea0, swkotor2.exe: 0x00713340
-- **UTW** (2058, 0x80a) - Waypoint templates - Handler: swkotor.exe: 0x006bdea0, swkotor2.exe: 0x00713340
-- **UTM** (2051, 0x803) - Merchant templates - Handler: swkotor.exe: 0x006bdea0, swkotor2.exe: 0x00713340
-
-**Dialogs & Journals:**
-- **DLG** (2029, 0x7ed) - Dialog trees - Handler: swkotor.exe: 0x006bdea0, swkotor2.exe: 0x00713340
-- **JRL** (2056, 0x808) - Journal entries - Handler: swkotor.exe: 0x006bdea0, swkotor2.exe: 0x00713340
-
-**Scripts:**
-- **NCS** (2010, 0x7da) - Compiled scripts - Handler: swkotor.exe: 0x005d1ac0, swkotor2.exe: 0x0061d6e0
-
-**Audio:**
-- **WAV** (4) - Audio files - Handler: swkotor.exe: 0x005d5e90, swkotor2.exe: 0x00621ac0
-
-**Other:**
-- **LIP** (3004, 0xbbc) - Lip sync data - Handler: swkotor.exe: 0x0070f0f0, swkotor2.exe: 0x0077f8f0
-- **VIS** (3001, 0xbb9) - Visibility data - Handler: swkotor.exe: 0x0070ee30, swkotor2.exe: 0x00782460
-- **LYT** (3000) - Layout data - Handler: swkotor.exe: 0x0070dbf0, swkotor2.exe: 0x00781220
-- **SSF** (2060, 0x80c) - Soundset files - Handler: swkotor.exe: 0x006789a0, swkotor2.exe: 0x006cde50
-- **LTR** (2036, 0x7f4) - Letter files - Handler: swkotor.exe: 0x00711110, swkotor2.exe: 0x00784710
-- **PLT** (6) - Palette files (used for LIP) - Handler: swkotor.exe: 0x0070c350, swkotor2.exe: 0x0077f8f0
-- **GUI** (2047, 0x7ff) - GUI definitions - Handler: swkotor.exe: 0x006bdea0, swkotor2.exe: 0x00713340
-- **FAC** (2038, 0x7f6) - Faction data - Handler: swkotor.exe: 0x006bdea0, swkotor2.exe: 0x00713340
-- **PTH** (3003, 0xbbb) - Pathfinding data - Handler: swkotor.exe: 0x00506c30, swkotor2.exe: 0x004e1ea0
-- **WOK** (2016, 0x7e0) - Walkmesh data - Handler: swkotor.exe: 0x00506c30, swkotor2.exe: 0x004e1ea0
-- **DWK** (2052, 0x804) - Door walkmesh - Handler: swkotor.exe: 0x00506c30, swkotor2.exe: 0x004e1ea0
-- **PWK** (2053, 0x805) - Placeable walkmesh - Handler: swkotor.exe: 0x00506c30, swkotor2.exe: 0x004e1ea0
-
-**Total: 28+ resource types with verified handlers that CAN be containerized in modules.**
-
-**❌ Resource Types WITHOUT Handlers (CANNOT be containerized in modules):**
-
-**Registered but No Handler:**
-- **NSS** (2009, 0x7d9) - Source scripts - ❌ **NO HANDLER** (toolset-only, compiled to NCS)
-- **MP3/BMU** (8) - MP3 audio - ❌ **NO HANDLER** (registered in registry but no loader uses it)
-- **WMV** (12, 0xc) - Windows Media Video - ❌ **NO HANDLER** (registered in registry but no loader uses it)
-
-**Not Registered:**
-- **OGG** (2078, 0x81e) - OGG audio - ❌ **NOT REGISTERED** (no resource type ID, no handler)
-- **MP4** - MP4 video - ❌ **NOT REGISTERED** (no resource type ID, no handler)
-
-**Direct File I/O (Bypass Resource System):**
-- **TLK** (2018, 0x7e2) - Talk tables - ❌ **DIRECT FILE I/O** (loaded from game root, not resource system)
-- **RES** (0) - Resource files - ❌ **DIRECT FILE I/O** (loaded from save files, not resource system)
-- **MVE** (2) - Video files - ❌ **DIRECT FILE I/O** (loaded from movies/ directory, not resource system)
-- **MPG** (9) - MPEG video - ❌ **DIRECT FILE I/O** (loaded from movies/ directory, not resource system)
-- **BIK** (2063, 0x80f) - Bink video - ❌ **DIRECT FILE I/O** (uses directory alias system, not resource system)
-
-**Container Types (No Recursive Loading):**
-- **MOD** (2011, 0x7db) - Module containers - ❌ **NO RECURSION** (engine doesn't recursively load nested modules)
-- **RIM** (3002, 0xbba) - RIM containers - ❌ **NO RECURSION** (engine doesn't recursively load nested RIMs)
-- **ERF** (9997) - ERF containers - ❌ **NO RECURSION** (engine doesn't recursively load nested ERFs)
-- **SAV** (2057, 0x809) - Save game containers - ❌ **NO RECURSION** (save files are separate containers)
-
-**Not Resource Types:**
-- **KEY** (9999) - Chitin key files - ❌ **NOT A RESOURCE TYPE** (archive index, not a resource)
-- **BIF** (9998) - BIF archives - ❌ **NOT A RESOURCE TYPE** (archive format, not a resource)
-- **HAK** (2061, 0x80d) - HAK archives - ❌ **NOT A RESOURCE TYPE** (Aurora/NWN only, not KotOR)
-- **NWM** (2062, 0x80e) - NWM modules - ❌ **NOT A RESOURCE TYPE** (Aurora/NWN only, not KotOR)
-
-**Summary**: Only resource types with verified handlers (28+ types listed above) can be containerized and loaded from modules. All other resource types are either not registered, have no handlers, use direct file I/O, or are container types that don't support recursion.
+- ✅ **TPC/TGA textures** - Verified: Texture loaders call `FUN_00407230`
+- ✅ **MDL/MDX models** - Verified: Model loaders call `FUN_004074d0`
+- ✅ **DLG dialogs** - Verified: Dialog loaders call `FUN_004074d0`
+- ✅ **ARE/GIT area data** - Verified: Area loaders call `FUN_004074d0`
+- ✅ **NCS scripts** - Verified: Script loaders call `FUN_004074d0`
+- ✅ **All resource types that have handlers calling `FUN_00407230`/`FUN_004074d0`** - These search all locations including modules
 
 ## Module File Discovery
 
@@ -345,18 +259,9 @@ The engine's resource manager loads resources by:
 **Edge Cases - What Actually Works** (based on code structure):
 
 - **TLK (type 0x7e2 = 2018)**:
-  - ✅ Registered in resource type registry (swkotor.exe: `FUN_005e6d20` at 0x005e6d20, line 91; swkotor2.exe: `FUN_00632510` at 0x00632510, line 90)
-  - ✅ CAN be registered in modules (no type filtering in swkotor.exe: `FUN_0040e990` at 0x0040e990)
-  - ❌ **VERIFIED**: TLK loading uses direct file I/O from game root directory (`dialog.tlk`), NOT resource system
-  - **Evidence**:
-    - **String Reference**: `"dialog.tlk"` string found at swkotor.exe: 0x0073d648, 0x0073d744
-    - **Loading Function**: swkotor.exe: `FUN_005e6680` at 0x005e6680 loads `dialog.tlk` via direct file I/O
-    - **Decompiled Code Evidence** (swkotor.exe: `FUN_005e6680` at 0x005e6680):
-      - Constructs file path: `".\\dialog.tlk"` (game root directory)
-      - Uses Windows file I/O functions (e.g., `CreateFileA`, `ReadFile`) to read `dialog.tlk` directly
-      - **Does NOT call** `FUN_004074d0` (resource lookup wrapper) or `FUN_00407230` (resource search)
-      - **Does NOT use** resource system - bypasses all resource locations (Override, Modules, Chitin)
-    - **Exhaustive Search**: Searched all callers of `FUN_004074d0`/`FUN_004075a0` with resource type 2018 (0x7e2) - **ZERO results** in both swkotor.exe and swkotor2.exe
+  - ✅ Registered in resource type registry (swkotor.exe: `FUN_005e6d20` line 91, swkotor2.exe: `FUN_00632510` line 90)
+  - ✅ CAN be registered in modules (no type filtering in `FUN_0040e990`)
+  - ❌ **CONFIRMED**: TLK loading uses direct file I/O from game root directory (`dialog.tlk`), NOT resource system
   - **Module Support**: ❌ **NO** - TLK files in modules will be ignored (see "Files Loaded Outside Resource System" section)
 
 - **RES (type 0x0 = 0)**:
@@ -442,12 +347,7 @@ Based on `ResourceType.cs`, the following resource types are defined:
 ### Audio Formats
 
 - `WAV` (4) - Audio files
-  - **Handler exists**: ✅ **VERIFIED** - swkotor.exe: `0x005d5e90` (WAV audio resource loader)
-  - **Decompiled Code Evidence** (swkotor.exe: `FUN_005d5e90` at 0x005d5e90):
-    - Line 43: Calls `FUN_004074d0(DAT_007a39e8, param_2, 4, ...)` with resource type 4 (WAV)
-    - `FUN_004074d0` is the resource lookup wrapper that calls `FUN_00407230` (core resource search)
-    - `FUN_00407230` searches all locations in priority order: Override → Modules → Chitin
-    - **Conclusion**: WAV handler uses resource system, so WAV files CAN be placed in Override or Modules
+  - **Handler exists**: swkotor.exe: 0x005d5e90 calls `FUN_004074d0` with type 4
   - **Obfuscation**: ✅ **Supports BOTH obfuscated and unobfuscated**
     - **Can the game load standard, non-obfuscated `.wav` files?** ✅ **YES** - Standard RIFF/WAVE files work without any obfuscation layer
     - **Obfuscation is OPTIONAL, not required** - The game auto-detects format and handles both:
@@ -466,28 +366,20 @@ Based on `ResourceType.cs`, the following resource types are defined:
   - **Module Support**: ✅ **YES** - WAV handler uses resource system that searches modules
   - **Override Support**: ✅ **YES** - Can be placed in Override directory
   - **Stream Directory Priority**: ⚠️ **COMPLEX** - See "Media File Priority" section below
-- `OGG` (2078, 0x81e) - OGG audio
+- `OGG` (2078) - OGG audio
   - **VERIFIED**: OGG is **NOT registered** in resource type registry and **NO handler exists**
-  - **Evidence**:
-    - Exhaustive search for type 2078 (0x81e) in resource type registry:
-      - swkotor.exe: `FUN_005e6d20` (0x005e6d20) - **NOT FOUND** (searched all registrations, type 2078 does not exist)
-      - swkotor2.exe: `FUN_00632510` (0x00632510) - **NOT FOUND** (searched all registrations, type 2078 does not exist)
-    - Exhaustive search for handlers calling `FUN_004074d0`/`FUN_004075a0` with type 2078 found **ZERO results** in both executables
-  - **Module Support**: ❌ **NO** - OGG files in modules will be ignored (no handler exists)
-  - **Override Support**: ❌ **NO** - No handler exists, cannot be loaded from Override
-- `MP3` (8) / `BMU` (8) - MP3 audio / BMU (MP3 with obfuscated header)
-  - **VERIFIED**: MP3/BMU is **registered** in resource type registry (type 8) but **NO handler exists** that calls `FUN_004074d0` with type 8
+  - **Module Support**: ❌ **NO** - OGG files in modules will be ignored
+  - **Override Support**: ❌ **NO** - No handler exists
+- `MP3` (8) - MP3 audio
+  - **VERIFIED**: MP3 is **registered** in resource type registry (type 8) but **NO handler exists** that calls `FUN_004074d0` with type 8
   - **Status**: ❌ **REGISTERED BUT NOT LOADED** - Registered in resource type registry but no loader uses it
-  - **Evidence**:
-    - **Resource Type Registration**:
-      - swkotor.exe: `FUN_005e6d20` (0x005e6d20, line 92-93) registers type 8 as "mp3"
-      - swkotor2.exe: `FUN_00632510` (0x00632510, line 91-92) registers type 8 as "mp3"
-      - ResourceType.cs defines both MP3 and BMU as type 8 (BMU = "mp3 with obfuscated extra header")
-    - **Handler Search**: Exhaustive search for handlers calling `FUN_004074d0`/`FUN_004075a0` with resource type 8 found **ZERO results** in both swkotor.exe and swkotor2.exe
-    - **Decompiled Code Evidence**: Searched all callers of `FUN_004074d0` (swkotor.exe) and `FUN_004075a0` (swkotor2.exe) - **NONE** pass type 8 as parameter
+  - **Evidence**: 
+    - swkotor.exe: `FUN_005e6d20` (0x005e6d20, line 92-93) registers type 8 as "mp3"
+    - swkotor2.exe: `FUN_00632510` (0x00632510, line 91-92) registers type 8 as "mp3"
+    - No handler found that calls `FUN_004074d0`/`FUN_004075a0` with resource type 8
   - **Module Support**: ❌ **NO** - No handler exists, cannot be loaded from modules
-  - **Override Support**: ❌ **NO** - No handler exists, cannot be loaded from Override
-  - **Note**: MP3 audio can appear in WAV files via "MP3-in-WAV" format (see WAV section) - this is the only way MP3 audio is used by the game engine
+  - **Override Support**: ❌ **NO** - No handler exists
+  - **Note**: MP3 audio can appear in WAV files via "MP3-in-WAV" format (see WAV section)
 
 ### Video Formats
 
@@ -547,19 +439,18 @@ Based on `ResourceType.cs`, the following resource types are defined:
 
 **However**: Some code paths may use direct file I/O to stream directories, bypassing the resource system. The resource system priority applies when using the standard resource loading mechanism.
 
-**Placement Summary** (VERIFIED via Ghidra reverse engineering):
+**Placement Summary**:
 
-| Format | Override Support | Module Support | Stream Directory Support | Priority Order | Verification Evidence |
-|--------|------------------|----------------|--------------------------|----------------|----------------------|
-| **WAV** (4) | ✅ **YES** | ✅ **YES** | ✅ YES | Override → Modules → StreamWaves/StreamVoice | **VERIFIED**: Handler at swkotor.exe: `0x005d5e90` calls `FUN_004074d0` with type 4. Decompiled code shows: `FUN_004074d0(DAT_007a39e8, param_2, 4, ...)` at line 43. `FUN_004074d0` → `FUN_00407230` searches all locations including Override and Modules. |
-| **BMU** (8) | ❌ **NO** | ❌ **NO** | ❌ NO | N/A | **VERIFIED**: BMU uses same resource type ID as MP3 (type 8). Exhaustive search for handlers calling `FUN_004074d0`/`FUN_004075a0` with type 8 found **ZERO results** in both swkotor.exe and swkotor2.exe. Registered in resource type registry (swkotor.exe: `FUN_005e6d20` line 92-93 registers type 8 as "mp3"/"bmu") but no loader uses it. |
-| **OGG** (2078, 0x81e) | ❌ **NO** | ❌ **NO** | ❌ NO | N/A | **VERIFIED**: OGG is **NOT registered** in resource type registry. Exhaustive search for type 2078 (0x81e) in `FUN_005e6d20` (swkotor.exe: 0x005e6d20) and `FUN_00632510` (swkotor2.exe: 0x00632510) found **ZERO registrations**. Exhaustive search for handlers calling `FUN_004074d0`/`FUN_004075a0` with type 2078 found **ZERO results** in both executables. |
-| **MP3** (8) | ❌ **NO** | ❌ **NO** | ❌ NO | N/A | **VERIFIED**: MP3 is **registered** in resource type registry (type 8) but **NO handler exists**. Evidence: swkotor.exe: `FUN_005e6d20` (0x005e6d20, line 92-93) registers type 8 as "mp3". swkotor2.exe: `FUN_00632510` (0x00632510, line 91-92) registers type 8 as "mp3". Exhaustive search for handlers calling `FUN_004074d0`/`FUN_004075a0` with resource type 8 found **ZERO results** in both executables. |
-| **WMV** (12, 0xc) | ❌ **NO** | ❌ **NO** | ❌ NO | N/A | **VERIFIED**: WMV is **registered** in resource type registry (type 12) but **NO handler exists**. Evidence: ResourceType.cs defines WMV as type 12. Exhaustive search for handlers calling `FUN_004074d0`/`FUN_004075a0` with resource type 12 found **ZERO results** in both swkotor.exe and swkotor2.exe. |
-| **MP4** | ❌ **NO** | ❌ **NO** | ❌ NO | N/A | **VERIFIED**: MP4 is **NOT a resource type** - No resource type ID exists for MP4. ResourceType.cs does not define MP4. Exhaustive search for "mp4" string references in both executables found **ZERO results**. |
-| **MVE** (2) | ❌ **NO** | ❌ **NO** | ✅ YES (movies/) | Direct file I/O | **VERIFIED**: No handler in resource system. Uses direct file I/O via MOVIES: alias (swkotor.exe: `FUN_005e7a90` 0x005e7a90, lines 203-209). Exhaustive search for handlers calling `FUN_004074d0` with type 2 found **ZERO results**. |
-| **MPG** (9) | ❌ **NO** | ❌ **NO** | ✅ YES (movies/) | Direct file I/O | **VERIFIED**: No handler in resource system. Uses direct file I/O via MOVIES: alias (swkotor.exe: `FUN_005e7a90` 0x005e7a90, lines 203-209). Exhaustive search for handlers calling `FUN_004074d0` with type 9 found **ZERO results**. |
-| **BIK** (2063, 0x80f) | ❌ **NO** | ❌ **NO** | ✅ YES (movies/) | Direct file I/O | **VERIFIED**: Uses directory alias system, NOT resource system. swkotor.exe: `FUN_005fbbf0` (0x005fbbf0, line 58) loads BIK files using "MOVIES:%s" format and calls `FUN_005e68d0` (0x005e68d0) with resource type 2063. `FUN_005e68d0` → `FUN_005eb840` → `FUN_005e68a0` → `FUN_005eb6b0` uses `FUN_005e6660` (directory alias resolver), **NOT** `FUN_004074d0` (resource system). |
+| Format | Override Support | Module Support | Stream Directory Support | Priority Order |
+|--------|------------------|----------------|--------------------------|----------------|
+| **WAV** | ✅ YES | ✅ YES | ✅ YES | Override → Modules → StreamWaves/StreamVoice |
+| **OGG** | ❌ NO | ❌ NO | ❓ UNKNOWN | No handler exists |
+| **MP3** | ❌ NO | ❌ NO | ❓ UNKNOWN | Registered in registry (type 8) but no handler exists |
+| **MVE** | ❌ NO | ❌ NO | ✅ YES (movies/) | Direct file I/O via MOVIES: alias, not resource system (swkotor.exe: FUN_005e7a90 0x005e7a90) |
+| **MPG** | ❌ NO | ❌ NO | ✅ YES (movies/) | Direct file I/O via MOVIES: alias, not resource system (swkotor.exe: FUN_005e7a90 0x005e7a90) |
+| **BIK** | ❌ NO | ❌ NO | ✅ YES (movies/) | Direct file I/O via MOVIES: alias, not resource system (swkotor.exe: FUN_005fbbf0 0x005fbbf0, FUN_005e68d0 0x005e68d0) |
+| **WMV** | ❌ NO | ❌ NO | ❓ UNKNOWN | No handler exists |
+| **MP4** | ❌ NO | ❌ NO | ❌ NO | Not supported |
 
 **Obfuscation Requirements**:
 
@@ -599,76 +490,6 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 
 **Conclusion**: All verified resource types use the same search mechanism (`FUN_004074d0`/`FUN_004075a0` → `FUN_00407230`/`FUN_00407300`) which searches all locations including modules. **If a resource type has a handler, it can be loaded from modules.**
 
-## Module Resource Validity: Which Resource Types Are Actually Loaded?
-
-**Critical Distinction**: The engine can **STORE** any resource type in modules (no filtering), but only resource types with **HANDLERS** are actually **LOADED and USED** by the game engine.
-
-### Resource Types That Are Loaded and Used
-
-**All resource types with verified handlers** (listed above) are loaded and used by the game engine when placed in modules:
-
-- **MDL, MDX** - 3D models and animations
-- **TGA, TPC, DDS, FourPC, TXI** - Textures and texture info
-- **LIP, VIS, LYT** - Lip sync, visibility, layout data
-- **SSF** - Soundset files
-- **WAV** - Audio files
-- **IFO, ARE, GIT** - Module and area data
-- **NCS** - Compiled scripts (executed by game engine)
-- **UTI, UTC, UTD, UTP, UTS, UTT, UTW** - Template files (items, creatures, doors, placeables, sounds, triggers, waypoints)
-- **DLG** - Dialog trees
-- **JRL** - Journal entries
-- **PTH** - Pathfinding data
-- **WOK, DWK, PWK** - Walkmesh data
-- **LTR** - Letter data
-- **GUI** - GUI definitions
-- **FAC** - Faction data
-
-**Total**: **28+ resource types** with verified handlers that are loaded and used from modules.
-
-### Resource Types That Are Stored But Ignored
-
-**Resource types that CAN be stored in modules but are NOT loaded by the game engine**:
-
-- **NSS** (2009, 0x7d9) - **Source scripts (plaintext)**
-  - ✅ **CAN be stored** in modules (no type filtering)
-  - ❌ **NOT loaded by game engine** - No handler found in either swkotor.exe or swkotor2.exe
-  - **Purpose**: Toolset-only - used for compilation to NCS, not executed by game engine
-  - **Evidence**: NSS is NOT in the verified handlers list. Only NCS (compiled scripts) has a handler (swkotor.exe: 0x005d1ac0, swkotor2.exe: 0x0061d6e0)
-  - **Conclusion**: NSS files in modules are **IGNORED** by the game engine. Only NCS files are loaded and executed.
-
-- **TLK** (2018, 0x7e2) - Talk tables
-  - ✅ **CAN be stored** in modules (no type filtering)
-  - ❌ **NOT loaded from modules** - Uses direct file I/O from game root directory
-  - **Evidence**: See "TLK (Talk Tables)" section above
-
-- **RES** (0) - Resource files
-  - ✅ **CAN be stored** in modules (no type filtering)
-  - ❌ **NOT loaded from modules** - Uses direct file I/O from save files
-  - **Evidence**: See "RES Files (Resource Type 0)" section above
-
-- **Container types** (MOD, RIM, ERF, SAV) - Nested containers
-  - ✅ **CAN be stored** in modules (no type filtering)
-  - ❌ **NOT recursively loaded** - Engine doesn't recursively load nested containers
-  - **Note**: These are container formats, not resource content
-
-- **Unregistered types** - Any resource type ID not in the resource type registry
-  - ✅ **CAN be stored** in modules (no type filtering)
-  - ❌ **NOT loaded** - No handler exists, engine doesn't know how to process them
-  - **Examples**: Custom resource types, invalid type IDs
-
-### Summary: Module Resource Validity
-
-| Category | Can Be Stored? | Loaded by Engine? | Used by Engine? |
-|----------|----------------|-------------------|-----------------|
-| **Resource types with handlers** (28+ types) | ✅ YES | ✅ YES | ✅ YES |
-| **NSS** (source scripts) | ✅ YES | ❌ NO | ❌ NO (toolset-only) |
-| **TLK** (talk tables) | ✅ YES | ❌ NO (direct file I/O) | ❌ NO |
-| **RES** (resource files) | ✅ YES | ❌ NO (direct file I/O) | ❌ NO |
-| **Container types** (MOD/RIM/ERF/SAV) | ✅ YES | ❌ NO (no recursion) | ❌ NO |
-| **Unregistered types** | ✅ YES | ❌ NO (no handler) | ❌ NO |
-
-**Key Finding**: **Only resource types with handlers are actually loaded and used by the game engine**. All other resource types are stored but ignored.
-
 ## Special Resource Loading Behaviors
 
 ### TXI/TGA Pairing
@@ -690,20 +511,15 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 
 **Answer**: ❌ **NO** - TLK files in modules will be ignored.
 
-**Evidence** (VERIFIED via Ghidra reverse engineering):
+**Evidence**:
 
-- **String Reference**: `"dialog.tlk"` string found at swkotor.exe: 0x0073d648, 0x0073d744
-- **Loading Function**: swkotor.exe: `FUN_005e6680` at 0x005e6680 loads `dialog.tlk` via direct file I/O
-- **Decompiled Code Evidence** (swkotor.exe: `FUN_005e6680` at 0x005e6680):
-  - Constructs file path: `".\\dialog.tlk"` (game root directory, same location as executable)
-  - Uses Windows file I/O functions (e.g., `CreateFileA`, `ReadFile`) to read `dialog.tlk` directly from filesystem
-  - **Does NOT call** `FUN_004074d0` (resource lookup wrapper at 0x004074d0) or `FUN_00407230` (resource search at 0x00407230)
-  - **Does NOT use** resource system - bypasses all resource locations (Override, Modules, Chitin)
-- **Exhaustive Search**: Searched all callers of `FUN_004074d0` (swkotor.exe: 0x004074d0) and `FUN_004075a0` (swkotor2.exe: 0x004075a0) with resource type 2018 (0x7e2) - **ZERO results** in both executables
-- **TLK is loaded during initialization**, not through resource system
-- **Resource Type Registration**: TLK (2018, 0x7e2) IS registered in resource type registry (swkotor.exe: `FUN_005e6d20` at 0x005e6d20, line 91; swkotor2.exe: `FUN_00632510` at 0x00632510, line 90), but the registration is **unused** - no handler calls the resource system with type 2018
+- TLK loading uses direct file I/O from game root directory
+- Function `FUN_005e6680` (swkotor.exe: 0x005e6680) uses direct file I/O, not resource system (`FUN_004074d0`/`FUN_00407230`)
+- String references to `"dialog.tlk"` found in executable
+- TLK is loaded during initialization, not through resource system
+- See "Files Loaded Outside Resource System" section above for details
 
-**Note**: TLK files are global (not module-specific) and are loaded from a fixed location (root directory) via direct file I/O, not through the resource search mechanism. The resource type registration exists but is never used by any loader function.
+**Note**: TLK files are global (not module-specific) and are loaded from a fixed location (root directory) via direct file I/O, not through the resource search mechanism.
 
 ### RES, PT, NFO Priority: Save Files vs Modules/Override/Patch.erf
 
@@ -716,7 +532,6 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 **Priority**: ❌ **Module/Override/Patch.erf RES files are IGNORED**
 
 **Evidence**:
-
 - swkotor.exe: `FUN_004b8300` line 136-155 loads "savenfo.res" directly via `FUN_00411260` (GFF loader)
 - `FUN_00411260` does not call `FUN_00407230` (resource system)
 - RES files are accessed directly from save file path, bypassing resource system entirely
@@ -728,14 +543,12 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 **Priority**: ✅ **Module/Override/Patch.erf PT files WILL override save file PT files**
 
 **Evidence**:
-
 - swkotor.exe: `FUN_00565d20` (0x00565d20) loads PARTYTABLE
 - swkotor.exe: `FUN_00565d20` line 51: Calls `FUN_00410630` with "PARTYTABLE" and "PT  " signature
 - swkotor.exe: `FUN_00410630` line 48: Calls `FUN_00407680` with resource type
 - swkotor.exe: `FUN_00407680` line 12: Calls `FUN_00407230` (resource system search function)
 
 **Complete Priority Order** (from `FUN_00407230`):
-
 1. **Override Directory** (Location 3, Source Type 2) - Highest priority
 2. **Module Containers** (Location 2, Source Type 3) - `.mod` files
 3. **Module RIM Files** (Location 1, Source Type 4) - `.rim`, `_s.rim`, `_a.rim`, `_adx.rim`
@@ -749,7 +562,6 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 **Priority**: ❌ **Module/Override/Patch.erf NFO files are IGNORED**
 
 **Evidence**:
-
 - swkotor.exe: `FUN_004b8300` line 136-155 loads "savenfo.res" directly via `FUN_00411260` (GFF loader)
 - `FUN_00411260` does not call `FUN_00407230` (resource system)
 - NFO files are accessed directly from save file path, bypassing resource system entirely
@@ -793,31 +605,6 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 
 **Conclusion**: DDS is a first-class texture format that can be used from modules, but it's not part of the automatic texture loading priority system. It requires explicit loading or specific context usage.
 
-### NSS (Source Scripts) vs NCS (Compiled Scripts)
-
-**Question**: Does the engine ever load or use `.nss` files from modules, or are they ignored entirely?
-
-**Answer**: ❌ **NSS files are IGNORED entirely by the game engine**
-
-**Evidence**:
-
-1. **NSS Resource Type**: NSS (2009, 0x7d9) is defined in ResourceType.cs but is **NOT** in the verified handlers list
-2. **NCS Handler Exists**: NCS (2010, 0x7da) has a verified handler:
-   - swkotor.exe: 0x005d1ac0
-   - swkotor2.exe: 0x0061d6e0
-3. **No NSS Handler Found**: Exhaustive search for handlers calling `FUN_004074d0`/`FUN_004075a0` with type 2009 (NSS) found **ZERO results** in both executables
-4. **Game Engine Executes Bytecode**: The game engine executes NCS (compiled bytecode), not NSS (source code)
-5. **NSS is Toolset-Only**: NSS files are used by the toolset/compiler to generate NCS files, not by the game engine
-
-**Conclusion**:
-
-- ✅ **NSS files CAN be stored** in modules (no type filtering prevents this)
-- ❌ **NSS files are NOT loaded** by the game engine (no handler exists)
-- ❌ **NSS files are NOT used** by the game engine (engine only executes NCS bytecode)
-- **NSS files in modules are IGNORED** - They take up space but serve no purpose in the game
-
-**Recommendation**: Do NOT place NSS files in modules. Only NCS (compiled) files are needed. NSS files are for development/toolset use only.
-
 ### WAV/OGG Audio
 
 **Question**: Can WAV/OGG be loaded from modules?
@@ -825,7 +612,7 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 **Answer**:
 
 - **WAV (4)**: **YES** - VERIFIED: Handler at swkotor.exe: 0x005d5e90 calls `FUN_004074d0` with type 4
-- **OGG (2078)**: **VERIFIED**: OGG is **NOT registered** in resource type registry and **NO handler exists** - OGG files in modules will be ignored
+- **OGG (2078)**: **TODO: Gain Certainty by going through ghidra mcp** - Search for OGG handler (type 2078, 0x81e) and verify it calls `FUN_004074d0`
 
 **Note**: Audio files may also be loaded from specific directories (e.g., `streamwaves/`, `streammusic/`) rather than through the resource search mechanism. Verify if module loading works for audio playback.
 
@@ -1398,46 +1185,29 @@ if (iVar7 == 0) {
 
 **When flag at offset 0x54 != 0 (Complex Mode)**:
 
-**VERIFIED** (swkotor.exe: `FUN_004094a0` at 0x004094a0):
-
-**Decompiled Code Flow** (lines 32-211):
-
-0. **Load `.rim`** (lines 32-42, BEFORE checks):
-   - **`.rim` is loaded FIRST** in complex mode, before any area file checks
-   - Line 42: `FUN_00406e20(param_1,aiStack_38,4,0)` - Opens and loads `.rim` file (container type 4 = RIM)
-   - All resources in `.rim` are registered in resource table
-   - **This happens BEFORE** the `_a.rim`/`_adx.rim` checks
-
 1. **Check for `_a.rim`** (lines 50-62):
    - Constructs filename: `{module}_a.rim`
-   - Searches for ARE resource type `0xbba` (3002) in `_a.rim` using `FUN_00407230`
+   - Searches for ARE resource type `0xbba` (3002) in `_a.rim`
    - **If found**: Loads `_a.rim` (line 159: `FUN_00406e20(param_1,aiStack_38,4,0)`) - Sets flag bit 0x10
-   - Resources in `_a.rim` are registered (duplicates from `.rim` are ignored via `FUN_0040e990`)
    - **If not found**: Continues to check `_adx.rim`
 
 2. **Check for `_adx.rim`** (lines 64-88):
    - Constructs filename: `{module}_adx.rim`
-   - Searches for ARE resource type `0xbba` (3002) in `_adx.rim` using `FUN_00407230`
+   - Searches for ARE resource type `0xbba` (3002) in `_adx.rim`
    - **If found**: Loads `_adx.rim` (line 85: `FUN_00406e20(param_1,aiStack_38,4,0)`) - Sets flag bit 0x20
-   - Resources in `_adx.rim` are registered (duplicates from `.rim`/`_a.rim` are ignored)
    - **If not found**: Continues to check `.mod`
 
 3. **Load Override Directory** (line 91: `FUN_00406e20(param_1,aiStack_48,2,0)`) - Loads MODULES: directory (type 2 = DIR/Override)
-   - Override files are registered (Override has highest priority in resource search, not registration order)
 
 4. **Check for `.mod`** (line 95: `FUN_00407230(param_1,aiStack_28,0x7db,aiStack_50,aiStack_48)`):
    - Searches for resource type `0x7db` (2011 = MOD) in MODULES: directory
-   - **If `.mod` exists**: Loads `.mod` (line 136: `FUN_00406e20(param_1,aiStack_38,3,2)`) - Sets flag bit 0x2
-   - Resources in `.mod` are registered via `FUN_0040e990`
-   - **Duplicate Handling**: `.mod` resources with same ResRef+Type as `.rim` **REPLACE** existing entries (not ignored)
-   - **CRITICAL**: When `.mod` exists, `_s.rim` is NOT loaded (check at line 100: `if (iVar5 == 0)`)
+   - **If `.mod` exists**: Loads `.mod` (line 136: `FUN_00406e20(param_1,aiStack_38,3,2)`) - Sets flag bit 0x2, **OVERRIDES** `.rim` entries
    - **If `.mod` doesn't exist**: Continues to check `_s.rim`
 
-5. **Check for `_s.rim`** (lines 97-124, **ONLY if `.mod` doesn't exist**):
+5. **Check for `_s.rim`** (lines 97-124):
    - Constructs filename: `{module}_s.rim`
-   - Searches for ARE resource type `0xbba` (3002) in `_s.rim` using `FUN_00407230`
-   - **If found**: Loads `_s.rim` (line 118: `FUN_00406e20(param_1,aiStack_38,4,0)`) - Sets flag bit 0x8
-   - Resources in `_s.rim` are registered (duplicates from `.rim`/`_a.rim`/`_adx.rim` are ignored)
+   - Searches for ARE resource type `0xbba` (3002) in `_s.rim`
+   - **If found**: Loads `_s.rim` (line 118: `FUN_00406e20(param_1,aiStack_38,4,0)`) - Sets flag bit 0x8, **ADDS** to `.rim` entries
 
 6. **Load CURRENTGAME: directory** (lines 166-200):
    - Only if flag at offset 0x58 == 0 AND previous load succeeded
@@ -1469,35 +1239,17 @@ if (iVar7 == 0) {
 - **Same resource in `_a.rim`/`_adx.rim` and `.rim`**: `.rim` wins (main `.rim` loads first, area files supplement it)
 - **CRITICAL**: When `.mod` exists, `.rim` and `_s.rim` are NOT loaded - `.mod` completely replaces them
 
-**When is `.rim` Loaded in Complex Mode?**
-
-**VERIFIED** (swkotor.exe: `FUN_004094a0` at 0x004094a0):
-
-- **`.rim` is loaded FIRST** in complex mode, before any checks
-- **Decompiled Code Evidence**: The function loads `.rim` at the beginning of complex mode (before line 50), then checks for `_a.rim`/`_adx.rim` to supplement it
-- **If `.mod` exists**: `.rim` is loaded but then **replaced** by `.mod` (`.mod` overrides all `.rim` entries via duplicate handling)
-- **If `.mod` doesn't exist**: `.rim` remains loaded and `_s.rim` supplements it
-
-**Complete Loading Order** (swkotor.exe: `FUN_004094a0` at 0x004094a0, complex mode):
-
-1. **Load `.rim`** (base module file) - Loaded FIRST
-2. **Check and load `_a.rim`** (if ARE found) - Supplements `.rim`
-3. **Check and load `_adx.rim`** (if ARE found) - Supplements `.rim`
-4. **Load Override Directory** - Override files registered
-5. **Check and load `.mod`** (if exists) - **REPLACES** `.rim` (all `.rim` entries overridden)
-6. **Check and load `_s.rim`** (if ARE found AND `.mod` doesn't exist) - Supplements `.rim`
-
 **Edge Cases**:
 
 - **Flag == 0, only `.rim` exists**: Only `.rim` is loaded, function returns immediately
 - **Flag == 0, `.rim` + `_a.rim` exist**: Only `.rim` is loaded (flag == 0 bypasses `_a.rim` check)
 - **Flag != 0, `.rim` + `_a.rim` exist**: Both `.rim` and `_a.rim` are loaded (`.rim` loads first, `_a.rim` supplements)
-- **Flag != 0, `.mod` exists**: `.rim` is loaded first, then `.mod` is loaded and **overrides** all `.rim` entries. `_s.rim` is NOT loaded.
-- **Flag != 0, `.mod` + `_a.rim` exist**: `.rim` is loaded first, then `.mod` is loaded and **overrides** all `.rim` entries. `_a.rim` is NOT loaded (`.mod` check happens before `_a.rim` check, and `.mod` replaces `.rim`).
+- **Flag != 0, `.mod` exists**: Only `.mod` is loaded, `.rim` and `_s.rim` are NOT loaded
+- **Flag != 0, `.mod` + `_a.rim` exist**: Only `.mod` is loaded, `_a.rim` is NOT loaded (`.mod` check happens before `_a.rim` check)
 - **Flag != 0, `.rim` + `_s.rim` exist, no `.mod`**: Both `.rim` and `_s.rim` are loaded (`.rim` loads first, `_s.rim` supplements)
 - **Flag != 0, `.rim` + `_a.rim` + `_adx.rim` exist**: All three are loaded (`.rim` first, then `_a.rim`, then `_adx.rim`)
-- **Flag != 0, `.rim` + `_a.rim` + `_adx.rim` + `_s.rim` exist, no `.mod`**: All four are loaded (`.rim` first, then `_a.rim`, then `_adx.rim`, then `_s.rim`)
-- **Duplicate resources**: First registered wins, later duplicates are ignored (checked in swkotor.exe: `FUN_0040e990` at 0x0040e990, line 36)
+- **Flag != 0, `.rim` + `_a.rim` + `_adx.rim` + `_s.rim` exist**: All four are loaded (`.rim` first, then `_a.rim`, then `_adx.rim`, then `_s.rim`)
+- **Duplicate resources**: First registered wins, later duplicates are ignored (checked in `FUN_0040e990` line 36)
 
 ### K2 (swkotor2.exe) - `FUN_004096b0`
 
@@ -1514,53 +1266,34 @@ if (iVar7 == 0) {
 
 **When flag at offset 0x54 != 0 (Complex Mode)**:
 
-**VERIFIED** (swkotor2.exe: `FUN_004096b0` at 0x004096b0):
-
-**Decompiled Code Flow** (lines 36-250):
-
-0. **Load `.rim`** (lines 36-46, BEFORE checks):
-   - **`.rim` is loaded FIRST** in complex mode, before any area file checks
-   - Line 46: `FUN_00406ef0(param_1,aiStack_58,4,0)` - Opens and loads `.rim` file (container type 4 = RIM)
-   - All resources in `.rim` are registered in resource table
-   - **This happens BEFORE** the `_a.rim`/`_adx.rim` checks
-
 1. **Check for `_a.rim`** (lines 54-66):
    - Constructs filename: `{module}_a.rim`
-   - Searches for ARE resource type `0xbba` (3002) in `_a.rim` using `FUN_00407300`
+   - Searches for ARE resource type `0xbba` (3002) in `_a.rim`
    - **If found**: Loads `_a.rim` (line 182: `FUN_00406ef0(param_1,aiStack_58,4,0)`) - Sets flag bit 0x10
-   - Resources in `_a.rim` are registered (duplicates from `.rim` are ignored via `FUN_0040e990`)
    - **If not found**: Continues to check `_adx.rim`
 
 2. **Check for `_adx.rim`** (lines 68-92):
    - Constructs filename: `{module}_adx.rim`
-   - Searches for ARE resource type `0xbba` (3002) in `_adx.rim` using `FUN_00407300`
+   - Searches for ARE resource type `0xbba` (3002) in `_adx.rim`
    - **If found**: Loads `_adx.rim` (line 89: `FUN_00406ef0(param_1,aiStack_58,4,0)`) - Sets flag bit 0x20
-   - Resources in `_adx.rim` are registered (duplicates from `.rim`/`_a.rim` are ignored)
    - **If not found**: Continues to check `.mod`
 
 3. **Load Override Directory** (line 95: `FUN_00406ef0(param_1,aiStack_60,2,0)`) - Loads MODULES: directory (type 2 = DIR/Override)
-   - Override files are registered (Override has highest priority in resource search, not registration order)
 
 4. **Check for `.mod`** (line 99: `FUN_00407300(param_1,aiStack_30,0x7db,apuStack_6c,aiStack_60)`):
    - Searches for resource type `0x7db` (2011 = MOD) in MODULES: directory
-   - **If `.mod` exists**: Loads `.mod` (line 161: `FUN_00406ef0(param_1,aiStack_58,3,2)`) - Sets flag bit 0x2
-   - Resources in `.mod` are registered via `FUN_0040e990`
-   - **Duplicate Handling**: `.mod` resources with same ResRef+Type as `.rim` **REPLACE** existing entries (not ignored)
-   - **CRITICAL**: When `.mod` exists, `_s.rim` and `_dlg.erf` are NOT loaded (check at line 100: `if (iVar5 == 0)`)
+   - **If `.mod` exists**: Loads `.mod` (line 161: `FUN_00406ef0(param_1,aiStack_58,3,2)`) - Sets flag bit 0x2, **OVERRIDES** `.rim` entries
    - **If `.mod` doesn't exist**: Continues to check `_s.rim`
 
-5. **Check for `_s.rim`** (lines 101-127, **ONLY if `.mod` doesn't exist**):
+5. **Check for `_s.rim`** (lines 101-127):
    - Constructs filename: `{module}_s.rim`
-   - Searches for ARE resource type `0xbba` (3002) in `_s.rim` using `FUN_00407300`
-   - **If found**: Loads `_s.rim` (line 122: `FUN_00406ef0(param_1,aiStack_58,4,0)`) - Sets flag bit 0x8
-   - Resources in `_s.rim` are registered (duplicates from `.rim`/`_a.rim`/`_adx.rim` are ignored)
+   - Searches for ARE resource type `0xbba` (3002) in `_s.rim`
+   - **If found**: Loads `_s.rim` (line 122: `FUN_00406ef0(param_1,aiStack_58,4,0)`) - Sets flag bit 0x8, **ADDS** to `.rim` entries
 
-6. **Load `_dlg.erf`** (lines 128-149, **ONLY if `.mod` doesn't exist**, K2 only):
+6. **Load `_dlg.erf`** (lines 128-149):
    - **ONLY if `.mod` doesn't exist** (inside the `if (iVar5 == 0)` block at line 100)
    - Constructs filename: `{module}_dlg.erf` (line 128: `FUN_00630a90(aiStack_30,"_dlg")`)
-   - Loads `_dlg.erf` (line 147: `FUN_00406ef0(param_1,piVar3,3,2)`) - Container type 3 (ERF)
-   - Resources in `_dlg.erf` are registered via `FUN_0040e990` (duplicates from `.rim`/`_a.rim`/`_adx.rim`/`_s.rim` are ignored)
-   - **No ARE check** - `_dlg.erf` is loaded as an ERF container, all resources are registered regardless of type
+   - Loads `_dlg.erf` (line 147: `FUN_00406ef0(param_1,piVar3,3,2)`) - Container type 3 (ERF), **ADDS** to `.rim` and `_s.rim` entries
 
 7. **Load CURRENTGAME: directory** (lines 189-250):
    - Only if flag at offset 0x58 == 0 AND previous load succeeded
@@ -1585,35 +1318,16 @@ if (iVar7 == 0) {
 - **Same resource in `.rim` and `.mod`**: `.mod` wins (registered after `.rim`, overrides it)
 - **CRITICAL**: When `.mod` exists, `.rim`, `_s.rim`, and `_dlg.erf` are NOT loaded - `.mod` completely replaces them
 
-**When is `.rim` Loaded in Complex Mode?**
-
-**VERIFIED** (swkotor2.exe: `FUN_004096b0` at 0x004096b0):
-
-- **`.rim` is loaded FIRST** in complex mode, before any checks
-- **Decompiled Code Evidence**: The function loads `.rim` at the beginning of complex mode (before line 54), then checks for `_a.rim`/`_adx.rim` to supplement it
-- **If `.mod` exists**: `.rim` is loaded but then **replaced** by `.mod` (`.mod` overrides all `.rim` entries via duplicate handling)
-- **If `.mod` doesn't exist**: `.rim` remains loaded and `_s.rim` + `_dlg.erf` supplement it
-
-**Complete Loading Order** (swkotor2.exe: `FUN_004096b0` at 0x004096b0, complex mode):
-
-1. **Load `.rim`** (base module file) - Loaded FIRST
-2. **Check and load `_a.rim`** (if ARE found) - Supplements `.rim`
-3. **Check and load `_adx.rim`** (if ARE found) - Supplements `.rim`
-4. **Load Override Directory** - Override files registered
-5. **Check and load `.mod`** (if exists) - **REPLACES** `.rim` (all `.rim` entries overridden)
-6. **Check and load `_s.rim`** (if ARE found AND `.mod` doesn't exist) - Supplements `.rim`
-7. **Load `_dlg.erf`** (if exists AND `.mod` doesn't exist, K2 only) - Supplements `.rim` and `_s.rim`
-
 **Edge Cases** (K2):
 
 - **Flag == 0, only `.rim` exists**: Only `.rim` is loaded, function returns immediately
 - **Flag == 0, `.rim` + `_a.rim` exist**: Only `.rim` is loaded (flag == 0 bypasses `_a.rim` check)
 - **Flag != 0, `.rim` + `_a.rim` exist**: Both `.rim` and `_a.rim` are loaded (`.rim` loads first, `_a.rim` supplements)
-- **Flag != 0, `.mod` exists**: `.rim` is loaded first, then `.mod` is loaded and **overrides** all `.rim` entries. `_s.rim` and `_dlg.erf` are NOT loaded.
-- **Flag != 0, `.mod` + `_a.rim` exist**: `.rim` is loaded first, then `.mod` is loaded and **overrides** all `.rim` entries. `_a.rim` is NOT loaded (`.mod` check happens before `_a.rim` check, and `.mod` replaces `.rim`).
+- **Flag != 0, `.mod` exists**: Only `.mod` is loaded, `.rim`, `_s.rim`, and `_dlg.erf` are NOT loaded
+- **Flag != 0, `.mod` + `_a.rim` exist**: Only `.mod` is loaded, `_a.rim` is NOT loaded (`.mod` check happens before `_a.rim` check)
 - **Flag != 0, `.rim` + `_s.rim` + `_dlg.erf` exist, no `.mod`**: All three are loaded (`.rim` first, then `_s.rim`, then `_dlg.erf`)
-- **Flag != 0, `.rim` + `_a.rim` + `_adx.rim` + `_s.rim` + `_dlg.erf` exist, no `.mod`**: All five are loaded (`.rim` first, then `_a.rim`, then `_adx.rim`, then `_s.rim`, then `_dlg.erf`)
-- **Duplicate resources**: First registered wins, later duplicates are ignored (checked in swkotor2.exe: `FUN_0040e990` at 0x0040e990, line 36)
+- **Flag != 0, `.rim` + `_a.rim` + `_adx.rim` + `_s.rim` + `_dlg.erf` exist**: All five are loaded (`.rim` first, then `_a.rim`, then `_adx.rim`, then `_s.rim`, then `_dlg.erf`)
+- **Duplicate resources**: First registered wins, later duplicates are ignored (checked in `FUN_0040e990` line 36)
 
 ## Override Directory Priority (PROVEN)
 
@@ -1653,367 +1367,9 @@ if (iVar7 == 0) {
 - Only **1 level deep** subdirectories are searched
 - Files at 2+ levels deep are **NOT PROCESSED**
 
-## Multiple Module Files - Resource Resolution and Combinations
+## Multiple Module Files - Resource Resolution
 
-### Complete Priority Order for Duplicate Resources
-
-**Question**: If the same resource (same ResRef and type) exists in multiple module files (`.rim`, `_s.rim`, `_dlg.erf`, `_adx.rim`), which takes priority?
-
-**Answer**: **FIRST registered wins** - Resources are registered in the order files are opened, and duplicates are ignored.
-
-**Duplicate Handling** (swkotor.exe: `FUN_0040e990` at 0x0040e990, swkotor2.exe: `FUN_0040e990` at 0x0040e990):
-
-- Line 36: Checks if resource with same ResRef+Type already exists
-- Line 39-91: If duplicate found AND resource is already loaded (`*(int *)((int)this_00 + 0x14) != -1`), returns 0 (ignores duplicate)
-- Line 94-101: If no duplicate OR resource not loaded, registers new resource
-- **Result**: **FIRST resource registered wins**. Later duplicates are ignored.
-
-### K1 (swkotor.exe) - Complete Priority Order
-
-**Function**: swkotor.exe: `FUN_004094a0` at 0x004094a0
-
-**Complete Resource Registration Order** (complex mode, when all files exist and `.mod` does NOT exist):
-
-1. **`.rim`** - **HIGHEST PRIORITY** (loaded first, line ~32-42)
-   - Base module file
-   - All resources in `.rim` are registered first
-   - **Wins** over duplicates in all other files
-
-2. **`_a.rim`** (if ARE found, line 159)
-   - Loaded after `.rim`
-   - Resources supplement `.rim` (duplicates ignored)
-   - **Loses** to `.rim` for duplicate resources
-
-3. **`_adx.rim`** (if ARE found, line 85)
-   - Loaded after `.rim` and `_a.rim`
-   - Resources supplement `.rim` (duplicates ignored)
-   - **Loses** to `.rim` and `_a.rim` for duplicate resources
-
-4. **Override Directory** (line 91)
-   - Loaded after RIM files
-   - **Wins** over all module files (Override has highest priority in resource search)
-
-5. **`.mod`** (if exists, line 136)
-   - Loaded after `.rim`
-   - **OVERRIDES** all `.rim` entries (duplicates replace existing entries)
-   - **Wins** over `.rim`, `_a.rim`, `_adx.rim`, `_s.rim` for duplicate resources
-   - **CRITICAL**: When `.mod` exists, `_s.rim` is NOT loaded
-
-6. **`_s.rim`** (if ARE found AND `.mod` doesn't exist, line 118)
-   - Loaded after `.rim`, `_a.rim`, `_adx.rim`
-   - Resources supplement `.rim` (duplicates ignored)
-   - **Loses** to `.rim`, `_a.rim`, `_adx.rim` for duplicate resources
-
-**Complete Priority Order** (when same resource exists in multiple files, `.mod` does NOT exist):
-
-1. **Override Directory** - **HIGHEST** (searched first in resource lookup)
-2. **`.rim`** - **HIGHEST** among module files (registered first)
-3. **`_a.rim`** - Second (registered after `.rim`, duplicates ignored)
-4. **`_adx.rim`** - Third (registered after `_a.rim`, duplicates ignored)
-5. **`_s.rim`** - Fourth (registered after `_adx.rim`, duplicates ignored)
-6. **Chitin BIFs** - **LOWEST** (searched last in resource lookup)
-
-**Complete Priority Order** (when `.mod` exists):
-
-1. **Override Directory** - **HIGHEST** (searched first in resource lookup)
-2. **`.mod`** - **HIGHEST** among module files (overrides all `.rim` entries)
-3. **Chitin BIFs** - **LOWEST** (searched last in resource lookup)
-4. **`.rim`, `_a.rim`, `_adx.rim`, `_s.rim`** - **NOT LOADED** (`.mod` replaces them)
-
-### K2 (swkotor2.exe) - Complete Priority Order
-
-**Function**: swkotor2.exe: `FUN_004096b0` at 0x004096b0
-
-**Complete Resource Registration Order** (complex mode, when all files exist and `.mod` does NOT exist):
-
-1. **`.rim`** - **HIGHEST PRIORITY** (loaded first, line ~36-46)
-   - Base module file
-   - All resources in `.rim` are registered first
-   - **Wins** over duplicates in all other files
-
-2. **`_a.rim`** (if ARE found, line 182)
-   - Loaded after `.rim`
-   - Resources supplement `.rim` (duplicates ignored)
-   - **Loses** to `.rim` for duplicate resources
-
-3. **`_adx.rim`** (if ARE found, line 89)
-   - Loaded after `.rim` and `_a.rim`
-   - Resources supplement `.rim` (duplicates ignored)
-   - **Loses** to `.rim` and `_a.rim` for duplicate resources
-
-4. **Override Directory** (line 95)
-   - Loaded after RIM files
-   - **Wins** over all module files (Override has highest priority in resource search)
-
-5. **`.mod`** (if exists, line 161)
-   - Loaded after `.rim`
-   - **OVERRIDES** all `.rim` entries (duplicates replace existing entries)
-   - **Wins** over `.rim`, `_a.rim`, `_adx.rim`, `_s.rim`, `_dlg.erf` for duplicate resources
-   - **CRITICAL**: When `.mod` exists, `_s.rim` and `_dlg.erf` are NOT loaded
-
-6. **`_s.rim`** (if ARE found AND `.mod` doesn't exist, line 122)
-   - Loaded after `.rim`, `_a.rim`, `_adx.rim`
-   - Resources supplement `.rim` (duplicates ignored)
-   - **Loses** to `.rim`, `_a.rim`, `_adx.rim` for duplicate resources
-
-7. **`_dlg.erf`** (if exists AND `.mod` doesn't exist, K2 only, line 147)
-   - Loaded after `.rim`, `_a.rim`, `_adx.rim`, `_s.rim`
-   - Resources supplement `.rim` and `_s.rim` (duplicates ignored)
-   - **Loses** to `.rim`, `_a.rim`, `_adx.rim`, `_s.rim` for duplicate resources
-
-**Complete Priority Order** (when same resource exists in multiple files, `.mod` does NOT exist):
-
-1. **Override Directory** - **HIGHEST** (searched first in resource lookup)
-2. **`.rim`** - **HIGHEST** among module files (registered first)
-3. **`_a.rim`** - Second (registered after `.rim`, duplicates ignored)
-4. **`_adx.rim`** - Third (registered after `_a.rim`, duplicates ignored)
-5. **`_s.rim`** - Fourth (registered after `_adx.rim`, duplicates ignored)
-6. **`_dlg.erf`** - Fifth (registered after `_s.rim`, duplicates ignored, K2 only)
-7. **Chitin BIFs** - **LOWEST** (searched last in resource lookup)
-
-**Complete Priority Order** (when `.mod` exists):
-
-1. **Override Directory** - **HIGHEST** (searched first in resource lookup)
-2. **`.mod`** - **HIGHEST** among module files (overrides all `.rim` entries)
-3. **Chitin BIFs** - **LOWEST** (searched last in resource lookup)
-4. **`.rim`, `_a.rim`, `_adx.rim`, `_s.rim`, `_dlg.erf`** - **NOT LOADED** (`.mod` replaces them)
-
-### ARE Resource in `_dlg.erf` - Special Case
-
-**Question**: What happens if ARE is in `_dlg.erf` while `_adx.rim`, `.rim`, and `_s.rim` contain other resources?
-
-**Answer** (K2 only - `_dlg.erf` doesn't exist in K1):
-
-**VERIFIED** (swkotor2.exe: `FUN_004096b0` at 0x004096b0):
-
-1. **ARE Check Logic** (lines 54-92):
-   - Function checks `_a.rim` (line 54-66) for ARE resource type `0xbba` (3002)
-   - If not found, checks `_adx.rim` (line 68-92) for ARE resource type `0xbba` (3002)
-   - **`_dlg.erf` is NOT checked for ARE** - The ARE check only happens for `_a.rim` and `_adx.rim`
-
-2. **`_dlg.erf` Loading** (lines 128-149):
-   - `_dlg.erf` is loaded **ONLY if `.mod` doesn't exist** (inside `if (iVar5 == 0)` block at line 100)
-   - `_dlg.erf` is loaded **AFTER** `_s.rim` (line 122 loads `_s.rim`, line 147 loads `_dlg.erf`)
-   - **No ARE check** - `_dlg.erf` is loaded as an ERF container, all resources are registered regardless of type
-
-3. **Result**:
-   - **If ARE is in `_dlg.erf`**: ARE resource will be loaded and registered, but it **will NOT be used** for the area file check (the check only looks in `_a.rim` and `_adx.rim`)
-   - **If ARE is in `_adx.rim`**: ARE resource will be found by the check, `_adx.rim` will be loaded, and ARE will be used
-   - **If ARE is in `.rim` or `_s.rim`**: ARE resource will be loaded, but it **will NOT be found** by the area file check (check only looks in `_a.rim` and `_adx.rim`)
-   - **Priority for duplicate ARE**: If ARE exists in multiple files, the first registered wins (`.rim` → `_a.rim` → `_adx.rim` → `_s.rim` → `_dlg.erf`)
-
-**Conclusion**: ARE in `_dlg.erf` will be loaded and registered, but the area file check logic will **NOT find it** because it only searches `_a.rim` and `_adx.rim`. The ARE in `_dlg.erf` will be available for resource lookup, but won't trigger the area file loading behavior.
-
-### Exhaustive Priority Chain: Step-by-Step Resource Resolution
-
-**Question**: If `test.ncs` exists in `.rim`, `_dlg.erf`, `_s.rim`, `_adx.rim`, and `_a.rim`, which takes priority? What is the complete priority chain?
-
-**Answer**: **Complete priority chain based on registration order** (first registered wins for duplicates):
-
-#### K1 (swkotor.exe) - Complete Priority Chain (when `.mod` does NOT exist)
-
-**Resource Registration Order** (swkotor.exe: `FUN_004094a0` at 0x004094a0):
-
-1. **`.rim`** (line ~32-42) - **HIGHEST PRIORITY** among module files
-   - Loaded FIRST, before any other checks
-   - All resources in `.rim` are registered first
-   - **If `test.ncs` exists in `.rim`**: ✅ **`.rim` version is loaded** (wins over all other module files)
-
-2. **`_a.rim`** (line 159, if ARE found) - **SECOND PRIORITY**
-   - Checked at lines 50-62, loaded at line 159
-   - Resources supplement `.rim` (duplicates from `.rim` are ignored)
-   - **If `test.ncs` removed from `.rim`, exists in `_a.rim`**: ✅ **`_a.rim` version is loaded** (wins over `_adx.rim`, `_s.rim`)
-
-3. **`_adx.rim`** (line 85, if ARE found) - **THIRD PRIORITY**
-   - Checked at lines 64-88, loaded at line 85
-   - Resources supplement `.rim` (duplicates from `.rim`/`_a.rim` are ignored)
-   - **If `test.ncs` removed from `.rim` and `_a.rim`, exists in `_adx.rim`**: ✅ **`_adx.rim` version is loaded** (wins over `_s.rim`)
-
-4. **Override Directory** (line 91) - **ABSOLUTE HIGHEST PRIORITY** (searched first in resource lookup)
-   - Loaded after RIM files are registered
-   - **Wins over ALL module files** (searched first in `FUN_00407230`)
-   - **If `test.ncs` exists in Override**: ✅ **Override version is loaded** (wins over all module files, including `.rim`)
-
-5. **`_s.rim`** (line 118, if ARE found AND `.mod` doesn't exist) - **FOURTH PRIORITY**
-   - Loaded after `.rim`, `_a.rim`, `_adx.rim`
-   - Resources supplement `.rim` (duplicates from `.rim`/`_a.rim`/`_adx.rim` are ignored)
-   - **If `test.ncs` removed from `.rim`, `_a.rim`, `_adx.rim`, exists in `_s.rim`**: ✅ **`_s.rim` version is loaded**
-
-6. **patch.erf** (K1 only, loaded during global initialization) - **FIFTH PRIORITY**
-   - Loaded with chitin resources (Location 0, Source Type 1)
-   - **Wins over Chitin BIFs, loses to all module files and Override**
-   - **If `test.ncs` removed from all module files and Override, exists in patch.erf**: ✅ **patch.erf version is loaded** (wins over Chitin BIFs)
-
-7. **Chitin BIF archives** (Location 0, Source Type 1) - **LOWEST PRIORITY**
-   - Searched last in resource lookup (`FUN_00407230`)
-   - **If `test.ncs` removed from all other locations, exists in Chitin**: ✅ **Chitin version is loaded**
-
-**Complete Priority Chain for `test.ncs`** (K1, when `.mod` does NOT exist):
-
-1. **Override Directory** - If exists here, this version is loaded (searched first)
-2. **`.rim`** - If not in Override, and exists in `.rim`, this version is loaded (registered first)
-3. **`_a.rim`** - If not in Override/`.rim`, and exists in `_a.rim`, this version is loaded (registered second)
-4. **`_adx.rim`** - If not in Override/`.rim`/`_a.rim`, and exists in `_adx.rim`, this version is loaded (registered third)
-5. **`_s.rim`** - If not in Override/`.rim`/`_a.rim`/`_adx.rim`, and exists in `_s.rim`, this version is loaded (registered fourth)
-6. **patch.erf** - If not in Override/module files, and exists in patch.erf, this version is loaded (loaded with chitin, searched before Chitin BIFs)
-7. **Chitin BIFs** - If not in any other location, and exists in Chitin, this version is loaded (searched last)
-
-#### K2 (swkotor2.exe) - Complete Priority Chain (when `.mod` does NOT exist)
-
-**Resource Registration Order** (swkotor2.exe: `FUN_004096b0` at 0x004096b0):
-
-1. **`.rim`** (line ~36-46) - **HIGHEST PRIORITY** among module files
-   - Loaded FIRST, before any other checks
-   - All resources in `.rim` are registered first
-   - **If `test.ncs` exists in `.rim`**: ✅ **`.rim` version is loaded** (wins over all other module files)
-
-2. **`_a.rim`** (line 182, if ARE found) - **SECOND PRIORITY**
-   - Checked at lines 54-66, loaded at line 182
-   - Resources supplement `.rim` (duplicates from `.rim` are ignored)
-   - **If `test.ncs` removed from `.rim`, exists in `_a.rim`**: ✅ **`_a.rim` version is loaded** (wins over `_adx.rim`, `_s.rim`, `_dlg.erf`)
-
-3. **`_adx.rim`** (line 89, if ARE found) - **THIRD PRIORITY**
-   - Checked at lines 68-92, loaded at line 89
-   - Resources supplement `.rim` (duplicates from `.rim`/`_a.rim` are ignored)
-   - **If `test.ncs` removed from `.rim` and `_a.rim`, exists in `_adx.rim`**: ✅ **`_adx.rim` version is loaded** (wins over `_s.rim`, `_dlg.erf`)
-
-4. **Override Directory** (line 95) - **ABSOLUTE HIGHEST PRIORITY** (searched first in resource lookup)
-   - Loaded after RIM files are registered
-   - **Wins over ALL module files** (searched first in `FUN_00407300`)
-   - **If `test.ncs` exists in Override**: ✅ **Override version is loaded** (wins over all module files, including `.rim`)
-
-5. **`_s.rim`** (line 122, if ARE found AND `.mod` doesn't exist) - **FOURTH PRIORITY**
-   - Loaded after `.rim`, `_a.rim`, `_adx.rim`
-   - Resources supplement `.rim` (duplicates from `.rim`/`_a.rim`/`_adx.rim` are ignored)
-   - **If `test.ncs` removed from `.rim`, `_a.rim`, `_adx.rim`, exists in `_s.rim`**: ✅ **`_s.rim` version is loaded** (wins over `_dlg.erf`)
-
-6. **`_dlg.erf`** (line 147, if exists AND `.mod` doesn't exist, K2 only) - **FIFTH PRIORITY**
-   - Loaded after `.rim`, `_a.rim`, `_adx.rim`, `_s.rim`
-   - Resources supplement `.rim` and `_s.rim` (duplicates from `.rim`/`_a.rim`/`_adx.rim`/`_s.rim` are ignored)
-   - **If `test.ncs` removed from `.rim`, `_a.rim`, `_adx.rim`, `_s.rim`, exists in `_dlg.erf`**: ✅ **`_dlg.erf` version is loaded**
-
-7. **patch.erf** - **NOT SUPPORTED in K2** (K1 only)
-
-8. **Chitin BIF archives** (Location 0, Source Type 1) - **LOWEST PRIORITY**
-   - Searched last in resource lookup (`FUN_00407300`)
-   - **If `test.ncs` removed from all other locations, exists in Chitin**: ✅ **Chitin version is loaded**
-
-**Complete Priority Chain for `test.ncs`** (K2, when `.mod` does NOT exist):
-
-1. **Override Directory** - If exists here, this version is loaded (searched first)
-2. **`.rim`** - If not in Override, and exists in `.rim`, this version is loaded (registered first)
-3. **`_a.rim`** - If not in Override/`.rim`, and exists in `_a.rim`, this version is loaded (registered second)
-4. **`_adx.rim`** - If not in Override/`.rim`/`_a.rim`, and exists in `_adx.rim`, this version is loaded (registered third)
-5. **`_s.rim`** - If not in Override/`.rim`/`_a.rim`/`_adx.rim`, and exists in `_s.rim`, this version is loaded (registered fourth)
-6. **`_dlg.erf`** - If not in Override/`.rim`/`_a.rim`/`_adx.rim`/`_s.rim`, and exists in `_dlg.erf`, this version is loaded (registered fifth, K2 only)
-7. **Chitin BIFs** - If not in any other location, and exists in Chitin, this version is loaded (searched last)
-
-#### When `.mod` EXISTS (Both K1 and K2)
-
-**Complete Priority Chain** (when `.mod` exists):
-
-1. **Override Directory** - **ABSOLUTE HIGHEST PRIORITY** (searched first)
-2. **`.mod`** - **OVERRIDES all `.rim` entries** (registered after `.rim`, replaces all duplicates)
-3. **patch.erf** (K1 only) - Loaded with chitin resources
-4. **Chitin BIFs** - **LOWEST PRIORITY** (searched last)
-5. **`.rim`, `_a.rim`, `_adx.rim`, `_s.rim`, `_dlg.erf`** - **NOT LOADED** (`.mod` completely replaces them)
-
-**Note**: When `.mod` exists, `.rim` is loaded first but then **all its entries are replaced** by `.mod` entries. The other files (`_a.rim`, `_adx.rim`, `_s.rim`, `_dlg.erf`) are **NOT loaded at all**.
-
-#### patch.erf Priority in Complete Chain
-
-**Question**: Where does patch.erf fit in the priority order?
-
-**Answer**: **patch.erf has priority BETWEEN module files and Chitin BIFs** (K1 only):
-
-**Complete Priority Order Including patch.erf** (K1 only):
-
-1. **Override Directory** (Location 3, Source Type 2) - **HIGHEST PRIORITY**
-   - Searched first in `FUN_00407230`
-   - **Wins over ALL other locations**
-
-2. **Module Containers** (Location 2, Source Type 3) - **HIGH PRIORITY**
-   - `.mod` files (if exists, overrides all `.rim` entries)
-   - `_dlg.erf` files (K2 only, if exists and no `.mod`)
-
-3. **Module RIM Files** (Location 1, Source Type 4) - **MEDIUM PRIORITY**
-   - `.rim` files (highest priority among RIM files)
-   - `_a.rim` files (second priority)
-   - `_adx.rim` files (third priority)
-   - `_s.rim` files (fourth priority)
-
-4. **patch.erf** (Location 0, Source Type 1, K1 only) - **LOW-MEDIUM PRIORITY**
-   - Loaded with chitin resources during global initialization
-   - **Wins over Chitin BIFs, loses to all module files and Override**
-   - **Priority**: Override → Modules → **patch.erf** → Chitin BIFs
-
-5. **Chitin BIF Archives** (Location 0, Source Type 1) - **LOWEST PRIORITY**
-   - BIF files from `chitin.key`
-   - Searched last in `FUN_00407230`
-
-**Evidence**:
-
-- **Resource Search Order** (`FUN_00407230` lines 8-16):
-  1. `this+0x14` (Location 3 = Override) - Highest
-  2. `this+0x18` with param_6=1 (Location 2, variant 1 = Module containers) - High
-  3. `this+0x1c` (Location 1 = Module RIM files) - Medium
-  4. `this+0x18` with param_6=2 (Location 2, variant 2 = Module containers) - Medium
-  5. `this+0x10` (Location 0 = Chitin/patch.erf) - Lowest
-
-- **patch.erf Loading**: Loaded via `addERF()` which assigns it Location 0, Source Type 1 (same as Chitin BIF files)
-- **Within Location 0**: patch.erf is loaded during global initialization (before modules), but both are in Location 0, so they're searched together. The order within Location 0 depends on registration order, but since patch.erf is loaded at startup and modules are loaded later, patch.erf resources are registered first within Location 0.
-
-**Conclusion**: **patch.erf has priority OVER Chitin BIFs but BELOW all module files and Override**. The complete priority chain is:
-
-1. Override (highest)
-2. Module files (`.mod`, `.rim`, `_a.rim`, `_adx.rim`, `_s.rim`, `_dlg.erf`)
-3. **patch.erf** (K1 only)
-4. Chitin BIFs (lowest)
-
-### Summary: Complete Priority Order for Duplicate Resources
-
-**K1 (swkotor.exe)** - When `.mod` does NOT exist:
-
-| Priority | File | When Loaded | Duplicate Behavior |
-|----------|------|-------------|-------------------|
-| 1 (Highest) | Override Directory | Line 91 | Overrides all module files |
-| 2 | `.rim` | Line ~32-42 (first) | Base module, wins over all other module files |
-| 3 | `_a.rim` | Line 159 (if ARE found) | Duplicates ignored (`.rim` wins) |
-| 4 | `_adx.rim` | Line 85 (if ARE found) | Duplicates ignored (`.rim`/`_a.rim` win) |
-| 5 | `_s.rim` | Line 118 (if ARE found, no `.mod`) | Duplicates ignored (`.rim`/`_a.rim`/`_adx.rim` win) |
-| 6 (Lowest) | Chitin BIFs | Resource search | Searched last |
-
-**K1 (swkotor.exe)** - When `.mod` EXISTS:
-
-| Priority | File | When Loaded | Duplicate Behavior |
-|----------|------|-------------|-------------------|
-| 1 (Highest) | Override Directory | Line 91 | Overrides all module files |
-| 2 | `.mod` | Line 136 | **OVERRIDES** all `.rim` entries |
-| 3 (Lowest) | Chitin BIFs | Resource search | Searched last |
-| N/A | `.rim`, `_a.rim`, `_adx.rim`, `_s.rim` | **NOT LOADED** | `.mod` replaces them |
-
-**K2 (swkotor2.exe)** - When `.mod` does NOT exist:
-
-| Priority | File | When Loaded | Duplicate Behavior |
-|----------|------|-------------|-------------------|
-| 1 (Highest) | Override Directory | Line 95 | Overrides all module files |
-| 2 | `.rim` | Line ~36-46 (first) | Base module, wins over all other module files |
-| 3 | `_a.rim` | Line 182 (if ARE found) | Duplicates ignored (`.rim` wins) |
-| 4 | `_adx.rim` | Line 89 (if ARE found) | Duplicates ignored (`.rim`/`_a.rim` win) |
-| 5 | `_s.rim` | Line 122 (if ARE found, no `.mod`) | Duplicates ignored (`.rim`/`_a.rim`/`_adx.rim` win) |
-| 6 | `_dlg.erf` | Line 147 (if exists, no `.mod`, K2 only) | Duplicates ignored (`.rim`/`_a.rim`/`_adx.rim`/`_s.rim` win) |
-| 7 (Lowest) | Chitin BIFs | Resource search | Searched last |
-
-**K2 (swkotor2.exe)** - When `.mod` EXISTS:
-
-| Priority | File | When Loaded | Duplicate Behavior |
-|----------|------|-------------|-------------------|
-| 1 (Highest) | Override Directory | Line 95 | Overrides all module files |
-| 2 | `.mod` | Line 161 | **OVERRIDES** all `.rim` entries |
-| 3 (Lowest) | Chitin BIFs | Resource search | Searched last |
-| N/A | `.rim`, `_a.rim`, `_adx.rim`, `_s.rim`, `_dlg.erf` | **NOT LOADED** | `.mod` replaces them |
-
-**Key Finding**: **`.rim` always loads FIRST** and has highest priority among module files. All other files supplement it (duplicates are ignored). **`.mod` is the exception** - it overrides all `.rim` entries and prevents `_s.rim`/`_dlg.erf` from loading.
+**See "Module File Priority Order" section above for complete details with exact instruction-level proof.**
 
 ## patch.erf (K1 Only)
 
@@ -2032,30 +1388,10 @@ if (iVar7 == 0) {
 
 **Priority Order** (for resources in patch.erf):
 
-**Complete Priority Chain Including patch.erf** (K1 only):
-
-1. **Override Directory** (Location 3, Source Type 2) - **HIGHEST PRIORITY**
-   - Searched first in `FUN_00407230`
-   - **Wins over ALL other locations**, including patch.erf
-
-2. **Module Files** (Location 1-2, Source Type 3-4) - **HIGH PRIORITY**
-   - `.mod` files (if exists, overrides all `.rim` entries)
-   - `.rim` files (highest priority among RIM files)
-   - `_a.rim` files (second priority)
-   - `_adx.rim` files (third priority)
-   - `_s.rim` files (fourth priority)
-   - `_dlg.erf` files (K2 only, fifth priority)
-   - **All module files win over patch.erf**
-
-3. **patch.erf** (Location 0, Source Type 1) - **MEDIUM PRIORITY**
-   - Loaded with chitin resources during global initialization
-   - **Wins over Chitin BIFs, loses to all module files and Override**
-   - **Priority**: Override → Modules → **patch.erf** → Chitin BIFs
-
-4. **Chitin BIF Archives** (Location 0, Source Type 1) - **LOWEST PRIORITY**
-   - BIF files from `chitin.key`
-   - Searched last in `FUN_00407230`
-   - **Loses to patch.erf** (both are Location 0, but patch.erf is registered first during global initialization)
+1. Override directory (highest priority)
+2. Module files (`.mod`, `.rim`, `_s.rim`, `_dlg.erf`)
+3. **patch.erf** (loaded with chitin resources)
+4. Chitin BIF archives (lowest priority)
 
 **What Can Be Put in patch.erf**:
 
@@ -2177,17 +1513,10 @@ if (iVar7 == 0) {
    - Engine behavior: Accepts any resource type ID stored in containers, regardless of container type
 
 7. **Valid file combinations**:
-   - K1: `.mod` (override), `.rim`, `.rim` + `_s.rim`, `.rim` + `_a.rim`, `.rim` + `_adx.rim`, `.rim` + `_a.rim` + `_adx.rim`, `.rim` + `_a.rim` + `_adx.rim` + `_s.rim`
-   - K2: `.mod` (override), `.rim`, `.rim` + `_s.rim`, `.rim` + `_s.rim` + `_dlg.erf`, `.rim` + `_a.rim`, `.rim` + `_adx.rim`, `.rim` + `_a.rim` + `_adx.rim`, `.rim` + `_a.rim` + `_adx.rim` + `_s.rim` + `_dlg.erf`
+   - K1: `.mod` (override), `.rim`, `.rim` + `_s.rim`, `.rim` + `_a.rim`, `.rim` + `_adx.rim`, `.rim` + `_a.rim` + `_adx.rim`
+   - K2: `.mod` (override), `.rim`, `.rim` + `_s.rim`, `.rim` + `_s.rim` + `_dlg.erf`, `.rim` + `_a.rim`, `.rim` + `_adx.rim`, `.rim` + `_a.rim` + `_adx.rim`
    - **Note**: `.mod` completely replaces `.rim` and all extension files - they are NOT loaded together
    - **Note**: `_a.rim` and `_adx.rim` are CONFIRMED via reverse engineering (K1: lines 50-88, K2: lines 54-92)
-
-8. **Complete Resource Priority Chain** (for duplicate resources):
-   - **K1 (when `.mod` does NOT exist)**: Override → `.rim` → `_a.rim` → `_adx.rim` → `_s.rim` → patch.erf → Chitin BIFs
-   - **K2 (when `.mod` does NOT exist)**: Override → `.rim` → `_a.rim` → `_adx.rim` → `_s.rim` → `_dlg.erf` → Chitin BIFs
-   - **When `.mod` EXISTS**: Override → `.mod` → patch.erf (K1 only) → Chitin BIFs (all other module files NOT loaded)
-   - **Key Finding**: `_a.rim` has priority over `_adx.rim` (checked and loaded first). Both supplement `.rim` (duplicates ignored).
-   - **patch.erf Priority**: patch.erf has priority OVER Chitin BIFs but BELOW all module files and Override (K1 only)
 
 ## Implementation Notes for Andastra
 

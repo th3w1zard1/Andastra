@@ -1795,7 +1795,7 @@ namespace HolocronToolset.Tests.Editors
                 // In headless mode, we can't easily verify the dialog was opened and contains content
                 // The Python test checks for "Help File Not Found" in the HTML content
                 // TODO: STUB - For now, we just verify the method doesn't throw an exception
-                // A more complete test would require UI automation which is complex in headless mode
+                // TODO: STUB - A more complete test would require UI automation which is complex in headless mode
             }
             catch (Exception ex)
             {

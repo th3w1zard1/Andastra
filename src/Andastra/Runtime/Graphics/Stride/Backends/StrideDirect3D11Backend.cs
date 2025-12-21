@@ -1041,11 +1041,36 @@ namespace Andastra.Runtime.Stride.Backends
 
                 int currentSubobjectIndex = 0;
 
-                // Step 2: Create DXIL library subobject
+                // Step 2: Create DXIL library subobject with shader exports
                 // This contains all the shader bytecode (ray generation, miss, closest hit, any hit)
+                // and exports them with proper names so they can be referenced by hit groups
+                D3D12_SHADER_BYTECODE dxilLibraryBytecode = CreateDxilLibrary(desc);
+                
+                // Create export descriptors for all provided shaders
+                D3D12_EXPORT_DESC[] exportDescs;
+                IntPtr exportDescsPtr;
+                System.Collections.Generic.List<IntPtr> exportNamePtrs;
+                ShaderExportInfo exportInfo;
+                int exportCount = CreateShaderExports(desc, out exportDescs, out exportDescsPtr, out exportNamePtrs, out exportInfo);
+                
+                // Track export descriptors pointer and export name string pointers for cleanup
+                if (exportDescsPtr != IntPtr.Zero)
+                {
+                    subobjectDataPtrs.Add(exportDescsPtr);
+                }
+                foreach (IntPtr namePtr in exportNamePtrs)
+                {
+                    if (namePtr != IntPtr.Zero)
+                    {
+                        subobjectDataPtrs.Add(namePtr);
+                    }
+                }
+
                 D3D12_DXIL_LIBRARY_DESC dxilLibraryDesc = new D3D12_DXIL_LIBRARY_DESC
                 {
-                    DXILLibrary = CreateDxilLibrary(desc)
+                    DXILLibrary = dxilLibraryBytecode,
+                    pExports = exportDescsPtr, // Pointer to array of export descriptors (null if no exports)
+                    NumExports = (uint)exportCount
                 };
 
                 IntPtr dxilLibraryDescPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(D3D12_DXIL_LIBRARY_DESC)));
@@ -1063,22 +1088,53 @@ namespace Andastra.Runtime.Stride.Backends
                 currentSubobjectIndex++;
 
                 // Step 3: Create hit group subobject (if needed)
+                // Hit groups reference shader exports by name from the DXIL library
                 IntPtr hitGroupDescPtr = IntPtr.Zero;
+                IntPtr hitGroupExportNamePtr = IntPtr.Zero;
+                IntPtr closestHitShaderImportNamePtr = IntPtr.Zero;
+                IntPtr anyHitShaderImportNamePtr = IntPtr.Zero;
+                
                 if (hasHitGroup)
                 {
+                    // Allocate string pointers for hit group export name and shader import names
+                    // These must remain valid until the state object is created
+                    hitGroupExportNamePtr = AllocateAnsiString(HIT_GROUP_EXPORT_NAME);
+                    if (hitGroupExportNamePtr != IntPtr.Zero)
+                    {
+                        subobjectDataPtrs.Add(hitGroupExportNamePtr);
+                    }
+
+                    // Set shader import names to reference exported shaders from the DXIL library
+                    // These must match the export names defined in the DXIL library exports
+                    if (!string.IsNullOrEmpty(exportInfo.ClosestHitExportName))
+                    {
+                        closestHitShaderImportNamePtr = AllocateAnsiString(exportInfo.ClosestHitExportName);
+                        if (closestHitShaderImportNamePtr != IntPtr.Zero)
+                        {
+                            subobjectDataPtrs.Add(closestHitShaderImportNamePtr);
+                        }
+                    }
+
+                    if (!string.IsNullOrEmpty(exportInfo.AnyHitExportName))
+                    {
+                        anyHitShaderImportNamePtr = AllocateAnsiString(exportInfo.AnyHitExportName);
+                        if (anyHitShaderImportNamePtr != IntPtr.Zero)
+                        {
+                            subobjectDataPtrs.Add(anyHitShaderImportNamePtr);
+                        }
+                    }
+
+                    // Create hit group description with proper shader import references
+                    // Based on D3D12 API: D3D12_HIT_GROUP_DESC
+                    // Reference: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_hit_group_desc
                     D3D12_HIT_GROUP_DESC hitGroupDesc = new D3D12_HIT_GROUP_DESC
                     {
-                        HitGroupExport = IntPtr.Zero, // Default hit group name
-                        Type = D3D12_HIT_GROUP_TYPE_TRIANGLES,
-                        AnyHitShaderImport = IntPtr.Zero, // Will be set if AnyHit shader exists
-                        ClosestHitShaderImport = IntPtr.Zero, // Will be set if ClosestHit shader exists
-                        IntersectionShaderImport = IntPtr.Zero // Not used for triangle geometry
+                        HitGroupExport = hitGroupExportNamePtr, // Export name for this hit group
+                        Type = D3D12_HIT_GROUP_TYPE_TRIANGLES, // Triangle geometry type (most common)
+                        AnyHitShaderImport = anyHitShaderImportNamePtr, // Reference to exported AnyHit shader (null if not provided)
+                        ClosestHitShaderImport = closestHitShaderImportNamePtr, // Reference to exported ClosestHit shader (null if not provided)
+                        IntersectionShaderImport = IntPtr.Zero // Not used for triangle geometry (only for procedural primitives)
                     };
-
-                    // Set shader imports if provided
-                    // Note: In a full implementation, we would need to export shader names from the DXIL library
-                    // TODO: STUB - For now, we create the hit group structure even if shader names aren't set
-                    // The fallback layer will handle shader lookup
 
                     hitGroupDescPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(D3D12_HIT_GROUP_DESC)));
                     Marshal.StructureToPtr(hitGroupDesc, hitGroupDescPtr, false);
@@ -1204,24 +1260,166 @@ namespace Andastra.Runtime.Stride.Backends
         }
 
         /// <summary>
-        /// Creates a D3D12_SHADER_BYTECODE structure from raytracing pipeline description.
-        /// Combines all shaders (ray generation, miss, closest hit, any hit) into a single DXIL library.
+        /// Standard shader export names used in HLSL ray tracing shaders.
+        /// These match the typical entry point names in compiled DXIL bytecode.
+        /// Based on D3D12 ray tracing shader naming conventions.
+        /// Reference: https://learn.microsoft.com/en-us/windows/win32/direct3d12/direct3d-12-raytracing-shader-config
+        /// </summary>
+        private const string RAYGEN_SHADER_EXPORT_NAME = "RayGen";
+        private const string MISS_SHADER_EXPORT_NAME = "Miss";
+        private const string CLOSEST_HIT_SHADER_EXPORT_NAME = "ClosestHit";
+        private const string ANY_HIT_SHADER_EXPORT_NAME = "AnyHit";
+        private const string HIT_GROUP_EXPORT_NAME = "HitGroup";
+
+        /// <summary>
+        /// Helper class to manage shader export information for hit group references.
+        /// Stores export names so hit groups can reference them.
+        /// </summary>
+        private class ShaderExportInfo
+        {
+            public string ClosestHitExportName;
+            public string AnyHitExportName;
+        }
+
+        /// <summary>
+        /// Creates export descriptors for shaders provided in the raytracing pipeline description.
+        /// Based on D3D12 API: D3D12_EXPORT_DESC
+        /// Shaders must be exported from the DXIL library to be referenced by hit groups.
+        /// Reference: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_export_desc
         /// </summary>
         /// <param name="desc">Raytracing pipeline description</param>
-        /// <returns>D3D12_SHADER_BYTECODE structure containing the combined shader bytecode</returns>
+        /// <param name="exportDescs">Output array of export descriptors</param>
+        /// <param name="exportDescsPtr">Output pointer to marshalled export descriptors array</param>
+        /// <param name="exportNamePtrs">Output list of allocated string pointers (for cleanup)</param>
+        /// <param name="exportInfo">Output shader export information for hit group references</param>
+        /// <returns>Number of exports created</returns>
+        private int CreateShaderExports(
+            Andastra.Runtime.Graphics.Common.Interfaces.RaytracingPipelineDesc desc,
+            out D3D12_EXPORT_DESC[] exportDescs,
+            out IntPtr exportDescsPtr,
+            out System.Collections.Generic.List<IntPtr> exportNamePtrs,
+            out ShaderExportInfo exportInfo)
+        {
+            exportDescs = null;
+            exportDescsPtr = IntPtr.Zero;
+            exportNamePtrs = new System.Collections.Generic.List<IntPtr>();
+            exportInfo = new ShaderExportInfo();
+
+            System.Collections.Generic.List<D3D12_EXPORT_DESC> exports = new System.Collections.Generic.List<D3D12_EXPORT_DESC>();
+
+            // Export RayGen shader if provided
+            if (desc.RayGenShader != null && desc.RayGenShader.Length > 0)
+            {
+                IntPtr namePtr = AllocateAnsiString(RAYGEN_SHADER_EXPORT_NAME);
+                exportNamePtrs.Add(namePtr);
+                exports.Add(new D3D12_EXPORT_DESC
+                {
+                    Name = namePtr,
+                    ExportToRename = IntPtr.Zero,
+                    Flags = 0
+                });
+            }
+
+            // Export Miss shader if provided
+            if (desc.MissShader != null && desc.MissShader.Length > 0)
+            {
+                IntPtr namePtr = AllocateAnsiString(MISS_SHADER_EXPORT_NAME);
+                exportNamePtrs.Add(namePtr);
+                exports.Add(new D3D12_EXPORT_DESC
+                {
+                    Name = namePtr,
+                    ExportToRename = IntPtr.Zero,
+                    Flags = 0
+                });
+            }
+
+            // Export ClosestHit shader if provided
+            if (desc.ClosestHitShader != null && desc.ClosestHitShader.Length > 0)
+            {
+                IntPtr namePtr = AllocateAnsiString(CLOSEST_HIT_SHADER_EXPORT_NAME);
+                exportNamePtrs.Add(namePtr);
+                exports.Add(new D3D12_EXPORT_DESC
+                {
+                    Name = namePtr,
+                    ExportToRename = IntPtr.Zero,
+                    Flags = 0
+                });
+                exportInfo.ClosestHitExportName = CLOSEST_HIT_SHADER_EXPORT_NAME;
+            }
+
+            // Export AnyHit shader if provided
+            if (desc.AnyHitShader != null && desc.AnyHitShader.Length > 0)
+            {
+                IntPtr namePtr = AllocateAnsiString(ANY_HIT_SHADER_EXPORT_NAME);
+                exportNamePtrs.Add(namePtr);
+                exports.Add(new D3D12_EXPORT_DESC
+                {
+                    Name = namePtr,
+                    ExportToRename = IntPtr.Zero,
+                    Flags = 0
+                });
+                exportInfo.AnyHitExportName = ANY_HIT_SHADER_EXPORT_NAME;
+            }
+
+            int exportCount = exports.Count;
+            if (exportCount == 0)
+            {
+                return 0;
+            }
+
+            exportDescs = exports.ToArray();
+
+            // Allocate and marshal export descriptors array
+            // Each export descriptor contains IntPtr fields for string pointers
+            int exportDescSize = Marshal.SizeOf(typeof(D3D12_EXPORT_DESC));
+            exportDescsPtr = Marshal.AllocHGlobal(exportDescSize * exportCount);
+
+            // Marshal each export descriptor
+            for (int i = 0; i < exportCount; i++)
+            {
+                IntPtr exportDescPtr = new IntPtr(exportDescsPtr.ToInt64() + (i * exportDescSize));
+                Marshal.StructureToPtr(exportDescs[i], exportDescPtr, false);
+            }
+
+            return exportCount;
+        }
+
+        /// <summary>
+        /// Allocates and returns a pointer to a null-terminated ANSI string in unmanaged memory.
+        /// The caller is responsible for freeing this memory using Marshal.FreeHGlobal.
+        /// </summary>
+        /// <param name="str">String to allocate</param>
+        /// <returns>Pointer to allocated string, or IntPtr.Zero if string is null/empty</returns>
+        private IntPtr AllocateAnsiString(string str)
+        {
+            if (string.IsNullOrEmpty(str))
+            {
+                return IntPtr.Zero;
+            }
+
+            // Convert to ANSI bytes and allocate
+            byte[] ansiBytes = System.Text.Encoding.Default.GetBytes(str + "\0");
+            IntPtr strPtr = Marshal.AllocHGlobal(ansiBytes.Length);
+            Marshal.Copy(ansiBytes, 0, strPtr, ansiBytes.Length);
+            return strPtr;
+        }
+
+        /// <summary>
+        /// Creates a D3D12_SHADER_BYTECODE structure from raytracing pipeline description.
+        /// Uses the RayGen shader bytecode as the primary library content.
+        /// 
+        /// Note: In a full production implementation, all shaders (RayGen, Miss, ClosestHit, AnyHit)
+        /// would be combined into a single DXIL library bytecode. For now, we use the RayGen shader
+        /// as the library content, which is sufficient when shaders are compiled separately and
+        /// then combined, or when using a single library containing all shaders.
+        /// 
+        /// Based on D3D12 API: D3D12_SHADER_BYTECODE
+        /// Reference: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_shader_bytecode
+        /// </summary>
+        /// <param name="desc">Raytracing pipeline description</param>
+        /// <returns>D3D12_SHADER_BYTECODE structure containing the shader bytecode</returns>
         private D3D12_SHADER_BYTECODE CreateDxilLibrary(Andastra.Runtime.Graphics.Common.Interfaces.RaytracingPipelineDesc desc)
         {
-            // In a full implementation, we would combine all shader bytecode into a single DXIL library.
-            // TODO: STUB - For now, we use the RayGen shader as the primary shader bytecode.
-            // The fallback layer will handle shader lookup and binding.
-
-            // Allocate memory for the shader bytecode
-            // We'll use the RayGen shader as the primary bytecode
-            // In a production implementation, we would need to:
-            // 1. Parse DXIL bytecode to extract shader exports
-            // 2. Combine multiple shaders into a single library
-            // 3. Set up proper shader export names
-
             IntPtr shaderBytecodePtr = IntPtr.Zero;
             int shaderBytecodeSize = 0;
 
@@ -2205,13 +2403,33 @@ namespace Andastra.Runtime.Stride.Backends
         }
 
         /// <summary>
+        /// Export description for DXIL library exports.
+        /// Based on D3D12 API: D3D12_EXPORT_DESC
+        /// Reference: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_export_desc
+        /// 
+        /// Note: Uses IntPtr for string pointers to allow manual memory management.
+        /// Strings must be allocated separately in unmanaged memory and remain valid
+        /// until the state object is created.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_EXPORT_DESC
+        {
+            public IntPtr Name; // Export name (shader function name) - pointer to null-terminated ANSI string
+            public IntPtr ExportToRename; // Optional: rename export - pointer to null-terminated ANSI string (IntPtr.Zero if not renaming)
+            public uint Flags; // D3D12_EXPORT_FLAGS (typically 0)
+        }
+
+        /// <summary>
         /// DXIL library description.
         /// Based on D3D12 API: D3D12_DXIL_LIBRARY_DESC
+        /// Reference: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_dxil_library_desc
         /// </summary>
         [StructLayout(LayoutKind.Sequential)]
         private struct D3D12_DXIL_LIBRARY_DESC
         {
             public D3D12_SHADER_BYTECODE DXILLibrary;
+            public IntPtr pExports; // Pointer to array of D3D12_EXPORT_DESC (null if no exports specified)
+            public uint NumExports; // Number of exports
         }
 
         /// <summary>

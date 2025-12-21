@@ -2341,7 +2341,8 @@ namespace HolocronToolset.Editors
 
             // Collect all bookmarks after current line
             var bookmarks = new List<int>();
-            var itemsList = _bookmarkTree.Items as IEnumerable<TreeViewItem> ?? new List<TreeViewItem>();
+            var itemsList = _bookmarkTree.ItemsSource as List<TreeViewItem> ??
+                          (_bookmarkTree.Items as IEnumerable<TreeViewItem> ?? new List<TreeViewItem>()).ToList();
 
             foreach (var item in itemsList)
             {
@@ -2401,7 +2402,8 @@ namespace HolocronToolset.Editors
 
             // Collect all bookmarks before current line
             var bookmarks = new List<int>();
-            var itemsList = _bookmarkTree.Items as IEnumerable<TreeViewItem> ?? new List<TreeViewItem>();
+            var itemsList = _bookmarkTree.ItemsSource as List<TreeViewItem> ??
+                          (_bookmarkTree.Items as IEnumerable<TreeViewItem> ?? new List<TreeViewItem>()).ToList();
 
             foreach (var item in itemsList)
             {

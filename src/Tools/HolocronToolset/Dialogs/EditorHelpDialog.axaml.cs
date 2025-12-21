@@ -979,7 +979,7 @@ namespace HolocronToolset.Dialogs
                 if (href.StartsWith("#", System.StringComparison.Ordinal))
                 {
                     // Anchor link - scroll to anchor within current document
-                    // Note: Full anchor scrolling would require more complex implementation
+                    // TODO: STUB - Note: Full anchor scrolling would require more complex implementation
                     // TODO: STUB - For now, we'll just handle file links
                     return;
                 }

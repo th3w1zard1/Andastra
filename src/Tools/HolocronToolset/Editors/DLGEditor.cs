@@ -1056,7 +1056,7 @@ namespace HolocronToolset.Editors
 
                 // Note: Avalonia clipboard access is async, but we'll use a synchronous approach for now
                 // In a full implementation, we might need to make this async or use a different approach
-                // For now, we'll just try to get the clipboard text if possible
+                // TODO: STUB - For now, we'll just try to get the clipboard text if possible
                 // Matching PyKotor: clipboard_text: str = cb.text()
                 // Matching PyKotor: node_data: dict[str | int, Any] = json.loads(clipboard_text)
                 // Matching PyKotor: if isinstance(node_data, dict) and "type" in node_data: self._copy = DLGLink.from_dict(node_data)
@@ -2220,11 +2220,11 @@ namespace HolocronToolset.Editors
             bool isAutoRepeat = _keysDown.Contains(key);
 
             // Matching PyKotor implementation: if not is_tree_view_call: check focus
-            // For now, we handle all key events at the window level
+            // TODO: STUB - For now, we handle all key events at the window level
             // In a full implementation, we would check if dialogTree has focus
 
             // Matching PyKotor implementation: if not selected_index.isValid(): return
-            // For now, we'll handle keys even without selection (for Insert key to add root node)
+            // TODO: STUB - For now, we'll handle keys even without selection (for Insert key to add root node)
 
             // Matching PyKotor implementation: if selected_item is None: handle Insert key
             if (_model.SelectedIndex < 0)
@@ -2268,7 +2268,7 @@ namespace HolocronToolset.Editors
                 else if (key == Key.Enter || key == Key.Return)
                 {
                     // Matching PyKotor implementation: edit_text based on focus
-                    // For now, we'll just handle the basic case
+                    // TODO: STUB - For now, we'll just handle the basic case
                     EditText();
                     e.Handled = true;
                     return;
@@ -2550,7 +2550,7 @@ namespace HolocronToolset.Editors
             if (_installation == null)
             {
                 // In a full implementation, we would log an error
-                // For now, we'll just return silently
+                // TODO: STUB - For now, we'll just return silently
                 return;
             }
 
@@ -2607,7 +2607,7 @@ namespace HolocronToolset.Editors
                 {
                     // Matching PyKotor: RobustLogger().exception(f"Error executing LocalizedStringDialog: {exc.__class__.__name__}: {exc}")
                     // In a full implementation, we would log the error
-                    // For now, we'll just continue to the next item
+                    // TODO: STUB - For now, we'll just continue to the next item
                     return;
                 }
 
@@ -2633,7 +2633,7 @@ namespace HolocronToolset.Editors
             {
                 // Matching PyKotor: RobustLogger().exception(f"Error creating LocalizedStringDialog: {exc.__class__.__name__}: {exc}")
                 // In a full implementation, we would log the error
-                // For now, we'll just return silently
+                // TODO: STUB - For now, we'll just return silently
                 return;
             }
         }
@@ -2941,7 +2941,7 @@ namespace HolocronToolset.Editors
             //     self.blink_window()
 
             // Note: Sound and voice combo boxes are not yet implemented in the C# UI
-            // For now, we'll just blink the window to match the "else" case
+            // TODO: STUB - For now, we'll just blink the window to match the "else" case
             // When combo boxes are added, this should check them first
             BlinkWindow();
         }
@@ -3103,7 +3103,7 @@ namespace HolocronToolset.Editors
             suggestions.Add("strref:");
 
             // Note: Avalonia doesn't have a built-in AutoCompleteBox like Qt's QCompleter
-            // For now, we'll skip the completer setup - it can be added later if needed
+            // TODO: STUB - For now, we'll skip the completer setup - it can be added later if needed
             // Matching PyKotor: self.find_input_completer: QCompleter = QCompleter(suggestions, self.find_input)
             // Matching PyKotor: self.find_input.setCompleter(self.find_input_completer)
         }
@@ -3409,8 +3409,8 @@ namespace HolocronToolset.Editors
                             // Matching PyKotor: return int(value.strip()) in item.link.node.text._substrings
                             if (node.Text != null)
                             {
-                                // Note: Accessing _substrings would require reflection or public API
-                                // For now, check if text exists (simplified)
+                                // TODO: STUB - Note: Accessing _substrings would require reflection or public API
+                                // TODO: STUB - For now, check if text exists (simplified)
                                 return node.Text.GetString(0, Gender.Male) != null;
                             }
                         }
@@ -3645,7 +3645,7 @@ namespace HolocronToolset.Editors
 
             // Find the parent chain and expand them
             // In Avalonia TreeView, we need to expand items by setting IsExpanded
-            // For now, we'll expand all items to ensure visibility (simplified approach)
+            // TODO: STUB - For now, we'll expand all items to ensure visibility (simplified approach)
             // A full implementation would track the parent chain and expand only those
             ExpandItemRecursive(item);
         }
@@ -3659,7 +3659,7 @@ namespace HolocronToolset.Editors
             }
 
             // In Avalonia, TreeViewItem expansion is handled differently
-            // For now, we'll ensure the item is visible by expanding its parent chain
+            // TODO: STUB - For now, we'll ensure the item is visible by expanding its parent chain
             // This is a simplified implementation - a full version would use TreeView's expansion API
 
             // Expand all children recursively
@@ -3920,7 +3920,7 @@ namespace HolocronToolset.Editors
             {
                 // Matching PyKotor: self._logger.error(f"Failed to find original node for node {source_node!r}")
                 // In a full implementation, we would log this error
-                // For now, we silently fail (matching the behavior when logging is not available)
+                // TODO: STUB - For now, we silently fail (matching the behavior when logging is not available)
             }
         }
 
@@ -4386,7 +4386,7 @@ namespace HolocronToolset.Editors
             {
                 link = standardItem.Link;
                 // In PyKotor, link_parent_path comes from item.data(_LINK_PARENT_NODE_PATH_ROLE)
-                // For now, we'll try to find the parent path by traversing the tree
+                // TODO: STUB - For now, we'll try to find the parent path by traversing the tree
                 if (standardItem.Parent != null && standardItem.Parent.Link != null && standardItem.Parent.Link.Node != null)
                 {
                     linkParentPath = standardItem.Parent.Link.Node.Path();
@@ -4909,7 +4909,7 @@ namespace HolocronToolset.Editors
 
             // Matching PyKotor implementation: Refresh the item text and formatting based on the node data
             // The actual display update happens when we rebuild the tree view
-            // For now, we'll trigger a tree view update to reflect the changes
+            // TODO: STUB - For now, we'll trigger a tree view update to reflect the changes
             // In a more optimized implementation, we would update just the specific tree view item's header
 
             // Update the tree view to reflect changes
@@ -5392,7 +5392,7 @@ namespace HolocronToolset.Editors
                     var childrenList = parentItem.Children.ToList();
                     childrenList.Insert(row.Value, newItem);
                     // Note: We can't directly insert into Children collection, so we'll add and then shift if needed
-                    // For now, just add at the end and let the caller handle ordering if needed
+                    // TODO: STUB - For now, just add at the end and let the caller handle ordering if needed
                     parentItem.AddChild(newItem);
                 }
                 else

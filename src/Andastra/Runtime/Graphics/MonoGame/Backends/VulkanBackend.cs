@@ -340,6 +340,24 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         public IDevice GetDevice()
         {
+            // TODO: STUB - Implement IDevice creation for Vulkan raytracing
+            // When raytracing is enabled with VK_KHR_ray_tracing_pipeline, this should create
+            // and return a VulkanDevice instance that implements IDevice and provides access
+            // to Vulkan raytracing functionality
+            // For now, return null as the device creation is not yet implemented
+            if (!_raytracingEnabled || _device == IntPtr.Zero)
+            {
+                return null;
+            }
+
+            // TODO: STUB - Create and return actual IDevice implementation
+            // This will require implementing a VulkanDevice class that wraps VkDevice
+            // and provides the IDevice interface for raytracing operations
+            return null;
+        }
+
+        public IDevice GetDevice()
+        {
             if (!_initialized || !_capabilities.SupportsRaytracing)
             {
                 return null;

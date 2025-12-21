@@ -2482,7 +2482,7 @@ namespace HolocronToolset.Tests.Editors
                     if (item != null)
                     {
                         // Note: Avalonia ListBox items may need different handling for checked state
-                        // This is a simplified test - full implementation would require checking item state
+                        // TODO: STUB - This is a simplified test - full implementation would require checking item state
                         var featId = GetFeatIdFromItem(item);
                         if (featId.HasValue)
                         {
@@ -3172,7 +3172,7 @@ namespace HolocronToolset.Tests.Editors
             if (featList.Items != null && featList.Items.Count > 0)
             {
                 // TODO: STUB - Note: Full implementation would require checking/unchecking items
-                // This is a simplified test that verifies the list exists and can be accessed
+                // TODO: STUB - This is a simplified test that verifies the list exists and can be accessed
                 featList.Items.Count.Should().BeGreaterThan(0, "Feat list should have items");
             }
         }
@@ -3312,7 +3312,7 @@ namespace HolocronToolset.Tests.Editors
             }
             alignmentSlider.Value = 50;
 
-            // Note: Preview update testing would require UI automation framework
+            // TODO: STUB - Note: Preview update testing would require UI automation framework
             // TODO: STUB - For now, we verify the fields can be changed
             appearanceSelect.Should().NotBeNull("Appearance select should exist");
             alignmentSlider.Should().NotBeNull("Alignment slider should exist");
@@ -3343,7 +3343,7 @@ namespace HolocronToolset.Tests.Editors
             // Firstname should be generated
             var firstNameEdit = GetFirstNameEdit(editor);
             firstNameEdit.Should().NotBeNull("First name edit should exist");
-            // Note: Full verification would require checking LocalizedString content
+            // TODO: STUB - Note: Full verification would require checking LocalizedString content
 
             // Click random lastname button
             var lastNameRandomBtn = GetLastNameRandomButton(editor);
@@ -3359,7 +3359,7 @@ namespace HolocronToolset.Tests.Editors
             data.Should().NotBeNull();
             var gff = GFF.FromBytes(data);
             var utc = UTCHelpers.ConstructUtc(gff);
-            // Note: Full verification would require checking LocalizedString content
+            // TODO: STUB - Note: Full verification would require checking LocalizedString content
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1747-1761
@@ -3383,7 +3383,7 @@ namespace HolocronToolset.Tests.Editors
             var inventoryBtn = GetInventoryButton(editor);
             inventoryBtn.Should().NotBeNull("Inventory button should exist");
             inventoryBtn.IsEnabled.Should().BeTrue("Inventory button should be enabled");
-            // Note: Full dialog testing would require UI automation framework
+            // TODO: STUB - Note: Full dialog testing would require UI automation framework
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1763-1792
@@ -3403,7 +3403,7 @@ namespace HolocronToolset.Tests.Editors
             byte[] originalData = System.IO.File.ReadAllBytes(utcFile);
             editor.Load(utcFile, "p_hk47", ResourceType.UTC, originalData);
 
-            // Note: Menu actions testing would require accessing menu items
+            // TODO: STUB - Note: Menu actions testing would require accessing menu items
             // TODO: STUB - For now, we verify the editor can be created and loaded
             editor.Should().NotBeNull("Editor should exist");
         }
@@ -3430,7 +3430,7 @@ namespace HolocronToolset.Tests.Editors
             commentsEdit.Should().NotBeNull("Comments edit should exist");
             commentsEdit.Text = "Test comment";
 
-            // Note: Tab title update testing would require accessing TabControl/TabItem
+            // TODO: STUB - Note: Tab title update testing would require accessing TabControl/TabItem
             // TODO: STUB - For now, we verify the comments field can be modified
             commentsEdit.Text.Should().Be("Test comment");
 
@@ -3463,7 +3463,7 @@ namespace HolocronToolset.Tests.Editors
             if (featList.Items != null && featList.Items.Count > 0)
             {
                 // TODO: STUB - Note: Full implementation would require checking/unchecking items and verifying summary updates
-                // This is a simplified test that verifies the list exists
+                // TODO: STUB - This is a simplified test that verifies the list exists
                 featList.Items.Count.Should().BeGreaterThan(0, "Feat list should have items");
             }
         }
@@ -3492,7 +3492,7 @@ namespace HolocronToolset.Tests.Editors
             if (powerList.Items != null && powerList.Items.Count > 0)
             {
                 // TODO: STUB - Note: Full implementation would require checking/unchecking items and verifying summary updates
-                // This is a simplified test that verifies the list exists
+                // TODO: STUB - This is a simplified test that verifies the list exists
                 powerList.Items.Count.Should().BeGreaterThan(0, "Power list should have items");
             }
         }
@@ -3521,7 +3521,7 @@ namespace HolocronToolset.Tests.Editors
             // Label should show inventory count
             var labelText = inventoryCountLabel.Text;
             labelText.Should().NotBeNull("Label text should not be null");
-            // Note: Full verification would check that label updates when inventory changes
+            // TODO: STUB - Note: Full verification would check that label updates when inventory changes
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1893-1996
@@ -3638,7 +3638,7 @@ namespace HolocronToolset.Tests.Editors
             var firstNameEdit = GetFirstNameEdit(editor);
             firstNameEdit.Text = "TestFirst";
             // Use reflection to access private _utc field
-            // Note: The _utc field may not be directly accessible if the editor hasn't built the UTC yet
+            // TODO: STUB - Note: The _utc field may not be directly accessible if the editor hasn't built the UTC yet
             // We can verify the change was made by building and checking the result
             var (data, _) = editor.Build();
             var utc = UTCHelpers.ConstructUtc(Andastra.Parsing.Formats.GFF.GFF.FromBytes(data));
@@ -3647,7 +3647,7 @@ namespace HolocronToolset.Tests.Editors
             // Test lastnameEdit - LocalizedString widget
             var lastNameEdit = GetLastNameEdit(editor);
             lastNameEdit.Text = "TestLast";
-            // Verify the change was made by building and checking the result
+            // TODO: STUB - Verify the change was made by building and checking the result
             var (data3, _) = editor.Build();
             var utc3 = UTCHelpers.ConstructUtc(Andastra.Parsing.Formats.GFF.GFF.FromBytes(data3));
             utc3.LastName.Get(Language.English, Gender.Male).Should().Be("TestLast");
@@ -4376,7 +4376,7 @@ namespace HolocronToolset.Tests.Editors
             // Verify inventory button exists
             var inventoryBtn = GetInventoryButton(editor);
             inventoryBtn.Should().NotBeNull("Inventory button should exist");
-            // Note: Full dialog testing would require UI automation framework
+            // TODO: STUB - Note: Full dialog testing would require UI automation framework
         }
 
         /// <summary>

@@ -565,7 +565,7 @@ namespace HolocronToolset.Editors
             if (_installation != null && !string.IsNullOrEmpty(base._filepath))
             {
                 // Populate script fields with relevant resources (for autocomplete-like behavior)
-                // Note: In Python, these are ComboBoxes with populate_combo_box, but in C# we use TextBox
+                // TODO: STUB - Note: In Python, these are ComboBoxes with populate_combo_box, but in C# we use TextBox
                 // So we'll just set the text value - autocomplete would require a different control
             }
 

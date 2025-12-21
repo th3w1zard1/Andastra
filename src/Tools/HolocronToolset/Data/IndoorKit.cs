@@ -1259,8 +1259,8 @@ namespace HolocronToolset.Data
         private void _ProcessLytDoorhooks(LYT lytData)
         {
             // LYT doorhooks contain information about where doors connect rooms
-            // This is complex and would require matching doorhooks to rooms
-            // For simplicity, we'll leave hooks empty for module-derived components
+            // TODO: STUB - This is complex and would require matching doorhooks to rooms
+            // TODO: STUB - For simplicity, we'll leave hooks empty for module-derived components
             // The hooks are already extracted from BWM edges in _create_component_from_lyt_room
         }
 

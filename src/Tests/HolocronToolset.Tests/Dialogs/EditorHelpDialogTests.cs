@@ -151,8 +151,8 @@ namespace HolocronToolset.Tests.Dialogs
             editor.AddHelpAction();
 
             // Check that Help menu exists
-            // Note: Menu finding is complex in Avalonia, so we'll verify the method doesn't crash
-            // The actual menu verification would require more complex UI traversal
+            // TODO: STUB - Note: Menu finding is complex in Avalonia, so we'll verify the method doesn't crash
+            // TODO: STUB - The actual menu verification would require more complex UI traversal
             editor.Should().NotBeNull();
 
             editor.Close();

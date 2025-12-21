@@ -316,6 +316,24 @@ namespace Andastra.Runtime.MonoGame.Remix
             };
         }
 
+        public IDevice GetDevice()
+        {
+            // TODO: STUB - Implement IDevice creation for RTX Remix
+            // RTX Remix provides path tracing via D3D9 interception, but does not expose
+            // a standard IDevice interface. This may need a custom RemixDevice wrapper
+            // that adapts Remix's API to the IDevice interface
+            // For now, return null as the device creation is not yet implemented
+            if (!_remixActive || _device == IntPtr.Zero)
+            {
+                return null;
+            }
+
+            // TODO: STUB - Create and return actual IDevice implementation for Remix
+            // This will require implementing a RemixDevice class that wraps Remix's
+            // raytracing functionality and provides the IDevice interface
+            return null;
+        }
+
         #region D3D9 Draw Commands
 
         /// <summary>

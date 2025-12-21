@@ -319,7 +319,7 @@ namespace HolocronToolset.Dialogs
                         {
                             var fileInfo = filePath;
                             // Add detailed stat information
-                            // Note: Full stat implementation would require more detailed file system access
+                            // TODO: STUB - Note: Full stat implementation would require more detailed file system access
                             // TODO: STUB - For now, we'll add basic file information
                             item.SizeOnDisk = HumanReadableSize(fileInfo.Length);
                             item.LastModified = fileInfo.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss");
@@ -440,8 +440,8 @@ namespace HolocronToolset.Dialogs
                     // Add basic file attributes that are available in C#
                     attributes.Add("Last Modified");
                     attributes.Add("Created");
-                    // Note: Full stat implementation would require more detailed file system access
-                    // The Python version uses os.stat() which provides more attributes
+                    // TODO: STUB - Note: Full stat implementation would require more detailed file system access
+                    // TODO: STUB - The Python version uses os.stat() which provides more attributes
                 }
             }
             catch

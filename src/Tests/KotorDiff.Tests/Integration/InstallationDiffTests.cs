@@ -34,8 +34,8 @@ namespace KotorDiff.Tests.Integration
                 File.WriteAllText(Path.Combine(tempDir2, "swkotor.exe"), "");
                 File.WriteAllText(Path.Combine(tempDir2, "chitin.key"), "");
 
-                // Don't create any files - test basic comparison with empty installations
-                // (Creating game resource files would require more complex setup)
+                // TODO: STUB - Don't create any files - test basic comparison with empty installations
+                // TODO: STUB - Note: Creating game resource files would require more complex setup
 
                 var install1 = new Installation(tempDir1);
                 var install2 = new Installation(tempDir2);

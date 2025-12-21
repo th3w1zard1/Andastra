@@ -534,6 +534,13 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         public IDevice GetDevice()
         {
+            // OpenGL does not support hardware raytracing
+            // Return null as per interface documentation
+            return null;
+        }
+
+        public IDevice GetDevice()
+        {
             // OpenGL does not natively support hardware raytracing (Vulkan RT is separate from OpenGL)
             return null;
         }

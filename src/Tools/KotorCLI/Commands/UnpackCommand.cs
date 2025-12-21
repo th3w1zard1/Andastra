@@ -251,7 +251,7 @@ namespace KotorCLI.Commands
 
                 logger.Info($"Successfully unpacked {unpackedCount} files");
 
-                // TODO: Handle removeDeleted option (would require tracking previous unpacks)
+                // TODO: PLACEHOLDER - Handle removeDeleted option (would require tracking previous unpacks)
 
                 return 0;
             }
