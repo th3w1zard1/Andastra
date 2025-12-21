@@ -2061,8 +2061,9 @@ namespace Andastra.Runtime.Content.Save
                 AreaState areaState = kvp.Value;
 
                 // Cached modules are stored as ResourceType.SAV (2057) with ResRef = areaResRef
-                // The data inside is either ERF or RIM format
-                // TODO: STUB - For now, we'll serialize as RIM (most common format for area state)
+                // The data inside is RIM format (standard format for area state in swkotor2.exe)
+                // Based on swkotor2.exe: Area state is stored as [module]_s.rim in savegame.sav
+                // SerializeAreaStateAsModule creates a RIM archive containing the area state GFF
                 byte[] moduleData = SerializeAreaStateAsModule(areaState);
                 if (moduleData != null)
                 {
