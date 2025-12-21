@@ -298,8 +298,19 @@ namespace Andastra.Runtime.Games.Eclipse.Components
                                     // Try to get entity by ObjectId if stored as uint
                                     if (itemObj is uint objectId)
                                     {
-                                        // TODO: STUB - Entity lookup would require world reference
-                                        // TODO: STUB - For now, we skip this - items should be restored by save system
+                                        // Look up entity by ObjectId using world reference
+                                        // Based on daorigins.exe: Entity lookup by ObjectId for equipped items
+                                        // Located via string references: "ObjectId" @ 0x00af4e74 (daorigins.exe)
+                                        // Original implementation: FUN_004e9de0 @ 0x004e9de0 (GetObject wrapper)
+                                        // O(1) dictionary lookup by ObjectId (uint32)
+                                        if (Owner.World != null)
+                                        {
+                                            IEntity item = Owner.World.GetEntity(objectId);
+                                            if (item != null && item.IsValid)
+                                            {
+                                                _slots[slot] = item;
+                                            }
+                                        }
                                     }
                                     else if (itemObj is IEntity item)
                                     {
@@ -336,7 +347,29 @@ namespace Andastra.Runtime.Games.Eclipse.Components
                         int slot = 18; // Start inventory bag slots at 18 (Eclipse-specific numbering may differ)
                         foreach (object itemObj in enumerable)
                         {
-                            if (itemObj is IEntity item)
+                            IEntity item = null;
+                            
+                            // Handle items stored as ObjectId (uint)
+                            if (itemObj is uint objectId)
+                            {
+                                // Look up entity by ObjectId using world reference
+                                // Based on daorigins.exe: Entity lookup by ObjectId for inventory bag items
+                                // Located via string references: "ObjectId" @ 0x00af4e74 (daorigins.exe)
+                                // Original implementation: FUN_004e9de0 @ 0x004e9de0 (GetObject wrapper)
+                                // O(1) dictionary lookup by ObjectId (uint32)
+                                if (Owner.World != null)
+                                {
+                                    item = Owner.World.GetEntity(objectId);
+                                }
+                            }
+                            // Handle items stored as direct entity references
+                            else if (itemObj is IEntity entityItem)
+                            {
+                                item = entityItem;
+                            }
+                            
+                            // Add item to slot if valid
+                            if (item != null && item.IsValid)
                             {
                                 _slots[slot] = item;
                                 slot++;
