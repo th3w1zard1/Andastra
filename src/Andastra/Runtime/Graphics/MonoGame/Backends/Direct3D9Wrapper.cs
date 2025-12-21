@@ -1171,11 +1171,6 @@ namespace Andastra.Runtime.MonoGame.Backends
             if (del == null) return -1; // E_FAIL
             return del(device, count, pRects, flags, color, z, stencil);
         }
-        {
-            ClearDelegate del = GetComMethod<ClearDelegate>(device, 34);
-            if (del == null) return -1; // E_FAIL
-            return del(device, count, pRects, flags, color, z, stencil);
-        }
 
         public static int Reset(IntPtr device, IntPtr pPresentParameters)
         {
