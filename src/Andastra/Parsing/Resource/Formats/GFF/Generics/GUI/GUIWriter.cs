@@ -81,8 +81,7 @@ namespace Andastra.Parsing.Resource.Generics.GUI
         /// </summary>
         private void WriteControl(GUIControl control, GFFStruct gffStruct)
         {
-            WriteControlToStruct(control, gffStruct);
-            return gffStruct;
+            WriteControl(control, gffStruct);
         }
 
         private void WriteControlToStruct(GUIControl control, GFFStruct gffStruct)
@@ -235,8 +234,6 @@ namespace Andastra.Parsing.Resource.Generics.GUI
                 }
                 gffStruct.SetList("CONTROLS", childControlsList);
             }
-
-            return gffStruct;
         }
 
         /// <summary>
