@@ -2043,9 +2043,10 @@ namespace Andastra.Runtime.Games.Aurora
             UpdateAreaHeartbeat(deltaTime);
 
             // Process tile-based area logic (animations, lighting)
-            // TODO: STUB - Note: Full tile animation system would require tileset data access
-            // TODO: STUB - For now, we update tile state tracking that's already implemented
-            // Tile animations and lighting are handled by rendering system
+            // Based on nwmain.exe: CNWSArea::UpdateTiles processes tile animations and state
+            // Tile animations and lighting rendering are handled by rendering system,
+            // but we update tile state and animation timers here for game logic
+            UpdateTileAnimations(deltaTime);
         }
 
         /// <summary>
