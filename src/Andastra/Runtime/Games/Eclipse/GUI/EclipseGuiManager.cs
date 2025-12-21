@@ -234,6 +234,32 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
         }
 
         /// <summary>
+        /// Gets a loaded GUI by name.
+        /// </summary>
+        /// <param name="guiName">Name of the GUI to retrieve.</param>
+        /// <returns>The loaded GUI (ParsingGUI object), or null if not loaded.</returns>
+        /// <remarks>
+        /// Based on Eclipse GUI system: Returns the ParsingGUI object from the internal loaded GUIs dictionary.
+        /// This allows external code to access a GUI that was previously loaded via LoadGui without
+        /// needing to load it again from disk.
+        /// </remarks>
+        [CanBeNull]
+        public ParsingGUI GetLoadedGui(string guiName)
+        {
+            if (string.IsNullOrEmpty(guiName))
+            {
+                return null;
+            }
+
+            if (_loadedGuis.TryGetValue(guiName, out var loadedGui))
+            {
+                return loadedGui.Gui;
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Updates GUI input handling.
         /// </summary>
         public override void Update(object gameTime)
