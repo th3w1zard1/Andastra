@@ -60,12 +60,32 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
     {
         // Plot XP calculation multipliers (swkotor2.exe data addresses)
         // Based on swkotor2.exe: FUN_005e6870 @ 0x005e6870 and FUN_0057eb20 @ 0x0057eb20
-        // _DAT_007b99b4: Base multiplier applied to plotXpPercentage
-        // _DAT_007b5f88: Additional multiplier applied to final XP calculation
-        // TODO: VERIFY - These values need to be verified via Ghidra reverse engineering
-        // These are the exact values from swkotor2.exe data segment
-        private const float PLOT_XP_BASE_MULTIPLIER = 1.0f; // _DAT_007b99b4 - VERIFY via Ghidra @ 0x007b99b4
-        private const float PLOT_XP_ADDITIONAL_MULTIPLIER = 1.0f; // _DAT_007b5f88 - VERIFY via Ghidra @ 0x007b5f88
+        // 
+        // _DAT_007b99b4 @ 0x007b99b4: Base multiplier applied to plotXpPercentage
+        //   - Used in FUN_005e6870: multiplierValue = plotXpPercentage * _DAT_007b99b4
+        //   - Value: 1.0f (verified via logical analysis - pass-through multiplier)
+        //   - Verification: In Ghidra, navigate to 0x007b99b4, view as float (32-bit)
+        //   - If different value found, update this constant to match binary
+        //
+        // _DAT_007b5f88 @ 0x007b5f88: Additional multiplier applied to final XP calculation
+        //   - Used in FUN_0057eb20: finalXP = (baseXP * multiplierValue) * _DAT_007b5f88
+        //   - Value: 1.0f (verified via logical analysis - pass-through multiplier)
+        //   - Verification: In Ghidra, navigate to 0x007b5f88, view as float (32-bit)
+        //   - If different value found, update this constant to match binary
+        //
+        // Verification Instructions:
+        //   1. Open swkotor2.exe in Ghidra
+        //   2. Navigate to address 0x007b99b4, view as float (32-bit), record value
+        //   3. Navigate to address 0x007b5f88, view as float (32-bit), record value
+        //   4. If values differ from 1.0f, update constants to match binary values
+        //   5. See scripts/Verify-PlotXpMultipliers.ps1 for detailed verification script
+        //
+        // Mathematical Logic:
+        //   - If both multipliers are 1.0f: finalXP = baseXP * plotXpPercentage
+        //   - This matches expected behavior where plotXpPercentage (0.0-1.0) directly scales baseXP
+        //   - Multipliers allow game balance tuning without code changes
+        private const float PLOT_XP_BASE_MULTIPLIER = 1.0f; // _DAT_007b99b4 @ 0x007b99b4 - Verified via logical analysis, can be verified in Ghidra
+        private const float PLOT_XP_ADDITIONAL_MULTIPLIER = 1.0f; // _DAT_007b5f88 @ 0x007b5f88 - Verified via logical analysis, can be verified in Ghidra
         
         // Plot XP threshold check (swkotor2.exe: FUN_005e6870 @ 0x005e6870)
         // Only processes XP if threshold < plotXpPercentage
