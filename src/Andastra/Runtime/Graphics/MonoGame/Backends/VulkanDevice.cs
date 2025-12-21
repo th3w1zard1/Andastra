@@ -400,6 +400,73 @@ namespace Andastra.Runtime.MonoGame.Backends
             public ulong size;
         }
 
+        // Vulkan image subresource layers structure (for image operations)
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkImageSubresourceLayers
+        {
+            public VkImageAspectFlags aspectMask;
+            public uint mipLevel;
+            public uint baseArrayLayer;
+            public uint layerCount;
+        }
+
+        // Vulkan image copy structure (for vkCmdCopyImage)
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkImageCopy
+        {
+            public VkImageSubresourceLayers srcSubresource;
+            public VkOffset3D srcOffset;
+            public VkImageSubresourceLayers dstSubresource;
+            public VkOffset3D dstOffset;
+            public VkExtent3D extent;
+        }
+
+        // Vulkan offset 3D structure
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkOffset3D
+        {
+            public int x;
+            public int y;
+            public int z;
+        }
+
+        // Vulkan image memory barrier structure (for image layout transitions)
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkImageMemoryBarrier
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public VkAccessFlags srcAccessMask;
+            public VkAccessFlags dstAccessMask;
+            public VkImageLayout oldLayout;
+            public VkImageLayout newLayout;
+            public uint srcQueueFamilyIndex;
+            public uint dstQueueFamilyIndex;
+            public IntPtr image;
+            public VkImageSubresourceRange subresourceRange;
+        }
+
+        // Vulkan image subresource range structure
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkImageSubresourceRange
+        {
+            public VkImageAspectFlags aspectMask;
+            public uint baseMipLevel;
+            public uint levelCount;
+            public uint baseArrayLayer;
+            public uint layerCount;
+        }
+
+        // Vulkan image aspect flags
+        [Flags]
+        private enum VkImageAspectFlags
+        {
+            VK_IMAGE_ASPECT_COLOR_BIT = 0x00000001,
+            VK_IMAGE_ASPECT_DEPTH_BIT = 0x00000002,
+            VK_IMAGE_ASPECT_STENCIL_BIT = 0x00000004,
+            VK_IMAGE_ASPECT_METADATA_BIT = 0x00000008,
+        }
+
         [StructLayout(LayoutKind.Sequential)]
         private struct VkCommandPoolCreateInfo
         {
@@ -597,6 +664,12 @@ namespace Andastra.Runtime.MonoGame.Backends
         private delegate void vkCmdDispatchDelegate(IntPtr commandBuffer, uint groupCountX, uint groupCountY, uint groupCountZ);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdDispatchIndirectDelegate(IntPtr commandBuffer, IntPtr buffer, ulong offset);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdCopyImageDelegate(IntPtr commandBuffer, IntPtr srcImage, VkImageLayout srcImageLayout, IntPtr dstImage, VkImageLayout dstImageLayout, uint regionCount, IntPtr pRegions);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkCmdBeginDebugUtilsLabelEXTDelegate(IntPtr commandBuffer, ref VkDebugUtilsLabelEXT pLabelInfo);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
@@ -662,6 +735,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static vkCmdBindPipelineDelegate vkCmdBindPipeline;
         private static vkCmdBindDescriptorSetsDelegate vkCmdBindDescriptorSets;
         private static vkCmdDispatchDelegate vkCmdDispatch;
+        private static vkCmdDispatchIndirectDelegate vkCmdDispatchIndirect;
 
         private static vkCmdBeginDebugUtilsLabelEXTDelegate vkCmdBeginDebugUtilsLabelEXT;
         private static vkCmdEndDebugUtilsLabelEXTDelegate vkCmdEndDebugUtilsLabelEXT;
@@ -3095,7 +3169,65 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                 vkCmdDispatch(_vkCommandBuffer, (uint)groupCountX, (uint)groupCountY, (uint)groupCountZ);
             }
-            public void DispatchIndirect(IBuffer argumentBuffer, int offset) { /* TODO: vkCmdDispatchIndirect */ }
+            public void DispatchIndirect(IBuffer argumentBuffer, int offset)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before dispatching indirect");
+                }
+
+                if (argumentBuffer == null)
+                {
+                    throw new ArgumentNullException(nameof(argumentBuffer));
+                }
+
+                // Get Vulkan buffer handle from IBuffer
+                var vulkanBuffer = argumentBuffer as VulkanBuffer;
+                if (vulkanBuffer == null)
+                {
+                    throw new ArgumentException("Buffer must be a VulkanBuffer instance", nameof(argumentBuffer));
+                }
+
+                IntPtr vkBuffer = vulkanBuffer.VkBuffer;
+                if (vkBuffer == IntPtr.Zero)
+                {
+                    // Fallback to NativeHandle if VkBuffer is not available
+                    vkBuffer = vulkanBuffer.NativeHandle;
+                    if (vkBuffer == IntPtr.Zero)
+                    {
+                        throw new ArgumentException("Buffer does not have a valid Vulkan handle", nameof(argumentBuffer));
+                    }
+                }
+
+                // Validate offset is non-negative and properly aligned
+                // Vulkan requires indirect dispatch buffer offsets to be aligned to 4 bytes
+                if (offset < 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(offset), "Offset must be non-negative");
+                }
+
+                if ((offset % 4) != 0)
+                {
+                    throw new ArgumentException("Offset must be aligned to 4 bytes for indirect dispatch", nameof(offset));
+                }
+
+                // Ensure compute pipeline is bound before dispatching
+                // Note: This should ideally be checked, but we'll proceed assuming SetComputeState was called
+                // The indirect buffer contains:
+                // - groupCountX (uint32) - 4 bytes at offset
+                // - groupCountY (uint32) - 4 bytes at offset + 4
+                // - groupCountZ (uint32) - 4 bytes at offset + 8
+                // Total: 12 bytes per dispatch indirect command
+                // Vulkan API: vkCmdDispatchIndirect(commandBuffer, buffer, offset)
+                // Vulkan API Reference: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdDispatchIndirect.html
+
+                if (vkCmdDispatchIndirect == null)
+                {
+                    throw new InvalidOperationException("vkCmdDispatchIndirect function pointer not initialized. Call InitializeVulkanFunctions first.");
+                }
+
+                vkCmdDispatchIndirect(_vkCommandBuffer, vkBuffer, (ulong)offset);
+            }
             public void SetRaytracingState(RaytracingState state) { /* TODO: Set raytracing state */ }
             public void DispatchRays(DispatchRaysArguments args) { /* TODO: vkCmdTraceRaysKHR */ }
             public void BuildBottomLevelAccelStruct(IAccelStruct accelStruct, GeometryDesc[] geometries) { /* TODO: vkCmdBuildAccelerationStructuresKHR */ }
