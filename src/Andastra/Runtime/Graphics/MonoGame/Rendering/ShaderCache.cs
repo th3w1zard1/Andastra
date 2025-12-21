@@ -546,21 +546,121 @@ namespace Andastra.Runtime.MonoGame.Rendering
         /// <summary>
         /// Compiles shader for OpenGL (fallback for non-Windows platforms).
         /// </summary>
-        /// <param name="shaderSource">Shader source code (may need GLSL conversion).</param>
+        /// <param name="shaderSource">Shader source code (HLSL/FX, will be converted to GLSL by MGFXC).</param>
         /// <returns>Compiled bytecode, or null if compilation failed.</returns>
         /// <remarks>
         /// OpenGL Shader Compilation:
-        /// - For OpenGL, shaders are typically GLSL, not HLSL
-        /// - This is a fallback for non-Windows platforms
-        /// - May require HLSL to GLSL conversion
+        /// - Uses MonoGame's MGFXC tool to compile HLSL/FX shaders for OpenGL
+        /// - MGFXC automatically handles HLSL to GLSL conversion
+        /// - This is a fallback for non-Windows platforms when DirectX compilation isn't available
+        /// - MGFXC compiles shaders to platform-specific bytecode (.mgfxo format)
         /// - Original game: OpenGL backend used fixed-function pipeline
+        /// - Modern enhancement: Runtime shader compilation with cross-platform support
         /// </remarks>
         private byte[] CompileShaderOpenGL(string shaderSource)
         {
-            // OpenGL shader compilation would require GLSL source
-            // For now, return null as this requires HLSL to GLSL conversion
-            // which is beyond the scope of this implementation
-            return null;
+            if (string.IsNullOrEmpty(shaderSource))
+            {
+                return null;
+            }
+
+            try
+            {
+                // Use MGFXC to compile shader for OpenGL platform
+                // MGFXC handles HLSL to GLSL conversion automatically
+                // Create temporary source file
+                string tempSourceFile = Path.Combine(Path.GetTempPath(), $"shader_gl_{Guid.NewGuid()}.fx");
+                string tempOutputFile = Path.Combine(Path.GetTempPath(), $"shader_gl_{Guid.NewGuid()}.mgfxo");
+
+                try
+                {
+                    // Write source to temporary file
+                    File.WriteAllText(tempSourceFile, shaderSource, Encoding.UTF8);
+
+                    // Find MGFXC tool
+                    string mgfxcPath = FindMGFXCPath();
+                    if (string.IsNullOrEmpty(mgfxcPath))
+                    {
+                        System.Diagnostics.Debug.WriteLine("[ShaderCache] CompileShaderOpenGL: MGFXC not found, cannot compile OpenGL shader");
+                        return null;
+                    }
+
+                    // Run MGFXC to compile shader for OpenGL
+                    // MGFXC automatically detects the target platform and converts HLSL to GLSL as needed
+                    // For OpenGL, MGFXC compiles to .mgfxo format (MonoGame Effect format)
+                    System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = mgfxcPath,
+                        Arguments = $"\"{tempSourceFile}\" \"{tempOutputFile}\" /Profile:OpenGL",
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        CreateNoWindow = true
+                    };
+
+                    using (System.Diagnostics.Process process = System.Diagnostics.Process.Start(startInfo))
+                    {
+                        if (process == null)
+                        {
+                            System.Diagnostics.Debug.WriteLine("[ShaderCache] CompileShaderOpenGL: Failed to start MGFXC process");
+                            return null;
+                        }
+
+                        process.WaitForExit(5000); // 5 second timeout
+
+                        if (process.ExitCode != 0)
+                        {
+                            string error = process.StandardError.ReadToEnd();
+                            string output = process.StandardOutput.ReadToEnd();
+                            System.Diagnostics.Debug.WriteLine($"[ShaderCache] CompileShaderOpenGL: MGFXC compilation error (exit code {process.ExitCode}): {error}");
+                            if (!string.IsNullOrEmpty(output))
+                            {
+                                System.Diagnostics.Debug.WriteLine($"[ShaderCache] CompileShaderOpenGL: MGFXC output: {output}");
+                            }
+                            return null;
+                        }
+
+                        // Read compiled bytecode
+                        if (File.Exists(tempOutputFile))
+                        {
+                            byte[] bytecode = File.ReadAllBytes(tempOutputFile);
+                            System.Diagnostics.Debug.WriteLine($"[ShaderCache] CompileShaderOpenGL: Successfully compiled shader ({bytecode.Length} bytes)");
+                            return bytecode;
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.WriteLine("[ShaderCache] CompileShaderOpenGL: MGFXC succeeded but output file not found");
+                            return null;
+                        }
+                    }
+                }
+                finally
+                {
+                    // Cleanup temporary files
+                    try
+                    {
+                        if (File.Exists(tempSourceFile))
+                        {
+                            File.Delete(tempSourceFile);
+                        }
+                        if (File.Exists(tempOutputFile))
+                        {
+                            File.Delete(tempOutputFile);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log cleanup errors but don't fail compilation
+                        System.Diagnostics.Debug.WriteLine($"[ShaderCache] CompileShaderOpenGL: Cleanup error: {ex.Message}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // MGFXC compilation failed
+                System.Diagnostics.Debug.WriteLine($"[ShaderCache] CompileShaderOpenGL: Exception during compilation: {ex.Message}");
+                return null;
+            }
         }
 
         /// <summary>
