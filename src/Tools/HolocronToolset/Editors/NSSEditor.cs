@@ -987,6 +987,92 @@ namespace HolocronToolset.Editors
             ShowHelpDialog(wikiFile);
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:3398-3446
+        // Original: def _show_keyboard_shortcuts(self): Show keyboard shortcuts dialog
+        /// <summary>
+        /// Shows a dialog displaying all available keyboard shortcuts for the editor.
+        /// Matching PyKotor implementation which displays formatted text with all shortcuts.
+        /// </summary>
+        private void ShowKeyboardShortcuts()
+        {
+            // Build comprehensive list of keyboard shortcuts
+            // Matching PyKotor: displays all shortcuts organized by category
+            var shortcutsText = new StringBuilder();
+            shortcutsText.AppendLine("Keyboard Shortcuts:");
+            shortcutsText.AppendLine();
+            
+            shortcutsText.AppendLine("File Operations:");
+            shortcutsText.AppendLine("  Ctrl+N          - New file");
+            shortcutsText.AppendLine("  Ctrl+O          - Open file");
+            shortcutsText.AppendLine("  Ctrl+S          - Save");
+            shortcutsText.AppendLine("  Ctrl+Shift+S    - Save As");
+            shortcutsText.AppendLine("  Ctrl+W          - Close");
+            shortcutsText.AppendLine("  Ctrl+Q          - Exit");
+            shortcutsText.AppendLine("  F5              - Compile");
+            shortcutsText.AppendLine();
+
+            shortcutsText.AppendLine("Edit Operations:");
+            shortcutsText.AppendLine("  Ctrl+Z          - Undo");
+            shortcutsText.AppendLine("  Ctrl+Shift+Z    - Redo");
+            shortcutsText.AppendLine("  Ctrl+Y          - Redo (alternative)");
+            shortcutsText.AppendLine("  Ctrl+X          - Cut");
+            shortcutsText.AppendLine("  Ctrl+C          - Copy");
+            shortcutsText.AppendLine("  Ctrl+V          - Paste");
+            shortcutsText.AppendLine("  Ctrl+F          - Find");
+            shortcutsText.AppendLine("  Ctrl+H          - Replace");
+            shortcutsText.AppendLine("  Ctrl+G          - Go to Line");
+            shortcutsText.AppendLine("  Ctrl+/          - Toggle Comment");
+            shortcutsText.AppendLine("  Ctrl+Shift+D    - Duplicate Line");
+            shortcutsText.AppendLine("  Ctrl+Shift+K    - Delete Line");
+            shortcutsText.AppendLine("  Alt+Up/Down     - Move Line");
+            shortcutsText.AppendLine("  Ctrl+]          - Indent");
+            shortcutsText.AppendLine("  Ctrl+[          - Unindent");
+            shortcutsText.AppendLine("  Ctrl+L          - Select Line");
+            shortcutsText.AppendLine("  Ctrl+D          - Select Next Occurrence");
+            shortcutsText.AppendLine("  Alt+F3          - Select All Occurrences");
+            shortcutsText.AppendLine();
+
+            shortcutsText.AppendLine("View Operations:");
+            shortcutsText.AppendLine("  Ctrl+B          - Toggle File Explorer");
+            shortcutsText.AppendLine("  Ctrl+`          - Toggle Terminal Panel");
+            shortcutsText.AppendLine("  Ctrl+Shift+U    - Toggle Output Panel");
+            shortcutsText.AppendLine("  Ctrl+=          - Zoom In");
+            shortcutsText.AppendLine("  Ctrl+-          - Zoom Out");
+            shortcutsText.AppendLine("  Ctrl+0          - Reset Zoom");
+            shortcutsText.AppendLine("  Alt+Z           - Toggle Word Wrap");
+            shortcutsText.AppendLine();
+
+            shortcutsText.AppendLine("Code Operations:");
+            shortcutsText.AppendLine("  Shift+Alt+F     - Format Code");
+            shortcutsText.AppendLine("  Ctrl+Space      - Trigger Suggest");
+            shortcutsText.AppendLine("  F12             - Go to Definition");
+            shortcutsText.AppendLine("  Shift+F12       - Find All References");
+            shortcutsText.AppendLine("  Ctrl+K, Ctrl+B  - Toggle Bookmark");
+            shortcutsText.AppendLine("  Ctrl+K, Ctrl+N  - Next Bookmark");
+            shortcutsText.AppendLine("  Ctrl+K, Ctrl+P  - Previous Bookmark");
+            shortcutsText.AppendLine();
+
+            shortcutsText.AppendLine("Code Folding:");
+            shortcutsText.AppendLine("  Ctrl+Shift+[    - Fold Region");
+            shortcutsText.AppendLine("  Ctrl+Shift+]    - Unfold Region");
+            shortcutsText.AppendLine("  Ctrl+K, Ctrl+0  - Fold All");
+            shortcutsText.AppendLine("  Ctrl+K, Ctrl+J  - Unfold All");
+            shortcutsText.AppendLine();
+
+            shortcutsText.AppendLine("Other:");
+            shortcutsText.AppendLine("  Ctrl+Shift+P    - Show Command Palette");
+            shortcutsText.AppendLine("  F1              - Show Documentation");
+
+            // Show message box with shortcuts
+            // Matching PyKotor: QMessageBox.information(self, "Keyboard Shortcuts", shortcuts_text)
+            var messageBox = MessageBoxManager.GetMessageBoxStandard(
+                "Keyboard Shortcuts",
+                shortcutsText.ToString(),
+                ButtonEnum.Ok,
+                Icon.Info);
+            messageBox.ShowAsync();
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:1256-1349
         // Original: def go_to_definition(self):
         /// <summary>
@@ -1271,13 +1357,13 @@ namespace HolocronToolset.Editors
             }
 
             // Add individual filters for each supported type
-            foreach (var restype in _readSupported)
+            foreach (var resourceType in _readSupported)
             {
-                if (restype != null && !string.IsNullOrEmpty(restype.Extension) && !string.IsNullOrEmpty(restype.Category))
+                if (resourceType != null && !string.IsNullOrEmpty(resourceType.Extension) && !string.IsNullOrEmpty(resourceType.Category))
                 {
-                    fileFilters.Add(new FilePickerFileType($"{restype.Category} File (*.{restype.Extension})")
+                    fileFilters.Add(new FilePickerFileType($"{resourceType.Category} File (*.{resourceType.Extension})")
                     {
-                        Patterns = new[] { $"*.{restype.Extension}" }
+                        Patterns = new[] { $"*.{resourceType.Extension}" }
                     });
                 }
             }
@@ -3293,7 +3379,7 @@ namespace HolocronToolset.Editors
 
             // Help
             _commandPalette.RegisterCommand("help.documentation", "Show Documentation", () => ShowDocumentation(), "Help");
-            _commandPalette.RegisterCommand("help.shortcuts", "Show Keyboard Shortcuts", () => { /* TODO: Implement */ }, "Help");
+            _commandPalette.RegisterCommand("help.shortcuts", "Show Keyboard Shortcuts", () => ShowKeyboardShortcuts(), "Help");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:707-709
