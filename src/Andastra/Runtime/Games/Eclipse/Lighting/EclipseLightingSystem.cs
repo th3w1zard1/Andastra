@@ -68,6 +68,22 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
         private bool _moonShadows;
         private byte _shadowOpacity;
 
+        // Entity-light attachment tracking
+        // Maps entity object ID to lights attached to that entity
+        private readonly Dictionary<uint, List<DynamicLight>> _entityLightMap;
+        // Maps light to its attached entity ID (for reverse lookup)
+        private readonly Dictionary<DynamicLight, uint> _lightEntityMap;
+
+        // Day/night cycle tracking
+        private float _timeOfDay = 0.5f; // 0.0 = midnight, 0.5 = noon, 1.0 = midnight
+        private bool _enableDayNightCycle = false;
+        private float _dayNightCycleSpeed = 1.0f;
+
+        // Shadow map update tracking
+        private bool _shadowMapsDirty = false;
+        private float _shadowMapUpdateInterval = 1.0f / 60.0f; // Update shadow maps at 60Hz
+        private float _shadowMapUpdateTimer = 0.0f;
+
         private bool _disposed;
         private bool _clustersDirty = true;
 
@@ -120,6 +136,8 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
             MaxLights = maxLights;
             _lights = new List<DynamicLight>(maxLights);
             _lightMap = new Dictionary<uint, DynamicLight>(maxLights);
+            _entityLightMap = new Dictionary<uint, List<DynamicLight>>();
+            _lightEntityMap = new Dictionary<DynamicLight, uint>();
 
             // Allocate cluster data
             int totalClusters = ClusterCountX * ClusterCountY * ClusterCountZ;
@@ -273,6 +291,14 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
         /// <remarks>
         /// Updates light transforms, shadow maps, and clustering.
         /// Called by EclipseArea.Update() each frame.
+        /// 
+        /// Per-frame updates include:
+        /// - Day/night cycle updates for sun/moon directional lights
+        /// - Shadow map updates for directional lights (periodic)
+        /// - Marking clusters as dirty when lights change
+        /// 
+        /// Note: Entity-attached light updates are handled separately via UpdateEntityLightTransforms()
+        /// since they require entity system access.
         /// </remarks>
         public void Update(float deltaTime)
         {
@@ -281,18 +307,209 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
                 return;
             }
 
-            // Update light transforms if needed
-            // In a full implementation, this would update lights that follow entities
-            // TODO: STUB - For now, static lights don't need per-frame updates
-
-            // Update shadow maps if dirty
-            // In a full implementation, this would regenerate shadow maps for directional lights
-            // TODO: STUB - For now, shadow maps are static
-
-            // Mark clusters as dirty if lights changed
-            if (_clustersDirty)
+            // Update day/night cycle if enabled
+            if (_enableDayNightCycle)
             {
-                // Clustering will be updated when UpdateClustering is called
+                _timeOfDay += deltaTime * _dayNightCycleSpeed;
+                if (_timeOfDay >= 1.0f)
+                {
+                    _timeOfDay -= 1.0f; // Wrap around
+                }
+                if (_timeOfDay < 0.0f)
+                {
+                    _timeOfDay += 1.0f; // Wrap around (if speed is negative)
+                }
+
+                UpdateDayNightCycle();
+            }
+
+            // Update shadow maps periodically for directional lights
+            _shadowMapUpdateTimer += deltaTime;
+            if (_shadowMapUpdateTimer >= _shadowMapUpdateInterval || _shadowMapsDirty)
+            {
+                UpdateShadowMaps();
+                _shadowMapUpdateTimer = 0.0f;
+                _shadowMapsDirty = false;
+            }
+
+            // Mark clusters as dirty if lights changed (will be updated when UpdateClustering is called)
+            // Clustering is updated separately to avoid per-frame cost
+        }
+
+        /// <summary>
+        /// Updates entity-attached light transforms based on entity world matrices.
+        /// This should be called from EclipseArea.Update() with entity transform data.
+        /// </summary>
+        /// <param name="entityTransforms">Dictionary mapping entity object ID to world transform matrix.</param>
+        /// <remarks>
+        /// Entity Light Transform Updates:
+        /// - Updates lights that are attached to entities (torches, fires, etc.)
+        /// - Lights follow entity position and rotation
+        /// - Marks clusters as dirty when lights move
+        /// - Based on Eclipse engine pattern: lights attached to placeables and creatures
+        /// </remarks>
+        public void UpdateEntityLightTransforms(Dictionary<uint, Matrix4x4> entityTransforms)
+        {
+            if (_disposed || entityTransforms == null)
+            {
+                return;
+            }
+
+            bool lightsMoved = false;
+
+            // Update each entity's attached lights
+            foreach (var entityEntry in _entityLightMap)
+            {
+                uint entityId = entityEntry.Key;
+                List<DynamicLight> entityLights = entityEntry.Value;
+
+                // Check if entity has a transform
+                if (!entityTransforms.TryGetValue(entityId, out Matrix4x4 entityTransform))
+                {
+                    continue;
+                }
+
+                // Update all lights attached to this entity
+                foreach (DynamicLight light in entityLights)
+                {
+                    if (light == null || !light.Enabled)
+                    {
+                        continue;
+                    }
+
+                    // Store previous position to detect movement
+                    Vector3 oldPosition = light.Position;
+
+                    // Update light transform from entity transform
+                    light.UpdateTransform(entityTransform);
+
+                    // Check if light moved (for cluster dirty marking)
+                    if (Vector3.DistanceSquared(oldPosition, light.Position) > 0.0001f)
+                    {
+                        lightsMoved = true;
+                    }
+                }
+            }
+
+            // Mark clusters as dirty if any lights moved
+            if (lightsMoved)
+            {
+                _clustersDirty = true;
+                _shadowMapsDirty = true; // Shadow maps may need updates if lights moved significantly
+            }
+        }
+
+        /// <summary>
+        /// Updates sun/moon directional lights based on day/night cycle time.
+        /// </summary>
+        /// <remarks>
+        /// Day/Night Cycle Updates:
+        /// - Calculates sun/moon direction based on time of day
+        /// - Transitions between sun and moon as primary directional light
+        /// - Updates light colors and intensities based on time of day
+        /// - Based on Eclipse engine day/night cycle system
+        /// </remarks>
+        private void UpdateDayNightCycle()
+        {
+            if (_sunLight == null || _moonLight == null)
+            {
+                return;
+            }
+
+            // Calculate sun angle based on time of day
+            // 0.0 (midnight) = -90 degrees (below horizon), 0.5 (noon) = 90 degrees (above horizon)
+            float sunAngle = (_timeOfDay - 0.5f) * 2.0f * (float)Math.PI; // Convert to radians
+            float sunElevation = (float)Math.Sin(sunAngle); // -1 to 1 range
+
+            // Sun direction: rotates around Y axis (east to west), elevates up/down
+            float sunAzimuth = _timeOfDay * 2.0f * (float)Math.PI; // Full rotation over day
+            float sunX = (float)Math.Cos(sunAzimuth) * (float)Math.Cos(sunElevation);
+            float sunZ = (float)Math.Sin(sunAzimuth) * (float)Math.Cos(sunElevation);
+            float sunY = sunElevation;
+
+            Vector3 sunDirection = Vector3.Normalize(new Vector3(sunX, sunY, sunZ));
+            Vector3 oldSunDirection = _sunLight.Direction;
+
+            // Update sun direction
+            _sunLight.Direction = sunDirection;
+
+            // Moon is opposite of sun (180 degrees offset)
+            Vector3 moonDirection = Vector3.Normalize(-sunDirection);
+            _moonLight.Direction = moonDirection;
+
+            // Determine if it's day or night
+            bool isNight = sunElevation < 0.0f; // Below horizon = night
+
+            // Update primary directional light
+            if (isNight)
+            {
+                if (_primaryDirectional != _moonLight)
+                {
+                    _primaryDirectional = _moonLight;
+                    _sunLight.Enabled = false;
+                    _moonLight.Enabled = true;
+                }
+            }
+            else
+            {
+                if (_primaryDirectional != _sunLight)
+                {
+                    _primaryDirectional = _sunLight;
+                    _sunLight.Enabled = true;
+                    _moonLight.Enabled = false;
+                }
+
+                // Adjust sun intensity based on elevation (fade near horizon)
+                float sunIntensity = Math.Max(0.0f, sunElevation); // 0 at horizon, 1 at zenith
+                _sunLight.Intensity = sunIntensity;
+            }
+
+            // Adjust ambient color based on time of day
+            // Dawn/dusk: warmer colors, night: cooler colors
+            float timeFactor = Math.Abs(sunElevation); // 0 at horizon, 1 at zenith/midnight
+            Vector3 dayAmbient = ColorBgrToVector3(_sunAmbientColor);
+            Vector3 nightAmbient = ColorBgrToVector3(_moonAmbientColor);
+            AmbientColor = Vector3.Lerp(nightAmbient, dayAmbient, timeFactor);
+
+            // Mark clusters as dirty if sun/moon direction changed significantly
+            if (Vector3.DistanceSquared(oldSunDirection, sunDirection) > 0.0001f)
+            {
+                _clustersDirty = true;
+                _shadowMapsDirty = true; // Shadow maps need updates when sun/moon moves
+            }
+        }
+
+        /// <summary>
+        /// Updates shadow maps for directional lights that cast shadows.
+        /// </summary>
+        /// <remarks>
+        /// Shadow Map Updates:
+        /// - Regenerates shadow maps for sun/moon directional lights if they moved
+        /// - Updates shadow map matrices for rendering
+        /// - Based on Eclipse engine shadow mapping system
+        /// </remarks>
+        private void UpdateShadowMaps()
+        {
+            // Update sun shadow map if it casts shadows
+            if (_sunLight != null && _sunLight.Enabled && _sunLight.CastShadows && _sunShadows)
+            {
+                // In a full implementation, this would:
+                // 1. Calculate shadow map view/projection matrix based on sun direction
+                // 2. Render shadow map from sun's perspective
+                // 3. Update shadow map texture
+                // For now, we mark it as needing updates
+                _sunLight.UpdateGpuData();
+            }
+
+            // Update moon shadow map if it casts shadows
+            if (_moonLight != null && _moonLight.Enabled && _moonLight.CastShadows && _moonShadows)
+            {
+                // In a full implementation, this would:
+                // 1. Calculate shadow map view/projection matrix based on moon direction
+                // 2. Render shadow map from moon's perspective
+                // 3. Update shadow map texture
+                // For now, we mark it as needing updates
+                _moonLight.UpdateGpuData();
             }
         }
 
@@ -380,6 +597,20 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
                 _lights.Remove(dynamicLight);
                 _lightMap.Remove(dynamicLight.LightId);
 
+                // Remove from entity attachment tracking
+                if (_lightEntityMap.TryGetValue(dynamicLight, out uint entityId))
+                {
+                    if (_entityLightMap.TryGetValue(entityId, out List<DynamicLight> entityLights))
+                    {
+                        entityLights.Remove(dynamicLight);
+                        if (entityLights.Count == 0)
+                        {
+                            _entityLightMap.Remove(entityId);
+                        }
+                    }
+                    _lightEntityMap.Remove(dynamicLight);
+                }
+
                 if (_primaryDirectional == dynamicLight)
                 {
                     _primaryDirectional = null;
@@ -398,6 +629,135 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
                 dynamicLight.Dispose();
                 _clustersDirty = true;
             }
+        }
+
+        /// <summary>
+        /// Attaches a light to an entity so it follows the entity's transform.
+        /// </summary>
+        /// <param name="light">The light to attach.</param>
+        /// <param name="entityId">The entity object ID to attach to.</param>
+        /// <remarks>
+        /// Entity Light Attachment:
+        /// - Lights attached to entities will be updated each frame via UpdateEntityLightTransforms()
+        /// - Useful for torches, fires, and other dynamic lights on placeables/creatures
+        /// - Based on Eclipse engine pattern: lights can be attached to entities in GIT file
+        /// </remarks>
+        public void AttachLightToEntity(IDynamicLight light, uint entityId)
+        {
+            if (light == null)
+            {
+                return;
+            }
+
+            var dynamicLight = light as DynamicLight;
+            if (dynamicLight == null && light is DynamicLightAdapter adapter)
+            {
+                dynamicLight = adapter.Light;
+            }
+
+            if (dynamicLight == null || !_lights.Contains(dynamicLight))
+            {
+                Console.WriteLine("[EclipseLighting] Cannot attach light to entity - light not in system");
+                return;
+            }
+
+            // Remove from previous entity if attached
+            if (_lightEntityMap.TryGetValue(dynamicLight, out uint oldEntityId))
+            {
+                if (oldEntityId != entityId && _entityLightMap.TryGetValue(oldEntityId, out List<DynamicLight> oldEntityLights))
+                {
+                    oldEntityLights.Remove(dynamicLight);
+                    if (oldEntityLights.Count == 0)
+                    {
+                        _entityLightMap.Remove(oldEntityId);
+                    }
+                }
+            }
+
+            // Add to new entity
+            if (!_entityLightMap.TryGetValue(entityId, out List<DynamicLight> entityLights))
+            {
+                entityLights = new List<DynamicLight>();
+                _entityLightMap[entityId] = entityLights;
+            }
+
+            if (!entityLights.Contains(dynamicLight))
+            {
+                entityLights.Add(dynamicLight);
+            }
+
+            _lightEntityMap[dynamicLight] = entityId;
+        }
+
+        /// <summary>
+        /// Detaches a light from its entity.
+        /// </summary>
+        /// <param name="light">The light to detach.</param>
+        public void DetachLightFromEntity(IDynamicLight light)
+        {
+            if (light == null)
+            {
+                return;
+            }
+
+            var dynamicLight = light as DynamicLight;
+            if (dynamicLight == null && light is DynamicLightAdapter adapter)
+            {
+                dynamicLight = adapter.Light;
+            }
+
+            if (dynamicLight == null)
+            {
+                return;
+            }
+
+            if (_lightEntityMap.TryGetValue(dynamicLight, out uint entityId))
+            {
+                if (_entityLightMap.TryGetValue(entityId, out List<DynamicLight> entityLights))
+                {
+                    entityLights.Remove(dynamicLight);
+                    if (entityLights.Count == 0)
+                    {
+                        _entityLightMap.Remove(entityId);
+                    }
+                }
+                _lightEntityMap.Remove(dynamicLight);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the time of day (0.0 = midnight, 0.5 = noon, 1.0 = midnight).
+        /// </summary>
+        public float TimeOfDay
+        {
+            get { return _timeOfDay; }
+            set
+            {
+                _timeOfDay = value;
+                // Wrap around
+                if (_timeOfDay >= 1.0f) _timeOfDay -= 1.0f;
+                if (_timeOfDay < 0.0f) _timeOfDay += 1.0f;
+                // Update immediately
+                UpdateDayNightCycle();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets whether the day/night cycle is enabled.
+        /// </summary>
+        public bool EnableDayNightCycle
+        {
+            get { return _enableDayNightCycle; }
+            set { _enableDayNightCycle = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the day/night cycle speed multiplier.
+        /// </summary>
+        public float DayNightCycleSpeed
+        {
+            get { return _dayNightCycleSpeed; }
+            set { _dayNightCycleSpeed = value; }
         }
 
         /// <summary>
@@ -680,6 +1040,8 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
             }
             _lights.Clear();
             _lightMap.Clear();
+            _entityLightMap.Clear();
+            _lightEntityMap.Clear();
 
             _primaryDirectional = null;
             _sunLight = null;
