@@ -74,9 +74,23 @@ namespace Andastra.Runtime.MonoGame.Backends
             // This is a placeholder structure
         }
 
+        // ID3D12StateObjectProperties interface for retrieving shader identifiers
+        // GUID: {de5fa827-9bf9-4f26-89ff-d7f56fde3860}
+        private static readonly Guid IID_ID3D12StateObjectProperties = new Guid(0xde5fa827, 0x9bf9, 0x4f26, 0x89, 0xff, 0xd7, 0xf5, 0x6f, 0xde, 0x38, 0x60);
+
+        [ComImport]
+        [Guid("de5fa827-9bf9-4f26-89ff-d7f56fde3860")]
+        [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+        private interface ID3D12StateObjectProperties
+        {
+            // GetShaderIdentifier returns a pointer to 32 bytes of shader identifier data
+            // The pointer is valid for the lifetime of the state object
+            IntPtr GetShaderIdentifier([MarshalAs(UnmanagedType.LPWStr)] string pExportName);
+        }
+
         // DirectX 12 function pointers for P/Invoke (simplified - full implementation requires extensive declarations)
         // In a complete implementation, these would be loaded via GetProcAddress or use SharpDX/Vortice wrapper
-        
+
         #endregion
 
         private readonly IntPtr _device;
@@ -492,7 +506,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 IntPtr handle = new IntPtr(_nextResourceHandle++);
                 var pipeline = new D3D12GraphicsPipeline(handle, desc, IntPtr.Zero, rootSignature, _device);
                 _resources[handle] = pipeline;
-                
+
                 Console.WriteLine($"[D3D12Device] WARNING: Failed to create graphics pipeline state: {ex.Message}");
                 return pipeline;
             }
@@ -1228,7 +1242,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     _samplerDescriptorHeap = IntPtr.Zero;
                 }
             }
-            
+
             // Clear descriptor heap state
             _samplerHeapCpuStartHandle = IntPtr.Zero;
             _samplerHeapDescriptorIncrementSize = 0;
@@ -1313,7 +1327,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// All COM interfaces inherit from IUnknown, which has Release at vtable index 2.
         /// Based on COM Reference Counting: https://docs.microsoft.com/en-us/windows/win32/api/unknwn/nf-unknwn-iunknown-release
         /// </summary>
-        private unsafe uint ReleaseComObject(IntPtr comObject)
+        private static unsafe uint ReleaseComObject(IntPtr comObject)
         {
             // Platform check: DirectX 12 COM is Windows-only
             if (Environment.OSVersion.Platform != PlatformID.Win32NT)
@@ -2308,7 +2322,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// Calls ID3D12DescriptorHeap::GetGPUDescriptorHandleForHeapStart through COM vtable.
         /// VTable index 10 for ID3D12DescriptorHeap.
         /// Based on DirectX 12 Descriptor Heaps: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12descriptorheap-getgpudescriptorhandleforheapstart
-        /// 
+        ///
         /// DirectX 12 GPU descriptor handles are used to reference descriptors from command lists during GPU execution.
         /// The handle must be preserved until all referencing command lists have finished execution.
         /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
@@ -3369,9 +3383,40 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             public void Dispose()
             {
-                // TODO: Release D3D12 pipeline state and root signature
-                // - Call ID3D12PipelineState::Release()
-                // - Call ID3D12RootSignature::Release()
+                // Release D3D12 pipeline state and root signature
+                // Based on DirectX 12 COM Reference Counting: https://docs.microsoft.com/en-us/windows/win32/api/unknwn/nf-unknwn-iunknown-release
+                // ID3D12PipelineState and ID3D12RootSignature are COM objects that must be released via IUnknown::Release()
+                // This prevents memory leaks and properly decrements reference counts
+
+                if (_d3d12PipelineState != IntPtr.Zero)
+                {
+                    uint refCount = ReleaseComObject(_d3d12PipelineState);
+                    if (refCount > 0)
+                    {
+                        // Reference count > 0 means other objects still hold references
+                        // This is normal and expected - the object will be freed when all references are released
+                    }
+                    else
+                    {
+                        // Reference count reached 0, object was freed
+                        // This is the expected behavior when disposing
+                    }
+                }
+
+                if (_rootSignature != IntPtr.Zero)
+                {
+                    uint refCount = ReleaseComObject(_rootSignature);
+                    if (refCount > 0)
+                    {
+                        // Reference count > 0 means other objects still hold references
+                        // This is normal and expected - the object will be freed when all references are released
+                    }
+                    else
+                    {
+                        // Reference count reached 0, object was freed
+                        // This is the expected behavior when disposing
+                    }
+                }
             }
         }
 
@@ -3398,9 +3443,40 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             public void Dispose()
             {
-                // TODO: Release D3D12 pipeline state and root signature
-                // - Call ID3D12PipelineState::Release()
-                // - Call ID3D12RootSignature::Release()
+                // Release D3D12 pipeline state and root signature
+                // Based on DirectX 12 COM Reference Counting: https://docs.microsoft.com/en-us/windows/win32/api/unknwn/nf-unknwn-iunknown-release
+                // ID3D12PipelineState and ID3D12RootSignature are COM objects that must be released via IUnknown::Release()
+                // This prevents memory leaks and properly decrements reference counts
+
+                if (_d3d12PipelineState != IntPtr.Zero)
+                {
+                    uint refCount = ReleaseComObject(_d3d12PipelineState);
+                    if (refCount > 0)
+                    {
+                        // Reference count > 0 means other objects still hold references
+                        // This is normal and expected - the object will be freed when all references are released
+                    }
+                    else
+                    {
+                        // Reference count reached 0, object was freed
+                        // This is the expected behavior when disposing
+                    }
+                }
+
+                if (_rootSignature != IntPtr.Zero)
+                {
+                    uint refCount = ReleaseComObject(_rootSignature);
+                    if (refCount > 0)
+                    {
+                        // Reference count > 0 means other objects still hold references
+                        // This is normal and expected - the object will be freed when all references are released
+                    }
+                    else
+                    {
+                        // Reference count reached 0, object was freed
+                        // This is the expected behavior when disposing
+                    }
+                }
             }
         }
 
@@ -3548,9 +3624,30 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             public void Dispose()
             {
-                // TODO: Release D3D12 acceleration structure
-                // - Release backing buffer resource
-                // Note: Acceleration structures are resources, released via ID3D12Resource::Release()
+                // Release D3D12 acceleration structure
+                // Based on DirectX 12 COM Reference Counting: https://docs.microsoft.com/en-us/windows/win32/api/unknwn/nf-unknwn-iunknown-release
+                // ID3D12Resource (acceleration structure) is a COM object that must be released via IUnknown::Release()
+                // This prevents memory leaks and properly decrements reference counts
+                // Note: Acceleration structures are D3D12 resources stored in backing buffers
+                
+                // Release the acceleration structure COM object
+                if (_d3d12AccelStruct != IntPtr.Zero)
+                {
+                    uint refCount = ReleaseComObject(_d3d12AccelStruct);
+                    if (refCount > 0)
+                    {
+                        // Reference count > 0 means other objects still hold references
+                        // This is normal and expected - the object will be freed when all references are released
+                    }
+                    else
+                    {
+                        // Reference count reached 0, object was freed
+                        // This is the expected behavior when disposing
+                    }
+                }
+                
+                // Release backing buffer resource
+                // The backing buffer holds the acceleration structure data
                 _backingBuffer?.Dispose();
             }
         }
@@ -3722,13 +3819,13 @@ namespace Andastra.Runtime.MonoGame.Backends
             public void WriteBuffer<T>(IBuffer buffer, T[] data, int destOffset = 0) where T : unmanaged { /* TODO: Use upload heap or UpdateSubresources */ }
             /// <summary>
             /// Writes texture data to a texture subresource using a staging buffer.
-            /// 
+            ///
             /// Implementation: Creates a temporary upload buffer, copies data with proper row pitch alignment,
             /// then uses CopyTextureRegion to copy from the upload buffer to the texture.
-            /// 
+            ///
             /// Based on DirectX 12 UpdateSubresources pattern:
             /// https://docs.microsoft.com/en-us/windows/win32/direct3d12/uploading-resource-data
-            /// 
+            ///
             /// Note: This implementation uses approximate footprint calculations for standard formats.
             /// A full implementation would use ID3D12Device::GetCopyableFootprints for exact layouts.
             /// </summary>
@@ -3895,7 +3992,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                                     {
                                         uint srcRowOffset = (z * mipHeight * mipWidth * bytesPerPixel) + (y * mipWidth * bytesPerPixel);
                                         uint dstRowOffset = (z * slicePitch) + (y * rowPitch);
-                                        
+
                                         // C# 7.3 compatible: use pointer arithmetic and loop instead of System.Buffer.MemoryCopy
                                         byte* srcRowPtr = srcPtr + srcRowOffset;
                                         byte* dstRowPtr = dstPtr + dstRowOffset;
@@ -4062,7 +4159,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 //   ID3D12Resource* pSrcBuffer,
                 //   UINT64 SrcOffset,
                 //   UINT64 NumBytes)
-                // 
+                //
                 // Based on DirectX 12 documentation:
                 // - pDstBuffer: Destination buffer resource
                 // - DstOffset: Offset in bytes from the start of the destination buffer
@@ -4573,7 +4670,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             /// Calls ID3D12GraphicsCommandList::CopyBufferRegion through COM vtable.
             /// VTable index 46 for ID3D12GraphicsCommandList.
             /// Based on DirectX 12 Buffer Copy: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-copybufferregion
-            /// 
+            ///
             /// CopyBufferRegion copies a region of data from one buffer to another.
             /// Signature: void CopyBufferRegion(
             ///   ID3D12Resource* pDstBuffer,
@@ -5116,17 +5213,17 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             /// <summary>
             /// Inserts a UAV (Unordered Access View) barrier for a texture resource.
-            /// 
+            ///
             /// A UAV barrier ensures that all UAV writes to the resource have completed before
             /// subsequent operations (compute shaders, pixel shaders, etc.) can read from the resource.
             /// This is necessary when a resource is both written to and read from as a UAV in different
             /// draw/dispatch calls within the same command list.
-            /// 
+            ///
             /// Based on DirectX 12 API: ID3D12GraphicsCommandList::ResourceBarrier
             /// Located via DirectX 12 documentation: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-resourcebarrier
             /// Original implementation: Records a UAV barrier command into the command list
             /// UAV barriers use D3D12_RESOURCE_BARRIER_TYPE_UAV barrier type
-            /// 
+            ///
             /// Note: UAV barriers differ from transition barriers - they don't change resource state,
             /// they only synchronize access between UAV write and read operations.
             /// </summary>
@@ -5194,17 +5291,17 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             /// <summary>
             /// Inserts a UAV (Unordered Access View) barrier for a buffer resource.
-            /// 
+            ///
             /// A UAV barrier ensures that all UAV writes to the buffer have completed before
             /// subsequent operations (compute shaders, pixel shaders, etc.) can read from the buffer.
             /// This is necessary when a buffer is both written to and read from as a UAV in different
             /// draw/dispatch calls within the same command list.
-            /// 
+            ///
             /// Based on DirectX 12 API: ID3D12GraphicsCommandList::ResourceBarrier
             /// Located via DirectX 12 documentation: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-resourcebarrier
             /// Original implementation: Records a UAV barrier command into the command list
             /// UAV barriers use D3D12_RESOURCE_BARRIER_TYPE_UAV barrier type
-            /// 
+            ///
             /// Note: UAV barriers differ from transition barriers - they don't change resource state,
             /// they only synchronize access between UAV write and read operations.
             /// </summary>
@@ -5319,7 +5416,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     if (d3d12Framebuffer != null)
                     {
                         FramebufferDesc fbDesc = d3d12Framebuffer.Desc;
-                        
+
                         // Get render target views for color attachments
                         uint numRenderTargets = 0;
                         IntPtr renderTargetDescriptorsPtr = IntPtr.Zero;
@@ -5328,7 +5425,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                         if (fbDesc.ColorAttachments != null && fbDesc.ColorAttachments.Length > 0)
                         {
                             numRenderTargets = unchecked((uint)fbDesc.ColorAttachments.Length);
-                            
+
                             // Allocate memory for array of CPU descriptor handles
                             // D3D12_CPU_DESCRIPTOR_HANDLE is a struct with one IntPtr field
                             int handleSize = Marshal.SizeOf<D3D12_CPU_DESCRIPTOR_HANDLE>();
@@ -5386,7 +5483,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                                 // Allocate memory for depth-stencil descriptor handle
                                 int dsvHandleSize = Marshal.SizeOf<D3D12_CPU_DESCRIPTOR_HANDLE>();
                                 depthStencilDescriptorPtr = Marshal.AllocHGlobal(dsvHandleSize);
-                                
+
                                 D3D12_CPU_DESCRIPTOR_HANDLE dsvCpuHandle = new D3D12_CPU_DESCRIPTOR_HANDLE
                                 {
                                     ptr = dsvHandle
@@ -5578,7 +5675,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                         }
 
                         BufferDesc bufferDesc = vertexBuffers[i].Desc;
-                        
+
                         // Try to get stride from buffer's StructStride if available
                         if (bufferDesc.StructStride > 0)
                         {
@@ -5589,7 +5686,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                             // Calculate stride from input layout attributes for this buffer index
                             uint maxOffset = 0;
                             uint maxSize = 0;
-                            
+
                             foreach (VertexAttributeDesc attr in inputLayout.Attributes)
                             {
                                 if (attr.BufferIndex == i)
@@ -5597,7 +5694,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                                     // Calculate size of this attribute based on format
                                     uint attrSize = GetFormatSize(attr.Format);
                                     uint attrEnd = unchecked((uint)attr.Offset + attrSize);
-                                    
+
                                     if (attrEnd > maxOffset + maxSize)
                                     {
                                         maxOffset = unchecked((uint)attr.Offset);
@@ -5608,7 +5705,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                             // Stride is the maximum offset + size, rounded up to next 4-byte boundary for alignment
                             strides[i] = (maxOffset + maxSize + 3) & ~3U; // Align to 4 bytes
-                            
+
                             // If no attributes found, use a default stride based on buffer size
                             if (strides[i] == 0 && bufferDesc.ByteSize > 0)
                             {
@@ -6002,7 +6099,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             public void SetViewport(Viewport viewport) { /* TODO: RSSetViewports */ }
             public void SetViewports(Viewport[] viewports) { /* TODO: RSSetViewports */ }
-            
+
             /// <summary>
             /// Sets a single scissor rectangle.
             /// Converts Rectangle (X, Y, Width, Height) to D3D12_RECT (left, top, right, bottom).
@@ -7742,10 +7839,10 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// Calls ID3D12CommandQueue::ExecuteCommandLists through COM vtable.
         /// VTable index 4 for ID3D12CommandQueue (after IUnknown: QueryInterface, AddRef, Release, UpdateTileMappings).
         /// Based on DirectX 12 Command Queue: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12commandqueue-executecommandlists
-        /// 
+        ///
         /// ExecuteCommandLists submits command lists to the command queue for execution on the GPU.
         /// All command lists must be closed before execution.
-        /// 
+        ///
         /// Signature: void ExecuteCommandLists(UINT NumCommandLists, ID3D12CommandList* const* ppCommandLists)
         /// </summary>
         private unsafe void CallExecuteCommandLists(IntPtr commandQueue, uint numCommandLists, IntPtr ppCommandLists)
