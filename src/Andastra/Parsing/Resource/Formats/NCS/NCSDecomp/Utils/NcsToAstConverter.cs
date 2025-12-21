@@ -1571,13 +1571,56 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 if (savebpIndex >= 0)
                 {
                     fallbackMainStart = savebpIndex + 1;
-                    // TODO:  Check for entry stub
-                    if (instructions.Count > fallbackMainStart + 1 &&
-                        instructions[fallbackMainStart].InsType == NCSInstructionType.JSR &&
-                        (instructions[fallbackMainStart + 1].InsType == NCSInstructionType.RETN ||
-                         instructions[fallbackMainStart + 1].InsType == NCSInstructionType.RESTOREBP))
+                    // Check for entry stub using comprehensive detection (handles RSADD* prefixes and all patterns)
+                    // swkotor2.exe: 0x004eb750 - Entry stub patterns: [RSADD*], JSR, RETN or [RSADD*], JSR, RESTOREBP
+                    // Based on HasEntryStubPattern method which handles all edge cases
+                    if (HasEntryStubPattern(instructions, fallbackMainStart, ncs))
                     {
-                        fallbackMainStart += 2; // Skip JSR + RETN/RESTOREBP
+                        int entryStubStart = fallbackMainStart;
+                        int entryStubEnd = -1;
+                        
+                        // Calculate entry stub end position (similar to AnalyzeEmptyMainStructure)
+                        // Entry stub can be: [RSADD*], JSR, RETN or [RSADD*], JSR, RESTOREBP
+                        int jsrOffset = 0;
+                        if (entryStubStart < instructions.Count && IsRsaddInstruction(instructions[entryStubStart].InsType))
+                        {
+                            jsrOffset = 1; // JSR is at position entryStubStart + 1
+                        }
+                        
+                        int jsrIndex = entryStubStart + jsrOffset;
+                        if (jsrIndex + 1 < instructions.Count)
+                        {
+                            if (instructions[jsrIndex].InsType == NCSInstructionType.JSR &&
+                                instructions[jsrIndex + 1].InsType == NCSInstructionType.RETN)
+                            {
+                                entryStubEnd = jsrIndex + 2; // After RETN
+                            }
+                            else if (instructions[jsrIndex].InsType == NCSInstructionType.JSR &&
+                                     instructions[jsrIndex + 1].InsType == NCSInstructionType.RESTOREBP)
+                            {
+                                // Check if RESTOREBP is followed by cleanup code at the end (not an entry stub)
+                                int restorebpIndex = jsrIndex + 1;
+                                if (!IsRestorebpFollowedByCleanupCode(instructions, restorebpIndex))
+                                {
+                                    entryStubEnd = jsrIndex + 2; // After RESTOREBP (valid entry stub)
+                                }
+                                // If RESTOREBP is cleanup code, entryStubEnd remains -1 (no entry stub)
+                            }
+                        }
+                        
+                        if (entryStubEnd > entryStubStart)
+                        {
+                            fallbackMainStart = entryStubEnd; // Skip entire entry stub
+                            Debug($"DEBUG NcsToAstConverter: Detected entry stub at {entryStubStart}-{entryStubEnd - 1}, adjusted fallbackMainStart to {fallbackMainStart}");
+                        }
+                        else
+                        {
+                            Debug($"DEBUG NcsToAstConverter: Entry stub pattern detected but could not determine end position, using fallbackMainStart={fallbackMainStart}");
+                        }
+                    }
+                    else
+                    {
+                        Debug($"DEBUG NcsToAstConverter: No entry stub pattern detected at {fallbackMainStart}, using fallbackMainStart={fallbackMainStart}");
                     }
                 }
 
