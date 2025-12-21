@@ -3981,8 +3981,58 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
             public void BuildTopLevelAccelStruct(IAccelStruct accelStruct, AccelStructInstance[] instances) { /* TODO: BuildRaytracingAccelerationStructure */ }
             public void CompactBottomLevelAccelStruct(IAccelStruct dest, IAccelStruct src) { /* TODO: CopyRaytracingAccelerationStructure */ }
-            public void BeginDebugEvent(string name, Vector4 color) { /* TODO: BeginEvent */ }
-            public void EndDebugEvent() { /* TODO: EndEvent */ }
+
+            /// <summary>
+            /// Begins a debug event region in the command list.
+            /// Based on DirectX 12 Debug Events: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-beginevent
+            /// Encodes event name as UTF-8 and passes to ID3D12GraphicsCommandList::BeginEvent.
+            /// Color parameter is provided for cross-platform compatibility but D3D12 BeginEvent uses name only.
+            /// </summary>
+            public void BeginDebugEvent(string name, Vector4 color)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before beginning debug event");
+                }
+
+                if (string.IsNullOrEmpty(name))
+                {
+                    throw new ArgumentException("Debug event name cannot be null or empty", nameof(name));
+                }
+
+                // Encode event name as UTF-8 bytes (null-terminated for D3D12/PIX compatibility)
+                byte[] nameBytes = System.Text.Encoding.UTF8.GetBytes(name + "\0");
+                GCHandle nameHandle = GCHandle.Alloc(nameBytes, GCHandleType.Pinned);
+                try
+                {
+                    // Call BeginEvent via vtable
+                    // Metadata is 0 for standard event markers (PIX uses this internally)
+                    // pData points to UTF-8 encoded event name
+                    // Size is the length of the name bytes including null terminator
+                    CallBeginEvent(_d3d12CommandList, 0, nameHandle.AddrOfPinnedObject(), (uint)nameBytes.Length);
+                }
+                finally
+                {
+                    nameHandle.Free();
+                }
+            }
+
+            /// <summary>
+            /// Ends a debug event region in the command list.
+            /// Based on DirectX 12 Debug Events: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-endevent
+            /// Must be paired with a preceding BeginDebugEvent call on the same command list.
+            /// </summary>
+            public void EndDebugEvent()
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before ending debug event");
+                }
+
+                // Call EndEvent via vtable
+                CallEndEvent(_d3d12CommandList);
+            }
+
             public void InsertDebugMarker(string name, Vector4 color) { /* TODO: SetMarker */ }
 
             /// <summary>

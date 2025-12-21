@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using Andastra.Parsing.Tests.Common;
 using FluentAssertions;
@@ -62,16 +64,53 @@ namespace Andastra.Parsing.Tests.Formats
                 return;
             }
 
-            // Try to find Kaitai Struct compiler
-            var kscCheck = RunCommand("kaitai-struct-compiler", "--version");
-            if (kscCheck.ExitCode != 0)
+            // Comprehensive Kaitai Struct compiler detection and installation
+            var compilerPath = FindOrInstallKaitaiCompiler();
+            if (string.IsNullOrEmpty(compilerPath))
             {
-                // Try with .jar extension or check if it's in PATH
-                // TODO: STUB - For now, we'll skip if not found - in CI/CD this should be installed
-                return;
+                // Only skip if we're not in CI/CD and installation failed
+                // In CI/CD, we should fail the test to ensure proper setup
+                if (!IsRunningInCICD())
+                {
+                    return;
+                }
+                else
+                {
+                    Xunit.Assert.True(false, 
+                        "Kaitai Struct compiler not found and automatic installation failed in CI/CD environment. " +
+                        "Please ensure Java is available and network access is allowed for downloading the compiler.");
+                }
             }
 
-            kscCheck.ExitCode.Should().Be(0, "Kaitai Struct compiler should be available");
+            // Verify compiler works
+            CompileResult verifyResult;
+            if (compilerPath.EndsWith(".jar"))
+            {
+                var verifyCheck = RunCommand("java", $"-jar \"{compilerPath}\" --version");
+                verifyResult = new CompileResult
+                {
+                    Success = verifyCheck.ExitCode == 0,
+                    ExitCode = verifyCheck.ExitCode,
+                    Output = verifyCheck.Output,
+                    ErrorMessage = verifyCheck.Error
+                };
+            }
+            else
+            {
+                var verifyCheck = RunCommand(compilerPath, "--version");
+                verifyResult = new CompileResult
+                {
+                    Success = verifyCheck.ExitCode == 0,
+                    ExitCode = verifyCheck.ExitCode,
+                    Output = verifyCheck.Output,
+                    ErrorMessage = verifyCheck.Error
+                };
+            }
+
+            verifyResult.Success.Should().BeTrue(
+                $"Kaitai Struct compiler should be available and functional. " +
+                $"Compiler path: {compilerPath}, Exit code: {verifyResult.ExitCode}, " +
+                $"Error: {verifyResult.ErrorMessage}");
         }
 
         [Fact(Timeout = 300000)]
@@ -470,6 +509,250 @@ namespace Andastra.Parsing.Tests.Formats
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Detects if the test is running in a CI/CD environment.
+        /// Checks for common CI/CD environment variables from GitHub Actions, Azure DevOps, Jenkins, etc.
+        /// </summary>
+        private bool IsRunningInCICD()
+        {
+            // GitHub Actions
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GITHUB_ACTIONS")))
+            {
+                return true;
+            }
+
+            // Azure DevOps
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SYSTEM_TEAMFOUNDATIONCOLLECTIONURI")))
+            {
+                return true;
+            }
+
+            // Jenkins
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("JENKINS_URL")))
+            {
+                return true;
+            }
+
+            // GitLab CI
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GITLAB_CI")))
+            {
+                return true;
+            }
+
+            // Travis CI
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("TRAVIS")))
+            {
+                return true;
+            }
+
+            // CircleCI
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CIRCLECI")))
+            {
+                return true;
+            }
+
+            // Generic CI indicator
+            var ciEnv = Environment.GetEnvironmentVariable("CI");
+            if (!string.IsNullOrEmpty(ciEnv) && (ciEnv.Equals("true", StringComparison.OrdinalIgnoreCase) || ciEnv == "1"))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Finds the Kaitai Struct compiler using comprehensive detection methods.
+        /// If not found and running in CI/CD or if KAITAI_AUTO_INSTALL is set, automatically downloads and installs it.
+        /// </summary>
+        private string FindOrInstallKaitaiCompiler()
+        {
+            // First, try to find existing compiler using existing detection methods
+            var existingCompiler = FindKaitaiCompilerJar();
+            if (!string.IsNullOrEmpty(existingCompiler) && File.Exists(existingCompiler))
+            {
+                return existingCompiler;
+            }
+
+            // Try direct command invocation
+            var directCheck = RunCommand("kaitai-struct-compiler", "--version");
+            if (directCheck.ExitCode == 0)
+            {
+                // Found in PATH
+                return "kaitai-struct-compiler";
+            }
+
+            // Check if we should auto-install
+            var shouldAutoInstall = IsRunningInCICD();
+            var autoInstallEnv = Environment.GetEnvironmentVariable("KAITAI_AUTO_INSTALL");
+            if (!string.IsNullOrEmpty(autoInstallEnv) && (autoInstallEnv.Equals("true", StringComparison.OrdinalIgnoreCase) || autoInstallEnv == "1"))
+            {
+                shouldAutoInstall = true;
+            }
+
+            if (!shouldAutoInstall)
+            {
+                return null;
+            }
+
+            // Auto-install the compiler
+            try
+            {
+                return DownloadAndInstallKaitaiCompiler();
+            }
+            catch (Exception ex)
+            {
+                // Log but don't throw - allow test to handle gracefully
+                Debug.WriteLine($"Failed to auto-install Kaitai Struct compiler: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Downloads and installs the Kaitai Struct compiler JAR file.
+        /// Downloads version 0.10 from GitHub releases and extracts the JAR to a standard location.
+        /// </summary>
+        private string DownloadAndInstallKaitaiCompiler()
+        {
+            const string version = "0.10";
+            const string downloadUrl = "https://github.com/kaitai-io/kaitai_struct_compiler/releases/download/" + version + "/kaitai-struct-compiler-" + version + ".zip";
+
+            // Determine install directory (prefer user's home directory)
+            string installDir;
+            if (IsRunningInCICD())
+            {
+                // In CI/CD, use temp directory or workspace directory
+                var workspaceRoot = Environment.GetEnvironmentVariable("GITHUB_WORKSPACE") ??
+                    Environment.GetEnvironmentVariable("SYSTEM_DEFAULTWORKINGDIRECTORY") ??
+                    Environment.GetEnvironmentVariable("WORKSPACE");
+                
+                if (!string.IsNullOrEmpty(workspaceRoot) && Directory.Exists(workspaceRoot))
+                {
+                    installDir = Path.Combine(workspaceRoot, ".kaitai");
+                }
+                else
+                {
+                    installDir = Path.Combine(Path.GetTempPath(), ".kaitai");
+                }
+            }
+            else
+            {
+                // Local development: use user profile directory
+                var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                installDir = Path.Combine(userProfile, ".kaitai");
+            }
+
+            // Ensure install directory exists
+            if (!Directory.Exists(installDir))
+            {
+                Directory.CreateDirectory(installDir);
+            }
+
+            var jarPath = Path.Combine(installDir, "kaitai-struct-compiler.jar");
+
+            // Check if already downloaded
+            if (File.Exists(jarPath))
+            {
+                // Verify it's a valid JAR by checking if Java can read it
+                var verifyCheck = RunCommand("java", $"-jar \"{jarPath}\" --version");
+                if (verifyCheck.ExitCode == 0)
+                {
+                    return jarPath;
+                }
+                // If invalid, delete and re-download
+                try
+                {
+                    File.Delete(jarPath);
+                }
+                catch
+                {
+                    // Ignore deletion errors
+                }
+            }
+
+            // Download the ZIP file
+            var zipPath = Path.Combine(Path.GetTempPath(), $"kaitai-struct-compiler-{version}.zip");
+            try
+            {
+                using (var httpClient = new HttpClient())
+                {
+                    httpClient.Timeout = TimeSpan.FromMinutes(5);
+                    var response = httpClient.GetAsync(downloadUrl).Result;
+                    response.EnsureSuccessStatusCode();
+
+                    using (var fileStream = new FileStream(zipPath, FileMode.Create))
+                    {
+                        response.Content.CopyToAsync(fileStream).Wait();
+                    }
+                }
+
+                // Extract the JAR from the ZIP
+                var extractDir = Path.Combine(Path.GetTempPath(), $"kaitai-struct-compiler-{version}-extract");
+                try
+                {
+                    if (Directory.Exists(extractDir))
+                    {
+                        Directory.Delete(extractDir, true);
+                    }
+                    Directory.CreateDirectory(extractDir);
+
+                    ZipFile.ExtractToDirectory(zipPath, extractDir);
+
+                    // Find the JAR file in the extracted directory
+                    var jarFiles = Directory.GetFiles(extractDir, "*.jar", SearchOption.AllDirectories);
+                    if (jarFiles.Length == 0)
+                    {
+                        throw new FileNotFoundException("No JAR file found in downloaded Kaitai Struct compiler archive");
+                    }
+
+                    // Copy the first (and usually only) JAR file to install location
+                    File.Copy(jarFiles[0], jarPath, true);
+
+                    // Verify the installed JAR works
+                    var verifyCheck = RunCommand("java", $"-jar \"{jarPath}\" --version");
+                    if (verifyCheck.ExitCode != 0)
+                    {
+                        throw new InvalidOperationException($"Downloaded Kaitai Struct compiler JAR is not valid. Exit code: {verifyCheck.ExitCode}, Error: {verifyCheck.Error}");
+                    }
+
+                    // Set environment variable for future use
+                    Environment.SetEnvironmentVariable("KAITAI_COMPILER_JAR", jarPath, EnvironmentVariableTarget.Process);
+
+                    return jarPath;
+                }
+                finally
+                {
+                    // Cleanup extraction directory
+                    try
+                    {
+                        if (Directory.Exists(extractDir))
+                        {
+                            Directory.Delete(extractDir, true);
+                        }
+                    }
+                    catch
+                    {
+                        // Ignore cleanup errors
+                    }
+                }
+            }
+            finally
+            {
+                // Cleanup ZIP file
+                try
+                {
+                    if (File.Exists(zipPath))
+                    {
+                        File.Delete(zipPath);
+                    }
+                }
+                catch
+                {
+                    // Ignore cleanup errors
+                }
+            }
         }
 
         private (int ExitCode, string Output, string Error) RunCommand(string command, string arguments)
