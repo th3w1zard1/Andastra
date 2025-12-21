@@ -346,8 +346,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     return new Direct3D10Backend();
 
                 case GraphicsBackend.Direct3D9Remix:
-                    // TODO: STUB - Direct3D9Wrapper class not yet implemented
-                    throw new NotSupportedException("Direct3D9Wrapper is not yet implemented.");
+                    return new Direct3D9Wrapper();
 
                 case GraphicsBackend.OpenGL:
                     return new OpenGLBackend();
