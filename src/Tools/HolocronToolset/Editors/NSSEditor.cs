@@ -1335,11 +1335,11 @@ namespace HolocronToolset.Editors
             
             // Add filter for all supported file types
             var allExtensions = new List<string>();
-            foreach (var restype in _readSupported)
+            foreach (var resType in _readSupported)
             {
-                if (restype != null && !string.IsNullOrEmpty(restype.Extension))
+                if (resType != null && !string.IsNullOrEmpty(resType.Extension))
                 {
-                    allExtensions.Add($"*.{restype.Extension}");
+                    allExtensions.Add($"*.{resType.Extension}");
                 }
             }
             // Add capsule file extensions
@@ -1357,13 +1357,13 @@ namespace HolocronToolset.Editors
             }
 
             // Add individual filters for each supported type
-            foreach (var resourceType in _readSupported)
+            foreach (var resType in _readSupported)
             {
-                if (resourceType != null && !string.IsNullOrEmpty(resourceType.Extension) && !string.IsNullOrEmpty(resourceType.Category))
+                if (restype != null && !string.IsNullOrEmpty(restype.Extension) && !string.IsNullOrEmpty(restype.Category))
                 {
-                    fileFilters.Add(new FilePickerFileType($"{resourceType.Category} File (*.{resourceType.Extension})")
+                    fileFilters.Add(new FilePickerFileType($"{restype.Category} File (*.{restype.Extension})")
                     {
-                        Patterns = new[] { $"*.{resourceType.Extension}" }
+                        Patterns = new[] { $"*.{restype.Extension}" }
                     });
                 }
             }
@@ -1640,17 +1640,17 @@ namespace HolocronToolset.Editors
                 string text = null;
                 try
                 {
-                    text = Encoding.UTF8.GetString(data);
+                    text = System.Text.Encoding.UTF8.GetString(data);
                 }
                 catch (DecoderFallbackException)
                 {
                     try
                     {
-                        text = Encoding.GetEncoding("windows-1252").GetString(data);
+                        text = System.Text.Encoding.GetEncoding("windows-1252").GetString(data);
                     }
                     catch (DecoderFallbackException)
                     {
-                        text = Encoding.GetEncoding("latin-1").GetString(data);
+                        text = System.Text.Encoding.GetEncoding("latin-1").GetString(data);
                     }
                 }
 
@@ -1774,19 +1774,19 @@ namespace HolocronToolset.Editors
             byte[] data;
             try
             {
-                data = Encoding.UTF8.GetBytes(text);
-            }
-            catch (EncoderFallbackException)
-            {
-                try
-                {
-                    data = Encoding.GetEncoding("windows-1252").GetBytes(text);
+                    data = System.Text.Encoding.UTF8.GetBytes(text);
                 }
                 catch (EncoderFallbackException)
                 {
-                    data = Encoding.GetEncoding("latin-1").GetBytes(text);
+                    try
+                    {
+                        data = System.Text.Encoding.GetEncoding("windows-1252").GetBytes(text);
+                    }
+                    catch (EncoderFallbackException)
+                    {
+                        data = System.Text.Encoding.GetEncoding("latin-1").GetBytes(text);
+                    }
                 }
-            }
 
             return Tuple.Create(data, new byte[0]);
         }
@@ -4343,17 +4343,17 @@ namespace HolocronToolset.Editors
             // Try multiple encodings to read the file (matching Python implementation)
             try
             {
-                return File.ReadAllText(localPath, Encoding.UTF8);
+                return File.ReadAllText(localPath, System.Text.Encoding.UTF8);
             }
             catch (DecoderFallbackException)
             {
                 try
                 {
-                    return File.ReadAllText(localPath, Encoding.GetEncoding("windows-1252"));
+                    return File.ReadAllText(localPath, System.Text.Encoding.GetEncoding("windows-1252"));
                 }
                 catch (DecoderFallbackException)
                 {
-                    return File.ReadAllText(localPath, Encoding.GetEncoding("latin-1"));
+                    return File.ReadAllText(localPath, System.Text.Encoding.GetEncoding("latin-1"));
                 }
             }
         }
