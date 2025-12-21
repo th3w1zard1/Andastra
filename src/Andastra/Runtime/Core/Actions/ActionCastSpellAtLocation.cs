@@ -258,6 +258,59 @@ namespace Andastra.Runtime.Core.Actions
         }
 
         /// <summary>
+        /// Gets the duration of a visual effect from visualeffects.2da.
+        /// Based on swkotor2.exe: Visual effect duration from visualeffects.2da duration column
+        /// Located via string references: "visualeffects" @ 0x007c4a7c
+        /// Original implementation: Looks up duration from visualeffects.2da by visual effect ID (row index)
+        /// </summary>
+        /// <param name="visualEffectId">The visual effect ID (row index in visualeffects.2da)</param>
+        /// <returns>The duration in seconds, or 2.0f as default if lookup fails</returns>
+        private float GetVisualEffectDuration(int visualEffectId)
+        {
+            if (visualEffectId <= 0)
+            {
+                return 2.0f; // Default duration
+            }
+
+            if (_gameDataManager != null)
+            {
+                dynamic gameDataManager = _gameDataManager;
+                try
+                {
+                    // Get visualeffects.2da table
+                    // Based on swkotor2.exe: Loads visualeffects.2da via GameDataManager.GetTable("visualeffects")
+                    Parsing.Formats.TwoDA.TwoDA visualEffectsTable = gameDataManager.GetTable("visualeffects");
+                    if (visualEffectsTable != null)
+                    {
+                        // Get row by visual effect ID (row index)
+                        // Based on swkotor2.exe: Visual effect ID maps directly to row index in visualeffects.2da
+                        if (visualEffectId < visualEffectsTable.GetHeight())
+                        {
+                            Parsing.Formats.TwoDA.TwoDARow row = visualEffectsTable.GetRow(visualEffectId);
+                            if (row != null)
+                            {
+                                // Get duration column value
+                                // Based on visualeffects.2da format: duration column contains float value in seconds
+                                float? duration = row.GetFloat("duration");
+                                if (duration.HasValue && duration.Value > 0.0f)
+                                {
+                                    return duration.Value;
+                                }
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // Fall through to default
+                }
+            }
+
+            // Default duration if lookup fails
+            return 2.0f;
+        }
+
+        /// <summary>
         /// Applies spell effects at the target location.
         /// Based on swkotor2.exe: Spell effect application at location
         /// Located via string references: Spell effect system for location-based spells
@@ -314,10 +367,12 @@ namespace Andastra.Runtime.Core.Actions
                                 DurationType = Combat.EffectDurationType.Instant
                             };
                             effectSystem.ApplyEffect(groundVfxEntity, groundVisualEffect, caster);
-                            // Schedule entity destruction after a short delay to allow visual effect to display
+                            // Schedule entity destruction after visual effect duration
                             // Based on swkotor2.exe: Ground visual effects persist for their duration from visualeffects.2da
-                            // TODO: STUB - For now, destroy after 2 seconds (actual duration should come from visualeffects.2da)
-                            caster.World.DelayScheduler?.ScheduleAction(2.0f, () =>
+                            // Located via string references: "visualeffects" @ 0x007c4a7c, duration column in visualeffects.2da
+                            // Original implementation: Looks up duration from visualeffects.2da by visual effect ID (conjGrndVfx)
+                            float visualEffectDuration = GetVisualEffectDuration(conjGrndVfx);
+                            caster.World.DelayScheduler?.ScheduleAction(visualEffectDuration, () =>
                             {
                                 if (groundVfxEntity.IsValid)
                                 {
