@@ -36,6 +36,12 @@ namespace Andastra.Runtime.Graphics
         /// </summary>
         /// <param name="indices">Index data.</param>
         void SetData(int[] indices);
+
+        /// <summary>
+        /// Gets index data from the buffer.
+        /// </summary>
+        /// <param name="indices">Array to receive the index data.</param>
+        void GetData(int[] indices);
     }
 }
 

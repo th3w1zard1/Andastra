@@ -38,6 +38,21 @@ namespace Andastra.Runtime.Stride.Graphics
             _buffer.SetData(_buffer.GraphicsDevice.ImmediateContext, data);
         }
 
+        public void GetData<T>(T[] data) where T : struct
+        {
+            if (data == null)
+            {
+                throw new ArgumentNullException(nameof(data));
+            }
+
+            if (data.Length > _vertexCount)
+            {
+                throw new ArgumentException("Data array length exceeds vertex count.", nameof(data));
+            }
+
+            _buffer.GetData(_buffer.GraphicsDevice.ImmediateContext, data);
+        }
+
         public void Dispose()
         {
             _buffer?.Dispose();

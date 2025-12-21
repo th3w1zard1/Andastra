@@ -40,6 +40,13 @@ namespace Andastra.Runtime.Graphics
         /// <typeparam name="T">Vertex type.</typeparam>
         /// <param name="data">Vertex data.</param>
         void SetData<T>(T[] data) where T : struct;
+
+        /// <summary>
+        /// Gets vertex data from the buffer.
+        /// </summary>
+        /// <typeparam name="T">Vertex type.</typeparam>
+        /// <param name="data">Array to receive the vertex data.</param>
+        void GetData<T>(T[] data) where T : struct;
     }
 }
 

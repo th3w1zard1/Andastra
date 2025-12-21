@@ -50,6 +50,33 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
+        public void GetData(int[] indices)
+        {
+            if (indices == null)
+            {
+                throw new ArgumentNullException(nameof(indices));
+            }
+
+            if (indices.Length > _indexCount)
+            {
+                throw new ArgumentException("Data array length exceeds index count.", nameof(indices));
+            }
+
+            if (_isShort)
+            {
+                var shortIndices = new ushort[_indexCount];
+                _buffer.GetData(_buffer.GraphicsDevice.ImmediateContext, shortIndices);
+                for (int i = 0; i < indices.Length && i < shortIndices.Length; i++)
+                {
+                    indices[i] = shortIndices[i];
+                }
+            }
+            else
+            {
+                _buffer.GetData(_buffer.GraphicsDevice.ImmediateContext, indices);
+            }
+        }
+
         public void Dispose()
         {
             _buffer?.Dispose();

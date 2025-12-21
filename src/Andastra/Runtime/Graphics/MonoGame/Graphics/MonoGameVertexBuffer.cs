@@ -43,6 +43,21 @@ namespace Andastra.Runtime.MonoGame.Graphics
             _buffer.SetData(data);
         }
 
+        public void GetData<T>(T[] data) where T : struct
+        {
+            if (data == null)
+            {
+                throw new ArgumentNullException(nameof(data));
+            }
+
+            if (data.Length > _vertexCount)
+            {
+                throw new ArgumentException("Data array length exceeds vertex count.", nameof(data));
+            }
+
+            _buffer.GetData(data);
+        }
+
         public void Dispose()
         {
             _buffer?.Dispose();
