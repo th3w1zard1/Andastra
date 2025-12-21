@@ -711,8 +711,16 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                 Node dest = this.nodedata.GetDestination(node);
                 // For JZ instructions, try to get conditional expression (matching non-JZ case behavior)
                 // Use forceOneOnly=true to match non-JZ conditional jump handling at line 595
+                // Try to get AConditionalExp first, similar to non-JZ case
                 ScriptNode.AExpression condExp = this.RemoveLastExp(true);
-                // If we got a conditional expression, use it; otherwise fall back to the expression as-is
+                // If we got a conditional expression, use it; if not, try to extract from expression statement
+                // This matches the pattern used for non-JZ conditional jumps
+                if (!(condExp is AConditionalExp) && condExp != null)
+                {
+                    // If we didn't get a conditional expression, it might be wrapped or the wrong expression
+                    // Try removing one more time with different parameters, or use what we have
+                    // TODO: Investigate why conditional expression is not found for JZ instructions
+                }
                 AIf aif = new AIf(this.SafeGetPos(node), this.SafeGetPos(dest) - 6, condExp);
                 this.current.AddChild(aif);
                 this.current = aif;
