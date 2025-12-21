@@ -249,6 +249,18 @@ namespace HolocronToolset.Common.Widgets
             }
         }
 
+        // Matching PyKotor implementation - convenience methods for setting mode
+        // Original: Methods to set find or replace mode explicitly
+        public void SetFindMode()
+        {
+            ShowFind();
+        }
+
+        public void SetReplaceMode()
+        {
+            ShowReplace();
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/find_replace_widget.py:211-221
         // Original: def _on_find_text_changed(self):
         private void OnFindTextChanged()

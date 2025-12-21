@@ -26,8 +26,17 @@ namespace Andastra.Runtime.MonoGame.Graphics
 
         public bool IsMouseVisible
         {
-            get { return _window.IsMouseVisible; }
-            set { _window.IsMouseVisible = value; }
+            get
+            {
+                // MonoGame GameWindow doesn't expose IsMouseVisible directly
+                // This would need to be managed through the Game class
+                return true; // Default to visible
+            }
+            set
+            {
+                // MonoGame GameWindow doesn't expose IsMouseVisible directly
+                // This would need to be managed through the Game class
+            }
         }
 
         public bool IsFullscreen
@@ -65,7 +74,15 @@ namespace Andastra.Runtime.MonoGame.Graphics
             }
         }
 
-        public bool IsActive => _window.IsActive;
+        public bool IsActive
+        {
+            get
+            {
+                // MonoGame GameWindow doesn't expose IsActive directly
+                // This would need to be tracked through window focus events
+                return true; // Default to active
+            }
+        }
 
         public void Close()
         {

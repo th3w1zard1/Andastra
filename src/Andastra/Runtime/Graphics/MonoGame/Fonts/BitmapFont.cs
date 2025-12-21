@@ -7,6 +7,7 @@ using Andastra.Parsing;
 using Andastra.Parsing.Installation;
 using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.MonoGame.Graphics;
+using MonoGameTexture2D = Andastra.Runtime.Graphics.MonoGame.Graphics.MonoGameTexture2D;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.MonoGame.Fonts

@@ -16,8 +16,8 @@ using Andastra.Parsing.Formats.TwoDA;
 using static Andastra.Parsing.Formats.TwoDA.TwoDAAuto;
 using Andastra.Parsing.Formats.TLK;
 using static Andastra.Parsing.Formats.TLK.TLKAuto;
-using Andastra.Parsing.Resource;
 extern alias app;
+using Andastra.Parsing.Resource;
 using App = app::KotorDiff.App;
 
 namespace KotorDiff.Tests.Helpers

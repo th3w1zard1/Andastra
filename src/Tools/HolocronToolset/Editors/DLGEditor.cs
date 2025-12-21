@@ -96,6 +96,10 @@ namespace HolocronToolset.Editors
         private DLGListWidget _pinnedItemsList;
 
         private int _currentResultIndex = 0;
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:122-123
+        // Original: self.search_results: list[DLGStandardItem] = [], self.current_search_text: str = ""
+        private List<DLGStandardItem> _searchResults = new List<DLGStandardItem>();
+        private string _currentSearchText = "";
 
         // Search UI Controls
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:451-465

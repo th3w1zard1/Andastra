@@ -290,7 +290,7 @@ namespace HolocronToolset.Editors
             _mainSplitter.RowDefinitions.Add(new RowDefinition { Height = new GridLength(0) });  // Initially hidden (0 height)
 
             // Store current content as main content container
-            _mainContentContainer = Content;
+            _mainContentContainer = Content as Control;
 
             // Create panel tabs (TabControl for output, terminal, etc.)
             // Matching PyKotor: self.ui.panelTabs (QTabWidget)
@@ -558,9 +558,10 @@ namespace HolocronToolset.Editors
                 // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2657-2658
                 // Original: self.ui.codeEdit.cursorPositionChanged.connect(self._update_breadcrumbs)
                 // Update breadcrumbs on cursor position changes (selection changes include cursor moves)
-                _codeEdit.SelectionChanged += (s, e) => UpdateBreadcrumbs();
+                // Note: TextBox doesn't have SelectionChanged event, so we use PointerPressed/Released and KeyUp
                 _codeEdit.PointerPressed += (s, e) => UpdateBreadcrumbs();
                 _codeEdit.PointerReleased += (s, e) => UpdateBreadcrumbs();
+                _codeEdit.KeyUp += (s, e) => UpdateBreadcrumbs();
                 _codeEdit.KeyDown += (s, e) => UpdateBreadcrumbs();
                 _codeEdit.KeyUp += (s, e) => UpdateBreadcrumbs();
 
@@ -1658,7 +1659,7 @@ namespace HolocronToolset.Editors
                     "Find All References",
                     $"No references to '{word}' found in current file.",
                     ButtonEnum.Ok,
-                    Icon.Info);
+                    MsBox.Avalonia.Enums.Icon.Info);
                 messageBox.ShowAsync();
             }
             else
@@ -1675,17 +1676,17 @@ namespace HolocronToolset.Editors
                         // Calculate position by finding the line start and adding column offset
                         int lineStart = 0;
                         int currentLine = 1;
-                        string text = _codeEdit.Text;
+                        string codeText = _codeEdit.Text;
 
                         // Find the start of the target line
-                        for (int i = 0; i < text.Length && currentLine < firstResult.Line; i++)
+                        for (int i = 0; i < codeText.Length && currentLine < firstResult.Line; i++)
                         {
-                            if (text[i] == '\n')
+                            if (codeText[i] == '\n')
                             {
                                 currentLine++;
                                 lineStart = i + 1;
                             }
-                            else if (text[i] == '\r')
+                            else if (codeText[i] == '\r')
                             {
                                 // Handle \r\n or \r
                                 if (i + 1 < text.Length && text[i + 1] == '\n')
@@ -1719,7 +1720,7 @@ namespace HolocronToolset.Editors
                     "Find All References",
                     $"Found {results.Count} reference(s) to '{word}'. Navigated to first occurrence.",
                     ButtonEnum.Ok,
-                    Icon.Info);
+                    MsBox.Avalonia.Enums.Icon.Info);
                 messageBox.ShowAsync();
             }
         }
@@ -2364,14 +2365,14 @@ namespace HolocronToolset.Editors
             {
                 foreach (var func in functions)
                 {
-                    string returnType = func.ReturnType?.ToScriptString() ?? "void";
+                    string returnType = func.ReturnType.ToScriptString();
 
                     // Try to get parameter info
                     if (func.Params != null && func.Params.Count > 0)
                     {
                         var paramStrings = func.Params.Take(3).Select(p =>
                         {
-                            string paramType = p.DataType?.ToScriptString() ?? "";
+                            string paramType = p.DataType.ToScriptString();
                             string paramName = p.Name ?? "";
                             return $"{paramType} {paramName}";
                         }).ToList();
@@ -2395,7 +2396,7 @@ namespace HolocronToolset.Editors
             {
                 foreach (var constItem in constants)
                 {
-                    string constType = constItem.DataType?.ToScriptString() ?? "";
+                    string constType = constItem.DataType.ToScriptString();
                     string constValue = constItem.Value?.ToString() ?? "";
 
                     if (!string.IsNullOrEmpty(constType) && !string.IsNullOrEmpty(constValue))
@@ -3920,7 +3921,7 @@ namespace HolocronToolset.Editors
                     "Format Document",
                     "No code to format.",
                     ButtonEnum.Ok,
-                    Icon.Info);
+                    MsBox.Avalonia.Enums.Icon.Info);
                 await infoBox.ShowAsync();
                 return;
             }

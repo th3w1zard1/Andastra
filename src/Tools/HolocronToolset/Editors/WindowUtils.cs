@@ -359,7 +359,7 @@ namespace HolocronToolset.Editors
             }
             else if (restype.Contents == "plaintext")
             {
-                editor = new TXTEditor(parentWindow, installation);
+                editor = new HolocronToolset.Editors.TXTEditor(parentWindow, installation);
             }
 
             if (editor == null)
