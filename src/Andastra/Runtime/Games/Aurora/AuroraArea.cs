@@ -506,9 +506,15 @@ namespace Andastra.Runtime.Games.Aurora
 
                 // Read lighting scheme
                 // Based on ARE format: LightingScheme is BYTE (index into environment.2da)
+                // LightingScheme = 0 means no preset (use ARE file values directly)
+                // LightingScheme > 0 means preset index into environment.2da
+                // Validation: LightingScheme is validated in InitializeAreaEffects() to ensure it's a valid index
+                // nwmain.exe: CNWSArea::LoadProperties validates LightingScheme against environment.2da row count
                 if (root.Exists("LightingScheme"))
                 {
                     _lightingScheme = root.GetUInt8("LightingScheme");
+                    // Note: Full validation (checking if index exists in environment.2da) happens in InitializeAreaEffects()
+                    // where we have access to the 2DA table manager
                 }
                 else
                 {
@@ -1780,6 +1786,85 @@ namespace Andastra.Runtime.Games.Aurora
         }
 
         /// <summary>
+        /// Validates that LightingScheme is a valid byte value (0-255) and if > 0, a valid index in environment.2da.
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: CNWSArea lighting scheme validation
+        /// - LightingScheme is a BYTE (0-255) - byte type already enforces this range
+        /// - LightingScheme = 0 is always valid (means no preset, use ARE file values directly)
+        /// - LightingScheme > 0 must be a valid row index in environment.2da
+        /// - If invalid, clamps to 0 (no preset) to prevent crashes
+        /// - Original engine behavior: Invalid indices are silently ignored, falls back to ARE file values
+        /// </remarks>
+        private void ValidateLightingScheme()
+        {
+            // LightingScheme is already a byte, so it's guaranteed to be 0-255
+            // But we need to validate that if > 0, it's a valid index in environment.2da
+            
+            // LightingScheme = 0 is always valid (no preset)
+            if (_lightingScheme == 0)
+            {
+                return;
+            }
+
+            // Need 2DA table manager to validate against environment.2da
+            if (_twoDATableManager == null)
+            {
+                // Can't validate without table manager - this is acceptable during early initialization
+                // The validation will happen later when LoadLightingSchemeFromEnvironment2DA is called
+                return;
+            }
+
+            try
+            {
+                // Load environment.2da table to check row count
+                // Based on nwmain.exe: C2DA::Load2DArray loads tables from resource system
+                TwoDA environmentTable = _twoDATableManager.GetTable("environment");
+                if (environmentTable == null)
+                {
+                    // Table not found - invalidate the lighting scheme (set to 0)
+                    // Based on original engine: Missing table means no preset available
+                    _lightingScheme = 0;
+                    return;
+                }
+
+                // Get row count from environment.2da
+                // Based on nwmain.exe: C2DA row count validation
+                int rowCount = environmentTable.GetHeight();
+                
+                // Validate that LightingScheme is within valid row range
+                // Row indices are 0-based, so valid range is 0 to (rowCount - 1)
+                // But LightingScheme = 0 means no preset, so valid preset indices are 1 to (rowCount - 1)
+                if (_lightingScheme >= rowCount)
+                {
+                    // Invalid index - clamp to 0 (no preset)
+                    // Based on original engine: Invalid indices are silently ignored
+                    _lightingScheme = 0;
+                    return;
+                }
+
+                // Additional validation: Check if the row actually exists and is valid
+                // Based on nwmain.exe: Row validation ensures row is not empty/invalid
+                TwoDARow row = _twoDATableManager.GetRow("environment", _lightingScheme);
+                if (row == null)
+                {
+                    // Row not found - invalidate the lighting scheme (set to 0)
+                    // Based on original engine: Missing row means no preset available
+                    _lightingScheme = 0;
+                    return;
+                }
+
+                // Validation passed - LightingScheme is a valid index in environment.2da
+            }
+            catch (Exception ex)
+            {
+                // Error during validation - invalidate the lighting scheme to prevent crashes
+                // Based on original engine: Errors are handled gracefully, fall back to ARE file values
+                _lightingScheme = 0;
+            }
+        }
+
+        /// <summary>
         /// Loads and applies lighting scheme preset from environment.2da.
         /// </summary>
         /// <remarks>
@@ -2140,6 +2225,11 @@ namespace Andastra.Runtime.Games.Aurora
             // Validate wind power (0-2: None, Weak, Strong, already clamped in LoadAreaProperties)
             if (_windPower < 0) _windPower = 0;
             if (_windPower > 2) _windPower = 2;
+
+            // Validate lighting scheme index
+            // Based on nwmain.exe: LightingScheme is index into environment.2da (0 = no preset, > 0 = preset index)
+            // LightingScheme must be a valid byte (0-255) and if > 0, must be a valid row index in environment.2da
+            ValidateLightingScheme();
 
             // Lighting scheme has been loaded from environment.2da if LightingScheme > 0
             // Based on nwmain.exe: LightingScheme is index into environment.2da
