@@ -107,7 +107,7 @@ namespace Andastra.Parsing.Tests.Formats
 
         // Compiler and nwscript paths
         private static readonly string NwnCompiler = FindCompiler();
-        private static readonly string K1Nwscript = Path.Combine(RepoRoot, "vendor", "PyKotor", "vendor", "NorthernLights", "Scripts", "k1_nwscript.nss");
+        private static readonly string K1Nwscript = Path.Combine(RepoRoot, "tools", "k1_nwscript.nss");
         private static readonly string K1AscNwscript = Path.Combine(RepoRoot, "tools", "k1_asc_nwscript.nss");
         private static readonly string K2Nwscript = Path.Combine(RepoRoot, "include", "k2_nwscript.nss");
 
@@ -1295,7 +1295,9 @@ namespace Andastra.Parsing.Tests.Formats
                 // For roundtrip tests, disable all optimizations to match external compiler output exactly
                 // Pass empty list to disable optimizations (including RemoveNopOptimizer)
                 // This ensures bytecode matches the external compiler's output byte-for-byte
-                NCS ncs = NCSAuto.CompileNss(source, game, null, new List<NCSOptimizer>(), libraryLookup);
+                // CRITICAL: Pass nwscript path to ensure function order matches external compiler
+                string nwscriptPath = gameFlag.Equals("k2") ? K2Nwscript : K1Nwscript;
+                NCS ncs = NCSAuto.CompileNss(source, game, null, new List<NCSOptimizer>(), libraryLookup, null, false, nwscriptPath);
                 NCSAuto.WriteNcs(ncs, compiledOut);
 
                 if (!File.Exists(compiledOut))
@@ -3578,7 +3580,7 @@ namespace Andastra.Parsing.Tests.Formats
                                     Console.Error.WriteLine($"DEBUG: Saved decompiled output to {debugFile}");
                                 }
                             }
-                            catch (Exception debugEx)
+                            catch (Exception)
                             {
                                 // Ignore debug file save errors
                             }

@@ -517,28 +517,24 @@ namespace Andastra.Parsing.Formats.NCS
             }
             NCS ncs = compiler.Compile(source, library);
 
-            // Apply optimizers only if explicitly provided
-            // Based on reverse engineering of nwnnsscomp.exe, it does not appear to perform
-            // explicit optimization passes. The bytecode generation should produce optimized
-            // output directly without post-compilation optimization passes.
-            if (optimizers != null && optimizers.Count > 0)
+            // Always remove NOP instructions to match external compiler behavior
+            // The external compiler (nwnnsscomp.exe) does not produce NOP instructions in its output
+            // Matching PyKotor behavior: automatically add RemoveNopOptimizer if not in the list
+            List<NCSOptimizer> optimizersToApply = optimizers != null ? new List<NCSOptimizer>(optimizers) : new List<NCSOptimizer>();
+            bool hasRemoveNop = optimizersToApply.Any(o => o is RemoveNopOptimizer);
+            if (!hasRemoveNop)
             {
-                // Apply only user-specified optimizers
-                foreach (NCSOptimizer optimizer in optimizers)
-                {
-                    optimizer.Reset();
-                }
-                ncs.Optimize(optimizers);
+                optimizersToApply.Insert(0, new RemoveNopOptimizer());
             }
 
-            // Apply all optimizers (if any)
-            if (optimizers.Count > 0)
+            // Apply optimizers
+            if (optimizersToApply.Count > 0)
             {
-                foreach (NCSOptimizer optimizer in optimizers)
+                foreach (NCSOptimizer optimizer in optimizersToApply)
                 {
                     optimizer.Reset();
                 }
-                ncs.Optimize(optimizers);
+                ncs.Optimize(optimizersToApply);
             }
 
             if (System.Environment.GetEnvironmentVariable("NCS_INTERPRETER_DEBUG") == "true")
