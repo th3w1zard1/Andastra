@@ -2184,12 +2184,15 @@ namespace Andastra.Runtime.Games.Aurora
             var scriptHooksComponent = moduleEntity.GetComponent<IScriptHooksComponent>();
             if (scriptHooksComponent == null)
             {
-                // Try to add IScriptHooksComponent if entity supports component addition
-                // Note: Entity component system may require component to be added during entity creation
-                // TODO: STUB - For now, if component doesn't exist, we'll skip script execution
-                // In a full implementation, ComponentInitializer should ensure all entities have IScriptHooksComponent
-                System.Diagnostics.Debug.WriteLine($"[AuroraModuleLoader] Module entity missing IScriptHooksComponent - scripts will not execute");
-                return;
+                // Create and add IScriptHooksComponent if it doesn't exist
+                // Based on nwmain.exe: All entities should have IScriptHooksComponent for script execution
+                // ComponentInitializer typically ensures this during entity creation, but we handle it here
+                // as a fallback for entities that may have been created without proper component initialization
+                // Aurora uses BaseScriptHooksComponent directly (no engine-specific implementation needed)
+                scriptHooksComponent = new Common.Components.BaseScriptHooksComponent();
+                moduleEntity.AddComponent<IScriptHooksComponent>(scriptHooksComponent);
+                
+                System.Diagnostics.Debug.WriteLine($"[AuroraModuleLoader] Created and added IScriptHooksComponent to module entity for script execution");
             }
 
             // Set script hooks on module entity component
