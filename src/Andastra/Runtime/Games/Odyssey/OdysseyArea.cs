@@ -1170,6 +1170,81 @@ namespace Andastra.Runtime.Games.Odyssey
         /// - vendor/reone/src/libs/graphics/format/bwmreader.cpp
         /// - vendor/KotOR.js/src/odyssey/OdysseyWalkMesh.ts
         /// </remarks>
+        
+        /// <summary>
+        /// Converts a NavigationMesh (core/engine-agnostic) to OdysseyNavigationMesh (engine-specific).
+        /// </summary>
+        /// <param name="navMesh">The NavigationMesh to convert.</param>
+        /// <returns>An OdysseyNavigationMesh with the same data.</returns>
+        /// <remarks>
+        /// Based on swkotor2.exe: Area stores walkmesh with Odyssey-specific navigation behavior.
+        /// This conversion ensures proper abstraction: OdysseyArea uses OdysseyNavigationMesh instead
+        /// of the core NavigationMesh class.
+        ///
+        /// Conversion process:
+        /// 1. Extract arrays from NavigationMesh using public properties
+        /// 2. Rebuild AABB tree using NavigationMesh.BuildAabbTreeFromFaces (static method)
+        /// 3. Create OdysseyNavigationMesh with extracted data
+        ///
+        /// Based on swkotor2.exe: FUN_004f5070 @ 0x004f5070 - walkmesh projection with Odyssey-specific logic
+        /// </remarks>
+        private static OdysseyNavigationMesh ConvertToOdysseyNavigationMesh(INavigationMesh navMesh)
+        {
+            if (navMesh == null)
+            {
+                return new OdysseyNavigationMesh();
+            }
+
+            // Check if it's already an OdysseyNavigationMesh
+            if (navMesh is OdysseyNavigationMesh odysseyNavMesh)
+            {
+                return odysseyNavMesh;
+            }
+
+            // Must be a NavigationMesh - extract its data
+            NavigationMesh coreNavMesh = navMesh as NavigationMesh;
+            if (coreNavMesh == null)
+            {
+                // Unknown type - return empty mesh
+                return new OdysseyNavigationMesh();
+            }
+
+            // Extract arrays from NavigationMesh using public properties
+            // Based on NavigationMesh public API: Vertices, FaceIndices, Adjacency, SurfaceMaterials are IReadOnlyList
+            Vector3[] vertices = new Vector3[coreNavMesh.Vertices.Count];
+            for (int i = 0; i < coreNavMesh.Vertices.Count; i++)
+            {
+                vertices[i] = coreNavMesh.Vertices[i];
+            }
+
+            int[] faceIndices = new int[coreNavMesh.FaceIndices.Count];
+            for (int i = 0; i < coreNavMesh.FaceIndices.Count; i++)
+            {
+                faceIndices[i] = coreNavMesh.FaceIndices[i];
+            }
+
+            int[] adjacency = new int[coreNavMesh.Adjacency.Count];
+            for (int i = 0; i < coreNavMesh.Adjacency.Count; i++)
+            {
+                adjacency[i] = coreNavMesh.Adjacency[i];
+            }
+
+            int[] surfaceMaterials = new int[coreNavMesh.SurfaceMaterials.Count];
+            for (int i = 0; i < coreNavMesh.SurfaceMaterials.Count; i++)
+            {
+                surfaceMaterials[i] = coreNavMesh.SurfaceMaterials[i];
+            }
+
+            // Rebuild AABB tree using NavigationMesh static method
+            // Based on NavigationMesh.BuildAabbTreeFromFaces - builds AABB tree from face data
+            int faceCount = faceIndices.Length / 3;
+            NavigationMesh.AabbNode aabbRoot = NavigationMesh.BuildAabbTreeFromFaces(vertices, faceIndices, surfaceMaterials, faceCount);
+
+            // Create OdysseyNavigationMesh with extracted data
+            // Based on OdysseyNavigationMesh constructor: takes arrays and AABB root
+            return new OdysseyNavigationMesh(vertices, faceIndices, adjacency, surfaceMaterials, aabbRoot);
+        }
+
         private void LoadWalkmeshFromRooms()
         {
             if (_module == null)
@@ -1195,12 +1270,11 @@ namespace Andastra.Runtime.Games.Odyssey
 
                 if (combinedNavMesh != null)
                 {
-                    // NavigationMeshFactory returns NavigationMesh which implements INavigationMesh
-                    // Both NavigationMesh and OdysseyNavigationMesh implement INavigationMesh
-                    // For Odyssey areas, we can use NavigationMesh directly since it has all required functionality
-                    // OdysseyNavigationMesh is a wrapper that provides Odyssey-specific extensions if needed
-                    // TODO: STUB - For now, we use NavigationMesh directly as it's fully functional
-                    _navigationMesh = combinedNavMesh;
+                    // NavigationMeshFactory returns NavigationMesh (core/engine-agnostic class)
+                    // For proper Odyssey abstraction, we wrap it in OdysseyNavigationMesh (engine-specific)
+                    // Based on swkotor2.exe: Area stores walkmesh with Odyssey-specific navigation behavior
+                    // swkotor2.exe: FUN_004f5070 @ 0x004f5070 - walkmesh projection with Odyssey-specific logic
+                    _navigationMesh = ConvertToOdysseyNavigationMesh(combinedNavMesh);
                 }
                 else
                 {
