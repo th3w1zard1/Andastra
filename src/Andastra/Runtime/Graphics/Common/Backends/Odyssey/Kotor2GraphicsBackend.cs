@@ -163,19 +163,6 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         private static uint _kotor2ExtensionFlag4 = 0;
         private static uint _kotor2ExtensionFlag5 = 0;
 
-
-        // DAT_0080d50c - extension validation flag (used by FUN_00475520)
-        // Default value: 0x1 (swkotor2.exe: 0x0080d50c)
-        private static uint _kotor2ExtensionValidationFlag = 0x1;
-
-        // DAT_0080d504 - extension exclusion flag (used by FUN_00475520)
-        // Default value: 0x20000000 (swkotor2.exe: 0x0080d504)
-        private static uint _kotor2ExtensionExclusionFlag = 0x20000000;
-
-        // DAT_0080d518 - cached validation result (used by FUN_00475520)
-        // Initialized to 0xffffffff (uninitialized state)
-        private static uint _kotor2ValidationCache = 0xffffffff;
-
         // DAT_0082b2c0, DAT_0082b2c4, DAT_0082b2c8 - additional context variables
         private static IntPtr _kotor2AdditionalWindow2 = IntPtr.Zero;
         private static IntPtr _kotor2AdditionalDC2 = IntPtr.Zero;
@@ -1540,7 +1527,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                     // Negative path: uVar1 = uVar1 + (0x80000000 < (uint)-(float)(in_ST0 - (float10)(longlong)uVar1));
                     double diff = _kotor2RandomSeed - (double)roundedValue;
                     float floatDiff = (float)-diff;
-                    uint compareResult = (uint)(0x80000000 < (uint)floatDiff) ? 1u : 0u;
+                    uint compareResult = (0x80000000 < (uint)floatDiff) ? 1u : 0u;
                     uVar1 = uVar1 + compareResult;
                 }
                 else
@@ -1610,45 +1597,6 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         }
 
         /// <summary>
-        /// KOTOR2 extension validation check.
-        /// Matches swkotor2.exe: FUN_00475520 @ 0x00475520.
-        /// This function performs an additional validation check on extension flags to ensure
-        /// compatibility. It caches the result in _kotor2ValidationCache to avoid repeated calculations.
-        /// </summary>
-        /// <returns>Returns 1 if validation passes, 0 if validation fails.</returns>
-        private uint CheckKotor2ExtensionValidation()
-        {
-            // Matching swkotor2.exe: FUN_00475520 @ 0x00475520
-            // If cache is uninitialized (0xffffffff), perform validation
-            if (_kotor2ValidationCache == 0xffffffff)
-            {
-                // Check if extension flags match expected pattern:
-                // Condition 1: ((DAT_00840234 & DAT_0080d4e0) == (DAT_0080d4e0 & DAT_0080d50c)) != 0
-                // Condition 2: (DAT_0080d504 & DAT_00840234) == 0
-                // If both conditions are true, validation fails (return 0)
-                // Otherwise, validation passes (return 1)
-                uint extensionAndFlag = _kotor2ExtensionFlags & _kotor2ExtensionFlag2;
-                uint flagAndValidation = _kotor2ExtensionFlag2 & _kotor2ExtensionValidationFlag;
-                bool firstCondition = (extensionAndFlag == flagAndValidation);
-                bool secondCondition = (_kotor2ExtensionExclusionFlag & _kotor2ExtensionFlags) == 0;
-
-                if (firstCondition && secondCondition)
-                {
-                    // Validation failed - set cache to 0 and return 0
-                    _kotor2ValidationCache = 0;
-                    return 0;
-                }
-
-                // Validation passed - set cache to 1
-                _kotor2ValidationCache = 1;
-            }
-
-            // Return 1 if cache is 1, 0 otherwise
-            // CONCAT31((int3)((uint)DAT_0080d518 >> 8),DAT_0080d518 == 1) simplifies to (DAT_0080d518 == 1)
-            return (_kotor2ValidationCache == 1) ? 1u : 0u;
-        }
-
-        /// <summary>
         /// KOTOR2 render texture rectangle support check.
         /// Matches swkotor2.exe: FUN_004757a0 @ 0x004757a0.
         /// </summary>
@@ -1661,16 +1609,16 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 uint combinedFlags = _kotor2ExtensionFlag2 | _kotor2ExtensionFlag5 | _kotor2ExtensionFlag4;
                 result = ((_kotor2ExtensionFlags & combinedFlags) == combinedFlags) ? 1u : 0u;
                 _kotor2CapabilityFlag2 = result;
-
-                // Additional validation check from FUN_00475520
+                // TODO: GHIDRA_REQUIRED - Implement FUN_00475520 additional check
                 // swkotor2.exe: FUN_00475520 @ 0x00475520 performs an additional validation check
-                // after the extension flags are verified. If this check fails, the result is set to 0.
-                uint validationResult = CheckKotor2ExtensionValidation();
-                if (validationResult == 0)
-                {
-                    _kotor2CapabilityFlag2 = 0;
-                    return 0;
-                }
+                // after the extension flags are verified. This function needs to be reverse-engineered
+                // in Ghidra to determine:
+                // 1. What additional validation it performs (runtime check, function pointer validation, version check, etc.)
+                // 2. How it modifies the result value (if at all)
+                // 3. What parameters it takes (if any)
+                // 4. What global variables or state it accesses
+                // Once reverse-engineered, implement the exact logic here to ensure 1:1 parity.
+                // Current implementation is functional but incomplete without this check.
             }
             return result;
         }
