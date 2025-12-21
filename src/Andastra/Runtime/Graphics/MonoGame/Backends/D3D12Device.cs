@@ -57,7 +57,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static readonly Guid IID_ID3D12StateObject = new Guid(0x47016943, 0xfca8, 0x4594, 0x93, 0xea, 0xaf, 0x25, 0x8b, 0xdc, 0x7b, 0x77);
         private static readonly Guid IID_ID3D12StateObjectProperties = new Guid(0xde5fa827, 0x91bf, 0x4fb9, 0xb6, 0x01, 0x5c, 0x10, 0x5e, 0x15, 0x58, 0xdc);
 
-        // DirectX 12 COM interface declarations (simplified - full implementation would require complete COM interop)
+        // TODO:  DirectX 12 COM interface declarations (simplified - full implementation would require complete COM interop)
         [ComImport]
         [Guid("189819f1-1db6-4b57-be54-1821339b85f7")]
         [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
@@ -679,21 +679,66 @@ namespace Andastra.Runtime.MonoGame.Backends
             try
             {
                 // Step 1: Get or create root signature from binding layouts
-                // TODO:  Note: CreateBindingLayout also has a TODO for root signature creation
-                // TODO: STUB - For now, we try to get root signature from binding layouts if they exist
+                // Based on DirectX 12 Graphics Pipeline: Root signature is required for pipeline state creation
+                // Root signature defines the shader resource binding layout (CBVs, SRVs, UAVs, samplers)
+                // https://docs.microsoft.com/en-us/windows/win32/direct3d12/root-signatures
                 if (desc.BindingLayouts != null && desc.BindingLayouts.Length > 0)
                 {
-                    // Get root signature from first binding layout (pipeline typically uses one root signature)
-                    // TODO:  In a full implementation, multiple root signatures would be combined
+                    // Get root signature from binding layouts
+                    // Based on DirectX 12: A graphics pipeline typically uses one root signature
+                    // Multiple binding layouts can be combined into a single root signature, but for simplicity,
+                    // we use the root signature from the first binding layout
+                    // In a full implementation, multiple root signatures could be combined or used separately
+                    
+                    // Try to get root signature from first binding layout
                     var firstLayout = desc.BindingLayouts[0] as D3D12BindingLayout;
                     if (firstLayout != null)
                     {
-                        // D3D12BindingLayout stores root signature internally
-                        // We need to access it via a method or property
-                        // TODO: STUB - For now, we'll need to create root signature if not already created
-                        // This will be fully implemented when CreateBindingLayout is implemented
-                        rootSignature = IntPtr.Zero; // Will be set when root signature is created
+                        // D3D12BindingLayout stores root signature internally and provides GetRootSignature() method
+                        // Based on D3D12BindingLayout implementation: Root signature is created during CreateBindingLayout
+                        // and stored in the layout for reuse across multiple pipelines
+                        rootSignature = firstLayout.GetRootSignature();
+                        
+                        // Validate that root signature was successfully retrieved
+                        if (rootSignature == IntPtr.Zero)
+                        {
+                            // Root signature should have been created during CreateBindingLayout
+                            // If it's null, this indicates CreateBindingLayout was not fully implemented or failed
+                            // In this case, we cannot proceed with pipeline creation as root signature is required
+                            // Log error and continue with IntPtr.Zero - pipeline creation will fail gracefully
+                            Console.WriteLine("[D3D12Device] ERROR: Root signature is null in binding layout - CreateBindingLayout may not be fully implemented");
+                            // Note: We could attempt to create the root signature here, but that would duplicate
+                            // the logic from CreateBindingLayout. It's better to ensure CreateBindingLayout works correctly.
+                            // rootSignature remains IntPtr.Zero, which will cause pipeline creation to fail
+                        }
                     }
+                    else
+                    {
+                        // Binding layout is not a D3D12BindingLayout (could be from different backend)
+                        // In this case, we cannot extract the root signature directly
+                        // We would need to create a root signature from the binding layout descriptor
+                        // For now, log a warning and continue with IntPtr.Zero
+                        Console.WriteLine("[D3D12Device] WARNING: Binding layout is not D3D12BindingLayout, cannot extract root signature");
+                    }
+                    
+                    // Handle multiple binding layouts (if more than one is provided)
+                    // Based on DirectX 12: Multiple root signatures can be used, but typically one is sufficient
+                    // For graphics pipelines, we use the first root signature
+                    // In compute pipelines or advanced scenarios, multiple root signatures might be needed
+                    if (desc.BindingLayouts.Length > 1)
+                    {
+                        // Log that multiple binding layouts are provided but only first is used
+                        // In a full implementation, multiple root signatures could be combined or validated for compatibility
+                        Console.WriteLine($"[D3D12Device] INFO: Multiple binding layouts provided ({desc.BindingLayouts.Length}), using root signature from first layout");
+                    }
+                }
+                else
+                {
+                    // No binding layouts provided - pipeline will use default/empty root signature
+                    // Based on DirectX 12: A root signature is required, but an empty root signature (no parameters) is valid
+                    // This allows pipelines that don't use shader resources to be created
+                    Console.WriteLine("[D3D12Device] INFO: No binding layouts provided, pipeline will use empty root signature");
+                    // rootSignature remains IntPtr.Zero, which will be handled in ConvertGraphicsPipelineDescToD3D12
                 }
 
                 // Step 2: Convert GraphicsPipelineDesc to D3D12_GRAPHICS_PIPELINE_STATE_DESC
@@ -7206,7 +7251,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 _isOpen = false;
             }
 
-            // All ICommandList methods require full implementation
+            // TODO:  All ICommandList methods require full implementation
             // TODO:  These are stubbed with TODO comments indicating D3D12 API calls needed
             // Implementation will be completed when DirectX 12 interop is added
 
@@ -11539,8 +11584,8 @@ namespace Andastra.Runtime.MonoGame.Backends
                 }
 
                 // Validate that destination buffer is large enough
-                // Note: In a full implementation, we would check the compacted size from post-build info
-                // For now, we assume the destination buffer was created with the appropriate size
+                // TODO:  Note: In a full implementation, we would check the compacted size from post-build info
+                // TODO:  For now, we assume the destination buffer was created with the appropriate size
                 // The caller is responsible for ensuring the destination buffer is large enough
                 // Typical compacted size is 50-70% of the original size, but can vary
 
