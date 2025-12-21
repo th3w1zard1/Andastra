@@ -1408,6 +1408,26 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
         }
 
+        /// <summary>
+        /// Converts an integer sample count to Vulkan sample count flag bits.
+        /// Maps sample count values (1, 2, 4, 8, 16, 32, 64) to corresponding VkSampleCountFlagBits enum values.
+        /// Defaults to VK_SAMPLE_COUNT_1_BIT if the value is not a power-of-2 or is unsupported.
+        /// </summary>
+        private VkSampleCountFlagBits ConvertToVkSampleCount(int sampleCount)
+        {
+            switch (sampleCount)
+            {
+                case 1: return VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT;
+                case 2: return VkSampleCountFlagBits.VK_SAMPLE_COUNT_2_BIT;
+                case 4: return VkSampleCountFlagBits.VK_SAMPLE_COUNT_4_BIT;
+                case 8: return VkSampleCountFlagBits.VK_SAMPLE_COUNT_8_BIT;
+                case 16: return VkSampleCountFlagBits.VK_SAMPLE_COUNT_16_BIT;
+                case 32: return VkSampleCountFlagBits.VK_SAMPLE_COUNT_32_BIT;
+                case 64: return VkSampleCountFlagBits.VK_SAMPLE_COUNT_64_BIT;
+                default: return VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT;
+            }
+        }
+
         private IntPtr AllocateDeviceMemory(VkMemoryRequirements requirements, VkMemoryPropertyFlags properties)
         {
             // Find suitable memory type
