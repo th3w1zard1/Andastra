@@ -1050,6 +1050,8 @@ namespace Andastra.Runtime.Game.Core
         /// Based on swkotor.exe and swkotor2.exe: Character preview entity is created with appearance data
         /// - Original implementation: Creates temporary creature entity with appearance type for preview
         /// - Entity is positioned at origin and rotated for preview display
+        /// - swkotor.exe: Character preview entity created with appearance data from character creation
+        /// - swkotor2.exe: Character preview entity created with appearance data from character creation
         /// </summary>
         private void InitializePreviewEntity()
         {
@@ -1064,6 +1066,12 @@ namespace Andastra.Runtime.Game.Core
             _previewEntity.Tag = "CharacterPreview";
             _previewEntity.Position = Vector3.Zero;
             _previewEntity.Facing = 0f;
+            
+            // Add transform component (required by EntityModelRenderer for rendering)
+            // Based on swkotor.exe and swkotor2.exe: Entity transform component provides position/rotation for rendering
+            var transformComponent = new Andastra.Runtime.Games.Odyssey.Components.TransformComponent(Vector3.Zero, 0f);
+            transformComponent.Owner = _previewEntity;
+            _previewEntity.AddComponent<ITransformComponent>(transformComponent);
             
             // Add creature component with appearance data
             var creatureComponent = new CreatureComponent();

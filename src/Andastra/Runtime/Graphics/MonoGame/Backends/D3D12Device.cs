@@ -816,6 +816,54 @@ namespace Andastra.Runtime.MonoGame.Backends
             _samplerHeapCapacity = 0;
             _samplerHeapNextIndex = 0;
 
+            // Release idle fence and event handle if they were created
+            if (_idleFence != IntPtr.Zero)
+            {
+                try
+                {
+                    // Release the COM object through IUnknown::Release() vtable call
+                    uint refCount = ReleaseComObject(_idleFence);
+                    if (refCount > 0)
+                    {
+                        Console.WriteLine($"[D3D12Device] Idle fence still has {refCount} references after Release()");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Log error but continue cleanup - don't throw from Dispose
+                    Console.WriteLine($"[D3D12Device] Error releasing idle fence: {ex.Message}");
+                }
+                finally
+                {
+                    // Always clear the handle even if Release() failed
+                    _idleFence = IntPtr.Zero;
+                    _idleFenceValue = 0;
+                }
+            }
+
+            if (_idleFenceEvent != IntPtr.Zero)
+            {
+                try
+                {
+                    // Close the Windows event handle
+                    bool closed = CloseHandle(_idleFenceEvent);
+                    if (!closed)
+                    {
+                        Console.WriteLine($"[D3D12Device] Failed to close idle fence event handle");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Log error but continue cleanup - don't throw from Dispose
+                    Console.WriteLine($"[D3D12Device] Error closing idle fence event: {ex.Message}");
+                }
+                finally
+                {
+                    // Always clear the handle even if CloseHandle() failed
+                    _idleFenceEvent = IntPtr.Zero;
+                }
+            }
+
             // Note: We don't release _device or _device5 here as they're owned by Direct3D12Backend
             // The backend will handle device cleanup in its Shutdown method
 
@@ -839,6 +887,35 @@ namespace Andastra.Runtime.MonoGame.Backends
         internal IntPtr GetCommandQueueHandle()
         {
             return _commandQueue;
+        }
+
+        /// <summary>
+        /// Releases a COM object by calling IUnknown::Release().
+        /// All COM interfaces inherit from IUnknown, which has Release at vtable index 2.
+        /// Based on COM Reference Counting: https://docs.microsoft.com/en-us/windows/win32/api/unknwn/nf-unknwn-iunknown-release
+        /// </summary>
+        private unsafe uint ReleaseComObject(IntPtr comObject)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return 0;
+            }
+
+            if (comObject == IntPtr.Zero)
+            {
+                return 0;
+            }
+
+            // Get vtable pointer (first field of COM object)
+            IntPtr* vtable = *(IntPtr**)comObject;
+            // IUnknown::Release is at index 2 in all COM interface vtables
+            IntPtr methodPtr = vtable[2];
+
+            // Create delegate from function pointer
+            ReleaseDelegate release = (ReleaseDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(ReleaseDelegate));
+
+            return release(comObject);
         }
 
         #endregion
@@ -3174,8 +3251,147 @@ namespace Andastra.Runtime.MonoGame.Backends
             public void SetStencilRef(uint reference) { /* TODO: OMSetStencilRef */ }
             public void Draw(DrawArguments args) { /* TODO: DrawInstanced */ }
             public void DrawIndexed(DrawArguments args) { /* TODO: DrawIndexedInstanced */ }
-            public void DrawIndirect(IBuffer argumentBuffer, int offset, int drawCount, int stride) { /* TODO: ExecuteIndirect */ }
-            public void DrawIndexedIndirect(IBuffer argumentBuffer, int offset, int drawCount, int stride) { /* TODO: ExecuteIndirect */ }
+            public void DrawIndirect(IBuffer argumentBuffer, int offset, int drawCount, int stride)
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (argumentBuffer == null)
+                {
+                    throw new ArgumentNullException(nameof(argumentBuffer));
+                }
+
+                if (offset < 0)
+                {
+                    throw new ArgumentException("Offset must be non-negative", nameof(offset));
+                }
+
+                if (drawCount <= 0)
+                {
+                    throw new ArgumentException("Draw count must be positive", nameof(drawCount));
+                }
+
+                if (stride <= 0)
+                {
+                    throw new ArgumentException("Stride must be positive", nameof(stride));
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    return; // Command list not initialized
+                }
+
+                // Get the native D3D12 resource handle from the buffer
+                IntPtr argumentResource = argumentBuffer.NativeHandle;
+                if (argumentResource == IntPtr.Zero)
+                {
+                    throw new ArgumentException("Argument buffer has invalid native handle", nameof(argumentBuffer));
+                }
+
+                // Get or create the draw indirect command signature
+                // Command signatures are cached per device to avoid repeated creation
+                IntPtr commandSignature = _device.CreateDrawIndirectCommandSignature();
+                if (commandSignature == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("Failed to create or retrieve draw indirect command signature");
+                }
+
+                // Get GPU virtual address of the argument buffer
+                ulong argumentBufferGpuVa = _device.GetGpuVirtualAddress(argumentResource);
+                if (argumentBufferGpuVa == 0UL)
+                {
+                    throw new InvalidOperationException("Failed to get GPU virtual address for argument buffer");
+                }
+
+                // Calculate the GPU virtual address with offset
+                ulong argumentBufferOffsetGpuVa = argumentBufferGpuVa + unchecked((ulong)offset);
+
+                // For multi-draw indirect, MaxCommandCount is drawCount
+                // The count buffer is NULL (IntPtr.Zero) and CountBufferOffset is 0 when not using count buffer
+                // Based on DirectX 12 ExecuteIndirect: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-executeindirect
+                // swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+                _device.CallExecuteIndirect(
+                    _d3d12CommandList,
+                    commandSignature,
+                    unchecked((uint)drawCount), // MaxCommandCount: number of draw commands to execute
+                    argumentResource, // pArgumentBuffer: resource containing D3D12_DRAW_ARGUMENTS array
+                    argumentBufferOffsetGpuVa, // ArgumentBufferOffset: offset into argument buffer
+                    IntPtr.Zero, // pCountBuffer: NULL (not using count buffer for this implementation)
+                    0UL); // CountBufferOffset: 0 when pCountBuffer is NULL
+            }
+
+            public void DrawIndexedIndirect(IBuffer argumentBuffer, int offset, int drawCount, int stride)
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (argumentBuffer == null)
+                {
+                    throw new ArgumentNullException(nameof(argumentBuffer));
+                }
+
+                if (offset < 0)
+                {
+                    throw new ArgumentException("Offset must be non-negative", nameof(offset));
+                }
+
+                if (drawCount <= 0)
+                {
+                    throw new ArgumentException("Draw count must be positive", nameof(drawCount));
+                }
+
+                if (stride <= 0)
+                {
+                    throw new ArgumentException("Stride must be positive", nameof(stride));
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    return; // Command list not initialized
+                }
+
+                // Get the native D3D12 resource handle from the buffer
+                IntPtr argumentResource = argumentBuffer.NativeHandle;
+                if (argumentResource == IntPtr.Zero)
+                {
+                    throw new ArgumentException("Argument buffer has invalid native handle", nameof(argumentBuffer));
+                }
+
+                // Get or create the draw indexed indirect command signature
+                // Command signatures are cached per device to avoid repeated creation
+                IntPtr commandSignature = _device.CreateDrawIndexedIndirectCommandSignature();
+                if (commandSignature == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("Failed to create or retrieve draw indexed indirect command signature");
+                }
+
+                // Get GPU virtual address of the argument buffer
+                ulong argumentBufferGpuVa = _device.GetGpuVirtualAddress(argumentResource);
+                if (argumentBufferGpuVa == 0UL)
+                {
+                    throw new InvalidOperationException("Failed to get GPU virtual address for argument buffer");
+                }
+
+                // Calculate the GPU virtual address with offset
+                ulong argumentBufferOffsetGpuVa = argumentBufferGpuVa + unchecked((ulong)offset);
+
+                // For multi-draw indexed indirect, MaxCommandCount is drawCount
+                // The count buffer is NULL (IntPtr.Zero) and CountBufferOffset is 0 when not using count buffer
+                // Based on DirectX 12 ExecuteIndirect: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-executeindirect
+                // swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+                _device.CallExecuteIndirect(
+                    _d3d12CommandList,
+                    commandSignature,
+                    unchecked((uint)drawCount), // MaxCommandCount: number of draw indexed commands to execute
+                    argumentResource, // pArgumentBuffer: resource containing D3D12_DRAW_INDEXED_ARGUMENTS array
+                    argumentBufferOffsetGpuVa, // ArgumentBufferOffset: offset into argument buffer
+                    IntPtr.Zero, // pCountBuffer: NULL (not using count buffer for this implementation)
+                    0UL); // CountBufferOffset: 0 when pCountBuffer is NULL
+            }
             public void SetComputeState(ComputeState state)
             {
                 if (!_isOpen)
@@ -3781,37 +3997,6 @@ namespace Andastra.Runtime.MonoGame.Backends
         }
 
         /// <summary>
-        /// Draw arguments structure (matches GPU buffer layout).
-        /// Based on D3D12 API: D3D12_DRAW_ARGUMENTS
-        /// This structure must match the layout in the GPU buffer exactly.
-        /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
-        /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
-        private struct D3D12_DRAW_ARGUMENTS
-        {
-            public uint VertexCountPerInstance;
-            public uint InstanceCount;
-            public uint StartVertexLocation;
-            public uint StartInstanceLocation;
-        }
-
-        /// <summary>
-        /// Draw indexed arguments structure (matches GPU buffer layout).
-        /// Based on D3D12 API: D3D12_DRAW_INDEXED_ARGUMENTS
-        /// This structure must match the layout in the GPU buffer exactly.
-        /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
-        /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
-        private struct D3D12_DRAW_INDEXED_ARGUMENTS
-        {
-            public uint IndexCountPerInstance;
-            public uint InstanceCount;
-            public uint StartIndexLocation;
-            public int BaseVertexLocation;
-            public uint StartInstanceLocation;
-        }
-
-        /// <summary>
         /// GPU virtual address and stride structure.
         /// Based on D3D12 API: D3D12_GPU_VIRTUAL_ADDRESS_AND_STRIDE
         /// </summary>
@@ -4018,6 +4203,202 @@ namespace Andastra.Runtime.MonoGame.Backends
                     if (hr == 0) // S_OK
                     {
                         _dispatchIndirectCommandSignature = commandSignature;
+                        return commandSignature;
+                    }
+                    else
+                    {
+                        // Failed to create command signature
+                        return IntPtr.Zero;
+                    }
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(descPtr);
+                }
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(argumentDescPtr);
+            }
+        }
+
+        /// <summary>
+        /// Creates or retrieves cached command signature for DrawIndirect.
+        /// Command signatures describe the structure of indirect arguments in GPU buffers.
+        /// Based on DirectX 12 CreateCommandSignature: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createcommandsignature
+        /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+        /// </summary>
+        internal unsafe IntPtr CreateDrawIndirectCommandSignature()
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return IntPtr.Zero;
+            }
+
+            if (_device == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            // If already created, return cached signature
+            if (_drawIndirectCommandSignature != IntPtr.Zero)
+            {
+                return _drawIndirectCommandSignature;
+            }
+
+            // Create indirect argument description for Draw
+            // D3D12_DRAW_ARGUMENTS contains 4 uints (VertexCountPerInstance, InstanceCount, StartVertexLocation, StartInstanceLocation)
+            var argumentDesc = new D3D12_INDIRECT_ARGUMENT_DESC
+            {
+                Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW,
+                ConstantRootParameterIndex = 0,
+                ConstantNum32BitValuesToSet = 0,
+                VertexBufferSlot = IntPtr.Zero
+            };
+
+            // Create command signature description
+            // ByteStride is the size of D3D12_DRAW_ARGUMENTS (16 bytes: 4 uints)
+            var commandSignatureDesc = new D3D12_COMMAND_SIGNATURE_DESC
+            {
+                ByteStride = (uint)Marshal.SizeOf(typeof(D3D12_DRAW_ARGUMENTS)),
+                NumArgumentDescs = 1,
+                pArgumentDescs = IntPtr.Zero, // Will be set after marshaling
+                NodeMask = 0
+            };
+
+            // Allocate memory for argument description
+            int argumentDescSize = Marshal.SizeOf(typeof(D3D12_INDIRECT_ARGUMENT_DESC));
+            IntPtr argumentDescPtr = Marshal.AllocHGlobal(argumentDescSize);
+            try
+            {
+                Marshal.StructureToPtr(argumentDesc, argumentDescPtr, false);
+                commandSignatureDesc.pArgumentDescs = argumentDescPtr;
+
+                // Allocate memory for command signature description
+                int descSize = Marshal.SizeOf(typeof(D3D12_COMMAND_SIGNATURE_DESC));
+                IntPtr descPtr = Marshal.AllocHGlobal(descSize);
+                try
+                {
+                    Marshal.StructureToPtr(commandSignatureDesc, descPtr, false);
+
+                    // Get vtable pointer
+                    IntPtr* vtable = *(IntPtr**)_device;
+                    // CreateCommandSignature is at index 27 in ID3D12Device vtable
+                    IntPtr methodPtr = vtable[27];
+
+                    // Create delegate from function pointer
+                    CreateCommandSignatureDelegate createCommandSignature =
+                        (CreateCommandSignatureDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CreateCommandSignatureDelegate));
+
+                    // IID_ID3D12CommandSignature
+                    Guid iidCommandSignature = new Guid(0xc36a797c, 0xec80, 0x4f0a, 0x89, 0x85, 0xa7, 0xb2, 0x47, 0x50, 0x85, 0xa1);
+
+                    IntPtr commandSignature;
+                    int hr = createCommandSignature(_device, descPtr, IntPtr.Zero, ref iidCommandSignature, out commandSignature);
+
+                    // Check HRESULT
+                    if (hr == 0) // S_OK
+                    {
+                        _drawIndirectCommandSignature = commandSignature;
+                        return commandSignature;
+                    }
+                    else
+                    {
+                        // Failed to create command signature
+                        return IntPtr.Zero;
+                    }
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(descPtr);
+                }
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(argumentDescPtr);
+            }
+        }
+
+        /// <summary>
+        /// Creates or retrieves cached command signature for DrawIndexedIndirect.
+        /// Command signatures describe the structure of indirect arguments in GPU buffers.
+        /// Based on DirectX 12 CreateCommandSignature: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createcommandsignature
+        /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+        /// </summary>
+        internal unsafe IntPtr CreateDrawIndexedIndirectCommandSignature()
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return IntPtr.Zero;
+            }
+
+            if (_device == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            // If already created, return cached signature
+            if (_drawIndexedIndirectCommandSignature != IntPtr.Zero)
+            {
+                return _drawIndexedIndirectCommandSignature;
+            }
+
+            // Create indirect argument description for DrawIndexed
+            // D3D12_DRAW_INDEXED_ARGUMENTS contains 5 values (IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation)
+            var argumentDesc = new D3D12_INDIRECT_ARGUMENT_DESC
+            {
+                Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED,
+                ConstantRootParameterIndex = 0,
+                ConstantNum32BitValuesToSet = 0,
+                VertexBufferSlot = IntPtr.Zero
+            };
+
+            // Create command signature description
+            // ByteStride is the size of D3D12_DRAW_INDEXED_ARGUMENTS (20 bytes: 4 uints + 1 int)
+            var commandSignatureDesc = new D3D12_COMMAND_SIGNATURE_DESC
+            {
+                ByteStride = (uint)Marshal.SizeOf(typeof(D3D12_DRAW_INDEXED_ARGUMENTS)),
+                NumArgumentDescs = 1,
+                pArgumentDescs = IntPtr.Zero, // Will be set after marshaling
+                NodeMask = 0
+            };
+
+            // Allocate memory for argument description
+            int argumentDescSize = Marshal.SizeOf(typeof(D3D12_INDIRECT_ARGUMENT_DESC));
+            IntPtr argumentDescPtr = Marshal.AllocHGlobal(argumentDescSize);
+            try
+            {
+                Marshal.StructureToPtr(argumentDesc, argumentDescPtr, false);
+                commandSignatureDesc.pArgumentDescs = argumentDescPtr;
+
+                // Allocate memory for command signature description
+                int descSize = Marshal.SizeOf(typeof(D3D12_COMMAND_SIGNATURE_DESC));
+                IntPtr descPtr = Marshal.AllocHGlobal(descSize);
+                try
+                {
+                    Marshal.StructureToPtr(commandSignatureDesc, descPtr, false);
+
+                    // Get vtable pointer
+                    IntPtr* vtable = *(IntPtr**)_device;
+                    // CreateCommandSignature is at index 27 in ID3D12Device vtable
+                    IntPtr methodPtr = vtable[27];
+
+                    // Create delegate from function pointer
+                    CreateCommandSignatureDelegate createCommandSignature =
+                        (CreateCommandSignatureDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CreateCommandSignatureDelegate));
+
+                    // IID_ID3D12CommandSignature
+                    Guid iidCommandSignature = new Guid(0xc36a797c, 0xec80, 0x4f0a, 0x89, 0x85, 0xa7, 0xb2, 0x47, 0x50, 0x85, 0xa1);
+
+                    IntPtr commandSignature;
+                    int hr = createCommandSignature(_device, descPtr, IntPtr.Zero, ref iidCommandSignature, out commandSignature);
+
+                    // Check HRESULT
+                    if (hr == 0) // S_OK
+                    {
+                        _drawIndexedIndirectCommandSignature = commandSignature;
                         return commandSignature;
                     }
                     else
