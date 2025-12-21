@@ -671,11 +671,104 @@ namespace Andastra.Runtime.MonoGame.Backends
                 return;
             }
 
-            // TODO: IMPLEMENT - Execute D3D12 command lists
-            // - Close command lists if not already closed
-            // - Build array of ID3D12CommandList pointers
-            // - Call ID3D12CommandQueue::ExecuteCommandLists
-            // - Signal fence for synchronization if needed
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                // On non-Windows platforms, ExecuteCommandLists is a no-op
+                // The application should use VulkanDevice for cross-platform support
+                return;
+            }
+
+            if (_commandQueue == IntPtr.Zero)
+            {
+                throw new InvalidOperationException("Command queue is not initialized");
+            }
+
+            // Close all command lists if not already closed
+            // Command lists must be closed before they can be executed
+            foreach (ICommandList commandList in commandLists)
+            {
+                if (commandList == null)
+                {
+                    continue;
+                }
+
+                // Check if command list is a D3D12CommandList
+                D3D12CommandList d3d12CommandList = commandList as D3D12CommandList;
+                if (d3d12CommandList == null)
+                {
+                    Console.WriteLine("[D3D12Device] Warning: Command list is not a D3D12CommandList, skipping execution");
+                    continue;
+                }
+
+                // Close the command list if it's still open
+                // The Close() method handles checking if it's already closed
+                try
+                {
+                    commandList.Close();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[D3D12Device] Warning: Failed to close command list before execution: {ex.Message}");
+                    // Continue with execution attempt - the command list may already be closed
+                }
+            }
+
+            // Build array of ID3D12CommandList pointers
+            // Filter out null command lists and non-D3D12 command lists
+            List<IntPtr> nativeCommandLists = new List<IntPtr>();
+            foreach (ICommandList commandList in commandLists)
+            {
+                if (commandList == null)
+                {
+                    continue;
+                }
+
+                D3D12CommandList d3d12CommandList = commandList as D3D12CommandList;
+                if (d3d12CommandList == null)
+                {
+                    continue; // Skip non-D3D12 command lists
+                }
+
+                // Get native command list pointer
+                IntPtr nativeCommandList = d3d12CommandList.GetNativeCommandListPointer();
+                if (nativeCommandList != IntPtr.Zero)
+                {
+                    nativeCommandLists.Add(nativeCommandList);
+                }
+            }
+
+            if (nativeCommandLists.Count == 0)
+            {
+                // No valid command lists to execute
+                return;
+            }
+
+            // Allocate unmanaged memory for array of command list pointers
+            // ID3D12CommandQueue::ExecuteCommandLists expects: ID3D12CommandList* const* ppCommandLists
+            // This is an array of pointers to ID3D12CommandList interfaces
+            IntPtr commandListArrayPtr = Marshal.AllocHGlobal(IntPtr.Size * nativeCommandLists.Count);
+            try
+            {
+                // Write command list pointers to the array
+                for (int i = 0; i < nativeCommandLists.Count; i++)
+                {
+                    IntPtr commandListPtr = nativeCommandLists[i];
+                    IntPtr arrayElementPtr = new IntPtr(commandListArrayPtr.ToInt64() + (i * IntPtr.Size));
+                    Marshal.WriteIntPtr(arrayElementPtr, commandListPtr);
+                }
+
+                // Call ID3D12CommandQueue::ExecuteCommandLists
+                // ExecuteCommandLists signature: void ExecuteCommandLists(UINT NumCommandLists, ID3D12CommandList* const* ppCommandLists)
+                // VTable index: ExecuteCommandLists is at index 4 in ID3D12CommandQueue vtable
+                // (after IUnknown: QueryInterface, AddRef, Release, UpdateTileMappings)
+                CallExecuteCommandLists(_commandQueue, (uint)nativeCommandLists.Count, commandListArrayPtr);
+            }
+            finally
+            {
+                // Free the allocated array memory
+                Marshal.FreeHGlobal(commandListArrayPtr);
+            }
         }
 
         public void WaitIdle()
@@ -3286,6 +3379,37 @@ namespace Andastra.Runtime.MonoGame.Backends
                     (CommandListResetDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CommandListResetDelegate));
 
                 return resetCommandList(commandList, pAllocator, pInitialState);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::Close through COM vtable.
+            /// VTable index 5 for ID3D12GraphicsCommandList (after Reset at index 4).
+            /// Based on DirectX 12 Command List Close: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-close
+            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+            /// </summary>
+            private unsafe int CallClose(IntPtr commandList)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return (int)HRESULT.E_FAIL;
+                }
+
+                if (commandList == IntPtr.Zero)
+                {
+                    return (int)HRESULT.E_INVALIDARG;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // Close is at index 5 in ID3D12GraphicsCommandList vtable (after Reset at index 4)
+                IntPtr methodPtr = vtable[5];
+
+                // Create delegate from function pointer
+                CloseDelegate closeCommandList =
+                    (CloseDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CloseDelegate));
+
+                return closeCommandList(commandList);
             }
 
             /// <summary>
@@ -6132,6 +6256,42 @@ namespace Andastra.Runtime.MonoGame.Backends
                 ArgumentBufferOffset,
                 pCountBuffer,
                 CountBufferOffset);
+        }
+
+        /// <summary>
+        /// Calls ID3D12CommandQueue::ExecuteCommandLists through COM vtable.
+        /// VTable index 4 for ID3D12CommandQueue (after IUnknown: QueryInterface, AddRef, Release, UpdateTileMappings).
+        /// Based on DirectX 12 Command Queue: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12commandqueue-executecommandlists
+        /// 
+        /// ExecuteCommandLists submits command lists to the command queue for execution on the GPU.
+        /// All command lists must be closed before execution.
+        /// 
+        /// Signature: void ExecuteCommandLists(UINT NumCommandLists, ID3D12CommandList* const* ppCommandLists)
+        /// </summary>
+        private unsafe void CallExecuteCommandLists(IntPtr commandQueue, uint numCommandLists, IntPtr ppCommandLists)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            if (commandQueue == IntPtr.Zero || ppCommandLists == IntPtr.Zero || numCommandLists == 0)
+            {
+                return;
+            }
+
+            // Get vtable pointer
+            IntPtr* vtable = *(IntPtr**)commandQueue;
+            // ExecuteCommandLists is at index 4 in ID3D12CommandQueue vtable
+            // (after IUnknown: QueryInterface, AddRef, Release, UpdateTileMappings)
+            IntPtr methodPtr = vtable[4];
+
+            // Create delegate from function pointer
+            ExecuteCommandListsDelegate executeCommandLists =
+                (ExecuteCommandListsDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(ExecuteCommandListsDelegate));
+
+            executeCommandLists(commandQueue, numCommandLists, ppCommandLists);
         }
 
         /// <summary>
