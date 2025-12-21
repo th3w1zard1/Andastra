@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Numerics;
 using System.Reflection;
 using Andastra.Runtime.Core.Collision;
@@ -124,10 +125,44 @@ namespace Andastra.Runtime.Core.Actions
                                 break; // Found the type
                             }
                         }
-                        catch
+                        catch (ReflectionTypeLoadException)
                         {
-                            // TODO: STUB - Continue searching other assemblies
+                            // Assembly has types that couldn't be loaded - continue searching other assemblies
+                            // This can happen when dependencies are missing or types are in unavailable assemblies
+                            continue;
                         }
+                        catch (TypeLoadException)
+                        {
+                            // Specific type couldn't be loaded from this assembly - continue searching
+                            // The type may exist in a different assembly
+                            continue;
+                        }
+                        catch (BadImageFormatException)
+                        {
+                            // Assembly is corrupted or has invalid format - skip this assembly and continue
+                            // This can happen with mixed architecture assemblies or corrupted DLLs
+                            continue;
+                        }
+                        catch (FileNotFoundException)
+                        {
+                            // Assembly file or dependency is missing - continue searching other assemblies
+                            // This can happen when assembly references are broken
+                            continue;
+                        }
+                        catch (FileLoadException)
+                        {
+                            // Assembly failed to load - continue searching other assemblies
+                            // This can happen with version conflicts or loading issues
+                            continue;
+                        }
+                        catch (System.ArgumentException)
+                        {
+                            // Invalid type name format (shouldn't happen with our constructed name, but handle gracefully)
+                            // Continue searching other assemblies
+                            continue;
+                        }
+                        // Note: We intentionally don't catch general Exception to allow unexpected critical errors to propagate
+                        // This ensures we don't silently ignore serious problems while continuing to search
                     }
                     
                     if (detectorType != null)
