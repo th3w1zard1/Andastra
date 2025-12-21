@@ -63,8 +63,8 @@ namespace Andastra.Runtime.MonoGame.Backends
         [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
         private interface ID3D12Device
         {
-            // Methods would be declared here in full implementation
-            // This is a placeholder structure
+            // TODO:  Methods would be declared here in full implementation
+            // TODO:  This is a placeholder structure
         }
 
         [ComImport]
@@ -73,7 +73,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private interface ID3D12Device5
         {
             // ID3D12Device5 methods for raytracing
-            // This is a placeholder structure
+            // TODO:  This is a placeholder structure
         }
 
         [ComImport]
@@ -82,7 +82,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private interface ID3D12StateObject
         {
             // ID3D12StateObject methods
-            // This is a placeholder structure - actual methods accessed via vtable
+            // TODO:  This is a placeholder structure - actual methods accessed via vtable
         }
 
         [ComImport]
@@ -91,10 +91,10 @@ namespace Andastra.Runtime.MonoGame.Backends
         private interface ID3D12StateObjectProperties
         {
             // ID3D12StateObjectProperties methods
-            // This is a placeholder structure - actual methods accessed via vtable
+            // TODO:  This is a placeholder structure - actual methods accessed via vtable
         }
 
-        // DirectX 12 function pointers for P/Invoke (simplified - full implementation requires extensive declarations)
+        // TODO:  DirectX 12 function pointers for P/Invoke (simplified - full implementation requires extensive declarations)
         // In a complete implementation, these would be loaded via GetProcAddress or use SharpDX/Vortice wrapper
         
         #endregion
@@ -136,6 +136,15 @@ namespace Andastra.Runtime.MonoGame.Backends
         private readonly Dictionary<IntPtr, IntPtr> _textureDsvHandles; // Cache of texture -> DSV handle mappings
         private readonly Dictionary<IntPtr, IntPtr> _textureRtvHandles; // Cache of texture -> RTV handle mappings
 
+        // SRV descriptor heap fields (non-shader-visible for texture management)
+        private IntPtr _srvDescriptorHeap;
+        private IntPtr _srvHeapCpuStartHandle;
+        private uint _srvHeapDescriptorIncrementSize;
+        private int _srvHeapCapacity;
+        private int _srvHeapNextIndex;
+        private const int DefaultSrvHeapCapacity = 1024;
+        private readonly Dictionary<IntPtr, IntPtr> _textureSrvHandles; // Cache of texture -> SRV handle mappings
+
         // UAV descriptor heap fields
         private IntPtr _uavDescriptorHeap;
         private IntPtr _uavHeapCpuStartHandle;
@@ -144,6 +153,15 @@ namespace Andastra.Runtime.MonoGame.Backends
         private int _uavHeapNextIndex;
         private const int DefaultUavHeapCapacity = 1024;
         private readonly Dictionary<IntPtr, IntPtr> _textureUavHandles; // Cache of texture -> UAV handle mappings
+
+        // CBV_SRV_UAV descriptor heap fields (for shader-visible binding sets)
+        private IntPtr _cbvSrvUavDescriptorHeap;
+        private IntPtr _cbvSrvUavHeapCpuStartHandle;
+        private D3D12_GPU_DESCRIPTOR_HANDLE _cbvSrvUavHeapGpuStartHandle;
+        private uint _cbvSrvUavHeapDescriptorIncrementSize;
+        private int _cbvSrvUavHeapCapacity;
+        private int _cbvSrvUavHeapNextIndex;
+        private const int DefaultCbvSrvUavHeapCapacity = 10000; // Large capacity for binding sets (typical for modern games)
 
         public GraphicsCapabilities Capabilities
         {
@@ -184,7 +202,9 @@ namespace Andastra.Runtime.MonoGame.Backends
             _currentFrameIndex = 0;
             _textureDsvHandles = new Dictionary<IntPtr, IntPtr>();
             _textureRtvHandles = new Dictionary<IntPtr, IntPtr>();
+            _textureSrvHandles = new Dictionary<IntPtr, IntPtr>();
             _textureUavHandles = new Dictionary<IntPtr, IntPtr>();
+            _cbvSrvUavHeapNextIndex = 0;
         }
 
         #region Resource Creation
@@ -633,12 +653,12 @@ namespace Andastra.Runtime.MonoGame.Backends
             try
             {
                 // Step 1: Get or create root signature from binding layouts
-                // Note: CreateBindingLayout also has a TODO for root signature creation
+                // TODO:  Note: CreateBindingLayout also has a TODO for root signature creation
                 // TODO: STUB - For now, we try to get root signature from binding layouts if they exist
                 if (desc.BindingLayouts != null && desc.BindingLayouts.Length > 0)
                 {
                     // Get root signature from first binding layout (pipeline typically uses one root signature)
-                    // In a full implementation, multiple root signatures would be combined
+                    // TODO:  In a full implementation, multiple root signatures would be combined
                     var firstLayout = desc.BindingLayouts[0] as D3D12BindingLayout;
                     if (firstLayout != null)
                     {
@@ -1058,13 +1078,120 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ArgumentNullException(nameof(layout));
             }
 
-            // TODO: IMPLEMENT - Allocate and populate D3D12 descriptor set
-            // - Allocate descriptor handles from descriptor heap
-            // - Create SRV/UAV/CBV descriptors using CreateShaderResourceView, CreateUnorderedAccessView, CreateConstantBufferView
-            // - Wrap in D3D12BindingSet and return
+            // Allocate and populate D3D12 descriptor set
+            // Based on DirectX 12 Binding Sets: https://docs.microsoft.com/en-us/windows/win32/direct3d12/descriptors-overview
+            // Binding sets contain SRV/UAV/CBV descriptors allocated from a shader-visible descriptor heap
+            // Each binding set item (texture, buffer, sampler) requires a descriptor in the heap
 
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                throw new PlatformNotSupportedException("DirectX 12 binding sets are only supported on Windows");
+            }
+
+            // Ensure CBV_SRV_UAV descriptor heap exists (shader-visible for binding sets)
+            EnsureCbvSrvUavDescriptorHeap();
+
+            if (_cbvSrvUavDescriptorHeap == IntPtr.Zero)
+            {
+                throw new InvalidOperationException("Failed to create CBV_SRV_UAV descriptor heap for binding sets");
+            }
+
+            // Count total descriptors needed for this binding set
+            // Based on DirectX 12: Each binding set item requires one descriptor
+            int totalDescriptorsNeeded = 0;
+            if (desc.Items != null)
+            {
+                foreach (var item in desc.Items)
+                {
+                    if (item.Type == BindingType.Texture || item.Type == BindingType.RWTexture ||
+                        item.Type == BindingType.ConstantBuffer || item.Type == BindingType.StructuredBuffer ||
+                        item.Type == BindingType.RWBuffer || item.Type == BindingType.AccelStruct)
+                    {
+                        totalDescriptorsNeeded++;
+                    }
+                }
+            }
+
+            if (totalDescriptorsNeeded == 0)
+            {
+                // Empty binding set - return binding set with zero descriptors
+                IntPtr handle = new IntPtr(_nextResourceHandle++);
+                var bindingSet = new D3D12BindingSet(handle, layout, desc, _cbvSrvUavDescriptorHeap, _device, this);
+                _resources[handle] = bindingSet;
+                return bindingSet;
+            }
+
+            // Check if heap has enough space
+            if (_cbvSrvUavHeapNextIndex + totalDescriptorsNeeded > _cbvSrvUavHeapCapacity)
+            {
+                throw new InvalidOperationException($"CBV_SRV_UAV descriptor heap is full (capacity: {_cbvSrvUavHeapCapacity}, needed: {totalDescriptorsNeeded}, available: {_cbvSrvUavHeapCapacity - _cbvSrvUavHeapNextIndex})");
+            }
+
+            // Allocate descriptors from heap (contiguous allocation for binding set)
+            int bindingSetStartIndex = _cbvSrvUavHeapNextIndex;
+            int currentDescriptorIndex = _cbvSrvUavHeapNextIndex;
+
+            // Process each binding set item and create descriptors
+            if (desc.Items != null)
+            {
+                foreach (var item in desc.Items)
+                {
+                    // Allocate CPU descriptor handle for this item
+                    IntPtr cpuDescriptorHandle = OffsetDescriptorHandle(_cbvSrvUavHeapCpuStartHandle, currentDescriptorIndex, _cbvSrvUavHeapDescriptorIncrementSize);
+
+                    // Create descriptor based on binding type
+                    // Based on DirectX 12: CreateShaderResourceView, CreateUnorderedAccessView, CreateConstantBufferView
+                    if (item.Type == BindingType.Texture && item.Texture != null)
+                    {
+                        // Create SRV descriptor for texture
+                        CreateSrvDescriptorForBindingSet(item.Texture, cpuDescriptorHandle);
+                        currentDescriptorIndex++;
+                    }
+                    else if (item.Type == BindingType.RWTexture && item.Texture != null)
+                    {
+                        // Create UAV descriptor for read-write texture
+                        CreateUavDescriptorForBindingSet(item.Texture, cpuDescriptorHandle);
+                        currentDescriptorIndex++;
+                    }
+                    else if (item.Type == BindingType.ConstantBuffer && item.Buffer != null)
+                    {
+                        // Create CBV descriptor for constant buffer
+                        CreateCbvDescriptorForBindingSet(item.Buffer, item.BufferOffset, item.BufferRange, cpuDescriptorHandle);
+                        currentDescriptorIndex++;
+                    }
+                    else if (item.Type == BindingType.StructuredBuffer && item.Buffer != null)
+                    {
+                        // Create SRV descriptor for structured buffer
+                        CreateSrvDescriptorForStructuredBuffer(item.Buffer, item.BufferOffset, item.BufferRange, cpuDescriptorHandle);
+                        currentDescriptorIndex++;
+                    }
+                    else if (item.Type == BindingType.RWBuffer && item.Buffer != null)
+                    {
+                        // Create UAV descriptor for read-write buffer
+                        CreateUavDescriptorForBuffer(item.Buffer, item.BufferOffset, item.BufferRange, cpuDescriptorHandle);
+                        currentDescriptorIndex++;
+                    }
+                    else if (item.Type == BindingType.AccelStruct && item.AccelStruct != null)
+                    {
+                        // Create SRV descriptor for acceleration structure
+                        CreateSrvDescriptorForAccelStruct(item.AccelStruct, cpuDescriptorHandle);
+                        currentDescriptorIndex++;
+                    }
+                    // Note: Samplers are handled separately in sampler descriptor heap
+                }
+            }
+
+            // Update heap next index
+            _cbvSrvUavHeapNextIndex = currentDescriptorIndex;
+
+            // Calculate GPU descriptor handle for binding set start
+            // Based on DirectX 12: GPU descriptor handles are offset from heap start by descriptor index * increment size
+            D3D12_GPU_DESCRIPTOR_HANDLE gpuDescriptorHandle = OffsetGpuDescriptorHandle(_cbvSrvUavHeapGpuStartHandle, bindingSetStartIndex, _cbvSrvUavHeapDescriptorIncrementSize);
+
+            // Create binding set with allocated descriptors
             IntPtr handle = new IntPtr(_nextResourceHandle++);
-            var bindingSet = new D3D12BindingSet(handle, layout, desc, IntPtr.Zero, _device, this);
+            var bindingSet = new D3D12BindingSet(handle, layout, desc, _cbvSrvUavDescriptorHeap, _device, this, gpuDescriptorHandle);
             _resources[handle] = bindingSet;
 
             return bindingSet;
@@ -4944,9 +5071,13 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// <summary>
         /// Creates an SRV descriptor for a texture.
         /// Based on DirectX 12 Shader Resource Views: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createshaderresourceview
-        /// Note: In a full implementation, SRV descriptors would typically be allocated from shader-visible descriptor heaps.
-        /// This is a simplified version that creates a non-shader-visible descriptor for texture management.
+        /// Creates a non-shader-visible descriptor for texture management.
         /// </summary>
+        /// <param name="d3d12Resource">The D3D12 resource (texture) to create an SRV for.</param>
+        /// <param name="desc">Texture description.</param>
+        /// <param name="dxgiFormat">DXGI format for the texture.</param>
+        /// <param name="resourceDimension">D3D12 resource dimension (D3D12_RESOURCE_DIMENSION_TEXTURE2D, etc.).</param>
+        /// <returns>CPU descriptor handle for the SRV, or IntPtr.Zero on failure.</returns>
         private IntPtr CreateSrvDescriptorForTexture(IntPtr d3d12Resource, TextureDesc desc, uint dxgiFormat, uint resourceDimension)
         {
             if (d3d12Resource == IntPtr.Zero)
@@ -4954,11 +5085,261 @@ namespace Andastra.Runtime.MonoGame.Backends
                 return IntPtr.Zero;
             }
 
-            // TODO: STUB - For now, return IntPtr.Zero as SRV descriptors are typically managed by binding sets
-            // The texture can still be used with GetOrCreateRtvHandle/GetOrCreateDsvHandle for render targets/depth stencils
-            // SRV descriptors for shader binding will be created through CreateBindingSet
-            // This is a placeholder that can be extended if needed for texture-only SRV management
-            return IntPtr.Zero;
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return IntPtr.Zero;
+            }
+
+            if (_device == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            // Allocate SRV descriptor handle
+            IntPtr srvHandle = AllocateSrvDescriptor();
+            if (srvHandle == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            // Determine SRV dimension based on resource dimension
+            uint srvDimension;
+            switch (resourceDimension)
+            {
+                case D3D12_RESOURCE_DIMENSION_TEXTURE1D:
+                    srvDimension = D3D12_SRV_DIMENSION_TEXTURE1D;
+                    break;
+                case D3D12_RESOURCE_DIMENSION_TEXTURE2D:
+                    srvDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+                    break;
+                case D3D12_RESOURCE_DIMENSION_TEXTURE3D:
+                    srvDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
+                    break;
+                default:
+                    // Unsupported dimension, default to TEXTURE2D
+                    srvDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+                    break;
+            }
+
+            // Create D3D12_SHADER_RESOURCE_VIEW_DESC structure
+            var srvDesc = new D3D12_SHADER_RESOURCE_VIEW_DESC
+            {
+                Format = dxgiFormat,
+                ViewDimension = srvDimension
+            };
+
+            // Set dimension-specific parameters
+            // For most textures, we use the default mip settings (all mips, starting from mip 0)
+            if (srvDimension == D3D12_SRV_DIMENSION_TEXTURE2D)
+            {
+                srvDesc.Texture2D = new D3D12_TEX2D_SRV
+                {
+                    MostDetailedMip = 0, // Start from first mip level
+                    MipLevels = unchecked((uint)(desc.MipLevels > 0 ? desc.MipLevels : -1)), // -1 means all mips
+                    PlaneSlice = 0, // Typically 0 for non-planar formats
+                    ResourceMinLODClamp = 0.0f // No clamping
+                };
+            }
+            else if (srvDimension == D3D12_SRV_DIMENSION_TEXTURE1D)
+            {
+                srvDesc.Texture1D = new D3D12_TEX1D_SRV
+                {
+                    MostDetailedMip = 0,
+                    MipLevels = unchecked((uint)(desc.MipLevels > 0 ? desc.MipLevels : -1)),
+                    ResourceMinLODClamp = 0.0f
+                };
+            }
+            else if (srvDimension == D3D12_SRV_DIMENSION_TEXTURE3D)
+            {
+                srvDesc.Texture3D = new D3D12_TEX3D_SRV
+                {
+                    MostDetailedMip = 0,
+                    MipLevels = unchecked((uint)(desc.MipLevels > 0 ? desc.MipLevels : -1)),
+                    ResourceMinLODClamp = 0.0f
+                };
+            }
+
+            // Allocate memory for the SRV descriptor structure
+            int srvDescSize = Marshal.SizeOf(typeof(D3D12_SHADER_RESOURCE_VIEW_DESC));
+            IntPtr srvDescPtr = Marshal.AllocHGlobal(srvDescSize);
+            try
+            {
+                Marshal.StructureToPtr(srvDesc, srvDescPtr, false);
+
+                // Call ID3D12Device::CreateShaderResourceView
+                CallCreateShaderResourceView(_device, d3d12Resource, srvDescPtr, srvHandle);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(srvDescPtr);
+            }
+
+            return srvHandle;
+        }
+
+        #endregion
+
+        #region D3D12 SRV Descriptor Heap Management
+
+        /// <summary>
+        /// Ensures the SRV descriptor heap is created and initialized.
+        /// Creates an SRV descriptor heap with the default capacity if one doesn't exist.
+        /// Based on DirectX 12 Descriptor Heaps: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_descriptor_heap_desc
+        /// </summary>
+        private void EnsureSrvDescriptorHeap()
+        {
+            if (_srvDescriptorHeap != IntPtr.Zero)
+            {
+                return; // Heap already exists
+            }
+
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            if (_device == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                // Create D3D12_DESCRIPTOR_HEAP_DESC structure for SRV heap
+                // Use CBV_SRV_UAV heap type for SRV descriptors (non-shader-visible for texture management)
+                var heapDesc = new D3D12_DESCRIPTOR_HEAP_DESC
+                {
+                    Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+                    NumDescriptors = (uint)DefaultSrvHeapCapacity,
+                    Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE, // SRV heaps for texture management are not shader-visible
+                    NodeMask = 0
+                };
+
+                // Allocate memory for the descriptor heap descriptor structure
+                int heapDescSize = Marshal.SizeOf(typeof(D3D12_DESCRIPTOR_HEAP_DESC));
+                IntPtr heapDescPtr = Marshal.AllocHGlobal(heapDescSize);
+                try
+                {
+                    Marshal.StructureToPtr(heapDesc, heapDescPtr, false);
+
+                    // Allocate memory for the output descriptor heap pointer
+                    IntPtr heapPtr = Marshal.AllocHGlobal(IntPtr.Size);
+                    try
+                    {
+                        // Call ID3D12Device::CreateDescriptorHeap
+                        Guid iidDescriptorHeap = IID_ID3D12DescriptorHeap;
+                        int hr = CallCreateDescriptorHeap(_device, heapDescPtr, ref iidDescriptorHeap, heapPtr);
+                        if (hr < 0)
+                        {
+                            throw new InvalidOperationException($"CreateDescriptorHeap failed with HRESULT 0x{hr:X8}");
+                        }
+
+                        // Get the descriptor heap pointer
+                        IntPtr descriptorHeap = Marshal.ReadIntPtr(heapPtr);
+                        if (descriptorHeap == IntPtr.Zero)
+                        {
+                            throw new InvalidOperationException("Descriptor heap pointer is null");
+                        }
+
+                        // Get descriptor heap start handle (CPU handle for descriptor heap)
+                        IntPtr cpuHandle = CallGetCPUDescriptorHandleForHeapStart(descriptorHeap);
+                        if (cpuHandle == IntPtr.Zero)
+                        {
+                            throw new InvalidOperationException("Failed to get CPU descriptor handle for heap start");
+                        }
+
+                        // Get descriptor increment size
+                        uint descriptorIncrementSize = CallGetDescriptorHandleIncrementSize(_device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+                        if (descriptorIncrementSize == 0)
+                        {
+                            throw new InvalidOperationException("Failed to get descriptor handle increment size");
+                        }
+
+                        // Store heap information
+                        _srvDescriptorHeap = descriptorHeap;
+                        _srvHeapCpuStartHandle = cpuHandle;
+                        _srvHeapDescriptorIncrementSize = descriptorIncrementSize;
+                        _srvHeapCapacity = DefaultSrvHeapCapacity;
+                        _srvHeapNextIndex = 0;
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(heapPtr);
+                    }
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(heapDescPtr);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to create SRV descriptor heap: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Allocates a descriptor handle from the SRV descriptor heap.
+        /// Returns IntPtr.Zero if allocation fails.
+        /// </summary>
+        private IntPtr AllocateSrvDescriptor()
+        {
+            EnsureSrvDescriptorHeap();
+
+            if (_srvDescriptorHeap == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            if (_srvHeapNextIndex >= _srvHeapCapacity)
+            {
+                // Heap is full - in a production implementation, we might want to create a larger heap or handle this differently
+                throw new InvalidOperationException($"SRV descriptor heap is full (capacity: {_srvHeapCapacity})");
+            }
+
+            // Calculate CPU descriptor handle for this index
+            IntPtr cpuDescriptorHandle = OffsetDescriptorHandle(_srvHeapCpuStartHandle, _srvHeapNextIndex, _srvHeapDescriptorIncrementSize);
+            int allocatedIndex = _srvHeapNextIndex;
+            _srvHeapNextIndex++;
+
+            return cpuDescriptorHandle;
+        }
+
+        /// <summary>
+        /// COM interface method delegate for CreateShaderResourceView.
+        /// </summary>
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void CreateShaderResourceViewDelegate(IntPtr device, IntPtr pResource, IntPtr pDesc, IntPtr DestDescriptor);
+
+        /// <summary>
+        /// Calls ID3D12Device::CreateShaderResourceView through COM vtable.
+        /// VTable index 35 for ID3D12Device (after CreateRenderTargetView at index 34).
+        /// Based on DirectX 12 Shader Resource Views: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createshaderresourceview
+        /// </summary>
+        private unsafe void CallCreateShaderResourceView(IntPtr device, IntPtr pResource, IntPtr pDesc, IntPtr DestDescriptor)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            if (device == IntPtr.Zero || pResource == IntPtr.Zero || DestDescriptor == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Get vtable pointer
+            IntPtr* vtable = *(IntPtr**)device;
+            // CreateShaderResourceView is at index 35 in ID3D12Device vtable (after CreateRenderTargetView at 34)
+            IntPtr methodPtr = vtable[35];
+
+            // Create delegate from function pointer
+            CreateShaderResourceViewDelegate createSrv = (CreateShaderResourceViewDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CreateShaderResourceViewDelegate));
+
+            createSrv(device, pResource, pDesc, DestDescriptor);
         }
 
         #endregion
@@ -5089,6 +5470,413 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             return cpuDescriptorHandle;
         }
+
+        /// <summary>
+        /// Ensures the CBV_SRV_UAV descriptor heap is created and initialized.
+        /// Creates a shader-visible CBV_SRV_UAV descriptor heap with the default capacity if one doesn't exist.
+        /// Based on DirectX 12 Descriptor Heaps: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_descriptor_heap_desc
+        /// This heap is used for binding sets (SRV/UAV/CBV descriptors for shader resources).
+        /// </summary>
+        private void EnsureCbvSrvUavDescriptorHeap()
+        {
+            if (_cbvSrvUavDescriptorHeap != IntPtr.Zero)
+            {
+                return; // Heap already exists
+            }
+
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            if (_device == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                // Create D3D12_DESCRIPTOR_HEAP_DESC structure for CBV_SRV_UAV heap
+                // Use shader-visible flag for binding sets (descriptors must be accessible from shaders)
+                var heapDesc = new D3D12_DESCRIPTOR_HEAP_DESC
+                {
+                    Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+                    NumDescriptors = (uint)DefaultCbvSrvUavHeapCapacity,
+                    Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, // Shader-visible for binding sets
+                    NodeMask = 0
+                };
+
+                // Allocate memory for the descriptor heap descriptor structure
+                int heapDescSize = Marshal.SizeOf(typeof(D3D12_DESCRIPTOR_HEAP_DESC));
+                IntPtr heapDescPtr = Marshal.AllocHGlobal(heapDescSize);
+                try
+                {
+                    Marshal.StructureToPtr(heapDesc, heapDescPtr, false);
+
+                    // Allocate memory for the output descriptor heap pointer
+                    IntPtr heapPtr = Marshal.AllocHGlobal(IntPtr.Size);
+                    try
+                    {
+                        // Call ID3D12Device::CreateDescriptorHeap
+                        Guid iidDescriptorHeap = IID_ID3D12DescriptorHeap;
+                        int hr = CallCreateDescriptorHeap(_device, heapDescPtr, ref iidDescriptorHeap, heapPtr);
+                        if (hr < 0)
+                        {
+                            throw new InvalidOperationException($"CreateDescriptorHeap failed with HRESULT 0x{hr:X8}");
+                        }
+
+                        // Get the descriptor heap pointer
+                        IntPtr descriptorHeap = Marshal.ReadIntPtr(heapPtr);
+                        if (descriptorHeap == IntPtr.Zero)
+                        {
+                            throw new InvalidOperationException("Descriptor heap pointer is null");
+                        }
+
+                        // Get descriptor heap start handles (CPU and GPU handles)
+                        IntPtr cpuHandle = CallGetCPUDescriptorHandleForHeapStart(descriptorHeap);
+                        if (cpuHandle == IntPtr.Zero)
+                        {
+                            throw new InvalidOperationException("Failed to get CPU descriptor handle for heap start");
+                        }
+
+                        D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = CallGetGPUDescriptorHandleForHeapStart(descriptorHeap);
+                        if (gpuHandle.ptr == 0)
+                        {
+                            throw new InvalidOperationException("Failed to get GPU descriptor handle for heap start");
+                        }
+
+                        // Get descriptor increment size
+                        uint descriptorIncrementSize = CallGetDescriptorHandleIncrementSize(_device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+                        if (descriptorIncrementSize == 0)
+                        {
+                            throw new InvalidOperationException("Failed to get descriptor handle increment size");
+                        }
+
+                        // Store heap information
+                        _cbvSrvUavDescriptorHeap = descriptorHeap;
+                        _cbvSrvUavHeapCpuStartHandle = cpuHandle;
+                        _cbvSrvUavHeapGpuStartHandle = gpuHandle;
+                        _cbvSrvUavHeapDescriptorIncrementSize = descriptorIncrementSize;
+                        _cbvSrvUavHeapCapacity = DefaultCbvSrvUavHeapCapacity;
+                        _cbvSrvUavHeapNextIndex = 0;
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(heapPtr);
+                    }
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(heapDescPtr);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to create CBV_SRV_UAV descriptor heap: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Offsets a GPU descriptor handle by a specified number of descriptors.
+        /// Based on DirectX 12 GPU Descriptor Handles: https://docs.microsoft.com/en-us/windows/win32/direct3d12/descriptors-overview
+        /// </summary>
+        private D3D12_GPU_DESCRIPTOR_HANDLE OffsetGpuDescriptorHandle(D3D12_GPU_DESCRIPTOR_HANDLE handle, int offset, uint incrementSize)
+        {
+            // Offset = handle.ptr + (offset * incrementSize)
+            ulong handleValue = handle.ptr;
+            ulong offsetValue = (ulong)offset * incrementSize;
+            return new D3D12_GPU_DESCRIPTOR_HANDLE { ptr = handleValue + offsetValue };
+        }
+
+        #region D3D12 Descriptor Structures for Binding Sets
+
+        /// <summary>
+        /// D3D12_UNORDERED_ACCESS_VIEW_DESC structure for unordered access views.
+        /// Based on DirectX 12 Unordered Access Views: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_unordered_access_view_desc
+        /// Uses explicit layout to model the union of view dimension types.
+        /// </summary>
+        [StructLayout(LayoutKind.Explicit)]
+        private struct D3D12_UNORDERED_ACCESS_VIEW_DESC
+        {
+            [FieldOffset(0)]
+            public uint Format; // DXGI_FORMAT
+            [FieldOffset(4)]
+            public uint ViewDimension; // D3D12_UAV_DIMENSION
+            // Union members start at offset 8 (all overlap at the same offset)
+            [FieldOffset(8)]
+            public D3D12_BUFFER_UAV Buffer;
+            [FieldOffset(8)]
+            public D3D12_TEX1D_UAV Texture1D;
+            [FieldOffset(8)]
+            public D3D12_TEX1D_ARRAY_UAV Texture1DArray;
+            [FieldOffset(8)]
+            public D3D12_TEX2D_UAV Texture2D;
+            [FieldOffset(8)]
+            public D3D12_TEX2D_ARRAY_UAV Texture2DArray;
+            [FieldOffset(8)]
+            public D3D12_TEX3D_UAV Texture3D;
+        }
+
+        /// <summary>
+        /// D3D12_UAV_DIMENSION constants for unordered access view dimensions.
+        /// Based on DirectX 12 UAV Dimensions: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ne-d3d12-d3d12_uav_dimension
+        /// </summary>
+        private const uint D3D12_UAV_DIMENSION_UNKNOWN = 0;
+        private const uint D3D12_UAV_DIMENSION_BUFFER = 1;
+        private const uint D3D12_UAV_DIMENSION_TEXTURE1D = 2;
+        private const uint D3D12_UAV_DIMENSION_TEXTURE1DARRAY = 3;
+        private const uint D3D12_UAV_DIMENSION_TEXTURE2D = 4;
+        private const uint D3D12_UAV_DIMENSION_TEXTURE2DARRAY = 5;
+        private const uint D3D12_UAV_DIMENSION_TEXTURE3D = 8;
+
+        /// <summary>
+        /// D3D12_TEX2D_UAV structure for 2D texture unordered access views.
+        /// Based on DirectX 12 UAV Structures: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_tex2d_uav
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_TEX2D_UAV
+        {
+            public uint MipSlice;
+            public uint PlaneSlice; // For planar formats (typically 0 for non-planar)
+        }
+
+        /// <summary>
+        /// D3D12_TEX1D_UAV structure for 1D texture unordered access views.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_TEX1D_UAV
+        {
+            public uint MipSlice;
+        }
+
+        /// <summary>
+        /// D3D12_TEX1D_ARRAY_UAV structure for 1D texture array unordered access views.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_TEX1D_ARRAY_UAV
+        {
+            public uint MipSlice;
+            public uint FirstArraySlice;
+            public uint ArraySize;
+        }
+
+        /// <summary>
+        /// D3D12_TEX2D_ARRAY_UAV structure for 2D texture array unordered access views.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_TEX2D_ARRAY_UAV
+        {
+            public uint MipSlice;
+            public uint FirstArraySlice;
+            public uint ArraySize;
+            public uint PlaneSlice;
+        }
+
+        /// <summary>
+        /// D3D12_TEX3D_UAV structure for 3D texture unordered access views.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_TEX3D_UAV
+        {
+            public uint MipSlice;
+            public uint FirstWSlice;
+            public uint WSize;
+        }
+
+        /// <summary>
+        /// D3D12_BUFFER_UAV structure for buffer unordered access views.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_BUFFER_UAV
+        {
+            public ulong FirstElement; // Offset in elements
+            public uint NumElements; // Number of elements
+            public uint StructureByteStride; // Stride for structured buffers (0 for raw buffers)
+            public ulong CounterOffsetInBytes; // Offset for counter (0 if no counter)
+            public uint Flags; // D3D12_BUFFER_UAV_FLAGS
+        }
+
+        /// <summary>
+        /// D3D12_SHADER_RESOURCE_VIEW_DESC structure for shader resource views.
+        /// Based on DirectX 12 Shader Resource Views: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_shader_resource_view_desc
+        /// Uses explicit layout to model the union of view dimension types.
+        /// </summary>
+        [StructLayout(LayoutKind.Explicit)]
+        private struct D3D12_SHADER_RESOURCE_VIEW_DESC
+        {
+            [FieldOffset(0)]
+            public uint Format; // DXGI_FORMAT
+            [FieldOffset(4)]
+            public uint ViewDimension; // D3D12_SRV_DIMENSION
+            // Union members start at offset 8 (all overlap at the same offset)
+            [FieldOffset(8)]
+            public D3D12_BUFFER_SRV Buffer;
+            [FieldOffset(8)]
+            public D3D12_TEX1D_SRV Texture1D;
+            [FieldOffset(8)]
+            public D3D12_TEX1D_ARRAY_SRV Texture1DArray;
+            [FieldOffset(8)]
+            public D3D12_TEX2D_SRV Texture2D;
+            [FieldOffset(8)]
+            public D3D12_TEX2D_ARRAY_SRV Texture2DArray;
+            [FieldOffset(8)]
+            public D3D12_TEX2DMS_SRV Texture2DMS;
+            [FieldOffset(8)]
+            public D3D12_TEX2DMS_ARRAY_SRV Texture2DMSArray;
+            [FieldOffset(8)]
+            public D3D12_TEX3D_SRV Texture3D;
+            [FieldOffset(8)]
+            public D3D12_TEXCUBE_SRV TextureCube;
+            [FieldOffset(8)]
+            public D3D12_TEXCUBE_ARRAY_SRV TextureCubeArray;
+        }
+
+        /// <summary>
+        /// D3D12_SRV_DIMENSION constants for shader resource view dimensions.
+        /// Based on DirectX 12 SRV Dimensions: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ne-d3d12-d3d12_srv_dimension
+        /// </summary>
+        private const uint D3D12_SRV_DIMENSION_UNKNOWN = 0;
+        private const uint D3D12_SRV_DIMENSION_BUFFER = 1;
+        private const uint D3D12_SRV_DIMENSION_TEXTURE1D = 2;
+        private const uint D3D12_SRV_DIMENSION_TEXTURE1DARRAY = 3;
+        private const uint D3D12_SRV_DIMENSION_TEXTURE2D = 4;
+        private const uint D3D12_SRV_DIMENSION_TEXTURE2DARRAY = 5;
+        private const uint D3D12_SRV_DIMENSION_TEXTURE2DMS = 6;
+        private const uint D3D12_SRV_DIMENSION_TEXTURE2DMSARRAY = 7;
+        private const uint D3D12_SRV_DIMENSION_TEXTURE3D = 8;
+        private const uint D3D12_SRV_DIMENSION_TEXTURECUBE = 9;
+        private const uint D3D12_SRV_DIMENSION_TEXTURECUBEARRAY = 10;
+
+        /// <summary>
+        /// D3D12_TEX2D_SRV structure for 2D texture shader resource views.
+        /// Based on DirectX 12 SRV Structures: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_tex2d_srv
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_TEX2D_SRV
+        {
+            public uint MostDetailedMip;
+            public uint MipLevels;
+            public uint PlaneSlice; // For planar formats (typically 0 for non-planar)
+            public float ResourceMinLODClamp;
+        }
+
+        /// <summary>
+        /// D3D12_TEX1D_SRV structure for 1D texture shader resource views.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_TEX1D_SRV
+        {
+            public uint MostDetailedMip;
+            public uint MipLevels;
+            public float ResourceMinLODClamp;
+        }
+
+        /// <summary>
+        /// D3D12_TEX1D_ARRAY_SRV structure for 1D texture array shader resource views.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_TEX1D_ARRAY_SRV
+        {
+            public uint MostDetailedMip;
+            public uint MipLevels;
+            public uint FirstArraySlice;
+            public uint ArraySize;
+            public float ResourceMinLODClamp;
+        }
+
+        /// <summary>
+        /// D3D12_TEX2D_ARRAY_SRV structure for 2D texture array shader resource views.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_TEX2D_ARRAY_SRV
+        {
+            public uint MostDetailedMip;
+            public uint MipLevels;
+            public uint FirstArraySlice;
+            public uint ArraySize;
+            public uint PlaneSlice;
+            public float ResourceMinLODClamp;
+        }
+
+        /// <summary>
+        /// D3D12_TEX2DMS_SRV structure for 2D multisampled texture shader resource views.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_TEX2DMS_SRV
+        {
+            public uint UnusedField_NothingToDefine; // MS textures don't have mip slices
+        }
+
+        /// <summary>
+        /// D3D12_TEX2DMS_ARRAY_SRV structure for 2D multisampled texture array shader resource views.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_TEX2DMS_ARRAY_SRV
+        {
+            public uint FirstArraySlice;
+            public uint ArraySize;
+        }
+
+        /// <summary>
+        /// D3D12_TEX3D_SRV structure for 3D texture shader resource views.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_TEX3D_SRV
+        {
+            public uint MostDetailedMip;
+            public uint MipLevels;
+            public float ResourceMinLODClamp;
+        }
+
+        /// <summary>
+        /// D3D12_TEXCUBE_SRV structure for cube texture shader resource views.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_TEXCUBE_SRV
+        {
+            public uint MostDetailedMip;
+            public uint MipLevels;
+            public float ResourceMinLODClamp;
+        }
+
+        /// <summary>
+        /// D3D12_TEXCUBE_ARRAY_SRV structure for cube texture array shader resource views.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_TEXCUBE_ARRAY_SRV
+        {
+            public uint MostDetailedMip;
+            public uint MipLevels;
+            public uint First2DArrayFace;
+            public uint NumCubes;
+            public float ResourceMinLODClamp;
+        }
+
+        /// <summary>
+        /// D3D12_BUFFER_SRV structure for buffer shader resource views.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_BUFFER_SRV
+        {
+            public ulong FirstElement; // Offset in elements
+            public uint NumElements; // Number of elements
+            public uint StructureByteStride; // Stride for structured buffers (0 for raw buffers)
+            public uint Flags; // D3D12_BUFFER_SRV_FLAGS
+        }
+
+        /// <summary>
+        /// D3D12_CONSTANT_BUFFER_VIEW_DESC structure for constant buffer views.
+        /// Based on DirectX 12 Constant Buffer Views: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_constant_buffer_view_desc
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_CONSTANT_BUFFER_VIEW_DESC
+        {
+            public ulong BufferLocation; // GPU virtual address
+            public uint SizeInBytes; // Size of constant buffer (must be multiple of 256)
+        }
+
+        #endregion
 
         /// <summary>
         /// COM interface method delegate for CreateUnorderedAccessView.
@@ -6071,7 +6859,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 if (_scratchBuffer != null)
                 {
                     // Check if existing scratch buffer is large enough
-                    // We'll need to check the buffer size - for now, assume we need to check via buffer desc
+                    // TODO:  We'll need to check the buffer size - for now, assume we need to check via buffer desc
                     // In practice, we might want to track the allocated size separately
                     // For simplicity, we'll reallocate if the required size is larger
                     // In a production implementation, you might want to track the allocated size
@@ -6330,7 +7118,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             // All ICommandList methods require full implementation
-            // These are stubbed with TODO comments indicating D3D12 API calls needed
+            // TODO:  These are stubbed with TODO comments indicating D3D12 API calls needed
             // Implementation will be completed when DirectX 12 interop is added
 
             /// <summary>
@@ -6609,7 +7397,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             /// https://docs.microsoft.com/en-us/windows/win32/direct3d12/uploading-resource-data
             /// 
             /// Note: This implementation uses approximate footprint calculations for standard formats.
-            /// A full implementation would use ID3D12Device::GetCopyableFootprints for exact layouts.
+            // TODO: / A full implementation would use ID3D12Device::GetCopyableFootprints for exact layouts.
             /// </summary>
             public void WriteTexture(ITexture texture, int mipLevel, int arraySlice, byte[] data)
             {
