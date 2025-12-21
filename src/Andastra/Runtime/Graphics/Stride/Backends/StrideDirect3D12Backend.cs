@@ -560,7 +560,8 @@ namespace Andastra.Runtime.Stride.Backends
                             Capacity = capacity,
                             DescriptorIncrementSize = descriptorIncrementSize,
                             NextIndex = 0,
-                            FreeIndices = new HashSet<int>()
+                            FreeIndices = new HashSet<int>(),
+                            HeapType = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV // Texture heap type
                         };
                         _bindlessHeaps[handle] = heapInfo;
 
