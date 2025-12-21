@@ -42,6 +42,12 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         private GraphicsDevice _graphicsDevice;
         private bool _guiInitialized;
 
+        // Upgrade slot and list box state tracking
+        // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 - tracks selected upgrade slot and list box selection
+        // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 - tracks selected upgrade slot and list box selection
+        private int? _selectedUpgradeSlot;
+        private List<string> _currentUpgradeList; // List of upgrade ResRefs currently displayed in LB_ITEMS
+
         /// <summary>
         /// Initializes a new instance of the upgrade screen.
         /// </summary>
@@ -53,6 +59,8 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             _controlMap = new Dictionary<string, GUIControl>(StringComparer.OrdinalIgnoreCase);
             _buttonMap = new Dictionary<string, GUIButton>(StringComparer.OrdinalIgnoreCase);
             _guiInitialized = false;
+            _selectedUpgradeSlot = null;
+            _currentUpgradeList = new List<string>();
         }
 
         /// <summary>
@@ -664,6 +672,32 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         }
 
         /// <summary>
+        /// Sets the selected upgrade slot and refreshes the upgrade list.
+        /// </summary>
+        /// <param name="upgradeSlot">Upgrade slot index (0-based).</param>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 - slot selection handler
+        /// Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 - slot selection handler
+        /// Original implementation:
+        /// - Sets selected slot index
+        /// - Gets available upgrades for that slot
+        /// - Populates LB_ITEMS list box with upgrade items
+        /// </remarks>
+        public void SetSelectedUpgradeSlot(int upgradeSlot)
+        {
+            if (upgradeSlot < 0)
+            {
+                _selectedUpgradeSlot = null;
+                _currentUpgradeList.Clear();
+                RefreshUpgradeDisplay();
+                return;
+            }
+
+            _selectedUpgradeSlot = upgradeSlot;
+            RefreshUpgradeDisplay();
+        }
+
+        /// <summary>
         /// Refreshes the upgrade display with available upgrades.
         /// </summary>
         /// <remarks>
@@ -681,11 +715,92 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
                 return;
             }
 
-            // Get available upgrades for all slots
+            if (!_selectedUpgradeSlot.HasValue)
+            {
+                // No slot selected - clear list box
+                _currentUpgradeList.Clear();
+                UpdateListBoxItems();
+                return;
+            }
+
+            // Get available upgrades for the selected slot
             // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 - gets available upgrades
             // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 - gets available upgrades
-            // For now, we'll populate the list when a slot is selected
-            // The actual list population happens when user selects a slot
+            _currentUpgradeList = GetAvailableUpgrades(_targetItem, _selectedUpgradeSlot.Value);
+
+            // Populate list box with available upgrades
+            UpdateListBoxItems();
+        }
+
+        /// <summary>
+        /// Updates the LB_ITEMS list box with the current upgrade list.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 - populates LB_ITEMS list box
+        /// Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 - populates LB_ITEMS list box
+        /// Original implementation:
+        /// - Clears existing list box items
+        /// - Adds each upgrade ResRef as a list box item
+        /// - Sets list box item text to upgrade name (from UTI template)
+        /// </remarks>
+        private void UpdateListBoxItems()
+        {
+            if (!_controlMap.TryGetValue("LB_ITEMS", out GUIControl listBoxControl))
+            {
+                return;
+            }
+
+            if (!(listBoxControl is GUIListBox listBox))
+            {
+                return;
+            }
+
+            // Clear existing list box items (children represent list items)
+            // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 - clears list box before populating
+            // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 - clears list box before populating
+            listBox.Children.Clear();
+
+            // Add each upgrade as a list box item
+            // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 - adds items to list box
+            // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 - adds items to list box
+            foreach (string upgradeResRef in _currentUpgradeList)
+            {
+                // Create a proto item for each upgrade
+                GUIProtoItem listItem = new GUIProtoItem();
+                listItem.Tag = upgradeResRef; // Store ResRef in tag for retrieval
+
+                // Load upgrade UTI template to get display name
+                UTI upgradeUTI = LoadUpgradeUTITemplate(upgradeResRef);
+                if (upgradeUTI != null && upgradeUTI.Name != null)
+                {
+                    // Set display text to upgrade name (LocalizedString.ToString() returns English text or StringRef)
+                    if (listItem.GuiText == null)
+                    {
+                        listItem.GuiText = new GUIText();
+                    }
+                    string displayName = upgradeUTI.Name.ToString();
+                    if (!string.IsNullOrEmpty(displayName))
+                    {
+                        listItem.GuiText.Text = displayName;
+                    }
+                    else
+                    {
+                        // Fallback to ResRef if name is empty
+                        listItem.GuiText.Text = upgradeResRef;
+                    }
+                }
+                else
+                {
+                    // Fallback to ResRef if UTI not loaded or name not available
+                    if (listItem.GuiText == null)
+                    {
+                        listItem.GuiText = new GUIText();
+                    }
+                    listItem.GuiText.Text = upgradeResRef;
+                }
+
+                listBox.Children.Add(listItem);
+            }
         }
 
         /// <summary>
@@ -734,6 +849,11 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// <remarks>
         /// Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 line 215 - calls ApplyUpgrade
         /// Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 line 163 - calls ApplyUpgrade
+        /// Original implementation:
+        /// - Gets selected upgrade slot (offset 0x18d0 in upgrade screen object)
+        /// - Gets selected upgrade ResRef from LB_ITEMS list box (CurrentValue property)
+        /// - Calls ApplyUpgrade with item, slot, and ResRef
+        /// - Refreshes upgrade display if successful
         /// </remarks>
         private void HandleApplyUpgrade()
         {
@@ -742,14 +862,72 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
                 return;
             }
 
-            // Get selected upgrade from list box
-            // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 - gets selected item from LB_ITEMS
-            // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 - gets selected item from LB_ITEMS
-            // For now, this is a placeholder - full implementation would:
-            // 1. Get selected upgrade slot from UI
-            // 2. Get selected upgrade ResRef from list box
-            // 3. Call ApplyUpgrade with item, slot, and ResRef
-            // 4. Refresh display
+            // Check if upgrade slot is selected
+            // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 line 216 - checks selected slot
+            // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 line 164 - checks selected slot
+            if (!_selectedUpgradeSlot.HasValue)
+            {
+                // No upgrade slot selected - cannot apply upgrade
+                return;
+            }
+
+            int upgradeSlot = _selectedUpgradeSlot.Value;
+
+            // Get selected upgrade ResRef from list box
+            // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 line 217 - gets selected item from LB_ITEMS
+            // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 line 165 - gets selected item from LB_ITEMS
+            // List box CurrentValue property contains the selected item index
+            string selectedUpgradeResRef = null;
+            if (_controlMap.TryGetValue("LB_ITEMS", out GUIControl listBoxControl))
+            {
+                if (listBoxControl is GUIListBox listBox)
+                {
+                    // Get selected index from CurrentValue property
+                    // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 - uses CurrentValue to get selected index
+                    // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 - uses CurrentValue to get selected index
+                    if (listBox.CurrentValue.HasValue && listBox.CurrentValue.Value >= 0 && listBox.CurrentValue.Value < _currentUpgradeList.Count)
+                    {
+                        int selectedIndex = listBox.CurrentValue.Value;
+                        selectedUpgradeResRef = _currentUpgradeList[selectedIndex];
+                    }
+                    else if (listBox.Children != null && listBox.Children.Count > 0)
+                    {
+                        // Fallback: Check for item with IsSelected flag set
+                        // Based on original GUI system: Items may have IsSelected property set
+                        foreach (GUIControl child in listBox.Children)
+                        {
+                            if (child != null && child.IsSelected.HasValue && child.IsSelected.Value != 0)
+                            {
+                                // This item is selected - use its tag (ResRef)
+                                if (!string.IsNullOrEmpty(child.Tag))
+                                {
+                                    selectedUpgradeResRef = child.Tag;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (string.IsNullOrEmpty(selectedUpgradeResRef))
+            {
+                // No upgrade selected from list box - cannot apply upgrade
+                return;
+            }
+
+            // Apply upgrade to item
+            // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 line 215 - calls ApplyUpgrade
+            // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 line 163 - calls ApplyUpgrade
+            bool success = ApplyUpgrade(_targetItem, upgradeSlot, selectedUpgradeResRef);
+
+            if (success)
+            {
+                // Refresh upgrade display to reflect changes
+                // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 - refreshes display after applying upgrade
+                // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 - refreshes display after applying upgrade
+                RefreshUpgradeDisplay();
+            }
         }
 
         /// <summary>
