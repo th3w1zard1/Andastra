@@ -930,6 +930,15 @@ namespace Andastra.Runtime.MonoGame.Backends
             public IntPtr buffer; // VkBuffer
         }
 
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkAccelerationStructureDeviceAddressInfoKHR.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkAccelerationStructureDeviceAddressInfoKHR
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public IntPtr accelerationStructure; // VkAccelerationStructureKHR
+        }
+
         // Vulkan enums
         private enum VkStructureType
         {
@@ -1389,6 +1398,9 @@ namespace Andastra.Runtime.MonoGame.Backends
         // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkDestroyAccelerationStructureKHR.html
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkDestroyAccelerationStructureKHRDelegate(IntPtr device, IntPtr accelerationStructure, IntPtr pAllocator);
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetAccelerationStructureDeviceAddressKHR.html
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate ulong vkGetAccelerationStructureDeviceAddressKHRDelegate(IntPtr device, ref VkAccelerationStructureDeviceAddressInfoKHR pInfo);
 
         // VK_KHR_ray_tracing_pipeline extension function pointers (static for now - would be loaded via vkGetDeviceProcAddr in real implementation)
         private static vkCreateRayTracingPipelinesKHRDelegate vkCreateRayTracingPipelinesKHR;
@@ -1401,6 +1413,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static vkGetBufferDeviceAddressKHRDelegate vkGetBufferDeviceAddressKHR;
         private static vkCreateAccelerationStructureKHRDelegate vkCreateAccelerationStructureKHR;
         private static vkDestroyAccelerationStructureKHRDelegate vkDestroyAccelerationStructureKHR;
+        private static vkGetAccelerationStructureDeviceAddressKHRDelegate vkGetAccelerationStructureDeviceAddressKHR;
 
         // Helper methods for Vulkan interop
         private static void InitializeVulkanFunctions(IntPtr device)
@@ -7298,6 +7311,146 @@ namespace Andastra.Runtime.MonoGame.Backends
                     firstInstance);
             }
             public void DrawIndirect(IBuffer argumentBuffer, int offset, int drawCount, int stride) { /* TODO: vkCmdDrawIndirect */ }
+            /// <summary>
+            /// Draws indexed primitives using indirect drawing via vkCmdDrawIndexedIndirect.
+            /// 
+            /// Performs multiple indexed draw calls, where the draw parameters for each call
+            /// are stored in a buffer rather than passed directly. This is useful for GPU-driven
+            /// rendering where the GPU determines how many primitives to draw.
+            /// 
+            /// The argument buffer must contain an array of VkDrawIndexedIndirectCommand structures,
+            /// each containing:
+            /// - indexCount: Number of indices to draw
+            /// - instanceCount: Number of instances to draw
+            /// - firstIndex: First index to use from the index buffer
+            /// - vertexOffset: Offset added to each vertex index before indexing into vertex buffer
+            /// - firstInstance: First instance ID for instanced rendering
+            /// 
+            /// Based on Vulkan API: vkCmdDrawIndexedIndirect
+            /// Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdDrawIndexedIndirect.html
+            /// Original implementation: Records multiple indexed draw commands into the command buffer
+            /// 
+            /// vkCmdDrawIndexedIndirect signature:
+            /// void vkCmdDrawIndexedIndirect(
+            ///     VkCommandBuffer commandBuffer,
+            ///     VkBuffer buffer,
+            ///     VkDeviceSize offset,
+            ///     uint32_t drawCount,
+            ///     uint32_t stride);
+            /// 
+            /// VkDrawIndexedIndirectCommand structure (20 bytes):
+            /// - uint32_t indexCount (4 bytes)
+            /// - uint32_t instanceCount (4 bytes)
+            /// - uint32_t firstIndex (4 bytes)
+            /// - int32_t vertexOffset (4 bytes)
+            /// - uint32_t firstInstance (4 bytes)
+            /// 
+            /// swkotor2.exe: N/A - Original game used DirectX 9, not Vulkan
+            /// </summary>
+            /// <param name="argumentBuffer">Buffer containing VkDrawIndexedIndirectCommand structures</param>
+            /// <param name="offset">Byte offset into the argument buffer where the first command starts</param>
+            /// <param name="drawCount">Number of draw commands to execute (number of VkDrawIndexedIndirectCommand structures)</param>
+            /// <param name="stride">Byte stride between consecutive VkDrawIndexedIndirectCommand structures (must be 20 bytes or 0 for tightly packed)</param>
+            /// <exception cref="InvalidOperationException">Thrown if command list is not open or function pointer is not initialized</exception>
+            /// <exception cref="ArgumentNullException">Thrown if argumentBuffer is null</exception>
+            /// <exception cref="ArgumentException">Thrown if buffer is not a VulkanBuffer, has invalid handle, or stride is invalid</exception>
+            /// <exception cref="ArgumentOutOfRangeException">Thrown if offset or drawCount is negative</exception>
+            public void DrawIndexedIndirect(IBuffer argumentBuffer, int offset, int drawCount, int stride)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before drawing indexed indirect");
+                }
+
+                if (argumentBuffer == null)
+                {
+                    throw new ArgumentNullException(nameof(argumentBuffer));
+                }
+
+                if (offset < 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(offset), "Offset must be non-negative");
+                }
+
+                if (drawCount <= 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(drawCount), "Draw count must be positive");
+                }
+
+                if (stride < 0)
+                {
+                    throw new ArgumentException("Stride must be non-negative. Use 0 for tightly packed commands (20 bytes each)", nameof(stride));
+                }
+
+                // Get Vulkan buffer handle from IBuffer
+                var vulkanBuffer = argumentBuffer as VulkanBuffer;
+                if (vulkanBuffer == null)
+                {
+                    throw new ArgumentException("Buffer must be a VulkanBuffer instance", nameof(argumentBuffer));
+                }
+
+                IntPtr vkBuffer = vulkanBuffer.VkBuffer;
+                if (vkBuffer == IntPtr.Zero)
+                {
+                    // Fallback to NativeHandle if VkBuffer is not available
+                    vkBuffer = vulkanBuffer.NativeHandle;
+                    if (vkBuffer == IntPtr.Zero)
+                    {
+                        throw new ArgumentException("Buffer does not have a valid Vulkan handle", nameof(argumentBuffer));
+                    }
+                }
+
+                // Validate offset alignment
+                // Vulkan requires indirect draw buffer offsets to be aligned to 4 bytes
+                if ((offset % 4) != 0)
+                {
+                    throw new ArgumentException("Offset must be aligned to 4 bytes for indirect indexed draw", nameof(offset));
+                }
+
+                // Validate stride
+                // VkDrawIndexedIndirectCommand is 20 bytes (5 * 4 bytes)
+                // Stride of 0 means tightly packed (20 bytes per command)
+                // Stride must be >= 20 bytes if non-zero, and must be a multiple of 4 bytes
+                const int VkDrawIndexedIndirectCommandSize = 20; // 5 * uint32_t/int32_t = 20 bytes
+                if (stride == 0)
+                {
+                    // Tightly packed - use the structure size
+                    stride = VkDrawIndexedIndirectCommandSize;
+                }
+                else if (stride < VkDrawIndexedIndirectCommandSize)
+                {
+                    throw new ArgumentException($"Stride {stride} must be at least {VkDrawIndexedIndirectCommandSize} bytes (size of VkDrawIndexedIndirectCommand)", nameof(stride));
+                }
+                else if ((stride % 4) != 0)
+                {
+                    throw new ArgumentException("Stride must be a multiple of 4 bytes", nameof(stride));
+                }
+
+                // Ensure graphics pipeline and index buffer are bound before drawing
+                // Note: This should ideally be checked, but we'll proceed assuming SetGraphicsState was called
+                // The indirect buffer contains an array of VkDrawIndexedIndirectCommand structures:
+                // - indexCount: Number of indices to draw (uint32_t, 4 bytes)
+                // - instanceCount: Number of instances to draw (uint32_t, 4 bytes)
+                // - firstIndex: First index to use from index buffer (uint32_t, 4 bytes)
+                // - vertexOffset: Offset added to vertex indices (int32_t, 4 bytes)
+                // - firstInstance: First instance ID (uint32_t, 4 bytes)
+                // Total: 20 bytes per draw indexed indirect command
+                // Vulkan API: vkCmdDrawIndexedIndirect(commandBuffer, buffer, offset, drawCount, stride)
+                // Vulkan API Reference: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdDrawIndexedIndirect.html
+
+                if (vkCmdDrawIndexedIndirect == null)
+                {
+                    throw new InvalidOperationException("vkCmdDrawIndexedIndirect function pointer not initialized. Call InitializeVulkanFunctions first.");
+                }
+
+                // Call vkCmdDrawIndexedIndirect to record the indirect indexed draw commands
+                vkCmdDrawIndexedIndirect(
+                    _vkCommandBuffer,
+                    vkBuffer,
+                    unchecked((ulong)offset),
+                    unchecked((uint)drawCount),
+                    unchecked((uint)stride));
+            }
             public void SetComputeState(ComputeState state)
             {
                 if (!_isOpen)
