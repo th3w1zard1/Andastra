@@ -24,6 +24,22 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         private const string D3D12Library = "d3d12.dll";
 
+        // Windows API functions for event synchronization
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern IntPtr CreateEvent(IntPtr lpEventAttributes, [MarshalAs(UnmanagedType.Bool)] bool bManualReset, [MarshalAs(UnmanagedType.Bool)] bool bInitialState, string lpName);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool CloseHandle(IntPtr hObject);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern uint WaitForSingleObject(IntPtr hHandle, uint dwMilliseconds);
+
+        private const uint WAIT_OBJECT_0 = 0x00000000;
+        private const uint WAIT_TIMEOUT = 0x00000102;
+        private const uint WAIT_FAILED = 0xFFFFFFFF;
+        private const uint INFINITE = 0xFFFFFFFF;
+
         // DirectX 12 HRESULT values
         private enum HRESULT
         {
@@ -716,58 +732,6 @@ namespace Andastra.Runtime.MonoGame.Backends
             return _commandQueue;
         }
 
-        /// <summary>
-        /// Releases a COM object by calling IUnknown::Release through the vtable.
-        /// All COM interfaces inherit from IUnknown, which has Release at vtable index 2.
-        /// Based on COM Reference Counting: https://docs.microsoft.com/en-us/windows/win32/api/unknwn/nf-unknwn-iunknown-release
-        /// </summary>
-        private static unsafe uint ReleaseComObject(IntPtr comObject)
-        {
-            // Platform check: DirectX 12 COM is Windows-only
-            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-            {
-                return 0;
-            }
-
-            if (comObject == IntPtr.Zero)
-            {
-                return 0; // Already released or invalid
-            }
-
-            try
-            {
-                // Get vtable pointer (first pointer in COM object)
-                IntPtr* vtablePtr = *(IntPtr**)comObject;
-                if (vtablePtr == null)
-                {
-                    return 0; // Invalid vtable
-                }
-
-                // IUnknown::Release is at vtable index 2
-                // Index 0 = QueryInterface
-                // Index 1 = AddRef
-                // Index 2 = Release
-                IntPtr releasePtr = vtablePtr[2];
-                if (releasePtr == IntPtr.Zero)
-                {
-                    return 0; // Invalid Release function pointer
-                }
-
-                // Create delegate from function pointer
-                ReleaseDelegate releaseDelegate =
-                    (ReleaseDelegate)Marshal.GetDelegateForFunctionPointer(releasePtr, typeof(ReleaseDelegate));
-
-                // Call Release() and return the new reference count
-                return releaseDelegate(comObject);
-            }
-            catch
-            {
-                // If anything goes wrong (invalid pointer, etc.), just return 0
-                // This prevents crashes during cleanup
-                return 0;
-            }
-        }
-
         #endregion
 
         #region D3D12 Resource Barrier Structures
@@ -1081,6 +1045,9 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         // DirectX 12 Interface ID for ID3D12DescriptorHeap
         private static readonly Guid IID_ID3D12DescriptorHeap = new Guid(0x8efb471d, 0x616c, 0x4f49, 0x90, 0xf7, 0x12, 0x7b, 0xb7, 0x63, 0xfa, 0x51);
+
+        // DirectX 12 Interface ID for ID3D12Fence
+        private static readonly Guid IID_ID3D12Fence = new Guid(0x0a753dcf, 0xc4d8, 0x4b91, 0xad, 0xf6, 0xbe, 0x5a, 0x60, 0xd9, 0x5a, 0x76);
 
         /// <summary>
         /// D3D12_DESCRIPTOR_HEAP_DESC structure.
