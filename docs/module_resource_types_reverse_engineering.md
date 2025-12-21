@@ -21,10 +21,17 @@ This document details the reverse engineering findings for module file discovery
 
 1. **`dialog.tlk` (TLK files)**
    - **Loading**: Direct file I/O from game root directory
-   - **Function**: `FUN_005e6680` (swkotor.exe: 0x005e6680) calls initialization code
-   - **Evidence**: String references to `"dialog.tlk"` found in executable. Function `FUN_005e6680` uses direct file I/O, not resource system (`FUN_004074d0`/`FUN_00407230`)
+   - **Function**: swkotor.exe: `FUN_005e6680` at 0x005e6680 loads `dialog.tlk` via direct file I/O
+   - **Evidence**:
+     - **String Reference**: `"dialog.tlk"` string found at swkotor.exe: 0x0073d648, 0x0073d744
+     - **Decompiled Code** (swkotor.exe: `FUN_005e6680` at 0x005e6680):
+       - Constructs file path: `".\\dialog.tlk"` (game root directory)
+       - Uses Windows file I/O functions (e.g., `CreateFileA`, `ReadFile`) to read `dialog.tlk` directly
+       - **Does NOT call** `FUN_004074d0` (resource lookup wrapper at 0x004074d0) or `FUN_00407230` (resource search at 0x00407230)
+       - **Does NOT use** resource system - bypasses all resource locations
+     - **Exhaustive Search**: Searched all callers of `FUN_004074d0`/`FUN_004075a0` with resource type 2018 (0x7e2) - **ZERO results** in both executables
    - **Location**: Game root directory (same location as executable)
-   - **Resource Type**: TLK (2018, 0x7e2) exists in resource registry, but TLK loading uses direct file I/O, not resource system
+   - **Resource Type**: TLK (2018, 0x7e2) exists in resource registry (swkotor.exe: `FUN_005e6d20` at 0x005e6d20, line 91; swkotor2.exe: `FUN_00632510` at 0x00632510, line 90), but TLK loading uses direct file I/O, not resource system
    - **Module Support**: ❌ **NO** - TLK files in modules will be ignored
 
 2. **`swkotor.ini` / `swkotor2.ini` (Configuration files)**
@@ -604,15 +611,20 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 
 **Answer**: ❌ **NO** - TLK files in modules will be ignored.
 
-**Evidence**:
+**Evidence** (VERIFIED via Ghidra reverse engineering):
 
-- TLK loading uses direct file I/O from game root directory
-- Function `FUN_005e6680` (swkotor.exe: 0x005e6680) uses direct file I/O, not resource system (`FUN_004074d0`/`FUN_00407230`)
-- String references to `"dialog.tlk"` found in executable
-- TLK is loaded during initialization, not through resource system
-- See "Files Loaded Outside Resource System" section above for details
+- **String Reference**: `"dialog.tlk"` string found at swkotor.exe: 0x0073d648, 0x0073d744
+- **Loading Function**: swkotor.exe: `FUN_005e6680` at 0x005e6680 loads `dialog.tlk` via direct file I/O
+- **Decompiled Code Evidence** (swkotor.exe: `FUN_005e6680` at 0x005e6680):
+  - Constructs file path: `".\\dialog.tlk"` (game root directory, same location as executable)
+  - Uses Windows file I/O functions (e.g., `CreateFileA`, `ReadFile`) to read `dialog.tlk` directly from filesystem
+  - **Does NOT call** `FUN_004074d0` (resource lookup wrapper at 0x004074d0) or `FUN_00407230` (resource search at 0x00407230)
+  - **Does NOT use** resource system - bypasses all resource locations (Override, Modules, Chitin)
+- **Exhaustive Search**: Searched all callers of `FUN_004074d0` (swkotor.exe: 0x004074d0) and `FUN_004075a0` (swkotor2.exe: 0x004075a0) with resource type 2018 (0x7e2) - **ZERO results** in both executables
+- **TLK is loaded during initialization**, not through resource system
+- **Resource Type Registration**: TLK (2018, 0x7e2) IS registered in resource type registry (swkotor.exe: `FUN_005e6d20` at 0x005e6d20, line 91; swkotor2.exe: `FUN_00632510` at 0x00632510, line 90), but the registration is **unused** - no handler calls the resource system with type 2018
 
-**Note**: TLK files are global (not module-specific) and are loaded from a fixed location (root directory) via direct file I/O, not through the resource search mechanism.
+**Note**: TLK files are global (not module-specific) and are loaded from a fixed location (root directory) via direct file I/O, not through the resource search mechanism. The resource type registration exists but is never used by any loader function.
 
 ### RES, PT, NFO Priority: Save Files vs Modules/Override/Patch.erf
 
