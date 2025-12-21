@@ -3548,7 +3548,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         /// <param name="isCubeMap">Whether this is a cube map texture</param>
         /// <param name="cubeMapFace">Cube map face index (0-5), ignored if not cube map</param>
         /// <returns>OpenGL texture ID, or 0 if creation failed</returns>
-        private uint CreateMipLevelTexture(TPC.Mipmap mipmap, TPCTextureFormat tpcFormat, bool isCubeMap, int cubeMapFace)
+        private uint CreateMipLevelTexture(TPCMipmap mipmap, TPCTextureFormat tpcFormat, bool isCubeMap, int cubeMapFace)
         {
             if (mipmap == null || mipmap.Data == null || mipmap.Data.Length == 0)
             {

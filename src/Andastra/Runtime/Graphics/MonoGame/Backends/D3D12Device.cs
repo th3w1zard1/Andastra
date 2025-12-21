@@ -76,6 +76,14 @@ namespace Andastra.Runtime.MonoGame.Backends
         // Frame tracking for multi-buffering
         private int _currentFrameIndex;
 
+        // Sampler descriptor heap management
+        private IntPtr _samplerDescriptorHeap;
+        private IntPtr _samplerHeapCpuStartHandle;
+        private uint _samplerHeapDescriptorIncrementSize;
+        private int _samplerHeapCapacity;
+        private int _samplerHeapNextIndex;
+        private const int DefaultSamplerHeapCapacity = 2048;
+
         public GraphicsCapabilities Capabilities
         {
             get { return _capabilities; }
@@ -789,6 +797,96 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         #endregion
 
+        #region D3D12 Sampler Structures and Constants
+
+        // DirectX 12 Descriptor Heap Types
+        private const uint D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER = 1;
+
+        // DirectX 12 Descriptor Heap Flags
+        private const uint D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE = 0x1;
+
+        // DirectX 12 Filter Types
+        private const uint D3D12_FILTER_MIN_MAG_MIP_POINT = 0x00000000;
+        private const uint D3D12_FILTER_MIN_MAG_POINT_MIP_LINEAR = 0x00000001;
+        private const uint D3D12_FILTER_MIN_POINT_MAG_LINEAR_MIP_POINT = 0x00000004;
+        private const uint D3D12_FILTER_MIN_POINT_MAG_MIP_LINEAR = 0x00000005;
+        private const uint D3D12_FILTER_MIN_LINEAR_MAG_MIP_POINT = 0x00000010;
+        private const uint D3D12_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR = 0x00000011;
+        private const uint D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT = 0x00000014;
+        private const uint D3D12_FILTER_MIN_MAG_MIP_LINEAR = 0x00000015;
+        private const uint D3D12_FILTER_ANISOTROPIC = 0x00000055;
+
+        // DirectX 12 Texture Address Modes
+        private const uint D3D12_TEXTURE_ADDRESS_MODE_WRAP = 1;
+        private const uint D3D12_TEXTURE_ADDRESS_MODE_MIRROR = 2;
+        private const uint D3D12_TEXTURE_ADDRESS_MODE_CLAMP = 3;
+        private const uint D3D12_TEXTURE_ADDRESS_MODE_BORDER = 4;
+        private const uint D3D12_TEXTURE_ADDRESS_MODE_MIRROR_ONCE = 5;
+
+        // DirectX 12 Comparison Functions
+        private const uint D3D12_COMPARISON_FUNC_NEVER = 1;
+        private const uint D3D12_COMPARISON_FUNC_LESS = 2;
+        private const uint D3D12_COMPARISON_FUNC_EQUAL = 3;
+        private const uint D3D12_COMPARISON_FUNC_LESS_EQUAL = 4;
+        private const uint D3D12_COMPARISON_FUNC_GREATER = 5;
+        private const uint D3D12_COMPARISON_FUNC_NOT_EQUAL = 6;
+        private const uint D3D12_COMPARISON_FUNC_GREATER_EQUAL = 7;
+        private const uint D3D12_COMPARISON_FUNC_ALWAYS = 8;
+
+        // DirectX 12 Float Constants
+        private const float D3D12_FLOAT32_MAX = 3.402823466e+38f;
+
+        // DirectX 12 Interface ID for ID3D12DescriptorHeap
+        private static readonly Guid IID_ID3D12DescriptorHeap = new Guid(0x8efb471d, 0x616c, 0x4f49, 0x90, 0xf7, 0x12, 0x7b, 0xb7, 0x63, 0xfa, 0x51);
+
+        /// <summary>
+        /// D3D12_DESCRIPTOR_HEAP_DESC structure.
+        /// Based on DirectX 12 Descriptor Heaps: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_descriptor_heap_desc
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_DESCRIPTOR_HEAP_DESC
+        {
+            public uint Type; // D3D12_DESCRIPTOR_HEAP_TYPE
+            public uint NumDescriptors;
+            public uint Flags; // D3D12_DESCRIPTOR_HEAP_FLAGS
+            public uint NodeMask;
+        }
+
+        /// <summary>
+        /// D3D12_SAMPLER_DESC structure.
+        /// Based on DirectX 12 Sampler Descriptors: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_sampler_desc
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_SAMPLER_DESC
+        {
+            public uint Filter; // D3D12_FILTER
+            public uint AddressU; // D3D12_TEXTURE_ADDRESS_MODE
+            public uint AddressV; // D3D12_TEXTURE_ADDRESS_MODE
+            public uint AddressW; // D3D12_TEXTURE_ADDRESS_MODE
+            public float MipLODBias;
+            public uint MaxAnisotropy;
+            public uint ComparisonFunc; // D3D12_COMPARISON_FUNC
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+            public float[] BorderColor; // float[4] for RGBA border color
+            public float MinLOD;
+            public float MaxLOD;
+        }
+
+        // COM interface method delegates for descriptor heap operations
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int CreateDescriptorHeapDelegate(IntPtr device, IntPtr pDescriptorHeapDesc, ref Guid riid, IntPtr ppvHeap);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate IntPtr GetCPUDescriptorHandleForHeapStartDelegate(IntPtr descriptorHeap);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate uint GetDescriptorHandleIncrementSizeDelegate(IntPtr device, uint DescriptorHeapType);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void CreateSamplerDelegate(IntPtr device, IntPtr pDesc, IntPtr DestDescriptor);
+
+        #endregion
+
         #region Resource Interface
 
         private interface IResource : IDisposable
@@ -1362,6 +1460,37 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                 resourceBarrier(commandList, numBarriers, pBarriers);
             }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::Dispatch through COM vtable.
+            /// VTable index 97 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Compute Shader Dispatch: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-dispatch
+            /// </summary>
+            private unsafe void CallDispatch(IntPtr commandList, uint threadGroupCountX, uint threadGroupCountY, uint threadGroupCountZ)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // Dispatch is at index 97 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[97];
+
+                // Create delegate from function pointer
+                DispatchDelegate dispatch =
+                    (DispatchDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(DispatchDelegate));
+
+                dispatch(commandList, threadGroupCountX, threadGroupCountY, threadGroupCountZ);
+            }
+
             public void UAVBarrier(ITexture texture) { /* TODO: UAVBarrier */ }
             public void UAVBarrier(IBuffer buffer) { /* TODO: UAVBarrier */ }
             public void SetGraphicsState(GraphicsState state) { /* TODO: Set all graphics state */ }
@@ -1376,7 +1505,26 @@ namespace Andastra.Runtime.MonoGame.Backends
             public void DrawIndirect(IBuffer argumentBuffer, int offset, int drawCount, int stride) { /* TODO: ExecuteIndirect */ }
             public void DrawIndexedIndirect(IBuffer argumentBuffer, int offset, int drawCount, int stride) { /* TODO: ExecuteIndirect */ }
             public void SetComputeState(ComputeState state) { /* TODO: Set compute state */ }
-            public void Dispatch(int groupCountX, int groupCountY = 1, int groupCountZ = 1) { /* TODO: Dispatch */ }
+            public void Dispatch(int groupCountX, int groupCountY = 1, int groupCountZ = 1)
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (groupCountX <= 0 || groupCountY <= 0 || groupCountZ <= 0)
+                {
+                    return; // Invalid thread group counts
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    return; // Command list not initialized
+                }
+
+                // Call ID3D12GraphicsCommandList::Dispatch
+                CallDispatch(_d3d12CommandList, unchecked((uint)groupCountX), unchecked((uint)groupCountY), unchecked((uint)groupCountZ));
+            }
             public void DispatchIndirect(IBuffer argumentBuffer, int offset) { /* TODO: ExecuteIndirect */ }
             public void SetRaytracingState(RaytracingState state) { /* TODO: Set raytracing state */ }
             public void DispatchRays(DispatchRaysArguments args) { /* TODO: DispatchRays */ }
