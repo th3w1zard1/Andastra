@@ -1780,6 +1780,194 @@ namespace Andastra.Runtime.Games.Aurora
         }
 
         /// <summary>
+        /// Loads and applies lighting scheme preset from environment.2da.
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: CNWSArea lighting scheme loading from environment.2da
+        /// - LightingScheme is an index into environment.2da (0 = no preset, > 0 = preset index)
+        /// - When LightingScheme > 0, loads the corresponding row from environment.2da
+        /// - Applies lighting properties (ambient/diffuse colors, fog, shadows, weather) from the preset
+        /// - Overrides ARE file values with preset values when preset is specified
+        /// - Based on Bioware-Aurora-AreaFile.md: environment.2da column structure
+        /// - RGB values from 2DA are converted to BGR DWORD format (0BGR) for Aurora engine
+        /// - Row index is 0-based in 2DA format, but LightingScheme may be 1-based (first preset = 1)
+        /// - Handles missing table or row gracefully (falls back to ARE file values)
+        /// </remarks>
+        private void LoadLightingSchemeFromEnvironment2DA()
+        {
+            // LightingScheme = 0 means no preset (use ARE file values directly)
+            if (_lightingScheme == 0)
+            {
+                return;
+            }
+
+            // Need 2DA table manager to load environment.2da
+            if (_twoDATableManager == null)
+            {
+                return;
+            }
+
+            try
+            {
+                // Load environment.2da table
+                // Based on nwmain.exe: C2DA::Load2DArray loads tables from resource system
+                TwoDA environmentTable = _twoDATableManager.GetTable("environment");
+                if (environmentTable == null)
+                {
+                    // Table not found - use ARE file values
+                    return;
+                }
+
+                // Get row from environment.2da
+                // LightingScheme is the row index (0-based in 2DA format)
+                // Note: First row (index 0) is typically header/default, so LightingScheme = 1 is first preset
+                // But we'll use LightingScheme directly as row index to match engine behavior
+                TwoDARow row = _twoDATableManager.GetRow("environment", _lightingScheme);
+                if (row == null)
+                {
+                    // Row not found - use ARE file values
+                    return;
+                }
+
+                // Load day lighting properties (LIGHT_* columns)
+                // Based on environment.2da column structure: LIGHT_AMB_RED, LIGHT_AMB_GREEN, LIGHT_AMB_BLUE
+                int lightAmbRed = _twoDATableManager.GetCellInt("environment", _lightingScheme, "LIGHT_AMB_RED", 128) ?? 128;
+                int lightAmbGreen = _twoDATableManager.GetCellInt("environment", _lightingScheme, "LIGHT_AMB_GREEN", 128) ?? 128;
+                int lightAmbBlue = _twoDATableManager.GetCellInt("environment", _lightingScheme, "LIGHT_AMB_BLUE", 128) ?? 128;
+                // Convert RGB to BGR DWORD format (0BGR, stored as 0x00BBGGRR in little-endian)
+                _sunAmbientColor = (uint)((lightAmbBlue << 16) | (lightAmbGreen << 8) | lightAmbRed);
+
+                int lightDiffRed = _twoDATableManager.GetCellInt("environment", _lightingScheme, "LIGHT_DIFF_RED", 255) ?? 255;
+                int lightDiffGreen = _twoDATableManager.GetCellInt("environment", _lightingScheme, "LIGHT_DIFF_GREEN", 255) ?? 255;
+                int lightDiffBlue = _twoDATableManager.GetCellInt("environment", _lightingScheme, "LIGHT_DIFF_BLUE", 255) ?? 255;
+                _sunDiffuseColor = (uint)((lightDiffBlue << 16) | (lightDiffGreen << 8) | lightDiffRed);
+
+                // Load night lighting properties (DARK_* columns)
+                int darkAmbRed = _twoDATableManager.GetCellInt("environment", _lightingScheme, "DARK_AMB_RED", 64) ?? 64;
+                int darkAmbGreen = _twoDATableManager.GetCellInt("environment", _lightingScheme, "DARK_AMB_GREEN", 64) ?? 64;
+                int darkAmbBlue = _twoDATableManager.GetCellInt("environment", _lightingScheme, "DARK_AMB_BLUE", 64) ?? 64;
+                _moonAmbientColor = (uint)((darkAmbBlue << 16) | (darkAmbGreen << 8) | darkAmbRed);
+
+                int darkDiffRed = _twoDATableManager.GetCellInt("environment", _lightingScheme, "DARK_DIFF_RED", 192) ?? 192;
+                int darkDiffGreen = _twoDATableManager.GetCellInt("environment", _lightingScheme, "DARK_DIFF_GREEN", 192) ?? 192;
+                int darkDiffBlue = _twoDATableManager.GetCellInt("environment", _lightingScheme, "DARK_DIFF_BLUE", 192) ?? 192;
+                _moonDiffuseColor = (uint)((darkDiffBlue << 16) | (darkDiffGreen << 8) | darkDiffRed);
+
+                // Load shadow properties
+                int lightShadows = _twoDATableManager.GetCellInt("environment", _lightingScheme, "LIGHT_SHADOWS", 0) ?? 0;
+                _sunShadows = (byte)(lightShadows != 0 ? 1 : 0);
+
+                int darkShadows = _twoDATableManager.GetCellInt("environment", _lightingScheme, "DARK_SHADOWS", 0) ?? 0;
+                _moonShadows = (byte)(darkShadows != 0 ? 1 : 0);
+
+                // Load fog properties (day)
+                int lightFogRed = _twoDATableManager.GetCellInt("environment", _lightingScheme, "LIGHT_FOG_RED", 128) ?? 128;
+                int lightFogGreen = _twoDATableManager.GetCellInt("environment", _lightingScheme, "LIGHT_FOG_GREEN", 128) ?? 128;
+                int lightFogBlue = _twoDATableManager.GetCellInt("environment", _lightingScheme, "LIGHT_FOG_BLUE", 128) ?? 128;
+                _sunFogColor = (uint)((lightFogBlue << 16) | (lightFogGreen << 8) | lightFogRed);
+
+                int lightFog = _twoDATableManager.GetCellInt("environment", _lightingScheme, "LIGHT_FOG", 0) ?? 0;
+                if (lightFog < 0) lightFog = 0;
+                if (lightFog > 15) lightFog = 15;
+                _sunFogAmount = (byte)lightFog;
+
+                // Load fog properties (night)
+                int darkFogRed = _twoDATableManager.GetCellInt("environment", _lightingScheme, "DARK_FOG_RED", 128) ?? 128;
+                int darkFogGreen = _twoDATableManager.GetCellInt("environment", _lightingScheme, "DARK_FOG_GREEN", 128) ?? 128;
+                int darkFogBlue = _twoDATableManager.GetCellInt("environment", _lightingScheme, "DARK_FOG_BLUE", 128) ?? 128;
+                _moonFogColor = (uint)((darkFogBlue << 16) | (darkFogGreen << 8) | darkFogRed);
+
+                int darkFog = _twoDATableManager.GetCellInt("environment", _lightingScheme, "DARK_FOG", 0) ?? 0;
+                if (darkFog < 0) darkFog = 0;
+                if (darkFog > 15) darkFog = 15;
+                _moonFogAmount = (byte)darkFog;
+
+                // Load weather properties (optional - only override if present in preset)
+                int? wind = _twoDATableManager.GetCellInt("environment", _lightingScheme, "WIND", null);
+                if (wind.HasValue)
+                {
+                    if (wind.Value < 0) wind = 0;
+                    if (wind.Value > 2) wind = 2;
+                    _windPower = wind.Value;
+                }
+
+                int? rain = _twoDATableManager.GetCellInt("environment", _lightingScheme, "RAIN", null);
+                if (rain.HasValue)
+                {
+                    if (rain.Value < 0) rain = 0;
+                    if (rain.Value > 100) rain = 100;
+                    _chanceRain = rain.Value;
+                }
+
+                int? snow = _twoDATableManager.GetCellInt("environment", _lightingScheme, "SNOW", null);
+                if (snow.HasValue)
+                {
+                    if (snow.Value < 0) snow = 0;
+                    if (snow.Value > 100) snow = 100;
+                    _chanceSnow = snow.Value;
+                }
+
+                int? lightning = _twoDATableManager.GetCellInt("environment", _lightingScheme, "LIGHTNING", null);
+                if (lightning.HasValue)
+                {
+                    if (lightning.Value < 0) lightning = 0;
+                    if (lightning.Value > 100) lightning = 100;
+                    _chanceLightning = lightning.Value;
+                }
+
+                // Load shadow alpha (opacity)
+                // Based on environment.2da: SHADOW_ALPHA is shadow opacity (0.0 to 1.0)
+                // ARE file stores shadow opacity as 0-100, so convert from 0.0-1.0 range
+                float? shadowAlpha = _twoDATableManager.GetCellFloat("environment", _lightingScheme, "SHADOW_ALPHA", null);
+                if (shadowAlpha.HasValue)
+                {
+                    // Convert from 0.0-1.0 range to 0-100 range for ARE file format
+                    int shadowOpacityValue = (int)(shadowAlpha.Value * 100.0f);
+                    if (shadowOpacityValue < 0) shadowOpacityValue = 0;
+                    if (shadowOpacityValue > 100) shadowOpacityValue = 100;
+                    _shadowOpacity = (byte)shadowOpacityValue;
+                }
+
+                // Load skybox (optional)
+                int? skybox = _twoDATableManager.GetCellInt("environment", _lightingScheme, "SKYBOX", null);
+                if (skybox.HasValue)
+                {
+                    if (skybox.Value < 0) skybox = 0;
+                    if (skybox.Value > 255) skybox = 255;
+                    _skyBox = (byte)skybox.Value;
+                }
+
+                // Load day/night cycle setting (optional)
+                // DAYNIGHT column: "cycle", "light", or "night"
+                string dayNight = _twoDATableManager.GetCellValue("environment", _lightingScheme, "DAYNIGHT");
+                if (!string.IsNullOrEmpty(dayNight))
+                {
+                    dayNight = dayNight.ToLowerInvariant();
+                    if (dayNight == "cycle")
+                    {
+                        _dayNightCycle = 1; // Dynamic cycle
+                    }
+                    else if (dayNight == "night")
+                    {
+                        _dayNightCycle = 0; // Static night
+                        _isNight = 1;
+                    }
+                    else if (dayNight == "light")
+                    {
+                        _dayNightCycle = 0; // Static day
+                        _isNight = 0;
+                    }
+                    // If not one of the recognized values, keep ARE file values
+                }
+            }
+            catch
+            {
+                // If loading fails for any reason, use ARE file values
+                // This ensures the area can still be created even if environment.2da is missing or corrupt
+            }
+        }
+
+        /// <summary>
         /// Initializes area effects and environmental systems.
         /// </summary>
         /// <remarks>
@@ -1816,6 +2004,11 @@ namespace Andastra.Runtime.Games.Aurora
         /// </remarks>
         protected override void InitializeAreaEffects()
         {
+            // Load lighting scheme from environment.2da if specified
+            // Based on nwmain.exe: LightingScheme > 0 means use preset from environment.2da
+            // This must be called before setting defaults, so preset values can override defaults
+            LoadLightingSchemeFromEnvironment2DA();
+
             // Initialize sun lighting system
             // Based on nwmain.exe: Sun lighting provides primary directional light source
             // Default sun ambient color: 0x808080 (gray in BGR format, provides base ambient lighting)
@@ -1948,12 +2141,11 @@ namespace Andastra.Runtime.Games.Aurora
             if (_windPower < 0) _windPower = 0;
             if (_windPower > 2) _windPower = 2;
 
-            // Initialize lighting scheme
+            // Lighting scheme has been loaded from environment.2da if LightingScheme > 0
             // Based on nwmain.exe: LightingScheme is index into environment.2da
             // LightingScheme = 0 means no preset lighting scheme (use ARE file colors directly)
-            // LightingScheme > 0 means use preset from environment.2da (TODO: STUB - not implemented here, handled by rendering system)
-            // TODO: STUB - For now, we just validate that LightingScheme is a valid byte value (0-255)
-            // The actual lookup from environment.2da would be done by the rendering system if needed
+            // LightingScheme > 0 means preset was loaded from environment.2da in LoadLightingSchemeFromEnvironment2DA()
+            // All lighting properties (colors, fog, shadows, weather) have been applied from the preset if available
 
             // Weather system initialization
             // Weather simulation state is initialized in constructor, but we validate here that

@@ -318,6 +318,95 @@ namespace Andastra.Runtime.Core.Combat
         }
 
         /// <summary>
+        /// Gets the total AC bonus from all active effects on an entity.
+        /// </summary>
+        /// <param name="entity">The entity to get AC bonus for.</param>
+        /// <returns>The total AC bonus (positive for increases, negative for decreases).</returns>
+        /// <remarks>
+        /// AC Bonus Calculation:
+        /// - Based on swkotor2.exe: AC effects modify total AC calculation
+        /// - Located via string references: "ArmorClass" @ 0x007c42a8, "EffectACIncrease" @ routine 115
+        /// - Original implementation: AC effects add to total AC (10 + DEX + Armor + Natural + Deflection + Effects)
+        /// - Effect bonus messages:
+        ///   - " + %d (Effect AC Deflection Bonus)" @ 0x007c3d9c
+        ///   - " + %d (Effect AC Shield Bonus)" @ 0x007c3dc0
+        ///   - " + %d (Effect AC Armor Bonus)" @ 0x007c3de0
+        ///   - " + %d (Effect AC Natural Bonus)" @ 0x007c3e00
+        ///   - " + %d (Effect AC Dodge Bonus)" @ 0x007c3e20
+        /// - All AC effect types stack additively (ACIncrease adds, ACDecrease subtracts)
+        /// - This method efficiently calculates the total bonus from all active AC effects
+        /// </remarks>
+        public int GetACBonus(IEntity entity)
+        {
+            if (entity == null)
+            {
+                return 0;
+            }
+
+            int bonus = 0;
+            List<ActiveEffect> effects;
+            if (_entityEffects.TryGetValue(entity.ObjectId, out effects))
+            {
+                foreach (ActiveEffect activeEffect in effects)
+                {
+                    Effect effect = activeEffect.Effect;
+                    if (effect.Type == EffectType.ACIncrease)
+                    {
+                        bonus += effect.Amount;
+                    }
+                    else if (effect.Type == EffectType.ACDecrease)
+                    {
+                        bonus -= effect.Amount;
+                    }
+                }
+            }
+
+            return bonus;
+        }
+
+        /// <summary>
+        /// Gets the total attack bonus from all active effects on an entity.
+        /// </summary>
+        /// <param name="entity">The entity to get attack bonus for.</param>
+        /// <returns>The total attack bonus (positive for increases, negative for decreases).</returns>
+        /// <remarks>
+        /// Attack Bonus Calculation:
+        /// - Based on swkotor2.exe: Attack effects modify total attack bonus
+        /// - Located via string references: "EffectAttackIncrease" @ routine 118
+        /// - Original implementation: Attack effects add to total attack (BAB + STR/DEX + Effects)
+        /// - Effect bonus message: " + %d (Effect Attack Bonus)" @ 0x007c39d0
+        /// - All attack effect types stack additively (AttackIncrease adds, AttackDecrease subtracts)
+        /// - This method efficiently calculates the total bonus from all active attack effects
+        /// </remarks>
+        public int GetAttackBonus(IEntity entity)
+        {
+            if (entity == null)
+            {
+                return 0;
+            }
+
+            int bonus = 0;
+            List<ActiveEffect> effects;
+            if (_entityEffects.TryGetValue(entity.ObjectId, out effects))
+            {
+                foreach (ActiveEffect activeEffect in effects)
+                {
+                    Effect effect = activeEffect.Effect;
+                    if (effect.Type == EffectType.AttackIncrease)
+                    {
+                        bonus += effect.Amount;
+                    }
+                    else if (effect.Type == EffectType.AttackDecrease)
+                    {
+                        bonus -= effect.Amount;
+                    }
+                }
+            }
+
+            return bonus;
+        }
+
+        /// <summary>
         /// Updates all effects (called each combat round).
         /// </summary>
         public void UpdateRound()
@@ -399,22 +488,29 @@ namespace Andastra.Runtime.Core.Combat
 
                 case EffectType.ACIncrease:
                 case EffectType.ACDecrease:
-                    // AC modifiers are applied via effect bonus tracking
+                    // AC modifiers are calculated on-demand via GetACBonus() method
                     // Based on swkotor2.exe: AC effects modify total AC calculation
                     // Located via string references: "ArmorClass" @ 0x007c42a8, "EffectACIncrease" @ routine 115
                     // Original implementation: AC effects add to total AC (10 + DEX + Armor + Natural + Deflection + Effects)
-                    // Game-specific implementations should use reflection or extension methods to call bonus tracking
-                    // TODO: STUB - For now, this is handled by the concrete StatsComponent implementation querying EffectSystem
+                    // Effect bonus messages:
+                    //   - " + %d (Effect AC Deflection Bonus)" @ 0x007c3d9c
+                    //   - " + %d (Effect AC Shield Bonus)" @ 0x007c3dc0
+                    //   - " + %d (Effect AC Armor Bonus)" @ 0x007c3de0
+                    //   - " + %d (Effect AC Natural Bonus)" @ 0x007c3e00
+                    //   - " + %d (Effect AC Dodge Bonus)" @ 0x007c3e20
+                    // StatsComponent queries EffectSystem.GetACBonus() when calculating ArmorClass property
+                    // No direct stat modification needed - bonus is calculated from active effects on-demand
                     break;
 
                 case EffectType.AttackIncrease:
                 case EffectType.AttackDecrease:
-                    // Attack bonus is applied via effect bonus tracking
+                    // Attack bonus is calculated on-demand via GetAttackBonus() method
                     // Based on swkotor2.exe: Attack effects modify total attack bonus
                     // Located via string references: "EffectAttackIncrease" @ routine 118
                     // Original implementation: Attack effects add to total attack (BAB + STR/DEX + Effects)
-                    // Game-specific implementations should use reflection or extension methods to call bonus tracking
-                    // TODO: STUB - For now, this is handled by the concrete StatsComponent implementation querying EffectSystem
+                    // Effect bonus message: " + %d (Effect Attack Bonus)" @ 0x007c39d0
+                    // StatsComponent queries EffectSystem.GetAttackBonus() when calculating BaseAttackBonus property
+                    // No direct stat modification needed - bonus is calculated from active effects on-demand
                     break;
 
                 case EffectType.DamageIncrease:

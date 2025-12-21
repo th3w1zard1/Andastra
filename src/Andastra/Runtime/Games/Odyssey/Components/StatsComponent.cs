@@ -168,20 +168,10 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
                 // BAB + STR modifier for melee (or DEX for ranged/finesse) + effect bonuses
                 int effectBonus = _effectAttackBonus;
                 
-                // Query EffectSystem for additional attack bonuses if available
+                // Query EffectSystem for attack bonuses from active effects
                 if (Owner != null && Owner.World != null && Owner.World.EffectSystem != null)
                 {
-                    foreach (ActiveEffect activeEffect in Owner.World.EffectSystem.GetEffects(Owner))
-                    {
-                        if (activeEffect.Effect.Type == EffectType.AttackIncrease)
-                        {
-                            effectBonus += activeEffect.Effect.Amount;
-                        }
-                        else if (activeEffect.Effect.Type == EffectType.AttackDecrease)
-                        {
-                            effectBonus -= activeEffect.Effect.Amount;
-                        }
-                    }
+                    effectBonus += Owner.World.EffectSystem.GetAttackBonus(Owner);
                 }
                 
                 return _baseAttackBonus + GetAbilityModifier(Ability.Strength) + effectBonus;
@@ -195,20 +185,10 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
                 // Defense = 10 + DEX mod + Armor + Natural + Deflection + Effect bonuses
                 int effectBonus = _effectACBonus;
                 
-                // Query EffectSystem for additional AC bonuses if available
+                // Query EffectSystem for AC bonuses from active effects
                 if (Owner != null && Owner.World != null && Owner.World.EffectSystem != null)
                 {
-                    foreach (ActiveEffect activeEffect in Owner.World.EffectSystem.GetEffects(Owner))
-                    {
-                        if (activeEffect.Effect.Type == EffectType.ACIncrease)
-                        {
-                            effectBonus += activeEffect.Effect.Amount;
-                        }
-                        else if (activeEffect.Effect.Type == EffectType.ACDecrease)
-                        {
-                            effectBonus -= activeEffect.Effect.Amount;
-                        }
-                    }
+                    effectBonus += Owner.World.EffectSystem.GetACBonus(Owner);
                 }
                 
                 return 10 
