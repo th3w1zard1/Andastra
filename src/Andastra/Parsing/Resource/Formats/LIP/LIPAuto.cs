@@ -84,7 +84,19 @@ namespace Andastra.Parsing.Formats.LIP
             }
             if (fileFormat == ResourceType.LIP_XML)
             {
-                throw new NotImplementedException("LIP XML format not yet implemented");
+                if (source is string filepath)
+                {
+                    return new LIPXMLReader(filepath, offset, sizeValue).Load();
+                }
+                if (source is byte[] bytes)
+                {
+                    return new LIPXMLReader(bytes, offset, sizeValue).Load();
+                }
+                if (source is Stream stream)
+                {
+                    return new LIPXMLReader(stream, offset, sizeValue).Load();
+                }
+                throw new ArgumentException("Source must be string, byte[], or Stream for XML LIP");
             }
             if (fileFormat == ResourceType.LIP_JSON)
             {
@@ -127,7 +139,18 @@ namespace Andastra.Parsing.Formats.LIP
             }
             else if (format == ResourceType.LIP_XML)
             {
-                throw new NotImplementedException("LIP XML format not yet implemented");
+                if (target is string filepath)
+                {
+                    new LIPXMLWriter(lip, filepath).Write();
+                }
+                else if (target is Stream stream)
+                {
+                    new LIPXMLWriter(lip, stream).Write();
+                }
+                else
+                {
+                    throw new ArgumentException("Target must be string or Stream for XML LIP");
+                }
             }
             else if (format == ResourceType.LIP_JSON)
             {
@@ -166,7 +189,11 @@ namespace Andastra.Parsing.Formats.LIP
             }
             else if (format == ResourceType.LIP_XML)
             {
-                throw new NotImplementedException("LIP XML format not yet implemented");
+                using (var writer = new LIPXMLWriter(lip))
+                {
+                    writer.Write();
+                    return writer.Data();
+                }
             }
             else if (format == ResourceType.LIP_JSON)
             {
