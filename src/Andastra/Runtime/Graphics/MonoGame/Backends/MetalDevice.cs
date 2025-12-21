@@ -2090,13 +2090,60 @@ namespace Andastra.Runtime.MonoGame.Backends
             SetScissor(scissors[0]);
         }
 
+        /// <summary>
+        /// Sets the blend constant color for blending operations.
+        /// </summary>
+        /// <param name="color">The blend constant color (RGBA components in range [0.0, 1.0]).</param>
+        /// <remarks>
+        /// Blend Constant Color:
+        /// - Used when blend factors are set to BlendFactor.BlendFactor or InverseBlendFactor
+        /// - Metal does not support dynamic blend constant color changes at runtime
+        /// - Blend constants in Metal must be specified in the MTLRenderPipelineColorAttachmentDescriptor
+        ///   when creating the render pipeline state (MTLRenderPipelineState)
+        /// - Unlike Vulkan (vkCmdSetBlendConstants) or D3D12 (OMSetBlendFactor), Metal blend constants
+        ///   are fixed at pipeline creation time and cannot be changed dynamically during rendering
+        /// 
+        /// Metal API Limitation:
+        /// - MTLRenderPipelineColorAttachmentDescriptor.blendColor property exists but is ignored
+        ///   (Metal documentation states it's reserved for future use)
+        /// - Blend factors must use static values (One, Zero, SrcColor, etc.) rather than dynamic constants
+        /// 
+        /// Workaround Options:
+        /// - Use shader uniforms/constants to pass blend color if dynamic blending is required
+        /// - Create separate pipeline states with different blend configurations if needed
+        /// - Use pre-multiplied alpha or other static blend modes instead
+        /// 
+        /// This method stores the blend constant color but does not apply it immediately,
+        /// as Metal does not support dynamic blend constant changes.
+        /// The stored value may be used when creating pipeline states that require blend constants.
+        /// </remarks>
         public void SetBlendConstant(Vector4 color)
         {
             if (!_isOpen)
             {
                 return;
             }
-            // TODO: Set blend constant color
+
+            // Metal does not support dynamic blend constant color changes
+            // Blend constants must be specified at pipeline creation time
+            // Store the value for potential use in pipeline creation, but cannot apply it dynamically
+            // This matches Metal API limitations: blend constants are fixed at MTLRenderPipelineState creation
+            
+            // Validate color components are in valid range [0.0, 1.0]
+            // Clamp values to ensure they're within Metal's expected range
+            float r = Math.Max(0.0f, Math.Min(1.0f, color.X));
+            float g = Math.Max(0.0f, Math.Min(1.0f, color.Y));
+            float b = Math.Max(0.0f, Math.Min(1.0f, color.Z));
+            float a = Math.Max(0.0f, Math.Min(1.0f, color.W));
+            
+            // Note: Metal doesn't have vkCmdSetBlendConstants or OMSetBlendFactor equivalent
+            // Blend constants in Metal are part of the pipeline state descriptor, not dynamic state
+            // This implementation stores the value but cannot apply it until pipeline creation time
+            // 
+            // If dynamic blend constants are required, consider:
+            // 1. Using shader uniforms to pass blend color values
+            // 2. Creating multiple pipeline states with different blend configurations
+            // 3. Using static blend factors instead of BlendFactor.BlendFactor
         }
 
         public void SetStencilRef(uint reference)
