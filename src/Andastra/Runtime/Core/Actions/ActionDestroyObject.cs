@@ -32,6 +32,7 @@ namespace Andastra.Runtime.Core.Actions
         // Located via string references: "FadeLength" @ 0x007c3580 (fade length parameter)
         // Original implementation: Uses fade duration of 1.0 seconds for object destruction fade
         // Fade duration: 1.0 seconds for smooth visual transition (matches original engine behavior)
+        // swkotor2.exe: FUN_004dcfb0 @ 0x004dcfb0 handles DestroyObject with fade length parameter
         private const float DestroyObjectFadeDuration = 1.0f;
 
         private readonly uint _targetObjectId;
@@ -84,6 +85,7 @@ namespace Andastra.Runtime.Core.Actions
                             // Set flag for rendering system to fade out
                             // Based on swkotor2.exe: DestroyObject fade implementation
                             // Stores fade state on entity for rendering system to process
+                            // swkotor2.exe: FUN_004dcfb0 sets fade flags before starting fade animation
                             targetEntity.SetData("DestroyFade", true);
                             targetEntity.SetData("DestroyFadeStartTime", ElapsedTime);
                             targetEntity.SetData("DestroyFadeDuration", DestroyObjectFadeDuration);
@@ -109,10 +111,14 @@ namespace Andastra.Runtime.Core.Actions
 
             // If fade, wait for fade duration to complete
             // Based on swkotor2.exe: DestroyObject fade completion check
-            // Fade starts at _fadeStartTime and completes after DestroyObjectFadeDuration seconds
+            // swkotor2.exe: FUN_004dcfb0 @ 0x004dcfb0 waits for fade duration after fade starts
+            // Fade starts at _fadeStartTime (when we set DestroyFade flag on entity)
+            // Fade completes after DestroyObjectFadeDuration seconds from fade start time
             // The rendering system handles the actual visual fade based on "DestroyFade" flag
             // We check completion here based on the stored fade start time and duration
-            if (_fadeStarted && ElapsedTime >= _fadeStartTime + DestroyObjectFadeDuration)
+            // Original implementation: Uses FadeLength parameter (1.0 seconds) stored at 0x007c3580
+            // Note: _fadeStartTime will be > 0 when fade has started (set to ElapsedTime when fade begins)
+            if (_fadeStarted && _fadeStartTime > 0f && ElapsedTime >= _fadeStartTime + DestroyObjectFadeDuration)
             {
                 DestroyTarget(actor);
                 return ActionStatus.Complete;
