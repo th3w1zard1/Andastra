@@ -1664,13 +1664,87 @@ namespace Andastra.Runtime.MonoGame.Backends
             // TODO: Implement texture write via Metal command encoder
         }
 
+        /// <summary>
+        /// Copies data from a source buffer to a destination buffer using Metal blit command encoder.
+        /// 
+        /// This performs a GPU-side buffer-to-buffer copy operation, which is efficient for large data transfers.
+        /// The copy operation is recorded into the command buffer and executed when the command buffer is committed.
+        /// 
+        /// Based on Metal API: MTLBlitCommandEncoder::copyFromBuffer:sourceOffset:toBuffer:destinationOffset:size:
+        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlblitcommandencoder/1400756-copyfrombuffer
+        /// </summary>
+        /// <param name="dest">Destination buffer</param>
+        /// <param name="destOffset">Destination offset in bytes</param>
+        /// <param name="src">Source buffer</param>
+        /// <param name="srcOffset">Source offset in bytes</param>
+        /// <param name="size">Number of bytes to copy</param>
         public void CopyBuffer(IBuffer dest, int destOffset, IBuffer src, int srcOffset, int size)
         {
             if (!_isOpen || dest == null || src == null)
             {
                 return;
             }
-            // TODO: Implement buffer copy via Metal blit command encoder
+
+            // Validate size
+            if (size <= 0)
+            {
+                return; // Nothing to copy
+            }
+
+            // Validate offsets and size don't exceed buffer bounds
+            if (srcOffset < 0 || destOffset < 0)
+            {
+                Console.WriteLine("[MetalCommandList] CopyBuffer: Invalid offsets - sourceOffset and destOffset must be non-negative");
+                return;
+            }
+
+            // Get buffer handles
+            MetalBuffer srcMetalBuffer = src as MetalBuffer;
+            MetalBuffer destMetalBuffer = dest as MetalBuffer;
+
+            if (srcMetalBuffer == null || destMetalBuffer == null)
+            {
+                Console.WriteLine("[MetalCommandList] CopyBuffer: Buffers must be MetalBuffer instances");
+                return;
+            }
+
+            IntPtr srcBufferHandle = srcMetalBuffer.NativeHandle;
+            IntPtr destBufferHandle = destMetalBuffer.NativeHandle;
+
+            if (srcBufferHandle == IntPtr.Zero || destBufferHandle == IntPtr.Zero)
+            {
+                Console.WriteLine("[MetalCommandList] CopyBuffer: Invalid buffer handles");
+                return;
+            }
+
+            // Validate buffer sizes
+            BufferDesc srcDesc = srcMetalBuffer.Desc;
+            BufferDesc destDesc = destMetalBuffer.Desc;
+
+            if (srcOffset + size > srcDesc.ByteSize)
+            {
+                Console.WriteLine($"[MetalCommandList] CopyBuffer: Source buffer overflow - sourceOffset ({srcOffset}) + size ({size}) > source buffer size ({srcDesc.ByteSize})");
+                return;
+            }
+
+            if (destOffset + size > destDesc.ByteSize)
+            {
+                Console.WriteLine($"[MetalCommandList] CopyBuffer: Destination buffer overflow - destOffset ({destOffset}) + size ({size}) > destination buffer size ({destDesc.ByteSize})");
+                return;
+            }
+
+            // Get or create blit command encoder
+            IntPtr blitEncoder = GetOrCreateBlitCommandEncoder();
+            if (blitEncoder == IntPtr.Zero)
+            {
+                Console.WriteLine("[MetalCommandList] CopyBuffer: Failed to get blit command encoder");
+                return;
+            }
+
+            // Perform buffer-to-buffer copy using Metal blit command encoder
+            // CopyFromBuffer signature: (blitEncoder, sourceBuffer, sourceOffset, destinationBuffer, destinationOffset, size)
+            // All parameters are in bytes (ulong for offsets and size)
+            MetalNative.CopyFromBuffer(blitEncoder, srcBufferHandle, (ulong)srcOffset, destBufferHandle, (ulong)destOffset, (ulong)size);
         }
 
         /// <summary>
