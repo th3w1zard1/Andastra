@@ -230,8 +230,8 @@ namespace Andastra.Parsing.Resource.Generics.GUI
                 var childControlsList = new GFFList();
                 foreach (var child in control.Children)
                 {
-                    var childStruct = WriteControl(child);
-                    childControlsList.Add(childStruct);
+                    var childStruct = childControlsList.Add(6); // Struct type 6 for GUI controls
+                    WriteControl(child, childStruct);
                 }
                 gffStruct.SetList("CONTROLS", childControlsList);
             }
@@ -245,12 +245,10 @@ namespace Andastra.Parsing.Resource.Generics.GUI
         /// </summary>
         private void WriteExtent(GFFStruct gffStruct, GUIControl control)
         {
-            var extentStruct = new GFFStruct(0);
-            extentStruct.SetInt32("LEFT", (int)control.Extent.X);
+            var extentStruct = gffStruct.Acquire<GFFStruct>("EXTENT", new GFFStruct(0));extentStruct.SetInt32("LEFT", (int)control.Extent.X);
             extentStruct.SetInt32("TOP", (int)control.Extent.Y);
             extentStruct.SetInt32("WIDTH", (int)control.Extent.Z);
             extentStruct.SetInt32("HEIGHT", (int)control.Extent.W);
-            gffStruct.SetStruct("EXTENT", extentStruct);
         }
 
         /// <summary>
@@ -323,12 +321,10 @@ namespace Andastra.Parsing.Resource.Generics.GUI
         /// </summary>
         private void WriteMoveTo(GFFStruct gffStruct, GUIMoveTo moveto)
         {
-            var movetoStruct = new GFFStruct(0);
-            movetoStruct.SetInt32("UP", moveto.Up);
+            var movetoStruct = gffStruct.Acquire<GFFStruct>("MOVETO", new GFFStruct(0));movetoStruct.SetInt32("UP", moveto.Up);
             movetoStruct.SetInt32("DOWN", moveto.Down);
             movetoStruct.SetInt32("LEFT", moveto.Left);
             movetoStruct.SetInt32("RIGHT", moveto.Right);
-            gffStruct.SetStruct("MOVETO", movetoStruct);
         }
 
         /// <summary>
@@ -785,10 +781,8 @@ namespace Andastra.Parsing.Resource.Generics.GUI
             // DIR image stored in Properties for non-GUIScrollbar controls
             if (control.Properties.ContainsKey("DIR_IMAGE"))
             {
-                var dirStruct = new GFFStruct(0);
-                dirStruct.SetResRef("IMAGE", (ResRef)control.Properties["DIR_IMAGE"]);
+                var dirStruct = gffStruct.Acquire<GFFStruct>("DIR", new GFFStruct(0));dirStruct.SetResRef("IMAGE", (ResRef)control.Properties["DIR_IMAGE"]);
                 dirStruct.SetInt32("ALIGNMENT", 18); // Default alignment
-                gffStruct.SetStruct("DIR", dirStruct);
             }
 
             // Thumb stored in base control
@@ -810,12 +804,3 @@ namespace Andastra.Parsing.Resource.Generics.GUI
         }
     }
 }
-
-
-            {
-                gffStruct.SetUInt8("PULSING", (byte)protoItem.Pulsing.Value);
-            }
-        }
-    }
-}
-
