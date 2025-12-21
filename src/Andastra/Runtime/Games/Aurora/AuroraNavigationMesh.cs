@@ -127,7 +127,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// Based on nwmain.exe: CNWSArea tile storage structure.
         /// Tiles are stored in a 2D grid with dimensions Width x Height.
         /// If tilesetLoader and tilesetResRef are provided, GetTileHeight will sample from actual walkmesh geometry.
-        /// Otherwise, it falls back to simplified height transition model.
+        /// Otherwise, it falls back to simplified height transition model with bilinear interpolation.
         /// </remarks>
         public AuroraNavigationMesh(AuroraTile[,] tiles, int tileWidth, int tileHeight, TilesetLoader tilesetLoader = null, string tilesetResRef = null)
         {
@@ -449,7 +449,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// Implementation details:
         /// - Samples height at the actual position within the tile using GetTileHeightAtPosition
         /// - For tile boundaries, interpolates heights from adjacent tiles for smooth transitions
-        /// - Falls back to simplified height transition model when walkmesh data is unavailable
+        /// - Falls back to simplified height transition model with bilinear interpolation when walkmesh data is unavailable
         /// - Based on nwmain.exe: CNWTileSurfaceMesh::GetHeightAtPoint @ 0x1402bedf0
         /// </remarks>
         public bool GetHeightAtPoint(Vector3 point, out float height)
@@ -609,7 +609,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// 
         /// Implementation:
         /// 1. If tileset loader and tileset resref are available, samples height from actual walkmesh geometry
-        /// 2. Otherwise, falls back to simplified model based on height transitions
+        /// 2. Otherwise, falls back to simplified model based on height transitions with bilinear interpolation
         /// 
         /// Walkmesh sampling:
         /// - Loads tile model from tileset using TileId
@@ -620,6 +620,97 @@ namespace Andastra.Runtime.Games.Aurora
         private float GetTileHeight(int tileX, int tileY)
         {
             return GetTileHeightAtPosition(tileX, tileY, 0.5f, 0.5f);
+        }
+
+        /// <summary>
+        /// Calculates the height at a corner of a tile, considering adjacent tiles for smooth transitions.
+        /// </summary>
+        /// <param name="tileX">Tile X coordinate.</param>
+        /// <param name="tileY">Tile Y coordinate.</param>
+        /// <param name="baseHeight">Base height of the tile (from height transitions).</param>
+        /// <param name="cornerDx">X direction offset for corner (-1 for left, 1 for right, 0 for center).</param>
+        /// <param name="cornerDz">Z direction offset for corner (-1 for top, 1 for bottom, 0 for center).</param>
+        /// <returns>The calculated corner height.</returns>
+        /// <remarks>
+        /// Based on nwmain.exe: Tile corner height calculation considers adjacent tiles.
+        /// For smooth height transitions, corner heights are averaged from the tile and its adjacent tiles.
+        /// 
+        /// Algorithm:
+        /// 1. Start with the base tile's height
+        /// 2. Check adjacent tiles in the corner direction (cornerDx, cornerDz)
+        /// 3. Average heights from valid adjacent tiles for smooth transitions
+        /// 4. Return the calculated corner height
+        /// 
+        /// Corner directions:
+        /// - (-1, -1): Top-left corner (checks left and top neighbors)
+        /// - (1, -1): Top-right corner (checks right and top neighbors)
+        /// - (-1, 1): Bottom-left corner (checks left and bottom neighbors)
+        /// - (1, 1): Bottom-right corner (checks right and bottom neighbors)
+        /// </remarks>
+        private float CalculateCornerHeight(int tileX, int tileY, float baseHeight, int cornerDx, int cornerDz)
+        {
+            float heightPerTransition = 0.5f; // Based on nwmain.exe: Standard height transition value
+            
+            // Start with the base tile's height
+            float totalHeight = baseHeight;
+            int tileCount = 1;
+            
+            // Check adjacent tiles in the corner direction for smooth transitions
+            // For a corner, we check the tile itself and up to 3 adjacent tiles (horizontal, vertical, and diagonal)
+            
+            // Check horizontal neighbor (left or right)
+            if (cornerDx != 0)
+            {
+                int neighborX = tileX + cornerDx;
+                int neighborY = tileY;
+                if (IsTileValid(neighborX, neighborY))
+                {
+                    AuroraTile neighborTile = _tiles[neighborY, neighborX];
+                    if (neighborTile.IsLoaded)
+                    {
+                        float neighborHeight = baseHeight + (neighborTile.Height * heightPerTransition);
+                        totalHeight += neighborHeight;
+                        tileCount++;
+                    }
+                }
+            }
+            
+            // Check vertical neighbor (top or bottom)
+            if (cornerDz != 0)
+            {
+                int neighborX = tileX;
+                int neighborY = tileY + cornerDz;
+                if (IsTileValid(neighborX, neighborY))
+                {
+                    AuroraTile neighborTile = _tiles[neighborY, neighborX];
+                    if (neighborTile.IsLoaded)
+                    {
+                        float neighborHeight = baseHeight + (neighborTile.Height * heightPerTransition);
+                        totalHeight += neighborHeight;
+                        tileCount++;
+                    }
+                }
+            }
+            
+            // Check diagonal neighbor (if both cornerDx and cornerDz are non-zero)
+            if (cornerDx != 0 && cornerDz != 0)
+            {
+                int neighborX = tileX + cornerDx;
+                int neighborY = tileY + cornerDz;
+                if (IsTileValid(neighborX, neighborY))
+                {
+                    AuroraTile neighborTile = _tiles[neighborY, neighborX];
+                    if (neighborTile.IsLoaded)
+                    {
+                        float neighborHeight = baseHeight + (neighborTile.Height * heightPerTransition);
+                        totalHeight += neighborHeight;
+                        tileCount++;
+                    }
+                }
+            }
+            
+            // Average the heights from all valid tiles for smooth transitions
+            return totalHeight / tileCount;
         }
 
         /// <summary>
@@ -636,7 +727,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// 
         /// Implementation:
         /// 1. If tileset loader and tileset resref are available, samples height from actual walkmesh geometry at the specified position
-        /// 2. Otherwise, falls back to simplified model based on height transitions
+        /// 2. Otherwise, falls back to simplified model based on height transitions with bilinear interpolation
         /// 
         /// Walkmesh sampling:
         /// - Loads tile model from tileset using TileId
@@ -677,16 +768,51 @@ namespace Andastra.Runtime.Games.Aurora
             }
 
             // Fallback: Use simplified model based on height transitions
+            // Based on nwmain.exe: CNWTileSet::GetHeightTransition @ 0x1402c67c0
             // Tile.Height indicates number of height transitions
-            // Based on nwmain.exe: Height transitions correspond to elevation changes
+            // Height transitions correspond to elevation changes
             // Each height transition typically represents a 0.5 unit elevation change
             // This is a reasonable approximation when walkmesh data is not available
-            // Note: This fallback doesn't account for position within tile, only uses tile center height
+            
+            // Calculate corner heights using bilinear interpolation model
+            // Based on nwmain.exe: Tile height transitions are stored per-tile
+            // The height at any point within the tile is interpolated from corner heights
+            // Corner heights are calculated from the tile's height transitions and adjacent tiles
+            
+            float heightPerTransition = 0.5f; // Based on nwmain.exe: Standard height transition value
             float baseHeight = 0.0f;
-            float heightPerTransition = 0.5f;
-            float tileHeight = baseHeight + (tile.Height * heightPerTransition);
-
-            return tileHeight;
+            
+            // Calculate base height for this tile
+            float tileBaseHeight = baseHeight + (tile.Height * heightPerTransition);
+            
+            // Calculate corner heights by considering adjacent tiles for smooth transitions
+            // Top-left corner (normalizedX=0, normalizedZ=0)
+            float topLeftHeight = CalculateCornerHeight(tileX, tileY, tileBaseHeight, -1, -1);
+            
+            // Top-right corner (normalizedX=1, normalizedZ=0)
+            float topRightHeight = CalculateCornerHeight(tileX, tileY, tileBaseHeight, 1, -1);
+            
+            // Bottom-left corner (normalizedX=0, normalizedZ=1)
+            float bottomLeftHeight = CalculateCornerHeight(tileX, tileY, tileBaseHeight, -1, 1);
+            
+            // Bottom-right corner (normalizedX=1, normalizedZ=1)
+            float bottomRightHeight = CalculateCornerHeight(tileX, tileY, tileBaseHeight, 1, 1);
+            
+            // Bilinear interpolation to get height at the specified normalized position
+            // Based on standard bilinear interpolation formula:
+            // h(x,z) = (1-x)(1-z)*h00 + x(1-z)*h10 + (1-x)z*h01 + xz*h11
+            // where h00=topLeft, h10=topRight, h01=bottomLeft, h11=bottomRight
+            float h00 = topLeftHeight;
+            float h10 = topRightHeight;
+            float h01 = bottomLeftHeight;
+            float h11 = bottomRightHeight;
+            
+            float height = (1.0f - normalizedX) * (1.0f - normalizedZ) * h00 +
+                          normalizedX * (1.0f - normalizedZ) * h10 +
+                          (1.0f - normalizedX) * normalizedZ * h01 +
+                          normalizedX * normalizedZ * h11;
+            
+            return height;
         }
 
         /// <summary>
@@ -1876,8 +2002,8 @@ namespace Andastra.Runtime.Games.Aurora
         /// 4. Check each tile for walkability (non-walkable tiles block the ray)
         /// 5. Return first blocking tile or end point if no obstruction
         /// 
-        /// Note: This is a simplified implementation that uses tile walkability flags.
-        /// A full implementation would test against per-tile walkmesh geometry when available.
+        // TODO: / Note: This is a simplified implementation that uses tile walkability flags.
+        // TODO: / A full implementation would test against per-tile walkmesh geometry when available.
         /// </remarks>
         public bool Raycast(Vector3 origin, Vector3 direction, float maxDistance, out Vector3 hitPoint, out int hitFace)
         {
