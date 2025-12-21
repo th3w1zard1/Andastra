@@ -348,6 +348,20 @@ namespace Andastra.Runtime.MonoGame.Backends
             public IntPtr pTexelBufferView;
         }
 
+        /// <summary>
+        /// VkWriteDescriptorSetAccelerationStructureKHR structure for acceleration structure descriptor writes.
+        /// Based on Vulkan specification: VK_KHR_acceleration_structure extension
+        /// https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkWriteDescriptorSetAccelerationStructureKHR.html
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkWriteDescriptorSetAccelerationStructureKHR
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public uint accelerationStructureCount;
+            public IntPtr pAccelerationStructures; // VkAccelerationStructureKHR*
+        }
+
         [StructLayout(LayoutKind.Sequential)]
         private struct VkPipelineLayoutCreateInfo
         {
@@ -760,7 +774,8 @@ namespace Andastra.Runtime.MonoGame.Backends
             VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO = 47,
             VK_STRUCTURE_TYPE_LOADER_DEVICE_CREATE_INFO = 48,
             VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR = 1000165000,
-            VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR = 1000165001
+            VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR = 1000165001,
+            VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR = 1000150001
         }
 
         // Additional Vulkan enums
@@ -1736,6 +1751,213 @@ namespace Andastra.Runtime.MonoGame.Backends
             return pipeline;
         }
 
+        /// <summary>
+        /// Creates a VkRenderPass from a framebuffer description.
+        /// Based on Vulkan Render Pass Creation: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateRenderPass.html
+        /// </summary>
+        private IntPtr CreateRenderPassFromFramebufferDesc(FramebufferDesc desc)
+        {
+            if (desc == null || vkCreateRenderPass == null)
+            {
+                return IntPtr.Zero;
+            }
+
+            // Build attachment descriptions from framebuffer attachments
+            List<VkAttachmentDescription> attachments = new List<VkAttachmentDescription>();
+            List<VkAttachmentReference> colorAttachmentRefs = new List<VkAttachmentReference>();
+            VkAttachmentReference depthAttachmentRef = new VkAttachmentReference
+            {
+                attachment = unchecked((uint)-1), // VK_ATTACHMENT_UNUSED
+                layout = VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED
+            };
+            bool hasDepthAttachment = false;
+
+            uint attachmentIndex = 0;
+
+            // Process color attachments
+            if (desc.ColorAttachments != null && desc.ColorAttachments.Length > 0)
+            {
+                foreach (var colorAttachment in desc.ColorAttachments)
+                {
+                    if (colorAttachment.Texture != null)
+                    {
+                        // Get texture format and sample count from texture description
+                        VkFormat format = ConvertToVkFormat(colorAttachment.Texture.Desc.Format);
+                        VkSampleCountFlagBits samples = ConvertToVkSampleCount(colorAttachment.Texture.Desc.SampleCount);
+
+                        attachments.Add(new VkAttachmentDescription
+                        {
+                            flags = 0,
+                            format = format,
+                            samples = samples,
+                            loadOp = VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_LOAD, // Default: load existing content
+                            storeOp = VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_STORE, // Store for next frame
+                            stencilLoadOp = VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+                            stencilStoreOp = VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_DONT_CARE,
+                            initialLayout = VkImageLayout.VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                            finalLayout = VkImageLayout.VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+                        });
+
+                        colorAttachmentRefs.Add(new VkAttachmentReference
+                        {
+                            attachment = attachmentIndex,
+                            layout = VkImageLayout.VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+                        });
+
+                        attachmentIndex++;
+                    }
+                }
+            }
+
+            // Process depth attachment
+            if (desc.DepthAttachment.Texture != null)
+            {
+                VkFormat depthFormat = ConvertTextureFormatToVkFormat(desc.DepthAttachment.Texture.Desc.Format);
+                VkSampleCountFlagBits depthSamples = ConvertToVkSampleCount(desc.DepthAttachment.Texture.Desc.SampleCount);
+
+                attachments.Add(new VkAttachmentDescription
+                {
+                    flags = 0,
+                    format = depthFormat,
+                    samples = depthSamples,
+                    loadOp = VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_LOAD,
+                    storeOp = VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_STORE,
+                    stencilLoadOp = VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+                    stencilStoreOp = VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_DONT_CARE,
+                    initialLayout = VkImageLayout.VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                    finalLayout = VkImageLayout.VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+                });
+
+                depthAttachmentRef = new VkAttachmentReference
+                {
+                    attachment = attachmentIndex,
+                    layout = VkImageLayout.VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+                };
+                hasDepthAttachment = true;
+                attachmentIndex++;
+            }
+
+            // Create subpass description
+            VkSubpassDescription subpass = new VkSubpassDescription
+            {
+                flags = 0,
+                pipelineBindPoint = VkPipelineBindPoint.VK_PIPELINE_BIND_POINT_GRAPHICS,
+                inputAttachmentCount = 0,
+                pInputAttachments = IntPtr.Zero,
+                colorAttachmentCount = (uint)colorAttachmentRefs.Count,
+                pColorAttachments = IntPtr.Zero, // Will be set after marshalling
+                pResolveAttachments = IntPtr.Zero,
+                pDepthStencilAttachment = IntPtr.Zero, // Will be set after marshalling
+                preserveAttachmentCount = 0,
+                pPreserveAttachments = IntPtr.Zero
+            };
+
+            // Create render pass if we have attachments
+            if (attachments.Count == 0)
+            {
+                return IntPtr.Zero; // No attachments, no render pass needed
+            }
+
+            IntPtr vkRenderPass = IntPtr.Zero;
+
+            try
+            {
+                // Marshal attachment descriptions
+                int attachmentDescSize = Marshal.SizeOf(typeof(VkAttachmentDescription));
+                IntPtr pAttachments = Marshal.AllocHGlobal(attachmentDescSize * attachments.Count);
+                try
+                {
+                    for (int i = 0; i < attachments.Count; i++)
+                    {
+                        IntPtr attachmentPtr = new IntPtr(pAttachments.ToInt64() + i * attachmentDescSize);
+                        Marshal.StructureToPtr(attachments[i], attachmentPtr, false);
+                    }
+
+                    // Marshal color attachment references
+                    IntPtr pColorAttachments = IntPtr.Zero;
+                    if (colorAttachmentRefs.Count > 0)
+                    {
+                        int colorRefSize = Marshal.SizeOf(typeof(VkAttachmentReference));
+                        pColorAttachments = Marshal.AllocHGlobal(colorRefSize * colorAttachmentRefs.Count);
+                        for (int i = 0; i < colorAttachmentRefs.Count; i++)
+                        {
+                            IntPtr colorRefPtr = new IntPtr(pColorAttachments.ToInt64() + i * colorRefSize);
+                            Marshal.StructureToPtr(colorAttachmentRefs[i], colorRefPtr, false);
+                        }
+                    }
+
+                    // Marshal depth attachment reference
+                    IntPtr pDepthStencilAttachment = IntPtr.Zero;
+                    if (hasDepthAttachment)
+                    {
+                        int depthRefSize = Marshal.SizeOf(typeof(VkAttachmentReference));
+                        pDepthStencilAttachment = Marshal.AllocHGlobal(depthRefSize);
+                        Marshal.StructureToPtr(depthAttachmentRef, pDepthStencilAttachment, false);
+                    }
+
+                    // Update subpass with marshalled pointers
+                    subpass.pColorAttachments = pColorAttachments;
+                    subpass.pDepthStencilAttachment = pDepthStencilAttachment;
+
+                    // Marshal subpass description
+                    int subpassSize = Marshal.SizeOf(typeof(VkSubpassDescription));
+                    IntPtr pSubpasses = Marshal.AllocHGlobal(subpassSize);
+                    try
+                    {
+                        Marshal.StructureToPtr(subpass, pSubpasses, false);
+
+                        // Create render pass create info
+                        VkRenderPassCreateInfo renderPassCreateInfo = new VkRenderPassCreateInfo
+                        {
+                            sType = VkStructureType.VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
+                            pNext = IntPtr.Zero,
+                            flags = 0,
+                            attachmentCount = (uint)attachments.Count,
+                            pAttachments = pAttachments,
+                            subpassCount = 1,
+                            pSubpasses = pSubpasses,
+                            dependencyCount = 0,
+                            pDependencies = IntPtr.Zero
+                        };
+
+                        // Create render pass
+                        VkResult result = vkCreateRenderPass(_device, ref renderPassCreateInfo, IntPtr.Zero, out vkRenderPass);
+                        if (result != VkResult.VK_SUCCESS)
+                        {
+                            throw new VulkanException($"vkCreateRenderPass failed with result: {result}");
+                        }
+                    }
+                    finally
+                    {
+                        if (pSubpasses != IntPtr.Zero)
+                        {
+                            Marshal.FreeHGlobal(pSubpasses);
+                        }
+                    }
+                }
+                finally
+                {
+                    if (pAttachments != IntPtr.Zero)
+                    {
+                        Marshal.FreeHGlobal(pAttachments);
+                    }
+                    // Note: pColorAttachments and pDepthStencilAttachment are freed when render pass is destroyed
+                    // These pointers are used by the render pass, so we cannot free them here
+                }
+            }
+            catch
+            {
+                // If render pass creation fails, clean up and rethrow
+                if (vkRenderPass != IntPtr.Zero)
+                {
+                    vkDestroyRenderPass(_device, vkRenderPass, IntPtr.Zero);
+                }
+                throw;
+            }
+
+            return vkRenderPass;
+        }
+
         private IntPtr CreatePipelineLayout(IBindingLayout[] bindingLayouts)
         {
             // Create descriptor set layouts from binding layouts
@@ -2501,6 +2723,8 @@ namespace Andastra.Runtime.MonoGame.Backends
             List<VkWriteDescriptorSet> writeDescriptorSets = new List<VkWriteDescriptorSet>();
             List<IntPtr> imageInfoPtrs = new List<IntPtr>();
             List<IntPtr> bufferInfoPtrs = new List<IntPtr>();
+            List<IntPtr> accelStructExtensionPtrs = new List<IntPtr>(); // Track acceleration structure extension structures
+            List<IntPtr> accelStructHandleArrays = new List<IntPtr>(); // Track acceleration structure handle arrays
 
             try
             {
@@ -2600,28 +2824,60 @@ namespace Andastra.Runtime.MonoGame.Backends
                         case BindingType.AccelStruct:
                             // Acceleration structures require special handling with VkWriteDescriptorSetAccelerationStructureKHR
                             // This uses the VK_KHR_acceleration_structure extension
+                            // Based on Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkWriteDescriptorSetAccelerationStructureKHR.html
                             if (item.AccelStruct != null)
                             {
                                 // Get acceleration structure handle
                                 IntPtr accelStructHandle = GetAccelStructHandle(item.AccelStruct);
                                 if (accelStructHandle != IntPtr.Zero)
                                 {
-                                    // Acceleration structures are written using a chained structure
-                                    // VkWriteDescriptorSetAccelerationStructureKHR
-                                    // For now, we'll set up the write descriptor set with the acceleration structure type
-                                    // The actual acceleration structure handle would be set via pNext chain
-                                    // This requires VK_KHR_acceleration_structure extension structures
-                                    
-                                    // Note: Full implementation would require:
-                                    // 1. VkWriteDescriptorSetAccelerationStructureKHR structure
-                                    // 2. Chain it via pNext in VkWriteDescriptorSet
-                                    // 3. Set descriptorType to VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR
-                                    
+                                    // Set descriptor type to acceleration structure
                                     writeDescriptorSet.descriptorType = VkDescriptorType.VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
                                     
-                                    // TODO: Add VkWriteDescriptorSetAccelerationStructureKHR support when extension is available
-                                    // For now, we log that acceleration structure binding is partially implemented
-                                    Console.WriteLine($"[VulkanDevice] Acceleration structure binding for slot {item.Slot} - requires VK_KHR_acceleration_structure extension structures");
+                                    // Create VkWriteDescriptorSetAccelerationStructureKHR structure
+                                    // This structure is chained via pNext in VkWriteDescriptorSet
+                                    // The acceleration structure handles are provided as an array
+                                    // For single descriptor writes, descriptorCount is typically 1
+                                    
+                                    // Allocate memory for acceleration structure handles array
+                                    // VkAccelerationStructureKHR is a handle (uint64_t), so we need IntPtr.Size bytes per handle
+                                    int handleArraySize = (int)writeDescriptorSet.descriptorCount * IntPtr.Size;
+                                    IntPtr accelStructHandlesPtr = Marshal.AllocHGlobal(handleArraySize);
+                                    accelStructHandleArrays.Add(accelStructHandlesPtr);
+                                    
+                                    // Write acceleration structure handle to array
+                                    // For descriptorCount == 1, we write a single handle
+                                    // For arrays, we would write multiple handles
+                                    Marshal.WriteIntPtr(accelStructHandlesPtr, accelStructHandle);
+                                    
+                                    // Create the extension structure
+                                    VkWriteDescriptorSetAccelerationStructureKHR accelStructExtension = new VkWriteDescriptorSetAccelerationStructureKHR
+                                    {
+                                        sType = VkStructureType.VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR,
+                                        pNext = IntPtr.Zero, // No further chaining
+                                        accelerationStructureCount = writeDescriptorSet.descriptorCount,
+                                        pAccelerationStructures = accelStructHandlesPtr
+                                    };
+                                    
+                                    // Marshal the extension structure
+                                    int extensionSize = Marshal.SizeOf(typeof(VkWriteDescriptorSetAccelerationStructureKHR));
+                                    IntPtr accelStructExtensionPtr = Marshal.AllocHGlobal(extensionSize);
+                                    accelStructExtensionPtrs.Add(accelStructExtensionPtr);
+                                    Marshal.StructureToPtr(accelStructExtension, accelStructExtensionPtr, false);
+                                    
+                                    // Chain the extension structure via pNext
+                                    // Note: pNext will be set after marshalling, so we'll update it later
+                                    // For now, we store the pointer to set it when marshalling the write descriptor set
+                                    // We'll use a temporary marker to identify this write descriptor set
+                                    // Actually, we need to set pNext before adding to the list, but we need the marshalled pointer
+                                    // Solution: We'll marshal the extension structure now and set pNext immediately
+                                    writeDescriptorSet.pNext = accelStructExtensionPtr;
+                                    
+                                    Console.WriteLine($"[VulkanDevice] Acceleration structure binding for slot {item.Slot} - using VK_KHR_acceleration_structure extension");
+                                }
+                                else
+                                {
+                                    Console.WriteLine($"[VulkanDevice] Warning: Acceleration structure handle is invalid for slot {item.Slot}");
                                 }
                             }
                             break;
