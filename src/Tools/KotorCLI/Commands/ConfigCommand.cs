@@ -20,56 +20,65 @@ namespace KotorCLI.Commands
         {
             var configCommand = new Command("config", "Get, set, or unset user-defined configuration options");
 
-            var keyArgument = new Argument<string>("key", "Configuration key") { Arity = ArgumentArity.ZeroOrOne };
-            configCommand.AddArgument(keyArgument);
+            var keyArgument = new Argument<string>("key", () => null, "Configuration key");
+            configCommand.Add(keyArgument);
 
-            var valueArgument = new Argument<string>("value", "Configuration value") { Arity = ArgumentArity.ZeroOrOne };
-            configCommand.AddArgument(valueArgument);
+            var valueArgument = new Argument<string>("value", () => null, "Configuration value");
+            configCommand.Add(valueArgument);
 
             var globalOption = new Option<bool>(
-                new[] { "--global" },
+                "--global",
                 "Apply to all packages (default)"
             );
-            configCommand.AddOption(globalOption);
+            configCommand.Options.Add(globalOption);
 
             var localOption = new Option<bool>(
-                new[] { "--local" },
+                "--local",
                 "Apply to current package only"
             );
-            configCommand.AddOption(localOption);
+            configCommand.Options.Add(localOption);
 
             var getOption = new Option<bool>(
-                new[] { "--get" },
+                "--get",
                 "Get the value of key (default when value not passed)"
             );
-            configCommand.AddOption(getOption);
+            configCommand.Options.Add(getOption);
 
             var setOption = new Option<bool>(
-                new[] { "--set" },
+                "--set",
                 "Set key to value (default when value is passed)"
             );
-            configCommand.AddOption(setOption);
+            configCommand.Options.Add(setOption);
 
             var unsetOption = new Option<bool>(
-                new[] { "--unset" },
+                "--unset",
                 "Delete the key/value pair for key"
             );
-            configCommand.AddOption(unsetOption);
+            configCommand.Options.Add(unsetOption);
 
             var listOption = new Option<bool>(
-                new[] { "--list" },
+                "--list",
                 "List all key/value pairs in the config file"
             );
-            configCommand.AddOption(listOption);
+            configCommand.Options.Add(listOption);
 
-            configCommand.SetHandler((string key, string value, bool global, bool local, bool get, bool set, bool unset, bool list) =>
+            configCommand.SetAction(parseResult =>
             {
+                var key = parseResult.GetValue(keyArgument);
+                var value = parseResult.GetValue(valueArgument);
+                var global = parseResult.GetValue(globalOption);
+                var local = parseResult.GetValue(localOption);
+                var get = parseResult.GetValue(getOption);
+                var set = parseResult.GetValue(setOption);
+                var unset = parseResult.GetValue(unsetOption);
+                var list = parseResult.GetValue(listOption);
+                
                 var logger = new StandardLogger();
                 var exitCode = Execute(key, value, global, local, get, set, unset, list, logger);
                 Environment.Exit(exitCode);
-            }, keyArgument, valueArgument, globalOption, localOption, getOption, setOption, unsetOption, listOption);
+            });
 
-            rootCommand.AddCommand(configCommand);
+            rootCommand.Add(configCommand);
         }
 
         private static int Execute(string key, string value, bool global, bool local, bool get, bool set, bool unset, bool list, ILogger logger)

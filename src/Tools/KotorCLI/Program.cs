@@ -19,48 +19,48 @@ namespace KotorCLI
                 Description = "Command-line tool for converting KOTOR modules, ERFs, and haks between binary and text-based source files"
             };
 
-            // Global options
+            // Global options (add as regular options to root command)
             var versionOption = new Option<bool>(
                 new[] { "--version", "-v" },
                 "Show version information"
             );
-            rootCommand.AddGlobalOption(versionOption);
+            rootCommand.Options.Add(versionOption);
 
             var verboseOption = new Option<bool>(
-                new[] { "--verbose" },
+                "--verbose",
                 "Increase feedback verbosity"
             );
-            rootCommand.AddGlobalOption(verboseOption);
+            rootCommand.Options.Add(verboseOption);
 
             var debugOption = new Option<bool>(
-                new[] { "--debug" },
+                "--debug",
                 "Enable debug logging (implies --verbose)"
             );
-            rootCommand.AddGlobalOption(debugOption);
+            rootCommand.Options.Add(debugOption);
 
             var quietOption = new Option<bool>(
-                new[] { "--quiet" },
+                "--quiet",
                 "Disable all logging except errors"
             );
-            rootCommand.AddGlobalOption(quietOption);
+            rootCommand.Options.Add(quietOption);
 
             var noColorOption = new Option<bool>(
-                new[] { "--no-color" },
+                "--no-color",
                 "Disable color output"
             );
-            rootCommand.AddGlobalOption(noColorOption);
+            rootCommand.Options.Add(noColorOption);
 
             var yesOption = new Option<bool>(
-                new[] { "--yes" },
+                "--yes",
                 "Automatically answer yes to all prompts"
             );
-            rootCommand.AddGlobalOption(yesOption);
+            rootCommand.Options.Add(yesOption);
 
             var noOption = new Option<bool>(
-                new[] { "--no" },
+                "--no",
                 "Automatically answer no to all prompts"
             );
-            rootCommand.AddGlobalOption(noOption);
+            rootCommand.Options.Add(noOption);
 
             // Add all command handlers
             ConfigCommand.AddToRootCommand(rootCommand);
@@ -84,14 +84,15 @@ namespace KotorCLI
             KeyPackCommand.AddToRootCommand(rootCommand);
 
             // Handle version option
-            rootCommand.SetHandler((bool version) =>
+            rootCommand.SetAction(parseResult =>
             {
+                var version = parseResult.GetValue(versionOption);
                 if (version)
                 {
                     Console.WriteLine($"KotorCLI {Version}");
                     Environment.Exit(0);
                 }
-            }, versionOption);
+            });
 
             try
             {
@@ -100,7 +101,7 @@ namespace KotorCLI
             catch (Exception ex)
             {
                 Console.Error.WriteLine($"Error: {ex.Message}");
-                if (args.Contains("--debug"))
+                if (args.Length > 0 && (args[0] == "--debug" || Array.IndexOf(args, "--debug") >= 0))
                 {
                     Console.Error.WriteLine($"Stack trace: {ex.StackTrace}");
                 }
@@ -109,4 +110,3 @@ namespace KotorCLI
         }
     }
 }
-

@@ -1,4 +1,9 @@
+using System;
 using System.CommandLine;
+using System.IO;
+using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Resource;
+using Andastra.Parsing.Tools;
 using KotorCLI.Logging;
 
 namespace KotorCLI.Commands
@@ -33,111 +38,257 @@ namespace KotorCLI.Commands
         {
             var cmd = new Command("gff2json", "Convert GFF to JSON");
             var inputArg = new Argument<string>("input", "Input GFF file");
-            cmd.AddArgument(inputArg);
+            cmd.Add(inputArg);
             var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output JSON file");
-            cmd.AddOption(outputOpt);
-            cmd.SetHandler((string input, string output) => { var logger = new StandardLogger(); logger.Info("gff2json not yet implemented"); }, inputArg, outputOpt);
-            rootCommand.AddCommand(cmd);
+            cmd.Options.Add(outputOpt);
+            cmd.SetAction(parseResult =>
+            {
+                var input = parseResult.GetValue(inputArg);
+                var output = parseResult.GetValue(outputOpt);
+                var logger = new StandardLogger();
+                var exitCode = ExecuteGff2Json(input, output, logger);
+                Environment.Exit(exitCode);
+            });
+            rootCommand.Add(cmd);
+        }
+
+        private static int ExecuteGff2Json(string input, string output, ILogger logger)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(output))
+                {
+                    output = Path.ChangeExtension(input, ".json");
+                }
+                Conversions.ConvertGffToJson(input, output);
+                logger.Info($"Converted {input} to {output}");
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Failed to convert GFF to JSON: {ex.Message}");
+                return 1;
+            }
         }
 
         private static void AddJson2Gff(RootCommand rootCommand)
         {
             var cmd = new Command("json2gff", "Convert JSON to GFF");
             var inputArg = new Argument<string>("input", "Input JSON file");
-            cmd.AddArgument(inputArg);
+            cmd.Add(inputArg);
             var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output GFF file");
-            cmd.AddOption(outputOpt);
-            cmd.SetHandler((string input, string output) => { var logger = new StandardLogger(); logger.Info("json2gff not yet implemented"); }, inputArg, outputOpt);
-            rootCommand.AddCommand(cmd);
+            cmd.Options.Add(outputOpt);
+            cmd.SetAction(parseResult =>
+            {
+                var input = parseResult.GetValue(inputArg);
+                var output = parseResult.GetValue(outputOpt);
+                var logger = new StandardLogger();
+                logger.Warning("JSON to GFF conversion not yet implemented in Andastra.Parsing");
+                Environment.Exit(1);
+            });
+            rootCommand.Add(cmd);
         }
 
         private static void AddGff2Xml(RootCommand rootCommand)
         {
             var cmd = new Command("gff2xml", "Convert GFF to XML");
             var inputArg = new Argument<string>("input", "Input GFF file");
-            cmd.AddArgument(inputArg);
+            cmd.Add(inputArg);
             var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output XML file");
-            cmd.AddOption(outputOpt);
-            cmd.SetHandler((string input, string output) => { var logger = new StandardLogger(); logger.Info("gff2xml not yet implemented"); }, inputArg, outputOpt);
-            rootCommand.AddCommand(cmd);
+            cmd.Options.Add(outputOpt);
+            cmd.SetAction(parseResult =>
+            {
+                var input = parseResult.GetValue(inputArg);
+                var output = parseResult.GetValue(outputOpt);
+                var logger = new StandardLogger();
+                try
+                {
+                    if (string.IsNullOrEmpty(output))
+                    {
+                        output = Path.ChangeExtension(input, ".xml");
+                    }
+                    Conversions.ConvertGffToXml(input, output);
+                    logger.Info($"Converted {input} to {output}");
+                    Environment.Exit(0);
+                }
+                catch (Exception ex)
+                {
+                    logger.Error($"Failed to convert GFF to XML: {ex.Message}");
+                    Environment.Exit(1);
+                }
+            });
+            rootCommand.Add(cmd);
         }
 
         private static void AddXml2Gff(RootCommand rootCommand)
         {
             var cmd = new Command("xml2gff", "Convert XML to GFF");
             var inputArg = new Argument<string>("input", "Input XML file");
-            cmd.AddArgument(inputArg);
+            cmd.Add(inputArg);
             var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output GFF file");
-            cmd.AddOption(outputOpt);
-            cmd.SetHandler((string input, string output) => { var logger = new StandardLogger(); logger.Info("xml2gff not yet implemented"); }, inputArg, outputOpt);
-            rootCommand.AddCommand(cmd);
+            cmd.Options.Add(outputOpt);
+            cmd.SetAction(parseResult =>
+            {
+                var input = parseResult.GetValue(inputArg);
+                var output = parseResult.GetValue(outputOpt);
+                var logger = new StandardLogger();
+                try
+                {
+                    if (string.IsNullOrEmpty(output))
+                    {
+                        output = Path.ChangeExtension(input, ".gff");
+                    }
+                    Conversions.ConvertXmlToGff(input, output);
+                    logger.Info($"Converted {input} to {output}");
+                    Environment.Exit(0);
+                }
+                catch (Exception ex)
+                {
+                    logger.Error($"Failed to convert XML to GFF: {ex.Message}");
+                    Environment.Exit(1);
+                }
+            });
+            rootCommand.Add(cmd);
         }
 
         private static void AddTlk2Xml(RootCommand rootCommand)
         {
             var cmd = new Command("tlk2xml", "Convert TLK to XML");
             var inputArg = new Argument<string>("input", "Input TLK file");
-            cmd.AddArgument(inputArg);
+            cmd.Add(inputArg);
             var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output XML file");
-            cmd.AddOption(outputOpt);
-            cmd.SetHandler((string input, string output) => { var logger = new StandardLogger(); logger.Info("tlk2xml not yet implemented"); }, inputArg, outputOpt);
-            rootCommand.AddCommand(cmd);
+            cmd.Options.Add(outputOpt);
+            cmd.SetAction(parseResult =>
+            {
+                var input = parseResult.GetValue(inputArg);
+                var output = parseResult.GetValue(outputOpt);
+                var logger = new StandardLogger();
+                logger.Info("tlk2xml not yet implemented");
+                Environment.Exit(0);
+            });
+            rootCommand.Add(cmd);
         }
 
         private static void AddXml2Tlk(RootCommand rootCommand)
         {
             var cmd = new Command("xml2tlk", "Convert XML to TLK");
             var inputArg = new Argument<string>("input", "Input XML file");
-            cmd.AddArgument(inputArg);
+            cmd.Add(inputArg);
             var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output TLK file");
-            cmd.AddOption(outputOpt);
-            cmd.SetHandler((string input, string output) => { var logger = new StandardLogger(); logger.Info("xml2tlk not yet implemented"); }, inputArg, outputOpt);
-            rootCommand.AddCommand(cmd);
+            cmd.Options.Add(outputOpt);
+            cmd.SetAction(parseResult =>
+            {
+                var input = parseResult.GetValue(inputArg);
+                var output = parseResult.GetValue(outputOpt);
+                var logger = new StandardLogger();
+                logger.Info("xml2tlk not yet implemented");
+                Environment.Exit(0);
+            });
+            rootCommand.Add(cmd);
         }
 
         private static void AddSsf2Xml(RootCommand rootCommand)
         {
             var cmd = new Command("ssf2xml", "Convert SSF to XML");
             var inputArg = new Argument<string>("input", "Input SSF file");
-            cmd.AddArgument(inputArg);
+            cmd.Add(inputArg);
             var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output XML file");
-            cmd.AddOption(outputOpt);
-            cmd.SetHandler((string input, string output) => { var logger = new StandardLogger(); logger.Info("ssf2xml not yet implemented"); }, inputArg, outputOpt);
-            rootCommand.AddCommand(cmd);
+            cmd.Options.Add(outputOpt);
+            cmd.SetAction(parseResult =>
+            {
+                var input = parseResult.GetValue(inputArg);
+                var output = parseResult.GetValue(outputOpt);
+                var logger = new StandardLogger();
+                logger.Info("ssf2xml not yet implemented");
+                Environment.Exit(0);
+            });
+            rootCommand.Add(cmd);
         }
 
         private static void AddXml2Ssf(RootCommand rootCommand)
         {
             var cmd = new Command("xml2ssf", "Convert XML to SSF");
             var inputArg = new Argument<string>("input", "Input XML file");
-            cmd.AddArgument(inputArg);
+            cmd.Add(inputArg);
             var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output SSF file");
-            cmd.AddOption(outputOpt);
-            cmd.SetHandler((string input, string output) => { var logger = new StandardLogger(); logger.Info("xml2ssf not yet implemented"); }, inputArg, outputOpt);
-            rootCommand.AddCommand(cmd);
+            cmd.Options.Add(outputOpt);
+            cmd.SetAction(parseResult =>
+            {
+                var input = parseResult.GetValue(inputArg);
+                var output = parseResult.GetValue(outputOpt);
+                var logger = new StandardLogger();
+                logger.Info("xml2ssf not yet implemented");
+                Environment.Exit(0);
+            });
+            rootCommand.Add(cmd);
         }
 
         private static void Add2Da2Csv(RootCommand rootCommand)
         {
             var cmd = new Command("2da2csv", "Convert 2DA to CSV");
             var inputArg = new Argument<string>("input", "Input 2DA file");
-            cmd.AddArgument(inputArg);
+            cmd.Add(inputArg);
             var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output CSV file");
-            cmd.AddOption(outputOpt);
-            cmd.SetHandler((string input, string output) => { var logger = new StandardLogger(); logger.Info("2da2csv not yet implemented"); }, inputArg, outputOpt);
-            rootCommand.AddCommand(cmd);
+            cmd.Options.Add(outputOpt);
+            var delimiterOpt = new Option<string>("--delimiter", () => ",", "CSV delimiter");
+            cmd.Options.Add(delimiterOpt);
+            cmd.SetAction(parseResult =>
+            {
+                var input = parseResult.GetValue(inputArg);
+                var output = parseResult.GetValue(outputOpt);
+                var delimiter = parseResult.GetValue(delimiterOpt);
+                var logger = new StandardLogger();
+                try
+                {
+                    if (string.IsNullOrEmpty(output))
+                    {
+                        output = Path.ChangeExtension(input, ".csv");
+                    }
+                    Conversions.Convert2DaToCsv(input, output, delimiter);
+                    logger.Info($"Converted {input} to {output}");
+                    Environment.Exit(0);
+                }
+                catch (Exception ex)
+                {
+                    logger.Error($"Failed to convert 2DA to CSV: {ex.Message}");
+                    Environment.Exit(1);
+                }
+            });
+            rootCommand.Add(cmd);
         }
 
         private static void AddCsv22Da(RootCommand rootCommand)
         {
             var cmd = new Command("csv22da", "Convert CSV to 2DA");
             var inputArg = new Argument<string>("input", "Input CSV file");
-            cmd.AddArgument(inputArg);
+            cmd.Add(inputArg);
             var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output 2DA file");
-            cmd.AddOption(outputOpt);
-            cmd.SetHandler((string input, string output) => { var logger = new StandardLogger(); logger.Info("csv22da not yet implemented"); }, inputArg, outputOpt);
-            rootCommand.AddCommand(cmd);
+            cmd.Options.Add(outputOpt);
+            var delimiterOpt = new Option<string>("--delimiter", () => ",", "CSV delimiter");
+            cmd.Options.Add(delimiterOpt);
+            cmd.SetAction(parseResult =>
+            {
+                var input = parseResult.GetValue(inputArg);
+                var output = parseResult.GetValue(outputOpt);
+                var delimiter = parseResult.GetValue(delimiterOpt);
+                var logger = new StandardLogger();
+                try
+                {
+                    if (string.IsNullOrEmpty(output))
+                    {
+                        output = Path.ChangeExtension(input, ".2da");
+                    }
+                    Conversions.ConvertCsvTo2Da(input, output, delimiter);
+                    logger.Info($"Converted {input} to {output}");
+                    Environment.Exit(0);
+                }
+                catch (Exception ex)
+                {
+                    logger.Error($"Failed to convert CSV to 2DA: {ex.Message}");
+                    Environment.Exit(1);
+                }
+            });
+            rootCommand.Add(cmd);
         }
     }
 }
-
