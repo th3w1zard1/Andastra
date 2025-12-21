@@ -1941,14 +1941,75 @@ namespace Andastra.Runtime.Content.Save
         #region Inventory, Repute, Cached Characters, Cached Modules
 
         // Serialize inventory (INVENTORY.res) - player inventory items
-        // Based on swkotor.exe: Inventory is stored as a GFF file in savegame.sav
-        // Located via string reference: "INVENTORY" @ (needs verification)
+        // Based on swkotor2.exe: Inventory is stored as a GFF file in savegame.sav
+        // Located via string reference: "INVENTORY" @ 0x007c2504 (inventory field)
+        // Original implementation: INVENTORY.res contains a GFF with "ItemList" containing item entries
+        // Each item entry contains: TemplateResRef, StackSize, Charges, Identified, and Upgrades
         private byte[] SerializeInventory(PartyState partyState)
         {
-            // TODO: STUB - Implement inventory serialization
-            // Inventory is stored as a GFF file with item data
-            // Need to serialize player inventory items from PartyState
-            return null;
+            if (partyState == null || partyState.PlayerCharacter == null)
+            {
+                return null;
+            }
+
+            List<ItemState> inventory = partyState.PlayerCharacter.Inventory;
+            if (inventory == null || inventory.Count == 0)
+            {
+                // Return empty GFF with empty ItemList
+                var emptyGff = new GFF(GFFContent.GFF);
+                emptyGff.Root.Acquire<GFFList>("ItemList", new GFFList());
+                return emptyGff.ToBytes();
+            }
+
+            // Create GFF with generic content type (no specific content type for inventory)
+            var gff = new GFF(GFFContent.GFF);
+            var root = gff.Root;
+
+            // Create ItemList containing all inventory items
+            var itemList = root.Acquire<GFFList>("ItemList", new GFFList());
+
+            foreach (ItemState item in inventory)
+            {
+                if (item == null || string.IsNullOrEmpty(item.TemplateResRef))
+                {
+                    continue; // Skip invalid items
+                }
+
+                var itemStruct = itemList.Add();
+
+                // TemplateResRef - Item template ResRef (required)
+                itemStruct.SetString("TemplateResRef", item.TemplateResRef);
+
+                // StackSize - Number of items in stack (default: 1)
+                itemStruct.SetInt32("StackSize", item.StackSize > 0 ? item.StackSize : 1);
+
+                // Charges - Current charges/uses remaining (for items with charges)
+                itemStruct.SetInt32("Charges", item.Charges);
+
+                // Identified - Whether the item has been identified (byte: 1 = identified, 0 = not identified)
+                itemStruct.SetUInt8("Identified", item.Identified ? (byte)1 : (byte)0);
+
+                // Upgrades - List of item upgrades/modifications
+                // Based on swkotor2.exe: Items can have upgrades installed (weapon/armor upgrades)
+                // Each upgrade entry contains: UpgradeSlot (int32) and UpgradeResRef (string)
+                if (item.Upgrades != null && item.Upgrades.Count > 0)
+                {
+                    var upgradesList = itemStruct.Acquire<GFFList>("Upgrades", new GFFList());
+                    foreach (ItemUpgrade upgrade in item.Upgrades)
+                    {
+                        if (upgrade == null || string.IsNullOrEmpty(upgrade.UpgradeResRef))
+                        {
+                            continue; // Skip invalid upgrades
+                        }
+
+                        var upgradeStruct = upgradesList.Add();
+                        upgradeStruct.SetInt32("UpgradeSlot", upgrade.UpgradeSlot);
+                        upgradeStruct.SetString("UpgradeResRef", upgrade.UpgradeResRef);
+                    }
+                }
+            }
+
+            return gff.ToBytes();
         }
 
         // Serialize repute (REPUTE.fac) - faction reputation
