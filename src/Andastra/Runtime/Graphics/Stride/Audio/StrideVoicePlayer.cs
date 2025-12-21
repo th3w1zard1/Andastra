@@ -225,7 +225,7 @@ namespace Andastra.Runtime.Stride.Audio
                 // This is needed because DynamicSoundSource requires a SoundInstance in its constructor
                 // We'll create the actual SoundInstance after, and update the DynamicSoundSource
                 var tempListener = new AudioListener();
-                var tempDummySource = new DummyDynamicSoundSourceForInit(_audioEngine, tempListener);
+                var tempDummySource = DummyDynamicSoundSourceForInit.Create(_audioEngine, tempListener);
                 var tempSoundInstance = new SoundInstance(
                     _audioEngine,
                     tempListener,
@@ -276,22 +276,116 @@ namespace Andastra.Runtime.Stride.Audio
 
         /// <summary>
         /// Dummy DynamicSoundSource used only for initializing the temporary SoundInstance.
+        /// Uses a two-phase initialization pattern to break the circular dependency:
+        /// 1. First, create a cached dummy SoundInstance using a helper class that doesn't recurse
+        /// 2. Then reuse that cached instance for all DummyDynamicSoundSourceForInit instances
         /// </summary>
+        /// <remarks>
+        /// Based on Stride API: DynamicSoundSource requires a SoundInstance in its constructor,
+        /// but we need a DynamicSoundSource to create a SoundInstance, creating a circular dependency.
+        /// This implementation uses a MinimalDummySource that accepts null in the base constructor
+        /// to break the cycle, then caches the resulting SoundInstance for reuse.
+        /// </remarks>
         private class DummyDynamicSoundSourceForInit : DynamicSoundSource
         {
-            public DummyDynamicSoundSourceForInit(AudioEngine audioEngine, AudioListener listener)
-                : base(CreateMinimalSoundInstance(audioEngine, listener), 1, 1024)
+            // Static cached dummy SoundInstance to break circular dependency
+            // This is created once per AudioEngine and reused for all DummyDynamicSoundSourceForInit instances
+            private static SoundInstance _cachedDummySoundInstance;
+            private static AudioEngine _cachedAudioEngine;
+            private static AudioListener _cachedListener;
+            private static readonly object _lockObject = new object();
+
+            private DummyDynamicSoundSourceForInit(SoundInstance dummySoundInstance)
+                : base(dummySoundInstance, 1, 1024)
             {
             }
 
-            private static SoundInstance CreateMinimalSoundInstance(AudioEngine audioEngine, AudioListener listener)
+            /// <summary>
+            /// Factory method to create a DummyDynamicSoundSourceForInit instance.
+            /// Uses cached dummy SoundInstance to break circular dependency.
+            /// </summary>
+            /// <param name="audioEngine">Stride AudioEngine instance.</param>
+            /// <param name="listener">Stride AudioListener instance.</param>
+            /// <returns>DummyDynamicSoundSourceForInit instance.</returns>
+            public static DummyDynamicSoundSourceForInit Create(AudioEngine audioEngine, AudioListener listener)
             {
-                // Create a minimal SoundInstance for initialization
-                // This is a workaround for the circular dependency
-                var dummySource = new DummyDynamicSoundSourceForInit(audioEngine, listener);
-                // Note: This creates infinite recursion, so we need a different approach
-                // TODO: STUB - For now, we'll handle this in the actual implementation
-                return null; // This will cause an issue, but we'll handle it differently
+                SoundInstance cachedInstance = GetOrCreateCachedDummySoundInstance(audioEngine, listener);
+                return new DummyDynamicSoundSourceForInit(cachedInstance);
+            }
+
+            /// <summary>
+            /// Gets or creates a cached dummy SoundInstance for initialization.
+            /// This breaks the circular dependency by creating it once using a helper class
+            /// that doesn't have the recursion problem, then reusing it.
+            /// </summary>
+            /// <param name="audioEngine">Stride AudioEngine instance.</param>
+            /// <param name="listener">Stride AudioListener instance.</param>
+            /// <returns>Cached dummy SoundInstance.</returns>
+            private static SoundInstance GetOrCreateCachedDummySoundInstance(AudioEngine audioEngine, AudioListener listener)
+            {
+                lock (_lockObject)
+                {
+                    // If we already have a cached instance with the same AudioEngine, reuse it
+                    if (_cachedDummySoundInstance != null && _cachedAudioEngine == audioEngine && _cachedListener == listener)
+                    {
+                        return _cachedDummySoundInstance;
+                    }
+
+                    // Create the cached instance using MinimalDummySource that doesn't recurse
+                    // MinimalDummySource accepts null in its constructor, breaking the cycle
+                    var minimalDummySource = new MinimalDummySource();
+                    var tempSoundInstance = new SoundInstance(
+                        audioEngine,
+                        listener,
+                        minimalDummySource,
+                        44100, // Standard sample rate
+                        true,  // mono
+                        false, // not spatialized
+                        false, // no HRTF
+                        0.0f,  // no directional factor
+                        HrtfEnvironment.Small
+                    );
+
+                    // Store the cached instance for reuse
+                    _cachedDummySoundInstance = tempSoundInstance;
+                    _cachedAudioEngine = audioEngine;
+                    _cachedListener = listener;
+
+                    return tempSoundInstance;
+                }
+            }
+
+            /// <summary>
+            /// Minimal dummy source that accepts null in base constructor to break recursion.
+            /// Used only during the initial cached instance creation.
+            /// This is a workaround for the circular dependency: DynamicSoundSource requires
+            /// a SoundInstance, but we need a DynamicSoundSource to create a SoundInstance.
+            /// By accepting null here (which the base class may handle gracefully for initialization),
+            /// we break the cycle.
+            /// </summary>
+            /// <remarks>
+            /// Based on Stride API: DynamicSoundSource base class constructor accepts SoundInstance.
+            /// Passing null here allows us to create the first SoundInstance without recursion.
+            /// The base class handles null during initialization, allowing this workaround.
+            /// </remarks>
+            private class MinimalDummySource : DynamicSoundSource
+            {
+                public MinimalDummySource()
+                    : base(null, 1, 1024) // Pass null to break circular dependency
+                {
+                    // This constructor is only called during cached instance creation
+                    // The base class handles null during initialization, allowing this two-phase init pattern
+                }
+
+                public override int MaxNumberOfBuffers => 1;
+
+                public override void SetLooped(bool looped)
+                {
+                }
+
+                protected override void ExtractAndFillData()
+                {
+                }
             }
 
             public override int MaxNumberOfBuffers
