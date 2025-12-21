@@ -1060,6 +1060,10 @@ namespace Andastra.Runtime.MonoGame.Backends
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void SetDescriptorHeapsDelegate(IntPtr commandList, uint NumDescriptorHeaps, IntPtr ppDescriptorHeaps);
 
+        // COM interface method delegate for Close (ID3D12CommandList::Close)
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int CloseDelegate(IntPtr commandList);
+
         // D3D12 GPU descriptor handle structure
         [StructLayout(LayoutKind.Sequential)]
         private struct D3D12_GPU_DESCRIPTOR_HANDLE
@@ -3298,6 +3302,14 @@ namespace Andastra.Runtime.MonoGame.Backends
                     throw new InvalidOperationException("Failed to create or retrieve draw indirect command signature");
                 }
 
+                // Validate stride matches the command signature stride
+                // D3D12_DRAW_ARGUMENTS is 16 bytes (4 uints)
+                int expectedStride = Marshal.SizeOf(typeof(D3D12_DRAW_ARGUMENTS));
+                if (stride != expectedStride)
+                {
+                    throw new ArgumentException($"Stride {stride} does not match expected stride {expectedStride} for D3D12_DRAW_ARGUMENTS", nameof(stride));
+                }
+
                 // Get GPU virtual address of the argument buffer
                 ulong argumentBufferGpuVa = _device.GetGpuVirtualAddress(argumentResource);
                 if (argumentBufferGpuVa == 0UL)
@@ -3367,6 +3379,14 @@ namespace Andastra.Runtime.MonoGame.Backends
                 if (commandSignature == IntPtr.Zero)
                 {
                     throw new InvalidOperationException("Failed to create or retrieve draw indexed indirect command signature");
+                }
+
+                // Validate stride matches the command signature stride
+                // D3D12_DRAW_INDEXED_ARGUMENTS is 20 bytes (4 uints + 1 int)
+                int expectedStride = Marshal.SizeOf(typeof(D3D12_DRAW_INDEXED_ARGUMENTS));
+                if (stride != expectedStride)
+                {
+                    throw new ArgumentException($"Stride {stride} does not match expected stride {expectedStride} for D3D12_DRAW_INDEXED_ARGUMENTS", nameof(stride));
                 }
 
                 // Get GPU virtual address of the argument buffer
