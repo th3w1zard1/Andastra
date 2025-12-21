@@ -1289,9 +1289,29 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ArgumentNullException(nameof(fence));
             }
 
-            // TODO: IMPLEMENT - Signal D3D12 fence
-            // - Extract ID3D12Fence from IFence implementation
-            // - Call ID3D12CommandQueue::Signal
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                // On non-Windows platforms, Signal is a no-op
+                // The application should use VulkanDevice for cross-platform support
+                return;
+            }
+
+            // Extract ID3D12Fence pointer from IFence implementation
+            IntPtr d3d12Fence = ExtractD3D12FenceHandle(fence);
+            if (d3d12Fence == IntPtr.Zero)
+            {
+                throw new ArgumentException("Failed to extract ID3D12Fence handle from IFence implementation. The fence must be a D3D12 fence with a valid native handle.", nameof(fence));
+            }
+
+            // Signal the fence from the command queue
+            // This tells the GPU to signal the fence when all previous commands have completed
+            // Based on DirectX 12 Command Queue Signaling: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12commandqueue-signal
+            ulong signalValue = CallSignalFence(_commandQueue, d3d12Fence, value);
+            if (signalValue == 0)
+            {
+                throw new InvalidOperationException("Failed to signal D3D12 fence from command queue");
+            }
         }
 
         /// <summary>
@@ -4411,6 +4431,326 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             return rtvHandle;
         }
+
+        #endregion
+
+        #region D3D12 UAV Descriptor Heap Management
+
+        /// <summary>
+        /// Ensures the UAV descriptor heap is created and initialized.
+        /// Creates a UAV descriptor heap with the default capacity if one doesn't exist.
+        /// Based on DirectX 12 Descriptor Heaps: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_descriptor_heap_desc
+        /// </summary>
+        private void EnsureUavDescriptorHeap()
+        {
+            if (_uavDescriptorHeap != IntPtr.Zero)
+            {
+                return; // Heap already exists
+            }
+
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            if (_device == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                // Create D3D12_DESCRIPTOR_HEAP_DESC structure for UAV heap
+                // Use CBV_SRV_UAV heap type for UAV descriptors (non-shader-visible for CPU clearing operations)
+                var heapDesc = new D3D12_DESCRIPTOR_HEAP_DESC
+                {
+                    Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+                    NumDescriptors = (uint)DefaultUavHeapCapacity,
+                    Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE, // UAV heaps for clearing are not shader-visible
+                    NodeMask = 0
+                };
+
+                // Allocate memory for the descriptor heap descriptor structure
+                int heapDescSize = Marshal.SizeOf(typeof(D3D12_DESCRIPTOR_HEAP_DESC));
+                IntPtr heapDescPtr = Marshal.AllocHGlobal(heapDescSize);
+                try
+                {
+                    Marshal.StructureToPtr(heapDesc, heapDescPtr, false);
+
+                    // Allocate memory for the output descriptor heap pointer
+                    IntPtr heapPtr = Marshal.AllocHGlobal(IntPtr.Size);
+                    try
+                    {
+                        // Call ID3D12Device::CreateDescriptorHeap
+                        Guid iidDescriptorHeap = IID_ID3D12DescriptorHeap;
+                        int hr = CallCreateDescriptorHeap(_device, heapDescPtr, ref iidDescriptorHeap, heapPtr);
+                        if (hr < 0)
+                        {
+                            throw new InvalidOperationException($"CreateDescriptorHeap failed with HRESULT 0x{hr:X8}");
+                        }
+
+                        // Get the descriptor heap pointer
+                        IntPtr descriptorHeap = Marshal.ReadIntPtr(heapPtr);
+                        if (descriptorHeap == IntPtr.Zero)
+                        {
+                            throw new InvalidOperationException("Descriptor heap pointer is null");
+                        }
+
+                        // Get descriptor heap start handle (CPU handle for descriptor heap)
+                        IntPtr cpuHandle = CallGetCPUDescriptorHandleForHeapStart(descriptorHeap);
+                        if (cpuHandle == IntPtr.Zero)
+                        {
+                            throw new InvalidOperationException("Failed to get CPU descriptor handle for heap start");
+                        }
+
+                        // Get descriptor increment size
+                        uint descriptorIncrementSize = CallGetDescriptorHandleIncrementSize(_device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+                        if (descriptorIncrementSize == 0)
+                        {
+                            throw new InvalidOperationException("Failed to get descriptor handle increment size");
+                        }
+
+                        // Store heap information
+                        _uavDescriptorHeap = descriptorHeap;
+                        _uavHeapCpuStartHandle = cpuHandle;
+                        _uavHeapDescriptorIncrementSize = descriptorIncrementSize;
+                        _uavHeapCapacity = DefaultUavHeapCapacity;
+                        _uavHeapNextIndex = 0;
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(heapPtr);
+                    }
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(heapDescPtr);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to create UAV descriptor heap: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Allocates a descriptor handle from the UAV descriptor heap.
+        /// Returns IntPtr.Zero if allocation fails.
+        /// </summary>
+        private IntPtr AllocateUavDescriptor()
+        {
+            EnsureUavDescriptorHeap();
+
+            if (_uavDescriptorHeap == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            if (_uavHeapNextIndex >= _uavHeapCapacity)
+            {
+                // Heap is full - in a production implementation, we might want to create a larger heap or handle this differently
+                throw new InvalidOperationException($"UAV descriptor heap is full (capacity: {_uavHeapCapacity})");
+            }
+
+            // Calculate CPU descriptor handle for this index
+            IntPtr cpuDescriptorHandle = OffsetDescriptorHandle(_uavHeapCpuStartHandle, _uavHeapNextIndex, _uavHeapDescriptorIncrementSize);
+            int allocatedIndex = _uavHeapNextIndex;
+            _uavHeapNextIndex++;
+
+            return cpuDescriptorHandle;
+        }
+
+        /// <summary>
+        /// COM interface method delegate for CreateUnorderedAccessView.
+        /// </summary>
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void CreateUnorderedAccessViewDelegate(IntPtr device, IntPtr pResource, IntPtr pCounterResource, IntPtr pDesc, IntPtr DestDescriptor);
+
+        /// <summary>
+        /// Calls ID3D12Device::CreateUnorderedAccessView through COM vtable.
+        /// VTable index 36 for ID3D12Device.
+        /// Based on DirectX 12 Unordered Access Views: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createunorderedaccessview
+        /// </summary>
+        private unsafe void CallCreateUnorderedAccessView(IntPtr device, IntPtr pResource, IntPtr pCounterResource, IntPtr pDesc, IntPtr DestDescriptor)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            if (device == IntPtr.Zero || pResource == IntPtr.Zero || DestDescriptor == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Get vtable pointer
+            IntPtr* vtable = *(IntPtr**)device;
+            // CreateUnorderedAccessView is at index 36 in ID3D12Device vtable
+            IntPtr methodPtr = vtable[36];
+
+            // Create delegate from function pointer
+            CreateUnorderedAccessViewDelegate createUav = (CreateUnorderedAccessViewDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CreateUnorderedAccessViewDelegate));
+
+            createUav(device, pResource, pCounterResource, pDesc, DestDescriptor);
+        }
+
+        /// <summary>
+        /// Converts TextureFormat to DXGI_FORMAT for unordered access views.
+        /// Based on DirectX 12 Texture Formats: https://docs.microsoft.com/en-us/windows/win32/api/dxgiformat/ne-dxgiformat-dxgi_format
+        /// Supports formats that can be used as UAVs (typically uint/int formats for ClearUnorderedAccessViewUint).
+        /// </summary>
+        private uint ConvertTextureFormatToDxgiFormatForUav(TextureFormat format)
+        {
+            switch (format)
+            {
+                case TextureFormat.R8_UNorm:
+                    return 61; // DXGI_FORMAT_R8_UNORM
+                case TextureFormat.R8_UInt:
+                    return 62; // DXGI_FORMAT_R8_UINT
+                case TextureFormat.R8_SInt:
+                    return 63; // DXGI_FORMAT_R8_SINT
+                case TextureFormat.R8G8_UNorm:
+                    return 49; // DXGI_FORMAT_R8G8_UNORM
+                case TextureFormat.R8G8_UInt:
+                    return 50; // DXGI_FORMAT_R8G8_UINT
+                case TextureFormat.R8G8_SInt:
+                    return 51; // DXGI_FORMAT_R8G8_SINT
+                case TextureFormat.R8G8B8A8_UNorm:
+                    return 28; // DXGI_FORMAT_R8G8B8A8_UNORM
+                case TextureFormat.R8G8B8A8_UInt:
+                    return 30; // DXGI_FORMAT_R8G8B8A8_UINT
+                case TextureFormat.R8G8B8A8_SInt:
+                    return 29; // DXGI_FORMAT_R8G8B8A8_SINT
+                case TextureFormat.R16_UNorm:
+                    return 56; // DXGI_FORMAT_R16_UNORM
+                case TextureFormat.R16_UInt:
+                    return 57; // DXGI_FORMAT_R16_UINT
+                case TextureFormat.R16_SInt:
+                    return 58; // DXGI_FORMAT_R16_SINT
+                case TextureFormat.R16_Float:
+                    return 54; // DXGI_FORMAT_R16_FLOAT
+                case TextureFormat.R16G16_UNorm:
+                    return 35; // DXGI_FORMAT_R16G16_UNORM
+                case TextureFormat.R16G16_UInt:
+                    return 36; // DXGI_FORMAT_R16G16_UINT
+                case TextureFormat.R16G16_SInt:
+                    return 37; // DXGI_FORMAT_R16G16_SINT
+                case TextureFormat.R16G16_Float:
+                    return 34; // DXGI_FORMAT_R16G16_FLOAT
+                case TextureFormat.R16G16B16A16_UNorm:
+                    return 11; // DXGI_FORMAT_R16G16B16A16_UNORM
+                case TextureFormat.R16G16B16A16_UInt:
+                    return 12; // DXGI_FORMAT_R16G16B16A16_UINT
+                case TextureFormat.R16G16B16A16_SInt:
+                    return 13; // DXGI_FORMAT_R16G16B16A16_SINT
+                case TextureFormat.R16G16B16A16_Float:
+                    return 10; // DXGI_FORMAT_R16G16B16A16_FLOAT
+                case TextureFormat.R32_UInt:
+                    return 41; // DXGI_FORMAT_R32_UINT
+                case TextureFormat.R32_SInt:
+                    return 42; // DXGI_FORMAT_R32_SINT
+                case TextureFormat.R32_Float:
+                    return 41; // DXGI_FORMAT_R32_FLOAT (Note: Use R32_UINT for uint clearing, R32_FLOAT for float clearing)
+                case TextureFormat.R32G32_UInt:
+                    return 16; // DXGI_FORMAT_R32G32_UINT
+                case TextureFormat.R32G32_SInt:
+                    return 17; // DXGI_FORMAT_R32G32_SINT
+                case TextureFormat.R32G32_Float:
+                    return 16; // DXGI_FORMAT_R32G32_FLOAT
+                case TextureFormat.R32G32B32_UInt:
+                    return 32; // DXGI_FORMAT_R32G32B32_UINT
+                case TextureFormat.R32G32B32_SInt:
+                    return 33; // DXGI_FORMAT_R32G32B32_SINT
+                case TextureFormat.R32G32B32_Float:
+                    return 6; // DXGI_FORMAT_R32G32B32_FLOAT
+                case TextureFormat.R32G32B32A32_UInt:
+                    return 2; // DXGI_FORMAT_R32G32B32A32_UINT
+                case TextureFormat.R32G32B32A32_SInt:
+                    return 3; // DXGI_FORMAT_R32G32B32A32_SINT
+                case TextureFormat.R32G32B32A32_Float:
+                    return 1; // DXGI_FORMAT_R32G32B32A32_FLOAT
+                default:
+                    return 0; // DXGI_FORMAT_UNKNOWN
+            }
+        }
+
+        /// <summary>
+        /// Gets or creates a UAV descriptor handle for a texture.
+        /// Caches the handle to avoid recreating descriptors for the same texture.
+        /// Based on DirectX 12 Unordered Access Views: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createunorderedaccessview
+        /// </summary>
+        internal IntPtr GetOrCreateUavHandle(ITexture texture, int mipLevel, int arraySlice)
+        {
+            if (texture == null || texture.NativeHandle == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            // Create a unique key for this texture/mip/array combination
+            // For simplicity, we'll use the texture handle as the key (assuming one UAV per texture)
+            // In a more complete implementation, we could include mipLevel and arraySlice in the key
+            IntPtr textureHandle = texture.NativeHandle;
+
+            // Check cache first
+            IntPtr cachedHandle;
+            if (_textureUavHandles.TryGetValue(textureHandle, out cachedHandle))
+            {
+                return cachedHandle;
+            }
+
+            // Allocate new UAV descriptor
+            IntPtr uavHandle = AllocateUavDescriptor();
+            if (uavHandle == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            // Get texture format and convert to DXGI_FORMAT
+            TextureFormat format = texture.Desc.Format;
+            uint dxgiFormat = ConvertTextureFormatToDxgiFormatForUav(format);
+            if (dxgiFormat == 0)
+            {
+                // Format not supported for UAV, return zero handle
+                return IntPtr.Zero;
+            }
+
+            // Create D3D12_UNORDERED_ACCESS_VIEW_DESC structure
+            var uavDesc = new D3D12_UNORDERED_ACCESS_VIEW_DESC
+            {
+                Format = dxgiFormat,
+                ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D, // Default to 2D texture
+                Texture2D = new D3D12_TEX2D_UAV
+                {
+                    MipSlice = unchecked((uint)mipLevel),
+                    PlaneSlice = 0 // Typically 0 for non-planar formats
+                }
+            };
+
+            // Allocate memory for the UAV descriptor structure
+            int uavDescSize = Marshal.SizeOf(typeof(D3D12_UNORDERED_ACCESS_VIEW_DESC));
+            IntPtr uavDescPtr = Marshal.AllocHGlobal(uavDescSize);
+            try
+            {
+                Marshal.StructureToPtr(uavDesc, uavDescPtr, false);
+
+                // Call ID3D12Device::CreateUnorderedAccessView
+                // pCounterResource is NULL for textures (counters are for structured buffers)
+                CallCreateUnorderedAccessView(_device, texture.NativeHandle, IntPtr.Zero, uavDescPtr, uavHandle);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(uavDescPtr);
+            }
+
+            // Cache the handle
+            _textureUavHandles[textureHandle] = uavHandle;
+
+            return uavHandle;
+        }
+
+        #endregion
 
         /// <summary>
         /// Converts TextureFormat to DXGI_FORMAT for render target views.
@@ -8044,7 +8384,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             /// Converts Viewport[] to D3D12_VIEWPORT[] and calls ID3D12GraphicsCommandList::RSSetViewports.
             /// Based on DirectX 12 Viewports: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-rssetviewports
             /// </summary>
-            public void SetViewports(Viewport[] viewports)
+            public unsafe void SetViewports(Viewport[] viewports)
             {
                 if (!_isOpen)
                 {
