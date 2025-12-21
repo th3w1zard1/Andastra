@@ -67,25 +67,43 @@ The game uses two loading modes controlled by a flag at offset 0x54 in the resou
   - **Behavior**: Checks for `_a.rim` first, then `_adx.rim`, then `.mod`, then `_s.rim`/`_dlg.erf`
   - **Evidence**: swkotor.exe: `FUN_004094a0` line 49-216 (else branch when flag != 0)
 
-**Flag Control**: The flag at offset 0x54 is part of the resource manager structure (`param_1`). 
+**Flag Control**: The flag at offset 0x54 is part of the resource manager structure (`param_1`).
 
-**Initialization**: In `FUN_00409bf0` (resource manager creation, swkotor.exe: 0x00409bf0), offset 0x54 is NOT explicitly set, so it defaults to 0 (zero-initialized by `operator_new`).
+**Initialization**: In `FUN_00409bf0` (resource manager creation, swkotor.exe: 0x00409bf0), offset 0x54 is NOT explicitly set, so it defaults to 0 (zero-initialized by `operator_new`). Analysis of FUN_00409bf0 confirms no writes to offset 0x54 occur during initialization.
 
 **Setting the Flag**: The flag is set to 1 (enabling Complex Mode) by `FUN_004064f0` (swkotor.exe: 0x004064f0):
+
 - **Function**: `void __thiscall FUN_004064f0(void *this, int *param_1, undefined4 param_2, undefined4 param_3)`
 - **Line 9**: `*(undefined4 *)((int)this + 0x54) = param_2;`
-- **Called from**: `FUN_004c4150` (swkotor.exe: 0x004c4150) line 90 with `param_2=1`
+- **Called from**: `FUN_004c4150` (swkotor.exe: 0x004c4150) line 90 with `param_2=1` (hardcoded literal)
 - **When**: Called when loading a module/game (specifically during module localization loading)
 - **Evidence**: swkotor.exe: `FUN_004c4150` line 90: `FUN_004064f0(DAT_007a39e8,local_40,1,*(undefined4 *)((int)this + 0x1c8));`
+- **Critical Finding**: Cross-reference analysis confirms `FUN_004064f0` is the ONLY function that writes to offset 0x54 in the resource manager structure (DAT_007a39e8). No other functions write to this offset in the resource manager context.
 
 **swkotor2.exe Equivalents**:
-- Setting function: `FUN_004065e0` (swkotor2.exe: 0x004065e0) - identical behavior, line 9 sets offset 0x54
-- Called from: `FUN_004fd2a0` (swkotor2.exe: 0x004fd2a0) line 98 with `param_2=1`
-- Checking function: `FUN_004096b0` (swkotor2.exe: 0x004096b0) line 36: `if (*(int *)((int)param_1 + 0x54) == 0)`
 
-**Condition Summary**:
-- **Simple Mode (flag == 0)**: Default state when resource manager is created. Flag remains 0 if `FUN_004064f0`/`FUN_004065e0` is never called.
-- **Complex Mode (flag != 0)**: Flag becomes 1 when `FUN_004064f0`/`FUN_004065e0` is called with `param_2=1` during module/game loading. This happens when loading localization data for a module.
+- Setting function: `FUN_004065e0` (swkotor2.exe: 0x004065e0) - identical behavior, line 9 sets offset 0x54
+- Called from: `FUN_004fd2a0` (swkotor2.exe: 0x004fd2a0) line 98 with `param_2=1` (hardcoded literal)
+- Checking function: `FUN_004096b0` (swkotor2.exe: 0x004096b0) line 36: `if (*(int *)((int)param_1 + 0x54) == 0)`
+- **Critical Finding**: Cross-reference analysis confirms `FUN_004065e0` is the ONLY function that writes to offset 0x54 in the resource manager structure (DAT_008283c0). No other functions write to this offset in the resource manager context.
+
+**Condition Summary - FULLY VERIFIED**:
+
+- **Simple Mode (flag == 0)**: 
+  - **Initial State**: Default state when resource manager is created by `FUN_00409bf0`. Offset 0x54 is zero-initialized to 0 by `operator_new`.
+  - **Persists if**: `FUN_004064f0`/`FUN_004065e0` is never called (e.g., during main menu or when not loading a module)
+  - **No conditional logic**: There is NO condition that sets the flag to 0 - it simply remains 0 if not explicitly set to 1
+
+- **Complex Mode (flag == 1)**: 
+  - **Trigger**: Flag becomes 1 when `FUN_004064f0`/`FUN_004065e0` is called during module/game loading
+  - **Value is always 1**: `param_2` is ALWAYS 1 (hardcoded literal) - there is NO conditional logic that determines if it should be 0 or 1
+  - **When called**: During module localization loading (`FUN_004c4150` in swkotor.exe, `FUN_004fd2a0` in swkotor2.exe)
+  - **State transition**: Once set to 1, the flag remains 1 for the lifetime of the resource manager instance
+
+**Conclusion**: The flag operates as a simple state indicator:
+- **0 = Simple Mode**: Initial/unset state (zero-initialized)
+- **1 = Complex Mode**: Set state (unconditionally set to 1 when module localization loads)
+- **No conditional logic exists**: The value is never conditionally determined - it's either 0 (default) or 1 (unconditionally set). The only "condition" is whether `FUN_004064f0`/`FUN_004065e0` is called at all.
 
 **Full Function Decompilation** (swkotor.exe: `FUN_004094a0`):
 
@@ -97,7 +115,7 @@ The game uses two loading modes controlled by a flag at offset 0x54 in the resou
 
 **When Each Mode Is Used**:
 
-- **Simple Mode (flag == 0)**: 
+- **Simple Mode (flag == 0)**:
   - **Default state**: When the resource manager is first created by `FUN_00409bf0`, offset 0x54 is zero-initialized to 0
   - **Remains 0 if**: `FUN_004064f0`/`FUN_004065e0` is never called (e.g., during main menu or when not loading a module)
   - **Usage**: Used for simple resource loading scenarios, typically for main menu resources or when only `.rim` files need to be loaded

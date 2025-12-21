@@ -304,15 +304,19 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // Implementation follows Microsoft's recommended pattern for uploading texture mipmaps
 
                 // Check if texture resource exists
-                // If NativeTexture is not set, store upload data for deferred upload when texture is created
+                // If NativeTexture is not set, create the texture now
                 if (info.NativeTexture == IntPtr.Zero)
                 {
-                    // Texture resource doesn't exist yet - store upload data for deferred upload
+                    // Texture resource doesn't exist yet - create it now
                     // This handles the case where CreateTexture was called but the actual D3D11 texture wasn't created yet
-                    info.UploadData = data;
+                    if (!CreateTextureResource(ref info, data))
+                    {
+                        Console.WriteLine($"[Direct3D11Backend] UploadTextureData: Failed to create texture {info.DebugName}");
+                        return false;
+                    }
+
+                    // Update the resource info in the dictionary
                     _resources[handle] = info;
-                    Console.WriteLine($"[Direct3D11Backend] UploadTextureData: Stored {data.Mipmaps.Length} mipmap levels for deferred upload (texture {info.DebugName} not yet created)");
-                    return true;
                 }
 
                 // Validate texture format matches upload data format
@@ -750,34 +754,282 @@ namespace Andastra.Runtime.MonoGame.Backends
         }
 
         /// <summary>
+        /// Converts TextureFormat enum to DXGI_FORMAT enumeration value.
+        /// Based on D3D11 API texture format specifications and DXGI format definitions.
+        /// Reference: https://docs.microsoft.com/en-us/windows/win32/api/dxgiformat/ne-dxgiformat-dxgi_format
+        /// </summary>
+        /// <param name="format">TextureFormat enum value</param>
+        /// <returns>DXGI_FORMAT enumeration value</returns>
+        private uint ConvertTextureFormatToDXGIFormat(TextureFormat format)
+        {
+            switch (format)
+            {
+                case TextureFormat.R8_UNorm:
+                    return DXGI_FORMAT_R8_UNORM;
+                case TextureFormat.R8_UInt:
+                    return DXGI_FORMAT_R8_UINT;
+                case TextureFormat.R8_SInt:
+                    return DXGI_FORMAT_R8_SINT;
+                case TextureFormat.R8G8_UNorm:
+                    return DXGI_FORMAT_R8G8_UNORM;
+                case TextureFormat.R8G8_UInt:
+                    return DXGI_FORMAT_R8G8_UINT;
+                case TextureFormat.R8G8_SInt:
+                    return DXGI_FORMAT_R8G8_SINT;
+                case TextureFormat.R8G8B8A8_UNorm:
+                    return DXGI_FORMAT_R8G8B8A8_UNORM;
+                case TextureFormat.R8G8B8A8_UNorm_SRGB:
+                    return DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+                case TextureFormat.R8G8B8A8_UInt:
+                    return DXGI_FORMAT_R8G8B8A8_UINT;
+                case TextureFormat.R8G8B8A8_SInt:
+                    return DXGI_FORMAT_R8G8B8A8_SINT;
+                case TextureFormat.B8G8R8A8_UNorm:
+                    return DXGI_FORMAT_B8G8R8A8_UNORM;
+                case TextureFormat.B8G8R8A8_UNorm_SRGB:
+                    return DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
+                case TextureFormat.R16_Float:
+                    return DXGI_FORMAT_R16_FLOAT;
+                case TextureFormat.R16_UNorm:
+                    return DXGI_FORMAT_R16_UNORM;
+                case TextureFormat.R16_UInt:
+                    return DXGI_FORMAT_R16_UINT;
+                case TextureFormat.R16_SInt:
+                    return DXGI_FORMAT_R16_SINT;
+                case TextureFormat.R16G16_Float:
+                    return DXGI_FORMAT_R16G16_FLOAT;
+                case TextureFormat.R16G16_UNorm:
+                    return DXGI_FORMAT_R16G16_UNORM;
+                case TextureFormat.R16G16_UInt:
+                    return DXGI_FORMAT_R16G16_UINT;
+                case TextureFormat.R16G16_SInt:
+                    return DXGI_FORMAT_R16G16_SINT;
+                case TextureFormat.R16G16B16A16_Float:
+                    return DXGI_FORMAT_R16G16B16A16_FLOAT;
+                case TextureFormat.R16G16B16A16_UNorm:
+                    return DXGI_FORMAT_R16G16B16A16_UNORM;
+                case TextureFormat.R16G16B16A16_UInt:
+                    return DXGI_FORMAT_R16G16B16A16_UINT;
+                case TextureFormat.R16G16B16A16_SInt:
+                    return DXGI_FORMAT_R16G16B16A16_SINT;
+                case TextureFormat.R32_Float:
+                    return DXGI_FORMAT_R32_FLOAT;
+                case TextureFormat.R32_UInt:
+                    return DXGI_FORMAT_R32_UINT;
+                case TextureFormat.R32_SInt:
+                    return DXGI_FORMAT_R32_SINT;
+                case TextureFormat.R32G32_Float:
+                    return DXGI_FORMAT_R32G32_FLOAT;
+                case TextureFormat.R32G32_UInt:
+                    return DXGI_FORMAT_R32G32_UINT;
+                case TextureFormat.R32G32_SInt:
+                    return DXGI_FORMAT_R32G32_SINT;
+                case TextureFormat.R32G32B32_Float:
+                    return DXGI_FORMAT_R32G32B32_FLOAT;
+                case TextureFormat.R32G32B32A32_Float:
+                    return DXGI_FORMAT_R32G32B32A32_FLOAT;
+                case TextureFormat.R32G32B32A32_UInt:
+                    return DXGI_FORMAT_R32G32B32A32_UINT;
+                case TextureFormat.R32G32B32A32_SInt:
+                    return DXGI_FORMAT_R32G32B32A32_SINT;
+                default:
+                    Console.WriteLine($"[Direct3D11Backend] ConvertTextureFormatToDXGIFormat: Unknown format {format}, defaulting to DXGI_FORMAT_R8G8B8A8_UNORM");
+                    return DXGI_FORMAT_R8G8B8A8_UNORM;
+            }
+        }
+
+        /// <summary>
+        /// Creates a D3D11 texture using ID3D11Device::CreateTexture2D COM method.
+        /// Based on D3D11 API: https://docs.microsoft.com/en-us/windows/win32/api/d3d11/nf-d3d11-id3d11device-createtexture2d
+        /// Matches original engine behavior: swkotor.exe and swkotor2.exe create textures with IDirect3DDevice9::CreateTexture.
+        /// </summary>
+        /// <param name="desc">D3D11_TEXTURE2D_DESC structure describing the texture</param>
+        /// <param name="ppTexture2D">Output pointer to receive the created ID3D11Texture2D*</param>
+        /// <returns>HRESULT: S_OK (0) on success, error code on failure</returns>
+        private unsafe int CreateTexture2D(ref D3D11_TEXTURE2D_DESC desc, out IntPtr ppTexture2D)
+        {
+            ppTexture2D = IntPtr.Zero;
+
+            if (_device == IntPtr.Zero)
+            {
+                Console.WriteLine("[Direct3D11Backend] CreateTexture2D: Device not initialized");
+                return unchecked((int)0x80070057); // E_INVALIDARG
+            }
+
+            // Check if we're on Windows (required for DirectX 11)
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                Console.WriteLine("[Direct3D11Backend] CreateTexture2D: DirectX 11 is only supported on Windows");
+                return unchecked((int)0x80070057); // E_INVALIDARG
+            }
+
+            // Validate texture dimensions
+            if (desc.Width == 0 || desc.Height == 0)
+            {
+                Console.WriteLine($"[Direct3D11Backend] CreateTexture2D: Invalid texture dimensions {desc.Width}x{desc.Height}");
+                return unchecked((int)0x80070057); // E_INVALIDARG
+            }
+
+            // Validate array size
+            if (desc.ArraySize == 0)
+            {
+                Console.WriteLine("[Direct3D11Backend] CreateTexture2D: Invalid array size (must be > 0)");
+                return unchecked((int)0x80070057); // E_INVALIDARG
+            }
+
+            // Validate format
+            if (desc.Format == DXGI_FORMAT_UNKNOWN)
+            {
+                Console.WriteLine("[Direct3D11Backend] CreateTexture2D: Invalid format (DXGI_FORMAT_UNKNOWN)");
+                return unchecked((int)0x80070057); // E_INVALIDARG
+            }
+
+            try
+            {
+                // Allocate memory for D3D11_TEXTURE2D_DESC structure
+                int descSize = Marshal.SizeOf(typeof(D3D11_TEXTURE2D_DESC));
+                IntPtr pDesc = Marshal.AllocHGlobal(descSize);
+                try
+                {
+                    // Marshal structure to native memory
+                    Marshal.StructureToPtr(desc, pDesc, false);
+
+                    // Allocate memory for output texture pointer (ID3D11Texture2D**)
+                    IntPtr ppTexture = Marshal.AllocHGlobal(IntPtr.Size);
+                    try
+                    {
+                        // Initialize output pointer to NULL
+                        Marshal.WriteIntPtr(ppTexture, IntPtr.Zero);
+
+                        // Call CreateTexture2D through COM vtable
+                        // ID3D11Device::CreateTexture2D is at vtable index 5
+                        // Based on D3D11 COM interface: ID3D11Device vtable layout
+                        // Reference: https://docs.microsoft.com/en-us/windows/win32/api/d3d11/nn-d3d11-id3d11device
+                        IntPtr* vtable = *(IntPtr**)_device;
+                        IntPtr methodPtr = vtable[5]; // CreateTexture2D method pointer
+                        var createTexture2D = Marshal.GetDelegateForFunctionPointer<CreateTexture2DDelegate>(methodPtr);
+
+                        // Call CreateTexture2D
+                        // HRESULT CreateTexture2D(
+                        //     const D3D11_TEXTURE2D_DESC *pDesc,
+                        //     const D3D11_SUBRESOURCE_DATA *pInitialData,  // NULL for empty texture
+                        //     ID3D11Texture2D **ppTexture2D
+                        // )
+                        int result = createTexture2D(
+                            _device,
+                            pDesc,
+                            IntPtr.Zero, // pInitialData = NULL (texture will be empty, data uploaded via UpdateSubresource)
+                            ppTexture
+                        );
+
+                        // Check result
+                        if (result >= 0) // S_OK (0) or success code
+                        {
+                            // Read the created texture pointer
+                            ppTexture2D = Marshal.ReadIntPtr(ppTexture);
+                            if (ppTexture2D != IntPtr.Zero)
+                            {
+                                Console.WriteLine($"[Direct3D11Backend] CreateTexture2D: Successfully created texture {desc.Width}x{desc.Height}, format 0x{desc.Format:X}, mipLevels={desc.MipLevels}, arraySize={desc.ArraySize}");
+                            }
+                            else
+                            {
+                                Console.WriteLine("[Direct3D11Backend] CreateTexture2D: CreateTexture2D returned success but texture pointer is NULL");
+                                result = unchecked((int)0x8007000E); // E_OUTOFMEMORY
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[Direct3D11Backend] CreateTexture2D: Failed with HRESULT 0x{result:X8}");
+                        }
+
+                        return result;
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(ppTexture);
+                    }
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(pDesc);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Direct3D11Backend] CreateTexture2D: Exception calling CreateTexture2D: {ex.Message}");
+                return unchecked((int)0x80004005); // E_FAIL
+            }
+        }
+
+        /// <summary>
         /// Creates the actual D3D11 texture resource if it doesn't exist.
         /// This is called during UploadTextureData if the texture wasn't created in CreateTexture.
         /// Based on D3D11 API: ID3D11Device::CreateTexture2D
+        /// Matches original engine behavior: swkotor.exe and swkotor2.exe create textures with IDirect3DDevice9::CreateTexture.
         /// </summary>
-        private bool CreateTextureResource(ref ResourceInfo info, TextureUploadData uploadData)
+        private unsafe bool CreateTextureResource(ref ResourceInfo info, TextureUploadData uploadData)
         {
             if (info.NativeTexture != IntPtr.Zero)
             {
                 return true; // Texture already exists
             }
 
-            // D3D11_TEXTURE2D_DESC texDesc = {
-            //     .Width = info.TextureDesc.Width,
-            //     .Height = info.TextureDesc.Height,
-            //     .MipLevels = info.TextureDesc.MipLevels > 0 ? info.TextureDesc.MipLevels : uploadData.Mipmaps.Length,
-            //     .ArraySize = info.TextureDesc.ArraySize > 0 ? info.TextureDesc.ArraySize : 1,
-            //     .Format = ConvertTextureFormatToDXGIFormat(info.TextureDesc.Format),
-            //     .SampleDesc = { .Count = info.TextureDesc.SampleCount, .Quality = 0 },
-            //     .Usage = D3D11_USAGE_DEFAULT, // GPU-accessible, can be updated via UpdateSubresource
-            //     .BindFlags = D3D11_BIND_SHADER_RESOURCE,
-            //     .CPUAccessFlags = 0, // No CPU access needed for UpdateSubresource
-            //     .MiscFlags = info.TextureDesc.IsCubemap ? D3D11_RESOURCE_MISC_TEXTURECUBE : 0
-            // };
-            // ID3D11Device::CreateTexture2D(&texDesc, NULL, &texture)
+            // Determine mipmap levels
+            // If MipLevels is 0, use the number of mipmaps in upload data
+            // If MipLevels is specified, use that value
+            uint mipLevels;
+            if (info.TextureDesc.MipLevels > 0)
+            {
+                mipLevels = (uint)info.TextureDesc.MipLevels;
+            }
+            else if (uploadData != null && uploadData.Mipmaps != null && uploadData.Mipmaps.Length > 0)
+            {
+                mipLevels = (uint)uploadData.Mipmaps.Length;
+            }
+            else
+            {
+                // Default to 1 mipmap level if not specified
+                mipLevels = 1;
+            }
 
-            // TODO: STUB - For now, create a placeholder since the actual D3D11 device is not yet implemented
-            // When the DirectX 11 implementation is complete, this will create the actual texture
-            info.NativeTexture = new IntPtr(1); // Placeholder - will be replaced with actual ID3D11Texture2D* when D3D11 is implemented
+            // Determine array size
+            uint arraySize = info.TextureDesc.ArraySize > 0 ? (uint)info.TextureDesc.ArraySize : 1;
+
+            // Convert texture format to DXGI_FORMAT
+            uint dxgiFormat = ConvertTextureFormatToDXGIFormat(info.TextureDesc.Format);
+
+            // Create DXGI_SAMPLE_DESC structure
+            DXGI_SAMPLE_DESC sampleDesc;
+            sampleDesc.Count = (uint)info.TextureDesc.SampleCount;
+            sampleDesc.Quality = 0; // Standard quality level
+
+            // Create D3D11_TEXTURE2D_DESC structure
+            D3D11_TEXTURE2D_DESC texDesc;
+            texDesc.Width = (uint)info.TextureDesc.Width;
+            texDesc.Height = (uint)info.TextureDesc.Height;
+            texDesc.MipLevels = mipLevels;
+            texDesc.ArraySize = arraySize;
+            texDesc.Format = dxgiFormat;
+            texDesc.SampleDesc = sampleDesc;
+            texDesc.Usage = D3D11_USAGE_DEFAULT; // GPU-accessible, can be updated via UpdateSubresource
+            texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE; // Can be bound as shader resource
+            texDesc.CPUAccessFlags = 0; // No CPU access needed for UpdateSubresource
+            texDesc.MiscFlags = info.TextureDesc.IsCubemap ? D3D11_RESOURCE_MISC_TEXTURECUBE : 0;
+
+            // Create the texture using ID3D11Device::CreateTexture2D
+            IntPtr texture;
+            int result = CreateTexture2D(ref texDesc, out texture);
+
+            if (result < 0 || texture == IntPtr.Zero)
+            {
+                Console.WriteLine($"[Direct3D11Backend] CreateTextureResource: Failed to create texture {info.DebugName} (HRESULT: 0x{result:X8})");
+                return false;
+            }
+
+            // Store the native texture pointer
+            info.NativeTexture = texture;
+
+            Console.WriteLine($"[Direct3D11Backend] CreateTextureResource: Successfully created texture {info.DebugName} ({info.TextureDesc.Width}x{info.TextureDesc.Height}, format={info.TextureDesc.Format}, mipLevels={mipLevels})");
 
             return true;
         }
@@ -905,6 +1157,132 @@ namespace Andastra.Runtime.MonoGame.Backends
             return 16; // Default to DXT3/DXT5 block size
         }
 
+        #region D3D11 Constants
+
+        // D3D11_USAGE enumeration values
+        // Based on D3D11 API: https://docs.microsoft.com/en-us/windows/win32/api/d3d11/ne-d3d11-d3d11_usage
+        private const uint D3D11_USAGE_DEFAULT = 0;
+        private const uint D3D11_USAGE_IMMUTABLE = 1;
+        private const uint D3D11_USAGE_DYNAMIC = 2;
+        private const uint D3D11_USAGE_STAGING = 3;
+
+        // D3D11_BIND_FLAG enumeration values
+        // Based on D3D11 API: https://docs.microsoft.com/en-us/windows/win32/api/d3d11/ne-d3d11-d3d11_bind_flag
+        private const uint D3D11_BIND_VERTEX_BUFFER = 0x1;
+        private const uint D3D11_BIND_INDEX_BUFFER = 0x2;
+        private const uint D3D11_BIND_CONSTANT_BUFFER = 0x4;
+        private const uint D3D11_BIND_SHADER_RESOURCE = 0x8;
+        private const uint D3D11_BIND_STREAM_OUTPUT = 0x10;
+        private const uint D3D11_BIND_RENDER_TARGET = 0x20;
+        private const uint D3D11_BIND_DEPTH_STENCIL = 0x40;
+        private const uint D3D11_BIND_UNORDERED_ACCESS = 0x80;
+
+        // D3D11_RESOURCE_MISC_FLAG enumeration values
+        // Based on D3D11 API: https://docs.microsoft.com/en-us/windows/win32/api/d3d11/ne-d3d11-d3d11_resource_misc_flag
+        private const uint D3D11_RESOURCE_MISC_GENERATE_MIPS = 0x1;
+        private const uint D3D11_RESOURCE_MISC_SHARED = 0x2;
+        private const uint D3D11_RESOURCE_MISC_TEXTURECUBE = 0x4;
+        private const uint D3D11_RESOURCE_MISC_DRAWINDIRECT_ARGS = 0x10;
+        private const uint D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS = 0x20;
+        private const uint D3D11_RESOURCE_MISC_BUFFER_STRUCTURED = 0x40;
+        private const uint D3D11_RESOURCE_MISC_RESOURCE_CLAMP = 0x80;
+        private const uint D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX = 0x100;
+        private const uint D3D11_RESOURCE_MISC_GDI_COMPATIBLE = 0x200;
+
+        // DXGI_FORMAT enumeration values
+        // Based on DXGI API: https://docs.microsoft.com/en-us/windows/win32/api/dxgiformat/ne-dxgiformat-dxgi_format
+        private const uint DXGI_FORMAT_UNKNOWN = 0;
+        private const uint DXGI_FORMAT_R8_UNORM = 61;
+        private const uint DXGI_FORMAT_R8_UINT = 62;
+        private const uint DXGI_FORMAT_R8_SINT = 63;
+        private const uint DXGI_FORMAT_R8G8_UNORM = 49;
+        private const uint DXGI_FORMAT_R8G8_UINT = 50;
+        private const uint DXGI_FORMAT_R8G8_SINT = 51;
+        private const uint DXGI_FORMAT_R8G8B8A8_UNORM = 28;
+        private const uint DXGI_FORMAT_R8G8B8A8_UNORM_SRGB = 29;
+        private const uint DXGI_FORMAT_R8G8B8A8_UINT = 30;
+        private const uint DXGI_FORMAT_R8G8B8A8_SINT = 31;
+        private const uint DXGI_FORMAT_B8G8R8A8_UNORM = 87;
+        private const uint DXGI_FORMAT_B8G8R8A8_UNORM_SRGB = 91;
+        private const uint DXGI_FORMAT_R16_FLOAT = 54;
+        private const uint DXGI_FORMAT_R16_UNORM = 56;
+        private const uint DXGI_FORMAT_R16_UINT = 57;
+        private const uint DXGI_FORMAT_R16_SINT = 58;
+        private const uint DXGI_FORMAT_R16G16_FLOAT = 34;
+        private const uint DXGI_FORMAT_R16G16_UNORM = 35;
+        private const uint DXGI_FORMAT_R16G16_UINT = 36;
+        private const uint DXGI_FORMAT_R16G16_SINT = 37;
+        private const uint DXGI_FORMAT_R16G16B16A16_FLOAT = 10;
+        private const uint DXGI_FORMAT_R16G16B16A16_UNORM = 11;
+        private const uint DXGI_FORMAT_R16G16B16A16_UINT = 12;
+        private const uint DXGI_FORMAT_R16G16B16A16_SINT = 13;
+        private const uint DXGI_FORMAT_R32_FLOAT = 41;
+        private const uint DXGI_FORMAT_R32_UINT = 42;
+        private const uint DXGI_FORMAT_R32_SINT = 43;
+        private const uint DXGI_FORMAT_R32G32_FLOAT = 16;
+        private const uint DXGI_FORMAT_R32G32_UINT = 17;
+        private const uint DXGI_FORMAT_R32G32_SINT = 18;
+        private const uint DXGI_FORMAT_R32G32B32_FLOAT = 6;
+        private const uint DXGI_FORMAT_R32G32B32A32_FLOAT = 2;
+        private const uint DXGI_FORMAT_R32G32B32A32_UINT = 3;
+        private const uint DXGI_FORMAT_R32G32B32A32_SINT = 4;
+        private const uint DXGI_FORMAT_D16_UNORM = 55;
+        private const uint DXGI_FORMAT_D24_UNORM_S8_UINT = 45;
+        private const uint DXGI_FORMAT_D32_FLOAT = 40;
+        private const uint DXGI_FORMAT_D32_FLOAT_S8X24_UINT = 20;
+        private const uint DXGI_FORMAT_BC1_UNORM = 71;
+        private const uint DXGI_FORMAT_BC1_UNORM_SRGB = 72;
+        private const uint DXGI_FORMAT_BC2_UNORM = 74;
+        private const uint DXGI_FORMAT_BC2_UNORM_SRGB = 75;
+        private const uint DXGI_FORMAT_BC3_UNORM = 77;
+        private const uint DXGI_FORMAT_BC3_UNORM_SRGB = 78;
+        private const uint DXGI_FORMAT_BC4_UNORM = 80;
+        private const uint DXGI_FORMAT_BC4_SNORM = 81;
+        private const uint DXGI_FORMAT_BC5_UNORM = 83;
+        private const uint DXGI_FORMAT_BC5_SNORM = 84;
+        private const uint DXGI_FORMAT_BC6H_UF16 = 95;
+        private const uint DXGI_FORMAT_BC6H_SF16 = 96;
+        private const uint DXGI_FORMAT_BC7_UNORM = 98;
+        private const uint DXGI_FORMAT_BC7_UNORM_SRGB = 99;
+
+        // IID_ID3D11Texture2D GUID
+        // Based on D3D11 API: {6f15aaf2-d208-4e89-9ab4-489535d34f9c}
+        private static readonly Guid IID_ID3D11Texture2D = new Guid(0x6f15aaf2, 0xd208, 0x4e89, 0x9a, 0xb4, 0x48, 0x95, 0x35, 0xd3, 0x4f, 0x9c);
+
+        #endregion
+
+        #region D3D11 Structures
+
+        /// <summary>
+        /// DXGI_SAMPLE_DESC structure for multisampling configuration.
+        /// Based on DXGI API: https://docs.microsoft.com/en-us/windows/win32/api/dxgicommon/ns-dxgicommon-dxgi_sample_desc
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct DXGI_SAMPLE_DESC
+        {
+            public uint Count;   // Number of multisamples per pixel
+            public uint Quality; // Image quality level (0 = no multisampling)
+        }
+
+        /// <summary>
+        /// D3D11_TEXTURE2D_DESC structure for texture creation.
+        /// Based on D3D11 API: https://docs.microsoft.com/en-us/windows/win32/api/d3d11/ns-d3d11-d3d11_texture2d_desc
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D11_TEXTURE2D_DESC
+        {
+            public uint Width;          // Texture width in texels
+            public uint Height;         // Texture height in texels
+            public uint MipLevels;     // Number of mipmap levels (0 = full mipmap chain)
+            public uint ArraySize;      // Number of textures in array (1 for non-array textures)
+            public uint Format;         // DXGI_FORMAT enumeration value
+            public DXGI_SAMPLE_DESC SampleDesc; // Multisampling parameters
+            public uint Usage;          // D3D11_USAGE enumeration value
+            public uint BindFlags;       // D3D11_BIND_FLAG combination
+            public uint CPUAccessFlags; // D3D11_CPU_ACCESS_FLAG combination (0 for D3D11_USAGE_DEFAULT)
+            public uint MiscFlags;      // D3D11_RESOURCE_MISC_FLAG combination
+        }
+
         /// <summary>
         /// D3D11_BOX structure for defining a 3D box region.
         /// Based on D3D11 API: https://docs.microsoft.com/en-us/windows/win32/api/d3d11/ns-d3d11-d3d11_box
@@ -920,6 +1298,20 @@ namespace Andastra.Runtime.MonoGame.Backends
             public uint Bottom;  // Bottom coordinate of the box (exclusive)
             public uint Back;    // Back coordinate of the box (exclusive)
         }
+
+        #endregion
+
+        /// <summary>
+        /// Delegate for ID3D11Device::CreateTexture2D COM method.
+        /// Based on D3D11 API: https://docs.microsoft.com/en-us/windows/win32/api/d3d11/nf-d3d11-id3d11device-createtexture2d
+        /// </summary>
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int CreateTexture2DDelegate(
+            IntPtr pDevice,            // ID3D11Device* (this pointer)
+            IntPtr pDesc,              // const D3D11_TEXTURE2D_DESC* (texture description)
+            IntPtr pInitialData,       // const D3D11_SUBRESOURCE_DATA* (NULL for empty texture, or initial data)
+            IntPtr ppTexture2D         // ID3D11Texture2D** (output texture pointer)
+        );
 
         /// <summary>
         /// Delegate for ID3D11DeviceContext::UpdateSubresource COM method.
