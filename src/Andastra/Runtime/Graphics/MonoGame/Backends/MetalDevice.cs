@@ -1422,23 +1422,163 @@ namespace Andastra.Runtime.MonoGame.Backends
         }
 
         // Resource Operations - delegate to MetalBackend or implement via Metal command encoder
+        /// <summary>
+        /// Writes data to a GPU buffer using Metal blit command encoder.
+        /// 
+        /// Implementation strategy:
+        /// 1. Create a temporary staging buffer with shared storage mode for CPU access
+        /// 2. Write CPU data to staging buffer contents
+        /// 3. Use blit command encoder to copy from staging buffer to destination buffer
+        /// 4. Release staging buffer
+        /// 
+        /// Based on Metal API:
+        /// - MTLDevice::newBufferWithLength:options: (for staging buffer with StorageModeShared)
+        /// - MTLBuffer::contents() (for CPU access to buffer memory)
+        /// - MTLBlitCommandEncoder::copyFromBuffer:sourceOffset:toBuffer:destinationOffset:size:
+        /// 
+        /// Metal API Reference:
+        /// https://developer.apple.com/documentation/metal/mtlblitcommandencoder/1400774-copyfrombuffer
+        /// https://developer.apple.com/documentation/metal/mtlbuffer/1515376-contents
+        /// </summary>
         public void WriteBuffer(IBuffer buffer, byte[] data, int destOffset = 0)
         {
-            if (!_isOpen || buffer == null)
+            if (!_isOpen || buffer == null || data == null || data.Length == 0)
             {
                 return;
             }
-            // TODO: Implement buffer write via Metal command encoder
-            // Metal uses MTLBlitCommandEncoder::copyFromBuffer:sourceOffset:toBuffer:destinationOffset:size
+
+            // Validate destination offset and data size
+            MetalBuffer metalBuffer = buffer as MetalBuffer;
+            if (metalBuffer == null)
+            {
+                Console.WriteLine("[MetalCommandList] WriteBuffer: Buffer must be a MetalBuffer instance");
+                return;
+            }
+
+            BufferDesc bufferDesc = metalBuffer.Desc;
+            if (destOffset < 0 || destOffset >= bufferDesc.ByteSize)
+            {
+                Console.WriteLine($"[MetalCommandList] WriteBuffer: Invalid destination offset {destOffset}, buffer size is {bufferDesc.ByteSize}");
+                return;
+            }
+
+            if (data.Length > bufferDesc.ByteSize - destOffset)
+            {
+                Console.WriteLine($"[MetalCommandList] WriteBuffer: Data size {data.Length} exceeds available buffer space {bufferDesc.ByteSize - destOffset}");
+                return;
+            }
+
+            IntPtr destinationBuffer = metalBuffer.NativeHandle;
+            if (destinationBuffer == IntPtr.Zero)
+            {
+                Console.WriteLine("[MetalCommandList] WriteBuffer: Invalid buffer native handle");
+                return;
+            }
+
+            // Get Metal device from backend for creating staging buffer
+            IntPtr device = _backend.GetMetalDevice();
+            if (device == IntPtr.Zero)
+            {
+                Console.WriteLine("[MetalCommandList] WriteBuffer: Failed to get Metal device");
+                return;
+            }
+
+            // Create temporary staging buffer with shared storage mode for CPU access
+            // Shared storage mode allows direct CPU writes without synchronization barriers
+            // MetalResourceOptions.StorageModeShared = 0 (from enum definition)
+            IntPtr stagingBuffer = MetalNative.CreateBufferWithOptions(device, (ulong)data.Length, (uint)MetalResourceOptions.StorageModeShared);
+            if (stagingBuffer == IntPtr.Zero)
+            {
+                Console.WriteLine("[MetalCommandList] WriteBuffer: Failed to create staging buffer");
+                return;
+            }
+
+            try
+            {
+                // Get pointer to staging buffer contents for CPU write
+                IntPtr stagingBufferContents = MetalNative.GetBufferContents(stagingBuffer);
+                if (stagingBufferContents == IntPtr.Zero)
+                {
+                    Console.WriteLine("[MetalCommandList] WriteBuffer: Failed to get staging buffer contents");
+                    return;
+                }
+
+                // Copy CPU data to staging buffer contents
+                // Marshal.Copy handles the unsafe memory copy
+                Marshal.Copy(data, 0, stagingBufferContents, data.Length);
+
+                // Get or create blit command encoder for buffer copy operation
+                IntPtr blitEncoder = GetOrCreateBlitCommandEncoder();
+                if (blitEncoder == IntPtr.Zero)
+                {
+                    Console.WriteLine("[MetalCommandList] WriteBuffer: Failed to get blit command encoder");
+                    return;
+                }
+
+                // Copy from staging buffer to destination buffer using blit command encoder
+                // This copies data on the GPU side, ensuring proper synchronization
+                // sourceOffset = 0 (start of staging buffer)
+                // destinationOffset = destOffset (user-specified offset in destination buffer)
+                // size = data.Length (amount of data to copy)
+                MetalNative.CopyFromBuffer(blitEncoder, stagingBuffer, 0, destinationBuffer, (ulong)destOffset, (ulong)data.Length);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MetalCommandList] WriteBuffer: Exception during buffer write: {ex.Message}");
+                Console.WriteLine($"[MetalCommandList] WriteBuffer: Stack trace: {ex.StackTrace}");
+            }
+            finally
+            {
+                // Release staging buffer
+                // Metal uses ARC (Automatic Reference Counting), but we release explicitly to match allocation
+                if (stagingBuffer != IntPtr.Zero)
+                {
+                    MetalNative.ReleaseBuffer(stagingBuffer);
+                }
+            }
         }
 
+        /// <summary>
+        /// Writes typed data to a GPU buffer using Metal blit command encoder.
+        /// 
+        /// This is a convenience method that converts typed arrays to byte arrays and delegates
+        /// to the byte array WriteBuffer method. It uses Marshal to convert unmanaged types
+        /// to byte arrays for GPU upload.
+        /// 
+        /// Based on Metal API: Same as WriteBuffer(IBuffer, byte[], int)
+        /// </summary>
+        /// <typeparam name="T">Unmanaged type (struct, primitive, etc.)</typeparam>
+        /// <param name="buffer">Target buffer</param>
+        /// <param name="data">Typed data array to write</param>
+        /// <param name="destOffset">Destination offset in bytes</param>
         public void WriteBuffer<T>(IBuffer buffer, T[] data, int destOffset = 0) where T : unmanaged
         {
-            if (!_isOpen || buffer == null || data == null)
+            if (!_isOpen || buffer == null || data == null || data.Length == 0)
             {
                 return;
             }
-            // TODO: Implement typed buffer write
+
+            // Calculate byte size of typed data
+            int elementSize = Marshal.SizeOf<T>();
+            int byteSize = data.Length * elementSize;
+
+            // Convert typed array to byte array using pinned GCHandle
+            // This avoids copying data twice and is efficient for unmanaged types
+            byte[] byteData = new byte[byteSize];
+            GCHandle dataHandle = GCHandle.Alloc(data, GCHandleType.Pinned);
+            try
+            {
+                // Copy typed data directly from pinned array to byte array
+                IntPtr sourcePtr = dataHandle.AddrOfPinnedObject();
+                Marshal.Copy(sourcePtr, byteData, 0, byteSize);
+            }
+            finally
+            {
+                dataHandle.Free();
+            }
+
+            // Delegate to byte array WriteBuffer method
+            WriteBuffer(buffer, byteData, destOffset);
         }
 
         public void WriteTexture(ITexture texture, int mipLevel, int arraySlice, byte[] data)
@@ -1785,23 +1925,53 @@ namespace Andastra.Runtime.MonoGame.Backends
                 return;
             }
 
-            // Set multiple viewports on render command encoder
-            // Metal API only supports setting one viewport at a time via setViewport:
-            // Metal does not provide a batch setViewports:count: API, so each viewport must be set individually.
-            // The struct is created on the stack for each iteration, which is efficient and avoids heap allocation.
-            // If Metal adds a batch API in the future, this can be optimized to use native array marshalling.
-            for (int i = 0; i < viewports.Length; i++)
+            // Check if Metal supports batch viewport setting API (setViewports:count:)
+            // This API does not exist in current Metal versions but is checked for future compatibility
+            if (!_supportsBatchViewports.HasValue)
             {
-                MetalViewport metalViewport = new MetalViewport
+                _supportsBatchViewports = MetalNative.SupportsBatchViewports(_currentRenderCommandEncoder);
+            }
+
+            // Use optimized batch API if available, otherwise fall back to individual calls
+            if (_supportsBatchViewports.Value && viewports.Length > 1)
+            {
+                // Convert viewports to MetalViewport array for native marshalling
+                MetalViewport[] metalViewports = new MetalViewport[viewports.Length];
+                for (int i = 0; i < viewports.Length; i++)
                 {
-                    OriginX = viewports[i].X,
-                    OriginY = viewports[i].Y,
-                    Width = viewports[i].Width,
-                    Height = viewports[i].Height,
-                    Znear = viewports[i].MinDepth,
-                    Zfar = viewports[i].MaxDepth
-                };
-                MetalNative.SetViewport(_currentRenderCommandEncoder, metalViewport);
+                    metalViewports[i] = new MetalViewport
+                    {
+                        OriginX = viewports[i].X,
+                        OriginY = viewports[i].Y,
+                        Width = viewports[i].Width,
+                        Height = viewports[i].Height,
+                        Znear = viewports[i].MinDepth,
+                        Zfar = viewports[i].MaxDepth
+                    };
+                }
+
+                // Use native array marshalling for batch viewport setting
+                // This is more efficient than individual calls as it reduces P/Invoke overhead
+                MetalNative.SetViewports(_currentRenderCommandEncoder, metalViewports, (uint)metalViewports.Length);
+            }
+            else
+            {
+                // Fallback: Set viewports individually (current Metal API)
+                // Metal API only supports setting one viewport at a time via setViewport:
+                // The struct is created on the stack for each iteration, which is efficient and avoids heap allocation.
+                for (int i = 0; i < viewports.Length; i++)
+                {
+                    MetalViewport metalViewport = new MetalViewport
+                    {
+                        OriginX = viewports[i].X,
+                        OriginY = viewports[i].Y,
+                        Width = viewports[i].Width,
+                        Height = viewports[i].Height,
+                        Znear = viewports[i].MinDepth,
+                        Zfar = viewports[i].MaxDepth
+                    };
+                    MetalNative.SetViewport(_currentRenderCommandEncoder, metalViewport);
+                }
             }
         }
 
@@ -2252,6 +2422,72 @@ namespace Andastra.Runtime.MonoGame.Backends
         [DllImport("/System/Library/Frameworks/Metal.framework/Metal")]
         public static extern void SetViewport(IntPtr renderCommandEncoder, MetalViewport viewport);
 
+        /// <summary>
+        /// Checks if the Metal render command encoder supports batch viewport setting API (setViewports:count:).
+        /// This API does not exist in current Metal versions but is checked for future compatibility.
+        /// When Metal adds this API, this method can be enhanced to use Objective-C runtime (respondsToSelector:)
+        /// to dynamically detect API availability at runtime.
+        /// </summary>
+        public static bool SupportsBatchViewports(IntPtr renderCommandEncoder)
+        {
+            if (renderCommandEncoder == IntPtr.Zero)
+            {
+                return false;
+            }
+
+            // Metal does not currently provide a batch viewport API (setViewports:count:)
+            // This method returns false for now, but can be enhanced in the future to use:
+            // - respondsToSelector: to check if setViewports:count: method exists
+            // - class_getInstanceMethod to check method availability
+            // When the API becomes available, remove this return statement and implement runtime detection
+            return false;
+        }
+
+        /// <summary>
+        /// Sets multiple viewports using native array marshalling if the batch API is available.
+        /// This method uses setViewports:count: if available, which is more efficient than individual calls.
+        /// Based on hypothetical Metal API: MTLRenderCommandEncoder::setViewports(MTLViewport*, NSUInteger count)
+        /// Note: This API does not exist in current Metal versions but is implemented for future compatibility.
+        /// </summary>
+        public static void SetViewports(IntPtr renderCommandEncoder, MetalViewport[] viewports, uint count)
+        {
+            if (renderCommandEncoder == IntPtr.Zero || viewports == null || viewports.Length == 0 || count == 0)
+            {
+                return;
+            }
+
+            if (count > (uint)viewports.Length)
+            {
+                count = (uint)viewports.Length;
+            }
+
+            // Pin the array to prevent GC from moving it during native call
+            // Use GCHandle to pin the array for efficient native marshalling
+            GCHandle arrayHandle = GCHandle.Alloc(viewports, GCHandleType.Pinned);
+            try
+            {
+                IntPtr arrayPtr = arrayHandle.AddrOfPinnedObject();
+                
+                // Call setViewports:count: using Objective-C runtime
+                // Signature: - (void)setViewports:(const MTLViewport*)viewports count:(NSUInteger)count
+                IntPtr selector = sel_registerName("setViewports:count:");
+                if (selector != IntPtr.Zero)
+                {
+                    // Use objc_msgSend to call setViewports:count: with pinned array pointer
+                    // The array is marshalled as a pointer to the first element
+                    objc_msgSend_void_ptr_uint(renderCommandEncoder, selector, arrayPtr, count);
+                }
+            }
+            finally
+            {
+                // Always unpin the array to prevent memory leaks
+                if (arrayHandle.IsAllocated)
+                {
+                    arrayHandle.Free();
+                }
+            }
+        }
+
         // Objective-C runtime for calling Metal debug methods
         // Metal debug methods (pushDebugGroup:, popDebugGroup) are Objective-C instance methods
         // These require using objc_msgSend to call them from C#
@@ -2263,6 +2499,12 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         [DllImport(LibObjC, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr objc_msgSend_void_string(IntPtr receiver, IntPtr selector, IntPtr nsString);
+
+        [DllImport(LibObjC, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr objc_msgSend_selector(IntPtr receiver, IntPtr selector, IntPtr aSelector);
+
+        [DllImport(LibObjC, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr objc_msgSend_void_ptr_uint(IntPtr receiver, IntPtr selector, IntPtr viewports, uint count);
 
         [DllImport(LibObjC, EntryPoint = "sel_registerName")]
         private static extern IntPtr sel_registerName([MarshalAs(UnmanagedType.LPStr)] string str);
@@ -2336,118 +2578,6 @@ namespace Andastra.Runtime.MonoGame.Backends
             IntPtr selector = sel_registerName("popDebugGroup");
             // objc_msgSend returns a value even for void methods, we ignore it
             objc_msgSend_void(commandBufferOrEncoder, selector);
-        }
-
-        // Buffer copying via blit command encoder
-        // Based on Metal API: MTLBlitCommandEncoder::copyFromBuffer:sourceOffset:toBuffer:destinationOffset:size:
-        // Metal API Reference: https://developer.apple.com/documentation/metal/mtlblitcommandencoder/1400774-copyfrombuffer
-        // Method signature: - (void)copyFromBuffer:(id<MTLBuffer>)sourceBuffer sourceOffset:(NSUInteger)sourceOffset toBuffer:(id<MTLBuffer>)destinationBuffer destinationOffset:(NSUInteger)destinationOffset size:(NSUInteger)size;
-        // Note: On 64-bit systems, NSUInteger is 64-bit (ulong), not 32-bit (uint)
-        [DllImport(LibObjC, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void objc_msgSend_copyFromBuffer(IntPtr receiver, IntPtr selector, IntPtr sourceBuffer, ulong sourceOffset, IntPtr destinationBuffer, ulong destinationOffset, ulong size);
-
-        /// <summary>
-        /// Copies data from one buffer to another using a Metal blit command encoder.
-        /// Based on Metal API: MTLBlitCommandEncoder::copyFromBuffer:sourceOffset:toBuffer:destinationOffset:size:
-        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlblitcommandencoder/1400774-copyfrombuffer
-        /// </summary>
-        /// <param name="blitEncoder">Metal blit command encoder handle</param>
-        /// <param name="sourceBuffer">Source buffer handle</param>
-        /// <param name="sourceOffset">Source offset in bytes</param>
-        /// <param name="destinationBuffer">Destination buffer handle</param>
-        /// <param name="destinationOffset">Destination offset in bytes</param>
-        /// <param name="size">Size in bytes to copy</param>
-        public static void CopyFromBuffer(IntPtr blitEncoder, IntPtr sourceBuffer, ulong sourceOffset, IntPtr destinationBuffer, ulong destinationOffset, ulong size)
-        {
-            if (blitEncoder == IntPtr.Zero || sourceBuffer == IntPtr.Zero || destinationBuffer == IntPtr.Zero)
-            {
-                return;
-            }
-
-            try
-            {
-                // Register selector for copyFromBuffer:sourceOffset:toBuffer:destinationOffset:size:
-                IntPtr selector = sel_registerName("copyFromBuffer:sourceOffset:toBuffer:destinationOffset:size:");
-                
-                // Call the method
-                // Note: On 64-bit systems, NSUInteger is 64-bit (ulong)
-                objc_msgSend_copyFromBuffer(blitEncoder, selector, sourceBuffer, sourceOffset, destinationBuffer, destinationOffset, size);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[MetalNative] CopyFromBuffer: Exception: {ex.Message}");
-                Console.WriteLine($"[MetalNative] CopyFromBuffer: Stack trace: {ex.StackTrace}");
-            }
-        }
-
-        // Buffer contents access for CPU writes
-        // Based on Metal API: MTLBuffer::contents()
-        // Metal API Reference: https://developer.apple.com/documentation/metal/mtlbuffer/1515376-contents
-        // Method signature: - (void *)contents;
-        [DllImport(LibObjC, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr objc_msgSend_contents(IntPtr receiver, IntPtr selector);
-
-        /// <summary>
-        /// Gets a pointer to the contents of a Metal buffer for CPU access.
-        /// Only valid for buffers with shared or managed storage mode.
-        /// Based on Metal API: MTLBuffer::contents()
-        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlbuffer/1515376-contents
-        /// </summary>
-        /// <param name="buffer">Metal buffer handle</param>
-        /// <returns>Pointer to buffer contents, or IntPtr.Zero if invalid</returns>
-        public static IntPtr GetBufferContents(IntPtr buffer)
-        {
-            if (buffer == IntPtr.Zero)
-            {
-                return IntPtr.Zero;
-            }
-
-            try
-            {
-                IntPtr selector = sel_registerName("contents");
-                return objc_msgSend_contents(buffer, selector);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[MetalNative] GetBufferContents: Exception: {ex.Message}");
-                return IntPtr.Zero;
-            }
-        }
-
-        // Create buffer with explicit resource options (for staging buffers)
-        // Based on Metal API: MTLDevice::newBufferWithLength:options:
-        // Metal API Reference: https://developer.apple.com/documentation/metal/mtldevice/1433429-newbufferwithlength
-        // Method signature: - (id<MTLBuffer>)newBufferWithLength:(NSUInteger)length options:(MTLResourceOptions)options;
-        [DllImport(LibObjC, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr objc_msgSend_CreateBufferWithOptions(IntPtr receiver, IntPtr selector, ulong length, uint options);
-
-        /// <summary>
-        /// Creates a Metal buffer with explicit resource options.
-        /// Used for creating staging buffers with shared storage mode for CPU writes.
-        /// Based on Metal API: MTLDevice::newBufferWithLength:options:
-        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtldevice/1433429-newbufferwithlength
-        /// </summary>
-        /// <param name="device">Metal device handle</param>
-        /// <param name="length">Buffer length in bytes</param>
-        /// <param name="options">Resource options (e.g., StorageModeShared for CPU access)</param>
-        /// <returns>Metal buffer handle, or IntPtr.Zero if creation failed</returns>
-        public static IntPtr CreateBufferWithOptions(IntPtr device, ulong length, uint options)
-        {
-            if (device == IntPtr.Zero)
-            {
-                return IntPtr.Zero;
-            }
-
-            try
-            {
-                IntPtr selector = sel_registerName("newBufferWithLength:options:");
-                return objc_msgSend_CreateBufferWithOptions(device, selector, length, options);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[MetalNative] CreateBufferWithOptions: Exception: {ex.Message}");
-                return IntPtr.Zero;
-            }
         }
     }
 
