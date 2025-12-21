@@ -20,6 +20,8 @@ using Andastra.Runtime.Engines.Odyssey.Loading;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces.Components;
 using RuntimeObjectType = Andastra.Runtime.Core.Enums.ObjectType;
+using Andastra.Parsing.Formats.MDL;
+using Andastra.Parsing.Resource;
 
 namespace Andastra.Runtime.Games.Odyssey
 {
@@ -2430,10 +2432,21 @@ namespace Andastra.Runtime.Games.Odyssey
                     IRoomMeshData meshData;
                     if (!_roomMeshes.TryGetValue(room.ModelName, out meshData))
                     {
-                        // Try to load mesh using room renderer
-                        // TODO: STUB - Note: MDL loading would require access to resource system
-                        // TODO: STUB - For now, we'll skip rooms that haven't been pre-loaded
-                        continue;
+                        // Try to load mesh on-demand from Module
+                        // Based on swkotor2.exe: Room meshes are loaded from MDL files referenced in LYT file
+                        // Located via string references: "Rooms" @ 0x007bd490, "RoomName" @ 0x007bd484
+                        // Original implementation: Loads room MDL models from module archives when needed for rendering
+                        meshData = LoadRoomMeshOnDemand(room.ModelName, roomRenderer);
+                        if (meshData != null)
+                        {
+                            // Cache the loaded mesh
+                            _roomMeshes[room.ModelName] = meshData;
+                        }
+                        else
+                        {
+                            // Failed to load - skip this room
+                            continue;
+                        }
                     }
 
                     if (meshData == null || meshData.VertexBuffer == null || meshData.IndexBuffer == null)
@@ -2483,6 +2496,112 @@ namespace Andastra.Runtime.Games.Odyssey
                         );
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Loads a room mesh on-demand from the Module when it's needed for rendering.
+        /// </summary>
+        /// <param name="modelResRef">The model resource reference (room model name).</param>
+        /// <param name="roomRenderer">The room mesh renderer to use for creating mesh data.</param>
+        /// <returns>The loaded room mesh data, or null if loading failed.</returns>
+        /// <remarks>
+        /// Based on swkotor2.exe: Room meshes are loaded on-demand when needed for rendering.
+        /// Located via string references: "Rooms" @ 0x007bd490, "RoomName" @ 0x007bd484
+        /// Original implementation: Loads MDL/MDX files from module archives and creates renderable mesh data.
+        /// This implements the on-demand loading that was previously stubbed.
+        /// </remarks>
+        private IRoomMeshData LoadRoomMeshOnDemand(string modelResRef, IRoomMeshRenderer roomRenderer)
+        {
+            // Validate inputs
+            if (string.IsNullOrEmpty(modelResRef))
+            {
+                return null;
+            }
+
+            if (roomRenderer == null)
+            {
+                return null;
+            }
+
+            // Module is required to load MDL/MDX files
+            if (_module == null)
+            {
+                // Cannot load without Module - this is expected if Module wasn't set yet
+                return null;
+            }
+
+            try
+            {
+                // Load MDL file from Module
+                // Based on swkotor2.exe: Room models are loaded from module archives
+                // Original implementation: Uses Module.Resource() to load MDL files
+                ModuleResource mdlResource = _module.Model(modelResRef);
+                if (mdlResource == null)
+                {
+                    // MDL not found in module
+                    return null;
+                }
+
+                byte[] mdlData = mdlResource.Data();
+                if (mdlData == null || mdlData.Length == 0)
+                {
+                    // Empty or invalid MDL data
+                    return null;
+                }
+
+                // Load MDX file from Module (contains vertex data)
+                // Based on swkotor2.exe: MDX files are companion files to MDL files
+                // Original implementation: Loads MDX data to provide vertex geometry for MDL
+                byte[] mdxData = null;
+                ModuleResource mdxResource = _module.ModelExt(modelResRef);
+                if (mdxResource != null)
+                {
+                    mdxData = mdxResource.Data();
+                }
+
+                // Parse MDL file
+                // Based on swkotor2.exe: MDL files are binary format containing model structure
+                // Original implementation: Parses MDL binary format to extract mesh geometry
+                // MDLAuto.ReadMdl can parse both binary MDL (with MDX data) and ASCII MDL formats
+                Andastra.Parsing.Formats.MDLData.MDL mdl = MDLAuto.ReadMdl(mdlData, sourceExt: mdxData);
+                if (mdl == null)
+                {
+                    // Failed to parse MDL
+                    return null;
+                }
+
+                // Create mesh data using room renderer
+                // Based on swkotor2.exe: Room renderer extracts geometry from MDL and creates GPU buffers
+                // Original implementation: Converts MDL geometry to vertex/index buffers for rendering
+                IRoomMeshData meshData = roomRenderer.LoadRoomMesh(modelResRef, mdl);
+                if (meshData == null)
+                {
+                    // Failed to create mesh data
+                    return null;
+                }
+
+                // Validate mesh data has valid buffers
+                if (meshData.VertexBuffer == null || meshData.IndexBuffer == null)
+                {
+                    // Invalid mesh data
+                    return null;
+                }
+
+                if (meshData.IndexCount < 3)
+                {
+                    // Need at least one triangle
+                    return null;
+                }
+
+                return meshData;
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't throw - just return null to skip this room
+                // Based on swkotor2.exe: Room loading failures don't crash the game, rooms are just skipped
+                Console.WriteLine($"[OdysseyArea] Failed to load room mesh '{modelResRef}': {ex.Message}");
+                return null;
             }
         }
 
