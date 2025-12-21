@@ -163,6 +163,22 @@ namespace Andastra.Runtime.Core.Save
         /// </summary>
         public string PlayerName { get; set; }
 
+        /// <summary>
+        /// Faction reputation state.
+        /// </summary>
+        /// <remarks>
+        /// Faction Reputation Storage:
+        /// - Based on swkotor2.exe: REPUTE.fac file format
+        /// - Located via string reference: "REPUTE" @ (needs verification)
+        /// - FAC file format: GFF with "FAC " signature, contains FactionList and RepList
+        /// - FactionList: List of Faction structs (FactionName: string, FactionGlobal: uint)
+        /// - RepList: List of Reputation structs (FactionID1: uint, FactionID2: uint, FactionRep: uint)
+        /// - Original implementation: Faction relationships stored in GFF structures with FactionID, FactionRep fields
+        /// - Reference: vendor/xoreos/src/engines/nwn2/faction.cpp (loadFac method)
+        /// - Reference: vendor/PyKotor/wiki/Bioware-Aurora-Faction.md (Faction Format documentation)
+        /// - Reputation values: 0-100 range (0-10=hostile, 11-89=neutral, 90-100=friendly)
+        /// </remarks>
+        public FactionReputationState FactionReputation { get; set; }
 
         public SaveGameData()
         {
@@ -176,6 +192,7 @@ namespace Andastra.Runtime.Core.Save
             LiveContentStrings = new List<string>();
             PlotStates = new Dictionary<int, PlotState>();
             ModuleAreaMappings = new Dictionary<string, List<string>>();
+            FactionReputation = new FactionReputationState();
         }
     }
 
@@ -759,5 +776,57 @@ namespace Andastra.Runtime.Core.Save
         public string Message { get; set; }
         public int Type { get; set; }
         public byte Color { get; set; }
+    }
+
+    /// <summary>
+    /// Faction reputation state (REPUTE.fac).
+    /// </summary>
+    /// <remarks>
+    /// Faction Reputation Storage:
+    /// - Based on swkotor2.exe: REPUTE.fac file format
+    /// - FAC file format: GFF with "FAC " signature, contains FactionList and RepList
+    /// - FactionList: List of Faction structs (FactionName: string, FactionGlobal: uint)
+    /// - RepList: List of Reputation structs (FactionID1: uint, FactionID2: uint, FactionRep: uint)
+    /// - Original implementation: Faction relationships stored in GFF structures with FactionID, FactionRep fields
+    /// - Reference: vendor/xoreos/src/engines/nwn2/faction.cpp (loadFac method)
+    /// - Reference: vendor/PyKotor/wiki/Bioware-Aurora-Faction.md (Faction Format documentation)
+    /// - Reputation values: 0-100 range (0-10=hostile, 11-89=neutral, 90-100=friendly)
+    /// </remarks>
+    public class FactionReputationState
+    {
+        /// <summary>
+        /// List of faction entries (faction ID -> faction name).
+        /// </summary>
+        /// <remarks>
+        /// Faction names may be empty/unknown for some faction IDs.
+        /// Names are primarily used for display/debugging purposes.
+        /// </remarks>
+        public Dictionary<int, string> FactionNames { get; set; }
+
+        /// <summary>
+        /// Faction global flags (faction ID -> global flag).
+        /// </summary>
+        /// <remarks>
+        /// Global effect flag: 1 if all members of this faction immediately change reputation when reputation changes.
+        /// </remarks>
+        public Dictionary<int, bool> FactionGlobal { get; set; }
+
+        /// <summary>
+        /// Reputation entries (source faction ID -> target faction ID -> reputation value).
+        /// </summary>
+        /// <remarks>
+        /// Reputation values: 0-100 range
+        /// - 0-10: Hostile (will attack on sight)
+        /// - 11-89: Neutral (will not attack, but not friendly)
+        /// - 90-100: Friendly (allied, will assist in combat)
+        /// </remarks>
+        public Dictionary<int, Dictionary<int, int>> Reputations { get; set; }
+
+        public FactionReputationState()
+        {
+            FactionNames = new Dictionary<int, string>();
+            FactionGlobal = new Dictionary<int, bool>();
+            Reputations = new Dictionary<int, Dictionary<int, int>>();
+        }
     }
 }
