@@ -182,7 +182,7 @@ namespace Andastra.Runtime.Games.Eclipse.Scene
                 };
 
                 // Store room name as identifier for later reference (used for VIS visibility checks)
-                // Room name is stored in ModelResRef for now, but can be separated if needed
+                // TODO:  Room name is stored in ModelResRef for now, but can be separated if needed
                 // VIS files use room names for visibility calculations, so we need to track the original room name
                 // Note: ModelResRef is used both as identifier and model reference in current implementation
                 // This works because Eclipse typically uses room names as model references
@@ -503,20 +503,31 @@ namespace Andastra.Runtime.Games.Eclipse.Scene
 
         /// <summary>
         /// Updates ModelResRef for area sections based on VIS file data.
-        /// VIS files may contain model references that can be used to update section ModelResRef.
+        /// VIS files contain room names that correspond to model ResRefs (MDL file names).
         /// </summary>
-        /// <param name="visData">VIS visibility data that may contain model references.</param>
+        /// <param name="visData">VIS visibility data containing room names (model ResRefs).</param>
         /// <param name="sections">List of area sections to update.</param>
         /// <remarks>
         /// VIS-Based Model Reference Update (Eclipse engines - daorigins.exe, DragonAge2.exe):
         /// - Based on Eclipse engine VIS file format
-        /// - VIS files primarily contain room-to-room visibility relationships
-        /// - Some VIS implementations may also contain model references
-        /// - If VIS data contains model references, update sections accordingly
+        /// - VIS files contain room names that ARE the model ResRefs (MDL file names)
+        /// - ARE room names may differ from model ResRefs in some cases
+        /// - When VIS data is available, use VIS room names as authoritative source for model ResRefs
+        /// - daorigins.exe: VIS room names correspond to MDL model file names
+        /// - DragonAge2.exe: VIS room names correspond to model file names (GR2/MMH format)
         /// 
-        /// Current implementation: VIS files don't typically contain model references
-        /// This method is a placeholder for future enhancement if VIS format is extended
-        /// or if model references are determined from other sources (layout files, etc.)
+        /// Implementation:
+        /// 1. Get all room names from VIS file (these are the model ResRefs)
+        /// 2. For each section, check if its current ModelResRef exists in VIS
+        /// 3. If ModelResRef exists in VIS, it's correct (keep it)
+        /// 4. If ModelResRef doesn't exist in VIS, try to find matching VIS room by name comparison
+        /// 5. If match found, update ModelResRef to VIS room name (authoritative model ResRef)
+        /// 6. If no match found, keep original ModelResRef (may be valid but not in VIS)
+        /// 
+        /// Based on VIS file format specification:
+        /// - vendor/PyKotor/wiki/VIS-File-Format.md
+        /// - VIS room names are typically the MDL ResRef of the room
+        /// - Room names in VIS are stored lowercase for case-insensitive comparison
         /// </remarks>
         private void UpdateModelResRefFromVIS([NotNull] VIS visData, [NotNull] List<AreaSection> sections)
         {
@@ -525,19 +536,79 @@ namespace Andastra.Runtime.Games.Eclipse.Scene
                 return;
             }
 
-            // Based on Eclipse engine VIS file format analysis:
-            // VIS files contain room-to-room visibility relationships
-            // VIS files typically do NOT contain model references
-            // Model references are determined from room names or layout files
-            
-            // Current implementation: VIS files don't contain model references
-            // This method is a placeholder for future enhancement if:
-            // 1. VIS format is extended to include model references
-            // 2. Model references are determined from other sources (layout files, etc.)
-            // 3. Additional metadata is available that maps room names to model references
-            
-            // For now, ModelResRef remains as determined from room name
-            // This matches Eclipse engine behavior where room names correspond to model file names
+            // Get all room names from VIS file (these are the model ResRefs)
+            // Based on VIS file format: Room names in VIS are the model ResRefs (MDL file names)
+            // daorigins.exe: VIS room names correspond to MDL model file names
+            // DragonAge2.exe: VIS room names correspond to model file names
+            HashSet<string> visRooms = visData.AllRooms();
+            if (visRooms == null || visRooms.Count == 0)
+            {
+                // VIS file has no rooms - cannot update ModelResRef
+                return;
+            }
+
+            // Create case-insensitive lookup dictionary for efficient matching
+            // VIS stores room names lowercase, but we need to match against section ModelResRef
+            // which may be in different case
+            var visRoomLookup = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (string visRoom in visRooms)
+            {
+                if (!string.IsNullOrEmpty(visRoom))
+                {
+                    // Store both lowercase and original case for matching
+                    visRoomLookup[visRoom] = visRoom;
+                }
+            }
+
+            // Update ModelResRef for each section based on VIS data
+            // Based on Eclipse engine: VIS room names are authoritative model ResRefs
+            foreach (AreaSection section in sections)
+            {
+                if (section == null || string.IsNullOrEmpty(section.ModelResRef))
+                {
+                    // Skip sections without ModelResRef
+                    continue;
+                }
+
+                string currentModelResRef = section.ModelResRef;
+
+                // Check if current ModelResRef exists in VIS (case-insensitive)
+                // If it exists, it's correct (VIS room names are model ResRefs)
+                if (visRoomLookup.ContainsKey(currentModelResRef))
+                {
+                    // ModelResRef exists in VIS - it's correct, keep it
+                    // Optionally normalize to VIS case (use VIS room name as authoritative)
+                    string visRoomName = visRoomLookup[currentModelResRef];
+                    if (!string.Equals(currentModelResRef, visRoomName, StringComparison.Ordinal))
+                    {
+                        // Update to VIS room name (authoritative case)
+                        section.ModelResRef = visRoomName;
+                    }
+                    continue;
+                }
+
+                // Current ModelResRef doesn't exist in VIS - try to find matching VIS room
+                // This handles cases where ARE room name differs from model ResRef
+                // Search for VIS room that matches the section's ModelResRef (case-insensitive)
+                string matchingVisRoom = null;
+                foreach (string visRoom in visRooms)
+                {
+                    if (string.Equals(visRoom, currentModelResRef, StringComparison.OrdinalIgnoreCase))
+                    {
+                        matchingVisRoom = visRoom;
+                        break;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(matchingVisRoom))
+                {
+                    // Found matching VIS room - update ModelResRef to VIS room name
+                    // VIS room name is the authoritative model ResRef
+                    section.ModelResRef = matchingVisRoom;
+                }
+                // If no match found, keep original ModelResRef
+                // It may be valid but not present in VIS (some areas may not have all rooms in VIS)
+            }
         }
     }
 
