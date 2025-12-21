@@ -872,10 +872,17 @@ namespace Andastra.Runtime.MonoGame.Backends
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkCmdTraceRaysKHRDelegate(IntPtr commandBuffer, ref VkStridedDeviceAddressRegionKHR pRaygenShaderBindingTable, ref VkStridedDeviceAddressRegionKHR pMissShaderBindingTable, ref VkStridedDeviceAddressRegionKHR pHitShaderBindingTable, ref VkStridedDeviceAddressRegionKHR pCallableShaderBindingTable, uint width, uint height, uint depth);
 
+        // VK_KHR_acceleration_structure extension function delegates
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkDestroyAccelerationStructureKHRDelegate(IntPtr device, IntPtr accelerationStructure, IntPtr pAllocator);
+
         // VK_KHR_ray_tracing_pipeline extension function pointers (static for now - would be loaded via vkGetDeviceProcAddr in real implementation)
         private static vkCreateRayTracingPipelinesKHRDelegate vkCreateRayTracingPipelinesKHR;
         private static vkGetRayTracingShaderGroupHandlesKHRDelegate vkGetRayTracingShaderGroupHandlesKHR;
         private static vkCmdTraceRaysKHRDelegate vkCmdTraceRaysKHR;
+
+        // VK_KHR_acceleration_structure extension function pointers (loaded via vkGetDeviceProcAddr when extension is available)
+        private static vkDestroyAccelerationStructureKHRDelegate vkDestroyAccelerationStructureKHR;
 
         // Helper methods for Vulkan interop
         private static void InitializeVulkanFunctions(IntPtr device)
