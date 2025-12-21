@@ -1912,14 +1912,27 @@ namespace Andastra.Runtime.Games.Aurora
                 // Feats
                 // Based on nwmain.exe: CNWSCreatureStats::LoadCreatureStats loads FeatList from UTC
                 // Aurora uses two feat lists: FeatList (normal) and BonusFeatList (bonus)
-                // TODO: STUB - For now, we put all feats in FeatList (normal feats)
-                // Full implementation would distinguish between normal and bonus feats based on feat data
+                //
+                // Implementation note: The UTC GFF format only contains a single "FeatList" field that contains
+                // all feats for the creature template. The UTC format does not distinguish between normal and
+                // bonus feats at the template level.
+                //
+                // In the original engine (nwmain.exe), bonus feats are determined at runtime based on:
+                // - Class bonus feats (from classes.2da BonusFeatsTable column)
+                // - Race bonus feats (from racialtypes.2da)
+                // - Level-based bonus feats
+                // - Item properties that grant bonus feats
+                //
+                // Template-loaded feats (from UTC FeatList) are all treated as normal feats, as they represent
+                // feats explicitly assigned to the creature template. Bonus feats should be populated separately
+                // during creature initialization based on the creature's classes, race, and level.
                 creatureComponent.FeatList.Clear();
                 foreach (int featId in utc.Feats)
                 {
                     creatureComponent.FeatList.Add(featId);
                 }
-                // BonusFeatList remains empty (would be populated from other sources if needed)
+                // BonusFeatList is populated at runtime based on class/race/level bonuses, not from UTC template
+                creatureComponent.BonusFeatList.Clear();
 
                 // Equipment
                 // Based on nwmain.exe: CNWSCreature::LoadCreature loads Equip_ItemList from UTC
