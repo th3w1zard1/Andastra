@@ -7,6 +7,7 @@ using Andastra.Parsing;
 using Andastra.Parsing.Common.Script;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Resource.Generics.UTI;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Formats.TwoDA;
@@ -3189,7 +3190,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         {
             // SetAreaTransitionBMP - Sets area transition bitmap for player
             // This should only be called in area transition scripts, run by the person clicking the transition via AssignCommand
-            
+
             if (args.Count < 1)
             {
                 Console.WriteLine("[Kotor1] SetAreaTransitionBMP: Invalid argument count");
@@ -5740,9 +5741,9 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         /// Based on swkotor.exe: StartNewModule implementation
         /// Located via string references: "Module" @ 0x007c1a70, "ModuleName" @ 0x007bde2c
         /// Original implementation: Shuts down current module and loads new one, positions party at waypoint
-        /// 
+        ///
         /// Function ID: 509 (NWScript routine ID, 0x1fd)
-        /// 
+        ///
         /// Ghidra Reverse Engineering Findings:
         /// - swkotor.exe: Function ID 509 referenced at 0x0041c54a and 0x0041c554 (function registration/dispatch setup)
         /// - swkotor2.exe: Function ID 509 referenced at 0x0041bf2a and 0x0041bf34 (identical pattern)
@@ -5750,7 +5751,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         /// - Module transition handlers: FUN_00501fa0 @ 0x00501fa0 (swkotor2.exe) handles module loading and transition scripts
         /// - Module state management: "ModuleLoaded" @ 0x00745078, "ModuleRunning" @ 0x00745060 (swkotor.exe)
         /// - Module save system: FUN_004b2380 @ 0x004b2380 (swkotor.exe), FUN_004ea910 @ 0x004ea910 (swkotor2.exe) handle module name in save games
-        /// 
+        ///
         /// Original Engine Behavior (swkotor.exe/swkotor2.exe):
         /// - Validates module name parameter (returns immediately if empty)
         /// - Plays movie files (sMovie1-sMovie6) sequentially if provided (before module transition)
@@ -5758,7 +5759,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         /// - Positions party at specified waypoint (or default entry waypoint if not specified)
         /// - Returns immediately (function is synchronous, but transition happens asynchronously)
         /// - Script execution continues while module transition is in progress
-        /// 
+        ///
         /// Module Transition Sequence (Original Engine):
         /// 1. Validate module name and waypoint tag
         /// 2. Play movie files sequentially (if provided) - BIK format, blocking playback
@@ -5774,20 +5775,20 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         /// 12. Fire OnEnter script for party members (ScriptOnEnter field in ARE)
         /// 13. Fire OnSpawn script on newly spawned creatures (ScriptSpawn field in UTC template)
         /// 14. Hide loading screen
-        /// 
+        ///
         /// Movie Playback (Original Engine):
         /// - Movies play sequentially before module transition begins
         /// - Movie files are BIK format (Bink video) - requires BINKW32.DLL
         /// - Playback is blocking (waits for each movie to finish before playing next)
         /// - If movie playback fails, continues with module transition
         /// - Movie playback would be handled by Bink video system (not yet implemented)
-        /// 
+        ///
         /// Waypoint Positioning:
         /// - If waypoint tag is provided, positions party at that waypoint
         /// - If waypoint tag is empty, uses default entry waypoint from module IFO
         /// - Party members positioned in line perpendicular to waypoint facing (1.0 unit spacing)
         /// - Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 positions all party members at waypoint with spacing
-        /// 
+        ///
         /// Cross-Engine Equivalents:
         /// - swkotor2.exe: Same function ID (509), identical implementation pattern
         ///   - Module transition: FUN_00501fa0 @ 0x00501fa0 handles module loading and "Mod_Transition" script execution
@@ -5799,7 +5800,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         ///   - Uses UnrealScript LoadModuleMessage and package loading system
         /// -  (Infinity): Different architecture, level-based instead of module-based
         ///   - Uses level streaming system instead of discrete module transitions
-        /// 
+        ///
         /// Implementation Notes:
         /// - This implementation uses ModuleTransitionSystem.TransitionToModule() which handles the full transition sequence
         /// - Movie playback is not yet implemented (requires Bink video system integration)
@@ -5857,14 +5858,14 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
                         // Pass movie parameters to TransitionToModule (null if no movies provided)
                         string[] moviesToPlay = movieCount > 0 ? movies : null;
                         System.Threading.Tasks.Task transitionTask = moduleTransitionSystem.TransitionToModule(moduleName, waypointTag, moviesToPlay);
-                        
+
                         // Note: We don't await here because:
                         // 1. NWScript functions are synchronous
                         // 2. Original engine returns immediately from StartNewModule
                         // 3. Module transition happens asynchronously in the game loop
                         // 4. Script execution continues while transition is in progress
                         // The Task will be handled by the game loop's async context
-                        
+
                         // Log transition initiation for debugging
                         System.Console.WriteLine("[Kotor1] StartNewModule: Initiating transition to module '{0}' at waypoint '{1}'", moduleName, waypointTag ?? "(default)");
                     }
@@ -6228,7 +6229,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
                     // Similar pattern to ActionDestroyObject fade-out, but in reverse (fade-in instead of fade-out)
                     // The AppearAnimationFadeSystem will update Opacity property over time
                     entityImpl.SetData("AppearAnimation", true);
-                    
+
                     // Get current simulation time for fade start time
                     float startTime = 0.0f;
                     if (ctx.World != null && ctx.World.TimeManager != null)
@@ -6236,11 +6237,11 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
                         startTime = ctx.World.TimeManager.SimulationTime;
                     }
                     entityImpl.SetData("AppearAnimationStartTime", startTime);
-                    
+
                     // Fade duration: 0.75 seconds (matches ActionDestroyObject fade-out duration and original engine timing)
                     const float fadeDuration = 0.75f;
                     entityImpl.SetData("AppearAnimationDuration", fadeDuration);
-                    
+
                     // Set initial opacity to 0.0 (fully transparent) - AppearAnimationFadeSystem will fade in to 1.0
                     Core.Interfaces.Components.IRenderableComponent renderable = entity.GetComponent<Core.Interfaces.Components.IRenderableComponent>();
                     if (renderable != null)

@@ -44,7 +44,7 @@ namespace KotorDiff.Tests.Integration
                 var logLines = new System.Collections.Generic.List<string>();
                 Action<string> logFunc = msg => { }; // Silent logging for performance
 
-                bool? result = Resolution.InstallationDiffWithResolution.DiffInstallationsWithResolution(
+                bool? result = resolution::KotorDiff.Resolution.InstallationDiffWithResolution.DiffInstallationsWithResolution(
                     new System.Collections.Generic.List<object> { install1, install2 },
                     filters: null,
                     logFunc: logFunc,
@@ -120,7 +120,7 @@ namespace KotorDiff.Tests.Integration
                 var logLines = new System.Collections.Generic.List<string>();
                 Action<string> logFunc = msg => { }; // Silent logging for performance
 
-                bool? result = Resolution.InstallationDiffWithResolution.DiffInstallationsWithResolution(
+                bool? result = resolution::KotorDiff.Resolution.InstallationDiffWithResolution.DiffInstallationsWithResolution(
                     new System.Collections.Generic.List<object> { install1, install2 },
                     filters: null,
                     logFunc: logFunc,

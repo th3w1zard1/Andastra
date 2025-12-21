@@ -1144,7 +1144,7 @@ namespace HolocronToolset.Data
             if (vertices.Count == 0)
             {
                 // Empty walkmesh - return blank image matching kit.py minimum size
-                // For now, return null as placeholder - actual image rendering will be implemented
+                // TODO: STUB - For now, return null as placeholder - actual image rendering will be implemented
                 // when Avalonia rendering infrastructure is available
                 return null;
             }

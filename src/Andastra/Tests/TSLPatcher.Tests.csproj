@@ -87,6 +87,7 @@
   <!-- This test project targets Parsing/TSLPatcher. Runtime/graphics tests live elsewhere. -->
   <ItemGroup>
     <Compile Remove="Runtime\**\*.cs" />
+    <Compile Remove="Parsing\**\*.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -173,7 +173,7 @@ namespace HolocronToolset.Editors
             if (mdlData == null || mdxData == null)
             {
                 // Matching PyKotor implementation: QMessageBox.critical(...)
-                // For now, we'll just return - in full implementation would show error dialog
+                // TODO: STUB - For now, we'll just return - in full implementation would show error dialog
                 return;
             }
 

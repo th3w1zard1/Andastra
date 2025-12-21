@@ -16,6 +16,7 @@ using Andastra.Runtime.Games.Odyssey.Input;
 using Andastra.Runtime.Engines.Odyssey.Combat;
 using Andastra.Runtime.Engines.Odyssey.Systems;
 using Andastra.Runtime.Engines.Odyssey.Dialogue;
+using Systems = Andastra.Runtime.Games.Odyssey.Systems;
 using Andastra.Runtime.Engines.Odyssey.Loading;
 using Andastra.Runtime.Engines.Odyssey.EngineApi;
 using Andastra.Runtime.Engines.Odyssey.Components;
@@ -222,7 +223,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             // Located via string references: "2DAName" @ 0x007c3980, " 2DA file" @ 0x007c4674
             // Original implementation: GameDataManager loads and caches 2DA tables from installation
             _gameDataManager = new GameDataManager(_installation);
-            var gameDataProvider = new Data.OdysseyGameDataProvider(_gameDataManager);
+            var gameDataProvider = new Andastra.Runtime.Games.Odyssey.Data.OdysseyGameDataProvider(_gameDataManager);
             _world.GameDataProvider = gameDataProvider;
 
             // Initialize game systems
@@ -840,7 +841,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             int genderValue = characterData.Gender == Gender.Male ? 0 : 1;
 
             // Get class data for HP/FP calculations
-            Data.ClassData classData = _gameDataManager?.GetClass(classId);
+            GameDataManager.ClassData classData = _gameDataManager?.GetClass(classId);
             int hitDie = classData?.HitDie ?? 8; // Default to d8 if class data unavailable
             bool isForceUser = classData?.ForceUser ?? false;
 

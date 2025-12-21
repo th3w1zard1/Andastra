@@ -212,7 +212,7 @@ namespace Andastra.Runtime.Games.Odyssey.Save
                 byte[] erfData = await File.ReadAllBytesAsync(saveFilePath, ct);
                 ERF erf = DeserializeERF(erfData);
 
-                var saveData = new SaveGameData();
+                var saveData = new Andastra.Runtime.Core.Save.SaveGameData();
 
                 // 1. Load metadata (savenfo.res)
                 byte[] nfoData = erf.Get("savenfo", ResourceType.GFF);

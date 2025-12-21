@@ -58,6 +58,7 @@ namespace Andastra.Runtime.Games.Odyssey
         private IWorld _world;
         private bool _isValid = true;
         private uint _areaId;
+        private string _displayName;
 
         /// <summary>
         /// Creates a new Odyssey entity.
@@ -150,6 +151,19 @@ namespace Andastra.Runtime.Games.Odyssey
         {
             get => _areaId;
             set => _areaId = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the display name for this entity.
+        /// </summary>
+        /// <remarks>
+        /// Display name is used for UI display and can be set from template data or GIT instances.
+        /// Based on swkotor2.exe: Entity names are stored in templates and can be overridden by GIT instances.
+        /// </remarks>
+        public string DisplayName
+        {
+            get => _displayName;
+            set => _displayName = value;
         }
 
         /// <summary>

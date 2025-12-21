@@ -60,8 +60,23 @@ namespace HolocronToolset.Widgets
 
         private void SetupUI()
         {
-            // Find controls from XAML
-            _layout = this.FindControl<StackPanel>("layout");
+            // If already set up programmatically, skip
+            if (_layout != null)
+            {
+                return;
+            }
+
+            // Find controls from XAML (may fail if not in visual tree)
+            try
+            {
+                _layout = this.FindControl<StackPanel>("layout");
+            }
+            catch (InvalidOperationException)
+            {
+                // Not in a visual tree (e.g., in unit tests) - will create programmatically
+                _layout = null;
+            }
+
             if (_layout == null)
             {
                 _layout = new StackPanel

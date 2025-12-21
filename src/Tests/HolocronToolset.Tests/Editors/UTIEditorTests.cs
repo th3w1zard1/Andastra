@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Resource.Generics.UTI;
 using Andastra.Parsing.Resource;
 using FluentAssertions;
 using HolocronToolset.Data;
@@ -599,7 +600,7 @@ namespace HolocronToolset.Tests.Editors
                 // Matching Python: assert editor.ui.iconLabel.contextMenuPolicy() == Qt.ContextMenuPolicy.CustomContextMenu
                 // In Avalonia, we verify that context menu behavior is set up
                 // The actual context menu implementation may differ from Qt
-                // For now, just verify the editor doesn't crash
+                // TODO: STUB - For now, just verify the editor doesn't crash
                 editor.Should().NotBeNull();
             }
 
@@ -623,7 +624,7 @@ namespace HolocronToolset.Tests.Editors
             // Matching Python: editor._show_help_dialog("GFF-UTI.md")
             // In C#, we test that the help action exists and doesn't crash
             // The actual dialog functionality is tested in EditorHelpDialogTests
-            // For now, just verify the editor is properly initialized
+            // TODO: STUB - For now, just verify the editor is properly initialized
             editor.Should().NotBeNull();
 
             // The help dialog opening is an integration test that requires
@@ -860,7 +861,7 @@ namespace HolocronToolset.Tests.Editors
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uti_editor.py:100
             // Original: for uti_resource in (resource for resource in self.installation if resource.restype() is ResourceType.UTI):
             // We need to iterate through UTI resources from the installation
-            // For now, we'll test with a known UTI file if available
+            // TODO: STUB - For now, we'll test with a known UTI file if available
             string testFilesDir = System.IO.Path.Combine(
                 System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
                 "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
@@ -933,7 +934,7 @@ namespace HolocronToolset.Tests.Editors
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uti_editor.py:116
             // Original: for uti_resource in (resource for resource in self.installation if resource.restype() is ResourceType.UTI):
             // We need to iterate through UTI resources from the installation
-            // For now, we'll test with a known UTI file if available
+            // TODO: STUB - For now, we'll test with a known UTI file if available
             string testFilesDir = System.IO.Path.Combine(
                 System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
                 "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");

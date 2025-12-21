@@ -73,7 +73,7 @@ namespace HolocronToolset.Tests.Editors
             var editor = new TXTEditor(null, _installation);
 
             // Try to find a txt file in test_files (if available)
-            // For now, create test data directly
+            // TODO: STUB - For now, create test data directly
             string testText = "Hello World";
             byte[] testData = Encoding.UTF8.GetBytes(testText);
 

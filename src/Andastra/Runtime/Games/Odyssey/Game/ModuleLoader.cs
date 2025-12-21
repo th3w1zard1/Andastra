@@ -31,6 +31,14 @@ using OdyObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 using InstResourceResult = Andastra.Parsing.Installation.ResourceResult;
 using Andastra.Runtime.Engines.Odyssey.Components;
 using Andastra.Runtime.Engines.Odyssey.Loading;
+using Systems = Andastra.Runtime.Games.Odyssey.Systems;
+using OdysseyNavigationMeshFactory = Andastra.Runtime.Engines.Odyssey.Loading.NavigationMeshFactory;
+using SoundComponent = Andastra.Runtime.Games.Odyssey.Components.SoundComponent;
+using OdysseyDoorComponent = Andastra.Runtime.Games.Odyssey.Components.OdysseyDoorComponent;
+using OdysseyWaypointComponent = Andastra.Runtime.Games.Odyssey.Components.OdysseyWaypointComponent;
+using PlaceableComponent = Andastra.Runtime.Games.Odyssey.Components.PlaceableComponent;
+using Andastra.Parsing.Resource.Generics.UTM;
+using Andastra.Parsing.Resource.Generics.UTC;
 
 namespace Andastra.Runtime.Engines.Odyssey.Game
 {
@@ -408,7 +416,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         /// - Module scripts are stored in RuntimeModule and copied to module entity's script hooks component
         /// - Module entity persists for the lifetime of the module (until module is unloaded)
         /// - Common across all engines: Odyssey, Aurora, Eclipse, Infinity all use fixed module object ID
-        /// 
+        ///
         /// Entity Properties:
         /// - ObjectId: Fixed at 0x7F000002 (World.ModuleObjectId)
         /// - ObjectType: Invalid (no Module ObjectType in enum, modules are special system entities)
@@ -455,7 +463,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             // Module entities need IScriptHooksComponent for script execution
             // Based on swkotor2.exe: Module scripts require script hooks component
             // ComponentInitializer.InitializeComponents adds IScriptHooksComponent to all entities
-            Systems.ComponentInitializer.InitializeComponents(entity);
+            Andastra.Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(entity);
 
             // Ensure IScriptHooksComponent is present (ComponentInitializer should add it, but verify for safety)
             if (!entity.HasComponent<IScriptHooksComponent>())
@@ -660,7 +668,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
 
             // Use NavigationMeshFactory to create proper navigation mesh from WOK/BWM files
             // This properly handles BWM adjacency, surface materials, and AABB tree construction
-            var navMeshFactory = new NavigationMeshFactory();
+            var navMeshFactory = new OdysseyNavigationMeshFactory();
             INavigationMesh combinedNavMesh = navMeshFactory.CreateFromModule(parsingModule, roomInfos);
 
             if (combinedNavMesh != null && combinedNavMesh is NavigationMesh navMesh)
@@ -929,22 +937,22 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         private void SpawnWaypoint(GITWaypoint waypoint, RuntimeArea area)
         {
             IEntity entity = _world.CreateEntity(OdyObjectType.Waypoint, ToSysVector3(waypoint.Position), waypoint.Bearing);
-            
+
             // Initialize waypoint components
-            Systems.ComponentInitializer.InitializeComponents(entity);
-            
+            Andastra.Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(entity);
+
             // Set tag from GIT (GIT tag takes precedence over template tag)
             if (!string.IsNullOrEmpty(waypoint.Tag))
             {
                 entity.Tag = waypoint.Tag;
             }
-            
+
             // Set waypoint name from GIT (LocalizedName)
-            if (waypoint.Name != null && !waypoint.Name.IsInvalid)
+            if (waypoint.Name != null && waypoint.Name.StringRef != -1)
             {
                 entity.DisplayName = waypoint.Name.ToString();
             }
-            
+
             // Load waypoint template (UTW) if ResRef is provided
             // Based on swkotor2.exe: FUN_004e04a0 loads UTW template from TemplateResRef
             // Original implementation: Loads UTW template, applies properties to waypoint entity
@@ -952,16 +960,16 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             {
                 LoadWaypointTemplate(entity, waypoint.ResRef.ToString());
             }
-            
+
             // Set waypoint component properties from GIT (GIT values override template values)
             // Based on swkotor2.exe: GIT waypoint properties override UTW template properties
             // Original implementation: GIT MapNote, MapNoteEnabled, HasMapNote override template values
-            Components.OdysseyWaypointComponent waypointComponent = entity.GetComponent<Components.OdysseyWaypointComponent>();
+            OdysseyWaypointComponent waypointComponent = entity.GetComponent<OdysseyWaypointComponent>();
             if (waypointComponent != null)
             {
                 // Set map note properties from GIT
                 waypointComponent.HasMapNote = waypoint.HasMapNote;
-                if (waypoint.HasMapNote && waypoint.MapNote != null && !waypoint.MapNote.IsInvalid)
+                if (waypoint.HasMapNote && waypoint.MapNote != null && waypoint.MapNote.StringRef != -1)
                 {
                     waypointComponent.MapNote = waypoint.MapNote.ToString();
                     waypointComponent.MapNoteEnabled = waypoint.MapNoteEnabled;
@@ -972,7 +980,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                     waypointComponent.MapNoteEnabled = false;
                 }
             }
-            
+
             area.AddEntity(entity);
         }
 
@@ -982,7 +990,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             entity.Tag = door.Tag;
 
             // Initialize components
-            Systems.ComponentInitializer.InitializeComponents(entity);
+            Andastra.Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(entity);
 
             // Load door template
             if (!string.IsNullOrEmpty(door.ResRef?.ToString()))
@@ -1006,7 +1014,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             IEntity entity = _world.CreateEntity(OdyObjectType.Placeable, ToSysVector3(placeable.Position), placeable.Bearing);
 
             // Initialize components
-            Systems.ComponentInitializer.InitializeComponents(entity);
+            Andastra.Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(entity);
 
             // Load placeable template
             if (!string.IsNullOrEmpty(placeable.ResRef?.ToString()))
@@ -1022,7 +1030,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             IEntity entity = _world.CreateEntity(OdyObjectType.Creature, ToSysVector3(creature.Position), creature.Bearing);
 
             // Initialize components
-            Systems.ComponentInitializer.InitializeComponents(entity);
+            Andastra.Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(entity);
 
             // Load creature template
             if (!string.IsNullOrEmpty(creature.ResRef?.ToString()))
@@ -1494,32 +1502,32 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                     }
 
                     // Set entity display name from UTW (only if not already set from GIT)
-                    if (string.IsNullOrEmpty(entity.DisplayName) && utw.Name != null && !utw.Name.IsInvalid)
+                    if (string.IsNullOrEmpty(entity.DisplayName) && utw.Name != null && utw.Name.StringRef != -1)
                     {
                         entity.DisplayName = utw.Name.ToString();
                     }
 
                     // Apply UTW properties to waypoint component
-                    Components.OdysseyWaypointComponent waypointComponent = entity.GetComponent<Components.OdysseyWaypointComponent>();
+                    OdysseyWaypointComponent waypointComponent = entity.GetComponent<OdysseyWaypointComponent>();
                     if (waypointComponent != null)
                     {
                         waypointComponent.TemplateResRef = utwResRef;
-                        
+
                         // Set map note properties from UTW (only if not already set from GIT)
                         // Based on swkotor2.exe: GIT MapNote overrides UTW MapNote
                         if (!waypointComponent.HasMapNote)
                         {
                             waypointComponent.HasMapNote = utw.HasMapNote;
-                            if (utw.HasMapNote && utw.MapNote != null && !utw.MapNote.IsInvalid)
+                            if (utw.HasMapNote && utw.MapNote != null && utw.MapNote.StringRef != -1)
                             {
                                 waypointComponent.MapNote = utw.MapNote.ToString();
                                 waypointComponent.MapNoteEnabled = utw.MapNoteEnabled;
                             }
                         }
-                        
+
                         // Set Odyssey-specific properties from UTW
                         waypointComponent.Appearance = utw.AppearanceId;
-                        if (utw.Description != null && !utw.Description.IsInvalid)
+                        if (utw.Description != null && utw.Description.StringRef != -1)
                         {
                             // Description is a LocalizedString, store as string reference (int)
                             waypointComponent.Description = utw.Description.StringRef;
@@ -1642,10 +1650,10 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 Console.WriteLine("[ModuleLoader] WARNING: No GIT data available, creating placeholder waypoint");
                 IEntity playerSpawn = _world.CreateEntity(OdyObjectType.Waypoint, SysVector3.Zero, 0);
                 playerSpawn.Tag = "wp_player_spawn";
-                
+
                 // Initialize waypoint component
                 Systems.ComponentInitializer.InitializeComponents(playerSpawn);
-                
+
                 runtimeArea.AddEntity(playerSpawn);
             }
 

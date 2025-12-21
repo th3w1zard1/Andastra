@@ -41,7 +41,7 @@ namespace KotorCLI.Commands
         private static int Execute(string[] targetNames, bool clean, bool noConvert, bool noCompile, ILogger logger)
         {
             // Pack command orchestrates: convert -> compile -> pack
-            // For now, this is a placeholder that calls the individual commands
+            // TODO: STUB - For now, this is a placeholder that calls the individual commands
             
             logger.Info("Pack command not yet fully implemented");
             logger.Info("Pack command should:");

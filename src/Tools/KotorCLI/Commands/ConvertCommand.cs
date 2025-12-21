@@ -144,7 +144,7 @@ namespace KotorCLI.Commands
                             }
 
                             // Note: JSON GFF reading not yet implemented in Andastra.Parsing
-                            // For now, we'll log a warning and skip
+                            // TODO: STUB - For now, we'll log a warning and skip
                             logger.Warning($"JSON GFF reading not yet implemented. Skipping {Path.GetFileName(jsonFile)}");
                             logger.Warning("Convert command requires JSON GFF support to be implemented in Andastra.Parsing");
 

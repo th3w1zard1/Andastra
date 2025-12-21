@@ -153,7 +153,7 @@ namespace Andastra.Runtime.Games.Odyssey.Fonts
 
                 // Convert TPC to MonoGame Texture2D
                 // Fonts always use 2D textures, not cube maps
-                Texture convertedTexture = TpcToMonoGameTextureConverter.Convert(fontTexture, graphicsDevice, false);
+                Texture convertedTexture = Andastra.Runtime.MonoGame.Converters.TpcToMonoGameTextureConverter.Convert(fontTexture, graphicsDevice, false);
                 if (convertedTexture is TextureCube)
                 {
                     Console.WriteLine($"[OdysseyBitmapFont] ERROR: Font texture cannot be a cube map: {fontResRef}");

@@ -32,7 +32,7 @@ namespace HolocronToolset.Utils
             if (string.IsNullOrEmpty(ncsDecompilerPath) || !File.Exists(ncsDecompilerPath))
             {
                 // In full implementation, would prompt user for decompiler
-                // For now, try to use built-in decompiler
+                // TODO: STUB - For now, try to use built-in decompiler
                 try
                 {
                     return DecompileUsingBuiltIn(compiledBytes, installationPath, tsl);
@@ -44,7 +44,7 @@ namespace HolocronToolset.Utils
             }
 
             // Use external decompiler - will be implemented when external compiler integration is available
-            // For now, fall back to built-in
+            // TODO: STUB - For now, fall back to built-in
             try
             {
                 return DecompileUsingBuiltIn(compiledBytes, installationPath, tsl);

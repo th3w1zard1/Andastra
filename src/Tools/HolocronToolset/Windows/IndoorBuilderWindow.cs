@@ -352,7 +352,7 @@ namespace HolocronToolset.Windows
         {
             // Matching Python implementation: Update status bar with mouse position, buttons, and keys
             // This will be fully implemented when status bar UI is available
-            // For now, this is a placeholder that matches the Python interface
+            // TODO: STUB - For now, this is a placeholder that matches the Python interface
         }
     }
 

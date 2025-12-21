@@ -7,7 +7,6 @@ using Andastra.Runtime.Graphics;
 using Andastra.Runtime.MonoGame.Converters;
 using Andastra.Runtime.MonoGame.Rendering;
 using Andastra.Parsing.Installation;
-using GameDataManager = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.MonoGame.Graphics
@@ -37,14 +36,14 @@ namespace Andastra.Runtime.MonoGame.Graphics
             // GameDataManager provides access to 2DA tables (appearance.2da, placeables.2da, etc.) for model resolution
             // Installation provides access to resource system (MDL files, textures, etc.)
             // Based on swkotor2.exe: FUN_005261b0 @ 0x005261b0 loads creature model from appearance.2da
+            // Note: Using object types to avoid circular dependency - EntityModelRenderer accepts object for gameDataManager
             if (gameDataManager != null && installation != null)
             {
-                GameDataManager gdm = gameDataManager as GameDataManager;
                 Installation inst = installation as Installation;
                 
-                if (gdm != null && inst != null)
+                if (inst != null)
                 {
-                    _renderer = new EntityModelRenderer(device, gdm, inst);
+                    _renderer = new EntityModelRenderer(device, gameDataManager, inst);
                 }
             }
         }

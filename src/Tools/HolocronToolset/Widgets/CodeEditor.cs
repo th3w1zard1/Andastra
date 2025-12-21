@@ -515,7 +515,7 @@ namespace HolocronToolset.Widgets
             }
 
             // Note: Ctrl+K, Ctrl+0 and Ctrl+K, Ctrl+J require key sequence handling
-            // For now, we'll handle them as single key combinations
+            // TODO: STUB - For now, we'll handle them as single key combinations
             // In a full implementation, you'd track the Ctrl+K press and then handle the second key
             // For simplicity, we'll use alternative shortcuts or handle them in a key sequence manager
             // Ctrl+K Ctrl+0 for fold all (using Ctrl+Shift+0 as alternative)
@@ -936,7 +936,7 @@ namespace HolocronToolset.Widgets
 
             // For Avalonia TextBox, we need to calculate character position from point
             // This is a simplified implementation - in a real scenario, you'd use TextLayout.HitTestPoint
-            // For now, we'll use a basic approximation based on font metrics
+            // TODO: STUB - For now, we'll use a basic approximation based on font metrics
 
             // Get approximate character width (this is a simplification)
             // In a real implementation, you'd measure actual character widths

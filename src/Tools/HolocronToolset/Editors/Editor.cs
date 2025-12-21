@@ -29,8 +29,11 @@ namespace HolocronToolset.Editors
         protected ResourceType[] _readSupported;
         protected ResourceType[] _writeSupported;
 
-        // Expose filepath for derived classes
+        // Expose filepath for derived classes and testing
         protected string Filepath => _filepath;
+        
+        // Public property for testing
+        public string FilepathPublic => _filepath;
 
         // Expose installation for widgets and derived classes
         // Matching PyKotor: widgets access editor._installation directly

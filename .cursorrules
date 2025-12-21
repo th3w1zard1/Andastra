@@ -1,305 +1,82 @@
-# HoloPatcher.NET Rules and Conventions for AI LLM agents
+# HoloPatcher.NET Rules for AI Agents  
+(2025 Edition – Optimized for LLM Performance & Compliance)
 
-## ⚠️ CRITICAL: Git Commit Requirement ⚠️
+## 1. CRITICAL: ALWAYS COMMIT EVERY CHANGE
+**Rule #1 – Non-negotiable**  
+After ANY file change (create, modify, delete, move):  
 
-**MANDATORY FOR ALL AI AGENTS**: After making ANY changes to files in this repository, you MUST:
-
-1. **Stage all modified files**: `git add <file1> <file2> ...` (or `git add .` for all changes)
-2. **Commit with a descriptive message**: `git commit -m "type: descriptive message"`
-3. **Verify the commit succeeded**: Check that `git commit` returns successfully with no errors
-
-**This is NOT optional.** Do NOT summarize changes without committing them. Do NOT skip this step. Every code change, file modification, or configuration update MUST be committed before you consider the task complete.
-
-**NEVER use `git add .` or `git add -A` to stage changes.** Always stage files individually. This is because we may have multiple agents working on multiple files simultaneously.
-
-**Commit message format**: Use conventional commits format:
-
-- `fix:` for bug fixes
-- `feat:` for new features
-- `refactor:` for code refactoring
-- `docs:` for documentation changes
-- `chore:` for maintenance tasks
-- `test:` for test changes
-
-Example: `git commit -m "fix: correct finalize job condition in workflow"`
-
-Note: root-level .git is different repo than ./src/Andastra/.git
-
----
-
-## Documentation
-
-When creating ANY new `.md` files, always follow these guidelines:
-
-- Always place within `docs`
-- Never report on progression (changes and what still remains to be done).
-- Exclusively provide public-facing documentation, something an end user will need to read if they want to either develop for Andastra.NET or work with it.
-
-Please do not create .md documentation unless it delivers public-facing information or authoritative gameplay/platform references that an end user or developer genuinely needs for PyKotor or the games themselves.
-
-## Helper Scripts
-
-- Always place within `scripts`
-- Should be idempotent and flexible enough to be used for a plethora of scenarios, not just whatever the task you're working on involves.
-- Do not delete helper .py/.ps1/.sh scripts when you are finished with them; keep them in scripts folder
-
-## File Organization
-
-**CRITICAL: Repository Root Cleanup**
-
-AI agents MUST maintain proper file organization in the repository root:
-
-1. **Documentation Files**:
-   - ALL `.md` documentation files (except `README.md`) MUST be placed in `./docs`
-   - `README.md` is the ONLY markdown file allowed in the repository root
-   - When creating new documentation, always place it in `./docs`
-   - If you find documentation files in the root (other than `README.md`), move them to `./docs`
-
-2. **Script Files**:
-   - ALL script files (`.ps1`, `.sh`, `.py`, `.bat`, `.cmd`, etc.) MUST be placed in `./scripts`
-   - When creating new scripts, always place them in `./scripts`
-   - If you find script files in the root, move them to `./scripts`
-
-3. **Root Directory**:
-   - The root directory should only contain:
-     - `README.md` (the only allowed markdown file in root)
-     - Solution files (`.sln`)
-     - Project configuration files (`.csproj`, `.props`, etc.)
-     - Build artifacts and temporary files (as appropriate)
-     - Essential configuration files (`.gitignore`, `.cursorrules`, etc.)
-
-**When creating or moving files, always verify they are in the correct location according to these rules.**
-
-## Cross-Platform Target Framework Requirements
-
-**CRITICAL: All projects must be cross-platform compatible. Use platform-agnostic target frameworks only.**
-
-- **DO use**: `net9.0`, `net8.0`, `net7.0` (no platform suffix)
-- **DO NOT use**: `net9.0-windows`, `net9.0-linux`, `net9.0-macos` (platform-specific TFMs are forbidden)
-
-This codebase must run on Windows, Linux, and macOS. Platform-specific TFMs break cross-platform compatibility and are not allowed under any circumstances.
-
-## C# Language Version Requirements
-
-**CRITICAL: The maximum C# language version allowed is 7.3. NEVER upgrade to C# 8.0 or higher.**
-
-This is a hard requirement for .NET Framework 4.x compatibility. The following C# 8+ features are FORBIDDEN:
-
-- Nullable reference types (`string?`, `object?`, etc.)
-- Switch expressions
-- Using declarations (must use `using` blocks)
-- Default interface implementations
-- Async streams
-- Indices and ranges (`^1`, `..`)
-- Null-coalescing assignment (`??=`)
-- Pattern matching enhancements (property patterns, tuple patterns, positional patterns)
-- Static local functions
-
-When fixing code, convert C# 8+ syntax to C# 7.3 compatible alternatives, including but not limited to:
-
-- `string?` → `string` (use `[CanBeNull]` attribute if needed and add `using JetBrains.Annotations;` if not already present)
-- `value!` → `value` (remove null-forgiving operator)
-- Switch expressions → switch statements
-- `using var x = ...` → `using (var x = ...) { }`
-- `namespace SomeNamespace;` → `namespace SomeNamespace { ... }`
-
-## Incomplete/Temporary Code Marking
-
-**CRITICAL: All incomplete code MUST use `TODO:` prefix for searchability.**
-
-**Marking Patterns:**
-
-- **STUB**: Method signature exists, throws `NotImplementedException` with context
-
-  ```csharp
-  // TODO: STUB - Implement ProcessData (swkotor2.exe: 0x004eb750)
-  throw new NotImplementedException("ProcessData: Reverse engineering in progress");
-  ```
-
-- **PLACEHOLDER**: Temporary implementation that works but needs replacement
-
-  ```csharp
-  // TODO: PLACEHOLDER - Replace with full GFF serialization (swkotor2.exe: 0x005ac670)
-  ```
-
-- **SIMPLIFIED**: Working implementation missing features/optimizations
-
-  ```csharp
-  // TODO: SIMPLIFIED - Add A* pathfinding optimization for large areas
-  ```
-
-- **FIXME**: Known bug or incorrect behavior requiring fix
-
-  ```csharp
-  // TODO: FIXME - Memory leak when disposing resources, needs investigation
-  ```
-
-- **HACK**: Workaround that should be replaced with proper solution
-
-  ```csharp
-  // TODO: HACK - Using reflection until API is fixed
-  ```
-
-**Requirements:**
-
-- ALL incomplete code MUST start with `TODO:` followed by type (STUB/PLACEHOLDER/SIMPLIFIED/FIXME/HACK)
-- Include context: what needs doing, why incomplete, relevant addresses/refs
-- For reverse-engineered code: include executable and function address
-- Be specific: avoid vague comments like "fix this" or "placeholder"
-- Public APIs: use XML docs (`/// <summary>`) to document incomplete methods
-
-## NCS/NSS File Operations
-
-The `scripts` directory contains a comprehensive unified PowerShell tool for all NCS/NSS file operations:
-
-### NcsTool.ps1
-
-Unified tool for all NCS (bytecode) and NSS (source) file operations. Supports multiple operations via subcommands:
-
-**Operations:**
-
-- `compile`: Compile NSS source files to NCS bytecode
-- `decompile`: Decompile NCS bytecode files to NSS source
-- `compare`: Compare two NCS files (bytecode and/or instructions)
-- `roundtrip`: Perform round-trip testing (NSS -> NCS -> NSS -> NCS -> Compare)
-- `generate-defs`: Generate ScriptDefs.cs from nwscript.nss files
-
-**Examples:**
-
-```powershell
-# Compile NSS to NCS
-.\scripts\NcsTool.ps1 compile -InputPath "script.nss" -Game "k2"
-.\scripts\NcsTool.ps1 compile -InputPath "C:\Scripts" -Recursive -LibraryLookup "C:\Includes" -Overwrite
-
-# Decompile NCS to NSS
-.\scripts\NcsTool.ps1 decompile -InputPath "script.ncs" -OutputPath "script.nss" -Game "k1"
-.\scripts\NcsTool.ps1 decompile -InputPath "C:\NCS" -OutputPath "C:\Decompiled" -Recursive
-
-# Compare two NCS files
-.\scripts\NcsTool.ps1 compare -OriginalFile "original.ncs" -RoundTripFile "roundtrip.ncs" -CompareMode "bytecode" -Detailed
-.\scripts\NcsTool.ps1 compare -OriginalFile "test.ncs" -RoundTripFile "test.rt.ncs" -CompareMode "both" -ShowOnly "both"
-
-# Round-trip testing
-.\scripts\NcsTool.ps1 roundtrip -InputPath "script.nss" -Game "k2"
-.\scripts\NcsTool.ps1 roundtrip -InputPath "C:\Scripts" -Recursive -CompareMode "bytecode" -KeepIntermediate -StopOnFirstFailure
-
-# Generate ScriptDefs.cs
-.\scripts\NcsTool.ps1 generate-defs
+```bash
+git add <file>  # NEVER git add . or -A
+git commit -m "type(scope): message"  # e.g. feat: add K2 camera system
 ```
 
-The tool supports `-WhatIf` for dry-run testing, `-Verbose` for detailed output, and follows PowerShell best practices. It can process single files, multiple files, or entire directory trees recursively.
+Commit format: Conventional Commits  
+`fix:`, `feat:`, `refactor:`, `docs:`, `chore:`, `test:`
 
-**CRITICAL: Ghidra MCP Usage for Andastra Code (Aurora/Eclipse/Infinity/Odyssey)**
+**Why this works for LLMs**: Clear, measurable, binary success/failure check. LLMs perform best with explicit "do this exact sequence" instructions.
 
-When working on Andastra Engine code (anything in `src/Andastra/`), AI agents MUST:
+## 2. File Organization (Root Must Stay Clean)
+- `docs/` – ALL .md except root `README.md`  
+- `scripts/` – ALL .ps1/.sh/.py/.bat  
+- Root only allowed: `README.md`, .sln, .csproj, .props, .gitignore, .cursor/rules  
 
-1. **Use Ghidra MCP** for understanding original engine behavior:
-   - Verify implementation faithfulness against original engine behavior
-    - **ARCHITECTURAL POLICY: Conditional Handling over Inheritance**:
+**Action**: If you see misplaced files → move them immediately → commit.
 
-      **⚠️ CRITICAL: NEW CODE ONLY - NO REFACTORING EXISTING CODE ⚠️**
+## 3. .NET Target Framework (Cross-Platform Only)
+Use ONLY: `net9.0`, `net8.0`, `net7.0`  
+**Forbidden**: `net9.0-windows`, `-linux`, `-macos`
 
-      **PREFERRED APPROACH: CONDITIONAL LOGIC (PRAGMATIC)**
-      - For ALL **new** features, classes, and systems, **STRONGLY PREFER** conditional logic (`if/else` or `switch` statements) within the same class/file to handle engine or game-specific behavior.
-      - **Inheritance was probably the worst idea for most of this codebase** - conditional handling is much more practical and pragmatic.
-      - **Goal**: Keep related logic for different games/engines in one place to avoid "class explosion" and facilitate reverse engineering.
-      - Use `GameType` (e.g., `K1`, `K2`, `NWN`) or `EngineType` identifiers to branch logic where behavior differs between games/engines.
-      - **Example pattern for new code**:
-        ```csharp
-        public void ProcessEvent(Event e)
-        {
-            // Common logic...
-            if (GameType == GameType.K2) { /* KOTOR 2 behavior (swkotor2.exe: 0x004eb750) */ }
-            else if (GameType == GameType.K1) { /* KOTOR 1 behavior (swkotor.exe: 0x004af630) */ }
-        }
-        ```
+## 4. C# Language Version: 7.3 Maximum
+**Hard limit**: C# 8+ features banned (nullable refs, switch expr, ranges, using decl, etc.)
 
-      **🚫 ABSOLUTELY FORBIDDEN: REFACTORING EXISTING INHERITANCE 🚫**
-      - **DO NOT** perform large, heavy refactors of existing inheritance structures (like the Three-Tier Structure).
-      - **DO NOT** convert existing inheritance hierarchies to conditional logic.
-      - **DO NOT** break existing class references or rename existing base/engine/game classes.
-      - **DO NOT** attempt to "improve" or "modernize" existing inheritance-based code by converting it to conditionals.
-      - **DO NOT** suggest or attempt to refactor existing inheritance-based code "for consistency" or "to match new code style".
-      - **DO NOT** refactor existing code "to use conditional logic instead of inheritance" - this is explicitly forbidden.
-      - **DO NOT** perform any refactoring that would require changing more than a few files or break existing references.
-      - **WHY**: Inheritance was used extensively in the past; refactoring it would break hundreds of references. **The risk of breaking things far outweighs any theoretical benefit.** Maintain existing structures as-is.
-      - **CRITICAL**: If you see existing inheritance-based code, your job is to **work with it as-is**, not to "fix" it. Adding new features to existing inheritance hierarchies is fine, but converting them to conditionals is NOT.
-      - **CRITICAL**: This policy is **ONLY for new code**. Existing inheritance-based code must remain unchanged. Do not attempt to "migrate" or "update" existing code to use conditionals.
+**Rewrite pattern (if you see C# 8+)**:  
+- `string?` → `string` + `[CanBeNull]` (JetBrains.Annotations)  
+- `using var x = ...` → `using (var x = ...) { }`  
+- Switch expr → switch statement
 
-      **WHEN TO USE CONDITIONAL LOGIC:**
-      - ✅ Creating a **new** class, method, or system from scratch.
-      - ✅ Adding a **new** feature that doesn't exist yet.
-      - ✅ Implementing behavior that differs slightly between games/engines in a common class.
-      - ✅ **ALWAYS prefer conditionals for new code** - inheritance should only be used if there's a compelling reason.
-      - ✅ When writing **completely new** code that doesn't touch existing inheritance hierarchies.
-      - ✅ When creating **new** helper methods or utilities that need to handle multiple engines/games.
+## 5. Incomplete Code: ALWAYS Mark with `TODO:` + Type
+```csharp
+// TODO: STUB - Implement K2 event system (swkotor2.exe: 0x004eb750)
+// TODO: PLACEHOLDER - Temporary GFF v3.3 (0x005ac670)
+// TODO: FIXME - Memory leak in resource cache
+// TODO: SIMPLIFIED - No pathfinding optimization yet
+// TODO: HACK - Reflection workaround until API fixed
+```
 
-      **WHEN TO MAINTAIN INHERITANCE:**
-      - ✅ Working with existing classes that already use inheritance.
-      - ✅ Fixing bugs or adding features to existing inheritance-based systems.
-      - ✅ **If it already uses inheritance, leave it alone** - don't try to "fix" it.
-      - ✅ Any code that already exists in the codebase - maintain the existing pattern.
-      - ✅ When extending existing inheritance hierarchies - use inheritance to extend, not conditionals to replace.
-      - ✅ When modifying existing files - preserve the existing architecture pattern (inheritance or conditionals, whichever is already there).
+**Why this works**: LLMs love searchability. `TODO:` + type + context is the gold standard for self-documenting code.
 
-      **MANDATORY WORKFLOW FOR REVERSE ENGINEERING**:
-      1. Identify behavior by comparing across engines/games in Ghidra.
-      2. Document findings in Ghidra for ALL relevant executables before implementing.
-      3. In C# code, document the source of truth (e.g., `swkotor.exe: 0x...`) in comments near the conditional branch.
+## 6. Architecture Rule – New Code vs Existing
+**New code ONLY** (everything you write):  
+**Prefer conditional logic over inheritance**  
+```csharp
+if (GameType == GameType.K2) { /* K2 behavior */ }
+else if (GameType == GameType.K1) { /* K1 behavior */ }
+```
 
-     **MANDATORY: In-Ghidra Documentation**: AI agents MUST document findings directly within Ghidra
-     - Every analyzed function should have:
-       - Descriptive function name
-       - Function prototype with correct types
-       - Comments explaining purpose and key details
-       - Renamed variables and data labels
-       - Cross-references documented where relevant
+**Existing code**: Leave inheritance alone. Never refactor it.  
+**Why**: LLMs get confused by "sometimes use inheritance, sometimes not". Clear rule: new = conditionals, old = keep as-is.
 
-2. **Reference Documentation**:
-   - Primary: `vendor/PyKotor/wiki/` for file format documentation
-   - Secondary: `vendor/PyKotor/vendor/xoreos-docs/` for official BioWare specs
-   - Implementation plan: `.cursor/plans/monogame_odyssey_engine_e8927e4a.plan.md`
-   - Roadmap: `docs/engine_roadmap.md`
+## 7. Reverse Engineering Workflow (Mandatory)
+1. Analyze in Ghidra first  
+2. Document in Ghidra: rename functions/vars, add comments, prototype  
+3. In C#: comment source of truth  
+   ```csharp
+   // swkotor2.exe: 0x004eb750 – original engine behavior
+   if (GameType == GameType.K2) { ... }
+   ```
 
-### Engine Architecture Principles
+## 8. NSS/NCS Operations
+Use `scripts/NcsTool.ps1` for everything (compile, decompile, compare, roundtrip, generate-defs)
 
-**No Game Assets**: Runtime loads from user-provided game installations. Never ship game assets.
+## 9. Documentation
+- Only public-facing .md → `docs/`  
+- No progress reports or internal notes  
+- Only what end users/developers need
 
-### Engine API Implementation
-
-When implementing NWScript engine functions:
-
-1. **Use ScriptDefs**: Reference `Andastra.Common.Script.ScriptDefs` for function signatures
-2. **Profile separation**: K1 has ~850 functions, K2 has ~950 functions. dragon age origins/dragon age 2/mass effect 1/2 and nwn: ee are unfinished and HIGH priorities.
-
-### Clean-Room Process
-
-- Implementation is derived from behavioral observation and specification documents
-- **No code copying** from other implementations
-- Match original engine behavior exactly where documented
-- Document any deviations or improvements
-- Avoid GPL/LGPL/AGPL dependencies in shipped runtime
-
-### Testing Requirements
-
-- NCS VM: deterministic unit tests for all opcodes
-- Resource precedence: synthetic mini-installation fixtures
-- Content decoding: golden-file tests
-- Vertical slice: playable integration tests
-
-### Performance Budgets
-
-- Module load (warm): seconds, not minutes
-- Frame rate: stable 60fps on midrange GPU
-- Script budget: capped instructions per frame
-- Memory: bounded caches with LRU eviction
-
-### Definition of Done for Engine Work
-
-A feature is complete when:
-
-- Implementation matches original engine behavior
-- Unit tests meticulously written, and passing for deterministic logic
-- Integration with Andastra format parsers works
-- C# 7.3 syntax or lower, 8+ isn't supported.
-- Code compiles with no warnings
+## 10. Definition of Done (Simple Checklist)
+- Code compiles (no warnings)  
+- Uses C# 7.3  
+- Matches original behavior (Ghidra-verified)  
+- All changes committed  
+- Files in correct folders  
+- Uses `TODO:` for anything unfinished

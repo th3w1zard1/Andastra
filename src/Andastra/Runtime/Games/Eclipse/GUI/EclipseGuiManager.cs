@@ -33,20 +33,20 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
     /// - GUI format: GFF-based format with "GUI " signature (same as Odyssey/Aurora engines)
     /// - Font rendering: Uses EclipseBitmapFont for text rendering
     /// - Texture loading: Eclipse-specific texture format support (TEX/DDS)
-    /// 
+    ///
     /// Format Verification:
     /// - Eclipse engine uses the same GFF-based GUI format as Odyssey and Aurora engines
     /// - GUI files are stored as ResourceType.GUI in game archives (ERF/RIM files)
     /// - Format signature: "GUI " (GFF content type)
     /// - Structure: GFF root contains Tag, CONTROLS list with nested control structures
     /// - Verified via codebase analysis: GUIReader handles GFF-based format, ResourceType.GUI maps to .gui/.gff extension
-    /// 
+    ///
     /// Based on reverse engineering analysis:
     /// - daorigins.exe: GUI loading functions use GFF format parser
     /// - DragonAge2.exe: GUI loading functions use GFF format parser
     /// - Format compatibility: Eclipse GUI format is compatible with Odyssey/Aurora GUI format
     /// - Located via string references: GUI resource loading in Eclipse engine follows same pattern as Odyssey
-    /// 
+    ///
     /// Implementation details:
     /// - Loads GUI resources from installation using ResourceType.GUI
     /// - Parses GFF format using GUIReader (same parser as Odyssey/Aurora)
@@ -94,7 +94,7 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
             _loadedGuis = new Dictionary<string, LoadedGui>(StringComparer.OrdinalIgnoreCase);
             _textureCache = new Dictionary<string, ITexture2D>(StringComparer.OrdinalIgnoreCase);
             _fontCache = new Dictionary<string, EclipseBitmapFont>(StringComparer.OrdinalIgnoreCase);
-            
+
             // Initialize input states (requires MonoGame GraphicsDevice for Mouse/Keyboard)
             if (device is MonoGameGraphicsDevice mgDevice)
             {
@@ -435,7 +435,7 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
 
         private void RenderPanel(GUIPanel panel, NumericsVector2 position, NumericsVector2 size)
         {
-            if (panel.Border != null && !panel.Border.Fill.IsBlank)
+            if (panel.Border != null && !panel.Border.Fill.IsBlank())
             {
                 ITexture2D fillTexture = LoadTexture(panel.Border.Fill.ToString());
                 if (fillTexture != null)
@@ -466,7 +466,7 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
                 borderToUse = button.Hilight;
             }
 
-            if (borderToUse != null && !borderToUse.Fill.IsBlank)
+            if (borderToUse != null && !borderToUse.Fill.IsBlank())
             {
                 ITexture2D fillTexture = LoadTexture(borderToUse.Fill.ToString());
                 if (fillTexture != null)
@@ -485,7 +485,8 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
                 BaseBitmapFont font = LoadFont(button.GuiText.Font.ToString());
                 if (font != null)
                 {
-                    NumericsVector2 textSize = font.MeasureString(text);
+                    Graphics.Vector2 textSizeGraphics = font.MeasureString(text);
+                    NumericsVector2 textSize = new NumericsVector2(textSizeGraphics.X, textSizeGraphics.Y);
                     NumericsVector2 textPos = CalculateTextPosition(button.GuiText.Alignment, position, size, textSize);
                     RenderBitmapText(font, text, textPos, textColor);
                 }
@@ -503,7 +504,8 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
                 BaseBitmapFont font = LoadFont(label.GuiText.Font.ToString());
                 if (font != null)
                 {
-                    NumericsVector2 textSize = font.MeasureString(text);
+                    Graphics.Vector2 textSizeGraphics = font.MeasureString(text);
+                    NumericsVector2 textSize = new NumericsVector2(textSizeGraphics.X, textSizeGraphics.Y);
                     NumericsVector2 textPos = CalculateTextPosition(label.GuiText.Alignment, position, size, textSize);
                     RenderBitmapText(font, text, textPos, textColor);
                 }
@@ -512,7 +514,7 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
 
         private void RenderGenericControl(GUIControl control, NumericsVector2 position, NumericsVector2 size)
         {
-            if (control.Border != null && !control.Border.Fill.IsBlank)
+            if (control.Border != null && !control.Border.Fill.IsBlank())
             {
                 ITexture2D fillTexture = LoadTexture(control.Border.Fill.ToString());
                 if (fillTexture != null)
@@ -544,10 +546,10 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
                 {
                     var g = glyph.Value;
                     ITexture2D texture = font.Texture;
-                    var sourceRect = new Andastra.Runtime.Graphics.Rectangle(g.Value.SourceX, g.Value.SourceY, g.Value.SourceWidth, g.Value.SourceHeight);
-                    var destRect = new Andastra.Runtime.Graphics.Rectangle((int)x, (int)y, (int)g.Value.Width, (int)g.Value.Height);
-                    _spriteBatch.Draw(texture, destRect, sourceRect, color);
-                    x += g.Value.Width + font.SpacingR;
+                    var sourceRect = new Andastra.Runtime.Graphics.Rectangle(g.SourceX, g.SourceY, g.SourceWidth, g.SourceHeight);
+                    var destRect = new Andastra.Runtime.Graphics.Rectangle((int)x, (int)y, (int)g.Width, (int)g.Height);
+                    _spriteBatch.Draw(texture, destRect, sourceRect, color, 0.0f, Andastra.Runtime.Graphics.Vector2.Zero, Andastra.Runtime.Graphics.SpriteEffects.None, 0.0f);
+                    x += g.Width + font.SpacingR;
                 }
                 else
                 {
@@ -565,7 +567,7 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
         /// - Textures are loaded from game archives (ERF/RIM files)
         /// - Texture format: TEX files contain texture data, DDS files are DirectX textures
         /// - Located via string references: Texture loading in Eclipse engine resource system
-        /// 
+        ///
         /// Implementation:
         /// - Loads texture from installation using ResourceType.TEX or ResourceType.DDS
         /// - Caches loaded textures for performance
@@ -602,11 +604,11 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
                     using (TexParser parser = new TexParser(texResult.Data))
                     {
                         TexParser.TexParseResult result = parser.Parse();
-                        
+
                         // Create texture from parsed TEX data
                         // Based on Eclipse engine: Creates DirectX texture from TEX pixel data
                         texture = _graphicsDevice.CreateTexture2D(result.Width, result.Height, result.RgbaData);
-                        
+
                         if (texture != null)
                         {
                             _textureCache[key] = texture;
@@ -633,11 +635,11 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
                     using (DdsParser parser = new DdsParser(ddsResult.Data))
                     {
                         DdsParser.DdsParseResult result = parser.Parse();
-                        
+
                         // Create texture from parsed DDS data
                         // Based on Eclipse engine: Creates DirectX texture from DDS pixel data
                         texture = _graphicsDevice.CreateTexture2D(result.Width, result.Height, result.RgbaData);
-                        
+
                         if (texture != null)
                         {
                             _textureCache[key] = texture;
@@ -687,7 +689,7 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
                     using (TpcParser parser = new TpcParser(tpcResult.Data))
                     {
                         TpcParser.TpcParseResult result = parser.Parse();
-                        
+
                         if (result == null || result.Width <= 0 || result.Height <= 0 || result.RgbaData == null || result.RgbaData.Length == 0)
                         {
                             System.Diagnostics.Debug.WriteLine($"[EclipseGuiManager] ERROR: Failed to parse TPC texture {textureName}: Invalid TPC structure or dimensions");
@@ -705,7 +707,7 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
                             // Located via codebase analysis: IGraphicsDevice.CreateTexture2D signature and usage patterns
                             // TpcParser.Parse() already converts all formats (DXT1/DXT5/RGB/RGBA/BGRA/Greyscale) to RGBA
                             texture = _graphicsDevice.CreateTexture2D(result.Width, result.Height, result.RgbaData);
-                            
+
                             if (texture != null)
                             {
                                 _textureCache[key] = texture;

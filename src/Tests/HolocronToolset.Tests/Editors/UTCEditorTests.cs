@@ -3313,7 +3313,7 @@ namespace HolocronToolset.Tests.Editors
             alignmentSlider.Value = 50;
 
             // Note: Preview update testing would require UI automation framework
-            // For now, we verify the fields can be changed
+            // TODO: STUB - For now, we verify the fields can be changed
             appearanceSelect.Should().NotBeNull("Appearance select should exist");
             alignmentSlider.Should().NotBeNull("Alignment slider should exist");
         }
@@ -3404,7 +3404,7 @@ namespace HolocronToolset.Tests.Editors
             editor.Load(utcFile, "p_hk47", ResourceType.UTC, originalData);
 
             // Note: Menu actions testing would require accessing menu items
-            // For now, we verify the editor can be created and loaded
+            // TODO: STUB - For now, we verify the editor can be created and loaded
             editor.Should().NotBeNull("Editor should exist");
         }
 
@@ -3431,7 +3431,7 @@ namespace HolocronToolset.Tests.Editors
             commentsEdit.Text = "Test comment";
 
             // Note: Tab title update testing would require accessing TabControl/TabItem
-            // For now, we verify the comments field can be modified
+            // TODO: STUB - For now, we verify the comments field can be modified
             commentsEdit.Text.Should().Be("Test comment");
 
             // Clear comment - tab title should update

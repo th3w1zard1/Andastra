@@ -210,7 +210,7 @@ namespace HolocronToolset.Tests.Dialogs
             parent.Show(); // Ensure parent is shown for name scope
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_dialogs_extra.py:135-137
             // Original: capsules = [] # No capsules for now
-            var capsules = new List<object>(); // No capsules for now
+            var capsules = new List<Andastra.Parsing.Formats.Capsule.Capsule>(); // No capsules for now
             var inventory = new List<Andastra.Parsing.Common.InventoryItem>();
             var equipment = new Dictionary<Andastra.Parsing.Common.EquipmentSlot, Andastra.Parsing.Common.InventoryItem>(); // equipment must be a dict[EquipmentSlot, InventoryItem], not a list
 

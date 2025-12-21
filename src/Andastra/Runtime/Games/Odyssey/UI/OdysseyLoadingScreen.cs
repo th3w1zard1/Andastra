@@ -2,6 +2,7 @@ using System;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Games.Common;
 using Andastra.Parsing.Resource.Generics.GUI;
+using Andastra.Runtime.MonoGame.GUI;
 
 namespace Andastra.Runtime.Games.Odyssey.UI
 {
@@ -91,19 +92,8 @@ namespace Andastra.Runtime.Games.Odyssey.UI
             int screenHeight = 600;
             
             // Get screen dimensions from graphics device
-            try
-            {
-                var graphicsDevice = _guiManager.GraphicsDevice;
-                if (graphicsDevice != null && graphicsDevice.Viewport.Width > 0 && graphicsDevice.Viewport.Height > 0)
-                {
-                    screenWidth = graphicsDevice.Viewport.Width;
-                    screenHeight = graphicsDevice.Viewport.Height;
-                }
-            }
-            catch
-            {
-                // Fallback to default resolution if viewport is not available
-            }
+            // GraphicsDevice is protected, so we use default resolution
+            // Screen dimensions will be set when LoadGui is called
 
             // Load the loading screen GUI
             // Based on swkotor2.exe: Loads "loadscreen_p" GUI panel
@@ -224,7 +214,7 @@ namespace Andastra.Runtime.Games.Odyssey.UI
             // Based on reone implementation: _gui->rootControl().setBorderFill(resRef)
             // The root control represents the entire loading screen panel, and its border fill
             // is used as the background image for the loading screen
-            if (_guiManager is Runtime.Graphics.MonoGame.GUI.KotorGuiManager kotorGuiManager)
+            if (_guiManager is KotorGuiManager kotorGuiManager)
             {
                 // Set the texture on the root control (null tag means root control)
                 bool updated = kotorGuiManager.SetControlTexture(null, imageResRef);

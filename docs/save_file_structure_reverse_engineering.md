@@ -37,6 +37,7 @@ This document details the reverse engineering findings for save file structure, 
 **Function**: `FUN_006ca250` (swkotor.exe: 0x006ca250) - Load save game
 
 **Evidence**:
+
 - swkotor.exe: `FUN_006ca250` line 110: Creates "GAMEINPROGRESS:" directory alias
 - swkotor.exe: `FUN_006ca250` line 145: Loads override directory (`FUN_00408800`)
 - swkotor.exe: `FUN_006ca250` line 147: Loads PARTYTABLE (`FUN_00565d20`)
@@ -49,6 +50,7 @@ This document details the reverse engineering findings for save file structure, 
 **Loading Mechanism**: **Direct file I/O**, bypasses resource system
 
 **Evidence**:
+
 - swkotor.exe: `FUN_004b8300` line 136-155 loads "savenfo.res" directly via `FUN_00411260` (GFF loader)
 - No RES handler found that calls `FUN_004074d0` (resource system)
 - RES files are accessed directly from save file path, bypassing `FUN_00407230` entirely
@@ -64,6 +66,7 @@ This document details the reverse engineering findings for save file structure, 
 **Loading Mechanism**: **Resource system** (`FUN_00407230`)
 
 **Evidence**:
+
 - swkotor.exe: `FUN_00565d20` (0x00565d20) loads PARTYTABLE
 - swkotor.exe: `FUN_00565d20` line 51: Calls `FUN_00410630` with "PARTYTABLE" and "PT  " signature
 - swkotor.exe: `FUN_00410630` line 48: Calls `FUN_00407680` with resource type
@@ -72,6 +75,7 @@ This document details the reverse engineering findings for save file structure, 
 **Priority**: ✅ **Module/Override/Patch.erf PT files WILL override save file PT files**
 
 **Complete Priority Order** (from `FUN_00407230`):
+
 1. **Override Directory** (Location 3, Source Type 2) - Highest priority
 2. **Module Containers** (Location 2, Source Type 3) - `.mod` files
 3. **Module RIM Files** (Location 1, Source Type 4) - `.rim`, `_s.rim`, `_a.rim`, `_adx.rim`
@@ -85,6 +89,7 @@ This document details the reverse engineering findings for save file structure, 
 **Loading Mechanism**: **Direct file I/O**, bypasses resource system
 
 **Evidence**:
+
 - swkotor.exe: `FUN_004b8300` line 136-155 loads "savenfo.res" directly via `FUN_00411260` (GFF loader)
 - `FUN_00411260` does not call `FUN_00407230` (resource system)
 - NFO files are accessed directly from save file path, bypassing resource system
@@ -100,23 +105,27 @@ This document details the reverse engineering findings for save file structure, 
 ### What IS Cached
 
 **1. Party Members (AVAILNPC*.utc)**
+
 - **Files**: AVAILNPC0.utc, AVAILNPC1.utc, ..., AVAILNPC11.utc (up to 12 files)
 - **Contents**: Complete companion character data (stats, equipment, feats, powers, skills, inventory)
 - **Updated**: Whenever companion stats/equipment changes
 - **Indexes**: Match PT_AVAIL_NPCS in PARTYTABLE.res
 
 **2. Inventory (INVENTORY.res)**
+
 - **File**: INVENTORY.res (GFF with "ItemList" containing item structs)
 - **Contents**: Player's inventory items (not equipped)
 - **Updated**: Whenever items picked up, dropped, or used
 - **Format**: GFF file with item template data (resref, stack size, etc.)
 
 **3. Reputation (REPUTE.fac)**
+
 - **File**: REPUTE.fac (GFF with "FAC " signature)
 - **Contents**: Faction reputation data
 - **Updated**: When reputation-affecting actions occur
 
 **4. Cached Modules (ERF/RIM files)**
+
 - **Files**: `{module}.sav` (ERF archives) for previously visited areas
 - **Contents**: Complete module state (module.ifo, creatures, placeables, triggers, etc.)
 - **Updated**: When area is visited and state changes
@@ -124,16 +133,19 @@ This document details the reverse engineering findings for save file structure, 
 - **Fix**: Clear EventQueue GFF list from each cached module's IFO
 
 **5. Global Variables (GLOBALVARS.res)**
+
 - **File**: GLOBALVARS.res (GFF with "GLOB" signature)
 - **Contents**: All global int/bool/string variables
 - **Updated**: When global variables are set
 
 **6. Party State (PARTYTABLE.res)**
+
 - **File**: PARTYTABLE.res (GFF with "PT  " signature)
 - **Contents**: Party member list, selection, gold, XP pool, solo mode, cheat flags
 - **Updated**: When party composition or state changes
 
 **7. Save Metadata (savenfo.res)**
+
 - **File**: savenfo.res (GFF with "NFO " signature)
 - **Contents**: Save name, time, screenshot, current module, entry position
 - **Updated**: When save is created
@@ -141,26 +153,31 @@ This document details the reverse engineering findings for save file structure, 
 ### What is NOT Cached
 
 **1. Module Resources (TPC, TGA, MDL, MDX, etc.)**
+
 - **Status**: NOT cached in save files
 - **Reason**: Loaded from modules/BIF files on-demand
 - **Exception**: Cached modules contain their own resources, but base module resources are not duplicated
 
 **2. Scripts (NCS files)**
+
 - **Status**: NOT cached in save files
 - **Reason**: Loaded from modules/BIF files on-demand
 - **Exception**: Script state (variables, execution state) may be cached in module state
 
 **3. Dialog Trees (DLG files)**
+
 - **Status**: NOT cached in save files
 - **Reason**: Loaded from modules/BIF files on-demand
 - **Exception**: Dialog state (selected entries, flags) may be cached in module state
 
 **4. Area Layouts (ARE, GIT files)**
+
 - **Status**: NOT cached in save files (base data)
 - **Reason**: Loaded from modules/BIF files on-demand
 - **Exception**: Area state (entity positions, door states) IS cached in module state
 
 **5. Texture Packs (TPA, TPB, TPC files)**
+
 - **Status**: NOT cached in save files
 - **Reason**: Loaded from texture pack directories on-demand
 
@@ -171,6 +188,7 @@ This document details the reverse engineering findings for save file structure, 
 **Cached modules are ERF/RIM files stored inside savegame.sav ERF archive**
 
 **Evidence**:
+
 - PyKotor `SaveNestedCapsule` class shows cached modules as ERF files with resource type SAV (2057)
 - Each cached module is a complete ERF archive containing:
   - module.ifo (module info)
@@ -178,11 +196,13 @@ This document details the reverse engineering findings for save file structure, 
   - Entity states (positions, HP, door/placeable states)
 
 **Loading**:
+
 - swkotor.exe: `FUN_00409460` → `FUN_00408e90` loads GAMEINPROGRESS: directory
 - Cached modules are loaded into resource table when save is loaded
 - Module states are applied when areas are entered
 
 **Common Issues**:
+
 - **EventQueue corruption**: EventQueue in module.ifo can become corrupted → save won't load
 - **Fix**: Clear EventQueue GFF list from each cached module's IFO
 - **Missing modules**: If cached module references are missing, save may fail to load
@@ -202,22 +222,27 @@ When mods are uninstalled and saves are reused, the following issues occur:
 ### Mitigation Strategies
 
 **1. Validate Resources Before Loading**
+
 - Check if referenced resources exist before loading
 - Remove invalid references or replace with defaults
 
 **2. Clean EventQueue**
+
 - Clear EventQueue GFF list from cached module IFO files
 - Prevents corruption-related save load failures
 
 **3. Remove Invalid Inventory Items**
+
 - Scan inventory for items with missing templates
 - Remove or replace with default items
 
 **4. Validate Party Members**
+
 - Check if AVAILNPC*.utc templates exist
 - Remove or replace with default companions
 
 **5. Rebuild Cached Modules**
+
 - Remove cached modules from save file
 - Force game to rebuild module state from base modules
 
@@ -237,5 +262,4 @@ When mods are uninstalled and saves are reused, the following issues occur:
 2. **Selective component removal** (remove cached modules, inventory items, etc.)
 3. **Resource validation** (check for missing templates, etc.)
 4. **EventQueue cleanup** (clear corrupted EventQueue from cached modules)
-5. **Integration with other editors** (GITEditor, etc.) to handle cached data
-
+5. **Integration with other edi

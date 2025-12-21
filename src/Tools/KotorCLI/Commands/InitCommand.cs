@@ -64,7 +64,6 @@ description = ""Default target""
             var defaultOption = new Option<bool>("--default", "Skip package generation dialog");
             initCommand.Options.Add(defaultOption);
             var vcsOption = new Option<string>("--vcs", "Version control system to use");
-            vcsOption.SetDefaultValue("git");
             initCommand.Options.Add(vcsOption);
             var initFileOption = new Option<string>("--file", "File to unpack into the package");
             initCommand.Options.Add(initFileOption);
@@ -74,7 +73,11 @@ description = ""Default target""
                 var dir = parseResult.GetValue(dirArgument) ?? ".";
                 var file = parseResult.GetValue(fileArgument);
                 var defaultMode = parseResult.GetValue(defaultOption);
-                var vcs = parseResult.GetValue(vcsOption) ?? "git";
+                var vcs = parseResult.GetValue(vcsOption);
+                if (string.IsNullOrEmpty(vcs))
+                {
+                    vcs = "git";
+                }
                 var initFile = parseResult.GetValue(initFileOption) ?? file;
                 
                 var logger = new StandardLogger();

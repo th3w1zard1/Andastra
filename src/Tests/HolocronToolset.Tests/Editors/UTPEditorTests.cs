@@ -330,7 +330,7 @@ namespace HolocronToolset.Tests.Editors
             UTP originalUtp = UTPHelpers.ConstructUtp(originalGff);
 
             // Modify tag - need to access private field via reflection or make it accessible
-            // For now, we'll test via Build() which reads from UI
+            // TODO: STUB - For now, we'll test via Build() which reads from UI
             // This is a simplified test - full implementation would manipulate UI directly
             var (data, _) = editor.Build();
             var modifiedGff = GFF.FromBytes(data);

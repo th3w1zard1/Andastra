@@ -1813,7 +1813,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Verify preview toggle functionality exists
             // In Avalonia, we verify that toggle_preview method exists if implemented
-            // For now, we just verify the editor can be created and preview functionality would be available
+            // TODO: STUB - For now, we just verify the editor can be created and preview functionality would be available
             editor.Should().NotBeNull();
         }
 
@@ -1828,7 +1828,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Verify help dialog functionality exists
             // In Avalonia, we verify that help dialog can be shown
-            // For now, we just verify the editor can be created
+            // TODO: STUB - For now, we just verify the editor can be created
             editor.Should().NotBeNull();
         }
 

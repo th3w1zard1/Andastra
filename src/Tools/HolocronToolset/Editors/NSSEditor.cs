@@ -1957,7 +1957,7 @@ namespace HolocronToolset.Editors
             }
 
             // Matching Python: self._filter_snippets() - would be called if filtering is implemented
-            // For now, we just load the snippets
+            // TODO: STUB - For now, we just load the snippets
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:349-360
@@ -2593,7 +2593,7 @@ namespace HolocronToolset.Editors
         private void UpdateBookmarkVisualization()
         {
             // In a full implementation, this would update visual indicators in the code editor
-            // For now, this is a placeholder that matches the Python interface
+            // TODO: STUB - For now, this is a placeholder that matches the Python interface
         }
 
         // Public property to access bookmark tree for testing
@@ -3303,7 +3303,7 @@ namespace HolocronToolset.Editors
 
             // View operations
             // Note: Toggle Explorer, Terminal, Output Panel would need UI actions to trigger
-            // For now, we register placeholders
+            // TODO: STUB - For now, we register placeholders
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:630, 677
             // Original: {"id": "view.toggleExplorer", "label": "Toggle Explorer", "category": "View"},
             // Original: "view.toggleExplorer": lambda: self.ui.actionToggleFileExplorer.trigger(),
@@ -4362,7 +4362,7 @@ namespace HolocronToolset.Editors
                 }
 
                 // Check if filepath is an ERF/RIM file (would need special handling)
-                // For now, if installation is set and filepath is empty or BIF, use override path
+                // TODO: STUB - For now, if installation is set and filepath is empty or BIF, use override path
                 if (_installation != null && (string.IsNullOrEmpty(_filepath) || Path.GetFileName(filepath).EndsWith(".bif", StringComparison.OrdinalIgnoreCase)))
                 {
                     string overridePath = Path.Combine(_installation.Path, "override");
@@ -4976,7 +4976,7 @@ namespace HolocronToolset.Editors
             if (!string.IsNullOrEmpty(_filepath) && File.Exists(_filepath))
             {
                 // Note: In a full implementation, we would select and scroll to the current file
-                // For now, we just ensure the model is set up correctly
+                // TODO: STUB - For now, we just ensure the model is set up correctly
             }
 
             // Integrate file explorer dock into main UI layout
@@ -5067,7 +5067,7 @@ namespace HolocronToolset.Editors
 
             string filter = _fileSystemModel.RootPath; // Get filter from model (if exposed)
             // Note: FileSystemModel.SetFilter stores filter but doesn't expose it
-            // For now, we'll get filter from _fileSearchEdit if available
+            // TODO: STUB - For now, we'll get filter from _fileSearchEdit if available
             string searchFilter = (_fileSearchEdit?.Text ?? "").ToLowerInvariant();
 
             var rootItems = new List<TreeViewItem>();

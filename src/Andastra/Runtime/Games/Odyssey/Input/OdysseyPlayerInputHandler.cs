@@ -39,6 +39,11 @@ namespace Andastra.Runtime.Games.Odyssey.Input
     public class OdysseyPlayerInputHandler : PlayerInputHandler
     {
         /// <summary>
+        /// Gets the world context (protected access to base class world).
+        /// </summary>
+        protected IWorld World { get; private set; }
+
+        /// <summary>
         /// Initializes a new instance of the Odyssey player input handler.
         /// </summary>
         /// <param name="world">The world context.</param>
@@ -46,6 +51,7 @@ namespace Andastra.Runtime.Games.Odyssey.Input
         protected OdysseyPlayerInputHandler(IWorld world, PartySystem partySystem)
             : base(world, partySystem)
         {
+            World = world;
         }
 
         /// <summary>

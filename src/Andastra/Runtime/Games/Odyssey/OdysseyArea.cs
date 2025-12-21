@@ -17,6 +17,9 @@ using RuntimeIModule = Andastra.Runtime.Core.Interfaces.IModule;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Runtime.Core.Navigation;
 using Andastra.Runtime.Engines.Odyssey.Loading;
+using Andastra.Runtime.Core.Enums;
+using Andastra.Runtime.Core.Interfaces.Components;
+using RuntimeObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 
 namespace Andastra.Runtime.Games.Odyssey
 {
@@ -384,7 +387,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 if (root.Exists("Name"))
                 {
                     LocalizedString nameLocStr = root.GetLocString("Name");
-                    if (nameLocStr != null && !nameLocStr.IsInvalid)
+                    if (nameLocStr != null && nameLocStr.StringRef != -1)
                     {
                         _displayName = nameLocStr.ToString();
                     }
@@ -812,7 +815,7 @@ namespace Andastra.Runtime.Games.Odyssey
                     // ObjectId: Use from GIT if available, otherwise generate
                     // Note: GITCreature doesn't store ObjectId, so we generate one
                     uint objectId = GetObjectId(null);
-                    var entity = new OdysseyEntity(objectId, ObjectType.Creature, creature.ResRef?.ToString() ?? string.Empty);
+                    var entity = new OdysseyEntity(objectId, RuntimeObjectType.Creature, creature.ResRef?.ToString() ?? string.Empty);
 
                     // Set position from GIT
                     // Based on swkotor2.exe: FUN_004dfbb0 reads XPosition, YPosition, ZPosition
@@ -848,7 +851,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 foreach (Parsing.Resource.Generics.GITDoor door in git.Doors)
                 {
                     uint objectId = GetObjectId(null);
-                    var entity = new OdysseyEntity(objectId, ObjectType.Door, door.Tag ?? string.Empty);
+                    var entity = new OdysseyEntity(objectId, RuntimeObjectType.Door, door.Tag ?? string.Empty);
 
                     // Set position and orientation from GIT
                     // Based on swkotor2.exe: FUN_004e08e0 reads X, Y, Z, Bearing
@@ -882,7 +885,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 foreach (Parsing.Resource.Generics.GITPlaceable placeable in git.Placeables)
                 {
                     uint objectId = GetObjectId(null);
-                    var entity = new OdysseyEntity(objectId, ObjectType.Placeable, placeable.ResRef?.ToString() ?? string.Empty);
+                    var entity = new OdysseyEntity(objectId, RuntimeObjectType.Placeable, placeable.ResRef?.ToString() ?? string.Empty);
 
                     // Set position and orientation from GIT
                     // Based on swkotor2.exe: FUN_004e08e0 reads X, Y, Z, Bearing
@@ -907,7 +910,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 foreach (Parsing.Resource.Generics.GITTrigger trigger in git.Triggers)
                 {
                     uint objectId = GetObjectId(null);
-                    var entity = new OdysseyEntity(objectId, ObjectType.Trigger, trigger.Tag ?? string.Empty);
+                    var entity = new OdysseyEntity(objectId, RuntimeObjectType.Trigger, trigger.Tag ?? string.Empty);
 
                     // Set position from GIT
                     // Based on swkotor2.exe: FUN_004e5920 reads XPosition, YPosition, ZPosition
@@ -947,7 +950,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 foreach (Parsing.Resource.Generics.GITWaypoint waypoint in git.Waypoints)
                 {
                     uint objectId = GetObjectId(null);
-                    var entity = new OdysseyEntity(objectId, ObjectType.Waypoint, waypoint.Tag ?? string.Empty);
+                    var entity = new OdysseyEntity(objectId, RuntimeObjectType.Waypoint, waypoint.Tag ?? string.Empty);
 
                     // Set position and orientation from GIT
                     // Based on swkotor2.exe: FUN_004e04a0 reads XPosition, YPosition, ZPosition, XOrientation, YOrientation
@@ -964,7 +967,7 @@ namespace Andastra.Runtime.Games.Odyssey
                     if (waypointComponent != null && waypointComponent is Components.OdysseyWaypointComponent odysseyWaypoint)
                     {
                         odysseyWaypoint.HasMapNote = waypoint.HasMapNote;
-                        if (waypoint.HasMapNote && waypoint.MapNote != null && !waypoint.MapNote.IsInvalid)
+                        if (waypoint.HasMapNote && waypoint.MapNote != null && waypoint.MapNote.StringRef != -1)
                         {
                             odysseyWaypoint.MapNote = waypoint.MapNote.ToString();
                             odysseyWaypoint.MapNoteEnabled = waypoint.MapNoteEnabled;
@@ -977,7 +980,7 @@ namespace Andastra.Runtime.Games.Odyssey
                     }
 
                     // Set waypoint name from GIT
-                    if (waypoint.Name != null && !waypoint.Name.IsInvalid)
+                    if (waypoint.Name != null && waypoint.Name.StringRef != -1)
                     {
                         entity.DisplayName = waypoint.Name.ToString();
                     }
@@ -996,7 +999,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 foreach (Parsing.Resource.Generics.GITSound sound in git.Sounds)
                 {
                     uint objectId = GetObjectId(null);
-                    var entity = new OdysseyEntity(objectId, ObjectType.Sound, sound.ResRef?.ToString() ?? string.Empty);
+                    var entity = new OdysseyEntity(objectId, RuntimeObjectType.Sound, sound.ResRef?.ToString() ?? string.Empty);
 
                     // Set position from GIT
                     // Based on swkotor2.exe: FUN_004e06a0 reads XPosition, YPosition, ZPosition
@@ -1404,22 +1407,22 @@ namespace Andastra.Runtime.Games.Odyssey
             // Remove from type-specific lists
             switch (entity.ObjectType)
             {
-                case ObjectType.Creature:
+                case RuntimeObjectType.Creature:
                     _creatures.Remove(entity);
                     break;
-                case ObjectType.Placeable:
+                case RuntimeObjectType.Placeable:
                     _placeables.Remove(entity);
                     break;
-                case ObjectType.Door:
+                case RuntimeObjectType.Door:
                     _doors.Remove(entity);
                     break;
-                case ObjectType.Trigger:
+                case RuntimeObjectType.Trigger:
                     _triggers.Remove(entity);
                     break;
-                case ObjectType.Waypoint:
+                case RuntimeObjectType.Waypoint:
                     _waypoints.Remove(entity);
                     break;
-                case ObjectType.Sound:
+                case RuntimeObjectType.Sound:
                     _sounds.Remove(entity);
                     break;
             }
@@ -1442,37 +1445,37 @@ namespace Andastra.Runtime.Games.Odyssey
             // Add to type-specific lists
             switch (entity.ObjectType)
             {
-                case ObjectType.Creature:
+                case RuntimeObjectType.Creature:
                     if (!_creatures.Contains(entity))
                     {
                         _creatures.Add(entity);
                     }
                     break;
-                case ObjectType.Placeable:
+                case RuntimeObjectType.Placeable:
                     if (!_placeables.Contains(entity))
                     {
                         _placeables.Add(entity);
                     }
                     break;
-                case ObjectType.Door:
+                case RuntimeObjectType.Door:
                     if (!_doors.Contains(entity))
                     {
                         _doors.Add(entity);
                     }
                     break;
-                case ObjectType.Trigger:
+                case RuntimeObjectType.Trigger:
                     if (!_triggers.Contains(entity))
                     {
                         _triggers.Add(entity);
                     }
                     break;
-                case ObjectType.Waypoint:
+                case RuntimeObjectType.Waypoint:
                     if (!_waypoints.Contains(entity))
                     {
                         _waypoints.Add(entity);
                     }
                     break;
-                case ObjectType.Sound:
+                case RuntimeObjectType.Sound:
                     if (!_sounds.Contains(entity))
                     {
                         _sounds.Add(entity);

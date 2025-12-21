@@ -319,7 +319,7 @@ namespace HolocronToolset.Editors
         private void SetupUI()
         {
             // Try to find controls from XAML if available
-            // For now, programmatic UI is set up in SetupProgrammaticUI
+            // TODO: STUB - For now, programmatic UI is set up in SetupProgrammaticUI
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:111-121

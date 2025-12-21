@@ -287,7 +287,7 @@ namespace Andastra.Runtime.Content.Save
         {
             // SaveGameData doesn't have a path property, so we can't determine it here
             // This is a limitation - we'd need the save path passed in
-            // For now, return null and let the caller handle path management
+            // TODO: STUB - For now, return null and let the caller handle path management
             return null;
         }
 
@@ -1991,7 +1991,7 @@ namespace Andastra.Runtime.Content.Save
 
                 // Cached modules are stored as ResourceType.SAV (2057) with ResRef = areaResRef
                 // The data inside is either ERF or RIM format
-                // For now, we'll serialize as RIM (most common format for area state)
+                // TODO: STUB - For now, we'll serialize as RIM (most common format for area state)
                 byte[] moduleData = SerializeAreaStateAsModule(areaState);
                 if (moduleData != null)
                 {

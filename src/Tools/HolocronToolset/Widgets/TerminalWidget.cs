@@ -90,16 +90,42 @@ namespace HolocronToolset.Widgets
 
         private void SetupUI()
         {
-            // Find controls from XAML
-            _terminalOutput = this.FindControl<TextBox>("terminalOutput");
+            // If already set up programmatically, skip
             if (_terminalOutput != null)
             {
-                ApplyTerminalTheme();
-                _terminalOutput.KeyDown += OnKeyDown;
-                WriteOutput("Holocron Toolset Terminal\n");
-                WriteOutput("Type 'help' for available commands.\n\n");
-                WritePrompt();
+                return;
             }
+
+            // Find controls from XAML (may fail if not in visual tree)
+            try
+            {
+                _terminalOutput = this.FindControl<TextBox>("terminalOutput");
+            }
+            catch (InvalidOperationException)
+            {
+                // Not in a visual tree (e.g., in unit tests) - will create programmatically
+                _terminalOutput = null;
+            }
+
+            // If not found in XAML, create programmatically
+            if (_terminalOutput == null)
+            {
+                _terminalOutput = new TextBox
+                {
+                    IsReadOnly = false,
+                    AcceptsReturn = true,
+                    AcceptsTab = false,
+                    TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+                    FontFamily = new FontFamily("Consolas"),
+                    FontSize = 10
+                };
+            }
+
+            ApplyTerminalTheme();
+            _terminalOutput.KeyDown += OnKeyDown;
+            WriteOutput("Holocron Toolset Terminal\n");
+            WriteOutput("Type 'help' for available commands.\n\n");
+            WritePrompt();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/terminal_widget.py:74-106

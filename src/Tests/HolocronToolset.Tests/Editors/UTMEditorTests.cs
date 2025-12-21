@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using Andastra.Parsing;
 using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Resource.Generics.UTM;
 using Andastra.Parsing.Resource;
 using FluentAssertions;
 using HolocronToolset.Data;

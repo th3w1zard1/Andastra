@@ -6,6 +6,7 @@ using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Parsing;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource.Generics;
+using UTI = Andastra.Parsing.Resource.Generics.UTI.UTI;
 
 namespace Andastra.Runtime.Engines.Odyssey.UI
 {

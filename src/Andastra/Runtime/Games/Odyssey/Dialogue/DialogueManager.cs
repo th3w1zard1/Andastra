@@ -1094,7 +1094,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
                     // Award XP to all active party members
                     // Based on swkotor2.exe: FUN_0057ccd0 awards XP to party
                     // Original implementation awards XP to all active party members
-                    _partySystem.AwardXP(finalXP, split: false);
+                    _partySystem.AwardXP(finalXP);
                 }
             }
 

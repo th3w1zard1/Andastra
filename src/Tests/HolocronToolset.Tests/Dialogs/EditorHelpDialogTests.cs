@@ -572,12 +572,15 @@ namespace HolocronToolset.Tests.Dialogs
             var missingFiles = new List<Tuple<string, string>>();
             foreach (var kvp in EditorWikiMapping.EditorWikiMap)
             {
-                if (kvp.Value != null)
+                if (kvp.Value != null && kvp.Value.Length > 0)
                 {
-                    string filePath = Path.Combine(wikiPath, kvp.Value);
-                    if (!File.Exists(filePath))
+                    foreach (string wikiFile in kvp.Value)
                     {
-                        missingFiles.Add(Tuple.Create(kvp.Key, kvp.Value));
+                        string filePath = Path.Combine(wikiPath, wikiFile);
+                        if (!File.Exists(filePath))
+                        {
+                            missingFiles.Add(Tuple.Create(kvp.Key, wikiFile));
+                        }
                     }
                 }
             }

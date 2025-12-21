@@ -35,6 +35,36 @@ namespace Andastra.Runtime.Core.Game
         /// Character name.
         /// </summary>
         public string Name { get; set; }
+
+        /// <summary>
+        /// Strength attribute.
+        /// </summary>
+        public int Strength { get; set; }
+
+        /// <summary>
+        /// Dexterity attribute.
+        /// </summary>
+        public int Dexterity { get; set; }
+
+        /// <summary>
+        /// Constitution attribute.
+        /// </summary>
+        public int Constitution { get; set; }
+
+        /// <summary>
+        /// Intelligence attribute.
+        /// </summary>
+        public int Intelligence { get; set; }
+
+        /// <summary>
+        /// Wisdom attribute.
+        /// </summary>
+        public int Wisdom { get; set; }
+
+        /// <summary>
+        /// Charisma attribute.
+        /// </summary>
+        public int Charisma { get; set; }
     }
 
     /// <summary>

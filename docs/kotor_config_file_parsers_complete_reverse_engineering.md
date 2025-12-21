@@ -6,7 +6,7 @@
 
 This document provides **complete** documentation of:
 1. **config.txt** parser - Command execution script
-2. **startup.txt** parser - Startup command execution script  
+2. **startup.txt** parser - Startup command execution script
 3. **swkotor.ini** parser - INI configuration file (KOTOR 1)
 4. **swKotor2.ini** parser - INI configuration file (KOTOR 2)
 
@@ -27,12 +27,12 @@ For each file type, this document includes:
    - [File Format Specification](#file-format-specification)
    - [Command Syntax](#command-syntax)
    - [Known Commands](#known-commands)
-   
+
 2. [swKotor2.ini Parser (KOTOR 2)](#2-swkotor2ini-parser-kotor-2)
    - [INI File Format](#ini-file-format)
    - [Complete Options Reference](#complete-options-reference)
    - [Default Values](#default-values)
-   
+
 3. [swkotor.ini Parser (KOTOR 1)](#3-swkotorini-parser-kotor-1)
    - [INI File Format](#ini-file-format-1)
    - [Complete Options Reference](#complete-options-reference-1)
@@ -49,7 +49,7 @@ For each file type, this document includes:
 **Main Parser Function**: `FUN_00460ff0` (swkotor2.exe: `0x00460ff0`)
 - **Signature**: `undefined * FUN_00460ff0(char *param_1)`
 - **Purpose**: Executes text files (config.txt, startup.txt) as command scripts
-- **Called From**: 
+- **Called From**:
   - GameMain line 55: `FUN_00460ff0("config.txt")`
   - GameMain line 116: `FUN_00460ff0("startup.txt")`
 
@@ -61,7 +61,7 @@ For each file type, this document includes:
 **File Opening Function**: `FUN_00460db0` (swkotor2.exe: `0x00460db0`)
 - **Signature**: `int * FUN_00460db0(undefined4 param_1, undefined1 *param_2, int *param_3, char param_4)`
 - **Purpose**: Opens files with path resolution
-- **Implementation**: 
+- **Implementation**:
   - Line 21: Constructs path: `"%s%s%s"` format
   - Line 22: Opens file in binary read mode: `"rb"`
   - Returns NULL if file doesn't exist
@@ -563,7 +563,7 @@ All findings verified via:
 
 ---
 
-**Document Generated**: Based exclusively on Ghidra MCP reverse engineering analysis  
-**Analysis Date**: Static binary analysis  
+**Document Generated**: Based exclusively on Ghidra MCP reverse engineering analysis
+**Analysis Date**: Static binary analysis
 **Methodology**: Decompilation, cross-reference analysis, string searching, and comparison with known documentation
 

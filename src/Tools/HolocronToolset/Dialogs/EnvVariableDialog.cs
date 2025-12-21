@@ -199,7 +199,7 @@ namespace HolocronToolset.Dialogs
 
                 // Note: Avalonia doesn't have a built-in AutoCompleteBox like Qt's QCompleter
                 // The value field will remain a TextBox, but we can show possible values in tooltip or description
-                // For now, we'll rely on the validation to guide users
+                // TODO: STUB - For now, we'll rely on the validation to guide users
             }
             else
             {

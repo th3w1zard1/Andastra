@@ -1991,7 +1991,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Note: Checkbox and NumericUpDown fields will fail due to known issue
             // TrapType may also fail if ComboBox2DA SetSelectedIndex doesn't work correctly
-            // For now, just verify the test runs without crashing
+            // TODO: STUB - For now, just verify the test runs without crashing
             modifiedUtt.Should().NotBeNull("Modified UTT should not be null");
         }
 

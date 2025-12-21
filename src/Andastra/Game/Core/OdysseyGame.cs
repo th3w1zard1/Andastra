@@ -751,17 +751,25 @@ namespace Andastra.Runtime.Game.Core
         /// Plays a button sound effect.
         /// Based on swkotor.exe and swkotor2.exe: Button interactions play sound effects
         /// </summary>
+        /// <summary>
+        /// Plays a button sound effect.
+        /// Based on swkotor.exe and swkotor2.exe: Button interactions play sound effects
+        /// Sound files: "gui_actscroll" (hover/click), "gui_actscroll1" (alternative)
+        /// From guisounds.2da: Clicked_Default and Entered_Default sound references
+        /// </summary>
         private void PlayButtonSound(string soundResRef)
         {
+            if (_soundPlayer == null)
+            {
+                return;
+            }
+
             try
             {
-                // Get sound player from graphics backend audio manager
-                var soundPlayer = _graphicsBackend.AudioManager?.SoundPlayer;
-                if (soundPlayer != null)
-                {
-                    // Play sound at full volume, non-positional (2D sound)
-                    soundPlayer.PlaySound(soundResRef, 1.0f, false, System.Numerics.Vector3.Zero);
-                }
+                // Play sound at full volume, non-positional (2D sound)
+                // Based on swkotor.exe and swkotor2.exe: Button sounds are 2D (not positional)
+                // Original implementation: Plays sound immediately when button interaction occurs
+                _soundPlayer.PlaySound(soundResRef, 1.0f);
             }
             catch (Exception ex)
             {

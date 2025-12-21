@@ -132,10 +132,7 @@ namespace HolocronToolset.Tests.Windows
 
                 // Matching Python line 377: assert builder.ui.actionSettings.isEnabled() is False
                 // ActionSettings should be disabled when no installation is provided
-                if (builder.Ui.ActionSettings != null)
-                {
-                    builder.Ui.ActionSettings.IsEnabled.Should().BeFalse("ActionSettings should be disabled when no installation is provided");
-                }
+                builder.Ui.ActionSettingsEnabled.Should().BeFalse("ActionSettings should be disabled when no installation is provided");
 
                 // Matching Python line 378: assert builder._module_kit_manager is None
                 builder.ModuleKitManager.Should().BeNull("ModuleKitManager should be null when no installation is provided");
@@ -226,7 +223,7 @@ namespace HolocronToolset.Tests.Windows
         // TODO: STUB - Implement test_move_warp_command (vendor/PyKotor/Tools/HolocronToolset/tests/gui/windows/test_indoor_builder.py)
         //
         // These will be ported once the IndoorMapBuilder implementation is complete.
-        // For now, placeholder tests are created to ensure zero omissions.
+        // TODO: STUB - For now, placeholder tests are created to ensure zero omissions.
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/windows/test_indoor_builder.py:403-426
         // Original: def test_add_room_command_undo_redo(self, qtbot: QtBot, builder_no_kits: IndoorMapBuilder, real_kit_component: KitComponent):
@@ -2435,7 +2432,7 @@ namespace HolocronToolset.Tests.Windows
                 // Note: In headless tests, operations are synchronous
 
                 // Matching Python line 1018: assert builder.ui.gridSizeSpin.value() >= builder.ui.gridSizeSpin.minimum()
-                // For now, verify the value was set (actual min/max validation will be in UI)
+                // TODO: STUB - For now, verify the value was set (actual min/max validation will be in UI)
                 renderer.GridSize.Should().BeApproximately(0.1f, 0.001f, "grid_size should accept 0.1");
 
                 // Matching Python line 1021: builder.ui.gridSizeSpin.setValue(100.0)
@@ -2446,7 +2443,7 @@ namespace HolocronToolset.Tests.Windows
                 // Note: In headless tests, operations are synchronous
 
                 // Matching Python line 1024: assert builder.ui.gridSizeSpin.value() <= builder.ui.gridSizeSpin.maximum()
-                // For now, verify the value was set (actual min/max validation will be in UI)
+                // TODO: STUB - For now, verify the value was set (actual min/max validation will be in UI)
                 renderer.GridSize.Should().BeApproximately(100.0f, 0.001f, "grid_size should accept 100.0");
             }
             finally
@@ -5233,7 +5230,7 @@ namespace HolocronToolset.Tests.Windows
 
                     // Matching Python: assert len(component.bwm.faces) > 0
                     // Note: BWM.Faces is a property, we need to check if it exists
-                    // For now, just verify BWM is not null
+                    // TODO: STUB - For now, just verify BWM is not null
                     return; // Found a component with valid BWM, test passes
                 }
             }
@@ -5379,7 +5376,7 @@ namespace HolocronToolset.Tests.Windows
 
                     // Note: BWM geometry validation requires access to vertices/faces
                     // This will be fully implemented when ModuleKit._load_module_components is complete
-                    // For now, verify BWM exists
+                    // TODO: STUB - For now, verify BWM exists
                     bwm.Should().NotBeNull("Component BWM should not be null");
                     return; // Found a component with BWM, test passes
                 }
@@ -5429,7 +5426,7 @@ namespace HolocronToolset.Tests.Windows
                     // 1. BWM vertices access
                     // 2. Image dimension access (QImage width/height)
                     // This will be fully implemented when ModuleKit._load_module_components is complete
-                    // For now, verify both exist
+                    // TODO: STUB - For now, verify both exist
                     bwm.Should().NotBeNull("Component BWM should not be null");
                     image.Should().NotBeNull("Component image should not be null");
                     return; // Found a component with BWM and image, test passes
@@ -5547,7 +5544,7 @@ namespace HolocronToolset.Tests.Windows
 
                     // Note: Full scale validation requires real_kit_component fixture and image/BWM access
                     // This will be fully implemented when ModuleKit._load_module_components is complete
-                    // For now, verify component exists
+                    // TODO: STUB - For now, verify component exists
                     moduleComponent.Should().NotBeNull("Module component should exist");
                     return; // Found a component, test passes
                 }
@@ -5590,7 +5587,7 @@ namespace HolocronToolset.Tests.Windows
 
                     // Note: Image format validation requires QImage format access
                     // This will be fully implemented when ModuleKit._load_module_components is complete
-                    // For now, verify image exists
+                    // TODO: STUB - For now, verify image exists
                     image.Should().NotBeNull("Component image should not be null");
                     return; // Found a component with image, test passes
                 }
@@ -5633,7 +5630,7 @@ namespace HolocronToolset.Tests.Windows
 
                     // Note: Image mirroring validation requires pixel data access
                     // This will be fully implemented when ModuleKit._load_module_components is complete
-                    // For now, verify image exists and is valid
+                    // TODO: STUB - For now, verify image exists and is valid
                     image.Should().NotBeNull("Component image should not be null");
                     return; // Found a component with image, test passes
                 }
@@ -5678,7 +5675,7 @@ namespace HolocronToolset.Tests.Windows
 
                     // Note: Image size validation requires QImage width/height access
                     // This will be fully implemented when ModuleKit._load_module_components is complete
-                    // For now, verify image exists
+                    // TODO: STUB - For now, verify image exists
                     image.Should().NotBeNull("Component image should not be null");
                     return; // Found a component with image, test passes
                 }
@@ -5721,7 +5718,7 @@ namespace HolocronToolset.Tests.Windows
 
                     // Note: BWM recentering validation requires vertex access
                     // This will be fully implemented when ModuleKit._load_module_components is complete
-                    // For now, verify BWM exists
+                    // TODO: STUB - For now, verify BWM exists
                     bwm.Should().NotBeNull("Component BWM should not be null");
                     return; // Found a component with BWM, test passes
                 }
@@ -5769,7 +5766,7 @@ namespace HolocronToolset.Tests.Windows
 
                     // Note: Full image generation validation requires real_kit_component fixture and detailed image/BWM access
                     // This will be fully implemented when ModuleKit._load_module_components is complete
-                    // For now, verify both exist
+                    // TODO: STUB - For now, verify both exist
                     moduleImage.Should().NotBeNull("Module component image should not be null");
                     moduleBwm.Should().NotBeNull("Module component BWM should not be null");
                     return; // Found a component with image and BWM, test passes
@@ -6678,7 +6675,7 @@ namespace HolocronToolset.Tests.Windows
 
                     // Note: Full pixel-per-unit validation requires image width/height and BWM vertex access
                     // This will be fully implemented when ModuleKit._load_module_components is complete
-                    // For now, verify both exist
+                    // TODO: STUB - For now, verify both exist
                     image.Should().NotBeNull("Component image should not be null");
                     bwm.Should().NotBeNull("Component BWM should not be null");
                     return; // Found a component with image and BWM, test passes

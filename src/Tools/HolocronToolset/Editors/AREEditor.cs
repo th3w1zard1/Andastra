@@ -899,7 +899,7 @@ namespace HolocronToolset.Editors
             }
             // Matching Python: self.ui.dirtFunction1Spin.setValue(are.dirty_func_1) (line 233)
             // Note: ARE class doesn't have DirtyFunc properties - these may need to be extracted from GFF
-            // For now, default to 0
+            // TODO: STUB - For now, default to 0
             if (_dirtFunction1Spin != null)
             {
                 _dirtFunction1Spin.Value = 0;

@@ -9,6 +9,7 @@ using Andastra.Runtime.Engines.Odyssey.Components;
 using Andastra.Runtime.Engines.Odyssey.Systems;
 using Andastra.Runtime.Engines.Odyssey.Data;
 using Andastra.Runtime.Games.Common.Combat;
+using BaseItemData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.BaseItemData;
 
 namespace Andastra.Runtime.Engines.Odyssey.Combat
 {

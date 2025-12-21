@@ -122,7 +122,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// 2. Check if face is walkable
         /// 3. Project point to face and verify it's within face bounds
         /// </remarks>
-        public bool IsPointWalkable(Vector3 point)
+        public override bool IsPointWalkable(Vector3 point)
         {
             // Find face at point (2D projection)
             int faceIndex = FindFaceAt(point);
@@ -191,7 +191,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// - Projects point onto face plane using barycentric interpolation (equivalent to FUN_0055b1d0)
         /// - Returns projected position and height
         /// </remarks>
-        public bool ProjectToWalkmesh(Vector3 point, out Vector3 result, out float height)
+        public override bool ProjectToWalkmesh(Vector3 point, out Vector3 result, out float height)
         {
             result = point;
             height = point.Y;
@@ -267,6 +267,15 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Returns false if point is not over walkable surface.
         /// 
         /// Based on FUN_004f5070 @ 0x004f5070 in swkotor2.exe.
+        public override Vector3? ProjectPoint(Vector3 point)
+        {
+            if (ProjectToWalkmesh(point, out Vector3 result, out float height))
+            {
+                return result;
+            }
+            return null;
+        }
+        
         /// Uses same projection logic as ProjectToWalkmesh but only returns height.
         /// </remarks>
         public bool GetHeightAtPoint(Vector3 point, out float height)

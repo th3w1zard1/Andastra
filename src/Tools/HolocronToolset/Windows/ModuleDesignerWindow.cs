@@ -168,7 +168,7 @@ namespace HolocronToolset.Windows
 
                 // Matching Python: combined_module = Module(mod_root, self._installation, use_dot_mod=is_mod_file(mod_filepath))
                 // Note: Module class needs to be implemented in Andastra.Parsing
-                // For now, this is a placeholder matching the Python interface
+                // TODO: STUB - For now, this is a placeholder matching the Python interface
                 _modulePath = modFilepath;
                 _moduleName = Path.GetFileNameWithoutExtension(modFilepath);
 
@@ -221,7 +221,7 @@ namespace HolocronToolset.Windows
             // Matching Python: git.path = self._module.path() / "module.git"
             // Matching Python: write_git(git, git.path)
             // Note: GIT saving needs to be implemented in Andastra.Parsing
-            // For now, this is a placeholder matching the Python interface
+            // TODO: STUB - For now, this is a placeholder matching the Python interface
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/module_designer.py:1199-1262
@@ -235,7 +235,7 @@ namespace HolocronToolset.Windows
 
             // Matching Python implementation: Build tree of module resources
             // This will be fully implemented when Module class provides resource enumeration
-            // For now, clear the tree
+            // TODO: STUB - For now, clear the tree
             Ui.ModuleTree.ItemsSource = null;
         }
 
@@ -245,7 +245,7 @@ namespace HolocronToolset.Windows
         {
             // Matching Python implementation: Rebuild list of GIT instances
             // This will be fully implemented when GIT and instance classes are available
-            // For now, this is a placeholder matching the Python interface
+            // TODO: STUB - For now, this is a placeholder matching the Python interface
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/module_designer.py:978-983

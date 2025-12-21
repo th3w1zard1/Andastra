@@ -3707,6 +3707,41 @@ namespace Andastra.Runtime.Core.Navigation
         }
 
         /// <summary>
+        /// Projects a point onto the walkmesh (alias for ProjectToSurface for compatibility).
+        /// </summary>
+        public bool ProjectToWalkmesh(Vector3 point, out Vector3 result, out float height)
+        {
+            return ProjectToSurface(point, out result, out height);
+        }
+
+        /// <summary>
+        /// Projects a point onto the navigation mesh, returning the projected point or null.
+        /// </summary>
+        public Vector3? ProjectPoint(Vector3 point)
+        {
+            Vector3 result;
+            float height;
+            if (ProjectToSurface(point, out result, out height))
+            {
+                return result;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Checks if a point is walkable (finds face and checks if it's walkable).
+        /// </summary>
+        public bool IsPointWalkable(Vector3 point)
+        {
+            int faceIndex = FindFaceAt(point);
+            if (faceIndex < 0)
+            {
+                return false;
+            }
+            return IsWalkable(faceIndex);
+        }
+
+        /// <summary>
         /// Determines the Z (height) coordinate for a given (x, y) point on a triangle's plane.
         /// Based on swkotor2.exe: FUN_004d6b10 @ 0x004d6b10 (plane equation height calculation).
         /// </summary>

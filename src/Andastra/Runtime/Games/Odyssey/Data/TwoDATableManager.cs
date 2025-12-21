@@ -58,7 +58,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
             }
 
             // Check cache first
-            TwoDA cached;d;d;d;d;
+            TwoDA cached;
             if (_cachedTables.TryGetValue(tableName, out cached))
             {
                 return cached;

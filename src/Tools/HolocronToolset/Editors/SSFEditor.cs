@@ -429,7 +429,7 @@ namespace HolocronToolset.Editors
         {
             // File dialog to select TLK file
             // This will be implemented when file dialogs are available
-            // For now, use installation's talktable if available
+            // TODO: STUB - For now, use installation's talktable if available
             if (_installation != null)
             {
                 if (_installation != null)

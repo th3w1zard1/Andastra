@@ -1,6 +1,9 @@
 using System.Collections.Generic;
 using Andastra.Runtime.Core.Interfaces;
 
+using ClassData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.ClassData;
+using FeatData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.FeatData;
+
 namespace Andastra.Runtime.Engines.Odyssey.Components
 {
     /// <summary>
@@ -274,7 +277,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
             foreach (CreatureClass cls in ClassList)
             {
                 // Look up class data to check if it's a Force-using class
-                Data.ClassData classData = gameDataManager.GetClass(cls.ClassId);
+                ClassData classData = gameDataManager.GetClass(cls.ClassId);
                 if (classData != null && classData.ForceUser)
                 {
                     totalLevel += cls.Level;
@@ -346,7 +349,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
                 return true;
             }
 
-            Data.FeatData featData = gameDataManager.GetFeat(featId);
+            FeatData featData = gameDataManager.GetFeat(featId);
             if (featData == null)
             {
                 // Feat data not found, assume usable if creature has it
@@ -428,7 +431,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
                 return true;
             }
 
-            Data.FeatData featData = gameDataManager.GetFeat(featId);
+            FeatData featData = gameDataManager.GetFeat(featId);
             if (featData == null)
             {
                 return true;
@@ -474,7 +477,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
             // Reset uses for all feats the creature has
             foreach (int featId in FeatList)
             {
-                Data.FeatData featData = gameDataManager.GetFeat(featId);
+                FeatData featData = gameDataManager.GetFeat(featId);
                 if (featData != null && featData.UsesPerDay > 0)
                 {
                     FeatDailyUses[featId] = featData.UsesPerDay;

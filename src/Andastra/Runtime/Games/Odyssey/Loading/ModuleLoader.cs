@@ -6,6 +6,7 @@ using System.Numerics;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.LYT;
+using LYT = Andastra.Parsing.Resource.Formats.LYT.LYT;
 using Andastra.Parsing.Formats.VIS;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Parsing.Common;

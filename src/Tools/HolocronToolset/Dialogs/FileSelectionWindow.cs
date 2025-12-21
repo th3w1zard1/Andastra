@@ -320,7 +320,7 @@ namespace HolocronToolset.Dialogs
                             var fileInfo = filePath;
                             // Add detailed stat information
                             // Note: Full stat implementation would require more detailed file system access
-                            // For now, we'll add basic file information
+                            // TODO: STUB - For now, we'll add basic file information
                             item.SizeOnDisk = HumanReadableSize(fileInfo.Length);
                             item.LastModified = fileInfo.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss");
                             item.Created = fileInfo.CreationTime.ToString("yyyy-MM-dd HH:mm:ss");

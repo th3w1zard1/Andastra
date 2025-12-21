@@ -867,7 +867,7 @@ namespace HolocronToolset.Dialogs
                     if (item is FileResource resource)
                     {
                         // Filter logic would be implemented here
-                        // For now, just show all items
+                        // TODO: STUB - For now, just show all items
                     }
                 }
             }

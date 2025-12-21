@@ -3,6 +3,7 @@ using System.Numerics;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
+using Andastra.Runtime.Engines.Odyssey.Components;
 using Andastra.Runtime.Games.Odyssey.Components;
 using JetBrains.Annotations;
 using Vector3 = System.Numerics.Vector3;
@@ -22,7 +23,7 @@ namespace Andastra.Runtime.Games.Odyssey.Systems
     /// - Action-capable entities (creatures, doors, placeables) receive ActionQueueComponent
     /// - All entities receive ScriptHooksComponent for script execution (ScriptHeartbeat, ScriptOnNotice, etc.)
     /// - Type-specific components are added based on ObjectType (CreatureComponent, DoorComponent, PlaceableComponent, etc.)
-    /// 
+    ///
     /// Original Implementation (swkotor.exe):
     /// - GIT loading: FUN_0050dd80 @ 0x0050dd80 loads GIT file and creates entities from lists
     ///   - FUN_00504a70 @ 0x00504a70 creates creatures from "Creature List"
@@ -35,7 +36,7 @@ namespace Andastra.Runtime.Games.Odyssey.Systems
     ///   - FUN_0050a7b0 @ 0x0050a7b0 creates stores from "Store List"
     /// - Creature template loading: Functions that load UTC templates initialize creature components
     /// - Component attachment: Components are attached during entity creation, not separately initialized
-    /// 
+    ///
     /// Original Implementation (swkotor2.exe):
     /// - GIT loading: FUN_004e9440 @ 0x004e9440 loads GIT file and creates entities from lists
     ///   - FUN_004dff20 @ 0x004dff20 creates creatures from "Creature List"
@@ -51,7 +52,7 @@ namespace Andastra.Runtime.Games.Odyssey.Systems
     ///   - Called by FUN_005223a0 @ 0x005223a0 (creature creation from GIT)
     ///   - Called by FUN_00595ca0 @ 0x00595ca0 (player character creation)
     /// - Component attachment: Components are attached during entity creation, not separately initialized
-    /// 
+    ///
     /// Common Patterns (both executables):
     /// - Transform component: All entities have position/orientation data loaded from GIT or templates
     /// - Renderable component: Entities with visual models (creatures, doors, placeables, items) have renderable components
@@ -69,7 +70,7 @@ namespace Andastra.Runtime.Games.Odyssey.Systems
         /// <remarks>
         /// This method implements the common component initialization logic from both swkotor.exe and swkotor2.exe.
         /// Components are added based on the entity's ObjectType, matching the behavior of the original engine.
-        /// 
+        ///
         /// Component initialization order:
         /// 1. TransformComponent - All entities (position/orientation)
         /// 2. RenderableComponent - Entities with visual models (creatures, doors, placeables, items)
@@ -77,7 +78,7 @@ namespace Andastra.Runtime.Games.Odyssey.Systems
         /// 4. Type-specific components - Based on ObjectType (CreatureComponent, DoorComponent, etc.)
         /// 5. ScriptHooksComponent - All entities (script execution)
         /// 6. ActionQueueComponent - Entities that can perform actions (creatures, doors, placeables)
-        /// 
+        ///
         /// Based on:
         /// - swkotor.exe: FUN_0050dd80 @ 0x0050dd80 (GIT loading), FUN_00504a70 @ 0x00504a70 (creature creation)
         /// - swkotor2.exe: FUN_004e9440 @ 0x004e9440 (GIT loading), FUN_005fb0f0 @ 0x005fb0f0 (creature template loading)
@@ -142,7 +143,7 @@ namespace Andastra.Runtime.Games.Odyssey.Systems
                     }
                     if (!entity.HasComponent<IFactionComponent>())
                     {
-                        var factionComponent = new Components.OdysseyFactionComponent();
+                        var factionComponent = new Andastra.Runtime.Engines.Odyssey.Components.OdysseyFactionComponent();
                         // Set FactionID from entity data if available (loaded from UTC template)
                         if (entity.GetData("FactionID") is int factionId)
                         {
@@ -185,7 +186,7 @@ namespace Andastra.Runtime.Games.Odyssey.Systems
                     {
                         var soundComponent = new SoundComponent();
                         soundComponent.Owner = entity;
-                        
+
                         // Initialize sound component properties from entity data if available (loaded from GIT)
                         // Based on EntityFactory.CreateSoundFromGit: Sound properties are stored in entity data
                         if (entity.GetData("Active") is bool active)
@@ -232,7 +233,7 @@ namespace Andastra.Runtime.Games.Odyssey.Systems
                         {
                             soundComponent.SoundFiles = sounds;
                         }
-                        
+
                         entity.AddComponent(soundComponent);
                     }
                     break;
@@ -286,7 +287,7 @@ namespace Andastra.Runtime.Games.Odyssey.Systems
         /// - Doors can perform actions (opening, closing, locking, etc.)
         /// - Placeables can perform actions (opening, closing, using, etc.)
         /// - Other entity types do not have action queues
-        /// 
+        ///
         /// Verified against:
         /// - swkotor.exe: Action queue system for creatures, doors, placeables
         /// - swkotor2.exe: Action queue system for creatures, doors, placeables
@@ -316,7 +317,7 @@ namespace Andastra.Runtime.Games.Odyssey.Systems
         /// - Placeables have visual models and are rendered in the world
         /// - Items have visual models when dropped or in inventory
         /// - Other entity types (triggers, waypoints, sounds, stores, encounters) do not have visual models
-        /// 
+        ///
         /// Verified against:
         /// - swkotor.exe: Renderable entities include creatures, doors, placeables, items
         /// - swkotor2.exe: Renderable entities include creatures, doors, placeables, items
@@ -346,7 +347,7 @@ namespace Andastra.Runtime.Games.Odyssey.Systems
         /// - Doors play animations (opening, closing, etc.)
         /// - Placeables play animations (opening, closing, using, etc.)
         /// - Other entity types do not play animations
-        /// 
+        ///
         /// Verified against:
         /// - swkotor.exe: Animated entities include creatures, doors, placeables
         /// - swkotor2.exe: Animated entities include creatures, doors, placeables

@@ -117,6 +117,21 @@ namespace Andastra.Runtime.Core.Interfaces
         bool ProjectToSurface(Vector3 point, out Vector3 result, out float height);
 
         /// <summary>
+        /// Projects a point onto the walkmesh (alias for ProjectToSurface for compatibility).
+        /// </summary>
+        bool ProjectToWalkmesh(Vector3 point, out Vector3 result, out float height);
+
+        /// <summary>
+        /// Projects a point onto the navigation mesh, returning the projected point or null.
+        /// </summary>
+        Vector3? ProjectPoint(Vector3 point);
+
+        /// <summary>
+        /// Checks if a point is walkable (finds face and checks if it's walkable).
+        /// </summary>
+        bool IsPointWalkable(Vector3 point);
+
+        /// <summary>
         /// Finds a path from start to goal while avoiding obstacles.
         /// </summary>
         /// <remarks>

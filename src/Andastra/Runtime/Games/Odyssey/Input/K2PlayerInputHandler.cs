@@ -134,14 +134,14 @@ namespace Andastra.Runtime.Games.Odyssey.Input
             //   Reads _maxAttackRange = twoDA.getFloat("maxattackrange") from baseitems.2da
             // PyKotor documentation: baseitems.2da has "maxattackrange" column (Integer) for maximum attack range
             IItemComponent itemComponent = weapon.GetComponent<IItemComponent>();
-            if (itemComponent != null && _world?.GameDataProvider != null)
+            if (itemComponent != null && World?.GameDataProvider != null)
             {
                 int baseItemId = itemComponent.BaseItem;
                 if (baseItemId >= 0)
                 {
                     // Read maxattackrange from baseitems.2da using GameDataProvider
                     // Based on swkotor2.exe: Reads maxattackrange column from baseitems.2da row indexed by BaseItem ID
-                    float maxAttackRange = _world.GameDataProvider.GetTableFloat("baseitems", baseItemId, "maxattackrange", 0.0f);
+                    float maxAttackRange = World.GameDataProvider.GetTableFloat("baseitems", baseItemId, "maxattackrange", 0.0f);
                     if (maxAttackRange > 0.0f)
                     {
                         // Convert from game units to world units if necessary (maxattackrange is typically in game units)
@@ -153,7 +153,7 @@ namespace Andastra.Runtime.Games.Odyssey.Input
                     // Fallback: Check if ranged weapon to use default ranged range
                     // Based on swkotor2.exe: Ranged weapons have longer default range than melee
                     // Read rangedweapon flag from baseitems.2da to determine if ranged
-                    int rangedWeapon = (int)_world.GameDataProvider.GetTableFloat("baseitems", baseItemId, "rangedweapon", 0.0f);
+                    int rangedWeapon = (int)World.GameDataProvider.GetTableFloat("baseitems", baseItemId, "rangedweapon", 0.0f);
                     if (rangedWeapon != 0)
                     {
                         // Default ranged weapon range (approximate fallback when maxattackrange not available)

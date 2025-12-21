@@ -307,7 +307,7 @@ namespace HolocronToolset.Editors
         private void SetupUI()
         {
             // Try to find controls from XAML if available
-            // For now, programmatic UI is set up in SetupProgrammaticUI
+            // TODO: STUB - For now, programmatic UI is set up in SetupProgrammaticUI
             
             if (_installation == null)
             {

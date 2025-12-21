@@ -96,10 +96,48 @@ namespace HolocronToolset.Widgets
 
         private void SetupUI()
         {
-            // Find controls from XAML
-            _searchEdit = this.FindControl<TextBox>("searchEdit");
-            _commandList = this.FindControl<ListBox>("commandList");
-            _statusLabel = this.FindControl<TextBlock>("statusLabel");
+            // If already set up programmatically, skip
+            if (_searchEdit != null && _commandList != null && _statusLabel != null)
+            {
+                return;
+            }
+
+            // Find controls from XAML (may fail if not in visual tree)
+            try
+            {
+                _searchEdit = this.FindControl<TextBox>("searchEdit");
+                _commandList = this.FindControl<ListBox>("commandList");
+                _statusLabel = this.FindControl<TextBlock>("statusLabel");
+            }
+            catch (InvalidOperationException)
+            {
+                // Not in a visual tree (e.g., in unit tests) - will create programmatically
+                _searchEdit = null;
+                _commandList = null;
+                _statusLabel = null;
+            }
+
+            // If not found in XAML, create programmatically (only if not already created)
+            if (_searchEdit == null)
+            {
+                _searchEdit = new TextBox
+                {
+                    Watermark = "Type to search commands...",
+                    Margin = new Avalonia.Thickness(8)
+                };
+            }
+            if (_commandList == null)
+            {
+                _commandList = new ListBox();
+            }
+            if (_statusLabel == null)
+            {
+                _statusLabel = new TextBlock
+                {
+                    Text = "",
+                    Margin = new Avalonia.Thickness(4, 8, 4, 8)
+                };
+            }
 
             if (_searchEdit != null)
             {

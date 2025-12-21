@@ -216,7 +216,7 @@ namespace HolocronToolset.Editors
         public void UpdateScene()
         {
             // Scene update - will be implemented when graphics scene is available
-            // For now, just ensure LYT data is consistent
+            // TODO: STUB - For now, just ensure LYT data is consistent
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:231-235
@@ -364,7 +364,7 @@ namespace HolocronToolset.Editors
                     // 3. Create a TPC object from the image data
                     // 4. Write as TPC
                     // 
-                    // For now, we provide a clear error message indicating this limitation
+                    // TODO: STUB - For now, we provide a clear error message indicating this limitation
                     System.Console.WriteLine($"Error: Direct import of {extension.ToUpperInvariant()} files is not yet supported.");
                     System.Console.WriteLine($"Please convert {Path.GetFileName(filePath)} to TGA or TPC format first, then import.");
                     System.Console.WriteLine($"You can use external tools to convert PNG/JPG/BMP to TGA, then import the TGA file.");
@@ -694,7 +694,7 @@ namespace HolocronToolset.Editors
         {
             // Update model browser UI with imported models
             // This method should refresh any model browser widget in the UI
-            // For now, we'll ensure the imported models list is maintained
+            // TODO: STUB - For now, we'll ensure the imported models list is maintained
             
             // If there's a model browser widget, it should be updated here
             // The actual UI update will depend on the specific model browser implementation
@@ -723,7 +723,7 @@ namespace HolocronToolset.Editors
         {
             // Update texture browser UI with imported textures
             // This method should refresh any texture browser widget in the UI
-            // For now, we'll ensure the imported textures list is maintained
+            // TODO: STUB - For now, we'll ensure the imported textures list is maintained
             
             // If there's a texture browser widget, it should be updated here
             // The actual UI update will depend on the specific texture browser implementation

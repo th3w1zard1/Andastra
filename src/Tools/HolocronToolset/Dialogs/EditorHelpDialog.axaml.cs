@@ -980,7 +980,7 @@ namespace HolocronToolset.Dialogs
                 {
                     // Anchor link - scroll to anchor within current document
                     // Note: Full anchor scrolling would require more complex implementation
-                    // For now, we'll just handle file links
+                    // TODO: STUB - For now, we'll just handle file links
                     return;
                 }
 

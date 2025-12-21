@@ -281,6 +281,11 @@ namespace Andastra.Runtime.Games.Common
         public abstract bool TestLineOfSight(Vector3 from, Vector3 to);
         public abstract bool ProjectToSurface(Vector3 point, out Vector3 result, out float height);
         public abstract IList<Vector3> FindPathAroundObstacles(Vector3 start, Vector3 goal, IList<ObstacleInfo> obstacles);
+        
+        // Additional INavigationMesh interface methods
+        public abstract bool IsPointWalkable(Vector3 point);
+        public abstract bool ProjectToWalkmesh(Vector3 point, out Vector3 result, out float height);
+        public abstract Vector3? ProjectPoint(Vector3 point);
     }
 }
 

@@ -1463,7 +1463,7 @@ namespace HolocronToolset.Tests.Formats
         public void TestK1Serialization()
         {
             // Read TEST_DLG_XML - Note: XML format not fully supported yet, so construct DLG directly
-            // For now, construct DLG manually from expected structure
+            // TODO: STUB - For now, construct DLG manually from expected structure
             DLG dlg = ConstructTestDlgFromXml();
 
             foreach (DLGNode node in dlg.AllEntries())
@@ -1518,7 +1518,7 @@ namespace HolocronToolset.Tests.Formats
         public void TestIoConstruct()
         {
             // Note: XML GFF reading not yet implemented in C#
-            // For now, construct DLG directly from expected structure
+            // TODO: STUB - For now, construct DLG directly from expected structure
             DLG dlg = ConstructTestDlgFromXml();
             ValidateIo(dlg);
         }

@@ -17,7 +17,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\AvRichTextBox\AvRichTextBox\AvRichTextBox.csproj" />
     <ProjectReference Include="..\Rte\Rte.csproj" />
-    <ProjectReference Include="..\ViewModels\ViewModels.csproj" />
+    <ProjectReference Include="..\HoloPatcher.UI.csproj" />
     <ProjectReference Include="..\Update\Update.csproj" />
   </ItemGroup>
 

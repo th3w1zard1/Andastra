@@ -33,7 +33,7 @@ namespace HolocronToolset.Utils
             if (string.IsNullOrEmpty(extractPath) || !Directory.Exists(extractPath))
             {
                 // Prompt user for directory - will be implemented when file dialogs are available
-                // For now, use temp directory
+                // TODO: STUB - For now, use temp directory
                 extractPath = Path.Combine(Path.GetTempPath(), "HolocronToolset");
                 Directory.CreateDirectory(extractPath);
             }

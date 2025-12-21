@@ -39,14 +39,14 @@ namespace KotorCLI.Commands
             extractCommand.Options.Add(filterOption);
             var keyFileOption = new Option<string>("--key-file", "KEY file for BIF extraction (default: chitin.key)");
             extractCommand.Options.Add(keyFileOption);
-            
+
             extractCommand.SetAction(parseResult =>
             {
                 var file = parseResult.GetValue(fileOption);
                 var output = parseResult.GetValue(outputOption);
                 var filter = parseResult.GetValue(filterOption);
                 var keyFile = parseResult.GetValue(keyFileOption);
-                
+
                 var logger = new StandardLogger();
                 var exitCode = Execute(file, output, filter, keyFile, logger);
                 Environment.Exit(exitCode);
@@ -162,7 +162,7 @@ namespace KotorCLI.Commands
                 foreach (ERFResource resource in erf)
                 {
                     string resref = resource.ResRef?.ToString() ?? "unknown";
-                    
+
                     // Apply filter
                     if (!MatchesFilter(resref, filter))
                     {
@@ -171,7 +171,7 @@ namespace KotorCLI.Commands
 
                     string ext = resource.ResType?.Extension ?? "bin";
                     string outputFile = Path.Combine(outputDir, $"{resref}.{ext}");
-                    
+
                     Directory.CreateDirectory(Path.GetDirectoryName(outputFile));
                     File.WriteAllBytes(outputFile, resource.Data);
                     extractedCount++;
@@ -205,7 +205,7 @@ namespace KotorCLI.Commands
                 foreach (RIMResource resource in rim)
                 {
                     string resref = resource.ResRef?.ToString() ?? "unknown";
-                    
+
                     // Apply filter
                     if (!MatchesFilter(resref, filter))
                     {
@@ -214,7 +214,7 @@ namespace KotorCLI.Commands
 
                     string ext = resource.ResType?.Extension ?? "bin";
                     string outputFile = Path.Combine(outputDir, $"{resref}.{ext}");
-                    
+
                     Directory.CreateDirectory(Path.GetDirectoryName(outputFile));
                     File.WriteAllBytes(outputFile, resource.Data);
                     extractedCount++;
@@ -283,9 +283,9 @@ namespace KotorCLI.Commands
                         // Extract BIF index and resource index from resource ID
                         int bifIndex = (int)(keyEntry.ResourceId >> 20) & 0xFFF;
                         int resIndex = (int)(keyEntry.ResourceId & 0xFFFFF);
-                        
+
                         // Only include entries for this BIF (we need to know which BIF this is)
-                        // For now, we'll match by checking if the resource ID could belong to this BIF
+                        // TODO: STUB - For now, we'll match by checking if the resource ID could belong to this BIF
                         // This is a simplified approach - full implementation would need to track BIF index
                         resourceLookup[resIndex] = keyEntry;
                     }
@@ -297,7 +297,7 @@ namespace KotorCLI.Commands
                 {
                     string resref;
                     ResourceType restype = resource.ResType ?? ResourceType.INVALID;
-                    
+
                     // Try to get name from KEY lookup
                     if (resourceLookup != null && resourceLookup.TryGetValue(resourceIndex, out KeyEntry keyEntry))
                     {
@@ -309,7 +309,7 @@ namespace KotorCLI.Commands
                         // Use resource's own ResRef if available, otherwise numeric name
                         resref = resource.ResRef?.ToString() ?? $"resource_{resourceIndex:05d}";
                     }
-                    
+
                     // Apply filter
                     if (!MatchesFilter(resref, filter))
                     {
@@ -319,7 +319,7 @@ namespace KotorCLI.Commands
 
                     string ext = restype?.Extension ?? "bin";
                     string outputFile = Path.Combine(outputDir, $"{resref}.{ext}");
-                    
+
                     Directory.CreateDirectory(Path.GetDirectoryName(outputFile));
                     File.WriteAllBytes(outputFile, resource.Data);
                     extractedCount++;
@@ -418,7 +418,7 @@ namespace KotorCLI.Commands
                         // Extract BIF index and resource index from resource ID
                         int entryBifIndex = (int)(keyEntry.ResourceId >> 20) & 0xFFF;
                         int resIndex = (int)(keyEntry.ResourceId & 0xFFFFF);
-                        
+
                         if (entryBifIndex == bifIndex)
                         {
                             resourceLookup[resIndex] = keyEntry;
@@ -431,7 +431,7 @@ namespace KotorCLI.Commands
                     {
                         string resref;
                         ResourceType restype = resource.ResType ?? ResourceType.INVALID;
-                        
+
                         // Get name from KEY lookup
                         if (resourceLookup.TryGetValue(resourceIndex, out KeyEntry keyEntry))
                         {
@@ -442,7 +442,7 @@ namespace KotorCLI.Commands
                         {
                             resref = resource.ResRef?.ToString() ?? $"resource_{resourceIndex:05d}";
                         }
-                        
+
                         // Apply filter
                         if (!MatchesFilter(resref, filter))
                         {
@@ -453,7 +453,7 @@ namespace KotorCLI.Commands
                         string ext = restype?.Extension ?? "bin";
                         string bifStem = Path.GetFileNameWithoutExtension(bifPath);
                         string outputFile = Path.Combine(outputDir, bifStem, $"{resref}.{ext}");
-                        
+
                         Directory.CreateDirectory(Path.GetDirectoryName(outputFile));
                         File.WriteAllBytes(outputFile, resource.Data);
                         extractedCount++;

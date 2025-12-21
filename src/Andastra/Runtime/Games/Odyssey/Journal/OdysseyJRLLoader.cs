@@ -77,7 +77,7 @@ namespace Andastra.Runtime.Games.Odyssey.Journal
                 byte[] jrlData = resource.Data;
 
                 // Parse JRL file
-                JRL jrl = JRLHelper.ReadJrl(jrlData);
+                JRL jrl = JRLHelpers.ReadJrl(jrlData);
                 if (jrl != null)
                 {
                     // Cache the loaded JRL
@@ -159,7 +159,7 @@ namespace Andastra.Runtime.Games.Odyssey.Journal
 
             // Resolve LocalizedString to text
             LocalizedString locString = entry.Text;
-            if (locString == null || !locString.IsValid)
+            if (locString == null || locString.StringRef == -1)
             {
                 return null;
             }
@@ -167,7 +167,7 @@ namespace Andastra.Runtime.Games.Odyssey.Journal
             // Resolve using TLK tables
             if (_baseTlk != null)
             {
-                string text = _baseTlk.GetString(locString.StringId);
+                string text = _baseTlk.String(locString.StringRef);
                 if (!string.IsNullOrEmpty(text))
                 {
                     return text;
@@ -176,7 +176,7 @@ namespace Andastra.Runtime.Games.Odyssey.Journal
 
             if (_customTlk != null)
             {
-                string text = _customTlk.GetString(locString.StringId);
+                string text = _customTlk.String(locString.StringRef);
                 if (!string.IsNullOrEmpty(text))
                 {
                     return text;
@@ -184,7 +184,7 @@ namespace Andastra.Runtime.Games.Odyssey.Journal
             }
 
             // Fallback: return string ID if TLK not available
-            return locString.StringId.ToString();
+            return locString.StringRef.ToString();
         }
 
         /// <summary>

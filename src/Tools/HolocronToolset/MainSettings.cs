@@ -14,11 +14,11 @@ namespace HolocronToolset.NET
         // Original: def setup_pre_init_settings():
         /// <summary>
         /// Setup pre-initialization settings for the Holocron Toolset.
-        /// 
+        ///
         /// This function is called before the application window is created.
         /// It sets up environment variables from user settings, prioritizing existing
         /// environment variable values to allow system-level overrides.
-        /// 
+        ///
         /// Matching PyKotor: setup_pre_init_settings() in main_settings.py
         /// </summary>
         public static void SetupPreInitSettings()
@@ -27,10 +27,10 @@ namespace HolocronToolset.NET
             // These ones are accessible through the in-app settings window widget.
             // Matching PyKotor: settings_widget = ApplicationSettings()
             var settingsWidget = new ApplicationSettings();
-            
+
             // Matching PyKotor: environment_variables: dict[str, str] = settings_widget.app_env_variables
             Dictionary<string, string> environmentVariables = settingsWidget.AppEnvVariables;
-            
+
             // Matching PyKotor: for key, value in environment_variables.items():
             //                     os.environ[key] = os.environ.get(key, value)  # Use os.environ.get to prioritize the existing env.
             // Set environment variables, prioritizing existing environment variable values
@@ -39,7 +39,7 @@ namespace HolocronToolset.NET
             {
                 string key = kvp.Key;
                 string value = kvp.Value;
-                
+
                 // Use Environment.GetEnvironmentVariable to check if already set
                 // Only set if not already set (preserves existing env vars)
                 // This matches Python's os.environ.get(key, value) - prioritizes existing env
@@ -49,7 +49,7 @@ namespace HolocronToolset.NET
                     Environment.SetEnvironmentVariable(key, value);
                 }
             }
-            
+
             // Matching PyKotor: for attr_name, attr_value in settings_widget.REQUIRES_RESTART.items():
             //                     if attr_value is None:  # attr not available in this qt version.
             //                         continue
@@ -73,20 +73,20 @@ namespace HolocronToolset.NET
         // Original: def setup_post_init_settings():
         /// <summary>
         /// Set up post-initialization settings for the application.
-        /// 
+        ///
         /// This function performs the following tasks:
         /// 1. Retrieves the GlobalSettings instance and sets the global font.
         /// 2. Applies font settings that can be changed without restarting.
-        /// 
+        ///
         /// The function uses the GlobalSettings class to manage and apply various
         /// settings to the Avalonia Application instance.
-        /// 
+        ///
         /// Matching PyKotor: setup_post_init_settings() in main_settings.py
         /// </summary>
         public static void SetupPostInitSettings()
         {
             var settings = new GlobalSettings();
-            
+
             // Apply font settings
             string fontString = settings.GlobalFont;
             if (!string.IsNullOrEmpty(fontString))
@@ -134,7 +134,7 @@ namespace HolocronToolset.NET
                                 {
                                     Application.Current.Resources["DefaultFontFamily"] = fontFamily;
                                 }
-                                
+
                                 if (!Application.Current.Resources.ContainsKey("DefaultFontSize"))
                                 {
                                     Application.Current.Resources.Add("DefaultFontSize", size);
@@ -143,10 +143,10 @@ namespace HolocronToolset.NET
                                 {
                                     Application.Current.Resources["DefaultFontSize"] = size;
                                 }
-                                
+
                                 // Note: In PyKotor/Qt, QApplication.setFont() applies globally
                                 // In Avalonia, fonts are typically applied via styles or per-control
-                                // For now, we store the font preference in resources for use by styles
+                                // TODO: STUB - For now, we store the font preference in resources for use by styles
                             }
                         }
                     }
@@ -157,7 +157,7 @@ namespace HolocronToolset.NET
                     // This matches PyKotor behavior where invalid font strings are ignored
                 }
             }
-            
+
             // Note: In PyKotor, this also applies Qt attributes (AA_*) and MISC_SETTINGS
             // Since we're using Avalonia instead of Qt, Qt-specific attributes don't apply.
             // However, we maintain the structure for potential future Avalonia equivalents.
@@ -168,7 +168,7 @@ namespace HolocronToolset.NET
         /// <summary>
         /// Setup default environment variables for the toolset based on our recommendations.
         /// These can be configured in the toolset's Settings dialog.
-        /// 
+        ///
         /// Note: While Avalonia doesn't use Qt, we maintain 1:1 parity with PyKotor's PyQt implementation
         /// by setting these environment variables. They may be used by other tools or for compatibility.
         /// </summary>

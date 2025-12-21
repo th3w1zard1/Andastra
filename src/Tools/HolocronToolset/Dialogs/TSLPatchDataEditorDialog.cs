@@ -328,7 +328,7 @@ namespace HolocronToolset.Dialogs
             _tlkStringTree = new TreeView();
             // Note: Avalonia TreeView doesn't have built-in column headers like QTreeWidget
             // We'll use a DataGrid or custom TreeViewItem with formatted content
-            // For now, we'll use TreeView with custom item templates
+            // TODO: STUB - For now, we'll use TreeView with custom item templates
             _tlkStringTree.MinHeight = 300;
             content.Children.Add(_tlkStringTree);
 
@@ -1744,7 +1744,7 @@ namespace HolocronToolset.Dialogs
                 // Note: 2DA modifications would come from actual 2DA files being modified
                 // The _twodaMemoryTokens are just memory tracking tokens, not actual 2DA file modifications
                 // If there are actual 2DA files to modify, they would be added here
-                // For now, we'll leave Twoda empty unless there are actual 2DA modifications
+                // TODO: STUB - For now, we'll leave Twoda empty unless there are actual 2DA modifications
 
                 // Add install files
                 modificationsByType.Install = installFiles;

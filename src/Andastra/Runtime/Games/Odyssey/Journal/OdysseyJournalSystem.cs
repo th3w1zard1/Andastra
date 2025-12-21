@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Runtime.Core.Journal;
 using Andastra.Runtime.Games.Common.Journal;
 using JetBrains.Annotations;
 
@@ -84,7 +83,8 @@ namespace Andastra.Runtime.Games.Odyssey.Journal
         /// </summary>
         protected override BaseJournalEntry CreateJournalEntry(string questTag, int state, string text, int xpReward)
         {
-            return new JournalEntry
+            // Create a BaseJournalEntry (not CoreJournalEntry) to match the base class contract
+            return new BaseJournalEntry
             {
                 QuestTag = questTag,
                 State = state,
@@ -119,53 +119,35 @@ namespace Andastra.Runtime.Games.Odyssey.Journal
         /// <summary>
         /// Gets journal entries (Odyssey-specific type).
         /// </summary>
-        public new IReadOnlyList<JournalEntry> GetAllEntries()
+        public new IReadOnlyList<BaseJournalEntry> GetAllEntries()
         {
-            var result = new List<JournalEntry>();
-            foreach (BaseJournalEntry entry in base.GetAllEntries())
-            {
-                if (entry is JournalEntry odysseyEntry)
-                {
-                    result.Add(odysseyEntry);
-                }
-            }
-            return result;
+            return base.GetAllEntries();
         }
 
         /// <summary>
         /// Gets journal entries for a quest (Odyssey-specific type).
         /// </summary>
-        public new List<JournalEntry> GetEntriesForQuest(string questTag)
+        public new List<BaseJournalEntry> GetEntriesForQuest(string questTag)
         {
-            var result = new List<JournalEntry>();
-            foreach (BaseJournalEntry entry in base.GetEntriesForQuest(questTag))
-            {
-                if (entry is JournalEntry odysseyEntry)
-                {
-                    result.Add(odysseyEntry);
-                }
-            }
-            return result;
+            return base.GetEntriesForQuest(questTag);
         }
 
         /// <summary>
         /// Gets latest entry for a quest (Odyssey-specific type).
         /// </summary>
         [CanBeNull]
-        public new JournalEntry GetLatestEntryForQuest(string questTag)
+        public new BaseJournalEntry GetLatestEntryForQuest(string questTag)
         {
-            BaseJournalEntry baseEntry = base.GetLatestEntryForQuest(questTag);
-            return baseEntry as JournalEntry;
+            return base.GetLatestEntryForQuest(questTag);
         }
 
         /// <summary>
         /// Gets entry by state (Odyssey-specific type).
         /// </summary>
         [CanBeNull]
-        public new JournalEntry GetEntryByState(string questTag, int state)
+        public new BaseJournalEntry GetEntryByState(string questTag, int state)
         {
-            BaseJournalEntry baseEntry = base.GetEntryByState(questTag, state);
-            return baseEntry as JournalEntry;
+            return base.GetEntryByState(questTag, state);
         }
 
         /// <summary>

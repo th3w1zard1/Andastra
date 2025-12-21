@@ -601,7 +601,7 @@ namespace GenerateScriptDefs
             // Create line number mapping for tokens
             var lineNumbers = new Dictionary<NssTokenBase, int>();
             // Note: Line number mapping would require more sophisticated tracking
-            // For now, we'll use a simplified approach in ExtractFunctionDocumentationFromLine
+            // TODO: STUB - For now, we'll use a simplified approach in ExtractFunctionDocumentationFromLine
 
             var constants = new List<ConstantInfo>();
             var functions = new List<FunctionInfo>();

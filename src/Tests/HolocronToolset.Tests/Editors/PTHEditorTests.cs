@@ -749,7 +749,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Find the help dialog - in Avalonia, we need to check if it was created
             // Since Show() is non-blocking, we can't easily find it like in Qt
-            // For now, we'll just verify the method doesn't throw and that the wiki file exists
+            // TODO: STUB - For now, we'll just verify the method doesn't throw and that the wiki file exists
             string wikiPath = HolocronToolset.Dialogs.EditorHelpDialog.GetWikiPath();
             string filePath = System.IO.Path.Combine(wikiPath, "GFF-PTH.md");
             

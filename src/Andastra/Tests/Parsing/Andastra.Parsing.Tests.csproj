@@ -7,6 +7,8 @@
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,9 +26,15 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="FluentAssertions" Version="8.8.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Parsing\Andastra.Parsing.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Formats\NCSRoundtripTests.cs" />
+    <Compile Include="..\Performance\**\*.cs" />
   </ItemGroup>
 </Project>
