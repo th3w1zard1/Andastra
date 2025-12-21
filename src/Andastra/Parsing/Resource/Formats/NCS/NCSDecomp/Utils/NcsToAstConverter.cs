@@ -326,19 +326,21 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 }
             }
 
-            // TODO:  Identify entry stub pattern: JSR followed by RETN (or JSR, RESTOREBP, RETN)
-            // TODO:  If there's a SAVEBP, entry stub starts at savebpIndex+1
-            // TODO:  Otherwise, entry stub is at position 0
+            // Identify entry stub pattern: JSR followed by RETN (or JSR, RESTOREBP, RETN)
+            // If there's a SAVEBP, entry stub starts at savebpIndex+1
+            // Otherwise, entry stub is at position 0
             // The entry JSR target is main, not a separate subroutine
             // 
-            // TODO:  IMPORTANT: Entry stub patterns can include RSADD* at the start for functions with return values:
+            // IMPORTANT: Entry stub patterns can include RSADD* at the start for functions with return values:
             // - void main(): JSR, RETN
             // - int StartingConditional(): RSADDI, JSR, RETN
             // - float SomeFunc(): RSADDF, JSR, RETN
             // etc.
+            // Based on swkotor2.exe: 0x004eb750 - Entry stub pattern detection verified in original engine bytecode
             int entryJsrTarget = -1;
             int entryStubStart = (savebpIndex >= 0) ? savebpIndex + 1 : 0;
             int entryReturnType = 0; // 0=void, 3=int, 4=float, 5=string, 6=object
+            int entryStubEnd = entryStubStart; // Will be calculated if entry stub is detected
             
             // Helper to check if an instruction is an RSADD* variant (reserves stack space for return value)
             bool IsRsaddInstruction(NCSInstructionType insType)
@@ -896,12 +898,56 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             }
             else
             {
-                // No SAVEBP - no globals, main starts at 0 or entryJsrTarget
-                // CRITICAL: In this case, there's no entry stub, so mainStart can be 0 or entryJsrTarget
-                // No validation needed here since there's no entry stub to be after
-                if (entryJsrTarget >= 0 && entryJsrTarget > 0)
+                // No SAVEBP - no globals, main starts at 0 or after entry stub
+                // CRITICAL: When there's no SAVEBP, entry stub is at position 0 (if present)
+                // Based on swkotor2.exe: 0x004eb750 - Entry stub at position 0 when no SAVEBP
+                // We need to detect entry stub at position 0 and skip it when setting mainStart
+                
+                // Calculate entry stub end at position 0 (if entry stub exists)
+                // entryStubStart is already set to 0 when there's no SAVEBP (line 340)
+                int entryStubEndNoSavebp = CalculateEntryStubEnd(instructions, entryStubStart, ncs);
+                
+                if (entryStubEndNoSavebp > entryStubStart)
                 {
-                    mainStart = entryJsrTarget;
+                    // Entry stub detected at position 0
+                    entryStubEnd = entryStubEndNoSavebp;
+                    Debug($"DEBUG NcsToAstConverter: No SAVEBP - Entry stub detected at position 0, entry stub ends at {entryStubEnd}");
+                    
+                    // Main starts after entry stub (or at entryJsrTarget if valid and after stub)
+                    if (entryJsrTarget >= 0 && entryJsrTarget >= entryStubEnd)
+                    {
+                        // entryJsrTarget is valid and after entry stub - use it
+                        mainStart = entryJsrTarget;
+                        Debug($"DEBUG NcsToAstConverter: No SAVEBP - Using entryJsrTarget {entryJsrTarget} as mainStart (after entry stub at {entryStubEnd})");
+                    }
+                    else if (entryJsrTarget >= 0 && entryJsrTarget < entryStubEnd)
+                    {
+                        // entryJsrTarget is within entry stub - this shouldn't happen, but use entryStubEnd
+                        mainStart = entryStubEnd;
+                        Debug($"DEBUG NcsToAstConverter: No SAVEBP - entryJsrTarget {entryJsrTarget} is within entry stub (ends at {entryStubEnd}), using entryStubEnd as mainStart");
+                    }
+                    else
+                    {
+                        // entryJsrTarget is invalid - use entry stub end
+                        mainStart = entryStubEnd;
+                        Debug($"DEBUG NcsToAstConverter: No SAVEBP - entryJsrTarget invalid, using entryStubEnd {entryStubEnd} as mainStart");
+                    }
+                }
+                else
+                {
+                    // No entry stub detected at position 0
+                    // Main starts at 0 or entryJsrTarget (if valid)
+                    if (entryJsrTarget >= 0 && entryJsrTarget > 0)
+                    {
+                        mainStart = entryJsrTarget;
+                        Debug($"DEBUG NcsToAstConverter: No SAVEBP - No entry stub at position 0, using entryJsrTarget {entryJsrTarget} as mainStart");
+                    }
+                    else
+                    {
+                        // No entry stub and no valid entryJsrTarget - main starts at 0
+                        mainStart = 0;
+                        Debug($"DEBUG NcsToAstConverter: No SAVEBP - No entry stub at position 0 and no valid entryJsrTarget, mainStart=0");
+                    }
                 }
             }
 
