@@ -1294,6 +1294,57 @@ namespace Andastra.Runtime.MonoGame.Backends
             // - Call ID3D12CommandQueue::Signal
         }
 
+        /// <summary>
+        /// Extracts the ID3D12Fence native handle from an IFence implementation using reflection.
+        /// The fence handle is typically stored as NativeHandle or in a private field.
+        /// Based on DirectX 12 Fence Implementation Pattern.
+        /// </summary>
+        private IntPtr ExtractD3D12FenceHandle(IFence fence)
+        {
+            if (fence == null)
+            {
+                return IntPtr.Zero;
+            }
+
+            // Try to get NativeHandle property via reflection (similar to how Vulkan does it)
+            System.Reflection.PropertyInfo nativeHandleProp = fence.GetType().GetProperty("NativeHandle");
+            if (nativeHandleProp != null)
+            {
+                object nativeHandleValue = nativeHandleProp.GetValue(fence);
+                if (nativeHandleValue is IntPtr)
+                {
+                    return (IntPtr)nativeHandleValue;
+                }
+            }
+
+            // Fallback: Try to find a private field that contains the fence pointer
+            // This is a common pattern in D3D12 fence implementations
+            System.Reflection.FieldInfo[] fields = fence.GetType().GetFields(System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+            foreach (System.Reflection.FieldInfo field in fields)
+            {
+                // Look for IntPtr fields that might contain the fence pointer
+                if (field.FieldType == typeof(IntPtr))
+                {
+                    object fieldValue = field.GetValue(fence);
+                    if (fieldValue is IntPtr)
+                    {
+                        IntPtr handle = (IntPtr)fieldValue;
+                        if (handle != IntPtr.Zero)
+                        {
+                            // Verify this looks like a valid COM pointer (non-null, aligned)
+                            // Basic validation: pointer should be aligned and not zero
+                            if (handle.ToInt64() % IntPtr.Size == 0 && handle.ToInt64() != 0)
+                            {
+                                return handle;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return IntPtr.Zero;
+        }
+
         public void WaitFence(IFence fence, ulong value)
         {
             if (!IsValid)
@@ -1306,10 +1357,57 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ArgumentNullException(nameof(fence));
             }
 
-            // TODO: IMPLEMENT - Wait for D3D12 fence
-            // - Extract ID3D12Fence from IFence implementation
-            // - Call ID3D12Fence::SetEventOnCompletion with event handle
-            // - Wait for event on current thread
+            // Extract ID3D12Fence pointer from IFence implementation
+            IntPtr d3d12Fence = ExtractD3D12FenceHandle(fence);
+            if (d3d12Fence == IntPtr.Zero)
+            {
+                throw new ArgumentException("Failed to extract ID3D12Fence handle from IFence implementation. The fence must be a D3D12 fence with a valid native handle.", nameof(fence));
+            }
+
+            // Check if fence is already completed (optimization - avoids unnecessary event creation)
+            ulong completedValue = CallGetFenceCompletedValue(d3d12Fence);
+            if (completedValue >= value)
+            {
+                // Fence already completed, no need to wait
+                return;
+            }
+
+            // Create Windows event for synchronization
+            // Use auto-reset event (bManualReset = false) since we only wait once
+            IntPtr fenceEvent = CreateEvent(IntPtr.Zero, false, false, null);
+            if (fenceEvent == IntPtr.Zero)
+            {
+                throw new InvalidOperationException("Failed to create Windows event for fence synchronization");
+            }
+
+            try
+            {
+                // Set event to be signaled when fence reaches the target value
+                int hrSetEvent = CallSetEventOnCompletion(d3d12Fence, value, fenceEvent);
+                if (hrSetEvent < 0)
+                {
+                    throw new InvalidOperationException($"Failed to set event on fence completion: HRESULT 0x{hrSetEvent:X8}");
+                }
+
+                // Wait for the event to be signaled (GPU has completed)
+                uint waitResult = WaitForSingleObject(fenceEvent, INFINITE);
+                if (waitResult != WAIT_OBJECT_0)
+                {
+                    if (waitResult == WAIT_FAILED)
+                    {
+                        throw new InvalidOperationException("WaitForSingleObject failed while waiting for fence completion");
+                    }
+                    throw new InvalidOperationException($"Unexpected wait result while waiting for fence completion: 0x{waitResult:X8}");
+                }
+            }
+            finally
+            {
+                // Always close the event handle, even if an exception occurred
+                if (fenceEvent != IntPtr.Zero)
+                {
+                    CloseHandle(fenceEvent);
+                }
+            }
         }
 
         #endregion
@@ -7892,8 +7990,110 @@ namespace Andastra.Runtime.MonoGame.Backends
                 unmapResource(resource, unchecked((uint)subresource), IntPtr.Zero);
             }
 
-            public void SetViewport(Viewport viewport) { /* TODO: RSSetViewports */ }
-            public void SetViewports(Viewport[] viewports) { /* TODO: RSSetViewports */ }
+            /// <summary>
+            /// Sets a single viewport.
+            /// Converts Viewport to D3D12_VIEWPORT and calls ID3D12GraphicsCommandList::RSSetViewports.
+            /// Based on DirectX 12 Viewports: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-rssetviewports
+            /// </summary>
+            public void SetViewport(Viewport viewport)
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    return; // Command list not initialized
+                }
+
+                // Convert Viewport to D3D12_VIEWPORT
+                // Viewport uses (X, Y, Width, Height, MinDepth, MaxDepth) as float
+                // D3D12_VIEWPORT uses (TopLeftX, TopLeftY, Width, Height, MinDepth, MaxDepth) as double (for alignment, but represents float values)
+                D3D12_VIEWPORT d3d12Viewport = new D3D12_VIEWPORT
+                {
+                    TopLeftX = viewport.X,
+                    TopLeftY = viewport.Y,
+                    Width = viewport.Width,
+                    Height = viewport.Height,
+                    MinDepth = viewport.MinDepth,
+                    MaxDepth = viewport.MaxDepth
+                };
+
+                // Allocate unmanaged memory for the viewport
+                int viewportSize = Marshal.SizeOf(typeof(D3D12_VIEWPORT));
+                IntPtr viewportPtr = Marshal.AllocHGlobal(viewportSize);
+
+                try
+                {
+                    // Marshal structure to unmanaged memory
+                    Marshal.StructureToPtr(d3d12Viewport, viewportPtr, false);
+
+                    // Call RSSetViewports with a single viewport
+                    CallRSSetViewports(_d3d12CommandList, 1, viewportPtr);
+                }
+                finally
+                {
+                    // Free allocated memory
+                    Marshal.FreeHGlobal(viewportPtr);
+                }
+            }
+
+            /// <summary>
+            /// Sets multiple viewports.
+            /// Converts Viewport[] to D3D12_VIEWPORT[] and calls ID3D12GraphicsCommandList::RSSetViewports.
+            /// Based on DirectX 12 Viewports: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-rssetviewports
+            /// </summary>
+            public void SetViewports(Viewport[] viewports)
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    return; // Command list not initialized
+                }
+
+                if (viewports == null || viewports.Length == 0)
+                {
+                    return; // No viewports to set
+                }
+
+                // Allocate unmanaged memory for the viewport array
+                int viewportSize = Marshal.SizeOf(typeof(D3D12_VIEWPORT));
+                IntPtr viewportsPtr = Marshal.AllocHGlobal(viewportSize * viewports.Length);
+
+                try
+                {
+                    // Convert Viewport[] to D3D12_VIEWPORT[]
+                    for (int i = 0; i < viewports.Length; i++)
+                    {
+                        Viewport vp = viewports[i];
+                        D3D12_VIEWPORT d3d12Viewport = new D3D12_VIEWPORT
+                        {
+                            TopLeftX = vp.X,
+                            TopLeftY = vp.Y,
+                            Width = vp.Width,
+                            Height = vp.Height,
+                            MinDepth = vp.MinDepth,
+                            MaxDepth = vp.MaxDepth
+                        };
+
+                        IntPtr viewportPtr = new IntPtr(viewportsPtr.ToInt64() + (i * viewportSize));
+                        Marshal.StructureToPtr(d3d12Viewport, viewportPtr, false);
+                    }
+
+                    // Call RSSetViewports with the array
+                    CallRSSetViewports(_d3d12CommandList, unchecked((uint)viewports.Length), viewportsPtr);
+                }
+                finally
+                {
+                    // Free allocated memory
+                    Marshal.FreeHGlobal(viewportsPtr);
+                }
+            }
             
             /// <summary>
             /// Sets a single scissor rectangle.
