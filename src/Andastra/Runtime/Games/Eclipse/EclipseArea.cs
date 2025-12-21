@@ -7738,34 +7738,35 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Group faces into debris chunks (faces that share vertices form chunks)
             // Based on daorigins.exe: Debris is generated as chunks of connected destroyed faces
+            // Faces are considered connected if they share at least one vertex
             HashSet<int> processedFaces = new HashSet<int>();
             List<List<int>> debrisChunks = new List<List<int>>();
 
-            foreach (int faceIndex in destroyedFaceIndices)
+            // Get cached geometry for vertex connectivity checking
+            if (!_cachedMeshGeometry.TryGetValue(meshId, out CachedMeshGeometry cachedGeometry))
             {
-                if (processedFaces.Contains(faceIndex))
-                {
-                    continue;
-                }
+                // No cached geometry available - fall back to simple chunking (all faces in one chunk)
+                List<int> singleChunk = new List<int>(destroyedFaceIndices);
+                debrisChunks.Add(singleChunk);
+            }
+            else
+            {
+                // Build vertex-to-face mapping for efficient connectivity checking
+                // Maps each vertex index to the set of faces that contain that vertex
+                Dictionary<int, HashSet<int>> vertexToFaces = BuildVertexToFaceMap(cachedGeometry.Indices, destroyedFaceIndices);
 
-                // Find connected faces for this debris chunk
-                List<int> chunk = new List<int> { faceIndex };
-                processedFaces.Add(faceIndex);
-
-                // Simple chunking: group faces that are close together
-                // TODO:  Full implementation would find connected faces by shared vertices
-                foreach (int otherFaceIndex in destroyedFaceIndices)
+                // Use flood-fill algorithm to find all connected face groups
+                foreach (int faceIndex in destroyedFaceIndices)
                 {
-                    if (otherFaceIndex != faceIndex && !processedFaces.Contains(otherFaceIndex))
+                    if (processedFaces.Contains(faceIndex))
                     {
-                        // Check if faces are close enough to be in same chunk
-                        // TODO:  This is simplified - full implementation would check vertex connectivity
-                        chunk.Add(otherFaceIndex);
-                        processedFaces.Add(otherFaceIndex);
+                        continue;
                     }
-                }
 
-                debrisChunks.Add(chunk);
+                    // Find all faces connected to this face through shared vertices
+                    List<int> chunk = FindConnectedFaces(faceIndex, destroyedFaceIndices, vertexToFaces, cachedGeometry.Indices, processedFaces);
+                    debrisChunks.Add(chunk);
+                }
             }
 
             // Create debris pieces for each chunk
@@ -7785,6 +7786,187 @@ namespace Andastra.Runtime.Games.Eclipse
 
                 _debrisPieces.Add(debris);
             }
+        }
+
+        /// <summary>
+        /// Gets the vertex indices for a face (triangle).
+        /// Each face has 3 vertices stored at indices: faceIndex * 3, faceIndex * 3 + 1, faceIndex * 3 + 2
+        /// </summary>
+        /// <param name="faceIndex">Face index (triangle index).</param>
+        /// <param name="indices">Mesh index array (3 indices per triangle).</param>
+        /// <returns>Array of 3 vertex indices for the face, or null if faceIndex is invalid.</returns>
+        private int[] GetFaceVertexIndices(int faceIndex, List<int> indices)
+        {
+            if (indices == null || faceIndex < 0)
+            {
+                return null;
+            }
+
+            int baseIndex = faceIndex * 3;
+            if (baseIndex + 2 >= indices.Count)
+            {
+                return null; // Invalid face index
+            }
+
+            return new int[]
+            {
+                indices[baseIndex],
+                indices[baseIndex + 1],
+                indices[baseIndex + 2]
+            };
+        }
+
+        /// <summary>
+        /// Checks if two faces share at least one vertex.
+        /// Two faces are connected if they share any vertex index.
+        /// </summary>
+        /// <param name="faceIndex1">First face index.</param>
+        /// <param name="faceIndex2">Second face index.</param>
+        /// <param name="indices">Mesh index array (3 indices per triangle).</param>
+        /// <returns>True if faces share at least one vertex, false otherwise.</returns>
+        private bool FacesShareVertex(int faceIndex1, int faceIndex2, List<int> indices)
+        {
+            int[] vertices1 = GetFaceVertexIndices(faceIndex1, indices);
+            int[] vertices2 = GetFaceVertexIndices(faceIndex2, indices);
+
+            if (vertices1 == null || vertices2 == null)
+            {
+                return false;
+            }
+
+            // Check if any vertex from face1 matches any vertex from face2
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    if (vertices1[i] == vertices2[j])
+                    {
+                        return true; // Faces share at least one vertex
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Builds a mapping from vertex indices to faces that contain those vertices.
+        /// This allows efficient lookup of all faces connected to a given face through shared vertices.
+        /// </summary>
+        /// <param name="indices">Mesh index array (3 indices per triangle).</param>
+        /// <param name="faceIndices">Set of face indices to include in the mapping (destroyed faces).</param>
+        /// <returns>Dictionary mapping vertex index to set of face indices that contain that vertex.</returns>
+        private Dictionary<int, HashSet<int>> BuildVertexToFaceMap(List<int> indices, List<int> faceIndices)
+        {
+            Dictionary<int, HashSet<int>> vertexToFaces = new Dictionary<int, HashSet<int>>();
+
+            if (indices == null || faceIndices == null)
+            {
+                return vertexToFaces;
+            }
+
+            foreach (int faceIndex in faceIndices)
+            {
+                int[] faceVertices = GetFaceVertexIndices(faceIndex, indices);
+                if (faceVertices == null)
+                {
+                    continue;
+                }
+
+                // Add this face to the set of faces for each of its vertices
+                foreach (int vertexIndex in faceVertices)
+                {
+                    if (!vertexToFaces.TryGetValue(vertexIndex, out HashSet<int> faces))
+                    {
+                        faces = new HashSet<int>();
+                        vertexToFaces[vertexIndex] = faces;
+                    }
+                    faces.Add(faceIndex);
+                }
+            }
+
+            return vertexToFaces;
+        }
+
+        /// <summary>
+        /// Finds all faces connected to the given face through shared vertices using flood-fill algorithm.
+        /// Two faces are considered connected if they share at least one vertex.
+        /// </summary>
+        /// <param name="startFaceIndex">Starting face index for connectivity search.</param>
+        /// <param name="allDestroyedFaces">Set of all destroyed face indices (search is limited to these faces).</param>
+        /// <param name="vertexToFaces">Mapping from vertex indices to faces for efficient connectivity lookup.</param>
+        /// <param name="indices">Mesh index array (3 indices per triangle).</param>
+        /// <param name="processedFaces">Set of already processed faces (will be updated with newly found faces).</param>
+        /// <returns>List of all face indices connected to startFaceIndex through shared vertices.</returns>
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Debris chunking uses vertex connectivity to group faces.
+        /// The flood-fill algorithm ensures all faces that share vertices (directly or transitively) are grouped together.
+        /// 
+        /// Algorithm:
+        /// 1. Start with the given face
+        /// 2. For each vertex in the face, find all other faces that share that vertex
+        /// 3. Recursively process each connected face that hasn't been processed yet
+        /// 4. Continue until no new connected faces are found
+        /// </remarks>
+        private List<int> FindConnectedFaces(
+            int startFaceIndex,
+            List<int> allDestroyedFaces,
+            Dictionary<int, HashSet<int>> vertexToFaces,
+            List<int> indices,
+            HashSet<int> processedFaces)
+        {
+            List<int> connectedFaces = new List<int>();
+            Queue<int> faceQueue = new Queue<int>();
+            HashSet<int> visitedFaces = new HashSet<int>();
+
+            // Use a HashSet for fast lookup of destroyed faces
+            HashSet<int> destroyedFaceSet = new HashSet<int>(allDestroyedFaces);
+
+            // Start flood-fill from the initial face
+            faceQueue.Enqueue(startFaceIndex);
+            visitedFaces.Add(startFaceIndex);
+
+            while (faceQueue.Count > 0)
+            {
+                int currentFace = faceQueue.Dequeue();
+                connectedFaces.Add(currentFace);
+                processedFaces.Add(currentFace);
+
+                // Get vertices of current face
+                int[] faceVertices = GetFaceVertexIndices(currentFace, indices);
+                if (faceVertices == null)
+                {
+                    continue;
+                }
+
+                // For each vertex in the current face, find all other faces that share this vertex
+                foreach (int vertexIndex in faceVertices)
+                {
+                    if (!vertexToFaces.TryGetValue(vertexIndex, out HashSet<int> facesWithVertex))
+                    {
+                        continue;
+                    }
+
+                    // Check all faces that share this vertex
+                    foreach (int connectedFace in facesWithVertex)
+                    {
+                        // Only consider destroyed faces that haven't been processed yet
+                        if (connectedFace != currentFace && 
+                            destroyedFaceSet.Contains(connectedFace) && 
+                            !visitedFaces.Contains(connectedFace))
+                        {
+                            // Verify faces actually share a vertex (defensive check)
+                            if (FacesShareVertex(currentFace, connectedFace, indices))
+                            {
+                                visitedFaces.Add(connectedFace);
+                                faceQueue.Enqueue(connectedFace);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return connectedFaces;
         }
     }
 
