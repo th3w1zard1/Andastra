@@ -3160,6 +3160,68 @@ namespace Andastra.Runtime.MonoGame.Backends
                 setScissorRects(commandList, NumRects, pRects);
             }
 
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::BeginEvent through COM vtable.
+            /// VTable index 57 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Debug Events: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-beginevent
+            /// Note: This method is used internally by PIX event runtime. Event name is encoded as UTF-8 bytes.
+            /// </summary>
+            private unsafe void CallBeginEvent(IntPtr commandList, uint metadata, IntPtr pData, uint size)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // BeginEvent is at index 57 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[57];
+
+                // Create delegate from function pointer
+                BeginEventDelegate beginEvent =
+                    (BeginEventDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(BeginEventDelegate));
+
+                beginEvent(commandList, metadata, pData, size);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::EndEvent through COM vtable.
+            /// VTable index 58 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Debug Events: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-endevent
+            /// Note: This method is used internally by PIX event runtime to mark the end of an event region.
+            /// </summary>
+            private unsafe void CallEndEvent(IntPtr commandList)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // EndEvent is at index 58 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[58];
+
+                // Create delegate from function pointer
+                EndEventDelegate endEvent =
+                    (EndEventDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(EndEventDelegate));
+
+                endEvent(commandList);
+            }
+
             public void UAVBarrier(ITexture texture) { /* TODO: UAVBarrier */ }
             public void UAVBarrier(IBuffer buffer) { /* TODO: UAVBarrier */ }
             public void SetGraphicsState(GraphicsState state) { /* TODO: Set all graphics state */ }
