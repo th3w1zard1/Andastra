@@ -2221,19 +2221,33 @@ namespace Andastra.Runtime.Games.Aurora
             {
                 // Get player character entity to use as triggerer
                 // Based on nwmain.exe: Player character identified by ObjectType.Creature with IsPC flag
-                // Player character is typically the first creature entity with IsPC flag set
+                // Original implementation: Iterates through all creatures and finds the one with IsPC flag set to true
+                // nwmain.exe: CNWSModule::OnClientEnter checks creature IsPC flag from UTC template data
+                // IsPC flag is stored in UTC file (Creature template) and loaded into entity data during creature creation
                 IEntity playerCharacter = null;
                 try
                 {
                     // Try to find player character from world entities
-                    // Player character is typically a Creature entity with special flags
+                    // Based on nwmain.exe: Player character is identified by IsPC flag in creature template (UTC file)
+                    // IsPC flag is loaded from UTC template and stored in entity data during creature creation
+                    // AuroraEntityTemplateFactory sets IsPC from UTC template: entity.SetData("IsPC", GetIntField(root, "IsPC", 0) != 0)
                     var creatures = _world.GetEntitiesOfType(ObjectType.Creature);
                     foreach (IEntity creature in creatures)
                     {
-                        // Check if entity is player character (implementation may vary)
-                        // TODO: STUB - For now, use first creature as fallback (actual implementation should check IsPC flag or similar)
-                        playerCharacter = creature;
-                        break; // Use first creature found (should be player character in single-player)
+                        // Check if entity is player character by checking IsPC flag
+                        // Based on nwmain.exe: CNWSCreature::GetIsPC checks IsPC flag from creature template
+                        // Original implementation: Checks UTC template IsPC field (boolean, stored as byte in GFF)
+                        // nwmain.exe: IsPC flag is read from UTC template during creature creation and stored in CNWSCreature structure
+                        // Current implementation: IsPC is stored as entity data during template loading (AuroraEntityTemplateFactory)
+                        if (creature is Core.Entities.Entity concreteEntity)
+                        {
+                            bool isPC = concreteEntity.GetData<bool>("IsPC", false);
+                            if (isPC)
+                            {
+                                playerCharacter = creature;
+                                break; // Found player character - use it as triggerer
+                            }
+                        }
                     }
                 }
                 catch
@@ -2244,6 +2258,7 @@ namespace Andastra.Runtime.Games.Aurora
 
                 // Fire OnClientEnter script event with player character as triggerer
                 // If player character not found, execute without triggerer (script should handle null triggerer gracefully)
+                // Based on nwmain.exe: OnClientEnter fires even if player character not found (null triggerer)
                 _world.EventBus.FireScriptEvent(moduleEntity, ScriptEvent.OnClientEnter, playerCharacter);
             }
 
