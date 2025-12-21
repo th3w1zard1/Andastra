@@ -50,6 +50,7 @@ namespace Andastra.Runtime.Content.Save
     public class SaveSerializer : ISaveSerializer
     {
         private readonly object _gameDataManager;
+        private string _savesDirectory;
 
         /// <summary>
         /// Creates a new save serializer.
@@ -58,6 +59,17 @@ namespace Andastra.Runtime.Content.Save
         public SaveSerializer(object gameDataManager = null)
         {
             _gameDataManager = gameDataManager;
+            _savesDirectory = null;
+        }
+
+        /// <summary>
+        /// Sets the saves directory for path resolution.
+        /// When set, GetSavePathFromData can construct save paths from save names.
+        /// </summary>
+        /// <param name="savesDirectory">Base directory for save games.</param>
+        public void SetSavesDirectory(string savesDirectory)
+        {
+            _savesDirectory = savesDirectory;
         }
 
         // GFF field labels for save NFO
@@ -232,6 +244,7 @@ namespace Andastra.Runtime.Content.Save
 
             // Load existing save if it exists (to preserve cached modules and other resources)
             // This is important for maintaining nested module state
+            // Note: savesDirectory should be provided via SetSavesDirectory() for path resolution
             string savePath = GetSavePathFromData(saveData);
             if (!string.IsNullOrEmpty(savePath) && Directory.Exists(savePath))
             {
@@ -282,13 +295,77 @@ namespace Andastra.Runtime.Content.Save
             return writer.Write();
         }
 
-        // Helper to get save path from SaveGameData (if available)
-        private string GetSavePathFromData(SaveGameData saveData)
+        /// <summary>
+        /// Gets the save path from SaveGameData by constructing it from the save name.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_00708990 @ 0x00708990
+        /// Original implementation constructs path as "SAVES:\{saveName}\"
+        /// Save name format: "%06d - %s" (6-digit number - name) from string @ 0x007be298
+        /// 
+        /// Path construction:
+        /// 1. Uses savesDirectory if provided (via SetSavesDirectory or parameter)
+        /// 2. Sanitizes save name for filesystem compatibility
+        /// 3. Combines savesDirectory + sanitized save name
+        /// 
+        /// Returns null if saves directory is not available or save name is invalid.
+        /// </remarks>
+        private string GetSavePathFromData(SaveGameData saveData, string savesDirectory = null)
         {
-            // SaveGameData doesn't have a path property, so we can't determine it here
-            // This is a limitation - we'd need the save path passed in
-            // TODO: STUB - For now, return null and let the caller handle path management
-            return null;
+            if (saveData == null)
+            {
+                return null;
+            }
+
+            // Use provided savesDirectory parameter, fall back to instance field, or return null
+            string baseDirectory = savesDirectory ?? _savesDirectory;
+            if (string.IsNullOrEmpty(baseDirectory))
+            {
+                // Cannot construct path without saves directory
+                return null;
+            }
+
+            // Get save name from SaveGameData
+            string saveName = saveData.Name;
+            if (string.IsNullOrEmpty(saveName))
+            {
+                // Save name is required to construct path
+                return null;
+            }
+
+            // Sanitize save name for filesystem compatibility
+            // Based on SaveDataProvider.SanitizeSaveName implementation
+            string sanitizedName = SanitizeSaveName(saveName);
+
+            // Construct path: savesDirectory/sanitizedName
+            // Based on swkotor2.exe: "SAVES:\{saveName}\" format
+            return Path.Combine(baseDirectory, sanitizedName);
+        }
+
+        /// <summary>
+        /// Sanitizes a save name for filesystem compatibility.
+        /// Removes or replaces invalid filename characters.
+        /// </summary>
+        /// <remarks>
+        /// Based on SaveDataProvider.SanitizeSaveName implementation.
+        /// Invalid characters are replaced with underscore ('_').
+        /// </remarks>
+        private string SanitizeSaveName(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return name;
+            }
+
+            // Remove or replace invalid filename characters
+            char[] invalid = Path.GetInvalidFileNameChars();
+            string sanitized = name;
+            foreach (char c in invalid)
+            {
+                sanitized = sanitized.Replace(c, '_');
+            }
+
+            return sanitized;
         }
 
         // Deserialize save game archive from ERF format

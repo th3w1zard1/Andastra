@@ -62,6 +62,13 @@ namespace Andastra.Runtime.Content.Save
 
             // Ensure saves directory exists
             SaveFolderIO.EnsureDirectoryExists(_savesDirectory);
+
+            // If serializer supports saves directory setting, configure it
+            // This allows the serializer to resolve save paths from save names
+            if (_serializer is SaveSerializer saveSerializer)
+            {
+                saveSerializer.SetSavesDirectory(_savesDirectory);
+            }
         }
 
         /// <summary>

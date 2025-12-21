@@ -736,10 +736,31 @@ namespace Andastra.Runtime.Content.Loaders
     /// <summary>
     /// Store instance from GIT.
     /// </summary>
+    /// <remarks>
+    /// Based on nwmain.exe: GIT store struct contains all store properties
+    /// - StoreGold: INT - Maximum gold store can use to buy items (-1 = unlimited)
+    /// - IdentifyPrice: INT - Price to identify items (-1 = won't identify, 0+ = price)
+    /// - MaxBuyPrice: INT - Maximum price for items to buy (-1 = no limit)
+    /// - BlackMarket: BYTE - Whether store is a black market (1 = black market, 0 = normal)
+    /// - BM_MarkDown: INT - Black market markdown percentage
+    /// - WillNotBuy: List - Base item types store won't buy
+    /// - WillOnlyBuy: List - Base item types store will only buy
+    /// Based on vendor/PyKotor/wiki/Bioware-Aurora-Store.md: Table 2.1.1
+    /// </remarks>
     public class StoreInstance : GITInstance
     {
         public float XOrientation { get; set; }
         public float YOrientation { get; set; }
+        
+        // Store properties from GIT (can override UTM template values)
+        // Based on nwmain.exe: GIT store struct contains instance-specific overrides
+        public int StoreGold { get; set; } = -1; // -1 = unlimited (default from nwmain.exe)
+        public int IdentifyPrice { get; set; } = 100; // Default from nwmain.exe
+        public int MaxBuyPrice { get; set; } = -1; // -1 = no limit (default from nwmain.exe)
+        public bool BlackMarket { get; set; } = false; // Default from nwmain.exe
+        public int BM_MarkDown { get; set; } = 0; // Default from nwmain.exe
+        public List<int> WillNotBuy { get; set; } = new List<int>(); // Base item types store won't buy
+        public List<int> WillOnlyBuy { get; set; } = new List<int>(); // Base item types store will only buy
     }
 
     /// <summary>
