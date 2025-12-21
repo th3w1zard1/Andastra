@@ -602,12 +602,23 @@ if (iVar7 == 0) {
 
 **Duplicate Handling**: Same as K1 - first registered wins.
 
-**Resource Resolution Priority**:
+**Resource Resolution Priority** (exact behavior):
 
-- If same resource exists in `.rim`, `_s.rim`, and `_dlg.erf`: **`.rim` wins** (registered first)
-- If same resource exists in `_s.rim` and `_dlg.erf`: **`_s.rim` wins** (registered before `_dlg.erf`)
-- If same resource exists in `.rim` and `.mod`: **`.mod` wins** (registered after `.rim`, overrides it)
+- **Same resource in `.rim`, `_s.rim`, and `_dlg.erf`**: `.rim` wins (registered first)
+- **Same resource in `_s.rim` and `_dlg.erf`**: `_s.rim` wins (registered before `_dlg.erf`)
+- **Same resource in `.rim` and `.mod`**: `.mod` wins (registered after `.rim`, overrides it)
 - **CRITICAL**: When `.mod` exists, `.rim`, `_s.rim`, and `_dlg.erf` are NOT loaded - `.mod` completely replaces them
+
+**Edge Cases** (K2):
+
+- **Flag == 0, only `.rim` exists**: Only `.rim` is loaded, function returns immediately
+- **Flag == 0, `.rim` + `_a.rim` exist**: Only `.rim` is loaded (flag == 0 bypasses `_a.rim` check)
+- **Flag != 0, `.rim` + `_a.rim` exist**: Both `.rim` and `_a.rim` are loaded (`.rim` loads first, `_a.rim` supplements)
+- **Flag != 0, `.mod` exists**: Only `.mod` is loaded, `.rim`, `_s.rim`, and `_dlg.erf` are NOT loaded
+- **Flag != 0, `.mod` + `_a.rim` exist**: Only `.mod` is loaded, `_a.rim` is NOT loaded (`.mod` check happens before `_a.rim` check)
+- **Flag != 0, `.rim` + `_s.rim` + `_dlg.erf` exist, no `.mod`**: All three are loaded (`.rim` first, then `_s.rim`, then `_dlg.erf`)
+- **Flag != 0, `.rim` + `_a.rim` + `_adx.rim` + `_s.rim` + `_dlg.erf` exist**: All five are loaded (`.rim` first, then `_a.rim`, then `_adx.rim`, then `_s.rim`, then `_dlg.erf`)
+- **Duplicate resources**: First registered wins, later duplicates are ignored (checked in `FUN_0040e990` line 36)
 
 ## Override Directory Priority (PROVEN)
 
