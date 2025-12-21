@@ -3232,7 +3232,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     {
                         return false;
                     }
-                    Ability ability = (Ability)abilityId;
+                    Core.Enums.Ability ability = (Core.Enums.Ability)abilityId;
                     int abilityScore = stats.GetAbility(ability);
                     return abilityScore > 0; // Has non-zero ability score
                     
@@ -3247,7 +3247,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     {
                         return false;
                     }
-                    Ability ability44 = (Ability)abilityId44;
+                    Core.Enums.Ability ability44 = (Core.Enums.Ability)abilityId44;
                     int modifier = stats.GetAbilityModifier(ability44);
                     return modifier > 0;
                     
@@ -3388,7 +3388,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     {
                         return false;
                     }
-                    Ability ability66 = (Ability)abilityId66;
+                    Core.Enums.Ability ability66 = (Core.Enums.Ability)abilityId66;
                     int actualScore = stats.GetAbility(ability66);
                     return actualScore == expectedScore;
                     
@@ -3404,7 +3404,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     {
                         return false;
                     }
-                    Ability ability67 = (Ability)abilityId67;
+                    Core.Enums.Ability ability67 = (Core.Enums.Ability)abilityId67;
                     int actualModifier = stats.GetAbilityModifier(ability67);
                     return actualModifier == expectedModifier;
                     
