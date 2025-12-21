@@ -376,7 +376,7 @@ namespace Andastra.Parsing.Mods.GFF
             if (pathName == ">>##INDEXINLIST##<<")
             {
                 logger.AddVerbose($"Removing unique sentinel from AddStructToListGFF instance (ini section [{Identifier}]). Path: '{Path}'");
-                // Python: self.path = self.path.parent  # HACK(th3w1zard1): idk why conditional parenting is necessary but it works
+                // TODO:  Python: self.path = self.path.parent  # HACK(th3w1zard1): idk why conditional parenting is necessary but it works
                 (workingPath, _) = SplitPath(Path);
                 Path = workingPath;
             }
@@ -628,19 +628,36 @@ namespace Andastra.Parsing.Mods.GFF
                 // Python: newpath = PureWindowsPath("")
                 // Python: for part, resolvedpart in zip_longest(add_field.path.parts, self.path.parts):
                 // Python:     newpath /= resolvedpart or part
+                // Implementation: zip_longest pairs elements from both sequences, filling with None when one is shorter.
+                // For each pair (part, resolvedpart), use resolvedpart if it's truthy (not None/empty), otherwise use part.
+                // This allows merging paths of different lengths, preferring the resolved (parent) path parts when available.
                 string childPath = addField is AddFieldGFF af ? af.Path : (addField is AddStructToListGFF asl ? asl.Path : string.Empty);
-                // Python zip_longest logic: newpath parts are resolvedpart or part
-                List<string> newpathParts = new List<string>();
+                // Split paths into parts, preserving empty entries to match Python's PureWindowsPath.parts behavior
+                // Python's PureWindowsPath("").parts = [] (empty), PureWindowsPath("A").parts = ["A"]
+                // PureWindowsPath("A/B").parts = ["A", "B"], PureWindowsPath("A/").parts = ["A"]
                 string[] childParts = string.IsNullOrEmpty(childPath) ? Array.Empty<string>() : childPath.Split(new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
                 string[] selfParts = string.IsNullOrEmpty(Path) ? Array.Empty<string>() : Path.Split(new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
+                // zip_longest: iterate up to max length, using None for missing elements
                 int maxParts = Math.Max(childParts.Length, selfParts.Length);
+                List<string> newpathParts = new List<string>();
                 for (int i = 0; i < maxParts; i++)
                 {
+                    // Get part from child path (None if index out of range)
                     string part = i < childParts.Length ? childParts[i] : null;
-                    string resolved = i < selfParts.Length ? selfParts[i] : null;
-                    newpathParts.Add(!string.IsNullOrEmpty(resolved) ? resolved : part);
+                    // Get resolvedpart from self path (None if index out of range)
+                    string resolvedpart = i < selfParts.Length ? selfParts[i] : null;
+                    // Python: resolvedpart or part
+                    // In Python, None is falsy, empty string is falsy. So: use resolvedpart if truthy, else use part
+                    // Since we split with RemoveEmptyEntries, parts won't be empty strings, only null when missing
+                    string selectedPart = !string.IsNullOrEmpty(resolvedpart) ? resolvedpart : part;
+                    // Only add non-null parts (zip_longest can produce None/None pairs when both sequences are exhausted)
+                    if (!string.IsNullOrEmpty(selectedPart))
+                    {
+                        newpathParts.Add(selectedPart);
+                    }
                 }
-                string newpath = string.Join("/", newpathParts.Where(p => !string.IsNullOrEmpty(p)));
+                // Join parts with forward slash to match Python's PureWindowsPath behavior
+                string newpath = string.Join("/", newpathParts);
 
                 string childIdentifier = GetIdentifierForLogging(addField);
                 logger.AddVerbose($"Resolved gff path of INI section [{childIdentifier}] from relative '{childPath}' --> absolute '{newpath}'");
