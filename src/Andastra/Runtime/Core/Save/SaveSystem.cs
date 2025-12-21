@@ -1587,7 +1587,7 @@ namespace Andastra.Runtime.Core.Save
                 // Based on swkotor2.exe: Mod_Area_list in module IFO file
                 // Original implementation: Module IFO contains Mod_Area_list field (GFF List) with area ResRefs
                 // Located via string references: "Mod_Area_list" @ 0x007be748 (swkotor2.exe)
-                // The mapping is populated when saving by extracting the area list from the module
+                // The mapping is populated when saving by extracting the area list from RuntimeModule.AreaList
                 if (CurrentSave != null && CurrentSave.ModuleAreaMappings != null)
                 {
                     List<string> areaList;
@@ -1617,29 +1617,9 @@ namespace Andastra.Runtime.Core.Save
             }
 
             // Check if the module contains this area
-            // Prefer using RuntimeModule.AreaList if available (matches the saved mapping structure)
-            // Otherwise fall back to IModule.GetArea() for other IModule implementations
-            Core.Module.RuntimeModule runtimeModule = module as Core.Module.RuntimeModule;
-            if (runtimeModule != null && runtimeModule.AreaList != null)
-            {
-                // Use AreaList directly (same source as the saved mapping)
-                // Based on swkotor2.exe: Mod_Area_list contains ordered list of area ResRefs
-                foreach (string mappedAreaResRef in runtimeModule.AreaList)
-                {
-                    if (string.Equals(mappedAreaResRef, areaResRef, StringComparison.OrdinalIgnoreCase))
-                    {
-                        return true;
-                    }
-                }
-                return false;
-            }
-            else
-            {
-                // Fall back to GetArea() for other IModule implementations
-                // IModule.GetArea() returns null if the area is not in the module
-                IArea area = module.GetArea(areaResRef);
-                return area != null;
-            }
+            // IModule.GetArea() returns null if the area is not in the module
+            IArea area = module.GetArea(areaResRef);
+            return area != null;
         }
 
         /// <summary>
