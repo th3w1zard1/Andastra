@@ -1358,8 +1358,9 @@ namespace Andastra.Runtime.Core.Save
         /// <remarks>
         /// Based on swkotor2.exe: Item data restored from PARTYTABLE.res
         /// Creates item entity from template ResRef and restores stack size, charges, identified flag, and upgrades
-        /// Note: This is a simplified implementation - full implementation would need access to entity factory
-        /// to create items from templates. For now, returns null as item creation requires module/entity factory context.
+        /// Uses EntityFactory to create items from templates (via reflection to avoid direct dependency)
+        /// Based on swkotor2.exe: FUN_0057dcd0 @ 0x0057dcd0 (load party data from PARTYTABLE.res)
+        /// Original implementation: Items restored from save files with all properties (StackSize, Charges, Identified, Upgrades)
         /// </remarks>
         private IEntity RestoreItemFromState(ItemState itemState)
         {
@@ -1368,20 +1369,255 @@ namespace Andastra.Runtime.Core.Save
                 return null;
             }
 
-            // TODO: STUB - Note: Full implementation would require:
-            // 1. Access to entity factory to create items from template ResRefs
-            // 2. Module context to load item templates
-            // 3. Ability to restore item upgrades and properties
-            // TODO: STUB - For now, this is a placeholder that indicates the item needs to be restored
-            // The actual item restoration would be handled by the entity factory when loading the save
+            // Get current module - needed for EntityFactory to load item templates
+            IModule currentModule = _world.CurrentModule;
+            if (currentModule == null)
+            {
+                return null; // Cannot create items without module context
+            }
+
+            // Get EntityFactory using reflection to avoid direct dependency on Odyssey namespace
+            // Based on Odyssey EntityFactory pattern: CreateItemFromTemplate(Module, string, Vector3, float)
+            // EntityFactory is typically available through ModuleLoader or GameSession
+            // Try to get EntityFactory from world or module using reflection
+            object entityFactory = GetEntityFactory();
+            if (entityFactory == null)
+            {
+                return null; // EntityFactory not available
+            }
+
+            // Get CreateItemFromTemplate method from EntityFactory
+            var entityFactoryType = entityFactory.GetType();
+            var createItemMethod = entityFactoryType.GetMethod("CreateItemFromTemplate", 
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            if (createItemMethod == null)
+            {
+                return null; // CreateItemFromTemplate method not found
+            }
+
+            // Convert IModule to parsing Module type if needed
+            // EntityFactory.CreateItemFromTemplate expects Andastra.Parsing.Common.Module
+            object parsingModule = GetParsingModule(currentModule);
+            if (parsingModule == null)
+            {
+                return null; // Cannot convert IModule to parsing Module type
+            }
+
+            // Create item entity at origin (position doesn't matter for inventory items)
+            // Items in inventory don't need a world position
+            System.Numerics.Vector3 itemPosition = System.Numerics.Vector3.Zero;
+            float itemFacing = 0.0f;
+
+            // Call EntityFactory.CreateItemFromTemplate
+            IEntity itemEntity = null;
+            try
+            {
+                object result = createItemMethod.Invoke(entityFactory, new object[] { parsingModule, itemState.TemplateResRef, itemPosition, itemFacing });
+                itemEntity = result as IEntity;
+            }
+            catch (Exception)
+            {
+                // Failed to create item - return null
+                return null;
+            }
+
+            if (itemEntity == null)
+            {
+                return null; // Item creation failed
+            }
+
+            // Restore item properties from saved state
+            // Based on swkotor2.exe: Item properties restored from PARTYTABLE.res
+            Interfaces.Components.IItemComponent itemComponent = itemEntity.GetComponent<Interfaces.Components.IItemComponent>();
+            if (itemComponent != null)
+            {
+                // Restore StackSize
+                itemComponent.StackSize = itemState.StackSize;
+
+                // Restore Charges
+                itemComponent.Charges = itemState.Charges;
+
+                // Restore Identified flag
+                itemComponent.Identified = itemState.Identified;
+
+                // Restore item upgrades
+                // Based on swkotor2.exe: Item upgrades saved in PARTYTABLE.res
+                // Upgrades are stored as ItemUpgrade structures with UpgradeSlot and UpgradeResRef
+                if (itemState.Upgrades != null && itemState.Upgrades.Count > 0)
+                {
+                    // Clear existing upgrades first
+                    var upgradesList = itemComponent.Upgrades;
+                    if (upgradesList != null)
+                    {
+                        // Get the list type to clear it
+                        var listType = upgradesList.GetType();
+                        var clearMethod = listType.GetMethod("Clear");
+                        if (clearMethod != null)
+                        {
+                            clearMethod.Invoke(upgradesList, null);
+                        }
+
+                        // Restore each upgrade
+                        foreach (ItemUpgrade savedUpgrade in itemState.Upgrades)
+                        {
+                            // Create ItemUpgrade structure
+                            // Based on Interfaces.Components.ItemUpgrade structure
+                            var upgradeType = typeof(Interfaces.Components.ItemUpgrade);
+                            object upgrade = System.Activator.CreateInstance(upgradeType);
+                            
+                            // Set upgrade properties using reflection
+                            var upgradeTypeProperty = upgradeType.GetProperty("UpgradeType");
+                            var indexProperty = upgradeType.GetProperty("Index");
+                            
+                            if (upgradeTypeProperty != null && upgradeTypeProperty.CanWrite)
+                            {
+                                upgradeTypeProperty.SetValue(upgrade, savedUpgrade.UpgradeSlot);
+                            }
+                            
+                            if (indexProperty != null && indexProperty.CanWrite)
+                            {
+                                // UpgradeResRef is stored as string, convert to int if needed
+                                if (int.TryParse(savedUpgrade.UpgradeResRef, out int upgradeIndex))
+                                {
+                                    indexProperty.SetValue(upgrade, upgradeIndex);
+                                }
+                            }
+
+                            // Add upgrade to item component
+                            // ItemComponent.Upgrades is a collection, use Add method
+                            var addMethod = listType.GetMethod("Add");
+                            if (addMethod != null)
+                            {
+                                addMethod.Invoke(upgradesList, new object[] { upgrade });
+                            }
+                        }
+                    }
+                }
+            }
+
+            return itemEntity;
+        }
+
+        /// <summary>
+        /// Gets EntityFactory using reflection to avoid direct dependency.
+        /// </summary>
+        /// <returns>EntityFactory instance or null if not available.</returns>
+        private object GetEntityFactory()
+        {
+            // Try to get EntityFactory from world using reflection
+            // EntityFactory is typically available through ModuleLoader or GameSession
+            // Check if world has EntityFactory property or method
+            var worldType = _world.GetType();
             
-            // In a complete implementation, this would:
-            // 1. Get entity factory from world/module
-            // 2. Create item entity from TemplateResRef
-            // 3. Get IItemComponent and set StackSize, Charges, Identified
-            // 4. Restore item upgrades from itemState.Upgrades
-            // 5. Return the created entity
-            
+            // Try EntityFactory property
+            var entityFactoryProperty = worldType.GetProperty("EntityFactory", 
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            if (entityFactoryProperty != null)
+            {
+                return entityFactoryProperty.GetValue(_world);
+            }
+
+            // Try GetEntityFactory method
+            var getEntityFactoryMethod = worldType.GetMethod("GetEntityFactory", 
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            if (getEntityFactoryMethod != null)
+            {
+                return getEntityFactoryMethod.Invoke(_world, null);
+            }
+
+            // Try to get from CurrentModule if it has EntityFactory
+            if (_world.CurrentModule != null)
+            {
+                var moduleType = _world.CurrentModule.GetType();
+                var moduleEntityFactoryProperty = moduleType.GetProperty("EntityFactory", 
+                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                if (moduleEntityFactoryProperty != null)
+                {
+                    return moduleEntityFactoryProperty.GetValue(_world.CurrentModule);
+                }
+            }
+
+            // Fallback: Create new EntityFactory instance
+            // Based on Odyssey EntityFactory: new Loading.EntityFactory()
+            // Use reflection to create instance to avoid direct dependency
+            var entityFactoryTypeName = "Andastra.Runtime.Games.Odyssey.Loading.EntityFactory";
+            var entityFactoryType = System.Type.GetType(entityFactoryTypeName);
+            if (entityFactoryType != null)
+            {
+                try
+                {
+                    return System.Activator.CreateInstance(entityFactoryType);
+                }
+                catch (Exception)
+                {
+                    // Failed to create EntityFactory
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Gets parsing Module from IModule interface.
+        /// </summary>
+        /// <returns>Parsing Module instance or null if conversion not possible.</returns>
+        private object GetParsingModule(IModule module)
+        {
+            if (module == null)
+            {
+                return null;
+            }
+
+            // If module is already the parsing Module type, return it
+            var parsingModuleTypeName = "Andastra.Parsing.Common.Module";
+            var parsingModuleType = System.Type.GetType(parsingModuleTypeName);
+            if (parsingModuleType != null && parsingModuleType.IsAssignableFrom(module.GetType()))
+            {
+                return module;
+            }
+
+            // Try to get parsing Module from IModule using reflection
+            // Some IModule implementations may have a ParsingModule property
+            var moduleType = module.GetType();
+            var parsingModuleProperty = moduleType.GetProperty("ParsingModule", 
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            if (parsingModuleProperty != null)
+            {
+                return parsingModuleProperty.GetValue(module);
+            }
+
+            // Try to get Module property (some implementations expose it directly)
+            var moduleProperty = moduleType.GetProperty("Module", 
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            if (moduleProperty != null)
+            {
+                object moduleValue = moduleProperty.GetValue(module);
+                if (parsingModuleType != null && parsingModuleType.IsAssignableFrom(moduleValue.GetType()))
+                {
+                    return moduleValue;
+                }
+            }
+
+            // For RuntimeModule, try to get ParsingModule field
+            // Based on Core.Module.RuntimeModule which may have a ParsingModule field
+            var parsingModuleField = moduleType.GetField("_parsingModule", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (parsingModuleField == null)
+            {
+                parsingModuleField = moduleType.GetField("ParsingModule", 
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            }
+            if (parsingModuleField != null)
+            {
+                return parsingModuleField.GetValue(module);
+            }
+
+            // If module itself is the parsing Module, return it
+            if (parsingModuleType != null && parsingModuleType.IsInstanceOfType(module))
+            {
+                return module;
+            }
+
             return null;
         }
 
