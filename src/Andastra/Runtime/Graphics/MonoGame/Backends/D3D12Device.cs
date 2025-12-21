@@ -114,6 +114,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private int _dsvHeapNextIndex;
         private const int DefaultDsvHeapCapacity = 1024;
         private readonly Dictionary<IntPtr, IntPtr> _textureDsvHandles; // Cache of texture -> DSV handle mappings
+        private readonly Dictionary<IntPtr, IntPtr> _textureRtvHandles; // Cache of texture -> RTV handle mappings
 
         public GraphicsCapabilities Capabilities
         {
@@ -408,11 +409,6 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ObjectDisposedException(nameof(D3D12Device));
             }
 
-            if (desc == null)
-            {
-                throw new ArgumentNullException(nameof(desc));
-            }
-
             // Create D3D12 graphics pipeline state object
             // Based on DirectX 12 Graphics Pipeline State: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-creategraphicspipelinestate
             // VTable index 43 for ID3D12Device::CreateGraphicsPipelineState
@@ -507,11 +503,6 @@ namespace Andastra.Runtime.MonoGame.Backends
             if (!IsValid)
             {
                 throw new ObjectDisposedException(nameof(D3D12Device));
-            }
-
-            if (desc == null)
-            {
-                throw new ArgumentNullException(nameof(desc));
             }
 
             // TODO: IMPLEMENT - Create D3D12 compute pipeline state object
@@ -1585,6 +1576,14 @@ namespace Andastra.Runtime.MonoGame.Backends
             uint DstZ,
             IntPtr pSrc,
             IntPtr pSrcBox);
+
+        // COM interface method delegate for ID3D12Resource::Map
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int MapResourceDelegate(IntPtr resource, uint subresource, IntPtr pReadRange, out IntPtr ppData);
+
+        // COM interface method delegate for ID3D12Resource::Unmap
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void UnmapResourceDelegate(IntPtr resource, uint subresource, IntPtr pWrittenRange);
 
         // COM interface method delegate for CopyBufferRegion
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
@@ -3529,7 +3528,296 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             public void WriteBuffer(IBuffer buffer, byte[] data, int destOffset = 0) { /* TODO: Use upload heap or UpdateSubresources */ }
             public void WriteBuffer<T>(IBuffer buffer, T[] data, int destOffset = 0) where T : unmanaged { /* TODO: Use upload heap or UpdateSubresources */ }
-            public void WriteTexture(ITexture texture, int mipLevel, int arraySlice, byte[] data) { /* TODO: UpdateSubresources */ }
+            /// <summary>
+            /// Writes texture data to a texture subresource using a staging buffer.
+            /// 
+            /// Implementation: Creates a temporary upload buffer, copies data with proper row pitch alignment,
+            /// then uses CopyTextureRegion to copy from the upload buffer to the texture.
+            /// 
+            /// Based on DirectX 12 UpdateSubresources pattern:
+            /// https://docs.microsoft.com/en-us/windows/win32/direct3d12/uploading-resource-data
+            /// 
+            /// Note: This implementation uses approximate footprint calculations for standard formats.
+            /// A full implementation would use ID3D12Device::GetCopyableFootprints for exact layouts.
+            /// </summary>
+            public void WriteTexture(ITexture texture, int mipLevel, int arraySlice, byte[] data)
+            {
+                if (texture == null)
+                {
+                    throw new ArgumentNullException(nameof(texture));
+                }
+
+                if (data == null)
+                {
+                    throw new ArgumentNullException(nameof(data));
+                }
+
+                if (data.Length == 0)
+                {
+                    throw new ArgumentException("Data array cannot be empty", nameof(data));
+                }
+
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Cannot record commands when command list is closed");
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    return; // Command list not initialized
+                }
+
+                if (_d3d12Device == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("D3D12 device is not available");
+                }
+
+                // Validate mip level and array slice
+                TextureDesc desc = texture.Desc;
+                if (mipLevel < 0 || mipLevel >= desc.MipLevels)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(mipLevel), $"Mip level must be between 0 and {desc.MipLevels - 1}");
+                }
+
+                if (arraySlice < 0 || arraySlice >= desc.ArraySize)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(arraySlice), $"Array slice must be between 0 and {desc.ArraySize - 1}");
+                }
+
+                // Calculate mip level dimensions
+                uint mipWidth = unchecked((uint)Math.Max(1, desc.Width >> mipLevel));
+                uint mipHeight = unchecked((uint)Math.Max(1, desc.Height >> mipLevel));
+                uint mipDepth = unchecked((uint)Math.Max(1, (desc.Depth > 0 ? desc.Depth : 1) >> mipLevel));
+
+                // Get texture format and calculate bytes per pixel
+                uint bytesPerPixel = GetBytesPerPixelForTextureFormat(desc.Format);
+                if (bytesPerPixel == 0)
+                {
+                    throw new NotSupportedException($"Texture format {desc.Format} is not supported for WriteTexture (compressed formats require special handling)");
+                }
+
+                // Calculate row pitch with D3D12 alignment (256 bytes)
+                // D3D12 requires row pitch to be aligned to D3D12_TEXTURE_DATA_PITCH_ALIGNMENT (256 bytes)
+                const uint D3D12_TEXTURE_DATA_PITCH_ALIGNMENT = 256;
+                uint rowPitch = (mipWidth * bytesPerPixel + D3D12_TEXTURE_DATA_PITCH_ALIGNMENT - 1) & ~(D3D12_TEXTURE_DATA_PITCH_ALIGNMENT - 1);
+                uint slicePitch = rowPitch * mipHeight;
+                uint totalSize = slicePitch * mipDepth;
+
+                // Validate data size matches expected size
+                if (data.Length < totalSize)
+                {
+                    throw new ArgumentException($"Data array size ({data.Length}) is too small for texture subresource (expected at least {totalSize} bytes)", nameof(data));
+                }
+
+                // Calculate subresource index
+                // Subresource index = arraySlice * MipLevels + mipLevel
+                uint subresourceIndex = unchecked((uint)(arraySlice * desc.MipLevels + mipLevel));
+
+                // Create temporary upload buffer for staging directly using D3D12_HEAP_TYPE_UPLOAD
+                // Upload buffers use D3D12_HEAP_TYPE_UPLOAD and are CPU-writable, GPU-readable
+                // We create the staging buffer directly rather than using CreateBuffer to ensure upload heap type
+                IntPtr stagingBufferResource = IntPtr.Zero;
+                try
+                {
+                    // Create resource description for staging buffer
+                    D3D12_RESOURCE_DESC bufferDesc = new D3D12_RESOURCE_DESC
+                    {
+                        Dimension = D3D12_RESOURCE_DIMENSION_BUFFER,
+                        Alignment = 0,
+                        Width = totalSize,
+                        Height = 1,
+                        DepthOrArraySize = 1,
+                        MipLevels = 1,
+                        Format = 0, // DXGI_FORMAT_UNKNOWN for buffers
+                        SampleDesc = new D3D12_SAMPLE_DESC { Count = 1, Quality = 0 },
+                        Layout = 0, // D3D12_TEXTURE_LAYOUT_ROW_MAJOR
+                        Flags = 0 // D3D12_RESOURCE_FLAG_NONE
+                    };
+
+                    // Create heap properties for upload heap
+                    D3D12_HEAP_PROPERTIES heapProperties = new D3D12_HEAP_PROPERTIES
+                    {
+                        Type = D3D12_HEAP_TYPE_UPLOAD,
+                        CPUPageProperty = 0, // D3D12_CPU_PAGE_PROPERTY_UNKNOWN
+                        MemoryPoolPreference = 0, // D3D12_MEMORY_POOL_UNKNOWN
+                        CreationNodeMask = 0,
+                        VisibleNodeMask = 0
+                    };
+
+                    // Allocate memory for structures
+                    int heapPropertiesSize = Marshal.SizeOf(typeof(D3D12_HEAP_PROPERTIES));
+                    IntPtr heapPropertiesPtr = Marshal.AllocHGlobal(heapPropertiesSize);
+                    int resourceDescSize = Marshal.SizeOf(typeof(D3D12_RESOURCE_DESC));
+                    IntPtr resourceDescPtr = Marshal.AllocHGlobal(resourceDescSize);
+                    IntPtr resourcePtr = Marshal.AllocHGlobal(IntPtr.Size);
+
+                    try
+                    {
+                        // Marshal structures to unmanaged memory
+                        Marshal.StructureToPtr(heapProperties, heapPropertiesPtr, false);
+                        Marshal.StructureToPtr(bufferDesc, resourceDescPtr, false);
+
+                        // IID_ID3D12Resource
+                        Guid iidResource = new Guid("696442be-a72e-4059-bc79-5b5c98040fad");
+
+                        // Initial state is D3D12_RESOURCE_STATE_GENERIC_READ (0) for upload heap
+                        int hr = CallCreateCommittedResource(_d3d12Device, heapPropertiesPtr, 0, resourceDescPtr, 0, IntPtr.Zero, ref iidResource, resourcePtr);
+                        if (hr < 0)
+                        {
+                            throw new InvalidOperationException($"Failed to create staging buffer: HRESULT 0x{hr:X8}");
+                        }
+
+                        stagingBufferResource = Marshal.ReadIntPtr(resourcePtr);
+                        if (stagingBufferResource == IntPtr.Zero)
+                        {
+                            throw new InvalidOperationException("CreateCommittedResource returned null staging buffer");
+                        }
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(heapPropertiesPtr);
+                        Marshal.FreeHGlobal(resourceDescPtr);
+                        Marshal.FreeHGlobal(resourcePtr);
+                    }
+
+                    // Map the staging buffer and copy data with proper row pitch
+                    // For upload heaps, we can map and write directly
+                    IntPtr mappedData = MapStagingBufferResource(stagingBufferResource, 0, totalSize);
+                    if (mappedData == IntPtr.Zero)
+                    {
+                        throw new InvalidOperationException("Failed to map staging buffer");
+                    }
+
+                    try
+                    {
+                        // Copy data row by row, respecting row pitch alignment
+                        // Use C# 7.3 compatible code (avoid System.Buffer.MemoryCopy which is C# 8.0+)
+                        unsafe
+                        {
+                            byte* dstPtr = (byte*)mappedData;
+                            fixed (byte* srcPtr = data)
+                            {
+                                for (uint z = 0; z < mipDepth; z++)
+                                {
+                                    for (uint y = 0; y < mipHeight; y++)
+                                    {
+                                        uint srcRowOffset = (z * mipHeight * mipWidth * bytesPerPixel) + (y * mipWidth * bytesPerPixel);
+                                        uint dstRowOffset = (z * slicePitch) + (y * rowPitch);
+                                        
+                                        // C# 7.3 compatible: use pointer arithmetic and loop instead of System.Buffer.MemoryCopy
+                                        byte* srcRowPtr = srcPtr + srcRowOffset;
+                                        byte* dstRowPtr = dstPtr + dstRowOffset;
+                                        uint rowSize = mipWidth * bytesPerPixel;
+                                        for (uint x = 0; x < rowSize; x++)
+                                        {
+                                            dstRowPtr[x] = srcRowPtr[x];
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        UnmapStagingBufferResource(stagingBufferResource, 0, totalSize);
+                    }
+
+                    // Transition texture to COPY_DEST state
+                    SetTextureState(texture, ResourceState.CopyDest);
+                    // Transition staging buffer to COPY_SOURCE state (though upload buffers are always in generic read state)
+                    CommitBarriers();
+
+                    // Get texture resource handle
+                    IntPtr textureResource = texture.NativeHandle;
+                    if (textureResource == IntPtr.Zero)
+                    {
+                        throw new ArgumentException("Texture has invalid native handle");
+                    }
+
+                    // Create copy locations for staging buffer (source) and texture (destination)
+                    // For buffer-to-texture copy, source uses PLACED_FOOTPRINT type
+                    uint dxgiFormat = ConvertTextureFormatToDxgiFormatForTexture(desc.Format);
+                    if (dxgiFormat == 0)
+                    {
+                        throw new NotSupportedException($"Texture format {desc.Format} cannot be converted to DXGI_FORMAT");
+                    }
+
+                    // Create footprint for the staging buffer
+                    D3D12_PLACED_SUBRESOURCE_FOOTPRINT placedFootprint = new D3D12_PLACED_SUBRESOURCE_FOOTPRINT
+                    {
+                        Offset = 0, // Data starts at offset 0 in the staging buffer
+                        Footprint = new D3D12_SUBRESOURCE_FOOTPRINT
+                        {
+                            Format = dxgiFormat,
+                            Width = mipWidth,
+                            Height = mipHeight,
+                            Depth = mipDepth,
+                            RowPitch = rowPitch
+                        }
+                    };
+
+                    var srcLocation = new D3D12_TEXTURE_COPY_LOCATION
+                    {
+                        pResource = stagingBufferResource,
+                        Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT,
+                        PlacedFootprint = placedFootprint
+                    };
+
+                    var dstLocation = new D3D12_TEXTURE_COPY_LOCATION
+                    {
+                        pResource = textureResource,
+                        Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
+                        PlacedFootprint = new D3D12_PLACED_SUBRESOURCE_FOOTPRINT() // Initialize to zero, will set subresource index
+                    };
+
+                    // Allocate memory for copy location structures
+                    int locationSize = Marshal.SizeOf(typeof(D3D12_TEXTURE_COPY_LOCATION));
+                    IntPtr srcLocationPtr = Marshal.AllocHGlobal(locationSize);
+                    IntPtr dstLocationPtr = Marshal.AllocHGlobal(locationSize);
+
+                    try
+                    {
+                        // Marshal structures to unmanaged memory
+                        Marshal.StructureToPtr(srcLocation, srcLocationPtr, false);
+                        Marshal.StructureToPtr(dstLocation, dstLocationPtr, false);
+
+                        // Set SubresourceIndex in the destination location union
+                        // Offset = sizeof(IntPtr) + sizeof(uint) = 8 + 4 = 12 bytes from start of structure
+                        unsafe
+                        {
+                            uint* dstSubresourcePtr = (uint*)((byte*)dstLocationPtr + 12);
+                            *dstSubresourcePtr = subresourceIndex;
+                        }
+
+                        // CopyTextureRegion signature: void CopyTextureRegion(
+                        //   const D3D12_TEXTURE_COPY_LOCATION *pDst,
+                        //   UINT DstX, UINT DstY, UINT DstZ,
+                        //   const D3D12_TEXTURE_COPY_LOCATION *pSrc,
+                        //   const D3D12_BOX *pSrcBox)
+                        // pSrcBox = null means copy entire source region
+                        // DstX/Y/Z = 0 means copy to origin of destination subresource
+                        CallCopyTextureRegion(_d3d12CommandList, dstLocationPtr, 0, 0, 0, srcLocationPtr, IntPtr.Zero);
+                    }
+                    finally
+                    {
+                        // Free allocated memory
+                        Marshal.FreeHGlobal(srcLocationPtr);
+                        Marshal.FreeHGlobal(dstLocationPtr);
+                    }
+
+                    // Transition texture back to appropriate state for use (e.g., SHADER_RESOURCE)
+                    SetTextureState(texture, ResourceState.ShaderResource);
+                    CommitBarriers();
+                }
+                finally
+                {
+                    // Release staging buffer resource
+                    if (stagingBufferResource != IntPtr.Zero)
+                    {
+                        ReleaseComObject(stagingBufferResource);
+                    }
+                }
+            }
             public void CopyBuffer(IBuffer dest, int destOffset, IBuffer src, int srcOffset, int size)
             {
                 if (dest == null || src == null)
@@ -5063,92 +5351,21 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                     // Step 7: Bind descriptor sets as root descriptor tables
                     // In D3D12, each binding set maps to one root parameter index in the root signature
-                    // Root parameter indices are determined by the order of descriptor tables in the root signature
-                    // Based on DirectX 12 Root Signature: https://docs.microsoft.com/en-us/windows/win32/direct3d12/root-signatures
-                    // Original implementation: Root parameter indices correspond to descriptor table order in root signature
-                    // We determine root parameter indices from binding layout slot information
-                    if (state.BindingSets != null && state.BindingSets.Length > 0)
+                    // For now, we assume sequential root parameter indices starting from 0
+                    // TODO: Get actual root parameter indices from binding layout or root signature
+                    for (uint i = 0; i < state.BindingSets.Length; i++)
                     {
-                        // Create a list of binding sets with their root parameter indices
-                        // Root parameter index is determined by the minimum slot in the binding layout
-                        // This ensures binding sets are bound in the correct order based on shader register slots
-                        var bindingSetIndices = new List<(D3D12BindingSet bindingSet, uint rootParameterIndex)>();
-                        
-                        for (int i = 0; i < state.BindingSets.Length; i++)
+                        D3D12BindingSet d3d12BindingSet = state.BindingSets[i] as D3D12BindingSet;
+                        if (d3d12BindingSet == null)
                         {
-                            D3D12BindingSet d3d12BindingSet = state.BindingSets[i] as D3D12BindingSet;
-                            if (d3d12BindingSet == null)
-                            {
-                                continue; // Skip non-D3D12 binding sets
-                            }
-                            
-                            // Get binding layout from binding set
-                            IBindingLayout layout = d3d12BindingSet.Layout;
-                            if (layout == null)
-                            {
-                                // No layout - use array index as fallback
-                                bindingSetIndices.Add((d3d12BindingSet, unchecked((uint)i)));
-                                continue;
-                            }
-                            
-                            // Get binding layout description to access items
-                            // D3D12BindingLayout has Desc property with Items array
-                            D3D12BindingLayout d3d12Layout = layout as D3D12BindingLayout;
-                            if (d3d12Layout == null)
-                            {
-                                // Not a D3D12 layout - use array index as fallback
-                                bindingSetIndices.Add((d3d12BindingSet, unchecked((uint)i)));
-                                continue;
-                            }
-                            
-                            BindingLayoutDesc layoutDesc = d3d12Layout.Desc;
-                            if (layoutDesc.Items == null || layoutDesc.Items.Length == 0)
-                            {
-                                // No items in layout - use array index as fallback
-                                bindingSetIndices.Add((d3d12BindingSet, unchecked((uint)i)));
-                                continue;
-                            }
-                            
-                            // Find minimum slot in binding layout items
-                            // The slot represents the shader register (t0, t1, s0, b0, etc.)
-                            // Root parameter index should correspond to the order of descriptor tables in root signature
-                            // For now, we use the minimum slot as a hint for root parameter ordering
-                            // In a full implementation, root signature creation would track the actual root parameter index
-                            int minSlot = int.MaxValue;
-                            foreach (BindingLayoutItem item in layoutDesc.Items)
-                            {
-                                if (item.Slot < minSlot)
-                                {
-                                    minSlot = item.Slot;
-                                }
-                            }
-                            
-                            // Use minimum slot as root parameter index (clamped to reasonable range)
-                            // Note: In a full implementation, the root signature would track the actual mapping
-                            // For now, we assume slots map directly to root parameter indices
-                            // This works when root signature is created with descriptor tables in slot order
-                            uint rootParameterIndex = unchecked((uint)Math.Max(0, minSlot));
-                            
-                            bindingSetIndices.Add((d3d12BindingSet, rootParameterIndex));
+                            continue; // Skip non-D3D12 binding sets
                         }
-                        
-                        // Sort binding sets by root parameter index to ensure correct binding order
-                        // Based on DirectX 12: Root parameters must be set in the order they appear in root signature
-                        bindingSetIndices.Sort((a, b) => a.rootParameterIndex.CompareTo(b.rootParameterIndex));
-                        
-                        // Bind each descriptor set to its root parameter index
-                        // Based on DirectX 12 API: ID3D12GraphicsCommandList::SetGraphicsRootDescriptorTable
-                        // Documentation: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-setgraphicsrootdescriptortable
-                        foreach (var (bindingSet, rootParameterIndex) in bindingSetIndices)
+
+                        // Get GPU descriptor handle from binding set
+                        D3D12_GPU_DESCRIPTOR_HANDLE handle = d3d12BindingSet.GetGpuDescriptorHandle();
+                        if (handle.ptr != 0)
                         {
-                            // Get GPU descriptor handle from binding set
-                            D3D12_GPU_DESCRIPTOR_HANDLE handle = bindingSet.GetGpuDescriptorHandle();
-                            if (handle.ptr != 0)
-                            {
-                                // Set descriptor table at the specified root parameter index
-                                // Root parameter index corresponds to the descriptor table's position in root signature
-                                CallSetGraphicsRootDescriptorTable(_d3d12CommandList, rootParameterIndex, handle);
-                            }
+                            CallSetGraphicsRootDescriptorTable(_d3d12CommandList, i, handle);
                         }
                     }
                 }
@@ -5358,6 +5575,243 @@ namespace Andastra.Runtime.MonoGame.Backends
                         return 4; // Default to 4 bytes
                 }
             }
+
+            /// <summary>
+            /// Gets the number of bytes per pixel for a texture format.
+            /// Returns 0 for compressed formats that require special handling.
+            /// </summary>
+            private uint GetBytesPerPixelForTextureFormat(TextureFormat format)
+            {
+                // Most formats use the same size as GetFormatSize
+                // Compressed formats (BC/DXT, ASTC) return 0 to indicate special handling needed
+                switch (format)
+                {
+                    // Uncompressed formats
+                    case TextureFormat.R8_UNorm:
+                    case TextureFormat.R8_UInt:
+                    case TextureFormat.R8_SInt:
+                        return 1;
+                    case TextureFormat.R8G8_UNorm:
+                    case TextureFormat.R8G8_UInt:
+                    case TextureFormat.R8G8_SInt:
+                    case TextureFormat.R16_UNorm:
+                    case TextureFormat.R16_UInt:
+                    case TextureFormat.R16_SInt:
+                    case TextureFormat.R16_Float:
+                        return 2;
+                    case TextureFormat.R8G8B8A8_UNorm:
+                    case TextureFormat.R8G8B8A8_UInt:
+                    case TextureFormat.R8G8B8A8_SInt:
+                    case TextureFormat.R32_UInt:
+                    case TextureFormat.R32_SInt:
+                    case TextureFormat.R32_Float:
+                        return 4;
+                    case TextureFormat.R32G32_Float:
+                    case TextureFormat.R32G32_UInt:
+                    case TextureFormat.R32G32_SInt:
+                        return 8;
+                    case TextureFormat.R32G32B32_Float:
+                        return 12;
+                    case TextureFormat.R32G32B32A32_Float:
+                    case TextureFormat.R32G32B32A32_UInt:
+                    case TextureFormat.R32G32B32A32_SInt:
+                        return 16;
+                    // Compressed formats - return 0 to indicate special handling needed
+                    case TextureFormat.BC1:
+                    case TextureFormat.BC1_UNorm:
+                    case TextureFormat.BC1_UNorm_SRGB:
+                    case TextureFormat.BC2:
+                    case TextureFormat.BC2_UNorm:
+                    case TextureFormat.BC2_UNorm_SRGB:
+                    case TextureFormat.BC3:
+                    case TextureFormat.BC3_UNorm:
+                    case TextureFormat.BC3_UNorm_SRGB:
+                    case TextureFormat.BC4:
+                    case TextureFormat.BC4_UNorm:
+                    case TextureFormat.BC5:
+                    case TextureFormat.BC5_UNorm:
+                    case TextureFormat.BC6H:
+                    case TextureFormat.BC6H_UFloat:
+                    case TextureFormat.BC7:
+                    case TextureFormat.BC7_UNorm:
+                    case TextureFormat.BC7_UNorm_SRGB:
+                    case TextureFormat.ASTC_4x4:
+                    case TextureFormat.ASTC_5x5:
+                    case TextureFormat.ASTC_6x6:
+                    case TextureFormat.ASTC_8x8:
+                    case TextureFormat.ASTC_10x10:
+                    case TextureFormat.ASTC_12x12:
+                        return 0; // Compressed formats require block-based calculations
+                    default:
+                        return 4; // Default to 4 bytes per pixel
+                }
+            }
+
+            /// <summary>
+            /// Converts TextureFormat to DXGI_FORMAT for texture operations.
+            /// Based on DirectX 12 Texture Formats: https://docs.microsoft.com/en-us/windows/win32/api/dxgiformat/ne-dxgiformat-dxgi_format
+            /// </summary>
+            private uint ConvertTextureFormatToDxgiFormatForTexture(TextureFormat format)
+            {
+                switch (format)
+                {
+                    case TextureFormat.R8_UNorm:
+                        return 61; // DXGI_FORMAT_R8_UNORM
+                    case TextureFormat.R8_UInt:
+                        return 62; // DXGI_FORMAT_R8_UINT
+                    case TextureFormat.R8_SInt:
+                        return 63; // DXGI_FORMAT_R8_SINT
+                    case TextureFormat.R8G8_UNorm:
+                        return 49; // DXGI_FORMAT_R8G8_UNORM
+                    case TextureFormat.R8G8_UInt:
+                        return 50; // DXGI_FORMAT_R8G8_UINT
+                    case TextureFormat.R8G8_SInt:
+                        return 51; // DXGI_FORMAT_R8G8_SINT
+                    case TextureFormat.R8G8B8A8_UNorm:
+                        return 28; // DXGI_FORMAT_R8G8B8A8_UNORM
+                    case TextureFormat.R8G8B8A8_UInt:
+                        return 30; // DXGI_FORMAT_R8G8B8A8_UINT
+                    case TextureFormat.R8G8B8A8_SInt:
+                        return 29; // DXGI_FORMAT_R8G8B8A8_SINT
+                    case TextureFormat.R16_UNorm:
+                        return 56; // DXGI_FORMAT_R16_UNORM
+                    case TextureFormat.R16_UInt:
+                        return 57; // DXGI_FORMAT_R16_UINT
+                    case TextureFormat.R16_SInt:
+                        return 58; // DXGI_FORMAT_R16_SINT
+                    case TextureFormat.R16_Float:
+                        return 54; // DXGI_FORMAT_R16_FLOAT
+                    case TextureFormat.R32_UInt:
+                        return 42; // DXGI_FORMAT_R32_UINT
+                    case TextureFormat.R32_SInt:
+                        return 43; // DXGI_FORMAT_R32_SINT
+                    case TextureFormat.R32_Float:
+                        return 41; // DXGI_FORMAT_R32_FLOAT
+                    case TextureFormat.R32G32_Float:
+                        return 16; // DXGI_FORMAT_R32G32_FLOAT
+                    case TextureFormat.R32G32_UInt:
+                        return 52; // DXGI_FORMAT_R32G32_UINT
+                    case TextureFormat.R32G32_SInt:
+                        return 53; // DXGI_FORMAT_R32G32_SINT
+                    case TextureFormat.R32G32B32_Float:
+                        return 6; // DXGI_FORMAT_R32G32B32_FLOAT
+                    case TextureFormat.R32G32B32A32_Float:
+                        return 2; // DXGI_FORMAT_R32G32B32A32_FLOAT
+                    case TextureFormat.R32G32B32A32_UInt:
+                        return 1; // DXGI_FORMAT_R32G32B32A32_UINT
+                    case TextureFormat.R32G32B32A32_SInt:
+                        return 3; // DXGI_FORMAT_R32G32B32A32_SINT
+                    case TextureFormat.BC1:
+                    case TextureFormat.BC1_UNorm:
+                        return 71; // DXGI_FORMAT_BC1_UNORM
+                    case TextureFormat.BC1_UNorm_SRGB:
+                        return 72; // DXGI_FORMAT_BC1_UNORM_SRGB
+                    case TextureFormat.BC2:
+                    case TextureFormat.BC2_UNorm:
+                        return 74; // DXGI_FORMAT_BC2_UNORM
+                    case TextureFormat.BC2_UNorm_SRGB:
+                        return 75; // DXGI_FORMAT_BC2_UNORM_SRGB
+                    case TextureFormat.BC3:
+                    case TextureFormat.BC3_UNorm:
+                        return 77; // DXGI_FORMAT_BC3_UNORM
+                    case TextureFormat.BC3_UNorm_SRGB:
+                        return 78; // DXGI_FORMAT_BC3_UNORM_SRGB
+                    case TextureFormat.BC4:
+                    case TextureFormat.BC4_UNorm:
+                        return 80; // DXGI_FORMAT_BC4_UNORM
+                    case TextureFormat.BC5:
+                    case TextureFormat.BC5_UNorm:
+                        return 83; // DXGI_FORMAT_BC5_UNORM
+                    case TextureFormat.BC6H:
+                    case TextureFormat.BC6H_UFloat:
+                        return 95; // DXGI_FORMAT_BC6H_UF16
+                    case TextureFormat.BC7:
+                    case TextureFormat.BC7_UNorm:
+                        return 98; // DXGI_FORMAT_BC7_UNORM
+                    case TextureFormat.BC7_UNorm_SRGB:
+                        return 99; // DXGI_FORMAT_BC7_UNORM_SRGB
+                    default:
+                        return 0; // DXGI_FORMAT_UNKNOWN
+                }
+            }
+
+            /// <summary>
+            /// Maps a staging buffer resource for CPU access.
+            /// Based on DirectX 12 Resource Mapping: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12resource-map
+            /// </summary>
+            private unsafe IntPtr MapStagingBufferResource(IntPtr resource, ulong subresource, ulong size)
+            {
+                // ID3D12Resource::Map signature:
+                // HRESULT Map(UINT Subresource, const D3D12_RANGE *pReadRange, void **ppData)
+                // For upload heaps, pReadRange can be NULL to map the entire resource
+                // Subresource is 0 for buffers
+
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return IntPtr.Zero;
+                }
+
+                if (resource == IntPtr.Zero)
+                {
+                    return IntPtr.Zero;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)resource;
+                // Map is at index 8 in ID3D12Resource vtable
+                IntPtr methodPtr = vtable[8];
+
+                // Create delegate from function pointer
+                [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+                delegate int MapResourceDelegate(IntPtr resource, uint subresource, IntPtr pReadRange, out IntPtr ppData);
+                MapResourceDelegate mapResource = (MapResourceDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(MapResourceDelegate));
+
+                IntPtr mappedData;
+                int hr = mapResource(resource, unchecked((uint)subresource), IntPtr.Zero, out mappedData);
+                if (hr < 0)
+                {
+                    return IntPtr.Zero;
+                }
+
+                return mappedData;
+            }
+
+            /// <summary>
+            /// Unmaps a staging buffer resource.
+            /// Based on DirectX 12 Resource Unmapping: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12resource-unmap
+            /// </summary>
+            private unsafe void UnmapStagingBufferResource(IntPtr resource, ulong subresource, ulong size)
+            {
+                // ID3D12Resource::Unmap signature:
+                // void Unmap(UINT Subresource, const D3D12_RANGE *pWrittenRange)
+                // For upload heaps, pWrittenRange can be NULL to unmap the entire resource
+                // Subresource is 0 for buffers
+
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (resource == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)resource;
+                // Unmap is at index 9 in ID3D12Resource vtable
+                IntPtr methodPtr = vtable[9];
+
+                // Create delegate from function pointer
+                [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+                delegate void UnmapResourceDelegate(IntPtr resource, uint subresource, IntPtr pWrittenRange);
+                UnmapResourceDelegate unmapResource = (UnmapResourceDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(UnmapResourceDelegate));
+
+                unmapResource(resource, unchecked((uint)subresource), IntPtr.Zero);
+            }
+
             public void SetViewport(Viewport viewport) { /* TODO: RSSetViewports */ }
             public void SetViewports(Viewport[] viewports) { /* TODO: RSSetViewports */ }
             
