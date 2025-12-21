@@ -1367,14 +1367,26 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             stub.Append("//   - Verify the file is a valid KotOR/TSL NCS bytecode file.").Append(newline);
             stub.Append(newline);
 
-            // TODO:  Minimal valid NSS stub
-            stub.Append("// Minimal fallback function:").Append(newline);
-            stub.Append("void main() {").Append(newline);
+            // Minimal valid NSS stub
+            // A minimal valid NSS file must contain at least one function definition
+            // Based on NSS grammar: code_root can contain function_definition
+            // The minimal valid stub is a void main() function with proper syntax
+            stub.Append("// Minimal valid NSS stub - compilable fallback function").Append(newline);
+            stub.Append("// This stub is generated when decompilation fails completely").Append(newline);
+            stub.Append("// It provides a syntactically valid NSS file that can be compiled").Append(newline);
+            stub.Append(newline);
+            
+            // Generate minimal valid main function
+            // Based on NWScript: main() is the entry point for script execution
+            // Format: void main() { ... } with proper spacing and syntax
+            stub.Append("void main()").Append(newline);
+            stub.Append("{").Append(newline);
             stub.Append("    // Decompilation failed at stage: ").Append(errorStage != null ? errorStage : "Unknown").Append(newline);
             if (exception != null && exception.Message != null)
             {
                 stub.Append("    // Error: ").Append(exception.Message.Replace("\n", " ").Replace("\r", "")).Append(newline);
             }
+            stub.Append("    // This is a minimal valid NSS stub - function body is empty but syntactically correct").Append(newline);
             stub.Append("}").Append(newline);
 
             return stub.ToString();
