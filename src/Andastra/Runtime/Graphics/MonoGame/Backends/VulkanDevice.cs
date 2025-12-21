@@ -465,6 +465,17 @@ namespace Andastra.Runtime.MonoGame.Backends
             public float[] color;
         }
 
+        // Vulkan memory barrier structure (for general memory synchronization)
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkMemoryBarrier.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkMemoryBarrier
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public VkAccessFlags srcAccessMask;
+            public VkAccessFlags dstAccessMask;
+        }
+
         // Vulkan buffer memory barrier structure
         [StructLayout(LayoutKind.Sequential)]
         private struct VkBufferMemoryBarrier
@@ -6407,8 +6418,169 @@ namespace Andastra.Runtime.MonoGame.Backends
                 }
             }
 
-            public void UAVBarrier(ITexture texture) { /* TODO: vkCmdMemoryBarrier */ }
-            public void UAVBarrier(IBuffer buffer) { /* TODO: vkCmdMemoryBarrier */ }
+            /// <summary>
+            /// Inserts a UAV (Unordered Access View) barrier for a texture resource.
+            /// 
+            /// A UAV barrier ensures that all UAV writes to the texture have completed before
+            /// subsequent operations (compute shaders, pixel shaders, etc.) can read from the texture.
+            /// This is necessary when a texture is both written to and read from as a UAV in different
+            /// draw/dispatch calls within the same command list.
+            /// 
+            /// Based on Vulkan API: vkCmdPipelineBarrier with VkMemoryBarrier
+            /// Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdPipelineBarrier.html
+            /// Original implementation: Records a memory barrier command into the command buffer
+            /// UAV barriers use VkMemoryBarrier to synchronize all shader storage writes with subsequent reads
+            /// 
+            /// Note: UAV barriers differ from transition barriers - they don't change resource state,
+            /// they only synchronize access between UAV write and read operations.
+            /// </summary>
+            public void UAVBarrier(ITexture texture)
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (texture == null)
+                {
+                    return; // Null texture - nothing to barrier
+                }
+
+                if (_vkCommandBuffer == IntPtr.Zero)
+                {
+                    return; // Command buffer not initialized
+                }
+
+                if (vkCmdPipelineBarrier == null)
+                {
+                    return; // Cannot barrier without pipeline barrier function
+                }
+
+                // UAV barriers use memory barriers to synchronize all shader storage writes with reads
+                // Based on Vulkan specification: Memory barriers synchronize all memory accesses
+                // For UAV barriers, we need to ensure all shader writes complete before subsequent reads
+                VkMemoryBarrier memoryBarrier = new VkMemoryBarrier
+                {
+                    sType = VkStructureType.VK_STRUCTURE_TYPE_MEMORY_BARRIER,
+                    pNext = IntPtr.Zero,
+                    // Source: All shader writes to UAV resources (storage images/buffers)
+                    srcAccessMask = VkAccessFlags.VK_ACCESS_SHADER_WRITE_BIT,
+                    // Destination: All shader reads and writes from/to UAV resources
+                    dstAccessMask = VkAccessFlags.VK_ACCESS_SHADER_READ_BIT | VkAccessFlags.VK_ACCESS_SHADER_WRITE_BIT
+                };
+
+                // Allocate memory for memory barrier structure
+                int barrierSize = Marshal.SizeOf(typeof(VkMemoryBarrier));
+                IntPtr barrierPtr = Marshal.AllocHGlobal(barrierSize);
+
+                try
+                {
+                    // Marshal structure to unmanaged memory
+                    Marshal.StructureToPtr(memoryBarrier, barrierPtr, false);
+
+                    // Call vkCmdPipelineBarrier with memory barrier
+                    // Source stage: All stages that can write to UAVs (compute and fragment shaders)
+                    // Destination stage: All stages that can read from UAVs (compute and fragment shaders)
+                    vkCmdPipelineBarrier(
+                        _vkCommandBuffer,
+                        VkPipelineStageFlags.VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VkPipelineStageFlags.VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, // srcStageMask
+                        VkPipelineStageFlags.VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VkPipelineStageFlags.VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, // dstStageMask
+                        0, // dependencyFlags
+                        1, // memoryBarrierCount
+                        barrierPtr, // pMemoryBarriers
+                        0, // bufferMemoryBarrierCount
+                        IntPtr.Zero, // pBufferMemoryBarriers
+                        0, // imageMemoryBarrierCount
+                        IntPtr.Zero); // pImageMemoryBarriers
+                }
+                finally
+                {
+                    // Free allocated memory
+                    Marshal.FreeHGlobal(barrierPtr);
+                }
+            }
+
+            /// <summary>
+            /// Inserts a UAV (Unordered Access View) barrier for a buffer resource.
+            /// 
+            /// A UAV barrier ensures that all UAV writes to the buffer have completed before
+            /// subsequent operations (compute shaders, pixel shaders, etc.) can read from the buffer.
+            /// This is necessary when a buffer is both written to and read from as a UAV in different
+            /// draw/dispatch calls within the same command list.
+            /// 
+            /// Based on Vulkan API: vkCmdPipelineBarrier with VkMemoryBarrier
+            /// Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdPipelineBarrier.html
+            /// Original implementation: Records a memory barrier command into the command buffer
+            /// UAV barriers use VkMemoryBarrier to synchronize all shader storage writes with subsequent reads
+            /// 
+            /// Note: UAV barriers differ from transition barriers - they don't change resource state,
+            /// they only synchronize access between UAV write and read operations.
+            /// </summary>
+            public void UAVBarrier(IBuffer buffer)
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (buffer == null)
+                {
+                    return; // Null buffer - nothing to barrier
+                }
+
+                if (_vkCommandBuffer == IntPtr.Zero)
+                {
+                    return; // Command buffer not initialized
+                }
+
+                if (vkCmdPipelineBarrier == null)
+                {
+                    return; // Cannot barrier without pipeline barrier function
+                }
+
+                // UAV barriers use memory barriers to synchronize all shader storage writes with reads
+                // Based on Vulkan specification: Memory barriers synchronize all memory accesses
+                // For UAV barriers, we need to ensure all shader writes complete before subsequent reads
+                VkMemoryBarrier memoryBarrier = new VkMemoryBarrier
+                {
+                    sType = VkStructureType.VK_STRUCTURE_TYPE_MEMORY_BARRIER,
+                    pNext = IntPtr.Zero,
+                    // Source: All shader writes to UAV resources (storage images/buffers)
+                    srcAccessMask = VkAccessFlags.VK_ACCESS_SHADER_WRITE_BIT,
+                    // Destination: All shader reads and writes from/to UAV resources
+                    dstAccessMask = VkAccessFlags.VK_ACCESS_SHADER_READ_BIT | VkAccessFlags.VK_ACCESS_SHADER_WRITE_BIT
+                };
+
+                // Allocate memory for memory barrier structure
+                int barrierSize = Marshal.SizeOf(typeof(VkMemoryBarrier));
+                IntPtr barrierPtr = Marshal.AllocHGlobal(barrierSize);
+
+                try
+                {
+                    // Marshal structure to unmanaged memory
+                    Marshal.StructureToPtr(memoryBarrier, barrierPtr, false);
+
+                    // Call vkCmdPipelineBarrier with memory barrier
+                    // Source stage: All stages that can write to UAVs (compute and fragment shaders)
+                    // Destination stage: All stages that can read from UAVs (compute and fragment shaders)
+                    vkCmdPipelineBarrier(
+                        _vkCommandBuffer,
+                        VkPipelineStageFlags.VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VkPipelineStageFlags.VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, // srcStageMask
+                        VkPipelineStageFlags.VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VkPipelineStageFlags.VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, // dstStageMask
+                        0, // dependencyFlags
+                        1, // memoryBarrierCount
+                        barrierPtr, // pMemoryBarriers
+                        0, // bufferMemoryBarrierCount
+                        IntPtr.Zero, // pBufferMemoryBarriers
+                        0, // imageMemoryBarrierCount
+                        IntPtr.Zero); // pImageMemoryBarriers
+                }
+                finally
+                {
+                    // Free allocated memory
+                    Marshal.FreeHGlobal(barrierPtr);
+                }
+            }
             /// <summary>
             /// Sets all graphics pipeline state for rendering.
             /// 
