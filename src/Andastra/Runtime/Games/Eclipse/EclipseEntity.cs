@@ -1296,14 +1296,18 @@ namespace Andastra.Runtime.Games.Eclipse
                         {
                             statsComponent.CurrentHP = 0;
                         }
-                        statsComponent.BaseAttackBonus = baseAttackBonus;
-                        statsComponent.ArmorClass = armorClass;
-                        statsComponent.FortitudeSave = fortitudeSave;
-                        statsComponent.ReflexSave = reflexSave;
-                        statsComponent.WillSave = willSave;
-                        statsComponent.WalkSpeed = walkSpeed;
-                        statsComponent.RunSpeed = runSpeed;
-                        statsComponent.Level = level;
+                        // Cast to concrete type for methods not in interface
+                        var eclipseStats = statsComponent as Components.EclipseStatsComponent;
+                        if (eclipseStats != null)
+                        {
+                            eclipseStats.SetBaseAttackBonus(baseAttackBonus);
+                            eclipseStats.SetBaseSaves(fortitudeSave, reflexSave, willSave);
+                            eclipseStats.WalkSpeed = walkSpeed;
+                            eclipseStats.RunSpeed = runSpeed;
+                            eclipseStats.Level = level;
+                        }
+                        // ArmorClass is read-only and calculated, so we can't set it directly
+                        // It's calculated from base + modifiers + armor + effects
 
                         // Restore ability scores (if StatsComponent supports setting them)
                         // Note: Most implementations calculate abilities, but we try to set them
@@ -1490,7 +1494,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 if (hasPlaceable)
                 {
                     bool isUseable = reader.ReadInt32() != 0;
-                    bool hasInventory = reader.ReadInt32() != 0;
+                    bool placeableHasInventory = reader.ReadInt32() != 0;
                     bool isStatic = reader.ReadInt32() != 0;
                     bool isOpen = reader.ReadInt32() != 0;
                     bool isLocked = reader.ReadInt32() != 0;
@@ -1505,7 +1509,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     if (placeableComponent != null)
                     {
                         placeableComponent.IsUseable = isUseable;
-                        placeableComponent.HasInventory = hasInventory;
+                        placeableComponent.HasInventory = placeableHasInventory;
                         placeableComponent.IsStatic = isStatic;
                         placeableComponent.IsOpen = isOpen;
                         placeableComponent.IsLocked = isLocked;

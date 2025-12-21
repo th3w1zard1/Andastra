@@ -428,13 +428,13 @@ namespace Andastra.Runtime.Games.Eclipse
                 }
 
                 // Project to unmodified static face
-                if (ProjectToStaticFace(point, faceIndex, out Vector3 projected, out float h))
+                if (ProjectToStaticFace(point, faceIndex, out Vector3 projected2, out float h2))
                 {
                     candidates.Add(new ProjectionCandidate
                     {
-                        ProjectedPoint = projected,
-                        Height = h,
-                        Distance = Vector3.Distance(point, projected),
+                        ProjectedPoint = projected2,
+                        Height = h2,
+                        Distance = Vector3.Distance(point, projected2),
                         SurfaceType = SurfaceType.Ground,
                         FaceIndex = faceIndex
                     });
@@ -2163,9 +2163,9 @@ namespace Andastra.Runtime.Games.Eclipse
                             // Check if too close to existing cover point
                             bool tooClose = false;
                             int existingIndex = -1;
-                            for (int i = 0; i < _coverPoints.Count; i++)
+                            for (int j = 0; j < _coverPoints.Count; j++)
                             {
-                                CoverPoint existing = _coverPoints[i];
+                                CoverPoint existing = _coverPoints[j];
                                 float dist = Vector3Extensions.Distance2D(coverPosition, existing.Position);
                                 if (dist < CoverPointGenerationSpacing * 0.5f)
                                 {
@@ -3694,6 +3694,23 @@ namespace Andastra.Runtime.Games.Eclipse
                 LastUpdateTime = _meshNeedsRebuild ? 1.0f : 0.0f // Simple flag-based tracking
             };
         }
+
+        /// <summary>
+        /// AABB tree node for spatial acceleration (shared with NavigationMesh).
+        /// </summary>
+        public class AabbNode
+        {
+            public Vector3 BoundsMin { get; set; }
+            public Vector3 BoundsMax { get; set; }
+            public int FaceIndex { get; set; }  // -1 for internal nodes
+            public AabbNode Left { get; set; }
+            public AabbNode Right { get; set; }
+
+            public AabbNode()
+            {
+                FaceIndex = -1;
+            }
+        }
     }
 
     /// <summary>
@@ -3821,23 +3838,6 @@ namespace Andastra.Runtime.Games.Eclipse
         Platform = 1,
         Elevated = 2,
         Obstacle = 3
-    }
-
-    /// <summary>
-    /// AABB tree node for spatial acceleration (shared with NavigationMesh).
-    /// </summary>
-    public class AabbNode
-    {
-        public Vector3 BoundsMin { get; set; }
-        public Vector3 BoundsMax { get; set; }
-        public int FaceIndex { get; set; }  // -1 for internal nodes
-        public AabbNode Left { get; set; }
-        public AabbNode Right { get; set; }
-
-        public AabbNode()
-        {
-            FaceIndex = -1;
-        }
     }
 
     /// <summary>

@@ -340,45 +340,44 @@ namespace Andastra.Runtime.Games.Eclipse.Loading
                 // Attributes
                 if (entity.GetData("Str") is int str)
                 {
-                    statsComponent.SetAbilityScore(Ability.Strength, str);
+                    statsComponent.SetAbility(Ability.Strength, str);
                 }
                 if (entity.GetData("Dex") is int dex)
                 {
-                    statsComponent.SetAbilityScore(Ability.Dexterity, dex);
+                    statsComponent.SetAbility(Ability.Dexterity, dex);
                 }
                 if (entity.GetData("Con") is int con)
                 {
-                    statsComponent.SetAbilityScore(Ability.Constitution, con);
+                    statsComponent.SetAbility(Ability.Constitution, con);
                 }
                 if (entity.GetData("Int") is int intel)
                 {
-                    statsComponent.SetAbilityScore(Ability.Intelligence, intel);
+                    statsComponent.SetAbility(Ability.Intelligence, intel);
                 }
                 if (entity.GetData("Wis") is int wis)
                 {
-                    statsComponent.SetAbilityScore(Ability.Wisdom, wis);
+                    statsComponent.SetAbility(Ability.Wisdom, wis);
                 }
                 if (entity.GetData("Cha") is int cha)
                 {
-                    statsComponent.SetAbilityScore(Ability.Charisma, cha);
+                    statsComponent.SetAbility(Ability.Charisma, cha);
                 }
 
-                // Saves
-                if (entity.GetData("FortitudeSave") is int fortSave)
+                // Saves - use SetBaseSaves method if available
+                var eclipseStats = statsComponent as Components.EclipseStatsComponent;
+                if (eclipseStats != null)
                 {
-                    statsComponent.BaseFortitude = fortSave;
-                }
-                if (entity.GetData("ReflexSave") is int refSave)
-                {
-                    statsComponent.BaseReflex = refSave;
-                }
-                if (entity.GetData("WillSave") is int willSave)
-                {
-                    statsComponent.BaseWill = willSave;
-                }
-                if (entity.GetData("NaturalAC") is int naturalAC)
-                {
-                    statsComponent.NaturalArmor = naturalAC;
+                    int fortSave = entity.GetData<int>("FortitudeSave", 0);
+                    int refSave = entity.GetData<int>("ReflexSave", 0);
+                    int willSave = entity.GetData<int>("WillSave", 0);
+                    if (fortSave != 0 || refSave != 0 || willSave != 0)
+                    {
+                        eclipseStats.SetBaseSaves(fortSave, refSave, willSave);
+                    }
+                    if (entity.GetData("NaturalAC") is int naturalAC)
+                    {
+                        eclipseStats.NaturalArmor = naturalAC;
+                    }
                 }
             }
 
@@ -471,7 +470,7 @@ namespace Andastra.Runtime.Games.Eclipse.Loading
             if (gffStruct.Exists(name))
             {
                 ResRef resRef = gffStruct.GetResRef(name);
-                if (resRef != null && !resRef.IsInvalid)
+                if (resRef != null && !resRef.IsBlank())
                 {
                     return resRef.ToString();
                 }

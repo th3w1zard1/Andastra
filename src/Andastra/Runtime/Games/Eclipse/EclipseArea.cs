@@ -4,7 +4,9 @@ using System.Numerics;
 using System.Linq;
 using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Enums;
+using ObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 using Andastra.Runtime.Core.Module;
 using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Graphics;
@@ -389,7 +391,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 }
 
                 // Verify GFF content type is ARE
-                if (gff.ContentType != GFFContent.ARE)
+                if (gff.Content != GFFContent.ARE)
                 {
                     // Try to parse anyway - some ARE files may have incorrect content type
                     // This is a defensive measure for compatibility
@@ -411,7 +413,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 if (root.Exists("Name"))
                 {
                     LocalizedString nameLocStr = root.GetLocString("Name");
-                    if (nameLocStr != null && !nameLocStr.IsInvalid)
+                    if (nameLocStr != null && nameLocStr.StringRef != -1)
                     {
                         _displayName = nameLocStr.ToString();
                     }
@@ -420,7 +422,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 if (root.Exists("ResRef"))
                 {
                     ResRef resRefObj = root.GetResRef("ResRef");
-                    if (resRefObj != null && !resRefObj.IsBlank)
+                    if (resRefObj != null && !resRefObj.IsBlank())
                     {
                         string resRefStr = resRefObj.ToString();
                         if (!string.IsNullOrEmpty(resRefStr))
@@ -872,7 +874,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 }
 
                 // Verify GFF content type is GIT
-                if (gff.ContentType != GFFContent.GIT)
+                if (gff.Content != GFFContent.GIT)
                 {
                     // Try to parse anyway - some GIT files may have incorrect content type
                     // This is a defensive measure for compatibility
@@ -1069,7 +1071,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     if (waypointComponent != null)
                     {
                         waypointComponent.HasMapNote = waypoint.HasMapNote;
-                        if (waypoint.HasMapNote && waypoint.MapNote != null && !waypoint.MapNote.IsInvalid)
+                        if (waypoint.HasMapNote && waypoint.MapNote != null && waypoint.MapNote.StringRef != -1)
                         {
                             waypointComponent.MapNote = waypoint.MapNote.ToString();
                             waypointComponent.MapNoteEnabled = waypoint.MapNoteEnabled;
@@ -1082,9 +1084,9 @@ namespace Andastra.Runtime.Games.Eclipse
                     }
 
                     // Set waypoint name from GIT
-                    if (waypoint.Name != null && !waypoint.Name.IsInvalid)
+                    if (waypoint.Name != null && waypoint.Name.StringRef != -1)
                     {
-                        entity.DisplayName = waypoint.Name.ToString();
+                        entity.SetData("DisplayName", waypoint.Name.ToString());
                     }
 
                     // Store template ResRef for later template loading
@@ -1180,7 +1182,7 @@ namespace Andastra.Runtime.Games.Eclipse
 
                 // Verify GFF content type is ARE
                 // Note: Some ARE files may have incorrect content type, so we parse anyway
-                if (gff.ContentType != GFFContent.ARE)
+                if (gff.Content != GFFContent.ARE)
                 {
                     // Try to parse anyway - some ARE files may have incorrect content type
                     // This is a defensive measure for compatibility
@@ -1197,8 +1199,8 @@ namespace Andastra.Runtime.Games.Eclipse
                 }
                 if (root.Exists("Name"))
                 {
-                    LocalizedString name = root.GetLocalizedString("Name");
-                    if (name != null && name.IsValid)
+                    LocalizedString name = root.GetLocString("Name");
+                    if (name != null && name.StringRef != -1)
                     {
                         _displayName = name.ToString();
                     }
@@ -1762,6 +1764,22 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <remarks>
         /// Eclipse-specific: Also adds entity to physics system.
         /// </remarks>
+        /// <summary>
+        /// Internal method to add entity to area (for use by nested classes).
+        /// </summary>
+        internal void AddEntityInternal(IEntity entity)
+        {
+            AddEntityToArea(entity);
+        }
+
+        /// <summary>
+        /// Internal method to remove entity from area (for use by nested classes).
+        /// </summary>
+        internal void RemoveEntityInternal(IEntity entity)
+        {
+            RemoveEntityFromArea(entity);
+        }
+
         protected override void AddEntityToArea(IEntity entity)
         {
             if (entity == null)
@@ -3084,7 +3102,7 @@ namespace Andastra.Runtime.Games.Eclipse
             }
 
             // Add entity to area's collections
-            area.AddEntityToArea(_entity);
+            area.AddEntityInternal(_entity);
 
             // If entity has physics, ensure it's added to physics system
             // This is handled by AddEntityToArea which calls AddEntityToPhysics
@@ -3137,7 +3155,7 @@ namespace Andastra.Runtime.Games.Eclipse
             }
 
             // Remove entity from area's collections
-            area.RemoveEntityFromArea(_entity);
+            area.RemoveEntityInternal(_entity);
 
             // If entity had physics, it's removed from physics system by RemoveEntityFromArea
         }
@@ -3534,7 +3552,7 @@ namespace Andastra.Runtime.Games.Eclipse
             }
 
             // Remove entity from area
-            area.RemoveEntityFromArea(_destructibleEntity);
+            area.RemoveEntityInternal(_destructibleEntity);
 
             // Create physics debris if entity has debris data
             if (_destructibleEntity.HasData("DebrisCount") && area.PhysicsSystem != null)
