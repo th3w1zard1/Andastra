@@ -799,6 +799,126 @@ namespace Andastra.Runtime.MonoGame.Backends
             public ulong size;
         }
 
+        // VK_KHR_acceleration_structure extension structures
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkAccelerationStructureBuildGeometryInfoKHR.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkAccelerationStructureBuildGeometryInfoKHR
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public VkAccelerationStructureTypeKHR type;
+            public VkBuildAccelerationStructureFlagsKHR flags;
+            public VkAccelerationStructureBuildTypeKHR buildType;
+            public IntPtr srcAccelerationStructure; // VkAccelerationStructureKHR (IntPtr)
+            public IntPtr dstAccelerationStructure; // VkAccelerationStructureKHR (IntPtr)
+            public uint geometryCount;
+            public IntPtr pGeometries; // Pointer to VkAccelerationStructureGeometryKHR array
+            public IntPtr ppGeometries; // Pointer to array of pointers to VkAccelerationStructureGeometryKHR (optional, null if pGeometries is used)
+            public ulong scratchDataDeviceAddress;
+        }
+
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkAccelerationStructureGeometryKHR.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkAccelerationStructureGeometryKHR
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public VkGeometryTypeKHR geometryType;
+            public VkAccelerationStructureGeometryDataKHR geometry;
+            public VkGeometryFlagsKHR flags;
+        }
+
+        // Union-like structure for geometry data (we use triangles only for BLAS)
+        [StructLayout(LayoutKind.Explicit, Size = 96)] // Size is the maximum of all union members
+        private struct VkAccelerationStructureGeometryDataKHR
+        {
+            [FieldOffset(0)]
+            public VkAccelerationStructureGeometryTrianglesDataKHR triangles;
+            [FieldOffset(0)]
+            public VkAccelerationStructureGeometryAabbsDataKHR aabbs;
+            [FieldOffset(0)]
+            public VkAccelerationStructureGeometryInstancesDataKHR instances;
+        }
+
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkAccelerationStructureGeometryTrianglesDataKHR.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkAccelerationStructureGeometryTrianglesDataKHR
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public VkFormat vertexFormat;
+            public ulong vertexDataDeviceAddress;
+            public ulong vertexStride;
+            public uint maxVertex;
+            public VkIndexType indexType;
+            public ulong indexDataDeviceAddress;
+            public ulong transformDataDeviceAddress;
+        }
+
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkAccelerationStructureGeometryAabbsDataKHR.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkAccelerationStructureGeometryAabbsDataKHR
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public ulong dataDeviceAddress;
+            public ulong stride;
+        }
+
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkAccelerationStructureGeometryInstancesDataKHR.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkAccelerationStructureGeometryInstancesDataKHR
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public VkBool32 arrayOfPointers;
+            public ulong dataDeviceAddress;
+        }
+
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkAccelerationStructureBuildRangeInfoKHR.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkAccelerationStructureBuildRangeInfoKHR
+        {
+            public uint primitiveCount;
+            public uint primitiveOffset;
+            public uint firstVertex;
+            public uint transformOffset;
+        }
+
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkAccelerationStructureBuildSizesInfoKHR.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkAccelerationStructureBuildSizesInfoKHR
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public ulong accelerationStructureSize;
+            public ulong updateScratchSize;
+            public ulong buildScratchSize;
+        }
+
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkAccelerationStructureCreateInfoKHR.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkAccelerationStructureCreateInfoKHR
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public ulong createFlags; // VkAccelerationStructureCreateFlagsKHR
+            public IntPtr buffer; // VkBuffer
+            public ulong offset;
+            public ulong size;
+            public VkAccelerationStructureTypeKHR type;
+            public ulong deviceAddress;
+        }
+
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkBufferDeviceAddressInfo.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkBufferDeviceAddressInfo
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public IntPtr buffer; // VkBuffer
+        }
+
         // Vulkan enums
         private enum VkStructureType
         {
@@ -854,7 +974,12 @@ namespace Andastra.Runtime.MonoGame.Backends
             VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT = 1000128002,
             VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR = 1000165000,
             VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR = 1000165001,
-            VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR = 1000396003
+            VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR = 1000396003,
+            VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR = 1000150000,
+            VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR = 1000150004,
+            VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR = 1000150017,
+            VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR = 1000150020,
+            VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO = 1000244001
         }
 
         // Additional Vulkan enums
@@ -918,6 +1043,45 @@ namespace Andastra.Runtime.MonoGame.Backends
         private enum VkPipelineLayoutCreateFlags { }
         private enum VkCommandBufferLevel { VK_COMMAND_BUFFER_LEVEL_PRIMARY = 0 }
         private enum VkPipelineBindPoint { VK_PIPELINE_BIND_POINT_GRAPHICS = 0, VK_PIPELINE_BIND_POINT_COMPUTE = 1, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR = 1000165000 }
+
+        // VK_KHR_acceleration_structure extension enums
+        private enum VkAccelerationStructureTypeKHR
+        {
+            VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR = 0,
+            VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR = 1,
+            VK_ACCELERATION_STRUCTURE_TYPE_GENERIC_KHR = 2
+        }
+
+        private enum VkAccelerationStructureBuildTypeKHR
+        {
+            VK_ACCELERATION_STRUCTURE_BUILD_TYPE_HOST_KHR = 0,
+            VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR = 1,
+            VK_ACCELERATION_STRUCTURE_BUILD_TYPE_HOST_OR_DEVICE_KHR = 2
+        }
+
+        private enum VkGeometryTypeKHR
+        {
+            VK_GEOMETRY_TYPE_TRIANGLES_KHR = 0,
+            VK_GEOMETRY_TYPE_AABBS_KHR = 1,
+            VK_GEOMETRY_TYPE_INSTANCES_KHR = 2
+        }
+
+        [Flags]
+        private enum VkGeometryFlagsKHR
+        {
+            VK_GEOMETRY_OPAQUE_BIT_KHR = 0x00000001,
+            VK_GEOMETRY_NO_DUPLICATE_ANY_HIT_INVOCATION_BIT_KHR = 0x00000002
+        }
+
+        [Flags]
+        private enum VkBuildAccelerationStructureFlagsKHR
+        {
+            VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_KHR = 0x00000001,
+            VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_COMPACTION_BIT_KHR = 0x00000002,
+            VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR = 0x00000004,
+            VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_BUILD_BIT_KHR = 0x00000008,
+            VK_BUILD_ACCELERATION_STRUCTURE_LOW_MEMORY_BIT_KHR = 0x00000010
+        }
 
         // Vulkan dependency flags
         [Flags]
@@ -1196,10 +1360,34 @@ namespace Andastra.Runtime.MonoGame.Backends
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkCmdTraceRaysKHRDelegate(IntPtr commandBuffer, ref VkStridedDeviceAddressRegionKHR pRaygenShaderBindingTable, ref VkStridedDeviceAddressRegionKHR pMissShaderBindingTable, ref VkStridedDeviceAddressRegionKHR pHitShaderBindingTable, ref VkStridedDeviceAddressRegionKHR pCallableShaderBindingTable, uint width, uint height, uint depth);
 
+        // VK_KHR_acceleration_structure extension function delegates
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBuildAccelerationStructuresKHR.html
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdBuildAccelerationStructuresKHRDelegate(IntPtr commandBuffer, uint infoCount, IntPtr pInfos, IntPtr ppBuildRangeInfos);
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetAccelerationStructureBuildSizesKHR.html
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkGetAccelerationStructureBuildSizesKHRDelegate(IntPtr device, VkAccelerationStructureBuildTypeKHR buildType, ref VkAccelerationStructureBuildGeometryInfoKHR pBuildInfo, IntPtr pMaxPrimitiveCounts, ref VkAccelerationStructureBuildSizesInfoKHR pSizeInfo);
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetBufferDeviceAddress.html
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate ulong vkGetBufferDeviceAddressKHRDelegate(IntPtr device, ref VkBufferDeviceAddressInfo pInfo);
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateAccelerationStructureKHR.html
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkCreateAccelerationStructureKHRDelegate(IntPtr device, ref VkAccelerationStructureCreateInfoKHR pCreateInfo, IntPtr pAllocator, out IntPtr pAccelerationStructure);
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkDestroyAccelerationStructureKHR.html
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkDestroyAccelerationStructureKHRDelegate(IntPtr device, IntPtr accelerationStructure, IntPtr pAllocator);
+
         // VK_KHR_ray_tracing_pipeline extension function pointers (static for now - would be loaded via vkGetDeviceProcAddr in real implementation)
         private static vkCreateRayTracingPipelinesKHRDelegate vkCreateRayTracingPipelinesKHR;
         private static vkGetRayTracingShaderGroupHandlesKHRDelegate vkGetRayTracingShaderGroupHandlesKHR;
         private static vkCmdTraceRaysKHRDelegate vkCmdTraceRaysKHR;
+
+        // VK_KHR_acceleration_structure extension function pointers (loaded via vkGetDeviceProcAddr)
+        private static vkCmdBuildAccelerationStructuresKHRDelegate vkCmdBuildAccelerationStructuresKHR;
+        private static vkGetAccelerationStructureBuildSizesKHRDelegate vkGetAccelerationStructureBuildSizesKHR;
+        private static vkGetBufferDeviceAddressKHRDelegate vkGetBufferDeviceAddressKHR;
+        private static vkCreateAccelerationStructureKHRDelegate vkCreateAccelerationStructureKHR;
+        private static vkDestroyAccelerationStructureKHRDelegate vkDestroyAccelerationStructureKHR;
 
         // Helper methods for Vulkan interop
         private static void InitializeVulkanFunctions(IntPtr device)
@@ -7033,7 +7221,339 @@ namespace Andastra.Runtime.MonoGame.Backends
                 {
                     throw new InvalidOperationException("Command list must be open before building acceleration structure");
                 }
-                // TODO: STUB - Implement vkCmdBuildAccelerationStructuresKHR for BLAS
+
+                if (accelStruct == null)
+                {
+                    throw new ArgumentNullException(nameof(accelStruct));
+                }
+
+                if (geometries == null || geometries.Length == 0)
+                {
+                    throw new ArgumentException("Geometries array cannot be null or empty", nameof(geometries));
+                }
+
+                // Validate that acceleration structure functions are available
+                if (vkCmdBuildAccelerationStructuresKHR == null || 
+                    vkGetAccelerationStructureBuildSizesKHR == null ||
+                    vkGetBufferDeviceAddressKHR == null ||
+                    vkCreateAccelerationStructureKHR == null)
+                {
+                    throw new NotSupportedException("VK_KHR_acceleration_structure extension functions are not available");
+                }
+
+                // Cast to VulkanAccelStruct to access internal handles
+                VulkanAccelStruct vulkanAccelStruct = accelStruct as VulkanAccelStruct;
+                if (vulkanAccelStruct == null)
+                {
+                    throw new ArgumentException("Acceleration structure must be a VulkanAccelStruct", nameof(accelStruct));
+                }
+
+                // Convert GeometryDesc[] to Vulkan structures
+                // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBuildAccelerationStructuresKHR.html
+                uint geometryCount = (uint)geometries.Length;
+                List<VkAccelerationStructureGeometryKHR> vkGeometries = new List<VkAccelerationStructureGeometryKHR>();
+                List<VkAccelerationStructureBuildRangeInfoKHR> buildRanges = new List<VkAccelerationStructureBuildRangeInfoKHR>();
+                List<IntPtr> geometryDataPtrs = new List<IntPtr>(); // For cleanup
+                List<IntPtr> trianglesDataPtrs = new List<IntPtr>(); // For cleanup
+
+                try
+                {
+                    // Convert each geometry
+                    for (int i = 0; i < geometries.Length; i++)
+                    {
+                        GeometryDesc geom = geometries[i];
+                        
+                        if (geom.Type != GeometryType.Triangles)
+                        {
+                            throw new NotSupportedException($"Geometry type {geom.Type} is not yet supported. Only Triangles are supported for BLAS.");
+                        }
+
+                        GeometryTriangles triangles = geom.Triangles;
+
+                        // Get device addresses for buffers
+                        ulong vertexBufferAddress = 0UL;
+                        ulong indexBufferAddress = 0UL;
+                        ulong transformBufferAddress = 0UL;
+
+                        if (triangles.VertexBuffer != null)
+                        {
+                            VulkanBuffer vulkanVertexBuffer = triangles.VertexBuffer as VulkanBuffer;
+                            if (vulkanVertexBuffer != null)
+                            {
+                                IntPtr vkBuffer = vulkanVertexBuffer.VkBuffer;
+                                if (vkBuffer != IntPtr.Zero)
+                                {
+                                    VkBufferDeviceAddressInfo bufferInfo = new VkBufferDeviceAddressInfo
+                                    {
+                                        sType = VkStructureType.VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
+                                        pNext = IntPtr.Zero,
+                                        buffer = vkBuffer
+                                    };
+                                    vertexBufferAddress = vkGetBufferDeviceAddressKHR(_device, ref bufferInfo);
+                                    if (triangles.VertexOffset > 0)
+                                    {
+                                        vertexBufferAddress += (ulong)triangles.VertexOffset;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (triangles.IndexBuffer != null)
+                        {
+                            VulkanBuffer vulkanIndexBuffer = triangles.IndexBuffer as VulkanBuffer;
+                            if (vulkanIndexBuffer != null)
+                            {
+                                IntPtr vkBuffer = vulkanIndexBuffer.VkBuffer;
+                                if (vkBuffer != IntPtr.Zero)
+                                {
+                                    VkBufferDeviceAddressInfo bufferInfo = new VkBufferDeviceAddressInfo
+                                    {
+                                        sType = VkStructureType.VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
+                                        pNext = IntPtr.Zero,
+                                        buffer = vkBuffer
+                                    };
+                                    indexBufferAddress = vkGetBufferDeviceAddressKHR(_device, ref bufferInfo);
+                                    if (triangles.IndexOffset > 0)
+                                    {
+                                        indexBufferAddress += (ulong)triangles.IndexOffset;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (triangles.TransformBuffer != null)
+                        {
+                            VulkanBuffer vulkanTransformBuffer = triangles.TransformBuffer as VulkanBuffer;
+                            if (vulkanTransformBuffer != null)
+                            {
+                                IntPtr vkBuffer = vulkanTransformBuffer.VkBuffer;
+                                if (vkBuffer != IntPtr.Zero)
+                                {
+                                    VkBufferDeviceAddressInfo bufferInfo = new VkBufferDeviceAddressInfo
+                                    {
+                                        sType = VkStructureType.VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
+                                        pNext = IntPtr.Zero,
+                                        buffer = vkBuffer
+                                    };
+                                    transformBufferAddress = vkGetBufferDeviceAddressKHR(_device, ref bufferInfo);
+                                    if (triangles.TransformOffset > 0)
+                                    {
+                                        transformBufferAddress += (ulong)triangles.TransformOffset;
+                                    }
+                                }
+                            }
+                        }
+
+                        // Convert vertex format to VkFormat
+                        VkFormat vertexFormat = ConvertToVkFormat(triangles.VertexFormat);
+                        if (vertexFormat == VkFormat.VK_FORMAT_UNDEFINED)
+                        {
+                            // Fallback: assume float3 format (R32G32B32_SFLOAT = 106)
+                            vertexFormat = (VkFormat)106; // VK_FORMAT_R32G32B32_SFLOAT
+                        }
+
+                        // Convert index format
+                        VkIndexType indexType = VkIndexType.VK_INDEX_TYPE_UINT32;
+                        if (triangles.IndexFormat == TextureFormat.R16_UInt)
+                        {
+                            indexType = VkIndexType.VK_INDEX_TYPE_UINT16;
+                        }
+
+                        // Create triangles data structure
+                        VkAccelerationStructureGeometryTrianglesDataKHR trianglesData = new VkAccelerationStructureGeometryTrianglesDataKHR
+                        {
+                            sType = VkStructureType.VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR,
+                            pNext = IntPtr.Zero,
+                            vertexFormat = vertexFormat,
+                            vertexDataDeviceAddress = vertexBufferAddress,
+                            vertexStride = (ulong)triangles.VertexStride,
+                            maxVertex = (uint)(triangles.VertexCount > 0 ? triangles.VertexCount - 1 : 0),
+                            indexType = indexType,
+                            indexDataDeviceAddress = indexBufferAddress,
+                            transformDataDeviceAddress = transformBufferAddress
+                        };
+
+                        // Create geometry structure
+                        VkGeometryFlagsKHR geometryFlags = VkGeometryFlagsKHR.VK_GEOMETRY_OPAQUE_BIT_KHR;
+                        if ((geom.Flags & GeometryFlags.NoDuplicateAnyHit) != 0)
+                        {
+                            geometryFlags |= VkGeometryFlagsKHR.VK_GEOMETRY_NO_DUPLICATE_ANY_HIT_INVOCATION_BIT_KHR;
+                        }
+
+                        // Create geometry structure with triangles data in union
+                        // The union structure allows direct field access via FieldOffset
+                        VkAccelerationStructureGeometryDataKHR geometryData = new VkAccelerationStructureGeometryDataKHR();
+                        geometryData.triangles = trianglesData; // Direct assignment works because of FieldOffset(0)
+
+                        VkAccelerationStructureGeometryKHR vkGeometry = new VkAccelerationStructureGeometryKHR
+                        {
+                            sType = VkStructureType.VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR,
+                            pNext = IntPtr.Zero,
+                            geometryType = VkGeometryTypeKHR.VK_GEOMETRY_TYPE_TRIANGLES_KHR,
+                            geometry = geometryData,
+                            flags = geometryFlags
+                        };
+
+                        vkGeometries.Add(vkGeometry);
+
+                        // Create build range info
+                        VkAccelerationStructureBuildRangeInfoKHR buildRange = new VkAccelerationStructureBuildRangeInfoKHR
+                        {
+                            primitiveCount = (uint)(triangles.IndexCount > 0 ? triangles.IndexCount / 3 : triangles.VertexCount / 3),
+                            primitiveOffset = 0,
+                            firstVertex = 0,
+                            transformOffset = 0
+                        };
+                        buildRanges.Add(buildRange);
+                    }
+
+                    // Create build geometry info
+                    VkBuildAccelerationStructureFlagsKHR buildFlags = VkBuildAccelerationStructureFlagsKHR.VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
+                    // TODO: Add support for other build flags from AccelStructDesc
+
+                    // Allocate memory for geometry array
+                    int geometrySize = Marshal.SizeOf(typeof(VkAccelerationStructureGeometryKHR));
+                    IntPtr geometriesPtr = Marshal.AllocHGlobal((int)(geometryCount * geometrySize));
+                    geometryDataPtrs.Add(geometriesPtr);
+                    try
+                    {
+                        // Copy geometries to unmanaged memory
+                        for (int i = 0; i < vkGeometries.Count; i++)
+                        {
+                            IntPtr geomPtr = new IntPtr(geometriesPtr.ToInt64() + i * geometrySize);
+                            Marshal.StructureToPtr(vkGeometries[i], geomPtr, false);
+                        }
+
+                        // Create build geometry info
+                        VkAccelerationStructureBuildGeometryInfoKHR buildInfo = new VkAccelerationStructureBuildGeometryInfoKHR
+                        {
+                            sType = VkStructureType.VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR,
+                            pNext = IntPtr.Zero,
+                            type = VkAccelerationStructureTypeKHR.VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR,
+                            flags = buildFlags,
+                            buildType = VkAccelerationStructureBuildTypeKHR.VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
+                            srcAccelerationStructure = IntPtr.Zero, // New build
+                            dstAccelerationStructure = vulkanAccelStruct.VkAccelStruct,
+                            geometryCount = geometryCount,
+                            pGeometries = geometriesPtr,
+                            ppGeometries = IntPtr.Zero,
+                            scratchDataDeviceAddress = 0UL // Will be set after getting sizes
+                        };
+
+                        // Get build sizes
+                        uint[] maxPrimitiveCounts = new uint[geometryCount];
+                        for (int i = 0; i < buildRanges.Count; i++)
+                        {
+                            maxPrimitiveCounts[i] = buildRanges[i].primitiveCount;
+                        }
+
+                        IntPtr maxPrimitiveCountsPtr = Marshal.AllocHGlobal(maxPrimitiveCounts.Length * sizeof(uint));
+                        try
+                        {
+                            Marshal.Copy(maxPrimitiveCounts, 0, maxPrimitiveCountsPtr, maxPrimitiveCounts.Length);
+
+                            VkAccelerationStructureBuildSizesInfoKHR sizeInfo = new VkAccelerationStructureBuildSizesInfoKHR
+                            {
+                                sType = VkStructureType.VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR,
+                                pNext = IntPtr.Zero,
+                                accelerationStructureSize = 0,
+                                updateScratchSize = 0,
+                                buildScratchSize = 0
+                            };
+
+                            vkGetAccelerationStructureBuildSizesKHR(
+                                _device,
+                                VkAccelerationStructureBuildTypeKHR.VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
+                                ref buildInfo,
+                                maxPrimitiveCountsPtr,
+                                ref sizeInfo);
+
+                            // TODO: PLACEHOLDER - Allocate scratch buffer and get device address
+                            // For now, we'll assume the acceleration structure was pre-allocated with sufficient size
+                            // In a full implementation, we would:
+                            // 1. Create a scratch buffer with sizeInfo.buildScratchSize
+                            // 2. Get its device address using vkGetBufferDeviceAddressKHR
+                            // 3. Set buildInfo.scratchDataDeviceAddress
+                            // Note: Scratch buffer must have VK_BUFFER_USAGE_STORAGE_BUFFER_BIT and VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
+                            buildInfo.scratchDataDeviceAddress = 0UL; // Placeholder - requires scratch buffer allocation
+
+                            // Allocate memory for build range info pointers array
+                            IntPtr[] buildRangeInfoPointers = new IntPtr[geometryCount];
+                            IntPtr[] buildRangeInfoPtrs = new IntPtr[geometryCount];
+                            for (int i = 0; i < buildRanges.Count; i++)
+                            {
+                                IntPtr rangePtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(VkAccelerationStructureBuildRangeInfoKHR)));
+                                Marshal.StructureToPtr(buildRanges[i], rangePtr, false);
+                                buildRangeInfoPtrs[i] = rangePtr;
+                                buildRangeInfoPointers[i] = rangePtr;
+                            }
+
+                            IntPtr buildRangeInfoArrayPtr = Marshal.AllocHGlobal((int)(geometryCount * IntPtr.Size));
+                            try
+                            {
+                                Marshal.Copy(buildRangeInfoPointers, 0, buildRangeInfoArrayPtr, buildRangeInfoPointers.Length);
+
+                                // Marshal buildInfo to unmanaged memory
+                                IntPtr buildInfoPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(VkAccelerationStructureBuildGeometryInfoKHR)));
+                                try
+                                {
+                                    Marshal.StructureToPtr(buildInfo, buildInfoPtr, false);
+
+                                    // Build acceleration structure
+                                    // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBuildAccelerationStructuresKHR.html
+                                    vkCmdBuildAccelerationStructuresKHR(
+                                        _vkCommandBuffer,
+                                        1, // infoCount
+                                        buildInfoPtr, // pInfos (pointer to array of VkAccelerationStructureBuildGeometryInfoKHR)
+                                        buildRangeInfoArrayPtr); // ppBuildRangeInfos (pointer to array of pointers to VkAccelerationStructureBuildRangeInfoKHR arrays)
+                                }
+                                finally
+                                {
+                                    Marshal.FreeHGlobal(buildInfoPtr);
+                                }
+
+                                // Cleanup build range info pointers
+                                for (int i = 0; i < buildRangeInfoPtrs.Length; i++)
+                                {
+                                    if (buildRangeInfoPtrs[i] != IntPtr.Zero)
+                                    {
+                                        Marshal.FreeHGlobal(buildRangeInfoPtrs[i]);
+                                    }
+                                }
+                            }
+                            finally
+                            {
+                                Marshal.FreeHGlobal(buildRangeInfoArrayPtr);
+                            }
+                        }
+                        finally
+                        {
+                            Marshal.FreeHGlobal(maxPrimitiveCountsPtr);
+                        }
+                    }
+                    finally
+                    {
+                        // Cleanup is handled in outer finally block
+                    }
+                }
+                finally
+                {
+                    // Cleanup allocated memory
+                    foreach (IntPtr ptr in geometryDataPtrs)
+                    {
+                        if (ptr != IntPtr.Zero)
+                        {
+                            Marshal.FreeHGlobal(ptr);
+                        }
+                    }
+                    foreach (IntPtr ptr in trianglesDataPtrs)
+                    {
+                        if (ptr != IntPtr.Zero)
+                        {
+                            Marshal.FreeHGlobal(ptr);
+                        }
+                    }
+                }
             }
 
             public void BuildTopLevelAccelStruct(IAccelStruct accelStruct, AccelStructInstance[] instances)
