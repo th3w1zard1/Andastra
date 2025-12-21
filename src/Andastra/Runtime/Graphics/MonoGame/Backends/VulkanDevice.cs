@@ -880,6 +880,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private enum VkSamplerAddressMode { VK_SAMPLER_ADDRESS_MODE_REPEAT = 0, VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT = 1, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE = 2, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER = 3 }
         private enum VkBool32 { VK_FALSE = 0, VK_TRUE = 1 }
         private enum VkCompareOp { VK_COMPARE_OP_NEVER = 0, VK_COMPARE_OP_LESS = 1, VK_COMPARE_OP_EQUAL = 2, VK_COMPARE_OP_LESS_OR_EQUAL = 3, VK_COMPARE_OP_GREATER = 4, VK_COMPARE_OP_NOT_EQUAL = 5, VK_COMPARE_OP_GREATER_OR_EQUAL = 6, VK_COMPARE_OP_ALWAYS = 7 }
+        private enum VkIndexType { VK_INDEX_TYPE_UINT16 = 0, VK_INDEX_TYPE_UINT32 = 1 }
         private enum VkBorderColor { VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK = 0 }
         private enum VkShaderModuleCreateFlags { }
         private enum VkDescriptorSetLayoutCreateFlags { }
@@ -1039,6 +1040,16 @@ namespace Andastra.Runtime.MonoGame.Backends
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkCmdSetViewportDelegate(IntPtr commandBuffer, uint firstViewport, uint viewportCount, IntPtr pViewports);
 
+        // Delegate for vkCmdBindVertexBuffers
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBindVertexBuffers.html
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdBindVertexBuffersDelegate(IntPtr commandBuffer, uint firstBinding, uint bindingCount, IntPtr pBuffers, IntPtr pOffsets);
+
+        // Delegate for vkCmdBindIndexBuffer
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBindIndexBuffer.html
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdBindIndexBufferDelegate(IntPtr commandBuffer, IntPtr buffer, ulong offset, VkIndexType indexType);
+
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkCmdDrawDelegate(IntPtr commandBuffer, uint vertexCount, uint instanceCount, uint firstVertex, uint firstInstance);
 
@@ -1166,6 +1177,8 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static vkCmdDrawIndexedDelegate vkCmdDrawIndexed;
         private static vkCmdSetScissorDelegate vkCmdSetScissor;
         private static vkCmdSetViewportDelegate vkCmdSetViewport;
+        private static vkCmdBindVertexBuffersDelegate vkCmdBindVertexBuffers;
+        private static vkCmdBindIndexBufferDelegate vkCmdBindIndexBuffer;
         private static vkCmdSetBlendConstantsDelegate vkCmdSetBlendConstants;
         private static vkCmdClearDepthStencilImageDelegate vkCmdClearDepthStencilImage;
         private static vkCmdClearColorImageDelegate vkCmdClearColorImage;
@@ -4374,6 +4387,22 @@ namespace Andastra.Runtime.MonoGame.Backends
                 _device = device;
             }
 
+            /// <summary>
+            /// Gets the VkPipeline handle. Used internally for command list binding.
+            /// </summary>
+            internal IntPtr VkPipeline
+            {
+                get { return _vkPipeline; }
+            }
+
+            /// <summary>
+            /// Gets the VkPipelineLayout handle. Used internally for descriptor set binding.
+            /// </summary>
+            internal IntPtr VkPipelineLayout
+            {
+                get { return _vkPipelineLayout; }
+            }
+
             public void Dispose()
             {
                 if (_vkPipeline != IntPtr.Zero && _device != IntPtr.Zero)
@@ -4594,11 +4623,26 @@ namespace Andastra.Runtime.MonoGame.Backends
         {
             public IBindingLayout Layout { get; }
             private readonly IntPtr _handle;
+            private readonly IntPtr _vkDescriptorSet;
 
             public VulkanBindingSet(IntPtr handle, IBindingLayout layout, BindingSetDesc desc)
+                : this(handle, layout, desc, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero)
+            {
+            }
+
+            public VulkanBindingSet(IntPtr handle, IBindingLayout layout, BindingSetDesc desc, IntPtr vkDescriptorSet, IntPtr descriptorPool, IntPtr device)
             {
                 _handle = handle;
                 Layout = layout;
+                _vkDescriptorSet = vkDescriptorSet;
+            }
+
+            /// <summary>
+            /// Gets the VkDescriptorSet handle. Used internally for command list binding.
+            /// </summary>
+            internal IntPtr VkDescriptorSet
+            {
+                get { return _vkDescriptorSet; }
             }
 
             public void Dispose()
@@ -6068,7 +6112,220 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             public void UAVBarrier(ITexture texture) { /* TODO: vkCmdMemoryBarrier */ }
             public void UAVBarrier(IBuffer buffer) { /* TODO: vkCmdMemoryBarrier */ }
-            public void SetGraphicsState(GraphicsState state) { /* TODO: Set all graphics state */ }
+            /// <summary>
+            /// Sets all graphics pipeline state for rendering.
+            /// 
+            /// This method configures the complete graphics pipeline state including:
+            /// - Graphics pipeline binding
+            /// - Viewports and scissor rectangles
+            /// - Descriptor sets (shader resources)
+            /// - Vertex buffers
+            /// - Index buffer
+            /// 
+            /// Note: Framebuffer and render pass begin/end are typically handled separately,
+            /// as render passes define render targets and must be managed around draw calls.
+            /// 
+            /// Based on Vulkan API: vkCmdBindPipeline, vkCmdSetViewport, vkCmdSetScissor,
+            /// vkCmdBindDescriptorSets, vkCmdBindVertexBuffers, vkCmdBindIndexBuffer
+            /// Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBindPipeline.html
+            /// </summary>
+            /// <param name="state">Complete graphics state configuration</param>
+            public void SetGraphicsState(GraphicsState state)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before setting graphics state");
+                }
+
+                if (state.Pipeline == null)
+                {
+                    throw new ArgumentException("Graphics state must have a valid pipeline", nameof(state));
+                }
+
+                // Step 1: Bind graphics pipeline
+                VulkanGraphicsPipeline vulkanPipeline = state.Pipeline as VulkanGraphicsPipeline;
+                if (vulkanPipeline == null)
+                {
+                    throw new ArgumentException("Pipeline must be a VulkanGraphicsPipeline", nameof(state));
+                }
+
+                IntPtr vkPipelineHandle = vulkanPipeline.VkPipeline;
+                if (vkPipelineHandle == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("Graphics pipeline does not have a valid VkPipeline handle. Pipeline may not have been fully created.");
+                }
+
+                // Bind graphics pipeline
+                // Based on Vulkan API: vkCmdBindPipeline binds a graphics pipeline to the command buffer
+                // Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBindPipeline.html
+                if (vkCmdBindPipeline != null)
+                {
+                    vkCmdBindPipeline(_vkCommandBuffer, VkPipelineBindPoint.VK_PIPELINE_BIND_POINT_GRAPHICS, vkPipelineHandle);
+                }
+
+                // Step 2: Set viewports and scissors
+                if (state.Viewport.Viewports != null && state.Viewport.Viewports.Length > 0)
+                {
+                    SetViewports(state.Viewport.Viewports);
+                }
+
+                if (state.Viewport.Scissors != null && state.Viewport.Scissors.Length > 0)
+                {
+                    SetScissors(state.Viewport.Scissors);
+                }
+
+                // Step 3: Bind descriptor sets if provided
+                if (state.BindingSets != null && state.BindingSets.Length > 0 && vkCmdBindDescriptorSets != null)
+                {
+                    // Get pipeline layout from graphics pipeline
+                    IntPtr vkPipelineLayout = vulkanPipeline.VkPipelineLayout;
+                    if (vkPipelineLayout == IntPtr.Zero)
+                    {
+                        throw new InvalidOperationException("Graphics pipeline does not have a valid VkPipelineLayout handle.");
+                    }
+
+                    // Build array of descriptor set handles
+                    int descriptorSetCount = state.BindingSets.Length;
+                    IntPtr descriptorSetHandlesPtr = Marshal.AllocHGlobal(descriptorSetCount * IntPtr.Size);
+                    try
+                    {
+                        for (int i = 0; i < descriptorSetCount; i++)
+                        {
+                            VulkanBindingSet vulkanBindingSet = state.BindingSets[i] as VulkanBindingSet;
+                            if (vulkanBindingSet == null)
+                            {
+                                Marshal.FreeHGlobal(descriptorSetHandlesPtr);
+                                throw new ArgumentException($"Binding set at index {i} must be a VulkanBindingSet", nameof(state));
+                            }
+
+                            IntPtr vkDescriptorSet = vulkanBindingSet.VkDescriptorSet;
+                            if (vkDescriptorSet == IntPtr.Zero)
+                            {
+                                Marshal.FreeHGlobal(descriptorSetHandlesPtr);
+                                throw new InvalidOperationException($"Binding set at index {i} does not have a valid VkDescriptorSet handle.");
+                            }
+
+                            Marshal.WriteIntPtr(descriptorSetHandlesPtr, i * IntPtr.Size, vkDescriptorSet);
+                        }
+
+                        // Bind all descriptor sets in a single call
+                        // Based on Vulkan API: vkCmdBindDescriptorSets
+                        // Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBindDescriptorSets.html
+                        vkCmdBindDescriptorSets(
+                            _vkCommandBuffer,
+                            VkPipelineBindPoint.VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            vkPipelineLayout,
+                            0, // firstSet - starting set index
+                            (uint)descriptorSetCount,
+                            descriptorSetHandlesPtr,
+                            0, // dynamicOffsetCount
+                            IntPtr.Zero // pDynamicOffsets - would be populated if dynamic buffers present
+                        );
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(descriptorSetHandlesPtr);
+                    }
+                }
+
+                // Step 4: Bind vertex buffers if provided
+                if (state.VertexBuffers != null && state.VertexBuffers.Length > 0 && vkCmdBindVertexBuffers != null)
+                {
+                    int vertexBufferCount = state.VertexBuffers.Length;
+                    IntPtr bufferHandlesPtr = Marshal.AllocHGlobal(vertexBufferCount * IntPtr.Size);
+                    IntPtr offsetsPtr = Marshal.AllocHGlobal(vertexBufferCount * sizeof(ulong));
+                    try
+                    {
+                        for (int i = 0; i < vertexBufferCount; i++)
+                        {
+                            VulkanBuffer vulkanBuffer = state.VertexBuffers[i] as VulkanBuffer;
+                            if (vulkanBuffer == null)
+                            {
+                                Marshal.FreeHGlobal(bufferHandlesPtr);
+                                Marshal.FreeHGlobal(offsetsPtr);
+                                throw new ArgumentException($"Vertex buffer at index {i} must be a VulkanBuffer", nameof(state));
+                            }
+
+                            IntPtr vkBuffer = vulkanBuffer.VkBuffer;
+                            if (vkBuffer == IntPtr.Zero)
+                            {
+                                vkBuffer = vulkanBuffer.NativeHandle;
+                                if (vkBuffer == IntPtr.Zero)
+                                {
+                                    Marshal.FreeHGlobal(bufferHandlesPtr);
+                                    Marshal.FreeHGlobal(offsetsPtr);
+                                    throw new InvalidOperationException($"Vertex buffer at index {i} does not have a valid Vulkan handle.");
+                                }
+                            }
+
+                            Marshal.WriteIntPtr(bufferHandlesPtr, i * IntPtr.Size, vkBuffer);
+                            Marshal.WriteInt64(offsetsPtr, i * sizeof(ulong), 0UL); // Offset is 0 for now - could be extended
+                        }
+
+                        // Bind vertex buffers
+                        // Based on Vulkan API: vkCmdBindVertexBuffers
+                        // Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBindVertexBuffers.html
+                        vkCmdBindVertexBuffers(
+                            _vkCommandBuffer,
+                            0, // firstBinding - starting binding index
+                            (uint)vertexBufferCount,
+                            bufferHandlesPtr,
+                            offsetsPtr
+                        );
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(bufferHandlesPtr);
+                        Marshal.FreeHGlobal(offsetsPtr);
+                    }
+                }
+
+                // Step 5: Bind index buffer if provided
+                if (state.IndexBuffer != null && vkCmdBindIndexBuffer != null)
+                {
+                    VulkanBuffer vulkanIndexBuffer = state.IndexBuffer as VulkanBuffer;
+                    if (vulkanIndexBuffer == null)
+                    {
+                        throw new ArgumentException("Index buffer must be a VulkanBuffer", nameof(state));
+                    }
+
+                    IntPtr vkIndexBuffer = vulkanIndexBuffer.VkBuffer;
+                    if (vkIndexBuffer == IntPtr.Zero)
+                    {
+                        vkIndexBuffer = vulkanIndexBuffer.NativeHandle;
+                        if (vkIndexBuffer == IntPtr.Zero)
+                        {
+                            throw new InvalidOperationException("Index buffer does not have a valid Vulkan handle.");
+                        }
+                    }
+
+                    // Convert TextureFormat to VkIndexType
+                    // R16_UInt -> VK_INDEX_TYPE_UINT16, R32_UInt -> VK_INDEX_TYPE_UINT32
+                    VkIndexType indexType = VkIndexType.VK_INDEX_TYPE_UINT32; // Default to 32-bit indices
+                    if (state.IndexFormat == TextureFormat.R16_UInt)
+                    {
+                        indexType = VkIndexType.VK_INDEX_TYPE_UINT16;
+                    }
+                    else if (state.IndexFormat == TextureFormat.R32_UInt)
+                    {
+                        indexType = VkIndexType.VK_INDEX_TYPE_UINT32;
+                    }
+
+                    // Bind index buffer
+                    // Based on Vulkan API: vkCmdBindIndexBuffer
+                    // Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBindIndexBuffer.html
+                    vkCmdBindIndexBuffer(
+                        _vkCommandBuffer,
+                        vkIndexBuffer,
+                        0UL, // offset - buffer offset in bytes
+                        indexType
+                    );
+                }
+
+                // Note: Framebuffer is not bound here as it's typically managed via render pass begin/end
+                // The framebuffer is specified when beginning a render pass (vkCmdBeginRenderPass)
+                // This is a design choice in Vulkan to separate pipeline state from render target state
+            }
             /// <summary>
             /// Sets a single viewport using vkCmdSetViewport.
             /// 
