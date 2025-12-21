@@ -263,9 +263,17 @@ namespace Andastra.Runtime.Stride.Graphics
                 var parameter = _effectInstance.Parameters;
                 if (parameter != null)
                 {
-                    // In a full implementation, this would use:
-                    // parameter.Set(name, strideMatrix);
-                    // TODO: STUB - For now, we track the parameter for when a shader is loaded
+                    // Set matrix parameter using Stride ParameterCollection.Set method
+                    // The parameter must exist in the effect shader for this to work
+                    try
+                    {
+                        parameter.Set(name, strideMatrix);
+                    }
+                    catch (ArgumentException)
+                    {
+                        // Parameter doesn't exist in the effect - this is expected if shader doesn't define it
+                        // Silently ignore to allow rendering to continue
+                    }
                 }
             }
             catch (Exception ex)
@@ -290,8 +298,16 @@ namespace Andastra.Runtime.Stride.Graphics
                 var parameter = _effectInstance.Parameters;
                 if (parameter != null)
                 {
-                    // In a full implementation, this would use:
-                    // parameter.Set(name, strideVector);
+                    // Set Vector3 parameter using Stride ParameterCollection.Set method
+                    try
+                    {
+                        parameter.Set(name, strideVector);
+                    }
+                    catch (ArgumentException)
+                    {
+                        // Parameter doesn't exist in the effect - this is expected if shader doesn't define it
+                        // Silently ignore to allow rendering to continue
+                    }
                 }
             }
             catch (Exception ex)
@@ -315,8 +331,16 @@ namespace Andastra.Runtime.Stride.Graphics
                 var parameter = _effectInstance.Parameters;
                 if (parameter != null)
                 {
-                    // In a full implementation, this would use:
-                    // parameter.Set(name, value);
+                    // Set float parameter using Stride ParameterCollection.Set method
+                    try
+                    {
+                        parameter.Set(name, value);
+                    }
+                    catch (ArgumentException)
+                    {
+                        // Parameter doesn't exist in the effect - this is expected if shader doesn't define it
+                        // Silently ignore to allow rendering to continue
+                    }
                 }
             }
             catch (Exception ex)
@@ -340,8 +364,16 @@ namespace Andastra.Runtime.Stride.Graphics
                 var parameter = _effectInstance.Parameters;
                 if (parameter != null)
                 {
-                    // In a full implementation, this would use:
-                    // parameter.Set(name, value);
+                    // Set bool parameter using Stride ParameterCollection.Set method
+                    try
+                    {
+                        parameter.Set(name, value);
+                    }
+                    catch (ArgumentException)
+                    {
+                        // Parameter doesn't exist in the effect - this is expected if shader doesn't define it
+                        // Silently ignore to allow rendering to continue
+                    }
                 }
             }
             catch (Exception ex)
@@ -365,8 +397,16 @@ namespace Andastra.Runtime.Stride.Graphics
                 var parameter = _effectInstance.Parameters;
                 if (parameter != null)
                 {
-                    // In a full implementation, this would use:
-                    // parameter.Set(name, texture);
+                    // Set texture parameter using Stride ParameterCollection.Set method
+                    try
+                    {
+                        parameter.Set(name, texture);
+                    }
+                    catch (ArgumentException)
+                    {
+                        // Parameter doesn't exist in the effect - this is expected if shader doesn't define it
+                        // Silently ignore to allow rendering to continue
+                    }
                 }
             }
             catch (Exception ex)
