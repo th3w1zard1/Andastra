@@ -11537,6 +11537,23 @@ namespace Andastra.Runtime.MonoGame.Backends
         private const uint D3D12_RAYTRACING_INSTANCE_FLAG_FORCE_OPAQUE = 0x4;
         private const uint D3D12_RAYTRACING_INSTANCE_FLAG_FORCE_NON_OPAQUE = 0x8;
 
+        // D3D12 Raytracing Acceleration Structure Copy Modes
+        // Based on D3D12 API: D3D12_RAYTRACING_ACCELERATION_STRUCTURE_COPY_MODE
+        // Reference: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/ne-d3d12-d3d12_raytracing_acceleration_structure_copy_mode
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_COPY_MODE_CLONE = 0;
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_COPY_MODE_COMPACT = 1;
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_COPY_MODE_VISUALIZATION_DECODE_FOR_TOOLS = 2;
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_COPY_MODE_SERIALIZE = 3;
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_COPY_MODE_DESERIALIZE = 4;
+
+        // D3D12 Raytracing Acceleration Structure Post-Build Info Types
+        // Based on D3D12 API: D3D12_RAYTRACING_ACCELERATION_STRUCTURE_POSTBUILD_INFO_TYPE
+        // Reference: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/ne-d3d12-d3d12_raytracing_acceleration_structure_postbuild_info_type
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_POSTBUILD_INFO_COMPACTED_SIZE = 0;
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_POSTBUILD_INFO_TOOLS_VISUALIZATION = 1;
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_POSTBUILD_INFO_SERIALIZATION = 2;
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_POSTBUILD_INFO_CURRENT_SIZE = 3;
+
         #endregion
 
         #region D3D12 ExecuteIndirect Structures and Constants
