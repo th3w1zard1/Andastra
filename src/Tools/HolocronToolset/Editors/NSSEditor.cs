@@ -971,13 +971,114 @@ namespace HolocronToolset.Editors
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:685
         // Original: def go_to_definition(self):
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:1256-1286
+        // Original: def go_to_definition(self):
         /// <summary>
         /// Navigates to the definition of the symbol at the cursor.
+        /// Searches the outline view for matching symbols (functions, structs, globals) and navigates to them.
         /// </summary>
         private void GoToDefinition()
         {
-            // TODO: Implement go to definition
-            // This would need to parse the code, find symbol definitions, and navigate to them
+            if (_codeEdit == null || _outlineView == null)
+            {
+                return;
+            }
+
+            // Get word under cursor
+            string word = GetWordUnderCursor();
+            if (string.IsNullOrEmpty(word) || string.IsNullOrWhiteSpace(word))
+            {
+                // Try to get selected text if no word under cursor
+                if (_codeEdit.SelectionStart != _codeEdit.SelectionEnd)
+                {
+                    word = _codeEdit.SelectedText?.Trim();
+                }
+                
+                if (string.IsNullOrEmpty(word) || string.IsNullOrWhiteSpace(word))
+                {
+                    var infoBox = MessageBoxManager.GetMessageBoxStandard(
+                        "Go to Definition",
+                        "No symbol selected.",
+                        ButtonEnum.Ok,
+                        MsBox.Avalonia.Enums.Icon.Info);
+                    infoBox.ShowAsync();
+                    return;
+                }
+            }
+
+            // Search outline view for matching symbol
+            bool found = false;
+            var itemsList = _outlineView.ItemsSource as IEnumerable<TreeViewItem> ?? new List<TreeViewItem>();
+            
+            foreach (var item in itemsList)
+            {
+                if (item?.Tag is OutlineSymbol symbol)
+                {
+                    // Extract identifier from symbol name (handle "Function: main" format)
+                    string identifier = symbol.Name;
+                    if (identifier.Contains(":"))
+                    {
+                        identifier = identifier.Split(':')[1].Trim();
+                    }
+                    else
+                    {
+                        identifier = identifier.Trim();
+                    }
+
+                    // Case-insensitive comparison
+                    if (string.Equals(identifier, word, StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Navigate to symbol's line number (convert from 0-based to 1-based)
+                        int lineNumber = symbol.LineNumber + 1;
+                        GotoLine(lineNumber);
+                        found = true;
+                        break;
+                    }
+
+                    // Also check children (parameters, nested symbols)
+                    if (item.ItemsSource != null)
+                    {
+                        var childItems = item.ItemsSource as IEnumerable<TreeViewItem> ?? new List<TreeViewItem>();
+                        foreach (var childItem in childItems)
+                        {
+                            if (childItem?.Tag is OutlineSymbol childSymbol)
+                            {
+                                string childIdentifier = childSymbol.Name;
+                                if (childIdentifier.Contains(":"))
+                                {
+                                    childIdentifier = childIdentifier.Split(':')[1].Trim();
+                                }
+                                else
+                                {
+                                    childIdentifier = childIdentifier.Trim();
+                                }
+
+                                if (string.Equals(childIdentifier, word, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    int lineNumber = childSymbol.LineNumber + 1;
+                                    GotoLine(lineNumber);
+                                    found = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (found)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (!found)
+            {
+                var infoBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Go to Definition",
+                    $"Definition of '{word}' not found.",
+                    ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Info);
+                infoBox.ShowAsync();
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:3816-3822
@@ -2146,7 +2247,7 @@ namespace HolocronToolset.Editors
             {
                 // Go to Definition (F12) - placeholder for now
                 var goToDefItem = new MenuItem { Header = "Go to Definition", HotKey = new KeyGesture(Key.F12) };
-                goToDefItem.Click += (s, e) => { /* TODO: Implement go to definition */ };
+                goToDefItem.Click += (s, e) => { GoToDefinition(); };
                 contextMenu.Items.Add(goToDefItem);
 
                 // Find All References (Shift+F12)
