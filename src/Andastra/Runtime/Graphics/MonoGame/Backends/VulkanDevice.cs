@@ -3565,7 +3565,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             var bufferDesc = new BufferDesc
             {
                 ByteSize = (int)estimatedBufferSize,
-                Usage = BufferUsageFlags.ShaderResource | BufferUsageFlags.AccelerationStructureStorage
+                Usage = BufferUsageFlags.ShaderResource | BufferUsageFlags.AccelStructStorage
             };
 
             IBuffer accelBuffer = CreateBuffer(bufferDesc);
