@@ -288,19 +288,6 @@ namespace Andastra.Runtime.Games.Common
         /// Returns all areas that have been registered with the world via RegisterArea.
         /// Common across all engines: Areas are registered when loaded or set as current area.
         /// Used by GetAreaByTag to search through all loaded areas.
-        /// </remarks>
-        public virtual IEnumerable<IArea> GetAllAreas()
-        {
-            return _areasById.Values;
-        }
-
-        /// <summary>
-        /// Gets all registered areas in the world.
-        /// </summary>
-        /// <remarks>
-        /// Returns all areas that have been registered with the world via RegisterArea.
-        /// Common across all engines: Areas are registered when loaded or set as current area.
-        /// Used by GetAreaByTag to search through all loaded areas.
         /// Based on Eclipse engine: GetAreaByTag searches through all registered areas
         /// Located via string reference: Area registration system (daorigins.exe, DragonAge2.exe)
         /// Original implementation: Areas are registered when loaded, search iterates through all registered areas
