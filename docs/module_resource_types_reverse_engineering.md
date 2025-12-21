@@ -30,6 +30,7 @@ This document details the reverse engineering findings for module file discovery
   - **Hardcoded `"_dlg"` check** (line 128): `apuStack_6c[0] = FUN_00630a90(aiStack_30,"_dlg");`
 
 **Supporting Functions:**
+
 - `FUN_00407230` (K1) / `FUN_00407300` (K2): Resource search through multiple locations
 - `FUN_00406e20` (K1) / `FUN_00406ef0` (K2): Opens and loads RIM/ERF containers
 - `FUN_004071a0` (K1) / `FUN_00407270` (K2): Searches resource lists
@@ -51,6 +52,7 @@ This document details the reverse engineering findings for module file discovery
 ### Valid File Combinations
 
 **K1 (swkotor.exe) Valid Combinations:**
+
 1. `{module}.mod` - **Overrides all** (highest priority)
 2. `{module}.rim` - Main module archive
 3. `{module}.rim` + `{module}_s.rim` - Composite module (main + data)
@@ -58,6 +60,7 @@ This document details the reverse engineering findings for module file discovery
 5. `{module}.rim` + `{module}_adx.rim` - Main + area archive extended (if exists)
 
 **K2 (swkotor2.exe) Valid Combinations:**
+
 1. `{module}.mod` - **Overrides all** (highest priority)
 2. `{module}.rim` - Main module archive
 3. `{module}.rim` + `{module}_s.rim` - Composite module (main + data)
@@ -66,6 +69,7 @@ This document details the reverse engineering findings for module file discovery
 6. `{module}.rim` + `{module}_adx.rim` - Main + area archive extended (if exists)
 
 **Invalid/Unsupported:**
+
 - `{module}_*.erf` - **NOT SUPPORTED** - Only `_dlg.erf` is hardcoded in K2
 - `{module}.hak` - **NOT SUPPORTED** - No `.hak` references found in either executable
 - `{module}_something.erf` - **NOT SUPPORTED** - Only `_dlg` suffix is checked
@@ -169,6 +173,7 @@ The engine's resource manager loads resources by:
    - **PROVES 2DA CAN be loaded from modules**
 
 **Conclusion**: The engine loads **ALL resource types** from modules with **ZERO filtering**. Any resource type stored in a RIM/ERF/MOD container will be:
+
 1. Registered in the resource table (via `FUN_0040e990`)
 2. Available for loading by type-specific loaders (e.g., `FUN_00413b40` for 2DA)
 3. Loaded regardless of type (TPC, TGA, 2DA, etc.)
@@ -184,22 +189,30 @@ The engine's resource manager loads resources by:
 
 **CANNOT or SHOULD NOT be packed** (engine limitations or conventions):
 
-- **TwoDA**: Must be in override or chitin, NOT in modules (convention enforced by tooling)
-- **TLK**: Talk tables are global, not module-specific
+- **TwoDA**: Convention says use override/chitin, but engine WILL load from modules (see proof above)
+- **TLK**: Talk tables are global, not module-specific (but engine would load if stored)
 - **KEY/BIF**: Chitin key/archive files (not module containers)
 - **MOD/RIM/ERF/SAV**: Nested containers not supported
 - **HAK/NWM**: Aurora/NWN formats, not KotOR
 - **RES**: Save data format, not module content
+- **DDS**: Not found in texture loading code - likely not supported or uses different path
 
 **Note on TwoDA**: **YES, you CAN drop a 2DA into a module.** The proof:
+
 - `FUN_0040f990` (RIM loader) and `FUN_0040f3c0` (MOD loader) register ALL entries with `FUN_0040e990`
 - `FUN_00413b40` (2DA loader) searches the resource table for type `0x7e1` - it doesn't care where it came from
 - Convention says use override/chitin, but the engine will load 2DA from modules
 
 **Note on TPC/TGA**: **YES, these CAN be containerized** in modules. The proof:
+
 - RIM/MOD loaders (`FUN_0040f990` / `FUN_0040f3c0`) iterate through ALL entries
 - No type filtering - every entry is registered in the resource table
-- Texture loaders will find them in the resource table regardless of source
+- Texture loaders (`FUN_004b8300` line 187-190) search through resource table:
+  - First tries TGA (type 3) via `FUN_00408bc0`
+  - Then tries TPC (type 0xbbf = 3007) via `FUN_00408bc0`
+  - `FUN_00408bc0` calls `FUN_00407230` which searches all locations including modules
+- **Texture Priority**: TGA → TPC (no DDS support in this code path)
+- **DDS**: Not found in texture loading code - likely not supported or uses different path
 
 ### Known Resource Types from Andastra
 
@@ -260,6 +273,61 @@ Based on `ResourceType.cs`, the following resource types are defined:
 - `MVE` (2) - Video files
 - `MPG` (9) - MPEG video
 - `BIK` (2063) - Bink video
+
+## Resource Search Priority Order (PROVEN)
+
+**Function**: `FUN_00407230` (swkotor.exe: 0x00407230) - Called by `FUN_004074d0` and `FUN_00408bc0`
+
+**Search Order** (lines 8-16):
+1. `this+0x14` (Location 3) - Highest priority
+2. `this+0x18` with param_6=1 (Location 2, variant 1)
+3. `this+0x1c` (Location 1)
+4. `this+0x18` with param_6=2 (Location 2, variant 2)
+5. `this+0x10` (Location 0) - Lowest priority
+
+**Source Type Identification** (`FUN_004074d0` line 44-60):
+- `1` = BIF (Chitin archives)
+- `2` = DIR (Override directory)
+- `3` = ERF (Module containers: MOD/ERF)
+- `4` = RIM (Module RIM files)
+
+**Module Loading Evidence** (`FUN_004094a0`):
+- Line 91: `FUN_00406e20(param_1,aiStack_48,2,0);` - Loads MODULES: with type 2 (DIR/Override)
+- Line 136: `FUN_00406e20(param_1,aiStack_38,3,2);` - Loads MODULES: with type 3 (ERF/MOD)
+- Line 42/85/118/159: `FUN_00406e20(param_1,aiStack_38,4,0);` - Loads RIMS: with type 4 (RIM)
+
+**Conclusion**: Modules are loaded into the resource table and searched in priority order. The search function `FUN_00407230` will find resources from modules if they're registered in the resource table.
+
+## Texture Loading Priority (PROVEN)
+
+**Function**: `FUN_004b8300` (swkotor.exe: 0x004b8300) - Area loading function
+
+**Texture Search Order** (lines 187-190):
+```c
+iVar7 = FUN_00408bc0(DAT_007a39e8,(int *)&piStack_100,3,(undefined4 *)0x0);  // Try TGA (type 3)
+if (iVar7 == 0) {
+  FUN_00406d60(&piStack_100,aiStack_118);
+  iVar7 = FUN_00408bc0(DAT_007a39e8,(int *)&piStack_100,0xbbf,(undefined4 *)0x0);  // Try TPC (type 0xbbf = 3007)
+```
+
+**Priority**: TGA (type 3) → TPC (type 0xbbf = 3007)
+
+**DDS Support**: NOT found in texture loading code - likely not supported or uses different path
+
+**Module Support**: `FUN_00408bc0` calls `FUN_00407230` which searches all locations including modules, so TPC/TGA CAN be loaded from modules.
+
+## Multiple Module Files - Resource Resolution
+
+When the same resource exists in multiple module files (e.g., `module.rim` and `module_s.rim`), the engine uses the **first match** found in the search order:
+
+1. Resources are registered in order: `.mod` → `.rim` → `_s.rim` → `_dlg.erf` (K2)
+2. `FUN_00407230` searches locations in priority order (see above)
+3. **First match wins** - later registrations are ignored if resource already exists
+
+**Example**: If `appearances.2da` exists in both `module.rim` and `module_s.rim`:
+- First file loaded registers the resource
+- Second file's entry is skipped (duplicate ResRef+Type)
+- Engine uses the first one found
 
 ## Summary
 
