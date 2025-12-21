@@ -149,10 +149,10 @@ namespace Andastra.Parsing.Resource
                 byte[] data = null;
                 ResourceType restype = ResourceType.INVALID;
 
-                if (resource is FileResource fileRes)
+                if (resource is FileResource fileResource)
                 {
-                    data = fileRes.GetData();
-                    restype = fileRes.ResType;
+                    data = fileResource.GetData();
+                    restype = fileResource.ResType;
                 }
                 else if (resource is ERFResource erfRes)
                 {
@@ -181,8 +181,102 @@ namespace Andastra.Parsing.Resource
                     return GFFAuto.BytesGff(loadedGff, ResourceType.GFF);
                 }
 
-                // Other resource types would need to be validated here
-                // TODO: STUB - For now, return the data as-is
+                // Validate non-GFF resource types using salvage strategies
+                // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/salvage.py:146-208
+                // Original: validate_resource function provides salvage strategies for each resource type
+                Dictionary<ResourceType, Func<FileResource, object>> strategies = GetSalvageStrategies();
+                if (strategies.ContainsKey(restype))
+                {
+                    string tempFile = null;
+                    try
+                    {
+                        // Create a temporary FileResource wrapper for ERFResource/RIMResource
+                        FileResource fileResWrapper = null;
+                        if (resource is FileResource existingFileRes)
+                        {
+                            fileResWrapper = existingFileRes;
+                        }
+                        else if (resource is ERFResource erfRes)
+                        {
+                            // Create temporary FileResource from ERFResource data
+                            // FileResource requires a file path, so we create a temporary file
+                            string tempResName = erfRes.ResRef.ToString();
+                            tempFile = Path.GetTempFileName();
+                            File.WriteAllBytes(tempFile, erfRes.Data);
+                            fileResWrapper = new FileResource(
+                                tempResName,
+                                erfRes.ResType,
+                                erfRes.Data.Length,
+                                0,
+                                tempFile
+                            );
+                        }
+                        else if (resource is RIMResource rimRes)
+                        {
+                            // Create temporary FileResource from RIMResource data
+                            string tempResName = rimRes.ResRef.ToString();
+                            tempFile = Path.GetTempFileName();
+                            File.WriteAllBytes(tempFile, rimRes.Data);
+                            fileResWrapper = new FileResource(
+                                tempResName,
+                                rimRes.ResType,
+                                rimRes.Data.Length,
+                                0,
+                                tempFile
+                            );
+                        }
+
+                        if (fileResWrapper != null)
+                        {
+                            Func<FileResource, object> strategy = strategies[restype];
+                            object validatedResult = strategy(fileResWrapper);
+
+                            if (validatedResult is byte[] validatedBytes)
+                            {
+                                return validatedBytes;
+                            }
+                            // If strategy returns something else, try to convert or return original
+                            return data;
+                        }
+                    }
+                    catch (Exception strategyEx)
+                    {
+                        // If strategy fails, log and return original data (non-strict mode) or null (strict mode)
+                        new RobustLogger().Warning($"Salvage strategy failed for {restype.Extension}: {strategyEx.Message}");
+                        if (strict)
+                        {
+                            if (shouldRaise)
+                            {
+                                throw;
+                            }
+                            return null;
+                        }
+                        return data;
+                    }
+                    finally
+                    {
+                        // Clean up temporary file if created
+                        if (tempFile != null && File.Exists(tempFile))
+                        {
+                            try
+                            {
+                                File.Delete(tempFile);
+                            }
+                            catch
+                            {
+                                // Ignore cleanup errors - temp file will be cleaned up by OS eventually
+                            }
+                        }
+                    }
+                }
+
+                // No strategy available for this resource type
+                // In strict mode, return null for unknown types; otherwise return data as-is
+                if (strict)
+                {
+                    new RobustLogger().Info($"No validation strategy available for resource type '{restype.Extension}', returning null (strict mode)");
+                    return null;
+                }
                 return data;
             }
             catch (Exception e)
