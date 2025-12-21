@@ -417,7 +417,38 @@ namespace Andastra.Parsing.Tools
                     return (true, "Valid TPC file");
                 }
 
-                return (true, "TODO: STUB - File exists (format validation not implemented)");
+                // For unknown file formats, validate basic file properties
+                // Check that file is readable and has content
+                FileInfo fileInfo = new FileInfo(filePath);
+                if (fileInfo.Length == 0)
+                {
+                    return (false, "File is empty (0 bytes)");
+                }
+
+                // Attempt to read first few bytes to verify file is readable
+                try
+                {
+                    using (FileStream stream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+                    {
+                        byte[] header = new byte[Math.Min(16, (int)fileInfo.Length)];
+                        int bytesRead = stream.Read(header, 0, header.Length);
+                        if (bytesRead == 0)
+                        {
+                            return (false, "File is not readable or corrupted");
+                        }
+                    }
+                }
+                catch (IOException)
+                {
+                    return (false, "File is not readable (I/O error)");
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    return (false, "File is not readable (access denied)");
+                }
+
+                // File exists, is readable, and has content, but format-specific validation is not implemented
+                return (true, $"File exists and is readable ({fileInfo.Length} bytes, format validation not implemented for {suffix})");
             }
             catch (Exception e)
             {
