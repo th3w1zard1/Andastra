@@ -214,6 +214,10 @@ namespace Andastra.Runtime.MonoGame.Raytracing
             // Destroy denoiser
             ShutdownDenoiser();
 
+            // Clean up texture tracking
+            _textureHandleMap.Clear();
+            _textureInfoCache.Clear();
+
             _initialized = false;
             _enabled = false;
 
