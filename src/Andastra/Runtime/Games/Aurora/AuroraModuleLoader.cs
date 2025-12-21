@@ -1912,7 +1912,7 @@ namespace Andastra.Runtime.Games.Aurora
                 creatureComponent.ClassList.Clear();
                 foreach (var utcClass in utc.Classes)
                 {
-                    var creatureClass = new Runtime.Games.Common.Components.BaseCreatureClass
+                    var creatureClass = new Components.AuroraCreatureClass
                     {
                         ClassId = utcClass.ClassId,
                         Level = utcClass.ClassLevel
@@ -2073,13 +2073,16 @@ namespace Andastra.Runtime.Games.Aurora
                     }
                 }
 
-                // Note: Additional properties from GIT (StoreGold, IdentifyPrice, MaxBuyPrice, BlackMarket, BM_MarkDown, WillNotBuy, WillOnlyBuy)
-                // are not in the UTM format for Odyssey, but may be in Aurora UTM format or loaded from GIT store struct
-                // TODO: STUB - For now, we set defaults matching nwmain.exe behavior:
-                // - StoreGold: -1 (unlimited, default from nwmain.exe line 63)
-                // - IdentifyPrice: 100 (default from nwmain.exe line 65)
-                // - MaxBuyPrice: -1 (no limit, default from nwmain.exe line 67)
-                // These can be overridden if Aurora UTM format includes them or if loaded from GIT store struct
+                // Set default store properties matching nwmain.exe behavior
+                // Based on nwmain.exe: CNWSStore::LoadStore @ 0x1404fbbf0
+                // StoreGold: Line 63 - ReadFieldINT("StoreGold", -1) - -1 = unlimited gold
+                // IdentifyPrice: Line 65 - ReadFieldINT("IdentifyPrice", 100) - default 100 gold
+                // MaxBuyPrice: Line 67 - ReadFieldINT("MaxBuyPrice", -1) - -1 = no price limit
+                // Note: These defaults match nwmain.exe behavior. Can be overridden if Aurora UTM format includes them
+                // or if loaded from GIT store struct (BlackMarket, BM_MarkDown, WillNotBuy, WillOnlyBuy)
+                storeComponent.Gold = -1; // StoreGold: -1 = unlimited (nwmain.exe line 63 default)
+                storeComponent.IdentifyPrice = 100; // IdentifyPrice: 100 gold (nwmain.exe line 65 default)
+                storeComponent.MaxBuyPrice = -1; // MaxBuyPrice: -1 = no limit (nwmain.exe line 67 default)
             }
             catch
             {

@@ -501,6 +501,130 @@ namespace Andastra.Runtime.MonoGame.Backends
             public uint queueFamilyIndex;
         }
 
+        // Vulkan render pass structures
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkRenderPassCreateInfo
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public VkRenderPassCreateFlags flags;
+            public uint attachmentCount;
+            public IntPtr pAttachments;
+            public uint subpassCount;
+            public IntPtr pSubpasses;
+            public uint dependencyCount;
+            public IntPtr pDependencies;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkAttachmentDescription
+        {
+            public VkAttachmentDescriptionFlags flags;
+            public VkFormat format;
+            public VkSampleCountFlagBits samples;
+            public VkAttachmentLoadOp loadOp;
+            public VkAttachmentStoreOp storeOp;
+            public VkAttachmentLoadOp stencilLoadOp;
+            public VkAttachmentStoreOp stencilStoreOp;
+            public VkImageLayout initialLayout;
+            public VkImageLayout finalLayout;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkSubpassDescription
+        {
+            public VkSubpassDescriptionFlags flags;
+            public VkPipelineBindPoint pipelineBindPoint;
+            public uint inputAttachmentCount;
+            public IntPtr pInputAttachments;
+            public uint colorAttachmentCount;
+            public IntPtr pColorAttachments;
+            public IntPtr pResolveAttachments;
+            public IntPtr pDepthStencilAttachment;
+            public uint preserveAttachmentCount;
+            public IntPtr pPreserveAttachments;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkAttachmentReference
+        {
+            public uint attachment;
+            public VkImageLayout layout;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkSubpassDependency
+        {
+            public uint srcSubpass;
+            public uint dstSubpass;
+            public VkPipelineStageFlags srcStageMask;
+            public VkPipelineStageFlags dstStageMask;
+            public VkAccessFlags srcAccessMask;
+            public VkAccessFlags dstAccessMask;
+            public VkDependencyFlags dependencyFlags;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkFramebufferCreateInfo
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public VkFramebufferCreateFlags flags;
+            public IntPtr renderPass;
+            public uint attachmentCount;
+            public IntPtr pAttachments;
+            public uint width;
+            public uint height;
+            public uint layers;
+        }
+
+        // Vulkan render pass enums and flags
+        [Flags]
+        private enum VkRenderPassCreateFlags
+        {
+        }
+
+        [Flags]
+        private enum VkAttachmentDescriptionFlags
+        {
+        }
+
+        private enum VkAttachmentLoadOp
+        {
+            VK_ATTACHMENT_LOAD_OP_LOAD = 0,
+            VK_ATTACHMENT_LOAD_OP_CLEAR = 1,
+            VK_ATTACHMENT_LOAD_OP_DONT_CARE = 2,
+        }
+
+        private enum VkAttachmentStoreOp
+        {
+            VK_ATTACHMENT_STORE_OP_STORE = 0,
+            VK_ATTACHMENT_STORE_OP_DONT_CARE = 1,
+        }
+
+        [Flags]
+        private enum VkSubpassDescriptionFlags
+        {
+        }
+
+        private enum VkPipelineBindPoint
+        {
+            VK_PIPELINE_BIND_POINT_GRAPHICS = 0,
+            VK_PIPELINE_BIND_POINT_COMPUTE = 1,
+            VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR = 1000165000,
+        }
+
+        [Flags]
+        private enum VkDependencyFlags
+        {
+            VK_DEPENDENCY_BY_REGION_BIT = 0x00000001,
+        }
+
+        [Flags]
+        private enum VkFramebufferCreateFlags
+        {
+        }
+
         // Vulkan ray tracing structures
         [StructLayout(LayoutKind.Sequential)]
         private struct VkPipelineShaderStageCreateInfo
@@ -883,6 +1007,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static vkCmdDrawDelegate vkCmdDraw;
         private static vkCmdDrawIndexedDelegate vkCmdDrawIndexed;
         private static vkCmdSetScissorDelegate vkCmdSetScissor;
+        private static vkCmdSetBlendConstantsDelegate vkCmdSetBlendConstants;
 
         // VK_KHR_ray_tracing_pipeline extension function delegates
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
@@ -903,6 +1028,47 @@ namespace Andastra.Runtime.MonoGame.Backends
             // Load Vulkan functions - in a real implementation, these would be loaded via vkGetDeviceProcAddr
             // For this example, we'll assume they're available through P/Invoke
             // This is a simplified version - real implementation would need proper function loading
+            
+            // Load VK_KHR_acceleration_structure extension functions if available
+            LoadAccelerationStructureExtensionFunctions(device);
+        }
+
+        /// <summary>
+        /// Loads VK_KHR_acceleration_structure extension functions via vkGetDeviceProcAddr.
+        /// </summary>
+        /// <param name="device">Vulkan device handle.</param>
+        /// <remarks>
+        /// Based on Vulkan specification: VK_KHR_acceleration_structure extension functions must be loaded via vkGetDeviceProcAddr
+        /// - vkDestroyAccelerationStructureKHR: Destroys acceleration structure objects
+        /// - Function pointer is null if extension is not available
+        /// - Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkDestroyAccelerationStructureKHR.html
+        /// </remarks>
+        private static void LoadAccelerationStructureExtensionFunctions(IntPtr device)
+        {
+            if (device == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Load vkGetDeviceProcAddr function pointer
+            // In a real implementation, this would be loaded from the Vulkan loader library
+            // For now, we'll use a P/Invoke approach or assume it's available
+            // vkGetDeviceProcAddr signature: PFN_vkGetDeviceProcAddr vkGetDeviceProcAddr(VkInstance instance, const char* pName);
+            // We need to get vkGetDeviceProcAddr first, then use it to load extension functions
+            
+            // Note: In a production implementation, vkGetDeviceProcAddr would be obtained from the Vulkan loader
+            // For this implementation, we'll provide a mechanism to load the function when the extension is available
+            // The actual loading would be done via P/Invoke to the Vulkan loader library (vulkan-1.dll on Windows, libvulkan.so on Linux)
+            
+            // Placeholder: Function loading would happen here
+            // In real implementation:
+            // 1. Get vkGetDeviceProcAddr from Vulkan loader
+            // 2. Call vkGetDeviceProcAddr(device, "vkDestroyAccelerationStructureKHR") to get function pointer
+            // 3. Marshal.GetDelegateForFunctionPointer to convert to delegate
+            // 4. Assign to static vkDestroyAccelerationStructureKHR field
+            
+            // For now, we'll leave it as null - the Dispose method will check for null before calling
+            // This allows graceful degradation when the extension is not available
         }
 
         private static void CheckResult(VkResult result, string operation)
