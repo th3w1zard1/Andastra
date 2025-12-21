@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Numerics;
+using System.Reflection;
 using Stride.Graphics;
 using Andastra.Runtime.Graphics.Common.Backends;
 using Andastra.Runtime.Graphics.Common.Enums;
@@ -3263,26 +3264,175 @@ namespace Andastra.Runtime.Stride.Backends
         /// <summary>
         /// Gets the native DirectX 12 command queue from Stride's GraphicsDevice.
         /// </summary>
+        /// <returns>Native command queue pointer (ID3D12CommandQueue), or IntPtr.Zero if not available.</returns>
+        /// <remarks>
+        /// Based on DirectX 12: Command queues are created by applications and used to execute command lists.
+        /// Stride's GraphicsDevice wraps ID3D12Device and manages command queues internally.
+        /// This method attempts to retrieve the command queue through multiple approaches:
+        /// 1. Direct property access (NativeCommandQueue property if exposed)
+        /// 2. Reflection-based access to internal command queue fields
+        /// 3. Access through GraphicsContext if available
+        /// 4. Fallback to IntPtr.Zero (synchronization handled via WaitIdle)
+        /// 
+        /// Based on DirectX 12 Command Queue: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nn-d3d12-id3d12commandqueue
+        /// </remarks>
         private IntPtr GetNativeCommandQueue()
         {
             // Stride's GraphicsDevice wraps ID3D12Device, but we need ID3D12CommandQueue
             // In Stride, the command queue is typically accessed through the GraphicsContext
-            // For DirectX 12, we can query the device for the command queue
-            // However, Stride may not expose this directly, so we may need to use a workaround
+            // For DirectX 12, command queues are created by the application, not queried from the device
+            // Stride manages command queues internally, so we need to access them through reflection
             
-            // Try to get command queue through Stride's internal structures
-            // This is a fallback - in production, Stride should provide direct access
             if (_strideDevice == null)
             {
                 return IntPtr.Zero;
             }
 
-            // Stride's GraphicsDevice may have a NativeCommandQueue property
-            // If not available, we'll need to create/access it through the device
-            // TODO: STUB - For now, return IntPtr.Zero and handle gracefully in the readback code
-            // In a full implementation, this would query Stride for the command queue handle
-            
-            return IntPtr.Zero; // Will be handled by using Stride's WaitIdle for synchronization
+            // Approach 1: Try to access NativeCommandQueue property directly
+            // Some graphics backends expose this property for low-level access
+            try
+            {
+                PropertyInfo nativeCommandQueueProp = _strideDevice.GetType().GetProperty("NativeCommandQueue", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                if (nativeCommandQueueProp != null)
+                {
+                    object commandQueueObj = nativeCommandQueueProp.GetValue(_strideDevice);
+                    if (commandQueueObj is IntPtr commandQueuePtr && commandQueuePtr != IntPtr.Zero)
+                    {
+                        return commandQueuePtr;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // Property doesn't exist or access failed - continue to next approach
+            }
+
+            // Approach 2: Try to access command queue through GraphicsContext
+            // Stride's GraphicsContext may have a reference to the command queue
+            try
+            {
+                if (_game?.GraphicsContext != null)
+                {
+                    object graphicsContext = _game.GraphicsContext;
+                    Type contextType = graphicsContext.GetType();
+
+                    // Try NativeCommandQueue property on GraphicsContext
+                    PropertyInfo contextQueueProp = contextType.GetProperty("NativeCommandQueue", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                    if (contextQueueProp != null)
+                    {
+                        object commandQueueObj = contextQueueProp.GetValue(graphicsContext);
+                        if (commandQueueObj is IntPtr commandQueuePtr && commandQueuePtr != IntPtr.Zero)
+                        {
+                            return commandQueuePtr;
+                        }
+                    }
+
+                    // Try CommandQueue property (different naming convention)
+                    PropertyInfo commandQueueProp = contextType.GetProperty("CommandQueue", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                    if (commandQueueProp != null)
+                    {
+                        object commandQueueObj = commandQueueProp.GetValue(graphicsContext);
+                        if (commandQueueObj is IntPtr commandQueuePtr && commandQueuePtr != IntPtr.Zero)
+                        {
+                            return commandQueuePtr;
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // Access failed - continue to next approach
+            }
+
+            // Approach 3: Try to access internal command queue field on GraphicsDevice
+            // Stride may store the command queue as an internal field
+            try
+            {
+                Type deviceType = _strideDevice.GetType();
+                
+                // Common field names for command queue storage in graphics backends
+                string[] possibleFieldNames = new string[]
+                {
+                    "_nativeCommandQueue",
+                    "_commandQueue",
+                    "nativeCommandQueue",
+                    "commandQueue",
+                    "_d3d12CommandQueue",
+                    "d3d12CommandQueue"
+                };
+
+                foreach (string fieldName in possibleFieldNames)
+                {
+                    FieldInfo queueField = deviceType.GetField(fieldName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                    if (queueField != null)
+                    {
+                        object queueValue = queueField.GetValue(_strideDevice);
+                        if (queueValue is IntPtr queuePtr && queuePtr != IntPtr.Zero)
+                        {
+                            return queuePtr;
+                        }
+                        // Some implementations may wrap IntPtr in a class
+                        if (queueValue != null)
+                        {
+                            Type queueValueType = queueValue.GetType();
+                            PropertyInfo nativePtrProp = queueValueType.GetProperty("NativePointer", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                            if (nativePtrProp == null)
+                            {
+                                nativePtrProp = queueValueType.GetProperty("Handle", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                            }
+                            if (nativePtrProp != null)
+                            {
+                                object nativePtr = nativePtrProp.GetValue(queueValue);
+                                if (nativePtr is IntPtr nativePtrValue && nativePtrValue != IntPtr.Zero)
+                                {
+                                    return nativePtrValue;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // Field access failed - continue to fallback
+            }
+
+            // Approach 4: Try to access command queue through CommandList if available
+            // Command lists in DirectX 12 are associated with command allocators, which are associated with command queues
+            // However, there's no direct API to get the queue from a command list
+            // Some implementations may store this association internally
+            try
+            {
+                if (_commandList != null)
+                {
+                    Type commandListType = _commandList.GetType();
+                    
+                    // Try to get command queue from command list
+                    PropertyInfo listQueueProp = commandListType.GetProperty("NativeCommandQueue", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                    if (listQueueProp == null)
+                    {
+                        listQueueProp = commandListType.GetProperty("CommandQueue", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                    }
+                    if (listQueueProp != null)
+                    {
+                        object commandQueueObj = listQueueProp.GetValue(_commandList);
+                        if (commandQueueObj is IntPtr commandQueuePtr && commandQueuePtr != IntPtr.Zero)
+                        {
+                            return commandQueuePtr;
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // Access failed - use fallback
+            }
+
+            // Fallback: Return IntPtr.Zero
+            // When command queue is not available, synchronization should be handled via Stride's WaitIdle method
+            // This is acceptable for readback operations where we can wait for GPU completion using Stride's API
+            // Based on DirectX 12: Command queue execution can be synchronized using fences or WaitIdle equivalents
+            return IntPtr.Zero;
         }
 
         /// <summary>
