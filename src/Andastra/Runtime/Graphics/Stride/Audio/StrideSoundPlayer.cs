@@ -45,6 +45,7 @@ namespace Andastra.Runtime.Stride.Audio
         private readonly AudioListener _audioListener;
         private readonly Dictionary<uint, SoundInstance> _playingSounds;
         private readonly Dictionary<uint, float> _instanceOriginalVolumes;
+        private readonly Dictionary<uint, float> _instancePans;
         private uint _nextSoundInstanceId;
         private float _masterVolume;
 
@@ -87,6 +88,7 @@ namespace Andastra.Runtime.Stride.Audio
             
             _playingSounds = new Dictionary<uint, SoundInstance>();
             _instanceOriginalVolumes = new Dictionary<uint, float>();
+            _instancePans = new Dictionary<uint, float>();
             _nextSoundInstanceId = 1;
             _masterVolume = 1.0f;
         }
@@ -150,6 +152,10 @@ namespace Andastra.Runtime.Stride.Audio
                 // https://doc.stride3d.net/latest/en/api/Stride.Audio.SoundInstance.html#Stride_Audio_SoundInstance_Pitch
                 soundInstance.Pitch = Math.Max(-1.0f, Math.Min(1.0f, pitch));
 
+                // Clamp pan value to valid range (-1.0 to 1.0)
+                // -1.0 = full left, 0.0 = center, 1.0 = full right
+                float clampedPan = Math.Max(-1.0f, Math.Min(1.0f, pan));
+
                 // Apply 3D positioning if spatial audio is enabled
                 // Based on Stride API: SoundInstance.Apply3D() for 3D spatial audio
                 // https://doc.stride3d.net/latest/en/api/Stride.Audio.SoundInstance.html#Stride_Audio_SoundInstance_Apply3D_Stride_Audio_AudioEmitter_
@@ -162,8 +168,25 @@ namespace Andastra.Runtime.Stride.Audio
                 else if (!useSpatialAudio)
                 {
                     // Apply 2D panning for non-spatial sounds
-                    // Note: Stride doesn't have a direct Pan property, but we can simulate it with volume balance
-                    // TODO:  For simplicity, we'll skip panning for now (can be enhanced later)
+                    // Stride doesn't have a direct Pan property, so we simulate it using 3D positioning
+                    // We use Apply3D with a fake 3D position where:
+                    // - X coordinate represents pan value (left/right)
+                    // - Y and Z are set to 0 (at listener position)
+                    // - This creates left/right panning through 3D spatial audio calculations
+                    // Based on Stride API: SoundInstance.Apply3D() can be used for 2D panning simulation
+                    // https://doc.stride3d.net/latest/en/api/Stride.Audio.SoundInstance.html#Stride_Audio_SoundInstance_Apply3D_Stride_Audio_AudioEmitter_
+                    if (Math.Abs(clampedPan) > 0.001f) // Only apply panning if not centered
+                    {
+                        var panEmitter = new AudioEmitter();
+                        // Convert pan value (-1.0 to 1.0) to X position for 3D panning
+                        // Use a small offset distance to ensure proper left/right positioning
+                        // Pan value of -1.0 (left) maps to negative X, 1.0 (right) maps to positive X
+                        // Using a small distance (0.1 units) ensures the sound is close enough to avoid
+                        // significant distance attenuation while still providing left/right panning
+                        float panDistance = 0.1f; // Small distance to avoid attenuation
+                        panEmitter.Position = new Stride.Core.Mathematics.Vector3(clampedPan * panDistance, 0.0f, 0.0f);
+                        soundInstance.Apply3D(panEmitter);
+                    }
                 }
 
                 // Play the sound instance
@@ -171,10 +194,11 @@ namespace Andastra.Runtime.Stride.Audio
                 // https://doc.stride3d.net/latest/en/api/Stride.Audio.SoundInstance.html#Stride_Audio_SoundInstance_Play
                 soundInstance.Play();
 
-                // Track instance and store original volume
+                // Track instance and store original volume and pan
                 uint instanceId = _nextSoundInstanceId++;
                 _playingSounds[instanceId] = soundInstance;
                 _instanceOriginalVolumes[instanceId] = originalVolume;
+                _instancePans[instanceId] = clampedPan;
 
                 return instanceId;
             }
@@ -212,6 +236,7 @@ namespace Andastra.Runtime.Stride.Audio
                 {
                     _playingSounds.Remove(soundInstanceId);
                     _instanceOriginalVolumes.Remove(soundInstanceId);
+                    _instancePans.Remove(soundInstanceId);
                 }
             }
         }
@@ -238,6 +263,7 @@ namespace Andastra.Runtime.Stride.Audio
             }
             _playingSounds.Clear();
             _instanceOriginalVolumes.Clear();
+            _instancePans.Clear();
         }
 
         /// <summary>
@@ -314,6 +340,7 @@ namespace Andastra.Runtime.Stride.Audio
                     {
                         _playingSounds.Remove(instanceId);
                         _instanceOriginalVolumes.Remove(instanceId);
+                        _instancePans.Remove(instanceId);
                     }
                 }
             }
