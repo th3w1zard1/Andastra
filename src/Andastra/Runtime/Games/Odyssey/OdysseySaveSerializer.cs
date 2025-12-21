@@ -2268,9 +2268,10 @@ namespace Andastra.Runtime.Games.Odyssey
                 }
             }
 
-            // Note: Stores, Encounters, and Cameras are not directly accessible via IArea interface
+            // Note: Stores and Cameras are not directly accessible via IArea interface
             // They would need to be added to AreaState separately if available from the area implementation
-            // TODO: STUB - For now, StoreStates, EncounterStates, and CameraStates remain empty
+            // Encounters are now extracted via world entity iteration (see encounter extraction below)
+            // TODO: STUB - For now, StoreStates and CameraStates remain empty
 
             foreach (IEntity sound in area.Sounds)
             {
