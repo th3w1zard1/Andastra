@@ -4995,6 +4995,13 @@ namespace Andastra.Runtime.Game.Core
                 _menuTexture = null;
             }
 
+            // Dispose cursor manager
+            if (_cursorManager != null)
+            {
+                _cursorManager.Dispose();
+                _cursorManager = null;
+            }
+
             // Dispose ground plane buffers
             if (_groundVertexBuffer != null)
             {
