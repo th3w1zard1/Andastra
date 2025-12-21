@@ -1467,10 +1467,11 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ArgumentNullException(nameof(fence));
             }
 
-            // TODO: IMPLEMENT - Signal fence from GPU
-            // - Extract VkFence from IFence implementation
-            // - Use vkQueueSubmit with fence
-            // Note: Vulkan doesn't have explicit fence signal, fences are signaled by queue operations
+            // TODO: Vulkan doesn't have direct fence signaling like D3D12
+            // Fences are signaled automatically when queue operations complete
+            // For explicit signaling, we'd need to submit an empty command buffer with fence
+            // For now, this is a placeholder
+            throw new NotImplementedException("Fence signaling not implemented - Vulkan fences are signaled by queue operations");
         }
 
         public void WaitFence(IFence fence, ulong value)
@@ -1485,10 +1486,9 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ArgumentNullException(nameof(fence));
             }
 
-            // TODO: IMPLEMENT - Wait for fence on CPU
-            // - Extract VkFence from IFence implementation
-            // - vkWaitForFences with timeout
-            // Note: Vulkan fences are binary, value parameter may need special handling
+            // TODO: Extract VkFence from IFence implementation and call vkWaitForFences
+            // For now, this is a placeholder
+            throw new NotImplementedException("Fence waiting not implemented - requires IFence implementation with VkFence access");
         }
 
         #endregion
