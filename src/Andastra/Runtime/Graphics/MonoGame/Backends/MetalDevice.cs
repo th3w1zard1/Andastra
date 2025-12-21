@@ -480,7 +480,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             IntPtr commandQueue = _backend.GetCommandQueue();
             if (commandQueue != IntPtr.Zero)
             {
-                MetalNative.WaitUntilCompleted(commandQueue);
+                MetalNative.WaitUntilCommandQueueCompleted(commandQueue);
             }
         }
 
@@ -1317,8 +1317,6 @@ namespace Andastra.Runtime.MonoGame.Backends
         private readonly MetalBackend _backend;
         private bool _disposed;
         private bool _isOpen;
-        private IntPtr _currentRenderCommandEncoder; // id<MTLRenderCommandEncoder>
-        private GraphicsState _currentGraphicsState; // Current graphics state for accessing index buffer
 
         public MetalCommandList(IntPtr handle, CommandListType type, MetalBackend backend)
         {
@@ -1326,7 +1324,6 @@ namespace Andastra.Runtime.MonoGame.Backends
             _type = type;
             _backend = backend;
             _isOpen = false;
-            _currentRenderCommandEncoder = IntPtr.Zero;
         }
 
         public void Open()
@@ -1486,16 +1483,8 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 return;
             }
-            
-            // TODO: Implement complete graphics state setting
+            // TODO: Implement graphics state setting
             // This would set pipeline, framebuffer, viewports, binding sets, etc.
-            // When implemented, this method should:
-            // 1. Create render pass descriptor from framebuffer
-            // 2. Begin render pass and store render command encoder in _currentRenderCommandEncoder
-            // 3. Set pipeline state
-            // 4. Set viewports from state.Viewport
-            // 5. Set binding sets
-            // 6. Set vertex/index buffers
         }
 
         public void SetViewport(Viewport viewport)
@@ -1516,9 +1505,18 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             // Set viewport on render command encoder
-            // Metal viewport uses double precision for coordinates, but we use float
-            // Metal API expects: origin (x, y), size (width, height), znear (minDepth), zfar (maxDepth)
-            MetalNative.SetViewport(_currentRenderCommandEncoder, viewport.X, viewport.Y, viewport.Width, viewport.Height, viewport.MinDepth, viewport.MaxDepth);
+            // Convert Viewport struct to MetalViewport struct
+            // Metal viewport uses double precision for coordinates
+            MetalViewport metalViewport = new MetalViewport
+            {
+                OriginX = viewport.X,
+                OriginY = viewport.Y,
+                Width = viewport.Width,
+                Height = viewport.Height,
+                Znear = viewport.MinDepth,
+                Zfar = viewport.MaxDepth
+            };
+            MetalNative.SetViewport(_currentRenderCommandEncoder, metalViewport);
         }
 
         public void SetViewports(Viewport[] viewports)
@@ -1529,8 +1527,9 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             // Multiple viewports can only be set on an active render command encoder
-            // Based on Metal API: MTLRenderCommandEncoder::setViewports(MTLViewport*, NSUInteger count)
+            // Based on Metal API: MTLRenderCommandEncoder::setViewport(MTLViewport)
             // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1516251-setviewport
+            // Note: Metal sets one viewport at a time. For viewport arrays, use geometry shader viewport arrays.
             if (_currentRenderCommandEncoder == IntPtr.Zero)
             {
                 // Render command encoder not available - SetGraphicsState must be called first to begin render pass
@@ -1539,7 +1538,21 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             // Set multiple viewports on render command encoder
             // Metal supports multiple viewports (viewport arrays) for multi-view rendering
-            MetalNative.SetViewports(_currentRenderCommandEncoder, viewports, (uint)viewports.Length);
+            // Metal API: setViewport: - sets a single viewport. For multiple viewports, set each one individually.
+            // TODO: Optimize to use native array marshalling if Metal adds setViewports:count: API in future
+            for (int i = 0; i < viewports.Length; i++)
+            {
+                MetalViewport metalViewport = new MetalViewport
+                {
+                    OriginX = viewports[i].X,
+                    OriginY = viewports[i].Y,
+                    Width = viewports[i].Width,
+                    Height = viewports[i].Height,
+                    Znear = viewports[i].MinDepth,
+                    Zfar = viewports[i].MaxDepth
+                };
+                MetalNative.SetViewport(_currentRenderCommandEncoder, metalViewport);
+            }
         }
 
         public void SetScissor(Rectangle scissor)
@@ -1612,7 +1625,98 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 return;
             }
-            // TODO: Implement indexed indirect draw
+
+            // Render command encoder must be active (SetGraphicsState must be called first)
+            if (_currentRenderCommandEncoder == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Index buffer must be set in graphics state
+            if (_currentGraphicsState.IndexBuffer == null)
+            {
+                return;
+            }
+
+            // Get native Metal buffer handles
+            var metalArgumentBuffer = argumentBuffer as MetalBuffer;
+            var metalIndexBuffer = _currentGraphicsState.IndexBuffer as MetalBuffer;
+            if (metalArgumentBuffer == null || metalIndexBuffer == null)
+            {
+                return;
+            }
+
+            IntPtr argumentBufferHandle = metalArgumentBuffer.NativeHandle;
+            IntPtr indexBufferHandle = metalIndexBuffer.NativeHandle;
+            if (argumentBufferHandle == IntPtr.Zero || indexBufferHandle == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Convert index format to Metal index type
+            // Metal supports UInt16 (16-bit) and UInt32 (32-bit) index types
+            MetalIndexType indexType;
+            if (_currentGraphicsState.IndexFormat == TextureFormat.R16_UInt)
+            {
+                indexType = MetalIndexType.UInt16;
+            }
+            else if (_currentGraphicsState.IndexFormat == TextureFormat.R32_UInt)
+            {
+                indexType = MetalIndexType.UInt32;
+            }
+            else
+            {
+                // Default to 32-bit if format is unknown
+                indexType = MetalIndexType.UInt32;
+            }
+
+            // Metal indexed indirect draw structure:
+            // - indexCountPerInstance (uint32)
+            // - instanceCount (uint32)
+            // - indexStart (uint32)
+            // - baseVertex (int32)
+            // - baseInstance (uint32)
+            // Total: 20 bytes per draw command
+            // Metal API: drawIndexedPrimitives:indexType:indexBuffer:indexBufferOffset:indirectBuffer:indirectBufferOffset:
+            // Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1515576-drawindexedprimitives
+
+            // Use default primitive type (Triangle) - this should ideally come from pipeline state
+            MetalPrimitiveType primitiveType = MetalPrimitiveType.Triangle;
+
+            // Draw indexed indirect commands
+            // If drawCount is 1, draw a single command
+            // If drawCount > 1, draw multiple commands with stride
+            if (drawCount == 1)
+            {
+                // Single draw command
+                MetalNative.DrawIndexedPrimitivesIndirect(
+                    _currentRenderCommandEncoder,
+                    primitiveType,
+                    indexType,
+                    indexBufferHandle,
+                    0, // indexBufferOffset - indices start at beginning of buffer
+                    argumentBufferHandle,
+                    (ulong)offset);
+            }
+            else
+            {
+                // Multiple draw commands with stride
+                // Metal doesn't have a direct multi-draw API, so we need to loop
+                // However, Metal 2.0+ supports indirect command buffers for better performance
+                // For now, we'll use a loop for compatibility
+                for (int i = 0; i < drawCount; i++)
+                {
+                    int commandOffset = offset + (i * stride);
+                    MetalNative.DrawIndexedPrimitivesIndirect(
+                        _currentRenderCommandEncoder,
+                        primitiveType,
+                        indexType,
+                        indexBufferHandle,
+                        0, // indexBufferOffset
+                        argumentBufferHandle,
+                        (ulong)commandOffset);
+                }
+            }
         }
 
         // Compute State
@@ -1854,11 +1958,56 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         [DllImport("/System/Library/Frameworks/Metal.framework/Metal")]
         public static extern void WaitUntilCommandQueueCompleted(IntPtr commandQueue);
+
+        /// <summary>
+        /// Draws indexed primitives using indirect arguments from a buffer.
+        /// Metal API: MTLRenderCommandEncoder::drawIndexedPrimitives:indexType:indexBuffer:indexBufferOffset:indirectBuffer:indirectBufferOffset:
+        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1515576-drawindexedprimitives
+        /// 
+        /// The indirect buffer contains draw arguments in the following structure (20 bytes):
+        /// - indexCountPerInstance (uint32) - 4 bytes
+        /// - instanceCount (uint32) - 4 bytes
+        /// - indexStart (uint32) - 4 bytes
+        /// - baseVertex (int32) - 4 bytes
+        /// - baseInstance (uint32) - 4 bytes
+        /// </summary>
+        /// <param name="renderCommandEncoder">Metal render command encoder (id&lt;MTLRenderCommandEncoder&gt;)</param>
+        /// <param name="primitiveType">Primitive type (Triangle, TriangleStrip, etc.)</param>
+        /// <param name="indexType">Index type (UInt16 or UInt32)</param>
+        /// <param name="indexBuffer">Index buffer (id&lt;MTLBuffer&gt;)</param>
+        /// <param name="indexBufferOffset">Offset into index buffer in bytes</param>
+        /// <param name="indirectBuffer">Indirect argument buffer (id&lt;MTLBuffer&gt;)</param>
+        /// <param name="indirectBufferOffset">Offset into indirect buffer in bytes</param>
+        [DllImport("/System/Library/Frameworks/Metal.framework/Metal")]
+        public static extern void DrawIndexedPrimitivesIndirect(
+            IntPtr renderCommandEncoder,
+            MetalPrimitiveType primitiveType,
+            MetalIndexType indexType,
+            IntPtr indexBuffer,
+            ulong indexBufferOffset,
+            IntPtr indirectBuffer,
+            ulong indirectBufferOffset);
     }
 
     #endregion
 
     #region Supporting Structures
+
+    /// <summary>
+    /// Metal viewport structure matching MTLViewport.
+    /// Based on Metal API: MTLViewport structure definition
+    /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlviewport
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct MetalViewport
+    {
+        public double OriginX;
+        public double OriginY;
+        public double Width;
+        public double Height;
+        public double Znear;
+        public double Zfar;
+    }
 
     [StructLayout(LayoutKind.Sequential)]
     internal struct MetalSamplerDescriptor
@@ -1904,5 +2053,4 @@ namespace Andastra.Runtime.MonoGame.Backends
 
     #endregion
 }
-
 

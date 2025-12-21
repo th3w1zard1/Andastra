@@ -1773,19 +1773,9 @@ namespace Andastra.Runtime.MonoGame.Backends
             // Try to get handle from VulkanAccelStruct
             if (accelStruct is VulkanAccelStruct vulkanAccelStruct)
             {
-                // Use reflection to get the private _vkAccelStruct field
-                System.Reflection.FieldInfo field = typeof(VulkanAccelStruct).GetField("_vkAccelStruct", 
-                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                
-                if (field != null)
-                {
-                    return (IntPtr)field.GetValue(vulkanAccelStruct);
-                }
+                return vulkanAccelStruct.VkAccelStruct;
             }
 
-            // Fallback: try to get device address and convert (not ideal, but workaround)
-            // Acceleration structures in Vulkan are identified by their device address in some contexts
-            // But for descriptor sets, we need the actual VkAccelerationStructureKHR handle
             return IntPtr.Zero;
         }
 
@@ -2582,6 +2572,14 @@ namespace Andastra.Runtime.MonoGame.Backends
                 DeviceAddress = deviceAddress;
                 _device = device;
                 IsTopLevel = desc.IsTopLevel;
+            }
+
+            /// <summary>
+            /// Gets the VkAccelerationStructureKHR handle. Used internally for descriptor set updates.
+            /// </summary>
+            internal IntPtr VkAccelStruct
+            {
+                get { return _vkAccelStruct; }
             }
 
             public void Dispose()
