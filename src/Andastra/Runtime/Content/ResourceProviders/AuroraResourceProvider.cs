@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Formats.KEY;
+using Andastra.Parsing.Resource.Formats.BIF;
 using Andastra.Runtime.Content.Interfaces;
 
 namespace Andastra.Runtime.Content.ResourceProviders
@@ -117,6 +119,12 @@ namespace Andastra.Runtime.Content.ResourceProviders
         private string _currentModule;
         private readonly Dictionary<string, byte[]> _overrideCache = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
         private readonly List<string> _hakFiles = new List<string>();
+        
+        // Base game resource caches (KEY/BIF files, ERF archives)
+        private readonly Dictionary<string, KEY> _keyFileCache = new Dictionary<string, KEY>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, BIF> _bifFileCache = new Dictionary<string, BIF>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, ERF> _erfFileCache = new Dictionary<string, ERF>(StringComparer.OrdinalIgnoreCase);
+        private readonly object _baseGameCacheLock = new object();
 
         public AuroraResourceProvider(string installationPath, GameType gameType = GameType.Unknown)
         {
@@ -466,16 +474,414 @@ namespace Andastra.Runtime.Content.ResourceProviders
             return null;
         }
 
+        /// <summary>
+        /// Looks up base game resources from KEY/BIF files, ERF archives, and directories.
+        /// </summary>
+        /// <remarks>
+        /// Base Game Resource Lookup (Aurora Engine):
+        /// - Base game resources are loaded from KEY/BIF files, ERF archives, and directory structures
+        /// - Based on nwmain.exe: CExoResMan::ServiceFromResFile @ 0x140193b80 (RES files) and
+        ///   CExoResMan::ServiceFromEncapsulated @ 0x140192cf0 (ERF files) are used for base game resources
+        /// - Resource lookup order (matching xoreos and original engine):
+        ///   1. KEY/BIF files (chitin.key, patch.key, xp1.key, xp2.key, xp3.key, etc.)
+        ///   2. ERF archives (gui_32bit.erf, xp1_gui.erf, xp2_gui.erf)
+        ///   3. Base game directories (data, ambient, music, movies, portraits, tlk, database)
+        /// - KEY files contain indexes mapping resource names to BIF files
+        /// - BIF files contain the actual resource data
+        /// - Later KEY files (xp3.key > xp2.key > xp1.key > patch.key > chitin.key) override earlier ones
+        /// - Based on nwmain.exe: KEY files are registered via CExoResMan::AddKeyTable @ 0x14018e330
+        /// - Based on vendor/xoreos/src/engines/nwn/nwn.cpp: initResources function loads KEY files in priority order
+        /// </remarks>
         private byte[] LookupInBaseGame(ResourceIdentifier id)
         {
-            // Base game resources are typically in data directory or core game archives
-            // Aurora Engine may use different base game resource locations
-            // TODO: STUB - For now, check common locations
-            string[] basePaths = new[]
+            if (id == null || id.ResType == null)
             {
-                Path.Combine(_installationPath, "data"),
-                Path.Combine(_installationPath, "data", "core"),
-                Path.Combine(_installationPath, "core")
+                return null;
+            }
+
+            // 1. Search KEY/BIF files (highest priority for base game resources)
+            // KEY files are loaded in reverse priority order (later files override earlier ones)
+            // Based on nwmain.exe: CExoResMan loads KEY files and searches them in registration order
+            byte[] resourceData = LookupInKeyBifFiles(id);
+            if (resourceData != null)
+            {
+                return resourceData;
+            }
+
+            // 2. Search ERF archives (GUI textures, expansion resources)
+            // Based on vendor/xoreos/src/engines/nwn/nwn.cpp: gui_32bit.erf, xp1_gui.erf, xp2_gui.erf
+            resourceData = LookupInErfArchives(id);
+            if (resourceData != null)
+            {
+                return resourceData;
+            }
+
+            // 3. Search base game directories (loose files)
+            // Based on vendor/xoreos/src/engines/nwn/nwn.cpp: data, ambient, music, movies, portraits, tlk, database
+            resourceData = LookupInBaseGameDirectories(id);
+            if (resourceData != null)
+            {
+                return resourceData;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Looks up resources in KEY/BIF files.
+        /// </summary>
+        /// <remarks>
+        /// KEY/BIF Resource Lookup:
+        /// - KEY files are loaded in priority order: chitin.key, patch.key, xp1.key, xp1patch.key, xp2.key, xp2patch.key, xp3.key, xp3patch.key
+        /// - Later KEY files override earlier ones (xp3.key has highest priority)
+        /// - For each KEY file, look up the resource by ResRef and ResType
+        /// - If found, extract BIF index and resource index from ResourceId
+        /// - Load the corresponding BIF file and extract the resource data
+        /// - Based on nwmain.exe: CExoResMan::ServiceFromResFile @ 0x140193b80 handles KEY/BIF resource loading
+        /// - Based on vendor/xoreos/src/engines/nwn/nwn.cpp: KEY files are indexed in priority order 10-17
+        /// </remarks>
+        private byte[] LookupInKeyBifFiles(ResourceIdentifier id)
+        {
+            // KEY files to search in priority order (later files override earlier ones)
+            // Based on vendor/xoreos/src/engines/nwn/nwn.cpp: initResources function
+            string[] keyFiles = new[]
+            {
+                "chitin.key",      // Base game (priority 10)
+                "patch.key",       // Base game patch (priority 11)
+                "xp1.key",         // Shadows of Undrentide (priority 12)
+                "xp1patch.key",    // SoU patch (priority 13)
+                "xp2.key",         // Hordes of the Underdark (priority 14)
+                "xp2patch.key",    // HotU patch (priority 15)
+                "xp3.key",         // Kingmaker (priority 16)
+                "xp3patch.key"     // Kingmaker patch (priority 17)
+            };
+
+            // Search KEY files in reverse order (highest priority first: xp3patch.key -> chitin.key)
+            // This matches the engine behavior where later registered KEY files override earlier ones
+            for (int i = keyFiles.Length - 1; i >= 0; i--)
+            {
+                string keyFileName = keyFiles[i];
+                string keyFilePath = Path.Combine(_installationPath, keyFileName);
+
+                if (!File.Exists(keyFilePath))
+                {
+                    continue;
+                }
+
+                try
+                {
+                    // Load and cache KEY file
+                    // KEYBinaryReader.Load() already calls BuildLookupTables(), so no need to call it again
+                    KEY keyFile;
+                    lock (_baseGameCacheLock)
+                    {
+                        if (!_keyFileCache.TryGetValue(keyFilePath, out keyFile))
+                        {
+                            keyFile = KEYAuto.ReadKey(keyFilePath);
+                            if (keyFile != null)
+                            {
+                                _keyFileCache[keyFilePath] = keyFile;
+                            }
+                        }
+                    }
+
+                    if (keyFile == null)
+                    {
+                        continue;
+                    }
+
+                    // Look up resource in KEY file
+                    // Based on KEY.cs: GetResource method
+                    KeyEntry keyEntry = keyFile.GetResource(id.ResName, id.ResType);
+                    if (keyEntry == null)
+                    {
+                        continue;
+                    }
+
+                    // Extract BIF index and resource index from ResourceId
+                    // ResourceId format: top 12 bits = BIF index, bottom 20 bits = resource index
+                    int bifIndex = keyEntry.BifIndex;
+                    int resIndex = keyEntry.ResIndex;
+
+                    if (bifIndex < 0 || bifIndex >= keyFile.BifEntries.Count)
+                    {
+                        continue;
+                    }
+
+                    // Get BIF filename from KEY file
+                    BifEntry bifEntry = keyFile.BifEntries[bifIndex];
+                    string bifFileName = bifEntry.Filename;
+
+                    // Resolve BIF file path (BIF files are relative to installation path)
+                    // Based on vendor/xoreos/src/engines/nwn/nwn.cpp: BIF paths are resolved from installation root
+                    string bifFilePath = Path.Combine(_installationPath, bifFileName.Replace('/', Path.DirectorySeparatorChar));
+                    
+                    // Try case-insensitive search if exact path doesn't exist
+                    if (!File.Exists(bifFilePath))
+                    {
+                        string bifDirectory = Path.GetDirectoryName(bifFilePath);
+                        string bifFileNameOnly = Path.GetFileName(bifFileName);
+                        if (Directory.Exists(bifDirectory))
+                        {
+                            string[] candidates = Directory.GetFiles(bifDirectory, "*.bif", SearchOption.TopDirectoryOnly)
+                                .Concat(Directory.GetFiles(bifDirectory, "*.bzf", SearchOption.TopDirectoryOnly))
+                                .ToArray();
+                            foreach (string candidate in candidates)
+                            {
+                                if (string.Equals(Path.GetFileName(candidate), bifFileNameOnly, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    bifFilePath = candidate;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (!File.Exists(bifFilePath))
+                    {
+                        continue;
+                    }
+
+                    // Load and cache BIF file
+                    BIF bifFile;
+                    lock (_baseGameCacheLock)
+                    {
+                        if (!_bifFileCache.TryGetValue(bifFilePath, out bifFile))
+                        {
+                            try
+                            {
+                                var bifReader = new BIFBinaryReader(bifFilePath);
+                                bifFile = bifReader.Load();
+                                
+                                // Merge KEY data to populate ResRef names in BIF resources
+                                // This matches PyKotor behavior where KEY data is merged into BIF for name resolution
+                                MergeKeyDataIntoBif(bifFile, keyFilePath, bifFilePath);
+                                
+                                if (bifFile != null)
+                                {
+                                    bifFile.BuildLookupTables();
+                                    _bifFileCache[bifFilePath] = bifFile;
+                                }
+                            }
+                            catch
+                            {
+                                // Skip corrupted BIF files
+                                continue;
+                            }
+                        }
+                    }
+
+                    if (bifFile == null)
+                    {
+                        continue;
+                    }
+
+                    // Extract resource from BIF file
+                    // Based on BIF.cs: TryGetResource method
+                    (bool found, BIFResource resource) = bifFile.TryGetResource(id.ResName, id.ResType);
+                    if (found && resource != null && resource.Data != null && resource.Data.Length > 0)
+                    {
+                        return resource.Data;
+                    }
+
+                    // Also try by resource index if direct lookup fails (for cases where ResRef doesn't match)
+                    if (resIndex >= 0 && resIndex < bifFile.Resources.Count)
+                    {
+                        BIFResource resourceByIndex = bifFile.Resources[resIndex];
+                        if (resourceByIndex != null && resourceByIndex.ResType == id.ResType && 
+                            resourceByIndex.Data != null && resourceByIndex.Data.Length > 0)
+                        {
+                            return resourceByIndex.Data;
+                        }
+                    }
+                }
+                catch
+                {
+                    // Skip corrupted KEY files or BIF files
+                    continue;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Merges KEY file data into BIF resources to populate ResRef names.
+        /// </summary>
+        /// <remarks>
+        /// KEY Data Merging:
+        /// - BIF files contain resource data but may not have ResRef names
+        /// - KEY files map ResourceId to ResRef names
+        /// - This method merges KEY data into BIF resources for name-based lookups
+        /// - Based on PyKotor: read_bif accepts key_source parameter and merges resource names
+        /// - Based on Archives.cs: MergeKeyDataIntoBif method
+        /// </remarks>
+        private void MergeKeyDataIntoBif(BIF bifFile, string keyFilePath, string bifFilePath)
+        {
+            if (bifFile == null || string.IsNullOrEmpty(keyFilePath) || !File.Exists(keyFilePath))
+            {
+                return;
+            }
+
+            try
+            {
+                KEY keyFile;
+                lock (_baseGameCacheLock)
+                {
+                    if (!_keyFileCache.TryGetValue(keyFilePath, out keyFile))
+                    {
+                        keyFile = KEYAuto.ReadKey(keyFilePath);
+                        if (keyFile != null)
+                        {
+                            // KEYBinaryReader.Load() already calls BuildLookupTables(), so no need to call it again
+                            _keyFileCache[keyFilePath] = keyFile;
+                        }
+                    }
+                }
+
+                if (keyFile == null)
+                {
+                    return;
+                }
+
+                // Find the BIF index for this BIF file
+                string bifFileName = Path.GetFileName(bifFilePath);
+                int bifIndex = -1;
+                for (int i = 0; i < keyFile.BifEntries.Count; i++)
+                {
+                    if (string.Equals(keyFile.BifEntries[i].Filename, bifFileName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        bifIndex = i;
+                        break;
+                    }
+                }
+
+                if (bifIndex < 0)
+                {
+                    return;
+                }
+
+                // Create lookup: ResourceId -> KeyEntry for this BIF
+                Dictionary<uint, KeyEntry> resourceIdToKeyEntry = new Dictionary<uint, KeyEntry>();
+                foreach (KeyEntry keyEntry in keyFile.KeyEntries)
+                {
+                    if (keyEntry.BifIndex == bifIndex)
+                    {
+                        resourceIdToKeyEntry[keyEntry.ResourceId] = keyEntry;
+                    }
+                }
+
+                // Merge ResRef names from KEY into BIF resources
+                foreach (BIFResource bifResource in bifFile.Resources)
+                {
+                    uint resourceId = (uint)((bifIndex << 20) | bifResource.ResnameKeyIndex);
+                    if (resourceIdToKeyEntry.TryGetValue(resourceId, out KeyEntry matchingKeyEntry))
+                    {
+                        // Update BIF resource ResRef from KEY entry
+                        bifResource.ResRef = matchingKeyEntry.ResRef;
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore merge errors - BIF may still be usable without KEY data
+            }
+        }
+
+        /// <summary>
+        /// Looks up resources in ERF archives (GUI textures, expansion resources).
+        /// </summary>
+        /// <remarks>
+        /// ERF Archive Lookup:
+        /// - ERF archives contain base game resources like GUI textures
+        /// - Based on vendor/xoreos/src/engines/nwn/nwn.cpp: gui_32bit.erf, xp1_gui.erf, xp2_gui.erf are loaded
+        /// - ERF files are searched in priority order (later files override earlier ones)
+        /// - Based on nwmain.exe: CExoResMan::ServiceFromEncapsulated @ 0x140192cf0 handles ERF resource loading
+        /// </remarks>
+        private byte[] LookupInErfArchives(ResourceIdentifier id)
+        {
+            // ERF archives to search in priority order (later files override earlier ones)
+            // Based on vendor/xoreos/src/engines/nwn/nwn.cpp: initResources function
+            string[] erfFiles = new[]
+            {
+                "gui_32bit.erf",   // Base game GUI textures (priority 50)
+                "xp1_gui.erf",     // SoU GUI textures (priority 51)
+                "xp2_gui.erf"      // HotU GUI textures (priority 52)
+            };
+
+            // Search ERF files in reverse order (highest priority first)
+            for (int i = erfFiles.Length - 1; i >= 0; i--)
+            {
+                string erfFileName = erfFiles[i];
+                string erfFilePath = Path.Combine(_installationPath, erfFileName);
+
+                if (!File.Exists(erfFilePath))
+                {
+                    continue;
+                }
+
+                try
+                {
+                    // Load and cache ERF file
+                    ERF erfFile;
+                    lock (_baseGameCacheLock)
+                    {
+                        if (!_erfFileCache.TryGetValue(erfFilePath, out erfFile))
+                        {
+                            erfFile = ERFAuto.ReadErf(erfFilePath);
+                            if (erfFile != null)
+                            {
+                                _erfFileCache[erfFilePath] = erfFile;
+                            }
+                        }
+                    }
+
+                    if (erfFile == null)
+                    {
+                        continue;
+                    }
+
+                    // Look up resource in ERF file
+                    // Based on ERF.cs: Get method
+                    byte[] resourceData = erfFile.Get(id.ResName, id.ResType);
+                    if (resourceData != null && resourceData.Length > 0)
+                    {
+                        return resourceData;
+                    }
+                }
+                catch
+                {
+                    // Skip corrupted ERF files
+                    continue;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Looks up resources in base game directories (loose files).
+        /// </summary>
+        /// <remarks>
+        /// Base Game Directory Lookup:
+        /// - Base game resources may be stored as loose files in various directories
+        /// - Based on vendor/xoreos/src/engines/nwn/nwn.cpp: data, ambient, music, movies, portraits, tlk, database directories
+        /// - Directories are searched in priority order (earlier directories have higher priority)
+        /// - Based on nwmain.exe: CExoResMan::ServiceFromDirectory @ 0x140191e80 handles directory-based resource loading
+        /// </remarks>
+        private byte[] LookupInBaseGameDirectories(ResourceIdentifier id)
+        {
+            // Base game directories to search (in priority order)
+            // Based on vendor/xoreos/src/engines/nwn/nwn.cpp: initResources function
+            string[] baseDirectories = new[]
+            {
+                "data",        // Main data directory (priority 2)
+                "ambient",     // Ambient sounds (priority 100)
+                "music",       // Music files (priority 101)
+                "movies",      // Movie files (priority 102)
+                "portraits",   // Portrait images (priority 103)
+                "tlk",         // Talk table files (priority 105)
+                "database"     // Database files (priority 106)
             };
 
             string extension = id.ResType?.Extension ?? "";
@@ -484,15 +890,49 @@ namespace Andastra.Runtime.Content.ResourceProviders
                 extension = extension.Substring(1);
             }
 
-            foreach (string basePath in basePaths)
+            // Search directories in order (earlier directories have higher priority)
+            foreach (string baseDir in baseDirectories)
             {
-                if (Directory.Exists(basePath))
+                string baseDirPath = Path.Combine(_installationPath, baseDir);
+                if (!Directory.Exists(baseDirPath))
                 {
-                    string resourcePath = Path.Combine(basePath, id.ResName + "." + extension);
-                    if (File.Exists(resourcePath))
+                    continue;
+                }
+
+                // Search for resource file (case-insensitive)
+                string resourceFileName = id.ResName + "." + extension;
+                string resourceFilePath = Path.Combine(baseDirPath, resourceFileName);
+                
+                if (File.Exists(resourceFilePath))
+                {
+                    try
                     {
-                        return File.ReadAllBytes(resourcePath);
+                        return File.ReadAllBytes(resourceFilePath);
                     }
+                    catch
+                    {
+                        // Skip files that can't be read
+                        continue;
+                    }
+                }
+
+                // Try case-insensitive search if exact match doesn't exist
+                try
+                {
+                    string[] candidates = Directory.GetFiles(baseDirPath, "*." + extension, SearchOption.TopDirectoryOnly);
+                    foreach (string candidate in candidates)
+                    {
+                        string candidateFileName = Path.GetFileNameWithoutExtension(candidate);
+                        if (string.Equals(candidateFileName, id.ResName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            return File.ReadAllBytes(candidate);
+                        }
+                    }
+                }
+                catch
+                {
+                    // Skip directories that can't be searched
+                    continue;
                 }
             }
 
