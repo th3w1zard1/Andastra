@@ -503,7 +503,75 @@ The game's WAV handler (`vendor/reone/src/libs/audio/format/wavreader.cpp:30-38`
 
 **Conclusion**: The game **can read normal, un-obfuscated WAV files**. Standard RIFF/WAVE files work without any obfuscation header. Only SFX files require the 470-byte header. VO files in the game are already standard WAV format.
 
-**Note**: Audio files may also be loaded from specific directories (e.g., `streamwaves/`, `streammusic/`) rather than through the resource search mechanism. Verify if module loading works for audio playback.
+### Audio File Loading Priority
+
+**Question**: What is the priority order for audio files? Which takes priority: WAV in Override, MP3 in Override, OGG in Module, or MP3 in streamwaves/streamvoice/streammusic? Does streammusic have different priority than streamwaves/streamvoice?
+
+**Answer**: **CRITICAL - Two Separate Audio Systems**
+
+The game uses **TWO SEPARATE audio loading systems** that operate independently:
+
+1. **Resource System** (for WAV files):
+   - Uses standard resource search mechanism (`FUN_004074d0` → `FUN_00407230`)
+   - **Priority**: Override → Modules → Chitin (standard resource priority)
+   - **Supported formats**: WAV (type 4) only
+   - **Used for**: Sound effects and voice-over loaded via resource system
+   - **Handler**: swkotor.exe: 0x005d5e90
+
+2. **Miles Audio System** (for streaming audio):
+   - Uses direct file I/O via Miles audio library
+   - **Directories**: `streamwaves/`, `streammusic/`, `streamvoice/`
+   - **Supported formats**: WAV, MP3, OGG (via direct file access)
+   - **Used for**: Streaming audio (music, ambient sounds, voice streaming)
+   - **Bypasses resource system**: Miles audio system does NOT use resource search mechanism
+
+**Key Finding**: These are **SEPARATE systems** - Miles audio system **bypasses** the resource system entirely for streamed audio.
+
+**Priority Order** (when both systems could load the same file):
+
+**TODO: Gain Certainty by going through ghidra mcp** - Need to verify:
+1. Does the game check resource system first, then Miles directories?
+2. Or does it check Miles directories first, then resource system?
+3. Or are they used for completely different audio types (resource system for sound effects, Miles for music)?
+
+**Current Understanding** (needs verification):
+
+- **WAV files**: Can be loaded via BOTH systems
+  - Resource system: WAV in Override/Module (via handler at 0x005d5e90)
+  - Miles system: WAV in streamwaves/streamvoice/ (via direct file I/O)
+  - **Unknown**: Which is checked first when both exist
+
+- **MP3 files**: 
+  - **NOT registered** in resource system (no handler calls `FUN_004074d0` with MP3 type)
+  - **Only loaded via Miles audio system** from streamwaves/streammusic/streamvoice/
+  - MP3 in Override/Module: ❌ **NOT SUPPORTED** - MP3 is not a resource type
+
+- **OGG files**:
+  - **NOT registered** in resource system (verified: not in resource type registry)
+  - **Only loaded via Miles audio system** from streamwaves/streammusic/streamvoice/
+  - OGG in Override/Module: ❌ **NOT SUPPORTED** - OGG is not a resource type
+
+**Streammusic vs Streamwaves/Streamvoice**:
+
+- **streammusic/**: Used for background music (different audio context)
+- **streamwaves/**: Used for sound effects (WAV files)
+- **streamvoice/**: Used for voice-over streaming (WAV files)
+- **Unknown**: Whether streammusic has different priority than streamwaves/streamvoice, or if they're all checked with same priority within Miles system
+
+**Summary Table**:
+
+| Location | Format | System | Supported? | Notes |
+|----------|--------|--------|------------|-------|
+| Override | WAV | Resource System | ✅ YES | Highest resource priority |
+| Module | WAV | Resource System | ✅ YES | After Override |
+| Override | MP3 | Resource System | ❌ NO | MP3 not a resource type |
+| Module | OGG | Resource System | ❌ NO | OGG not a resource type |
+| streamwaves/ | WAV | Miles Audio | ✅ YES | Direct file I/O (separate system) |
+| streamwaves/ | MP3 | Miles Audio | ✅ YES | Direct file I/O (separate system) |
+| streammusic/ | MP3 | Miles Audio | ✅ YES | Direct file I/O (separate system) |
+| streamvoice/ | WAV | Miles Audio | ✅ YES | Direct file I/O (separate system) |
+
+**Critical Unknown**: When both resource system and Miles system could load the same WAV file (e.g., WAV in Override AND WAV in streamwaves/), which is checked first? **TODO: Verify via Ghidra MCP** - Examine audio loading code to determine if resource system or Miles directories are checked first, and whether streammusic has different priority than streamwaves/streamvoice.
 
 ## Container Size Limits
 
