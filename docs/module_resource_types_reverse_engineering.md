@@ -324,7 +324,10 @@ Based on `ResourceType.cs`, the following resource types are defined:
 - `TGA` (3) - Texture images
 - `TXI` (2022) - Texture info
 - `NCS` (2010) - Compiled scripts
-- `NSS` (2009) - Script source (TODO: Gain Certainty by going through ghidra mcp - Verify if NSS can be loaded from modules by examining NSS resource type handlers and checking if NSS loading code searches modules. Check string references to ".nss" files. Note: NSS is typically compiled to NCS before use, so runtime loading may not be needed)
+- `NSS` (2009) - Script source
+  - **VERIFIED**: NSS (type 2009, 0x7d9) IS registered in resource type registry (swkotor.exe: `FUN_005e6d20` line 69-70, swkotor2.exe: `FUN_00632510` line 68-69)
+  - **VERIFIED**: NO handler calls `FUN_004074d0`/`FUN_004075a0` with type 0x7d9 - no runtime loader exists
+  - **Module Support**: ⚠️ **REGISTERED BUT NOT LOADED** - NSS files can be stored in modules and will be registered in the resource table, but the engine has no runtime loader for NSS. NSS must be compiled to NCS (type 2010) before use. The engine only loads NCS at runtime, not NSS source files.
 - `SSF` (2060) - Soundset files
 - `LIP` (3004) - Lip sync data
 - `VIS` (3001) - Visibility data
@@ -466,7 +469,7 @@ From Ghidra decompilation of callers to `FUN_004074d0` (swkotor.exe) and `FUN_00
 **Answer**:
 
 - **WAV (4)**: **YES** - VERIFIED: Handler at swkotor.exe: 0x005d5e90 calls `FUN_004074d0` with type 4
-- **OGG (2078)**: **TODO: Gain Certainty by going through ghidra mcp** - Search for OGG handler (type 2078, 0x81e) and verify it calls `FUN_004074d0`
+- **OGG (2078)**: ❌ **NO** - VERIFIED: OGG (type 2078, 0x81e) is **NOT registered** in resource type registry (swkotor.exe: `FUN_005e6d20`, swkotor2.exe: `FUN_00632510`). No handler calls `FUN_004074d0` with type 0x81e. OGG files in modules will be ignored. OGG is loaded via direct file I/O (Miles audio system or similar), not through resource system.
 
 **Note**: Audio files may also be loaded from specific directories (e.g., `streamwaves/`, `streammusic/`) rather than through the resource search mechanism. Verify if module loading works for audio playback.
 
