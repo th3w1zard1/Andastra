@@ -631,7 +631,7 @@ namespace Andastra.Parsing.Resource.Generics.GUI
             var baseControl = (GUIControl)progressBar;
             if (baseControl.Progress != null)
             {
-                var progressStruct = new GFFStruct(0);
+                var progressStruct = gffStruct.Acquire<GFFStruct>("PROGRESS", new GFFStruct(0));
                 if (baseControl.Progress.Color != null)
                 {
                     progressStruct.SetVector3("COLOR", new Vector3(baseControl.Progress.Color.R, baseControl.Progress.Color.G, baseControl.Progress.Color.B));
@@ -670,7 +670,7 @@ namespace Andastra.Parsing.Resource.Generics.GUI
             var baseControl = (GUIControl)slider;
             if (baseControl.Thumb != null)
             {
-                var thumbStruct = new GFFStruct(0);
+                var thumbStruct = gffStruct.Acquire<GFFStruct>("THUMB", new GFFStruct(0));
                 thumbStruct.SetResRef("IMAGE", baseControl.Thumb.Image);
                 thumbStruct.SetInt32("ALIGNMENT", baseControl.Thumb.Alignment);
                 if (baseControl.Thumb.Rotate.HasValue)
@@ -685,7 +685,6 @@ namespace Andastra.Parsing.Resource.Generics.GUI
                 {
                     thumbStruct.SetInt32("DRAWSTYLE", baseControl.Thumb.DrawStyle.Value);
                 }
-                gffStruct.SetStruct("THUMB", thumbStruct);
             }
 
             // Direction: 0 = horizontal, 1 = vertical
@@ -777,7 +776,8 @@ namespace Andastra.Parsing.Resource.Generics.GUI
             // DIR image stored in Properties for non-GUIScrollbar controls
             if (control.Properties.ContainsKey("DIR_IMAGE"))
             {
-                var dirStruct = gffStruct.Acquire<GFFStruct>("DIR", new GFFStruct(0));dirStruct.SetResRef("IMAGE", (ResRef)control.Properties["DIR_IMAGE"]);
+                var dirStruct = gffStruct.Acquire<GFFStruct>("DIR", new GFFStruct(0));
+                dirStruct.SetResRef("IMAGE", (ResRef)control.Properties["DIR_IMAGE"]);
                 dirStruct.SetInt32("ALIGNMENT", 18); // Default alignment
             }
 
