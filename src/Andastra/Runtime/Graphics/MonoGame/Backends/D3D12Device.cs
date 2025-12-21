@@ -3781,6 +3781,37 @@ namespace Andastra.Runtime.MonoGame.Backends
         }
 
         /// <summary>
+        /// Draw arguments structure (matches GPU buffer layout).
+        /// Based on D3D12 API: D3D12_DRAW_ARGUMENTS
+        /// This structure must match the layout in the GPU buffer exactly.
+        /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_DRAW_ARGUMENTS
+        {
+            public uint VertexCountPerInstance;
+            public uint InstanceCount;
+            public uint StartVertexLocation;
+            public uint StartInstanceLocation;
+        }
+
+        /// <summary>
+        /// Draw indexed arguments structure (matches GPU buffer layout).
+        /// Based on D3D12 API: D3D12_DRAW_INDEXED_ARGUMENTS
+        /// This structure must match the layout in the GPU buffer exactly.
+        /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_DRAW_INDEXED_ARGUMENTS
+        {
+            public uint IndexCountPerInstance;
+            public uint InstanceCount;
+            public uint StartIndexLocation;
+            public int BaseVertexLocation;
+            public uint StartInstanceLocation;
+        }
+
+        /// <summary>
         /// GPU virtual address and stride structure.
         /// Based on D3D12 API: D3D12_GPU_VIRTUAL_ADDRESS_AND_STRIDE
         /// </summary>

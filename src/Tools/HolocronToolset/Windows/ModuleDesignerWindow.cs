@@ -169,7 +169,7 @@ namespace HolocronToolset.Windows
             {
                 // Matching Python: mod_root: str = self._installation.get_module_root(mod_filepath)
                 // swkotor.exe: FUN_004094a0 - Module root extraction logic
-                string modRoot = Installation.Installation.GetModuleRoot(modFilepath);
+                string modRoot = Andastra.Parsing.Installation.Installation.GetModuleRoot(modFilepath);
 
                 // Matching Python: combined_module = Module(mod_root, self._installation, use_dot_mod=is_mod_file(mod_filepath))
                 // swkotor.exe: FUN_004094a0 - Module loading with .mod override detection

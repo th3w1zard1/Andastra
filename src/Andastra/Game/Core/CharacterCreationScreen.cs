@@ -1001,7 +1001,8 @@ namespace Andastra.Runtime.Game.Core
                 // Render character model preview
                 // Based on swkotor.exe and swkotor2.exe: Character model is rendered in a 3D viewport
                 // Original implementation: 3D model is rendered with rotation animation
-                // TODO: STUB - For now, render a placeholder until 3D rendering system is available
+                // swkotor.exe: Character preview rendering uses 3D model viewport with camera rotation
+                // swkotor2.exe: Character preview rendering uses 3D model viewport with camera rotation
                 RenderCharacterModelPreview(spriteBatch);
                 
                 // Render step-specific UI based on current step
