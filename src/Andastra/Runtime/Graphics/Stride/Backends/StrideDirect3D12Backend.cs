@@ -1094,8 +1094,13 @@ namespace Andastra.Runtime.Stride.Backends
 
             // Verify this is a sampler heap (not a texture heap)
             // Sampler heaps use D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER
-            // We can verify by checking if the heap was created with sampler type
-            // TODO: STUB - For now, we'll assume if it's in _bindlessHeaps and not a texture heap, it's a sampler heap
+            // Texture heaps use D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
+            // We verify by checking the heap type stored in BindlessHeapInfo
+            if (heapInfo.HeapType != D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER)
+            {
+                Console.WriteLine($"[StrideDX12] OnAddBindlessSampler: Heap {heap} is not a sampler heap (type: {heapInfo.HeapType}, expected: {D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER})");
+                return -1;
+            }
 
             // Check if sampler is already in the heap
             if (_samplerToHeapIndex.TryGetValue(sampler, out int existingIndex))
@@ -2366,7 +2371,7 @@ namespace Andastra.Runtime.Stride.Backends
 
         /// <summary>
         /// Information about a bindless descriptor heap.
-        /// Tracks the heap, handles, capacity, and allocation state.
+        /// Tracks the heap, handles, capacity, allocation state, and heap type.
         /// </summary>
         private class BindlessHeapInfo
         {
@@ -2377,6 +2382,12 @@ namespace Andastra.Runtime.Stride.Backends
             public uint DescriptorIncrementSize { get; set; }
             public int NextIndex { get; set; }
             public HashSet<int> FreeIndices { get; set; }
+            /// <summary>
+            /// Descriptor heap type (D3D12_DESCRIPTOR_HEAP_TYPE).
+            /// D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV (0) for texture heaps.
+            /// D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER (1) for sampler heaps.
+            /// </summary>
+            public uint HeapType { get; set; }
         }
 
         #endregion
