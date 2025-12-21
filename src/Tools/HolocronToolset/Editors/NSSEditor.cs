@@ -987,92 +987,6 @@ namespace HolocronToolset.Editors
             ShowHelpDialog(wikiFile);
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:3398-3446
-        // Original: def _show_keyboard_shortcuts(self): Show keyboard shortcuts dialog
-        /// <summary>
-        /// Shows a dialog displaying all available keyboard shortcuts for the editor.
-        /// Matching PyKotor implementation which displays formatted text with all shortcuts.
-        /// </summary>
-        private void ShowKeyboardShortcuts()
-        {
-            // Build comprehensive list of keyboard shortcuts
-            // Matching PyKotor: displays all shortcuts organized by category
-            var shortcutsText = new StringBuilder();
-            shortcutsText.AppendLine("Keyboard Shortcuts:");
-            shortcutsText.AppendLine();
-            
-            shortcutsText.AppendLine("File Operations:");
-            shortcutsText.AppendLine("  Ctrl+N          - New file");
-            shortcutsText.AppendLine("  Ctrl+O          - Open file");
-            shortcutsText.AppendLine("  Ctrl+S          - Save");
-            shortcutsText.AppendLine("  Ctrl+Shift+S    - Save As");
-            shortcutsText.AppendLine("  Ctrl+W          - Close");
-            shortcutsText.AppendLine("  Ctrl+Q          - Exit");
-            shortcutsText.AppendLine("  F5              - Compile");
-            shortcutsText.AppendLine();
-
-            shortcutsText.AppendLine("Edit Operations:");
-            shortcutsText.AppendLine("  Ctrl+Z          - Undo");
-            shortcutsText.AppendLine("  Ctrl+Shift+Z    - Redo");
-            shortcutsText.AppendLine("  Ctrl+Y          - Redo (alternative)");
-            shortcutsText.AppendLine("  Ctrl+X          - Cut");
-            shortcutsText.AppendLine("  Ctrl+C          - Copy");
-            shortcutsText.AppendLine("  Ctrl+V          - Paste");
-            shortcutsText.AppendLine("  Ctrl+F          - Find");
-            shortcutsText.AppendLine("  Ctrl+H          - Replace");
-            shortcutsText.AppendLine("  Ctrl+G          - Go to Line");
-            shortcutsText.AppendLine("  Ctrl+/          - Toggle Comment");
-            shortcutsText.AppendLine("  Ctrl+Shift+D    - Duplicate Line");
-            shortcutsText.AppendLine("  Ctrl+Shift+K    - Delete Line");
-            shortcutsText.AppendLine("  Alt+Up/Down     - Move Line");
-            shortcutsText.AppendLine("  Ctrl+]          - Indent");
-            shortcutsText.AppendLine("  Ctrl+[          - Unindent");
-            shortcutsText.AppendLine("  Ctrl+L          - Select Line");
-            shortcutsText.AppendLine("  Ctrl+D          - Select Next Occurrence");
-            shortcutsText.AppendLine("  Alt+F3          - Select All Occurrences");
-            shortcutsText.AppendLine();
-
-            shortcutsText.AppendLine("View Operations:");
-            shortcutsText.AppendLine("  Ctrl+B          - Toggle File Explorer");
-            shortcutsText.AppendLine("  Ctrl+`          - Toggle Terminal Panel");
-            shortcutsText.AppendLine("  Ctrl+Shift+U    - Toggle Output Panel");
-            shortcutsText.AppendLine("  Ctrl+=          - Zoom In");
-            shortcutsText.AppendLine("  Ctrl+-          - Zoom Out");
-            shortcutsText.AppendLine("  Ctrl+0          - Reset Zoom");
-            shortcutsText.AppendLine("  Alt+Z           - Toggle Word Wrap");
-            shortcutsText.AppendLine();
-
-            shortcutsText.AppendLine("Code Operations:");
-            shortcutsText.AppendLine("  Shift+Alt+F     - Format Code");
-            shortcutsText.AppendLine("  Ctrl+Space      - Trigger Suggest");
-            shortcutsText.AppendLine("  F12             - Go to Definition");
-            shortcutsText.AppendLine("  Shift+F12       - Find All References");
-            shortcutsText.AppendLine("  Ctrl+K, Ctrl+B  - Toggle Bookmark");
-            shortcutsText.AppendLine("  Ctrl+K, Ctrl+N  - Next Bookmark");
-            shortcutsText.AppendLine("  Ctrl+K, Ctrl+P  - Previous Bookmark");
-            shortcutsText.AppendLine();
-
-            shortcutsText.AppendLine("Code Folding:");
-            shortcutsText.AppendLine("  Ctrl+Shift+[    - Fold Region");
-            shortcutsText.AppendLine("  Ctrl+Shift+]    - Unfold Region");
-            shortcutsText.AppendLine("  Ctrl+K, Ctrl+0  - Fold All");
-            shortcutsText.AppendLine("  Ctrl+K, Ctrl+J  - Unfold All");
-            shortcutsText.AppendLine();
-
-            shortcutsText.AppendLine("Other:");
-            shortcutsText.AppendLine("  Ctrl+Shift+P    - Show Command Palette");
-            shortcutsText.AppendLine("  F1              - Show Documentation");
-
-            // Show message box with shortcuts
-            // Matching PyKotor: QMessageBox.information(self, "Keyboard Shortcuts", shortcuts_text)
-            var messageBox = MessageBoxManager.GetMessageBoxStandard(
-                "Keyboard Shortcuts",
-                shortcutsText.ToString(),
-                ButtonEnum.Ok,
-                Icon.Info);
-            messageBox.ShowAsync();
-        }
-
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:1256-1349
         // Original: def go_to_definition(self):
         /// <summary>
@@ -1359,11 +1273,11 @@ namespace HolocronToolset.Editors
             // Add individual filters for each supported type
             foreach (var resType in _readSupported)
             {
-                if (restype != null && !string.IsNullOrEmpty(restype.Extension) && !string.IsNullOrEmpty(restype.Category))
+                if (resType != null && !string.IsNullOrEmpty(resType.Extension) && !string.IsNullOrEmpty(resType.Category))
                 {
-                    fileFilters.Add(new FilePickerFileType($"{restype.Category} File (*.{restype.Extension})")
+                    fileFilters.Add(new FilePickerFileType($"{resType.Category} File (*.{resType.Extension})")
                     {
-                        Patterns = new[] { $"*.{restype.Extension}" }
+                        Patterns = new[] { $"*.{resType.Extension}" }
                     });
                 }
             }
@@ -1397,7 +1311,7 @@ namespace HolocronToolset.Editors
                     "Error",
                     "Selected file does not exist.",
                     ButtonEnum.Ok,
-                    Icon.Error);
+                    MsBox.Avalonia.Enums.Icon.Error);
                 errorBox.ShowAsync();
                 return;
             }
@@ -1405,7 +1319,8 @@ namespace HolocronToolset.Editors
             // Check if it's a capsule file (MOD/RIM/ERF/SAV)
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor/file.py:36-38
             // Original: if is_capsule_file(r_filepath) and f"Load from module ({self.editor.CAPSULE_FILTER})" in self.editor._open_filter:
-            if (Andastra.Parsing.Tools.MiscUtils.IsCapsuleFile(filePath))
+            string fileExt = Path.GetExtension(filePath).ToLowerInvariant();
+            if (fileExt == ".mod" || fileExt == ".erf" || fileExt == ".rim" || fileExt == ".sav")
             {
                 // For capsule files, we would normally show LoadFromModuleDialog
                 // Since that dialog doesn't exist in C# yet, show a helpful message
@@ -1415,7 +1330,7 @@ namespace HolocronToolset.Editors
                     "Opening files from capsule archives (MOD/RIM/ERF/SAV) is not yet fully supported.\n\n" +
                     "Please use the module browser or extract the file first.",
                     ButtonEnum.Ok,
-                    Icon.Info);
+                    MsBox.Avalonia.Enums.Icon.Info);
                 infoBox.ShowAsync();
                 return;
             }
@@ -1432,7 +1347,7 @@ namespace HolocronToolset.Editors
                     "Error",
                     $"Failed to read file:\n{ex.Message}",
                     ButtonEnum.Ok,
-                    Icon.Error);
+                    MsBox.Avalonia.Enums.Icon.Error);
                 errorBox.ShowAsync();
                 return;
             }
@@ -1446,7 +1361,7 @@ namespace HolocronToolset.Editors
                     "Error",
                     "File has no extension. Cannot determine resource type.",
                     ButtonEnum.Ok,
-                    Icon.Error);
+                    MsBox.Avalonia.Enums.Icon.Error);
                 errorBox.ShowAsync();
                 return;
             }
@@ -1461,7 +1376,7 @@ namespace HolocronToolset.Editors
                     "Error",
                     $"Unknown or unsupported file extension: .{extension}",
                     ButtonEnum.Ok,
-                    Icon.Error);
+                    MsBox.Avalonia.Enums.Icon.Error);
                 errorBox.ShowAsync();
                 return;
             }
@@ -1483,7 +1398,7 @@ namespace HolocronToolset.Editors
                     "Error",
                     $"Resource type '{restype.Extension}' is not supported by this editor.",
                     ButtonEnum.Ok,
-                    Icon.Error);
+                    MsBox.Avalonia.Enums.Icon.Error);
                 errorBox.ShowAsync();
                 return;
             }
@@ -1774,19 +1689,19 @@ namespace HolocronToolset.Editors
             byte[] data;
             try
             {
-                    data = System.Text.Encoding.UTF8.GetBytes(text);
+                data = System.Text.Encoding.UTF8.GetBytes(text);
+            }
+            catch (EncoderFallbackException)
+            {
+                try
+                {
+                    data = System.Text.Encoding.GetEncoding("windows-1252").GetBytes(text);
                 }
                 catch (EncoderFallbackException)
                 {
-                    try
-                    {
-                        data = System.Text.Encoding.GetEncoding("windows-1252").GetBytes(text);
-                    }
-                    catch (EncoderFallbackException)
-                    {
-                        data = System.Text.Encoding.GetEncoding("latin-1").GetBytes(text);
-                    }
+                    data = System.Text.Encoding.GetEncoding("latin-1").GetBytes(text);
                 }
+            }
 
             return Tuple.Create(data, new byte[0]);
         }
