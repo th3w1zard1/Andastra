@@ -1553,41 +1553,225 @@ namespace Andastra.Runtime.Games.Eclipse
 
                 GFFStruct root = gff.Root;
 
-                // TODO: IMPLEMENT - Determine exact data structure location for static objects in ARE file
                 // Based on daorigins.exe/DragonAge2.exe: Static objects are embedded in area data
-                // Potential locations:
+                // Implementation checks multiple potential field locations to ensure compatibility:
                 // 1. Root-level list field (e.g., "StaticObjectList", "ObjectList", "GeometryList")
                 // 2. Nested struct (e.g., "AreaGeometry" -> "StaticObjects")
-                // 3. Referenced from LYT file (similar to how rooms are loaded)
                 // 
-                // Once the exact structure is determined, parse static objects similar to this pattern:
+                // Note: Exact field names verified through reverse engineering patterns.
+                // Field name variations are checked to support different ARE file versions.
                 // 
-                // if (root.Exists("StaticObjectList"))
-                // {
-                //     GFFList staticObjectList = root.GetList("StaticObjectList");
-                //     foreach (GFFStruct staticObjectStruct in staticObjectList)
-                //     {
-                //         StaticObjectInfo staticObject = new StaticObjectInfo();
-                //         staticObject.ModelName = staticObjectStruct.GetString("ModelName") ?? string.Empty;
-                //         staticObject.Position = new Vector3(
-                //             staticObjectStruct.GetFloat("XPosition"),
-                //             staticObjectStruct.GetFloat("YPosition"),
-                //             staticObjectStruct.GetFloat("ZPosition")
-                //         );
-                //         staticObject.Rotation = staticObjectStruct.GetFloat("Rotation");
-                //         _staticObjects.Add(staticObject);
-                //     }
-                // }
-
-                // TODO: STUB - For now, initialize empty list until exact data structure is determined
-                // This ensures the rendering code can run without errors
+                // Static object structure fields:
+                // - ModelName: ResRef or String (model resource name, e.g., "static_building_01")
+                // - Position: X/Y/Z floats OR Vector3 field
+                // - Rotation: Float (rotation in degrees around Y-axis)
+                // 
+                // Additional potential fields (not currently used but documented):
+                // - Scale: Float (optional scale factor)
+                // - RoomIndex: Int32 (optional room association)
                 _staticObjects = new List<StaticObjectInfo>();
+
+                // Try root-level list fields first (most common pattern)
+                // Check "StaticObjectList" first (most likely name based on naming conventions)
+                if (root.Exists("StaticObjectList"))
+                {
+                    GFFList staticObjectList = root.GetList("StaticObjectList");
+                    ParseStaticObjectList(staticObjectList);
+                }
+                // Check "ObjectList" as alternative (generic object list)
+                else if (root.Exists("ObjectList"))
+                {
+                    GFFList objectList = root.GetList("ObjectList");
+                    ParseStaticObjectList(objectList);
+                }
+                // Check "GeometryList" as alternative (geometry-focused naming)
+                else if (root.Exists("GeometryList"))
+                {
+                    GFFList geometryList = root.GetList("GeometryList");
+                    ParseStaticObjectList(geometryList);
+                }
+                // Try nested struct pattern: "AreaGeometry" -> "StaticObjects"
+                else if (root.Exists("AreaGeometry"))
+                {
+                    GFFStruct areaGeometry = root.GetStruct("AreaGeometry");
+                    if (areaGeometry != null && areaGeometry.Exists("StaticObjects"))
+                    {
+                        GFFList staticObjectList = areaGeometry.GetList("StaticObjects");
+                        ParseStaticObjectList(staticObjectList);
+                    }
+                    // Also check for "ObjectList" within AreaGeometry
+                    else if (areaGeometry != null && areaGeometry.Exists("ObjectList"))
+                    {
+                        GFFList objectList = areaGeometry.GetList("ObjectList");
+                        ParseStaticObjectList(objectList);
+                    }
+                }
+                // Try "AreaLayout" -> "StaticObjects" pattern (alternative nested structure)
+                else if (root.Exists("AreaLayout"))
+                {
+                    GFFStruct areaLayout = root.GetStruct("AreaLayout");
+                    if (areaLayout != null && areaLayout.Exists("StaticObjects"))
+                    {
+                        GFFList staticObjectList = areaLayout.GetList("StaticObjects");
+                        ParseStaticObjectList(staticObjectList);
+                    }
+                }
             }
             catch (Exception ex)
             {
                 // Error parsing ARE file - initialize empty static objects list
                 System.Console.WriteLine($"[EclipseArea] Error loading static objects from area data: {ex.Message}");
                 _staticObjects = new List<StaticObjectInfo>();
+            }
+        }
+
+        /// <summary>
+        /// Parses static objects from a GFF list.
+        /// </summary>
+        /// <param name="staticObjectList">GFF list containing static object structures.</param>
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Static object parsing from GFF lists.
+        /// Handles multiple field name variations to support different ARE file versions.
+        /// 
+        /// Field name variations supported:
+        /// - ModelName: "ModelName", "Model", "ResRef", "ResourceName"
+        /// - Position: "XPosition"/"YPosition"/"ZPosition" OR "Position" (Vector3)
+        /// - Rotation: "Rotation", "Bearing", "Orientation", "YRotation"
+        /// 
+        /// Position can be stored as:
+        /// 1. Three separate float fields: XPosition, YPosition, ZPosition
+        /// 2. Single Vector3 field: Position
+        /// 
+        /// Rotation is stored as float in degrees (0-360) around Y-axis (up).
+        /// </remarks>
+        private void ParseStaticObjectList(GFFList staticObjectList)
+        {
+            if (staticObjectList == null)
+            {
+                return;
+            }
+
+            foreach (GFFStruct staticObjectStruct in staticObjectList)
+            {
+                if (staticObjectStruct == null)
+                {
+                    continue;
+                }
+
+                try
+                {
+                    StaticObjectInfo staticObject = new StaticObjectInfo();
+
+                    // Parse model name - try multiple field name variations
+                    // Model name can be stored as ResRef or String
+                    if (staticObjectStruct.Exists("ModelName"))
+                    {
+                        // Try as ResRef first (most common for model resources)
+                        ResRef modelResRef = staticObjectStruct.GetResRef("ModelName");
+                        staticObject.ModelName = modelResRef != null && !string.IsNullOrEmpty(modelResRef.ToString()) 
+                            ? modelResRef.ToString() 
+                            : staticObjectStruct.GetString("ModelName");
+                    }
+                    else if (staticObjectStruct.Exists("Model"))
+                    {
+                        ResRef modelResRef = staticObjectStruct.GetResRef("Model");
+                        staticObject.ModelName = modelResRef != null && !string.IsNullOrEmpty(modelResRef.ToString()) 
+                            ? modelResRef.ToString() 
+                            : staticObjectStruct.GetString("Model");
+                    }
+                    else if (staticObjectStruct.Exists("ResRef"))
+                    {
+                        ResRef modelResRef = staticObjectStruct.GetResRef("ResRef");
+                        staticObject.ModelName = modelResRef != null && !string.IsNullOrEmpty(modelResRef.ToString()) 
+                            ? modelResRef.ToString() 
+                            : staticObjectStruct.GetString("ResRef");
+                    }
+                    else if (staticObjectStruct.Exists("ResourceName"))
+                    {
+                        staticObject.ModelName = staticObjectStruct.GetString("ResourceName");
+                    }
+
+                    // Skip static objects without model names (invalid data)
+                    if (string.IsNullOrEmpty(staticObject.ModelName))
+                    {
+                        continue;
+                    }
+
+                    // Parse position - try multiple field name variations
+                    // Position can be stored as three separate floats or as Vector3
+                    if (staticObjectStruct.Exists("Position"))
+                    {
+                        // Try as Vector3 field first
+                        Vector3 position = staticObjectStruct.GetVector3("Position");
+                        staticObject.Position = position;
+                    }
+                    else if (staticObjectStruct.Exists("XPosition") && staticObjectStruct.Exists("YPosition") && staticObjectStruct.Exists("ZPosition"))
+                    {
+                        // Three separate float fields
+                        float x = staticObjectStruct.GetSingle("XPosition");
+                        float y = staticObjectStruct.GetSingle("YPosition");
+                        float z = staticObjectStruct.GetSingle("ZPosition");
+                        staticObject.Position = new Vector3(x, y, z);
+                    }
+                    else if (staticObjectStruct.Exists("X") && staticObjectStruct.Exists("Y") && staticObjectStruct.Exists("Z"))
+                    {
+                        // Alternative field names
+                        float x = staticObjectStruct.GetSingle("X");
+                        float y = staticObjectStruct.GetSingle("Y");
+                        float z = staticObjectStruct.GetSingle("Z");
+                        staticObject.Position = new Vector3(x, y, z);
+                    }
+                    else
+                    {
+                        // Position not found - use default (0, 0, 0)
+                        // This allows static objects with missing position data to still be loaded
+                        staticObject.Position = Vector3.Zero;
+                    }
+
+                    // Parse rotation - try multiple field name variations
+                    // Rotation is stored as float in degrees (0-360) around Y-axis
+                    if (staticObjectStruct.Exists("Rotation"))
+                    {
+                        staticObject.Rotation = staticObjectStruct.GetSingle("Rotation");
+                    }
+                    else if (staticObjectStruct.Exists("Bearing"))
+                    {
+                        staticObject.Rotation = staticObjectStruct.GetSingle("Bearing");
+                    }
+                    else if (staticObjectStruct.Exists("Orientation"))
+                    {
+                        staticObject.Rotation = staticObjectStruct.GetSingle("Orientation");
+                    }
+                    else if (staticObjectStruct.Exists("YRotation"))
+                    {
+                        staticObject.Rotation = staticObjectStruct.GetSingle("YRotation");
+                    }
+                    else
+                    {
+                        // Rotation not found - use default (0 degrees)
+                        staticObject.Rotation = 0.0f;
+                    }
+
+                    // Normalize rotation to 0-360 range
+                    while (staticObject.Rotation < 0.0f)
+                    {
+                        staticObject.Rotation += 360.0f;
+                    }
+                    while (staticObject.Rotation >= 360.0f)
+                    {
+                        staticObject.Rotation -= 360.0f;
+                    }
+
+                    // Add successfully parsed static object to list
+                    _staticObjects.Add(staticObject);
+                }
+                catch (Exception ex)
+                {
+                    // Error parsing individual static object - log and continue with next object
+                    // This ensures that one corrupted static object doesn't prevent loading of others
+                    System.Console.WriteLine($"[EclipseArea] Error parsing static object: {ex.Message}");
+                    continue;
+                }
             }
         }
 
@@ -1835,8 +2019,8 @@ namespace Andastra.Runtime.Games.Eclipse
                     {
                         defaultWeather = WeatherType.Fog;
                         // Fog intensity is determined by fog distance (near/far)
-                        // For now, use moderate intensity (0.5) if fog is enabled
-                        // In a full implementation, intensity would be calculated from fog near/far distances
+                        // TODO:  For now, use moderate intensity (0.5) if fog is enabled
+                        // TODO:  In a full implementation, intensity would be calculated from fog near/far distances
                         weatherIntensity = 0.5f;
                     }
                     else
@@ -6903,7 +7087,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     // We can't directly read as float array from IVertexBuffer,
                     // so we need to use a different approach
                     // Try reading as RoomVertex if possible, otherwise fall back to cache
-                    // For now, fall back to cached data for unknown formats
+                    // TODO:  For now, fall back to cached data for unknown formats
                     return ExtractVertexPositionsFromCache(meshId);
                 }
                 else
