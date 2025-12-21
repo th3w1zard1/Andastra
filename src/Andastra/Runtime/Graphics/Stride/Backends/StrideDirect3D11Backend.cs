@@ -2134,6 +2134,48 @@ namespace Andastra.Runtime.Stride.Backends
             return calculatedStride;
         }
 
+        /// <summary>
+        /// Sets the stride for a shader binding table buffer.
+        /// This method allows explicit stride specification when the stride is known,
+        /// which provides more accurate stride information than heuristic calculation.
+        ///
+        /// The stride must be aligned to D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT (32 bytes).
+        /// </summary>
+        /// <param name="sbtHandle">Handle to the shader binding table buffer</param>
+        /// <param name="stride">Stride in bytes (must be >= 32 and aligned to 32 bytes)</param>
+        /// <returns>True if stride was set successfully, false if parameters are invalid</returns>
+        private bool SetShaderBindingTableStride(IntPtr sbtHandle, uint stride)
+        {
+            if (sbtHandle == IntPtr.Zero)
+            {
+                return false;
+            }
+
+            // Validate stride: must be at least 32 bytes and aligned to 32 bytes
+            const uint D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES = 32;
+            const uint D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT = 32;
+
+            if (stride < D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES)
+            {
+                return false;
+            }
+
+            if (stride % D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT != 0)
+            {
+                return false;
+            }
+
+            // Verify the handle exists in resources
+            if (!_resources.ContainsKey(sbtHandle))
+            {
+                return false;
+            }
+
+            // Cache the stride
+            _sbtStrideCache[sbtHandle] = stride;
+            return true;
+        }
+
         #endregion
 
         #region P/Invoke Declarations for DXR Fallback Layer
