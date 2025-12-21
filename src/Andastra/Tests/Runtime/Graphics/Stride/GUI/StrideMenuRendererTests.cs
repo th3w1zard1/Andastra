@@ -65,10 +65,11 @@ namespace Andastra.Tests.Runtime.Stride.GUI
                 return;
             }
 
+            StrideMenuRenderer renderer = null;
             try
             {
                 // Act
-                var renderer = new StrideMenuRenderer(graphicsDevice);
+                renderer = new StrideMenuRenderer(graphicsDevice);
 
                 // Assert
                 renderer.IsInitialized.Should().BeTrue("StrideMenuRenderer should be initialized after successful construction");
