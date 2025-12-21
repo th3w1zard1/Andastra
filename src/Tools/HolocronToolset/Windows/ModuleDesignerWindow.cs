@@ -9,7 +9,9 @@ using HolocronToolset.Dialogs;
 using HolocronToolset.Windows;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
+using Andastra.Parsing.Tools;
 using ModuleClass = Andastra.Parsing.Common.Module;
 using GameModule = Andastra.Parsing.Common.Module;
 
@@ -166,11 +168,15 @@ namespace HolocronToolset.Windows
             try
             {
                 // Matching Python: mod_root: str = self._installation.get_module_root(mod_filepath)
-                string modRoot = Andastra.Parsing.Installation.Installation.GetModuleRoot(modFilepath);
+                // swkotor.exe: FUN_004094a0 - Module root extraction logic
+                string modRoot = Installation.Installation.GetModuleRoot(modFilepath);
 
                 // Matching Python: combined_module = Module(mod_root, self._installation, use_dot_mod=is_mod_file(mod_filepath))
-                // Note: Module class needs to be implemented in Andastra.Parsing
-                // TODO: STUB - For now, this is a placeholder matching the Python interface
+                // swkotor.exe: FUN_004094a0 - Module loading with .mod override detection
+                bool useDotMod = FileHelpers.IsModFile(modFilepath);
+                _module = new Module(modRoot, _installation.Installation, useDotMod);
+
+                // Store module path and name for UI display
                 _modulePath = modFilepath;
                 _moduleName = Path.GetFileNameWithoutExtension(modFilepath);
 
@@ -187,6 +193,13 @@ namespace HolocronToolset.Windows
             {
                 // Error handling - in full implementation would show error dialog
                 System.Console.WriteLine($"Failed to open module: {ex.Message}");
+                // Clear module on error to maintain consistent state
+                _module = null;
+                _modulePath = null;
+                _moduleName = null;
+                RefreshWindowTitle();
+                RebuildResourceTree();
+                RebuildInstanceList();
             }
         }
 
