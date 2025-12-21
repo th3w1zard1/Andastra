@@ -2968,9 +2968,13 @@ namespace Andastra.Runtime.MonoGame.Backends
                                     
                                     // Allocate memory for array of acceleration structure handles (IntPtr array)
                                     // For now, we support single acceleration structure per binding
-                                    IntPtr accelStructHandlesArray = Marshal.AllocHGlobal(IntPtr.Size);
+                                    IntPtr accelStructHandlesArray = IntPtr.Zero;
+                                    IntPtr accelStructInfoPtr = IntPtr.Zero;
+                                    
                                     try
                                     {
+                                        // Allocate memory for array of acceleration structure handles
+                                        accelStructHandlesArray = Marshal.AllocHGlobal(IntPtr.Size);
                                         Marshal.WriteIntPtr(accelStructHandlesArray, accelStructHandle);
                                         
                                         // Create VkWriteDescriptorSetAccelerationStructureKHR structure
@@ -2983,19 +2987,28 @@ namespace Andastra.Runtime.MonoGame.Backends
                                         };
                                         
                                         // Allocate memory for the acceleration structure info structure
-                                        IntPtr accelStructInfoPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(VkWriteDescriptorSetAccelerationStructureKHR)));
+                                        accelStructInfoPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(VkWriteDescriptorSetAccelerationStructureKHR)));
                                         Marshal.StructureToPtr(accelStructInfo, accelStructInfoPtr, false);
-                                        accelStructInfoPtrs.Add(accelStructInfoPtr);
                                         
-                                        // Also need to track the handles array for cleanup
+                                        // Add both allocations to cleanup list (order: structure first, then handles array)
+                                        // This ensures proper cleanup order
+                                        accelStructInfoPtrs.Add(accelStructInfoPtr);
                                         accelStructInfoPtrs.Add(accelStructHandlesArray);
                                         
                                         // Chain the acceleration structure info via pNext in VkWriteDescriptorSet
                                         writeDescriptorSet.pNext = accelStructInfoPtr;
+                                        
+                                        // Clear pointers to prevent double-free (they're now tracked in the list)
+                                        accelStructInfoPtr = IntPtr.Zero;
+                                        accelStructHandlesArray = IntPtr.Zero;
                                     }
                                     catch
                                     {
-                                        // If allocation fails, free what we allocated and continue
+                                        // If allocation or marshalling fails, free what we allocated
+                                        if (accelStructInfoPtr != IntPtr.Zero)
+                                        {
+                                            Marshal.FreeHGlobal(accelStructInfoPtr);
+                                        }
                                         if (accelStructHandlesArray != IntPtr.Zero)
                                         {
                                             Marshal.FreeHGlobal(accelStructHandlesArray);
