@@ -400,11 +400,19 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 }
                 
                 // Pattern 2: [RSADD*], JSR, RESTOREBP (entry stub with RESTOREBP, used by external compiler)
+                // swkotor2.exe: 0x004eb750 - If RESTOREBP is followed by MOVSP+RETN+RETN at the end, it's cleanup code, not entry stub
                 if (instList.Count > jsrIdx + 1 &&
                     instList[jsrIdx].InsType == NCSInstructionType.JSR &&
                     instList[jsrIdx].Jump != null &&
                     instList[jsrIdx + 1].InsType == NCSInstructionType.RESTOREBP)
                 {
+                    int restorebpIndex = jsrIdx + 1;
+                    // Check if RESTOREBP is followed by cleanup code at the end of the file
+                    if (IsRestorebpFollowedByCleanupCode(instList, restorebpIndex))
+                    {
+                        // This is cleanup code, not an entry stub
+                        return false;
+                    }
                     // Valid entry stub pattern found
                     return true;
                 }
@@ -1170,14 +1178,28 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                         // TODO:  If entry stub exists, extend globals to include it (but not main)
                         int entryStubCheck = globalsSubEnd;
                         if (instructions.Count > entryStubCheck + 1 &&
-                            instructions[entryStubCheck].InsType == NCSInstructionType.JSR &&
-                            (instructions[entryStubCheck + 1].InsType == NCSInstructionType.RETN ||
-                             instructions[entryStubCheck + 1].InsType == NCSInstructionType.RESTOREBP))
+                            instructions[entryStubCheck].InsType == NCSInstructionType.JSR)
                         {
-                            // TODO:  Entry stub exists - extend globals to include SAVEBP + entry stub pattern
-                            // TODO:  But NOT the cleanup code after entry stub (MOVSP+RETN before main)
-                            globalsSubEnd = entryStubCheck + 2; // SAVEBP + JSR + RETN/RESTOREBP
-                            Debug($"DEBUG NcsToAstConverter: Extended globals to include entry stub, globalsSubEnd={globalsSubEnd}");
+                            if (instructions[entryStubCheck + 1].InsType == NCSInstructionType.RETN)
+                            {
+                                globalsSubEnd = entryStubCheck + 2; // SAVEBP + JSR + RETN
+                                Debug($"DEBUG NcsToAstConverter: Extended globals to include entry stub (JSR+RETN), globalsSubEnd={globalsSubEnd}");
+                            }
+                            else if (instructions[entryStubCheck + 1].InsType == NCSInstructionType.RESTOREBP)
+                            {
+                                int restorebpIndex = entryStubCheck + 1;
+                                // swkotor2.exe: 0x004eb750 - If RESTOREBP is followed by MOVSP+RETN+RETN at the end, it's cleanup code, not entry stub
+                                if (IsRestorebpFollowedByCleanupCode(instructions, restorebpIndex))
+                                {
+                                    // This is cleanup code, not an entry stub - don't extend globalsSubEnd
+                                    Debug($"DEBUG NcsToAstConverter: JSR+RESTOREBP detected at {entryStubCheck}, but RESTOREBP is followed by cleanup code (MOVSP+RETN+RETN at end) - NOT treating as entry stub for globalsSubEnd");
+                                }
+                                else
+                                {
+                                    globalsSubEnd = entryStubCheck + 2; // SAVEBP + JSR + RESTOREBP
+                                    Debug($"DEBUG NcsToAstConverter: Extended globals to include entry stub (JSR+RESTOREBP), globalsSubEnd={globalsSubEnd}");
+                                }
+                            }
                         }
                         ASubroutine globalsSub = ConvertInstructionRangeToSubroutine(ncs, instructions, 0, globalsSubEnd, 0);
                         if (globalsSub != null)
