@@ -9,6 +9,8 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Games.Common;
+using Andastra.Runtime.Scripting.Interfaces;
+using Andastra.Runtime.Scripting.Types;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.ERF;
 using Andastra.Runtime.Core.Save;
@@ -48,6 +50,7 @@ namespace Andastra.Runtime.Games.Odyssey
     {
         [CanBeNull] private readonly GameDataManager _gameDataManager;
         [CanBeNull] private readonly string _savesDirectory;
+        [CanBeNull] private Scripting.Interfaces.IScriptGlobals _scriptGlobals;
 
         /// <summary>
         /// Initializes a new instance of the OdysseySaveSerializer class.
@@ -58,6 +61,15 @@ namespace Andastra.Runtime.Games.Odyssey
         {
             _gameDataManager = gameDataManager;
             _savesDirectory = savesDirectory;
+        }
+
+        /// <summary>
+        /// Sets the script globals instance for saving/loading local variables.
+        /// </summary>
+        /// <param name="scriptGlobals">The script globals instance to use for variable operations.</param>
+        public void SetScriptGlobals([CanBeNull] Scripting.Interfaces.IScriptGlobals scriptGlobals)
+        {
+            _scriptGlobals = scriptGlobals;
         }
         /// <summary>
         /// Gets the save file format version for Odyssey engine.
@@ -3762,7 +3774,19 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </summary>
         /// <remarks>
         /// Based on swkotor2.exe: Local variable application
-        /// Uses entity's variable system to store local variables
+        /// Uses entity's variable system to store local variables via IScriptGlobals interface
+        /// 
+        /// Local variables are stored per entity (by ObjectId) in the ScriptGlobals system.
+        /// This method applies all variable types from the LocalVariableSet:
+        /// - Integer variables (SetLocalInt)
+        /// - Float variables (SetLocalFloat)
+        /// - String variables (SetLocalString)
+        /// - Object reference variables (SetLocalObject)
+        /// - Location variables (SetLocalLocation)
+        /// 
+        /// Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 applies entity local variables during save game load
+        /// Located via string references: "LocalVariables" @ entity state structure
+        /// Original implementation: Reads local variables from GFF structure and applies them to entity's variable storage
         /// </remarks>
         private void ApplyLocalVariablesToEntity(OdysseyEntity entity, LocalVariableSet localVars)
         {
@@ -3771,24 +3795,91 @@ namespace Andastra.Runtime.Games.Odyssey
                 return;
             }
 
-            // Use entity's Deserialize method if available, or apply directly via reflection
-            // TODO: STUB - For now, we'll use the entity's variable system if accessible
-            // TODO: STUB - Note: Full implementation would require access to entity's variable storage
-            // This is a placeholder that would need to be completed when variable system is fully implemented
-
-            // Try to get ScriptHooks component which may contain variable storage
-            var scriptHooksComponent = entity.GetComponent<IScriptHooksComponent>();
-            if (scriptHooksComponent != null)
+            // Check if ScriptGlobals is available
+            if (_scriptGlobals == null)
             {
-                // Use reflection to access variable storage if available
-                var localVarsField = scriptHooksComponent.GetType().GetField("_localVariables", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                if (localVarsField != null)
+                // ScriptGlobals not set - cannot apply local variables
+                // This is expected if SetScriptGlobals has not been called
+                // Local variables will not be restored in this case
+                return;
+            }
+
+            // Cast entity to IEntity for ScriptGlobals interface
+            IEntity entityInterface = entity;
+
+            // Apply integer variables
+            if (localVars.Ints != null)
+            {
+                foreach (KeyValuePair<string, int> kvp in localVars.Ints)
                 {
-                    object existingVars = localVarsField.GetValue(scriptHooksComponent);
-                    if (existingVars != null)
+                    _scriptGlobals.SetLocalInt(entityInterface, kvp.Key, kvp.Value);
+                }
+            }
+
+            // Apply float variables
+            if (localVars.Floats != null)
+            {
+                foreach (KeyValuePair<string, float> kvp in localVars.Floats)
+                {
+                    _scriptGlobals.SetLocalFloat(entityInterface, kvp.Key, kvp.Value);
+                }
+            }
+
+            // Apply string variables
+            if (localVars.Strings != null)
+            {
+                foreach (KeyValuePair<string, string> kvp in localVars.Strings)
+                {
+                    // Handle null strings - ScriptGlobals may expect empty string instead of null
+                    string value = kvp.Value ?? string.Empty;
+                    _scriptGlobals.SetLocalString(entityInterface, kvp.Key, value);
+                }
+            }
+
+            // Apply object reference variables
+            // Object references are stored as ObjectId (uint) and need to be resolved to IEntity
+            // Based on ScriptGlobals implementation: SetLocalObject stores ObjectId, GetLocalObject resolves via entity.World
+            if (localVars.Objects != null && localVars.Objects.Count > 0)
+            {
+                // Entities have a World property that provides access to IWorld for entity lookup
+                IWorld world = entityInterface.World;
+                if (world != null)
+                {
+                    foreach (KeyValuePair<string, uint> kvp in localVars.Objects)
                     {
-                        // Merge local variables into existing storage
-                        // This would need to be implemented based on the actual variable storage structure
+                        uint objectId = kvp.Value;
+                        // Resolve ObjectId to IEntity
+                        // ObjectId 0x7F000000 (OBJECT_INVALID) represents null/invalid object reference
+                        if (objectId == 0x7F000000)
+                        {
+                            // Invalid object reference - set to null
+                            _scriptGlobals.SetLocalObject(entityInterface, kvp.Key, null);
+                        }
+                        else
+                        {
+                            // Resolve ObjectId to entity via world lookup
+                            IEntity referencedEntity = world.GetEntity(objectId);
+                            _scriptGlobals.SetLocalObject(entityInterface, kvp.Key, referencedEntity);
+                        }
+                    }
+                }
+            }
+
+            // Apply location variables
+            if (localVars.Locations != null)
+            {
+                foreach (KeyValuePair<string, SavedLocation> kvp in localVars.Locations)
+                {
+                    SavedLocation savedLocation = kvp.Value;
+                    if (savedLocation != null)
+                    {
+                        // Create Location object from SavedLocation
+                        // Based on ScriptGlobals implementation: Location type is used for location variables
+                        // Location contains Position (Vector3) and Facing (float)
+                        // Note: AreaResRef is stored separately in SavedLocation but Location type doesn't include it
+                        // Area context is implicit based on where the entity/script is executing
+                        Location locationObject = new Location(savedLocation.Position, savedLocation.Facing);
+                        _scriptGlobals.SetLocalLocation(entityInterface, kvp.Key, locationObject);
                     }
                 }
             }
