@@ -1,5 +1,7 @@
 # Module Resource Types - Reverse Engineering Findings
 
+**⚠️ IMPORTANT**: This document contains **exclusively** documentation from reverse engineered components of `swkotor.exe` and `swkotor2.exe` using Ghidra MCP. All findings are based on analysis of the original game executables, not third-party engine rewrites or custom implementations.
+
 ## Executive Summary
 
 This document details the reverse engineering findings for module file discovery and resource type support in `swkotor.exe` and `swkotor2.exe`.
@@ -20,7 +22,7 @@ This document details the reverse engineering findings for module file discovery
 1. **`dialog.tlk` (TLK files)**
    - **Loading**: Direct file I/O from game root directory
    - **Function**: `FUN_005e6680` (swkotor.exe: 0x005e6680) calls initialization code
-   - **Evidence**: Reone codebase shows `findFileIgnoreCase(gameDir, "dialog.tlk")` - direct filesystem search
+   - **Evidence**: String references to `"dialog.tlk"` found in executable. Function `FUN_005e6680` uses direct file I/O, not resource system (`FUN_004074d0`/`FUN_00407230`)
    - **Location**: Game root directory (same location as executable)
    - **Resource Type**: TLK (2018, 0x7e2) exists in resource registry, but TLK loading uses direct file I/O, not resource system
    - **Module Support**: ❌ **NO** - TLK files in modules will be ignored
