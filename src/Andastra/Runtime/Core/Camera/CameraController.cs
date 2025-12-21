@@ -250,6 +250,30 @@ namespace Andastra.Runtime.Core.Camera
         }
 
         /// <summary>
+        /// Sets free camera mode with direct position restoration.
+        /// Based on nwmain.exe: Camera_Restore restores exact camera position, look-at, and up vector for free mode
+        /// Reverse engineered from nwmain.exe: CNWSMessage::SendServerToPlayerCamera_Restore @ 0x1404d0f20
+        /// Located via string references: "Camera_Restore" @ 0x140dcb190
+        /// Original implementation: Client directly sets camera position, look-at, and up vector when restoring free mode
+        /// This method provides 1:1 parity with nwmain.exe camera restoration behavior
+        /// </summary>
+        /// <param name="position">Camera position to restore.</param>
+        /// <param name="lookAtPosition">Look-at position to restore.</param>
+        /// <param name="up">Up vector to restore.</param>
+        public void SetFreeModePosition(Vector3 position, Vector3 lookAtPosition, Vector3 up)
+        {
+            Mode = CameraMode.Free;
+            Position = position;
+            LookAtPosition = lookAtPosition;
+            Up = up;
+
+            if (OnModeChanged != null)
+            {
+                OnModeChanged(Mode);
+            }
+        }
+
+        /// <summary>
         /// Sets dialogue camera mode.
         /// </summary>
         public void SetDialogueMode(IEntity speaker, IEntity listener)

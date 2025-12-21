@@ -20,8 +20,7 @@ using Andastra.Runtime.Games.Odyssey.Collision;
 using Andastra.Runtime.Games.Odyssey.Content.ResourceProviders;
 using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Graphics;
-using System.Collections.Generic;
-using System.Linq;
+using Andastra.Runtime.MonoGame.Graphics.Cursor;
 using Andastra.Runtime.Engines.Odyssey.EngineApi;
 using Andastra.Runtime.Kotor.Game;
 using Andastra.Runtime.Scripting.EngineApi;
@@ -112,6 +111,9 @@ namespace Andastra.Runtime.Game.Core
         // GUI system for main menu
         private Andastra.Runtime.Graphics.MonoGame.GUI.KotorGuiManager _guiManager;
         private bool _mainMenuGuiLoaded = false;
+
+        // Cursor system
+        private ICursorManager _cursorManager;
 
         // Options menu system
         private bool _optionsMenuGuiLoaded = false;
@@ -246,6 +248,14 @@ namespace Andastra.Runtime.Game.Core
             // Create 1x1 white texture for menu drawing
             byte[] whitePixel = new byte[] { 255, 255, 255, 255 }; // RGBA white
             _menuTexture = _graphicsDevice.CreateTexture2D(1, 1, whitePixel);
+
+            // Initialize cursor manager
+            // Based on swkotor.exe and swkotor2.exe: Cursor system initialization
+            // Original implementation: Cursor manager loads cursor textures from EXE resources
+            // Cursor types: Default, Hand (button hover), Talk, Door, Pickup, Attack
+            _cursorManager = new Andastra.Runtime.MonoGame.Graphics.Cursor.MonoGameCursorManager(_graphicsDevice);
+            _cursorManager.SetCursor(CursorType.Default);
+            Console.WriteLine("[Odyssey] Cursor manager initialized");
 
             // Initialize menu input states
             _previousMenuKeyboardState = _graphicsBackend.InputManager.KeyboardState;
@@ -597,6 +607,45 @@ namespace Andastra.Runtime.Game.Core
                 // Fallback: clear to black
                 _graphicsDevice.Clear(new Color(0, 0, 0, 255));
             }
+
+            // Render cursor on top of everything
+            // Based on swkotor.exe and swkotor2.exe: Cursor rendered as sprite on top of all graphics
+            // Original implementation: Cursor rendered after all other graphics, follows mouse position
+            RenderCursor();
+        }
+
+        /// <summary>
+        /// Renders the mouse cursor on top of all graphics.
+        /// </summary>
+        /// <remarks>
+        /// Cursor Rendering:
+        /// - Based on swkotor.exe and swkotor2.exe: Cursor rendering system
+        /// - Original implementation: Cursor rendered as sprite using DirectX immediate mode
+        /// - Cursor position: Follows mouse position, offset by hotspot
+        /// - Cursor state: Shows pressed texture when mouse button is down
+        /// - Rendering order: Cursor rendered last, on top of all other graphics
+        /// </remarks>
+        private void RenderCursor()
+        {
+            if (_cursorManager == null || _cursorManager.CurrentCursor == null)
+            {
+                return;
+            }
+
+            ICursor cursor = _cursorManager.CurrentCursor;
+            ITexture2D cursorTexture = _cursorManager.IsPressed ? cursor.TextureDown : cursor.TextureUp;
+            Vector2 position = _cursorManager.Position;
+
+            // Offset position by hotspot (cursor click point)
+            Vector2 renderPosition = new Vector2(
+                position.X - cursor.HotspotX,
+                position.Y - cursor.HotspotY);
+
+            // Render cursor using sprite batch
+            // Cursor rendered with alpha blending on top of everything
+            _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Default);
+            _spriteBatch.Draw(cursorTexture, renderPosition, Color.White);
+            _spriteBatch.End();
         }
 
         public void Run()
@@ -647,17 +696,33 @@ namespace Andastra.Runtime.Game.Core
                 // Change mouse cursor on button hover
                 // Based on swkotor.exe and swkotor2.exe: Cursor changes when hovering over buttons
                 // Original implementation: Cursor changes to indicate interactive element
+                // swkotor.exe and swkotor2.exe: Cursor changes to hand/pointer when hovering buttons
                 if (!string.IsNullOrEmpty(currentHighlightedButton))
                 {
-                    // Button is hovered - change cursor to indicate interactivity
+                    // Button is hovered - change cursor to hand/pointer to indicate interactivity
                     // Original games use a hand cursor or highlight cursor on button hover
-                    _graphicsBackend.Window.IsMouseVisible = true;
-                    // TODO: Change cursor to hand/pointer cursor when hovering button (requires cursor texture)
+                    if (_cursorManager != null)
+                    {
+                        _cursorManager.SetCursor(CursorType.Hand);
+                    }
+                    _graphicsBackend.Window.IsMouseVisible = false; // Hide system cursor, use custom cursor
                 }
                 else
                 {
                     // No button hovered - use default cursor
-                    _graphicsBackend.Window.IsMouseVisible = true;
+                    if (_cursorManager != null)
+                    {
+                        _cursorManager.SetCursor(CursorType.Default);
+                    }
+                    _graphicsBackend.Window.IsMouseVisible = false; // Hide system cursor, use custom cursor
+                }
+
+                // Update cursor position and pressed state
+                if (_cursorManager != null)
+                {
+                    Point mousePos = mouseState.Position;
+                    _cursorManager.Position = new Vector2(mousePos.X, mousePos.Y);
+                    _cursorManager.IsPressed = mouseState.LeftButton == ButtonState.Pressed;
                 }
 
                 // Update previous mouse/keyboard state for fallback input handling if needed
@@ -691,6 +756,28 @@ namespace Andastra.Runtime.Game.Core
                     _selectedMenuIndex = i; // Update selection on hover
                     break;
                 }
+            }
+
+            // Update cursor based on button hover (fallback menu)
+            // Based on swkotor.exe and swkotor2.exe: Cursor changes when hovering over buttons
+            if (_cursorManager != null)
+            {
+                if (_hoveredMenuIndex >= 0)
+                {
+                    // Button is hovered - change cursor to hand/pointer
+                    _cursorManager.SetCursor(CursorType.Hand);
+                    _graphicsBackend.Window.IsMouseVisible = false; // Hide system cursor, use custom cursor
+                }
+                else
+                {
+                    // No button hovered - use default cursor
+                    _cursorManager.SetCursor(CursorType.Default);
+                    _graphicsBackend.Window.IsMouseVisible = false; // Hide system cursor, use custom cursor
+                }
+
+                // Update cursor position and pressed state
+                _cursorManager.Position = new Vector2(mousePos.X, mousePos.Y);
+                _cursorManager.IsPressed = mouseState.LeftButton == ButtonState.Pressed;
             }
 
             // Handle path selection navigation

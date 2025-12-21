@@ -673,7 +673,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             // When raytracing is enabled on Metal 3.0+ devices, this should create and return
             // a MetalDevice instance that implements IDevice and provides access to Metal raytracing
             // For now, return null as the device creation is not yet implemented
-            if (!_raytracingEnabled || !_supportsRaytracing || _device == IntPtr.Zero)
+            if (!_initialized || !_supportsRaytracing || !_raytracingEnabled || _device == IntPtr.Zero)
             {
                 return null;
             }
@@ -681,13 +681,6 @@ namespace Andastra.Runtime.MonoGame.Backends
             // TODO: STUB - Create and return actual IDevice implementation
             // This will require implementing a MetalDevice class that wraps MTLDevice
             // and provides the IDevice interface for raytracing operations
-            return null;
-        }
-
-        public IDevice GetDevice()
-        {
-            // Metal does not currently support hardware raytracing (would require Metal Ray Tracing API)
-            // Return null as Metal backend doesn't expose raytracing capabilities yet
             return null;
         }
 

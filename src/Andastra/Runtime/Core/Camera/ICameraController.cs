@@ -139,6 +139,15 @@ namespace Andastra.Runtime.Core.Camera
         void SetFreeMode();
 
         /// <summary>
+        /// Sets free camera mode with direct position restoration.
+        /// Based on nwmain.exe: Camera_Restore restores exact camera position, look-at, and up vector for free mode
+        /// </summary>
+        /// <param name="position">Camera position to restore.</param>
+        /// <param name="lookAtPosition">Look-at position to restore.</param>
+        /// <param name="up">Up vector to restore.</param>
+        void SetFreeModePosition(Vector3 position, Vector3 lookAtPosition, Vector3 up);
+
+        /// <summary>
         /// Sets dialogue camera mode.
         /// </summary>
         void SetDialogueMode(IEntity speaker, IEntity listener);

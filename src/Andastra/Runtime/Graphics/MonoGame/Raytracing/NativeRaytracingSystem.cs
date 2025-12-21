@@ -62,6 +62,11 @@ namespace Andastra.Runtime.MonoGame.Raytracing
         private Dictionary<IntPtr, int> _historyBufferWidths;
         private Dictionary<IntPtr, int> _historyBufferHeights;
         
+        // Texture handle tracking - maps IntPtr handles to ITexture objects
+        // This allows us to look up textures when updating binding sets
+        private readonly Dictionary<IntPtr, ITexture> _textureHandleMap;
+        private readonly Dictionary<IntPtr, TextureInfo> _textureInfoCache; // Cache texture dimensions
+        
         // Statistics
         private RaytracingStatistics _lastStats;
 
@@ -110,6 +115,8 @@ namespace Andastra.Runtime.MonoGame.Raytracing
             _historyBuffers = new Dictionary<IntPtr, ITexture>();
             _historyBufferWidths = new Dictionary<IntPtr, int>();
             _historyBufferHeights = new Dictionary<IntPtr, int>();
+            _textureHandleMap = new Dictionary<IntPtr, ITexture>();
+            _textureInfoCache = new Dictionary<IntPtr, TextureInfo>();
             _currentDenoiserType = DenoiserType.None;
         }
 
@@ -1200,37 +1207,139 @@ namespace Andastra.Runtime.MonoGame.Raytracing
             commandList.Dispose();
         }
 
+        /// <summary>
+        /// Updates the shadow binding set with the current output texture.
+        /// Since binding sets are immutable, we recreate the binding set with the new texture.
+        /// This method handles both push descriptor support (if available) and binding set recreation.
+        /// </summary>
         private void UpdateShadowBindingSet(IntPtr outputTexture)
         {
-            if (_shadowBindingSet == null || _shadowBindingLayout == null)
+            if (_shadowBindingSet == null || _shadowBindingLayout == null || _device == null)
             {
                 return;
             }
 
-            // In a real implementation, we would update the binding set with the current output texture
-            // However, since binding sets are typically immutable, we may need to recreate it
-            // or use push descriptors if supported
+            if (outputTexture == IntPtr.Zero)
+            {
+                Console.WriteLine("[NativeRT] UpdateShadowBindingSet: Invalid output texture handle");
+                return;
+            }
+
+            // Get the ITexture object from the handle
+            ITexture outputTextureObj = GetTextureFromHandle(outputTexture);
+            if (outputTextureObj == null)
+            {
+                Console.WriteLine($"[NativeRT] UpdateShadowBindingSet: Could not get ITexture from handle {outputTexture}");
+                Console.WriteLine($"[NativeRT] UpdateShadowBindingSet: Texture may not be registered. Use RegisterTextureHandle to register textures.");
+                return;
+            }
+
+            // Check if the binding layout supports push descriptors
+            // Push descriptors allow updating bindings without recreating the binding set
+            bool supportsPushDescriptors = _shadowBindingLayout.Desc.IsPushDescriptor;
             
-            // TODO: STUB - For now, we'll note that the binding set should be updated with the output texture
-            // The actual implementation depends on whether the backend supports push descriptors
-            // or requires recreating the binding set each frame
+            if (supportsPushDescriptors)
+            {
+                // If push descriptors are supported, we can update the binding set in-place
+                // However, since IBindingSet doesn't have an Update method, we still need to recreate
+                // In a real implementation with push descriptor support, we would use:
+                // commandList.PushDescriptorSet(_shadowBindingLayout, slot, outputTextureObj);
+                // For now, we'll recreate the binding set even with push descriptor support
+                // as the command list interface may not expose push descriptor methods
+                Console.WriteLine("[NativeRT] UpdateShadowBindingSet: Push descriptors supported but not yet implemented, recreating binding set");
+            }
+
+            // Recreate the binding set with the new output texture
+            // Dispose the old binding set first
+            IBindingSet oldBindingSet = _shadowBindingSet;
             
-            // If push descriptors are supported:
-            // commandList.PushDescriptorSet(_shadowBindingLayout, slot, outputTexture);
-            
-            // Otherwise, we would recreate the binding set:
-            // _shadowBindingSet.Dispose();
-            // _shadowBindingSet = _device.CreateBindingSet(_shadowBindingLayout, new BindingSetDesc { ... });
+            try
+            {
+                // Create new binding set with updated texture
+                _shadowBindingSet = _device.CreateBindingSet(_shadowBindingLayout, new BindingSetDesc
+                {
+                    Items = new BindingSetItem[]
+                    {
+                        new BindingSetItem
+                        {
+                            Slot = 0,
+                            Type = BindingType.AccelStruct,
+                            AccelStruct = _tlas
+                        },
+                        new BindingSetItem
+                        {
+                            Slot = 1,
+                            Type = BindingType.RWTexture,
+                            Texture = outputTextureObj
+                        },
+                        new BindingSetItem
+                        {
+                            Slot = 2,
+                            Type = BindingType.ConstantBuffer,
+                            Buffer = _shadowConstantBuffer
+                        }
+                    }
+                });
+
+                if (_shadowBindingSet == null)
+                {
+                    Console.WriteLine("[NativeRT] UpdateShadowBindingSet: Failed to create new binding set");
+                    // Restore old binding set if creation failed
+                    _shadowBindingSet = oldBindingSet;
+                    return;
+                }
+
+                // Dispose the old binding set after successful creation
+                oldBindingSet.Dispose();
+                
+                Console.WriteLine($"[NativeRT] UpdateShadowBindingSet: Successfully updated binding set with output texture {outputTexture}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[NativeRT] UpdateShadowBindingSet: Exception recreating binding set: {ex.Message}");
+                Console.WriteLine($"[NativeRT] UpdateShadowBindingSet: Stack trace: {ex.StackTrace}");
+                
+                // Restore old binding set if recreation failed
+                _shadowBindingSet = oldBindingSet;
+            }
         }
 
+        /// <summary>
+        /// Gets texture dimensions from a texture handle.
+        /// First checks the texture info cache, then tries to get the texture object and query its dimensions.
+        /// </summary>
         private System.Nullable<(int Width, int Height)> GetTextureInfo(IntPtr textureHandle)
         {
-            // In a real implementation, this would query the backend for texture information
-            // TODO: STUB - For now, we'll return null and use default resolution
-            // The backend would need to provide a method like:
-            // ITexture texture = _backend.GetTextureFromHandle(textureHandle);
-            // if (texture != null) return (texture.Desc.Width, texture.Desc.Height);
-            
+            if (textureHandle == IntPtr.Zero)
+            {
+                return null;
+            }
+
+            // Check cache first
+            if (_textureInfoCache.TryGetValue(textureHandle, out TextureInfo cachedInfo))
+            {
+                return (cachedInfo.Width, cachedInfo.Height);
+            }
+
+            // Try to get the texture object
+            ITexture texture = GetTextureFromHandle(textureHandle);
+            if (texture != null)
+            {
+                // Get dimensions from texture description
+                int width = texture.Desc.Width;
+                int height = texture.Desc.Height;
+                
+                // Cache the info for future lookups
+                _textureInfoCache[textureHandle] = new TextureInfo
+                {
+                    Width = width,
+                    Height = height
+                };
+                
+                return (width, height);
+            }
+
+            // If texture is not found, return null
             return null;
         }
 
@@ -1937,15 +2046,128 @@ namespace Andastra.Runtime.MonoGame.Raytracing
             commandList.Dispose();
         }
 
+        /// <summary>
+        /// Gets an ITexture object from an IntPtr texture handle.
+        /// Uses multiple strategies:
+        /// 1. Check the texture handle map (for textures registered via RegisterTextureHandle)
+        /// 2. Try to create a handle from native texture using CreateHandleForNativeTexture
+        /// 3. Return null if texture cannot be found
+        /// </summary>
         private ITexture GetTextureFromHandle(IntPtr textureHandle)
         {
-            // In a real implementation, this would query the backend/device for the texture
-            // TODO: STUB - For now, we return null - this requires backend support for texture handle lookup
-            // The backend would need to provide a method like:
-            // return _device.GetTextureFromHandle(textureHandle);
-            // or
-            // return _backend.GetTexture(textureHandle);
+            if (textureHandle == IntPtr.Zero || _device == null)
+            {
+                return null;
+            }
+
+            // Strategy 1: Check our texture handle map (for textures we've registered)
+            if (_textureHandleMap.TryGetValue(textureHandle, out ITexture mappedTexture))
+            {
+                return mappedTexture;
+            }
+
+            // Strategy 2: Try to create a handle from native texture
+            // This works if the handle is a native texture handle (e.g., D3D12 resource pointer)
+            // We need to query the texture description first, which requires backend support
+            // For now, we'll try to use CreateHandleForNativeTexture if the handle looks like a native handle
+            try
+            {
+                // Check if this might be a native handle by attempting to create a wrapper
+                // Note: This requires knowing the texture description, which we may not have
+                // In a real implementation, the backend would provide a method to get texture info from handle
+                
+                // Try to get texture info from cache or backend
+                var textureInfo = GetTextureInfo(textureHandle);
+                if (textureInfo.HasValue)
+                {
+                    // We have dimensions, but we still need the full TextureDesc
+                    // For now, we'll use a default description - in production, this would come from the backend
+                    TextureDesc desc = new TextureDesc
+                    {
+                        Width = textureInfo.Value.Width,
+                        Height = textureInfo.Value.Height,
+                        Depth = 1,
+                        ArraySize = 1,
+                        MipLevels = 1,
+                        SampleCount = 1,
+                        Format = TextureFormat.R32G32B32A32_Float, // Default format for raytracing output
+                        Dimension = TextureDimension.Texture2D,
+                        Usage = TextureUsage.ShaderResource | TextureUsage.UnorderedAccess,
+                        InitialState = ResourceState.UnorderedAccess,
+                        KeepInitialState = false,
+                        DebugName = "RaytracingOutputTexture"
+                    };
+
+                    ITexture texture = _device.CreateHandleForNativeTexture(textureHandle, desc);
+                    if (texture != null)
+                    {
+                        // Cache it for future lookups
+                        _textureHandleMap[textureHandle] = texture;
+                        return texture;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // CreateHandleForNativeTexture failed, try other methods
+                Console.WriteLine($"[NativeRT] GetTextureFromHandle: Failed to create handle from native texture: {ex.Message}");
+            }
+
+            // Strategy 3: Texture not found
+            // In a production system, the backend would provide a method to look up textures
+            // For now, we return null and log a warning
+            Console.WriteLine($"[NativeRT] GetTextureFromHandle: Could not resolve texture handle {textureHandle}");
+            Console.WriteLine($"[NativeRT] GetTextureFromHandle: Use RegisterTextureHandle to register textures before use");
+            
             return null;
+        }
+
+        /// <summary>
+        /// Registers a texture handle mapping.
+        /// This allows the raytracing system to look up ITexture objects from IntPtr handles.
+        /// Call this method when you have both the handle and the ITexture object.
+        /// </summary>
+        public void RegisterTextureHandle(IntPtr handle, ITexture texture)
+        {
+            if (handle == IntPtr.Zero)
+            {
+                Console.WriteLine("[NativeRT] RegisterTextureHandle: Invalid handle (IntPtr.Zero)");
+                return;
+            }
+
+            if (texture == null)
+            {
+                Console.WriteLine("[NativeRT] RegisterTextureHandle: Invalid texture (null)");
+                return;
+            }
+
+            _textureHandleMap[handle] = texture;
+            
+            // Also cache texture info
+            _textureInfoCache[handle] = new TextureInfo
+            {
+                Width = texture.Desc.Width,
+                Height = texture.Desc.Height
+            };
+            
+            Console.WriteLine($"[NativeRT] RegisterTextureHandle: Registered texture handle {handle} -> {texture.Desc.Width}x{texture.Desc.Height}");
+        }
+
+        /// <summary>
+        /// Unregisters a texture handle mapping.
+        /// Call this when a texture is destroyed to clean up the mapping.
+        /// </summary>
+        public void UnregisterTextureHandle(IntPtr handle)
+        {
+            if (handle == IntPtr.Zero)
+            {
+                return;
+            }
+
+            _textureHandleMap.Remove(handle);
+            _textureInfoCache.Remove(handle);
+            
+            Console.WriteLine($"[NativeRT] UnregisterTextureHandle: Unregistered texture handle {handle}");
         }
 
         public void Dispose()
@@ -1982,6 +2204,15 @@ namespace Andastra.Runtime.MonoGame.Raytracing
             public int RenderWidth;             // 4 bytes
             public int RenderHeight;            // 4 bytes
             // Total: 32 bytes (aligned)
+        }
+
+        /// <summary>
+        /// Cached texture information for quick lookups.
+        /// </summary>
+        private struct TextureInfo
+        {
+            public int Width;
+            public int Height;
         }
     }
 }

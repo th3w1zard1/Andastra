@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Games.Common.Journal;
+using Andastra.Runtime.Scripting.Interfaces;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Aurora.Journal
@@ -29,11 +32,17 @@ namespace Andastra.Runtime.Games.Aurora.Journal
         [CanBeNull]
         private readonly AuroraJRLLoader _jrlLoader;
         private readonly Dictionary<uint, Dictionary<string, int>> _creatureQuestStates; // creatureId -> questTag -> state
+        [CanBeNull]
+        private readonly IScriptGlobals _scriptGlobals;
+        [CanBeNull]
+        private readonly IWorld _world;
 
-        public AuroraJournalSystem([CanBeNull] AuroraJRLLoader jrlLoader = null)
+        public AuroraJournalSystem([CanBeNull] AuroraJRLLoader jrlLoader = null, [CanBeNull] IScriptGlobals scriptGlobals = null, [CanBeNull] IWorld world = null)
             : base()
         {
             _jrlLoader = jrlLoader;
+            _scriptGlobals = scriptGlobals;
+            _world = world;
             _creatureQuestStates = new Dictionary<uint, Dictionary<string, int>>();
         }
 
@@ -232,18 +241,143 @@ namespace Andastra.Runtime.Games.Aurora.Journal
         /// <remarks>
         /// Based on nwmain.exe: CNWSCreature::ReloadJournalEntries @ 0x14039ddb0
         /// Original implementation: Reloads journal entries from JRL files for a specific creature
+        /// 
+        /// Implementation details (nwmain.exe: 0x14039ddb0):
+        /// - Scans creature's local script variables for variables matching "NW_JOURNAL_ENTRY%s" pattern
+        /// - For each matching variable, extracts quest tag from variable name and state from variable value
+        /// - Loads corresponding JRL file and rebuilds journal entries for all quest states found
+        /// - Clears existing journal entries for this creature before reloading
+        /// - Variable format: "NW_JOURNAL_ENTRY<questTag>" = <entryId/state>
+        /// - Also checks "NW_JOURNAL_DATE%s" variables for entry timestamps (if applicable)
         /// </remarks>
         public void ReloadJournalEntries(uint creatureId)
         {
-            // Based on nwmain.exe: ReloadJournalEntries scans creature's script variables
-            // and reloads journal entries from JRL files based on quest tags found
-            // This is a simplified implementation - full implementation would scan script variables
-            // and reload entries from JRL files matching quest tags
+            if (_scriptGlobals == null || _world == null || _jrlLoader == null)
+            {
+                // If dependencies not available, just clear quest states (fallback behavior)
+                if (_creatureQuestStates.ContainsKey(creatureId))
+                {
+                    _creatureQuestStates[creatureId].Clear();
+                }
+                return;
+            }
 
-            // TODO: STUB - For now, we'll just clear the creature's quest states and let them be re-established
+            // Get the creature entity
+            IEntity creature = _world.GetEntity(creatureId);
+            if (creature == null)
+            {
+                return;
+            }
+
+            // Clear existing journal entries for this creature
+            // Based on nwmain.exe: CNWSCreature::ReloadJournalEntries clears existing entries before reloading
+            RemoveEntriesForCreature(creatureId);
+            
+            // Clear quest states for this creature (will be rebuilt from script variables)
             if (_creatureQuestStates.ContainsKey(creatureId))
             {
                 _creatureQuestStates[creatureId].Clear();
+            }
+
+            // Scan creature's local integer variables for journal entry variables
+            // Pattern: "NW_JOURNAL_ENTRY<questTag>" = <entryId/state>
+            // Based on nwmain.exe: ReloadJournalEntries scans all local variables matching this pattern
+            const string journalEntryPrefix = "NW_JOURNAL_ENTRY";
+            
+            foreach (string varName in _scriptGlobals.EnumerateLocalInts(creature))
+            {
+                // Check if variable matches journal entry pattern
+                if (!varName.StartsWith(journalEntryPrefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                // Extract quest tag from variable name (everything after "NW_JOURNAL_ENTRY")
+                string questTag = varName.Substring(journalEntryPrefix.Length);
+                if (string.IsNullOrEmpty(questTag))
+                {
+                    continue;
+                }
+
+                // Get entry ID/state from variable value
+                int entryId = _scriptGlobals.GetLocalInt(creature, varName);
+                if (entryId <= 0)
+                {
+                    // Skip entries with invalid state (0 or negative typically means not started/invalid)
+                    continue;
+                }
+
+                // Load journal entry text from JRL file
+                // Based on nwmain.exe: JRL files are loaded using quest tag as ResRef
+                string entryText = _jrlLoader.GetQuestEntryText(questTag, entryId, questTag);
+                if (string.IsNullOrEmpty(entryText))
+                {
+                    // Try global.jrl as fallback
+                    entryText = _jrlLoader.GetQuestEntryTextFromGlobal(questTag, entryId);
+                }
+
+                // If we have entry text, add the journal entry
+                if (!string.IsNullOrEmpty(entryText))
+                {
+                    // Get XP reward from quest data if available
+                    int xpReward = 0;
+                    BaseQuestData quest = GetQuest(questTag);
+                    if (quest != null)
+                    {
+                        BaseQuestStage stage = quest.GetStage(entryId);
+                        if (stage != null)
+                        {
+                            xpReward = stage.XPReward;
+                        }
+                    }
+
+                    // Create and add journal entry with creature association
+                    var entry = new AuroraJournalEntry
+                    {
+                        QuestTag = questTag,
+                        State = entryId,
+                        Text = entryText,
+                        XPReward = xpReward,
+                        DateAdded = DateTime.Now,
+                        CreatureId = creatureId
+                    };
+                    
+                    // Add to entries list (base class stores entries globally, but we track creatureId)
+                    base._entries.Add(entry);
+
+                    // Update quest state for this creature
+                    Dictionary<string, int> creatureStates;
+                    if (!_creatureQuestStates.TryGetValue(creatureId, out creatureStates))
+                    {
+                        creatureStates = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+                        _creatureQuestStates[creatureId] = creatureStates;
+                    }
+                    creatureStates[questTag] = entryId;
+
+                    // Fire entry added event
+                    if (OnEntryAdded != null)
+                    {
+                        OnEntryAdded(entry);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Removes all journal entries for a specific creature.
+        /// </summary>
+        private void RemoveEntriesForCreature(uint creatureId)
+        {
+            // Based on nwmain.exe: CNWSCreature::ReloadJournalEntries removes existing entries for creature
+            // We need to remove entries from the base class's _entries list that belong to this creature
+            // Since _entries is protected in base class, we access it directly
+            for (int i = base._entries.Count - 1; i >= 0; i--)
+            {
+                AuroraJournalEntry entry = base._entries[i] as AuroraJournalEntry;
+                if (entry != null && entry.CreatureId == creatureId)
+                {
+                    base._entries.RemoveAt(i);
+                }
             }
         }
 

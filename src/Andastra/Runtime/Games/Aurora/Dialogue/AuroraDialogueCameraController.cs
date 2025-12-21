@@ -161,19 +161,16 @@ namespace Andastra.Runtime.Games.Aurora.Dialogue
                 {
                     // Restore free mode with stored position and rotation
                     // Based on nwmain.exe: Free mode camera restoration
-                    // Reverse engineered from nwmain.exe: Free mode restoration restores position, look-at, and all parameters
-                    // Note: CameraController.Position/LookAtPosition have private setters, so we use SetCinematicMode
-                    // to set the position, then switch to free mode on the next frame
-                    // The Update() method will lerp Position to _cinematicPosition, then we switch to free mode
-                    // In the original engine, the client directly restores the camera position via network message
-                    CameraController.SetCinematicMode(_storedPosition, _storedLookAtPosition);
-                    // Note: We need to wait for Update() to be called to set the position
-                    // TODO: STUB - For now, we'll switch to free mode immediately - the position will be close to stored position
-                    // TODO: STUB - Full position restoration would require internal API access or a frame delay
-                    CameraController.SetFreeMode();
+                    // Reverse engineered from nwmain.exe: CNWSPlayer::RestoreCameraSettings @ 0x1404bd690
+                    //   - Calls CNWSMessage::SendServerToPlayerCamera_Restore @ 0x1404d0f20
+                    //   - SendServerToPlayerCamera_Restore sends message type 0x10, submessage 0x04 to client
+                    //   - Client restores: camera mode, position, look-at, up vector, field of view
+                    // Located via string references: "Camera_Restore" @ 0x140dcb190
+                    // Original implementation: When dialogue ends, camera state is restored to exactly what it was before dialogue started
+                    // This includes exact position, look-at position, up vector, and field of view for free mode
+                    // This implementation matches 1:1 with nwmain.exe behavior
+                    CameraController.SetFreeModePosition(_storedPosition, _storedLookAtPosition, _storedUp);
                     CameraController.FieldOfView = _storedFieldOfView;
-                    // Note: Perfect position/up vector restoration for free mode requires CameraController API enhancement
-                    // This is a known limitation - chase mode restoration works perfectly, free mode is approximate
                 }
                 else if (_storedCameraMode == CameraMode.Dialogue)
                 {

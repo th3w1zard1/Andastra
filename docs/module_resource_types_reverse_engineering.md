@@ -41,7 +41,7 @@ This document details the reverse engineering findings for module file discovery
      - `streamwaves/` - WAV files loaded directly from this directory
      - `streammusic/` - Music files loaded directly from this directory
    - **Evidence**: String references to `".\\streamwaves"` (swkotor.exe: 0x0074df40) and `".\\streammusic"` (swkotor.exe: 0x0074e028)
-   - **Resource Types**: WAV (4) and MP3 (8) exist in resource registry, but Miles audio system uses direct directory access
+   - **Resource Types**: WAV (4), OGG (2078), BMU (8) exist in resource registry, but Miles audio system uses direct directory access
    - **Module Support**: ❌ **NO** - Audio files in modules will NOT be loaded by Miles audio system
    - **Note**: WAV handler exists (swkotor.exe: 0x005d5e90) but Miles audio system bypasses it for streamed audio
 
@@ -366,19 +366,19 @@ Based on `ResourceType.cs`, the following resource types are defined:
   - **Module Support**: ✅ **YES** - WAV handler uses resource system that searches modules
   - **Override Support**: ✅ **YES** - Can be placed in Override directory
   - **Stream Directory Priority**: ⚠️ **COMPLEX** - See "Media File Priority" section below
+- `BMU` (8) - Obfuscated MP3 audio
+  - **Handler**: ❌ **NOT FOUND** in swkotor.exe or swkotor2.exe
+  - **Obfuscation**: ❓ **UNKNOWN** - No handler to verify obfuscation requirements
+  - **Module Support**: ❌ **NO** - No handler exists, cannot be loaded from modules
+  - **Override Support**: ❌ **NO** - No handler exists
 - `OGG` (2078) - OGG audio
   - **VERIFIED**: OGG is **NOT registered** in resource type registry and **NO handler exists**
   - **Module Support**: ❌ **NO** - OGG files in modules will be ignored
   - **Override Support**: ❌ **NO** - No handler exists
-- `MP3` (8) - MP3 audio
-  - **VERIFIED**: MP3 is **registered** in resource type registry (type 8) but **NO handler exists** that calls `FUN_004074d0` with type 8
-  - **Status**: ❌ **REGISTERED BUT NOT LOADED** - Registered in resource type registry but no loader uses it
-  - **Evidence**: 
-    - swkotor.exe: `FUN_005e6d20` (0x005e6d20, line 92-93) registers type 8 as "mp3"
-    - swkotor2.exe: `FUN_00632510` (0x00632510, line 91-92) registers type 8 as "mp3"
-    - No handler found that calls `FUN_004074d0`/`FUN_004075a0` with resource type 8
-  - **Module Support**: ❌ **NO** - No handler exists, cannot be loaded from modules
-  - **Override Support**: ❌ **NO** - No handler exists
+- `MP3` (25014) - MP3 audio
+  - **Status**: ❌ **NOT A GAME RESOURCE TYPE** - Toolset-only, not loaded by game
+  - **Module Support**: ❌ **NO** - Not a game resource type
+  - **Override Support**: ❌ **NO** - Not a game resource type
   - **Note**: MP3 audio can appear in WAV files via "MP3-in-WAV" format (see WAV section)
 
 ### Video Formats
@@ -444,8 +444,9 @@ Based on `ResourceType.cs`, the following resource types are defined:
 | Format | Override Support | Module Support | Stream Directory Support | Priority Order |
 |--------|------------------|----------------|--------------------------|----------------|
 | **WAV** | ✅ YES | ✅ YES | ✅ YES | Override → Modules → StreamWaves/StreamVoice |
+| **BMU** | ❌ NO | ❌ NO | ❓ UNKNOWN | No handler exists |
 | **OGG** | ❌ NO | ❌ NO | ❓ UNKNOWN | No handler exists |
-| **MP3** | ❌ NO | ❌ NO | ❓ UNKNOWN | Registered in registry (type 8) but no handler exists |
+| **MP3** | ❌ NO | ❌ NO | ❓ UNKNOWN | Not a game resource type |
 | **MVE** | ❌ NO | ❌ NO | ✅ YES (movies/) | Direct file I/O via MOVIES: alias, not resource system (swkotor.exe: FUN_005e7a90 0x005e7a90) |
 | **MPG** | ❌ NO | ❌ NO | ✅ YES (movies/) | Direct file I/O via MOVIES: alias, not resource system (swkotor.exe: FUN_005e7a90 0x005e7a90) |
 | **BIK** | ❌ NO | ❌ NO | ✅ YES (movies/) | Direct file I/O via MOVIES: alias, not resource system (swkotor.exe: FUN_005fbbf0 0x005fbbf0, FUN_005e68d0 0x005e68d0) |
@@ -457,8 +458,9 @@ Based on `ResourceType.cs`, the following resource types are defined:
 | Format | Obfuscation Support | Obfuscation Required? | Notes |
 |--------|---------------------|----------------------|-------|
 | **WAV** | ✅ YES | ❌ NO | Supports both obfuscated (SFX: 470 bytes, VO: 20 bytes, MP3-in-WAV: 58 bytes) and unobfuscated (standard RIFF/WAVE) |
+| **BMU** | ❓ UNKNOWN | ❓ UNKNOWN | Per codebase comment: "mp3 with obfuscated extra header" - but no handler found to verify |
 | **OGG** | ❌ NO | ❌ NO | Not supported - no handler exists |
-| **MP3** | ❌ NO | ❌ NO | Registered in registry (type 8) but no handler exists |
+| **MP3** | ❌ NO | ❌ NO | Not a game resource type |
 | **MVE/MPG/BIK** | ❌ NO | ❌ NO | Video formats - no obfuscation support |
 | **WMV** | ❌ NO | ❌ NO | No handler exists |
 | **MP4** | ❌ NO | ❌ NO | Not supported |
@@ -1433,8 +1435,9 @@ if (iVar7 == 0) {
 | Format | Obfuscation Support | Obfuscation Required? | Can Be in patch.erf? |
 |--------|---------------------|----------------------|----------------------|
 | **WAV** | ✅ YES | ❌ NO | ✅ YES - Supports both obfuscated (SFX: 470 bytes, VO: 20 bytes, MP3-in-WAV: 58 bytes) and unobfuscated (standard RIFF/WAVE) |
+| **BMU** | ❓ UNKNOWN | ❓ UNKNOWN | ❌ NO - No handler exists |
 | **OGG** | ❌ NO | ❌ NO | ❌ NO - No handler exists |
-| **MP3** | ❌ NO | ❌ NO | ❌ NO - Registered in registry (type 8) but no handler exists |
+| **MP3** | ❌ NO | ❌ NO | ❌ NO - Not a game resource type |
 | **MVE/MPG/BIK** | ❌ NO | ❌ NO | ❌ NO - Video formats use direct file I/O via MOVIES: alias, NOT resource system (swkotor.exe: FUN_005e7a90 0x005e7a90, FUN_005fbbf0 0x005fbbf0) |
 | **WMV** | ❌ NO | ❌ NO | ❌ NO - No handler exists |
 | **MP4** | ❌ NO | ❌ NO | ❌ NO - Not supported |
@@ -1448,7 +1451,7 @@ if (iVar7 == 0) {
 **Placement in patch.erf**:
 
 - **WAV**: ✅ **YES** - Can be placed in patch.erf (uses resource system)
-- **OGG/MP3/WMV/MP4**: ❌ **NO** - No handlers exist, cannot be loaded (MP3 is registered in registry but no handler uses it)
+- **BMU/OGG/MP3/WMV/MP4**: ❌ **NO** - No handlers exist, cannot be loaded
 - **MVE/MPG/BIK**: ❌ **NO** - Video formats use direct file I/O via MOVIES: alias, NOT resource system (swkotor.exe: FUN_005e7a90 0x005e7a90, FUN_005fbbf0 0x005fbbf0). Cannot be placed in patch.erf
 
 **Priority: patch.erf vs Stream Directories**:
@@ -1476,8 +1479,9 @@ if (iVar7 == 0) {
 | Format | patch.erf Support | Priority vs Stream Directories | Notes |
 |--------|-------------------|--------------------------------|-------|
 | **WAV** | ✅ YES | patch.erf → StreamWaves/StreamVoice | Uses resource system, supports both obfuscated and unobfuscated |
+| **BMU** | ❌ NO | N/A | No handler exists |
 | **OGG** | ❌ NO | N/A | No handler exists |
-| **MP3** | ❌ NO | N/A | Registered in registry (type 8) but no handler exists |
+| **MP3** | ❌ NO | N/A | Not a game resource type |
 | **MVE** | ❌ NO | N/A | Direct file I/O via MOVIES: alias, NOT resource system (swkotor.exe: FUN_005e7a90 0x005e7a90) |
 | **MPG** | ❌ NO | N/A | Direct file I/O via MOVIES: alias, NOT resource system (swkotor.exe: FUN_005e7a90 0x005e7a90) |
 | **BIK** | ❌ NO | N/A | Direct file I/O via MOVIES: alias, NOT resource system (swkotor.exe: FUN_005fbbf0 0x005fbbf0, FUN_005e68d0 0x005e68d0) |

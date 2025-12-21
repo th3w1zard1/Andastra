@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Andastra.Runtime.Core.Interfaces;
 
 namespace Andastra.Runtime.Scripting.Interfaces
@@ -70,6 +71,19 @@ namespace Andastra.Runtime.Scripting.Interfaces
         /// Clears all global variables.
         /// </summary>
         void ClearGlobals();
+
+        /// <summary>
+        /// Enumerates all local integer variable names for an entity.
+        /// </summary>
+        /// <param name="entity">Entity to enumerate local variables for.</param>
+        /// <returns>Collection of variable names.</returns>
+        IEnumerable<string> EnumerateLocalInts(IEntity entity);
+
+        /// <summary>
+        /// Enumerates all global integer variable names.
+        /// </summary>
+        /// <returns>Collection of variable names.</returns>
+        IEnumerable<string> EnumerateGlobalInts();
     }
 }
 

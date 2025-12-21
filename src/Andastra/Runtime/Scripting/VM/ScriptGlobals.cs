@@ -287,6 +287,30 @@ namespace Andastra.Runtime.Scripting.VM
             _globalStrings.Clear();
             _globalLocations.Clear();
         }
+
+        public IEnumerable<string> EnumerateLocalInts(IEntity entity)
+        {
+            if (entity == null)
+            {
+                yield break;
+            }
+
+            if (_localInts.TryGetValue(entity.ObjectId, out Dictionary<string, int> dict))
+            {
+                foreach (string key in dict.Keys)
+                {
+                    yield return key;
+                }
+            }
+        }
+
+        public IEnumerable<string> EnumerateGlobalInts()
+        {
+            foreach (string key in _globalInts.Keys)
+            {
+                yield return key;
+            }
+        }
     }
 }
 

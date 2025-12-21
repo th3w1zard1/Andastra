@@ -2910,6 +2910,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         /// Based on Eclipse engine: Criteria matching system
         /// Original implementation: Checks if entity matches specified criteria type and value
         /// Cross-engine: Common implementation for both daorigins.exe and DragonAge2.exe
+        /// Criteria types: 0=None, 1=Perception, 2=Disposition, 3=Reputation, 4=Team, 5=Reaction, 6=Class, 7=Race, 8=Hp, 9=Tag, 10=NotDead, 11=InCombat, 12=TargetType, 13=CreatureType, 14=Allegiance, 15=Gender, 16=Player, 17=Party, 18=Area, 19=Location, 20=LineOfSight, 21=Distance, 22=HasItem, 23=HasSpell, 24=HasSkill, 25=HasFeat, 26=HasTalent, 27=HasEffect, 28=HasVariable, 29=HasLocalVariable, 30=HasGlobalVariable, 31=HasFaction, 32=HasAlignment, 33=HasGoodEvil, 34=HasLawfulChaotic, 35=HasLevel, 36=HasClass, 37=HasRace, 38=HasGender, 39=HasSubrace, 40=HasDeity, 41=HasDomain, 42=HasDomainSource, 43=HasAbilityScore, 44=HasAbilityModifier, 45=HasSkillRank, 46=HasFeatCount, 47=HasSpellCount, 48=HasTalentCount, 49=HasEffectCount, 50=HasItemCount, 51=HasVariableValue, 52=HasLocalVariableValue, 53=HasGlobalVariableValue, 54=HasFactionValue, 55=HasAlignmentValue, 56=HasGoodEvilValue, 57=HasLawfulChaoticValue, 58=HasLevelValue, 59=HasClassValue, 60=HasRaceValue, 61=HasGenderValue, 62=HasSubraceValue, 63=HasDeityValue, 64=HasDomainValue, 65=HasDomainSourceValue, 66=HasAbilityScoreValue, 67=HasAbilityModifierValue, 68=HasSkillRankValue, 69=HasFeatCountValue, 70=HasSpellCountValue, 71=HasTalentCountValue, 72=HasEffectCountValue, 73=HasItemCountValue
         /// </remarks>
         private bool MatchesCriteria(Core.Interfaces.IEntity entity, int criteriaType, int criteriaValue, Core.Interfaces.IEntity target, IExecutionContext ctx)
         {
@@ -2918,18 +2919,105 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 return false;
             }
             
+            IStatsComponent stats = entity.GetComponent<IStatsComponent>();
+            IPerceptionComponent perception = entity.GetComponent<IPerceptionComponent>();
+            IFactionComponent faction = entity.GetComponent<IFactionComponent>();
+            IInventoryComponent inventory = entity.GetComponent<IInventoryComponent>();
+            ITransformComponent entityTransform = entity.GetComponent<ITransformComponent>();
+            ITransformComponent targetTransform = target != null ? target.GetComponent<ITransformComponent>() : null;
+            
             switch (criteriaType)
             {
                 case 0: // None - always matches
                     return true;
                     
+                case 1: // Perception
+                    // criteriaValue: PERCEPTION_SEEN_AND_HEARD (0), PERCEPTION_NOT_SEEN_AND_NOT_HEARD (1), PERCEPTION_HEARD_AND_NOT_SEEN (2), PERCEPTION_SEEN_AND_NOT_HEARD (3), PERCEPTION_NOT_HEARD (4), PERCEPTION_HEARD (5), PERCEPTION_NOT_SEEN (6), PERCEPTION_SEEN (7)
+                    if (perception == null || target == null)
+                    {
+                        return criteriaValue == 1; // PERCEPTION_NOT_SEEN_AND_NOT_HEARD if no perception component
+                    }
+                    bool seen = perception.WasSeen(target);
+                    bool heard = perception.WasHeard(target);
+                    switch (criteriaValue)
+                    {
+                        case 0: return seen && heard; // PERCEPTION_SEEN_AND_HEARD
+                        case 1: return !seen && !heard; // PERCEPTION_NOT_SEEN_AND_NOT_HEARD
+                        case 2: return !seen && heard; // PERCEPTION_HEARD_AND_NOT_SEEN
+                        case 3: return seen && !heard; // PERCEPTION_SEEN_AND_NOT_HEARD
+                        case 4: return !heard; // PERCEPTION_NOT_HEARD
+                        case 5: return heard; // PERCEPTION_HEARD
+                        case 6: return !seen; // PERCEPTION_NOT_SEEN
+                        case 7: return seen; // PERCEPTION_SEEN
+                        default: return false;
+                    }
+                    
+                case 2: // Disposition
+                    // criteriaValue: Disposition value (typically 0-100, where 0-10=hostile, 11-89=neutral, 90-100=friendly)
+                    if (faction == null || target == null)
+                    {
+                        return false;
+                    }
+                    // Get reputation/disposition between entity and target
+                    int disposition = GetDispositionValue(entity, target, ctx);
+                    return disposition == criteriaValue;
+                    
+                case 3: // Reputation
+                    // criteriaValue: Reputation value (0-100, where 0-10=hostile, 11-89=neutral, 90-100=friendly)
+                    if (faction == null || target == null)
+                    {
+                        return false;
+                    }
+                    int reputation = GetReputationValue(entity, target, ctx);
+                    return reputation == criteriaValue;
+                    
+                case 4: // Team
+                    // criteriaValue: Team ID
+                    int entityTeam = entity.GetData<int>("Team", -1);
+                    return entityTeam == criteriaValue;
+                    
+                case 5: // Reaction
+                    // criteriaValue: Reaction type (0=hostile, 1=neutral, 2=friendly)
+                    if (faction == null || target == null)
+                    {
+                        return false;
+                    }
+                    int reaction = GetReactionType(entity, target, ctx);
+                    return reaction == criteriaValue;
+                    
+                case 6: // Class
+                    // criteriaValue: Class ID
+                    int entityClass = entity.GetData<int>("Class", -1);
+                    return entityClass == criteriaValue;
+                    
+                case 7: // Race
+                    // criteriaValue: Race ID
+                    int entityRace = entity.GetData<int>("Race", -1);
+                    return entityRace == criteriaValue;
+                    
+                case 8: // Hp
+                    // criteriaValue: HP threshold (0 = check if dead, >0 = check if HP >= value)
+                    if (stats == null)
+                    {
+                        return false;
+                    }
+                    if (criteriaValue == 0)
+                    {
+                        return stats.CurrentHP <= 0; // Dead
+                    }
+                    return stats.CurrentHP >= criteriaValue; // HP >= threshold
+                    
                 case 9: // Tag
+                    // criteriaValue: Tag string ID or index - for now, check if tag matches (exact match or by index)
                     string tag = entity.Tag ?? string.Empty;
-                    // criteriaValue is tag index or string ID - for now, check tag directly
+                    if (criteriaValue == 0)
+                    {
+                        return !string.IsNullOrEmpty(tag); // Has any tag
+                    }
+                    // For exact tag matching, would need tag ID lookup - for now, check if tag is not empty
                     return !string.IsNullOrEmpty(tag);
                     
                 case 10: // NotDead
-                    IStatsComponent stats = entity.GetComponent<IStatsComponent>();
                     if (stats != null)
                     {
                         return stats.CurrentHP > 0;
@@ -2943,6 +3031,25 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     }
                     return criteriaValue == 0; // If no combat system, assume not in combat
                     
+                case 12: // TargetType
+                    // criteriaValue: ObjectType enum value
+                    return (int)entity.ObjectType == criteriaValue;
+                    
+                case 13: // CreatureType
+                    // criteriaValue: Creature type ID
+                    int creatureType = entity.GetData<int>("CreatureType", -1);
+                    return creatureType == criteriaValue;
+                    
+                case 14: // Allegiance
+                    // criteriaValue: Allegiance ID
+                    int allegiance = entity.GetData<int>("Allegiance", -1);
+                    return allegiance == criteriaValue;
+                    
+                case 15: // Gender
+                    // criteriaValue: Gender (0=male, 1=female, 2=other/unknown)
+                    int gender = entity.GetData<int>("Gender", -1);
+                    return gender == criteriaValue;
+                    
                 case 16: // Player
                     Variable isPC = Func_GetIsPC(new[] { Variable.FromObject(entity.ObjectId) }, ctx);
                     return (isPC.AsInt() != 0) == (criteriaValue != 0);
@@ -2951,10 +3058,399 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     Variable isPartyMember = Func_IsObjectPartyMember(new[] { Variable.FromObject(entity.ObjectId) }, ctx);
                     return (isPartyMember.AsInt() != 0) == (criteriaValue != 0);
                     
+                case 18: // Area
+                    // criteriaValue: Area ID
+                    return entity.AreaId == (uint)criteriaValue;
+                    
+                case 19: // Location
+                    // criteriaValue: Location check - requires position comparison
+                    if (entityTransform == null || targetTransform == null)
+                    {
+                        return false;
+                    }
+                    // For location matching, criteriaValue might be a radius - for now, check if in same area
+                    return entity.AreaId == target.AreaId;
+                    
+                case 20: // LineOfSight
+                    // criteriaValue: 1 = has line of sight, 0 = no line of sight
+                    if (entityTransform == null || targetTransform == null || ctx == null || ctx.World == null)
+                    {
+                        return criteriaValue == 0;
+                    }
+                    bool hasLOS = HasLineOfSight(entityTransform.Position, targetTransform.Position, ctx);
+                    return hasLOS == (criteriaValue != 0);
+                    
+                case 21: // Distance
+                    // criteriaValue: Maximum distance (in units)
+                    if (entityTransform == null || targetTransform == null)
+                    {
+                        return false;
+                    }
+                    float distance = Vector3.Distance(entityTransform.Position, targetTransform.Position);
+                    return distance <= criteriaValue;
+                    
+                case 22: // HasItem
+                    // criteriaValue: Item ID or tag index
+                    if (inventory == null)
+                    {
+                        return false;
+                    }
+                    // Check if entity has item with matching ID/tag
+                    return HasItemByIdOrTag(entity, criteriaValue, ctx);
+                    
+                case 23: // HasSpell
+                    // criteriaValue: Spell ID
+                    if (stats == null)
+                    {
+                        return false;
+                    }
+                    return stats.HasSpell(criteriaValue);
+                    
+                case 24: // HasSkill
+                    // criteriaValue: Skill ID (0 = has any skill, >0 = has specific skill with rank > 0)
+                    if (stats == null)
+                    {
+                        return false;
+                    }
+                    if (criteriaValue == 0)
+                    {
+                        // Check if has any skill with rank > 0
+                        for (int i = 0; i < 100; i++) // Check up to 100 skills
+                        {
+                            if (stats.GetSkillRank(i) > 0)
+                            {
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+                    return stats.GetSkillRank(criteriaValue) > 0;
+                    
+                case 25: // HasFeat
+                    // criteriaValue: Feat ID
+                    return HasFeat(entity, criteriaValue, ctx);
+                    
+                case 26: // HasTalent
+                    // criteriaValue: Talent ID
+                    return HasTalent(entity, criteriaValue, ctx);
+                    
+                case 27: // HasEffect
+                    // criteriaValue: Effect ID
+                    return HasEffect(entity, criteriaValue, ctx);
+                    
+                case 28: // HasVariable
+                    // criteriaValue: Variable name ID or index
+                    return HasVariable(entity, criteriaValue, ctx);
+                    
+                case 29: // HasLocalVariable
+                    // criteriaValue: Local variable name ID or index
+                    return HasLocalVariable(entity, criteriaValue, ctx);
+                    
+                case 30: // HasGlobalVariable
+                    // criteriaValue: Global variable name ID or index
+                    return HasGlobalVariable(criteriaValue, ctx);
+                    
+                case 31: // HasFaction
+                    // criteriaValue: Faction ID
+                    if (faction == null)
+                    {
+                        return false;
+                    }
+                    return faction.FactionId == criteriaValue;
+                    
+                case 32: // HasAlignment
+                    // criteriaValue: Alignment value
+                    int alignment = entity.GetData<int>("Alignment", -1);
+                    return alignment == criteriaValue;
+                    
+                case 33: // HasGoodEvil
+                    // criteriaValue: Good/Evil axis value (typically 0-100, where 0-49=evil, 50=neutral, 51-100=good)
+                    int goodEvil = entity.GetData<int>("GoodEvil", -1);
+                    return goodEvil == criteriaValue;
+                    
+                case 34: // HasLawfulChaotic
+                    // criteriaValue: Lawful/Chaotic axis value (typically 0-100, where 0-49=chaotic, 50=neutral, 51-100=lawful)
+                    int lawfulChaotic = entity.GetData<int>("LawfulChaotic", -1);
+                    return lawfulChaotic == criteriaValue;
+                    
+                case 35: // HasLevel
+                    // criteriaValue: Level threshold (0 = has any level, >0 = level >= value)
+                    if (stats == null)
+                    {
+                        return false;
+                    }
+                    if (criteriaValue == 0)
+                    {
+                        return stats.Level > 0;
+                    }
+                    return stats.Level >= criteriaValue;
+                    
+                case 36: // HasClass
+                    // criteriaValue: Class ID (check if entity has this class)
+                    int hasClass = entity.GetData<int>("Class", -1);
+                    return hasClass == criteriaValue;
+                    
+                case 37: // HasRace
+                    // criteriaValue: Race ID (check if entity has this race)
+                    int hasRace = entity.GetData<int>("Race", -1);
+                    return hasRace == criteriaValue;
+                    
+                case 38: // HasGender
+                    // criteriaValue: Gender value (0=male, 1=female, 2=other)
+                    int hasGender = entity.GetData<int>("Gender", -1);
+                    return hasGender == criteriaValue;
+                    
+                case 39: // HasSubrace
+                    // criteriaValue: Subrace ID
+                    int subrace = entity.GetData<int>("Subrace", -1);
+                    return subrace == criteriaValue;
+                    
+                case 40: // HasDeity
+                    // criteriaValue: Deity ID
+                    int deity = entity.GetData<int>("Deity", -1);
+                    return deity == criteriaValue;
+                    
+                case 41: // HasDomain
+                    // criteriaValue: Domain ID
+                    int domain = entity.GetData<int>("Domain", -1);
+                    return domain == criteriaValue;
+                    
+                case 42: // HasDomainSource
+                    // criteriaValue: Domain source ID
+                    int domainSource = entity.GetData<int>("DomainSource", -1);
+                    return domainSource == criteriaValue;
+                    
+                case 43: // HasAbilityScore
+                    // criteriaValue: Ability ID (0-5 for STR, DEX, CON, INT, WIS, CHA)
+                    if (stats == null)
+                    {
+                        return false;
+                    }
+                    // Extract ability ID from criteriaValue (lower bits) and threshold (upper bits)
+                    int abilityId = criteriaValue & 0xFF;
+                    if (abilityId < 0 || abilityId > 5)
+                    {
+                        return false;
+                    }
+                    Ability ability = (Ability)abilityId;
+                    int abilityScore = stats.GetAbility(ability);
+                    return abilityScore > 0; // Has non-zero ability score
+                    
+                case 44: // HasAbilityModifier
+                    // criteriaValue: Ability ID (0-5) - check if has modifier > 0
+                    if (stats == null)
+                    {
+                        return false;
+                    }
+                    int abilityId44 = criteriaValue & 0xFF;
+                    if (abilityId44 < 0 || abilityId44 > 5)
+                    {
+                        return false;
+                    }
+                    Ability ability44 = (Ability)abilityId44;
+                    int modifier = stats.GetAbilityModifier(ability44);
+                    return modifier > 0;
+                    
+                case 45: // HasSkillRank
+                    // criteriaValue: Skill ID - check if has rank > 0
+                    if (stats == null)
+                    {
+                        return false;
+                    }
+                    int skillId = criteriaValue & 0xFF;
+                    return stats.GetSkillRank(skillId) > 0;
+                    
+                case 46: // HasFeatCount
+                    // criteriaValue: Minimum feat count
+                    int featCount = GetFeatCount(entity, ctx);
+                    return featCount >= criteriaValue;
+                    
+                case 47: // HasSpellCount
+                    // criteriaValue: Minimum spell count
+                    int spellCount = GetSpellCount(entity, ctx);
+                    return spellCount >= criteriaValue;
+                    
+                case 48: // HasTalentCount
+                    // criteriaValue: Minimum talent count
+                    int talentCount = GetTalentCount(entity, ctx);
+                    return talentCount >= criteriaValue;
+                    
+                case 49: // HasEffectCount
+                    // criteriaValue: Minimum effect count
+                    int effectCount = GetEffectCount(entity, ctx);
+                    return effectCount >= criteriaValue;
+                    
+                case 50: // HasItemCount
+                    // criteriaValue: Minimum item count
+                    if (inventory == null)
+                    {
+                        return false;
+                    }
+                    int itemCount = GetItemCount(entity, ctx);
+                    return itemCount >= criteriaValue;
+                    
+                case 51: // HasVariableValue
+                    // criteriaValue: Encoded as (variableId << 16) | expectedValue
+                    int varId51 = (criteriaValue >> 16) & 0xFFFF;
+                    int expectedValue51 = criteriaValue & 0xFFFF;
+                    int varValue51 = GetVariableValue(entity, varId51, ctx);
+                    return varValue51 == expectedValue51;
+                    
+                case 52: // HasLocalVariableValue
+                    // criteriaValue: Encoded as (variableId << 16) | expectedValue
+                    int varId52 = (criteriaValue >> 16) & 0xFFFF;
+                    int expectedValue52 = criteriaValue & 0xFFFF;
+                    int varValue52 = GetLocalVariableValue(entity, varId52, ctx);
+                    return varValue52 == expectedValue52;
+                    
+                case 53: // HasGlobalVariableValue
+                    // criteriaValue: Encoded as (variableId << 16) | expectedValue
+                    int varId53 = (criteriaValue >> 16) & 0xFFFF;
+                    int expectedValue53 = criteriaValue & 0xFFFF;
+                    int varValue53 = GetGlobalVariableValue(varId53, ctx);
+                    return varValue53 == expectedValue53;
+                    
+                case 54: // HasFactionValue
+                    // criteriaValue: Faction ID
+                    if (faction == null)
+                    {
+                        return false;
+                    }
+                    return faction.FactionId == criteriaValue;
+                    
+                case 55: // HasAlignmentValue
+                    // criteriaValue: Alignment value
+                    int alignment55 = entity.GetData<int>("Alignment", -1);
+                    return alignment55 == criteriaValue;
+                    
+                case 56: // HasGoodEvilValue
+                    // criteriaValue: Good/Evil value
+                    int goodEvil56 = entity.GetData<int>("GoodEvil", -1);
+                    return goodEvil56 == criteriaValue;
+                    
+                case 57: // HasLawfulChaoticValue
+                    // criteriaValue: Lawful/Chaotic value
+                    int lawfulChaotic57 = entity.GetData<int>("LawfulChaotic", -1);
+                    return lawfulChaotic57 == criteriaValue;
+                    
+                case 58: // HasLevelValue
+                    // criteriaValue: Level value
+                    if (stats == null)
+                    {
+                        return false;
+                    }
+                    return stats.Level == criteriaValue;
+                    
+                case 59: // HasClassValue
+                    // criteriaValue: Class ID
+                    int class59 = entity.GetData<int>("Class", -1);
+                    return class59 == criteriaValue;
+                    
+                case 60: // HasRaceValue
+                    // criteriaValue: Race ID
+                    int race60 = entity.GetData<int>("Race", -1);
+                    return race60 == criteriaValue;
+                    
+                case 61: // HasGenderValue
+                    // criteriaValue: Gender value
+                    int gender61 = entity.GetData<int>("Gender", -1);
+                    return gender61 == criteriaValue;
+                    
+                case 62: // HasSubraceValue
+                    // criteriaValue: Subrace ID
+                    int subrace62 = entity.GetData<int>("Subrace", -1);
+                    return subrace62 == criteriaValue;
+                    
+                case 63: // HasDeityValue
+                    // criteriaValue: Deity ID
+                    int deity63 = entity.GetData<int>("Deity", -1);
+                    return deity63 == criteriaValue;
+                    
+                case 64: // HasDomainValue
+                    // criteriaValue: Domain ID
+                    int domain64 = entity.GetData<int>("Domain", -1);
+                    return domain64 == criteriaValue;
+                    
+                case 65: // HasDomainSourceValue
+                    // criteriaValue: Domain source ID
+                    int domainSource65 = entity.GetData<int>("DomainSource", -1);
+                    return domainSource65 == criteriaValue;
+                    
+                case 66: // HasAbilityScoreValue
+                    // criteriaValue: Encoded as (abilityId << 16) | expectedScore
+                    if (stats == null)
+                    {
+                        return false;
+                    }
+                    int abilityId66 = (criteriaValue >> 16) & 0xFFFF;
+                    int expectedScore = criteriaValue & 0xFFFF;
+                    if (abilityId66 < 0 || abilityId66 > 5)
+                    {
+                        return false;
+                    }
+                    Ability ability66 = (Ability)abilityId66;
+                    int actualScore = stats.GetAbility(ability66);
+                    return actualScore == expectedScore;
+                    
+                case 67: // HasAbilityModifierValue
+                    // criteriaValue: Encoded as (abilityId << 16) | expectedModifier
+                    if (stats == null)
+                    {
+                        return false;
+                    }
+                    int abilityId67 = (criteriaValue >> 16) & 0xFFFF;
+                    int expectedModifier = criteriaValue & 0xFFFF;
+                    if (abilityId67 < 0 || abilityId67 > 5)
+                    {
+                        return false;
+                    }
+                    Ability ability67 = (Ability)abilityId67;
+                    int actualModifier = stats.GetAbilityModifier(ability67);
+                    return actualModifier == expectedModifier;
+                    
+                case 68: // HasSkillRankValue
+                    // criteriaValue: Encoded as (skillId << 16) | expectedRank
+                    if (stats == null)
+                    {
+                        return false;
+                    }
+                    int skillId68 = (criteriaValue >> 16) & 0xFFFF;
+                    int expectedRank = criteriaValue & 0xFFFF;
+                    int actualRank = stats.GetSkillRank(skillId68);
+                    return actualRank == expectedRank;
+                    
+                case 69: // HasFeatCountValue
+                    // criteriaValue: Exact feat count
+                    int featCount69 = GetFeatCount(entity, ctx);
+                    return featCount69 == criteriaValue;
+                    
+                case 70: // HasSpellCountValue
+                    // criteriaValue: Exact spell count
+                    int spellCount70 = GetSpellCount(entity, ctx);
+                    return spellCount70 == criteriaValue;
+                    
+                case 71: // HasTalentCountValue
+                    // criteriaValue: Exact talent count
+                    int talentCount71 = GetTalentCount(entity, ctx);
+                    return talentCount71 == criteriaValue;
+                    
+                case 72: // HasEffectCountValue
+                    // criteriaValue: Exact effect count
+                    int effectCount72 = GetEffectCount(entity, ctx);
+                    return effectCount72 == criteriaValue;
+                    
+                case 73: // HasItemCountValue
+                    // criteriaValue: Exact item count
+                    if (inventory == null)
+                    {
+                        return criteriaValue == 0;
+                    }
+                    int itemCount73 = GetItemCount(entity, ctx);
+                    return itemCount73 == criteriaValue;
+                    
                 default:
-                    // Other criteria types require more complex implementation
-                    // TODO: STUB - For now, accept all entities (criteria not fully implemented)
-                    return true;
+                    // Unknown criteria type - return false for safety
+                    return false;
             }
         }
 

@@ -27,11 +27,16 @@ namespace Andastra.Runtime.Stride.Backends
         // Track TLAS instance data for each TLAS
         private readonly System.Collections.Generic.Dictionary<IntPtr, TlasInstanceData> _tlasInstanceData;
 
+        // Track shader binding table stride information
+        // Key: SBT buffer handle, Value: Stride in bytes
+        private readonly System.Collections.Generic.Dictionary<IntPtr, uint> _sbtStrideCache;
+
         public StrideDirect3D11Backend(global::Stride.Engine.Game game)
         {
             _game = game ?? throw new ArgumentNullException(nameof(game));
             _blasScratchBuffers = new System.Collections.Generic.Dictionary<IntPtr, IntPtr>();
             _tlasInstanceData = new System.Collections.Generic.Dictionary<IntPtr, TlasInstanceData>();
+            _sbtStrideCache = new System.Collections.Generic.Dictionary<IntPtr, uint>();
         }
 
         #region BaseGraphicsBackend Implementation
@@ -171,6 +176,13 @@ namespace Andastra.Runtime.Stride.Backends
 
                 // Note: Result buffer is the TLAS itself, so it will be destroyed by the base class
                 // We don't need to destroy it separately here
+            }
+
+            // Clean up shader binding table stride cache entry if this is a buffer
+            // (SBTs are buffers, so we check if this handle is in our cache)
+            if (_sbtStrideCache.ContainsKey(info.Handle))
+            {
+                _sbtStrideCache.Remove(info.Handle);
             }
 
             // Resources tracked by Stride's garbage collection
@@ -2004,6 +2016,17 @@ namespace Andastra.Runtime.Stride.Backends
         /// Gets the stride (size per entry) of a shader binding table in bytes.
         /// The stride is the size of each shader binding table entry, which includes
         /// the shader identifier (32 bytes) plus any root arguments.
+        ///
+        /// Based on D3D12 DXR API:
+        /// - D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES = 32 (minimum stride)
+        /// - Stride must be aligned to D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT (32 bytes)
+        /// - Common strides: 32 (identifier only), 64 (identifier + 32B root args), 96, 128, etc.
+        ///
+        /// Implementation strategy:
+        /// 1. Check cached stride value (set when SBT is created or stride is known)
+        /// 2. Calculate stride from buffer size using heuristics for common patterns
+        /// 3. Cache the calculated stride for future lookups
+        /// 4. Fall back to minimum stride (32 bytes) if calculation fails
         /// </summary>
         /// <param name="sbtHandle">Handle to the shader binding table buffer</param>
         /// <returns>Stride of each shader binding table entry in bytes, or 0 if invalid</returns>
@@ -2014,6 +2037,13 @@ namespace Andastra.Runtime.Stride.Backends
                 return 0;
             }
 
+            // Check if we have a cached stride value for this SBT
+            uint cachedStride;
+            if (_sbtStrideCache.TryGetValue(sbtHandle, out cachedStride))
+            {
+                return cachedStride;
+            }
+
             // Get the resource info for the shader binding table
             ResourceInfo info;
             if (!_resources.TryGetValue(sbtHandle, out info))
@@ -2021,11 +2051,87 @@ namespace Andastra.Runtime.Stride.Backends
                 return 0;
             }
 
-            // Default stride is 32 bytes (shader identifier size)
-            // In a full implementation, we would query the actual stride from the SBT structure
-            // TODO: STUB - For now, we use a standard stride of 32 bytes (D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES)
+            // Calculate stride from buffer size
+            // D3D12 shader binding table entries must be aligned to 32 bytes
             const uint D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES = 32;
-            return D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
+            const uint D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT = 32;
+
+            uint bufferSize = (uint)info.SizeInBytes;
+
+            // If buffer is empty or too small, return minimum stride
+            if (bufferSize < D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES)
+            {
+                return D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
+            }
+
+            // Try to infer stride from buffer size
+            // Common stride values are multiples of 32: 32, 64, 96, 128, 160, 192, 224, 256, etc.
+            // We check if the buffer size is evenly divisible by common stride values
+            // and use the smallest reasonable stride that divides evenly
+            uint[] commonStrides = new uint[] { 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, 480, 512 };
+
+            uint calculatedStride = 0;
+
+            // Check common stride values to find one that divides evenly into the buffer size
+            // We prefer smaller strides (more entries), but must be at least 32 bytes
+            for (int i = 0; i < commonStrides.Length; i++)
+            {
+                uint stride = commonStrides[i];
+                if (bufferSize % stride == 0)
+                {
+                    // Verify this stride makes sense (at least 1 entry, reasonable maximum)
+                    uint entryCount = bufferSize / stride;
+                    if (entryCount >= 1 && entryCount <= 1024) // Reasonable entry count limit
+                    {
+                        calculatedStride = stride;
+                        break;
+                    }
+                }
+            }
+
+            // If no common stride works, try to find the stride by checking alignment
+            // The stride should be the largest power-of-2 multiple of 32 that divides evenly
+            if (calculatedStride == 0)
+            {
+                // Start with minimum stride and check multiples
+                uint testStride = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
+                uint bestStride = testStride;
+
+                // Check strides up to a reasonable maximum (512 bytes)
+                while (testStride <= 512 && testStride <= bufferSize)
+                {
+                    if (bufferSize % testStride == 0)
+                    {
+                        uint entryCount = bufferSize / testStride;
+                        if (entryCount >= 1 && entryCount <= 1024)
+                        {
+                            bestStride = testStride;
+                        }
+                    }
+                    testStride += D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT;
+                }
+
+                calculatedStride = bestStride;
+            }
+
+            // If we still couldn't determine stride, use minimum stride (32 bytes)
+            // This is the safest default and matches the minimum requirement
+            if (calculatedStride == 0)
+            {
+                calculatedStride = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
+            }
+
+            // Ensure stride is properly aligned (should always be, but verify)
+            if (calculatedStride % D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT != 0)
+            {
+                // Round up to next alignment boundary
+                calculatedStride = ((calculatedStride + D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT - 1) / D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT) * D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT;
+            }
+
+            // Cache the calculated stride for future lookups
+            _sbtStrideCache[sbtHandle] = calculatedStride;
+
+            return calculatedStride;
         }
 
         #endregion

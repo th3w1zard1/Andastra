@@ -4,6 +4,7 @@ using System.Numerics;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Dialogue;
 using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Graphics;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Formats.WAV;
@@ -139,12 +140,20 @@ namespace Andastra.Runtime.Stride.Audio
                 // Apply 3D positioning if spatial audio is enabled
                 // Based on Stride API: SoundInstance.Apply3D() for 3D spatial audio
                 // https://doc.stride3d.net/latest/en/api/Stride.Audio.SoundInstance.html#Stride_Audio_SoundInstance_Apply3D_Stride_Audio_AudioEmitter_
+                // Based on swkotor2.exe: Voice-over plays at speaker entity position for 3D spatial audio
                 if (useSpatialAudio && speaker != null)
                 {
                     var emitter = new AudioEmitter();
-                    // Get speaker position from entity (would need IWorld or position component)
-                    // TODO: STUB - For now, set to origin - full implementation would get actual position
-                    emitter.Position = Vector3.Zero;
+                    // Get speaker position from entity TransformComponent
+                    // Based on MonoGameVoicePlayer implementation: Gets position from ITransformComponent
+                    // Entity position is the source of truth for 3D audio positioning in KOTOR
+                    Vector3 speakerPosition = Vector3.Zero;
+                    ITransformComponent transform = speaker.GetComponent<ITransformComponent>();
+                    if (transform != null)
+                    {
+                        speakerPosition = transform.Position;
+                    }
+                    emitter.Position = speakerPosition;
                     _currentVoiceInstance.Apply3D(emitter);
                 }
 

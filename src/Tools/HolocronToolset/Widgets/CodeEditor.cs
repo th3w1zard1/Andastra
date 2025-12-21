@@ -6,6 +6,8 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Avalonia;
+using Avalonia.Media;
+using Avalonia.Media.TextFormatting;
 
 namespace HolocronToolset.Widgets
 {

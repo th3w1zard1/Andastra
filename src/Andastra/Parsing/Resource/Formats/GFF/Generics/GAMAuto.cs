@@ -39,11 +39,11 @@ namespace Andastra.Parsing.Resource.Generics
         /// </summary>
         /// <param name="gam">The GAM object to write.</param>
         /// <param name="target">Target to write to (string filepath or Stream).</param>
-        /// <param name="game">The game type (must be Aurora or , not Odyssey).</param>
+        /// <param name="game">The game type (must be Aurora, not Odyssey or Eclipse).</param>
         /// <param name="fileFormat">File format (default: GAM, must be GAM).</param>
         /// <remarks>
         /// GAM Writing:
-        /// - Validates game type (Aurora only, not Odyssey)
+        /// - Validates game type (Aurora only, not Odyssey or Eclipse)
         /// - Dismantles GAM object to GFF structure
         /// - Writes GFF format file with "GAM " signature
         /// - Supports file paths and streams
@@ -88,12 +88,12 @@ namespace Andastra.Parsing.Resource.Generics
         /// Converts a GAM object to bytes.
         /// </summary>
         /// <param name="gam">The GAM object to convert.</param>
-        /// <param name="game">The game type (must be Aurora or , not Odyssey).</param>
+        /// <param name="game">The game type (must be Aurora, not Odyssey or Eclipse).</param>
         /// <param name="fileFormat">File format (default: GAM, must be GAM).</param>
         /// <returns>Byte array containing GAM file data.</returns>
         /// <remarks>
         /// GAM Bytes Conversion:
-        /// - Validates game type (Aurora only, not Odyssey)
+        /// - Validates game type (Aurora only, not Odyssey or Eclipse)
         /// - Dismantles GAM object to GFF structure
         /// - Converts GFF to bytes with "GAM " signature
         /// </remarks>

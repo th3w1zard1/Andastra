@@ -163,17 +163,6 @@ namespace Andastra.Runtime.Core.Save
         /// </summary>
         public string PlayerName { get; set; }
 
-        /// <summary>
-        /// Module-to-area mapping (module ResRef -> list of area ResRefs).
-        /// </summary>
-        /// <remarks>
-        /// Based on swkotor2.exe: Mod_Area_list in module IFO file
-        /// Original implementation: Module IFO contains Mod_Area_list field (GFF List) with area ResRefs
-        /// Located via string references: "Mod_Area_list" @ 0x007be748 (swkotor2.exe)
-        /// This mapping allows verification of area-to-module relationships without loading the module IFO
-        /// Used by DoesAreaBelongToModule to check if an area belongs to a module when the module is not loaded
-        /// </remarks>
-        public Dictionary<string, List<string>> ModuleAreaMapping { get; set; }
 
         public SaveGameData()
         {
@@ -186,7 +175,7 @@ namespace Andastra.Runtime.Core.Save
             LiveContent = new List<bool>();
             LiveContentStrings = new List<string>();
             PlotStates = new Dictionary<int, PlotState>();
-            ModuleAreaMapping = new Dictionary<string, List<string>>();
+            ModuleAreaMappings = new Dictionary<string, List<string>>();
         }
     }
 
