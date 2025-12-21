@@ -176,6 +176,27 @@ namespace Andastra.Runtime.Games.Aurora.Data
         }
 
         /// <summary>
+        /// Gets a 2DA table by name.
+        /// </summary>
+        /// <param name="tableName">The table name without extension (e.g., "appearance" for appearance.2da, "itempropdef" for itempropdef.2da).</param>
+        /// <returns>The loaded 2DA table, or null if not found.</returns>
+        /// <remarks>
+        /// Based on nwmain.exe: C2DA::Load2DArray @ 0x1401a73a0 for 2DA loading
+        /// - Uses AuroraTwoDATableManager to access 2DA tables with caching
+        /// - Cross-engine pattern: Same as Odyssey and Eclipse
+        /// </remarks>
+        [CanBeNull]
+        public TwoDA GetTable(string tableName)
+        {
+            if (string.IsNullOrEmpty(tableName))
+            {
+                return null;
+            }
+
+            return _tableManager.GetTable(tableName);
+        }
+
+        /// <summary>
         /// Gets feat data from feat.2da table.
         /// </summary>
         /// <param name="featId">The feat ID (row index in feat.2da).</param>

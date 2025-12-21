@@ -697,6 +697,16 @@ namespace Andastra.Runtime.MonoGame.Backends
             _samplerHeapCapacity = 0;
             _samplerHeapNextIndex = 0;
 
+            // Release DSV descriptor heap
+            _dsvDescriptorHeap = IntPtr.Zero;
+            _dsvHeapCpuStartHandle = IntPtr.Zero;
+            _dsvHeapDescriptorIncrementSize = 0;
+            _dsvHeapCapacity = 0;
+            _dsvHeapNextIndex = 0;
+
+            // Clear DSV handle cache
+            _textureDsvHandles.Clear();
+
             // Note: We don't release _device or _device5 here as they're owned by Direct3D12Backend
             // The backend will handle device cleanup in its Shutdown method
 

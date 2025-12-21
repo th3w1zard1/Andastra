@@ -999,9 +999,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             score += 10;
 
             return score;
-            }
-
-            Console.WriteLine($"[VulkanBackend] Found {deviceCount} physical device(s)");
+        }
 
             // Allocate array for device handles
             IntPtr[] deviceHandles = new IntPtr[deviceCount];

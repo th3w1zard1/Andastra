@@ -134,6 +134,27 @@ namespace Andastra.Runtime.Games.Odyssey.Data
             float? value = row.GetFloat(columnName);
             return value ?? defaultValue;
         }
+
+        /// <summary>
+        /// Gets a 2DA table by name.
+        /// </summary>
+        /// <param name="tableName">The table name without extension (e.g., "appearance" for appearance.2da, "itempropdef" for itempropdef.2da).</param>
+        /// <returns>The loaded 2DA table, or null if not found.</returns>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_0041d2c0 @ 0x0041d2c0 (2DA table lookup)
+        /// - Uses GameDataManager to access 2DA tables with caching
+        /// - Cross-engine pattern: Same as Aurora and Eclipse
+        /// </remarks>
+        [CanBeNull]
+        public Parsing.Formats.TwoDA.TwoDA GetTable(string tableName)
+        {
+            if (string.IsNullOrEmpty(tableName))
+            {
+                return null;
+            }
+
+            return _gameDataManager.GetTable(tableName);
+        }
     }
 }
 

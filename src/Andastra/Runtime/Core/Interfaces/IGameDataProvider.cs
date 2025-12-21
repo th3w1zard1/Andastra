@@ -1,4 +1,5 @@
 using JetBrains.Annotations;
+using Andastra.Parsing.Formats.TwoDA;
 
 namespace Andastra.Runtime.Core.Interfaces
 {
@@ -61,5 +62,21 @@ namespace Andastra.Runtime.Core.Interfaces
         /// Engine-specific implementations handle the actual table loading and lookup.
         /// </remarks>
         float GetTableFloat(string tableName, int rowIndex, string columnName, float defaultValue = 0.0f);
+
+        /// <summary>
+        /// Gets a 2DA table by name.
+        /// </summary>
+        /// <param name="tableName">The table name without extension (e.g., "appearance" for appearance.2da, "itempropdef" for itempropdef.2da).</param>
+        /// <returns>The loaded 2DA table, or null if not found.</returns>
+        /// <remarks>
+        /// Based on reverse engineering:
+        /// - swkotor2.exe: FUN_0041d2c0 @ 0x0041d2c0 (2DA table lookup)
+        /// - swkotor.exe: Similar 2DA lookup system
+        /// - nwmain.exe: C2DA::Load2DArray @ 0x1401a73a0 for 2DA loading
+        /// - Generic table lookup method for accessing any game data table.
+        /// - Engine-specific implementations handle the actual table loading and caching.
+        /// </remarks>
+        [CanBeNull]
+        TwoDA GetTable(string tableName);
     }
 }

@@ -78,9 +78,42 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // Get the backend selection order
                 GraphicsBackend[] backendOrder = GetBackendOrder(settings);
 
-                // Try each backend in order
+                // For now, force MonoGame backend to get demo working
+                Console.WriteLine("[BackendFactory] Using MonoGame backend for demo");
+                IGraphicsBackend backend = CreateBackendInstance(GraphicsBackend.OpenGL); // This creates MonoGame backend
+                if (backend != null)
+                {
+                    try
+                    {
+                        if (backend.Initialize(settings))
+                        {
+                            Console.WriteLine("[BackendFactory] Successfully initialized MonoGame backend");
+                            _currentBackend = backend;
+                            return backend;
+                        }
+                        else
+                        {
+                            Console.WriteLine("[BackendFactory] MonoGame backend initialization failed");
+                            backend.Dispose();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("[BackendFactory] MonoGame backend threw exception: " + ex.Message);
+                        backend.Dispose();
+                    }
+                }
+
+                // Fallback: Try each backend in order
                 foreach (GraphicsBackend backendType in backendOrder)
                 {
+                    // Skip Vulkan for now due to compilation issues
+                    if (backendType == GraphicsBackend.Vulkan)
+                    {
+                        Console.WriteLine("[BackendFactory] Skipping Vulkan backend due to compilation issues");
+                        continue;
+                    }
+
                     // Check if this backend is available
                     if (!IsBackendAvailable(backendType))
                     {
@@ -89,7 +122,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     }
 
                     // Try to create and initialize the backend
-                    IGraphicsBackend backend = CreateBackendInstance(backendType);
+                    backend = CreateBackendInstance(backendType);
                     if (backend == null)
                     {
                         Console.WriteLine("[BackendFactory] Failed to create backend instance: " + backendType);

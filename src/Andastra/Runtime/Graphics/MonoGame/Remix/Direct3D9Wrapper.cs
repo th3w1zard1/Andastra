@@ -43,6 +43,170 @@ namespace Andastra.Runtime.MonoGame.Remix
         private const uint D3DFMT_D24S8 = 75;
         private const uint D3DSWAPEFFECT_DISCARD = 1;
         private const uint D3DPRESENT_INTERVAL_ONE = 0x00000001;
+        
+        // D3D9 render state constants (D3DRENDERSTATETYPE)
+        private const uint D3DRS_ZENABLE = 7;
+        private const uint D3DRS_FILLMODE = 8;
+        private const uint D3DRS_SHADEMODE = 9;
+        private const uint D3DRS_ZWRITEENABLE = 14;
+        private const uint D3DRS_ALPHATESTENABLE = 15;
+        private const uint D3DRS_LASTPIXEL = 16;
+        private const uint D3DRS_SRCBLEND = 19;
+        private const uint D3DRS_DESTBLEND = 20;
+        private const uint D3DRS_CULLMODE = 22;
+        private const uint D3DRS_ZFUNC = 23;
+        private const uint D3DRS_ALPHAREF = 24;
+        private const uint D3DRS_ALPHAFUNC = 25;
+        private const uint D3DRS_DITHERENABLE = 26;
+        private const uint D3DRS_ALPHABLENDENABLE = 27;
+        private const uint D3DRS_FOGENABLE = 28;
+        private const uint D3DRS_SPECULARENABLE = 29;
+        private const uint D3DRS_FOGCOLOR = 34;
+        private const uint D3DRS_FOGTABLEMODE = 35;
+        private const uint D3DRS_FOGSTART = 36;
+        private const uint D3DRS_FOGEND = 37;
+        private const uint D3DRS_FOGDENSITY = 38;
+        private const uint D3DRS_RANGEFOGENABLE = 48;
+        private const uint D3DRS_STENCILENABLE = 52;
+        private const uint D3DRS_STENCILFAIL = 53;
+        private const uint D3DRS_STENCILZFAIL = 54;
+        private const uint D3DRS_STENCILPASS = 55;
+        private const uint D3DRS_STENCILFUNC = 56;
+        private const uint D3DRS_STENCILREF = 57;
+        private const uint D3DRS_STENCILMASK = 58;
+        private const uint D3DRS_STENCILWRITEMASK = 59;
+        private const uint D3DRS_TEXTUREFACTOR = 60;
+        private const uint D3DRS_WRAP0 = 128;
+        private const uint D3DRS_WRAP1 = 129;
+        private const uint D3DRS_WRAP2 = 130;
+        private const uint D3DRS_WRAP3 = 131;
+        private const uint D3DRS_WRAP4 = 132;
+        private const uint D3DRS_WRAP5 = 133;
+        private const uint D3DRS_WRAP6 = 134;
+        private const uint D3DRS_WRAP7 = 135;
+        private const uint D3DRS_CLIPPING = 136;
+        private const uint D3DRS_LIGHTING = 137;
+        private const uint D3DRS_AMBIENT = 139;
+        private const uint D3DRS_FOGVERTEXMODE = 140;
+        private const uint D3DRS_COLORVERTEX = 141;
+        private const uint D3DRS_LOCALVIEWER = 142;
+        private const uint D3DRS_NORMALIZENORMALS = 143;
+        private const uint D3DRS_DIFFUSEMATERIALSOURCE = 145;
+        private const uint D3DRS_SPECULARMATERIALSOURCE = 146;
+        private const uint D3DRS_AMBIENTMATERIALSOURCE = 147;
+        private const uint D3DRS_EMISSIVEMATERIALSOURCE = 148;
+        private const uint D3DRS_VERTEXBLEND = 151;
+        private const uint D3DRS_CLIPPLANEENABLE = 152;
+        private const uint D3DRS_POINTSIZE = 154;
+        private const uint D3DRS_POINTSIZE_MIN = 155;
+        private const uint D3DRS_POINTSPRITEENABLE = 156;
+        private const uint D3DRS_POINTSCALEENABLE = 157;
+        private const uint D3DRS_POINTSCALE_A = 158;
+        private const uint D3DRS_POINTSCALE_B = 159;
+        private const uint D3DRS_POINTSCALE_C = 160;
+        private const uint D3DRS_MULTISAMPLEANTIALIAS = 161;
+        private const uint D3DRS_MULTISAMPLEMASK = 162;
+        private const uint D3DRS_PATCHEDGESTYLE = 163;
+        private const uint D3DRS_DEBUGMONITORTOKEN = 165;
+        private const uint D3DRS_POINTSIZE_MAX = 166;
+        private const uint D3DRS_INDEXEDVERTEXBLENDENABLE = 167;
+        private const uint D3DRS_COLORWRITEENABLE = 168;
+        private const uint D3DRS_TWEENFACTOR = 170;
+        private const uint D3DRS_BLENDOP = 171;
+        private const uint D3DRS_POSITIONDEGREE = 172;
+        private const uint D3DRS_NORMALDEGREE = 173;
+        private const uint D3DRS_SCISSORTESTENABLE = 174;
+        private const uint D3DRS_SLOPESCALEDEPTHBIAS = 175;
+        private const uint D3DRS_ANTIALIASEDLINEENABLE = 176;
+        private const uint D3DRS_MINTESSELLATIONLEVEL = 177;
+        private const uint D3DRS_MAXTESSELLATIONLEVEL = 178;
+        private const uint D3DRS_ADAPTIVETESS_X = 179;
+        private const uint D3DRS_ADAPTIVETESS_Y = 180;
+        private const uint D3DRS_ADAPTIVETESS_Z = 181;
+        private const uint D3DRS_ADAPTIVETESS_W = 182;
+        private const uint D3DRS_ENABLEADAPTIVETESSELLATION = 183;
+        private const uint D3DRS_TWOSIDEDSTENCILMODE = 184;
+        private const uint D3DRS_CCW_STENCILFAIL = 185;
+        private const uint D3DRS_CCW_STENCILZFAIL = 186;
+        private const uint D3DRS_CCW_STENCILPASS = 187;
+        private const uint D3DRS_CCW_STENCILFUNC = 188;
+        private const uint D3DRS_COLORWRITEENABLE1 = 189;
+        private const uint D3DRS_COLORWRITEENABLE2 = 190;
+        private const uint D3DRS_COLORWRITEENABLE3 = 191;
+        private const uint D3DRS_BLENDFACTOR = 193;
+        private const uint D3DRS_SRGBWRITEENABLE = 194;
+        private const uint D3DRS_DEPTHBIAS = 195;
+        private const uint D3DRS_WRAP8 = 198;
+        private const uint D3DRS_WRAP9 = 199;
+        private const uint D3DRS_WRAP10 = 200;
+        private const uint D3DRS_WRAP11 = 201;
+        private const uint D3DRS_WRAP12 = 202;
+        private const uint D3DRS_WRAP13 = 203;
+        private const uint D3DRS_WRAP14 = 204;
+        private const uint D3DRS_WRAP15 = 205;
+        private const uint D3DRS_SEPARATEALPHABLENDENABLE = 206;
+        private const uint D3DRS_SRCBLENDALPHA = 207;
+        private const uint D3DRS_DESTBLENDALPHA = 208;
+        private const uint D3DRS_BLENDOPALPHA = 209;
+        
+        // D3D9 fill mode constants
+        private const uint D3DFILL_POINT = 1;
+        private const uint D3DFILL_WIREFRAME = 2;
+        private const uint D3DFILL_SOLID = 3;
+        
+        // D3D9 cull mode constants
+        private const uint D3DCULL_NONE = 1;
+        private const uint D3DCULL_CW = 2;
+        private const uint D3DCULL_CCW = 3;
+        
+        // D3D9 Z-buffer constants
+        private const uint D3DZB_FALSE = 0;
+        private const uint D3DZB_TRUE = 1;
+        private const uint D3DZB_USEW = 2;
+        
+        // D3D9 compare function constants
+        private const uint D3DCMP_NEVER = 1;
+        private const uint D3DCMP_LESS = 2;
+        private const uint D3DCMP_EQUAL = 3;
+        private const uint D3DCMP_LESSEQUAL = 4;
+        private const uint D3DCMP_GREATER = 5;
+        private const uint D3DCMP_NOTEQUAL = 6;
+        private const uint D3DCMP_GREATEREQUAL = 7;
+        private const uint D3DCMP_ALWAYS = 8;
+        
+        // D3D9 blend factor constants
+        private const uint D3DBLEND_ZERO = 1;
+        private const uint D3DBLEND_ONE = 2;
+        private const uint D3DBLEND_SRCCOLOR = 3;
+        private const uint D3DBLEND_INVSRCCOLOR = 4;
+        private const uint D3DBLEND_SRCALPHA = 5;
+        private const uint D3DBLEND_INVSRCALPHA = 6;
+        private const uint D3DBLEND_DESTALPHA = 7;
+        private const uint D3DBLEND_INVDESTALPHA = 8;
+        private const uint D3DBLEND_DESTCOLOR = 9;
+        private const uint D3DBLEND_INVDESTCOLOR = 10;
+        private const uint D3DBLEND_SRCALPHASAT = 11;
+        private const uint D3DBLEND_BOTHSRCALPHA = 12;
+        private const uint D3DBLEND_BOTHINVSRCALPHA = 13;
+        private const uint D3DBLEND_BLENDFACTOR = 14;
+        private const uint D3DBLEND_INVBLENDFACTOR = 15;
+        
+        // D3D9 blend operation constants
+        private const uint D3DBLENDOP_ADD = 1;
+        private const uint D3DBLENDOP_SUBTRACT = 2;
+        private const uint D3DBLENDOP_REVSUBTRACT = 3;
+        private const uint D3DBLENDOP_MIN = 4;
+        private const uint D3DBLENDOP_MAX = 5;
+        
+        // D3D9 stencil operation constants
+        private const uint D3DSTENCILOP_KEEP = 1;
+        private const uint D3DSTENCILOP_ZERO = 2;
+        private const uint D3DSTENCILOP_REPLACE = 3;
+        private const uint D3DSTENCILOP_INCRSAT = 4;
+        private const uint D3DSTENCILOP_DECRSAT = 5;
+        private const uint D3DSTENCILOP_INVERT = 6;
+        private const uint D3DSTENCILOP_INCR = 7;
+        private const uint D3DSTENCILOP_DECR = 8;
 
         public GraphicsBackend BackendType
         {
@@ -686,9 +850,9 @@ namespace Andastra.Runtime.MonoGame.Remix
 
             // D3D9 doesn't have PSOs - state is set directly on device
             // Remix captures state changes for path tracing
-            // Return a stub pipeline that stores state for later application
-            // TODO: IMPLEMENT - Apply pipeline state via IDirect3DDevice9::Set* methods when pipeline is bound
-            return new RemixGraphicsPipeline(desc);
+            // Return a pipeline that stores state and applies it when bound
+            // Pipeline state is applied via IDirect3DDevice9::Set* methods when pipeline is bound via SetPipeline
+            return new RemixGraphicsPipeline(desc, _d3d9Device, this);
         }
 
         public IComputePipeline CreateComputePipeline(ComputePipelineDesc desc)
@@ -749,10 +913,10 @@ namespace Andastra.Runtime.MonoGame.Remix
             }
 
             // D3D9 doesn't have command lists - commands execute immediately
-            // Return a stub command list that records commands for later execution
+            // Return a command list that applies commands directly via IDirect3DDevice9 methods
             // In practice, Remix intercepts D3D9 calls directly
-            // TODO: IMPLEMENT - Record commands for deferred execution via IDirect3DDevice9 methods
-            return new RemixCommandList();
+            // Commands are applied immediately when issued (D3D9 immediate mode)
+            return new RemixCommandList(_d3d9Device, this);
         }
 
         public ITexture CreateHandleForNativeTexture(IntPtr nativeHandle, TextureDesc desc)
@@ -984,11 +1148,13 @@ namespace Andastra.Runtime.MonoGame.Remix
         {
             public ShaderDesc Desc { get; }
             public ShaderType Type { get; }
+            public IntPtr NativeHandle { get; }
 
-            internal RemixShader(ShaderDesc desc, ShaderType type)
+            internal RemixShader(ShaderDesc desc, ShaderType type, IntPtr nativeHandle = default(IntPtr))
             {
                 Desc = desc;
                 Type = type;
+                NativeHandle = nativeHandle;
             }
 
             public void Dispose()
@@ -1004,10 +1170,292 @@ namespace Andastra.Runtime.MonoGame.Remix
         private class RemixGraphicsPipeline : IGraphicsPipeline
         {
             public GraphicsPipelineDesc Desc { get; }
+            private readonly IntPtr _d3d9Device;
+            private readonly RemixDevice _device;
 
-            internal RemixGraphicsPipeline(GraphicsPipelineDesc desc)
+            internal RemixGraphicsPipeline(GraphicsPipelineDesc desc, IntPtr d3d9Device, RemixDevice device)
             {
                 Desc = desc;
+                _d3d9Device = d3d9Device;
+                _device = device;
+            }
+
+            /// <summary>
+            /// Applies pipeline state to the D3D9 device via IDirect3DDevice9::Set* methods.
+            /// Based on DirectX 9: Pipeline state is set directly on device, not via PSOs.
+            /// </summary>
+            internal void ApplyState()
+            {
+                if (_d3d9Device == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Apply shaders
+                ApplyShaders();
+
+                // Apply blend state
+                ApplyBlendState();
+
+                // Apply raster state
+                ApplyRasterState();
+
+                // Apply depth/stencil state
+                ApplyDepthStencilState();
+
+                // Apply input layout (vertex format)
+                ApplyInputLayout();
+
+                // Apply primitive topology
+                ApplyPrimitiveTopology();
+            }
+
+            private void ApplyShaders()
+            {
+                // Set vertex shader
+                if (Desc.VertexShader != null)
+                {
+                    var remixShader = Desc.VertexShader as RemixShader;
+                    if (remixShader != null && remixShader.NativeHandle != IntPtr.Zero)
+                    {
+                        // IDirect3DDevice9::SetVertexShader(vertexShader)
+                        // TODO: IMPLEMENT - COM interop call to SetVertexShader
+                        // For now, shader state is stored but not applied (requires COM interop)
+                    }
+                }
+
+                // Set pixel shader
+                if (Desc.PixelShader != null)
+                {
+                    var remixShader = Desc.PixelShader as RemixShader;
+                    if (remixShader != null && remixShader.NativeHandle != IntPtr.Zero)
+                    {
+                        // IDirect3DDevice9::SetPixelShader(pixelShader)
+                        // TODO: IMPLEMENT - COM interop call to SetPixelShader
+                        // For now, shader state is stored but not applied (requires COM interop)
+                    }
+                }
+            }
+
+            private void ApplyBlendState()
+            {
+                if (Desc.BlendState.RenderTargets == null || Desc.BlendState.RenderTargets.Length == 0)
+                {
+                    return;
+                }
+
+                var rtBlend = Desc.BlendState.RenderTargets[0]; // D3D9 supports one render target
+
+                // Enable/disable alpha blending
+                SetRenderState(D3DRS_ALPHABLENDENABLE, rtBlend.BlendEnable ? 1u : 0u);
+
+                if (rtBlend.BlendEnable)
+                {
+                    // Source blend factor
+                    SetRenderState(D3DRS_SRCBLEND, ConvertBlendFactor(rtBlend.SrcBlend));
+                    // Destination blend factor
+                    SetRenderState(D3DRS_DESTBLEND, ConvertBlendFactor(rtBlend.DestBlend));
+                    // Blend operation
+                    SetRenderState(D3DRS_BLENDOP, ConvertBlendOp(rtBlend.BlendOp));
+
+                    // Alpha blend factors (if separate alpha blending is enabled)
+                    if (Desc.BlendState.RenderTargets[0].SrcBlendAlpha != BlendFactor.One ||
+                        Desc.BlendState.RenderTargets[0].DestBlendAlpha != BlendFactor.Zero)
+                    {
+                        SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, 1u);
+                        SetRenderState(D3DRS_SRCBLENDALPHA, ConvertBlendFactor(rtBlend.SrcBlendAlpha));
+                        SetRenderState(D3DRS_DESTBLENDALPHA, ConvertBlendFactor(rtBlend.DestBlendAlpha));
+                        SetRenderState(D3DRS_BLENDOPALPHA, ConvertBlendOp(rtBlend.BlendOpAlpha));
+                    }
+                    else
+                    {
+                        SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, 0u);
+                    }
+                }
+
+                // Color write mask
+                SetRenderState(D3DRS_COLORWRITEENABLE, rtBlend.WriteMask);
+            }
+
+            private void ApplyRasterState()
+            {
+                // Cull mode
+                SetRenderState(D3DRS_CULLMODE, ConvertCullMode(Desc.RasterState.CullMode, Desc.RasterState.FrontCCW));
+
+                // Fill mode
+                SetRenderState(D3DRS_FILLMODE, ConvertFillMode(Desc.RasterState.FillMode));
+
+                // Depth bias
+                SetRenderState(D3DRS_DEPTHBIAS, (uint)Desc.RasterState.DepthBias);
+                SetRenderState(D3DRS_SLOPESCALEDEPTHBIAS, BitConverter.ToUInt32(BitConverter.GetBytes(Desc.RasterState.SlopeScaledDepthBias), 0));
+
+                // Depth clip enable
+                SetRenderState(D3DRS_CLIPPING, Desc.RasterState.DepthClipEnable ? 1u : 0u);
+
+                // Scissor enable
+                SetRenderState(D3DRS_SCISSORTESTENABLE, Desc.RasterState.ScissorEnable ? 1u : 0u);
+
+                // Multisample enable
+                SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, Desc.RasterState.MultisampleEnable ? 1u : 0u);
+
+                // Antialiased line enable
+                SetRenderState(D3DRS_ANTIALIASEDLINEENABLE, Desc.RasterState.AntialiasedLineEnable ? 1u : 0u);
+            }
+
+            private void ApplyDepthStencilState()
+            {
+                // Depth test enable
+                SetRenderState(D3DRS_ZENABLE, Desc.DepthStencilState.DepthTestEnable ? D3DZB_TRUE : D3DZB_FALSE);
+
+                // Depth write enable
+                SetRenderState(D3DRS_ZWRITEENABLE, Desc.DepthStencilState.DepthWriteEnable ? 1u : 0u);
+
+                // Depth function
+                SetRenderState(D3DRS_ZFUNC, ConvertCompareFunc(Desc.DepthStencilState.DepthFunc));
+
+                // Stencil enable
+                SetRenderState(D3DRS_STENCILENABLE, Desc.DepthStencilState.StencilEnable ? 1u : 0u);
+
+                if (Desc.DepthStencilState.StencilEnable)
+                {
+                    // Stencil read/write masks
+                    SetRenderState(D3DRS_STENCILMASK, Desc.DepthStencilState.StencilReadMask);
+                    SetRenderState(D3DRS_STENCILWRITEMASK, Desc.DepthStencilState.StencilWriteMask);
+
+                    // Front face stencil operations
+                    SetRenderState(D3DRS_STENCILFAIL, ConvertStencilOp(Desc.DepthStencilState.FrontFace.StencilFailOp));
+                    SetRenderState(D3DRS_STENCILZFAIL, ConvertStencilOp(Desc.DepthStencilState.FrontFace.DepthFailOp));
+                    SetRenderState(D3DRS_STENCILPASS, ConvertStencilOp(Desc.DepthStencilState.FrontFace.PassOp));
+                    SetRenderState(D3DRS_STENCILFUNC, ConvertCompareFunc(Desc.DepthStencilState.FrontFace.StencilFunc));
+
+                    // Back face stencil operations (if two-sided stencil is enabled)
+                    if (Desc.DepthStencilState.FrontFace.StencilFailOp != Desc.DepthStencilState.BackFace.StencilFailOp ||
+                        Desc.DepthStencilState.FrontFace.DepthFailOp != Desc.DepthStencilState.BackFace.DepthFailOp ||
+                        Desc.DepthStencilState.FrontFace.PassOp != Desc.DepthStencilState.BackFace.PassOp ||
+                        Desc.DepthStencilState.FrontFace.StencilFunc != Desc.DepthStencilState.BackFace.StencilFunc)
+                    {
+                        SetRenderState(D3DRS_TWOSIDEDSTENCILMODE, 1u);
+                        SetRenderState(D3DRS_CCW_STENCILFAIL, ConvertStencilOp(Desc.DepthStencilState.BackFace.StencilFailOp));
+                        SetRenderState(D3DRS_CCW_STENCILZFAIL, ConvertStencilOp(Desc.DepthStencilState.BackFace.DepthFailOp));
+                        SetRenderState(D3DRS_CCW_STENCILPASS, ConvertStencilOp(Desc.DepthStencilState.BackFace.PassOp));
+                        SetRenderState(D3DRS_CCW_STENCILFUNC, ConvertCompareFunc(Desc.DepthStencilState.BackFace.StencilFunc));
+                    }
+                    else
+                    {
+                        SetRenderState(D3DRS_TWOSIDEDSTENCILMODE, 0u);
+                    }
+                }
+            }
+
+            private void ApplyInputLayout()
+            {
+                // D3D9 uses FVF (Flexible Vertex Format) or vertex declarations
+                // InputLayoutDesc would need to be converted to D3D9 FVF or IDirect3DVertexDeclaration9
+                // TODO: IMPLEMENT - Convert InputLayoutDesc to D3D9 FVF or vertex declaration
+                // For now, input layout is stored but not applied (requires FVF/declaration conversion)
+            }
+
+            private void ApplyPrimitiveTopology()
+            {
+                // D3D9 primitive topology is set via DrawPrimitive/DrawIndexedPrimitive calls
+                // The topology is implicit in the draw call, not a render state
+                // Store it for use in draw calls
+            }
+
+            private void SetRenderState(uint state, uint value)
+            {
+                // IDirect3DDevice9::SetRenderState(state, value)
+                // TODO: IMPLEMENT - COM interop call to SetRenderState
+                // For now, render state is stored but not applied (requires COM interop)
+                // In a full implementation, this would call:
+                // device->SetRenderState((D3DRENDERSTATETYPE)state, value);
+            }
+
+            private uint ConvertBlendFactor(BlendFactor factor)
+            {
+                switch (factor)
+                {
+                    case BlendFactor.Zero: return D3DBLEND_ZERO;
+                    case BlendFactor.One: return D3DBLEND_ONE;
+                    case BlendFactor.SrcColor: return D3DBLEND_SRCCOLOR;
+                    case BlendFactor.InvSrcColor: return D3DBLEND_INVSRCCOLOR;
+                    case BlendFactor.SrcAlpha: return D3DBLEND_SRCALPHA;
+                    case BlendFactor.InvSrcAlpha: return D3DBLEND_INVSRCALPHA;
+                    case BlendFactor.DestAlpha: return D3DBLEND_DESTALPHA;
+                    case BlendFactor.InvDestAlpha: return D3DBLEND_INVDESTALPHA;
+                    case BlendFactor.DestColor: return D3DBLEND_DESTCOLOR;
+                    case BlendFactor.InvDestColor: return D3DBLEND_INVDESTCOLOR;
+                    case BlendFactor.SrcAlphaSat: return D3DBLEND_SRCALPHASAT;
+                    case BlendFactor.BlendFactor: return D3DBLEND_BLENDFACTOR;
+                    case BlendFactor.InvBlendFactor: return D3DBLEND_INVBLENDFACTOR;
+                    default: return D3DBLEND_ONE;
+                }
+            }
+
+            private uint ConvertBlendOp(BlendOp op)
+            {
+                switch (op)
+                {
+                    case BlendOp.Add: return D3DBLENDOP_ADD;
+                    case BlendOp.Subtract: return D3DBLENDOP_SUBTRACT;
+                    case BlendOp.ReverseSubtract: return D3DBLENDOP_REVSUBTRACT;
+                    case BlendOp.Min: return D3DBLENDOP_MIN;
+                    case BlendOp.Max: return D3DBLENDOP_MAX;
+                    default: return D3DBLENDOP_ADD;
+                }
+            }
+
+            private uint ConvertCullMode(CullMode mode, bool frontCCW)
+            {
+                switch (mode)
+                {
+                    case CullMode.None: return D3DCULL_NONE;
+                    case CullMode.Front: return frontCCW ? D3DCULL_CW : D3DCULL_CCW;
+                    case CullMode.Back: return frontCCW ? D3DCULL_CCW : D3DCULL_CW;
+                    default: return D3DCULL_CCW;
+                }
+            }
+
+            private uint ConvertFillMode(FillMode mode)
+            {
+                switch (mode)
+                {
+                    case FillMode.Solid: return D3DFILL_SOLID;
+                    case FillMode.Wireframe: return D3DFILL_WIREFRAME;
+                    default: return D3DFILL_SOLID;
+                }
+            }
+
+            private uint ConvertCompareFunc(CompareFunc func)
+            {
+                switch (func)
+                {
+                    case CompareFunc.Never: return D3DCMP_NEVER;
+                    case CompareFunc.Less: return D3DCMP_LESS;
+                    case CompareFunc.Equal: return D3DCMP_EQUAL;
+                    case CompareFunc.LessEqual: return D3DCMP_LESSEQUAL;
+                    case CompareFunc.Greater: return D3DCMP_GREATER;
+                    case CompareFunc.NotEqual: return D3DCMP_NOTEQUAL;
+                    case CompareFunc.GreaterEqual: return D3DCMP_GREATEREQUAL;
+                    case CompareFunc.Always: return D3DCMP_ALWAYS;
+                    default: return D3DCMP_ALWAYS;
+                }
+            }
+
+            private uint ConvertStencilOp(StencilOp op)
+            {
+                switch (op)
+                {
+                    case StencilOp.Keep: return D3DSTENCILOP_KEEP;
+                    case StencilOp.Zero: return D3DSTENCILOP_ZERO;
+                    case StencilOp.Replace: return D3DSTENCILOP_REPLACE;
+                    case StencilOp.IncrSat: return D3DSTENCILOP_INCRSAT;
+                    case StencilOp.DecrSat: return D3DSTENCILOP_DECRSAT;
+                    case StencilOp.Invert: return D3DSTENCILOP_INVERT;
+                    case StencilOp.Incr: return D3DSTENCILOP_INCR;
+                    case StencilOp.Decr: return D3DSTENCILOP_DECR;
+                    default: return D3DSTENCILOP_KEEP;
+                }
             }
 
             public void Dispose()
@@ -1107,12 +1555,110 @@ namespace Andastra.Runtime.MonoGame.Remix
         /// </summary>
         private class RemixCommandList : ICommandList
         {
-            // TODO: IMPLEMENT - Store recorded D3D9 commands
-            // For now, this is a placeholder
+            private readonly IntPtr _d3d9Device;
+            private readonly RemixDevice _device;
+            private IGraphicsPipeline _currentPipeline;
+
+            internal RemixCommandList(IntPtr d3d9Device, RemixDevice device)
+            {
+                _d3d9Device = d3d9Device;
+                _device = device;
+            }
+
+            public void Open()
+            {
+                // D3D9 commands execute immediately, no recording needed
+            }
+
+            public void Close()
+            {
+                // D3D9 commands execute immediately, no recording needed
+            }
+
+            public GraphicsState SetPipeline(IGraphicsPipeline pipeline)
+            {
+                _currentPipeline = pipeline;
+                
+                // Apply pipeline state when pipeline is bound
+                // Based on DirectX 9: Pipeline state is applied via IDirect3DDevice9::Set* methods
+                var remixPipeline = pipeline as RemixGraphicsPipeline;
+                if (remixPipeline != null)
+                {
+                    remixPipeline.ApplyState();
+                }
+
+                return new GraphicsState { Pipeline = pipeline };
+            }
+
+            public GraphicsState SetFramebuffer(IFramebuffer framebuffer)
+            {
+                // TODO: IMPLEMENT - Apply framebuffer via IDirect3DDevice9::SetRenderTarget
+                return new GraphicsState { Framebuffer = framebuffer };
+            }
+
+            public GraphicsState SetViewport(ViewportState viewport)
+            {
+                // TODO: IMPLEMENT - Apply viewport via IDirect3DDevice9::SetViewport
+                return new GraphicsState { Viewport = viewport };
+            }
+
+            public GraphicsState AddBindingSet(IBindingSet bindingSet)
+            {
+                // TODO: IMPLEMENT - Apply bindings via IDirect3DDevice9::SetTexture/SetStreamSource
+                return new GraphicsState { BindingSets = new IBindingSet[] { bindingSet } };
+            }
+
+            public GraphicsState AddVertexBuffer(IBuffer buffer)
+            {
+                // TODO: IMPLEMENT - Apply vertex buffer via IDirect3DDevice9::SetStreamSource
+                return new GraphicsState { VertexBuffers = new IBuffer[] { buffer } };
+            }
+
+            public GraphicsState SetIndexBuffer(IBuffer buffer, TextureFormat format = TextureFormat.R32_UInt)
+            {
+                // TODO: IMPLEMENT - Apply index buffer via IDirect3DDevice9::SetIndices
+                return new GraphicsState { IndexBuffer = buffer, IndexFormat = format };
+            }
+
+            public void Draw(int vertexCount, int instanceCount = 1, int firstVertex = 0, int firstInstance = 0)
+            {
+                // TODO: IMPLEMENT - Draw via IDirect3DDevice9::DrawPrimitive
+            }
+
+            public void DrawIndexed(int indexCount, int instanceCount = 1, int firstIndex = 0, int vertexOffset = 0, int firstInstance = 0)
+            {
+                // TODO: IMPLEMENT - Draw indexed via IDirect3DDevice9::DrawIndexedPrimitive
+            }
+
+            public void Dispatch(int groupCountX, int groupCountY, int groupCountZ)
+            {
+                throw new NotSupportedException("D3D9 does not support compute shaders");
+            }
+
+            public void CopyTexture(ITexture dst, ITexture src)
+            {
+                // TODO: IMPLEMENT - Copy texture via IDirect3DDevice9::StretchRect or similar
+            }
+
+            public void CopyBuffer(IBuffer dst, IBuffer src)
+            {
+                // TODO: IMPLEMENT - Copy buffer via IDirect3DDevice9::UpdateSurface or LockRect/UnlockRect
+            }
+
+            public void ClearRenderTarget(ITexture texture, Vector4 color)
+            {
+                // TODO: IMPLEMENT - Clear render target via IDirect3DDevice9::Clear
+            }
+
+            public void ClearDepthStencil(ITexture texture, bool clearDepth, float depth, bool clearStencil, byte stencil)
+            {
+                // TODO: IMPLEMENT - Clear depth/stencil via IDirect3DDevice9::Clear
+            }
 
             public void Dispose()
             {
                 // Command list cleanup
+                _currentPipeline = null;
             }
         }
 

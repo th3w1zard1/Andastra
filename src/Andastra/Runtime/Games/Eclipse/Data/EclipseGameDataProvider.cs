@@ -152,6 +152,27 @@ namespace Andastra.Runtime.Games.Eclipse.Data
             float? value = row.GetFloat(columnName);
             return value ?? defaultValue;
         }
+
+        /// <summary>
+        /// Gets a 2DA table by name.
+        /// </summary>
+        /// <param name="tableName">The table name without extension (e.g., "appearance" for appearance.2da, "itempropdef" for itempropdef.2da).</param>
+        /// <returns>The loaded 2DA table, or null if not found.</returns>
+        /// <remarks>
+        /// Based on Eclipse engine: Looks up 2DA tables using EclipseTwoDATableManager
+        /// - Uses EclipseTwoDATableManager to access 2DA tables with caching
+        /// - Cross-engine pattern: Same as Odyssey and Aurora
+        /// </remarks>
+        [CanBeNull]
+        public Parsing.Formats.TwoDA.TwoDA GetTable(string tableName)
+        {
+            if (string.IsNullOrEmpty(tableName))
+            {
+                return null;
+            }
+
+            return _tableManager.GetTable(tableName);
+        }
     }
 }
 
