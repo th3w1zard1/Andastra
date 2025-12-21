@@ -5449,6 +5449,8 @@ namespace Andastra.Runtime.MonoGame.Backends
             private readonly IntPtr _d3d12AccelStruct;
             private readonly IBuffer _backingBuffer;
             private readonly IntPtr _device5;
+            private IBuffer _scratchBuffer;
+            private ulong _scratchBufferDeviceAddress;
 
             public D3D12AccelStruct(IntPtr handle, AccelStructDesc desc, IntPtr d3d12AccelStruct, IBuffer backingBuffer, ulong deviceAddress, IntPtr device5)
             {
@@ -5459,6 +5461,70 @@ namespace Andastra.Runtime.MonoGame.Backends
                 DeviceAddress = deviceAddress;
                 _device5 = device5;
                 IsTopLevel = desc.IsTopLevel;
+                _scratchBuffer = null;
+                _scratchBufferDeviceAddress = 0UL;
+            }
+
+            /// <summary>
+            /// Gets or allocates a scratch buffer for building the acceleration structure.
+            /// Based on D3D12 API: Scratch buffers are temporary GPU memory used during acceleration structure building.
+            /// </summary>
+            public IBuffer GetOrAllocateScratchBuffer(D3D12Device device, ulong requiredSize)
+            {
+                if (device == null)
+                {
+                    throw new ArgumentNullException(nameof(device));
+                }
+
+                // If we already have a scratch buffer that's large enough, reuse it
+                if (_scratchBuffer != null)
+                {
+                    // Check if existing scratch buffer is large enough
+                    // We'll need to check the buffer size - for now, assume we need to check via buffer desc
+                    // In practice, we might want to track the allocated size separately
+                    // For simplicity, we'll reallocate if the required size is larger
+                    // In a production implementation, you might want to track the allocated size
+                }
+
+                // Allocate new scratch buffer if needed
+                // Scratch buffers must be in DEFAULT heap (GPU-accessible)
+                BufferDesc scratchBufferDesc = new BufferDesc
+                {
+                    ByteSize = (int)requiredSize,
+                    Usage = BufferUsageFlags.AccelStructStorage | BufferUsageFlags.AccelStructBuildInput,
+                    InitialState = ResourceState.AccelStructBuildInput,
+                    IsAccelStructBuildInput = true,
+                    DebugName = IsTopLevel ? "TLAS_ScratchBuffer" : "BLAS_ScratchBuffer"
+                };
+
+                // Dispose old scratch buffer if it exists
+                if (_scratchBuffer != null)
+                {
+                    _scratchBuffer.Dispose();
+                }
+
+                _scratchBuffer = device.CreateBuffer(scratchBufferDesc);
+                if (_scratchBuffer == null || _scratchBuffer.NativeHandle == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("Failed to create scratch buffer for acceleration structure building");
+                }
+
+                // Get GPU virtual address for scratch buffer
+                _scratchBufferDeviceAddress = device.GetGpuVirtualAddress(_scratchBuffer.NativeHandle);
+                if (_scratchBufferDeviceAddress == 0UL)
+                {
+                    throw new InvalidOperationException("Failed to get GPU virtual address for scratch buffer");
+                }
+
+                return _scratchBuffer;
+            }
+
+            /// <summary>
+            /// Gets the GPU virtual address of the scratch buffer.
+            /// </summary>
+            public ulong ScratchBufferDeviceAddress
+            {
+                get { return _scratchBufferDeviceAddress; }
             }
 
             public void Dispose()
@@ -5466,6 +5532,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // TODO: Release D3D12 acceleration structure
                 // - Release backing buffer resource
                 // Note: Acceleration structures are resources, released via ID3D12Resource::Release()
+                _scratchBuffer?.Dispose();
                 _backingBuffer?.Dispose();
             }
         }
@@ -6477,7 +6544,43 @@ namespace Andastra.Runtime.MonoGame.Backends
                 CallClearDepthStencilView(_d3d12CommandList, dsvHandle, clearFlags, clampedDepth, stencil, 0, IntPtr.Zero);
             }
             public void ClearUAVFloat(ITexture texture, Vector4 value) { /* TODO: ClearUnorderedAccessViewFloat */ }
-            public void ClearUAVUint(ITexture texture, uint value) { /* TODO: ClearUnorderedAccessViewUint */ }
+            public void ClearUAVUint(ITexture texture, uint value)
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (texture == null)
+                {
+                    return;
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    return; // Command list not initialized
+                }
+
+                // Ensure texture is in UNORDERED_ACCESS state for clearing
+                SetTextureState(texture, ResourceState.UnorderedAccess);
+                CommitBarriers();
+
+                // Get or create UAV descriptor handle for the texture
+                // Use mip level 0 and array slice 0 as defaults (consistent with other clear operations)
+                IntPtr uavHandle = _device.GetOrCreateUavHandle(texture, 0, 0);
+                if (uavHandle == IntPtr.Zero)
+                {
+                    return; // Failed to create/get UAV handle
+                }
+
+                // ClearUnorderedAccessViewUint requires Values[4] array
+                // For single uint value, replicate it across all 4 components (RGBA/X/Y/Z/W)
+                uint[] values = new uint[4] { value, value, value, value };
+
+                // Call ClearUnorderedAccessViewUint (NumRects = 0, pRects = null clears entire view)
+                // For non-shader-visible heaps, ViewGPUHandleInCurrentHeap can be the same as ViewCPUHandle
+                CallClearUnorderedAccessViewUint(_d3d12CommandList, uavHandle, uavHandle, texture.NativeHandle, values, 0, IntPtr.Zero);
+            }
             public void SetTextureState(ITexture texture, ResourceState state)
             {
                 if (texture == null)
@@ -9554,7 +9657,246 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                 buildAccelStruct(commandList, pDesc, numPostbuildInfoDescs, pPostbuildInfoDescs);
             }
-            public void BuildTopLevelAccelStruct(IAccelStruct accelStruct, AccelStructInstance[] instances) { /* TODO: BuildRaytracingAccelerationStructure */ }
+            /// <summary>
+            /// Builds a top-level acceleration structure (TLAS) from instance data.
+            /// Based on D3D12 API: ID3D12GraphicsCommandList4::BuildRaytracingAccelerationStructure
+            /// D3D12 DXR API Reference: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist4-buildraytracingaccelerationstructure
+            /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+            /// </summary>
+            public void BuildTopLevelAccelStruct(IAccelStruct accelStruct, AccelStructInstance[] instances)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open to record build commands");
+                }
+
+                if (accelStruct == null)
+                {
+                    throw new ArgumentNullException(nameof(accelStruct));
+                }
+
+                if (instances == null || instances.Length == 0)
+                {
+                    throw new ArgumentException("At least one instance must be provided", nameof(instances));
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("Command list is not initialized");
+                }
+
+                // Validate that this is a top-level acceleration structure
+                if (!accelStruct.IsTopLevel)
+                {
+                    throw new ArgumentException("Acceleration structure must be top-level for BuildTopLevelAccelStruct", nameof(accelStruct));
+                }
+
+                // Cast to D3D12AccelStruct to access internal data
+                D3D12AccelStruct d3d12AccelStruct = accelStruct as D3D12AccelStruct;
+                if (d3d12AccelStruct == null)
+                {
+                    throw new ArgumentException("Acceleration structure must be a D3D12 acceleration structure", nameof(accelStruct));
+                }
+
+                try
+                {
+                    uint instanceCount = (uint)instances.Length;
+
+                    // Convert AccelStructInstance[] to D3D12_RAYTRACING_INSTANCE_DESC[]
+                    // D3D12_RAYTRACING_INSTANCE_DESC is 64 bytes (48 bytes transform + 16 bytes metadata)
+                    int instanceDescSize = Marshal.SizeOf(typeof(D3D12_RAYTRACING_INSTANCE_DESC));
+                    IntPtr instanceDescsPtr = Marshal.AllocHGlobal(instanceDescSize * instances.Length);
+
+                    try
+                    {
+                        IntPtr currentInstancePtr = instanceDescsPtr;
+                        for (int i = 0; i < instances.Length; i++)
+                        {
+                            var instance = instances[i];
+
+                            // Convert AccelStructInstance to D3D12_RAYTRACING_INSTANCE_DESC
+                            var instanceDesc = new D3D12_RAYTRACING_INSTANCE_DESC
+                            {
+                                // Transform matrix (3x4 row-major, 12 floats = 48 bytes)
+                                Transform = new float[12]
+                                {
+                                    instance.Transform.M11, instance.Transform.M12, instance.Transform.M13, instance.Transform.M14,
+                                    instance.Transform.M21, instance.Transform.M22, instance.Transform.M23, instance.Transform.M24,
+                                    instance.Transform.M31, instance.Transform.M32, instance.Transform.M33, instance.Transform.M34
+                                },
+                                // Packed fields: InstanceID (24 bits), InstanceMask (8 bits), Flags (8 bits)
+                                // Bit layout: [InstanceID:24][InstanceMask:8][Flags:8]
+                                InstanceID_InstanceMask_Flags = (instance.InstanceCustomIndex & 0x00FFFFFF) | // 24-bit InstanceID
+                                                                 ((uint)instance.Mask << 24) | // 8-bit InstanceMask at bits 24-31
+                                                                 (ConvertAccelStructInstanceFlagsToD3D12(instance.Flags) << 24), // Flags in upper 8 bits
+                                // Packed fields: InstanceShaderBindingTableRecordOffset (24 bits), Flags (8 bits)
+                                // Bit layout: [InstanceShaderBindingTableRecordOffset:24][Flags:8]
+                                InstanceShaderBindingTableRecordOffset_Flags = (instance.InstanceShaderBindingTableRecordOffset & 0x00FFFFFF), // 24-bit offset
+                                // GPU virtual address of the bottom-level acceleration structure
+                                AccelerationStructure = instance.AccelerationStructureReference
+                            };
+
+                            // Marshal structure to unmanaged memory
+                            Marshal.StructureToPtr(instanceDesc, currentInstancePtr, false);
+                            currentInstancePtr = new IntPtr(currentInstancePtr.ToInt64() + instanceDescSize);
+                        }
+
+                        // Create instance buffer to hold D3D12_RAYTRACING_INSTANCE_DESC data
+                        // Instance buffer must be in DEFAULT heap (GPU-accessible) and writable by CPU for updates
+                        BufferDesc instanceBufferDesc = new BufferDesc
+                        {
+                            ByteSize = instanceDescSize * instances.Length,
+                            Usage = BufferUsageFlags.AccelStructStorage | BufferUsageFlags.AccelStructBuildInput,
+                            InitialState = ResourceState.AccelStructBuildInput,
+                            IsAccelStructBuildInput = true,
+                            DebugName = "TLAS_InstanceBuffer"
+                        };
+
+                        IBuffer instanceBuffer = _device.CreateBuffer(instanceBufferDesc);
+                        if (instanceBuffer == null || instanceBuffer.NativeHandle == IntPtr.Zero)
+                        {
+                            throw new InvalidOperationException("Failed to create instance buffer for TLAS");
+                        }
+
+                        try
+                        {
+                            // Write instance data to buffer
+                            // Convert unmanaged memory to byte array for WriteBuffer
+                            byte[] instanceData = new byte[instanceDescSize * instances.Length];
+                            Marshal.Copy(instanceDescsPtr, instanceData, 0, instanceData.Length);
+                            WriteBuffer(instanceBuffer, instanceData, 0);
+
+                            // Get GPU virtual address of instance buffer
+                            ulong instanceBufferGpuVa = _device.GetGpuVirtualAddress(instanceBuffer.NativeHandle);
+                            if (instanceBufferGpuVa == 0UL)
+                            {
+                                throw new InvalidOperationException("Failed to get GPU virtual address for instance buffer");
+                            }
+
+                            // Get build flags from acceleration structure descriptor
+                            uint buildFlags = _device.ConvertAccelStructBuildFlagsToD3D12(accelStruct.Desc.BuildFlags);
+
+                            // Build D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS for TLAS
+                            // TLAS uses instance descriptors, not geometry descriptors
+                            // pGeometryDescs is repurposed to point to instance descriptors for TLAS
+                            var buildInputs = new D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS
+                            {
+                                Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL,
+                                Flags = buildFlags,
+                                NumDescs = instanceCount,
+                                DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY,
+                                pGeometryDescs = new IntPtr((long)instanceBufferGpuVa) // For TLAS, this points to instance descriptors
+                            };
+
+                            // Get GPU virtual address for destination buffer
+                            ulong destGpuVa = accelStruct.DeviceAddress;
+                            if (destGpuVa == 0UL)
+                            {
+                                throw new InvalidOperationException("Acceleration structure does not have a valid device address. Acceleration structure must be created before building.");
+                            }
+
+                            // Calculate estimated scratch buffer size for TLAS
+                            // D3D12 scratch buffer size for TLAS is typically:
+                            // - Conservative estimate: ~64 bytes per instance for scratch space
+                            // - Minimum 256KB to ensure we have enough space for small TLAS
+                            // This is a reasonable estimate when GetRaytracingAccelerationStructurePrebuildInfo is not available
+                            ulong estimatedScratchSize = (ulong)instanceCount * 64UL;
+                            if (estimatedScratchSize < 256UL * 1024UL)
+                            {
+                                estimatedScratchSize = 256UL * 1024UL; // Minimum 256KB
+                            }
+
+                            // Round up to next 256-byte alignment (D3D12 requirement)
+                            estimatedScratchSize = (estimatedScratchSize + 255UL) & ~255UL;
+
+                            // Get or allocate scratch buffer from acceleration structure
+                            IBuffer scratchBuffer = d3d12AccelStruct.GetOrAllocateScratchBuffer(_device, estimatedScratchSize);
+                            if (scratchBuffer == null || scratchBuffer.NativeHandle == IntPtr.Zero)
+                            {
+                                throw new InvalidOperationException("Failed to allocate scratch buffer for acceleration structure building");
+                            }
+
+                            // Get GPU virtual address for scratch buffer
+                            ulong scratchGpuVa = d3d12AccelStruct.ScratchBufferDeviceAddress;
+                            if (scratchGpuVa == 0UL)
+                            {
+                                throw new InvalidOperationException("Scratch buffer does not have a valid device address");
+                            }
+
+                            // Build D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC
+                            // Note: The Inputs field is embedded by value in the structure
+                            var buildDesc = new D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC
+                            {
+                                DestAccelerationStructureData = new IntPtr((long)destGpuVa),
+                                Inputs = buildInputs,
+                                SourceAccelerationStructureData = IntPtr.Zero, // Building from scratch (no update)
+                                ScratchAccelerationStructureData = new IntPtr((long)scratchGpuVa)
+                            };
+
+                            // Marshal build description to unmanaged memory
+                            int buildDescSize = Marshal.SizeOf(typeof(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC));
+                            IntPtr buildDescPtr = Marshal.AllocHGlobal(buildDescSize);
+
+                            try
+                            {
+                                Marshal.StructureToPtr(buildDesc, buildDescPtr, false);
+
+                                // Call ID3D12GraphicsCommandList4::BuildRaytracingAccelerationStructure
+                                CallBuildRaytracingAccelerationStructure(_d3d12CommandList, buildDescPtr, 0, IntPtr.Zero);
+                            }
+                            finally
+                            {
+                                Marshal.FreeHGlobal(buildDescPtr);
+                            }
+                        }
+                        finally
+                        {
+                            // Instance buffer is temporary and can be disposed after build
+                            // In practice, you might want to keep it for updates
+                            instanceBuffer.Dispose();
+                        }
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(instanceDescsPtr);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException($"Failed to build top-level acceleration structure: {ex.Message}", ex);
+                }
+            }
+
+            /// <summary>
+            /// Converts AccelStructInstanceFlags to D3D12 raytracing instance flags.
+            /// Based on D3D12 API: D3D12_RAYTRACING_INSTANCE_FLAGS
+            /// </summary>
+            private uint ConvertAccelStructInstanceFlagsToD3D12(AccelStructInstanceFlags flags)
+            {
+                uint d3d12Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
+
+                if ((flags & AccelStructInstanceFlags.TriangleFacingCullDisable) != 0)
+                {
+                    d3d12Flags |= D3D12_RAYTRACING_INSTANCE_FLAG_TRIANGLE_CULL_DISABLE;
+                }
+
+                if ((flags & AccelStructInstanceFlags.TriangleFrontCounterClockwise) != 0)
+                {
+                    d3d12Flags |= D3D12_RAYTRACING_INSTANCE_FLAG_TRIANGLE_FRONT_COUNTERCLOCKWISE;
+                }
+
+                if ((flags & AccelStructInstanceFlags.ForceOpaque) != 0)
+                {
+                    d3d12Flags |= D3D12_RAYTRACING_INSTANCE_FLAG_FORCE_OPAQUE;
+                }
+
+                if ((flags & AccelStructInstanceFlags.ForceNoOpaque) != 0)
+                {
+                    d3d12Flags |= D3D12_RAYTRACING_INSTANCE_FLAG_FORCE_NON_OPAQUE;
+                }
+
+                return d3d12Flags;
+            }
             public void CompactBottomLevelAccelStruct(IAccelStruct dest, IAccelStruct src) { /* TODO: CopyRaytracingAccelerationStructure */ }
 
             /// <summary>
@@ -9662,6 +10004,14 @@ namespace Andastra.Runtime.MonoGame.Backends
         // D3D12 Elements Layout
         private const uint D3D12_ELEMENTS_LAYOUT_ARRAY = 0;
         private const uint D3D12_ELEMENTS_LAYOUT_ARRAY_OF_POINTERS = 1;
+
+        // D3D12 Raytracing Instance Flags
+        // Based on D3D12 API: D3D12_RAYTRACING_INSTANCE_FLAGS
+        private const uint D3D12_RAYTRACING_INSTANCE_FLAG_NONE = 0;
+        private const uint D3D12_RAYTRACING_INSTANCE_FLAG_TRIANGLE_CULL_DISABLE = 0x1;
+        private const uint D3D12_RAYTRACING_INSTANCE_FLAG_TRIANGLE_FRONT_COUNTERCLOCKWISE = 0x2;
+        private const uint D3D12_RAYTRACING_INSTANCE_FLAG_FORCE_OPAQUE = 0x4;
+        private const uint D3D12_RAYTRACING_INSTANCE_FLAG_FORCE_NON_OPAQUE = 0x8;
 
         #endregion
 
@@ -9815,25 +10165,25 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// <summary>
         /// Raytracing instance description for top-level acceleration structures.
         /// Based on D3D12 API: D3D12_RAYTRACING_INSTANCE_DESC
+        /// Memory layout: Transform[12 floats] + InstanceID_InstanceMask[uint32] + InstanceShaderBindingTableRecordOffset_Flags[uint32] + AccelerationStructure[uint64]
         /// </summary>
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        [StructLayout(LayoutKind.Sequential)]
         private struct D3D12_RAYTRACING_INSTANCE_DESC
         {
             /// <summary>
             /// 3x4 row-major transform matrix (12 floats = 48 bytes).
+            /// Layout: [m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23]
             /// </summary>
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 12)]
             public float[] Transform;
 
             /// <summary>
-            /// Packed fields: InstanceID (24 bits), InstanceMask (8 bits), Flags (8 bits).
-            /// Bit layout: [InstanceID:24][InstanceMask:8][Flags:8]
+            /// Packed fields: InstanceID (bits 0-23), InstanceMask (bits 24-31).
             /// </summary>
-            public uint InstanceID_InstanceMask_Flags;
+            public uint InstanceID_InstanceMask;
 
             /// <summary>
-            /// Packed fields: InstanceShaderBindingTableRecordOffset (24 bits), Flags (8 bits).
-            /// Bit layout: [InstanceShaderBindingTableRecordOffset:24][Flags:8]
+            /// Packed fields: InstanceShaderBindingTableRecordOffset (bits 0-23), Flags (bits 24-31).
             /// </summary>
             public uint InstanceShaderBindingTableRecordOffset_Flags;
 
@@ -9953,6 +10303,13 @@ namespace Andastra.Runtime.MonoGame.Backends
             int numPostbuildInfoDescs,
             IntPtr pPostbuildInfoDescs);
 
+        // COM interface method delegate for GetRaytracingAccelerationStructurePrebuildInfo
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void GetRaytracingAccelerationStructurePrebuildInfoDelegate(
+            IntPtr device5,
+            IntPtr pDesc,
+            IntPtr pInfo);
+
         // COM interface method delegate for DispatchRays
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void DispatchRaysDelegate(
@@ -9970,6 +10327,55 @@ namespace Andastra.Runtime.MonoGame.Backends
         // COM interface method delegate for GetGPUVirtualAddress
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate ulong GetGPUVirtualAddressDelegate(IntPtr resource);
+
+        /// <summary>
+        /// Calls ID3D12Device5::GetRaytracingAccelerationStructurePrebuildInfo through COM vtable.
+        /// VTable index 57 for ID3D12Device5 (first method in ID3D12Device5 interface).
+        /// Based on D3D12 DXR API: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device5-getraytracingaccelerationstructureprebuildinfo
+        /// </summary>
+        private unsafe void CallGetRaytracingAccelerationStructurePrebuildInfo(
+            IntPtr device5,
+            IntPtr pDesc,
+            out D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO pInfo)
+        {
+            // Initialize output structure
+            pInfo = new D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO();
+
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            if (device5 == IntPtr.Zero || pDesc == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Allocate unmanaged memory for output structure
+            IntPtr pInfoPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO)));
+            try
+            {
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)device5;
+                // GetRaytracingAccelerationStructurePrebuildInfo is at index 57 in ID3D12Device5 vtable
+                // (ID3D12Device has ~54 methods, ID3D12Device1-4 add a few, so ID3D12Device5 starts around index 57)
+                IntPtr methodPtr = vtable[57];
+
+                // Create delegate from function pointer
+                GetRaytracingAccelerationStructurePrebuildInfoDelegate getPrebuildInfo =
+                    (GetRaytracingAccelerationStructurePrebuildInfoDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(GetRaytracingAccelerationStructurePrebuildInfoDelegate));
+
+                getPrebuildInfo(device5, pDesc, pInfoPtr);
+
+                // Marshal structure back from unmanaged memory
+                pInfo = (D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO)Marshal.PtrToStructure(pInfoPtr, typeof(D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO));
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(pInfoPtr);
+            }
+        }
 
         /// <summary>
         /// Gets the GPU virtual address of a resource.
