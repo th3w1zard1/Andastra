@@ -1047,7 +1047,6 @@ namespace Andastra.Runtime.MonoGame.Backends
             // Default to ALL if no specific stage is set
             return D3D12_SHADER_VISIBILITY_ALL;
         }
-        }
 
         public IBindingSet CreateBindingSet(IBindingLayout layout, BindingSetDesc desc)
         {
@@ -1505,24 +1504,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new InvalidOperationException("ID3D12Device5 is not available for raytracing");
             }
 
-            // TODO: IMPLEMENT - Create D3D12 raytracing pipeline state object
-            // - Convert RaytracingPipelineDesc to D3D12_STATE_OBJECT_DESC
-            // - Add D3D12_DXIL_LIBRARY_SUBOBJECT for shaders
-            // - Add D3D12_HIT_GROUP_SUBOBJECT for hit groups
-            // - Add D3D12_RAYTRACING_SHADER_CONFIG_SUBOBJECT
-            // - Add D3D12_RAYTRACING_PIPELINE_CONFIG_SUBOBJECT
-            // - Add D3D12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT for global binding layout
-            // - Call ID3D12Device5::CreateStateObject
-            // - Query for ID3D12StateObjectProperties to get shader identifiers
-            // - Build shader binding table buffer
-            // - Wrap in D3D12RaytracingPipeline and return
-
-            IntPtr handle = new IntPtr(_nextResourceHandle++);
-            IBuffer sbtBuffer = null; // Placeholder - would be created from shader identifiers
-            var pipeline = new D3D12RaytracingPipeline(handle, desc, IntPtr.Zero, IntPtr.Zero, sbtBuffer, _device5);
-            _resources[handle] = pipeline;
-
-            return pipeline;
+            throw new NotImplementedException("D3D12 raytracing pipeline creation is not yet fully implemented. See CreateRaytracingPipeline implementation.");
         }
 
         #endregion
@@ -2781,6 +2763,10 @@ namespace Andastra.Runtime.MonoGame.Backends
         // COM interface method delegate for ExecuteCommandLists (ID3D12CommandQueue::ExecuteCommandLists)
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void ExecuteCommandListsDelegate(IntPtr commandQueue, uint NumCommandLists, IntPtr ppCommandLists);
+
+        // COM interface method delegate for Unmap (ID3D12Resource::Unmap)
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void UnmapResourceDelegate(IntPtr resource, uint subresource, IntPtr pWrittenRange);
 
         // COM interface method delegates for fence operations
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
@@ -5393,8 +5379,6 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
         }
 
-        #endregion
-
         #region Resource Interface
 
         private interface IResource : IDisposable
@@ -7988,6 +7972,11 @@ namespace Andastra.Runtime.MonoGame.Backends
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
             private delegate void EndEventDelegate(IntPtr commandList);
 
+            // COM interface method delegate for SetMarker
+            // Based on DirectX 12 Debug Events: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-setmarker
+            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+            private delegate void SetMarkerDelegate(IntPtr commandList, uint Metadata, IntPtr pData, uint Size);
+
             /// <summary>
             /// Calls ID3D12GraphicsCommandList::ClearDepthStencilView through COM vtable.
             /// VTable index 48 for ID3D12GraphicsCommandList.
@@ -8190,6 +8179,38 @@ namespace Andastra.Runtime.MonoGame.Backends
                     (EndEventDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(EndEventDelegate));
 
                 endEvent(commandList);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::SetMarker through COM vtable.
+            /// VTable index 59 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Debug Events: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-setmarker
+            /// Note: This method is used internally by PIX event runtime. Marker name is encoded as UTF-8 bytes.
+            /// SetMarker is similar to BeginEvent but does not require a matching EndEvent call - it's a single point marker.
+            /// </summary>
+            private unsafe void CallSetMarker(IntPtr commandList, uint metadata, IntPtr pData, uint size)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // SetMarker is at index 59 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[59];
+
+                // Create delegate from function pointer
+                SetMarkerDelegate setMarker =
+                    (SetMarkerDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(SetMarkerDelegate));
+
+                setMarker(commandList, metadata, pData, size);
             }
 
             /// <summary>
@@ -9092,8 +9113,6 @@ namespace Andastra.Runtime.MonoGame.Backends
                 IntPtr methodPtr = vtable[9];
 
                 // Create delegate from function pointer
-                [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-                delegate void UnmapResourceDelegate(IntPtr resource, uint subresource, IntPtr pWrittenRange);
                 UnmapResourceDelegate unmapResource = (UnmapResourceDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(UnmapResourceDelegate));
 
                 unmapResource(resource, unchecked((uint)subresource), IntPtr.Zero);
@@ -10575,7 +10594,41 @@ namespace Andastra.Runtime.MonoGame.Backends
                 CallEndEvent(_d3d12CommandList);
             }
 
-            public void InsertDebugMarker(string name, Vector4 color) { /* TODO: SetMarker */ }
+            /// <summary>
+            /// Inserts a debug marker in the command list.
+            /// Based on DirectX 12 Debug Events: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-setmarker
+            /// Encodes marker name as UTF-8 and passes to ID3D12GraphicsCommandList::SetMarker.
+            /// Color parameter is provided for cross-platform compatibility but D3D12 SetMarker uses name only.
+            /// Unlike BeginDebugEvent/EndDebugEvent, SetMarker is a single point marker that does not require a matching end call.
+            /// </summary>
+            public void InsertDebugMarker(string name, Vector4 color)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before inserting debug marker");
+                }
+
+                if (string.IsNullOrEmpty(name))
+                {
+                    throw new ArgumentException("Debug marker name cannot be null or empty", nameof(name));
+                }
+
+                // Encode marker name as UTF-8 bytes (null-terminated for D3D12/PIX compatibility)
+                byte[] nameBytes = System.Text.Encoding.UTF8.GetBytes(name + "\0");
+                GCHandle nameHandle = GCHandle.Alloc(nameBytes, GCHandleType.Pinned);
+                try
+                {
+                    // Call SetMarker via vtable
+                    // Metadata is 0 for standard event markers (PIX uses this internally)
+                    // pData points to UTF-8 encoded marker name
+                    // Size is the length of the name bytes including null terminator
+                    CallSetMarker(_d3d12CommandList, 0, nameHandle.AddrOfPinnedObject(), (uint)nameBytes.Length);
+                }
+                finally
+                {
+                    nameHandle.Free();
+                }
+            }
 
             /// <summary>
             /// Gets the native ID3D12GraphicsCommandList pointer.
@@ -11770,17 +11823,6 @@ namespace Andastra.Runtime.MonoGame.Backends
                     // Default to Float3 for most formats
                     return D3D12_RAYTRACING_VERTEX_FORMAT_FLOAT3;
             }
-        }
-
-        #endregion
-    }
-}
-
-            // Create delegate from function pointer
-            ExecuteCommandListsDelegate executeCommandLists =
-                (ExecuteCommandListsDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(ExecuteCommandListsDelegate));
-
-            executeCommandLists(commandQueue, numCommandLists, ppCommandLists);
         }
 
         /// <summary>
