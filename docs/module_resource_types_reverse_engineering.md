@@ -1804,6 +1804,172 @@ if (iVar7 == 0) {
 
 **Conclusion**: ARE in `_dlg.erf` will be loaded and registered, but the area file check logic will **NOT find it** because it only searches `_a.rim` and `_adx.rim`. The ARE in `_dlg.erf` will be available for resource lookup, but won't trigger the area file loading behavior.
 
+### Exhaustive Priority Chain: Step-by-Step Resource Resolution
+
+**Question**: If `test.ncs` exists in `.rim`, `_dlg.erf`, `_s.rim`, `_adx.rim`, and `_a.rim`, which takes priority? What is the complete priority chain?
+
+**Answer**: **Complete priority chain based on registration order** (first registered wins for duplicates):
+
+#### K1 (swkotor.exe) - Complete Priority Chain (when `.mod` does NOT exist)
+
+**Resource Registration Order** (swkotor.exe: `FUN_004094a0` at 0x004094a0):
+
+1. **`.rim`** (line ~32-42) - **HIGHEST PRIORITY** among module files
+   - Loaded FIRST, before any other checks
+   - All resources in `.rim` are registered first
+   - **If `test.ncs` exists in `.rim`**: ✅ **`.rim` version is loaded** (wins over all other module files)
+
+2. **`_a.rim`** (line 159, if ARE found) - **SECOND PRIORITY**
+   - Checked at lines 50-62, loaded at line 159
+   - Resources supplement `.rim` (duplicates from `.rim` are ignored)
+   - **If `test.ncs` removed from `.rim`, exists in `_a.rim`**: ✅ **`_a.rim` version is loaded** (wins over `_adx.rim`, `_s.rim`)
+
+3. **`_adx.rim`** (line 85, if ARE found) - **THIRD PRIORITY**
+   - Checked at lines 64-88, loaded at line 85
+   - Resources supplement `.rim` (duplicates from `.rim`/`_a.rim` are ignored)
+   - **If `test.ncs` removed from `.rim` and `_a.rim`, exists in `_adx.rim`**: ✅ **`_adx.rim` version is loaded** (wins over `_s.rim`)
+
+4. **Override Directory** (line 91) - **ABSOLUTE HIGHEST PRIORITY** (searched first in resource lookup)
+   - Loaded after RIM files are registered
+   - **Wins over ALL module files** (searched first in `FUN_00407230`)
+   - **If `test.ncs` exists in Override**: ✅ **Override version is loaded** (wins over all module files, including `.rim`)
+
+5. **`_s.rim`** (line 118, if ARE found AND `.mod` doesn't exist) - **FOURTH PRIORITY**
+   - Loaded after `.rim`, `_a.rim`, `_adx.rim`
+   - Resources supplement `.rim` (duplicates from `.rim`/`_a.rim`/`_adx.rim` are ignored)
+   - **If `test.ncs` removed from `.rim`, `_a.rim`, `_adx.rim`, exists in `_s.rim`**: ✅ **`_s.rim` version is loaded**
+
+6. **patch.erf** (K1 only, loaded during global initialization) - **FIFTH PRIORITY**
+   - Loaded with chitin resources (Location 0, Source Type 1)
+   - **Wins over Chitin BIFs, loses to all module files and Override**
+   - **If `test.ncs` removed from all module files and Override, exists in patch.erf**: ✅ **patch.erf version is loaded** (wins over Chitin BIFs)
+
+7. **Chitin BIF archives** (Location 0, Source Type 1) - **LOWEST PRIORITY**
+   - Searched last in resource lookup (`FUN_00407230`)
+   - **If `test.ncs` removed from all other locations, exists in Chitin**: ✅ **Chitin version is loaded**
+
+**Complete Priority Chain for `test.ncs`** (K1, when `.mod` does NOT exist):
+
+1. **Override Directory** - If exists here, this version is loaded (searched first)
+2. **`.rim`** - If not in Override, and exists in `.rim`, this version is loaded (registered first)
+3. **`_a.rim`** - If not in Override/`.rim`, and exists in `_a.rim`, this version is loaded (registered second)
+4. **`_adx.rim`** - If not in Override/`.rim`/`_a.rim`, and exists in `_adx.rim`, this version is loaded (registered third)
+5. **`_s.rim`** - If not in Override/`.rim`/`_a.rim`/`_adx.rim`, and exists in `_s.rim`, this version is loaded (registered fourth)
+6. **patch.erf** - If not in Override/module files, and exists in patch.erf, this version is loaded (loaded with chitin, searched before Chitin BIFs)
+7. **Chitin BIFs** - If not in any other location, and exists in Chitin, this version is loaded (searched last)
+
+#### K2 (swkotor2.exe) - Complete Priority Chain (when `.mod` does NOT exist)
+
+**Resource Registration Order** (swkotor2.exe: `FUN_004096b0` at 0x004096b0):
+
+1. **`.rim`** (line ~36-46) - **HIGHEST PRIORITY** among module files
+   - Loaded FIRST, before any other checks
+   - All resources in `.rim` are registered first
+   - **If `test.ncs` exists in `.rim`**: ✅ **`.rim` version is loaded** (wins over all other module files)
+
+2. **`_a.rim`** (line 182, if ARE found) - **SECOND PRIORITY**
+   - Checked at lines 54-66, loaded at line 182
+   - Resources supplement `.rim` (duplicates from `.rim` are ignored)
+   - **If `test.ncs` removed from `.rim`, exists in `_a.rim`**: ✅ **`_a.rim` version is loaded** (wins over `_adx.rim`, `_s.rim`, `_dlg.erf`)
+
+3. **`_adx.rim`** (line 89, if ARE found) - **THIRD PRIORITY**
+   - Checked at lines 68-92, loaded at line 89
+   - Resources supplement `.rim` (duplicates from `.rim`/`_a.rim` are ignored)
+   - **If `test.ncs` removed from `.rim` and `_a.rim`, exists in `_adx.rim`**: ✅ **`_adx.rim` version is loaded** (wins over `_s.rim`, `_dlg.erf`)
+
+4. **Override Directory** (line 95) - **ABSOLUTE HIGHEST PRIORITY** (searched first in resource lookup)
+   - Loaded after RIM files are registered
+   - **Wins over ALL module files** (searched first in `FUN_00407300`)
+   - **If `test.ncs` exists in Override**: ✅ **Override version is loaded** (wins over all module files, including `.rim`)
+
+5. **`_s.rim`** (line 122, if ARE found AND `.mod` doesn't exist) - **FOURTH PRIORITY**
+   - Loaded after `.rim`, `_a.rim`, `_adx.rim`
+   - Resources supplement `.rim` (duplicates from `.rim`/`_a.rim`/`_adx.rim` are ignored)
+   - **If `test.ncs` removed from `.rim`, `_a.rim`, `_adx.rim`, exists in `_s.rim`**: ✅ **`_s.rim` version is loaded** (wins over `_dlg.erf`)
+
+6. **`_dlg.erf`** (line 147, if exists AND `.mod` doesn't exist, K2 only) - **FIFTH PRIORITY**
+   - Loaded after `.rim`, `_a.rim`, `_adx.rim`, `_s.rim`
+   - Resources supplement `.rim` and `_s.rim` (duplicates from `.rim`/`_a.rim`/`_adx.rim`/`_s.rim` are ignored)
+   - **If `test.ncs` removed from `.rim`, `_a.rim`, `_adx.rim`, `_s.rim`, exists in `_dlg.erf`**: ✅ **`_dlg.erf` version is loaded**
+
+7. **patch.erf** - **NOT SUPPORTED in K2** (K1 only)
+
+8. **Chitin BIF archives** (Location 0, Source Type 1) - **LOWEST PRIORITY**
+   - Searched last in resource lookup (`FUN_00407300`)
+   - **If `test.ncs` removed from all other locations, exists in Chitin**: ✅ **Chitin version is loaded**
+
+**Complete Priority Chain for `test.ncs`** (K2, when `.mod` does NOT exist):
+
+1. **Override Directory** - If exists here, this version is loaded (searched first)
+2. **`.rim`** - If not in Override, and exists in `.rim`, this version is loaded (registered first)
+3. **`_a.rim`** - If not in Override/`.rim`, and exists in `_a.rim`, this version is loaded (registered second)
+4. **`_adx.rim`** - If not in Override/`.rim`/`_a.rim`, and exists in `_adx.rim`, this version is loaded (registered third)
+5. **`_s.rim`** - If not in Override/`.rim`/`_a.rim`/`_adx.rim`, and exists in `_s.rim`, this version is loaded (registered fourth)
+6. **`_dlg.erf`** - If not in Override/`.rim`/`_a.rim`/`_adx.rim`/`_s.rim`, and exists in `_dlg.erf`, this version is loaded (registered fifth, K2 only)
+7. **Chitin BIFs** - If not in any other location, and exists in Chitin, this version is loaded (searched last)
+
+#### When `.mod` EXISTS (Both K1 and K2)
+
+**Complete Priority Chain** (when `.mod` exists):
+
+1. **Override Directory** - **ABSOLUTE HIGHEST PRIORITY** (searched first)
+2. **`.mod`** - **OVERRIDES all `.rim` entries** (registered after `.rim`, replaces all duplicates)
+3. **patch.erf** (K1 only) - Loaded with chitin resources
+4. **Chitin BIFs** - **LOWEST PRIORITY** (searched last)
+5. **`.rim`, `_a.rim`, `_adx.rim`, `_s.rim`, `_dlg.erf`** - **NOT LOADED** (`.mod` completely replaces them)
+
+**Note**: When `.mod` exists, `.rim` is loaded first but then **all its entries are replaced** by `.mod` entries. The other files (`_a.rim`, `_adx.rim`, `_s.rim`, `_dlg.erf`) are **NOT loaded at all**.
+
+#### patch.erf Priority in Complete Chain
+
+**Question**: Where does patch.erf fit in the priority order?
+
+**Answer**: **patch.erf has priority BETWEEN module files and Chitin BIFs** (K1 only):
+
+**Complete Priority Order Including patch.erf** (K1 only):
+
+1. **Override Directory** (Location 3, Source Type 2) - **HIGHEST PRIORITY**
+   - Searched first in `FUN_00407230`
+   - **Wins over ALL other locations**
+
+2. **Module Containers** (Location 2, Source Type 3) - **HIGH PRIORITY**
+   - `.mod` files (if exists, overrides all `.rim` entries)
+   - `_dlg.erf` files (K2 only, if exists and no `.mod`)
+
+3. **Module RIM Files** (Location 1, Source Type 4) - **MEDIUM PRIORITY**
+   - `.rim` files (highest priority among RIM files)
+   - `_a.rim` files (second priority)
+   - `_adx.rim` files (third priority)
+   - `_s.rim` files (fourth priority)
+
+4. **patch.erf** (Location 0, Source Type 1, K1 only) - **LOW-MEDIUM PRIORITY**
+   - Loaded with chitin resources during global initialization
+   - **Wins over Chitin BIFs, loses to all module files and Override**
+   - **Priority**: Override → Modules → **patch.erf** → Chitin BIFs
+
+5. **Chitin BIF Archives** (Location 0, Source Type 1) - **LOWEST PRIORITY**
+   - BIF files from `chitin.key`
+   - Searched last in `FUN_00407230`
+
+**Evidence**:
+
+- **Resource Search Order** (`FUN_00407230` lines 8-16):
+  1. `this+0x14` (Location 3 = Override) - Highest
+  2. `this+0x18` with param_6=1 (Location 2, variant 1 = Module containers) - High
+  3. `this+0x1c` (Location 1 = Module RIM files) - Medium
+  4. `this+0x18` with param_6=2 (Location 2, variant 2 = Module containers) - Medium
+  5. `this+0x10` (Location 0 = Chitin/patch.erf) - Lowest
+
+- **patch.erf Loading**: Loaded via `addERF()` which assigns it Location 0, Source Type 1 (same as Chitin BIF files)
+- **Within Location 0**: patch.erf is loaded during global initialization (before modules), but both are in Location 0, so they're searched together. The order within Location 0 depends on registration order, but since patch.erf is loaded at startup and modules are loaded later, patch.erf resources are registered first within Location 0.
+
+**Conclusion**: **patch.erf has priority OVER Chitin BIFs but BELOW all module files and Override**. The complete priority chain is:
+
+1. Override (highest)
+2. Module files (`.mod`, `.rim`, `_a.rim`, `_adx.rim`, `_s.rim`, `_dlg.erf`)
+3. **patch.erf** (K1 only)
+4. Chitin BIFs (lowest)
+
 ### Summary: Complete Priority Order for Duplicate Resources
 
 **K1 (swkotor.exe)** - When `.mod` does NOT exist:
@@ -1866,10 +2032,30 @@ if (iVar7 == 0) {
 
 **Priority Order** (for resources in patch.erf):
 
-1. Override directory (highest priority)
-2. Module files (`.mod`, `.rim`, `_s.rim`, `_dlg.erf`)
-3. **patch.erf** (loaded with chitin resources)
-4. Chitin BIF archives (lowest priority)
+**Complete Priority Chain Including patch.erf** (K1 only):
+
+1. **Override Directory** (Location 3, Source Type 2) - **HIGHEST PRIORITY**
+   - Searched first in `FUN_00407230`
+   - **Wins over ALL other locations**, including patch.erf
+
+2. **Module Files** (Location 1-2, Source Type 3-4) - **HIGH PRIORITY**
+   - `.mod` files (if exists, overrides all `.rim` entries)
+   - `.rim` files (highest priority among RIM files)
+   - `_a.rim` files (second priority)
+   - `_adx.rim` files (third priority)
+   - `_s.rim` files (fourth priority)
+   - `_dlg.erf` files (K2 only, fifth priority)
+   - **All module files win over patch.erf**
+
+3. **patch.erf** (Location 0, Source Type 1) - **MEDIUM PRIORITY**
+   - Loaded with chitin resources during global initialization
+   - **Wins over Chitin BIFs, loses to all module files and Override**
+   - **Priority**: Override → Modules → **patch.erf** → Chitin BIFs
+
+4. **Chitin BIF Archives** (Location 0, Source Type 1) - **LOWEST PRIORITY**
+   - BIF files from `chitin.key`
+   - Searched last in `FUN_00407230`
+   - **Loses to patch.erf** (both are Location 0, but patch.erf is registered first during global initialization)
 
 **What Can Be Put in patch.erf**:
 
@@ -1991,10 +2177,17 @@ if (iVar7 == 0) {
    - Engine behavior: Accepts any resource type ID stored in containers, regardless of container type
 
 7. **Valid file combinations**:
-   - K1: `.mod` (override), `.rim`, `.rim` + `_s.rim`, `.rim` + `_a.rim`, `.rim` + `_adx.rim`, `.rim` + `_a.rim` + `_adx.rim`
-   - K2: `.mod` (override), `.rim`, `.rim` + `_s.rim`, `.rim` + `_s.rim` + `_dlg.erf`, `.rim` + `_a.rim`, `.rim` + `_adx.rim`, `.rim` + `_a.rim` + `_adx.rim`
+   - K1: `.mod` (override), `.rim`, `.rim` + `_s.rim`, `.rim` + `_a.rim`, `.rim` + `_adx.rim`, `.rim` + `_a.rim` + `_adx.rim`, `.rim` + `_a.rim` + `_adx.rim` + `_s.rim`
+   - K2: `.mod` (override), `.rim`, `.rim` + `_s.rim`, `.rim` + `_s.rim` + `_dlg.erf`, `.rim` + `_a.rim`, `.rim` + `_adx.rim`, `.rim` + `_a.rim` + `_adx.rim`, `.rim` + `_a.rim` + `_adx.rim` + `_s.rim` + `_dlg.erf`
    - **Note**: `.mod` completely replaces `.rim` and all extension files - they are NOT loaded together
    - **Note**: `_a.rim` and `_adx.rim` are CONFIRMED via reverse engineering (K1: lines 50-88, K2: lines 54-92)
+
+8. **Complete Resource Priority Chain** (for duplicate resources):
+   - **K1 (when `.mod` does NOT exist)**: Override → `.rim` → `_a.rim` → `_adx.rim` → `_s.rim` → patch.erf → Chitin BIFs
+   - **K2 (when `.mod` does NOT exist)**: Override → `.rim` → `_a.rim` → `_adx.rim` → `_s.rim` → `_dlg.erf` → Chitin BIFs
+   - **When `.mod` EXISTS**: Override → `.mod` → patch.erf (K1 only) → Chitin BIFs (all other module files NOT loaded)
+   - **Key Finding**: `_a.rim` has priority over `_adx.rim` (checked and loaded first). Both supplement `.rim` (duplicates ignored).
+   - **patch.erf Priority**: patch.erf has priority OVER Chitin BIFs but BELOW all module files and Override (K1 only)
 
 ## Implementation Notes for Andastra
 
