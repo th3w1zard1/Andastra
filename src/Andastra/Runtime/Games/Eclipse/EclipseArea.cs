@@ -3169,11 +3169,15 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Post-processing pass: Apply screen-space effects
             // Eclipse supports advanced post-processing (bloom, HDR, color grading)
-            // In a full implementation, this would:
-            // - Render to intermediate render targets
-            // - Apply bloom, tone mapping, color grading
-            // - Composite final image
-            // TODO: STUB - For now, this is a placeholder for post-processing pipeline
+            // Implementation includes:
+            // - HDR render target management (initialized on first use or viewport resize)
+            // - Bloom extraction from bright areas with configurable threshold
+            // - Multi-pass Gaussian blur for bloom effect with configurable passes
+            // - Bloom compositing with HDR scene using intensity control
+            // - HDR tone mapping with exposure, gamma, and white point controls
+            // - Color grading with contrast and saturation adjustments
+            // - Final compositing to output render target
+            // Based on daorigins.exe/DragonAge2.exe: Post-processing pipeline for advanced visual effects
             ApplyPostProcessing(graphicsDevice, basicEffect, viewMatrix, projectionMatrix);
         }
 
