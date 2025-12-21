@@ -14,6 +14,11 @@ namespace Andastra.Runtime.MonoGame.Graphics
     {
         private readonly SpatialAudio _spatialAudio;
 
+        /// <summary>
+        /// Gets the underlying SpatialAudio instance for use by MonoGame audio players.
+        /// </summary>
+        public SpatialAudio UnderlyingSpatialAudio => _spatialAudio;
+
         public MonoGameSpatialAudio()
         {
             _spatialAudio = new SpatialAudio();
