@@ -7,6 +7,7 @@ using Andastra.Runtime.Graphics.Common.Backends;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Structs;
+using StrideGraphics = Andastra.Runtime.Stride.Graphics;
 
 namespace Andastra.Runtime.Stride.Backends
 {
@@ -40,6 +41,7 @@ namespace Andastra.Runtime.Stride.Backends
         private readonly Dictionary<IntPtr, BindlessHeapInfo> _bindlessHeaps;
         private readonly Dictionary<IntPtr, int> _textureToHeapIndex; // texture handle -> heap index
         private readonly Dictionary<IntPtr, int> _samplerToHeapIndex; // sampler handle -> heap index
+        private readonly Dictionary<IntPtr, StrideGraphics.SamplerStateDescription> _samplerDescriptions; // sampler handle -> sampler state description
 
         public StrideDirect3D12Backend(global::Stride.Engine.Game game)
         {
@@ -47,6 +49,7 @@ namespace Andastra.Runtime.Stride.Backends
             _bindlessHeaps = new Dictionary<IntPtr, BindlessHeapInfo>();
             _textureToHeapIndex = new Dictionary<IntPtr, int>();
             _samplerToHeapIndex = new Dictionary<IntPtr, int>();
+            _samplerDescriptions = new Dictionary<IntPtr, StrideGraphics.SamplerStateDescription>();
         }
 
         #region BaseGraphicsBackend Implementation
@@ -906,6 +909,160 @@ namespace Andastra.Runtime.Stride.Backends
             }
         }
 
+        /// <summary>
+        /// Attempts to extract the sampler state description from a sampler handle.
+        /// The handle may be a GCHandle to a StrideSamplerState object, or it may be stored in our dictionary.
+        /// </summary>
+        private bool TryGetSamplerDescription(IntPtr samplerHandle, out StrideGraphics.SamplerStateDescription description)
+        {
+            description = default(StrideGraphics.SamplerStateDescription);
+
+            if (samplerHandle == IntPtr.Zero)
+            {
+                return false;
+            }
+
+            // First, try to look up in our stored descriptions
+            if (_samplerDescriptions.TryGetValue(samplerHandle, out description))
+            {
+                return true;
+            }
+
+            // Try to convert handle back to GCHandle and get the object
+            try
+            {
+                GCHandle gcHandle = GCHandle.FromIntPtr(samplerHandle);
+                if (gcHandle.IsAllocated)
+                {
+                    object target = gcHandle.Target;
+                    if (target != null)
+                    {
+                        // Check if it's a StrideSamplerState
+                        if (target is StrideGraphics.StrideSamplerState strideSampler)
+                        {
+                            description = strideSampler.Description;
+                            // Cache it for future use
+                            _samplerDescriptions[samplerHandle] = description;
+                            return true;
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // Not a GCHandle, try other methods
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Converts a Stride SamplerStateDescription to a D3D12_SAMPLER_DESC structure.
+        /// Based on DirectX 12 Sampler Descriptors: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_sampler_desc
+        /// </summary>
+        private D3D12_SAMPLER_DESC ConvertSamplerDescriptionToD3D12(StrideGraphics.SamplerStateDescription strideDesc)
+        {
+            var d3d12Desc = new D3D12_SAMPLER_DESC();
+
+            // Convert filter
+            d3d12Desc.Filter = ConvertTextureFilterToD3D12(strideDesc.Filter, strideDesc.MaxAnisotropy > 0);
+
+            // Convert address modes
+            d3d12Desc.AddressU = ConvertTextureAddressModeToD3D12(strideDesc.AddressU);
+            d3d12Desc.AddressV = ConvertTextureAddressModeToD3D12(strideDesc.AddressV);
+            d3d12Desc.AddressW = ConvertTextureAddressModeToD3D12(strideDesc.AddressW);
+
+            // Convert mip LOD bias (Stride uses double, D3D12 uses float)
+            d3d12Desc.MipLODBias = (float)strideDesc.MipMapLevelOfDetailBias;
+
+            // Convert max anisotropy
+            d3d12Desc.MaxAnisotropy = (uint)Math.Max(1, Math.Min(16, strideDesc.MaxAnisotropy));
+
+            // Comparison function - Stride doesn't expose this directly, use NEVER (no comparison)
+            d3d12Desc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+
+            // Border color - Stride doesn't expose this directly, use transparent black
+            d3d12Desc.BorderColor = new float[] { 0.0f, 0.0f, 0.0f, 0.0f };
+
+            // Min/Max LOD - Stride uses MaxMipLevel, D3D12 uses MinLOD and MaxLOD
+            d3d12Desc.MinLOD = 0.0f;
+            if (strideDesc.MaxMipLevel > 0)
+            {
+                d3d12Desc.MaxLOD = (float)strideDesc.MaxMipLevel;
+            }
+            else
+            {
+                d3d12Desc.MaxLOD = D3D12_FLOAT32_MAX;
+            }
+
+            return d3d12Desc;
+        }
+
+        /// <summary>
+        /// Converts a Stride TextureFilter to a D3D12_FILTER value.
+        /// Based on DirectX 12 Filter Types: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ne-d3d12-d3d12_filter
+        /// </summary>
+        private uint ConvertTextureFilterToD3D12(Stride.Graphics.TextureFilter filter, bool anisotropic)
+        {
+            if (anisotropic)
+            {
+                return D3D12_FILTER_ANISOTROPIC;
+            }
+
+            // Map Stride filter modes to D3D12 filter modes
+            // Stride uses enum values that may not match D3D12 exactly, so we check the actual enum values
+            switch (filter)
+            {
+                case Stride.Graphics.TextureFilter.Point:
+                    return D3D12_FILTER_MIN_MAG_MIP_POINT;
+                case Stride.Graphics.TextureFilter.Linear:
+                    return D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+                case Stride.Graphics.TextureFilter.Anisotropic:
+                    return D3D12_FILTER_ANISOTROPIC;
+                default:
+                    // Default to linear if unknown
+                    return D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+            }
+        }
+
+        /// <summary>
+        /// Converts a Stride TextureAddressMode to a D3D12_TEXTURE_ADDRESS_MODE value.
+        /// Based on DirectX 12 Texture Address Modes: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ne-d3d12-d3d12_texture_address_mode
+        /// </summary>
+        private uint ConvertTextureAddressModeToD3D12(Stride.Graphics.TextureAddressMode mode)
+        {
+            // Stride and D3D12 use the same enum values for address modes
+            // Wrap = 1, Mirror = 2, Clamp = 3, Border = 4, MirrorOnce = 5
+            switch (mode)
+            {
+                case Stride.Graphics.TextureAddressMode.Wrap:
+                    return D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+                case Stride.Graphics.TextureAddressMode.Mirror:
+                    return D3D12_TEXTURE_ADDRESS_MODE_MIRROR;
+                case Stride.Graphics.TextureAddressMode.Clamp:
+                    return D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+                case Stride.Graphics.TextureAddressMode.Border:
+                    return D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+                case Stride.Graphics.TextureAddressMode.MirrorOnce:
+                    return D3D12_TEXTURE_ADDRESS_MODE_MIRROR_ONCE;
+                default:
+                    // Default to wrap if unknown
+                    return D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+            }
+        }
+
+        /// <summary>
+        /// Registers a sampler state description for a given sampler handle.
+        /// This allows the system to look up the description when adding the sampler to a bindless heap.
+        /// </summary>
+        public void RegisterSamplerDescription(IntPtr samplerHandle, StrideGraphics.SamplerStateDescription description)
+        {
+            if (samplerHandle != IntPtr.Zero)
+            {
+                _samplerDescriptions[samplerHandle] = description;
+            }
+        }
+
         protected override int OnAddBindlessSampler(IntPtr heap, IntPtr sampler)
         {
             // Validate inputs
@@ -977,28 +1134,39 @@ namespace Andastra.Runtime.Stride.Backends
             // D3D12_SAMPLER_DESC structure
             // Note: In DirectX 12, samplers are descriptors created directly in descriptor heaps
             // The sampler parameter is a handle to sampler state information
-            // TODO: STUB - For now, we'll use default sampler settings; in a full implementation,
-            // we would extract the sampler description from the sampler handle
+            // Extract the sampler description from the sampler handle
             try
             {
                 // Calculate CPU descriptor handle for this index
                 IntPtr cpuDescriptorHandle = OffsetDescriptorHandle(heapInfo.CpuHandle, index, heapInfo.DescriptorIncrementSize);
 
-                // Create D3D12_SAMPLER_DESC structure with default settings
-                // Default sampler: Linear filtering, wrap addressing, no comparison
-                var samplerDesc = new D3D12_SAMPLER_DESC
+                // Try to extract the sampler state description from the handle
+                D3D12_SAMPLER_DESC samplerDesc;
+                if (TryGetSamplerDescription(sampler, out StrideGraphics.SamplerStateDescription strideDesc))
                 {
-                    Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-                    AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
-                    AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
-                    AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
-                    MipLODBias = 0.0f,
-                    MaxAnisotropy = 1,
-                    ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER,
-                    BorderColor = new float[] { 0.0f, 0.0f, 0.0f, 0.0f },
-                    MinLOD = 0.0f,
-                    MaxLOD = D3D12_FLOAT32_MAX
-                };
+                    // Convert Stride sampler description to D3D12 format
+                    samplerDesc = ConvertSamplerDescriptionToD3D12(strideDesc);
+                    Console.WriteLine($"[StrideDX12] OnAddBindlessSampler: Using extracted sampler description for handle {sampler}");
+                }
+                else
+                {
+                    // Fallback to default sampler settings if description cannot be extracted
+                    // This can happen if the sampler handle is not registered or is not a GCHandle
+                    Console.WriteLine($"[StrideDX12] OnAddBindlessSampler: Warning - Could not extract sampler description for handle {sampler}, using default settings");
+                    samplerDesc = new D3D12_SAMPLER_DESC
+                    {
+                        Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR,
+                        AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+                        AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+                        AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+                        MipLODBias = 0.0f,
+                        MaxAnisotropy = 1,
+                        ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER,
+                        BorderColor = new float[] { 0.0f, 0.0f, 0.0f, 0.0f },
+                        MinLOD = 0.0f,
+                        MaxLOD = D3D12_FLOAT32_MAX
+                    };
+                }
 
                 // Allocate memory for the sampler descriptor structure
                 int samplerDescSize = Marshal.SizeOf(typeof(D3D12_SAMPLER_DESC));
