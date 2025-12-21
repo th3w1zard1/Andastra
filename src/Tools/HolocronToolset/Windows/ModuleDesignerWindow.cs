@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using HolocronToolset.Data;
@@ -8,6 +9,7 @@ using HolocronToolset.Dialogs;
 using HolocronToolset.Windows;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Resource;
 using ModuleClass = Andastra.Parsing.Common.Module;
 using GameModule = Andastra.Parsing.Common.Module;
 
@@ -233,10 +235,122 @@ namespace HolocronToolset.Windows
                 return;
             }
 
-            // Matching Python implementation: Build tree of module resources
-            // This will be fully implemented when Module class provides resource enumeration
-            // TODO: STUB - For now, clear the tree
-            Ui.ModuleTree.ItemsSource = null;
+            // Only build if module is loaded
+            if (_module == null)
+            {
+                Ui.ModuleTree.IsEnabled = false;
+                Ui.ModuleTree.ItemsSource = null;
+                return;
+            }
+
+            // Enable the tree
+            Ui.ModuleTree.IsEnabled = true;
+
+            // Create category tree items for resource types
+            // Matching PyKotor: categories dictionary mapping ResourceType to category items
+            var categories = new Dictionary<ResourceType, TreeViewItem>
+            {
+                { ResourceType.UTC, new TreeViewItem { Header = "Creatures" } },
+                { ResourceType.UTP, new TreeViewItem { Header = "Placeables" } },
+                { ResourceType.UTD, new TreeViewItem { Header = "Doors" } },
+                { ResourceType.UTI, new TreeViewItem { Header = "Items" } },
+                { ResourceType.UTE, new TreeViewItem { Header = "Encounters" } },
+                { ResourceType.UTT, new TreeViewItem { Header = "Triggers" } },
+                { ResourceType.UTW, new TreeViewItem { Header = "Waypoints" } },
+                { ResourceType.UTS, new TreeViewItem { Header = "Sounds" } },
+                { ResourceType.UTM, new TreeViewItem { Header = "Merchants" } },
+                { ResourceType.DLG, new TreeViewItem { Header = "Dialogs" } },
+                { ResourceType.FAC, new TreeViewItem { Header = "Factions" } },
+                { ResourceType.MDL, new TreeViewItem { Header = "Models" } },
+                { ResourceType.TGA, new TreeViewItem { Header = "Textures" } },
+                { ResourceType.NCS, new TreeViewItem { Header = "Scripts" } },
+                { ResourceType.IFO, new TreeViewItem { Header = "Module Data" } },
+                { ResourceType.INVALID, new TreeViewItem { Header = "Other" } }
+            };
+
+            // Map related resource types to same categories (matching PyKotor)
+            categories[ResourceType.MDX] = categories[ResourceType.MDL];
+            categories[ResourceType.WOK] = categories[ResourceType.MDL];
+            categories[ResourceType.TPC] = categories[ResourceType.TGA];
+            categories[ResourceType.ARE] = categories[ResourceType.IFO];
+            categories[ResourceType.GIT] = categories[ResourceType.IFO];
+            categories[ResourceType.LYT] = categories[ResourceType.IFO];
+            categories[ResourceType.VIS] = categories[ResourceType.IFO];
+            categories[ResourceType.PTH] = categories[ResourceType.IFO];
+            categories[ResourceType.NSS] = categories[ResourceType.NCS];
+
+            // Initialize ItemsSource for each category
+            foreach (var category in categories.Values)
+            {
+                category.ItemsSource = new List<TreeViewItem>();
+                category.IsExpanded = true;
+            }
+
+            // Iterate through module resources and add them to appropriate categories
+            if (_module.Resources != null)
+            {
+                foreach (var kvp in _module.Resources)
+                {
+                    var resource = kvp.Value;
+                    if (resource == null)
+                    {
+                        continue;
+                    }
+
+                    // Get resource name and type
+                    string resname = resource.GetResName();
+                    ResourceType restype = resource.GetResType();
+
+                    // Determine category (default to "Other" if not found)
+                    TreeViewItem category = categories.ContainsKey(restype) 
+                        ? categories[restype] 
+                        : categories[ResourceType.INVALID];
+
+                    // Create resource item
+                    string resourceDisplayName = $"{resname}.{restype.Extension}";
+                    var resourceItem = new TreeViewItem
+                    {
+                        Header = resourceDisplayName,
+                        Tag = resource
+                    };
+
+                    // Add to category's children list
+                    var categoryChildren = category.ItemsSource as List<TreeViewItem>;
+                    if (categoryChildren != null)
+                    {
+                        categoryChildren.Add(resourceItem);
+                    }
+                }
+            }
+
+            // Sort items alphabetically within each category
+            foreach (var category in categories.Values)
+            {
+                var categoryChildren = category.ItemsSource as List<TreeViewItem>;
+                if (categoryChildren != null && categoryChildren.Count > 0)
+                {
+                    categoryChildren.Sort((a, b) => 
+                    {
+                        string headerA = a?.Header?.ToString() ?? "";
+                        string headerB = b?.Header?.ToString() ?? "";
+                        return string.Compare(headerA, headerB, StringComparison.OrdinalIgnoreCase);
+                    });
+                }
+            }
+
+            // Get unique category items (since some resource types share categories)
+            var uniqueCategories = categories.Values.Distinct().ToList();
+
+            // Sort categories alphabetically
+            uniqueCategories.Sort((a, b) =>
+            {
+                string headerA = a?.Header?.ToString() ?? "";
+                string headerB = b?.Header?.ToString() ?? "";
+                return string.Compare(headerA, headerB, StringComparison.OrdinalIgnoreCase);
+            });
+
+            // Set tree items source
+            Ui.ModuleTree.ItemsSource = uniqueCategories;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/module_designer.py:1348-1458
