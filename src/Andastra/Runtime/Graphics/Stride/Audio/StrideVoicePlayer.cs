@@ -288,8 +288,10 @@ namespace Andastra.Runtime.Stride.Audio
         /// </remarks>
         private class DummyDynamicSoundSourceForInit : DynamicSoundSource
         {
-            // Static cached dummy SoundInstance to break circular dependency
-            // This is created once per AudioEngine and reused for all DummyDynamicSoundSourceForInit instances
+            /// <summary>
+            /// Static cached dummy SoundInstance to break circular dependency.
+            /// This is created once per AudioEngine and reused for all DummyDynamicSoundSourceForInit instances.
+            /// </summary>
             private static SoundInstance _cachedDummySoundInstance;
             private static AudioEngine _cachedAudioEngine;
             private static AudioListener _cachedListener;
