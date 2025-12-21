@@ -515,14 +515,16 @@ namespace Andastra.Runtime.MonoGame.Backends
         // Vulkan clear color value structure
         // Based on Vulkan API: https://docs.vulkan.org/spec/latest/chapters/clears.html#VkClearColorValue
         // Can represent float, int32, or uint32 clear values depending on format
-        [StructLayout(LayoutKind.Sequential)]
+        // In C: union { float float32[4]; int32_t int32[4]; uint32_t uint32[4]; }
+        // Size is 16 bytes (4 values * 4 bytes each)
+        // We use fixed-size float fields to represent the union (most common case for color attachments)
+        [StructLayout(LayoutKind.Sequential, Size = 16)]
         private struct VkClearColorValue
         {
-            // Union of float, int32, and uint32 arrays - using float array for most common case
-            // In C: union { float float32[4]; int32_t int32[4]; uint32_t uint32[4]; }
-            // We use float array as it's the most common case for color attachments
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-            public float[] float32; // float[4] - clear values as floats (0.0 to 1.0)
+            public float float32_0; // First float value
+            public float float32_1; // Second float value
+            public float float32_2; // Third float value
+            public float float32_3; // Fourth float value
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -981,6 +983,11 @@ namespace Andastra.Runtime.MonoGame.Backends
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkCmdClearDepthStencilImageDelegate(IntPtr commandBuffer, IntPtr image, VkImageLayout imageLayout, IntPtr pDepthStencil, uint rangeCount, IntPtr pRanges);
 
+        // Delegate for vkCmdClearColorImage
+        // Based on Vulkan API: https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdClearColorImage.html
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void vkCmdClearColorImageDelegate(IntPtr commandBuffer, IntPtr image, VkImageLayout imageLayout, IntPtr pColor, uint rangeCount, IntPtr pRanges);
+
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate VkResult vkMapMemoryDelegate(IntPtr device, IntPtr memory, ulong offset, ulong size, uint flags, out IntPtr ppData);
 
@@ -1072,6 +1079,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static vkCmdSetScissorDelegate vkCmdSetScissor;
         private static vkCmdSetBlendConstantsDelegate vkCmdSetBlendConstants;
         private static vkCmdClearDepthStencilImageDelegate vkCmdClearDepthStencilImage;
+        private static vkCmdClearColorImageDelegate vkCmdClearColorImage;
         private static vkCmdUpdateBufferDelegate vkCmdUpdateBuffer;
         private static vkCmdCopyBufferDelegate vkCmdCopyBuffer;
         private static vkCmdCopyBufferToImageDelegate vkCmdCopyBufferToImage;
@@ -5274,7 +5282,126 @@ namespace Andastra.Runtime.MonoGame.Backends
                         return 0;
                 }
             }
-            public void ClearColorAttachment(IFramebuffer framebuffer, int attachmentIndex, Vector4 color) { /* TODO: vkCmdClearColorImage */ }
+            /// <summary>
+            /// Clears a color attachment of a framebuffer.
+            /// Based on Vulkan API: https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdClearColorImage.html
+            /// Transitions the image to TRANSFER_DST_OPTIMAL layout, clears it, then transitions back to COLOR_ATTACHMENT_OPTIMAL.
+            /// </summary>
+            public void ClearColorAttachment(IFramebuffer framebuffer, int attachmentIndex, Vector4 color)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before clearing color attachment");
+                }
+
+                if (framebuffer == null)
+                {
+                    throw new ArgumentNullException(nameof(framebuffer));
+                }
+
+                if (attachmentIndex < 0)
+                {
+                    throw new ArgumentException("Attachment index must be non-negative", nameof(attachmentIndex));
+                }
+
+                // Get framebuffer description to access color attachments
+                FramebufferDesc desc = framebuffer.Desc;
+                if (desc.ColorAttachments == null || desc.ColorAttachments.Length == 0)
+                {
+                    throw new ArgumentException("Framebuffer does not have any color attachments", nameof(framebuffer));
+                }
+
+                if (attachmentIndex >= desc.ColorAttachments.Length)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(attachmentIndex), $"Attachment index {attachmentIndex} is out of range (framebuffer has {desc.ColorAttachments.Length} color attachments)");
+                }
+
+                FramebufferAttachment attachment = desc.ColorAttachments[attachmentIndex];
+                if (attachment.Texture == null)
+                {
+                    throw new ArgumentException($"Color attachment at index {attachmentIndex} does not have a texture", nameof(framebuffer));
+                }
+
+                ITexture colorTexture = attachment.Texture;
+                IntPtr image = colorTexture.NativeHandle;
+                if (image == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException($"Color texture at attachment index {attachmentIndex} does not have a valid native handle");
+                }
+
+                // Get texture description to determine format
+                TextureDesc textureDesc = colorTexture.Desc;
+
+                // Check if vkCmdClearColorImage is available
+                if (vkCmdClearColorImage == null)
+                {
+                    throw new NotSupportedException("vkCmdClearColorImage is not available");
+                }
+
+                // Transition image to TRANSFER_DST_OPTIMAL layout for clearing
+                // Note: For clearing operations, we assume the image might be in UNDEFINED layout (newly created)
+                // or COLOR_ATTACHMENT_OPTIMAL (already used as attachment)
+                // Transitioning from UNDEFINED is safe for initialization/clearing operations
+                TransitionImageLayout(image, VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED, VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, textureDesc, attachment.MipLevel, attachment.ArraySlice);
+
+                // Create clear color value structure
+                // VkClearColorValue is a union that can be float[4], int32[4], or uint32[4]
+                // For color attachments, we use float[4] (most common case)
+                VkClearColorValue clearValue = new VkClearColorValue
+                {
+                    float32_0 = color.X,
+                    float32_1 = color.Y,
+                    float32_2 = color.Z,
+                    float32_3 = color.W
+                };
+
+                // Create subresource range for the specific mip level and array slice
+                VkImageSubresourceRange subresourceRange = new VkImageSubresourceRange
+                {
+                    aspectMask = VkImageAspectFlags.VK_IMAGE_ASPECT_COLOR_BIT,
+                    baseMipLevel = unchecked((uint)attachment.MipLevel),
+                    levelCount = 1, // Single mip level
+                    baseArrayLayer = unchecked((uint)attachment.ArraySlice),
+                    layerCount = 1 // Single array layer
+                };
+
+                // Allocate memory for structures and marshal them
+                int clearValueSize = Marshal.SizeOf<VkClearColorValue>();
+                IntPtr clearValuePtr = Marshal.AllocHGlobal(clearValueSize);
+                int rangeSize = Marshal.SizeOf<VkImageSubresourceRange>();
+                IntPtr rangePtr = Marshal.AllocHGlobal(rangeSize);
+
+                try
+                {
+                    // Marshal structures to unmanaged memory
+                    Marshal.StructureToPtr(clearValue, clearValuePtr, false);
+                    Marshal.StructureToPtr(subresourceRange, rangePtr, false);
+
+                    // Call vkCmdClearColorImage
+                    // Signature: void vkCmdClearColorImage(
+                    //   VkCommandBuffer commandBuffer,
+                    //   VkImage image,
+                    //   VkImageLayout imageLayout,
+                    //   const VkClearColorValue* pColor,
+                    //   uint32_t rangeCount,
+                    //   const VkImageSubresourceRange* pRanges)
+                    vkCmdClearColorImage(
+                        _vkCommandBuffer,
+                        image,
+                        VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                        clearValuePtr,
+                        1, // Single range
+                        rangePtr);
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(clearValuePtr);
+                    Marshal.FreeHGlobal(rangePtr);
+                }
+
+                // Transition image back to COLOR_ATTACHMENT_OPTIMAL for use as attachment
+                TransitionImageLayout(image, VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VkImageLayout.VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, textureDesc, attachment.MipLevel, attachment.ArraySlice);
+            }
             /// <summary>
             /// Clears the depth/stencil attachment of a framebuffer.
             /// Based on Vulkan API: https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdClearDepthStencilImage.html
