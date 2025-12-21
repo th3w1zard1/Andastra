@@ -1345,12 +1345,12 @@ namespace HolocronToolset.Data
         }
         
         /// <summary>
-        /// Converts a quaternion (Vector4) to a yaw rotation angle in degrees.
+        /// Converts a quaternion to a yaw rotation angle in degrees.
         /// Doors rotate around the Y-axis, so we extract the yaw component from the Euler angles.
         /// </summary>
         /// <param name="quaternion">The quaternion orientation (x, y, z, w)</param>
         /// <returns>Rotation angle in degrees (0-360)</returns>
-        private float _QuaternionToYawRotation(Vector4 quaternion)
+        private float _QuaternionToYawRotation(Andastra.Utility.Geometry.Quaternion quaternion)
         {
             // Convert quaternion to Euler angles (roll, pitch, yaw)
             // Based on PyKotor's Vector4.to_euler() implementation
