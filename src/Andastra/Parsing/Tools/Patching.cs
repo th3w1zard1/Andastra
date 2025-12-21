@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Reflection;
 using Andastra.Parsing;
 using Andastra.Parsing.Extract;
 using Andastra.Parsing.Formats.Capsule;
@@ -255,6 +257,21 @@ namespace Andastra.Parsing.Tools
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/patching.py:359-399
         // Original: def process_translations(tlk: TLK, from_lang: Language, config: PatchingConfig) -> None:
+        /// <summary>
+        /// Processes translations for a TLK file.
+        /// Translates all entries in the TLK from the source language to the target language using the configured translator.
+        /// </summary>
+        /// <param name="tlk">The TLK file to translate.</param>
+        /// <param name="fromLang">Source language of the TLK entries.</param>
+        /// <param name="config">Patching configuration with translator instance.</param>
+        /// <remarks>
+        /// Based on PyKotor implementation:
+        /// - Skips empty, numeric-only, and special "do not translate" entries
+        /// - Uses parallel processing with configurable thread count
+        /// - Fixes encoding for translated text based on target language
+        /// - Replaces entries in-place in the TLK object
+        /// - Logs each translation for debugging
+        /// </remarks>
         public static void ProcessTranslations(TLK tlk, Language fromLang, PatchingConfig config)
         {
             if (config.Translator == null)
@@ -262,9 +279,136 @@ namespace Andastra.Parsing.Tools
                 return;
             }
 
-            // Translator interface would need to be defined
-            // TODO: STUB - For now, log that translation is needed
-            LogMessage(config, "Translation processing not fully implemented - requires translator instance");
+            // Get translator interface via reflection (translator is stored as object for flexibility)
+            // Expected interface:
+            // - Translate(string text, Language fromLang) -> string method
+            // - ToLang: Language property
+            object translator = config.Translator;
+            Type translatorType = translator.GetType();
+            
+            // Get ToLang property
+            PropertyInfo toLangProperty = translatorType.GetProperty("ToLang");
+            if (toLangProperty == null)
+            {
+                LogMessage(config, "Translator instance does not have ToLang property - translation skipped");
+                return;
+            }
+            Language toLang = (Language)toLangProperty.GetValue(translator);
+            
+            // Get Translate method
+            MethodInfo translateMethod = translatorType.GetMethod("Translate", new[] { typeof(string), typeof(Language) });
+            if (translateMethod == null)
+            {
+                LogMessage(config, "Translator instance does not have Translate(string, Language) method - translation skipped");
+                return;
+            }
+
+            // Helper function to translate a single entry
+            // Based on PyKotor: def translate_entry(tlkentry: TLKEntry, from_lang: Language) -> tuple[str, str]
+            Tuple<string, string> TranslateEntry(TLKEntry entry, Language sourceLang)
+            {
+                string text = entry.Text;
+                
+                // Skip empty or whitespace-only text
+                if (string.IsNullOrWhiteSpace(text))
+                {
+                    return Tuple.Create(text, "");
+                }
+                
+                // Skip numeric-only text (likely placeholder or ID)
+                if (text.Trim().All(char.IsDigit))
+                {
+                    return Tuple.Create(text, "");
+                }
+                
+                // Skip special "do not translate" markers
+                if (text.Contains("Do not translate this text", StringComparison.OrdinalIgnoreCase))
+                {
+                    return Tuple.Create(text, text);
+                }
+                if (text.Contains("actual text to be translated", StringComparison.OrdinalIgnoreCase))
+                {
+                    return Tuple.Create(text, text);
+                }
+                
+                // Translate the text
+                try
+                {
+                    string translatedText = (string)translateMethod.Invoke(translator, new object[] { text, sourceLang });
+                    return Tuple.Create(text, translatedText ?? "");
+                }
+                catch (Exception ex)
+                {
+                    LogMessage(config, $"Error translating text '{text}': {ex.Message}");
+                    return Tuple.Create(text, "");
+                }
+            }
+
+            // Get encoding for target language
+            string targetEncoding = toLang.GetEncoding();
+            
+            // Process translations using parallel processing
+            // Based on PyKotor: ThreadPoolExecutor with max_workers=config.max_threads
+            int maxThreads = config.MaxThreads > 0 ? config.MaxThreads : 2;
+            
+            // Collect all entries that need translation
+            var entriesToTranslate = new List<Tuple<int, TLKEntry>>();
+            foreach (var entryTuple in tlk)
+            {
+                int stringref = entryTuple.stringref;
+                TLKEntry entry = entryTuple.entry;
+                entriesToTranslate.Add(Tuple.Create(stringref, entry));
+            }
+            
+            // Use Parallel.ForEach for thread-safe parallel processing
+            // Based on PyKotor: ThreadPoolExecutor pattern with max_workers
+            var parallelOptions = new ParallelOptions
+            {
+                MaxDegreeOfParallelism = maxThreads
+            };
+            
+            // Dictionary to store translation results (thread-safe for parallel writes)
+            var translationResults = new ConcurrentDictionary<int, Tuple<string, string>>();
+            
+            // Process translations in parallel
+            Parallel.ForEach(entriesToTranslate, parallelOptions, entryInfo =>
+            {
+                int stringref = entryInfo.Item1;
+                TLKEntry entry = entryInfo.Item2;
+                
+                try
+                {
+                    var result = TranslateEntry(entry, fromLang);
+                    translationResults[stringref] = result;
+                }
+                catch (Exception ex)
+                {
+                    LogMessage(config, $"TLK strref {stringref} generated an exception: {ex.Message}");
+                }
+            });
+            
+            // Apply translations to TLK (single-threaded for thread safety)
+            // Based on PyKotor: concurrent.futures.as_completed pattern
+            foreach (var kvp in translationResults)
+            {
+                int stringref = kvp.Key;
+                string originalText = kvp.Value.Item1;
+                string translatedText = kvp.Value.Item2;
+                
+                if (!string.IsNullOrWhiteSpace(translatedText))
+                {
+                    // Fix encoding for translated text
+                    // Based on PyKotor: fix_encoding(translated_text, config.translator.to_lang.get_encoding())
+                    string fixedText = FixEncoding(translatedText, targetEncoding);
+                    
+                    // Replace entry in TLK
+                    // Based on PyKotor: tlk.replace(strref, translated_text)
+                    tlk.Replace(stringref, fixedText);
+                    
+                    // Log translation
+                    LogMessage(config, $"#{stringref} Translated {originalText} --> {fixedText}");
+                }
+            }
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/patching.py:402-508
