@@ -1289,36 +1289,106 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         /// KOTOR2 secondary window creation.
         /// Matches swkotor2.exe: FUN_00428840 @ 0x00428840.
         /// </summary>
+        /// <remarks>
+        /// Secondary Window Creation (swkotor2.exe: FUN_00428840 @ 0x00428840):
+        /// - Creates a hidden window (WS_POPUP style, 1x1 size, positioned off-screen)
+        /// - Used for secondary OpenGL contexts for off-screen rendering
+        /// - Window is never shown (SW_HIDE) and used only for context creation
+        /// - Sets up pixel format using wglChoosePixelFormatARB if available
+        /// - Falls back to standard ChoosePixelFormat if ARB extension not available
+        /// - Returns window handle or IntPtr.Zero on failure
+        /// 
+        /// Based on swkotor2.exe reverse engineering:
+        /// - Window class: "KOTOR2SecondaryWindow" (registered once, reused)
+        /// - Window style: 0 (WS_OVERLAPPED, minimal style for hidden window)
+        /// - Window size: 1x1 pixels (minimal size for valid window)
+        /// - Window position: 0, 0 (off-screen when hidden)
+        /// - Pixel format: Matches primary window format (32-bit color, 24-bit depth, 8-bit stencil)
+        /// </remarks>
         private IntPtr CreateKotor2SecondaryWindow()
         {
             // Matching swkotor2.exe: FUN_00428840 @ 0x00428840
             // This function creates a hidden window for secondary OpenGL contexts
 
-            // The actual implementation would use wglChoosePixelFormatARB to create a window
-            // TODO: STUB - For now, this is a placeholder matching the function structure
-            // In the real implementation, this would create a window with specific pixel format attributes
+            const string className = "KOTOR2SecondaryWindow";
+            const uint WS_POPUP = 0x80000000;
+            const int SW_HIDE = 0;
 
-            WndProcDelegate wndProc = (hWnd, uMsg, wParam, lParam) => DefWindowProcA(hWnd, uMsg, wParam, lParam);
-            WNDCLASSA wndClass = new WNDCLASSA();
-            wndClass.style = 0;
-            wndClass.lpfnWndProc = Marshal.GetFunctionPointerForDelegate(wndProc);
-            wndClass.cbClsExtra = 0;
-            wndClass.cbWndExtra = 0;
-            wndClass.hInstance = IntPtr.Zero;
-            wndClass.hIcon = IntPtr.Zero;
-            wndClass.hCursor = IntPtr.Zero;
-            wndClass.hbrBackground = IntPtr.Zero;
-            wndClass.lpszMenuName = null;
-            wndClass.lpszClassName = "KOTOR2SecondaryWindow";
-
-            RegisterClassA(ref wndClass);
-
-            IntPtr hWnd2 = CreateWindowExA(0, "KOTOR2SecondaryWindow", "Secondary Window", 0, 0, 0, 1, 1, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
-
-            if (hWnd2 != IntPtr.Zero && _kotor2WglChoosePixelFormatArb != null)
+            // Register window class (only if not already registered)
+            // Check if class is already registered by attempting to get class info
+            WNDCLASSA existingClass = new WNDCLASSA();
+            IntPtr classAtom = GetClassInfoA(IntPtr.Zero, className, ref existingClass);
+            
+            if (classAtom == IntPtr.Zero)
             {
-                IntPtr hdc = GetDC(hWnd2);
+                // Class not registered, register it now
+                WndProcDelegate wndProc = (hWnd, uMsg, wParam, lParam) => DefWindowProcA(hWnd, uMsg, wParam, lParam);
+                WNDCLASSA wndClass = new WNDCLASSA();
+                wndClass.style = 0;
+                wndClass.lpfnWndProc = Marshal.GetFunctionPointerForDelegate(wndProc);
+                wndClass.cbClsExtra = 0;
+                wndClass.cbWndExtra = 0;
+                wndClass.hInstance = IntPtr.Zero;
+                wndClass.hIcon = IntPtr.Zero;
+                wndClass.hCursor = IntPtr.Zero;
+                wndClass.hbrBackground = IntPtr.Zero;
+                wndClass.lpszMenuName = null;
+                wndClass.lpszClassName = className;
 
+                ushort registerResult = RegisterClassA(ref wndClass);
+                if (registerResult == 0)
+                {
+                    // Registration failed (might be already registered or error)
+                    // Check error code - if it's ERROR_CLASS_ALREADY_EXISTS, we can continue
+                    int error = Marshal.GetLastWin32Error();
+                    if (error != 0x582) // ERROR_CLASS_ALREADY_EXISTS
+                    {
+                        // Real error, return failure
+                        return IntPtr.Zero;
+                    }
+                }
+            }
+
+            // Create hidden window (1x1 size, WS_POPUP style, positioned at 0,0)
+            // Window is never shown and used only for OpenGL context creation
+            IntPtr hWnd2 = CreateWindowExA(
+                0,                          // Extended window style (none)
+                className,                   // Window class name
+                "KOTOR2SecondaryWindow",     // Window name (not visible)
+                WS_POPUP,                    // Window style (popup, no title bar)
+                0,                           // X position (off-screen when hidden)
+                0,                           // Y position (off-screen when hidden)
+                1,                           // Width (minimal: 1 pixel)
+                1,                           // Height (minimal: 1 pixel)
+                IntPtr.Zero,                 // Parent window (none)
+                IntPtr.Zero,                 // Menu (none)
+                IntPtr.Zero,                 // Instance handle (use current)
+                IntPtr.Zero                  // Creation parameters (none)
+            );
+
+            if (hWnd2 == IntPtr.Zero)
+            {
+                // Window creation failed
+                return IntPtr.Zero;
+            }
+
+            // Hide the window (it should never be visible)
+            ShowWindow(hWnd2, SW_HIDE);
+
+            // Get device context for pixel format setup
+            IntPtr hdc = GetDC(hWnd2);
+            if (hdc == IntPtr.Zero)
+            {
+                // Failed to get DC, cleanup and return failure
+                DestroyWindow(hWnd2);
+                return IntPtr.Zero;
+            }
+
+            // Try to use wglChoosePixelFormatARB if available (preferred method)
+            bool pixelFormatSet = false;
+            if (_kotor2WglChoosePixelFormatArb != null)
+            {
+                // Use ARB extension for pixel format selection (matches primary window setup)
                 int[] attribs = new int[]
                 {
                     WGL_DRAW_TO_WINDOW_ARB, 1,
@@ -1328,24 +1398,83 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                     WGL_COLOR_BITS_ARB, 32,
                     WGL_DEPTH_BITS_ARB, 24,
                     WGL_STENCIL_BITS_ARB, 8,
-                    WGL_SAMPLE_BUFFERS_ARB, 1,
-                    WGL_SAMPLES_ARB, 8,
                     WGL_ACCELERATION_ARB, WGL_FULL_ACCELERATION_ARB,
                     WGL_SWAP_METHOD_ARB, WGL_SWAP_EXCHANGE_ARB,
-                    0
+                    0  // Terminator
                 };
+
+                // Add multisampling if enabled (matching primary window)
+                if (_kotor2MultisampleFlag > 0)
+                {
+                    // Insert sample buffers and samples before terminator
+                    int[] attribsWithMultisample = new int[attribs.Length + 2];
+                    Array.Copy(attribs, 0, attribsWithMultisample, 0, attribs.Length - 1);
+                    attribsWithMultisample[attribs.Length - 1] = WGL_SAMPLE_BUFFERS_ARB;
+                    attribsWithMultisample[attribs.Length] = 1;
+                    attribsWithMultisample[attribs.Length + 1] = WGL_SAMPLES_ARB;
+                    attribsWithMultisample[attribs.Length + 2] = _kotor2MultisampleFlag < 0x19 ? _kotor2MultisampleFlag : 24;
+                    attribsWithMultisample[attribs.Length + 3] = 0; // Terminator
+                    attribs = attribsWithMultisample;
+                }
 
                 int format;
                 uint numFormats;
                 if (_kotor2WglChoosePixelFormatArb(hdc, attribs, null, 1, out format, out numFormats) && numFormats > 0)
                 {
+                    // Get pixel format descriptor for the selected format
                     PIXELFORMATDESCRIPTOR pfd = new PIXELFORMATDESCRIPTOR();
-                    SetPixelFormat(hdc, format, ref pfd);
+                    pfd.nSize = 0x28;
+                    pfd.nVersion = 1;
+                    if (DescribePixelFormat(hdc, format, 0x28, ref pfd) > 0)
+                    {
+                        // Set the pixel format
+                        if (SetPixelFormat(hdc, format, ref pfd))
+                        {
+                            pixelFormatSet = true;
+                        }
+                    }
                 }
-
-                ReleaseDC(hWnd2, hdc);
             }
 
+            // Fallback to standard ChoosePixelFormat if ARB extension not available or failed
+            if (!pixelFormatSet)
+            {
+                PIXELFORMATDESCRIPTOR pfd = new PIXELFORMATDESCRIPTOR();
+                pfd.nSize = 0x28;
+                pfd.nVersion = 1;
+                pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+                pfd.iPixelType = PFD_TYPE_RGBA;
+                pfd.cColorBits = 32;
+                pfd.cAlphaBits = 8;
+                pfd.cDepthBits = 24;
+                pfd.cStencilBits = 8;
+                pfd.iLayerType = PFD_MAIN_PLANE;
+
+                int pixelFormat = ChoosePixelFormat(hdc, ref pfd);
+                if (pixelFormat != 0)
+                {
+                    if (!SetPixelFormat(hdc, pixelFormat, ref pfd))
+                    {
+                        // Pixel format setup failed, cleanup and return failure
+                        ReleaseDC(hWnd2, hdc);
+                        DestroyWindow(hWnd2);
+                        return IntPtr.Zero;
+                    }
+                    pixelFormatSet = true;
+                }
+            }
+
+            // Release device context (we'll get it again when creating the OpenGL context)
+            ReleaseDC(hWnd2, hdc);
+
+            if (!pixelFormatSet)
+            {
+                // Pixel format setup failed, cleanup and return failure
+                DestroyWindow(hWnd2);
+                return IntPtr.Zero;
+            }
+
+            // Window created successfully with pixel format set up
             return hWnd2;
         }
 

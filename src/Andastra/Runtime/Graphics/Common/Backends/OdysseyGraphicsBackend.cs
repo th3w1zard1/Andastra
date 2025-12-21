@@ -205,6 +205,9 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         [DllImport("user32.dll", CharSet = CharSet.Ansi)]
         protected static extern ushort RegisterClassA(ref WNDCLASSA lpWndClass);
 
+        [DllImport("user32.dll", CharSet = CharSet.Ansi, SetLastError = true)]
+        protected static extern IntPtr GetClassInfoA(IntPtr hInstance, string lpClassName, ref WNDCLASSA lpWndClass);
+
         [DllImport("user32.dll", CharSet = CharSet.Ansi)]
         protected static extern IntPtr CreateWindowExA(uint dwExStyle, string lpClassName, string lpWindowName, uint dwStyle, int x, int y, int nWidth, int nHeight, IntPtr hWndParent, IntPtr hMenu, IntPtr hInstance, IntPtr lpParam);
 

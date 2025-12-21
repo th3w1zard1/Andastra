@@ -30,7 +30,15 @@ namespace Andastra.Parsing.Common
         NWN = 30,
         NEVERWINTER_NIGHTS = NWN,
         NWN2 = 31,
-        NEVERWINTER_NIGHTS_2 = NWN2
+        NEVERWINTER_NIGHTS_2 = NWN2,
+
+        // Infinity Engine
+        BG = 40,
+        BALDURS_GATE = BG,
+        IWD = 41,
+        ICEWIND_DALE = IWD,
+        PST = 42,
+        PLANESCAPE_TORMENT = PST
     }
 
     public static class GameExtensions
@@ -122,6 +130,27 @@ namespace Andastra.Parsing.Common
         public static bool IsAurora(this Game game)
         {
             return IsNeverwinterNights(game);
+        }
+
+        // Infinity Engine
+        public static bool IsBaldursGate(this Game game)
+        {
+            return game == Game.BG || game == Game.BALDURS_GATE;
+        }
+
+        public static bool IsIcewindDale(this Game game)
+        {
+            return game == Game.IWD || game == Game.ICEWIND_DALE;
+        }
+
+        public static bool IsPlanescapeTorment(this Game game)
+        {
+            return game == Game.PST || game == Game.PLANESCAPE_TORMENT;
+        }
+
+        public static bool IsInfinity(this Game game)
+        {
+            return game >= Game.BG && game <= Game.PLANESCAPE_TORMENT;
         }
     }
 }
