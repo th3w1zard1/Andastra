@@ -56,43 +56,32 @@ namespace Andastra.Tests.Runtime.Stride.GUI
         [Fact]
         public void IsInitialized_AfterConstruction_ShouldBeTrue()
         {
-            // Arrange
-            Game game;
-            var graphicsDevice = CreateTestGraphicsDeviceOrSkip(out game);
-            if (graphicsDevice == null)
+            // Arrange - Create Stride GraphicsDevice for testing using helper method
+            var game = GraphicsTestHelper.CreateTestStrideGame();
+            if (game == null)
             {
                 // Skip test if GraphicsDevice creation fails (e.g., no GPU in headless CI environment)
                 return;
             }
 
-            StrideMenuRenderer renderer = null;
             try
             {
-                // Act
-                renderer = new StrideMenuRenderer(graphicsDevice);
+                var graphicsDevice = game.GraphicsDevice;
+                if (graphicsDevice == null)
+                {
+                    return;
+                }
 
-                // Assert
+                // Act - Create StrideMenuRenderer with GraphicsDevice
+                var renderer = new StrideMenuRenderer(graphicsDevice);
+
+                // Assert - Renderer should be initialized after construction
                 renderer.IsInitialized.Should().BeTrue("StrideMenuRenderer should be initialized after successful construction");
             }
             finally
             {
-                // Cleanup
-                try
-                {
-                    renderer?.Dispose();
-                }
-                catch
-                {
-                    // Ignore disposal errors
-                }
-                try
-                {
-                    game?.Dispose();
-                }
-                catch
-                {
-                    // Ignore cleanup errors
-                }
+                // Cleanup - Dispose of Game instance (which will clean up GraphicsDevice)
+                GraphicsTestHelper.CleanupTestStrideGame(game);
             }
         }
 
@@ -166,43 +155,41 @@ namespace Andastra.Tests.Runtime.Stride.GUI
         [Fact]
         public void UpdateViewport_ShouldUpdateViewport()
         {
-            // Arrange
-            var graphicsDevice = CreateTestGraphicsDeviceOrSkip();
-            if (graphicsDevice == null)
+            // Arrange - Create Stride GraphicsDevice for testing using helper method
+            var game = GraphicsTestHelper.CreateTestStrideGame();
+            if (game == null)
             {
-                // Skip test if GraphicsDevice creation fails
+                // Skip test if GraphicsDevice creation fails (e.g., no GPU in headless CI environment)
                 return;
             }
 
             try
             {
-                var renderer = new StrideMenuRenderer(graphicsDevice);
-                int initialWidth = renderer.ViewportWidth;
-                int initialHeight = renderer.ViewportHeight;
+                var graphicsDevice = game.GraphicsDevice;
+                if (graphicsDevice == null)
+                {
+                    return;
+                }
 
-                // Act
+                var renderer = new StrideMenuRenderer(graphicsDevice);
+                var initialWidth = renderer.ViewportWidth;
+                var initialHeight = renderer.ViewportHeight;
+
+                // Act - Update viewport to new dimensions
                 int newWidth = 1920;
                 int newHeight = 1080;
                 renderer.UpdateViewport(newWidth, newHeight);
 
-                // Assert
-                renderer.ViewportWidth.Should().Be(newWidth, "Viewport width should be updated");
-                renderer.ViewportHeight.Should().Be(newHeight, "Viewport height should be updated");
+                // Assert - Viewport dimensions should be updated
+                renderer.ViewportWidth.Should().Be(newWidth, "Viewport width should be updated after UpdateViewport");
+                renderer.ViewportHeight.Should().Be(newHeight, "Viewport height should be updated after UpdateViewport");
+                renderer.ViewportWidth.Should().NotBe(initialWidth, "Viewport width should have changed");
+                renderer.ViewportHeight.Should().NotBe(initialHeight, "Viewport height should have changed");
             }
             finally
             {
-                // Cleanup
-                try
-                {
-                    if (graphicsDevice != null && graphicsDevice.Game != null)
-                    {
-                        graphicsDevice.Game.Dispose();
-                    }
-                }
-                catch
-                {
-                    // Ignore cleanup errors
-                }
+                // Cleanup - Dispose of Game instance (which will clean up GraphicsDevice)
+                GraphicsTestHelper.CleanupTestStrideGame(game);
             }
         }
 

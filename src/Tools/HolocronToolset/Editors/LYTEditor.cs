@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.MDLData;
 using Andastra.Parsing.Resource;
@@ -356,19 +358,22 @@ namespace HolocronToolset.Editors
                 }
                 else if (needsConversion)
                 {
-                    // PNG, JPG, BMP formats require conversion to TGA/TPC first
-                    // TPCAuto does not directly support these formats
-                    // In a full implementation, we would:
-                    // 1. Load the image using an image library (e.g., System.Drawing, SkiaSharp, or ImageSharp)
-                    // 2. Convert to RGBA format
-                    // 3. Create a TPC object from the image data
-                    // 4. Write as TPC
-                    // 
-                    // TODO: STUB - For now, we provide a clear error message indicating this limitation
-                    System.Console.WriteLine($"Error: Direct import of {extension.ToUpperInvariant()} files is not yet supported.");
-                    System.Console.WriteLine($"Please convert {Path.GetFileName(filePath)} to TGA or TPC format first, then import.");
-                    System.Console.WriteLine($"You can use external tools to convert PNG/JPG/BMP to TGA, then import the TGA file.");
-                    return;
+                    // PNG, JPG, BMP formats require conversion to TPC
+                    // Load the image using Avalonia's Bitmap, extract RGBA pixel data, and create TPC
+                    try
+                    {
+                        tpc = ConvertImageToTpc(filePath);
+                        if (tpc == null)
+                        {
+                            System.Console.WriteLine($"Error: Failed to convert {extension.ToUpperInvariant()} file {filePath} to TPC format.");
+                            return;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Console.WriteLine($"Error: Failed to convert {extension.ToUpperInvariant()} file {filePath} to TPC: {ex}");
+                        return;
+                    }
                 }
 
                 if (tpc == null)
@@ -418,6 +423,161 @@ namespace HolocronToolset.Editors
             {
                 System.Console.WriteLine($"Error importing texture file {filePath}: {ex}");
             }
+        }
+
+        /// <summary>
+        /// Converts a PNG, JPG, or BMP image file to TPC format.
+        /// Loads the image using Avalonia's Bitmap, extracts RGBA pixel data, and creates a TPC object.
+        /// </summary>
+        /// <param name="filePath">Path to the image file (PNG, JPG, or BMP).</param>
+        /// <returns>TPC object created from the image, or null if conversion fails.</returns>
+        private TPC ConvertImageToTpc(string filePath)
+        {
+            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+            {
+                return null;
+            }
+
+            try
+            {
+                // Load the image using Avalonia's Bitmap
+                Bitmap bitmap;
+                using (var fileStream = File.OpenRead(filePath))
+                {
+                    bitmap = new Bitmap(fileStream);
+                }
+
+                // Get image dimensions
+                int width = bitmap.PixelSize.Width;
+                int height = bitmap.PixelSize.Height;
+
+                if (width <= 0 || height <= 0)
+                {
+                    return null;
+                }
+
+                // Extract RGBA pixel data from the bitmap
+                // Avalonia bitmaps use BGRA format, we need to convert to RGBA
+                byte[] rgbaData = ExtractRgbaFromBitmap(bitmap, width, height);
+
+                if (rgbaData == null || rgbaData.Length == 0)
+                {
+                    return null;
+                }
+
+                // Create TPC object
+                TPC tpc = new TPC();
+                tpc.Layers = new List<TPCLayer>();
+                tpc.IsAnimated = false;
+                tpc.IsCubeMap = false;
+
+                // Check if image has alpha channel
+                bool hasAlpha = HasAlphaChannel(rgbaData);
+
+                // Create a single layer with the image data
+                TPCLayer layer = new TPCLayer();
+                TPCTextureFormat format = hasAlpha ? TPCTextureFormat.RGBA : TPCTextureFormat.RGB;
+
+                // Set the mipmap data
+                // For RGB format, we need to convert RGBA to RGB
+                byte[] formatData;
+                if (hasAlpha)
+                {
+                    formatData = rgbaData;
+                }
+                else
+                {
+                    // Convert RGBA to RGB by removing alpha channel
+                    formatData = new byte[width * height * 3];
+                    for (int i = 0; i < width * height; i++)
+                    {
+                        formatData[i * 3 + 0] = rgbaData[i * 4 + 0]; // R
+                        formatData[i * 3 + 1] = rgbaData[i * 4 + 1]; // G
+                        formatData[i * 3 + 2] = rgbaData[i * 4 + 2]; // B
+                    }
+                }
+
+                layer.SetSingle(width, height, formatData, format);
+                tpc.Layers.Add(layer);
+                tpc._format = format;
+
+                return tpc;
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Error converting image to TPC: {ex}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Extracts RGBA pixel data from an Avalonia Bitmap.
+        /// Converts from BGRA (Avalonia's native format) to RGBA.
+        /// </summary>
+        /// <param name="bitmap">The Avalonia Bitmap to extract pixels from.</param>
+        /// <param name="width">Width of the image.</param>
+        /// <param name="height">Height of the image.</param>
+        /// <returns>RGBA pixel data as byte array, or null if extraction fails.</returns>
+        private byte[] ExtractRgbaFromBitmap(Bitmap bitmap, int width, int height)
+        {
+            try
+            {
+                // Create a copy of the bitmap to ensure we can access pixel data
+                // Avalonia bitmaps use BGRA format internally
+                using (var lockedBitmap = bitmap.Lock())
+                {
+                    byte[] rgbaData = new byte[width * height * 4];
+
+                    // Read pixel data row by row
+                    for (int y = 0; y < height; y++)
+                    {
+                        var row = lockedBitmap.GetRowBytes(y);
+                        for (int x = 0; x < width; x++)
+                        {
+                            int srcIndex = x * 4; // BGRA format: 4 bytes per pixel
+                            int dstIndex = (y * width + x) * 4; // RGBA format: 4 bytes per pixel
+
+                            // Convert BGRA to RGBA
+                            rgbaData[dstIndex + 0] = row[srcIndex + 2]; // R (was B)
+                            rgbaData[dstIndex + 1] = row[srcIndex + 1]; // G
+                            rgbaData[dstIndex + 2] = row[srcIndex + 0]; // B (was R)
+                            rgbaData[dstIndex + 3] = row[srcIndex + 3]; // A
+                        }
+                    }
+
+                    return rgbaData;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Error extracting RGBA from bitmap: {ex}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Checks if pixel data contains an alpha channel with non-opaque values.
+        /// </summary>
+        /// <param name="pixels">RGBA pixel data (4 bytes per pixel).</param>
+        /// <returns>True if any pixel has alpha < 255, false otherwise.</returns>
+        private static bool HasAlphaChannel(byte[] pixels)
+        {
+            if (pixels == null || pixels.Length < 4)
+            {
+                return false;
+            }
+
+            // Check alpha channel (every 4th byte starting at index 3)
+            // Early exit on first non-opaque pixel
+            for (int i = 3; i < pixels.Length; i += 4)
+            {
+                if (pixels[i] != 0xFF)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private string GetOverrideDirectory()

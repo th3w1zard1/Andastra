@@ -691,7 +691,7 @@ namespace Andastra.Runtime.Game.Core
                     // Button hover changed - play hover sound effect
                     // Based on swkotor.exe and swkotor2.exe: Button hover plays sound effect
                     // Sound file: "gui_actscroll" (from guisounds.2da Entered_Default)
-                    PlayButtonSound("gui_actscroll");
+                    PlayButtonSound(_buttonHoverSound);
                 }
                 _previousHighlightedButton = currentHighlightedButton;
 

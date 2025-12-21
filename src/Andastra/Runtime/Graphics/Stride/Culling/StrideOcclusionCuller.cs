@@ -212,25 +212,13 @@ namespace Andastra.Runtime.Stride.Culling
                     try
                     {
                         // Read full resolution texture (mip 0)
-                        // Stride uses Color4[] for texture data, but we need float[] for depth
-                        // We'll read as R32_Float format if available, otherwise convert from Color4
-                        float[] fullResData = new float[_width * _height];
+                        // Use format-aware depth reading to properly extract depth values
+                        float[] fullResData = ReadDepthTextureData(_hiZBuffer, _width, _height);
                         
-                        // Try to read as float data directly
-                        // Stride's Texture2D.GetData supports different formats
-                        // For depth buffer, we expect R32_Float format
-                        var context = _graphicsDevice.ImmediateContext;
-                        
-                        // Read texture data - Stride uses Color4[] for most formats
-                        // For depth buffers, we may need to use a different approach
-                        // TODO: STUB - For now, read as Color4 and extract red channel (assuming R32_Float stored in red)
-                        var colorData = new Color4[_width * _height];
-                        _hiZBuffer.GetData(context, colorData);
-                        
-                        // Convert Color4 to float (assuming depth is stored in red channel)
-                        for (int i = 0; i < fullResData.Length && i < colorData.Length; i++)
+                        if (fullResData == null || fullResData.Length == 0)
                         {
-                            fullResData[i] = colorData[i].R;
+                            // If reading failed, return 0 (assume visible)
+                            return 0.0f;
                         }
 
                         // Downsample to mip level resolution by taking maximum of 2x2 regions
