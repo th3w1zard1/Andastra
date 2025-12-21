@@ -663,14 +663,19 @@ namespace Andastra.Runtime.MonoGame.Backends
         private enum VkShaderStageFlags
         {
             VK_SHADER_STAGE_VERTEX_BIT = 0x00000001,
+            VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT = 0x00000002,
+            VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT = 0x00000004,
+            VK_SHADER_STAGE_GEOMETRY_BIT = 0x00000008,
             VK_SHADER_STAGE_FRAGMENT_BIT = 0x00000010,
             VK_SHADER_STAGE_COMPUTE_BIT = 0x00000020,
+            VK_SHADER_STAGE_ALL_GRAPHICS = 0x0000001F,
             VK_SHADER_STAGE_RAYGEN_BIT_KHR = 0x00000100,
             VK_SHADER_STAGE_MISS_BIT_KHR = 0x00000200,
             VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR = 0x00000400,
             VK_SHADER_STAGE_ANY_HIT_BIT_KHR = 0x00000800,
             VK_SHADER_STAGE_INTERSECTION_BIT_KHR = 0x00001000,
-            VK_SHADER_STAGE_CALLABLE_BIT_KHR = 0x00002000
+            VK_SHADER_STAGE_CALLABLE_BIT_KHR = 0x00002000,
+            VK_SHADER_STAGE_ALL = 0x7FFFFFFF
         }
         private enum VkPipelineLayoutCreateFlags { }
         private enum VkCommandBufferLevel { VK_COMMAND_BUFFER_LEVEL_PRIMARY = 0 }
@@ -758,7 +763,12 @@ namespace Andastra.Runtime.MonoGame.Backends
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate VkResult vkCreateCommandPoolDelegate(IntPtr device, IntPtr pCreateInfo, IntPtr pAllocator, out IntPtr pCommandPool);
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate VkResult vkDestroyCommandPoolDelegate(IntPtr device, IntPtr commandPool, IntPtr pAllocator);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkDestroyFramebufferDelegate(IntPtr device, IntPtr framebuffer, IntPtr pAllocator);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkDestroyRenderPassDelegate(IntPtr device, IntPtr renderPass, IntPtr pAllocator);
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate VkResult vkAllocateCommandBuffersDelegate(IntPtr device, IntPtr pAllocateInfo, IntPtr pCommandBuffers);
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
@@ -854,6 +864,8 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         private static vkCreateCommandPoolDelegate vkCreateCommandPool;
         private static vkDestroyCommandPoolDelegate vkDestroyCommandPool;
+        private static vkDestroyFramebufferDelegate vkDestroyFramebuffer;
+        private static vkDestroyRenderPassDelegate vkDestroyRenderPass;
         private static vkAllocateCommandBuffersDelegate vkAllocateCommandBuffers;
         private static vkFreeCommandBuffersDelegate vkFreeCommandBuffers;
         private static vkBeginCommandBufferDelegate vkBeginCommandBuffer;
@@ -1581,6 +1593,82 @@ namespace Andastra.Runtime.MonoGame.Backends
                 case BindingType.StructuredBuffer: return VkDescriptorType.VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
                 default: return VkDescriptorType.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             }
+        }
+
+        /// <summary>
+        /// Converts ShaderStageFlags to VkShaderStageFlags.
+        /// Maps abstract shader stage flags to Vulkan-specific shader stage flags.
+        /// Based on Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkShaderStageFlagBits.html
+        /// </summary>
+        /// <param name="stages">Shader stage flags to convert</param>
+        /// <returns>Vulkan shader stage flags</returns>
+        private VkShaderStageFlags ConvertShaderStageFlagsToVk(ShaderStageFlags stages)
+        {
+            if (stages == ShaderStageFlags.None)
+            {
+                return 0;
+            }
+
+            VkShaderStageFlags result = 0;
+
+            // Convert individual graphics stages
+            if ((stages & ShaderStageFlags.Vertex) != 0)
+            {
+                result |= VkShaderStageFlags.VK_SHADER_STAGE_VERTEX_BIT;
+            }
+            if ((stages & ShaderStageFlags.Hull) != 0)
+            {
+                result |= VkShaderStageFlags.VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+            }
+            if ((stages & ShaderStageFlags.Domain) != 0)
+            {
+                result |= VkShaderStageFlags.VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+            }
+            if ((stages & ShaderStageFlags.Geometry) != 0)
+            {
+                result |= VkShaderStageFlags.VK_SHADER_STAGE_GEOMETRY_BIT;
+            }
+            if ((stages & ShaderStageFlags.Pixel) != 0)
+            {
+                result |= VkShaderStageFlags.VK_SHADER_STAGE_FRAGMENT_BIT;
+            }
+            if ((stages & ShaderStageFlags.Compute) != 0)
+            {
+                result |= VkShaderStageFlags.VK_SHADER_STAGE_COMPUTE_BIT;
+            }
+
+            // Convert raytracing stages
+            if ((stages & ShaderStageFlags.RayGen) != 0)
+            {
+                result |= VkShaderStageFlags.VK_SHADER_STAGE_RAYGEN_BIT_KHR;
+            }
+            if ((stages & ShaderStageFlags.Miss) != 0)
+            {
+                result |= VkShaderStageFlags.VK_SHADER_STAGE_MISS_BIT_KHR;
+            }
+            if ((stages & ShaderStageFlags.ClosestHit) != 0)
+            {
+                result |= VkShaderStageFlags.VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
+            }
+            if ((stages & ShaderStageFlags.AnyHit) != 0)
+            {
+                result |= VkShaderStageFlags.VK_SHADER_STAGE_ANY_HIT_BIT_KHR;
+            }
+
+            // Handle composite flags
+            if ((stages & ShaderStageFlags.AllGraphics) == ShaderStageFlags.AllGraphics)
+            {
+                result |= VkShaderStageFlags.VK_SHADER_STAGE_ALL_GRAPHICS;
+            }
+            if ((stages & ShaderStageFlags.AllRaytracing) == ShaderStageFlags.AllRaytracing)
+            {
+                result |= VkShaderStageFlags.VK_SHADER_STAGE_RAYGEN_BIT_KHR |
+                          VkShaderStageFlags.VK_SHADER_STAGE_MISS_BIT_KHR |
+                          VkShaderStageFlags.VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR |
+                          VkShaderStageFlags.VK_SHADER_STAGE_ANY_HIT_BIT_KHR;
+            }
+
+            return result;
         }
 
         public IBindingSet CreateBindingSet(IBindingLayout layout, BindingSetDesc desc)
