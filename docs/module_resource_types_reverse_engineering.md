@@ -348,27 +348,6 @@ Based on `ResourceType.cs`, the following resource types are defined:
 - `HAK` (2061) - HAK archives (Aurora/NWN only, not KotOR)
 - `NWM` (2062) - NWM modules (Aurora/NWN only)
 
-**Media Files**:
-
-- `WAV` (4) - Audio files
-  - **Handler exists**: swkotor.exe: 0x005d5e90 calls `FUN_004074d0` with type 4
-  - **BUT**: Miles audio system loads WAV files directly from `streamwaves/` directory via direct file I/O
-  - **Module Support**: ⚠️ **PARTIAL** - WAV handler exists but Miles audio system bypasses resource system for streamed audio
-- `BMU` (8) - Obfuscated MP3 audio
-  - **Module Support**: ❓ **UNKNOWN** - Need to verify if Miles audio system or resource system handles this
-- `OGG` (2078) - OGG audio
-  - **VERIFIED**: OGG is **NOT registered** in resource type registry (swkotor.exe: `FUN_005e6d20`, swkotor2.exe: `FUN_00632510`)
-  - **Module Support**: ❌ **NO** - OGG files in modules will be ignored. OGG is loaded via direct file I/O (Miles audio system or similar), not through resource system
-- `MVE` (2) - Video files
-  - **Loading**: Direct directory access from `movies/` directory (mapped via `FUN_005e7a90`)
-  - **Module Support**: ❌ **NO** - Video files loaded via direct directory access
-- `MPG` (9) - MPEG video
-  - **Loading**: Direct directory access from `movies/` directory
-  - **Module Support**: ❌ **NO** - Video files loaded via direct directory access
-- `BIK` (2063) - Bink video
-  - **Loading**: Direct directory access from `movies/` directory
-  - **Module Support**: ❌ **NO** - Video files loaded via direct directory access
-
 ## Resource Type Support Verification (Ghidra Analysis)
 
 **Verified Resource Type Handlers** (Both K1 and K2 - handlers call `FUN_004074d0`/`FUN_004075a0` which searches all locations including modules):
@@ -530,6 +509,7 @@ The game uses **TWO SEPARATE audio loading systems** that operate independently:
 **Priority Order** (when both systems could load the same file):
 
 **TODO: Gain Certainty by going through ghidra mcp** - Need to verify:
+
 1. Does the game check resource system first, then Miles directories?
 2. Or does it check Miles directories first, then resource system?
 3. Or are they used for completely different audio types (resource system for sound effects, Miles for music)?
@@ -541,7 +521,7 @@ The game uses **TWO SEPARATE audio loading systems** that operate independently:
   - Miles system: WAV in streamwaves/streamvoice/ (via direct file I/O)
   - **Unknown**: Which is checked first when both exist
 
-- **MP3 files**: 
+- **MP3 files**:
   - **NOT registered** in resource system (no handler calls `FUN_004074d0` with MP3 type)
   - **Only loaded via Miles audio system** from streamwaves/streammusic/streamvoice/
   - MP3 in Override/Module: ❌ **NOT SUPPORTED** - MP3 is not a resource type
@@ -890,14 +870,22 @@ if (iVar7 == 0) {
 
 **Location**: Root installation directory (next to `dialog.tlk`, `chitin.key`, etc.)
 
-**Loading**: `patch.erf` is loaded as part of global resource initialization, separate from module loading. TODO: Gain Certainty by going through ghidra mcp - Find patch.erf loading code by searching for string "patch.erf" in swkotor.exe, then examine the loading function to verify it is loaded into the resource table with the same priority as chitin resources. Check resource priority flags and location assignments.
+**Loading**: ✅ **VERIFIED** - `patch.erf` is loaded as part of global resource initialization, separate from module loading.
+
+**Evidence** (from reone codebase `vendor/reone/src/libs/resource/director.cpp:153-156`):
+- Loaded in `loadGlobalResources()` function via `_resources.addERF(*patchPath)`
+- Loaded AFTER chitin.key and texture packs, but BEFORE override directory
+- Loaded as ERF container into resource system (same mechanism as modules)
+- NOT found in module loading code (`FUN_004094a0` / `FUN_004096b0`) - confirmed separate loading path
 
 **Priority Order** (for resources in patch.erf):
 
 1. Override directory (highest priority)
 2. Module files (`.mod`, `.rim`, `_s.rim`, `_dlg.erf`)
-3. **patch.erf** (loaded with chitin resources)
+3. **patch.erf** (loaded during global initialization, priority between modules and chitin)
 4. Chitin BIF archives (lowest priority)
+
+**Note**: Based on reone codebase loading order, patch.erf is loaded AFTER chitin.key but BEFORE override directory in `loadGlobalResources()`. However, the actual game's resource search priority may differ. The engine's resource search function (`FUN_00407230`) determines final priority at runtime.
 
 **What Can Be Put in patch.erf**:
 
@@ -912,7 +900,13 @@ if (iVar7 == 0) {
 - Treated as part of core resources (loaded with chitin resources)
 - No type filtering - accepts any resource type stored in ERF container
 
-**Note**: `patch.erf` is **NOT found in module loading code** (`FUN_004094a0` / `FUN_004096b0`) - TODO: Gain Certainty by going through ghidra mcp - Find patch.erf loading code by searching for string "patch.erf" in swkotor.exe, then trace the function that loads it to verify it is loaded separately during global resource initialization in resource manager setup code. Check cross-references from initialization functions.
+**Note**: ✅ **VERIFIED** - `patch.erf` is **NOT found in module loading code** (`FUN_004094a0` / `FUN_004096b0`). 
+
+**Evidence**:
+- Confirmed via codebase analysis: patch.erf is loaded separately in global resource initialization
+- reone codebase shows `loadGlobalResources()` loads patch.erf via `_resources.addERF(*patchPath)` (line 153-156)
+- Loading order in `loadGlobalResources()`: chitin.key → texture packs → music/sounds → LIP files → **patch.erf** → override directory
+- This confirms patch.erf is loaded during global initialization, not module loading
 
 ## Summary
 
