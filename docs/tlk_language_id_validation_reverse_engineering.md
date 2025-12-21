@@ -30,11 +30,13 @@ The Language ID field is a simple `uint32` with no format restrictions beyond be
 ### TLK Loading Functions
 
 **swkotor.exe:**
+
 - `FUN_004b63e0` (0x004b63e0) - Initializes resource system and loads "HD0:dialog"
 - `FUN_0041e5a0` (0x0041e5a0) - Loads TLK file via "HD0:dialog" alias
 - `FUN_0041d920` (0x0041d920) - Resource loading helper function
 
 **swkotor2.exe:**
+
 - `FUN_004eed20` (0x004eed20) - Initializes resource system and loads "HD0:dialog"
 - `FUN_0041fb20` (0x0041fb20) - Loads TLK file via "HD0:dialog" alias
 - `FUN_0041ed20` (0x0041ed20) - Resource loading helper function
@@ -42,6 +44,7 @@ The Language ID field is a simple `uint32` with no format restrictions beyond be
 ### Language ID Handling
 
 **Key Finding**: In all examined code paths, the language ID is:
+
 1. Read from offset 0x08 in the TLK file header as a `uint32`
 2. Stored in memory structures
 3. **NOT validated** against any whitelist of supported languages
@@ -81,6 +84,7 @@ The language ID is read from the file and appears to be used directly without an
 3. ❌ **Cannot confirm text decoding behavior** - The actual text decoding code path using the language ID was not located in this analysis
 
 **Implications:**
+
 - The game **will accept any uint32 value** (0 to 0xFFFFFFFF) as a language ID
 - The game **will NOT crash or reject** TLK files with unsupported language IDs during loading
 - **Unknown**: Whether the language ID is used in a way that would cause issues during text rendering (this would require finding the text decoding/encoding code paths, which were not located in this analysis)
@@ -88,6 +92,7 @@ The language ID is read from the file and appears to be used directly without an
 ## Limitations
 
 This analysis did not locate:
+
 - The actual text decoding functions that use the language ID for encoding/decoding
 - Any encoding lookup tables or mapping functions
 - Text rendering code paths that might use the language ID
@@ -97,9 +102,9 @@ Therefore, while we can confirm that **loading will succeed** with any language 
 ## Recommendation
 
 To fully answer the question about text rendering behavior with unsupported language IDs, one would need to:
+
 1. Locate the text decoding/encoding functions (likely in string/text rendering code)
 2. Analyze how the language ID is used to select character encodings
 3. Determine if there are default fallback behaviors for unknown language IDs
 
 However, for the **loading phase** specifically, the answer is clear: **any uint32 value is accepted without validation or error**.
-

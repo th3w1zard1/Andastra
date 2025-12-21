@@ -3582,6 +3582,18 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Based on swkotor2.exe: Dynamic entity spawning
         /// Located via string references: "CreateObject" @ 0x007bd0e0
         /// Spawns entities from BlueprintResRef that were not in original GIT
+        /// 
+        /// Original implementation (swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0):
+        /// - Loads SpawnedList from area state GFF
+        /// - For each spawned entity:
+        ///   1. Creates entity from BlueprintResRef template (UTC, UTP, UTD, etc.)
+        ///   2. Applies saved entity state (position, HP, components, local variables)
+        ///   3. Sets ObjectId from saved state (preserves original ObjectId)
+        ///   4. Registers entity with world
+        ///   5. Adds entity to appropriate area collection (Creatures, Placeables, Doors, etc.)
+        /// - Entities spawned this way are dynamically created (not in original GIT file)
+        /// - BlueprintResRef identifies the template resource (UTC for creatures, UTP for placeables, etc.)
+        /// - SpawnedBy field contains script name that originally spawned the entity (for debugging)
         /// </remarks>
         private void SpawnDynamicEntities(List<SpawnedEntityState> spawnedEntities, OdysseyArea odysseyArea)
         {
@@ -3596,11 +3608,41 @@ namespace Andastra.Runtime.Games.Odyssey
                 return;
             }
 
+            // Get World from area entities
+            // Based on swkotor2.exe: World is accessed via entity references
+            IWorld world = GetWorldFromAreaEntities(odysseyArea);
+            if (world == null)
+            {
+                System.Diagnostics.Debug.WriteLine("[OdysseySaveSerializer] SpawnDynamicEntities: Cannot spawn entities - no world reference available");
+                return;
+            }
+
+            // Get Module from world
+            // Based on swkotor2.exe: Module is required for loading template resources (UTC, UTP, UTD, etc.)
+            RuntimeIModule runtimeModule = world.CurrentModule;
+            if (runtimeModule == null)
+            {
+                System.Diagnostics.Debug.WriteLine("[OdysseySaveSerializer] SpawnDynamicEntities: Cannot spawn entities - no module loaded");
+                return;
+            }
+
+            // Get parsing Module for resource loading
+            // Based on swkotor2.exe: Module resources (UTC, UTP, etc.) are loaded from module archives
+            Andastra.Parsing.Common.Module parsingModule = GetParsingModuleFromRuntimeModule(runtimeModule);
+            if (parsingModule == null)
+            {
+                System.Diagnostics.Debug.WriteLine("[OdysseySaveSerializer] SpawnDynamicEntities: Cannot spawn entities - parsing module not available");
+                return;
+            }
+
+            // Create EntityFactory for loading templates
+            // Based on swkotor2.exe: EntityFactory loads GFF templates (UTC, UTP, UTD, etc.) and creates entities
+            // Located via string references: "TemplateResRef" @ 0x007bd00c, "Creature template '%s' doesn't exist.\n" @ 0x007bf78c
+            // Original implementation: FUN_005fb0f0 @ 0x005fb0f0 loads creature templates from GFF
+            var entityFactory = new Loading.EntityFactory();
+
             // Spawn each dynamically created entity
             // Based on swkotor2.exe: Entities are spawned from BlueprintResRef
-            // TODO: STUB - Note: Full implementation would require access to entity factory and world
-            // This is a placeholder that would need to be completed when entity spawning is fully implemented
-            // TODO: STUB - For now, we log that entities need to be spawned
             foreach (SpawnedEntityState spawnedState in spawnedEntities)
             {
                 if (spawnedState == null || string.IsNullOrEmpty(spawnedState.BlueprintResRef))
@@ -3608,14 +3650,353 @@ namespace Andastra.Runtime.Games.Odyssey
                     continue;
                 }
 
-                // Entity spawning would be done here:
-                // 1. Load entity template from BlueprintResRef
-                // 2. Create entity using entity factory
-                // 3. Apply entity state (position, HP, etc.)
-                // 4. Add to appropriate area collection
-                // 5. Register with world
+                // Determine ObjectType from entity state
+                // Based on swkotor2.exe: ObjectType is stored in entity state
+                ObjectType objectType = spawnedState.ObjectType;
+                if (objectType == ObjectType.Invalid || objectType == 0)
+                {
+                    // Try to infer ObjectType from BlueprintResRef resource type
+                    // Based on swkotor2.exe: Template resource types determine ObjectType
+                    // UTC = Creature, UTP = Placeable, UTD = Door, UTT = Trigger, UTW = Waypoint, UTS = Sound
+                    objectType = InferObjectTypeFromBlueprint(spawnedState.BlueprintResRef, parsingModule);
+                    if (objectType == ObjectType.Invalid)
+                    {
+                        // Default to Creature if cannot determine
+                        objectType = ObjectType.Creature;
+                    }
+                }
 
-                System.Diagnostics.Debug.WriteLine($"[OdysseySaveSerializer] Spawned entity needs to be created: {spawnedState.BlueprintResRef} at {spawnedState.Position}");
+                // Create entity from template
+                // Based on swkotor2.exe: FUN_005fb0f0 creates entity from template ResRef
+                IEntity entity = null;
+                System.Numerics.Vector3 position = spawnedState.Position;
+                float facing = spawnedState.Facing;
+
+                // Use ObjectId from saved state if available, otherwise EntityFactory will generate one
+                // Based on swkotor2.exe: ObjectId is preserved from save game to maintain entity references
+                uint objectId = spawnedState.ObjectId;
+                if (objectId != 0 && objectId != 0x7F000000) // 0x7F000000 = OBJECT_INVALID
+                {
+                    // Create entity with specific ObjectId to preserve save game references
+                    // Based on swkotor2.exe: ObjectId must be preserved for script references and entity lookups
+                    entity = CreateEntityWithObjectId(objectType, objectId, position, facing);
+                }
+                else
+                {
+                    // Use EntityFactory to create entity (will generate new ObjectId)
+                    // Based on swkotor2.exe: New ObjectId assigned if not in save state
+                    entity = CreateEntityFromTemplate(entityFactory, parsingModule, spawnedState.BlueprintResRef, objectType, position, facing);
+                }
+
+                if (entity == null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[OdysseySaveSerializer] SpawnDynamicEntities: Failed to create entity from template: {spawnedState.BlueprintResRef}");
+                    continue;
+                }
+
+                // Load template data into entity
+                // Based on swkotor2.exe: Template properties are loaded after entity creation
+                if (objectId != 0 && objectId != 0x7F000000)
+                {
+                    // Entity was created with specific ObjectId, need to load template manually
+                    LoadTemplateIntoEntity(entity, parsingModule, spawnedState.BlueprintResRef, objectType);
+                }
+
+                // Apply saved entity state (position, HP, components, local variables, etc.)
+                // Based on swkotor2.exe: FUN_005fb0f0 applies entity state after template loading
+                ApplyEntityState(entity, spawnedState);
+
+                // Set Tag from entity state if not already set from template
+                // Based on swkotor2.exe: Tag is preserved from save game
+                if (!string.IsNullOrEmpty(spawnedState.Tag) && string.IsNullOrEmpty(entity.Tag))
+                {
+                    entity.Tag = spawnedState.Tag;
+                }
+
+                // Set TemplateResRef for reference
+                // Based on swkotor2.exe: TemplateResRef is stored in entity data
+                if (entity is Core.Entities.Entity coreEntity)
+                {
+                    coreEntity.SetData("TemplateResRef", spawnedState.BlueprintResRef);
+                    if (!string.IsNullOrEmpty(spawnedState.SpawnedBy))
+                    {
+                        coreEntity.SetData("SpawnedBy", spawnedState.SpawnedBy);
+                    }
+                }
+
+                // Register entity with world
+                // Based on swkotor2.exe: Entities must be registered with world for lookups and updates
+                // Located via string references: "RegisterEntity" functionality in world system
+                if (entity.World == null)
+                {
+                    entity.World = world;
+                }
+                if (world.GetEntity(entity.ObjectId) == null)
+                {
+                    world.RegisterEntity(entity);
+                }
+
+                // Set AreaId for entity
+                // Based on swkotor2.exe: AreaId links entity to area for area-specific operations
+                uint areaId = world.GetAreaId(odysseyArea);
+                if (areaId != 0)
+                {
+                    entity.AreaId = areaId;
+                }
+
+                // Add entity to appropriate area collection
+                // Based on swkotor2.exe: Entities are added to type-specific area collections
+                // Located via string references: Area entity collections (Creatures, Placeables, Doors, etc.)
+                odysseyArea.AddEntityToArea(entity);
+
+                System.Diagnostics.Debug.WriteLine($"[OdysseySaveSerializer] SpawnDynamicEntities: Successfully spawned entity {entity.ObjectId} ({spawnedState.BlueprintResRef}) at {position}");
+            }
+        }
+
+        /// <summary>
+        /// Gets World reference from area entities.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: World is accessed via entity references
+        /// Tries to get World from any entity in the area
+        /// </remarks>
+        private IWorld GetWorldFromAreaEntities(OdysseyArea odysseyArea)
+        {
+            if (odysseyArea == null)
+            {
+                return null;
+            }
+
+            // Try to get World from creatures first
+            foreach (IEntity creature in odysseyArea.Creatures)
+            {
+                if (creature != null && creature.World != null)
+                {
+                    return creature.World;
+                }
+            }
+
+            // Try other entity types
+            foreach (IEntity entity in odysseyArea.Placeables.Concat(odysseyArea.Doors).Concat(odysseyArea.Triggers).Concat(odysseyArea.Waypoints).Concat(odysseyArea.Sounds))
+            {
+                if (entity != null && entity.World != null)
+                {
+                    return entity.World;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Gets parsing Module from runtime Module.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Module resources are accessed via parsing Module
+        /// Runtime Module may contain reference to parsing Module for resource loading
+        /// </remarks>
+        private Andastra.Parsing.Common.Module GetParsingModuleFromRuntimeModule(RuntimeIModule runtimeModule)
+        {
+            if (runtimeModule == null)
+            {
+                return null;
+            }
+
+            // Try to get parsing Module via reflection or interface
+            // Based on swkotor2.exe: Module system provides resource access
+            // Runtime Module implementations may expose parsing Module
+            var parsingModuleProperty = runtimeModule.GetType().GetProperty("ParsingModule");
+            if (parsingModuleProperty != null)
+            {
+                return parsingModuleProperty.GetValue(runtimeModule) as Andastra.Parsing.Common.Module;
+            }
+
+            // Try to get via GetParsingModule method if available
+            var getParsingModuleMethod = runtimeModule.GetType().GetMethod("GetParsingModule");
+            if (getParsingModuleMethod != null)
+            {
+                return getParsingModuleMethod.Invoke(runtimeModule, null) as Andastra.Parsing.Common.Module;
+            }
+
+            // Try to access ModuleLoader if available
+            // Based on swkotor2.exe: ModuleLoader provides Module access
+            var moduleLoaderField = runtimeModule.GetType().GetField("_moduleLoader", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (moduleLoaderField != null)
+            {
+                object moduleLoader = moduleLoaderField.GetValue(runtimeModule);
+                if (moduleLoader != null)
+                {
+                    var getParsingModuleMethod2 = moduleLoader.GetType().GetMethod("GetParsingModule");
+                    if (getParsingModuleMethod2 != null)
+                    {
+                        return getParsingModuleMethod2.Invoke(moduleLoader, null) as Andastra.Parsing.Common.Module;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Infers ObjectType from BlueprintResRef by checking available resource types.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Template resource types determine ObjectType
+        /// UTC = Creature, UTP = Placeable, UTD = Door, UTT = Trigger, UTW = Waypoint, UTS = Sound
+        /// </remarks>
+        private ObjectType InferObjectTypeFromBlueprint(string blueprintResRef, Andastra.Parsing.Common.Module module)
+        {
+            if (string.IsNullOrEmpty(blueprintResRef) || module == null)
+            {
+                return ObjectType.Invalid;
+            }
+
+            // Try Creature (UTC) first (most common)
+            if (module.Creature(blueprintResRef) != null)
+            {
+                return ObjectType.Creature;
+            }
+
+            // Try Placeable (UTP)
+            if (module.Placeable(blueprintResRef) != null)
+            {
+                return ObjectType.Placeable;
+            }
+
+            // Try Door (UTD)
+            if (module.Door(blueprintResRef) != null)
+            {
+                return ObjectType.Door;
+            }
+
+            // Try Trigger (UTT)
+            if (module.Trigger(blueprintResRef) != null)
+            {
+                return ObjectType.Trigger;
+            }
+
+            // Try Waypoint (UTW)
+            if (module.Waypoint(blueprintResRef) != null)
+            {
+                return ObjectType.Waypoint;
+            }
+
+            // Try Sound (UTS)
+            if (module.Sound(blueprintResRef) != null)
+            {
+                return ObjectType.Sound;
+            }
+
+            // Try Store (UTM)
+            if (module.Store(blueprintResRef) != null)
+            {
+                return ObjectType.Store;
+            }
+
+            return ObjectType.Invalid;
+        }
+
+        /// <summary>
+        /// Creates an entity with a specific ObjectId.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Entities can be created with specific ObjectId to preserve save game references
+        /// </remarks>
+        private IEntity CreateEntityWithObjectId(ObjectType objectType, uint objectId, System.Numerics.Vector3 position, float facing)
+        {
+            // Create entity using Core.Entities.Entity constructor with specific ObjectId
+            // Based on swkotor2.exe: Entity constructor accepts ObjectId parameter
+            var entity = new Core.Entities.Entity(objectId, objectType);
+            entity.Position = position;
+            entity.Facing = facing;
+            return entity;
+        }
+
+        /// <summary>
+        /// Creates an entity from template using EntityFactory.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: EntityFactory creates entities from templates
+        /// </remarks>
+        private IEntity CreateEntityFromTemplate(Loading.EntityFactory entityFactory, Andastra.Parsing.Common.Module module, string templateResRef, ObjectType objectType, System.Numerics.Vector3 position, float facing)
+        {
+            if (entityFactory == null || module == null || string.IsNullOrEmpty(templateResRef))
+            {
+                return null;
+            }
+
+            // Use appropriate EntityFactory method based on ObjectType
+            // Based on swkotor2.exe: Different template types use different creation methods
+            switch (objectType)
+            {
+                case ObjectType.Creature:
+                    return entityFactory.CreateCreatureFromTemplate(module, templateResRef, position, facing);
+
+                case ObjectType.Placeable:
+                    return entityFactory.CreatePlaceableFromTemplate(module, templateResRef, position, facing);
+
+                case ObjectType.Door:
+                    return entityFactory.CreateDoorFromTemplate(module, templateResRef, position, facing);
+
+                case ObjectType.Store:
+                    return entityFactory.CreateStoreFromTemplate(module, templateResRef, position, facing);
+
+                default:
+                    // For other types, try creature as fallback
+                    return entityFactory.CreateCreatureFromTemplate(module, templateResRef, position, facing);
+            }
+        }
+
+        /// <summary>
+        /// Loads template data into an existing entity.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Template data is loaded into entity after creation
+        /// Used when entity is created with specific ObjectId (not via EntityFactory)
+        /// </remarks>
+        private void LoadTemplateIntoEntity(IEntity entity, Andastra.Parsing.Common.Module module, string templateResRef, ObjectType objectType)
+        {
+            if (entity == null || module == null || string.IsNullOrEmpty(templateResRef))
+            {
+                return;
+            }
+
+            // Create temporary EntityFactory to access template loading methods
+            // Based on swkotor2.exe: Template loading uses EntityFactory internal methods
+            var entityFactory = new Loading.EntityFactory();
+
+            // Use reflection to access private template loading methods
+            // Based on swkotor2.exe: Template loading is internal to EntityFactory
+            System.Reflection.MethodInfo loadMethod = null;
+            switch (objectType)
+            {
+                case ObjectType.Creature:
+                    loadMethod = typeof(Loading.EntityFactory).GetMethod("LoadCreatureTemplate", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    break;
+
+                case ObjectType.Placeable:
+                    loadMethod = typeof(Loading.EntityFactory).GetMethod("LoadPlaceableTemplate", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    break;
+
+                case ObjectType.Door:
+                    loadMethod = typeof(Loading.EntityFactory).GetMethod("LoadDoorTemplate", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    break;
+
+                case ObjectType.Store:
+                    loadMethod = typeof(Loading.EntityFactory).GetMethod("LoadStoreTemplate", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    break;
+            }
+
+            if (loadMethod != null && entity is Core.Entities.Entity coreEntity)
+            {
+                try
+                {
+                    loadMethod.Invoke(entityFactory, new object[] { coreEntity, module, templateResRef });
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[OdysseySaveSerializer] LoadTemplateIntoEntity: Failed to load template {templateResRef}: {ex.Message}");
+                }
             }
         }
 

@@ -8,6 +8,7 @@ using JetBrains.Annotations;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.MDL;
 using Andastra.Parsing.Formats.TPC;
+using Andastra.Parsing.Resource.Formats.TwoDA;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using Andastra.Runtime.Graphics.MonoGame.Converters;
@@ -331,6 +332,11 @@ namespace Andastra.Runtime.Game.Core
                     {
                         Console.WriteLine("[Odyssey] WARNING: GUI manager requires MonoGame graphics device");
                     }
+
+                    // Load guisounds.2da to get correct button sound ResRefs
+                    // Based on swkotor.exe and swkotor2.exe: guisounds.2da contains Clicked_Default and Entered_Default
+                    // Original implementation: Loads guisounds.2da and reads soundresref column for Clicked_Default and Entered_Default
+                    LoadGuiSounds(installation);
 
                     // Load main menu 3D models (gui3D_room + menu variant)
                     // Based on swkotor.exe FUN_0067c4c0: Loads gui3D_room and mainmenu model
@@ -898,7 +904,7 @@ namespace Andastra.Runtime.Game.Core
             // Play button click sound
             // Based on swkotor.exe and swkotor2.exe: Button clicks play sound effect
             // Sound file: "gui_actscroll" or "gui_actscroll1" (button click sound)
-            PlayButtonSound("gui_actscroll");
+            PlayButtonSound(_buttonClickSound);
 
             // Handle button clicks based on button tag
             // Based on swkotor.exe FUN_0067ace0: Button tags (BTN_NEWGAME, BTN_LOADGAME, BTN_OPTIONS, BTN_EXIT)

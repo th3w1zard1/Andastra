@@ -137,13 +137,6 @@ namespace Andastra.Runtime.MonoGame.Backends
                 return;
             }
 
-            // Dispose cached device wrapper
-            if (_cachedDevice != null)
-            {
-                _cachedDevice.Dispose();
-                _cachedDevice = null;
-            }
-
             // Destroy all resources
             foreach (ResourceInfo resource in _resources.Values)
             {
@@ -345,31 +338,22 @@ namespace Andastra.Runtime.MonoGame.Backends
             return _lastFrameStats;
         }
 
-        // Cached device instance (singleton pattern for the lifetime of the backend)
-        private VulkanDevice _cachedDevice;
-
         public IDevice GetDevice()
         {
-            // Only return device if raytracing is enabled and device is initialized
+            // TODO: STUB - Implement IDevice creation for Vulkan raytracing
+            // When raytracing is enabled with VK_KHR_ray_tracing_pipeline, this should create
+            // and return a VulkanDevice instance that implements IDevice and provides access
+            // to Vulkan raytracing functionality
+            // TODO: STUB - For now, return null as the device creation is not yet implemented
             if (!_initialized || !_capabilities.SupportsRaytracing || !_raytracingEnabled || _device == IntPtr.Zero)
             {
                 return null;
             }
 
-            // Create and cache device instance on first access
-            if (_cachedDevice == null)
-            {
-                _cachedDevice = new VulkanDevice(
-                    _device,
-                    _instance,
-                    _physicalDevice,
-                    _graphicsQueue,
-                    _computeQueue,
-                    _transferQueue,
-                    _capabilities);
-            }
-
-            return _cachedDevice;
+            // TODO: STUB - Create and return actual IDevice implementation
+            // This will require implementing a VulkanDevice class that wraps VkDevice
+            // and provides the IDevice interface for raytracing operations
+            return null;
         }
 
         private bool CreateInstance()

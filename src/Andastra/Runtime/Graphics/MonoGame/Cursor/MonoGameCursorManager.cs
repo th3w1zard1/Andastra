@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Andastra.Runtime.Graphics;
+using Vector2 = System.Numerics.Vector2;
 
 namespace Andastra.Runtime.MonoGame.Graphics.Cursor
 {

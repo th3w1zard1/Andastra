@@ -17,7 +17,7 @@ seq:
     doc: File version, always "V1.0" for KotOR
   - id: letter_count
     type: u1
-    doc: Number of characters in alphabet (28 for KotOR: a-z plus ' and -)
+    doc: "Number of characters in alphabet (28 for KotOR: a-z plus ' and -)"
   - id: single_letter_block
     type: letter_block
     doc: Single-letter probability block (context length 0)
