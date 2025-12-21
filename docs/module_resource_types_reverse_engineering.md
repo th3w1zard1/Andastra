@@ -89,18 +89,19 @@ The game uses two loading modes controlled by a flag at offset 0x54 in the resou
 
 **Condition Summary - FULLY VERIFIED**:
 
-- **Simple Mode (flag == 0)**: 
+- **Simple Mode (flag == 0)**:
   - **Initial State**: Default state when resource manager is created by `FUN_00409bf0`. Offset 0x54 is zero-initialized to 0 by `operator_new`.
   - **Persists if**: `FUN_004064f0`/`FUN_004065e0` is never called (e.g., during main menu or when not loading a module)
   - **No conditional logic**: There is NO condition that sets the flag to 0 - it simply remains 0 if not explicitly set to 1
 
-- **Complex Mode (flag == 1)**: 
+- **Complex Mode (flag == 1)**:
   - **Trigger**: Flag becomes 1 when `FUN_004064f0`/`FUN_004065e0` is called during module/game loading
   - **Value is always 1**: `param_2` is ALWAYS 1 (hardcoded literal) - there is NO conditional logic that determines if it should be 0 or 1
   - **When called**: During module localization loading (`FUN_004c4150` in swkotor.exe, `FUN_004fd2a0` in swkotor2.exe)
   - **State transition**: Once set to 1, the flag remains 1 for the lifetime of the resource manager instance
 
 **Conclusion**: The flag operates as a simple state indicator:
+
 - **0 = Simple Mode**: Initial/unset state (zero-initialized)
 - **1 = Complex Mode**: Set state (unconditionally set to 1 when module localization loads)
 - **No conditional logic exists**: The value is never conditionally determined - it's either 0 (default) or 1 (unconditionally set). The only "condition" is whether `FUN_004064f0`/`FUN_004065e0` is called at all.
@@ -425,32 +426,150 @@ Resources that use `FUN_004074d0`/`FUN_004075a0` (which calls `FUN_00407230`/`FU
 
 ## Resource Search Priority Order
 
-### Global Resource Search Priority
+### Global Resource Search Priority (VERIFIED via Ghidra)
 
 **Function**: `FUN_00407230` (swkotor.exe: 0x00407230) / `FUN_00407300` (swkotor2.exe: 0x00407300)
 
-**Complete Priority Order** (Low to High):
+**Complete Priority Order** (Highest to Lowest - Search Order):
 
-1. **Chitin Archives** (`this+0x10`, Location 0, Source Type 1) - **Lowest Priority**
-   - BIF files from `chitin.key`
-   - `patch.erf` (K1 only, loaded during global initialization)
+**VERIFIED via Ghidra decompilation** (`FUN_00407230` lines 8-16):
 
-2. **Module RIM Files** (`this+0x1c`, Location 1, Source Type 4) - **Medium Priority**
-   - `.rim` files
-   - `_s.rim` files
+1. **Override Directory** (`this+0x14`, Location 3, Source Type 2) - **HIGHEST PRIORITY**
+   - Files in `Override/` folder
+   - **Evidence**: Line 8: `FUN_004071a0((undefined4 *)((int)this + 0x14),...)` - searched FIRST
+
+2. **Module Containers - First Variant** (`this+0x18`, Location 2, Source Type 3, param_6=1) - **HIGH PRIORITY**
+   - `.mod` files (MOD containers)
+   - **Evidence**: Line 10: `FUN_004071a0((undefined4 *)((int)this + 0x18),...,1)` - searched SECOND
+
+3. **Module RIM Files** (`this+0x1c`, Location 1, Source Type 4) - **MEDIUM PRIORITY**
+   - `.rim` files (simple mode only)
    - `_a.rim` files
    - `_adx.rim` files
+   - `_s.rim` files
+   - **Evidence**: Line 12: `FUN_004071a0((undefined4 *)((int)this + 0x1c),...)` - searched THIRD
 
-3. **Module Containers** (`this+0x18`, Location 2, Source Type 3) - **High Priority**
-   - `.mod` files (MOD containers)
+4. **Module Containers - Second Variant** (`this+0x18`, Location 2, Source Type 3, param_6=2) - **MEDIUM-LOW PRIORITY**
    - `_dlg.erf` files (K2 only, ERF containers)
+   - **Evidence**: Line 14: `FUN_004071a0((undefined4 *)((int)this + 0x18),...,2)` - searched FOURTH
 
-4. **Override Directory** (`this+0x14`, Location 3, Source Type 2) - **Highest Priority**
-   - Files in `Override/` folder
-
-**Evidence**: swkotor.exe: `FUN_00407230` lines 8-16
+5. **Chitin Archives** (`this+0x10`, Location 0, Source Type 1) - **LOWEST PRIORITY**
+   - BIF files from `chitin.key`
+   - `patch.erf` (K1 only, loaded during global initialization)
+   - **Evidence**: Line 16: `FUN_004071a0((undefined4 *)((int)this + 0x10),...)` - searched LAST
 
 **Note**: This priority order applies to **ALL resource types** that use the resource system. There is no special handling for different resource types in the search order.
+
+### Module File Registration Order (VERIFIED via Ghidra)
+
+**Critical**: Resources are registered in the order files are loaded. **First registration wins** - duplicates are ignored (verified in `FUN_0040e990` line 36).
+
+#### K1 Complex Mode Registration Order (swkotor.exe: `FUN_004094a0`)
+
+**VERIFIED via Ghidra decompilation**:
+
+1. **`_a.rim`** (if found) - Line 159: `FUN_00406e20(param_1,aiStack_38,4,0)`
+   - Registered to Location 1 (`this+0x1c`, Source Type 4)
+   - **Condition**: ARE type 0xbba found in `_a.rim` (line 61 check)
+
+2. **`_adx.rim`** (if found) - Line 85: `FUN_00406e20(param_1,aiStack_38,4,0)`
+   - Registered to Location 1 (`this+0x1c`, Source Type 4)
+   - **Condition**: `_a.rim` NOT found AND ARE type 0xbba found in `_adx.rim` (line 74 check)
+
+3. **`.mod`** (if found) - Line 136: `FUN_00406e20(param_1,aiStack_38,3,2)`
+   - Registered to Location 2 (`this+0x18`, Source Type 3, param_6=2)
+   - **Condition**: MOD type 0x7db found (line 95 check)
+   - **CRITICAL**: If `.mod` exists, `_s.rim` is NOT loaded (line 96: `if (iVar6 == 0)` - false when .mod found)
+
+4. **`_s.rim`** (if `.mod` NOT found) - Line 118: `FUN_00406e20(param_1,aiStack_38,4,0)`
+   - Registered to Location 1 (`this+0x1c`, Source Type 4)
+   - **Condition**: `.mod` NOT found AND ARE type 0xbba found in `_s.rim` (line 107 check)
+
+5. **`.rim`** - **NOT LOADED in complex mode**
+   - Only loaded in simple mode (flag == 0, line 32-42)
+
+#### K2 Complex Mode Registration Order (swkotor2.exe: `FUN_004096b0`)
+
+**VERIFIED via Ghidra decompilation**:
+
+1. **`_a.rim`** (if found) - Line 182: `FUN_00406ef0(param_1,aiStack_58,4,0)`
+   - Registered to Location 1 (`this+0x1c`, Source Type 4)
+   - **Condition**: ARE type 0xbba found in `_a.rim` (line 65 check)
+
+2. **`_adx.rim`** (if found) - Line 89: `FUN_00406ef0(param_1,aiStack_58,4,0)`
+   - Registered to Location 1 (`this+0x1c`, Source Type 4)
+   - **Condition**: `_a.rim` NOT found AND ARE type 0xbba found in `_adx.rim` (line 78 check)
+
+3. **`.mod`** (if found) - Line 161: `FUN_00406ef0(param_1,aiStack_58,3,2)`
+   - Registered to Location 2 (`this+0x18`, Source Type 3, param_6=2)
+   - **Condition**: MOD type 0x7db found (line 99 check)
+   - **CRITICAL**: If `.mod` exists, `_s.rim` and `_dlg.erf` are NOT loaded (line 100: `if (iVar5 == 0)` - false when .mod found)
+
+4. **`_s.rim`** (if `.mod` NOT found) - Line 122: `FUN_00406ef0(param_1,aiStack_58,4,0)`
+   - Registered to Location 1 (`this+0x1c`, Source Type 4)
+   - **Condition**: `.mod` NOT found AND ARE type 0xbba found in `_s.rim` (line 111 check)
+
+5. **`_dlg.erf`** (if `.mod` NOT found) - Line 147: `FUN_00406ef0(param_1,piVar3,3,2)`
+   - Registered to Location 2 (`this+0x18`, Source Type 3, param_6=2)
+   - **Condition**: `.mod` NOT found (line 128, inside `if (iVar5 == 0)` block)
+
+6. **`.rim`** - **NOT LOADED in complex mode**
+   - Only loaded in simple mode (flag == 0, line 36-46)
+
+### Complete Resource Resolution Priority Chain
+
+**Example**: Resource `test.ncs` exists in `.rim`, `_dlg.erf`, `_s.rim`, `_adx.rim`, and `_a.rim`.
+
+**Resolution Order** (when resource is requested):
+
+1. **Override Directory** - If `test.ncs` exists in `Override/`, it wins (HIGHEST PRIORITY)
+2. **`.mod` file** - If `.mod` exists and contains `test.ncs`, it wins (Location 2, searched second)
+3. **`_a.rim`** - If `_a.rim` exists and contains `test.ncs`, it wins (Location 1, searched third)
+   - **Registration**: Registered FIRST in complex mode (if found)
+   - **Search**: Searched THIRD in resource lookup
+4. **`_adx.rim`** - If `_adx.rim` exists and contains `test.ncs`, it wins (Location 1, searched third)
+   - **Registration**: Registered SECOND in complex mode (if `_a.rim` not found)
+   - **Search**: Searched THIRD in resource lookup
+   - **Duplicate Handling**: If `_a.rim` also contains `test.ncs`, `_a.rim` wins (registered first)
+5. **`_s.rim`** - If `_s.rim` exists and contains `test.ncs`, it wins (Location 1, searched third)
+   - **Registration**: Registered FOURTH in complex mode (if `.mod` not found)
+   - **Search**: Searched THIRD in resource lookup
+   - **Duplicate Handling**: If `_a.rim` or `_adx.rim` also contains `test.ncs`, earlier registered file wins
+6. **`_dlg.erf`** - If `_dlg.erf` exists and contains `test.ncs`, it wins (Location 2, searched fourth)
+   - **Registration**: Registered FIFTH in complex mode K2 (if `.mod` not found)
+   - **Search**: Searched FOURTH in resource lookup
+   - **Duplicate Handling**: If `.mod` also contains `test.ncs`, `.mod` wins (searched earlier)
+7. **`.rim`** - If `.rim` exists and contains `test.ncs`, it wins (Location 1, searched third)
+   - **Registration**: NOT LOADED in complex mode (only in simple mode)
+   - **Search**: Searched THIRD in resource lookup (if registered)
+8. **`patch.erf`** - If `patch.erf` exists and contains `test.ncs`, it wins (Location 0, searched last)
+   - **Registration**: Loaded during global initialization (K1 only)
+   - **Search**: Searched LAST (LOWEST PRIORITY)
+9. **Chitin BIF files** - If BIF contains `test.ncs`, it wins (Location 0, searched last)
+   - **Search**: Searched LAST (LOWEST PRIORITY)
+
+**Key Principle**:
+
+
+- **Registration order** determines which file wins when same resource exists in multiple files at the same location
+- **Search order** determines which location wins when same resource exists in different locations
+- **First registered wins** for duplicates at the same location
+- **Higher search priority wins** for duplicates at different locations
+
+### patch.erf Priority Position
+
+**VERIFIED via Ghidra**:
+
+- **Location**: `this+0x10` (Location 0, Source Type 1) - Same location as Chitin BIF files
+- **Search Priority**: **LOWEST** - Searched LAST in `FUN_00407230` (line 16)
+- **Priority Order**:
+  1. Override Directory (Location 3) - HIGHEST
+  2. Module Containers - First Variant (Location 2, param_6=1) - `.mod` files
+  3. Module RIM Files (Location 1) - `_a.rim`, `_adx.rim`, `_s.rim`, `.rim`
+  4. Module Containers - Second Variant (Location 2, param_6=2) - `_dlg.erf` files
+  5. **Chitin Archives (Location 0) - LOWEST** - Includes `patch.erf` and BIF files
+
+**Conclusion**: `patch.erf` has the **LOWEST priority** - it is searched AFTER override, modules, and all other locations. Resources in `patch.erf` will only be used if they don't exist in any other location.
 
 ### Override Directory Structure
 
@@ -598,6 +717,71 @@ Resources that use `FUN_004074d0`/`FUN_004075a0` (which calls `FUN_00407230`/`FU
 | Module Loading | `FUN_004094a0` (0x004094a0) | `FUN_004096b0` (0x004096b0) | Module file discovery and loading |
 | Resource Registration | `FUN_0040e990` (0x0040e990) | `FUN_0040e990` (0x0040e990) | Registers resources in resource table |
 
+### Complete Resource Resolution Example
+
+**Scenario**: Resource `test.ncs` exists in multiple locations: `.rim`, `_dlg.erf`, `_s.rim`, `_adx.rim`, and `_a.rim`.
+
+**Resolution Process** (VERIFIED via Ghidra):
+
+1. **Override Directory Check** (Location 3, searched FIRST)
+   - If `test.ncs` exists in `Override/` → **WINS** (HIGHEST PRIORITY)
+   - **Evidence**: `FUN_00407230` line 8 searches `this+0x14` first
+
+2. **Module Containers - First Variant** (Location 2, param_6=1, searched SECOND)
+   - If `.mod` exists and contains `test.ncs` → **WINS** (if not in Override)
+   - **Evidence**: `FUN_00407230` line 10 searches `this+0x18` with param_6=1
+   - **Registration**: `.mod` registered to Location 2 with param_3=2 (swkotor.exe: `FUN_004094a0` line 136)
+
+3. **Module RIM Files** (Location 1, searched THIRD)
+   - Files registered to Location 1 are searched in registration order:
+     - **`_a.rim`** → If contains `test.ncs` → **WINS** (if not in Override or .mod)
+       - **Registration**: Registered FIRST in complex mode (swkotor.exe: `FUN_004094a0` line 159)
+       - **Evidence**: `FUN_00407230` line 12 searches `this+0x1c`
+     - **`_adx.rim`** → If contains `test.ncs` → **WINS** (if `_a.rim` doesn't have it)
+       - **Registration**: Registered SECOND in complex mode (swkotor.exe: `FUN_004094a0` line 85)
+       - **Duplicate Handling**: If `_a.rim` also has `test.ncs`, `_a.rim` wins (registered first, `FUN_0040e990` line 36 ignores duplicates)
+     - **`_s.rim`** → If contains `test.ncs` → **WINS** (if `_a.rim` and `_adx.rim` don't have it)
+       - **Registration**: Registered FOURTH in complex mode (swkotor.exe: `FUN_004094a0` line 118)
+       - **Condition**: Only registered if `.mod` NOT found
+       - **Duplicate Handling**: If `_a.rim` or `_adx.rim` also has `test.ncs`, earlier registered file wins
+     - **`.rim`** → If contains `test.ncs` → **WINS** (if others don't have it)
+       - **Registration**: NOT LOADED in complex mode (only in simple mode)
+       - **Note**: In complex mode, `.rim` is never loaded, so resources in `.rim` are never registered
+
+4. **Module Containers - Second Variant** (Location 2, param_6=2, searched FOURTH)
+   - **`_dlg.erf`** (K2 only) → If contains `test.ncs` → **WINS** (if not in earlier locations)
+     - **Registration**: Registered FIFTH in complex mode K2 (swkotor2.exe: `FUN_004096b0` line 147)
+     - **Condition**: Only registered if `.mod` NOT found
+     - **Evidence**: `FUN_00407230` line 14 searches `this+0x18` with param_6=2
+     - **Duplicate Handling**: If `.mod` also has `test.ncs`, `.mod` wins (searched earlier, line 10)
+
+5. **Chitin Archives** (Location 0, searched LAST)
+   - **`patch.erf`** (K1 only) → If contains `test.ncs` → **WINS** (if not in any earlier location)
+     - **Registration**: Loaded during global initialization (not module loading)
+     - **Evidence**: `FUN_00407230` line 16 searches `this+0x10` last
+   - **BIF files** → If contains `test.ncs` → **WINS** (if not in any earlier location)
+     - **Registration**: Loaded during global initialization
+     - **Evidence**: `FUN_00407230` line 16 searches `this+0x10` last
+
+**Complete Priority Chain** (Highest to Lowest):
+
+1. **Override Directory** (Location 3) - HIGHEST PRIORITY
+2. **`.mod` files** (Location 2, param_6=1) - HIGH PRIORITY
+3. **`_a.rim`** (Location 1) - MEDIUM-HIGH PRIORITY (registered first at Location 1)
+4. **`_adx.rim`** (Location 1) - MEDIUM PRIORITY (registered second at Location 1, loses to `_a.rim` if duplicate)
+5. **`_s.rim`** (Location 1) - MEDIUM-LOW PRIORITY (registered fourth at Location 1, loses to `_a.rim`/`_adx.rim` if duplicate)
+6. **`_dlg.erf`** (Location 2, param_6=2, K2 only) - LOW PRIORITY (searched after Location 1, loses to `.mod` if duplicate)
+7. **`.rim`** (Location 1) - NOT LOADED in complex mode (only in simple mode)
+8. **`patch.erf`** (Location 0, K1 only) - LOWEST PRIORITY (searched last)
+9. **Chitin BIF files** (Location 0) - LOWEST PRIORITY (searched last)
+
+**Key Principles**:
+
+- **Search order** determines priority between different locations (Override > Module Containers > Module RIM > Chitin)
+- **Registration order** determines priority within the same location (first registered wins for duplicates)
+- **First registered wins** - `FUN_0040e990` line 36 checks for duplicates and ignores later registrations
+- **Location priority** - Resources in higher-priority locations always win over lower-priority locations, regardless of registration order
+
 ### Key Findings Summary
 
 1. **Module files are loaded in a specific order** - First file loaded wins for duplicate resources
@@ -607,6 +791,7 @@ Resources that use `FUN_004074d0`/`FUN_004075a0` (which calls `FUN_00407230`/`FU
 5. **Resource type is more important than location** - Different resource types can coexist, but same ResRef+Type combinations follow priority order
 6. **Override directory has highest priority** - Files in Override win over all other locations
 7. **Many files bypass the resource system** - TLK, RES, NFO, MVE, MPG, BIK use direct file I/O
+8. **`patch.erf` has lowest priority** - Searched after all module files and override directory
 
 ---
 
