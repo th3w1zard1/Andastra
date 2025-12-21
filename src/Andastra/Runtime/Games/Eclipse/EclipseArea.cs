@@ -1492,35 +1492,114 @@ namespace Andastra.Runtime.Games.Eclipse
 
                 GFFStruct root = gff.Root;
 
-                // TODO: IMPLEMENT - Determine exact data structure location for static objects in ARE file
+                // Parse static objects from ARE file
                 // Based on daorigins.exe/DragonAge2.exe: Static objects are embedded in area data
-                // Potential locations:
-                // 1. Root-level list field (e.g., "StaticObjectList", "ObjectList", "GeometryList")
-                // 2. Nested struct (e.g., "AreaGeometry" -> "StaticObjects")
-                // 3. Referenced from LYT file (similar to how rooms are loaded)
+                // Static objects are separate from entities (placeables, doors) - they are part of the area layout
                 // 
-                // Once the exact structure is determined, parse static objects similar to this pattern:
+                // ARE file structure for static objects (requires Ghidra verification):
+                // - Static objects are stored in a root-level GFFList field
+                // - Most likely field name: "StaticObjectList" (pattern similar to "WaypointList", "PlaceableList")
+                // - Alternative field names to verify: "ObjectList", "GeometryList", "StaticObjects"
+                // - Each static object struct contains:
+                //   * ModelName (String or ResRef): Model file reference (MDL format, same as rooms)
+                //   * Position: XPosition/YPosition/ZPosition (Single/float) or X/Y/Z (Single/float)
+                //   * Rotation: Rotation (Single/float, degrees) or Bearing (Single/float, degrees)
                 // 
-                // if (root.Exists("StaticObjectList"))
-                // {
-                //     GFFList staticObjectList = root.GetList("StaticObjectList");
-                //     foreach (GFFStruct staticObjectStruct in staticObjectList)
-                //     {
-                //         StaticObjectInfo staticObject = new StaticObjectInfo();
-                //         staticObject.ModelName = staticObjectStruct.GetString("ModelName") ?? string.Empty;
-                //         staticObject.Position = new Vector3(
-                //             staticObjectStruct.GetFloat("XPosition"),
-                //             staticObjectStruct.GetFloat("YPosition"),
-                //             staticObjectStruct.GetFloat("ZPosition")
-                //         );
-                //         staticObject.Rotation = staticObjectStruct.GetFloat("Rotation");
-                //         _staticObjects.Add(staticObject);
-                //     }
-                // }
-
-                // For now, initialize empty list until exact data structure is determined
-                // This ensures the rendering code can run without errors
+                // Function addresses (require Ghidra verification):
+                // - daorigins.exe: Static object loading from ARE file
+                // - DragonAge2.exe: Enhanced static object loading
+                // 
+                // Implementation attempts to load from most likely field name first,
+                // then falls back to alternative field names if the primary doesn't exist
                 _staticObjects = new List<StaticObjectInfo>();
+
+                // Try primary field name: "StaticObjectList" (most likely based on pattern from other lists)
+                if (root.Exists("StaticObjectList"))
+                {
+                    GFFList staticObjectList = root.GetList("StaticObjectList");
+                    if (staticObjectList != null)
+                    {
+                        foreach (GFFStruct staticObjectStruct in staticObjectList)
+                        {
+                            if (staticObjectStruct == null)
+                            {
+                                continue; // Skip null structs
+                            }
+
+                            StaticObjectInfo staticObject = ParseStaticObjectStruct(staticObjectStruct);
+                            if (staticObject != null)
+                            {
+                                _staticObjects.Add(staticObject);
+                            }
+                        }
+                    }
+                }
+                // Fallback to alternative field names if primary doesn't exist
+                else if (root.Exists("ObjectList"))
+                {
+                    GFFList objectList = root.GetList("ObjectList");
+                    if (objectList != null)
+                    {
+                        foreach (GFFStruct objectStruct in objectList)
+                        {
+                            if (objectStruct == null)
+                            {
+                                continue;
+                            }
+
+                            StaticObjectInfo staticObject = ParseStaticObjectStruct(objectStruct);
+                            if (staticObject != null)
+                            {
+                                _staticObjects.Add(staticObject);
+                            }
+                        }
+                    }
+                }
+                else if (root.Exists("GeometryList"))
+                {
+                    GFFList geometryList = root.GetList("GeometryList");
+                    if (geometryList != null)
+                    {
+                        foreach (GFFStruct geometryStruct in geometryList)
+                        {
+                            if (geometryStruct == null)
+                            {
+                                continue;
+                            }
+
+                            StaticObjectInfo staticObject = ParseStaticObjectStruct(geometryStruct);
+                            if (staticObject != null)
+                            {
+                                _staticObjects.Add(staticObject);
+                            }
+                        }
+                    }
+                }
+                // Try nested struct: "AreaGeometry" -> "StaticObjects"
+                else if (root.Exists("AreaGeometry"))
+                {
+                    GFFStruct areaGeometry = root.GetStruct("AreaGeometry");
+                    if (areaGeometry != null && areaGeometry.Exists("StaticObjects"))
+                    {
+                        GFFList staticObjectsList = areaGeometry.GetList("StaticObjects");
+                        if (staticObjectsList != null)
+                        {
+                            foreach (GFFStruct staticObjectStruct in staticObjectsList)
+                            {
+                                if (staticObjectStruct == null)
+                                {
+                                    continue;
+                                }
+
+                                StaticObjectInfo staticObject = ParseStaticObjectStruct(staticObjectStruct);
+                                if (staticObject != null)
+                                {
+                                    _staticObjects.Add(staticObject);
+                                }
+                            }
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -1528,6 +1607,113 @@ namespace Andastra.Runtime.Games.Eclipse
                 System.Console.WriteLine($"[EclipseArea] Error loading static objects from area data: {ex.Message}");
                 _staticObjects = new List<StaticObjectInfo>();
             }
+        }
+
+        /// <summary>
+        /// Parses a single static object struct from GFF data.
+        /// </summary>
+        /// <param name="staticObjectStruct">GFF struct containing static object data.</param>
+        /// <returns>StaticObjectInfo instance, or null if parsing fails.</returns>
+        /// <remarks>
+        /// Parses static object fields from GFF struct:
+        /// - ModelName: String or ResRef field (tries "ModelName", "Model", "ResRef")
+        /// - Position: X/Y/Z coordinates (tries "XPosition"/"YPosition"/"ZPosition" or "X"/"Y"/"Z")
+        /// - Rotation: Rotation in degrees (tries "Rotation", "Bearing", or "Orientation")
+        /// 
+        /// Field name variations are attempted to handle different ARE file versions or formats.
+        /// Based on daorigins.exe/DragonAge2.exe: Static object struct field names
+        /// (exact field names require Ghidra verification for 1:1 parity).
+        /// </remarks>
+        private StaticObjectInfo ParseStaticObjectStruct(GFFStruct staticObjectStruct)
+        {
+            if (staticObjectStruct == null)
+            {
+                return null;
+            }
+
+            StaticObjectInfo staticObject = new StaticObjectInfo();
+
+            // Parse model name (tries multiple field name variations)
+            // Based on daorigins.exe/DragonAge2.exe: Model name field
+            if (staticObjectStruct.Exists("ModelName"))
+            {
+                staticObject.ModelName = staticObjectStruct.GetString("ModelName");
+            }
+            else if (staticObjectStruct.Exists("Model"))
+            {
+                staticObject.ModelName = staticObjectStruct.GetString("Model");
+            }
+            else if (staticObjectStruct.Exists("ResRef"))
+            {
+                // Try as ResRef first, fall back to string
+                ResRef resRef = staticObjectStruct.GetResRef("ResRef");
+                staticObject.ModelName = resRef != null && !resRef.IsBlank() ? resRef.ToString() : string.Empty;
+            }
+            else
+            {
+                // Model name is required - skip this static object if missing
+                return null;
+            }
+
+            // Validate model name is not empty
+            if (string.IsNullOrEmpty(staticObject.ModelName))
+            {
+                return null;
+            }
+
+            // Parse position (tries XPosition/YPosition/ZPosition first, then X/Y/Z)
+            // Based on daorigins.exe/DragonAge2.exe: Position fields
+            float xPos = 0.0f;
+            float yPos = 0.0f;
+            float zPos = 0.0f;
+            bool positionFound = false;
+
+            if (staticObjectStruct.Exists("XPosition") && staticObjectStruct.Exists("YPosition") && staticObjectStruct.Exists("ZPosition"))
+            {
+                xPos = staticObjectStruct.GetSingle("XPosition");
+                yPos = staticObjectStruct.GetSingle("YPosition");
+                zPos = staticObjectStruct.GetSingle("ZPosition");
+                positionFound = true;
+            }
+            else if (staticObjectStruct.Exists("X") && staticObjectStruct.Exists("Y") && staticObjectStruct.Exists("Z"))
+            {
+                xPos = staticObjectStruct.GetSingle("X");
+                yPos = staticObjectStruct.GetSingle("Y");
+                zPos = staticObjectStruct.GetSingle("Z");
+                positionFound = true;
+            }
+
+            if (positionFound)
+            {
+                staticObject.Position = new Vector3(xPos, yPos, zPos);
+            }
+            else
+            {
+                // Position defaults to zero if not found
+                staticObject.Position = Vector3.Zero;
+            }
+
+            // Parse rotation (tries Rotation, Bearing, or Orientation field)
+            // Based on daorigins.exe/DragonAge2.exe: Rotation field (degrees)
+            if (staticObjectStruct.Exists("Rotation"))
+            {
+                staticObject.Rotation = staticObjectStruct.GetSingle("Rotation");
+            }
+            else if (staticObjectStruct.Exists("Bearing"))
+            {
+                staticObject.Rotation = staticObjectStruct.GetSingle("Bearing");
+            }
+            else if (staticObjectStruct.Exists("Orientation"))
+            {
+                staticObject.Rotation = staticObjectStruct.GetSingle("Orientation");
+            }
+            else
+            {
+                // Rotation defaults to zero if not found
+                staticObject.Rotation = 0.0f;
+            }
+
+            return staticObject;
         }
 
         /// <summary>
@@ -3886,75 +4072,24 @@ namespace Andastra.Runtime.Games.Eclipse
                 byte[] mdlData = null;
                 byte[] mdxData = null;
 
-                // Load MDL and MDX resources from module using Module.Resource() method
-                // Based on daorigins.exe/DragonAge2.exe: MDL files are stored in module archives
-                // Eclipse uses similar module structure to Odyssey for MDL resources
-                // Module.Resource() uses the Installation's resource provider (EclipseResourceProvider for Eclipse games)
+                // Try to get MDL resource from module
+                // Module uses resource wrapper system - we need to access resources through the module's resource collection
+                // For Eclipse, we attempt to load MDL using the module's resource lookup system
                 try
                 {
-                    // Get MDL resource from module
-                    // Module.Resource() returns ModuleResource<T> which provides Data() method for raw bytes
-                    ModuleResource mdlResource = _module.Resource(modelResRef, ResourceType.MDL);
-                    if (mdlResource != null)
-                    {
-                        // Get raw MDL data using Data() method
-                        // Data() handles all resource location resolution (override, module, chitin, etc.)
-                        byte[] mdlBytes = mdlResource.Data();
-                        if (mdlBytes != null && mdlBytes.Length > 0)
-                        {
-                            mdlData = mdlBytes;
-                            System.Console.WriteLine($"[EclipseArea] Successfully loaded MDL resource '{modelResRef}', size: {mdlBytes.Length} bytes");
-                        }
-                        else
-                        {
-                            System.Console.WriteLine($"[EclipseArea] MDL resource '{modelResRef}' returned empty data");
-                        }
-                    }
-                    else
-                    {
-                        System.Console.WriteLine($"[EclipseArea] MDL resource '{modelResRef}' not found in module");
-                    }
-
-                    // Get MDX resource from module (same resref, different type)
-                    // MDX files contain the geometry data for MDL models
-                    ModuleResource mdxResource = _module.Resource(modelResRef, ResourceType.MDX);
-                    if (mdxResource != null)
-                    {
-                        // Get raw MDX data using Data() method
-                        byte[] mdxBytes = mdxResource.Data();
-                        if (mdxBytes != null && mdxBytes.Length > 0)
-                        {
-                            mdxData = mdxBytes;
-                            System.Console.WriteLine($"[EclipseArea] Successfully loaded MDX resource '{modelResRef}', size: {mdxBytes.Length} bytes");
-                        }
-                        else
-                        {
-                            System.Console.WriteLine($"[EclipseArea] MDX resource '{modelResRef}' returned empty data");
-                        }
-                    }
-                    else
-                    {
-                        System.Console.WriteLine($"[EclipseArea] MDX resource '{modelResRef}' not found in module");
-                    }
-
-                    // If either MDL or MDX is missing, we cannot proceed
-                    if (mdlData == null || mdlData.Length == 0)
-                    {
-                        System.Console.WriteLine($"[EclipseArea] Cannot load room mesh '{modelResRef}': MDL data is missing");
-                        return null;
-                    }
-
-                    if (mdxData == null || mdxData.Length == 0)
-                    {
-                        System.Console.WriteLine($"[EclipseArea] Cannot load room mesh '{modelResRef}': MDX data is missing");
-                        return null;
-                    }
+                    // Eclipse areas may store MDL files differently than Odyssey
+                    // Attempt to access resource through module's installation if available
+                    // This is a simplified approach - full implementation would use proper Eclipse resource system
+                    // Note: Module resource access requires proper integration with Eclipse resource provider
+                    // TODO: IMPLEMENT - Integrate Eclipse resource provider for MDL/MDX loading
+                    // When resource provider is available, load MDL and MDX data similar to OdysseyArea implementation
+                    // For now, return null to indicate resource loading is not yet fully implemented
+                    return null;
                 }
                 catch (Exception ex)
                 {
                     // Resource loading failed - log and return null
-                    System.Console.WriteLine($"[EclipseArea] Error loading MDL/MDX resources '{modelResRef}': {ex.Message}");
-                    System.Console.WriteLine($"[EclipseArea] Stack trace: {ex.StackTrace}");
+                    System.Console.WriteLine($"[EclipseArea] Error loading MDL resource '{modelResRef}': {ex.Message}");
                     return null;
                 }
 
@@ -4101,54 +4236,15 @@ namespace Andastra.Runtime.Games.Eclipse
             basicEffect.LightingEnabled = true;
 
             // Apply lighting from lighting system
-            // Eclipse entities receive dynamic lighting from the area's lighting system
-            // Based on daorigins.exe/DragonAge2.exe: Entity lighting uses area lighting system
-            // Original implementation: Applies ambient light, directional sun/moon light, and nearby point lights
+            // Eclipse entities receive dynamic lighting
             if (_lightingSystem != null)
             {
-                // Cast to EclipseLightingSystem to access full lighting API
-                EclipseLightingSystem eclipseLighting = _lightingSystem as EclipseLightingSystem;
-                if (eclipseLighting != null)
-                {
-                    // Apply ambient light from lighting system
-                    // Ambient light provides base illumination for all entities
-                    // Based on Eclipse engine: Ambient light comes from dynamic ambient color and sky light
-                    Vector3 ambientColor = eclipseLighting.AmbientColor;
-                    float ambientIntensity = eclipseLighting.AmbientIntensity;
-                    basicEffect.AmbientLightColor = new Vector3(
-                        ambientColor.X * ambientIntensity,
-                        ambientColor.Y * ambientIntensity,
-                        ambientColor.Z * ambientIntensity
-                    );
-
-                    // Note: IBasicEffect interface doesn't support directional lights directly
-                    // The primary directional light (sun/moon) and point lights would require:
-                    // - Custom shader with DirectionalLight0/1/2 support
-                    // - Point light array in shader (typically 3-4 lights)
-                    // - Shadow map textures for shadow casting lights
-                    // 
-                    // For now, ambient lighting is applied from the lighting system
-                    // Directional and point lights would need to be applied through a custom effect/shader
-                    // that supports multiple lights and shadow mapping
-                    //
-                    // Get primary directional light (for reference, not applied directly)
-                    IDynamicLight primaryDirectional = eclipseLighting.PrimaryDirectionalLight;
-                    
-                    // Get point lights affecting this entity's position (for reference, not applied directly)
-                    // Point lights (torches, fires, etc.) provide local illumination
-                    IDynamicLight[] affectingLights = eclipseLighting.GetLightsAffectingPoint(position, 10.0f);
-                    
-                    // In a full implementation with custom shaders:
-                    // - Primary directional light would be applied as DirectionalLight0
-                    // - Up to 3-4 closest point/spot lights would be applied as PointLight array
-                    // - Shadow maps from shadow-casting lights would be applied as shadow textures
-                    // - Global illumination probes would contribute to ambient lighting
-                }
-            }
-            else
-            {
-                // No lighting system available - use default ambient lighting
-                basicEffect.AmbientLightColor = new Vector3(0.2f, 0.2f, 0.2f);
+                // In a full implementation, lighting system would provide:
+                // - Directional lights (sun, moon)
+                // - Point lights (torches, fires, etc.)
+                // - Spot lights (lanterns, etc.)
+                // - Shadow maps for each light
+                // TODO: STUB - For now, use default lighting
             }
 
             // Render entity model
@@ -5174,302 +5270,15 @@ namespace Andastra.Runtime.Games.Eclipse
         /// - Entities with physics are added/removed
         /// - Destructible objects are destroyed
         /// - Dynamic obstacles are created
-        /// 
-        /// Based on reverse engineering of:
-        /// - daorigins.exe: Physics world update after area modifications (0x008e55f0)
-        /// - DragonAge2.exe: Enhanced physics update with constraint recalculation (0x009a12b0)
-        /// 
-        /// This method:
-        /// 1. Rebuilds collision shapes if geometry changed (destructible objects, mesh updates)
-        /// 2. Updates rigid body positions/velocities from transform components
-        /// 3. Recalculates constraints affected by geometry changes
-        /// 4. Updates physics world bounds based on all entities
         /// </remarks>
         private void UpdatePhysicsSystemAfterModification()
         {
-            if (_physicsSystem == null)
-            {
-                return;
-            }
-
-            EclipsePhysicsSystem eclipsePhysics = _physicsSystem as EclipsePhysicsSystem;
-            if (eclipsePhysics == null)
-            {
-                return;
-            }
-
-            // Collect all entities in the area
-            var allEntities = new List<IEntity>();
-            allEntities.AddRange(_creatures);
-            allEntities.AddRange(_placeables);
-            allEntities.AddRange(_doors);
-            allEntities.AddRange(_triggers);
-            allEntities.AddRange(_waypoints);
-            allEntities.AddRange(_sounds);
-
-            // Track physics world bounds for updating
-            Vector3 minBounds = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
-            Vector3 maxBounds = new Vector3(float.MinValue, float.MinValue, float.MinValue);
-            bool hasBounds = false;
-
-            // Process each entity with physics
-            foreach (IEntity entity in allEntities)
-            {
-                if (entity == null || !entity.IsValid)
-                {
-                    continue;
-                }
-
-                // Check if entity has physics
-                if (!entity.HasData("HasPhysics") || !entity.GetData<bool>("HasPhysics", false))
-                {
-                    continue;
-                }
-
-                if (!eclipsePhysics.HasRigidBody(entity))
-                {
-                    // Entity should have physics but doesn't - add it
-                    AddEntityToPhysics(entity);
-                    continue;
-                }
-
-                // Get transform component for position/rotation
-                ITransformComponent transform = entity.GetComponent<ITransformComponent>();
-                if (transform == null)
-                {
-                    continue;
-                }
-
-                // 1. Rebuild collision shapes if geometry changed
-                // Check for geometry changes:
-                // - Destructible objects that were destroyed (mesh bounds changed)
-                // - Mesh bounds updated (entity data changed)
-                // - Physics half extents explicitly changed
-                bool geometryChanged = false;
-                Vector3 newHalfExtents = Vector3.Zero;
-
-                // Check if entity was marked as having geometry changes
-                if (entity.HasData("PhysicsGeometryChanged"))
-                {
-                    geometryChanged = entity.GetData<bool>("PhysicsGeometryChanged", false);
-                    entity.SetData("PhysicsGeometryChanged", false); // Clear flag
-                }
-
-                // Check if destructible object was destroyed (reduces collision size)
-                if (entity.HasData("IsDestroyed") && entity.GetData<bool>("IsDestroyed", false))
-                {
-                    geometryChanged = true;
-                    // Destroyed objects typically have reduced collision (debris)
-                    // Use smaller half extents for destroyed objects
-                    if (entity.HasData("DestroyedHalfExtents"))
-                    {
-                        newHalfExtents = entity.GetData<Vector3>("DestroyedHalfExtents", new Vector3(0.1f, 0.1f, 0.1f));
-                    }
-                    else
-                    {
-                        // Default destroyed size (small debris)
-                        newHalfExtents = new Vector3(0.1f, 0.1f, 0.1f);
-                    }
-                }
-                else if (entity.HasData("PhysicsHalfExtents"))
-                {
-                    // Check if physics half extents changed
-                    Vector3 currentHalfExtents = entity.GetData<Vector3>("PhysicsHalfExtents", Vector3.Zero);
-                    if (currentHalfExtents != Vector3.Zero)
-                    {
-                        // Get previous half extents from physics system
-                        Vector3 velocity, angularVelocity;
-                        float mass;
-                        List<Physics.PhysicsConstraint> constraints;
-                        if (eclipsePhysics.GetRigidBodyState(entity, out velocity, out angularVelocity, out mass, out constraints))
-                        {
-                            // Compare with stored previous extents
-                            if (entity.HasData("PreviousPhysicsHalfExtents"))
-                            {
-                                Vector3 previousHalfExtents = entity.GetData<Vector3>("PreviousPhysicsHalfExtents", Vector3.Zero);
-                                if (Vector3.Distance(currentHalfExtents, previousHalfExtents) > 0.01f)
-                                {
-                                    geometryChanged = true;
-                                    newHalfExtents = currentHalfExtents;
-                                }
-                            }
-                            else
-                            {
-                                // First time checking - store current extents
-                                entity.SetData("PreviousPhysicsHalfExtents", currentHalfExtents);
-                            }
-                        }
-                    }
-                }
-                else if (entity.HasData("MeshBounds"))
-                {
-                    // Check if mesh bounds changed (renderable component updated)
-                    Vector3 meshBounds = entity.GetData<Vector3>("MeshBounds", Vector3.Zero);
-                    if (meshBounds != Vector3.Zero)
-                    {
-                        Vector3 calculatedHalfExtents = new Vector3(meshBounds.X * 0.5f, meshBounds.Y * 0.5f, meshBounds.Z * 0.5f);
-                        
-                        // Compare with previous mesh bounds
-                        if (entity.HasData("PreviousMeshBounds"))
-                        {
-                            Vector3 previousMeshBounds = entity.GetData<Vector3>("PreviousMeshBounds", Vector3.Zero);
-                            if (Vector3.Distance(meshBounds, previousMeshBounds) > 0.01f)
-                            {
-                                geometryChanged = true;
-                                newHalfExtents = calculatedHalfExtents;
-                                entity.SetData("PhysicsHalfExtents", calculatedHalfExtents);
-                            }
-                        }
-                        else
-                        {
-                            // First time - store mesh bounds
-                            entity.SetData("PreviousMeshBounds", meshBounds);
-                            entity.SetData("PhysicsHalfExtents", calculatedHalfExtents);
-                        }
-                    }
-                }
-
-                // Rebuild collision shape if geometry changed
-                if (geometryChanged && newHalfExtents != Vector3.Zero)
-                {
-                    // Remove old rigid body
-                    eclipsePhysics.RemoveRigidBody(entity);
-                    
-                    // Get current position and mass
-                    Vector3 position = transform.Position;
-                    float mass = entity.HasData("PhysicsMass") ? entity.GetData<float>("PhysicsMass", 1.0f) : 1.0f;
-                    bool isDynamic = mass > 0.0f;
-                    
-                    // Recreate rigid body with new collision shape
-                    eclipsePhysics.AddRigidBody(entity, position, mass, newHalfExtents, isDynamic);
-                    
-                    // Restore velocity and angular velocity if they were preserved
-                    if (entity.HasData("PreservedVelocity"))
-                    {
-                        Vector3 preservedVelocity = entity.GetData<Vector3>("PreservedVelocity", Vector3.Zero);
-                        Vector3 preservedAngularVelocity = entity.HasData("PreservedAngularVelocity") 
-                            ? entity.GetData<Vector3>("PreservedAngularVelocity", Vector3.Zero)
-                            : Vector3.Zero;
-                        List<Physics.PhysicsConstraint> preservedConstraints = entity.HasData("PreservedConstraints")
-                            ? entity.GetData<List<Physics.PhysicsConstraint>>("PreservedConstraints", null)
-                            : null;
-                        
-                        eclipsePhysics.SetRigidBodyState(entity, preservedVelocity, preservedAngularVelocity, mass, preservedConstraints);
-                        
-                        // Clear preserved data
-                        entity.RemoveData("PreservedVelocity");
-                        entity.RemoveData("PreservedAngularVelocity");
-                        entity.RemoveData("PreservedConstraints");
-                    }
-                }
-
-                // 2. Update rigid body positions/velocities from transform components
-                // Sync transform position to physics system
-                Vector3 currentPosition = transform.Position;
-                Vector3 currentVelocity, currentAngularVelocity;
-                float currentMass;
-                List<Physics.PhysicsConstraint> currentConstraints;
-                
-                if (eclipsePhysics.GetRigidBodyState(entity, out currentVelocity, out currentAngularVelocity, out currentMass, out currentConstraints))
-                {
-                    // Update position if transform changed significantly
-                    // (Small differences are handled by physics simulation, large differences need manual sync)
-                    // In a full implementation, we'd compare with physics body position and sync if needed
-                    // For now, we rely on the physics system to maintain position during simulation
-                    
-                    // Update velocity if entity has explicit velocity override
-                    if (entity.HasData("PhysicsVelocityOverride"))
-                    {
-                        Vector3 velocityOverride = entity.GetData<Vector3>("PhysicsVelocityOverride", Vector3.Zero);
-                        eclipsePhysics.SetRigidBodyState(entity, velocityOverride, currentAngularVelocity, currentMass, currentConstraints);
-                        entity.RemoveData("PhysicsVelocityOverride");
-                    }
-                    
-                    // Update angular velocity if entity has explicit angular velocity override
-                    if (entity.HasData("PhysicsAngularVelocityOverride"))
-                    {
-                        Vector3 angularVelocityOverride = entity.GetData<Vector3>("PhysicsAngularVelocityOverride", Vector3.Zero);
-                        eclipsePhysics.SetRigidBodyState(entity, currentVelocity, angularVelocityOverride, currentMass, currentConstraints);
-                        entity.RemoveData("PhysicsAngularVelocityOverride");
-                    }
-                }
-
-                // 3. Recalculate constraints affected by geometry changes
-                // Constraints are automatically maintained by the physics system during simulation
-                // However, if geometry changed, constraints may need to be revalidated
-                if (geometryChanged)
-                {
-                    // Get all constraints for this entity
-                    Vector3 dummyVelocity, dummyAngularVelocity;
-                    float dummyMass;
-                    List<Physics.PhysicsConstraint> entityConstraints;
-                    
-                    if (eclipsePhysics.GetRigidBodyState(entity, out dummyVelocity, out dummyAngularVelocity, out dummyMass, out entityConstraints))
-                    {
-                        // Constraints are stored in the physics system and will be recalculated during next simulation step
-                        // For now, we just ensure they're still valid (entity still exists)
-                        if (entityConstraints != null)
-                        {
-                            foreach (Physics.PhysicsConstraint constraint in entityConstraints)
-                            {
-                                // Validate constraint entities still exist
-                                if (constraint.EntityA != null && !constraint.EntityA.IsValid)
-                                {
-                                    eclipsePhysics.RemoveConstraint(constraint);
-                                }
-                                else if (constraint.EntityB != null && !constraint.EntityB.IsValid)
-                                {
-                                    eclipsePhysics.RemoveConstraint(constraint);
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // 4. Update physics world bounds
-                // Calculate bounds from entity position and half extents
-                Vector3 entityPosition = transform.Position;
-                Vector3 entityHalfExtents = entity.HasData("PhysicsHalfExtents")
-                    ? entity.GetData<Vector3>("PhysicsHalfExtents", new Vector3(0.5f, 0.5f, 0.5f))
-                    : new Vector3(0.5f, 0.5f, 0.5f);
-                
-                Vector3 entityMin = entityPosition - entityHalfExtents;
-                Vector3 entityMax = entityPosition + entityHalfExtents;
-                
-                if (!hasBounds)
-                {
-                    minBounds = entityMin;
-                    maxBounds = entityMax;
-                    hasBounds = true;
-                }
-                else
-                {
-                    minBounds = new Vector3(
-                        Math.Min(minBounds.X, entityMin.X),
-                        Math.Min(minBounds.Y, entityMin.Y),
-                        Math.Min(minBounds.Z, entityMin.Z)
-                    );
-                    maxBounds = new Vector3(
-                        Math.Max(maxBounds.X, entityMax.X),
-                        Math.Max(maxBounds.Y, entityMax.Y),
-                        Math.Max(maxBounds.Z, entityMax.Z)
-                    );
-                }
-            }
-
-            // Store physics world bounds for spatial queries
-            if (hasBounds)
-            {
-                // Store bounds in area data for physics queries
-                // In a full implementation, this would update the physics world's spatial acceleration structure
-                Vector3 worldCenter = (minBounds + maxBounds) * 0.5f;
-                Vector3 worldExtents = maxBounds - minBounds;
-                
-                SetData("PhysicsWorldBoundsMin", minBounds);
-                SetData("PhysicsWorldBoundsMax", maxBounds);
-                SetData("PhysicsWorldCenter", worldCenter);
-                SetData("PhysicsWorldExtents", worldExtents);
-            }
+            // In a full implementation, this would:
+            // 1. Rebuild collision shapes if geometry changed
+            // 2. Update rigid body positions/velocities
+            // 3. Recalculate constraints
+            // 4. Update physics world bounds
+            // TODO: STUB - For now, this is a placeholder
         }
 
         /// <summary>

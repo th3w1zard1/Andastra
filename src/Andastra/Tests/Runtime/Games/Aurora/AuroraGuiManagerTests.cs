@@ -9,6 +9,7 @@ using Andastra.Tests.Runtime.TestHelpers;
 using FluentAssertions;
 using Moq;
 using Xunit;
+using GUIWriter = Andastra.Parsing.Resource.Generics.GUI.GUIWriter;
 
 namespace Andastra.Tests.Runtime.Games.Aurora
 {
@@ -236,14 +237,13 @@ namespace Andastra.Tests.Runtime.Games.Aurora
         }
 
         /// <summary>
-        /// Creates minimal test GUI data (simplified GFF format).
-        /// In a real scenario, this would be a proper GFF binary file.
+        /// Creates minimal test GUI data (GFF format).
+        /// Creates a GUI object and serializes it to GFF binary format using GUIWriter.
         /// </summary>
         private byte[] CreateTestGUIData()
         {
-            // For testing purposes, we'll create a minimal GFF structure
-            // This is a simplified version - real GFF files are more complex
-            // In practice, you'd use GFFAuto to create proper GFF data
+            // Create a minimal GUI structure for testing
+            // GUIWriter will convert this to proper GFF format
             var gui = new GUI
             {
                 Tag = "TEST_GUI",
@@ -267,9 +267,11 @@ namespace Andastra.Tests.Runtime.Games.Aurora
             };
 
             // Convert to GFF and then to bytes
-            // TODO: STUB - For now, return empty array as creating full GFF is complex
-            // In real tests, you'd use GFFAuto.BytesGff()
-            return new byte[0]; // Placeholder - would need full GFF serialization
+            // Use GUIWriter to properly serialize GUI object to GFF format
+            // Based on PyKotor dismantle_gui implementation: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/generics/gui.py:730
+            // GUIWriter converts GUI objects to GFF structure and then to binary format
+            var writer = new GUIWriter(gui);
+            return writer.Write();
         }
     }
 }
