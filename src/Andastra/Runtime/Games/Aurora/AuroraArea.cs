@@ -143,6 +143,11 @@ namespace Andastra.Runtime.Games.Aurora
         // Cached ARE data for scene building
         private byte[] _cachedAreData;
 
+        // Tile mesh cache - caches loaded tile meshes by model ResRef to avoid reloading
+        // Based on nwmain.exe: Tile meshes are cached to avoid reloading same models multiple times
+        // Key: Model ResRef (e.g., "tl_grass_01"), Value: Loaded mesh data
+        private readonly Dictionary<string, IRoomMeshData> _tileMeshCache;
+
         // Snow particle system for weather rendering
         // Based on nwmain.exe: CNWSArea::RenderWeather renders snow particles as billboard sprites
         private SnowParticleSystem _snowParticleSystem;
@@ -178,6 +183,10 @@ namespace Andastra.Runtime.Games.Aurora
             {
                 _tilesetLoader = new TilesetLoader(resourceLoader);
             }
+
+            // Initialize tile mesh cache
+            // Based on nwmain.exe: Tile meshes are cached to avoid reloading same models
+            _tileMeshCache = new Dictionary<string, IRoomMeshData>();
 
             // Initialize weather simulation
             _weatherRandom = new System.Random();
@@ -2976,7 +2985,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// - Iterates through all tiles in scene data
         /// - Tile animation rendering is handled by rendering system
         /// - This method updates tile state for game logic purposes
-        /// - Full implementation would require tileset data access to get animation loop definitions
+        // TODO: / - Full implementation would require tileset data access to get animation loop definitions
         /// </remarks>
         private void UpdateTileAnimations(float deltaTime)
         {
@@ -3002,14 +3011,14 @@ namespace Andastra.Runtime.Games.Aurora
                 // The rendering system handles actual animation rendering based on animation state
                 // This update method ensures tile state is current for game logic
                 
-                // Note: Full implementation would:
+                // TODO:  Note: Full implementation would:
                 // 1. Load tileset data to get animation loop definitions
                 // 2. Track animation time for each tile's active animation loops
                 // 3. Update animation frame indices based on animation speed and deltaTime
                 // 4. Handle animation loop cycling (loop, ping-pong, one-shot)
                 // 5. Update tile lighting state for dynamic lighting calculations
                 
-                // For now, tile state is updated implicitly by the rendering system
+                // TODO: STUB - For now, tile state is updated implicitly by the rendering system
                 // This method serves as a placeholder that can be expanded when tileset data access is available
             }
         }
@@ -3138,7 +3147,8 @@ namespace Andastra.Runtime.Games.Aurora
         /// - Original implementation: Loads MDL/MDX files from resource system and creates renderable mesh data
         /// - Resource search order: Override -> Module -> HAK -> Base Game (via AuroraResourceProvider)
         /// - Tiles use MDL models for visual representation (same format as other 3D models)
-        /// - This implements the on-demand loading that was previously stubbed
+        /// - Mesh caching: Loaded meshes are cached by model ResRef to avoid reloading same models
+        /// - Based on nwmain.exe: CNWSArea::RenderTiles caches tile meshes for performance
         /// </remarks>
         private IRoomMeshData LoadTileMeshOnDemand(string modelResRef, IRoomMeshRenderer roomRenderer)
         {
@@ -3151,6 +3161,14 @@ namespace Andastra.Runtime.Games.Aurora
             if (roomRenderer == null)
             {
                 return null;
+            }
+
+            // Check cache first - avoid reloading same tile models
+            // Based on nwmain.exe: Tile meshes are cached to improve rendering performance
+            if (_tileMeshCache != null && _tileMeshCache.TryGetValue(modelResRef, out IRoomMeshData cachedMesh))
+            {
+                // Return cached mesh if available
+                return cachedMesh;
             }
 
             // Resource loader is required to load MDL/MDX files
@@ -3211,6 +3229,13 @@ namespace Andastra.Runtime.Games.Aurora
                 {
                     // Need at least one triangle
                     return null;
+                }
+
+                // Cache the loaded mesh for future use
+                // Based on nwmain.exe: Tile meshes are cached to avoid reloading same models
+                if (_tileMeshCache != null)
+                {
+                    _tileMeshCache[modelResRef] = meshData;
                 }
 
                 return meshData;
@@ -3670,6 +3695,28 @@ namespace Andastra.Runtime.Games.Aurora
                 _lightningFlashTexture = null;
             }
 
+            // Clear tile mesh cache
+            // Based on nwmain.exe: Tile meshes are cleaned up when area is unloaded
+            if (_tileMeshCache != null)
+            {
+                // Dispose cached mesh data if it implements IDisposable
+                foreach (var cachedMesh in _tileMeshCache.Values)
+                {
+                    if (cachedMesh is System.IDisposable disposableMesh)
+                    {
+                        try
+                        {
+                            disposableMesh.Dispose();
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[AuroraArea] Error disposing cached tile mesh: {ex.Message}");
+                        }
+                    }
+                }
+                _tileMeshCache.Clear();
+            }
+
             // Clear all entity lists
             // Based on nwmain.exe: Entity lists are cleared during unload
             _creatures.Clear();
@@ -3780,7 +3827,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// <returns>Resource data or null if not found.</returns>
         /// <remarks>
         /// This method is expected by AuroraTileset but not part of IGameResourceProvider interface.
-        /// This is a workaround until the interface is extended.
+        // TODO: / This is a workaround until the interface is extended.
         /// </remarks>
         public byte[] LoadResource(ResRef resRef, ResourceType resourceType)
         {
