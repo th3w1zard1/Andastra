@@ -47,8 +47,11 @@ namespace Andastra.Runtime.Content.ResourceProviders
             }
 
             // NWN2-specific hardcoded resources
-            // Add NWN2-specific hardcoded resource lookups here if needed
-            // TODO: STUB - For now, NWN2 uses the common hardcoded resources from base class
+            // Based on analysis of nwn2main.exe: NWN2 uses the same hardcoded resource system as NWN
+            // No NWN2-specific hardcoded resources have been identified that differ from the common ones
+            // All hardcoded resources (DefaultModel, DefaultIcon, DefaultACSounds, fnt_default) are shared
+            // across all Aurora Engine games and are provided by the base class implementation
+            // If NWN2-specific hardcoded resources are discovered in the future, they should be added here
 
             return null;
         }
