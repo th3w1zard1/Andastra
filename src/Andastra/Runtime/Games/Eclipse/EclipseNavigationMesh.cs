@@ -1710,31 +1710,68 @@ namespace Andastra.Runtime.Games.Eclipse
         /// </summary>
         /// <remarks>
         /// Lower cost (bonus) for positions near cover.
-        /// In full implementation, this would use the cover point system.
+        /// Uses the cover point system to find nearby cover and calculate bonus based on proximity and quality.
+        /// 
+        /// Algorithm:
+        /// 1. Query nearby cover points within search radius
+        /// 2. Calculate bonus based on distance to nearest cover point and its quality
+        /// 3. Bonus decreases with distance and increases with cover quality
+        /// 4. Maximum bonus is applied when position is very close to high-quality cover
         /// </remarks>
         private float CalculateCoverBonus(Vector3 position)
         {
-            // Simplified cover assessment
-            // In full implementation, this would:
-            // 1. Query nearby cover points
-            // 2. Check if position provides cover from known threats
-            // 3. Calculate bonus based on cover quality
+            // Ensure cover points are generated
+            EnsureCoverPointsGenerated();
 
-            // TODO: STUB - For now, use a simple heuristic: check if position is near geometry that could provide cover
-            // This is a placeholder - full implementation would use FindCoverPoints
+            // Search radius for nearby cover points
+            // Positions within this radius can benefit from cover
             const float coverSearchRadius = 3.0f;
             float bonus = 0.0f;
 
-            // Check if there are nearby faces that could provide cover
-            // (simplified: assume faces with certain surface materials provide cover)
-            int faceIndex = FindStaticFaceAt(position);
-            if (faceIndex >= 0)
+            // Find nearby cover points
+            float nearestCoverDistance = float.MaxValue;
+            float bestCoverQuality = 0.0f;
+
+            float radiusSq = coverSearchRadius * coverSearchRadius;
+
+            foreach (CoverPoint coverPoint in _coverPoints)
             {
-                // Some surface materials might provide cover (e.g., walls, barriers)
-                // This is engine-specific and would need to be configured
-                int material = GetSurfaceMaterial(faceIndex);
-                // Placeholder: assume certain materials provide cover
-                // In full implementation, this would use a cover material lookup table
+                // Calculate 2D distance to cover point (ignoring height for cover assessment)
+                float distSq = Vector3Extensions.DistanceSquared2D(position, coverPoint.Position);
+                
+                if (distSq <= radiusSq)
+                {
+                    float distance = (float)Math.Sqrt(distSq);
+                    
+                    // Track nearest cover point
+                    if (distance < nearestCoverDistance)
+                    {
+                        nearestCoverDistance = distance;
+                        bestCoverQuality = coverPoint.Quality;
+                    }
+                }
+            }
+
+            // Calculate bonus based on proximity to nearest cover and its quality
+            if (nearestCoverDistance < float.MaxValue)
+            {
+                // Normalize distance (0.0 = at cover point, 1.0 = at search radius)
+                float normalizedDistance = nearestCoverDistance / coverSearchRadius;
+                
+                // Bonus decreases with distance (closer is better)
+                // Quality factor multiplies the bonus (better cover = larger bonus)
+                // Maximum bonus when very close to high-quality cover
+                float distanceFactor = 1.0f - normalizedDistance; // 1.0 at cover point, 0.0 at radius
+                float qualityFactor = bestCoverQuality; // 0.0 to 1.0
+                
+                // Combine factors: quality determines max bonus, distance determines how much we get
+                // Base bonus range: 0.0 to -2.0 (negative because it's a cost reduction/bonus)
+                float maxBonus = -2.0f * qualityFactor; // Higher quality = larger bonus
+                bonus = maxBonus * distanceFactor; // Closer = more of the bonus
+                
+                // Ensure bonus is negative (cost reduction)
+                bonus = Math.Max(bonus, -2.0f);
+                bonus = Math.Min(bonus, 0.0f);
             }
 
             return bonus;
