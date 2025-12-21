@@ -198,45 +198,49 @@ namespace Andastra.Runtime.Games.Eclipse.Environmental
             _emissionAccumulator = 0.0f;
 
             // Initialize emitter parameters based on type
-            // Based on daorigins.exe, DragonAge2.exe: Different emitter types have different properties
+            // Note: These are reasonable default values for a functional particle system
+            // The particle system structure (emission, lifetime management, physics updates) follows standard patterns
+            // Specific parameter values are estimates and may need adjustment based on actual game data or profiling
+            // TODO: PLACEHOLDER - Parameter values are reasonable defaults, not reverse-engineered from executables
+            // Future enhancement: Load particle emitter parameters from game data files (MDL emitters, effect definitions, etc.)
             switch (_emitterType)
             {
                 case ParticleEmitterType.Fire:
-                    _emissionRate = 50.0f; // 50 particles per second
-                    _particleLifetime = 2.0f; // 2 seconds lifetime
-                    _particleSpeed = 5.0f; // 5 units per second
-                    _gravity = -2.0f; // Slight upward force (fire rises)
+                    _emissionRate = 50.0f; // Reasonable default: 50 particles per second
+                    _particleLifetime = 2.0f; // Reasonable default: 2 seconds lifetime
+                    _particleSpeed = 5.0f; // Reasonable default: 5 units per second
+                    _gravity = -2.0f; // Negative gravity for upward movement (fire rises)
                     _maxParticles = 200;
                     break;
 
                 case ParticleEmitterType.Smoke:
-                    _emissionRate = 30.0f; // 30 particles per second
-                    _particleLifetime = 5.0f; // 5 seconds lifetime
-                    _particleSpeed = 3.0f; // 3 units per second
-                    _gravity = -1.0f; // Smoke rises slowly
+                    _emissionRate = 30.0f; // Reasonable default: 30 particles per second
+                    _particleLifetime = 5.0f; // Reasonable default: 5 seconds lifetime (smoke lingers)
+                    _particleSpeed = 3.0f; // Reasonable default: 3 units per second (slower than fire)
+                    _gravity = -1.0f; // Negative gravity for upward movement (smoke rises slowly)
                     _maxParticles = 150;
                     break;
 
                 case ParticleEmitterType.Magic:
-                    _emissionRate = 40.0f; // 40 particles per second
-                    _particleLifetime = 3.0f; // 3 seconds lifetime
-                    _particleSpeed = 8.0f; // 8 units per second
-                    _gravity = 0.0f; // Magic particles float
+                    _emissionRate = 40.0f; // Reasonable default: 40 particles per second
+                    _particleLifetime = 3.0f; // Reasonable default: 3 seconds lifetime
+                    _particleSpeed = 8.0f; // Reasonable default: 8 units per second
+                    _gravity = 0.0f; // No gravity (magic particles float)
                     _maxParticles = 180;
                     break;
 
                 case ParticleEmitterType.Environmental:
-                    _emissionRate = 20.0f; // 20 particles per second
-                    _particleLifetime = 4.0f; // 4 seconds lifetime
-                    _particleSpeed = 2.0f; // 2 units per second
-                    _gravity = -9.8f; // Standard gravity
+                    _emissionRate = 20.0f; // Reasonable default: 20 particles per second
+                    _particleLifetime = 4.0f; // Reasonable default: 4 seconds lifetime
+                    _particleSpeed = 2.0f; // Reasonable default: 2 units per second (slow environmental particles)
+                    _gravity = -9.8f; // Standard gravity (particles fall)
                     _maxParticles = 100;
                     break;
 
                 case ParticleEmitterType.Explosion:
-                    _emissionRate = 200.0f; // 200 particles per second (burst)
-                    _particleLifetime = 1.5f; // 1.5 seconds lifetime
-                    _particleSpeed = 15.0f; // 15 units per second (fast)
+                    _emissionRate = 200.0f; // Reasonable default: 200 particles per second (burst effect)
+                    _particleLifetime = 1.5f; // Reasonable default: 1.5 seconds lifetime (short burst)
+                    _particleSpeed = 15.0f; // Reasonable default: 15 units per second (fast explosion)
                     _gravity = -9.8f; // Standard gravity
                     _maxParticles = 300;
                     break;

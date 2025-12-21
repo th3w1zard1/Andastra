@@ -1756,34 +1756,17 @@ namespace Andastra.Runtime.MonoGame.GUI
             }
 
             // Apply thumb alignment if specified
-            // Based on swkotor.exe and swkotor2.exe: Slider thumb alignment positioning
+            // Based on standard GUI alignment patterns: Alignment affects positioning perpendicular to track direction
             // Alignment values: 0=TopLeft, 1=TopCenter, 2=TopRight, 3=MiddleLeft, 4=Center, 5=MiddleRight, 6=BottomLeft, 7=BottomCenter, 8=BottomRight
-            // For horizontal sliders: alignment affects horizontal positioning (left/center/right) and vertical positioning (top/middle/bottom)
-            // For vertical sliders: alignment affects vertical positioning (top/middle/bottom) and horizontal positioning (left/center/right)
+            // For horizontal sliders: thumb position along track (X) is determined by value; alignment affects vertical position (Y) within track
+            // For vertical sliders: thumb position along track (Y) is determined by value; alignment affects horizontal position (X) within track
+            // Note: Alignment does NOT affect the thumb's position along the track - that is determined by the slider value
             int thumbAlignment = thumb.Alignment;
             if (isHorizontal)
             {
-                // Horizontal slider: alignment affects how thumb is positioned along the track
-                // The calculated thumbPosition.X represents the left edge position for left alignment
-                // For center/right alignment, we need to recalculate based on the alignment mode
-                int hAlign = thumbAlignment % 3;
-                switch (hAlign)
-                {
-                    case 0: // Left: thumb's left edge follows normalizedPosition along track
-                        // thumbPosition.X already represents left edge position - no adjustment needed
-                        break;
-                    case 1: // Center: thumb's center follows normalizedPosition along full track width
-                        // Recalculate: normalizedPosition represents center position from 0.0 (left) to 1.0 (right)
-                        thumbPosition.X = position.X + (normalizedPosition * size.X) - (thumbSize.X / 2.0f);
-                        break;
-                    case 2: // Right: thumb's right edge follows normalizedPosition along full track width
-                        // Recalculate: normalizedPosition represents right edge position from 0.0 (left) to 1.0 (right)
-                        thumbPosition.X = position.X + (normalizedPosition * size.X) - thumbSize.X;
-                        break;
-                }
-
-                // Vertical alignment (0=Top, 1=Middle, 2=Bottom) affects thumb's vertical position within track
-                int vAlign = thumbAlignment / 3;
+                // Horizontal slider: Alignment affects vertical positioning only (perpendicular to track direction)
+                // The thumb's horizontal position (along track) is determined by normalizedPosition and is not affected by alignment
+                int vAlign = thumbAlignment / 3; // Vertical alignment component
                 switch (vAlign)
                 {
                     case 0: // Top: thumb's top edge at track top
@@ -1799,27 +1782,9 @@ namespace Andastra.Runtime.MonoGame.GUI
             }
             else
             {
-                // Vertical slider: alignment affects how thumb is positioned along the track
-                // The calculated thumbPosition.Y represents the top edge position for top alignment
-                // For middle/bottom alignment, we need to recalculate based on the alignment mode
-                int vAlign = thumbAlignment / 3;
-                switch (vAlign)
-                {
-                    case 0: // Top: thumb's top edge follows normalizedPosition along track
-                        // thumbPosition.Y already represents top edge position - no adjustment needed
-                        break;
-                    case 1: // Middle: thumb's center follows normalizedPosition along full track height
-                        // Recalculate: normalizedPosition represents center position from 0.0 (top) to 1.0 (bottom)
-                        thumbPosition.Y = position.Y + (normalizedPosition * size.Y) - (thumbSize.Y / 2.0f);
-                        break;
-                    case 2: // Bottom: thumb's bottom edge follows normalizedPosition along full track height
-                        // Recalculate: normalizedPosition represents bottom edge position from 0.0 (top) to 1.0 (bottom)
-                        thumbPosition.Y = position.Y + (normalizedPosition * size.Y) - thumbSize.Y;
-                        break;
-                }
-
-                // Horizontal alignment (0=Left, 1=Center, 2=Right) affects thumb's horizontal position within track
-                int hAlign = thumbAlignment % 3;
+                // Vertical slider: Alignment affects horizontal positioning only (perpendicular to track direction)
+                // The thumb's vertical position (along track) is determined by normalizedPosition and is not affected by alignment
+                int hAlign = thumbAlignment % 3; // Horizontal alignment component
                 switch (hAlign)
                 {
                     case 0: // Left: thumb's left edge at track left
