@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Andastra.Parsing.Tests.Common;
 using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing;
@@ -918,44 +920,301 @@ namespace Andastra.Parsing.Tests.Formats
         }
 
         /// <summary>
-        /// Compare parsed data between Andastra parser and Kaitai parser (when both available)
+        /// Compare parsed data between Andastra parser and Python/Kaitai parser
         /// This is a comprehensive comparison test that validates parser correctness
         /// </summary>
         [Fact(Timeout = 600000)]
         public void TestCompareAndastraAndKaitaiParsers()
         {
-            // This test requires:
-            // 1. Kaitai compiler available
-            // 2. Python runtime (for Python parser) or C# compilation (for C# parser)
-            // 3. Actual test TPC files
-            //
-            // TODO: STUB - For now, we structure the test to verify:
-            // - Both parsers can compile/load
-            // - Key structural elements match
-
-            string compilerPath = FindKaitaiCompiler();
-            if (string.IsNullOrEmpty(compilerPath))
-            {
-                return; // Skip if compiler not available
-            }
-
             // Create test data with Andastra parser
             var testTpc = CreateTestTPC();
             byte[] tpcBytes = TPCAuto.BytesTpc(testTpc, ResourceType.TPC);
+            tpcBytes.Should().NotBeNullOrEmpty("TPC bytes should be generated");
 
             // Parse with Andastra parser
             TPC andastraTpc = TPCAuto.ReadTpc(tpcBytes);
             andastraTpc.Should().NotBeNull("Andastra parser should parse TPC");
-
-            // Verify key properties that Kaitai parser should also extract
             andastraTpc.Format().Should().NotBe(TPCTextureFormat.Invalid, "Format should be valid");
             andastraTpc.Layers.Count.Should().BeGreaterThan(0, "Should have at least one layer");
 
-            // Note: Full comparison would require:
-            // 1. Compiling KSY to Python/C#
-            // 2. Running generated parser on same byte array
-            // 3. Comparing extracted fields (width, height, format, data size, etc.)
-            // This is a foundation test - full implementation would be in integration tests
+            // Write TPC bytes to temporary file for Python parser
+            string tempTpcFile = Path.Combine(Path.GetTempPath(), $"tpc_test_{Guid.NewGuid()}.tpc");
+            try
+            {
+                File.WriteAllBytes(tempTpcFile, tpcBytes);
+
+                // Run Python parser comparison script
+                // Try multiple locations: output directory, source directory
+                string pythonScriptPath = null;
+                string[] possiblePaths = new[]
+                {
+                    // In output directory (if copied)
+                    Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "compare_tpc_parsers.py"),
+                    // In source directory (development)
+                    Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "..", "..", "..", "..", "src", "Andastra", "Tests", "Formats", "compare_tpc_parsers.py"),
+                    // Alternative source path
+                    Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "src", "Andastra", "Tests", "Formats", "compare_tpc_parsers.py")
+                };
+
+                foreach (string path in possiblePaths)
+                {
+                    string normalizedPath = Path.GetFullPath(path);
+                    if (File.Exists(normalizedPath))
+                    {
+                        pythonScriptPath = normalizedPath;
+                        break;
+                    }
+                }
+
+                if (string.IsNullOrEmpty(pythonScriptPath) || !File.Exists(pythonScriptPath))
+                {
+                    // Skip test if Python script not available
+                    return;
+                }
+
+                // Find Python executable
+                string pythonPath = FindPython();
+                if (string.IsNullOrEmpty(pythonPath))
+                {
+                    // Skip test if Python not available
+                    return;
+                }
+
+                // Run Python parser
+                var pythonProcessInfo = new ProcessStartInfo
+                {
+                    FileName = pythonPath,
+                    Arguments = $"\"{pythonScriptPath}\" \"{tempTpcFile}\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                string pythonStdout = "";
+                string pythonStderr = "";
+                int pythonExitCode = -1;
+
+                using (var pythonProcess = Process.Start(pythonProcessInfo))
+                {
+                    if (pythonProcess != null)
+                    {
+                        pythonStdout = pythonProcess.StandardOutput.ReadToEnd();
+                        pythonStderr = pythonProcess.StandardError.ReadToEnd();
+                        pythonProcess.WaitForExit(30000);
+                        pythonExitCode = pythonProcess.ExitCode;
+                    }
+                }
+
+                pythonExitCode.Should().Be(0, 
+                    $"Python parser should succeed. STDOUT: {pythonStdout}, STDERR: {pythonStderr}");
+
+                // Parse JSON output from Python parser
+                PythonTpcData pythonData;
+                try
+                {
+                    pythonData = JsonSerializer.Deserialize<PythonTpcData>(pythonStdout);
+                    pythonData.Should().NotBeNull("Python parser JSON output should be valid");
+                }
+                catch (JsonException ex)
+                {
+                    throw new InvalidOperationException(
+                        $"Failed to parse Python parser JSON output: {pythonStdout}. Error: {ex.Message}");
+                }
+
+                // Comprehensive field-by-field comparison
+                CompareTpcParsers(andastraTpc, pythonData);
+            }
+            finally
+            {
+                // Clean up temporary file
+                if (File.Exists(tempTpcFile))
+                {
+                    try
+                    {
+                        File.Delete(tempTpcFile);
+                    }
+                    catch
+                    {
+                        // Ignore cleanup errors
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Comprehensive comparison of Andastra parser and Python parser results
+        /// </summary>
+        private void CompareTpcParsers(TPC andastraTpc, PythonTpcData pythonData)
+        {
+            // Compare alpha test (allowing small floating point differences)
+            pythonData.alpha_test.Should().BeApproximately(andastraTpc.AlphaTest, 0.001f,
+                "AlphaTest should match between parsers");
+
+            // Compare dimensions
+            var (andastraWidth, andastraHeight) = andastraTpc.Dimensions();
+            pythonData.width.Should().Be(andastraWidth,
+                $"Width should match: Andastra={andastraWidth}, Python={pythonData.width}");
+            pythonData.height.Should().Be(andastraHeight,
+                $"Height should match: Andastra={andastraHeight}, Python={pythonData.height}");
+
+            // Compare format
+            int pythonFormat = pythonData.format;
+            TPCTextureFormat expectedFormat = andastraTpc.Format();
+            pythonFormat.Should().Be((int)expectedFormat,
+                $"Format should match: Andastra={expectedFormat} ({(int)expectedFormat}), Python={pythonFormat}");
+
+            // Compare cube map flag
+            pythonData.is_cube_map.Should().Be(andastraTpc.IsCubeMap,
+                $"IsCubeMap should match: Andastra={andastraTpc.IsCubeMap}, Python={pythonData.is_cube_map}");
+
+            // Compare layer count
+            pythonData.layer_count.Should().Be(andastraTpc.Layers.Count,
+                $"Layer count should match: Andastra={andastraTpc.Layers.Count}, Python={pythonData.layer_count}");
+
+            // Compare mipmap count (from first layer if available)
+            if (andastraTpc.Layers.Count > 0 && pythonData.layers != null && pythonData.layers.Count > 0)
+            {
+                int andastraMipmapCount = andastraTpc.Layers[0].Mipmaps.Count;
+                int pythonMipmapCount = pythonData.layers[0].mipmaps != null ? pythonData.layers[0].mipmaps.Count : 0;
+                pythonMipmapCount.Should().Be(andastraMipmapCount,
+                    $"Mipmap count should match: Andastra={andastraMipmapCount}, Python={pythonMipmapCount}");
+
+                // Compare mipmap dimensions for each mipmap
+                for (int i = 0; i < Math.Min(andastraMipmapCount, pythonMipmapCount); i++)
+                {
+                    var andastraMipmap = andastraTpc.Layers[0].Mipmaps[i];
+                    var pythonMipmap = pythonData.layers[0].mipmaps[i];
+
+                    pythonMipmap.width.Should().Be(andastraMipmap.Width,
+                        $"Mipmap {i} width should match: Andastra={andastraMipmap.Width}, Python={pythonMipmap.width}");
+                    pythonMipmap.height.Should().Be(andastraMipmap.Height,
+                        $"Mipmap {i} height should match: Andastra={andastraMipmap.Height}, Python={pythonMipmap.height}");
+                    pythonMipmap.format.Should().Be((int)andastraMipmap.TpcFormat,
+                        $"Mipmap {i} format should match: Andastra={andastraMipmap.TpcFormat}, Python={pythonMipmap.format}");
+
+                    // Compare data size (allowing for minor differences due to padding/alignment)
+                    int sizeDiff = Math.Abs(pythonMipmap.data_size - andastraMipmap.Data.Length);
+                    sizeDiff.Should().BeLessThanOrEqualTo(16, // Allow small difference for alignment
+                        $"Mipmap {i} data size should be close: Andastra={andastraMipmap.Data.Length}, Python={pythonMipmap.data_size}");
+                }
+            }
+
+            // Compare TXI presence
+            bool andastraHasTxi = !string.IsNullOrEmpty(andastraTpc.Txi);
+            pythonData.txi_present.Should().Be(andastraHasTxi,
+                $"TXI presence should match: Andastra={andastraHasTxi}, Python={pythonData.txi_present}");
+        }
+
+        /// <summary>
+        /// Finds Python executable in common locations
+        /// </summary>
+        private static string FindPython()
+        {
+            string[] pythonCommands = { "python3", "python" };
+
+            foreach (string cmd in pythonCommands)
+            {
+                try
+                {
+                    var processInfo = new ProcessStartInfo
+                    {
+                        FileName = cmd,
+                        Arguments = "--version",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+
+                    using (var process = Process.Start(processInfo))
+                    {
+                        if (process != null)
+                        {
+                            process.WaitForExit(5000);
+                            if (process.ExitCode == 0)
+                            {
+                                return cmd;
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // Continue searching
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Data structure for Python parser JSON output
+        /// </summary>
+        private class PythonTpcData
+        {
+            [JsonPropertyName("alpha_test")]
+            public float alpha_test { get; set; }
+
+            [JsonPropertyName("width")]
+            public int width { get; set; }
+
+            [JsonPropertyName("height")]
+            public int height { get; set; }
+
+            [JsonPropertyName("format")]
+            public int format { get; set; }
+
+            [JsonPropertyName("format_name")]
+            public string format_name { get; set; }
+
+            [JsonPropertyName("is_compressed")]
+            public bool is_compressed { get; set; }
+
+            [JsonPropertyName("is_cube_map")]
+            public bool is_cube_map { get; set; }
+
+            [JsonPropertyName("mipmap_count")]
+            public int mipmap_count { get; set; }
+
+            [JsonPropertyName("layer_count")]
+            public int layer_count { get; set; }
+
+            [JsonPropertyName("txi_present")]
+            public bool txi_present { get; set; }
+
+            [JsonPropertyName("txi_length")]
+            public int txi_length { get; set; }
+
+            [JsonPropertyName("layers")]
+            public List<PythonTpcLayer> layers { get; set; }
+        }
+
+        /// <summary>
+        /// Python parser layer data structure
+        /// </summary>
+        private class PythonTpcLayer
+        {
+            [JsonPropertyName("mipmaps")]
+            public List<PythonTpcMipmap> mipmaps { get; set; }
+        }
+
+        /// <summary>
+        /// Python parser mipmap data structure
+        /// </summary>
+        private class PythonTpcMipmap
+        {
+            [JsonPropertyName("width")]
+            public int width { get; set; }
+
+            [JsonPropertyName("height")]
+            public int height { get; set; }
+
+            [JsonPropertyName("format")]
+            public int format { get; set; }
+
+            [JsonPropertyName("data_size")]
+            public int data_size { get; set; }
         }
 
         /// <summary>
