@@ -157,18 +157,23 @@ namespace Andastra.Parsing.Tests.Generator
         [Fact]
         public void ValidateTslpatchdataArguments_ShouldSetDefaultIni_WhenTslpatchdataProvidedButNotIni()
         {
-            // Arrange
+            // Arrange - Create a valid KOTOR installation (requires swkotor.exe or swkotor2.exe or chitin.key)
+            var installationPath = Path.Combine(_tempDir, "kotor_install");
+            Directory.CreateDirectory(installationPath);
+            // Create swkotor.exe to make it a valid KOTOR installation
+            File.WriteAllText(Path.Combine(installationPath, "swkotor.exe"), "");
+            
             var tslpatchdata = Path.Combine(_tempDir, "tslpatchdata");
             Directory.CreateDirectory(tslpatchdata);
-            // Note: Validation requires at least one path to be a valid KOTOR Installation
-            // This test would need a mock Installation or should test a different scenario
-            // TODO: STUB - For now, we'll test that it throws when no valid installation is provided
-            var paths = new List<object> { tslpatchdata };
+            var paths = new List<object> { installationPath };
 
-            // Act & Assert
-            Action act = () => GeneratorValidation.ValidateTslpatchdataArguments(null, tslpatchdata, paths);
-            act.Should().Throw<ArgumentException>()
-                .WithMessage("*requires at least one provided path to be a valid KOTOR Installation*");
+            // Act
+            var result = GeneratorValidation.ValidateTslpatchdataArguments(null, tslpatchdata, paths);
+
+            // Assert
+            result.validatedIni.Should().Be("changes.ini");
+            result.tslpatchdataPath.Should().NotBeNull();
+            result.tslpatchdataPath.FullName.Should().Be(Path.GetFullPath(tslpatchdata));
         }
 
         [Fact]
