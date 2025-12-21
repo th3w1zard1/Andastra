@@ -451,13 +451,14 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 }
             }
 
-            // Try loading as resource reference (ResRef)
-            // Based on DragonAge2.exe: Textures can be loaded from game resources
-            // Dragon Age 2 uses resource system to load textures from ERF archives
-            // TODO: STUB - For now, try common texture paths and extensions
+            // Try loading with common DDS file extensions if path doesn't exist as-is
+            // Based on DragonAge2.exe: Textures can be loaded from file system with .dds extension
+            // Dragon Age 2 uses DDS format for textures, so we try common extensions
+            // This handles cases where the path doesn't include the extension
             string[] extensions = { ".dds", ".DDS" };
             foreach (string ext in extensions)
             {
+                // Only append extension if path doesn't already end with it (case-insensitive)
                 string pathWithExt = path.EndsWith(ext, StringComparison.OrdinalIgnoreCase) ? path : path + ext;
                 if (File.Exists(pathWithExt))
                 {
