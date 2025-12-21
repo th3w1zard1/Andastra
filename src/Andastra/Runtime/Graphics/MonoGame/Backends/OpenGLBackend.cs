@@ -361,7 +361,8 @@ namespace Andastra.Runtime.MonoGame.Backends
                     uint uploadFormat = format;
 
                     // Convert BGRA to RGBA for OpenGL compatibility (matches original engine behavior)
-                    if (format == GL_BGRA)
+                    // Check source texture format enum to determine if conversion is needed
+                    if (data.Format == TextureFormat.B8G8R8A8_UNorm || data.Format == TextureFormat.B8G8R8A8_UNorm_SRGB)
                     {
                         uploadData = ConvertBGRAToRGBA(mipmap.Data);
                         uploadFormat = GL_RGBA;
@@ -810,8 +811,9 @@ namespace Andastra.Runtime.MonoGame.Backends
                     return GL_RGBA;
                 case TextureFormat.B8G8R8A8_UNorm:
                 case TextureFormat.B8G8R8A8_UNorm_SRGB:
-                    // BGRA needs conversion to RGBA, but return BGRA for now (will convert in upload)
-                    return GL_BGRA;
+                    // BGRA is converted to RGBA during upload (see UploadTextureData)
+                    // Return RGBA here since that's the format OpenGL will receive
+                    return GL_RGBA;
                 case TextureFormat.R16_Float:
                     return GL_RED;
                 case TextureFormat.R16G16_Float:
@@ -1067,6 +1069,10 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// Converts BGRA pixel data to RGBA.
         /// Matches original engine behavior: swkotor.exe converts BGRA to RGBA for OpenGL.
         /// Based on swkotor.exe: FUN_00427c90 @ 0x00427c90 BGRA conversion.
+        /// 
+        /// BGRA format: [B, G, R, A] per pixel (4 bytes)
+        /// RGBA format: [R, G, B, A] per pixel (4 bytes)
+        /// Conversion: Swap B and R channels, keep G and A unchanged.
         /// </summary>
         private byte[] ConvertBGRAToRGBA(byte[] bgraData)
         {
@@ -1075,18 +1081,38 @@ namespace Andastra.Runtime.MonoGame.Backends
                 return bgraData;
             }
 
-            byte[] rgbaData = new byte[bgraData.Length];
-            for (int i = 0; i < bgraData.Length; i += 4)
+            // Validate data length is a multiple of 4 (BGRA = 4 bytes per pixel)
+            if (bgraData.Length % 4 != 0)
             {
-                if (i + 3 < bgraData.Length)
-                {
-                    // BGRA -> RGBA: swap R and B channels
-                    rgbaData[i] = bgraData[i + 2];     // R
-                    rgbaData[i + 1] = bgraData[i + 1]; // G
-                    rgbaData[i + 2] = bgraData[i];     // B
-                    rgbaData[i + 3] = bgraData[i + 3]; // A
-                }
+                Console.WriteLine($"[OpenGLBackend] ConvertBGRAToRGBA: Warning - data length {bgraData.Length} is not a multiple of 4. This may indicate invalid BGRA texture data.");
             }
+
+            byte[] rgbaData = new byte[bgraData.Length];
+            
+            // Process complete 4-byte pixels
+            int pixelCount = bgraData.Length / 4;
+            for (int i = 0; i < pixelCount; i++)
+            {
+                int offset = i * 4;
+                // BGRA -> RGBA: swap R and B channels
+                rgbaData[offset] = bgraData[offset + 2];     // R (from B position)
+                rgbaData[offset + 1] = bgraData[offset + 1]; // G (unchanged)
+                rgbaData[offset + 2] = bgraData[offset];     // B (from R position)
+                rgbaData[offset + 3] = bgraData[offset + 3]; // A (unchanged)
+            }
+            
+            // Copy any remaining bytes (shouldn't happen for valid texture data, but handle gracefully)
+            int remainingBytes = bgraData.Length % 4;
+            if (remainingBytes > 0)
+            {
+                int startOffset = pixelCount * 4;
+                for (int i = 0; i < remainingBytes; i++)
+                {
+                    rgbaData[startOffset + i] = bgraData[startOffset + i];
+                }
+                Console.WriteLine($"[OpenGLBackend] ConvertBGRAToRGBA: Warning - {remainingBytes} leftover bytes copied without conversion. This may indicate invalid BGRA texture data.");
+            }
+            
             return rgbaData;
         }
 
