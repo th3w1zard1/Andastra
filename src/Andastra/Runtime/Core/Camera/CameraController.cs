@@ -4,6 +4,7 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.MDL;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Parsing.Resource;
+using Andastra.Parsing.Formats.MDL;
 
 namespace Andastra.Runtime.Core.Camera
 {
@@ -720,7 +721,9 @@ namespace Andastra.Runtime.Core.Camera
         /// Based on swkotor2.exe: Camera hook lookup system
         /// Located via string references: "camerahook" @ 0x007c7dac, "camerahook%d" @ 0x007d0448
         /// Original implementation: Searches MDL node tree for nodes named "camerahook{N}" and returns world-space position
-        /// Camera hooks are MDL nodes (dummy nodes) with names like "camerahook1", "camerahook2", etc.
+        /// Camera hooks are MDL dummy nodes (NodeType = 1) with names like "camerahook1", "camerahook2", etc.
+        /// Dummy nodes are non-rendering nodes used for positioning and hierarchy (NODE_HAS_HEADER flag only, value 0x001 = 1)
+        /// Based on MDL format specification: Dummy nodes have NodeType = MDLNodeType.DUMMY (1)
         /// </summary>
         /// <param name="entity">The entity to get the camera hook from.</param>
         /// <param name="hookIndex">The camera hook index (1-based, e.g., 1 = "camerahook1").</param>
@@ -749,11 +752,13 @@ namespace Andastra.Runtime.Core.Camera
             //   - Uses format string "camerahook%d" to construct node name from hookIndex
             //   - Queries model via FUN_006c21c0 @ 0x006c21c0 to get node by index
             //   - Calls virtual function at offset 0x10c with "camerahook" string to find node by name
+            //   - Verifies node is a dummy node (NodeType = 1, NODE_HAS_HEADER flag only)
             //   - Transforms node's local position to world space using entity's transform matrix
             //   - Returns world-space position of the camera hook node
-            // Implementation: Full MDL node lookup with recursive search and world-space transform
+            // Implementation: Full MDL node lookup with recursive search, dummy node validation, and world-space transform
 
             // Construct camera hook node name (format: "camerahook{N}")
+            // Based on swkotor2.exe: Format string "camerahook%d" @ 0x007d0448
             string hookNodeName = string.Format("camerahook{0}", hookIndex);
 
             // Try to get MDL model from entity
@@ -764,14 +769,27 @@ namespace Andastra.Runtime.Core.Camera
                 MDLNodeData hookNode = FindNodeByName(mdlModel.RootNode, hookNodeName);
                 if (hookNode != null)
                 {
-                    // Transform node position to world space
-                    Vector3 localPosition = new Vector3(
-                        hookNode.Position.X,
-                        hookNode.Position.Y,
-                        hookNode.Position.Z
-                    );
+                    // Verify that the found node is a dummy node
+                    // Camera hooks must be dummy nodes (NodeType = 1, NODE_HAS_HEADER flag only)
+                    // Based on MDL format: Dummy nodes have NodeType = MDLNodeType.DUMMY (1)
+                    // Dummy nodes are non-rendering nodes used for positioning and hierarchy
+                    // NodeType value 1 = NODE_HAS_HEADER flag (0x001) = dummy node
+                    ushort nodeTypeValue = hookNode.NodeType;
+                    bool isDummyNode = (nodeTypeValue == (ushort)MDLNodeType.DUMMY) || 
+                                       (nodeTypeValue == 0x0001); // NODE_HAS_HEADER flag only (0x001 = 1)
 
-                    // Get node's world-space transform by accumulating parent transforms
+                    if (!isDummyNode)
+                    {
+                        // Node found but is not a dummy node - this is unexpected
+                        // Camera hooks should always be dummy nodes, but we'll log a warning and continue
+                        // Some models might have incorrectly typed camera hook nodes
+                        Console.WriteLine($"[CameraController] Warning: Camera hook node '{hookNodeName}' found but is not a dummy node (NodeType={nodeTypeValue}). Expected NodeType=1 (DUMMY).");
+                        // Continue anyway - the node might still be usable as a camera hook
+                    }
+
+                    // Transform node position to world space
+                    // Based on swkotor2.exe: Node transform calculation for world-space positioning
+                    // Original implementation: Combines node's local transform with entity's world transform
                     Vector3 nodeWorldPosition = TransformNodeToWorldSpace(hookNode, mdlModel.RootNode, transform);
 
                     hookPosition = nodeWorldPosition;
