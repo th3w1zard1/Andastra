@@ -1487,7 +1487,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void vkCmdCopyAccelerationStructureKHRDelegate(IntPtr commandBuffer, ref VkCopyAccelerationStructureInfoKHR pInfo);
 
-        // VK_KHR_ray_tracing_pipeline extension function pointers (static for now - would be loaded via vkGetDeviceProcAddr in real implementation)
+        // TODO:  VK_KHR_ray_tracing_pipeline extension function pointers (static for now - would be loaded via vkGetDeviceProcAddr in real implementation)
         private static vkCreateRayTracingPipelinesKHRDelegate vkCreateRayTracingPipelinesKHR;
         private static vkGetRayTracingShaderGroupHandlesKHRDelegate vkGetRayTracingShaderGroupHandlesKHR;
         private static vkCmdTraceRaysKHRDelegate vkCmdTraceRaysKHR;
@@ -1506,7 +1506,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         {
             // Load Vulkan functions - in a real implementation, these would be loaded via vkGetDeviceProcAddr
             // For this example, we'll assume they're available through P/Invoke
-            // This is a simplified version - real implementation would need proper function loading
+            // TODO:  This is a simplified version - real implementation would need proper function loading
             
             // Load VK_KHR_acceleration_structure extension functions if available
             LoadAccelerationStructureExtensionFunctions(device);
@@ -1534,7 +1534,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             // Load vkGetDeviceProcAddr function pointer
             // In a real implementation, this would be loaded from the Vulkan loader library
-            // For now, we'll use a P/Invoke approach or assume it's available
+            // TODO: STUB - For now, we'll use a P/Invoke approach or assume it's available
             // vkGetDeviceProcAddr signature: PFN_vkGetDeviceProcAddr vkGetDeviceProcAddr(VkInstance instance, const char* pName);
             // We need to get vkGetDeviceProcAddr first, then use it to load extension functions
             
@@ -1550,7 +1550,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             // 4. Marshal.GetDelegateForFunctionPointer to convert to delegate
             // 5. Assign to static vkDestroyAccelerationStructureKHR and vkCmdCopyAccelerationStructureKHR fields
             
-            // For now, we'll leave it as null - the Dispose method will check for null before calling
+            // TODO: STUB - For now, we'll leave it as null - the Dispose method will check for null before calling
             // This allows graceful degradation when the extension is not available
         }
 
@@ -1575,7 +1575,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             // Load vkGetDeviceProcAddr function pointer
             // In a real implementation, this would be loaded from the Vulkan loader library
-            // For now, we'll use a P/Invoke approach or assume it's available
+            // TODO: STUB - For now, we'll use a P/Invoke approach or assume it's available
             // vkGetDeviceProcAddr signature: PFN_vkGetDeviceProcAddr vkGetDeviceProcAddr(VkInstance instance, const char* pName);
             // We need to get vkGetDeviceProcAddr first, then use it to load extension functions
             
@@ -1591,7 +1591,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             // 4. Assign to static vkCmdTraceRaysKHR field
             // 5. Repeat for vkCreateRayTracingPipelinesKHR and vkGetRayTracingShaderGroupHandlesKHR
             
-            // For now, we'll leave it as null - the DispatchRays method will check for null before calling
+            // TODO: STUB - For now, we'll leave it as null - the DispatchRays method will check for null before calling
             // This allows graceful degradation when the extension is not available
         }
 
@@ -1906,7 +1906,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 (desc.Usage & TextureUsage.UnorderedAccess) != 0)
             {
                 // TODO: Create VkImageView - this requires VkImageViewCreateInfo structure
-                // For now, we'll skip this and just use the image handle
+                // TODO: STUB - For now, we'll skip this and just use the image handle
             }
 
             IntPtr handle = new IntPtr(_nextResourceHandle++);
@@ -2124,7 +2124,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             // Determine memory properties based on usage
             // Note: Staging buffers would use host-visible memory, but BufferUsageFlags doesn't have a Staging flag
-            // For now, use device-local memory for all buffers
+            // TODO: STUB - For now, use device-local memory for all buffers
             VkMemoryPropertyFlags memoryProperties = VkMemoryPropertyFlags.VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
             // Allocate memory
@@ -2313,8 +2313,8 @@ namespace Andastra.Runtime.MonoGame.Backends
                 vkRenderPass = CreateRenderPassFromFramebufferDesc(framebufferDesc);
                 
                 // Note: The render pass is not owned by the pipeline - it may be shared with the framebuffer
-                // In a full implementation, the pipeline would need to store the render pass for pipeline creation
-                // For now, we create it but don't use it in pipeline creation (pipeline creation is not fully implemented)
+                // TODO:  In a full implementation, the pipeline would need to store the render pass for pipeline creation
+                // TODO: STUB - For now, we create it but don't use it in pipeline creation (pipeline creation is not fully implemented)
             }
 
             IntPtr handle = new IntPtr(_nextResourceHandle++);
@@ -2322,9 +2322,9 @@ namespace Andastra.Runtime.MonoGame.Backends
             _resources[handle] = pipeline;
 
             // Note: vkRenderPass is created but not currently used in pipeline creation
-            // In a full implementation, VkGraphicsPipelineCreateInfo would include the render pass
+            // TODO:  In a full implementation, VkGraphicsPipelineCreateInfo would include the render pass
             // The render pass is stored in the framebuffer, so pipelines should reference it from there
-            // For now, we create it to match the framebuffer's render pass structure
+            // TODO: STUB - For now, we create it to match the framebuffer's render pass structure
 
             return pipeline;
         }
@@ -3394,7 +3394,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                                     // The structure contains an array of acceleration structure handles
                                     
                                     // Allocate memory for array of acceleration structure handles (IntPtr array)
-                                    // For now, we support single acceleration structure per binding
+                                    // TODO: STUB - For now, we support single acceleration structure per binding
                                     IntPtr accelStructHandlesArray = IntPtr.Zero;
                                     IntPtr accelStructInfoPtr = IntPtr.Zero;
                                     
@@ -3734,7 +3734,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ArgumentNullException(nameof(desc));
             }
 
-            // Full implementation of VK_KHR_acceleration_structure extension
+            // TODO:  Full implementation of VK_KHR_acceleration_structure extension
             // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkAccelerationStructureKHR.html
             
             // Load extension functions if not already loaded
@@ -3753,7 +3753,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             // For initial creation, we need to estimate buffer size
             // In practice, this would be calculated from geometry data using vkGetAccelerationStructureBuildSizesKHR
-            // For now, we'll create a buffer with a reasonable default size
+            // TODO: STUB - For now, we'll create a buffer with a reasonable default size
             // The actual size will be calculated when building the acceleration structure
             ulong estimatedBufferSize = desc.IsTopLevel ? 4096UL : 16384UL; // Conservative estimates
 
@@ -3878,7 +3878,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 pipelineLayout = CreatePipelineLayout(new[] { desc.GlobalBindingLayout });
             }
 
-            // Full implementation of VK_KHR_ray_tracing_pipeline extension
+            // TODO:  Full implementation of VK_KHR_ray_tracing_pipeline extension
 
             // Helper to convert ShaderType to VkShaderStageFlags
             VkShaderStageFlags ConvertShaderTypeToVkStage(ShaderType shaderType)
@@ -4175,7 +4175,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                         try
                         {
                             // Note: vkCreateRayTracingPipelinesKHR should be loaded via vkGetDeviceProcAddr
-                            // For now, we assume it's available if raytracing is supported
+                            // TODO: STUB - For now, we assume it's available if raytracing is supported
                             if (vkCreateRayTracingPipelinesKHR == null)
                             {
                                 throw new NotSupportedException("vkCreateRayTracingPipelinesKHR function pointer is not initialized. VK_KHR_ray_tracing_pipeline extension may not be available.");
@@ -4204,7 +4204,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                                 // Get shader group handles and populate SBT
                                 // Note: SBT population typically happens at dispatch time or requires buffer mapping
-                                // For now, we create the buffer - full SBT population would require vkGetRayTracingShaderGroupHandlesKHR
+                                // TODO: STUB - For now, we create the buffer - full SBT population would require vkGetRayTracingShaderGroupHandlesKHR
                                 // and proper buffer device address support (VK_KHR_buffer_device_address)
 
                                 IntPtr handle = new IntPtr(_nextResourceHandle++);
@@ -4398,7 +4398,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             // TODO: Vulkan doesn't have direct fence signaling like D3D12
             // Fences are signaled automatically when queue operations complete
             // For explicit signaling, we'd need to submit an empty command buffer with fence
-            // For now, this is a placeholder
+            // TODO: STUB - For now, this is a placeholder
             throw new NotImplementedException("Fence signaling not implemented - Vulkan fences are signaled by queue operations");
         }
 
@@ -4502,7 +4502,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             if (vkGetPhysicalDeviceFormatProperties == null)
             {
                 // vkGetPhysicalDeviceFormatProperties is an instance-level function, loaded via vkGetInstanceProcAddr
-                // For now, try loading via P/Invoke (in a real implementation, this would use vkGetInstanceProcAddr)
+                // TODO: STUB - For now, try loading via P/Invoke (in a real implementation, this would use vkGetInstanceProcAddr)
                 string vulkanLib = VulkanLibrary;
                 IntPtr libHandle = NativeMethods.LoadLibrary(vulkanLib);
                 if (libHandle != IntPtr.Zero)
@@ -5379,8 +5379,8 @@ namespace Andastra.Runtime.MonoGame.Backends
                 _isOpen = false;
             }
 
-            // All ICommandList methods require full implementation
-            // These are stubbed with TODO comments indicating Vulkan API calls needed
+            // TODO:  All ICommandList methods require full implementation
+            // TODO:  These are stubbed with TODO comments indicating Vulkan API calls needed
             // Implementation will be completed when Vulkan interop is added
 
             /// <summary>
@@ -5906,7 +5906,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             // Helper method to get bytes per pixel for a texture format
-            // Simplified version - real implementation would handle all formats
+            // TODO:  Simplified version - real implementation would handle all formats
             private int GetBytesPerPixel(TextureFormat format)
             {
                 switch (format)
@@ -6244,17 +6244,91 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             // Helper to determine image aspect flags from texture format
+            // Returns appropriate Vulkan image aspect flags based on the texture format:
+            // - Depth-only formats: VK_IMAGE_ASPECT_DEPTH_BIT
+            // - Depth+Stencil formats: VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT
+            // - All other formats (color, compressed): VK_IMAGE_ASPECT_COLOR_BIT
             private VkImageAspectFlags GetImageAspectFlags(TextureFormat format)
             {
-                // Determine if format is depth/stencil or color
-                // This is a simplified version - full implementation would check all format types
                 switch (format)
                 {
-                    case TextureFormat.D24_UNORM_S8_UINT:
-                    case TextureFormat.D32_FLOAT:
-                    case TextureFormat.D32_FLOAT_S8X24_UINT:
+                    // Depth-only formats - only depth aspect
+                    case TextureFormat.D16_UNorm:
+                    case TextureFormat.D32_Float:
+                        return VkImageAspectFlags.VK_IMAGE_ASPECT_DEPTH_BIT;
+
+                    // Depth+Stencil formats - both depth and stencil aspects
+                    case TextureFormat.D24_UNorm_S8_UInt:
+                    case TextureFormat.D32_Float_S8_UInt:
                         return VkImageAspectFlags.VK_IMAGE_ASPECT_DEPTH_BIT | VkImageAspectFlags.VK_IMAGE_ASPECT_STENCIL_BIT;
+
+                    // All color formats (uncompressed)
+                    case TextureFormat.Unknown:
+                    case TextureFormat.R8_UNorm:
+                    case TextureFormat.R8_UInt:
+                    case TextureFormat.R8_SInt:
+                    case TextureFormat.R8G8_UNorm:
+                    case TextureFormat.R8G8_UInt:
+                    case TextureFormat.R8G8B8A8_UNorm:
+                    case TextureFormat.R8G8B8A8_UNorm_SRGB:
+                    case TextureFormat.R8G8B8A8_UInt:
+                    case TextureFormat.R8G8B8A8_SInt:
+                    case TextureFormat.B8G8R8A8_UNorm:
+                    case TextureFormat.B8G8R8A8_UNorm_SRGB:
+                    case TextureFormat.R16_Float:
+                    case TextureFormat.R16_UNorm:
+                    case TextureFormat.R16_UInt:
+                    case TextureFormat.R16_SInt:
+                    case TextureFormat.R16G16_Float:
+                    case TextureFormat.R16G16_UInt:
+                    case TextureFormat.R16G16_SInt:
+                    case TextureFormat.R16G16B16A16_Float:
+                    case TextureFormat.R16G16B16A16_UNorm:
+                    case TextureFormat.R16G16B16A16_UInt:
+                    case TextureFormat.R16G16B16A16_SInt:
+                    case TextureFormat.R32_Float:
+                    case TextureFormat.R32_UInt:
+                    case TextureFormat.R32_SInt:
+                    case TextureFormat.R32G32_Float:
+                    case TextureFormat.R32G32_UInt:
+                    case TextureFormat.R32G32_SInt:
+                    case TextureFormat.R32G32B32_Float:
+                    case TextureFormat.R32G32B32A32_Float:
+                    case TextureFormat.R32G32B32A32_UInt:
+                    case TextureFormat.R32G32B32A32_SInt:
+                    case TextureFormat.R11G11B10_Float:
+                    case TextureFormat.R10G10B10A2_UNorm:
+                    case TextureFormat.R10G10B10A2_UInt:
+                    // Block-compressed formats (BC1-BC7) - all are color formats
+                    case TextureFormat.BC1_UNorm:
+                    case TextureFormat.BC1_UNorm_SRGB:
+                    case TextureFormat.BC1:
+                    case TextureFormat.BC2_UNorm:
+                    case TextureFormat.BC2_UNorm_SRGB:
+                    case TextureFormat.BC2:
+                    case TextureFormat.BC3_UNorm:
+                    case TextureFormat.BC3_UNorm_SRGB:
+                    case TextureFormat.BC3:
+                    case TextureFormat.BC4_UNorm:
+                    case TextureFormat.BC4:
+                    case TextureFormat.BC5_UNorm:
+                    case TextureFormat.BC5:
+                    case TextureFormat.BC6H_UFloat:
+                    case TextureFormat.BC6H:
+                    case TextureFormat.BC7_UNorm:
+                    case TextureFormat.BC7_UNorm_SRGB:
+                    case TextureFormat.BC7:
+                    // ASTC compressed formats - all are color formats
+                    case TextureFormat.ASTC_4x4:
+                    case TextureFormat.ASTC_5x5:
+                    case TextureFormat.ASTC_6x6:
+                    case TextureFormat.ASTC_8x8:
+                    case TextureFormat.ASTC_10x10:
+                    case TextureFormat.ASTC_12x12:
+                        return VkImageAspectFlags.VK_IMAGE_ASPECT_COLOR_BIT;
+
                     default:
+                        // Default to color aspect for any unknown formats
                         return VkImageAspectFlags.VK_IMAGE_ASPECT_COLOR_BIT;
                 }
             }
@@ -6562,8 +6636,8 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // GENERAL is the standard layout for UAVs (storage images) in Vulkan
                 // We check current layout from resource state tracking, but for simplicity
                 // we transition from UNDEFINED or current layout to GENERAL
-                // Note: In a full implementation, we would track the current layout per texture
-                // For now, we transition assuming the texture might be in UNDEFINED or GENERAL layout
+                // TODO:  Note: In a full implementation, we would track the current layout per texture
+                // TODO: STUB - For now, we transition assuming the texture might be in UNDEFINED or GENERAL layout
                 TransitionImageLayout(image, VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED, VkImageLayout.VK_IMAGE_LAYOUT_GENERAL, textureDesc, 0, 0);
 
                 // Create clear color value structure
@@ -6748,7 +6822,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 // TODO: STUB - Implement texture state transitions with vkCmdPipelineBarrier (VkImageMemoryBarrier)
                 // Texture barriers require image layout transitions which are more complex than buffer barriers
-                // This is left as a stub for future implementation
+                // TODO:  This is left as a stub for future implementation
             }
 
             public void SetBufferState(IBuffer buffer, ResourceState state)
@@ -8113,7 +8187,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     // );
                 }
 
-                // Note: In a full implementation with Vulkan interop, this method would:
+                // TODO:  Note: In a full implementation with Vulkan interop, this method would:
                 // 1. Call native vkCmdBindPipeline to bind the compute pipeline
                 // 2. If binding sets are provided, call native vkCmdBindDescriptorSets to bind them
                 // 3. The native handles would be extracted via P/Invoke or similar interop mechanism
