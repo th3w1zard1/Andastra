@@ -5082,10 +5082,16 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         /// <summary>
         /// Checks if the Metal render command encoder supports batch viewport setting API (setViewports:count:).
-        /// This API does not exist in current Metal versions but is checked for future compatibility.
-        /// When Metal adds this API, this method can be enhanced to use Objective-C runtime (respondsToSelector:)
-        /// to dynamically detect API availability at runtime.
+        /// Uses Objective-C runtime to dynamically detect API availability at runtime.
+        /// Implements two detection methods:
+        /// 1. respondsToSelector: - Checks if the instance responds to the selector
+        /// 2. class_getInstanceMethod - Checks if the method exists in the class
+        /// Based on Objective-C runtime: respondsToSelector: and class_getInstanceMethod
+        /// Metal API Reference: Future API - setViewports:count: (not yet available in current Metal versions)
+        /// swkotor2.exe: N/A - Original game used DirectX 9, not Metal
         /// </summary>
+        /// <param name="renderCommandEncoder">The Metal render command encoder (id&lt;MTLRenderCommandEncoder&gt;).</param>
+        /// <returns>True if the batch viewport API is available, false otherwise.</returns>
         public static bool SupportsBatchViewports(IntPtr renderCommandEncoder)
         {
             if (renderCommandEncoder == IntPtr.Zero)
@@ -5093,12 +5099,49 @@ namespace Andastra.Runtime.MonoGame.Backends
                 return false;
             }
 
-            // Metal does not currently provide a batch viewport API (setViewports:count:)
-            // TODO:  This method returns false for now, but can be enhanced in the future to use:
-            // - respondsToSelector: to check if setViewports:count: method exists
-            // - class_getInstanceMethod to check method availability
-            // When the API becomes available, remove this return statement and implement runtime detection
-            return false;
+            try
+            {
+                // Register the selector for setViewports:count:
+                IntPtr selector = sel_registerName("setViewports:count:");
+                if (selector == IntPtr.Zero)
+                {
+                    return false;
+                }
+
+                // Method 1: Use respondsToSelector: to check if the instance responds to the selector
+                // This is the preferred method as it checks the actual instance's capabilities
+                IntPtr respondsToSelectorSel = sel_registerName("respondsToSelector:");
+                if (respondsToSelectorSel != IntPtr.Zero)
+                {
+                    byte responds = objc_msgSend_respondsToSelector(renderCommandEncoder, respondsToSelectorSel, selector);
+                    if (responds != 0)
+                    {
+                        return true;
+                    }
+                }
+
+                // Method 2: Use class_getInstanceMethod to check if the method exists in the class
+                // This is a fallback method that checks the class definition directly
+                IntPtr cls = object_getClass(renderCommandEncoder);
+                if (cls != IntPtr.Zero)
+                {
+                    IntPtr method = class_getInstanceMethod(cls, selector);
+                    if (method != IntPtr.Zero)
+                    {
+                        return true;
+                    }
+                }
+
+                // Neither method found the API, so it's not available
+                return false;
+            }
+            catch (Exception ex)
+            {
+                // If any exception occurs during runtime detection, assume the API is not available
+                // This ensures graceful degradation rather than crashing
+                Console.WriteLine($"[MetalNative] SupportsBatchViewports: Exception during runtime detection: {ex.Message}");
+                return false;
+            }
         }
 
         /// <summary>
