@@ -400,6 +400,15 @@ namespace Andastra.Runtime.MonoGame.Backends
             public ulong size;
         }
 
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkCommandPoolCreateInfo
+        {
+            public VkStructureType sType;
+            public IntPtr pNext;
+            public VkCommandPoolCreateFlags flags;
+            public uint queueFamilyIndex;
+        }
+
         // Vulkan enums
         private enum VkStructureType
         {
@@ -475,6 +484,12 @@ namespace Andastra.Runtime.MonoGame.Backends
         {
             VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT = 0x00000001,
             VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT = 0x00000002
+        }
+        [Flags]
+        private enum VkCommandPoolCreateFlags
+        {
+            VK_COMMAND_POOL_CREATE_TRANSIENT_BIT = 0x00000001,
+            VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT = 0x00000002
         }
         private enum VkDescriptorType { VK_DESCRIPTOR_TYPE_SAMPLER = 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER = 1, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE = 2, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE = 3, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER = 6, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER = 7, VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR = 1000150000 }
         private enum VkShaderStageFlags { VK_SHADER_STAGE_VERTEX_BIT = 0x00000001, VK_SHADER_STAGE_FRAGMENT_BIT = 0x00000010, VK_SHADER_STAGE_COMPUTE_BIT = 0x00000020, VK_SHADER_STAGE_RAYGEN_BIT_KHR = 0x00000100, VK_SHADER_STAGE_MISS_BIT_KHR = 0x00000200, VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR = 0x00000400 }
@@ -1333,17 +1348,385 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ArgumentNullException(nameof(layout));
             }
 
-            // TODO: IMPLEMENT - Allocate and create VkDescriptorSet
-            // - Allocate from VkDescriptorPool
-            // - Update descriptor set with resources from BindingSetItems
-            // - vkUpdateDescriptorSets
-            // - Track resource for cleanup
+            if (_descriptorPool == IntPtr.Zero)
+            {
+                throw new InvalidOperationException("Descriptor pool not initialized");
+            }
+
+            // Cast layout to VulkanBindingLayout to get the VkDescriptorSetLayout
+            VulkanBindingLayout vulkanLayout = layout as VulkanBindingLayout;
+            if (vulkanLayout == null)
+            {
+                throw new ArgumentException("Layout must be a VulkanBindingLayout", nameof(layout));
+            }
+
+            // Get the VkDescriptorSetLayout handle from the layout
+            // We need to access the private field, so we'll use reflection or add a property
+            // For now, we'll assume VulkanBindingLayout has a way to get the layout handle
+            IntPtr vkDescriptorSetLayout = GetDescriptorSetLayoutHandle(vulkanLayout);
+            if (vkDescriptorSetLayout == IntPtr.Zero)
+            {
+                throw new InvalidOperationException("Invalid descriptor set layout");
+            }
+
+            // Allocate descriptor set from pool
+            IntPtr vkDescriptorSet = AllocateDescriptorSet(vkDescriptorSetLayout);
+            if (vkDescriptorSet == IntPtr.Zero)
+            {
+                throw new InvalidOperationException("Failed to allocate descriptor set from pool");
+            }
+
+            // Update descriptor set with resources from BindingSetItems
+            if (desc.Items != null && desc.Items.Length > 0)
+            {
+                UpdateDescriptorSet(vkDescriptorSet, desc.Items, layout);
+            }
 
             IntPtr handle = new IntPtr(_nextResourceHandle++);
-            var bindingSet = new VulkanBindingSet(handle, layout, desc);
+            var bindingSet = new VulkanBindingSet(handle, layout, desc, vkDescriptorSet, _descriptorPool, _device);
             _resources[handle] = bindingSet;
 
+            Console.WriteLine($"[VulkanDevice] Created binding set with {desc.Items?.Length ?? 0} items, descriptor set handle: {vkDescriptorSet}");
+
             return bindingSet;
+        }
+
+        /// <summary>
+        /// Gets the VkDescriptorSetLayout handle from a VulkanBindingLayout.
+        /// Uses reflection to access the private field since we can't modify the class.
+        /// </summary>
+        private IntPtr GetDescriptorSetLayoutHandle(VulkanBindingLayout layout)
+        {
+            // Use reflection to get the private _vkDescriptorSetLayout field
+            System.Reflection.FieldInfo field = typeof(VulkanBindingLayout).GetField("_vkDescriptorSetLayout", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            
+            if (field != null)
+            {
+                return (IntPtr)field.GetValue(layout);
+            }
+
+            // Fallback: try to get it from the layout's Desc if available
+            // This is a workaround - ideally VulkanBindingLayout would expose this
+            Console.WriteLine("[VulkanDevice] Warning: Could not access VkDescriptorSetLayout handle from VulkanBindingLayout");
+            return IntPtr.Zero;
+        }
+
+        /// <summary>
+        /// Allocates a descriptor set from the descriptor pool.
+        /// Based on Vulkan Descriptor Set Allocation: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkAllocateDescriptorSets.html
+        /// </summary>
+        private IntPtr AllocateDescriptorSet(IntPtr vkDescriptorSetLayout)
+        {
+            // Allocate memory for descriptor set layout array
+            IntPtr setLayoutsPtr = Marshal.AllocHGlobal(IntPtr.Size);
+            try
+            {
+                Marshal.WriteIntPtr(setLayoutsPtr, vkDescriptorSetLayout);
+
+                VkDescriptorSetAllocateInfo allocateInfo = new VkDescriptorSetAllocateInfo
+                {
+                    sType = VkStructureType.VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+                    pNext = IntPtr.Zero,
+                    descriptorPool = _descriptorPool,
+                    descriptorSetCount = 1,
+                    pSetLayouts = setLayoutsPtr
+                };
+
+                // Allocate memory for output descriptor set handle
+                IntPtr descriptorSetPtr = Marshal.AllocHGlobal(IntPtr.Size);
+                try
+                {
+                    VkResult result = vkAllocateDescriptorSets(_device, ref allocateInfo, descriptorSetPtr);
+                    if (result != VkResult.VK_SUCCESS)
+                    {
+                        if (result == VkResult.VK_ERROR_OUT_OF_POOL_MEMORY || result == VkResult.VK_ERROR_FRAGMENTED_POOL)
+                        {
+                            Console.WriteLine($"[VulkanDevice] Warning: Descriptor pool exhausted (result: {result}), consider creating a larger pool or resetting the pool");
+                        }
+                        CheckResult(result, "vkAllocateDescriptorSets");
+                        return IntPtr.Zero;
+                    }
+
+                    IntPtr descriptorSet = Marshal.ReadIntPtr(descriptorSetPtr);
+                    return descriptorSet;
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(descriptorSetPtr);
+                }
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(setLayoutsPtr);
+            }
+        }
+
+        /// <summary>
+        /// Updates a descriptor set with resources from BindingSetItems.
+        /// Based on Vulkan Descriptor Set Updates: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkUpdateDescriptorSets.html
+        /// </summary>
+        private void UpdateDescriptorSet(IntPtr vkDescriptorSet, BindingSetItem[] items, IBindingLayout layout)
+        {
+            if (items == null || items.Length == 0)
+            {
+                return;
+            }
+
+            // Build write descriptor sets for each binding item
+            List<VkWriteDescriptorSet> writeDescriptorSets = new List<VkWriteDescriptorSet>();
+            List<IntPtr> imageInfoPtrs = new List<IntPtr>();
+            List<IntPtr> bufferInfoPtrs = new List<IntPtr>();
+
+            try
+            {
+                foreach (BindingSetItem item in items)
+                {
+                    VkDescriptorType descriptorType = ConvertToVkDescriptorType(item.Type);
+                    VkWriteDescriptorSet writeDescriptorSet = new VkWriteDescriptorSet
+                    {
+                        sType = VkStructureType.VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+                        pNext = IntPtr.Zero,
+                        dstSet = vkDescriptorSet,
+                        dstBinding = (uint)item.Slot,
+                        dstArrayElement = 0,
+                        descriptorCount = 1,
+                        descriptorType = descriptorType,
+                        pImageInfo = IntPtr.Zero,
+                        pBufferInfo = IntPtr.Zero,
+                        pTexelBufferView = IntPtr.Zero
+                    };
+
+                    // Set up descriptor info based on type
+                    switch (item.Type)
+                    {
+                        case BindingType.Texture:
+                        case BindingType.UnorderedAccess:
+                            // Create VkDescriptorImageInfo for texture/image
+                            if (item.Texture != null)
+                            {
+                                IntPtr imageView = GetTextureImageView(item.Texture);
+                                if (imageView != IntPtr.Zero)
+                                {
+                                    VkDescriptorImageInfo imageInfo = new VkDescriptorImageInfo
+                                    {
+                                        sampler = IntPtr.Zero,
+                                        imageView = imageView,
+                                        imageLayout = item.Type == BindingType.UnorderedAccess 
+                                            ? VkImageLayout.VK_IMAGE_LAYOUT_GENERAL 
+                                            : VkImageLayout.VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+                                    };
+
+                                    IntPtr imageInfoPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(VkDescriptorImageInfo)));
+                                    Marshal.StructureToPtr(imageInfo, imageInfoPtr, false);
+                                    imageInfoPtrs.Add(imageInfoPtr);
+                                    writeDescriptorSet.pImageInfo = imageInfoPtr;
+                                }
+                            }
+                            break;
+
+                        case BindingType.Sampler:
+                            // Create VkDescriptorImageInfo for sampler
+                            if (item.Sampler != null)
+                            {
+                                IntPtr sampler = GetSamplerHandle(item.Sampler);
+                                if (sampler != IntPtr.Zero)
+                                {
+                                    VkDescriptorImageInfo imageInfo = new VkDescriptorImageInfo
+                                    {
+                                        sampler = sampler,
+                                        imageView = IntPtr.Zero,
+                                        imageLayout = VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED
+                                    };
+
+                                    IntPtr imageInfoPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(VkDescriptorImageInfo)));
+                                    Marshal.StructureToPtr(imageInfo, imageInfoPtr, false);
+                                    imageInfoPtrs.Add(imageInfoPtr);
+                                    writeDescriptorSet.pImageInfo = imageInfoPtr;
+                                }
+                            }
+                            break;
+
+                        case BindingType.ConstantBuffer:
+                        case BindingType.StructuredBuffer:
+                            // Create VkDescriptorBufferInfo for buffer
+                            if (item.Buffer != null)
+                            {
+                                IntPtr buffer = GetBufferHandle(item.Buffer);
+                                if (buffer != IntPtr.Zero)
+                                {
+                                    ulong offset = (ulong)(item.BufferOffset >= 0 ? item.BufferOffset : 0);
+                                    ulong range = (ulong)(item.BufferRange > 0 ? item.BufferRange : item.Buffer.Desc.ByteSize);
+
+                                    VkDescriptorBufferInfo bufferInfo = new VkDescriptorBufferInfo
+                                    {
+                                        buffer = buffer,
+                                        offset = offset,
+                                        range = range
+                                    };
+
+                                    IntPtr bufferInfoPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(VkDescriptorBufferInfo)));
+                                    Marshal.StructureToPtr(bufferInfo, bufferInfoPtr, false);
+                                    bufferInfoPtrs.Add(bufferInfoPtr);
+                                    writeDescriptorSet.pBufferInfo = bufferInfoPtr;
+                                }
+                            }
+                            break;
+
+                        case BindingType.AccelStruct:
+                            // Acceleration structures require special handling with VkWriteDescriptorSetAccelerationStructureKHR
+                            // For now, we'll log a warning - full implementation would require the KHR extension structures
+                            Console.WriteLine($"[VulkanDevice] Warning: Acceleration structure binding not fully implemented for slot {item.Slot}");
+                            break;
+                    }
+
+                    writeDescriptorSets.Add(writeDescriptorSet);
+                }
+
+                // Marshal write descriptor sets array
+                if (writeDescriptorSets.Count > 0)
+                {
+                    int writeDescriptorSetSize = Marshal.SizeOf(typeof(VkWriteDescriptorSet));
+                    IntPtr writeDescriptorSetsPtr = Marshal.AllocHGlobal(writeDescriptorSets.Count * writeDescriptorSetSize);
+                    try
+                    {
+                        for (int i = 0; i < writeDescriptorSets.Count; i++)
+                        {
+                            IntPtr offset = new IntPtr(writeDescriptorSetsPtr.ToInt64() + i * writeDescriptorSetSize);
+                            Marshal.StructureToPtr(writeDescriptorSets[i], offset, false);
+                        }
+
+                        // Update descriptor sets
+                        vkUpdateDescriptorSets(_device, (uint)writeDescriptorSets.Count, writeDescriptorSetsPtr, 0, IntPtr.Zero);
+
+                        Console.WriteLine($"[VulkanDevice] Updated descriptor set with {writeDescriptorSets.Count} write operations");
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(writeDescriptorSetsPtr);
+                    }
+                }
+            }
+            finally
+            {
+                // Free all allocated image info and buffer info structures
+                foreach (IntPtr ptr in imageInfoPtrs)
+                {
+                    if (ptr != IntPtr.Zero)
+                    {
+                        Marshal.FreeHGlobal(ptr);
+                    }
+                }
+                foreach (IntPtr ptr in bufferInfoPtrs)
+                {
+                    if (ptr != IntPtr.Zero)
+                    {
+                        Marshal.FreeHGlobal(ptr);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the VkImageView handle from an ITexture.
+        /// </summary>
+        private IntPtr GetTextureImageView(ITexture texture)
+        {
+            if (texture == null)
+            {
+                return IntPtr.Zero;
+            }
+
+            // Try to get native handle from texture
+            // VulkanTexture should have a NativeHandle property or we can use reflection
+            if (texture is VulkanTexture vulkanTexture)
+            {
+                // Use reflection to get the private _vkImageView field
+                System.Reflection.FieldInfo field = typeof(VulkanTexture).GetField("_vkImageView", 
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                
+                if (field != null)
+                {
+                    return (IntPtr)field.GetValue(vulkanTexture);
+                }
+
+                // Fallback to NativeHandle
+                return vulkanTexture.NativeHandle;
+            }
+
+            // Fallback: use NativeHandle if available
+            System.Reflection.PropertyInfo nativeHandleProp = texture.GetType().GetProperty("NativeHandle");
+            if (nativeHandleProp != null)
+            {
+                return (IntPtr)nativeHandleProp.GetValue(texture);
+            }
+
+            return IntPtr.Zero;
+        }
+
+        /// <summary>
+        /// Gets the VkBuffer handle from an IBuffer.
+        /// </summary>
+        private IntPtr GetBufferHandle(IBuffer buffer)
+        {
+            if (buffer == null)
+            {
+                return IntPtr.Zero;
+            }
+
+            if (buffer is VulkanBuffer vulkanBuffer)
+            {
+                // Use reflection to get the private _vkBuffer field
+                System.Reflection.FieldInfo field = typeof(VulkanBuffer).GetField("_vkBuffer", 
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                
+                if (field != null)
+                {
+                    return (IntPtr)field.GetValue(vulkanBuffer);
+                }
+
+                // Fallback to NativeHandle
+                return vulkanBuffer.NativeHandle;
+            }
+
+            // Fallback: use NativeHandle if available
+            System.Reflection.PropertyInfo nativeHandleProp = buffer.GetType().GetProperty("NativeHandle");
+            if (nativeHandleProp != null)
+            {
+                return (IntPtr)nativeHandleProp.GetValue(buffer);
+            }
+
+            return IntPtr.Zero;
+        }
+
+        /// <summary>
+        /// Gets the VkSampler handle from an ISampler.
+        /// </summary>
+        private IntPtr GetSamplerHandle(ISampler sampler)
+        {
+            if (sampler == null)
+            {
+                return IntPtr.Zero;
+            }
+
+            // Try to get native handle from sampler
+            // Use reflection to access private fields or NativeHandle property
+            System.Reflection.PropertyInfo nativeHandleProp = sampler.GetType().GetProperty("NativeHandle");
+            if (nativeHandleProp != null)
+            {
+                return (IntPtr)nativeHandleProp.GetValue(sampler);
+            }
+
+            // Try to find _vkSampler field
+            System.Reflection.FieldInfo field = sampler.GetType().GetField("_vkSampler", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            
+            if (field != null)
+            {
+                return (IntPtr)field.GetValue(sampler);
+            }
+
+            return IntPtr.Zero;
         }
 
         public ICommandList CreateCommandList(CommandListType type = CommandListType.Graphics)
@@ -2701,6 +3084,12 @@ namespace Andastra.Runtime.MonoGame.Backends
                 }
             }
         }
+
+        #endregion
+    }
+}
+
+
 
         #endregion
     }
