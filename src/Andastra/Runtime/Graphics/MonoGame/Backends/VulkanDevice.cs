@@ -5274,8 +5274,162 @@ namespace Andastra.Runtime.MonoGame.Backends
             public void SetGraphicsState(GraphicsState state) { /* TODO: Set all graphics state */ }
             public void SetViewport(Viewport viewport) { /* TODO: vkCmdSetViewport */ }
             public void SetViewports(Viewport[] viewports) { /* TODO: vkCmdSetViewport */ }
-            public void SetScissor(Rectangle scissor) { /* TODO: vkCmdSetScissor */ }
-            public void SetScissors(Rectangle[] scissors) { /* TODO: vkCmdSetScissor */ }
+            /// <summary>
+            /// Sets a single scissor rectangle using vkCmdSetScissor.
+            /// 
+            /// Defines the scissor rectangle that clips rendering to a specific region of the framebuffer.
+            /// All rendering outside this rectangle is discarded. The scissor rectangle is defined in
+            /// framebuffer coordinates, with (0,0) at the top-left corner.
+            /// 
+            /// Based on Vulkan API: vkCmdSetScissor
+            /// Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetScissor.html
+            /// </summary>
+            /// <param name="scissor">Rectangle defining the scissor region in framebuffer coordinates.</param>
+            public void SetScissor(Rectangle scissor)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before setting scissor");
+                }
+
+                if (_vkCommandBuffer == IntPtr.Zero)
+                {
+                    return; // Command buffer not initialized
+                }
+
+                if (vkCmdSetScissor == null)
+                {
+                    return; // Function not loaded
+                }
+
+                // vkCmdSetScissor signature:
+                // void vkCmdSetScissor(
+                //     VkCommandBuffer commandBuffer,
+                //     uint32_t firstScissor,
+                //     uint32_t scissorCount,
+                //     const VkRect2D* pScissors);
+                //
+                // Convert Rectangle (X, Y, Width, Height) to VkRect2D (offset, extent):
+                // - offset.x = X
+                // - offset.y = Y
+                // - extent.width = Width
+                // - extent.height = Height
+
+                VkRect2D vkRect = new VkRect2D
+                {
+                    offset = new VkOffset2D
+                    {
+                        x = scissor.X,
+                        y = scissor.Y
+                    },
+                    extent = new VkExtent2D
+                    {
+                        width = unchecked((uint)System.Math.Max(0, scissor.Width)),
+                        height = unchecked((uint)System.Math.Max(0, scissor.Height))
+                    }
+                };
+
+                // Marshal VkRect2D to unmanaged memory
+                int rectSize = Marshal.SizeOf(typeof(VkRect2D));
+                IntPtr rectPtr = Marshal.AllocHGlobal(rectSize);
+                try
+                {
+                    Marshal.StructureToPtr(vkRect, rectPtr, false);
+
+                    // Call vkCmdSetScissor with firstScissor=0, scissorCount=1
+                    vkCmdSetScissor(_vkCommandBuffer, 0, 1, rectPtr);
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(rectPtr);
+                }
+            }
+
+            /// <summary>
+            /// Sets multiple scissor rectangles using vkCmdSetScissor.
+            /// 
+            /// Defines an array of scissor rectangles that clip rendering. Each viewport (if multiple
+            /// viewports are used) can have its own scissor rectangle. The scissor rectangles are defined
+            /// in framebuffer coordinates, with (0,0) at the top-left corner.
+            /// 
+            /// Based on Vulkan API: vkCmdSetScissor
+            /// Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetScissor.html
+            /// </summary>
+            /// <param name="scissors">Array of rectangles defining the scissor regions in framebuffer coordinates.</param>
+            public void SetScissors(Rectangle[] scissors)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before setting scissors");
+                }
+
+                if (_vkCommandBuffer == IntPtr.Zero)
+                {
+                    return; // Command buffer not initialized
+                }
+
+                if (vkCmdSetScissor == null)
+                {
+                    return; // Function not loaded
+                }
+
+                if (scissors == null || scissors.Length == 0)
+                {
+                    return; // No scissor rectangles to set
+                }
+
+                // vkCmdSetScissor signature:
+                // void vkCmdSetScissor(
+                //     VkCommandBuffer commandBuffer,
+                //     uint32_t firstScissor,
+                //     uint32_t scissorCount,
+                //     const VkRect2D* pScissors);
+                //
+                // Convert Rectangle array to VkRect2D array:
+                // - offset.x = X
+                // - offset.y = Y
+                // - extent.width = Width
+                // - extent.height = Height
+
+                // Convert Rectangle array to VkRect2D array
+                VkRect2D[] vkRects = new VkRect2D[scissors.Length];
+                for (int i = 0; i < scissors.Length; i++)
+                {
+                    vkRects[i] = new VkRect2D
+                    {
+                        offset = new VkOffset2D
+                        {
+                            x = scissors[i].X,
+                            y = scissors[i].Y
+                        },
+                        extent = new VkExtent2D
+                        {
+                            width = unchecked((uint)System.Math.Max(0, scissors[i].Width)),
+                            height = unchecked((uint)System.Math.Max(0, scissors[i].Height))
+                        }
+                    };
+                }
+
+                // Marshal VkRect2D array to unmanaged memory
+                int rectSize = Marshal.SizeOf(typeof(VkRect2D));
+                IntPtr rectsPtr = Marshal.AllocHGlobal(rectSize * vkRects.Length);
+                try
+                {
+                    IntPtr currentRectPtr = rectsPtr;
+                    for (int i = 0; i < vkRects.Length; i++)
+                    {
+                        Marshal.StructureToPtr(vkRects[i], currentRectPtr, false);
+                        currentRectPtr = new IntPtr(currentRectPtr.ToInt64() + rectSize);
+                    }
+
+                    // Call vkCmdSetScissor with firstScissor=0, scissorCount=scissors.Length
+                    vkCmdSetScissor(_vkCommandBuffer, 0, unchecked((uint)scissors.Length), rectsPtr);
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(rectsPtr);
+                }
+            }
             public void SetBlendConstant(Vector4 color) { /* TODO: vkCmdSetBlendConstants */ }
             public void SetStencilRef(uint reference) { /* TODO: vkCmdSetStencilReference */ }
             public void Draw(DrawArguments args)
