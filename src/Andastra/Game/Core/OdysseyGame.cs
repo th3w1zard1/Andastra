@@ -138,6 +138,8 @@ namespace Andastra.Runtime.Game.Core
         private float _mainMenuModelRotation = 0f; // Rotation angle for 3D model (in radians)
         private const float MainMenuRotationSpeed = 0.5f; // Rotation speed in radians per second (based on original games)
         private string _previousHighlightedButton = null; // Track button hover for sound effects
+        private string _buttonClickSound = "gui_actscroll"; // Default button click sound (from guisounds.2da Clicked_Default)
+        private string _buttonHoverSound = "gui_actscroll"; // Default button hover sound (from guisounds.2da Entered_Default)
         // Parent node map for efficient parent lookups (built once when model loads)
         // Based on swkotor.exe and swkotor2.exe: MDL node hierarchy traversal for transforms
         private Dictionary<MDLNode, MDLNode> _mainMenuModelParentMap;
