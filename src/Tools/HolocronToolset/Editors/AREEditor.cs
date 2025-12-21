@@ -1,14 +1,17 @@
 using Andastra.Parsing.Common;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Andastra.Parsing;
 using Andastra.Parsing.Extract;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.TwoDA;
+using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource.Generics.ARE;
 using Andastra.Parsing.Resource;
@@ -1774,12 +1777,6 @@ namespace HolocronToolset.Editors
 
             // Script combo boxes will be populated in LoadARE after filepath is set
             _relevantScriptResnames = new List<string>();
-
-            // Setup context menus for script combo boxes
-            SetupScriptComboBoxContextMenu(_onEnterSelect, "OnEnter Script");
-            SetupScriptComboBoxContextMenu(_onExitSelect, "OnExit Script");
-            SetupScriptComboBoxContextMenu(_onHeartbeatSelect, "OnHeartbeat Script");
-            SetupScriptComboBoxContextMenu(_onUserDefinedSelect, "OnUserDefined Script");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:106-132
@@ -1819,83 +1816,233 @@ namespace HolocronToolset.Editors
                 _lightningCheck.IsEnabled = isTsl;
             }
 
-            // TODO: STUB - setup_file_context_menu equivalent would be handled by SetupScriptComboBoxContextMenu
-            // which is called from SetupSignals
+            // Matching PyKotor implementation: installation.setup_file_context_menu(self.ui.onEnterSelect, [ResourceType.NSS, ResourceType.NCS])
+            // Setup context menus for script combo boxes with full file context menu functionality
+            SetupScriptComboBoxContextMenu(_onEnterSelect, new[] { ResourceType.NSS, ResourceType.NCS });
+            SetupScriptComboBoxContextMenu(_onExitSelect, new[] { ResourceType.NSS, ResourceType.NCS });
+            SetupScriptComboBoxContextMenu(_onHeartbeatSelect, new[] { ResourceType.NSS, ResourceType.NCS });
+            SetupScriptComboBoxContextMenu(_onUserDefinedSelect, new[] { ResourceType.NSS, ResourceType.NCS });
         }
 
-        // Create context menu for script ComboBox controls
-        // Matching PyKotor pattern from UTEEditor - allows opening existing scripts, creating new scripts, or viewing resource details
-        private void SetupScriptComboBoxContextMenu(ComboBox comboBox, string scriptTypeName)
-        {
-            if (comboBox == null)
-            {
-                return;
-            }
-
-            var contextMenu = new ContextMenu();
-            var menuItems = new List<MenuItem>();
-
-            // "Open in Editor" menu item - opens the script if it exists
-            var openInEditorItem = new MenuItem
-            {
-                Header = "Open in Editor",
-                IsEnabled = false
-            };
-            openInEditorItem.Click += (sender, e) => OpenScriptInEditor(comboBox, scriptTypeName);
-            menuItems.Add(openInEditorItem);
-
-            // Enable/disable based on whether script name is set
-            comboBox.SelectionChanged += (sender, e) =>
-            {
-                string text = comboBox.SelectedItem?.ToString() ?? comboBox.Text ?? string.Empty;
-                openInEditorItem.IsEnabled = !string.IsNullOrWhiteSpace(text);
-            };
-
-            // "Create New Script" menu item - creates a new NSS file
-            var createNewItem = new MenuItem
-            {
-                Header = "Create New Script"
-            };
-            createNewItem.Click += (sender, e) => CreateNewScript(comboBox, scriptTypeName);
-            menuItems.Add(createNewItem);
-
-            // "View Resource Location" menu item - shows where the script is located
-            var viewLocationItem = new MenuItem
-            {
-                Header = "View Resource Location",
-                IsEnabled = false
-            };
-            viewLocationItem.Click += (sender, e) => ViewScriptResourceLocation(comboBox, scriptTypeName);
-            menuItems.Add(viewLocationItem);
-
-            // Enable/disable based on whether script name is set
-            comboBox.SelectionChanged += (sender, e) =>
-            {
-                string text = comboBox.SelectedItem?.ToString() ?? comboBox.Text ?? string.Empty;
-                viewLocationItem.IsEnabled = !string.IsNullOrWhiteSpace(text);
-            };
-
-            // Add menu items to context menu
-            foreach (var item in menuItems)
-            {
-                contextMenu.Items.Add(item);
-            }
-            // Add separator before last item
-            contextMenu.Items.Insert(menuItems.Count - 1, new Separator());
-
-            comboBox.ContextMenu = contextMenu;
-        }
-
-        // Open the script referenced in the ComboBox in an appropriate editor
-        private void OpenScriptInEditor(ComboBox comboBox, string scriptTypeName)
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:325-387
+        // Original: def setup_file_context_menu(self, widget: QPlainTextEdit | QLineEdit | QComboBox, resref_type: list[ResourceType] | list[ResourceIdentifier], order: list[SearchLocation] | None = None):
+        // Create context menu for script ComboBox controls with full file context menu functionality
+        // Provides right-click menus to open, create, or view referenced files from all locations
+        private void SetupScriptComboBoxContextMenu(ComboBox comboBox, ResourceType[] resrefTypes)
         {
             if (comboBox == null || _installation == null)
             {
                 return;
             }
 
-            string scriptName = comboBox.Text?.Trim();
-            if (string.IsNullOrEmpty(scriptName))
+            // Create context menu that will be populated dynamically
+            var contextMenu = new ContextMenu();
+            comboBox.ContextMenu = contextMenu;
+
+            // Handle right-click to build dynamic menu
+            // In Avalonia, we use PointerPressed event to detect right-click
+            comboBox.PointerPressed += (sender, e) =>
+            {
+                if (e.GetCurrentPoint(comboBox).Properties.IsRightButtonPressed)
+                {
+                    if (contextMenu == null || _installation == null)
+                    {
+                        return;
+                    }
+
+                    // Clear existing items
+                    contextMenu.Items.Clear();
+
+                    // Get widget text (script name)
+                    string widgetText = comboBox.SelectedItem?.ToString() ?? comboBox.Text ?? string.Empty;
+                    widgetText = widgetText.Trim();
+
+                    // Add "Open in Editor" action (if script name is set)
+                    var openInEditorItem = new MenuItem
+                    {
+                        Header = "Open in Editor",
+                        IsEnabled = !string.IsNullOrEmpty(widgetText)
+                    };
+                    if (!string.IsNullOrEmpty(widgetText))
+                    {
+                        openInEditorItem.Click += (s, ev) => OpenScriptInEditor(comboBox, widgetText);
+                    }
+                    contextMenu.Items.Add(openInEditorItem);
+
+                    // Add "Create New Script" action
+                    var createNewItem = new MenuItem { Header = "Create New Script" };
+                    createNewItem.Click += (s, ev) => CreateNewScript(comboBox);
+                    contextMenu.Items.Add(createNewItem);
+
+                    contextMenu.Items.Add(new Separator());
+
+                    // Build file context menu (File... submenu with all locations)
+                    BuildFileContextMenu(contextMenu, widgetText, resrefTypes);
+                }
+            };
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:341-383
+        // Original: def build_file_context_menu(root_menu: QMenu, widget_text: str):
+        // Build and populate a file context menu for the given widget text
+        private void BuildFileContextMenu(ContextMenu rootMenu, string widgetText, ResourceType[] resourceTypes)
+        {
+            if (rootMenu == null || _installation == null || string.IsNullOrEmpty(widgetText))
+            {
+                return;
+            }
+
+            // Create "File..." submenu
+            var fileMenu = new MenuItem { Header = "File..." };
+            rootMenu.Items.Add(fileMenu);
+            rootMenu.Items.Add(new Separator());
+
+            // Default search order matching PyKotor: [SearchLocation.CHITIN, SearchLocation.OVERRIDE, SearchLocation.MODULES, SearchLocation.RIMS]
+            var searchOrder = new SearchLocation[] 
+            { 
+                SearchLocation.CHITIN, 
+                SearchLocation.OVERRIDE, 
+                SearchLocation.MODULES, 
+                SearchLocation.RIMS 
+            };
+
+            // Find all locations for the resource
+            var queries = new List<ResourceIdentifier>();
+            foreach (var resType in resourceTypes)
+            {
+                queries.Add(new ResourceIdentifier(widgetText, resType));
+            }
+
+            var locations = _installation.Locations(queries, searchOrder, null);
+
+            // Flatten all location results
+            var flatLocations = new List<LocationResult>();
+            foreach (var kvp in locations)
+            {
+                flatLocations.AddRange(kvp.Value);
+            }
+
+            if (flatLocations.Count > 0)
+            {
+                // Get installation path for relative path display
+                string installPath = _installation.Path;
+                var installPathInfo = new DirectoryInfo(installPath);
+
+                // Group locations by file path for submenu organization
+                var locationGroups = new Dictionary<string, List<LocationResult>>();
+                foreach (var location in flatLocations)
+                {
+                    string displayPath = location.FilePath;
+                    try
+                    {
+                        // Try to make path relative to installation
+                        if (!string.IsNullOrEmpty(installPath) && installPathInfo.Exists)
+                        {
+                            var locationPath = new FileInfo(location.FilePath);
+                            if (locationPath.Exists && locationPath.FullName.StartsWith(installPathInfo.FullName, StringComparison.OrdinalIgnoreCase))
+                            {
+                                displayPath = System.IO.Path.GetRelativePath(installPathInfo.FullName, locationPath.FullName);
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Use full path if relative path calculation fails
+                    }
+
+                    // For resources inside BIFs, append filename
+                    var fileResource = location.FileResource;
+                    if (fileResource != null && fileResource.InsideBif)
+                    {
+                        displayPath = System.IO.Path.Combine(displayPath, fileResource.Filename());
+                    }
+
+                    if (!locationGroups.ContainsKey(displayPath))
+                    {
+                        locationGroups[displayPath] = new List<LocationResult>();
+                    }
+                    locationGroups[displayPath].Add(location);
+                }
+
+                // Create submenu for each location
+                foreach (var kvp in locationGroups)
+                {
+                    string displayPath = kvp.Key;
+                    var locationList = kvp.Value;
+
+                    // Create submenu for this location
+                    var locationSubmenu = new MenuItem { Header = displayPath };
+                    fileMenu.Items.Add(locationSubmenu);
+
+                    // Add actions for each resource at this location
+                    foreach (var location in locationList)
+                    {
+                        var fileResource = location.FileResource;
+                        if (fileResource == null)
+                        {
+                            continue;
+                        }
+
+                        // "Open with Editor" action
+                        var openAction = new MenuItem
+                        {
+                            Header = $"Open {fileResource.Identifier} with Editor"
+                        };
+                        openAction.Click += (sender, e) =>
+                        {
+                            try
+                            {
+                                WindowUtils.OpenResourceEditor(fileResource, _installation, this);
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Console.WriteLine($"Error opening resource: {ex.Message}");
+                            }
+                        };
+                        locationSubmenu.Items.Add(openAction);
+                    }
+                }
+
+                // Add "Details..." action
+                var detailsAction = new MenuItem { Header = "Details..." };
+                detailsAction.Click += (sender, e) =>
+                {
+                    try
+                    {
+                        // Convert LocationResults to objects for FileSelectionWindow
+                        var searchResults = new List<object>();
+                        foreach (var location in flatLocations)
+                        {
+                            searchResults.Add(location);
+                        }
+
+                        var selectionWindow = new FileSelectionWindow(searchResults, _installation, this);
+                        selectionWindow.Show();
+                        selectionWindow.Activate();
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Console.WriteLine($"Error opening details window: {ex.Message}");
+                    }
+                };
+                fileMenu.Items.Add(new Separator());
+                fileMenu.Items.Add(detailsAction);
+
+                // Update menu title with file count
+                fileMenu.Header = $"{flatLocations.Count} file(s) located";
+            }
+            else
+            {
+                // No files found - disable menu
+                fileMenu.IsEnabled = false;
+                fileMenu.Header = "File... (0 files)";
+            }
+        }
+
+        // Open the script referenced in the ComboBox in an appropriate editor
+        private void OpenScriptInEditor(ComboBox comboBox, string scriptName)
+        {
+            if (comboBox == null || _installation == null || string.IsNullOrEmpty(scriptName))
             {
                 return;
             }
@@ -1929,7 +2076,7 @@ namespace HolocronToolset.Editors
                     resourceResult.FilePath
                 );
 
-                HolocronToolset.Editors.WindowUtils.OpenResourceEditor(fileResource, _installation, this);
+                WindowUtils.OpenResourceEditor(fileResource, _installation, this);
             }
             catch (Exception ex)
             {
@@ -1938,9 +2085,9 @@ namespace HolocronToolset.Editors
         }
 
         // Create a new script file and open it in the editor
-        private void CreateNewScript(ComboBox comboBox, string scriptTypeName)
+        private void CreateNewScript(ComboBox comboBox)
         {
-            if (_installation == null)
+            if (_installation == null || comboBox == null)
             {
                 return;
             }
@@ -1951,11 +2098,11 @@ namespace HolocronToolset.Editors
                 string scriptName = comboBox.Text?.Trim();
                 if (string.IsNullOrEmpty(scriptName))
                 {
-                    // Generate based on ARE resref and script type
+                    // Generate based on ARE resref
                     string baseName = !string.IsNullOrEmpty(_resname)
                         ? _resname
                         : "m00xx_area_000";
-                    scriptName = $"{baseName}_{scriptTypeName.ToLowerInvariant().Replace(" ", "_")}";
+                    scriptName = $"{baseName}_script";
                 }
 
                 // Limit to 16 characters (ResRef max length)
@@ -1969,7 +2116,7 @@ namespace HolocronToolset.Editors
                 nssEditor.New();
 
                 // Show the editor - user will set the resref when saving
-                HolocronToolset.Editors.WindowUtils.AddWindow(nssEditor, show: true);
+                WindowUtils.AddWindow(nssEditor, show: true);
 
                 // Update the combo box with the suggested script name
                 comboBox.Text = scriptName;
@@ -1977,82 +2124,6 @@ namespace HolocronToolset.Editors
             catch (Exception ex)
             {
                 System.Console.WriteLine($"Error creating new script: {ex.Message}");
-            }
-        }
-
-        // View the location/details of the script resource
-        private void ViewScriptResourceLocation(ComboBox comboBox, string scriptTypeName)
-        {
-            if (comboBox == null || _installation == null)
-            {
-                return;
-            }
-
-            string scriptName = comboBox.Text?.Trim();
-            if (string.IsNullOrEmpty(scriptName))
-            {
-                return;
-            }
-
-            try
-            {
-                // Find the script resource
-                var locations = _installation.Locations(
-                    new List<ResourceIdentifier> { new ResourceIdentifier(scriptName, ResourceType.NSS) },
-                    null,
-                    null);
-
-                var nssIdentifier = new ResourceIdentifier(scriptName, ResourceType.NSS);
-                if (locations.Count > 0 && locations.ContainsKey(nssIdentifier) &&
-                    locations[nssIdentifier].Count > 0)
-                {
-                    var foundLocations = locations[nssIdentifier];
-                    // Show dialog with all found locations
-                    var dialog = new ResourceLocationDialog(
-                        this,
-                        scriptName,
-                        ResourceType.NSS,
-                        foundLocations,
-                        _installation);
-                    dialog.ShowDialog(this);
-                }
-                else
-                {
-                    // Try compiled version
-                    locations = _installation.Locations(
-                        new List<ResourceIdentifier> { new ResourceIdentifier(scriptName, ResourceType.NCS) },
-                        null,
-                        null);
-
-                    var ncsIdentifier = new ResourceIdentifier(scriptName, ResourceType.NCS);
-                    if (locations.Count > 0 && locations.ContainsKey(ncsIdentifier) &&
-                        locations[ncsIdentifier].Count > 0)
-                    {
-                        var foundLocations = locations[ncsIdentifier];
-                        // Show dialog with all found locations
-                        var dialog = new ResourceLocationDialog(
-                            this,
-                            scriptName,
-                            ResourceType.NCS,
-                            foundLocations,
-                            _installation);
-                        dialog.ShowDialog(this);
-                    }
-                    else
-                    {
-                        // Show "not found" message
-                        var msgBox = MessageBoxManager.GetMessageBoxStandard(
-                            "Resource Not Found",
-                            $"Script '{scriptName}' not found in installation.\n\nSearched for:\n- {scriptName}.nss\n- {scriptName}.ncs",
-                            ButtonEnum.Ok,
-                            MsBox.Avalonia.Enums.Icon.Info);
-                        msgBox.ShowAsync();
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Console.WriteLine($"Error viewing script location '{scriptName}': {ex.Message}");
             }
         }
     }
