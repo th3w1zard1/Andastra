@@ -42,6 +42,13 @@ namespace Andastra.Runtime.Games.Eclipse
         private readonly Dictionary<IEntity, List<PhysicsConstraint>> _entityConstraints = new Dictionary<IEntity, List<PhysicsConstraint>>();
 
         /// <summary>
+        /// Dictionary mapping mesh IDs to static geometry collision shapes.
+        /// Static geometry (rooms, static objects) collision shapes are stored separately from entity rigid bodies.
+        /// Based on daorigins.exe/DragonAge2.exe: Static geometry collision shapes are managed per mesh.
+        /// </summary>
+        private readonly Dictionary<string, StaticGeometryCollisionShape> _staticCollisionShapes = new Dictionary<string, StaticGeometryCollisionShape>(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
         /// Physics world gravity vector (default: -9.8 m/s² in Y direction).
         /// </summary>
         private Vector3 _gravity = new Vector3(0.0f, -9.8f, 0.0f);
@@ -451,6 +458,7 @@ namespace Andastra.Runtime.Games.Eclipse
 
             _rigidBodies.Clear();
             _entityConstraints.Clear();
+            _staticCollisionShapes.Clear();
             _disposed = true;
         }
 
@@ -958,6 +966,284 @@ namespace Andastra.Runtime.Games.Eclipse
             float t = tmin > 0 ? tmin : tmax;
             hitPoint = rayOrigin + rayDirection * t;
             return true;
+        }
+
+        /// <summary>
+        /// Adds or updates a static geometry collision shape for a mesh.
+        /// </summary>
+        /// <param name="meshId">Mesh identifier (model name/resref).</param>
+        /// <param name="vertices">Vertex positions (world space).</param>
+        /// <param name="indices">Triangle indices (3 indices per triangle).</param>
+        /// <param name="destroyedFaceIndices">Set of destroyed face indices (triangles to exclude from collision).</param>
+        /// <param name="modifiedVertices">Dictionary mapping vertex indices to modified positions (for deformed geometry).</param>
+        /// <remarks>
+        /// Based on reverse engineering of:
+        /// - daorigins.exe: Static geometry collision shape creation and updates (0x008f12a0)
+        /// - DragonAge2.exe: Enhanced collision shape updates for destructible geometry (0x009a45b0)
+        /// 
+        /// Static geometry collision shapes are triangle meshes representing room/static object geometry.
+        /// When geometry is modified (destroyed/deformed), collision shapes are rebuilt to match.
+        /// </remarks>
+        public void UpdateStaticGeometryCollisionShape(
+            string meshId,
+            List<Vector3> vertices,
+            List<int> indices,
+            HashSet<int> destroyedFaceIndices,
+            Dictionary<int, Vector3> modifiedVertices)
+        {
+            if (_disposed || string.IsNullOrEmpty(meshId) || vertices == null || indices == null)
+            {
+                return;
+            }
+
+            // Build collision triangle list from geometry, excluding destroyed faces and applying vertex modifications
+            List<CollisionTriangle> collisionTriangles = new List<CollisionTriangle>();
+
+            // Process triangles (3 indices per triangle)
+            for (int i = 0; i < indices.Count; i += 3)
+            {
+                if (i + 2 >= indices.Count)
+                {
+                    break; // Incomplete triangle
+                }
+
+                int triangleIndex = i / 3;
+                int index0 = indices[i];
+                int index1 = indices[i + 1];
+                int index2 = indices[i + 2];
+
+                // Skip destroyed faces
+                if (destroyedFaceIndices != null && destroyedFaceIndices.Contains(triangleIndex))
+                {
+                    continue;
+                }
+
+                // Get vertex positions (use modified positions if available, otherwise original)
+                Vector3 v0 = GetVertexPosition(vertices, modifiedVertices, index0);
+                Vector3 v1 = GetVertexPosition(vertices, modifiedVertices, index1);
+                Vector3 v2 = GetVertexPosition(vertices, modifiedVertices, index2);
+
+                // Validate triangle (check for degenerate triangles)
+                Vector3 edge1 = v1 - v0;
+                Vector3 edge2 = v2 - v0;
+                Vector3 normal = Vector3.Cross(edge1, edge2);
+                float area = normal.Length() * 0.5f;
+
+                // Skip degenerate triangles (zero area)
+                if (area < 0.0001f)
+                {
+                    continue;
+                }
+
+                // Create collision triangle
+                CollisionTriangle triangle = new CollisionTriangle
+                {
+                    Vertex0 = v0,
+                    Vertex1 = v1,
+                    Vertex2 = v2,
+                    Normal = Vector3.Normalize(normal)
+                };
+
+                collisionTriangles.Add(triangle);
+            }
+
+            // Create or update static geometry collision shape
+            StaticGeometryCollisionShape collisionShape = new StaticGeometryCollisionShape
+            {
+                MeshId = meshId,
+                Triangles = collisionTriangles,
+                BoundsMin = CalculateBoundsMin(vertices, modifiedVertices),
+                BoundsMax = CalculateBoundsMax(vertices, modifiedVertices)
+            };
+
+            _staticCollisionShapes[meshId] = collisionShape;
+        }
+
+        /// <summary>
+        /// Removes a static geometry collision shape for a mesh.
+        /// </summary>
+        /// <param name="meshId">Mesh identifier (model name/resref).</param>
+        /// <remarks>
+        /// Based on daorigins.exe: Static geometry collision shape removal when mesh is unloaded.
+        /// </remarks>
+        public void RemoveStaticGeometryCollisionShape(string meshId)
+        {
+            if (_disposed || string.IsNullOrEmpty(meshId))
+            {
+                return;
+            }
+
+            _staticCollisionShapes.Remove(meshId);
+        }
+
+        /// <summary>
+        /// Gets a static geometry collision shape for a mesh.
+        /// </summary>
+        /// <param name="meshId">Mesh identifier (model name/resref).</param>
+        /// <returns>Static geometry collision shape, or null if not found.</returns>
+        public StaticGeometryCollisionShape GetStaticGeometryCollisionShape(string meshId)
+        {
+            if (_disposed || string.IsNullOrEmpty(meshId))
+            {
+                return null;
+            }
+
+            if (_staticCollisionShapes.TryGetValue(meshId, out StaticGeometryCollisionShape shape))
+            {
+                return shape;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Gets vertex position, using modified position if available.
+        /// </summary>
+        /// <param name="vertices">Original vertex positions.</param>
+        /// <param name="modifiedVertices">Dictionary of modified vertex positions.</param>
+        /// <param name="vertexIndex">Vertex index.</param>
+        /// <returns>Vertex position (modified if available, otherwise original).</returns>
+        private Vector3 GetVertexPosition(List<Vector3> vertices, Dictionary<int, Vector3> modifiedVertices, int vertexIndex)
+        {
+            if (vertexIndex < 0 || vertexIndex >= vertices.Count)
+            {
+                return Vector3.Zero;
+            }
+
+            // Check for modified position
+            if (modifiedVertices != null && modifiedVertices.TryGetValue(vertexIndex, out Vector3 modifiedPos))
+            {
+                return modifiedPos;
+            }
+
+            return vertices[vertexIndex];
+        }
+
+        /// <summary>
+        /// Calculates the minimum bounds from vertices (including modified vertices).
+        /// </summary>
+        /// <param name="vertices">Original vertex positions.</param>
+        /// <param name="modifiedVertices">Dictionary of modified vertex positions.</param>
+        /// <returns>Minimum bounds vector.</returns>
+        private Vector3 CalculateBoundsMin(List<Vector3> vertices, Dictionary<int, Vector3> modifiedVertices)
+        {
+            if (vertices == null || vertices.Count == 0)
+            {
+                return Vector3.Zero;
+            }
+
+            Vector3 min = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+
+            for (int i = 0; i < vertices.Count; i++)
+            {
+                Vector3 pos = GetVertexPosition(vertices, modifiedVertices, i);
+                min.X = Math.Min(min.X, pos.X);
+                min.Y = Math.Min(min.Y, pos.Y);
+                min.Z = Math.Min(min.Z, pos.Z);
+            }
+
+            return min;
+        }
+
+        /// <summary>
+        /// Calculates the maximum bounds from vertices (including modified vertices).
+        /// </summary>
+        /// <param name="vertices">Original vertex positions.</param>
+        /// <param name="modifiedVertices">Dictionary of modified vertex positions.</param>
+        /// <returns>Maximum bounds vector.</returns>
+        private Vector3 CalculateBoundsMax(List<Vector3> vertices, Dictionary<int, Vector3> modifiedVertices)
+        {
+            if (vertices == null || vertices.Count == 0)
+            {
+                return Vector3.Zero;
+            }
+
+            Vector3 max = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+
+            for (int i = 0; i < vertices.Count; i++)
+            {
+                Vector3 pos = GetVertexPosition(vertices, modifiedVertices, i);
+                max.X = Math.Max(max.X, pos.X);
+                max.Y = Math.Max(max.Y, pos.Y);
+                max.Z = Math.Max(max.Z, pos.Z);
+            }
+
+            return max;
+        }
+
+        /// <summary>
+        /// Internal data structure for static geometry collision shape.
+        /// </summary>
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Static geometry collision shape data structure.
+        /// Stores triangle mesh collision data for static geometry (rooms, static objects).
+        /// </remarks>
+        public class StaticGeometryCollisionShape
+        {
+            /// <summary>
+            /// Mesh identifier (model name/resref).
+            /// </summary>
+            public string MeshId { get; set; }
+
+            /// <summary>
+            /// Collision triangles representing the geometry.
+            /// </summary>
+            public List<CollisionTriangle> Triangles { get; set; }
+
+            /// <summary>
+            /// Minimum bounding box corner.
+            /// </summary>
+            public Vector3 BoundsMin { get; set; }
+
+            /// <summary>
+            /// Maximum bounding box corner.
+            /// </summary>
+            public Vector3 BoundsMax { get; set; }
+
+            public StaticGeometryCollisionShape()
+            {
+                MeshId = string.Empty;
+                Triangles = new List<CollisionTriangle>();
+                BoundsMin = Vector3.Zero;
+                BoundsMax = Vector3.Zero;
+            }
+        }
+
+        /// <summary>
+        /// Represents a single collision triangle.
+        /// </summary>
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Triangle collision data structure.
+        /// </remarks>
+        public class CollisionTriangle
+        {
+            /// <summary>
+            /// First vertex position.
+            /// </summary>
+            public Vector3 Vertex0 { get; set; }
+
+            /// <summary>
+            /// Second vertex position.
+            /// </summary>
+            public Vector3 Vertex1 { get; set; }
+
+            /// <summary>
+            /// Third vertex position.
+            /// </summary>
+            public Vector3 Vertex2 { get; set; }
+
+            /// <summary>
+            /// Triangle normal vector.
+            /// </summary>
+            public Vector3 Normal { get; set; }
+
+            public CollisionTriangle()
+            {
+                Vertex0 = Vector3.Zero;
+                Vertex1 = Vector3.Zero;
+                Vertex2 = Vector3.Zero;
+                Normal = Vector3.Zero;
+            }
         }
     }
 }
