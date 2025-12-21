@@ -2102,12 +2102,48 @@ namespace Andastra.Runtime.Content.Save
         // Serialize repute (REPUTE.fac) - faction reputation
         // Based on swkotor.exe: Repute is stored as a FAC file in savegame.sav
         // Located via string reference: "REPUTE" @ (needs verification)
+        // FAC file format: GFF with "FAC " signature, contains FactionList and RepList
+        // FactionList: List of Faction structs (FactionName: string, FactionGlobal: uint)
+        // RepList: List of Reputation structs (FactionID1: uint, FactionID2: uint, FactionRep: uint)
+        // Reference: vendor/xoreos/src/engines/nwn2/faction.cpp (loadFac method)
+        // Reference: vendor/PyKotor/wiki/Bioware-Aurora-Faction.md (Faction Format documentation)
         private byte[] SerializeRepute(SaveGameData saveData)
         {
-            // TODO: STUB - Implement repute serialization
-            // Repute is stored as a FAC file with faction reputation data
-            // Need to serialize faction reputation from SaveGameData
-            return null;
+            if (saveData == null)
+            {
+                return null;
+            }
+
+            // Create GFF with FAC content type
+            GFF gff = new GFF(GFFContent.FAC);
+            GFFStruct root = gff.Root;
+
+            // Create FactionList - list of Faction structs
+            // Each Faction struct contains:
+            // - FactionName (string): Name of the faction
+            // - FactionGlobal (uint/word): Global effect flag (1 if all members of this faction immediately change reputation)
+            // Based on vendor/xoreos/src/engines/nwn2/faction.cpp:179-198
+            GFFList factionList = new GFFList();
+            
+            // Create RepList - list of Reputation structs
+            // Each Reputation struct contains:
+            // - FactionID1 (uint): Index into FactionList (source faction)
+            // - FactionID2 (uint): Index into FactionList (target faction)
+            // - FactionRep (uint): How FactionID1 perceives FactionID2 (0-100, where 50 is neutral)
+            // Based on vendor/xoreos/src/engines/nwn2/faction.cpp:210-226
+            GFFList repList = new GFFList();
+
+            // TODO: PLACEHOLDER - Faction reputation data not yet stored in SaveGameData
+            // When faction reputation data is added to SaveGameData, populate factionList and repList here
+            // For now, create empty lists which is a valid FAC file structure (empty = no custom factions)
+            // The engine will fall back to repute.2da for default faction relationships
+            
+            // Set lists in root struct
+            root.SetList("FactionList", factionList);
+            root.SetList("RepList", repList);
+
+            // Write GFF to byte array
+            return new GFFBinaryWriter(gff).Write();
         }
 
         // Serialize cached characters (AVAILNPC*.utc) - companion character templates
