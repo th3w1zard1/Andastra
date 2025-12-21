@@ -318,16 +318,26 @@ namespace Andastra.Runtime.Games.Aurora
                     return Core.Enums.ScriptEvent.OnPlayerRest;
 
                 case ModuleEventType.OnPlayerEquipItem:
-                    // Note: OnPlayerEquipItem may not have direct ScriptEvent mapping
-                    // This may need to be handled via OnActivateItem or custom event
-                    // TODO: STUB - For now, return 0 to indicate no direct mapping
-                    return 0;
+                    // Map OnPlayerEquipItem to OnDisturbed
+                    // Based on nwmain.exe: Module-level equip events are handled via OnInventoryDisturbed
+                    // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_INVENTORY_DISTURBED" @ 0x007bc778 (0x1b)
+                    // Original implementation: OnInventoryDisturbed fires when items are equipped/unequipped/added/removed
+                    // ActionEquipItem fires OnDisturbed when items are equipped (ActionEquipItem.cs line 118)
+                    // OnDisturbed is the appropriate event for inventory modifications including equipping
+                    // Note: While OnAcquireItem exists, it's for item acquisition (picking up), not equipping
+                    // OnDisturbed is the correct event for equip/unequip operations as it fires on inventory modifications
+                    return Core.Enums.ScriptEvent.OnDisturbed;
 
                 case ModuleEventType.OnPlayerUnequipItem:
-                    // Note: OnPlayerUnequipItem may not have direct ScriptEvent mapping
-                    // This may need to be handled via OnUnacquireItem or custom event
-                    // TODO: STUB - For now, return 0 to indicate no direct mapping
-                    return 0;
+                    // Map OnPlayerUnequipItem to OnDisturbed
+                    // Based on nwmain.exe: Module-level unequip events are handled via OnInventoryDisturbed
+                    // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_INVENTORY_DISTURBED" @ 0x007bc778 (0x1b)
+                    // Original implementation: OnInventoryDisturbed fires when items are equipped/unequipped/added/removed
+                    // ActionUnequipItem fires OnDisturbed when items are unequipped (ActionUnequipItem.cs line 64)
+                    // OnDisturbed is the appropriate event for inventory modifications including unequipping
+                    // Note: While OnUnacquireItem exists, it's for item loss (removal from inventory), not unequipping
+                    // OnDisturbed is the correct event for equip/unequip operations as it fires on inventory modifications
+                    return Core.Enums.ScriptEvent.OnDisturbed;
 
                 default:
                     return 0; // Invalid mapping
