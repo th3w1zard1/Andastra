@@ -654,8 +654,8 @@ namespace Andastra.Runtime.MonoGame.Rendering
             // This matches BackendFactory.CreateBackendInstance logic for consistency
             switch (type)
             {
-                case GraphicsBackend.Vulkan:
-                    return new VulkanBackend();
+                // case GraphicsBackend.Vulkan:
+                //     return new VulkanBackend();
 
                 case GraphicsBackend.Direct3D12:
                     return new Direct3D12Backend();
@@ -666,8 +666,8 @@ namespace Andastra.Runtime.MonoGame.Rendering
                 case GraphicsBackend.Direct3D10:
                     return new Direct3D10Backend();
 
-                case GraphicsBackend.Direct3D9Remix:
-                    return new Direct3D9Wrapper();
+                // case GraphicsBackend.Direct3D9Remix:
+                //     return new Direct3D9Wrapper();
 
                 case GraphicsBackend.OpenGL:
                     return new OpenGLBackend();

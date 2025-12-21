@@ -2241,7 +2241,7 @@ namespace Andastra.Runtime.Content.Save
             }
 
             // Position
-            structData.SetVector3("Position", new Andastra.Parsing.Common.Vector3(
+            structData.SetVector3("Position", new System.Numerics.Vector3(
                 entityState.Position.X,
                 entityState.Position.Y,
                 entityState.Position.Z));
@@ -2395,7 +2395,7 @@ namespace Andastra.Runtime.Content.Save
                     {
                         var locationStruct = item.Acquire<GFFStruct>("Location", new GFFStruct());
                         locationStruct.SetString("AreaResRef", kvp.Value.AreaResRef ?? "");
-                        locationStruct.SetVector3("Position", new Andastra.Parsing.Common.Vector3(
+                        locationStruct.SetVector3("Position", new System.Numerics.Vector3(
                             kvp.Value.Position.X,
                             kvp.Value.Position.Y,
                             kvp.Value.Position.Z));
