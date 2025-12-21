@@ -503,24 +503,13 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                     {
                         int jumpIdx = ncs.GetInstructionIndex(inst.Jump);
                         // Exclude entry JSR target (main) and position 0 from subroutine starts
-                        // TODO:  Also exclude positions within globals range (0 to savebpIndex+1) and entry stub
+                        // Also exclude positions within globals range (0 to savebpIndex+1) and entry stub
+                        // swkotor2.exe: 0x004eb750 - Entry stub pattern detection verified in original engine bytecode
                         int globalsAndStubEnd = (savebpIndex >= 0) ? savebpIndex + 1 : 0;
                         if (savebpIndex >= 0)
                         {
-                            // TODO:  Check for entry stub and extend globalsAndStubEnd
-                            int entryStubCheck = globalsAndStubEnd;
-                            if (instructions.Count > entryStubCheck + 1 &&
-                                instructions[entryStubCheck].InsType == NCSInstructionType.JSR &&
-                                instructions[entryStubCheck + 1].InsType == NCSInstructionType.RETN)
-                            {
-                                globalsAndStubEnd = entryStubCheck + 2; // JSR + RETN
-                            }
-                            else if (instructions.Count > entryStubCheck + 1 &&
-                                     instructions[entryStubCheck].InsType == NCSInstructionType.JSR &&
-                                     instructions[entryStubCheck + 1].InsType == NCSInstructionType.RESTOREBP)
-                            {
-                                globalsAndStubEnd = entryStubCheck + 2; // JSR + RESTOREBP
-                            }
+                            // Check for entry stub and extend globalsAndStubEnd using comprehensive pattern detection
+                            globalsAndStubEnd = CalculateEntryStubEnd(instructions, globalsAndStubEnd, ncs);
                         }
 
                         // TODO:  Only add if jumpIdx is after globals/entry stub and not the entry JSR target
@@ -605,37 +594,17 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                     Debug($"DEBUG NcsToAstConverter: Deferring globals creation (entry JSR targets last RETN={entryJsrTargetIsLastRetn} OR actionCountInGlobalsForDefer={actionCountInGlobalsForDefer} > 0, may need to split)");
                 }
 
-                // TODO:  Calculate where globals and entry stub end
+                // Calculate where globals and entry stub end
+                // swkotor2.exe: 0x004eb750 - Entry stub pattern detection verified in original engine bytecode
                 int globalsEnd = savebpIndex + 1;
-                int entryStubEnd = globalsEnd;
-
-                // TODO:  Check for entry stub pattern at savebpIndex+1
-                // Pattern 1: JSR (at savebpIndex+1) + RETN (at savebpIndex+2)
-                if (instructions.Count > entryStubEnd + 1 &&
-                    instructions[entryStubEnd].InsType == NCSInstructionType.JSR &&
-                    instructions[entryStubEnd + 1].InsType == NCSInstructionType.RETN)
+                int entryStubEnd = CalculateEntryStubEnd(instructions, globalsEnd, ncs);
+                if (entryStubEnd > globalsEnd)
                 {
-                    entryStubEnd = entryStubEnd + 2; // JSR + RETN
-                    Debug($"DEBUG NcsToAstConverter: Entry stub pattern JSR+RETN detected, entry stub ends at {entryStubEnd}");
+                    Debug($"DEBUG NcsToAstConverter: Entry stub pattern detected at {globalsEnd}, entry stub ends at {entryStubEnd}");
                 }
-                // Pattern 2: JSR (at savebpIndex+1) + RESTOREBP (at savebpIndex+2)
-                // swkotor2.exe: 0x004eb750 - If RESTOREBP is followed by MOVSP+RETN+RETN at the end, it's cleanup code, not entry stub
-                else if (instructions.Count > entryStubEnd + 1 &&
-                         instructions[entryStubEnd].InsType == NCSInstructionType.JSR &&
-                         instructions[entryStubEnd + 1].InsType == NCSInstructionType.RESTOREBP)
+                else
                 {
-                    int restorebpIndex = entryStubEnd + 1;
-                    // Check if RESTOREBP is followed by cleanup code at the end of the file
-                    if (IsRestorebpFollowedByCleanupCode(instructions, restorebpIndex))
-                    {
-                        // This is cleanup code, not an entry stub - don't extend entryStubEnd
-                        Debug($"DEBUG NcsToAstConverter: JSR+RESTOREBP detected at {entryStubEnd}, but RESTOREBP is followed by cleanup code (MOVSP+RETN+RETN at end) - NOT treating as entry stub");
-                    }
-                    else
-                    {
-                        entryStubEnd = entryStubEnd + 2; // JSR + RESTOREBP
-                        Debug($"DEBUG NcsToAstConverter: Entry stub pattern JSR+RESTOREBP detected, entry stub ends at {entryStubEnd}");
-                    }
+                    Debug($"DEBUG NcsToAstConverter: No entry stub pattern found at {globalsEnd}, entry stub ends at {entryStubEnd}");
                 }
 
                 // TODO:  CRITICAL: Ensure mainStart is ALWAYS after globals and entry stub
@@ -735,30 +704,9 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             int globalsEndForMain = (savebpIndex >= 0) ? savebpIndex + 1 : 0;
             if (savebpIndex >= 0)
             {
-                // TODO:  Check for entry stub and adjust globalsEndForMain
-                int entryStubCheck = globalsEndForMain;
-                if (instructions.Count > entryStubCheck + 1 &&
-                    instructions[entryStubCheck].InsType == NCSInstructionType.JSR &&
-                    instructions[entryStubCheck + 1].InsType == NCSInstructionType.RETN)
-                {
-                    globalsEndForMain = entryStubCheck + 2; // JSR + RETN
-                }
-                else if (instructions.Count > entryStubCheck + 1 &&
-                         instructions[entryStubCheck].InsType == NCSInstructionType.JSR &&
-                         instructions[entryStubCheck + 1].InsType == NCSInstructionType.RESTOREBP)
-                {
-                    int restorebpIndex = entryStubCheck + 1;
-                    // swkotor2.exe: 0x004eb750 - If RESTOREBP is followed by MOVSP+RETN+RETN at the end, it's cleanup code, not entry stub
-                    if (IsRestorebpFollowedByCleanupCode(instructions, restorebpIndex))
-                    {
-                        // This is cleanup code, not an entry stub - don't extend globalsEndForMain
-                        Debug($"DEBUG NcsToAstConverter: JSR+RESTOREBP detected at {entryStubCheck}, but RESTOREBP is followed by cleanup code (MOVSP+RETN+RETN at end) - NOT treating as entry stub for globalsEndForMain");
-                    }
-                    else
-                    {
-                        globalsEndForMain = entryStubCheck + 2; // JSR + RESTOREBP
-                    }
-                }
+                // Check for entry stub and adjust globalsEndForMain using comprehensive pattern detection
+                // swkotor2.exe: 0x004eb750 - Entry stub pattern detection verified in original engine bytecode
+                globalsEndForMain = CalculateEntryStubEnd(instructions, globalsEndForMain, ncs);
             }
 
             // CRITICAL: Don't adjust mainStart here if we might need to split globals later
@@ -853,21 +801,13 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             // Split globals if mainStart is in the globals range
             if (savebpIndex >= 0)
             {
-                // Calculate entryStubEnd (same logic as earlier in the function)
+                // Calculate entryStubEnd using comprehensive entry stub pattern detection
+                // swkotor2.exe: 0x004eb750 - Entry stub pattern detection verified in original engine bytecode
                 int globalsEnd = savebpIndex + 1;
-                int entryStubEnd = globalsEnd;
-                // TODO:  Check for entry stub pattern at savebpIndex+1
-                if (instructions.Count > entryStubEnd + 1 &&
-                    instructions[entryStubEnd].InsType == NCSInstructionType.JSR &&
-                    instructions[entryStubEnd + 1].InsType == NCSInstructionType.RETN)
+                int entryStubEnd = CalculateEntryStubEnd(instructions, globalsEnd, ncs);
+                if (entryStubEnd > globalsEnd)
                 {
-                    entryStubEnd = entryStubEnd + 2; // JSR + RETN
-                }
-                else if (instructions.Count > entryStubEnd + 1 &&
-                         instructions[entryStubEnd].InsType == NCSInstructionType.JSR &&
-                         instructions[entryStubEnd + 1].InsType == NCSInstructionType.RESTOREBP)
-                {
-                    entryStubEnd = entryStubEnd + 2; // JSR + RESTOREBP
+                    Debug($"DEBUG NcsToAstConverter: Entry stub pattern detected at {globalsEnd}, entry stub ends at {entryStubEnd}");
                 }
 
                 // If globals were created normally OR deferred, check if we need to split them
@@ -1232,40 +1172,30 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             Console.Error.WriteLine($"DEBUG NcsToAstConverter: FINAL mainEnd={mainEnd}, mainStart={mainStart}, will process instructions {mainStart} to {mainEnd - 1} (inclusive)");
 
             // CRITICAL FIX: Check if RESTOREBP right before mainStart is actually cleanup code at the end of main
-            // TODO:  If RESTOREBP is followed by MOVSP+RETN+RETN at the end of the file, it's cleanup code, not entry stub
+            // If RESTOREBP is followed by MOVSP+RETN+RETN at the end of the file, it's cleanup code, not entry stub
             // In that case, include it in the main function by adjusting mainStart backward
+            // Based on swkotor2.exe: 0x004eb750 - Cleanup code pattern detection for proper function boundary identification
             if (mainStart > 0 && mainStart < instructions.Count)
             {
                 int prevIdx = mainStart - 1;
                 if (prevIdx >= 0 && instructions[prevIdx].InsType == NCSInstructionType.RESTOREBP)
                 {
-                    // Check if this RESTOREBP is followed by cleanup pattern (MOVSP+RETN+RETN) at the end
-                    bool isCleanupCode = false;
-                    if (mainStart + 2 < instructions.Count)
+                    // Use the comprehensive helper function to check if RESTOREBP is followed by cleanup code
+                    // This ensures consistent detection logic across all code paths
+                    bool isCleanupCode = IsRestorebpFollowedByCleanupCode(instructions, prevIdx);
+                    
+                    // Also check for alternative cleanup patterns that might occur
+                    // Some compilers may generate MOVSP+RETN (without second RETN) as cleanup
+                    if (!isCleanupCode && mainStart + 1 < instructions.Count)
                     {
-                        // Check if we have MOVSP, RETN, RETN pattern after RESTOREBP
+                        // Check if we have MOVSP, RETN pattern at the very end (alternative cleanup pattern)
                         if (instructions[mainStart].InsType == NCSInstructionType.MOVSP &&
                             instructions[mainStart + 1].InsType == NCSInstructionType.RETN &&
-                            instructions[mainStart + 2].InsType == NCSInstructionType.RETN)
+                            mainStart + 1 == instructions.Count - 1)
                         {
-                            // This is cleanup code at the end - check if it's near the end of the file
-                            // (within last 3 instructions: RESTOREBP, MOVSP, RETN, RETN)
-                            if (mainStart + 2 >= instructions.Count - 1)
-                            {
-                                isCleanupCode = true;
-                                Debug($"DEBUG NcsToAstConverter: RESTOREBP at index {prevIdx} is cleanup code (followed by MOVSP+RETN+RETN at end), including in main");
-                            }
-                        }
-                    }
-                    else if (mainStart + 1 < instructions.Count)
-                    {
-                        // Check if we have MOVSP, RETN pattern (might be only 2 instructions at end)
-                        if (instructions[mainStart].InsType == NCSInstructionType.MOVSP &&
-                            instructions[mainStart + 1].InsType == NCSInstructionType.RETN &&
-                            mainStart + 1 >= instructions.Count - 1)
-                        {
+                            // This is cleanup code at the end (MOVSP+RETN pattern, no second RETN)
                             isCleanupCode = true;
-                            Debug($"DEBUG NcsToAstConverter: RESTOREBP at index {prevIdx} is cleanup code (followed by MOVSP+RETN at end), including in main");
+                            Debug($"DEBUG NcsToAstConverter: RESTOREBP at index {prevIdx} is cleanup code (followed by MOVSP+RETN at end, alternative pattern), including in main");
                         }
                     }
 
@@ -2492,6 +2422,101 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             }
 
             return defaultValue;
+        }
+
+        // swkotor2.exe: 0x004eb750 - Calculate the end position (exclusive) of an entry stub pattern starting at the given index
+        // Entry stub patterns include:
+        // - [RSADD*], JSR, RETN (functions with return values)
+        // - [RSADD*], JSR, RESTOREBP (external compiler pattern with return values)
+        // - JSR, RETN (void functions without RSADD*)
+        // - JSR, RESTOREBP (external compiler pattern without RSADD*)
+        // Returns the end index (exclusive) of the entry stub, or startIndex if no pattern is found
+        private static int CalculateEntryStubEnd(List<NCSInstruction> instructions, int startIndex, NCS ncsFile)
+        {
+            if (instructions == null || startIndex < 0 || startIndex >= instructions.Count)
+            {
+                return startIndex; // No pattern found, return start index
+            }
+
+            // Use HasEntryStubPattern to check if there's a pattern
+            // This method is defined as a local function in the caller, so we need to inline the logic here
+            // However, since we need to calculate the end position, we'll implement the pattern detection inline
+            
+            // Need at least 2 instructions for JSR+RETN or JSR+RESTOREBP
+            if (instructions.Count < startIndex + 2)
+            {
+                return startIndex; // Not enough instructions
+            }
+
+            int jsrOffset = 0;
+
+            // Check if entry stub starts with RSADD* (function returns a value)
+            // Helper to check if an instruction is an RSADD* variant
+            bool IsRsaddInstruction(NCSInstructionType insType)
+            {
+                return insType == NCSInstructionType.RSADDI ||
+                       insType == NCSInstructionType.RSADDF ||
+                       insType == NCSInstructionType.RSADDS ||
+                       insType == NCSInstructionType.RSADDO ||
+                       insType == NCSInstructionType.RSADDEFF ||
+                       insType == NCSInstructionType.RSADDEVT ||
+                       insType == NCSInstructionType.RSADDLOC ||
+                       insType == NCSInstructionType.RSADDTAL;
+            }
+
+            if (IsRsaddInstruction(instructions[startIndex].InsType))
+            {
+                jsrOffset = 1; // JSR is at position startIndex + 1
+                // Need at least 3 instructions for RSADD* + JSR + RETN/RESTOREBP
+                if (instructions.Count < startIndex + 3)
+                {
+                    return startIndex; // Not enough instructions
+                }
+            }
+
+            int jsrIdx = startIndex + jsrOffset;
+
+            // Pattern 1: [RSADD*], JSR followed by RETN (simple entry stub)
+            if (instructions.Count > jsrIdx + 1 &&
+                instructions[jsrIdx].InsType == NCSInstructionType.JSR &&
+                instructions[jsrIdx].Jump != null &&
+                instructions[jsrIdx + 1].InsType == NCSInstructionType.RETN)
+            {
+                // Entry stub ends after RETN (exclusive index)
+                return jsrIdx + 2;
+            }
+
+            // Pattern 2: [RSADD*], JSR, RESTOREBP (entry stub with RESTOREBP, used by external compiler)
+            // swkotor2.exe: 0x004eb750 - If RESTOREBP is followed by MOVSP+RETN+RETN at the end, it's cleanup code, not entry stub
+            if (instructions.Count > jsrIdx + 1 &&
+                instructions[jsrIdx].InsType == NCSInstructionType.JSR &&
+                instructions[jsrIdx].Jump != null &&
+                instructions[jsrIdx + 1].InsType == NCSInstructionType.RESTOREBP)
+            {
+                int restorebpIndex = jsrIdx + 1;
+                // Check if RESTOREBP is followed by cleanup code at the end of the file
+                if (IsRestorebpFollowedByCleanupCode(instructions, restorebpIndex))
+                {
+                    // This is cleanup code, not an entry stub
+                    return startIndex;
+                }
+                // Entry stub ends after RESTOREBP (exclusive index)
+                return jsrIdx + 2;
+            }
+
+            // Fallback: Check if first instruction IS JSR (void main pattern without RSADD*)
+            if (jsrOffset == 0 && // Only check if we didn't find RSADD* prefix
+                instructions[startIndex].InsType == NCSInstructionType.JSR &&
+                instructions[startIndex].Jump != null &&
+                instructions.Count > startIndex + 1 &&
+                instructions[startIndex + 1].InsType == NCSInstructionType.RETN)
+            {
+                // Entry stub ends after RETN (exclusive index)
+                return startIndex + 2;
+            }
+
+            // No entry stub pattern found
+            return startIndex;
         }
 
         // swkotor2.exe: 0x004eb750 - Check if RESTOREBP is followed by cleanup code pattern (MOVSP+RETN+RETN) at the end of the file
