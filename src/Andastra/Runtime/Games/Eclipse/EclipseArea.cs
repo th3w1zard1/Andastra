@@ -5688,8 +5688,8 @@ namespace Andastra.Runtime.Games.Eclipse
                 graphicsDevice.RenderTarget = output;
                 graphicsDevice.Clear(new Color(0, 0, 0, 0));
 
-                // Extract bright areas for bloom using sprite batch
-                // In a full shader-based implementation, this would use a bright pass shader:
+                // Extract bright areas for bloom using shader-based bright pass extraction
+                // Full shader implementation for proper luminance-based bright area extraction
                 // Pixel shader: float3 color = sample(inputTexture, uv);
                 //              float luminance = dot(color, float3(0.299, 0.587, 0.114));
                 //              output = color * max(0.0, (luminance - threshold) / max(luminance, 0.001));
@@ -5697,16 +5697,71 @@ namespace Andastra.Runtime.Games.Eclipse
                 // daorigins.exe: Bright pass shader extracts luminance and applies threshold
                 // Based on daorigins.exe/DragonAge2.exe: Post-processing bright pass extraction
                 // 
-                // TODO: STUB - For now, use sprite batch to copy texture (full shader implementation requires shader files)
-                // The structure is complete and ready for shader integration
+                // Use shader-based bright pass extraction for accurate luminance thresholding
                 ISpriteBatch spriteBatch = graphicsDevice.CreateSpriteBatch();
                 if (spriteBatch != null && hdrInput.ColorTexture != null)
                 {
-                    spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
-                    Rectangle destinationRect = new Rectangle(0, 0, output.Width, output.Height);
-                    // Copy HDR input to output (bright pass extraction would be done in shader)
-                    spriteBatch.Draw(hdrInput.ColorTexture, destinationRect, Color.White);
-                    spriteBatch.End();
+                    // Get or compile bright pass shader
+                    Effect brightPassEffect = GetOrCreateBrightPassShader(graphicsDevice);
+                    
+                    if (brightPassEffect != null)
+                    {
+                        // Use shader-based bright pass extraction with threshold parameter
+                        // Access MonoGame SpriteBatch directly to use Effect parameter
+                        if (spriteBatch is Andastra.Runtime.MonoGame.Graphics.MonoGameSpriteBatch mgSpriteBatch)
+                        {
+                            // Get MonoGame texture
+                            if (hdrInput.ColorTexture is Andastra.Runtime.MonoGame.Graphics.MonoGameTexture2D mgInputTexture)
+                            {
+                                // Set shader parameter for threshold
+                                EffectParameter thresholdParam = brightPassEffect.Parameters["Threshold"];
+                                if (thresholdParam != null)
+                                {
+                                    thresholdParam.SetValue(threshold);
+                                }
+                                
+                                // Apply bright pass shader and draw
+                                mgSpriteBatch.SpriteBatch.Begin(
+                                    Microsoft.Xna.Framework.Graphics.SpriteSortMode.Immediate,
+                                    Microsoft.Xna.Framework.Graphics.BlendState.Opaque,
+                                    Microsoft.Xna.Framework.Graphics.SamplerState.LinearClamp,
+                                    Microsoft.Xna.Framework.Graphics.DepthStencilState.None,
+                                    Microsoft.Xna.Framework.Graphics.RasterizerState.CullNone,
+                                    brightPassEffect);
+                                
+                                mgSpriteBatch.SpriteBatch.Draw(
+                                    mgInputTexture.Texture,
+                                    new Microsoft.Xna.Framework.Rectangle(0, 0, output.Width, output.Height),
+                                    Microsoft.Xna.Framework.Color.White);
+                                
+                                mgSpriteBatch.SpriteBatch.End();
+                            }
+                            else
+                            {
+                                // Fallback: Use sprite batch without shader if texture type doesn't match
+                                spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
+                                Rectangle destinationRect = new Rectangle(0, 0, output.Width, output.Height);
+                                spriteBatch.Draw(hdrInput.ColorTexture, destinationRect, Color.White);
+                                spriteBatch.End();
+                            }
+                        }
+                        else
+                        {
+                            // Fallback: Use sprite batch without shader if not MonoGame backend
+                            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
+                            Rectangle destinationRect = new Rectangle(0, 0, output.Width, output.Height);
+                            spriteBatch.Draw(hdrInput.ColorTexture, destinationRect, Color.White);
+                            spriteBatch.End();
+                        }
+                    }
+                    else
+                    {
+                        // Fallback: Use sprite batch without shader if compilation failed
+                        spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
+                        Rectangle destinationRect = new Rectangle(0, 0, output.Width, output.Height);
+                        spriteBatch.Draw(hdrInput.ColorTexture, destinationRect, Color.White);
+                        spriteBatch.End();
+                    }
                 }
             }
             finally
@@ -6013,6 +6068,122 @@ technique BloomCompositing
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[EclipseArea] Failed to get/compile bloom compositing shader: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Gets or creates the bright pass shader for extracting bright areas from HDR input.
+        /// </summary>
+        /// <param name="graphicsDevice">Graphics device.</param>
+        /// <returns>Compiled bright pass effect, or null if compilation fails.</returns>
+        /// <remarks>
+        /// Creates and caches a shader for extracting bright areas based on luminance threshold.
+        /// Shader performs: 
+        /// - Calculate luminance: luminance = dot(color, float3(0.299, 0.587, 0.114))
+        /// - Apply threshold: output = color * max(0.0, (luminance - threshold) / max(luminance, 0.001))
+        /// Based on daorigins.exe/DragonAge2.exe: Bright pass extraction for bloom post-processing pipeline
+        /// </remarks>
+        private Effect GetOrCreateBrightPassShader(IGraphicsDevice graphicsDevice)
+        {
+            if (graphicsDevice == null)
+            {
+                return null;
+            }
+            
+            // Get MonoGame GraphicsDevice for ShaderCache
+            GraphicsDevice mgDevice = null;
+            if (graphicsDevice is Andastra.Runtime.MonoGame.Graphics.MonoGameGraphicsDevice mgGraphicsDevice)
+            {
+                mgDevice = mgGraphicsDevice.Device;
+            }
+            
+            if (mgDevice == null)
+            {
+                return null; // Cannot use shader cache without MonoGame GraphicsDevice
+            }
+            
+            // Initialize shader cache if needed
+            if (_shaderCache == null)
+            {
+                _shaderCache = new ShaderCache(mgDevice);
+            }
+            
+            // HLSL shader source for bright pass extraction with luminance thresholding
+            // This shader extracts bright areas from HDR input based on luminance threshold
+            // Used with SpriteBatch to extract bright areas for bloom post-processing
+            // Pixel shader: Samples input texture, calculates luminance, applies threshold
+            // MonoGame Effect format: Uses technique/pass structure for effect files
+            // Based on daorigins.exe/DragonAge2.exe: Bright pass extraction for bloom post-processing pipeline
+            // Note: MonoGame SpriteBatch Effect uses a specific format with Texture and TextureSampler
+            const string brightPassShaderSource = @"
+// Bright Pass Shader
+// Extracts bright areas from HDR input based on luminance threshold
+// Based on daorigins.exe/DragonAge2.exe: Bright pass extraction for bloom post-processing pipeline
+// Uses MonoGame Effect format for SpriteBatch rendering
+
+// Texture and sampler (SpriteBatch binds the texture being drawn to this)
+texture Texture;
+sampler TextureSampler : register(s0) = sampler_state
+{
+    Texture = <Texture>;
+    AddressU = Clamp;
+    AddressV = Clamp;
+    MinFilter = Linear;
+    MagFilter = Linear;
+    MipFilter = Linear;
+};
+
+// Shader parameter for luminance threshold (bright areas above this threshold are extracted)
+float Threshold = 0.5;
+
+// Pixel shader: Extract bright areas based on luminance threshold
+// MonoGame SpriteBatch provides: texCoord (TEXCOORD0) and color (COLOR0)
+float4 BrightPassPS(float2 texCoord : TEXCOORD0, 
+                    float4 color : COLOR0) : COLOR0
+{
+    // Sample the input texture (SpriteBatch binds the texture to TextureSampler)
+    float4 inputColor = tex2D(TextureSampler, texCoord);
+    
+    // Calculate luminance using standard RGB to luminance conversion
+    // Standard luminance weights: R=0.299, G=0.587, B=0.114
+    // These weights match human eye sensitivity to different color channels
+    float luminance = dot(inputColor.rgb, float3(0.299, 0.587, 0.114));
+    
+    // Apply threshold to extract bright areas
+    // Formula: output = color * max(0.0, (luminance - threshold) / max(luminance, 0.001))
+    // This extracts only pixels where luminance exceeds the threshold
+    // The division by max(luminance, 0.001) prevents division by zero and normalizes the result
+    // The max(0.0, ...) ensures negative values (below threshold) become zero
+    float thresholdFactor = max(0.0, (luminance - Threshold) / max(luminance, 0.001));
+    
+    // Apply threshold factor to color (bright areas are preserved, dark areas become black)
+    float3 brightColor = inputColor.rgb * thresholdFactor;
+    
+    // Return bright color with original alpha (preserves transparency if present)
+    return float4(brightColor, inputColor.a);
+}
+
+// Technique definition
+technique BrightPass
+{
+    pass Pass0
+    {
+        // SpriteBatch handles vertex shader, we only need pixel shader
+        PixelShader = compile ps_2_0 BrightPassPS();
+    }
+}
+";
+            
+            // Get or compile shader from cache
+            try
+            {
+                Effect effect = _shaderCache.GetShader("BrightPass", brightPassShaderSource);
+                return effect;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[EclipseArea] Failed to get/compile bright pass shader: {ex.Message}");
                 return null;
             }
         }
