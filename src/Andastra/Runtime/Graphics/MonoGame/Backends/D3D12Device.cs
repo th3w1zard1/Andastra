@@ -1915,6 +1915,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             private readonly IntPtr _handle;
             private readonly IntPtr _descriptorHeap;
             private readonly IntPtr _device;
+            private readonly D3D12_GPU_DESCRIPTOR_HANDLE _gpuDescriptorHandle;
 
             public D3D12BindingSet(IntPtr handle, IBindingLayout layout, BindingSetDesc desc, IntPtr descriptorHeap, IntPtr device)
             {
@@ -1922,7 +1923,21 @@ namespace Andastra.Runtime.MonoGame.Backends
                 Layout = layout;
                 _descriptorHeap = descriptorHeap;
                 _device = device;
+                _gpuDescriptorHandle = new D3D12_GPU_DESCRIPTOR_HANDLE { ptr = 0 }; // TODO: Calculate from heap offset
             }
+
+            public D3D12BindingSet(IntPtr handle, IBindingLayout layout, BindingSetDesc desc, IntPtr descriptorHeap, IntPtr device, D3D12_GPU_DESCRIPTOR_HANDLE gpuDescriptorHandle)
+            {
+                _handle = handle;
+                Layout = layout;
+                _descriptorHeap = descriptorHeap;
+                _device = device;
+                _gpuDescriptorHandle = gpuDescriptorHandle;
+            }
+
+            // Accessors for command list to use
+            public IntPtr GetDescriptorHeap() { return _descriptorHeap; }
+            public D3D12_GPU_DESCRIPTOR_HANDLE GetGpuDescriptorHandle() { return _gpuDescriptorHandle; }
 
             public void Dispose()
             {
@@ -2479,6 +2494,126 @@ namespace Andastra.Runtime.MonoGame.Backends
                 dispatch(commandList, threadGroupCountX, threadGroupCountY, threadGroupCountZ);
             }
 
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::SetPipelineState through COM vtable.
+            /// VTable index 40 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Pipeline State: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-setpipelinestate
+            /// </summary>
+            private unsafe void CallSetPipelineState(IntPtr commandList, IntPtr pPipelineState)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero || pPipelineState == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // SetPipelineState is at index 40 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[40];
+
+                // Create delegate from function pointer
+                SetPipelineStateDelegate setPipelineState =
+                    (SetPipelineStateDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(SetPipelineStateDelegate));
+
+                setPipelineState(commandList, pPipelineState);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::SetComputeRootSignature through COM vtable.
+            /// VTable index 46 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Root Signature: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-setcomputerootsignature
+            /// </summary>
+            private unsafe void CallSetComputeRootSignature(IntPtr commandList, IntPtr pRootSignature)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero || pRootSignature == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // SetComputeRootSignature is at index 46 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[46];
+
+                // Create delegate from function pointer
+                SetComputeRootSignatureDelegate setRootSignature =
+                    (SetComputeRootSignatureDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(SetComputeRootSignatureDelegate));
+
+                setRootSignature(commandList, pRootSignature);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::SetComputeRootDescriptorTable through COM vtable.
+            /// VTable index 47 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Root Parameters: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-setcomputerootdescriptortable
+            /// </summary>
+            private unsafe void CallSetComputeRootDescriptorTable(IntPtr commandList, uint RootParameterIndex, D3D12_GPU_DESCRIPTOR_HANDLE BaseDescriptor)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // SetComputeRootDescriptorTable is at index 47 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[47];
+
+                // Create delegate from function pointer
+                SetComputeRootDescriptorTableDelegate setRootDescriptorTable =
+                    (SetComputeRootDescriptorTableDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(SetComputeRootDescriptorTableDelegate));
+
+                setRootDescriptorTable(commandList, RootParameterIndex, BaseDescriptor);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::SetDescriptorHeaps through COM vtable.
+            /// VTable index 38 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 Descriptor Heaps: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-setdescriptorheaps
+            /// </summary>
+            private unsafe void CallSetDescriptorHeaps(IntPtr commandList, uint NumDescriptorHeaps, IntPtr ppDescriptorHeaps)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero || ppDescriptorHeaps == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // SetDescriptorHeaps is at index 38 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[38];
+
+                // Create delegate from function pointer
+                SetDescriptorHeapsDelegate setDescriptorHeaps =
+                    (SetDescriptorHeapsDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(SetDescriptorHeapsDelegate));
+
+                setDescriptorHeaps(commandList, NumDescriptorHeaps, ppDescriptorHeaps);
+            }
+
             // COM interface method delegate for ClearDepthStencilView
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
             private delegate void ClearDepthStencilViewDelegate(IntPtr commandList, IntPtr DepthStencilView, uint ClearFlags, float Depth, byte Stencil, uint NumRects, IntPtr pRects);
@@ -2526,7 +2661,121 @@ namespace Andastra.Runtime.MonoGame.Backends
             public void DrawIndexed(DrawArguments args) { /* TODO: DrawIndexedInstanced */ }
             public void DrawIndirect(IBuffer argumentBuffer, int offset, int drawCount, int stride) { /* TODO: ExecuteIndirect */ }
             public void DrawIndexedIndirect(IBuffer argumentBuffer, int offset, int drawCount, int stride) { /* TODO: ExecuteIndirect */ }
-            public void SetComputeState(ComputeState state) { /* TODO: Set compute state */ }
+            public void SetComputeState(ComputeState state)
+            {
+                if (!_isOpen)
+                {
+                    return; // Cannot record commands when command list is closed
+                }
+
+                if (state.Pipeline == null)
+                {
+                    throw new ArgumentException("Compute state must have a valid pipeline", nameof(state));
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    return; // Command list not initialized
+                }
+
+                // Cast to D3D12 implementation to access native handles
+                D3D12ComputePipeline d3d12Pipeline = state.Pipeline as D3D12ComputePipeline;
+                if (d3d12Pipeline == null)
+                {
+                    throw new ArgumentException("Pipeline must be a D3D12ComputePipeline", nameof(state));
+                }
+
+                // Step 1: Set the compute pipeline state
+                // ID3D12GraphicsCommandList::SetPipelineState sets the pipeline state object (PSO)
+                // This includes the compute shader and any pipeline state configuration
+                IntPtr pipelineState = d3d12Pipeline.GetPipelineState();
+                if (pipelineState != IntPtr.Zero)
+                {
+                    CallSetPipelineState(_d3d12CommandList, pipelineState);
+                }
+
+                // Step 2: Set the compute root signature
+                // ID3D12GraphicsCommandList::SetComputeRootSignature sets the root signature
+                // The root signature defines the layout of root parameters (constants, descriptors, etc.)
+                IntPtr rootSignature = d3d12Pipeline.GetRootSignature();
+                if (rootSignature != IntPtr.Zero)
+                {
+                    CallSetComputeRootSignature(_d3d12CommandList, rootSignature);
+                }
+
+                // Step 3: Bind descriptor sets (binding sets) if provided
+                // In D3D12, descriptor sets are bound via root descriptor tables
+                // Each binding set maps to a root parameter index in the root signature
+                if (state.BindingSets != null && state.BindingSets.Length > 0)
+                {
+                    // Collect descriptor heaps from all binding sets
+                    // D3D12 requires all descriptor heaps to be set before binding descriptor tables
+                    var descriptorHeaps = new System.Collections.Generic.List<IntPtr>();
+                    var seenHeaps = new System.Collections.Generic.HashSet<IntPtr>();
+
+                    foreach (IBindingSet bindingSet in state.BindingSets)
+                    {
+                        D3D12BindingSet d3d12BindingSet = bindingSet as D3D12BindingSet;
+                        if (d3d12BindingSet == null)
+                        {
+                            continue; // Skip non-D3D12 binding sets
+                        }
+
+                        // Get descriptor heap from binding set
+                        IntPtr descriptorHeap = d3d12BindingSet.GetDescriptorHeap();
+                        if (descriptorHeap != IntPtr.Zero && !seenHeaps.Contains(descriptorHeap))
+                        {
+                            descriptorHeaps.Add(descriptorHeap);
+                            seenHeaps.Add(descriptorHeap);
+                        }
+                    }
+
+                    // Set descriptor heaps if we have any
+                    // ID3D12GraphicsCommandList::SetDescriptorHeaps sets the descriptor heaps to use
+                    // This must be called before setting root descriptor tables
+                    if (descriptorHeaps.Count > 0)
+                    {
+                        int heapSize = Marshal.SizeOf(typeof(IntPtr));
+                        IntPtr heapsPtr = Marshal.AllocHGlobal(heapSize * descriptorHeaps.Count);
+                        try
+                        {
+                            for (int i = 0; i < descriptorHeaps.Count; i++)
+                            {
+                                IntPtr heapPtr = new IntPtr(heapsPtr.ToInt64() + (i * heapSize));
+                                Marshal.WriteIntPtr(heapPtr, descriptorHeaps[i]);
+                            }
+
+                            CallSetDescriptorHeaps(_d3d12CommandList, unchecked((uint)descriptorHeaps.Count), heapsPtr);
+                        }
+                        finally
+                        {
+                            Marshal.FreeHGlobal(heapsPtr);
+                        }
+                    }
+
+                    // Bind each binding set as a root descriptor table
+                    // In D3D12, each binding set typically maps to one root parameter index
+                    // The root parameter index is determined by the root signature layout
+                    // For now, we assume sequential root parameter indices starting from 0
+                    // TODO: Get actual root parameter indices from binding layout or root signature
+                    for (uint i = 0; i < state.BindingSets.Length; i++)
+                    {
+                        D3D12BindingSet d3d12BindingSet = state.BindingSets[i] as D3D12BindingSet;
+                        if (d3d12BindingSet == null)
+                        {
+                            continue; // Skip non-D3D12 binding sets
+                        }
+
+                        // Get GPU descriptor handle from binding set
+                        // The GPU descriptor handle points to the start of the descriptor table in the heap
+                        D3D12_GPU_DESCRIPTOR_HANDLE handle = d3d12BindingSet.GetGpuDescriptorHandle();
+                        if (handle.ptr != 0)
+                        {
+                            CallSetComputeRootDescriptorTable(_d3d12CommandList, i, handle);
+                        }
+                    }
+                }
+            }
             public void Dispatch(int groupCountX, int groupCountY = 1, int groupCountZ = 1)
             {
                 if (!_isOpen)
