@@ -180,13 +180,53 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ObjectDisposedException(nameof(D3D12Device));
             }
 
-            // TODO: IMPLEMENT - Create D3D12 sampler
-            // - Convert SamplerDesc to D3D12_SAMPLER_DESC
-            // - Allocate from sampler heap or use static samplers
-            // - Wrap in D3D12Sampler and return
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                // On non-Windows platforms, return a sampler with zero handle
+                // The application should use VulkanDevice for cross-platform support
+                IntPtr handle = new IntPtr(_nextResourceHandle++);
+                var sampler = new D3D12Sampler(handle, desc, IntPtr.Zero, _device);
+                _resources[handle] = sampler;
+                return sampler;
+            }
 
+            // Convert SamplerDesc to D3D12_SAMPLER_DESC
+            D3D12_SAMPLER_DESC d3d12SamplerDesc = ConvertSamplerDescToD3D12(desc);
+
+            // Allocate descriptor handle from sampler heap
+            IntPtr cpuDescriptorHandle = AllocateSamplerDescriptor();
+            if (cpuDescriptorHandle == IntPtr.Zero)
+            {
+                throw new InvalidOperationException("Failed to allocate sampler descriptor from heap");
+            }
+
+            // Create sampler descriptor in the allocated slot
+            try
+            {
+                // Allocate memory for the sampler descriptor structure
+                int samplerDescSize = Marshal.SizeOf(typeof(D3D12_SAMPLER_DESC));
+                IntPtr samplerDescPtr = Marshal.AllocHGlobal(samplerDescSize);
+                try
+                {
+                    Marshal.StructureToPtr(d3d12SamplerDesc, samplerDescPtr, false);
+
+                    // Call ID3D12Device::CreateSampler to create the sampler descriptor
+                    CallCreateSampler(_device, samplerDescPtr, cpuDescriptorHandle);
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(samplerDescPtr);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to create D3D12 sampler descriptor: {ex.Message}", ex);
+            }
+
+            // Wrap in D3D12Sampler and return
             IntPtr handle = new IntPtr(_nextResourceHandle++);
-            var sampler = new D3D12Sampler(handle, desc, IntPtr.Zero, _device);
+            var sampler = new D3D12Sampler(handle, desc, cpuDescriptorHandle, _device);
             _resources[handle] = sampler;
 
             return sampler;
@@ -633,6 +673,17 @@ namespace Andastra.Runtime.MonoGame.Backends
                 resource?.Dispose();
             }
             _resources.Clear();
+
+            // Release sampler descriptor heap if it was created
+            // Note: In D3D12, descriptor heaps are COM objects and need to be released via Release()
+            // However, since we're using IntPtr, we would need to call Release() through COM vtable
+            // For now, we just clear the handle - the backend may handle cleanup
+            // TODO: Implement proper COM Release() call for descriptor heap if needed
+            _samplerDescriptorHeap = IntPtr.Zero;
+            _samplerHeapCpuStartHandle = IntPtr.Zero;
+            _samplerHeapDescriptorIncrementSize = 0;
+            _samplerHeapCapacity = 0;
+            _samplerHeapNextIndex = 0;
 
             // Note: We don't release _device or _device5 here as they're owned by Direct3D12Backend
             // The backend will handle device cleanup in its Shutdown method
@@ -1138,6 +1189,153 @@ namespace Andastra.Runtime.MonoGame.Backends
             _samplerHeapNextIndex++;
 
             return cpuDescriptorHandle;
+        }
+
+        /// <summary>
+        /// Converts SamplerDesc to D3D12_SAMPLER_DESC structure.
+        /// Based on DirectX 12 Sampler Descriptors: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_sampler_desc
+        /// </summary>
+        private D3D12_SAMPLER_DESC ConvertSamplerDescToD3D12(SamplerDesc desc)
+        {
+            var d3d12Desc = new D3D12_SAMPLER_DESC();
+
+            // Convert filter modes to D3D12_FILTER
+            bool useAnisotropic = desc.MaxAnisotropy > 1 || desc.MinFilter == SamplerFilter.Anisotropic ||
+                                  desc.MagFilter == SamplerFilter.Anisotropic || desc.MipFilter == SamplerFilter.Anisotropic;
+
+            if (useAnisotropic)
+            {
+                d3d12Desc.Filter = D3D12_FILTER_ANISOTROPIC;
+            }
+            else
+            {
+                // Combine min, mag, and mip filters into D3D12_FILTER enum
+                bool minLinear = desc.MinFilter == SamplerFilter.Linear;
+                bool magLinear = desc.MagFilter == SamplerFilter.Linear;
+                bool mipLinear = desc.MipFilter == SamplerFilter.Linear;
+
+                if (!minLinear && !magLinear && !mipLinear)
+                {
+                    d3d12Desc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+                }
+                else if (!minLinear && !magLinear && mipLinear)
+                {
+                    d3d12Desc.Filter = D3D12_FILTER_MIN_MAG_POINT_MIP_LINEAR;
+                }
+                else if (!minLinear && magLinear && !mipLinear)
+                {
+                    d3d12Desc.Filter = D3D12_FILTER_MIN_POINT_MAG_LINEAR_MIP_POINT;
+                }
+                else if (!minLinear && magLinear && mipLinear)
+                {
+                    d3d12Desc.Filter = D3D12_FILTER_MIN_POINT_MAG_MIP_LINEAR;
+                }
+                else if (minLinear && !magLinear && !mipLinear)
+                {
+                    d3d12Desc.Filter = D3D12_FILTER_MIN_LINEAR_MAG_MIP_POINT;
+                }
+                else if (minLinear && !magLinear && mipLinear)
+                {
+                    d3d12Desc.Filter = D3D12_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
+                }
+                else if (minLinear && magLinear && !mipLinear)
+                {
+                    d3d12Desc.Filter = D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT;
+                }
+                else // minLinear && magLinear && mipLinear
+                {
+                    d3d12Desc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+                }
+            }
+
+            // Convert address modes
+            d3d12Desc.AddressU = ConvertSamplerAddressModeToD3D12(desc.AddressU);
+            d3d12Desc.AddressV = ConvertSamplerAddressModeToD3D12(desc.AddressV);
+            d3d12Desc.AddressW = ConvertSamplerAddressModeToD3D12(desc.AddressW);
+
+            // Convert mip LOD bias
+            d3d12Desc.MipLODBias = desc.MipLodBias;
+
+            // Convert max anisotropy (clamp to valid range 1-16)
+            d3d12Desc.MaxAnisotropy = (uint)Math.Max(1, Math.Min(16, desc.MaxAnisotropy));
+
+            // Convert comparison function
+            d3d12Desc.ComparisonFunc = ConvertCompareFuncToD3D12(desc.CompareFunc);
+
+            // Border color - use provided color or default to transparent black
+            if (desc.BorderColor != null && desc.BorderColor.Length >= 4)
+            {
+                d3d12Desc.BorderColor = new float[] { desc.BorderColor[0], desc.BorderColor[1], desc.BorderColor[2], desc.BorderColor[3] };
+            }
+            else
+            {
+                d3d12Desc.BorderColor = new float[] { 0.0f, 0.0f, 0.0f, 0.0f };
+            }
+
+            // Min/Max LOD
+            d3d12Desc.MinLOD = desc.MinLod;
+            if (desc.MaxLod > 0.0f)
+            {
+                d3d12Desc.MaxLOD = desc.MaxLod;
+            }
+            else
+            {
+                d3d12Desc.MaxLOD = D3D12_FLOAT32_MAX;
+            }
+
+            return d3d12Desc;
+        }
+
+        /// <summary>
+        /// Converts SamplerAddressMode enum to D3D12_TEXTURE_ADDRESS_MODE value.
+        /// Based on DirectX 12 Texture Address Modes: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ne-d3d12-d3d12_texture_address_mode
+        /// </summary>
+        private uint ConvertSamplerAddressModeToD3D12(SamplerAddressMode mode)
+        {
+            switch (mode)
+            {
+                case SamplerAddressMode.Wrap:
+                    return D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+                case SamplerAddressMode.Mirror:
+                    return D3D12_TEXTURE_ADDRESS_MODE_MIRROR;
+                case SamplerAddressMode.Clamp:
+                    return D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+                case SamplerAddressMode.Border:
+                    return D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+                case SamplerAddressMode.MirrorOnce:
+                    return D3D12_TEXTURE_ADDRESS_MODE_MIRROR_ONCE;
+                default:
+                    return D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+            }
+        }
+
+        /// <summary>
+        /// Converts CompareFunc enum to D3D12_COMPARISON_FUNC value.
+        /// Based on DirectX 12 Comparison Functions: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ne-d3d12-d3d12_comparison_func
+        /// </summary>
+        private uint ConvertCompareFuncToD3D12(CompareFunc compareFunc)
+        {
+            switch (compareFunc)
+            {
+                case CompareFunc.Never:
+                    return D3D12_COMPARISON_FUNC_NEVER;
+                case CompareFunc.Less:
+                    return D3D12_COMPARISON_FUNC_LESS;
+                case CompareFunc.Equal:
+                    return D3D12_COMPARISON_FUNC_EQUAL;
+                case CompareFunc.LessEqual:
+                    return D3D12_COMPARISON_FUNC_LESS_EQUAL;
+                case CompareFunc.Greater:
+                    return D3D12_COMPARISON_FUNC_GREATER;
+                case CompareFunc.NotEqual:
+                    return D3D12_COMPARISON_FUNC_NOT_EQUAL;
+                case CompareFunc.GreaterEqual:
+                    return D3D12_COMPARISON_FUNC_GREATER_EQUAL;
+                case CompareFunc.Always:
+                    return D3D12_COMPARISON_FUNC_ALWAYS;
+                default:
+                    return D3D12_COMPARISON_FUNC_NEVER;
+            }
         }
 
         #endregion
