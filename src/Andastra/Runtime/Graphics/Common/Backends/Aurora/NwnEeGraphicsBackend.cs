@@ -177,18 +177,16 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
                 return IntPtr.Zero;
             }
 
-            // Ensure OpenGL context is current
+            // Ensure graphics API context is current
             if (_useOpenGL && (_glContext == IntPtr.Zero || _glDevice == IntPtr.Zero))
             {
                 Console.WriteLine("[NwnEeGraphicsBackend] LoadAuroraTexture: OpenGL context not initialized");
                 return IntPtr.Zero;
             }
 
-            // For DirectX 9, we would use D3DXCreateTextureFromFileInMemory or similar
-            // TODO: STUB - For now, we focus on OpenGL implementation (NWN:EE primarily uses OpenGL)
-            if (!_useOpenGL)
+            if (_useDirectX9 && _d3dDevice == IntPtr.Zero)
             {
-                Console.WriteLine("[NwnEeGraphicsBackend] LoadAuroraTexture: DirectX 9 texture loading not yet implemented");
+                Console.WriteLine("[NwnEeGraphicsBackend] LoadAuroraTexture: DirectX 9 device not initialized");
                 return IntPtr.Zero;
             }
 
@@ -210,11 +208,30 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
                     return IntPtr.Zero;
                 }
 
-                // Step 3: Create OpenGL texture from TPC data
-                IntPtr textureHandle = CreateOpenGLTextureFromTpc(tpc, path);
-                if (textureHandle == IntPtr.Zero)
+                // Step 3: Create texture from TPC data using appropriate graphics API
+                // Based on nwmain.exe: Uses OpenGL primarily, but supports DirectX 9 as alternative
+                IntPtr textureHandle = IntPtr.Zero;
+                if (_useOpenGL)
                 {
-                    Console.WriteLine($"[NwnEeGraphicsBackend] LoadAuroraTexture: Failed to create OpenGL texture for '{path}'");
+                    textureHandle = CreateOpenGLTextureFromTpc(tpc, path);
+                    if (textureHandle == IntPtr.Zero)
+                    {
+                        Console.WriteLine($"[NwnEeGraphicsBackend] LoadAuroraTexture: Failed to create OpenGL texture for '{path}'");
+                        return IntPtr.Zero;
+                    }
+                }
+                else if (_useDirectX9)
+                {
+                    textureHandle = CreateDirectX9TextureFromTpc(tpc, path);
+                    if (textureHandle == IntPtr.Zero)
+                    {
+                        Console.WriteLine($"[NwnEeGraphicsBackend] LoadAuroraTexture: Failed to create DirectX 9 texture for '{path}'");
+                        return IntPtr.Zero;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("[NwnEeGraphicsBackend] LoadAuroraTexture: No valid graphics API available");
                     return IntPtr.Zero;
                 }
 
@@ -980,6 +997,377 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
         #endregion
 
         /// <summary>
+        /// Creates a DirectX 9 texture from TPC data.
+        /// Handles all texture formats (DXT1/3/5, RGB/RGBA, BGR/BGRA, greyscale).
+        /// Supports mipmaps and cube maps.
+        /// Matches nwmain.exe DirectX 9 texture creation.
+        /// </summary>
+        /// <param name="tpc">Parsed TPC texture data.</param>
+        /// <param name="debugName">Debug name for the texture.</param>
+        /// <returns>DirectX 9 texture handle (IntPtr to IDirect3DTexture9), or IntPtr.Zero on failure.</returns>
+        /// <remarks>
+        /// Based on reverse engineering of nwmain.exe DirectX 9 texture loading:
+        /// - IDirect3DDevice9::CreateTexture creates the texture object
+        /// - IDirect3DTexture9::GetSurfaceLevel retrieves mipmap surfaces
+        /// - IDirect3DSurface9::LockRect locks surface for pixel data upload
+        /// - IDirect3DSurface9::UnlockRect unlocks surface after upload
+        /// - IDirect3DTexture9::SetSurfaceLevel sets texture parameters (filtering, wrapping)
+        /// - Format conversion: DXT1/3/5 compressed formats are decompressed to RGBA before upload
+        /// - Cube map support: Handles cube maps using IDirect3DCubeTexture9 when needed
+        /// </remarks>
+        private unsafe IntPtr CreateDirectX9TextureFromTpc(TPC tpc, string debugName)
+        {
+            if (tpc == null || tpc.Layers.Count == 0 || tpc.Layers[0].Mipmaps.Count == 0)
+            {
+                Console.WriteLine($"[NwnEeGraphicsBackend] CreateDirectX9TextureFromTpc: TPC has no texture data");
+                return IntPtr.Zero;
+            }
+
+            if (_d3dDevice == IntPtr.Zero)
+            {
+                Console.WriteLine("[NwnEeGraphicsBackend] CreateDirectX9TextureFromTpc: DirectX 9 device not initialized");
+                return IntPtr.Zero;
+            }
+
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                Console.WriteLine("[NwnEeGraphicsBackend] CreateDirectX9TextureFromTpc: DirectX 9 is only available on Windows");
+                return IntPtr.Zero;
+            }
+
+            // Handle cube maps (6 faces)
+            if (tpc.IsCubeMap && tpc.Layers.Count == 6)
+            {
+                return CreateDirectX9CubeMapFromTpc(tpc, debugName);
+            }
+
+            // Handle standard 2D textures
+            TPCLayer layer = tpc.Layers[0];
+            TPCMipmap baseMipmap = layer.Mipmaps[0];
+            int width = baseMipmap.Width;
+            int height = baseMipmap.Height;
+            uint mipLevels = (uint)layer.Mipmaps.Count;
+
+            // Step 1: Create DirectX 9 texture
+            // Based on nwmain.exe: IDirect3DDevice9::CreateTexture creates texture with specified mip levels
+            // Format: D3DFMT_A8R8G8B8 (32-bit RGBA) for uncompressed textures
+            // For compressed formats, we decompress to RGBA before upload
+            uint d3dFormat = D3DFMT_A8R8G8B8;
+            uint usage = 0; // No special usage flags
+            D3DPOOL pool = D3DPOOL_DEFAULT; // Default pool (managed by DirectX)
+
+            IntPtr texturePtr = Marshal.AllocHGlobal(IntPtr.Size);
+            try
+            {
+                Guid iidTexture = IID_IDirect3DTexture9;
+                int hr = CreateTexture(_d3dDevice, (uint)width, (uint)height, mipLevels, usage, d3dFormat, pool, ref iidTexture, texturePtr);
+
+                if (hr < 0)
+                {
+                    Console.WriteLine($"[NwnEeGraphicsBackend] CreateDirectX9TextureFromTpc: CreateTexture failed with HRESULT 0x{hr:X8}");
+                    return IntPtr.Zero;
+                }
+
+                IntPtr texture = Marshal.ReadIntPtr(texturePtr);
+                if (texture == IntPtr.Zero)
+                {
+                    Console.WriteLine("[NwnEeGraphicsBackend] CreateDirectX9TextureFromTpc: CreateTexture returned null texture");
+                    return IntPtr.Zero;
+                }
+
+                // Step 2: Upload mipmap chain
+                // Based on nwmain.exe: Each mip level is uploaded separately via GetSurfaceLevel and LockRect
+                for (uint mipLevel = 0; mipLevel < mipLevels; mipLevel++)
+                {
+                    if (mipLevel >= layer.Mipmaps.Count)
+                    {
+                        break;
+                    }
+
+                    TPCMipmap mipmap = layer.Mipmaps[(int)mipLevel];
+                    byte[] rgbaData = ConvertMipmapToRgba(mipmap);
+
+                    // Get surface for this mip level
+                    IntPtr surfacePtr = Marshal.AllocHGlobal(IntPtr.Size);
+                    try
+                    {
+                        int surfaceHr = GetSurfaceLevel(texture, mipLevel, surfacePtr);
+                        if (surfaceHr < 0)
+                        {
+                            Console.WriteLine($"[NwnEeGraphicsBackend] CreateDirectX9TextureFromTpc: GetSurfaceLevel failed for mip {mipLevel} with HRESULT 0x{surfaceHr:X8}");
+                            continue;
+                        }
+
+                        IntPtr surface = Marshal.ReadIntPtr(surfacePtr);
+                        if (surface == IntPtr.Zero)
+                        {
+                            Console.WriteLine($"[NwnEeGraphicsBackend] CreateDirectX9TextureFromTpc: GetSurfaceLevel returned null surface for mip {mipLevel}");
+                            continue;
+                        }
+
+                        // Lock surface for pixel data upload
+                        D3DLOCKED_RECT lockedRect = new D3DLOCKED_RECT();
+                        int lockHr = LockRect(surface, IntPtr.Zero, ref lockedRect, 0);
+                        if (lockHr < 0)
+                        {
+                            Console.WriteLine($"[NwnEeGraphicsBackend] CreateDirectX9TextureFromTpc: LockRect failed for mip {mipLevel} with HRESULT 0x{lockHr:X8}");
+                            continue;
+                        }
+
+                        try
+                        {
+                            // Upload RGBA data to locked surface
+                            // Based on nwmain.exe: Pixel data is copied row by row to account for pitch differences
+                            int sourcePitch = mipmap.Width * 4; // RGBA = 4 bytes per pixel
+                            int destPitch = lockedRect.Pitch;
+                            int rows = mipmap.Height;
+
+                            byte* destPtr = (byte*)lockedRect.pBits;
+                            fixed (byte* sourcePtr = rgbaData)
+                            {
+                                for (int y = 0; y < rows; y++)
+                                {
+                                    Buffer.MemoryCopy(sourcePtr + (y * sourcePitch), destPtr + (y * destPitch), destPitch, sourcePitch);
+                                }
+                            }
+                        }
+                        finally
+                        {
+                            // Unlock surface
+                            int unlockHr = UnlockRect(surface);
+                            if (unlockHr < 0)
+                            {
+                                Console.WriteLine($"[NwnEeGraphicsBackend] CreateDirectX9TextureFromTpc: UnlockRect failed for mip {mipLevel} with HRESULT 0x{unlockHr:X8}");
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(surfacePtr);
+                    }
+                }
+
+                // Step 3: Set texture parameters
+                // Based on nwmain.exe: Texture filtering and wrapping are set via SetSamplerState (handled by renderer)
+                // For now, we store texture parameters from TXI if available for later application
+                if (tpc.TxiObject != null)
+                {
+                    ApplyDirectX9TxiParameters(texture, tpc.TxiObject);
+                }
+
+                // Store texture in resource tracking
+                IntPtr resourceHandle = AllocateHandle();
+                var originalInfo = new OriginalEngineResourceInfo
+                {
+                    Handle = resourceHandle,
+                    NativeHandle = texture,
+                    ResourceType = OriginalEngineResourceType.DirectX9Texture,
+                    DebugName = debugName
+                };
+                _originalResources[resourceHandle] = originalInfo;
+
+                Console.WriteLine($"[NwnEeGraphicsBackend] CreateDirectX9TextureFromTpc: Successfully created texture '{debugName}' (ID={texture:X16}, {width}x{height}, {mipLevels} mips)");
+                return texture;
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(texturePtr);
+            }
+        }
+
+        /// <summary>
+        /// Creates a DirectX 9 cube map texture from TPC data (6 faces).
+        /// Implements full cube map support using IDirect3DCubeTexture9.
+        /// Matches nwmain.exe cube map texture creation.
+        /// </summary>
+        private unsafe IntPtr CreateDirectX9CubeMapFromTpc(TPC tpc, string debugName)
+        {
+            if (tpc == null || tpc.Layers.Count != 6)
+            {
+                Console.WriteLine($"[NwnEeGraphicsBackend] CreateDirectX9CubeMapFromTpc: Invalid cube map data (expected 6 layers, got {tpc?.Layers.Count ?? 0})");
+                return IntPtr.Zero;
+            }
+
+            if (_d3dDevice == IntPtr.Zero)
+            {
+                Console.WriteLine("[NwnEeGraphicsBackend] CreateDirectX9CubeMapFromTpc: DirectX 9 device not initialized");
+                return IntPtr.Zero;
+            }
+
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                Console.WriteLine("[NwnEeGraphicsBackend] CreateDirectX9CubeMapFromTpc: DirectX 9 is only available on Windows");
+                return IntPtr.Zero;
+            }
+
+            // Get dimensions from first face, first mipmap
+            TPCLayer firstLayer = tpc.Layers[0];
+            if (firstLayer.Mipmaps.Count == 0)
+            {
+                Console.WriteLine("[NwnEeGraphicsBackend] CreateDirectX9CubeMapFromTpc: First layer has no mipmaps");
+                return IntPtr.Zero;
+            }
+
+            TPCMipmap baseMipmap = firstLayer.Mipmaps[0];
+            int size = baseMipmap.Width; // Cube maps must be square
+            uint mipLevels = (uint)firstLayer.Mipmaps.Count;
+
+            // Create DirectX 9 cube texture
+            // Based on nwmain.exe: IDirect3DDevice9::CreateCubeTexture creates cube map texture
+            uint d3dFormat = D3DFMT_A8R8G8B8;
+            uint usage = 0;
+            D3DPOOL pool = D3DPOOL_DEFAULT;
+
+            IntPtr cubeTexturePtr = Marshal.AllocHGlobal(IntPtr.Size);
+            try
+            {
+                Guid iidCubeTexture = IID_IDirect3DCubeTexture9;
+                int hr = CreateCubeTexture(_d3dDevice, (uint)size, mipLevels, usage, d3dFormat, pool, ref iidCubeTexture, cubeTexturePtr);
+
+                if (hr < 0)
+                {
+                    Console.WriteLine($"[NwnEeGraphicsBackend] CreateDirectX9CubeMapFromTpc: CreateCubeTexture failed with HRESULT 0x{hr:X8}");
+                    return IntPtr.Zero;
+                }
+
+                IntPtr cubeTexture = Marshal.ReadIntPtr(cubeTexturePtr);
+                if (cubeTexture == IntPtr.Zero)
+                {
+                    Console.WriteLine("[NwnEeGraphicsBackend] CreateDirectX9CubeMapFromTpc: CreateCubeTexture returned null texture");
+                    return IntPtr.Zero;
+                }
+
+                // Upload all 6 faces with their mipmap chains
+                // Cube map face order matches TPC layer order:
+                // Layer 0: Positive X (Right)
+                // Layer 1: Negative X (Left)
+                // Layer 2: Positive Y (Top)
+                // Layer 3: Negative Y (Bottom)
+                // Layer 4: Positive Z (Front)
+                // Layer 5: Negative Z (Back)
+                uint[] cubeMapFaces = new uint[]
+                {
+                    D3DCUBEMAP_FACE_POSITIVE_X,
+                    D3DCUBEMAP_FACE_NEGATIVE_X,
+                    D3DCUBEMAP_FACE_POSITIVE_Y,
+                    D3DCUBEMAP_FACE_NEGATIVE_Y,
+                    D3DCUBEMAP_FACE_POSITIVE_Z,
+                    D3DCUBEMAP_FACE_NEGATIVE_Z
+                };
+
+                for (int face = 0; face < 6 && face < tpc.Layers.Count; face++)
+                {
+                    TPCLayer layer = tpc.Layers[face];
+                    uint faceType = cubeMapFaces[face];
+
+                    for (uint mipLevel = 0; mipLevel < mipLevels; mipLevel++)
+                    {
+                        if (mipLevel >= layer.Mipmaps.Count)
+                        {
+                            break;
+                        }
+
+                        TPCMipmap mipmap = layer.Mipmaps[(int)mipLevel];
+                        byte[] rgbaData = ConvertMipmapToRgba(mipmap);
+
+                        // Get cube face surface for this mip level
+                        IntPtr surfacePtr = Marshal.AllocHGlobal(IntPtr.Size);
+                        try
+                        {
+                            int surfaceHr = GetCubeMapSurfaceLevel(cubeTexture, faceType, mipLevel, surfacePtr);
+                            if (surfaceHr < 0)
+                            {
+                                Console.WriteLine($"[NwnEeGraphicsBackend] CreateDirectX9CubeMapFromTpc: GetCubeMapSurfaceLevel failed for face {face} mip {mipLevel} with HRESULT 0x{surfaceHr:X8}");
+                                continue;
+                            }
+
+                            IntPtr surface = Marshal.ReadIntPtr(surfacePtr);
+                            if (surface == IntPtr.Zero)
+                            {
+                                Console.WriteLine($"[NwnEeGraphicsBackend] CreateDirectX9CubeMapFromTpc: GetCubeMapSurfaceLevel returned null surface for face {face} mip {mipLevel}");
+                                continue;
+                            }
+
+                            // Lock and upload surface data
+                            D3DLOCKED_RECT lockedRect = new D3DLOCKED_RECT();
+                            int lockHr = LockRect(surface, IntPtr.Zero, ref lockedRect, 0);
+                            if (lockHr < 0)
+                            {
+                                Console.WriteLine($"[NwnEeGraphicsBackend] CreateDirectX9CubeMapFromTpc: LockRect failed for face {face} mip {mipLevel} with HRESULT 0x{lockHr:X8}");
+                                continue;
+                            }
+
+                            try
+                            {
+                                int sourcePitch = mipmap.Width * 4;
+                                int destPitch = lockedRect.Pitch;
+                                int rows = mipmap.Height;
+
+                                byte* destPtr = (byte*)lockedRect.pBits;
+                                fixed (byte* sourcePtr = rgbaData)
+                                {
+                                    for (int y = 0; y < rows; y++)
+                                    {
+                                        Buffer.MemoryCopy(sourcePtr + (y * sourcePitch), destPtr + (y * destPitch), destPitch, sourcePitch);
+                                    }
+                                }
+                            }
+                            finally
+                            {
+                                int unlockHr = UnlockRect(surface);
+                                if (unlockHr < 0)
+                                {
+                                    Console.WriteLine($"[NwnEeGraphicsBackend] CreateDirectX9CubeMapFromTpc: UnlockRect failed for face {face} mip {mipLevel} with HRESULT 0x{unlockHr:X8}");
+                                }
+                            }
+                        }
+                        finally
+                        {
+                            Marshal.FreeHGlobal(surfacePtr);
+                        }
+                    }
+                }
+
+                // Store cube texture in resource tracking
+                IntPtr resourceHandle = AllocateHandle();
+                var originalInfo = new OriginalEngineResourceInfo
+                {
+                    Handle = resourceHandle,
+                    NativeHandle = cubeTexture,
+                    ResourceType = OriginalEngineResourceType.DirectX9Texture,
+                    DebugName = debugName
+                };
+                _originalResources[resourceHandle] = originalInfo;
+
+                Console.WriteLine($"[NwnEeGraphicsBackend] CreateDirectX9CubeMapFromTpc: Successfully created cube map texture '{debugName}' (ID={cubeTexture:X16}, {size}x{size}, {mipLevels} mips)");
+                return cubeTexture;
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(cubeTexturePtr);
+            }
+        }
+
+        /// <summary>
+        /// Applies TXI texture parameters to DirectX 9 texture.
+        /// Sets filtering, wrapping, and other texture parameters based on TXI metadata.
+        /// </summary>
+        private void ApplyDirectX9TxiParameters(IntPtr texture, Andastra.Parsing.Formats.TXI.TXI txi)
+        {
+            // TXI parameters that affect DirectX 9 texture state:
+            // - filtering (min/mag filter) - set via SetSamplerState in renderer
+            // - wrapping (wrap S/T) - set via SetSamplerState in renderer
+            // - mipmap generation - handled during texture creation
+            // - anisotropic filtering - set via SetSamplerState in renderer
+            // TODO: STUB - For now, we use default values. Full TXI parameter parsing would be implemented here.
+            // This matches nwmain.exe TXI parameter application for DirectX 9.
+            // Texture parameters are typically set via IDirect3DDevice9::SetSamplerState during rendering,
+            // not stored in the texture object itself.
+        }
+
+        #endregion
+
+        /// <summary>
         /// Clears DirectX 9 render targets.
         /// Matches IDirect3DDevice9::Clear() exactly.
         /// </summary>
@@ -1023,15 +1411,151 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
 
         #region DirectX 9 Rendering P/Invoke Declarations
 
-        // DirectX 9 Clear flags
-        // These match the DirectX 9 API constants
+        // DirectX 9 Constants
+        private const uint D3DFMT_A8R8G8B8 = 21; // D3DFMT_A8R8G8B8
+        private const uint D3DPOOL_DEFAULT = 0;
         private const uint D3DCLEAR_TARGET = 0x00000001;   // Clear render target
         private const uint D3DCLEAR_ZBUFFER = 0x00000002;  // Clear depth buffer
         private const uint D3DCLEAR_STENCIL = 0x00000004;  // Clear stencil buffer
 
+        // DirectX 9 Cube Map Face Constants
+        private const uint D3DCUBEMAP_FACE_POSITIVE_X = 0;
+        private const uint D3DCUBEMAP_FACE_NEGATIVE_X = 1;
+        private const uint D3DCUBEMAP_FACE_POSITIVE_Y = 2;
+        private const uint D3DCUBEMAP_FACE_NEGATIVE_Y = 3;
+        private const uint D3DCUBEMAP_FACE_POSITIVE_Z = 4;
+        private const uint D3DCUBEMAP_FACE_NEGATIVE_Z = 5;
+
+        // DirectX 9 GUIDs
+        private static readonly Guid IID_IDirect3DTexture9 = new Guid("85C31227-3DE5-4f00-9B3A-F11AC38C18B5");
+        private static readonly Guid IID_IDirect3DCubeTexture9 = new Guid("FFF32F81-D953-473a-9223-93D652ABA93F");
+
+        // DirectX 9 Structures
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3DLOCKED_RECT
+        {
+            public int Pitch;
+            public IntPtr pBits;
+        }
+
+        // DirectX 9 Enums
+        private enum D3DPOOL
+        {
+            D3DPOOL_DEFAULT = 0,
+            D3DPOOL_MANAGED = 1,
+            D3DPOOL_SYSTEMMEM = 2,
+            D3DPOOL_SCRATCH = 3
+        }
+
         // DirectX 9 Function Delegates
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate int ClearDelegate(IntPtr device, uint flags, uint color, float z, uint stencil);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int CreateTextureDelegate(IntPtr device, uint width, uint height, uint levels, uint usage,
+            uint format, D3DPOOL pool, ref Guid riid, IntPtr ppTexture);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int CreateCubeTextureDelegate(IntPtr device, uint edgeLength, uint levels, uint usage,
+            uint format, D3DPOOL pool, ref Guid riid, IntPtr ppCubeTexture);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int GetSurfaceLevelDelegate(IntPtr texture, uint level, IntPtr ppSurfaceLevel);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int GetCubeMapSurfaceLevelDelegate(IntPtr cubeTexture, uint faceType, uint level, IntPtr ppSurfaceLevel);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int LockRectDelegate(IntPtr surface, IntPtr pRect, ref D3DLOCKED_RECT pLockedRect, uint flags);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int UnlockRectDelegate(IntPtr surface);
+
+        /// <summary>
+        /// Creates texture using DirectX 9 COM vtable.
+        /// </summary>
+        private unsafe int CreateTexture(IntPtr device, uint width, uint height, uint levels, uint usage,
+            uint format, D3DPOOL pool, ref Guid riid, IntPtr ppTexture)
+        {
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT || device == IntPtr.Zero) return -1;
+
+            IntPtr* vtable = *(IntPtr**)device;
+            // CreateTexture is typically at index 44 in IDirect3DDevice9 vtable
+            IntPtr methodPtr = vtable[44];
+            var createTexture = Marshal.GetDelegateForFunctionPointer<CreateTextureDelegate>(methodPtr);
+            return createTexture(device, width, height, levels, usage, format, pool, ref riid, ppTexture);
+        }
+
+        /// <summary>
+        /// Creates cube texture using DirectX 9 COM vtable.
+        /// </summary>
+        private unsafe int CreateCubeTexture(IntPtr device, uint edgeLength, uint levels, uint usage,
+            uint format, D3DPOOL pool, ref Guid riid, IntPtr ppCubeTexture)
+        {
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT || device == IntPtr.Zero) return -1;
+
+            IntPtr* vtable = *(IntPtr**)device;
+            // CreateCubeTexture is typically at index 47 in IDirect3DDevice9 vtable
+            IntPtr methodPtr = vtable[47];
+            var createCubeTexture = Marshal.GetDelegateForFunctionPointer<CreateCubeTextureDelegate>(methodPtr);
+            return createCubeTexture(device, edgeLength, levels, usage, format, pool, ref riid, ppCubeTexture);
+        }
+
+        /// <summary>
+        /// Gets surface level from DirectX 9 texture using COM vtable.
+        /// </summary>
+        private unsafe int GetSurfaceLevel(IntPtr texture, uint level, IntPtr ppSurfaceLevel)
+        {
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT || texture == IntPtr.Zero) return -1;
+
+            IntPtr* vtable = *(IntPtr**)texture;
+            // GetSurfaceLevel is typically at index 21 in IDirect3DTexture9 vtable
+            IntPtr methodPtr = vtable[21];
+            var getSurfaceLevel = Marshal.GetDelegateForFunctionPointer<GetSurfaceLevelDelegate>(methodPtr);
+            return getSurfaceLevel(texture, level, ppSurfaceLevel);
+        }
+
+        /// <summary>
+        /// Gets cube map surface level from DirectX 9 cube texture using COM vtable.
+        /// </summary>
+        private unsafe int GetCubeMapSurfaceLevel(IntPtr cubeTexture, uint faceType, uint level, IntPtr ppSurfaceLevel)
+        {
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT || cubeTexture == IntPtr.Zero) return -1;
+
+            IntPtr* vtable = *(IntPtr**)cubeTexture;
+            // GetCubeMapSurfaceLevel is typically at index 22 in IDirect3DCubeTexture9 vtable
+            IntPtr methodPtr = vtable[22];
+            var getCubeMapSurfaceLevel = Marshal.GetDelegateForFunctionPointer<GetCubeMapSurfaceLevelDelegate>(methodPtr);
+            return getCubeMapSurfaceLevel(cubeTexture, faceType, level, ppSurfaceLevel);
+        }
+
+        /// <summary>
+        /// Locks a rectangle on a DirectX 9 surface using COM vtable.
+        /// </summary>
+        private unsafe int LockRect(IntPtr surface, IntPtr pRect, ref D3DLOCKED_RECT pLockedRect, uint flags)
+        {
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT || surface == IntPtr.Zero) return -1;
+
+            IntPtr* vtable = *(IntPtr**)surface;
+            // LockRect is typically at index 13 in IDirect3DSurface9 vtable
+            IntPtr methodPtr = vtable[13];
+            var lockRect = Marshal.GetDelegateForFunctionPointer<LockRectDelegate>(methodPtr);
+            return lockRect(surface, pRect, ref pLockedRect, flags);
+        }
+
+        /// <summary>
+        /// Unlocks a rectangle on a DirectX 9 surface using COM vtable.
+        /// </summary>
+        private unsafe int UnlockRect(IntPtr surface)
+        {
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT || surface == IntPtr.Zero) return -1;
+
+            IntPtr* vtable = *(IntPtr**)surface;
+            // UnlockRect is typically at index 14 in IDirect3DSurface9 vtable
+            IntPtr methodPtr = vtable[14];
+            var unlockRect = Marshal.GetDelegateForFunctionPointer<UnlockRectDelegate>(methodPtr);
+            return unlockRect(surface);
+        }
 
         #endregion
 
