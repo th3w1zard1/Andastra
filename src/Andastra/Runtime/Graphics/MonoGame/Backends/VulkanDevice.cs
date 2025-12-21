@@ -384,6 +384,18 @@ namespace Andastra.Runtime.MonoGame.Backends
             public IntPtr pInheritanceInfo;
         }
 
+        // VkCommandBufferAllocateInfo structure (Vulkan 1.0)
+        // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkCommandBufferAllocateInfo.html
+        [StructLayout(LayoutKind.Sequential)]
+        private struct VkCommandBufferAllocateInfo
+        {
+            public VkStructureType sType; // Must be VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO (40)
+            public IntPtr pNext; // nullptr or pointer to extension-specific structure
+            public IntPtr commandPool; // VkCommandPool handle to allocate from
+            public VkCommandBufferLevel level; // VK_COMMAND_BUFFER_LEVEL_PRIMARY (0) or VK_COMMAND_BUFFER_LEVEL_SECONDARY (1)
+            public uint commandBufferCount; // Number of command buffers to allocate
+        }
+
         [StructLayout(LayoutKind.Sequential)]
         private struct VkMemoryRequirements
         {
@@ -3053,15 +3065,73 @@ namespace Andastra.Runtime.MonoGame.Backends
                     break;
             }
 
-            // TODO: Allocate VkCommandBuffer from command pool
-            // For now, we'll create a placeholder command buffer handle
-            IntPtr vkCommandBuffer = new IntPtr(_nextResourceHandle++); // Placeholder
+            // Validate command pool is valid
+            if (commandPool == IntPtr.Zero)
+            {
+                throw new InvalidOperationException($"Command pool for type {type} is not initialized");
+            }
 
-            IntPtr handle = new IntPtr(_nextResourceHandle++);
-            var commandList = new VulkanCommandList(handle, type, this, vkCommandBuffer, commandPool, _device);
-            _resources[handle] = commandList;
+            // Validate vkAllocateCommandBuffers function pointer is initialized
+            // vkAllocateCommandBuffers is a core Vulkan function, so it should be available
+            if (vkAllocateCommandBuffers == null)
+            {
+                throw new InvalidOperationException("vkAllocateCommandBuffers function pointer is not initialized");
+            }
 
-            return commandList;
+            // Allocate VkCommandBuffer from command pool
+            // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkAllocateCommandBuffers.html
+            // We allocate a single primary command buffer
+            VkCommandBufferAllocateInfo allocateInfo = new VkCommandBufferAllocateInfo
+            {
+                sType = VkStructureType.VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+                pNext = IntPtr.Zero,
+                commandPool = commandPool,
+                level = VkCommandBufferLevel.VK_COMMAND_BUFFER_LEVEL_PRIMARY, // Primary command buffer can be submitted to queues
+                commandBufferCount = 1 // Allocate a single command buffer
+            };
+
+            // Marshal structure to unmanaged memory
+            int allocateInfoSize = Marshal.SizeOf(typeof(VkCommandBufferAllocateInfo));
+            IntPtr allocateInfoPtr = Marshal.AllocHGlobal(allocateInfoSize);
+            try
+            {
+                Marshal.StructureToPtr(allocateInfo, allocateInfoPtr, false);
+
+                // Allocate memory for command buffer handle (VkCommandBuffer is a handle, so it's IntPtr-sized)
+                IntPtr commandBufferPtr = Marshal.AllocHGlobal(IntPtr.Size);
+                try
+                {
+                    // vkAllocateCommandBuffers signature:
+                    // VkResult vkAllocateCommandBuffers(
+                    //     VkDevice device,
+                    //     const VkCommandBufferAllocateInfo* pAllocateInfo,
+                    //     VkCommandBuffer* pCommandBuffers);
+                    VkResult result = vkAllocateCommandBuffers(_device, allocateInfoPtr, commandBufferPtr);
+                    CheckResult(result, "vkAllocateCommandBuffers");
+
+                    // Read the allocated command buffer handle
+                    IntPtr vkCommandBuffer = Marshal.ReadIntPtr(commandBufferPtr);
+                    if (vkCommandBuffer == IntPtr.Zero)
+                    {
+                        throw new InvalidOperationException("vkAllocateCommandBuffers returned a null command buffer handle");
+                    }
+
+                    // Create VulkanCommandList with the allocated command buffer
+                    IntPtr handle = new IntPtr(_nextResourceHandle++);
+                    var commandList = new VulkanCommandList(handle, type, this, vkCommandBuffer, commandPool, _device);
+                    _resources[handle] = commandList;
+
+                    return commandList;
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(commandBufferPtr);
+                }
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(allocateInfoPtr);
+            }
         }
 
         public ITexture CreateHandleForNativeTexture(IntPtr nativeHandle, TextureDesc desc)
