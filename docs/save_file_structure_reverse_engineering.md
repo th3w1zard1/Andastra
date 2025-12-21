@@ -4,14 +4,15 @@
 
 ## Executive Summary
 
-This document details the reverse engineering findings for save file structure, cached entities, resource priority, and nested module support in `swkotor.exe` and `swkotor2.exe`.
+This document details the reverse engineering findings for save file structure, cached entities, resource priority, nested module support, and mod uninstall issues in `swkotor.exe` and `swkotor2.exe`.
 
 **Key Findings:**
 
 1. **Save files are ERF archives** containing game state (GLOBALVARS.res, PARTYTABLE.res, savenfo.res, cached modules)
 2. **RES, PT, NFO priority**: RES and NFO bypass resource system (direct file I/O), PT uses resource system
 3. **Nested modules**: Save files contain cached module ERF/RIM files for previously visited areas
-4. **Cached entities**: Party members (AVAILNPC*.utc), inventory (INVENTORY.res), reputation (REPUTE.fac), and module states are cached
+4. **Cached entities**: What IS cached vs what is NOT cached
+5. **Mod uninstall issues**: Comprehensive documentation of problems and mitigation strategies: Party members (AVAILNPC*.utc), inventory (INVENTORY.res), reputation (REPUTE.fac), and module states are cached
 
 ## Save File Structure
 
