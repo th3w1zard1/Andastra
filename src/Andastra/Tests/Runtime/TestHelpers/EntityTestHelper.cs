@@ -6,6 +6,13 @@ using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Games.Common.Components;
+using Andastra.Runtime.Core.Combat;
+using Andastra.Runtime.Core.Perception;
+using Andastra.Runtime.Core.Triggers;
+using Andastra.Runtime.Core.AI;
+using Andastra.Runtime.Core.Animation;
+using Andastra.Runtime.Core.Actions;
+using Andastra.Parsing.Formats.TwoDA;
 using Moq;
 
 namespace Andastra.Tests.Runtime.TestHelpers
@@ -16,11 +23,283 @@ namespace Andastra.Tests.Runtime.TestHelpers
     public static class EntityTestHelper
     {
         /// <summary>
-        /// Creates a mock world for testing.
+        /// Creates a mock world for testing with full functionality.
         /// </summary>
+        /// <remarks>
+        /// Creates a comprehensive mock world that maintains internal state for entities, areas, and modules.
+        /// All IWorld interface methods and properties are properly set up with reasonable default behavior.
+        /// The mock world supports:
+        /// - Entity management (CreateEntity, GetEntity, GetEntityByTag, RegisterEntity, UnregisterEntity)
+        /// - Area management (GetArea, RegisterArea, UnregisterArea, GetAreaId)
+        /// - Spatial queries (GetEntitiesInRadius, GetEntitiesOfType, GetAllEntities)
+        /// - All world systems (TimeManager, EventBus, DelayScheduler, EffectSystem, CombatSystem, etc.)
+        /// - Module management (GetModuleId, CurrentModule)
+        /// </remarks>
         public static IWorld CreateMockWorld()
         {
+            // Internal state for entity and area management
+            var entitiesById = new Dictionary<uint, IEntity>();
+            var entitiesByTag = new Dictionary<string, List<IEntity>>(StringComparer.OrdinalIgnoreCase);
+            var entitiesByType = new Dictionary<ObjectType, List<IEntity>>();
+            var allEntities = new List<IEntity>();
+            var areasById = new Dictionary<uint, IArea>();
+            var areaIds = new Dictionary<IArea, uint>();
+            uint nextObjectId = 1;
+            uint nextAreaId = 1;
+            const uint ModuleObjectId = 0x7F000002;
+
+            // Create mocks for interfaces
+            var mockTimeManager = new Mock<ITimeManager>(MockBehavior.Loose);
+            mockTimeManager.Setup(t => t.FixedTimestep).Returns(1.0f / 60.0f);
+            mockTimeManager.Setup(t => t.SimulationTime).Returns(0.0f);
+            mockTimeManager.Setup(t => t.RealTime).Returns(0.0f);
+            mockTimeManager.SetupProperty(t => t.TimeScale, 1.0f);
+            mockTimeManager.Setup(t => t.Update(It.IsAny<float>())).Callback<float>(deltaTime => { });
+
+            var mockEventBus = new Mock<IEventBus>(MockBehavior.Loose);
+            mockEventBus.Setup(e => e.Subscribe<It.IsAnyType>(It.IsAny<Action<It.IsAnyType>>())).Callback(() => { });
+            mockEventBus.Setup(e => e.Unsubscribe<It.IsAnyType>(It.IsAny<Action<It.IsAnyType>>())).Callback(() => { });
+            mockEventBus.Setup(e => e.Publish<It.IsAnyType>(It.IsAny<It.IsAnyType>())).Callback(() => { });
+            mockEventBus.Setup(e => e.QueueEvent<It.IsAnyType>(It.IsAny<It.IsAnyType>())).Callback(() => { });
+            mockEventBus.Setup(e => e.ProcessQueue()).Callback(() => { });
+
+            var mockDelayScheduler = new Mock<IDelayScheduler>(MockBehavior.Loose);
+            mockDelayScheduler.Setup(d => d.ScheduleDelay(It.IsAny<float>(), It.IsAny<IAction>(), It.IsAny<IEntity>())).Callback(() => { });
+            mockDelayScheduler.Setup(d => d.Update(It.IsAny<float>())).Callback(() => { });
+            mockDelayScheduler.Setup(d => d.ClearForEntity(It.IsAny<IEntity>())).Callback(() => { });
+            mockDelayScheduler.Setup(d => d.ClearAll()).Callback(() => { });
+
+            var mockGameDataProvider = new Mock<IGameDataProvider>(MockBehavior.Loose);
+            mockGameDataProvider.Setup(g => g.GetTable(It.IsAny<string>())).Returns((TwoDA.TwoDA)null);
+
+            // Create mock world
             var mockWorld = new Mock<IWorld>(MockBehavior.Loose);
+            
+            // Set up properties with mocks/interfaces
+            mockWorld.SetupProperty(w => w.CurrentArea, (IArea)null);
+            mockWorld.SetupProperty(w => w.CurrentModule, (IModule)null);
+            mockWorld.Setup(w => w.TimeManager).Returns(mockTimeManager.Object);
+            mockWorld.Setup(w => w.EventBus).Returns(mockEventBus.Object);
+            mockWorld.Setup(w => w.DelayScheduler).Returns(mockDelayScheduler.Object);
+            mockWorld.Setup(w => w.GameDataProvider).Returns(mockGameDataProvider.Object);
+
+            // Create real system instances (these are concrete classes that require IWorld)
+            // We use the mock world object so they can interact with it
+            var worldObject = mockWorld.Object;
+            var combatSystem = new CombatSystem(worldObject);
+            var effectSystem = new EffectSystem(worldObject);
+            var perceptionSystem = new PerceptionSystem(worldObject);
+            var triggerSystem = new TriggerSystem(worldObject);
+            var animationSystem = new AnimationSystem(worldObject);
+            var aiController = new AIController(worldObject, combatSystem);
+
+            mockWorld.Setup(w => w.EffectSystem).Returns(effectSystem);
+            mockWorld.Setup(w => w.PerceptionSystem).Returns(perceptionSystem);
+            mockWorld.Setup(w => w.CombatSystem).Returns(combatSystem);
+            mockWorld.Setup(w => w.TriggerSystem).Returns(triggerSystem);
+            mockWorld.Setup(w => w.AIController).Returns(aiController);
+            mockWorld.Setup(w => w.AnimationSystem).Returns(animationSystem);
+
+            // Set up CreateEntity methods
+            mockWorld.Setup(w => w.CreateEntity(It.IsAny<IEntityTemplate>(), It.IsAny<Vector3>(), It.IsAny<float>()))
+                .Returns<IEntityTemplate, Vector3, float>((template, position, facing) =>
+                {
+                    var mockEntity = new Mock<IEntity>(MockBehavior.Loose);
+                    uint objectId = nextObjectId++;
+                    mockEntity.Setup(e => e.ObjectId).Returns(objectId);
+                    mockEntity.SetupProperty(e => e.World, mockWorld.Object);
+                    mockEntity.SetupProperty(e => e.AreaId, 0u);
+                    mockEntity.Setup(e => e.IsValid).Returns(true);
+                    if (template != null)
+                    {
+                        mockEntity.SetupProperty(e => e.Tag, template.Tag ?? "");
+                        mockEntity.Setup(e => e.ObjectType).Returns(template.ObjectType);
+                    }
+                    var entity = mockEntity.Object;
+                    entitiesById[objectId] = entity;
+                    allEntities.Add(entity);
+                    return entity;
+                });
+
+            mockWorld.Setup(w => w.CreateEntity(It.IsAny<ObjectType>(), It.IsAny<Vector3>(), It.IsAny<float>()))
+                .Returns<ObjectType, Vector3, float>((objectType, position, facing) =>
+                {
+                    var mockEntity = new Mock<IEntity>(MockBehavior.Loose);
+                    uint objectId = nextObjectId++;
+                    mockEntity.Setup(e => e.ObjectId).Returns(objectId);
+                    mockEntity.SetupProperty(e => e.World, mockWorld.Object);
+                    mockEntity.SetupProperty(e => e.AreaId, 0u);
+                    mockEntity.Setup(e => e.IsValid).Returns(true);
+                    mockEntity.Setup(e => e.ObjectType).Returns(objectType);
+                    mockEntity.SetupProperty(e => e.Tag, "");
+                    var entity = mockEntity.Object;
+                    entitiesById[objectId] = entity;
+                    allEntities.Add(entity);
+                    return entity;
+                });
+
+            // Set up GetEntity
+            mockWorld.Setup(w => w.GetEntity(It.IsAny<uint>()))
+                .Returns<uint>(objectId => entitiesById.ContainsKey(objectId) ? entitiesById[objectId] : null);
+
+            // Set up GetEntityByTag
+            mockWorld.Setup(w => w.GetEntityByTag(It.IsAny<string>(), It.IsAny<int>()))
+                .Returns<string, int>((tag, nth) =>
+                {
+                    if (string.IsNullOrEmpty(tag) || !entitiesByTag.ContainsKey(tag))
+                        return null;
+                    var entities = entitiesByTag[tag];
+                    if (nth < 0 || nth >= entities.Count)
+                        return null;
+                    return entities[nth];
+                });
+
+            // Set up RegisterEntity
+            mockWorld.Setup(w => w.RegisterEntity(It.IsAny<IEntity>()))
+                .Callback<IEntity>(entity =>
+                {
+                    if (entity == null) return;
+                    entitiesById[entity.ObjectId] = entity;
+                    if (!allEntities.Contains(entity))
+                        allEntities.Add(entity);
+                    if (!string.IsNullOrEmpty(entity.Tag))
+                    {
+                        if (!entitiesByTag.ContainsKey(entity.Tag))
+                            entitiesByTag[entity.Tag] = new List<IEntity>();
+                        if (!entitiesByTag[entity.Tag].Contains(entity))
+                            entitiesByTag[entity.Tag].Add(entity);
+                    }
+                    if (!entitiesByType.ContainsKey(entity.ObjectType))
+                        entitiesByType[entity.ObjectType] = new List<IEntity>();
+                    if (!entitiesByType[entity.ObjectType].Contains(entity))
+                        entitiesByType[entity.ObjectType].Add(entity);
+                });
+
+            // Set up UnregisterEntity
+            mockWorld.Setup(w => w.UnregisterEntity(It.IsAny<IEntity>()))
+                .Callback<IEntity>(entity =>
+                {
+                    if (entity == null) return;
+                    entitiesById.Remove(entity.ObjectId);
+                    allEntities.Remove(entity);
+                    if (!string.IsNullOrEmpty(entity.Tag) && entitiesByTag.ContainsKey(entity.Tag))
+                        entitiesByTag[entity.Tag].Remove(entity);
+                    if (entitiesByType.ContainsKey(entity.ObjectType))
+                        entitiesByType[entity.ObjectType].Remove(entity);
+                });
+
+            // Set up DestroyEntity
+            mockWorld.Setup(w => w.DestroyEntity(It.IsAny<uint>()))
+                .Callback<uint>(objectId =>
+                {
+                    if (entitiesById.ContainsKey(objectId))
+                    {
+                        var entity = entitiesById[objectId];
+                        entitiesById.Remove(objectId);
+                        allEntities.Remove(entity);
+                        if (!string.IsNullOrEmpty(entity.Tag) && entitiesByTag.ContainsKey(entity.Tag))
+                            entitiesByTag[entity.Tag].Remove(entity);
+                        if (entitiesByType.ContainsKey(entity.ObjectType))
+                            entitiesByType[entity.ObjectType].Remove(entity);
+                    }
+                });
+
+            // Set up GetEntitiesInRadius
+            mockWorld.Setup(w => w.GetEntitiesInRadius(It.IsAny<Vector3>(), It.IsAny<float>(), It.IsAny<ObjectType>()))
+                .Returns<Vector3, float, ObjectType>((center, radius, typeMask) =>
+                {
+                    var results = new List<IEntity>();
+                    foreach (var entity in allEntities)
+                    {
+                        if ((entity.ObjectType & typeMask) == 0)
+                            continue;
+                        var transform = entity.GetComponent<ITransformComponent>();
+                        if (transform == null)
+                            continue;
+                        float distance = Vector3.Distance(center, transform.Position);
+                        if (distance <= radius)
+                            results.Add(entity);
+                    }
+                    return results;
+                });
+
+            // Set up GetEntitiesOfType
+            mockWorld.Setup(w => w.GetEntitiesOfType(It.IsAny<ObjectType>()))
+                .Returns<ObjectType>(type =>
+                {
+                    var results = new List<IEntity>();
+                    foreach (var entity in allEntities)
+                    {
+                        if ((entity.ObjectType & type) != 0)
+                            results.Add(entity);
+                    }
+                    return results;
+                });
+
+            // Set up GetAllEntities
+            mockWorld.Setup(w => w.GetAllEntities())
+                .Returns(() => new List<IEntity>(allEntities));
+
+            // Set up GetArea
+            mockWorld.Setup(w => w.GetArea(It.IsAny<uint>()))
+                .Returns<uint>(areaId => areasById.ContainsKey(areaId) ? areasById[areaId] : null);
+
+            // Set up RegisterArea
+            mockWorld.Setup(w => w.RegisterArea(It.IsAny<IArea>()))
+                .Callback<IArea>(area =>
+                {
+                    if (area == null) return;
+                    if (!areaIds.ContainsKey(area))
+                    {
+                        uint areaId = nextAreaId++;
+                        areaIds[area] = areaId;
+                        areasById[areaId] = area;
+                    }
+                });
+
+            // Set up UnregisterArea
+            mockWorld.Setup(w => w.UnregisterArea(It.IsAny<IArea>()))
+                .Callback<IArea>(area =>
+                {
+                    if (area == null) return;
+                    if (areaIds.ContainsKey(area))
+                    {
+                        uint areaId = areaIds[area];
+                        areaIds.Remove(area);
+                        areasById.Remove(areaId);
+                    }
+                });
+
+            // Set up GetAreaId
+            mockWorld.Setup(w => w.GetAreaId(It.IsAny<IArea>()))
+                .Returns<IArea>(area => area != null && areaIds.ContainsKey(area) ? areaIds[area] : 0u);
+
+            // Set up GetAllAreas
+            mockWorld.Setup(w => w.GetAllAreas())
+                .Returns(() => new List<IArea>(areasById.Values));
+
+            // Set up GetModuleId
+            mockWorld.Setup(w => w.GetModuleId(It.IsAny<IModule>()))
+                .Returns<IModule>(module =>
+                {
+                    if (module == null)
+                        return 0u;
+                    if (module == mockWorld.Object.CurrentModule)
+                        return ModuleObjectId;
+                    return 0u;
+                });
+
+            // Set up Update
+            mockWorld.Setup(w => w.Update(It.IsAny<float>()))
+                .Callback<float>(deltaTime =>
+                {
+                    // Update time manager and delay scheduler
+                    mockTimeManager.Object.Update(deltaTime);
+                    mockDelayScheduler.Object.Update(deltaTime);
+                    // Note: Real system instances (EffectSystem, CombatSystem, etc.) would update themselves
+                    // but for a mock world, we just update the mocked interfaces
+                });
+
             return mockWorld.Object;
         }
 
@@ -38,7 +317,7 @@ namespace Andastra.Tests.Runtime.TestHelpers
         {
             // Use BaseTransformComponent as a concrete implementation
             // We'll need to create an engine-specific one, but for testing we can use reflection
-            // or create a minimal mock
+            // TODO:  or create a minimal mock
             var mockTransform = new Mock<ITransformComponent>(MockBehavior.Strict);
             mockTransform.Setup(t => t.Position).Returns(new Vector3(x, y, z));
             mockTransform.Setup(t => t.Facing).Returns(facing);
