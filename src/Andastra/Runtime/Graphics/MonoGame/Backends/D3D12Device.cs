@@ -378,7 +378,6 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             // Create optimized clear value if this is a render target or depth stencil
             IntPtr optimizedClearValuePtr = IntPtr.Zero;
-            bool hasClearValue = false;
             // Note: ClearValue is a struct, so we check if it's been set by checking if Depth/Stencil or Color values are non-zero
             bool hasClearValue = (desc.Usage & (TextureUsage.RenderTarget | TextureUsage.DepthStencil)) != 0;
             if (hasClearValue)
@@ -402,10 +401,10 @@ namespace Andastra.Runtime.MonoGame.Backends
                     // Render target clear value (color)
                     clearValue.Color = new float[4]
                     {
-                        desc.ClearValue.Value.R,
-                        desc.ClearValue.Value.G,
-                        desc.ClearValue.Value.B,
-                        desc.ClearValue.Value.A
+                        desc.ClearValue.R,
+                        desc.ClearValue.G,
+                        desc.ClearValue.B,
+                        desc.ClearValue.A
                     };
                 }
 
