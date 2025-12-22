@@ -272,7 +272,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 // Based on swkotor.exe: SetAreaTransitionBMP stores bitmap on player entity
                 // Original implementation: Area transition bitmap is displayed during area transitions
                 string transitionBitmap = GetAreaTransitionBitmap(entity);
-                
+
                 // Show loading screen with transition bitmap if available
                 if (!string.IsNullOrEmpty(transitionBitmap) && _loadingScreen != null)
                 {
@@ -305,13 +305,13 @@ namespace Andastra.Runtime.Games.Odyssey
 
                 // Fire transition events (OnEnter script for target area)
                 FireAreaTransitionEvents(world, entity, targetAreaInstance);
-                
+
                 // Hide loading screen after transition completes
                 if (!string.IsNullOrEmpty(transitionBitmap) && _loadingScreen != null)
                 {
                     _loadingScreen.Hide();
                 }
-                
+
                 Console.WriteLine($"[OdysseyEventDispatcher] HandleAreaTransition: Successfully transitioned entity {entity.Tag ?? "null"} ({entity.ObjectId}) to area {targetAreaInstance.ResRef}");
             }
             else
@@ -488,7 +488,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <remarks>
         /// Based on swkotor2.exe: Area streaming system (swkotor2.exe: LoadAreaProperties @ 0x004e26d0)
         /// Checks if area is already loaded in current module, otherwise loads it via ModuleLoader.
-        /// 
+        ///
         /// Area streaming flow (based on swkotor2.exe area transition system):
         /// 1. Check if area is already loaded in current module (via IModule.GetArea)
         /// 2. Check if area is the current area
@@ -500,7 +500,7 @@ namespace Andastra.Runtime.Games.Odyssey
         ///    e. Register area with world (assign AreaId)
         ///    f. Return loaded area
         /// 4. If ModuleLoader is not available, return null (area streaming disabled)
-        /// 
+        ///
         /// Based on reverse engineering of:
         /// - swkotor2.exe: Area loading during transitions (FUN_004e26d0 @ 0x004e26d0)
         /// - swkotor.exe: Similar area loading system (KOTOR 1)
@@ -614,7 +614,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Located via string references: "LinkedTo" @ 0x007bd7a4 (waypoint tag for positioning after transition)
         /// Original implementation: If source entity (door/trigger) has LinkedTo field, positions entity at that waypoint.
         /// Otherwise, entity position is preserved and projected to target area walkmesh in ProjectEntityToTargetArea.
-        /// 
+        ///
         /// Transition positioning logic:
         /// 1. If sourceEntity is null, preserve current position (will be projected to walkmesh later)
         /// 2. Check if sourceEntity is a door with LinkedTo field
@@ -1347,7 +1347,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// - "EVENT_ON_MELEE_ATTACKED" @ 0x007bccf4 (case 0xf) - fires OnPhysicalAttacked script
         /// - "EVENT_DESTROY_OBJECT" @ 0x007bcd48 (case 0xb) - fires OnDeath script if entity is dead, or handles object destruction
         /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED" @ 0x007bcb14 (eventSubtype 4) - fires OnDamaged script
-        /// 
+        ///
         /// Combat event handling flow (based on swkotor2.exe: DispatchEvent @ 0x004dcfb0):
         /// 1. EVENT_ON_MELEE_ATTACKED (0xf): Fires OnPhysicalAttacked script on target entity with attacker as triggerer
         ///    - Script fires regardless of hit/miss (before damage is applied)
@@ -1359,13 +1359,13 @@ namespace Andastra.Runtime.Games.Odyssey
         /// 3. EVENT_SIGNAL_EVENT with ON_DAMAGED (eventSubtype 4): Fires OnDamaged script on target entity
         ///    - Script fires when entity takes damage (after damage is applied)
         ///    - Located via "ScriptDamaged" @ 0x007bee70, "OnDamaged" @ 0x007c1a80
-        /// 
+        ///
         /// Script execution:
         /// - Scripts are retrieved from entity's IScriptHooksComponent for the appropriate ScriptEvent
         /// - Scripts are executed via world's EventBus.FireScriptEvent, which queues and processes script execution
         /// - Source entity (attacker/damager/killer) is passed as triggerer to script execution context
         /// - Scripts can use GetLastAttacker(), GetLastDamager(), GetLastHostileActor() to retrieve source entity
-        /// 
+        ///
         /// AI behavior:
         /// - Combat events trigger AI responses (aggression, fleeing, etc.)
         /// - AI systems are notified via EventBus events and script execution
@@ -1487,12 +1487,32 @@ namespace Andastra.Runtime.Games.Odyssey
                 // Entity is not dead - this is object destruction (door, placeable, etc.)
                 // Handle object destruction cleanup
                 // Based on swkotor2.exe: Object destruction removes entity from world and cleans up components
-                // For doors/placeables: May fire OnDestroy script if available
+                // Located via string references: "EVENT_DESTROY_OBJECT" @ 0x007bcd48 (case 0xb in DispatchEvent @ 0x004dcfb0)
+                // Original implementation: EVENT_DESTROY_OBJECT is logged but doesn't fire script events
+                // Object destruction is handled by removing entity from world and cleaning up components
+                // The entity destruction system (World.DestroyEntity) handles all cleanup automatically
                 Console.WriteLine($"[OdysseyEventDispatcher] HandleDestroyObjectEvent: Entity {entity.Tag ?? "null"} ({entity.ObjectId}) is not dead, handling object destruction");
-                
-                // Check if entity has OnDestroy script (if supported by object type)
-                // TODO: STUB - For now, object destruction is handled by the entity's destruction system
-                // Future: May fire OnDestroy script event if entity type supports it
+
+                // Destroy the entity through the world's destruction system
+                // This ensures proper cleanup of all components, removal from areas, physics, and event systems
+                // Based on swkotor2.exe: Object destruction removes entity from world and cleans up all components
+                // The world's DestroyEntity method handles:
+                // - Component cleanup (removes all component references)
+                // - Area removal (removes entity from current area)
+                // - Physics cleanup (removes entity from physics system if applicable)
+                // - Event system cleanup (unregisters entity from event handlers)
+                // - Memory cleanup (disposes entity resources)
+                // Note: There is no OnDestroy script event in the original game (swkotor2.exe)
+                // EVENT_DESTROY_OBJECT is a world event that triggers entity destruction, not a script event
+                if (world != null)
+                {
+                    world.DestroyEntity(entity.ObjectId);
+                    Console.WriteLine($"[OdysseyEventDispatcher] HandleDestroyObjectEvent: Destroyed entity {entity.Tag ?? "null"} ({entity.ObjectId}) through world destruction system");
+                }
+                else
+                {
+                    Console.WriteLine($"[OdysseyEventDispatcher] HandleDestroyObjectEvent: Warning - Cannot destroy entity {entity.Tag ?? "null"} ({entity.ObjectId}), world is null");
+                }
             }
         }
 
