@@ -757,11 +757,34 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
             {
                 if (_mocks.TryGetValue(function.Name, out Func<object[], object> mock))
                 {
+                    // Mock function is set - call it with the arguments
+                    // Based on PyKotor: mock is called with args array containing function arguments
                     object[] mockArgs = argsSnap.Select(a => a.Value).ToArray();
-                    value = mock(mockArgs);
+                    
+                    // Validate parameter count matches function signature
+                    // Python validates at SetMock time, but C# validates at call time
+                    if (mockArgs.Length != function.Params.Count)
+                    {
+                        throw new InvalidOperationException(
+                            $"Mock function for '{function.Name}' received {mockArgs.Length} arguments " +
+                            $"but function expects {function.Params.Count} parameters. " +
+                            $"Mock functions must accept the same number of arguments as the function signature.");
+                    }
+                    
+                    try
+                    {
+                        value = mock(mockArgs);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new InvalidOperationException(
+                            $"Mock function for '{function.Name}' threw an exception: {ex.Message}", ex);
+                    }
                 }
                 else
                 {
+                    // No mock set - return null/default value
+                    // Based on PyKotor: functions without mocks return None/null
                     value = null;
                 }
 
@@ -769,12 +792,14 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
                 {
                     if (value == null)
                     {
+                        // Return zero vector for null return value
                         _stack.Add(DataType.Float, 0.0f);
                         _stack.Add(DataType.Float, 0.0f);
                         _stack.Add(DataType.Float, 0.0f);
                     }
                     else
                     {
+                        // Convert return value to Vector3 and push components (x, y, z order)
                         Vector3 vec = value is Vector3 v ? v : new Vector3(0, 0, 0);
                         _stack.Add(DataType.Float, vec.X);
                         _stack.Add(DataType.Float, vec.Y);
@@ -783,11 +808,14 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
                 }
                 else
                 {
+                    // Push return value onto stack with correct data type
                     _stack.Add(function.ReturnType, value);
                 }
             }
 
-            ActionSnapshots.Add(new ActionSnapshot(function.Name, argsSnap, null));
+            // Record action snapshot with return value for testing/debugging
+            // Based on PyKotor: ActionSnapshot captures function name, arguments, and return value
+            ActionSnapshots.Add(new ActionSnapshot(function.Name, argsSnap, value));
         }
 
         private static bool IsValueZero(object value)
@@ -829,18 +857,84 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
         }
 
         /// <summary>
-        // TODO: / Set a mock function for testing.
+        /// Sets a mock function for testing. The mock function will be called instead of the actual
+        /// engine function when the specified function is invoked during script execution.
+        /// 
+        /// This allows testing script behavior without requiring a full game engine runtime.
+        /// The mock function receives an array of arguments (in the order they appear in the function
+        /// signature) and should return a value matching the function's return type.
+        /// 
+        /// Parameter count validation: Unlike Python which can inspect the mock function's signature
+        /// at registration time, C# Func&lt;object[], object&gt; has a fixed signature. Parameter count
+        /// is validated at call time when the function is actually invoked. If the mock receives an
+        /// incorrect number of arguments, an InvalidOperationException will be thrown.
+        /// 
+        /// Based on PyKotor interpreter.py: set_mock() method validates function exists and parameter count.
+        /// Python version: Uses signature(mock).parameters to validate parameter count at registration.
+        /// C# version: Validates parameter count at call time in ExecuteAction() method.
         /// </summary>
+        /// <param name="functionName">The name of the function to mock (must exist in the function list).</param>
+        /// <param name="mock">The mock function that will be called instead of the actual function.
+        /// Must accept an object[] array containing the function arguments and return a value matching
+        /// the function's return type (or null for void functions).</param>
+        /// <exception cref="ArgumentException">Thrown if the function name is null, empty, or doesn't exist
+        /// in the function list for the current game.</exception>
+        /// <remarks>
+        /// Example usage:
+        /// <code>
+        /// // Mock GetGlobalInt to return 42
+        /// interpreter.SetMock("GetGlobalInt", (args) => {
+        ///     // args[0] is the global variable name (string)
+        ///     return 42; // Return value as int
+        /// });
+        /// 
+        /// // Mock GetObjectByTag to return a specific object ID
+        /// interpreter.SetMock("GetObjectByTag", (args) => {
+        ///     // args[0] is the tag (string)
+        ///     // args[1] is the nth occurrence (int)
+        ///     return 12345; // Return object ID as int
+        /// });
+        /// 
+        /// // Mock void function (return null)
+        /// interpreter.SetMock("PrintString", (args) => {
+        ///     // args[0] is the string to print
+        ///     Console.WriteLine(args[0]);
+        ///     return null; // Void functions return null
+        /// });
+        /// </code>
+        /// 
+        /// Note: The mock function will receive arguments in the order they appear in the function
+        /// signature. For example, GetObjectByTag(string tag, int nth) will receive args[0] = tag,
+        /// args[1] = nth.
+        /// 
+        /// Vector parameters are passed as Vector3 objects in the args array.
+        /// 
+        /// To remove a mock, use RemoveMock().
+        /// </remarks>
         public void SetMock(string functionName, Func<object[], object> mock)
         {
+            if (string.IsNullOrEmpty(functionName))
+            {
+                throw new ArgumentException("Function name cannot be null or empty.", nameof(functionName));
+            }
+
+            if (mock == null)
+            {
+                throw new ArgumentNullException(nameof(mock), "Mock function cannot be null.");
+            }
+
             ScriptFunction function = _functions.FirstOrDefault(f => f.Name == functionName);
             if (function == null)
             {
-                throw new ArgumentException($"Function '{functionName}' does not exist.");
+                throw new ArgumentException($"Function '{functionName}' does not exist in the function list for this game.", nameof(functionName));
             }
 
-            // TODO:  Python validates parameter count using signature(mock).parameters
-            // For C#, we can't easily inspect the Func signature, so we'll validate at call time
+            // Store the mock function
+            // Parameter count validation occurs at call time in ExecuteAction() method
+            // This matches Python behavior where parameter count is validated, but in C# we validate
+            // when the function is actually called rather than at registration time
+            // Python: Uses signature(mock).parameters to get parameter count and validates immediately
+            // C#: Func<object[], object> has fixed signature, so we validate parameter count at call time
             _mocks[functionName] = mock;
         }
 
