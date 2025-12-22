@@ -5381,13 +5381,13 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// <param name="resourceDimension">D3D12 resource dimension (D3D12_RESOURCE_DIMENSION_TEXTURE2D, etc.).</param>
         /// <returns>CPU descriptor handle for the SRV, or IntPtr.Zero on failure.</returns>
         // TODO: STUB - Create descriptor methods for binding sets
-        private void CreateSrvDescriptorForBindingSet(ITexture2D texture, IntPtr cpuDescriptorHandle)
+        private void CreateSrvDescriptorForBindingSet(ITexture texture, IntPtr cpuDescriptorHandle)
         {
             // TODO: Implement SRV descriptor creation for binding set
             // This should call CreateSrvDescriptorForTexture and copy the descriptor to the provided handle
         }
 
-        private void CreateUavDescriptorForBindingSet(ITexture2D texture, IntPtr cpuDescriptorHandle)
+        private void CreateUavDescriptorForBindingSet(ITexture texture, IntPtr cpuDescriptorHandle)
         {
             // TODO: Implement UAV descriptor creation for binding set
         }
