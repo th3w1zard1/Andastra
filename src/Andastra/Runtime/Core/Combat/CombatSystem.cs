@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Games.Common.Combat;
 
 namespace Andastra.Runtime.Core.Combat
 {
@@ -608,7 +609,7 @@ namespace Andastra.Runtime.Core.Combat
 
         private int GetDamageReduction(IEntity entity, DamageType type)
         {
-            // Simplified damage reduction
+            // TODO:  Simplified damage reduction
             return 0;
         }
 
@@ -619,8 +620,193 @@ namespace Andastra.Runtime.Core.Combat
 
         private int RollDamage(IEntity attacker)
         {
-            // Simplified weapon damage (1d8+1)
-            return _random.Next(1, 9) + 1;
+            if (attacker == null)
+            {
+                return 0;
+            }
+
+            // Try to get weapon damage calculator from world (engine-specific)
+            // Based on swkotor2.exe: Weapon damage calculation uses baseitems.2da
+            // Located via string references: "DamageDice" @ 0x007c2d3c, "DamageDie" @ 0x007c2d30
+            // Original implementation: FUN_005d7fc0 @ 0x005d7fc0 saves DamageDice/DamageDie to GFF
+            // Damage formula: Roll(damagedice * damagedie) + damagebonus + ability modifier
+            var calculator = GetWeaponDamageCalculator();
+            if (calculator != null)
+            {
+                // Use weapon damage calculator (handles equipped weapons, unarmed, ability modifiers, etc.)
+                // isOffhand = false (main hand attack), isCritical = false (will be applied in DealDamage if critical)
+                return calculator.CalculateDamage(attacker, isOffhand: false, isCritical: false);
+            }
+
+            // Fallback: Calculate damage directly from equipped weapon
+            return CalculateWeaponDamageFallback(attacker);
+        }
+
+        /// <summary>
+        /// Gets the weapon damage calculator from the world (engine-specific).
+        /// </summary>
+        /// <returns>The weapon damage calculator, or null if not available.</returns>
+        /// <remarks>
+        /// Based on swkotor2.exe: Weapon damage calculation system
+        /// Uses reflection to find engine-specific weapon damage calculator from world
+        /// Engine-specific implementations: WeaponDamageCalculator (Odyssey), AuroraWeaponDamageCalculator (Aurora), EclipseWeaponDamageCalculator (Eclipse)
+        /// </remarks>
+        private BaseWeaponDamageCalculator GetWeaponDamageCalculator()
+        {
+            if (_world == null)
+            {
+                return null;
+            }
+
+            // Try to get weapon damage calculator from world using reflection
+            // Engine-specific worlds may have a WeaponDamageCalculator property
+            try
+            {
+                Type worldType = _world.GetType();
+                
+                // Try common property names
+                System.Reflection.PropertyInfo calculatorProp = worldType.GetProperty("WeaponDamageCalculator");
+                if (calculatorProp != null)
+                {
+                    object calculator = calculatorProp.GetValue(_world);
+                    if (calculator is BaseWeaponDamageCalculator baseCalculator)
+                    {
+                        return baseCalculator;
+                    }
+                }
+
+                // Try method to get calculator
+                System.Reflection.MethodInfo getCalculatorMethod = worldType.GetMethod("GetWeaponDamageCalculator");
+                if (getCalculatorMethod != null)
+                {
+                    object calculator = getCalculatorMethod.Invoke(_world, null);
+                    if (calculator is BaseWeaponDamageCalculator baseCalculator)
+                    {
+                        return baseCalculator;
+                    }
+                }
+            }
+            catch
+            {
+                // Reflection failed, fall through to fallback
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Fallback weapon damage calculation when calculator is not available.
+        /// </summary>
+        /// <param name="attacker">The attacking entity.</param>
+        /// <returns>Damage amount.</returns>
+        /// <remarks>
+        /// Based on swkotor2.exe: Fallback damage calculation
+        /// Calculates damage directly from equipped weapon data
+        /// Uses entity data fields: "DamageDice", "DamageDie", "DamageBonus"
+        /// Falls back to unarmed damage (1d3) if no weapon equipped
+        /// </remarks>
+        private int CalculateWeaponDamageFallback(IEntity attacker)
+        {
+            if (attacker == null)
+            {
+                return 0;
+            }
+
+            // Get equipped weapon from inventory
+            Interfaces.Components.IInventoryComponent inventory = attacker.GetComponent<Interfaces.Components.IInventoryComponent>();
+            if (inventory == null)
+            {
+                // Unarmed damage: 1d3 (common across all engines)
+                return RollDice(1, 3);
+            }
+
+            // Try main hand weapon slot (engine-specific, but common slots are 4 for main hand, 5 for offhand)
+            // Based on swkotor2.exe: RIGHTWEAPON slot 4, LEFTWEAPON slot 5
+            IEntity weapon = inventory.GetItemInSlot(4); // Main hand
+            if (weapon == null)
+            {
+                weapon = inventory.GetItemInSlot(5); // Offhand
+            }
+
+            if (weapon == null)
+            {
+                // Unarmed damage: 1d3 (common across all engines)
+                return RollDice(1, 3);
+            }
+
+            // Get damage dice from weapon entity data
+            // Based on swkotor2.exe: DamageDice and DamageDie stored in entity data
+            // Located via string references: "DamageDice" @ 0x007c2d3c, "DamageDie" @ 0x007c2d30
+            int damageDice = 1;
+            int damageDie = 8;
+            int damageBonus = 0;
+
+            if (weapon.HasData("DamageDice"))
+            {
+                object diceObj = weapon.GetData("DamageDice");
+                if (diceObj is int dice)
+                {
+                    damageDice = dice;
+                }
+            }
+
+            if (weapon.HasData("DamageDie"))
+            {
+                object dieObj = weapon.GetData("DamageDie");
+                if (dieObj is int die)
+                {
+                    damageDie = die;
+                }
+            }
+
+            if (weapon.HasData("DamageBonus"))
+            {
+                object bonusObj = weapon.GetData("DamageBonus");
+                if (bonusObj is int bonus)
+                {
+                    damageBonus = bonus;
+                }
+            }
+
+            // Roll damage dice
+            int rolledDamage = RollDice(damageDice, damageDie);
+
+            // Add damage bonus
+            int totalDamage = rolledDamage + damageBonus;
+
+            // Add ability modifier (STR for melee, DEX for ranged - simplified)
+            Interfaces.Components.IStatsComponent stats = attacker.GetComponent<Interfaces.Components.IStatsComponent>();
+            if (stats != null)
+            {
+                // Simplified: Use STR modifier (melee default)
+                // Full implementation would check if weapon is ranged and use DEX, or check finesse feats
+                int strMod = stats.GetAbilityModifier(Core.Enums.Ability.Strength);
+                totalDamage += strMod;
+            }
+
+            // Minimum 1 damage
+            return Math.Max(1, totalDamage);
+        }
+
+        /// <summary>
+        /// Rolls dice (e.g., 2d6 = RollDice(2, 6)).
+        /// </summary>
+        /// <param name="count">Number of dice to roll.</param>
+        /// <param name="dieSize">Size of each die (e.g., 6 for d6).</param>
+        /// <returns>Total of all dice rolls.</returns>
+        /// <remarks>
+        /// Based on swkotor2.exe: Dice rolling system
+        /// Common across all engines: Rolls multiple dice and sums the results
+        /// Used for weapon damage, unarmed damage, and other dice-based calculations
+        /// </remarks>
+        private int RollDice(int count, int dieSize)
+        {
+            int total = 0;
+            for (int i = 0; i < count; i++)
+            {
+                total += _random.Next(1, dieSize + 1);
+            }
+            return total;
         }
 
         private bool IsAlive(IEntity entity)
