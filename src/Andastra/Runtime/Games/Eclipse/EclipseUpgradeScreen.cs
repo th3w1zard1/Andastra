@@ -1341,11 +1341,18 @@ namespace Andastra.Runtime.Games.Eclipse
                     if (loaded)
                     {
                         // Get loaded GUI from manager (if exposed, otherwise load directly)
-                        // TODO: STUB - For now, we'll also load directly for compatibility
+                        // Based on Eclipse GUI system: Retrieve GUI from manager cache to avoid duplicate loading
+                        ParsingGUI guiFromManager = _guiManager.GetLoadedGui(_guiName);
+                        if (guiFromManager != null && guiFromManager.Controls != null && guiFromManager.Controls.Count > 0)
+                        {
+                            _loadedGui = guiFromManager;
+                            Console.WriteLine($"[EclipseUpgradeScreen] Successfully retrieved GUI from manager: {_guiName} - {_loadedGui.Controls.Count} controls");
+                            return true;
+                        }
                     }
                 }
 
-                // Load GUI resource from installation
+                // Load GUI resource from installation (fallback if manager not available or GUI not in manager)
                 // Based on Eclipse GUI system: GUI resources are loaded via Installation
                 var resourceResult = _installation.Resources.LookupResource(_guiName, ResourceType.GUI, null, null);
                 if (resourceResult == null || resourceResult.Data == null || resourceResult.Data.Length == 0)

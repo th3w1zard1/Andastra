@@ -2345,11 +2345,18 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                             ctx.World.EventBus.FireScriptEvent(target, ScriptEvent.OnDeath, null);
                         }
                         
-                        // Notify combat system if available
+                        // Notify combat system immediately when entity dies
                         // Based on daorigins.exe/DragonAge2.exe: Combat system handles death cleanup (removes from combat, updates state)
-                        // CombatSystem will handle death through its normal update cycle, but we've already fired events
-                        // The combat system's HandleDeath method is private, but it listens to OnEntityDeath events
-                        // TODO: STUB - For now, the combat system will detect death on its next update cycle if it checks IsDead
+                        // Original implementation: When entity dies, it's immediately removed from combat to prevent further actions
+                        // CombatSystem.HandleDeath is private, but we can call ExitCombat directly to remove entity from combat
+                        // This ensures the entity is removed from combat immediately, not waiting for the next update cycle
+                        if (ctx.World != null && ctx.World.CombatSystem != null)
+                        {
+                            // Remove entity from combat immediately when it dies
+                            // ExitCombat removes the entity from active combat encounters and fires OnCombatEnd event
+                            // This prevents dead entities from continuing to participate in combat
+                            ctx.World.CombatSystem.ExitCombat(target);
+                        }
                     }
                 }
             }

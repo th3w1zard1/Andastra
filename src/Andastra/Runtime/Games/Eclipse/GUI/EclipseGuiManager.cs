@@ -234,6 +234,31 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
         }
 
         /// <summary>
+        /// Gets the loaded GUI by name.
+        /// </summary>
+        /// <param name="guiName">Name of the GUI to retrieve.</param>
+        /// <returns>The loaded GUI, or null if not loaded.</returns>
+        /// <remarks>
+        /// Based on Eclipse GUI system: Allows retrieval of loaded GUI from manager cache.
+        /// This enables screens to use GUIs loaded by the manager without re-loading them directly.
+        /// </remarks>
+        [CanBeNull]
+        public ParsingGUI GetLoadedGui(string guiName)
+        {
+            if (string.IsNullOrEmpty(guiName))
+            {
+                return null;
+            }
+
+            if (_loadedGuis.TryGetValue(guiName, out var loadedGui))
+            {
+                return loadedGui.Gui;
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Updates GUI input handling.
         /// </summary>
         public override void Update(object gameTime)
@@ -786,7 +811,7 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
                     break;
             }
 
-            // Vertical alignment (assuming top for now)
+            // TODO:  Vertical alignment (assuming top for now)
             y = position.Y;
 
             return new NumericsVector2(x, y);
