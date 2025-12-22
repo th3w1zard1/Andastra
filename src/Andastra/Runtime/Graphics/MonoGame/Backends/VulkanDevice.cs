@@ -1315,6 +1315,10 @@ namespace Andastra.Runtime.MonoGame.Backends
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate VkResult vkDestroyCommandPoolDelegate(IntPtr device, IntPtr commandPool, IntPtr pAllocator);
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkCreateRenderPassDelegate(IntPtr device, ref VkRenderPassCreateInfo pCreateInfo, IntPtr pAllocator, out IntPtr pRenderPass);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate VkResult vkDestroyRenderPassDelegate(IntPtr device, IntPtr renderPass, IntPtr pAllocator);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate VkResult vkDestroyFramebufferDelegate(IntPtr device, IntPtr framebuffer, IntPtr pAllocator);
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate VkResult vkDestroyRenderPassDelegate(IntPtr device, IntPtr renderPass, IntPtr pAllocator);
@@ -1474,6 +1478,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         private static vkCreateCommandPoolDelegate vkCreateCommandPool;
         private static vkDestroyCommandPoolDelegate vkDestroyCommandPool;
+        private static vkCreateRenderPassDelegate _vkCreateRenderPass;
         private static vkDestroyFramebufferDelegate vkDestroyFramebuffer;
         private static vkDestroyRenderPassDelegate vkDestroyRenderPass;
         private static vkAllocateCommandBuffersDelegate vkAllocateCommandBuffers;
@@ -2774,7 +2779,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private IntPtr CreateRenderPassFromFramebufferDesc(FramebufferDesc desc)
         {
             // Note: FramebufferDesc is a struct, so it cannot be null
-            if (vkCreateRenderPass == null)
+            if (_vkCreateRenderPass == null)
             {
                 return IntPtr.Zero;
             }
@@ -2938,7 +2943,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                         };
 
                         // Create render pass
-                        VkResult result = vkCreateRenderPass(_device, ref renderPassCreateInfo, IntPtr.Zero, out vkRenderPass);
+                        VkResult result = _vkCreateRenderPass(_device, ref renderPassCreateInfo, IntPtr.Zero, out vkRenderPass);
                         if (result != VkResult.VK_SUCCESS)
                         {
                             throw new VulkanException($"vkCreateRenderPass failed with result: {result}");
@@ -3151,7 +3156,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 };
 
                 // Create render pass if we have attachments
-                if (attachments.Count > 0 && vkCreateRenderPass != null)
+                if (attachments.Count > 0 && _vkCreateRenderPass != null)
                 {
                     // Marshal attachment descriptions
                     int attachmentDescSize = Marshal.SizeOf(typeof(VkAttachmentDescription));
@@ -3212,7 +3217,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                             };
 
                             // Create render pass
-                            VkResult result = vkCreateRenderPass(_device, ref renderPassCreateInfo, IntPtr.Zero, out vkRenderPass);
+                            VkResult result = _vkCreateRenderPass(_device, ref renderPassCreateInfo, IntPtr.Zero, out vkRenderPass);
                             if (result != VkResult.VK_SUCCESS)
                             {
                                 throw new VulkanException($"vkCreateRenderPass failed with result: {result}");
@@ -3248,7 +3253,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 {
                     Console.WriteLine("[VulkanDevice] Warning: CreateFramebuffer called with no attachments, creating placeholder framebuffer");
                 }
-                else if (vkCreateRenderPass == null)
+                else if (_vkCreateRenderPass == null)
                 {
                     Console.WriteLine("[VulkanDevice] Warning: vkCreateRenderPass function pointer not initialized, creating placeholder framebuffer");
                 }

@@ -1375,11 +1375,11 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // For empty binding sets, GPU descriptor handle is at heap start (offset 0)
                 // Based on DirectX 12: GPU descriptor handles are offset from heap start by descriptor index * increment size
                 // Since there are no descriptors, offset is 0
-                D3D12_GPU_DESCRIPTOR_HANDLE gpuDescriptorHandle = _cbvSrvUavHeapGpuStartHandle;
-                IntPtr handle = new IntPtr(_nextResourceHandle++);
-                var bindingSet = new D3D12BindingSet(handle, layout, desc, _cbvSrvUavDescriptorHeap, _device, this, gpuDescriptorHandle);
-                _resources[handle] = bindingSet;
-                return bindingSet;
+                D3D12_GPU_DESCRIPTOR_HANDLE emptyGpuDescriptorHandle = _cbvSrvUavHeapGpuStartHandle;
+                IntPtr emptyHandle = new IntPtr(_nextResourceHandle++);
+                var emptyBindingSet = new D3D12BindingSet(emptyHandle, layout, desc, _cbvSrvUavDescriptorHeap, _device, this, emptyGpuDescriptorHandle);
+                _resources[emptyHandle] = emptyBindingSet;
+                return emptyBindingSet;
             }
 
             // Check if heap has enough space
@@ -5380,6 +5380,38 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// <param name="dxgiFormat">DXGI format for the texture.</param>
         /// <param name="resourceDimension">D3D12 resource dimension (D3D12_RESOURCE_DIMENSION_TEXTURE2D, etc.).</param>
         /// <returns>CPU descriptor handle for the SRV, or IntPtr.Zero on failure.</returns>
+        // TODO: STUB - Create descriptor methods for binding sets
+        private void CreateSrvDescriptorForBindingSet(ITexture2D texture, IntPtr cpuDescriptorHandle)
+        {
+            // TODO: Implement SRV descriptor creation for binding set
+            // This should call CreateSrvDescriptorForTexture and copy the descriptor to the provided handle
+        }
+
+        private void CreateUavDescriptorForBindingSet(ITexture2D texture, IntPtr cpuDescriptorHandle)
+        {
+            // TODO: Implement UAV descriptor creation for binding set
+        }
+
+        private void CreateCbvDescriptorForBindingSet(IBuffer buffer, int offset, int range, IntPtr cpuDescriptorHandle)
+        {
+            // TODO: Implement CBV descriptor creation for binding set
+        }
+
+        private void CreateSrvDescriptorForStructuredBuffer(IBuffer buffer, int offset, int range, IntPtr cpuDescriptorHandle)
+        {
+            // TODO: Implement SRV descriptor creation for structured buffer
+        }
+
+        private void CreateUavDescriptorForBuffer(IBuffer buffer, int offset, int range, IntPtr cpuDescriptorHandle)
+        {
+            // TODO: Implement UAV descriptor creation for buffer
+        }
+
+        private void CreateSrvDescriptorForAccelStruct(IAccelStruct accelStruct, IntPtr cpuDescriptorHandle)
+        {
+            // TODO: Implement SRV descriptor creation for acceleration structure
+        }
+
         private IntPtr CreateSrvDescriptorForTexture(IntPtr d3d12Resource, TextureDesc desc, uint dxgiFormat, uint resourceDimension)
         {
             if (d3d12Resource == IntPtr.Zero)

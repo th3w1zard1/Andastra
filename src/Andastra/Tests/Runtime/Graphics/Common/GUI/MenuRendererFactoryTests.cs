@@ -82,7 +82,7 @@ namespace Andastra.Tests.Runtime.Graphics.Common.GUI
         {
             // Arrange
             // Note: Stride backend requires actual Stride GraphicsDevice
-            // For testing, we'll mock it and expect null if device extraction fails
+            // TODO:  For testing, we'll mock it and expect null if device extraction fails
             var graphicsDevice = GraphicsTestHelper.CreateTestIGraphicsDevice();
             var mockBackend = CreateMockGraphicsBackend(GraphicsBackendType.Stride, graphicsDevice, true);
             mockBackend.Setup(b => b.ContentManager).Returns((IContentManager)null);
@@ -192,16 +192,82 @@ namespace Andastra.Tests.Runtime.Graphics.Common.GUI
 
         /// <summary>
         /// Creates a mock IGraphicsBackend with the specified configuration.
+        /// Sets up all interface members required by MockBehavior.Strict to ensure comprehensive mocking.
         /// </summary>
+        /// <param name="backendType">The graphics backend type to mock.</param>
+        /// <param name="graphicsDevice">The graphics device to use (required).</param>
+        /// <param name="isInitialized">Whether the backend is initialized.</param>
+        /// <returns>A fully configured mock IGraphicsBackend with all interface members set up.</returns>
+        /// <remarks>
+        /// Mock Setup Details:
+        /// - Properties: BackendType, IsInitialized, GraphicsDevice (from parameters)
+        /// - Properties: ContentManager, Window, InputManager (mocked, can return null)
+        /// - Properties: SupportsVSync (defaults to true for testing)
+        /// - Methods: All IGraphicsBackend interface methods are set up with default implementations
+        /// - Methods returning interfaces: Return null by default (safe for testing scenarios)
+        /// - Methods with void return: Set up as no-ops (safe for testing)
+        /// - IDisposable: Dispose() is set up as a no-op
+        /// </remarks>
         private Mock<IGraphicsBackend> CreateMockGraphicsBackend(
             GraphicsBackendType backendType,
             IGraphicsDevice graphicsDevice,
             bool isInitialized)
         {
             var mockBackend = new Mock<IGraphicsBackend>(MockBehavior.Strict);
+            
+            // Core properties (from parameters)
             mockBackend.Setup(b => b.BackendType).Returns(backendType);
             mockBackend.Setup(b => b.GraphicsDevice).Returns(graphicsDevice);
             mockBackend.Setup(b => b.IsInitialized).Returns(isInitialized);
+            
+            // Additional properties (mocked with null/default values for testing)
+            mockBackend.Setup(b => b.ContentManager).Returns((IContentManager)null);
+            mockBackend.Setup(b => b.Window).Returns((IWindow)null);
+            mockBackend.Setup(b => b.InputManager).Returns((IInputManager)null);
+            mockBackend.Setup(b => b.SupportsVSync).Returns(true);
+            
+            // Lifecycle methods (no-ops for testing)
+            mockBackend.Setup(b => b.Initialize(
+                It.IsAny<int>(),
+                It.IsAny<int>(),
+                It.IsAny<string>(),
+                It.IsAny<bool>()));
+            
+            mockBackend.Setup(b => b.Run(
+                It.IsAny<Action<float>>(),
+                It.IsAny<Action>()));
+            
+            mockBackend.Setup(b => b.Exit());
+            
+            // Frame management methods (no-ops for testing)
+            mockBackend.Setup(b => b.BeginFrame());
+            mockBackend.Setup(b => b.EndFrame());
+            
+            // Renderer creation methods (return null for testing - callers should handle null)
+            mockBackend.Setup(b => b.CreateRoomMeshRenderer()).Returns((IRoomMeshRenderer)null);
+            mockBackend.Setup(b => b.CreateEntityModelRenderer(
+                It.IsAny<object>(),
+                It.IsAny<object>())).Returns((IEntityModelRenderer)null);
+            
+            // Audio creation methods (return null for testing)
+            mockBackend.Setup(b => b.CreateSpatialAudio()).Returns((ISpatialAudio)null);
+            
+            // Player creation methods (return null for testing)
+            mockBackend.Setup(b => b.CreateDialogueCameraController(
+                It.IsAny<object>())).Returns((object)null);
+            mockBackend.Setup(b => b.CreateSoundPlayer(
+                It.IsAny<object>())).Returns((object)null);
+            mockBackend.Setup(b => b.CreateMusicPlayer(
+                It.IsAny<object>())).Returns((object)null);
+            mockBackend.Setup(b => b.CreateVoicePlayer(
+                It.IsAny<object>())).Returns((object)null);
+            
+            // VSync method (no-op for testing)
+            mockBackend.Setup(b => b.SetVSync(It.IsAny<bool>()));
+            
+            // IDisposable implementation (no-op for testing)
+            mockBackend.Setup(b => b.Dispose());
+            
             return mockBackend;
         }
     }
