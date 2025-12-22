@@ -1375,7 +1375,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             stub.Append("// This stub is generated when decompilation fails completely").Append(newline);
             stub.Append("// It provides a syntactically valid NSS file that can be compiled").Append(newline);
             stub.Append(newline);
-            
+
             // Generate minimal valid main function
             // Based on NWScript: main() is the entry point for script execution
             // Format: void main() { ... } with proper spacing and syntax
@@ -1529,7 +1529,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
 
             List<ExtractedSubroutineInfo> subroutines = new List<ExtractedSubroutineInfo>();
             string[] lines = commands.Split('\n');
-            
+
             for (int i = 0; i < lines.Length; i++)
             {
                 string line = lines[i].Trim();
@@ -1541,7 +1541,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 // Look for subroutine/function declarations
                 // Patterns: "sub function_name(...)", "function function_name(...)", "void function_name(...)", etc.
                 ExtractedSubroutineInfo subInfo = null;
-                
+
                 // Pattern 1: "sub function_name(...)" or "sub function_name()"
                 if (line.StartsWith("sub ") && line.Contains("("))
                 {
@@ -1600,7 +1600,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
 
                 // Remove prefix and whitespace
                 string remaining = line.Substring(prefix.Length).Trim();
-                
+
                 // Find the opening parenthesis
                 int parenIndex = remaining.IndexOf('(');
                 if (parenIndex < 0)
@@ -1637,7 +1637,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 }
 
                 string paramsStr = remaining.Substring(parenIndex + 1, closeParenIndex - parenIndex - 1).Trim();
-                
+
                 if (string.IsNullOrEmpty(paramsStr))
                 {
                     // Empty parameter list
@@ -1648,7 +1648,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     // Parse parameters - split by comma
                     string[] paramParts = paramsStr.Split(',');
                     info.ParameterCount = paramParts.Length;
-                    
+
                     // Try to extract parameter types
                     foreach (string param in paramParts)
                     {
@@ -1687,7 +1687,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     // Default to void for sub/function
                     sigBuilder.Append("void ");
                 }
-                
+
                 sigBuilder.Append(info.Name).Append("(");
                 if (info.ParameterCount > 0 && info.ParameterTypes.Count > 0)
                 {
@@ -1708,9 +1708,9 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     }
                 }
                 sigBuilder.Append(")");
-                
+
                 info.Signature = sigBuilder.ToString();
-                
+
                 return info;
             }
             catch (Exception e)
@@ -1731,9 +1731,9 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
         /// <param name="extractedSubs">List of extracted subroutine information</param>
         /// <returns>Comprehensive fallback stub with function signatures</returns>
         private string GenerateComprehensiveFallbackStubWithSubroutines(
-            NcsFile file, 
-            string errorStage, 
-            Exception exception, 
+            NcsFile file,
+            string errorStage,
+            Exception exception,
             string additionalInfo,
             List<ExtractedSubroutineInfo> extractedSubs)
         {
@@ -1742,7 +1742,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
 
             // Start with standard comprehensive stub header
             string baseStub = this.GenerateComprehensiveFallbackStub(file, errorStage, exception, additionalInfo);
-            
+
             // Remove the minimal fallback function from the base stub (we'll replace it with actual stubs)
             // Find where the minimal function starts
             int minimalFuncIndex = baseStub.LastIndexOf("// Minimal fallback function:");
@@ -1767,10 +1767,10 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             foreach (ExtractedSubroutineInfo subInfo in extractedSubs)
             {
                 // Check if this is the main function
-                bool isMain = subInfo.Name != null && 
+                bool isMain = subInfo.Name != null &&
                              (subInfo.Name.Equals("main", StringComparison.OrdinalIgnoreCase) ||
                               subInfo.Name.Equals("StartingConditional", StringComparison.OrdinalIgnoreCase));
-                
+
                 if (isMain)
                 {
                     hasMain = true;
@@ -1787,7 +1787,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             // Generate function implementations
             foreach (ExtractedSubroutineInfo subInfo in extractedSubs)
             {
-                bool isMain = subInfo.Name != null && 
+                bool isMain = subInfo.Name != null &&
                              (subInfo.Name.Equals("main", StringComparison.OrdinalIgnoreCase) ||
                               subInfo.Name.Equals("StartingConditional", StringComparison.OrdinalIgnoreCase));
 
@@ -1796,17 +1796,17 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 stub.Append("    // Function signature extracted from decoded bytecode").Append(newline);
                 stub.Append("    // Line ").Append(subInfo.LineNumber + 1).Append(" in decoded commands").Append(newline);
                 stub.Append("    // Full decompilation failed - function body could not be recovered").Append(newline);
-                
+
                 if (isMain)
                 {
                     stub.Append("    // This is the main entry point function").Append(newline);
                 }
-                
+
                 if (subInfo.ParameterCount > 0)
                 {
                     stub.Append("    // Parameters: ").Append(subInfo.ParameterCount).Append(" detected").Append(newline);
                 }
-                
+
                 if (!string.IsNullOrEmpty(subInfo.ReturnType) && subInfo.ReturnType != "void")
                 {
                     stub.Append("    // Return type: ").Append(subInfo.ReturnType).Append(newline);
@@ -1823,7 +1823,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                         stub.Append("    return OBJECT_INVALID;").Append(newline);
                     }
                 }
-                
+
                 stub.Append("}").Append(newline);
                 stub.Append(newline);
             }
@@ -1850,6 +1850,78 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 }
                 stub.Append("}").Append(newline);
             }
+
+            return stub.ToString();
+        }
+
+        /// <summary>
+        /// Generates a comprehensive fallback stub that preserves decoded commands for manual recovery.
+        /// Similar to GenerateComprehensiveFallbackStubWithSubroutines but preserves the raw commands string.
+        /// </summary>
+        /// <param name="file">The NCS file being decompiled</param>
+        /// <param name="errorStage">Stage where the error occurred</param>
+        /// <param name="exception">Exception that occurred (if any)</param>
+        /// <param name="additionalInfo">Additional error information</param>
+        /// <param name="commands">Decoded commands string to preserve</param>
+        /// <returns>Comprehensive fallback stub with preserved commands</returns>
+        private string GenerateComprehensiveFallbackStubWithPreservedCommands(
+            NcsFile file,
+            string errorStage,
+            Exception exception,
+            string additionalInfo,
+            string commands)
+        {
+            StringBuilder stub = new StringBuilder();
+            string newline = Environment.NewLine;
+
+            // Start with standard comprehensive stub header
+            string baseStub = this.GenerateComprehensiveFallbackStub(file, errorStage, exception, additionalInfo);
+
+            // Remove the minimal fallback function from the base stub (we'll add preserved commands and a stub function)
+            int minimalFuncIndex = baseStub.LastIndexOf("// Minimal fallback function:");
+            if (minimalFuncIndex >= 0)
+            {
+                baseStub = baseStub.Substring(0, minimalFuncIndex);
+            }
+
+            stub.Append(baseStub);
+
+            // Add preserved commands section
+            stub.Append(newline);
+            stub.Append("// ========================================").Append(newline);
+            stub.Append("// PRESERVED DECODED COMMANDS").Append(newline);
+            stub.Append("// ========================================").Append(newline);
+            stub.Append("// The following commands were successfully decoded but could not be parsed into an AST.").Append(newline);
+            stub.Append("// These commands are preserved here for manual recovery or future analysis.").Append(newline);
+            stub.Append(newline);
+
+            if (!string.IsNullOrEmpty(commands))
+            {
+                // Split commands into lines and add as comments
+                string[] commandLines = commands.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                foreach (string line in commandLines)
+                {
+                    stub.Append("// ").Append(line).Append(newline);
+                }
+            }
+            else
+            {
+                stub.Append("// No commands available to preserve.").Append(newline);
+            }
+
+            stub.Append(newline);
+
+            // Add minimal fallback function
+            stub.Append("// Minimal fallback function:").Append(newline);
+            stub.Append("void main()").Append(newline);
+            stub.Append("{").Append(newline);
+            stub.Append("    // Decompilation failed at stage: ").Append(errorStage != null ? errorStage : "Unknown").Append(newline);
+            if (exception != null && exception.Message != null)
+            {
+                stub.Append("    // Error: ").Append(exception.Message.Replace("\n", " ").Replace("\r", "")).Append(newline);
+            }
+            stub.Append("    // Decoded commands have been preserved in comments above for manual recovery").Append(newline);
+            stub.Append("}").Append(newline);
 
             return stub.ToString();
         }
@@ -1965,7 +2037,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                         // File1 has more lines - continue comparison (bytecode line 98: ifnonnull 54)
                         // Save current s2 before reading new line (needed for proper comparison)
                         string prevS2 = s2;
-                        
+
                         // Read next line from file2 (bytecode line 54-59)
                         // This overwrites s2 in the bytecode, but we need to compare with prevS2
                         s2 = br2.ReadLine();
@@ -2038,7 +2110,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             {
                 // IO exception occurred - log and return null (bytecode lines 151-195)
                 Debug("IO exception in compare files: " + ex);
-                
+
                 // Ensure readers are closed (bytecode lines 180-186)
                 if (br1 != null)
                 {
@@ -2214,7 +2286,10 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             if (this.actions == null)
             {
                 Debug("null action! Creating fallback stub.");
-                // TODO:  Return comprehensive stub instead of null
+                // Return comprehensive stub when actions data is not loaded
+                // Based on NCSDecomp implementation: Always return a comprehensive fallback stub instead of null
+                // This ensures the decompiler always produces output, even when critical data is missing
+                // The stub includes detailed error information, file metadata, and a minimal valid NSS function
                 Utils.FileScriptData stub = new Utils.FileScriptData();
                 string expectedFile = isK2Selected ? "tsl_nwscript.nss" : "k1_nwscript.nss";
                 string stubCode = this.GenerateComprehensiveFallbackStub(file, "Actions data loading", null,
@@ -2328,15 +2403,15 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                                 if (subCount2 > 0)
                                 {
                                     Debug("Detected " + subCount2 + " potential subroutines in decoded commands, but full parse failed.");
-                                    
+
                                     // Extract detailed subroutine information from decoded commands
                                     // This allows us to create function stubs with actual signatures
                                     List<ExtractedSubroutineInfo> extractedSubs = ExtractSubroutineInformation(commands);
-                                    
+
                                     if (extractedSubs != null && extractedSubs.Count > 0)
                                     {
                                         Debug("Extracted information for " + extractedSubs.Count + " subroutines from decoded commands.");
-                                        
+
                                         // Build enhanced additional info with subroutine details
                                         StringBuilder enhancedInfo = new StringBuilder();
                                         enhancedInfo.Append("Bytecode was successfully decoded but parsing failed.\n");
@@ -2344,7 +2419,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                                         enhancedInfo.Append("Detected subroutines: ").Append(extractedSubs.Count).Append("\n\n");
                                         enhancedInfo.Append("EXTRACTED SUBROUTINE INFORMATION:\n");
                                         enhancedInfo.Append("The following subroutines were detected in the decoded commands:\n\n");
-                                        
+
                                         foreach (ExtractedSubroutineInfo subInfo in extractedSubs)
                                         {
                                             enhancedInfo.Append("  - ").Append(subInfo.Signature).Append("\n");
@@ -2362,16 +2437,16 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                                             }
                                             enhancedInfo.Append("\n");
                                         }
-                                        
+
                                         enhancedInfo.Append("RECOVERY NOTE: Function stubs have been generated based on detected subroutine signatures.\n");
                                         enhancedInfo.Append("The decoded commands are available but could not be parsed into an AST.\n");
                                         enhancedInfo.Append("This may indicate malformed bytecode or an unsupported format variant.\n\n");
-                                        
+
                                         // Generate stub with extracted subroutine information
                                         string stub = this.GenerateComprehensiveFallbackStubWithSubroutines(
-                                            file, 
-                                            "Parsing decoded bytecode", 
-                                            parseEx, 
+                                            file,
+                                            "Parsing decoded bytecode",
+                                            parseEx,
                                             enhancedInfo.ToString(),
                                             extractedSubs);
                                         data.SetCode(stub);
@@ -2387,25 +2462,15 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                         }
                     }
 
-                    // TODO:  If we still don't have an AST, create comprehensive stub but preserve commands for potential manual recovery
+                    // If we still don't have an AST, create comprehensive stub but preserve commands for potential manual recovery
                     if (ast == null)
                     {
-                        string commandsPreview = "none";
-                        if (commands != null && commands.Length > 0)
-                        {
-                            int previewLength = Math.Min(1000, commands.Length);
-                            commandsPreview = commands.Substring(0, previewLength);
-                            if (commands.Length > previewLength)
-                            {
-                                commandsPreview += "\n... (truncated, total length: " + commands.Length + " characters)";
-                            }
-                        }
                         string additionalInfo = "Bytecode was successfully decoded but parsing failed.\n" +
-                                               "Decoded commands length: " + (commands != null ? commands.Length : 0) + " characters\n" +
-                                               "Decoded commands preview:\n" + commandsPreview + "\n\n" +
+                                               "Decoded commands length: " + (commands != null ? commands.Length : 0) + " characters\n\n" +
                                                "RECOVERY NOTE: The decoded commands are available but could not be parsed into an AST.\n" +
-                                               "This may indicate malformed bytecode or an unsupported format variant.";
-                        string stub = this.GenerateComprehensiveFallbackStub(file, "Parsing decoded bytecode", parseEx, additionalInfo);
+                                               "This may indicate malformed bytecode or an unsupported format variant.\n" +
+                                               "The full decoded commands have been preserved in the comment section below for manual recovery.";
+                        string stub = this.GenerateComprehensiveFallbackStubWithPreservedCommands(file, "Parsing decoded bytecode", parseEx, additionalInfo, commands);
                         data.SetCode(stub);
                         return data;
                     }
