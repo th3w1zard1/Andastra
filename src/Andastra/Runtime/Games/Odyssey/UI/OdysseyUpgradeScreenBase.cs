@@ -97,6 +97,11 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         {
             _isVisible = true;
 
+            // Extract character skills when screen is shown
+            // Based on swkotor2.exe: Character skills used for item creation/upgrading (NOT IMPLEMENTED in original)
+            // Skills are extracted when character is set, but we also extract them here to ensure they're up-to-date
+            ExtractCharacterSkills();
+
             // Get GUI name based on game version
             // Based on swkotor2.exe: FUN_00731a00 @ 0x00731a00 line 37 - loads "upgradeitems_p"
             // Based on swkotor.exe: FUN_006c7630 @ 0x006c7630 line 37 - loads "upgradeitems"
@@ -359,10 +364,59 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
                     // FUN_0055f2a0/FUN_00555ed0 iterate through inventory items and compare ResRefs using string comparison
                     if (inventoryResRefs.Contains(normalizedResRef))
                     {
-                        // Upgrade is compatible and available in inventory
+                        // Check skill requirements for upgrade (if character skills are available)
+                        // Based on swkotor2.exe: Character skills used for item creation/upgrading (NOT IMPLEMENTED in original)
+                        // Skills are used to filter available upgrades based on skill requirements
+                        // If upgrade table has skill requirement columns (e.g., "RequiredSkill", "RequiredSkillRank"), check them
+                        // Common skills used: Repair (5), Security (6), Computer Use (0), Demolitions (1)
+                        bool meetsSkillRequirements = true;
+                        if (_characterSkills.Count > 0)
+                        {
+                            // Check for skill requirement columns in upgrade table
+                            // Some upgrade tables may have columns like "RequiredSkill" and "RequiredSkillRank"
+                            // If present, check if character meets the skill requirement
+                            if (headers.Contains("RequiredSkill", StringComparer.OrdinalIgnoreCase))
+                            {
+                                try
+                                {
+                                    string requiredSkillStr = row.GetString("RequiredSkill");
+                                    if (!string.IsNullOrWhiteSpace(requiredSkillStr) && requiredSkillStr != "****")
+                                    {
+                                        // Try to parse as skill ID (0-7 for KOTOR)
+                                        int? requiredSkillId = row.GetInteger("RequiredSkill", null);
+                                        if (requiredSkillId.HasValue)
+                                        {
+                                            // Check if upgrade table has RequiredSkillRank column
+                                            int requiredSkillRank = 0;
+                                            if (headers.Contains("RequiredSkillRank", StringComparer.OrdinalIgnoreCase))
+                                            {
+                                                int? requiredRank = row.GetInteger("RequiredSkillRank", null);
+                                                if (requiredRank.HasValue)
+                                                {
+                                                    requiredSkillRank = requiredRank.Value;
+                                                }
+                                            }
+
+                                            // Check if character meets skill requirement
+                                            int characterSkillRank = GetCharacterSkillRank(requiredSkillId.Value);
+                                            if (characterSkillRank < requiredSkillRank)
+                                            {
+                                                meetsSkillRequirements = false;
+                                            }
+                                        }
+                                    }
+                                }
+                                catch (KeyNotFoundException)
+                                {
+                                    // RequiredSkill column missing or invalid - skip skill check
+                                }
+                            }
+                        }
+
+                        // Upgrade is compatible, available in inventory, and meets skill requirements
                         // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 line 79, 118, 162, 289 - checks if item found in inventory
                         // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 line 66, 106 - checks if item found in inventory
-                        if (!availableUpgrades.Contains(normalizedResRef, StringComparer.OrdinalIgnoreCase))
+                        if (meetsSkillRequirements && !availableUpgrades.Contains(normalizedResRef, StringComparer.OrdinalIgnoreCase))
                         {
                             availableUpgrades.Add(normalizedResRef);
                         }

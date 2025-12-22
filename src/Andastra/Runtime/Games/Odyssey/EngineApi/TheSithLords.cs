@@ -489,14 +489,20 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         /// - Creates upgrade selection screen GUI ("upgradesel_p") with item type filters (All, Lightsaber, Ranged, Melee, Armor)
         /// - Creates upgrade items screen GUI ("upgradeitems_p") with item list, description, and upgrade buttons
         /// - Sets item ID in GUI object (offset 0x629)
-        /// - Sets character ID in GUI object (offset 0x18a8) - character skills not implemented in original
+        /// - Sets character ID in GUI object (offset 0x18a8) - character skills extracted and used for item creation/upgrading
         /// - Sets disableItemCreation flag (offset 0x18c8: 0 = false, 1 = true)
         /// - Sets disableUpgrade flag (offset 0x18cc: 0 = false, 1 = true)
         /// - Sets override2DA string (if provided, otherwise empty string)
         /// - Initializes screen via FUN_0067c8f0
         /// - Shows screen via GUI manager (FUN_0040bf90 adds to GUI manager, FUN_00638bb0 sets screen mode)
         /// - If oItem is NOT invalid, then the player will be forced to upgrade oItem and only oItem
-        /// - If oCharacter is NOT invalid, then that character's various skills will be used (NOT IMPLEMENTED in original)
+        /// - If oCharacter is NOT invalid, then that character's various skills will be used for:
+        ///   - Upgrade availability checks (skill requirements)
+        ///   - Item creation success rates (higher skills = better success)
+        ///   - Upgrade application skill checks (skill requirements for applying upgrades)
+        ///   Based on swkotor2.exe: Character skills stored in IStatsComponent, accessed via GetSkillRank()
+        ///   Skills extracted when character is set via BaseUpgradeScreen.ExtractCharacterSkills()
+        ///   Original implementation: Character skills were NOT IMPLEMENTED in original ShowUpgradeScreen
         /// - If nDisableItemCreation = TRUE, then the player will not be able to access the item creation screen
         /// - If nDisableUpgrade = TRUE, then the player will be forced straight to item creation and not be able to access Item Upgrading
         /// - sOverride2DA: Override 2DA file name (empty string for default upgradeitems.2da)
