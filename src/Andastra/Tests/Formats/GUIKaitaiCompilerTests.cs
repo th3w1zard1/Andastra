@@ -335,8 +335,75 @@ namespace Andastra.Parsing.Tests.Formats
             string[] pythonFiles = Directory.GetFiles(langOutputDir, "*.py", SearchOption.AllDirectories);
             pythonFiles.Should().NotBeEmpty("Python parser files should be generated");
 
-            // Note: Actually using the generated parser would require Python runtime and kaitaistruct library
-            // This test validates that compilation succeeds and generates expected files
+            // Actually use the generated parser to validate it works with Python runtime and kaitaistruct library
+            string pythonCmd = FindPythonRuntime();
+            if (string.IsNullOrEmpty(pythonCmd))
+            {
+                return; // Skip if Python not available
+            }
+
+            // Check if kaitaistruct library is available
+            if (!IsKaitaiStructLibraryAvailable(pythonCmd))
+            {
+                return; // Skip if kaitaistruct library not available
+            }
+
+            // Create Python script to use the generated parser
+            string pythonScript = CreatePythonParserScript(TestGuiFile, langOutputDir);
+            string tempScriptFile = Path.GetTempFileName();
+            File.WriteAllText(tempScriptFile, pythonScript);
+
+            try
+            {
+                // Execute Python script
+                var pythonInfo = new ProcessStartInfo
+                {
+                    FileName = pythonCmd,
+                    Arguments = $"\"{tempScriptFile}\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    WorkingDirectory = Path.GetDirectoryName(TestGuiFile)
+                };
+
+                string pythonStdout = "";
+                string pythonStderr = "";
+                int pythonExitCode = -1;
+
+                using (var process = Process.Start(pythonInfo))
+                {
+                    if (process != null)
+                    {
+                        pythonStdout = process.StandardOutput.ReadToEnd();
+                        pythonStderr = process.StandardError.ReadToEnd();
+                        process.WaitForExit(60000);
+                        pythonExitCode = process.ExitCode;
+                    }
+                }
+
+                // Python parser should execute successfully
+                pythonExitCode.Should().Be(0,
+                    $"Python parser should parse GUI file successfully. STDOUT: {pythonStdout}, STDERR: {pythonStderr}");
+
+                // Validate that parsing succeeded (output should contain GUI structure info)
+                pythonStdout.Should().NotBeNullOrEmpty("Python parser should produce output");
+                pythonStdout.Should().NotContain("\"error\"", "Python parser should not report errors");
+            }
+            finally
+            {
+                if (File.Exists(tempScriptFile))
+                {
+                    try
+                    {
+                        File.Delete(tempScriptFile);
+                    }
+                    catch
+                    {
+                        // Ignore cleanup errors
+                    }
+                }
+            }
         }
 
         [Fact(Timeout = 300000)]
@@ -691,7 +758,7 @@ namespace Andastra.Parsing.Tests.Formats
             string npmModulePath = Path.Combine(npmGlobalPath, "node_modules", "kaitai-struct-compiler");
             string npmCmdPath = Path.Combine(npmGlobalPath, "kaitai-struct-compiler.cmd");
             string npmJsPath = Path.Combine(npmModulePath, "kaitai-struct-compiler.js");
-            
+
             string[] possiblePaths = new[]
             {
                 "kaitai-struct-compiler",
@@ -796,7 +863,7 @@ namespace Andastra.Parsing.Tests.Formats
         private static void CreateTestGuiFile(string path)
         {
             // Create a minimal valid GFF file with "GUI " signature
-            // This is a simplified test file - a real GUI file would have actual control structures
+            // TODO:  This is a simplified test file - a real GUI file would have actual control structures
             var gff = new GFF(GFFContent.GUI);
             gff.Root.SetString("Tag", "TestGUI");
 
@@ -820,6 +887,164 @@ namespace Andastra.Parsing.Tests.Formats
             // Write GFF file
             Directory.CreateDirectory(Path.GetDirectoryName(path));
             GFFAuto.WriteGff(gff, path, ResourceType.GUI);
+        }
+
+        private static string FindPythonRuntime()
+        {
+            // Try common Python executable names
+            string[] pythonCommands = new[] { "python3", "python" };
+
+            foreach (string pythonCmd in pythonCommands)
+            {
+                try
+                {
+                    var processInfo = new ProcessStartInfo
+                    {
+                        FileName = pythonCmd,
+                        Arguments = "--version",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+
+                    using (var process = Process.Start(processInfo))
+                    {
+                        if (process != null)
+                        {
+                            process.WaitForExit(5000);
+                            if (process.ExitCode == 0)
+                            {
+                                return pythonCmd;
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // Continue searching
+                }
+            }
+
+            return null;
+        }
+
+        private static bool IsKaitaiStructLibraryAvailable(string pythonCmd)
+        {
+            try
+            {
+                // Try to import kaitaistruct to check if it's installed
+                var processInfo = new ProcessStartInfo
+                {
+                    FileName = pythonCmd,
+                    Arguments = "-c \"import kaitai_struct; print('ok')\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                using (var process = Process.Start(processInfo))
+                {
+                    if (process != null)
+                    {
+                        string output = process.StandardOutput.ReadToEnd();
+                        string error = process.StandardError.ReadToEnd();
+                        process.WaitForExit(5000);
+                        if (process.ExitCode == 0 && output.Trim() == "ok")
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Library not available
+            }
+
+            return false;
+        }
+
+        private static string CreatePythonParserScript(string guiFilePath, string parserOutputDir)
+        {
+            // Find the generated GUI.py file
+            string[] pyFiles = Directory.GetFiles(parserOutputDir, "*.py", SearchOption.AllDirectories);
+            if (pyFiles.Length == 0)
+            {
+                throw new InvalidOperationException("No Python parser files found in output directory");
+            }
+
+            // Determine module name from the first .py file found (without extension)
+            // Kaitai Struct generates module names based on .ksy file id, typically lowercase
+            string firstPyFile = Path.GetFileNameWithoutExtension(pyFiles[0]);
+            string moduleName = firstPyFile.ToLowerInvariant();
+
+            // Escape backslashes in paths for Python string literals
+            string escapedParserDir = parserOutputDir.Replace("\\", "\\\\");
+            string escapedGuiPath = guiFilePath.Replace("\\", "\\\\");
+
+            // Class name is typically capitalized version of module name (e.g., "gui" -> "Gui")
+            string className = char.ToUpperInvariant(moduleName[0]) + (moduleName.Length > 1 ? moduleName.Substring(1) : "");
+
+            string script = $@"import sys
+import json
+import os
+
+# Add parser directory to path
+sys.path.insert(0, r'{escapedParserDir}')
+
+try:
+    from kaitai_struct import KaitaiStream, BytesIO
+    # Import the generated parser (module name matches .ksy file id)
+    parser_module = __import__('{moduleName}')
+    parser_class = getattr(parser_module, '{className}')
+    
+    # Read GUI file
+    with open(r'{escapedGuiPath}', 'rb') as f:
+        data = f.read()
+    
+    # Parse using generated parser
+    stream = KaitaiStream(BytesIO(data))
+    parsed = parser_class(stream)
+
+    # Extract basic GFF header information to validate parsing
+    # GUI files are GFF-based, so the root structure should have a gff_header
+    result = {{'success': True, 'parsed': True}}
+
+    # Try to extract GFF header information if available
+    if hasattr(parsed, 'gff_header'):
+        gff_header = parsed.gff_header
+        result['file_type'] = gff_header.file_type.decode('ascii') if isinstance(gff_header.file_type, bytes) else str(gff_header.file_type)
+        result['file_version'] = gff_header.file_version.decode('ascii') if isinstance(gff_header.file_version, bytes) else str(gff_header.file_version)
+        result['struct_count'] = int(gff_header.struct_count) if hasattr(gff_header, 'struct_count') else 0
+        result['field_count'] = int(gff_header.field_count) if hasattr(gff_header, 'field_count') else 0
+        result['label_count'] = int(gff_header.label_count) if hasattr(gff_header, 'label_count') else 0
+
+        # Validate that file type is 'GUI '
+        file_type = result.get('file_type', '')
+        if file_type != 'GUI ':
+            result['warning'] = 'Expected file type \'GUI \', got \'' + str(file_type) + '\''
+    else:
+        # If no gff_header, at least verify parsing succeeded
+        result['parsed_structure'] = True
+
+    # Output JSON
+    print(json.dumps(result))
+
+except ImportError as e:
+    error_result = {{'error': 'Import error: ' + str(e), 'success': False}}
+    print(json.dumps(error_result), file=sys.stderr)
+    sys.exit(1)
+except Exception as e:
+    error_result = {{'error': 'Parse error: ' + str(e), 'success': False}}
+    print(json.dumps(error_result), file=sys.stderr)
+    import traceback
+    traceback.print_exc(file=sys.stderr)
+    sys.exit(1)
+";
+
+            return script;
         }
     }
 }
