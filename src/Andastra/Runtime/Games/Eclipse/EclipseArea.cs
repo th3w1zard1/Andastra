@@ -2658,10 +2658,105 @@ namespace Andastra.Runtime.Games.Eclipse
                             // Create dynamic light at placeable position
                             // Based on daorigins.exe: Dynamic lights are created from placeables
                             // Light properties: color (warm for torches/fires), radius (2-5 units), intensity
-                            // TODO:  Note: Full implementation would create actual light objects in lighting system
-                            placeable.SetData("LightPosition", lightPosition);
-                            placeable.SetData("LightRadius", 3.0f); // Default light radius
-                            placeable.SetData("LightIntensity", 1.0f); // Default light intensity
+                            // daorigins.exe: Dynamic lights are created from placeables with light source flags
+                            // Light creation occurs during area initialization and follows entity transforms
+                            var eclipseLightingSystem = _lightingSystem as Lighting.EclipseLightingSystem;
+                            if (eclipseLightingSystem != null)
+                            {
+                                // Determine light properties based on placeable type
+                                // Based on daorigins.exe: Light color and intensity vary by light source type
+                                Vector3 lightColor = new Vector3(1.0f, 0.9f, 0.7f); // Warm white/yellow for torches/fires
+                                float lightRadius = 3.0f; // Default radius (2-5 units typical)
+                                float lightIntensity = 1.0f; // Default intensity
+
+                                // Adjust light properties based on template type
+                                // Based on daorigins.exe: Different light sources have different properties
+                                if (!string.IsNullOrEmpty(templateResRef))
+                                {
+                                    string lowerResRef = templateResRef.ToLowerInvariant();
+                                    if (lowerResRef.Contains("torch"))
+                                    {
+                                        // Torches: warm orange/yellow, medium radius, medium intensity
+                                        lightColor = new Vector3(1.0f, 0.7f, 0.4f); // Warm orange
+                                        lightRadius = 3.5f;
+                                        lightIntensity = 1.2f;
+                                    }
+                                    else if (lowerResRef.Contains("fire") || lowerResRef.Contains("campfire"))
+                                    {
+                                        // Fires: bright orange/red, larger radius, higher intensity
+                                        lightColor = new Vector3(1.0f, 0.5f, 0.2f); // Bright orange-red
+                                        lightRadius = 5.0f;
+                                        lightIntensity = 1.5f;
+                                    }
+                                    else if (lowerResRef.Contains("candle"))
+                                    {
+                                        // Candles: warm yellow, small radius, low intensity
+                                        lightColor = new Vector3(1.0f, 0.95f, 0.8f); // Warm yellow
+                                        lightRadius = 2.0f;
+                                        lightIntensity = 0.8f;
+                                    }
+                                    else if (lowerResRef.Contains("lantern") || lowerResRef.Contains("lamp"))
+                                    {
+                                        // Lanterns/lamps: white/yellow, medium radius, medium intensity
+                                        lightColor = new Vector3(1.0f, 0.95f, 0.85f); // Warm white
+                                        lightRadius = 4.0f;
+                                        lightIntensity = 1.1f;
+                                    }
+                                }
+
+                                // Check for custom light properties in placeable data
+                                // Based on daorigins.exe: Light properties can be overridden in placeable data
+                                if (placeable.HasData("LightColor"))
+                                {
+                                    Vector3 customColor = placeable.GetData<Vector3>("LightColor");
+                                    if (customColor != Vector3.Zero)
+                                    {
+                                        lightColor = customColor;
+                                    }
+                                }
+                                if (placeable.HasData("LightRadius"))
+                                {
+                                    float customRadius = placeable.GetData<float>("LightRadius");
+                                    if (customRadius > 0.0f)
+                                    {
+                                        lightRadius = customRadius;
+                                    }
+                                }
+                                if (placeable.HasData("LightIntensity"))
+                                {
+                                    float customIntensity = placeable.GetData<float>("LightIntensity");
+                                    if (customIntensity > 0.0f)
+                                    {
+                                        lightIntensity = customIntensity;
+                                    }
+                                }
+
+                                // Create point light for placeable light source with all properties configured
+                                // Based on daorigins.exe: Placeable lights are point lights (omnidirectional)
+                                // CreateLight with properties automatically adds the light to the system
+                                IDynamicLight dynamicLight = eclipseLightingSystem.CreateLight(
+                                    LightType.Point,
+                                    lightPosition,
+                                    lightColor,
+                                    lightRadius,
+                                    lightIntensity);
+
+                                if (dynamicLight != null)
+                                {
+                                    // Attach light to entity so it follows entity transform
+                                    // Based on daorigins.exe: Placeable lights follow placeable position and rotation
+                                    uint entityObjectId = placeable.ObjectId;
+                                    eclipseLightingSystem.AttachLightToEntity(dynamicLight, entityObjectId);
+
+                                    // Store light reference in placeable data for cleanup
+                                    // Based on Eclipse engine pattern: Store references for cleanup when entity is removed
+                                    placeable.SetData("DynamicLight", dynamicLight);
+                                    placeable.SetData("LightPosition", lightPosition);
+                                    placeable.SetData("LightRadius", lightRadius);
+                                    placeable.SetData("LightIntensity", lightIntensity);
+                                    placeable.SetData("LightColor", lightColor);
+                                }
+                            }
                         }
                     }
                 }
@@ -2987,6 +3082,26 @@ namespace Andastra.Runtime.Games.Eclipse
             if (entity == null)
             {
                 return;
+            }
+
+            // Remove dynamic light from lighting system if entity has one
+            // Based on daorigins.exe: Lights attached to placeables are removed when placeable is removed
+            if (_lightingSystem != null && entity.HasData("DynamicLight"))
+            {
+                IDynamicLight entityLight = entity.GetData<IDynamicLight>("DynamicLight");
+                if (entityLight != null)
+                {
+                    var eclipseLightingSystem = _lightingSystem as Lighting.EclipseLightingSystem;
+                    if (eclipseLightingSystem != null)
+                    {
+                        // Detach light from entity before removing
+                        eclipseLightingSystem.DetachLightFromEntity(entityLight);
+                        // Remove light from lighting system
+                        eclipseLightingSystem.RemoveLight(entityLight);
+                    }
+                }
+                // Clear light reference from entity data
+                entity.SetData("DynamicLight", null);
             }
 
             // Remove from type-specific lists

@@ -40,7 +40,7 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
     /// - Supports dynamic lights, directional sun/moon lights, and area lighting
     /// - Advanced shadow mapping and global illumination support
     /// - Fog and atmospheric effects integration
-    /// 
+    ///
     /// Eclipse lighting features:
     /// - Dynamic shadow casting with configurable shadow maps
     /// - Sun and moon directional lights with separate ambient/diffuse colors
@@ -48,7 +48,7 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
     /// - Dynamic point and spot lights for torches, fires, etc.
     /// - Global illumination probes for area-based lighting
     /// - Light culling and clustering for performance
-    /// 
+    ///
     /// Based on reverse engineering of:
     /// - daorigins.exe: Lighting system initialization and management
     /// - DragonAge2.exe: Enhanced lighting features and shadow casting
@@ -351,12 +351,12 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
         /// <remarks>
         /// Updates light transforms, shadow maps, and clustering.
         /// Called by EclipseArea.Update() each frame.
-        /// 
+        ///
         /// Per-frame updates include:
         /// - Day/night cycle updates for sun/moon directional lights
         /// - Shadow map updates for directional lights (periodic)
         /// - Marking clusters as dirty when lights change
-        /// 
+        ///
         /// Note: Entity-attached light updates are handled separately via UpdateEntityLightTransforms()
         /// since they require entity system access.
         /// </remarks>
@@ -547,28 +547,109 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
         /// - Regenerates shadow maps for sun/moon directional lights if they moved
         /// - Updates shadow map matrices for rendering
         /// - Based on Eclipse engine shadow mapping system
+        /// - Calculates view/projection matrices for directional light shadow mapping
+        /// - Uses orthographic projection for directional lights (sun/moon)
+        /// - Shadow map matrices are stored in DynamicLight for use during rendering
+        /// 
+        /// Based on daorigins.exe/DragonAge2.exe: Shadow mapping system for directional lights
+        /// - Directional lights use orthographic shadow maps (not perspective)
+        /// - Shadow map covers a fixed area around the scene (configurable size)
+        /// - View matrix looks from light direction, projection is orthographic
         /// </remarks>
         private void UpdateShadowMaps()
         {
+            // Shadow map coverage area (world units)
+            // Based on Eclipse engine: Shadow maps cover a reasonable area around the scene
+            // Typical values: 50-200 units for most scenes
+            // Can be made configurable per light if needed
+            const float shadowMapSize = 100.0f; // Half-size (total coverage is 200x200 units)
+            const float shadowMapNear = 0.1f;
+            const float shadowMapFar = 500.0f; // Far plane for shadow map
+
             // Update sun shadow map if it casts shadows
             if (_sunLight != null && _sunLight.Enabled && _sunLight.CastShadows && _sunShadows)
             {
-                // TODO:  In a full implementation, this would:
-                // 1. Calculate shadow map view/projection matrix based on sun direction
-                // 2. Render shadow map from sun's perspective
-                // 3. Update shadow map texture
-                // TODO: STUB - For now, we mark it as needing updates
+                // Calculate shadow map view/projection matrix based on sun direction
+                // Based on Eclipse engine: Directional lights use orthographic shadow maps
+                // View matrix: Look from light direction towards scene center
+                // Projection matrix: Orthographic projection covering shadow map area
+                
+                // Calculate view matrix: look from light direction
+                // Light direction points towards scene, so we look from opposite direction
+                Vector3 lightDirection = _sunLight.Direction;
+                Vector3 lightPosition = -lightDirection * shadowMapFar * 0.5f; // Position light far from scene
+                Vector3 targetPosition = Vector3.Zero; // Look at scene center (can be made configurable)
+                Vector3 upVector = Vector3.UnitY; // Use Y-up (can calculate proper up vector if needed)
+                
+                // If light direction is nearly parallel to up vector, use alternative up
+                if (Math.Abs(Vector3.Dot(lightDirection, upVector)) > 0.9f)
+                {
+                    upVector = Vector3.UnitZ; // Use Z-up as alternative
+                }
+                
+                // Create view matrix looking from light position towards target
+                Matrix4x4 viewMatrix = Matrix4x4.CreateLookAt(lightPosition, targetPosition, upVector);
+                
+                // Create orthographic projection matrix
+                // Orthographic projection: left, right, bottom, top, near, far
+                Matrix4x4 projectionMatrix = Matrix4x4.CreateOrthographic(
+                    shadowMapSize * 2.0f, // Width (left to right)
+                    shadowMapSize * 2.0f, // Height (bottom to top)
+                    shadowMapNear,
+                    shadowMapFar
+                );
+                
+                // Combined light space matrix: projection * view
+                Matrix4x4 lightSpaceMatrix = projectionMatrix * viewMatrix;
+                
+                // Store matrices in light object for use during rendering
+                _sunLight.ShadowViewMatrix = viewMatrix;
+                _sunLight.ShadowProjectionMatrix = projectionMatrix;
+                _sunLight.ShadowLightSpaceMatrix = lightSpaceMatrix;
+                
+                // Update GPU data (includes shadow map matrices)
                 _sunLight.UpdateGpuData();
             }
 
             // Update moon shadow map if it casts shadows
             if (_moonLight != null && _moonLight.Enabled && _moonLight.CastShadows && _moonShadows)
             {
-                // TODO:  In a full implementation, this would:
-                // 1. Calculate shadow map view/projection matrix based on moon direction
-                // 2. Render shadow map from moon's perspective
-                // 3. Update shadow map texture
-                // TODO: STUB - For now, we mark it as needing updates
+                // Calculate shadow map view/projection matrix based on moon direction
+                // Same approach as sun, but using moon direction
+                
+                // Calculate view matrix: look from light direction
+                Vector3 lightDirection = _moonLight.Direction;
+                Vector3 lightPosition = -lightDirection * shadowMapFar * 0.5f; // Position light far from scene
+                Vector3 targetPosition = Vector3.Zero; // Look at scene center
+                Vector3 upVector = Vector3.UnitY; // Use Y-up
+                
+                // If light direction is nearly parallel to up vector, use alternative up
+                if (Math.Abs(Vector3.Dot(lightDirection, upVector)) > 0.9f)
+                {
+                    upVector = Vector3.UnitZ; // Use Z-up as alternative
+                }
+                
+                // Create view matrix looking from light position towards target
+                Matrix4x4 viewMatrix = Matrix4x4.CreateLookAt(lightPosition, targetPosition, upVector);
+                
+                // Create orthographic projection matrix
+                // Moon uses same shadow map size as sun (can be made different if needed)
+                Matrix4x4 projectionMatrix = Matrix4x4.CreateOrthographic(
+                    shadowMapSize * 2.0f, // Width
+                    shadowMapSize * 2.0f, // Height
+                    shadowMapNear,
+                    shadowMapFar
+                );
+                
+                // Combined light space matrix: projection * view
+                Matrix4x4 lightSpaceMatrix = projectionMatrix * viewMatrix;
+                
+                // Store matrices in light object for use during rendering
+                _moonLight.ShadowViewMatrix = viewMatrix;
+                _moonLight.ShadowProjectionMatrix = projectionMatrix;
+                _moonLight.ShadowLightSpaceMatrix = lightSpaceMatrix;
+                
+                // Update GPU data (includes shadow map matrices)
                 _moonLight.UpdateGpuData();
             }
         }
@@ -609,6 +690,40 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
 
             // Create adapter to bridge MonoGame.DynamicLight to Eclipse.IDynamicLight
             return new DynamicLightAdapter(light);
+        }
+
+        /// <summary>
+        /// Creates a new dynamic light with specified properties.
+        /// </summary>
+        /// <param name="type">Type of light to create.</param>
+        /// <param name="position">Light position.</param>
+        /// <param name="color">Light color.</param>
+        /// <param name="radius">Light radius (for point/spot lights).</param>
+        /// <param name="intensity">Light intensity.</param>
+        /// <returns>The created light, or null if max lights reached.</returns>
+        /// <remarks>
+        /// Creates a light and configures all properties in one call.
+        /// Based on daorigins.exe: Lights are created with position, color, radius, and intensity.
+        /// </remarks>
+        public IDynamicLight CreateLight(LightType type, Vector3 position, Vector3 color, float radius, float intensity)
+        {
+            IDynamicLight light = CreateLight(type);
+            if (light != null)
+            {
+                // Access underlying DynamicLight to set properties
+                // DynamicLightAdapter wraps the underlying DynamicLight
+                var adapter = light as DynamicLightAdapter;
+                if (adapter != null)
+                {
+                    DynamicLight underlyingLight = adapter.Light;
+                    underlyingLight.Position = position;
+                    underlyingLight.Color = color;
+                    underlyingLight.Radius = radius;
+                    underlyingLight.Intensity = intensity;
+                    underlyingLight.Enabled = true;
+                }
+            }
+            return light;
         }
 
         /// <summary>
