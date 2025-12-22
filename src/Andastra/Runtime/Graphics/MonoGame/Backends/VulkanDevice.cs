@@ -2725,10 +2725,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ObjectDisposedException(nameof(VulkanDevice));
             }
 
-            if (desc == null)
-            {
-                throw new ArgumentNullException(nameof(desc));
-            }
+            // Note: GraphicsPipelineDesc is a struct, so it cannot be null
 
             // Create pipeline layout from binding layouts
             IntPtr pipelineLayout = CreatePipelineLayout(desc.BindingLayouts);
@@ -2772,7 +2769,8 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// </summary>
         private IntPtr CreateRenderPassFromFramebufferDesc(FramebufferDesc desc)
         {
-            if (desc == null || vkCreateRenderPass == null)
+            // Note: FramebufferDesc is a struct, so it cannot be null
+            if (vkCreateRenderPass == null)
             {
                 return IntPtr.Zero;
             }
@@ -3030,10 +3028,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ObjectDisposedException(nameof(VulkanDevice));
             }
 
-            if (desc == null)
-            {
-                throw new ArgumentNullException(nameof(desc));
-            }
+            // Note: ComputePipelineDesc is a struct, so it cannot be null
 
             // Create pipeline layout from binding layouts
             IntPtr pipelineLayout = CreatePipelineLayout(desc.BindingLayouts);
@@ -3052,10 +3047,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new ObjectDisposedException(nameof(VulkanDevice));
             }
 
-            if (desc == null)
-            {
-                throw new ArgumentNullException(nameof(desc));
-            }
+            // Note: FramebufferDesc is a struct, so it cannot be null
 
             // Create VkRenderPass from attachments
             // Based on Vulkan Render Pass Creation: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateRenderPass.html
@@ -4243,10 +4235,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 throw new NotSupportedException("Raytracing is not supported on this device");
             }
 
-            if (desc == null)
-            {
-                throw new ArgumentNullException(nameof(desc));
-            }
+            // Note: RaytracingPipelineDesc is a struct, so it cannot be null
 
             // Full implementation of VK_KHR_acceleration_structure extension
             // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkAccelerationStructureKHR.html
