@@ -784,18 +784,18 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 // Calculate where globals and entry stub end
                 // swkotor2.exe: 0x004eb750 - Entry stub pattern detection verified in original engine bytecode
                 int globalsEnd = savebpIndex + 1;
-                int entryStubEnd = CalculateEntryStubEnd(instructions, globalsEnd, ncs);
-                if (entryStubEnd > globalsEnd)
+                int calculatedEntryStubEnd = CalculateEntryStubEnd(instructions, globalsEnd, ncs);
+                if (calculatedEntryStubEnd > globalsEnd)
                 {
-                    Debug($"DEBUG NcsToAstConverter: Entry stub pattern detected at {globalsEnd}, entry stub ends at {entryStubEnd}");
+                    Debug($"DEBUG NcsToAstConverter: Entry stub pattern detected at {globalsEnd}, entry stub ends at {calculatedEntryStubEnd}");
                 }
                 else
                 {
-                    Debug($"DEBUG NcsToAstConverter: No entry stub pattern found at {globalsEnd}, entry stub ends at {entryStubEnd}");
+                    Debug($"DEBUG NcsToAstConverter: No entry stub pattern found at {globalsEnd}, entry stub ends at {calculatedEntryStubEnd}");
                 }
 
                 // CRITICAL: Ensure mainStart is ALWAYS after globals and entry stub
-                // If entryJsrTarget points to globals range (0 to entryStubEnd), ignore it
+                // If entryJsrTarget points to globals range (0 to calculatedEntryStubEnd), ignore it
                 // Also ignore if entryJsrTarget points to the last RETN (likely wrong target)
                 // The last RETN is typically at instructions.Count - 1
                 bool entryJsrTargetIsLastRetn2 = (entryJsrTarget >= 0 && entryJsrTarget == instructions.Count - 1);
@@ -813,7 +813,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                         // FIXED: Only consider this as alternative main start if it's AFTER SAVEBP
                         // If it's before SAVEBP, it's part of globals initialization, not main
                         // Main function should be empty in that case (entry JSR targets last RETN)
-                        if (jsr0Target > savebpIndex && jsr0Target < entryStubEnd)
+                        if (jsr0Target > savebpIndex && jsr0Target < calculatedEntryStubEnd)
                         {
                             alternativeMainStart = jsr0Target;
                             Debug($"DEBUG NcsToAstConverter: Found alternative main start at {alternativeMainStart} (JSR at 0 targets {jsr0Target}, entry JSR targets last RETN, target is after SAVEBP)");
@@ -828,7 +828,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                     }
                 }
 
-                if (entryJsrTarget >= 0 && entryJsrTarget > entryStubEnd && !entryJsrTargetIsLastRetn2)
+                if (entryJsrTarget >= 0 && entryJsrTarget > calculatedEntryStubEnd && !entryJsrTargetIsLastRetn2)
                 {
                     // entryJsrTarget is valid and after entry stub and not the last RETN - use it
                     // swkotor2.exe: 0x004eb750 - Entry JSR target points to main function start
@@ -855,40 +855,40 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                         {
                             // Valid entryJsrTarget - use it as mainStart
                             mainStart = entryJsrTarget;
-                            Debug($"DEBUG NcsToAstConverter: Using entryJsrTarget {entryJsrTarget} as mainStart (after entry stub at {entryStubEnd}, valid main function entry point)");
+                            Debug($"DEBUG NcsToAstConverter: Using entryJsrTarget {entryJsrTarget} as mainStart (after entry stub at {calculatedEntryStubEnd}, valid main function entry point)");
                         }
                         else
                         {
-                            // entryJsrTarget points to another stub - fall back to entryStubEnd
-                            mainStart = entryStubEnd;
-                            Debug($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} points to another entry stub, falling back to entryStubEnd {entryStubEnd} as mainStart");
+                            // entryJsrTarget points to another stub - fall back to calculatedEntryStubEnd
+                            mainStart = calculatedEntryStubEnd;
+                            Debug($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} points to another entry stub, falling back to calculatedEntryStubEnd {calculatedEntryStubEnd} as mainStart");
                         }
                     }
                     else
                     {
-                        // entryJsrTarget is out of bounds - fall back to entryStubEnd
-                        mainStart = entryStubEnd;
-                        Debug($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} is out of bounds (instructions.Count={instructions.Count}), falling back to entryStubEnd {entryStubEnd} as mainStart");
+                        // entryJsrTarget is out of bounds - fall back to calculatedEntryStubEnd
+                        mainStart = calculatedEntryStubEnd;
+                        Debug($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} is out of bounds (instructions.Count={instructions.Count}), falling back to calculatedEntryStubEnd {calculatedEntryStubEnd} as mainStart");
                     }
                 }
                 else if (alternativeMainStart >= 0)
                 {
                     // Use alternative main start from JSR at 0
                     // CRITICAL: Ensure mainStart is ALWAYS after globals and entry stub
-                    // If alternativeMainStart is before entryStubEnd, we must use entryStubEnd instead
-                    // This ensures the invariant that mainStart >= entryStubEnd is maintained
-                    if (alternativeMainStart < entryStubEnd)
+                    // If alternativeMainStart is before calculatedEntryStubEnd, we must use calculatedEntryStubEnd instead
+                    // This ensures the invariant that mainStart >= calculatedEntryStubEnd is maintained
+                    if (alternativeMainStart < calculatedEntryStubEnd)
                     {
-                        Debug($"DEBUG NcsToAstConverter: alternativeMainStart {alternativeMainStart} is before entryStubEnd {entryStubEnd}, correcting to entryStubEnd to ensure mainStart is after globals and entry stub");
-                        mainStart = entryStubEnd;
+                        Debug($"DEBUG NcsToAstConverter: alternativeMainStart {alternativeMainStart} is before calculatedEntryStubEnd {calculatedEntryStubEnd}, correcting to calculatedEntryStubEnd to ensure mainStart is after globals and entry stub");
+                        mainStart = calculatedEntryStubEnd;
                     }
                     else
                     {
                         mainStart = alternativeMainStart;
-                        Debug($"DEBUG NcsToAstConverter: Using alternative mainStart {alternativeMainStart} (JSR at 0 target, entry JSR targets last RETN, after entry stub at {entryStubEnd})");
+                        Debug($"DEBUG NcsToAstConverter: Using alternative mainStart {alternativeMainStart} (JSR at 0 target, entry JSR targets last RETN, after entry stub at {calculatedEntryStubEnd})");
                     }
                 }
-                else if (entryJsrTargetIsLastRetn2 && entryJsrTarget >= 0 && entryJsrTarget >= entryStubEnd)
+                else if (entryJsrTargetIsLastRetn2 && entryJsrTarget >= 0 && entryJsrTarget >= calculatedEntryStubEnd)
                 {
                     // CRITICAL FIX: If entry JSR targets last RETN, determine where main code actually starts
                     // swkotor2.exe: 0x004eb750 - Entry stub (JSR+RETN) is just a wrapper - actual main code is after globals initialization
@@ -897,60 +897,60 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                     // If there's real code after entry stub, that's the main code
                     
                     // Check if code after entry stub is cleanup code or real main code
-                    bool isCleanupAfterStub = IsCodeAfterEntryStubCleanup(instructions, entryStubEnd);
+                    bool isCleanupAfterStub = IsCodeAfterEntryStubCleanup(instructions, calculatedEntryStubEnd);
                     
                     if (isCleanupAfterStub)
                     {
                         // Only cleanup code after entry stub - main code is before entry stub (after globals initialization)
                         // Entry stub is just a wrapper, actual main code starts at SAVEBP+1
-                        // CRITICAL: However, mainStart must ALWAYS be after entryStubEnd, so if SAVEBP+1 is before entryStubEnd,
-                        // we must use entryStubEnd instead. This ensures mainStart is always after globals and entry stub.
+                        // CRITICAL: However, mainStart must ALWAYS be after calculatedEntryStubEnd, so if SAVEBP+1 is before calculatedEntryStubEnd,
+                        // we must use calculatedEntryStubEnd instead. This ensures mainStart is always after globals and entry stub.
                         int potentialMainStart = savebpIndex + 1;
-                        if (potentialMainStart <= entryStubEnd)
+                        if (potentialMainStart <= calculatedEntryStubEnd)
                         {
-                            // SAVEBP+1 is within globals/entry stub range - must use entryStubEnd instead
-                            mainStart = entryStubEnd;
-                            Debug($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} is last RETN, code after entry stub at {entryStubEnd} is cleanup code, but SAVEBP+1 ({potentialMainStart}) is before entryStubEnd ({entryStubEnd}) - using entryStubEnd as mainStart to ensure it's after globals and entry stub");
+                            // SAVEBP+1 is within globals/entry stub range - must use calculatedEntryStubEnd instead
+                            mainStart = calculatedEntryStubEnd;
+                            Debug($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} is last RETN, code after entry stub at {calculatedEntryStubEnd} is cleanup code, but SAVEBP+1 ({potentialMainStart}) is before calculatedEntryStubEnd ({calculatedEntryStubEnd}) - using calculatedEntryStubEnd as mainStart to ensure it's after globals and entry stub");
                         }
                         else
                         {
                             // SAVEBP+1 is after entry stub - safe to use it
                             mainStart = potentialMainStart;
                             mainStartIsAfterSavebp = true; // Mark that mainStart was intentionally set to SAVEBP+1
-                            Debug($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} is last RETN, code after entry stub at {entryStubEnd} is cleanup code - entry stub is wrapper, main code starts at SAVEBP+1 ({mainStart})");
+                            Debug($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} is last RETN, code after entry stub at {calculatedEntryStubEnd} is cleanup code - entry stub is wrapper, main code starts at SAVEBP+1 ({mainStart})");
                         }
                     }
                     else
                     {
-                        // There's actual main code after entry stub - use entryStubEnd as mainStart
+                        // There's actual main code after entry stub - use calculatedEntryStubEnd as mainStart
                         // This handles cases where entry stub wraps main but main code continues after stub
-                        // CRITICAL: entryStubEnd is exactly the boundary, so we use it as mainStart (it's the first instruction after the stub)
-                        mainStart = entryStubEnd;
-                        Debug($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} is last RETN, code after entry stub at {entryStubEnd} is real main code - using entryStubEnd ({mainStart}) as mainStart");
+                        // CRITICAL: calculatedEntryStubEnd is exactly the boundary, so we use it as mainStart (it's the first instruction after the stub)
+                        mainStart = calculatedEntryStubEnd;
+                        Debug($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} is last RETN, code after entry stub at {calculatedEntryStubEnd} is real main code - using calculatedEntryStubEnd ({mainStart}) as mainStart");
                     }
                 }
                 else
                 {
-                    // entryJsrTarget is invalid, points to globals, or points to last RETN before entry stub - use entryStubEnd
-                    // CRITICAL: entryStubEnd is exactly the boundary between globals/entry stub and main code
+                    // entryJsrTarget is invalid, points to globals, or points to last RETN before entry stub - use calculatedEntryStubEnd
+                    // CRITICAL: calculatedEntryStubEnd is exactly the boundary between globals/entry stub and main code
                     // This ensures mainStart is always at or after the entry stub end
-                    mainStart = entryStubEnd;
+                    mainStart = calculatedEntryStubEnd;
                     if (entryJsrTargetIsLastRetn)
                     {
-                        Debug($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} points to last RETN before entry stub, using entryStubEnd {entryStubEnd} as mainStart");
+                        Debug($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} points to last RETN before entry stub, using calculatedEntryStubEnd {calculatedEntryStubEnd} as mainStart");
                     }
                     else
                     {
-                        Debug($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} invalid or in globals range, using entryStubEnd {entryStubEnd} as mainStart");
+                        Debug($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} invalid or in globals range, using calculatedEntryStubEnd {calculatedEntryStubEnd} as mainStart");
                     }
                 }
 
-                // CRITICAL VALIDATION: Ensure mainStart is ALWAYS after globals and entry stub (>= entryStubEnd)
+                // CRITICAL VALIDATION: Ensure mainStart is ALWAYS after globals and entry stub (>= calculatedEntryStubEnd)
                 // This is a final safety check to guarantee the invariant after all assignment paths
-                if (mainStart < entryStubEnd)
+                if (mainStart < calculatedEntryStubEnd)
                 {
-                    Debug($"DEBUG NcsToAstConverter: WARNING - mainStart ({mainStart}) is before entryStubEnd ({entryStubEnd}), correcting to entryStubEnd to ensure it's after globals and entry stub");
-                    mainStart = entryStubEnd;
+                    Debug($"DEBUG NcsToAstConverter: WARNING - mainStart ({mainStart}) is before calculatedEntryStubEnd ({calculatedEntryStubEnd}), correcting to calculatedEntryStubEnd to ensure it's after globals and entry stub");
+                    mainStart = calculatedEntryStubEnd;
                 }
                 else if (mainStart == entryStubEnd)
                 {
@@ -1119,18 +1119,18 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             // Split globals if mainStart is in the globals range
             if (savebpIndex >= 0)
             {
-                // Calculate entryStubEnd using comprehensive entry stub pattern detection
+                // Calculate entryStubEndInner using comprehensive entry stub pattern detection
                 // swkotor2.exe: 0x004eb750 - Entry stub pattern detection verified in original engine bytecode
                 int globalsEnd = savebpIndex + 1;
-                int entryStubEnd = CalculateEntryStubEnd(instructions, globalsEnd, ncs);
-                if (entryStubEnd > globalsEnd)
+                int entryStubEndInner = CalculateEntryStubEnd(instructions, globalsEnd, ncs);
+                if (entryStubEndInner > globalsEnd)
                 {
-                    Debug($"DEBUG NcsToAstConverter: Entry stub pattern detected at {globalsEnd}, entry stub ends at {entryStubEnd}");
+                    Debug($"DEBUG NcsToAstConverter: Entry stub pattern detected at {globalsEnd}, entry stub ends at {entryStubEndInner}");
                 }
 
                 // If globals were created normally OR deferred, check if we need to split them
                 // This handles cases where main code is in the globals range
-                Debug($"DEBUG NcsToAstConverter: Checking if we need to split globals - shouldDeferGlobals={shouldDeferGlobals}, savebpIndex={savebpIndex}, mainStart={mainStart}, entryStubEnd={entryStubEnd}");
+                Debug($"DEBUG NcsToAstConverter: Checking if we need to split globals - shouldDeferGlobals={shouldDeferGlobals}, savebpIndex={savebpIndex}, mainStart={mainStart}, entryStubEndInner={entryStubEndInner}");
 
                 // Check if main code is in globals range - this applies to BOTH normal and deferred cases
                 // When entry JSR targets last RETN, main code is often in the globals range (0 to SAVEBP)
@@ -1163,9 +1163,9 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 if (shouldCheckMainInGlobals)
                 {
                     // Check if main code is actually in the globals range (0 to SAVEBP)
-                    // If mainStart is at or after entryStubEnd and there are no ACTION instructions after SAVEBP+1,
+                    // If mainStart is at or after entryStubEndInner and there are no ACTION instructions after SAVEBP+1,
                     // the main code must be in the globals range
-                    Debug($"DEBUG NcsToAstConverter: Checking if main code is in globals - entryJsrTarget={entryJsrTarget}, instructions.Count-1={instructions.Count - 1}, entryJsrTargetIsLastRetnCheck={entryJsrTargetIsLastRetnCheck}, mainStart={mainStart}, entryStubEnd={entryStubEnd}, savebpIndex={savebpIndex}, actionCountInGlobals={actionCountInGlobals}, shouldCheckMainInGlobals={shouldCheckMainInGlobals}");
+                    Debug($"DEBUG NcsToAstConverter: Checking if main code is in globals - entryJsrTarget={entryJsrTarget}, instructions.Count-1={instructions.Count - 1}, entryJsrTargetIsLastRetnCheck={entryJsrTargetIsLastRetnCheck}, mainStart={mainStart}, entryStubEndInner={entryStubEndInner}, savebpIndex={savebpIndex}, actionCountInGlobals={actionCountInGlobals}, shouldCheckMainInGlobals={shouldCheckMainInGlobals}");
 
                     // Check if there are ACTION instructions in the range from SAVEBP+1 to last RETN
                     int actionCount = 0;
@@ -1670,8 +1670,16 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             }
 
             // CRITICAL: Ensure we always have at least one subroutine (main)
-            // If no subroutines were created, create a main subroutine from the entire instruction range
-            // TODO:  This handles edge cases where the entry stub detection fails or files have unusual structure
+            // Comprehensive edge case handling for files where entry stub detection fails or files have unusual structure
+            // Based on nwnnsscomp.exe and swkotor2.exe: Original engine handles malformed NCS files gracefully
+            // Edge cases handled:
+            // 1. Files with no SAVEBP and no entry stub pattern
+            // 2. Files where entry stub detection partially succeeds but end calculation fails
+            // 3. Files with malformed entry stubs (JSR without RETN, incomplete patterns)
+            // 4. Files where ConvertInstructionRangeToSubroutine returns null even with valid ranges
+            // 5. Files with unusual instruction sequences that don't match normal patterns
+            // 6. Files where entry stub end is calculated but the range is still invalid
+            // 7. Files with no recognizable structure (empty or corrupted)
             int subroutineCount = program.GetSubroutine().Count;
             Debug($"DEBUG NcsToAstConverter: Final subroutine count before fallback check: {subroutineCount}, instructions: {instructions.Count}");
             if (subroutineCount == 0 && instructions.Count > 0)
@@ -1679,33 +1687,36 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 Debug("DEBUG NcsToAstConverter: No subroutines created, creating fallback main subroutine from entire instruction range");
                 int fallbackMainStart = 0;
                 int fallbackMainEnd = instructions.Count;
-                // Skip globals if SAVEBP was found
+                
+                // EDGE CASE 1: Handle files with SAVEBP
                 if (savebpIndex >= 0)
                 {
                     fallbackMainStart = savebpIndex + 1;
-                    // Check for entry stub using comprehensive detection (handles RSADD* prefixes and all patterns)
+                    
+                    // EDGE CASE 2: Try to detect and skip entry stub using comprehensive detection
                     // swkotor2.exe: 0x004eb750 - Entry stub patterns: [RSADD*], JSR, RETN or [RSADD*], JSR, RESTOREBP
-                    // Based on HasEntryStubPattern method which handles all edge cases
                     if (HasEntryStubPattern(instructions, fallbackMainStart, ncs))
                     {
-                        int entryStubStart = fallbackMainStart;
-                        int entryStubEnd = -1;
+                        int fallbackEntryStubStart = fallbackMainStart;
+                        int fallbackEntryStubEnd = -1;
                         
-                        // Calculate entry stub end position (similar to AnalyzeEmptyMainStructure)
+                        // Calculate entry stub end position with comprehensive error handling
                         // Entry stub can be: [RSADD*], JSR, RETN or [RSADD*], JSR, RESTOREBP
                         int jsrOffset = 0;
-                        if (entryStubStart < instructions.Count && IsRsaddInstruction(instructions[entryStubStart].InsType))
+                        if (fallbackEntryStubStart < instructions.Count && IsRsaddInstruction(instructions[fallbackEntryStubStart].InsType))
                         {
-                            jsrOffset = 1; // JSR is at position entryStubStart + 1
+                            jsrOffset = 1; // JSR is at position fallbackEntryStubStart + 1
                         }
                         
-                        int jsrIndex = entryStubStart + jsrOffset;
+                        int jsrIndex = fallbackEntryStubStart + jsrOffset;
+                        
+                        // EDGE CASE 3: Handle malformed entry stubs (JSR without RETN, incomplete patterns)
                         if (jsrIndex + 1 < instructions.Count)
                         {
                             if (instructions[jsrIndex].InsType == NCSInstructionType.JSR &&
                                 instructions[jsrIndex + 1].InsType == NCSInstructionType.RETN)
                             {
-                                entryStubEnd = jsrIndex + 2; // After RETN
+                                fallbackEntryStubEnd = jsrIndex + 2; // After RETN
                             }
                             else if (instructions[jsrIndex].InsType == NCSInstructionType.JSR &&
                                      instructions[jsrIndex + 1].InsType == NCSInstructionType.RESTOREBP)
@@ -1714,20 +1725,49 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                                 int restorebpIndex = jsrIndex + 1;
                                 if (!IsRestorebpFollowedByCleanupCode(instructions, restorebpIndex))
                                 {
-                                    entryStubEnd = jsrIndex + 2; // After RESTOREBP (valid entry stub)
+                                    fallbackEntryStubEnd = jsrIndex + 2; // After RESTOREBP (valid entry stub)
                                 }
-                                // If RESTOREBP is cleanup code, entryStubEnd remains -1 (no entry stub)
+                                // If RESTOREBP is cleanup code, fallbackEntryStubEnd remains -1 (no entry stub)
+                            }
+                            // EDGE CASE 4: Handle incomplete entry stub patterns (JSR without RETN/RESTOREBP)
+                            else if (instructions[jsrIndex].InsType == NCSInstructionType.JSR)
+                            {
+                                // Malformed entry stub: JSR found but no RETN/RESTOREBP follows
+                                // Try to find the next RETN as a heuristic
+                                for (int i = jsrIndex + 1; i < Math.Min(jsrIndex + 10, instructions.Count); i++)
+                                {
+                                    if (instructions[i].InsType == NCSInstructionType.RETN)
+                                    {
+                                        fallbackEntryStubEnd = i + 1; // After RETN
+                                        Debug($"DEBUG NcsToAstConverter: Malformed entry stub detected - JSR at {jsrIndex} but RETN found at {i}, using heuristic end={fallbackEntryStubEnd}");
+                                        break;
+                                    }
+                                }
+                                // If no RETN found, treat JSR as part of main code (don't skip it)
+                                if (fallbackEntryStubEnd == -1)
+                                {
+                                    Debug($"DEBUG NcsToAstConverter: Malformed entry stub - JSR at {jsrIndex} but no RETN/RESTOREBP found, treating as main code");
+                                }
                             }
                         }
-                        
-                        if (entryStubEnd > entryStubStart)
+                        // EDGE CASE 5: Handle entry stub detection failure (pattern detected but end calculation fails)
+                        else if (jsrIndex >= instructions.Count)
                         {
-                            fallbackMainStart = entryStubEnd; // Skip entire entry stub
-                            Debug($"DEBUG NcsToAstConverter: Detected entry stub at {entryStubStart}-{entryStubEnd - 1}, adjusted fallbackMainStart to {fallbackMainStart}");
+                            Debug($"DEBUG NcsToAstConverter: Entry stub pattern detected but JSR index {jsrIndex} is out of bounds (instructions.Count={instructions.Count})");
+                        }
+                        
+                        if (fallbackEntryStubEnd > fallbackEntryStubStart && fallbackEntryStubEnd <= instructions.Count)
+                        {
+                            fallbackMainStart = fallbackEntryStubEnd; // Skip entire entry stub
+                            Debug($"DEBUG NcsToAstConverter: Detected entry stub at {fallbackEntryStubStart}-{fallbackEntryStubEnd - 1}, adjusted fallbackMainStart to {fallbackMainStart}");
+                        }
+                        else if (fallbackEntryStubEnd > instructions.Count)
+                        {
+                            Debug($"DEBUG NcsToAstConverter: Entry stub end {fallbackEntryStubEnd} exceeds instructions.Count {instructions.Count}, using fallbackMainStart={fallbackMainStart}");
                         }
                         else
                         {
-                            Debug($"DEBUG NcsToAstConverter: Entry stub pattern detected but could not determine end position, using fallbackMainStart={fallbackMainStart}");
+                            Debug($"DEBUG NcsToAstConverter: Entry stub pattern detected but could not determine valid end position (start={fallbackEntryStubStart}, end={fallbackEntryStubEnd}), using fallbackMainStart={fallbackMainStart}");
                         }
                     }
                     else
@@ -1735,8 +1775,48 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                         Debug($"DEBUG NcsToAstConverter: No entry stub pattern detected at {fallbackMainStart}, using fallbackMainStart={fallbackMainStart}");
                     }
                 }
+                // EDGE CASE 6: Handle files with no SAVEBP (no globals section)
+                else
+                {
+                    Debug("DEBUG NcsToAstConverter: No SAVEBP found, checking for entry stub at position 0");
+                    // Try to detect entry stub at position 0
+                    if (HasEntryStubPattern(instructions, 0, ncs))
+                    {
+                        int fallbackEntryStubEnd = -1;
+                        int jsrOffset = 0;
+                        if (instructions.Count > 0 && IsRsaddInstruction(instructions[0].InsType))
+                        {
+                            jsrOffset = 1;
+                        }
+                        
+                        int jsrIndex = jsrOffset;
+                        if (jsrIndex + 1 < instructions.Count)
+                        {
+                            if (instructions[jsrIndex].InsType == NCSInstructionType.JSR &&
+                                instructions[jsrIndex + 1].InsType == NCSInstructionType.RETN)
+                            {
+                                fallbackEntryStubEnd = jsrIndex + 2;
+                            }
+                            else if (instructions[jsrIndex].InsType == NCSInstructionType.JSR &&
+                                     instructions[jsrIndex + 1].InsType == NCSInstructionType.RESTOREBP)
+                            {
+                                int restorebpIndex = jsrIndex + 1;
+                                if (!IsRestorebpFollowedByCleanupCode(instructions, restorebpIndex))
+                                {
+                                    fallbackEntryStubEnd = jsrIndex + 2;
+                                }
+                            }
+                        }
+                        
+                        if (fallbackEntryStubEnd > 0 && fallbackEntryStubEnd <= instructions.Count)
+                        {
+                            fallbackMainStart = fallbackEntryStubEnd;
+                            Debug($"DEBUG NcsToAstConverter: Detected entry stub at 0-{fallbackEntryStubEnd - 1}, adjusted fallbackMainStart to {fallbackMainStart}");
+                        }
+                    }
+                }
 
-                // CRITICAL FIX: If fallbackMainStart >= fallbackMainEnd, use the entire range
+                // EDGE CASE 7: Validate and fix invalid ranges before attempting conversion
                 // This handles very small files where the calculated start might be after the end
                 if (fallbackMainStart >= fallbackMainEnd)
                 {
@@ -1744,7 +1824,20 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                     fallbackMainStart = 0;
                     fallbackMainEnd = instructions.Count;
                 }
+                
+                // Ensure range is within bounds
+                if (fallbackMainStart < 0)
+                {
+                    Debug($"DEBUG NcsToAstConverter: Fallback start ({fallbackMainStart}) is negative, clamping to 0");
+                    fallbackMainStart = 0;
+                }
+                if (fallbackMainEnd > instructions.Count)
+                {
+                    Debug($"DEBUG NcsToAstConverter: Fallback end ({fallbackMainEnd}) exceeds instructions.Count ({instructions.Count}), clamping to {instructions.Count}");
+                    fallbackMainEnd = instructions.Count;
+                }
 
+                // EDGE CASE 8: Attempt to create fallback subroutine with comprehensive error handling
                 if (fallbackMainStart < fallbackMainEnd && fallbackMainStart >= 0 && fallbackMainEnd <= instructions.Count)
                 {
                     ASubroutine fallbackMain = ConvertInstructionRangeToSubroutine(ncs, instructions, fallbackMainStart, fallbackMainEnd, fallbackMainStart);
@@ -1756,27 +1849,37 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                     else
                     {
                         Debug($"DEBUG NcsToAstConverter: Fallback main subroutine creation returned null (range {fallbackMainStart}-{fallbackMainEnd})");
-                        // Last resort: create an empty subroutine with just a RETN if we can find one
+                        // EDGE CASE 9: Create minimal subroutine with last few instructions as last resort
                         if (instructions.Count > 0)
                         {
                             Debug("DEBUG NcsToAstConverter: Attempting to create minimal subroutine as last resort");
                             AST.ASubroutine minimalSub = new AST.ASubroutine();
                             minimalSub.SetId(0);
                             AST.ACommandBlock minimalCmdBlock = new AST.ACommandBlock();
-                            // Try to convert at least the last instruction (should be RETN)
-                            for (int i = Math.Max(0, instructions.Count - 3); i < instructions.Count; i++)
+                            
+                            // Try to convert instructions from the calculated start position
+                            // If that fails, try the last few instructions
+                            int minimalStart = Math.Max(fallbackMainStart, Math.Max(0, instructions.Count - 10));
+                            int convertedCount = 0;
+                            for (int i = minimalStart; i < instructions.Count && convertedCount < 20; i++)
                             {
-                                PCmd cmd = ConvertInstructionToCmd(ncs, instructions[i], i, instructions);
-                                if (cmd != null)
+                                if (i >= 0 && i < instructions.Count && instructions[i] != null)
                                 {
-                                    minimalCmdBlock.AddCmd((AST.PCmd)(object)cmd);
+                                    PCmd cmd = ConvertInstructionToCmd(ncs, instructions[i], i, instructions);
+                                    if (cmd != null)
+                                    {
+                                        minimalCmdBlock.AddCmd((AST.PCmd)(object)cmd);
+                                        convertedCount++;
+                                    }
                                 }
                             }
+                            
                             minimalSub.SetCommandBlock(minimalCmdBlock);
-                            // Find RETN and set it as return
-                            for (int i = instructions.Count - 1; i >= 0 && i >= instructions.Count - 5; i--)
+                            
+                            // Find RETN and set it as return (search from end backwards)
+                            for (int i = instructions.Count - 1; i >= 0 && i >= instructions.Count - 10; i--)
                             {
-                                if (instructions[i].InsType == NCSInstructionType.RETN)
+                                if (instructions[i] != null && instructions[i].InsType == NCSInstructionType.RETN)
                                 {
                                     AReturn ret = ConvertRetn(instructions[i], i);
                                     if (ret != null)
@@ -1786,21 +1889,37 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                                     break;
                                 }
                             }
+                            
                             program.GetSubroutine().Add(minimalSub);
-                            Debug("DEBUG NcsToAstConverter: Created minimal fallback subroutine");
+                            Debug($"DEBUG NcsToAstConverter: Created minimal fallback subroutine with {convertedCount} commands");
                         }
                     }
                 }
                 else
                 {
                     Debug($"DEBUG NcsToAstConverter: Fallback main subroutine range invalid (start={fallbackMainStart}, end={fallbackMainEnd}, instructions.Count={instructions.Count})");
-                    // Last resort: create an empty subroutine
+                    // EDGE CASE 10: Create empty subroutine as absolute last resort for corrupted files
                     if (instructions.Count > 0)
                     {
                         Debug("DEBUG NcsToAstConverter: Creating empty subroutine as absolute last resort");
                         AST.ASubroutine emptySub = new AST.ASubroutine();
                         emptySub.SetId(0);
                         emptySub.SetCommandBlock(new AST.ACommandBlock());
+                        
+                        // Try to find and add at least one RETN if possible
+                        for (int i = 0; i < instructions.Count && i < 50; i++)
+                        {
+                            if (instructions[i] != null && instructions[i].InsType == NCSInstructionType.RETN)
+                            {
+                                AReturn ret = ConvertRetn(instructions[i], i);
+                                if (ret != null)
+                                {
+                                    emptySub.SetReturn((AST.PReturn)(object)ret);
+                                    break;
+                                }
+                            }
+                        }
+                        
                         program.GetSubroutine().Add(emptySub);
                         Debug("DEBUG NcsToAstConverter: Created empty fallback subroutine");
                     }

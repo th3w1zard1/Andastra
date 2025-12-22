@@ -7,6 +7,8 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Andastra.Parsing.Formats.MDL;
+using Andastra.Parsing.Formats.MDLData;
 using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Resource;
 using Andastra.Runtime.Content.Interfaces;
@@ -54,6 +56,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         // Menu state tracking - tracks which menus are currently open
         // Based on daorigins.exe: Menu system tracks open menus for rendering
         private HashSet<DragonAgeOriginsMenuType> _openMenus = new HashSet<DragonAgeOriginsMenuType>();
+
+        // Texture cache for model textures - maps model ResRef to DirectX 9 texture pointer
+        // Based on daorigins.exe: Model textures are cached to avoid reloading same textures repeatedly
+        private Dictionary<string, IntPtr> _modelTextureCache = new Dictionary<string, IntPtr>(StringComparer.OrdinalIgnoreCase);
 
         public override GraphicsBackendType BackendType => GraphicsBackendType.EclipseEngine;
 
@@ -1155,32 +1161,70 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             IntPtr texture = IntPtr.Zero;
             if (!string.IsNullOrEmpty(renderable.ModelResRef) && _resourceProvider != null)
             {
-                // TODO:  Try to load texture from model ResRef (in a full implementation, this would load the actual model's texture)
-                // TODO:  For now, we try to get texture from entity data if available
-                object textureObj = entity.GetData("Texture");
-                if (textureObj != null)
+                // Try to load texture from model ResRef (loads the actual model's texture from MDL file)
+                // Based on daorigins.exe: Model textures are loaded from MDL files via resource provider
+                // Texture loading process:
+                // 1. Check texture cache for model ResRef (avoids reloading same textures)
+                // 2. Load MDL file from model ResRef using resource provider
+                // 3. Extract texture name from MDL (Texture1 from first mesh node, or first texture from AllTextures())
+                // 4. Load texture file (TPC/DDS/TGA) using LoadEclipseTexture
+                // 5. Cache the texture pointer for future use
+                string modelResRef = renderable.ModelResRef;
+                if (_modelTextureCache.ContainsKey(modelResRef))
                 {
-                    // Try to get native texture pointer
-                    Type textureType = textureObj.GetType();
-                    PropertyInfo handleProp = textureType.GetProperty("Handle");
-                    if (handleProp != null)
+                    texture = _modelTextureCache[modelResRef];
+                    if (texture != IntPtr.Zero)
                     {
-                        object handleObj = handleProp.GetValue(textureObj);
-                        if (handleObj is IntPtr)
-                        {
-                            texture = (IntPtr)handleObj;
-                        }
+                        // Texture found in cache
+                        System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] RenderEntity: Using cached texture for model '{modelResRef}' (handle: 0x{texture:X16})");
                     }
-
-                    if (texture == IntPtr.Zero)
+                }
+                else
+                {
+                    // Texture not in cache - load from model
+                    texture = LoadTextureFromModelResRef(modelResRef);
+                    if (texture != IntPtr.Zero)
                     {
-                        PropertyInfo nativeProp = textureType.GetProperty("NativePointer");
-                        if (nativeProp != null)
+                        // Cache the texture for future use
+                        _modelTextureCache[modelResRef] = texture;
+                        System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] RenderEntity: Loaded and cached texture for model '{modelResRef}' (handle: 0x{texture:X16})");
+                    }
+                    else
+                    {
+                        // Failed to load texture from model - cache failure to avoid repeated attempts
+                        _modelTextureCache[modelResRef] = IntPtr.Zero;
+                        System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] RenderEntity: Failed to load texture from model '{modelResRef}', caching failure");
+                    }
+                }
+
+                // Fallback: Try to get texture from entity data if model texture loading failed
+                if (texture == IntPtr.Zero)
+                {
+                    object textureObj = entity.GetData("Texture");
+                    if (textureObj != null)
+                    {
+                        // Try to get native texture pointer
+                        Type textureType = textureObj.GetType();
+                        PropertyInfo handleProp = textureType.GetProperty("Handle");
+                        if (handleProp != null)
                         {
-                            object nativeObj = nativeProp.GetValue(textureObj);
-                            if (nativeObj is IntPtr)
+                            object handleObj = handleProp.GetValue(textureObj);
+                            if (handleObj is IntPtr)
                             {
-                                texture = (IntPtr)nativeObj;
+                                texture = (IntPtr)handleObj;
+                            }
+                        }
+
+                        if (texture == IntPtr.Zero)
+                        {
+                            PropertyInfo nativeProp = textureType.GetProperty("NativePointer");
+                            if (nativeProp != null)
+                            {
+                                object nativeObj = nativeProp.GetValue(textureObj);
+                                if (nativeObj is IntPtr)
+                                {
+                                    texture = (IntPtr)nativeObj;
+                                }
                             }
                         }
                     }
@@ -2108,6 +2152,140 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         private delegate int DrawPrimitiveDelegate(IntPtr device, uint primitiveType, int startVertex, int primitiveCount);
 
         #endregion
+
+        /// <summary>
+        /// Loads texture from model ResRef by loading MDL file and extracting texture reference.
+        /// Based on daorigins.exe: Model textures are loaded from MDL files via resource provider.
+        /// </summary>
+        /// <remarks>
+        /// Dragon Age Origins Model Texture Loading:
+        /// - Based on reverse engineering of daorigins.exe model texture loading
+        /// - Process: Load MDL file from model ResRef -> Extract texture name from MDL -> Load texture file
+        /// - Texture extraction: Uses Texture1 from first mesh node, or first texture from AllTextures() method
+        /// - Resource loading: MDL files are loaded from ERF archives, RIM files, and package files via resource provider
+        /// - Texture formats: TPC (primary), DDS, TGA (supported by LoadEclipseTexture)
+        /// - Caching: Textures are cached per model ResRef to avoid reloading same textures
+        /// - Error handling: Returns IntPtr.Zero on failure (matches original engine behavior)
+        /// </remarks>
+        /// <param name="modelResRef">Model resource reference (MDL file name without extension).</param>
+        /// <returns>IntPtr to IDirect3DTexture9, or IntPtr.Zero on failure.</returns>
+        private IntPtr LoadTextureFromModelResRef(string modelResRef)
+        {
+            if (string.IsNullOrEmpty(modelResRef))
+            {
+                System.Console.WriteLine("[DragonAgeOriginsGraphicsBackend] LoadTextureFromModelResRef: Model ResRef is null or empty");
+                return IntPtr.Zero;
+            }
+
+            if (_resourceProvider == null)
+            {
+                System.Console.WriteLine("[DragonAgeOriginsGraphicsBackend] LoadTextureFromModelResRef: Resource provider is null");
+                return IntPtr.Zero;
+            }
+
+            try
+            {
+                // Step 1: Load MDL file from model ResRef
+                // Based on daorigins.exe: MDL files are loaded from resource provider (ERF archives, RIM files, package files)
+                // Extract resource name from path (remove extensions if present)
+                string mdlResourceName = modelResRef;
+                if (mdlResourceName.EndsWith(".mdl", StringComparison.OrdinalIgnoreCase) || mdlResourceName.EndsWith(".MDL", StringComparison.OrdinalIgnoreCase))
+                {
+                    mdlResourceName = Path.GetFileNameWithoutExtension(mdlResourceName);
+                }
+
+                ResourceIdentifier mdlId = new ResourceIdentifier(mdlResourceName, ParsingResourceType.MDL);
+                Task<bool> mdlExistsTask = _resourceProvider.ExistsAsync(mdlId, CancellationToken.None);
+                mdlExistsTask.Wait();
+                if (!mdlExistsTask.Result)
+                {
+                    System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] LoadTextureFromModelResRef: MDL resource '{mdlResourceName}' not found");
+                    return IntPtr.Zero;
+                }
+
+                Task<byte[]> mdlDataTask = _resourceProvider.GetResourceBytesAsync(mdlId, CancellationToken.None);
+                mdlDataTask.Wait();
+                byte[] mdlData = mdlDataTask.Result;
+                if (mdlData == null || mdlData.Length == 0)
+                {
+                    System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] LoadTextureFromModelResRef: Failed to load MDL data for '{mdlResourceName}'");
+                    return IntPtr.Zero;
+                }
+
+                // Try to load MDX file (binary MDL companion file) if available
+                byte[] mdxData = null;
+                ResourceIdentifier mdxId = new ResourceIdentifier(mdlResourceName, ParsingResourceType.MDX);
+                Task<bool> mdxExistsTask = _resourceProvider.ExistsAsync(mdxId, CancellationToken.None);
+                mdxExistsTask.Wait();
+                if (mdxExistsTask.Result)
+                {
+                    Task<byte[]> mdxDataTask = _resourceProvider.GetResourceBytesAsync(mdxId, CancellationToken.None);
+                    mdxDataTask.Wait();
+                    mdxData = mdxDataTask.Result;
+                }
+
+                // Step 2: Parse MDL file and extract texture reference
+                // Based on daorigins.exe: MDL files contain texture references in mesh nodes
+                // MDLAuto.ReadMdl can parse both binary MDL (with MDX data) and ASCII MDL formats
+                MDL mdl = MDLAuto.ReadMdl(mdlData, sourceExt: mdxData);
+                if (mdl == null)
+                {
+                    System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] LoadTextureFromModelResRef: Failed to parse MDL file '{mdlResourceName}'");
+                    return IntPtr.Zero;
+                }
+
+                // Step 3: Extract texture name from MDL
+                // Priority: 1) Texture1 from first mesh node, 2) First texture from AllTextures()
+                // Based on daorigins.exe: Texture1 is the primary diffuse texture, Texture2 is lightmap
+                string textureName = null;
+                
+                // Try to get Texture1 from first mesh node (most common case)
+                List<MDLNode> allNodes = mdl.AllNodes();
+                foreach (MDLNode node in allNodes)
+                {
+                    if (node.Mesh != null && !string.IsNullOrEmpty(node.Mesh.Texture1) && node.Mesh.Texture1 != "NULL")
+                    {
+                        textureName = node.Mesh.Texture1;
+                        break; // Use first texture found
+                    }
+                }
+
+                // Fallback: Use first texture from AllTextures() if no Texture1 found
+                if (string.IsNullOrEmpty(textureName))
+                {
+                    HashSet<string> allTextures = mdl.AllTextures();
+                    if (allTextures != null && allTextures.Count > 0)
+                    {
+                        textureName = allTextures.First(); // Get first texture
+                    }
+                }
+
+                if (string.IsNullOrEmpty(textureName))
+                {
+                    System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] LoadTextureFromModelResRef: No texture found in MDL file '{mdlResourceName}'");
+                    return IntPtr.Zero;
+                }
+
+                System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] LoadTextureFromModelResRef: Extracted texture '{textureName}' from model '{modelResRef}'");
+
+                // Step 4: Load texture file using existing LoadEclipseTexture method
+                // Based on daorigins.exe: Textures are loaded via LoadEclipseTexture (supports TPC/DDS/TGA formats)
+                IntPtr texture = LoadEclipseTexture(textureName);
+                if (texture == IntPtr.Zero)
+                {
+                    System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] LoadTextureFromModelResRef: Failed to load texture '{textureName}' for model '{modelResRef}'");
+                    return IntPtr.Zero;
+                }
+
+                System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] LoadTextureFromModelResRef: Successfully loaded texture '{textureName}' for model '{modelResRef}' (handle: 0x{texture:X16})");
+                return texture;
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] LoadTextureFromModelResRef: Exception loading texture from model '{modelResRef}': {ex.Message}");
+                return IntPtr.Zero;
+            }
+        }
 
         /// <summary>
         /// Dragon Age Origins-specific texture loading.
