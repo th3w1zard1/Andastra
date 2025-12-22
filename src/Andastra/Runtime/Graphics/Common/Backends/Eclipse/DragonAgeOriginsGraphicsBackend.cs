@@ -880,7 +880,6 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // Set texture for particles based on emitter type
             // Based on daorigins.exe: Different emitter types use different particle textures
             // daorigins.exe: Particle textures are loaded from game resources using texture name from emitter or default texture mapping
-            // Reference: vendor/reone/src/libs/scene/node/emitter.cpp:258 - texture = _resourceSvc.textures.get(emitter->textureName, TextureUsage::MainTex)
             string textureName = GetParticleTextureName(emitter, emitterType);
             IntPtr particleTexture = LoadParticleTexture(textureName);
             SetTextureDirectX9(0, particleTexture);
@@ -911,7 +910,6 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 // Original implementation: Particles are rendered as quads that always face the camera
                 // Billboard calculation: Extract right and up vectors from view matrix to orient quad
                 // Based on standard billboard technique: Use view matrix columns for right/up vectors
-                // Reference: reone billboard shader (v_billboard.glsl) - extracts right/up from view matrix
                 float halfSize = particle.Size * 0.5f;
                 Vector3 pos = particle.Position;
 
@@ -931,8 +929,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 //   [0        0     0          1    ]
                 // Right vector = column 0: [M11, M21, M31]
                 // Up vector = column 1: [M12, M22, M32]
-                // Based on reone billboard shader: vec3 right = vec3(uView[0][0], uView[1][0], uView[2][0])
-                //                                vec3 up = vec3(uView[0][1], uView[1][1], uView[2][1])
+                // Based on daorigins.exe: View matrix columns extracted for billboard orientation
                 Vector3 billboardRight = Vector3.UnitX; // Default fallback
                 Vector3 billboardUp = Vector3.UnitY; // Default fallback
 
@@ -982,7 +979,6 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 //   bottom-left  bottom-right
                 // Each vertex = particle position + (right * xOffset) + (up * yOffset)
                 // Based on daorigins.exe: Billboard quads are centered on particle position
-                // Based on reone billboard shader: P = vec3(uModel[3]) + right * aPosition.x + up * aPosition.y
                 // Billboard orientation is now fully calculated based on camera position via view matrix
                 Vector3 topLeft = pos + billboardRight * (-halfSize) + billboardUp * halfSize;
                 Vector3 topRight = pos + billboardRight * halfSize + billboardUp * halfSize;
@@ -1008,7 +1004,6 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         /// <summary>
         /// Gets texture name for particle emitter.
         /// Based on daorigins.exe: Particle textures are stored in emitter objects (MDL emitter texture field).
-        /// Reference: vendor/reone/src/libs/scene/node/emitter.cpp:258 - emitter->textureName
         /// </summary>
         /// <param name="emitter">Emitter object (may contain texture name property).</param>
         /// <param name="emitterType">Emitter type (used for fallback default texture mapping).</param>
@@ -1021,7 +1016,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 // Based on MDL emitter structure: texture field contains texture name
                 // Property names may vary: TextureName, TextureResRef, Texture, textureName, etc.
                 Type emitterType_obj = emitter.GetType();
-                
+
                 // Try common property names for texture name
                 string[] texturePropertyNames = { "TextureName", "TextureResRef", "Texture", "textureName", "texture" };
                 foreach (string propName in texturePropertyNames)
@@ -1042,7 +1037,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                     }
                 }
             }
-            
+
             // Fallback: Use default texture mapping based on emitter type
             // Based on daorigins.exe: Different emitter types use different default particle textures
             // Common particle texture names in Dragon Age Origins:
@@ -1092,7 +1087,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // Load texture using LoadEclipseTexture (handles TPC/DDS/TGA formats via resource provider)
             // Based on daorigins.exe: Particle textures are loaded via same texture loading system as other textures
             IntPtr texture = LoadEclipseTexture(textureName);
-            
+
             if (texture != IntPtr.Zero)
             {
                 // Cache texture for future use
