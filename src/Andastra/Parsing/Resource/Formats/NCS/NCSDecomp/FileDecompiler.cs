@@ -2292,10 +2292,147 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 // The stub includes detailed error information, file metadata, and a minimal valid NSS function
                 Utils.FileScriptData stub = new Utils.FileScriptData();
                 string expectedFile = isK2Selected ? "tsl_nwscript.nss" : "k1_nwscript.nss";
-                string stubCode = this.GenerateComprehensiveFallbackStub(file, "Actions data loading", null,
-                    "The actions data table (nwscript.nss) is required to decompile NCS files.\n" +
-                    "Expected file: " + expectedFile + "\n" +
-                    "Please ensure the appropriate nwscript.nss file is available in tools/ directory, working directory, or configured path.");
+
+                // Build comprehensive diagnostic information
+                StringBuilder diagnosticInfo = new StringBuilder();
+                diagnosticInfo.Append("The actions data table (nwscript.nss) is required to decompile NCS files.\n");
+                diagnosticInfo.Append("Expected file: ").Append(expectedFile).Append("\n\n");
+
+                // Add file header analysis if file exists and is readable
+                if (file != null && file.Exists() && file.Length > 0)
+                {
+                    try
+                    {
+                        using (var fileStream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read))
+                        {
+                            byte[] header = new byte[Math.Min(32, (int)file.Length)];
+                            int read = fileStream.Read(header, 0, header.Length);
+                            if (read > 0)
+                            {
+                                diagnosticInfo.Append("NCS File Header Analysis:\n");
+                                diagnosticInfo.Append("  File size: ").Append(file.Length).Append(" bytes\n");
+                                diagnosticInfo.Append("  First ").Append(read).Append(" bytes (hex): ").Append(this.BytesToHex(header, read)).Append("\n");
+
+                                // Try to identify NCS file format
+                                if (read >= 4)
+                                {
+                                    // NCS files typically start with specific byte patterns
+                                    // Check for common NCS signatures
+                                    if (header[0] == 0x00 && header[1] == 0x00 && header[2] == 0x00 && header[3] == 0x00)
+                                    {
+                                        diagnosticInfo.Append("  Format: Appears to be valid NCS bytecode (starts with null header)\n");
+                                    }
+                                    else
+                                    {
+                                        diagnosticInfo.Append("  Format: Unusual header pattern - may be corrupted or non-standard\n");
+                                    }
+                                }
+                                diagnosticInfo.Append("\n");
+                            }
+                        }
+                    }
+                    catch (Exception headerEx)
+                    {
+                        diagnosticInfo.Append("NCS File Header Analysis: Failed to read file header - ").Append(headerEx.Message).Append("\n\n");
+                    }
+                }
+
+                // Add search paths information
+                diagnosticInfo.Append("Actions File Search Paths:\n");
+                try
+                {
+                    string userDir = JavaSystem.GetProperty("user.dir");
+                    List<string> searchPaths = new List<string>();
+
+                    // Check settings path (if available)
+                    try
+                    {
+                        string settingsPath = isK2Selected
+                            ? Decompiler.settings.GetProperty("K2 nwscript Path")
+                            : Decompiler.settings.GetProperty("K1 nwscript Path");
+                        if (!string.IsNullOrEmpty(settingsPath))
+                        {
+                            searchPaths.Add("Settings path: " + settingsPath);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // Settings not available
+                    }
+
+                    // Default search paths
+                    searchPaths.Add("tools/ directory: " + Path.Combine(userDir, "tools", expectedFile));
+                    searchPaths.Add("Working directory: " + Path.Combine(userDir, expectedFile));
+
+                    // JAR/EXE directory paths
+                    try
+                    {
+                        NcsFile ncsDecompDir = CompilerUtil.GetNCSDecompDirectory();
+                        if (ncsDecompDir != null)
+                        {
+                            searchPaths.Add("JAR/EXE tools/: " + Path.Combine(ncsDecompDir.FullName, "tools", expectedFile));
+                            searchPaths.Add("JAR/EXE directory: " + Path.Combine(ncsDecompDir.FullName, expectedFile));
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // Could not determine JAR/EXE directory
+                    }
+
+                    // Use NWScriptLocator if available for additional paths
+                    try
+                    {
+                        NWScriptLocator.GameType gameType = isK2Selected ? NWScriptLocator.GameType.TSL : NWScriptLocator.GameType.K1;
+                        List<string> candidatePaths = NWScriptLocator.GetCandidatePaths(gameType);
+                        foreach (string path in candidatePaths)
+                        {
+                            if (!searchPaths.Contains(path))
+                            {
+                                searchPaths.Add("NWScriptLocator: " + path);
+                            }
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // NWScriptLocator not available
+                    }
+
+                    foreach (string path in searchPaths)
+                    {
+                        diagnosticInfo.Append("  - ").Append(path);
+                        try
+                        {
+                            NcsFile testFile = new NcsFile(path);
+                            if (testFile.Exists() && testFile.IsFile())
+                            {
+                                diagnosticInfo.Append(" [EXISTS]");
+                            }
+                            else
+                            {
+                                diagnosticInfo.Append(" [NOT FOUND]");
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            diagnosticInfo.Append(" [ERROR CHECKING]");
+                        }
+                        diagnosticInfo.Append("\n");
+                    }
+                }
+                catch (Exception pathEx)
+                {
+                    diagnosticInfo.Append("  Error gathering search paths: ").Append(pathEx.Message).Append("\n");
+                }
+
+                diagnosticInfo.Append("\n");
+                diagnosticInfo.Append("Resolution Steps:\n");
+                diagnosticInfo.Append("  1. Download the appropriate nwscript.nss file for ").Append(isK2Selected ? "KotOR 2 (TSL)" : "KotOR 1").Append("\n");
+                diagnosticInfo.Append("  2. Place it in one of the search paths listed above\n");
+                diagnosticInfo.Append("  3. Ensure the file is named exactly: ").Append(expectedFile).Append("\n");
+                diagnosticInfo.Append("  4. Verify the file is readable and not corrupted\n");
+                diagnosticInfo.Append("  5. If using GUI mode, configure the path in Settings\n");
+
+                string stubCode = this.GenerateComprehensiveFallbackStub(file, "Actions data loading", null, diagnosticInfo.ToString());
                 stub.SetCode(stubCode);
                 return stub;
             }
@@ -2866,31 +3003,115 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     catch (Exception e)
                     {
                         Debug("Error generating code for main subroutine: " + e.Message);
-                        // TODO:  Try to create a minimal main function stub using MainPass
+                        // Try to create a minimal main function stub using MainPass
+                        // This is a comprehensive fallback that handles multiple failure scenarios
+                        SubScriptState minimalMain = null;
+                        MainPass recoveryPass = null;
                         try
                         {
-                            mainpass = new MainPass(subdata.GetState(mainsub), nodedata, subdata, this.actions);
-                            // Even if apply fails, try to get the state
+                            SubroutineState mainState = subdata.GetState(mainsub);
+                            if (mainState == null)
+                            {
+                                Debug("ERROR: Main subroutine state is null - cannot create minimal stub from state");
+                                throw new InvalidOperationException("Main subroutine state is null");
+                            }
+
+                            // Attempt 1: Try to create MainPass and get state (even if Apply fails)
                             try
                             {
-                                mainsub.Apply(mainpass);
+                                recoveryPass = new MainPass(mainState, nodedata, subdata, this.actions);
+                                // Even if apply fails, try to get the state
+                                try
+                                {
+                                    mainsub.Apply(recoveryPass);
+                                }
+                                catch (Exception e2)
+                                {
+                                    Debug("Could not apply mainpass, but attempting to use partial state: " + e2.Message);
+                                }
+                                minimalMain = recoveryPass.GetState();
+                                if (minimalMain != null)
+                                {
+                                    minimalMain.IsMain(true);
+                                    data.AddSub(minimalMain);
+                                    Debug("Created minimal main subroutine stub using MainPass partial state.");
+                                    recoveryPass.Done();
+                                    recoveryPass = null;
+                                }
                             }
                             catch (Exception e2)
                             {
-                                Debug("Could not apply mainpass, but attempting to use partial state: " + e2.Message);
+                                Debug("MainPass creation/application failed: " + e2.Message);
+                                if (recoveryPass != null)
+                                {
+                                    try
+                                    {
+                                        recoveryPass.Done();
+                                    }
+                                    catch (Exception)
+                                    {
+                                        // Ignore cleanup errors
+                                    }
+                                    recoveryPass = null;
+                                }
+
+                                // Attempt 2: Create SubScriptState directly from SubroutineState
+                                // This creates a minimal stub with just the function signature
+                                try
+                                {
+                                    LocalVarStack minimalStack = new LocalVarStack();
+                                    mainState.InitStack(minimalStack);
+                                    minimalMain = new SubScriptState(nodedata, subdata, minimalStack, mainState, this.actions, FileDecompiler.preferSwitches);
+                                    minimalMain.IsMain(true);
+                                    data.AddSub(minimalMain);
+                                    Debug("Created minimal main subroutine stub using direct SubScriptState creation.");
+                                }
+                                catch (Exception e3)
+                                {
+                                    Debug("Direct SubScriptState creation failed: " + e3.Message);
+
+                                    // Attempt 3: Create absolute minimal stub with just signature info
+                                    // Extract function signature from SubroutineState
+                                    try
+                                    {
+                                        UtilsType returnType = mainState.Type();
+                                        int paramCount = mainState.GetParamCount();
+                                        byte subId = mainState.GetId();
+                                        int startPos = mainState.GetStart();
+                                        int endPos = mainState.GetEnd();
+
+                                        // Create minimal stack with just return type and parameters
+                                        LocalVarStack absoluteMinimalStack = new LocalVarStack();
+                                        mainState.InitStack(absoluteMinimalStack);
+
+                                        // Create SubScriptState with minimal information
+                                        minimalMain = new SubScriptState(nodedata, subdata, absoluteMinimalStack, mainState, this.actions, FileDecompiler.preferSwitches);
+                                        minimalMain.IsMain(true);
+                                        data.AddSub(minimalMain);
+                                        Debug("Created absolute minimal main subroutine stub with signature only.");
+                                    }
+                                    catch (Exception e4)
+                                    {
+                                        Debug("Absolute minimal stub creation failed: " + e4.Message);
+                                        Debug("All attempts to create minimal main stub failed. Main function will be missing from decompiled output.");
+                                    }
+                                }
                             }
-                            SubScriptState minimalMain = mainpass.GetState();
-                            if (minimalMain != null)
-                            {
-                                minimalMain.IsMain(true);
-                                data.AddSub(minimalMain);
-                                Debug("Created minimal main subroutine stub.");
-                            }
-                            mainpass.Done();
                         }
                         catch (Exception e2)
                         {
                             Debug("Could not create minimal main stub: " + e2.Message);
+                            if (recoveryPass != null)
+                            {
+                                try
+                                {
+                                    recoveryPass.Done();
+                                }
+                                catch (Exception)
+                                {
+                                    // Ignore cleanup errors
+                                }
+                            }
                         }
                     }
                 }
@@ -3668,7 +3889,10 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     catch (Exception e)
                     {
                         Debug("Error generating code for main subroutine: " + e.Message);
-                        // TODO:  Try to create a minimal main function stub using MainPass
+                        // Try to create a minimal main function stub using MainPass
+                        // This is a comprehensive fallback that handles multiple failure scenarios
+                        SubScriptState minimalMain = null;
+                        MainPass recoveryPass = null;
                         try
                         {
                             SubroutineState mainState = subdata.GetState(mainsub);
@@ -3677,28 +3901,103 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                                 Debug("ERROR: Main subroutine state is null - this indicates AddSubState failed during SplitOffSubroutines.");
                                 throw new InvalidOperationException("Main subroutine state is null. This should not happen - AddSubState should have been called in AddMain.");
                             }
-                            mainpass = new MainPass(mainState, nodedata, subdata, this.actions);
-                            // Even if apply fails, try to get the state
+
+                            // Attempt 1: Try to create MainPass and get state (even if Apply fails)
                             try
                             {
-                                mainsub.Apply(mainpass);
+                                recoveryPass = new MainPass(mainState, nodedata, subdata, this.actions);
+                                // Even if apply fails, try to get the state
+                                try
+                                {
+                                    mainsub.Apply(recoveryPass);
+                                }
+                                catch (Exception e2)
+                                {
+                                    Debug("Could not apply mainpass, but attempting to use partial state: " + e2.Message);
+                                }
+                                minimalMain = recoveryPass.GetState();
+                                if (minimalMain != null)
+                                {
+                                    minimalMain.IsMain(true);
+                                    data.AddSub(minimalMain);
+                                    Debug("Created minimal main subroutine stub using MainPass partial state.");
+                                    recoveryPass.Done();
+                                    recoveryPass = null;
+                                }
                             }
                             catch (Exception e2)
                             {
-                                Debug("Could not apply mainpass, but attempting to use partial state: " + e2.Message);
+                                Debug("MainPass creation/application failed: " + e2.Message);
+                                if (recoveryPass != null)
+                                {
+                                    try
+                                    {
+                                        recoveryPass.Done();
+                                    }
+                                    catch (Exception)
+                                    {
+                                        // Ignore cleanup errors
+                                    }
+                                    recoveryPass = null;
+                                }
+
+                                // Attempt 2: Create SubScriptState directly from SubroutineState
+                                // This creates a minimal stub with just the function signature
+                                try
+                                {
+                                    LocalVarStack minimalStack = new LocalVarStack();
+                                    mainState.InitStack(minimalStack);
+                                    minimalMain = new SubScriptState(nodedata, subdata, minimalStack, mainState, this.actions, FileDecompiler.preferSwitches);
+                                    minimalMain.IsMain(true);
+                                    data.AddSub(minimalMain);
+                                    Debug("Created minimal main subroutine stub using direct SubScriptState creation.");
+                                }
+                                catch (Exception e3)
+                                {
+                                    Debug("Direct SubScriptState creation failed: " + e3.Message);
+
+                                    // Attempt 3: Create absolute minimal stub with just signature info
+                                    // Extract function signature from SubroutineState
+                                    try
+                                    {
+                                        UtilsType returnType = mainState.Type();
+                                        int paramCount = mainState.GetParamCount();
+                                        byte subId = mainState.GetId();
+                                        int startPos = mainState.GetStart();
+                                        int endPos = mainState.GetEnd();
+
+                                        // Create minimal stack with just return type and parameters
+                                        LocalVarStack absoluteMinimalStack = new LocalVarStack();
+                                        mainState.InitStack(absoluteMinimalStack);
+
+                                        // Create SubScriptState with minimal information
+                                        minimalMain = new SubScriptState(nodedata, subdata, absoluteMinimalStack, mainState, this.actions, FileDecompiler.preferSwitches);
+                                        minimalMain.IsMain(true);
+                                        data.AddSub(minimalMain);
+                                        Debug("Created absolute minimal main subroutine stub with signature only.");
+                                    }
+                                    catch (Exception e4)
+                                    {
+                                        Debug("Absolute minimal stub creation failed: " + e4.Message);
+                                        Debug("All attempts to create minimal main stub failed. Main function will be missing from decompiled output.");
+                                    }
+                                }
                             }
-                            SubScriptState minimalMain = mainpass.GetState();
-                            if (minimalMain != null)
-                            {
-                                minimalMain.IsMain(true);
-                                data.AddSub(minimalMain);
-                                Debug("Created minimal main subroutine stub.");
-                            }
-                            mainpass.Done();
                         }
                         catch (Exception e2)
                         {
                             Debug("Could not create minimal main stub: " + e2.Message);
+                            if (recoveryPass != null)
+                            {
+                                try
+                                {
+                                    recoveryPass.Done();
+                                }
+                                catch (Exception)
+                                {
+                                    // Ignore cleanup errors
+                                }
+                            }
                         }
                     }
                 }
