@@ -75,49 +75,28 @@ namespace Andastra.Runtime.MonoGame.Backends
                     DetectAvailableBackends();
                 }
 
-                // Get the backend selection order
+                // Get the backend selection order based on settings, platform, and capabilities
                 GraphicsBackend[] backendOrder = GetBackendOrder(settings);
 
-                // For now, force MonoGame backend to get demo working
-                Console.WriteLine("[BackendFactory] Using MonoGame backend for demo");
-                IGraphicsBackend backend = CreateBackendInstance(GraphicsBackend.OpenGL); // This creates MonoGame backend
-                if (backend != null)
-                {
-                    try
-                    {
-                        if (backend.Initialize(settings))
-                        {
-                            Console.WriteLine("[BackendFactory] Successfully initialized MonoGame backend");
-                            _currentBackend = backend;
-                            return backend;
-                        }
-                        else
-                        {
-                            Console.WriteLine("[BackendFactory] MonoGame backend initialization failed");
-                            backend.Dispose();
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("[BackendFactory] MonoGame backend threw exception: " + ex.Message);
-                        backend.Dispose();
-                    }
-                }
+                // Log backend selection order for debugging
+                Console.WriteLine($"[BackendFactory] Backend selection order: {string.Join(", ", backendOrder)}");
 
-                // Fallback: Try each backend in order
+                // Try each backend in order until one succeeds
+                IGraphicsBackend backend = null;
                 foreach (GraphicsBackend backendType in backendOrder)
                 {
-                    // Skip Vulkan for now due to compilation issues
+                    // TODO: FIXME - Skip Vulkan for now due to compilation issues
+                    // This should be removed once Vulkan backend compilation issues are resolved
                     if (backendType == GraphicsBackend.Vulkan)
                     {
                         Console.WriteLine("[BackendFactory] Skipping Vulkan backend due to compilation issues");
                         continue;
                     }
 
-                    // Check if this backend is available
+                    // Check if this backend is available on the current system
                     if (!IsBackendAvailable(backendType))
                     {
-                        Console.WriteLine("[BackendFactory] Backend not available: " + backendType);
+                        Console.WriteLine($"[BackendFactory] Backend not available: {backendType}");
                         continue;
                     }
 
