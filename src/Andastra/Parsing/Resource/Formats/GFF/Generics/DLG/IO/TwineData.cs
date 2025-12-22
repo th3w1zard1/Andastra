@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using Andastra.Parsing.Common;
 using JetBrains.Annotations;
 
@@ -245,29 +246,29 @@ namespace Andastra.Parsing.Resource.Generics.DLG.IO
             {
                 dlgNode.CameraAnim = meta.AnimationId;
             }
-            
+
             // camera_angle is always an int (defaults to 0, which is valid)
             dlgNode.CameraAngle = meta.CameraAngle;
-            
+
             // camera_id can be null or int - null means not set (new file), int means explicitly set
             if (meta.CameraId.HasValue)
             {
                 dlgNode.CameraId = meta.CameraId;
             }
-            
+
             // fade_type is always an int (defaults to 0, which is valid)
             dlgNode.FadeType = meta.FadeType;
-            
+
             // quest is a string (defaults to "", which is valid)
             dlgNode.Quest = meta.Quest ?? "";
-            
+
             // sound is a ResRef, stored as string in metadata
             // Only set if non-empty (empty string means not set for new files)
             if (!string.IsNullOrEmpty(meta.Sound))
             {
                 dlgNode.Sound = new ResRef(meta.Sound);
             }
-            
+
             // vo_resref is a ResRef, stored as string in metadata
             // Only set if non-empty (empty string means not set for new files)
             if (!string.IsNullOrEmpty(meta.VoResref))
@@ -293,7 +294,8 @@ namespace Andastra.Parsing.Resource.Generics.DLG.IO
             }
 
             // Store Twine metadata in dialog's comment field as JSON
-            // Note: In C# we'll use System.Text.Json for JSON serialization
+            // Matching PyKotor implementation: Serializes Twine-specific metadata to JSON string
+            // Based on Libraries/PyKotor/src/pykotor/resource/generics/dlg/io/twine_data.py:244-271
             var twineData = new Dictionary<string, object>
             {
                 { "style", story.Metadata.Style ?? "" },
@@ -305,9 +307,25 @@ namespace Andastra.Parsing.Resource.Generics.DLG.IO
                 { "creator_version", story.Metadata.CreatorVersion ?? "" },
                 { "zoom", story.Metadata.Zoom },
             };
-            
-            // Serialize to JSON string (simplified - would use System.Text.Json in full implementation)
-            dlg.Comment = System.Text.Json.JsonSerializer.Serialize(twineData);
+
+            // Serialize to JSON string with proper formatting options
+            // Matching PyKotor implementation: Uses json.dumps for serialization
+            // Note: For dialog comment field, we use compact format (no indentation) to save space
+            // Full story JSON files use indented format (see Twine.cs WriteJson method)
+            try
+            {
+                var options = new JsonSerializerOptions
+                {
+                    WriteIndented = false  // Compact format for comment field storage
+                };
+                dlg.Comment = JsonSerializer.Serialize(twineData, options);
+            }
+            catch (Exception)
+            {
+                // If serialization fails, set empty comment to avoid corrupting dialog data
+                // This should not happen in normal operation, but provides safety
+                dlg.Comment = "";
+            }
         }
 
         /// <summary>
@@ -332,7 +350,7 @@ namespace Andastra.Parsing.Resource.Generics.DLG.IO
 
                 story.Metadata.Style = twineData.ContainsKey("style") ? twineData["style"].ToString() : "";
                 story.Metadata.Script = twineData.ContainsKey("script") ? twineData["script"].ToString() : "";
-                
+
                 // Restore tag_colors, converting string representations back to Color objects
                 if (twineData.ContainsKey("tag_colors") && twineData["tag_colors"] is Dictionary<string, object> tagColorsRaw)
                 {
@@ -366,7 +384,7 @@ namespace Andastra.Parsing.Resource.Generics.DLG.IO
                     }
                     story.Metadata.TagColors = tagColorsRestored;
                 }
-                
+
                 story.Metadata.Format = twineData.ContainsKey("format") ? twineData["format"].ToString() : "Harlowe";
                 story.Metadata.FormatVersion = twineData.ContainsKey("format_version") ? twineData["format_version"].ToString() : "3.3.7";
                 story.Metadata.Creator = twineData.ContainsKey("creator") ? twineData["creator"].ToString() : "Andastra";
