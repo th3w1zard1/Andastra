@@ -110,7 +110,7 @@ namespace Andastra.Runtime.Games.Eclipse
         private float _whitePoint;
         private float _contrast;
         private float _saturation;
-        
+
         // Shader cache for post-processing effects (lazy-initialized)
         private ShaderCache _shaderCache;
 
@@ -1603,13 +1603,13 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <remarks>
         /// Based on daorigins.exe/DragonAge2.exe: Static objects are embedded geometry in area files.
         /// Static objects are separate from entities (placeables, doors) - they are part of the area layout.
-        /// 
+        ///
         /// Static object loading:
         /// - Static objects may be stored in ARE file or referenced from LYT layout
         /// - Each static object has a model name, position, and rotation
         /// - Static object models use MDL format (same as rooms)
         // TODO: / - Full implementation requires determining exact data structure location in ARE/LYT files
-        /// 
+        ///
         /// Note: The exact data structure location for static objects in Eclipse ARE files needs to be
         /// determined through reverse engineering. This implementation provides the framework for loading
         /// static objects when the data structure is identified.
@@ -1640,15 +1640,15 @@ namespace Andastra.Runtime.Games.Eclipse
                 // Implementation checks multiple potential field locations to ensure compatibility:
                 // 1. Root-level list field (e.g., "StaticObjectList", "ObjectList", "GeometryList")
                 // 2. Nested struct (e.g., "AreaGeometry" -> "StaticObjects")
-                // 
+                //
                 // Note: Exact field names verified through reverse engineering patterns.
                 // Field name variations are checked to support different ARE file versions.
-                // 
+                //
                 // Static object structure fields:
                 // - ModelName: ResRef or String (model resource name, e.g., "static_building_01")
                 // - Position: X/Y/Z floats OR Vector3 field
                 // - Rotation: Float (rotation in degrees around Y-axis)
-                // 
+                //
                 // Additional potential fields (not currently used but documented):
                 // - Scale: Float (optional scale factor)
                 // - RoomIndex: Int32 (optional room association)
@@ -1715,16 +1715,16 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <remarks>
         /// Based on daorigins.exe/DragonAge2.exe: Static object parsing from GFF lists.
         /// Handles multiple field name variations to support different ARE file versions.
-        /// 
+        ///
         /// Field name variations supported:
         /// - ModelName: "ModelName", "Model", "ResRef", "ResourceName"
         /// - Position: "XPosition"/"YPosition"/"ZPosition" OR "Position" (Vector3)
         /// - Rotation: "Rotation", "Bearing", "Orientation", "YRotation"
-        /// 
+        ///
         /// Position can be stored as:
         /// 1. Three separate float fields: XPosition, YPosition, ZPosition
         /// 2. Single Vector3 field: Position
-        /// 
+        ///
         /// Rotation is stored as float in degrees (0-360) around Y-axis (up).
         /// </remarks>
         private void ParseStaticObjectList(GFFList staticObjectList)
@@ -1751,22 +1751,22 @@ namespace Andastra.Runtime.Games.Eclipse
                     {
                         // Try as ResRef first (most common for model resources)
                         ResRef modelResRef = staticObjectStruct.GetResRef("ModelName");
-                        staticObject.ModelName = modelResRef != null && !string.IsNullOrEmpty(modelResRef.ToString()) 
-                            ? modelResRef.ToString() 
+                        staticObject.ModelName = modelResRef != null && !string.IsNullOrEmpty(modelResRef.ToString())
+                            ? modelResRef.ToString()
                             : staticObjectStruct.GetString("ModelName");
                     }
                     else if (staticObjectStruct.Exists("Model"))
                     {
                         ResRef modelResRef = staticObjectStruct.GetResRef("Model");
-                        staticObject.ModelName = modelResRef != null && !string.IsNullOrEmpty(modelResRef.ToString()) 
-                            ? modelResRef.ToString() 
+                        staticObject.ModelName = modelResRef != null && !string.IsNullOrEmpty(modelResRef.ToString())
+                            ? modelResRef.ToString()
                             : staticObjectStruct.GetString("Model");
                     }
                     else if (staticObjectStruct.Exists("ResRef"))
                     {
                         ResRef modelResRef = staticObjectStruct.GetResRef("ResRef");
-                        staticObject.ModelName = modelResRef != null && !string.IsNullOrEmpty(modelResRef.ToString()) 
-                            ? modelResRef.ToString() 
+                        staticObject.ModelName = modelResRef != null && !string.IsNullOrEmpty(modelResRef.ToString())
+                            ? modelResRef.ToString()
                             : staticObjectStruct.GetString("ResRef");
                     }
                     else if (staticObjectStruct.Exists("ResourceName"))
@@ -2039,7 +2039,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <remarks>
         /// Based on environmental data loading in daorigins.exe, DragonAge2.exe.
         /// Loads weather presets, particle emitter definitions, and audio zone definitions from area data.
-        /// 
+        ///
         /// Implementation details (daorigins.exe/DragonAge2.exe):
         /// 1. Parse ARE file for environmental data (weather chances, wind power, audio zone definitions)
         /// 2. Load weather presets (default weather type determined from chance values, intensity, wind parameters)
@@ -2048,7 +2048,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// 5. Create particle emitters from definitions (if any defined)
         /// 6. Create audio zones from definitions (if any defined), otherwise create default zone
         /// 7. Set default weather based on area weather properties (ChanceRain, ChanceSnow, ChanceLightning, WindPower)
-        /// 
+        ///
         /// Weather determination logic:
         /// - If ChanceRain > 0 and ChanceLightning > 0: Storm weather
         /// - Else if ChanceRain > 0: Rain weather
@@ -2056,7 +2056,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// - Else if fog properties set: Fog weather
         /// - Else: No weather
         /// - Intensity based on chance value (0-100 mapped to 0.0-1.0)
-        /// 
+        ///
         /// Audio zone creation:
         /// - If ARE file contains audio zone definitions: Create zones from definitions
         /// - Otherwise: Create default outdoor audio zone covering entire area bounds
@@ -2442,12 +2442,12 @@ namespace Andastra.Runtime.Games.Eclipse
         /// The intensity is inversely proportional to the fog range (far - near):
         /// - Small fog range (e.g., 10-50 units) = dense fog = high intensity (close to 1.0)
         /// - Large fog range (e.g., 100-2000 units) = light fog = low intensity (close to 0.0)
-        /// 
+        ///
         /// Based on standard fog calculations:
         /// - Fog density = 1.0 / (fogFar - fogNear) in linear fog models
         /// - Weather intensity uses normalized inverse relationship
         /// - Typical fog ranges: 10-100 (dense), 100-500 (moderate), 500-2000 (light)
-        /// 
+        ///
         /// Formula: intensity = 1.0 / (1.0 + (fogRange / scaleFactor))
         /// Where scaleFactor = 500.0 provides good distribution for typical ranges
         /// This ensures:
@@ -2493,7 +2493,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <remarks>
         /// Based on interactive element initialization in daorigins.exe, DragonAge2.exe.
         /// Sets up destructible objects, interactive triggers, and dynamic environmental changes.
-        /// 
+        ///
         /// Interactive Elements Initialization:
         /// - Based on daorigins.exe: Interactive element setup from area data
         /// - Based on DragonAge2.exe: Enhanced interactive element system
@@ -2502,7 +2502,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// - Interactive triggers: Environmental changes triggered by player actions
         /// - Dynamic lighting: Light sources that change based on environmental state
         /// - Weather transitions: Script-driven weather changes
-        /// 
+        ///
         /// Implementation details:
         /// 1. Identifies destructible placeables by ResRef patterns or template data
         /// 2. Creates particle emitters for interactive elements (torches, fires)
@@ -2537,10 +2537,10 @@ namespace Andastra.Runtime.Games.Eclipse
                 {
                     string lowerResRef = templateResRef.ToLowerInvariant();
                     // Check for common destructible object patterns
-                    if (lowerResRef.Contains("barrel") || 
-                        lowerResRef.Contains("crate") || 
-                        lowerResRef.Contains("box") || 
-                        lowerResRef.Contains("container") || 
+                    if (lowerResRef.Contains("barrel") ||
+                        lowerResRef.Contains("crate") ||
+                        lowerResRef.Contains("box") ||
+                        lowerResRef.Contains("container") ||
                         lowerResRef.Contains("breakable") ||
                         lowerResRef.Contains("destruct"))
                     {
@@ -2559,7 +2559,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     // Mark placeable as destructible
                     // Based on daorigins.exe: Destructible objects have physics components and can be destroyed
                     placeable.SetData("IsDestructible", true);
-                    
+
                     // Set debris count for destruction (default: 3-5 pieces)
                     if (!placeable.HasData("DebrisCount"))
                     {
@@ -2598,7 +2598,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     // Common patterns: weather, particle, lighting, environment
                     string onEnterScript = scriptHooksComponent.GetScript(ScriptEvent.OnEnter);
                     string onUsedScript = scriptHooksComponent.GetScript(ScriptEvent.OnUsed);
-                    
+
                     if (!string.IsNullOrEmpty(onEnterScript) || !string.IsNullOrEmpty(onUsedScript))
                     {
                         // Mark trigger as interactive environmental trigger
@@ -2627,9 +2627,9 @@ namespace Andastra.Runtime.Games.Eclipse
                     {
                         string lowerResRef = templateResRef.ToLowerInvariant();
                         // Check for common light source patterns
-                        if (lowerResRef.Contains("torch") || 
-                            lowerResRef.Contains("fire") || 
-                            lowerResRef.Contains("light") || 
+                        if (lowerResRef.Contains("torch") ||
+                            lowerResRef.Contains("fire") ||
+                            lowerResRef.Contains("light") ||
                             lowerResRef.Contains("lamp") ||
                             lowerResRef.Contains("lantern") ||
                             lowerResRef.Contains("candle"))
@@ -2648,13 +2648,13 @@ namespace Andastra.Runtime.Games.Eclipse
                     {
                         // Mark placeable as light source
                         placeable.SetData("IsLightSource", true);
-                        
+
                         // Get position for light source
                         var transformComponent = placeable.GetComponent<ITransformComponent>();
                         if (transformComponent != null)
                         {
                             Vector3 lightPosition = transformComponent.Position;
-                            
+
                             // Create dynamic light at placeable position
                             // Based on daorigins.exe: Dynamic lights are created from placeables
                             // Light properties: color (warm for torches/fires), radius (2-5 units), intensity
@@ -2693,12 +2693,12 @@ namespace Andastra.Runtime.Games.Eclipse
                 // Based on daorigins.exe: Particle emitters are created for torches, fires, magic effects
                 bool needsParticleEmitter = false;
                 ParticleEmitterType emitterType = ParticleEmitterType.Fire;
-                
+
                 string templateResRef = placeable.GetData<string>("TemplateResRef");
                 if (!string.IsNullOrEmpty(templateResRef))
                 {
                     string lowerResRef = templateResRef.ToLowerInvariant();
-                    
+
                     // Determine emitter type based on ResRef pattern
                     if (lowerResRef.Contains("torch"))
                     {
@@ -2740,11 +2740,11 @@ namespace Andastra.Runtime.Games.Eclipse
                     if (transformComponent != null)
                     {
                         Vector3 emitterPosition = transformComponent.Position;
-                        
+
                         // Create particle emitter at placeable position
                         // Based on daorigins.exe: Particle emitters are created from placeables
                         IParticleEmitter emitter = _particleSystem.CreateEmitter(emitterPosition, emitterType);
-                        
+
                         // Store emitter reference in placeable data for later cleanup
                         placeable.SetData("ParticleEmitter", emitter);
                         placeable.SetData("HasParticleEmitter", true);
@@ -2966,7 +2966,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Public method for removing entities from area collections.
         /// Calls the protected RemoveEntityFromArea method.
         /// Eclipse-specific: Also removes entity from physics system.
-        /// 
+        ///
         /// Based on daorigins.exe and DragonAge2.exe: Entity removal from area collections.
         /// Entities are removed from type-specific lists (creatures, placeables, doors, etc.)
         /// and from physics system if they have physics components.
@@ -3308,7 +3308,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 {
                     // Construct full type name
                     string fullTypeName = detectorNamespace + "." + detectorTypeName;
-                    
+
                     // Search all loaded assemblies for the detector type
                     Type detectorType = null;
                     foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
@@ -3352,7 +3352,7 @@ namespace Andastra.Runtime.Games.Eclipse
                             continue;
                         }
                     }
-                    
+
                     if (detectorType != null)
                     {
                         // Create instance using parameterless constructor
@@ -3384,7 +3384,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on daorigins.exe/DragonAge2.exe: Physics system queries collision detector for creature bounding box.
         /// Original implementation: Uses EclipseCreatureCollisionDetector to get bounding box from appearance.2da hitradius.
         /// Eclipse engine uses PhysX collision shapes, but creature size comes from appearance.2da hitradius.
-        /// 
+        ///
         /// This method:
         /// 1. Gets or creates the collision detector for the entity's world
         /// 2. Queries the collision detector for the creature's bounding box
@@ -3458,7 +3458,7 @@ namespace Andastra.Runtime.Games.Eclipse
             // Based on daorigins.exe/DragonAge2.exe: Physics collision shape creation from entity bounds
             // Original implementation: Queries entity renderable component for mesh bounds, falls back to type-based defaults
             Vector3 halfExtents = new Vector3(0.5f, 0.5f, 0.5f); // Default fallback
-            
+
             // Step 1: Check if entity has explicitly set physics half extents
             if (entity.HasData("PhysicsHalfExtents"))
             {
@@ -3484,7 +3484,7 @@ namespace Andastra.Runtime.Games.Eclipse
                         }
                     }
                 }
-                
+
                 // Step 3: Fall back to entity type-based defaults
                 // Based on daorigins.exe/DragonAge2.exe: Default collision sizes per entity type
                 if (halfExtents.X == 0.5f && halfExtents.Y == 0.5f && halfExtents.Z == 0.5f)
@@ -3497,37 +3497,37 @@ namespace Andastra.Runtime.Games.Eclipse
                             // Original implementation: Uses EclipseCreatureCollisionDetector to get bounding box from appearance.2da hitradius
                             // Eclipse engine uses PhysX collision shapes, but creature size comes from appearance.2da hitradius
                             CreatureBoundingBox creatureBoundingBox = GetCreatureBoundingBoxFromCollisionDetector(entity);
-                            
+
                             // Convert bounding box (half-extents) to physics half extents
                             // CreatureBoundingBox already contains half-extents (Width, Height, Depth)
                             halfExtents = new Vector3(creatureBoundingBox.Width, creatureBoundingBox.Height, creatureBoundingBox.Depth);
                             break;
-                            
+
                         case ObjectType.Door:
                             // Doors: Typically 1.0f width x 2.0f height x 0.5f depth (half extents)
                             // Based on daorigins.exe/DragonAge2.exe: Doors are rectangular, taller than wide
                             halfExtents = new Vector3(1.0f, 2.0f, 0.5f);
                             break;
-                            
+
                         case ObjectType.Placeable:
                             // Placeables: Vary by type, default 0.5f x 0.5f x 0.5f
                             // Based on daorigins.exe/DragonAge2.exe: Most placeables are medium-sized objects
                             // Larger placeables (chests, barrels) may have custom sizes set via entity data
                             halfExtents = new Vector3(0.5f, 0.5f, 0.5f);
                             break;
-                            
+
                         case ObjectType.Trigger:
                             // Triggers: Small bounding box for activation detection
                             // Based on daorigins.exe/DragonAge2.exe: Triggers use small collision shapes
                             halfExtents = new Vector3(0.25f, 0.25f, 0.25f);
                             break;
-                            
+
                         case ObjectType.Waypoint:
                             // Waypoints: Very small, just for positioning
                             // Based on daorigins.exe/DragonAge2.exe: Waypoints are point entities
                             halfExtents = new Vector3(0.1f, 0.1f, 0.1f);
                             break;
-                            
+
                         default:
                             // Unknown type: Use default 0.5f x 0.5f x 0.5f
                             halfExtents = new Vector3(0.5f, 0.5f, 0.5f);
@@ -3928,6 +3928,14 @@ namespace Andastra.Runtime.Games.Eclipse
                 return;
             }
 
+            // Update frustum from view and projection matrices for culling
+            // Based on daorigins.exe/DragonAge2.exe: Frustum culling uses view-projection matrix to extract frustum planes
+            // Original implementation: Extracts 6 frustum planes (left, right, bottom, top, near, far) from view-projection matrix
+            // Gribb/Hartmann method: Efficiently extracts planes directly from combined matrix
+            Matrix viewMatrixXna = ConvertMatrix4x4ToXnaMatrix(viewMatrix);
+            Matrix projectionMatrixXna = ConvertMatrix4x4ToXnaMatrix(projectionMatrix);
+            _frustum.UpdateFromMatrices(viewMatrixXna, projectionMatrixXna);
+
             // Check if rooms are available for rendering
             if (_rooms == null || _rooms.Count == 0)
             {
@@ -3947,14 +3955,55 @@ namespace Andastra.Runtime.Games.Eclipse
                     continue; // Skip rooms without model names
                 }
 
-                // Basic frustum culling: Check if room is potentially visible
-                // Based on daorigins.exe/DragonAge2.exe: Frustum culling improves performance
-                // TODO:  Simple distance-based culling for now (can be expanded to proper frustum test)
-                float roomDistance = Vector3.Distance(cameraPosition, room.Position);
-                const float maxRenderDistance = 1000.0f; // Maximum render distance for rooms
-                if (roomDistance > maxRenderDistance)
+                // Frustum culling: Check if room is potentially visible using proper frustum test
+                // Based on daorigins.exe/DragonAge2.exe: Frustum culling improves performance by skipping objects outside view
+                // Original implementation: Tests bounding volumes against frustum planes extracted from view-projection matrix
+                // Uses bounding sphere test for efficient culling (faster than AABB test, good approximation for rooms)
+                bool roomVisible = false;
+                MeshBoundingVolume boundingVolume;
+                if (_cachedMeshBoundingVolumes.TryGetValue(room.ModelName, out boundingVolume))
                 {
-                    continue; // Room is too far away, skip rendering
+                    // Use cached bounding volume from MDL for frustum test
+                    // Transform bounding sphere center from model space to world space
+                    // Based on daorigins.exe/DragonAge2.exe: Bounding volumes are in model space, must be transformed to world space
+                    float rotationRadians = (float)(room.Rotation * Math.PI / 180.0);
+                    Matrix4x4 rotationMatrix = Matrix4x4.CreateRotationY(rotationRadians);
+                    Matrix4x4 translationMatrix = Matrix4x4.CreateTranslation(room.Position);
+                    Matrix4x4 worldMatrix = rotationMatrix * translationMatrix;
+
+                    // Calculate bounding sphere center in model space (center of bounding box)
+                    Vector3 modelSpaceCenter = new Vector3(
+                        (boundingVolume.BMin.X + boundingVolume.BMax.X) * 0.5f,
+                        (boundingVolume.BMin.Y + boundingVolume.BMax.Y) * 0.5f,
+                        (boundingVolume.BMin.Z + boundingVolume.BMax.Z) * 0.5f
+                    );
+
+                    // Transform center to world space
+                    Vector3 worldSpaceCenter = Vector3.Transform(modelSpaceCenter, worldMatrix);
+
+                    // Use the larger of MDL radius or computed radius from bounding box for conservative culling
+                    Vector3 boundingBoxSize = boundingVolume.BMax - boundingVolume.BMin;
+                    float computedRadius = Math.Max(Math.Max(boundingBoxSize.X, boundingBoxSize.Y), boundingBoxSize.Z) * 0.5f;
+                    float boundingRadius = Math.Max(boundingVolume.Radius, computedRadius);
+
+                    // Test bounding sphere against frustum
+                    // Based on daorigins.exe/DragonAge2.exe: Frustum culling uses sphere test for efficiency
+                    System.Numerics.Vector3 sphereCenter = new System.Numerics.Vector3(worldSpaceCenter.X, worldSpaceCenter.Y, worldSpaceCenter.Z);
+                    roomVisible = _frustum.SphereInFrustum(sphereCenter, boundingRadius);
+                }
+                else
+                {
+                    // No cached bounding volume - use estimated bounding sphere as fallback
+                    // Based on daorigins.exe/DragonAge2.exe: Fallback to estimated radius when MDL data unavailable
+                    // Typical room size: 50-100 units radius
+                    const float estimatedRoomRadius = 75.0f;
+                    System.Numerics.Vector3 roomPos = new System.Numerics.Vector3(room.Position.X, room.Position.Y, room.Position.Z);
+                    roomVisible = _frustum.SphereInFrustum(roomPos, estimatedRoomRadius);
+                }
+
+                if (!roomVisible)
+                {
+                    continue; // Room is outside frustum, skip rendering
                 }
 
                 // Get or load room mesh data
@@ -4012,7 +4061,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     // Original implementation: GetLightsAffectingPoint queries lights within radius of position
                     const float roomLightQueryRadius = 50.0f; // Query radius for lights affecting room
                     IDynamicLight[] affectingLights = _lightingSystem.GetLightsAffectingPoint(room.Position, roomLightQueryRadius);
-                    
+
                     if (affectingLights != null && affectingLights.Length > 0)
                     {
                         // Sort lights by priority:
@@ -4027,27 +4076,27 @@ namespace Andastra.Runtime.Games.Eclipse
                                 return -1;
                             if (a.Type != LightType.Directional && b.Type == LightType.Directional)
                                 return 1;
-                            
+
                             // Then by intensity (brightest first)
                             float intensityA = a.Intensity * a.Color.Length();
                             float intensityB = b.Intensity * b.Color.Length();
                             return intensityB.CompareTo(intensityA);
                         });
-                        
+
                         // Apply up to 3 lights (BasicEffect supports 3 directional lights)
                         // Based on MonoGame BasicEffect: DirectionalLight0, DirectionalLight1, DirectionalLight2
                         // For point/spot lights, approximate as directional lights pointing from light to room center
                         int lightsApplied = 0;
                         const int maxLights = 3; // BasicEffect supports 3 directional lights
-                        
+
                         foreach (IDynamicLight light in sortedLights)
                         {
                             if (lightsApplied >= maxLights)
                                 break;
-                            
+
                             if (!light.Enabled)
                                 continue;
-                            
+
                             // Try to access MonoGame BasicEffect's DirectionalLight properties
                             // This requires casting to the concrete implementation
                             // Based on MonoGame BasicEffect API: DirectionalLight0/1/2 properties
@@ -4058,14 +4107,14 @@ namespace Andastra.Runtime.Games.Eclipse
                                 // MonoGameBasicEffect wraps Microsoft.Xna.Framework.Graphics.BasicEffect
                                 var effectField = typeof(Andastra.Runtime.MonoGame.Graphics.MonoGameBasicEffect)
                                     .GetField("_effect", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                                
+
                                 if (effectField != null)
                                 {
                                     var mgEffect = effectField.GetValue(monoGameEffect) as Microsoft.Xna.Framework.Graphics.BasicEffect;
                                     if (mgEffect != null)
                                     {
                                         Microsoft.Xna.Framework.Graphics.DirectionalLight directionalLight;
-                                        
+
                                         // Select which DirectionalLight slot to use (0, 1, or 2)
                                         switch (lightsApplied)
                                         {
@@ -4081,10 +4130,10 @@ namespace Andastra.Runtime.Games.Eclipse
                                             default:
                                                 continue; // Should not happen
                                         }
-                                        
+
                                         // Configure directional light based on light type
                                         directionalLight.Enabled = true;
-                                        
+
                                         if (light.Type == LightType.Directional)
                                         {
                                             // Directional light: use direction directly
@@ -4094,7 +4143,7 @@ namespace Andastra.Runtime.Games.Eclipse
                                                 light.Direction.Y,
                                                 light.Direction.Z
                                             );
-                                            
+
                                             // Calculate diffuse color from light color and intensity
                                             // Based on daorigins.exe/DragonAge2.exe: Light color is multiplied by intensity
                                             Vector3 lightColor = light.Color * light.Intensity;
@@ -4103,7 +4152,7 @@ namespace Andastra.Runtime.Games.Eclipse
                                                 Math.Min(1.0f, lightColor.Y),
                                                 Math.Min(1.0f, lightColor.Z)
                                             );
-                                            
+
                                             // Directional lights typically don't have specular in BasicEffect
                                             // But we can set it to match diffuse for some specular highlights
                                             directionalLight.SpecularColor = directionalLight.DiffuseColor;
@@ -4119,20 +4168,20 @@ namespace Andastra.Runtime.Games.Eclipse
                                                 lightToRoom.Y,
                                                 lightToRoom.Z
                                             );
-                                            
+
                                             // Calculate diffuse color with distance attenuation
                                             // Based on daorigins.exe/DragonAge2.exe: Point lights use inverse square falloff
                                             float distance = Vector3.Distance(light.Position, room.Position);
                                             float attenuation = 1.0f / (1.0f + (distance * distance) / (light.Radius * light.Radius));
                                             Vector3 lightColor = light.Color * light.Intensity * attenuation;
-                                            
+
                                             directionalLight.DiffuseColor = new Microsoft.Xna.Framework.Vector3(
                                                 Math.Min(1.0f, lightColor.X),
                                                 Math.Min(1.0f, lightColor.Y),
                                                 Math.Min(1.0f, lightColor.Z)
                                             );
                                             directionalLight.SpecularColor = directionalLight.DiffuseColor;
-                                            
+
                                             // For spot lights, apply additional cone attenuation
                                             if (light.Type == LightType.Spot)
                                             {
@@ -4140,7 +4189,7 @@ namespace Andastra.Runtime.Games.Eclipse
                                                 float cosAngle = Vector3.Dot(Vector3.Normalize(-light.Direction), lightToRoom);
                                                 float innerCone = (float)Math.Cos(light.InnerConeAngle * Math.PI / 180.0);
                                                 float outerCone = (float)Math.Cos(light.OuterConeAngle * Math.PI / 180.0);
-                                                
+
                                                 // Smooth falloff from inner to outer cone
                                                 float spotAttenuation = 1.0f;
                                                 if (cosAngle < outerCone)
@@ -4152,14 +4201,14 @@ namespace Andastra.Runtime.Games.Eclipse
                                                     // Between inner and outer cone - smooth falloff
                                                     spotAttenuation = (cosAngle - outerCone) / (innerCone - outerCone);
                                                 }
-                                                
+
                                                 // Apply spot attenuation to diffuse color
                                                 Vector3 spotColor = new Vector3(
                                                     directionalLight.DiffuseColor.X,
                                                     directionalLight.DiffuseColor.Y,
                                                     directionalLight.DiffuseColor.Z
                                                 ) * spotAttenuation;
-                                                
+
                                                 directionalLight.DiffuseColor = new Microsoft.Xna.Framework.Vector3(
                                                     Math.Min(1.0f, spotColor.X),
                                                     Math.Min(1.0f, spotColor.Y),
@@ -4176,29 +4225,29 @@ namespace Andastra.Runtime.Games.Eclipse
                                             // Based on daorigins.exe/DragonAge2.exe: Area lights approximated for basic rendering
                                             // Area lights emit light from a rectangular area, producing soft shadows
                                             // For BasicEffect approximation: treat as directional light with area-size-based attenuation
-                                            
+
                                             Vector3 lightToRoom = Vector3.Normalize(room.Position - light.Position);
                                             directionalLight.Direction = new Microsoft.Xna.Framework.Vector3(
                                                 lightToRoom.X,
                                                 lightToRoom.Y,
                                                 lightToRoom.Z
                                             );
-                                            
+
                                             // Calculate distance attenuation (inverse square falloff like point lights)
                                             float distance = Vector3.Distance(light.Position, room.Position);
                                             float distanceAttenuation = 1.0f / (1.0f + (distance * distance) / (light.Radius * light.Radius));
-                                            
+
                                             // Calculate area-based attenuation
                                             // Larger area lights appear brighter and have softer falloff
                                             // Area size affects how "diffuse" the light source appears
                                             // Use area dimensions to scale the effective intensity
                                             float areaSize = light.AreaWidth * light.AreaHeight;
                                             float areaFactor = 1.0f + (areaSize * 0.1f); // Scale factor based on area size (larger = brighter)
-                                            
+
                                             // Calculate cosine of angle between light direction and light-to-room vector
                                             // Area lights emit light primarily in their direction
                                             float cosAngle = Vector3.Dot(Vector3.Normalize(-light.Direction), lightToRoom);
-                                            
+
                                             // Area lights have wider emission cone than spot lights
                                             // Approximate as a 180-degree hemisphere (cosAngle > 0 means light reaches the surface)
                                             float directionalAttenuation = 1.0f;
@@ -4213,17 +4262,17 @@ namespace Andastra.Runtime.Games.Eclipse
                                                 // This approximates the soft emission characteristics of area lights
                                                 directionalAttenuation = cosAngle;
                                             }
-                                            
+
                                             // Combine all attenuation factors
                                             Vector3 lightColor = light.Color * light.Intensity * distanceAttenuation * areaFactor * directionalAttenuation;
-                                            
+
                                             directionalLight.DiffuseColor = new Microsoft.Xna.Framework.Vector3(
                                                 Math.Min(1.0f, lightColor.X),
                                                 Math.Min(1.0f, lightColor.Y),
                                                 Math.Min(1.0f, lightColor.Z)
                                             );
                                             directionalLight.SpecularColor = directionalLight.DiffuseColor;
-                                            
+
                                             // Note: True area light rendering would require:
                                             // - Multiple light samples across the area surface
                                             // - Soft shadow calculations (PCF or VSM)
@@ -4232,13 +4281,13 @@ namespace Andastra.Runtime.Games.Eclipse
                                             // This approximation provides reasonable results for BasicEffect but cannot
                                             // accurately represent the soft shadows and shape-based lighting of true area lights
                                         }
-                                        
+
                                         lightsApplied++;
                                     }
                                 }
                             }
                         }
-                        
+
                         // Update ambient color from lighting system
                         // Based on daorigins.exe/DragonAge2.exe: Ambient color comes from lighting system
                         Vector3 ambientColor = _lightingSystem.AmbientColor * _lightingSystem.AmbientIntensity;
@@ -4312,20 +4361,20 @@ namespace Andastra.Runtime.Games.Eclipse
         /// 1. Render shadow maps from light perspectives (directional lights and point lights)
         /// 2. Apply shadow maps during lighting pass using shadow comparison sampling
         /// 3. Handle soft shadows with percentage-closer filtering (PCF) or variance shadow maps (VSM)
-        /// 
+        ///
         /// Shadow Map Rendering:
         /// - Creates depth-only render targets for shadow maps
         /// - Renders scene geometry from light's point of view to shadow map texture
         /// - Stores depth values in shadow map (used for shadow comparison during lighting)
         /// - Supports cascaded shadow maps (CSM) for directional lights for better quality
         /// - Supports cube shadow maps for point lights (omni-directional shadows)
-        /// 
+        ///
         /// Shadow Application:
         /// - Shadow maps are sampled during lighting pass to determine shadowing
         /// - Uses shadow comparison sampling to compare fragment depth to shadow map depth
         /// - Applies shadow attenuation to lighting calculations
         /// - Supports soft shadows through filtering techniques (PCF, VSM, ESM)
-        /// 
+        ///
         /// Original implementation: daorigins.exe shadow mapping system for dynamic lighting and shadows
         /// DragonAge2.exe: Enhanced shadow mapping with cascaded shadow maps and improved filtering
         /// </remarks>
@@ -4409,6 +4458,14 @@ namespace Andastra.Runtime.Games.Eclipse
 
             IRoomMeshRenderer roomMeshRenderer = _renderContext.RoomMeshRenderer;
 
+            // Update frustum from view and projection matrices for culling (if not already updated)
+            // Based on daorigins.exe/DragonAge2.exe: Frustum culling uses view-projection matrix to extract frustum planes
+            // Note: Frustum is already updated in RenderStaticGeometry, but we update it here for consistency
+            // in case this method is called independently
+            Matrix viewMatrixXna = ConvertMatrix4x4ToXnaMatrix(viewMatrix);
+            Matrix projectionMatrixXna = ConvertMatrix4x4ToXnaMatrix(projectionMatrix);
+            _frustum.UpdateFromMatrices(viewMatrixXna, projectionMatrixXna);
+
             // Render each static object's geometry
             // Based on daorigins.exe/DragonAge2.exe: Static objects are rendered in order
             // Each static object has a model name that corresponds to static geometry (MDL or Eclipse format)
@@ -4419,14 +4476,55 @@ namespace Andastra.Runtime.Games.Eclipse
                     continue; // Skip static objects without model names
                 }
 
-                // Basic frustum culling: Check if static object is potentially visible
-                // Based on daorigins.exe/DragonAge2.exe: Frustum culling improves performance
-                // TODO:  Simple distance-based culling for now (can be expanded to proper frustum test)
-                float objectDistance = Vector3.Distance(cameraPosition, staticObject.Position);
-                const float maxRenderDistance = 1000.0f; // Maximum render distance for static objects
-                if (objectDistance > maxRenderDistance)
+                // Frustum culling: Check if static object is potentially visible using proper frustum test
+                // Based on daorigins.exe/DragonAge2.exe: Frustum culling improves performance by skipping objects outside view
+                // Original implementation: Tests bounding volumes against frustum planes extracted from view-projection matrix
+                // Uses bounding sphere test for efficient culling (faster than AABB test, good approximation for static objects)
+                bool objectVisible = false;
+                MeshBoundingVolume boundingVolume;
+                if (_cachedMeshBoundingVolumes.TryGetValue(staticObject.ModelName, out boundingVolume))
                 {
-                    continue; // Static object is too far away, skip rendering
+                    // Use cached bounding volume from MDL for frustum test
+                    // Transform bounding sphere center from model space to world space
+                    // Based on daorigins.exe/DragonAge2.exe: Bounding volumes are in model space, must be transformed to world space
+                    float rotationRadians = (float)(staticObject.Rotation * Math.PI / 180.0);
+                    Matrix4x4 rotationMatrix = Matrix4x4.CreateRotationY(rotationRadians);
+                    Matrix4x4 translationMatrix = Matrix4x4.CreateTranslation(staticObject.Position);
+                    Matrix4x4 worldMatrix = rotationMatrix * translationMatrix;
+
+                    // Calculate bounding sphere center in model space (center of bounding box)
+                    Vector3 modelSpaceCenter = new Vector3(
+                        (boundingVolume.BMin.X + boundingVolume.BMax.X) * 0.5f,
+                        (boundingVolume.BMin.Y + boundingVolume.BMax.Y) * 0.5f,
+                        (boundingVolume.BMin.Z + boundingVolume.BMax.Z) * 0.5f
+                    );
+
+                    // Transform center to world space
+                    Vector3 worldSpaceCenter = Vector3.Transform(modelSpaceCenter, worldMatrix);
+
+                    // Use the larger of MDL radius or computed radius from bounding box for conservative culling
+                    Vector3 boundingBoxSize = boundingVolume.BMax - boundingVolume.BMin;
+                    float computedRadius = Math.Max(Math.Max(boundingBoxSize.X, boundingBoxSize.Y), boundingBoxSize.Z) * 0.5f;
+                    float boundingRadius = Math.Max(boundingVolume.Radius, computedRadius);
+
+                    // Test bounding sphere against frustum
+                    // Based on daorigins.exe/DragonAge2.exe: Frustum culling uses sphere test for efficiency
+                    System.Numerics.Vector3 sphereCenter = new System.Numerics.Vector3(worldSpaceCenter.X, worldSpaceCenter.Y, worldSpaceCenter.Z);
+                    objectVisible = _frustum.SphereInFrustum(sphereCenter, boundingRadius);
+                }
+                else
+                {
+                    // No cached bounding volume - use estimated bounding sphere as fallback
+                    // Based on daorigins.exe/DragonAge2.exe: Fallback to estimated radius when MDL data unavailable
+                    // Typical static object size: 5-20 units radius
+                    const float estimatedObjectRadius = 10.0f;
+                    System.Numerics.Vector3 objectPos = new System.Numerics.Vector3(staticObject.Position.X, staticObject.Position.Y, staticObject.Position.Z);
+                    objectVisible = _frustum.SphereInFrustum(objectPos, estimatedObjectRadius);
+                }
+
+                if (!objectVisible)
+                {
+                    continue; // Static object is outside frustum, skip rendering
                 }
 
                 // Get or load static object mesh data
@@ -4484,7 +4582,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     // Original implementation: GetLightsAffectingPoint queries lights within radius of position
                     const float staticObjectLightQueryRadius = 25.0f; // Query radius for lights affecting static object
                     IDynamicLight[] affectingLights = _lightingSystem.GetLightsAffectingPoint(staticObject.Position, staticObjectLightQueryRadius);
-                    
+
                     if (affectingLights != null && affectingLights.Length > 0)
                     {
                         // Sort lights by priority:
@@ -4499,27 +4597,27 @@ namespace Andastra.Runtime.Games.Eclipse
                                 return -1;
                             if (a.Type != LightType.Directional && b.Type == LightType.Directional)
                                 return 1;
-                            
+
                             // Then by intensity (brightest first)
                             float intensityA = a.Intensity * a.Color.Length();
                             float intensityB = b.Intensity * b.Color.Length();
                             return intensityB.CompareTo(intensityA);
                         });
-                        
+
                         // Apply up to 3 lights (BasicEffect supports 3 directional lights)
                         // Based on MonoGame BasicEffect: DirectionalLight0, DirectionalLight1, DirectionalLight2
                         // For point/spot lights, approximate as directional lights pointing from light to static object center
                         int lightsApplied = 0;
                         const int maxLights = 3; // BasicEffect supports 3 directional lights
-                        
+
                         foreach (IDynamicLight light in sortedLights)
                         {
                             if (lightsApplied >= maxLights)
                                 break;
-                            
+
                             if (!light.Enabled)
                                 continue;
-                            
+
                             // Try to access MonoGame BasicEffect's DirectionalLight properties
                             // This requires casting to the concrete implementation
                             // Based on MonoGame BasicEffect API: DirectionalLight0/1/2 properties
@@ -4530,14 +4628,14 @@ namespace Andastra.Runtime.Games.Eclipse
                                 // MonoGameBasicEffect wraps Microsoft.Xna.Framework.Graphics.BasicEffect
                                 var effectField = typeof(Andastra.Runtime.MonoGame.Graphics.MonoGameBasicEffect)
                                     .GetField("_effect", BindingFlags.NonPublic | BindingFlags.Instance);
-                                
+
                                 if (effectField != null)
                                 {
                                     var mgEffect = effectField.GetValue(monoGameEffect) as Microsoft.Xna.Framework.Graphics.BasicEffect;
                                     if (mgEffect != null)
                                     {
                                         Microsoft.Xna.Framework.Graphics.DirectionalLight directionalLight;
-                                        
+
                                         // Select which DirectionalLight slot to use (0, 1, or 2)
                                         switch (lightsApplied)
                                         {
@@ -4553,10 +4651,10 @@ namespace Andastra.Runtime.Games.Eclipse
                                             default:
                                                 continue; // Should not happen
                                         }
-                                        
+
                                         // Configure directional light based on light type
                                         directionalLight.Enabled = true;
-                                        
+
                                         if (light.Type == LightType.Directional)
                                         {
                                             // Directional light: use direction directly
@@ -4566,7 +4664,7 @@ namespace Andastra.Runtime.Games.Eclipse
                                                 light.Direction.Y,
                                                 light.Direction.Z
                                             );
-                                            
+
                                             // Calculate diffuse color from light color and intensity
                                             // Based on daorigins.exe/DragonAge2.exe: Light color is multiplied by intensity
                                             Vector3 lightColor = light.Color * light.Intensity;
@@ -4575,7 +4673,7 @@ namespace Andastra.Runtime.Games.Eclipse
                                                 Math.Min(1.0f, lightColor.Y),
                                                 Math.Min(1.0f, lightColor.Z)
                                             );
-                                            
+
                                             // Directional lights typically don't have specular in BasicEffect
                                             // But we can set it to match diffuse for some specular highlights
                                             directionalLight.SpecularColor = directionalLight.DiffuseColor;
@@ -4591,20 +4689,20 @@ namespace Andastra.Runtime.Games.Eclipse
                                                 lightToObject.Y,
                                                 lightToObject.Z
                                             );
-                                            
+
                                             // Calculate diffuse color with distance attenuation
                                             // Based on daorigins.exe/DragonAge2.exe: Point lights use inverse square falloff
                                             float distance = Vector3.Distance(light.Position, staticObject.Position);
                                             float attenuation = 1.0f / (1.0f + (distance * distance) / (light.Radius * light.Radius));
                                             Vector3 lightColor = light.Color * light.Intensity * attenuation;
-                                            
+
                                             directionalLight.DiffuseColor = new Microsoft.Xna.Framework.Vector3(
                                                 Math.Min(1.0f, lightColor.X),
                                                 Math.Min(1.0f, lightColor.Y),
                                                 Math.Min(1.0f, lightColor.Z)
                                             );
                                             directionalLight.SpecularColor = directionalLight.DiffuseColor;
-                                            
+
                                             // For spot lights, apply additional cone attenuation
                                             if (light.Type == LightType.Spot)
                                             {
@@ -4612,7 +4710,7 @@ namespace Andastra.Runtime.Games.Eclipse
                                                 float cosAngle = Vector3.Dot(Vector3.Normalize(-light.Direction), lightToObject);
                                                 float innerCone = (float)Math.Cos(light.InnerConeAngle * Math.PI / 180.0);
                                                 float outerCone = (float)Math.Cos(light.OuterConeAngle * Math.PI / 180.0);
-                                                
+
                                                 // Smooth falloff from inner to outer cone
                                                 float spotAttenuation = 1.0f;
                                                 if (cosAngle < outerCone)
@@ -4624,14 +4722,14 @@ namespace Andastra.Runtime.Games.Eclipse
                                                     // Between inner and outer cone - smooth falloff
                                                     spotAttenuation = (cosAngle - outerCone) / (innerCone - outerCone);
                                                 }
-                                                
+
                                                 // Apply spot attenuation to diffuse color
                                                 Vector3 spotColor = new Vector3(
                                                     directionalLight.DiffuseColor.X,
                                                     directionalLight.DiffuseColor.Y,
                                                     directionalLight.DiffuseColor.Z
                                                 ) * spotAttenuation;
-                                                
+
                                                 directionalLight.DiffuseColor = new Microsoft.Xna.Framework.Vector3(
                                                     Math.Min(1.0f, spotColor.X),
                                                     Math.Min(1.0f, spotColor.Y),
@@ -4648,29 +4746,29 @@ namespace Andastra.Runtime.Games.Eclipse
                                             // Based on daorigins.exe/DragonAge2.exe: Area lights approximated for basic rendering
                                             // Area lights emit light from a rectangular area, producing soft shadows
                                             // For BasicEffect approximation: treat as directional light with area-size-based attenuation
-                                            
+
                                             Vector3 lightToObject = Vector3.Normalize(staticObject.Position - light.Position);
                                             directionalLight.Direction = new Microsoft.Xna.Framework.Vector3(
                                                 lightToObject.X,
                                                 lightToObject.Y,
                                                 lightToObject.Z
                                             );
-                                            
+
                                             // Calculate distance attenuation (inverse square falloff like point lights)
                                             float distance = Vector3.Distance(light.Position, staticObject.Position);
                                             float distanceAttenuation = 1.0f / (1.0f + (distance * distance) / (light.Radius * light.Radius));
-                                            
+
                                             // Calculate area-based attenuation
                                             // Larger area lights appear brighter and have softer falloff
                                             // Area size affects how "diffuse" the light source appears
                                             // Use area dimensions to scale the effective intensity
                                             float areaSize = light.AreaWidth * light.AreaHeight;
                                             float areaFactor = 1.0f + (areaSize * 0.1f); // Scale factor based on area size (larger = brighter)
-                                            
+
                                             // Calculate cosine of angle between light direction and light-to-object vector
                                             // Area lights emit light primarily in their direction
                                             float cosAngle = Vector3.Dot(Vector3.Normalize(-light.Direction), lightToObject);
-                                            
+
                                             // Area lights have wider emission cone than spot lights
                                             // Approximate as a 180-degree hemisphere (cosAngle > 0 means light reaches the surface)
                                             float directionalAttenuation = 1.0f;
@@ -4685,17 +4783,17 @@ namespace Andastra.Runtime.Games.Eclipse
                                                 // This approximates the soft emission characteristics of area lights
                                                 directionalAttenuation = cosAngle;
                                             }
-                                            
+
                                             // Combine all attenuation factors
                                             Vector3 lightColor = light.Color * light.Intensity * distanceAttenuation * areaFactor * directionalAttenuation;
-                                            
+
                                             directionalLight.DiffuseColor = new Microsoft.Xna.Framework.Vector3(
                                                 Math.Min(1.0f, lightColor.X),
                                                 Math.Min(1.0f, lightColor.Y),
                                                 Math.Min(1.0f, lightColor.Z)
                                             );
                                             directionalLight.SpecularColor = directionalLight.DiffuseColor;
-                                            
+
                                             // Note: True area light rendering would require:
                                             // - Multiple light samples across the area surface
                                             // - Soft shadow calculations (PCF or VSM)
@@ -4704,13 +4802,13 @@ namespace Andastra.Runtime.Games.Eclipse
                                             // This approximation provides reasonable results for BasicEffect but cannot
                                             // accurately represent the soft shadows and shape-based lighting of true area lights
                                         }
-                                        
+
                                         lightsApplied++;
                                     }
                                 }
                             }
                         }
-                        
+
                         // Update ambient color from lighting system
                         // Based on daorigins.exe/DragonAge2.exe: Ambient color comes from lighting system
                         Vector3 ambientColor = _lightingSystem.AmbientColor * _lightingSystem.AmbientIntensity;
@@ -4775,14 +4873,14 @@ namespace Andastra.Runtime.Games.Eclipse
         /// </summary>
         /// <remarks>
         /// Based on daorigins.exe/DragonAge2.exe: Eclipse supports destructible environments.
-        /// 
+        ///
         /// Implementation details:
         /// 1. Iterates through all modified meshes tracked by the modification tracker
         /// 2. For each modified mesh, renders only non-destroyed faces
         /// 3. Applies vertex modifications for deformed geometry
         /// 4. Renders debris pieces as separate geometry
         /// 5. Skips destroyed faces (they are not rendered or used for collision)
-        /// 
+        ///
         /// Original implementation: daorigins.exe geometry modification rendering
         /// - Modified geometry is rendered with updated vertex positions
         /// - Destroyed faces are excluded from rendering
@@ -4998,6 +5096,21 @@ namespace Andastra.Runtime.Games.Eclipse
         }
 
         /// <summary>
+        /// Converts System.Numerics.Matrix4x4 to Microsoft.Xna.Framework.Matrix.
+        /// </summary>
+        /// <param name="matrix">Matrix4x4 to convert.</param>
+        /// <returns>XNA Matrix.</returns>
+        private static Matrix ConvertMatrix4x4ToXnaMatrix(Matrix4x4 matrix)
+        {
+            return new Matrix(
+                matrix.M11, matrix.M12, matrix.M13, matrix.M14,
+                matrix.M21, matrix.M22, matrix.M23, matrix.M24,
+                matrix.M31, matrix.M32, matrix.M33, matrix.M34,
+                matrix.M41, matrix.M42, matrix.M43, matrix.M44
+            );
+        }
+
+        /// <summary>
         /// Gets or generates debris mesh data from destroyed face indices.
         /// </summary>
         /// <param name="debris">Debris piece to generate mesh for.</param>
@@ -5005,14 +5118,14 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <returns>Debris mesh data, or null if generation failed.</returns>
         /// <remarks>
         /// Based on daorigins.exe/DragonAge2.exe: Debris meshes are generated from destroyed face indices.
-        /// 
+        ///
         /// Implementation:
         /// 1. Creates cache key from mesh ID and face indices hash
         /// 2. Checks if mesh is already cached
         /// 3. If not cached, extracts vertices/indices from cached geometry for destroyed faces
         /// 4. Creates vertex/index buffers for debris mesh
         /// 5. Caches and returns the mesh data
-        /// 
+        ///
         /// Original implementation: daorigins.exe debris mesh generation
         /// - Extracts geometry from destroyed faces
         /// - Creates separate mesh for each debris piece
@@ -5020,7 +5133,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// </remarks>
         private IRoomMeshData GetOrGenerateDebrisMesh(DebrisPiece debris, IGraphicsDevice graphicsDevice)
         {
-            if (debris == null || graphicsDevice == null || string.IsNullOrEmpty(debris.MeshId) || 
+            if (debris == null || graphicsDevice == null || string.IsNullOrEmpty(debris.MeshId) ||
                 debris.FaceIndices == null || debris.FaceIndices.Count == 0)
             {
                 return null;
@@ -5048,7 +5161,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 return null;
             }
 
-            if (cachedGeometry.Vertices == null || cachedGeometry.Indices == null || 
+            if (cachedGeometry.Vertices == null || cachedGeometry.Indices == null ||
                 cachedGeometry.Vertices.Count == 0 || cachedGeometry.Indices.Count == 0)
             {
                 return null;
@@ -5225,12 +5338,12 @@ namespace Andastra.Runtime.Games.Eclipse
                     // Create ResourceIdentifier for MDL file
                     // Based on Eclipse engine: Resources are identified by ResRef and ResourceType
                     ResourceIdentifier mdlResourceId = new ResourceIdentifier(modelResRef, ResourceType.MDL);
-                    
+
                     // Load MDL data asynchronously (use GetAwaiter().GetResult() for synchronous context)
                     // Based on IGameResourceProvider: GetResourceBytesAsync loads resource data
                     // Eclipse resource provider searches: override directory → module RIM files → packages/core/env/ → streaming
                     mdlData = _resourceProvider.GetResourceBytesAsync(mdlResourceId, System.Threading.CancellationToken.None).GetAwaiter().GetResult();
-                    
+
                     // Load MDX file if MDL was loaded successfully
                     // Based on Eclipse engine: MDX files contain vertex data for MDL models
                     // MDX files are companion files to MDL files (same ResRef, different ResourceType)
@@ -5238,7 +5351,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     {
                         // Create ResourceIdentifier for MDX file
                         ResourceIdentifier mdxResourceId = new ResourceIdentifier(modelResRef, ResourceType.MDX);
-                        
+
                         // Load MDX data asynchronously
                         // Eclipse resource provider searches for MDX in same locations as MDL
                         mdxData = _resourceProvider.GetResourceBytesAsync(mdxResourceId, System.Threading.CancellationToken.None).GetAwaiter().GetResult();
@@ -5430,7 +5543,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 {
                     const float entityLightQueryRadius = 25.0f; // Query radius for lights affecting entity
                     IDynamicLight[] affectingLights = eclipseLightingSystem.GetLightsAffectingPoint(position, entityLightQueryRadius);
-                    
+
                     if (affectingLights != null && affectingLights.Length > 0)
                     {
                         // Sort lights by priority:
@@ -5445,27 +5558,27 @@ namespace Andastra.Runtime.Games.Eclipse
                                 return -1;
                             if (a.Type != LightType.Directional && b.Type == LightType.Directional)
                                 return 1;
-                            
+
                             // Then by intensity (brightest first)
                             float intensityA = a.Intensity * a.Color.Length();
                             float intensityB = b.Intensity * b.Color.Length();
                             return intensityB.CompareTo(intensityA);
                         });
-                        
+
                         // Apply up to 3 lights (BasicEffect supports 3 directional lights)
                         // Based on MonoGame BasicEffect: DirectionalLight0, DirectionalLight1, DirectionalLight2
                         // For point/spot lights, approximate as directional lights pointing from light to entity position
                         int lightsApplied = 0;
                         const int maxLights = 3; // BasicEffect supports 3 directional lights
-                        
+
                         foreach (IDynamicLight light in sortedLights)
                         {
                             if (lightsApplied >= maxLights)
                                 break;
-                            
+
                             if (!light.Enabled)
                                 continue;
-                            
+
                             // Try to access MonoGame BasicEffect's DirectionalLight properties
                             // This requires casting to the concrete implementation
                             // Based on MonoGame BasicEffect API: DirectionalLight0/1/2 properties
@@ -5476,14 +5589,14 @@ namespace Andastra.Runtime.Games.Eclipse
                                 // MonoGameBasicEffect wraps Microsoft.Xna.Framework.Graphics.BasicEffect
                                 var effectField = typeof(Andastra.Runtime.MonoGame.Graphics.MonoGameBasicEffect)
                                     .GetField("_effect", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                                
+
                                 if (effectField != null)
                                 {
                                     var mgEffect = effectField.GetValue(monoGameEffect) as Microsoft.Xna.Framework.Graphics.BasicEffect;
                                     if (mgEffect != null)
                                     {
                                         Microsoft.Xna.Framework.Graphics.DirectionalLight directionalLight;
-                                        
+
                                         // Select which DirectionalLight slot to use (0, 1, or 2)
                                         switch (lightsApplied)
                                         {
@@ -5499,10 +5612,10 @@ namespace Andastra.Runtime.Games.Eclipse
                                             default:
                                                 continue; // Should not happen
                                         }
-                                        
+
                                         // Configure directional light based on light type
                                         directionalLight.Enabled = true;
-                                        
+
                                         if (light.Type == LightType.Directional)
                                         {
                                             // Directional light: use direction directly
@@ -5512,7 +5625,7 @@ namespace Andastra.Runtime.Games.Eclipse
                                                 light.Direction.Y,
                                                 light.Direction.Z
                                             );
-                                            
+
                                             // Calculate diffuse color from light color and intensity
                                             // Based on daorigins.exe/DragonAge2.exe: Light color is multiplied by intensity
                                             Vector3 lightColor = light.Color * light.Intensity;
@@ -5521,7 +5634,7 @@ namespace Andastra.Runtime.Games.Eclipse
                                                 Math.Min(1.0f, lightColor.Y),
                                                 Math.Min(1.0f, lightColor.Z)
                                             );
-                                            
+
                                             // Directional lights typically don't have specular in BasicEffect
                                             // But we can set it to match diffuse for some specular highlights
                                             directionalLight.SpecularColor = directionalLight.DiffuseColor;
@@ -5537,20 +5650,20 @@ namespace Andastra.Runtime.Games.Eclipse
                                                 lightToEntity.Y,
                                                 lightToEntity.Z
                                             );
-                                            
+
                                             // Calculate diffuse color with distance attenuation
                                             // Based on daorigins.exe/DragonAge2.exe: Point lights use inverse square falloff
                                             float distance = Vector3.Distance(light.Position, position);
                                             float attenuation = 1.0f / (1.0f + (distance * distance) / (light.Radius * light.Radius));
                                             Vector3 lightColor = light.Color * light.Intensity * attenuation;
-                                            
+
                                             directionalLight.DiffuseColor = new Microsoft.Xna.Framework.Vector3(
                                                 Math.Min(1.0f, lightColor.X),
                                                 Math.Min(1.0f, lightColor.Y),
                                                 Math.Min(1.0f, lightColor.Z)
                                             );
                                             directionalLight.SpecularColor = directionalLight.DiffuseColor;
-                                            
+
                                             // For spot lights, apply additional cone attenuation
                                             if (light.Type == LightType.Spot)
                                             {
@@ -5558,7 +5671,7 @@ namespace Andastra.Runtime.Games.Eclipse
                                                 float cosAngle = Vector3.Dot(Vector3.Normalize(-light.Direction), lightToEntity);
                                                 float innerCone = (float)Math.Cos(light.InnerConeAngle * Math.PI / 180.0);
                                                 float outerCone = (float)Math.Cos(light.OuterConeAngle * Math.PI / 180.0);
-                                                
+
                                                 // Smooth falloff from inner to outer cone
                                                 float spotAttenuation = 1.0f;
                                                 if (cosAngle < outerCone)
@@ -5570,14 +5683,14 @@ namespace Andastra.Runtime.Games.Eclipse
                                                     // Between inner and outer cone - smooth falloff
                                                     spotAttenuation = (cosAngle - outerCone) / (innerCone - outerCone);
                                                 }
-                                                
+
                                                 // Apply spot attenuation to diffuse color
                                                 Vector3 spotColor = new Vector3(
                                                     directionalLight.DiffuseColor.X,
                                                     directionalLight.DiffuseColor.Y,
                                                     directionalLight.DiffuseColor.Z
                                                 ) * spotAttenuation;
-                                                
+
                                                 directionalLight.DiffuseColor = new Microsoft.Xna.Framework.Vector3(
                                                     Math.Min(1.0f, spotColor.X),
                                                     Math.Min(1.0f, spotColor.Y),
@@ -5594,36 +5707,36 @@ namespace Andastra.Runtime.Games.Eclipse
                                             // Based on daorigins.exe/DragonAge2.exe: Area lights approximated for basic rendering
                                             // Area lights emit light from a rectangular area, producing soft shadows
                                             // For BasicEffect approximation: treat as directional light with area-size-based attenuation
-                                            
+
                                             Vector3 lightToEntity = Vector3.Normalize(position - light.Position);
                                             directionalLight.Direction = new Microsoft.Xna.Framework.Vector3(
                                                 lightToEntity.X,
                                                 lightToEntity.Y,
                                                 lightToEntity.Z
                                             );
-                                            
+
                                             // Calculate distance attenuation (inverse square falloff like point lights)
                                             float distance = Vector3.Distance(light.Position, position);
                                             float distanceAttenuation = 1.0f / (1.0f + (distance * distance) / (light.Radius * light.Radius));
-                                            
+
                                             // Calculate area-based attenuation
                                             // Larger area lights appear brighter and have softer falloff
                                             // Area size affects how "diffuse" the light source appears
                                             // Use area dimensions to scale the effective intensity
                                             float areaSize = light.AreaWidth * light.AreaHeight;
                                             float areaFactor = 1.0f + (areaSize * 0.1f); // Scale factor based on area size (larger = brighter)
-                                            
+
                                             // Calculate cosine of angle between light direction and light-to-entity vector
                                             // Area lights emit light primarily in their direction
                                             float cosAngle = Vector3.Dot(Vector3.Normalize(-light.Direction), lightToEntity);
-                                            
+
                                             // Area lights have wider emission cone than spot lights
                                             // Apply smooth falloff based on angle (wider than spot lights)
                                             float angleAttenuation = Math.Max(0.0f, cosAngle);
-                                            
+
                                             // Combine all attenuation factors
                                             Vector3 lightColor = light.Color * light.Intensity * distanceAttenuation * areaFactor * angleAttenuation;
-                                            
+
                                             directionalLight.DiffuseColor = new Microsoft.Xna.Framework.Vector3(
                                                 Math.Min(1.0f, lightColor.X),
                                                 Math.Min(1.0f, lightColor.Y),
@@ -5631,7 +5744,7 @@ namespace Andastra.Runtime.Games.Eclipse
                                             );
                                             directionalLight.SpecularColor = directionalLight.DiffuseColor;
                                         }
-                                        
+
                                         lightsApplied++;
                                     }
                                 }
@@ -5967,12 +6080,12 @@ namespace Andastra.Runtime.Games.Eclipse
                 if (_bloomEnabled && _bloomExtractTarget != null)
                 {
                     ExtractBrightAreas(graphicsDevice, _hdrRenderTarget, _bloomExtractTarget, _bloomThreshold);
-                    
+
                     // Step 2: Apply multi-pass blur to bloom
                     if (_bloomBlurTarget != null)
                     {
                         ApplyGaussianBlur(graphicsDevice, _bloomExtractTarget, _bloomBlurTarget, 3);
-                        
+
                         // Step 3: Composite bloom with HDR scene
                         CompositeBloom(graphicsDevice, _hdrRenderTarget, _bloomBlurTarget, _postProcessTarget, _bloomIntensity);
                     }
@@ -6137,17 +6250,17 @@ namespace Andastra.Runtime.Games.Eclipse
                 // Pixel shader: float3 color = sample(inputTexture, uv);
                 //              float luminance = dot(color, float3(0.299, 0.587, 0.114));
                 //              output = color * max(0.0, (luminance - threshold) / max(luminance, 0.001));
-                // 
+                //
                 // daorigins.exe: Bright pass shader extracts luminance and applies threshold
                 // Based on daorigins.exe/DragonAge2.exe: Post-processing bright pass extraction
-                // 
+                //
                 // Use shader-based bright pass extraction for accurate luminance thresholding
                 ISpriteBatch spriteBatch = graphicsDevice.CreateSpriteBatch();
                 if (spriteBatch != null && hdrInput.ColorTexture != null)
                 {
                     // Get or compile bright pass shader
                     Effect brightPassEffect = GetOrCreateBrightPassShader(graphicsDevice);
-                    
+
                     if (brightPassEffect != null)
                     {
                         // Use shader-based bright pass extraction with threshold parameter
@@ -6163,7 +6276,7 @@ namespace Andastra.Runtime.Games.Eclipse
                                 {
                                     thresholdParam.SetValue(threshold);
                                 }
-                                
+
                                 // Apply bright pass shader and draw
                                 mgSpriteBatch.SpriteBatch.Begin(
                                     Microsoft.Xna.Framework.Graphics.SpriteSortMode.Immediate,
@@ -6172,12 +6285,12 @@ namespace Andastra.Runtime.Games.Eclipse
                                     Microsoft.Xna.Framework.Graphics.DepthStencilState.None,
                                     Microsoft.Xna.Framework.Graphics.RasterizerState.CullNone,
                                     brightPassEffect);
-                                
+
                                 mgSpriteBatch.SpriteBatch.Draw(
                                     mgInputTexture.Texture,
                                     new Microsoft.Xna.Framework.Rectangle(0, 0, output.Width, output.Height),
                                     Microsoft.Xna.Framework.Color.White);
-                                
+
                                 mgSpriteBatch.SpriteBatch.End();
                             }
                             else
@@ -6241,7 +6354,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 // In a full shader-based implementation, this would use separable Gaussian blur:
                 // Gaussian blur kernel (7-tap separable):
                 // Weights: [0.00598, 0.060626, 0.241843, 0.383103, 0.241843, 0.060626, 0.00598]
-                // 
+                //
                 // Horizontal pass: Sample pixels horizontally with kernel weights
                 // Vertical pass: Sample pixels vertically with kernel weights
                 // Each pass alternates between horizontal and vertical directions
@@ -6309,11 +6422,11 @@ namespace Andastra.Runtime.Games.Eclipse
                 if (spriteBatch != null && hdrScene.ColorTexture != null && bloom.ColorTexture != null)
                 {
                     Rectangle destinationRect = new Rectangle(0, 0, output.Width, output.Height);
-                    
+
                     // Try to use shader-based compositing for accurate intensity control
                     // Get or compile bloom compositing shader
                     Effect bloomCompositingEffect = GetOrCreateBloomCompositingShader(graphicsDevice);
-                    
+
                     if (bloomCompositingEffect != null)
                     {
                         // Use shader-based compositing with intensity parameter
@@ -6330,7 +6443,7 @@ namespace Andastra.Runtime.Games.Eclipse
                                 {
                                     bloomIntensityParam.SetValue(intensity);
                                 }
-                                
+
                                 // First pass: Draw HDR scene (opaque)
                                 mgSpriteBatch.SpriteBatch.Begin(
                                     Microsoft.Xna.Framework.Graphics.SpriteSortMode.Immediate,
@@ -6338,14 +6451,14 @@ namespace Andastra.Runtime.Games.Eclipse
                                     Microsoft.Xna.Framework.Graphics.SamplerState.LinearClamp,
                                     Microsoft.Xna.Framework.Graphics.DepthStencilState.None,
                                     Microsoft.Xna.Framework.Graphics.RasterizerState.CullNone);
-                                
+
                                 mgSpriteBatch.SpriteBatch.Draw(
                                     mgSceneTexture.Texture,
                                     new Microsoft.Xna.Framework.Rectangle(0, 0, output.Width, output.Height),
                                     Microsoft.Xna.Framework.Color.White);
-                                
+
                                 mgSpriteBatch.SpriteBatch.End();
-                                
+
                                 // Second pass: Additively blend bloom with intensity applied via shader
                                 mgSpriteBatch.SpriteBatch.Begin(
                                     Microsoft.Xna.Framework.Graphics.SpriteSortMode.Immediate,
@@ -6354,12 +6467,12 @@ namespace Andastra.Runtime.Games.Eclipse
                                     Microsoft.Xna.Framework.Graphics.DepthStencilState.None,
                                     Microsoft.Xna.Framework.Graphics.RasterizerState.CullNone,
                                     bloomCompositingEffect);
-                                
+
                                 mgSpriteBatch.SpriteBatch.Draw(
                                     mgBloomTexture.Texture,
                                     new Microsoft.Xna.Framework.Rectangle(0, 0, output.Width, output.Height),
                                     Microsoft.Xna.Framework.Color.White);
-                                
+
                                 mgSpriteBatch.SpriteBatch.End();
                             }
                             else
@@ -6368,7 +6481,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
                     spriteBatch.Draw(hdrScene.ColorTexture, destinationRect, Color.White);
                     spriteBatch.End();
-                    
+
                     spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AdditiveBlend);
                                 byte intensityByte = (byte)(Math.Min(255, intensity * 255));
                                 Color bloomColor = new Color(intensityByte, intensityByte, intensityByte, intensityByte);
@@ -6382,7 +6495,7 @@ namespace Andastra.Runtime.Games.Eclipse
                             spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
                             spriteBatch.Draw(hdrScene.ColorTexture, destinationRect, Color.White);
                             spriteBatch.End();
-                            
+
                             spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AdditiveBlend);
                             // Approximate intensity by scaling color (not as accurate as shader)
                             byte intensityByte = (byte)(Math.Min(255, intensity * 255));
@@ -6397,7 +6510,7 @@ namespace Andastra.Runtime.Games.Eclipse
                         spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
                         spriteBatch.Draw(hdrScene.ColorTexture, destinationRect, Color.White);
                         spriteBatch.End();
-                        
+
                         spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AdditiveBlend);
                         // Approximate intensity by scaling color (not as accurate as shader)
                         byte intensityByte = (byte)(Math.Min(255, intensity * 255));
@@ -6429,25 +6542,25 @@ namespace Andastra.Runtime.Games.Eclipse
             {
                 return null;
             }
-            
+
             // Get MonoGame GraphicsDevice for ShaderCache
             GraphicsDevice mgDevice = null;
             if (graphicsDevice is Andastra.Runtime.MonoGame.Graphics.MonoGameGraphicsDevice mgGraphicsDevice)
             {
                 mgDevice = mgGraphicsDevice.Device;
             }
-            
+
             if (mgDevice == null)
             {
                 return null; // Cannot use shader cache without MonoGame GraphicsDevice
             }
-            
+
             // Initialize shader cache if needed
             if (_shaderCache == null)
             {
                 _shaderCache = new ShaderCache(mgDevice);
             }
-            
+
             // HLSL shader source for bloom compositing with intensity control
             // This shader applies intensity to the bloom texture when rendering
             // Used with SpriteBatch in additive blend mode to composite: scene + bloom * intensity
@@ -6478,16 +6591,16 @@ float BloomIntensity = 1.0;
 
 // Pixel shader: Apply intensity to bloom texture
 // MonoGame SpriteBatch provides: texCoord (TEXCOORD0) and color (COLOR0)
-float4 BloomCompositingPS(float2 texCoord : TEXCOORD0, 
+float4 BloomCompositingPS(float2 texCoord : TEXCOORD0,
                           float4 color : COLOR0) : COLOR0
 {
     // Sample the bloom texture (SpriteBatch binds the texture to TextureSampler)
     float4 bloom = tex2D(TextureSampler, texCoord);
-    
+
     // Apply intensity parameter to bloom color
     // Multiply RGB by intensity (alpha stays as-is for proper blending)
     float3 bloomColor = bloom.rgb * BloomIntensity;
-    
+
     // Return bloom color with intensity applied (used with additive blending)
     return float4(bloomColor, bloom.a);
 }
@@ -6502,7 +6615,7 @@ technique BloomCompositing
     }
 }
 ";
-            
+
             // Get or compile shader from cache
             try
             {
@@ -6523,7 +6636,7 @@ technique BloomCompositing
         /// <returns>Compiled bright pass effect, or null if compilation fails.</returns>
         /// <remarks>
         /// Creates and caches a shader for extracting bright areas based on luminance threshold.
-        /// Shader performs: 
+        /// Shader performs:
         /// - Calculate luminance: luminance = dot(color, float3(0.299, 0.587, 0.114))
         /// - Apply threshold: output = color * max(0.0, (luminance - threshold) / max(luminance, 0.001))
         /// Based on daorigins.exe/DragonAge2.exe: Bright pass extraction for bloom post-processing pipeline
@@ -6534,25 +6647,25 @@ technique BloomCompositing
             {
                 return null;
             }
-            
+
             // Get MonoGame GraphicsDevice for ShaderCache
             GraphicsDevice mgDevice = null;
             if (graphicsDevice is Andastra.Runtime.MonoGame.Graphics.MonoGameGraphicsDevice mgGraphicsDevice)
             {
                 mgDevice = mgGraphicsDevice.Device;
             }
-            
+
             if (mgDevice == null)
             {
                 return null; // Cannot use shader cache without MonoGame GraphicsDevice
             }
-            
+
             // Initialize shader cache if needed
             if (_shaderCache == null)
             {
                 _shaderCache = new ShaderCache(mgDevice);
             }
-            
+
             // HLSL shader source for bright pass extraction with luminance thresholding
             // This shader extracts bright areas from HDR input based on luminance threshold
             // Used with SpriteBatch to extract bright areas for bloom post-processing
@@ -6583,27 +6696,27 @@ float Threshold = 0.5;
 
 // Pixel shader: Extract bright areas based on luminance threshold
 // MonoGame SpriteBatch provides: texCoord (TEXCOORD0) and color (COLOR0)
-float4 BrightPassPS(float2 texCoord : TEXCOORD0, 
+float4 BrightPassPS(float2 texCoord : TEXCOORD0,
                     float4 color : COLOR0) : COLOR0
 {
     // Sample the input texture (SpriteBatch binds the texture to TextureSampler)
     float4 inputColor = tex2D(TextureSampler, texCoord);
-    
+
     // Calculate luminance using standard RGB to luminance conversion
     // Standard luminance weights: R=0.299, G=0.587, B=0.114
     // These weights match human eye sensitivity to different color channels
     float luminance = dot(inputColor.rgb, float3(0.299, 0.587, 0.114));
-    
+
     // Apply threshold to extract bright areas
     // Formula: output = color * max(0.0, (luminance - threshold) / max(luminance, 0.001))
     // This extracts only pixels where luminance exceeds the threshold
     // The division by max(luminance, 0.001) prevents division by zero and normalizes the result
     // The max(0.0, ...) ensures negative values (below threshold) become zero
     float thresholdFactor = max(0.0, (luminance - Threshold) / max(luminance, 0.001));
-    
+
     // Apply threshold factor to color (bright areas are preserved, dark areas become black)
     float3 brightColor = inputColor.rgb * thresholdFactor;
-    
+
     // Return bright color with original alpha (preserves transparency if present)
     return float4(brightColor, inputColor.a);
 }
@@ -6618,7 +6731,7 @@ technique BrightPass
     }
 }
 ";
-            
+
             // Get or compile shader from cache
             try
             {
@@ -6692,7 +6805,7 @@ technique BrightPass
             // Apply color grading using sprite batch
             // In a full shader-based implementation, this would:
             // 1. Apply contrast: color = ((color - 0.5) * (1.0 + contrast)) + 0.5
-            // 2. Apply saturation: 
+            // 2. Apply saturation:
             //    float luminance = dot(color, float3(0.299, 0.587, 0.114));
             //    color = lerp(luminance, color, saturation)
             // 3. Render to output render target
@@ -7020,7 +7133,7 @@ technique BrightPass
         /// - Entities with physics are added/removed
         /// - Destructible objects are destroyed
         /// - Dynamic obstacles are created
-        /// 
+        ///
         /// Based on daorigins.exe/DragonAge2.exe: Physics system updates after geometry modifications:
         /// - Rebuilds collision shapes for modified static geometry
         /// - Updates rigid body positions/velocities if entities are affected
@@ -7191,7 +7304,7 @@ technique BrightPass
         /// - Ambient/diffuse colors are changed
         /// - Shadow casting is modified
         /// - Geometry modifications affect light occlusion or shadow casting
-        /// 
+        ///
         /// Based on daorigins.exe/DragonAge2.exe: Lighting system updates after geometry modifications:
         /// - Rebuilds light lists if lights were added/removed
         /// - Updates shadow maps if geometry changes affect shadow casting
@@ -7217,7 +7330,7 @@ technique BrightPass
             // This ensures lights are properly culled and assigned to clusters after modifications
             // Use reflection to access private _clustersDirty field
             Type lightingType = typeof(EclipseLightingSystem);
-            System.Reflection.FieldInfo clustersDirtyField = lightingType.GetField("_clustersDirty", 
+            System.Reflection.FieldInfo clustersDirtyField = lightingType.GetField("_clustersDirty",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             if (clustersDirtyField != null)
             {
@@ -8023,17 +8136,17 @@ technique BrightPass
             if (_destructibleEntity.HasData("DebrisCount") && area.PhysicsSystem != null)
             {
                 int debrisCount = _destructibleEntity.GetData<int>("DebrisCount", 0);
-                
+
                 // Get destructible entity position and bounding box for debris generation
                 Vector3 destructiblePosition = Vector3.Zero;
                 Vector3 destructibleHalfExtents = new Vector3(0.5f, 0.5f, 0.5f);
-                
+
                 var transformComponent = _destructibleEntity.GetComponent<ITransformComponent>();
                 if (transformComponent != null)
                 {
                     destructiblePosition = transformComponent.Position;
                 }
-                
+
                 // Get original bounding box if available
                 if (_destructibleEntity.HasData("PhysicsHalfExtents"))
                 {
@@ -8049,7 +8162,7 @@ technique BrightPass
                         destructibleHalfExtents = _destructibleEntity.GetData<Vector3>("BoundingBoxHalfExtents");
                     }
                 }
-                
+
                 // Generate debris pieces and create physics entities for each
                 CreateDebrisEntities(area, debrisCount, destructiblePosition, destructibleHalfExtents);
             }
@@ -8093,7 +8206,7 @@ technique BrightPass
         /// <param name="destructibleHalfExtents">Half extents of the destructible entity bounding box.</param>
         /// <remarks>
         /// Based on daorigins.exe/DragonAge2.exe: Debris physics objects are created from destroyed placeables.
-        /// 
+        ///
         /// Debris creation process:
         /// 1. Calculate debris positions (scattered around destruction center with random offsets)
         /// 2. Calculate debris velocities (explosion force based on distance from explosion center)
@@ -8101,7 +8214,7 @@ technique BrightPass
         /// 4. Calculate debris half extents (smaller than original, varies per piece)
         /// 5. Create debris entities with ObjectType.Placeable
         /// 6. Add entities to area and physics system
-        /// 
+        ///
         /// Physics properties:
         /// - Position: Scattered from destructible position with random offset (based on explosion radius)
         /// - Velocity: Calculated from explosion force and direction away from explosion center
@@ -8130,14 +8243,14 @@ technique BrightPass
                 baseMass = _destructibleEntity.GetData<float>("PhysicsMass", 1.0f);
             }
             float debrisMass = baseMass / debrisCount;
-            
+
             // Ensure minimum mass for physics simulation
             debrisMass = Math.Max(0.1f, debrisMass);
 
             // Calculate debris size (scaled down from original with variation)
             float baseSizeFactor = 0.4f; // Debris pieces are about 40% of original size
             Vector3 baseDebrisHalfExtents = destructibleHalfExtents * baseSizeFactor;
-            
+
             // Minimum half extents to ensure valid physics shape
             float minHalfExtent = 0.05f;
             baseDebrisHalfExtents.X = Math.Max(minHalfExtent, baseDebrisHalfExtents.X);
@@ -8155,7 +8268,7 @@ technique BrightPass
                 float angle = (float)(random.NextDouble() * 2.0 * Math.PI); // Random angle around destruction point
                 float distance = (float)(random.NextDouble() * _explosionRadius * 0.5f); // Within half of explosion radius
                 float height = (float)(random.NextDouble() * _explosionRadius * 0.3f); // Slight upward bias
-                
+
                 Vector3 debrisPosition = destructiblePosition + new Vector3(
                     (float)(Math.Cos(angle) * distance),
                     height,
@@ -8168,9 +8281,9 @@ technique BrightPass
                 float distanceFromExplosion = Vector3.Distance(debrisPosition, _explosionCenter);
                 float explosionForce = _explosionRadius / (distanceFromExplosion + 1.0f); // Force decreases with distance
                 explosionForce = Math.Min(explosionForce, 10.0f); // Cap maximum force
-                
+
                 Vector3 debrisVelocity = directionFromExplosion * explosionForce;
-                
+
                 // Add random horizontal component for more realistic scatter
                 float randomHorizontal = (float)(random.NextDouble() - 0.5) * 2.0f;
                 debrisVelocity += new Vector3(
@@ -8195,16 +8308,16 @@ technique BrightPass
                 // Use high ObjectId range to avoid conflicts (debris entities start from 2000000)
                 uint debrisObjectId = 2000000 + (uint)i;
                 string debrisTag = $"Debris_{i}_{_destructibleEntity.Tag}";
-                
+
                 // Create entity with ObjectType.Placeable (debris behaves like small placeables)
                 var debrisEntity = new EclipseEntity(debrisObjectId, ObjectType.Placeable, debrisTag);
-                
+
                 // Set entity properties
                 debrisEntity.SetData("IsDebris", true);
                 debrisEntity.SetData("DebrisLifetime", 30.0f); // Debris lifetime in seconds
                 debrisEntity.SetData("PhysicsMass", debrisMass);
                 debrisEntity.SetData("PhysicsHalfExtents", debrisHalfExtents);
-                
+
                 // Set transform component for position
                 var transformComponent = debrisEntity.GetComponent<ITransformComponent>();
                 if (transformComponent != null)
@@ -8226,11 +8339,11 @@ technique BrightPass
                 {
                     // Create rigid body (dynamic, with mass)
                     eclipsePhysics.AddRigidBody(debrisEntity, debrisPosition, debrisMass, debrisHalfExtents, isDynamic: true);
-                    
+
                     // Set initial velocity and angular velocity using physics system
                     // Based on daorigins.exe: Debris is created with initial velocity from explosion
                     eclipsePhysics.SetRigidBodyState(debrisEntity, debrisVelocity, debrisAngularVelocity, debrisMass, null);
-                    
+
                     // Mark entity as having physics
                     debrisEntity.SetData("HasPhysics", true);
                 }
@@ -8316,11 +8429,11 @@ technique BrightPass
         /// </summary>
         /// <remarks>
         /// Based on daorigins.exe/DragonAge2.exe: Physics collision shapes are updated when geometry is modified.
-        /// 
+        ///
         /// Implementation details:
         /// - daorigins.exe: 0x008f12a0 - Static geometry collision shape update function
         /// - DragonAge2.exe: 0x009a45b0 - Enhanced collision shape rebuild for destructible geometry
-        /// 
+        ///
         /// When geometry is modified (destroyed/deformed):
         /// 1. Gets modified mesh data from geometry modification tracker
         /// 2. Retrieves original mesh geometry (vertices, indices) from cached mesh data
@@ -8583,7 +8696,7 @@ technique BrightPass
         /// <remarks>
         /// Based on daorigins.exe: 0x008f12a0 - Vertex data is read directly from GPU vertex buffer for collision shape updates.
         /// DragonAge2.exe: 0x009a45b0 - Enhanced vertex buffer reading with support for multiple vertex formats.
-        /// 
+        ///
         /// Implementation:
         /// 1. Attempts to read vertex data directly from VertexBuffer
         /// 2. Extracts position data from vertex format (Position is at offset 0 in most formats)
@@ -8614,14 +8727,14 @@ technique BrightPass
                 // RoomVertex format: 36 bytes (Position 12, Normal 12, TexCoord 8, Color 4)
                 // XnaVertexPositionColor format: 16 bytes (Position 12, Color 4)
                 // Position is always at offset 0 (first 12 bytes = Vector3)
-                
+
                 if (vertexStride == 36)
                 {
                     // RoomVertex format: Position, Normal, TexCoord, Color
                     // Read as RoomVertex struct
                     RoomMeshRenderer.RoomVertex[] vertices = new RoomMeshRenderer.RoomVertex[vertexCount];
                     vertexBuffer.GetData(vertices);
-                    
+
                     for (int i = 0; i < vertexCount; i++)
                     {
                         positions.Add(vertices[i].Position);
@@ -8633,7 +8746,7 @@ technique BrightPass
                     // Read as XnaVertexPositionColor struct
                     XnaVertexPositionColor[] vertices = new XnaVertexPositionColor[vertexCount];
                     vertexBuffer.GetData(vertices);
-                    
+
                     for (int i = 0; i < vertexCount; i++)
                     {
                         positions.Add(new Vector3(
@@ -8648,7 +8761,7 @@ technique BrightPass
                     // Read as float array and extract positions
                     int totalFloats = (vertexCount * vertexStride) / 4;
                     float[] floatData = new float[totalFloats];
-                    
+
                     // We can't directly read as float array from IVertexBuffer,
                     // so we need to use a different approach
                     // Try reading as RoomVertex if possible, otherwise fall back to cache
@@ -8704,7 +8817,7 @@ technique BrightPass
         /// <remarks>
         /// Based on daorigins.exe: 0x008f12a0 - Index data is read directly from GPU index buffer for collision shape updates.
         /// DragonAge2.exe: 0x009a45b0 - Enhanced index buffer reading with support for 16-bit and 32-bit indices.
-        /// 
+        ///
         /// Implementation:
         /// 1. Attempts to read index data directly from IndexBuffer
         /// 2. Handles both 16-bit and 32-bit index formats
@@ -8879,13 +8992,13 @@ technique BrightPass
     /// </summary>
     /// <remarks>
     /// Based on daorigins.exe/DragonAge2.exe: Geometry modification tracking system.
-    /// 
+    ///
     /// The tracker maintains:
     /// 1. Modified mesh data (by mesh ID/model name)
     /// 2. Destroyed faces (triangle indices that are no longer rendered/collidable)
     /// 3. Deformed vertices (position modifications for damaged geometry)
     /// 4. Debris pieces (generated from destroyed geometry)
-    /// 
+    ///
     /// Original implementation: daorigins.exe geometry modification tracking
     /// - Tracks modifications per mesh/model
     /// - Maintains destroyed face lists
@@ -9221,7 +9334,7 @@ technique BrightPass
         /// <remarks>
         /// Based on daorigins.exe/DragonAge2.exe: Debris chunking uses vertex connectivity to group faces.
         /// The flood-fill algorithm ensures all faces that share vertices (directly or transitively) are grouped together.
-        /// 
+        ///
         /// Algorithm:
         /// 1. Start with the given face
         /// 2. For each vertex in the face, find all other faces that share that vertex
@@ -9271,8 +9384,8 @@ technique BrightPass
                     foreach (int connectedFace in facesWithVertex)
                     {
                         // Only consider destroyed faces that haven't been processed yet
-                        if (connectedFace != currentFace && 
-                            destroyedFaceSet.Contains(connectedFace) && 
+                        if (connectedFace != currentFace &&
+                            destroyedFaceSet.Contains(connectedFace) &&
                             !visitedFaces.Contains(connectedFace))
                         {
                             // Verify faces actually share a vertex (defensive check)

@@ -112,8 +112,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 _ssrConstants = Buffer.New(_graphicsDevice, constantBufferSize, BufferFlags.ConstantBuffer, GraphicsResourceUsage.Dynamic);
 
                 // Try to load SSR effect shader
-                // In a full implementation, this would load a compiled .sdsl shader
-                // For now, we'll use CPU-side ray marching as fallback
+                // TODO:  In a full implementation, this would load a compiled .sdsl shader
+                // TODO: STUB - For now, we'll use CPU-side ray marching as fallback
                 try
                 {
                     // Attempt to load effect - would need actual shader file
@@ -178,10 +178,11 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// <param name="projectionMatrix">Projection matrix for ray calculation.</param>
         /// <param name="width">Render width.</param>
         /// <param name="height">Render height.</param>
+        /// <param name="lightmap">Optional lightmap texture for reflection color modulation (matches GLSL sLightmap).</param>
         /// <returns>Output texture with reflections applied.</returns>
         public Texture Apply(Texture input, Texture depth, Texture normal, Texture roughness,
             System.Numerics.Matrix4x4 viewMatrix, System.Numerics.Matrix4x4 projectionMatrix,
-            int width, int height)
+            int width, int height, Texture lightmap = null)
         {
             if (!_enabled || input == null || depth == null || normal == null)
             {
@@ -208,7 +209,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             // 6. Apply edge fade (screen borders)
             // 7. Temporal accumulation for stability
 
-            ExecuteSsr(input, depth, normal, roughness, viewMatrix, projectionMatrix, _temporaryTexture, width, height);
+            ExecuteSsr(input, depth, normal, roughness, lightmap, viewMatrix, projectionMatrix, _temporaryTexture, width, height);
 
             // Swap history and output for temporal accumulation
             var temp = _historyTexture;
@@ -243,7 +244,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// for 1:1 parity with original game behavior.
         /// </summary>
         private void ExecuteSsr(Texture input, Texture depth, Texture normal, Texture roughness,
-            System.Numerics.Matrix4x4 viewMatrix, System.Numerics.Matrix4x4 projectionMatrix,
+            Texture lightmap, System.Numerics.Matrix4x4 viewMatrix, System.Numerics.Matrix4x4 projectionMatrix,
             Texture output, int width, int height)
         {
             if (!_effectInitialized || output == null)
@@ -256,18 +257,28 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
             // Set render target and clear
             // In Stride, rendering is typically done through SpriteBatch or custom rendering
-            // For now, we'll use the CPU fallback which handles the rendering logic
+            // TODO: STUB - For now, we'll use the CPU fallback which handles the rendering logic
 
             // If we have a shader effect, use GPU-based ray marching
             if (_ssrEffect != null && _fullscreenEffect != null)
             {
-                ExecuteSsrGpu(input, depth, normal, roughness, output, commandList);
+                var commandList = _graphicsDevice.ImmediateContext;
+                if (commandList != null)
+                {
+                    ExecuteSsrGpu(input, depth, normal, roughness, lightmap, output, commandList);
+                }
+                else
+                {
+                    // Fallback to CPU if command list not available
+                    ExecuteSsrCpu(input, depth, normal, roughness, lightmap, output, width, height);
+                }
             }
             else
             {
                 // Fallback: Use CPU-side implementation for now
                 // In production, this should always use GPU shader
-                ExecuteSsrCpu(input, depth, normal, roughness, output, width, height);
+                // CPU implementation matches vendor/reone/glsl/f_pbr_ssr.glsl for 1:1 parity
+                ExecuteSsrCpu(input, depth, normal, roughness, lightmap, output, width, height);
             }
         }
 
@@ -275,7 +286,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// GPU-based SSR execution using shader effect.
         /// </summary>
         private void ExecuteSsrGpu(Texture input, Texture depth, Texture normal, Texture roughness,
-            Texture output, CommandList commandList)
+            Texture lightmap, Texture output, CommandList commandList)
         {
             if (_ssrEffect == null || _fullscreenEffect == null)
             {
@@ -290,7 +301,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 UpdateSsrConstants(input.Width, input.Height);
                 
                 // Bind textures through effect parameters
-                // In a full implementation, the shader would define these parameters:
+                // TODO:  In a full implementation, the shader would define these parameters:
                 // parameters.Set("InputTexture", input);
                 // parameters.Set("DepthTexture", depth);
                 // parameters.Set("NormalTexture", normal);
@@ -299,21 +310,23 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
             // Draw fullscreen quad using SpriteBatch
             // Note: This requires a proper fullscreen quad shader setup
-            // For now, we fall back to CPU implementation
+            // TODO: STUB - For now, we fall back to CPU implementation
         }
 
         /// <summary>
         /// CPU-side SSR execution (fallback implementation).
-        /// Implements the complete ray marching algorithm matching the GLSL shader.
+        /// Implements the complete ray marching algorithm matching vendor/reone/glsl/f_pbr_ssr.glsl
+        /// for 1:1 parity with original game behavior.
         /// </summary>
         private void ExecuteSsrCpu(Texture input, Texture depth, Texture normal, Texture roughness,
-            Texture output, int width, int height)
+            Texture lightmap, Texture output, int width, int height)
         {
             // Read texture data
             var inputData = ReadTextureData(input);
             var depthData = ReadTextureData(depth);
             var normalData = ReadTextureData(normal);
             var roughnessData = roughness != null ? ReadTextureData(roughness) : null;
+            var lightmapData = lightmap != null ? ReadTextureData(lightmap) : null;
 
             // Allocate output buffer
             var outputData = new Vector4[width * height];
@@ -361,26 +374,39 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
                     if (hit)
                     {
-                        // Sample color at hit point
+                        // Sample color at hit point (matches GLSL: texture(sMainTex, hitUV))
                         Vector4 hitMainTexSample = SampleTexture(inputData, hitUV, width, height);
+                        
+                        // Sample lightmap at hit point (matches GLSL: texture(sLightmap, hitUV))
+                        // If lightmap is not provided, use white (1.0, 1.0, 1.0) for backward compatibility
+                        Vector3 lightmapColor = Vector3.One;
+                        if (lightmapData != null)
+                        {
+                            Vector4 hitLightmapSample = SampleTexture(lightmapData, hitUV, width, height);
+                            lightmapColor = new Vector3(hitLightmapSample.X, hitLightmapSample.Y, hitLightmapSample.Z);
+                        }
 
-                        reflectionColor = new Vector3(hitMainTexSample.X, hitMainTexSample.Y, hitMainTexSample.Z) *
-                                        hitMainTexSample.W;
+                        // Calculate reflection color matching GLSL: hitMainTexSample.rgb * hitMainTexSample.a * hitLightmapSample.rgb
+                        Vector3 mainTexRgb = new Vector3(hitMainTexSample.X, hitMainTexSample.Y, hitMainTexSample.Z);
+                        reflectionColor = mainTexRgb * hitMainTexSample.W * lightmapColor;
 
                         // Calculate reflection strength based on:
                         // 1. View angle (grazing angles have stronger reflections)
+                        // Matches GLSL: 1.0 - clamp(R.z, 0.0, 1.0)
                         reflectionStrength = 1.0f - Math.Max(0.0f, Math.Min(1.0f, R.Z));
 
                         // 2. Step count (fewer steps = more confidence)
+                        // Matches GLSL: 1.0 - numSteps / uSSRMaxSteps
                         reflectionStrength *= 1.0f - (numSteps / _maxIterations);
 
                         // 3. Edge fade (screen borders)
+                        // Matches GLSL: 1.0 - max(0.0, (maxDim - EDGE_FADE_START) / (1.0 - EDGE_FADE_START))
                         Vector2 hitNDC = hitUV * 2.0f - Vector2.One;
                         float maxDim = Math.Min(1.0f, Math.Max(Math.Abs(hitNDC.X), Math.Abs(hitNDC.Y)));
                         float edgeFade = 1.0f - Math.Max(0.0f, (maxDim - _edgeFadeStart) / (1.0f - _edgeFadeStart));
                         reflectionStrength *= edgeFade;
 
-                        // Apply roughness if available
+                        // Apply roughness if available (not in original GLSL, but useful for PBR)
                         if (roughnessData != null)
                         {
                             Vector4 roughSample = SampleTexture(roughnessData, uv, width, height);
@@ -388,7 +414,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                             reflectionStrength *= 1.0f - rough; // Rough surfaces have weaker reflections
                         }
 
-                        // Apply intensity
+                        // Apply intensity (not in original GLSL, but useful for control)
                         reflectionStrength *= _intensity;
                     }
 
@@ -864,8 +890,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
             // Update constant buffer
             // In Stride, constant buffers are updated through CommandList
-            // For now, we store the constants and would update them before rendering
-            // In a full implementation:
+            // TODO: STUB - For now, we store the constants and would update them before rendering
+            // TODO:  In a full implementation:
             // commandList.UpdateSubresource(_ssrConstants, 0, ref constants);
             // Or use EffectInstance.Parameters to set individual values
         }
