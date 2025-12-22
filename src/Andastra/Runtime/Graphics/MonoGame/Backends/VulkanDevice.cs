@@ -134,7 +134,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         // Vulkan memory property flags
         [Flags]
-        private enum VkMemoryPropertyFlags
+        internal enum VkMemoryPropertyFlags
         {
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT = 0x00000001,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT = 0x00000002,
@@ -1063,7 +1063,6 @@ namespace Andastra.Runtime.MonoGame.Backends
             VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO = 34,
             VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET = 35,
             VK_STRUCTURE_TYPE_COPY_DESCRIPTOR_SET = 36,
-            VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO = 10,
             VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO = 37,
             VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO = 38,
             VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO = 39,
@@ -3602,6 +3601,11 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             return vkFlags;
         }
+
+        /// <summary>
+        /// Converts ShaderStageFlags to VkShaderStageFlags.
+        /// </summary>
+        private VkShaderStageFlags ConvertShaderStageFlagsToVkFlags(ShaderStageFlags stages)
         {
             if (stages == ShaderStageFlags.None)
             {
@@ -6243,6 +6247,21 @@ namespace Andastra.Runtime.MonoGame.Backends
                     vkDestroyPipelineLayout(_device, _vkPipelineLayout, IntPtr.Zero);
                 }
                 _sbtBuffer?.Dispose();
+            }
+
+            /// <summary>
+            /// Gets the shader identifier for a shader or hit group in the pipeline.
+            /// Shader identifiers are opaque handles used in the shader binding table.
+            /// </summary>
+            /// <param name="exportName">The export name of the shader or hit group (e.g., "ShadowRayGen", "ShadowMiss", "ShadowHitGroup").</param>
+            /// <returns>Shader identifier bytes (typically 32 bytes for D3D12, variable for Vulkan). Returns null if the export name is not found.</returns>
+            public byte[] GetShaderIdentifier(string exportName)
+            {
+                // TODO: STUB - Implement Vulkan shader identifier retrieval
+                // Vulkan API: vkGetRayTracingShaderGroupHandlesKHR
+                // This requires calling vkGetRayTracingShaderGroupHandlesKHR to get shader group handles
+                // For now, return null to indicate not implemented
+                return null;
             }
         }
 

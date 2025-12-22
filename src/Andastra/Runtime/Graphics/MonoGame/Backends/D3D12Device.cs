@@ -7325,6 +7325,21 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // Release SBT buffer
                 _sbtBuffer?.Dispose();
             }
+
+            /// <summary>
+            /// Gets the shader identifier for a shader or hit group in the pipeline.
+            /// Shader identifiers are opaque handles used in the shader binding table.
+            /// </summary>
+            /// <param name="exportName">The export name of the shader or hit group (e.g., "ShadowRayGen", "ShadowMiss", "ShadowHitGroup").</param>
+            /// <returns>Shader identifier bytes (typically 32 bytes for D3D12, variable for Vulkan). Returns null if the export name is not found.</returns>
+            public byte[] GetShaderIdentifier(string exportName)
+            {
+                // TODO: STUB - Implement D3D12 shader identifier retrieval
+                // D3D12 API: ID3D12StateObjectProperties::GetShaderIdentifier
+                // This requires calling GetShaderIdentifier on the properties interface
+                // For now, return null to indicate not implemented
+                return null;
+            }
         }
 
         private class D3D12CommandList : ICommandList, IResource
@@ -13434,100 +13449,8 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
         }
 
-        /// <summary>
-        /// Converts AccelStructBuildFlags to D3D12 raytracing acceleration structure build flags.
-        /// Based on D3D12 API: D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS
-        /// </summary>
-        internal uint ConvertAccelStructBuildFlagsToD3D12(AccelStructBuildFlags flags)
-        {
-            uint d3d12Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_NONE;
-
-            if ((flags & AccelStructBuildFlags.AllowUpdate) != 0)
-            {
-                d3d12Flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_UPDATE;
-            }
-
-            if ((flags & AccelStructBuildFlags.AllowCompaction) != 0)
-            {
-                d3d12Flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_COMPACTION;
-            }
-
-            if ((flags & AccelStructBuildFlags.PreferFastTrace) != 0)
-            {
-                d3d12Flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
-            }
-
-            if ((flags & AccelStructBuildFlags.PreferFastBuild) != 0)
-            {
-                d3d12Flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_BUILD;
-            }
-
-            if ((flags & AccelStructBuildFlags.MinimizeMemory) != 0)
-            {
-                d3d12Flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_MINIMIZE_MEMORY;
-            }
-
-            return d3d12Flags;
-        }
-
-        /// <summary>
-        /// Converts GeometryFlags to D3D12 raytracing geometry flags.
-        /// Based on D3D12 API: D3D12_RAYTRACING_GEOMETRY_FLAGS
-        /// </summary>
-        internal uint ConvertGeometryFlagsToD3D12(GeometryFlags flags)
-        {
-            uint d3d12Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_NONE;
-
-            if ((flags & GeometryFlags.Opaque) != 0)
-            {
-                d3d12Flags |= D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
-            }
-
-            if ((flags & GeometryFlags.NoDuplicateAnyHit) != 0)
-            {
-                d3d12Flags |= D3D12_RAYTRACING_GEOMETRY_FLAG_NO_DUPLICATE_ANYHIT_INVOCATION;
-            }
-
-            return d3d12Flags;
-        }
-
-        /// <summary>
-        /// Converts TextureFormat to D3D12 raytracing index format.
-        /// Based on D3D12 API: D3D12_RAYTRACING_INDEX_FORMAT
-        /// </summary>
-        internal uint ConvertIndexFormatToD3D12(TextureFormat format)
-        {
-            switch (format)
-            {
-                case TextureFormat.R16_UInt:
-                    return D3D12_RAYTRACING_INDEX_FORMAT_UINT16;
-                case TextureFormat.R32_UInt:
-                    return D3D12_RAYTRACING_INDEX_FORMAT_UINT32;
-                default:
-                    // Default to 32-bit if format is unknown
-                    return D3D12_RAYTRACING_INDEX_FORMAT_UINT32;
-            }
-        }
-
-        /// <summary>
-        /// Converts TextureFormat to D3D12 raytracing vertex format.
-        /// Based on D3D12 API: D3D12_RAYTRACING_VERTEX_FORMAT
-        /// </summary>
-        internal uint ConvertVertexFormatToD3D12(TextureFormat format)
-        {
-            // D3D12 raytracing supports Float3 and Float2 vertex formats
-            // Most common vertex formats map to Float3
-            switch (format)
-            {
-                case TextureFormat.R32G32_Float:
-                    return D3D12_RAYTRACING_VERTEX_FORMAT_FLOAT2;
-                case TextureFormat.R32G32B32_Float:
-                case TextureFormat.R32G32B32A32_Float:
-                default:
-                    // Default to Float3 for most formats
-                    return D3D12_RAYTRACING_VERTEX_FORMAT_FLOAT3;
-            }
-        }
+        // Note: ConvertAccelStructBuildFlagsToD3D12, ConvertGeometryFlagsToD3D12, ConvertIndexFormatToD3D12, and ConvertVertexFormatToD3D12
+        // are already defined above. These duplicate methods were removed.
 
         #endregion
     }
