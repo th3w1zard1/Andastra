@@ -2679,7 +2679,20 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Based on swkotor2.exe: Room meshes are loaded on-demand when needed for rendering.
         /// Located via string references: "Rooms" @ 0x007bd490, "RoomName" @ 0x007bd484
         /// Original implementation: Loads MDL/MDX files from module archives and creates renderable mesh data.
-        // TODO: / This implements the on-demand loading that was previously stubbed.
+        /// 
+        /// Implementation details:
+        /// - Resource search order: Module.Model() -> Module.ModelExt() -> Installation (OVERRIDE -> CHITIN)
+        /// - Matches swkotor2.exe resource loading: Module -> Override -> Chitin
+        /// - MDL files: Loaded from Module.Model() or Module.ModelExt() as fallback
+        /// - MDX files: Loaded from Module.ModelExt() (companion files containing vertex data)
+        /// - Installation fallback: Uses Installation.Resource() with OVERRIDE and CHITIN search locations
+        /// - MDL parsing: Uses MDLAuto.ReadMdl() to parse both binary MDL (with MDX) and ASCII MDL formats
+        /// - Mesh creation: Uses IRoomMeshRenderer.LoadRoomMesh() to create GPU buffers from MDL geometry
+        /// - Validation: Ensures mesh has valid vertex/index buffers and at least 3 indices (one triangle)
+        /// - Error handling: Catches exceptions and returns null (room is skipped, doesn't crash)
+        /// - Caching: Loaded meshes are cached in _roomMeshes dictionary for future use
+        /// 
+        /// This replaces the previous stub implementation with full on-demand loading functionality.
         /// </remarks>
         private IRoomMeshData LoadRoomMeshOnDemand(string modelResRef, IRoomMeshRenderer roomRenderer)
         {
