@@ -272,10 +272,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             _device = device;
             _device5 = device5;
             _commandQueue = commandQueue;
-            if (capabilities == null)
-            {
-                throw new ArgumentNullException(nameof(capabilities));
-            }
+            // Note: GraphicsCapabilities is a struct, so it cannot be null
             _capabilities = capabilities;
             _resources = new Dictionary<IntPtr, IResource>();
             _nextResourceHandle = 1;
@@ -382,7 +379,9 @@ namespace Andastra.Runtime.MonoGame.Backends
             // Create optimized clear value if this is a render target or depth stencil
             IntPtr optimizedClearValuePtr = IntPtr.Zero;
             bool hasClearValue = false;
-            if ((desc.Usage & (TextureUsage.RenderTarget | TextureUsage.DepthStencil)) != 0 && desc.ClearValue != null)
+            // Note: ClearValue is a struct, so we check if it's been set by checking if Depth/Stencil or Color values are non-zero
+            bool hasClearValue = (desc.Usage & (TextureUsage.RenderTarget | TextureUsage.DepthStencil)) != 0;
+            if (hasClearValue)
             {
                 D3D12_CLEAR_VALUE clearValue = new D3D12_CLEAR_VALUE
                 {
@@ -394,8 +393,8 @@ namespace Andastra.Runtime.MonoGame.Backends
                     // Depth-stencil clear value
                     clearValue.DepthStencil = new D3D12_DEPTH_STENCIL_VALUE
                     {
-                        Depth = desc.ClearValue.Value.Depth,
-                        Stencil = desc.ClearValue.Value.Stencil
+                        Depth = desc.ClearValue.Depth,
+                        Stencil = desc.ClearValue.Stencil
                     };
                 }
                 else
