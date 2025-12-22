@@ -2658,27 +2658,35 @@ namespace Andastra.Runtime.MonoGame.Backends
             // Create pipeline layout from binding layouts
             IntPtr pipelineLayout = CreatePipelineLayout(desc.BindingLayouts);
 
-            // Create VkRenderPass from framebuffer if provided
+            // Get or create VkRenderPass from framebuffer if provided
             // Based on Vulkan Render Pass Creation: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateRenderPass.html
+            // The render pass is required for VkGraphicsPipelineCreateInfo when creating the actual VkPipeline
             IntPtr vkRenderPass = IntPtr.Zero;
             if (framebuffer != null)
             {
-                FramebufferDesc framebufferDesc = framebuffer.Desc;
-                vkRenderPass = CreateRenderPassFromFramebufferDesc(framebufferDesc);
-                
-                // Note: The render pass is not owned by the pipeline - it may be shared with the framebuffer
-                // TODO:  In a full implementation, the pipeline would need to store the render pass for pipeline creation
-                // TODO: STUB - For now, we create it but don't use it in pipeline creation (pipeline creation is not fully implemented)
+                // Try to get render pass from framebuffer if it's a VulkanFramebuffer
+                // This avoids creating duplicate render passes when the framebuffer already has one
+                VulkanFramebuffer vulkanFramebuffer = framebuffer as VulkanFramebuffer;
+                if (vulkanFramebuffer != null)
+                {
+                    vkRenderPass = vulkanFramebuffer.VkRenderPass;
+                }
+
+                // If framebuffer doesn't have a render pass, create one from its description
+                // This handles cases where the framebuffer is not a VulkanFramebuffer or doesn't have a render pass yet
+                if (vkRenderPass == IntPtr.Zero)
+                {
+                    FramebufferDesc framebufferDesc = framebuffer.Desc;
+                    vkRenderPass = CreateRenderPassFromFramebufferDesc(framebufferDesc);
+                }
             }
 
             IntPtr handle = new IntPtr(_nextResourceHandle++);
-            var pipeline = new VulkanGraphicsPipeline(handle, desc, IntPtr.Zero, pipelineLayout, _device);
+            // Store the render pass in the pipeline for use in VkGraphicsPipelineCreateInfo
+            // The render pass is not owned by the pipeline - it may be shared with the framebuffer
+            // Based on Vulkan specification: VkGraphicsPipelineCreateInfo.renderPass is required for graphics pipelines
+            var pipeline = new VulkanGraphicsPipeline(handle, desc, IntPtr.Zero, pipelineLayout, vkRenderPass, _device);
             _resources[handle] = pipeline;
-
-            // Note: vkRenderPass is created but not currently used in pipeline creation
-            // TODO:  In a full implementation, VkGraphicsPipelineCreateInfo would include the render pass
-            // The render pass is stored in the framebuffer, so pipelines should reference it from there
-            // TODO: STUB - For now, we create it to match the framebuffer's render pass structure
 
             return pipeline;
         }
