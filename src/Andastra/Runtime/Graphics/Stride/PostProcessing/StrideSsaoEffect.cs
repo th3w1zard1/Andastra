@@ -2,6 +2,7 @@ using System;
 using Stride.Graphics;
 using Stride.Rendering;
 using Stride.Core.Mathematics;
+using Stride.Engine;
 using Andastra.Runtime.Graphics.Common.PostProcessing;
 using Andastra.Runtime.Graphics.Common.Rendering;
 
@@ -62,22 +63,144 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 AddressW = TextureAddressMode.Clamp
             });
 
-            // Try to load SSAO effect shaders
-            // TODO: In a full implementation, this would load compiled .sdsl shader files
-            // TODO:  For now, we'll use SpriteBatch's built-in rendering which works without custom shaders
+            // Load SSAO effect shaders from compiled .sdsl files or ContentManager
+            // Based on Stride Engine shader loading:
+            // - Compiled .sdsl files are stored as .sdeffect files in content
+            // - Effect.Load() loads from default content paths
+            // - ContentManager.Load&lt;Effect&gt;() loads from content manager
+            // - EffectSystem can compile shaders at runtime from source (requires EffectSystem access)
+            LoadSsaoShaders();
+        }
+
+        /// <summary>
+        /// Loads SSAO effect shaders from compiled .sdsl files or creates them programmatically.
+        /// </summary>
+        /// <remarks>
+        /// Based on Stride Engine shader loading:
+        /// - Compiled .sdsl files are stored as .sdeffect files in content
+        /// - Effect.Load() loads from default content paths
+        /// - ContentManager.Load&lt;Effect&gt;() loads from content manager
+        /// - EffectSystem can compile shaders at runtime from source (requires EffectSystem access)
+        /// 
+        /// Shader Requirements:
+        /// - GTAO shader: Computes ambient occlusion using Ground Truth Ambient Occlusion algorithm
+        ///   - Inputs: DepthTexture, NormalTexture, NoiseTexture, ProjectionMatrix, ProjectionMatrixInv
+        ///   - Parameters: Radius, Power, SampleCount, ScreenSize, ScreenSizeInv
+        ///   - Output: Single-channel AO value (R8_UNorm)
+        /// - BilateralBlur shader: Edge-preserving blur for noise reduction
+        ///   - Inputs: SourceTexture, DepthTexture
+        ///   - Parameters: Horizontal (bool), BlurRadius, DepthThreshold, ScreenSize, ScreenSizeInv
+        ///   - Output: Blurred single-channel AO value (R8_UNorm)
+        /// 
+        /// Note: If shader files are not available, the effect will use SpriteBatch's default rendering
+        /// which will not compute actual SSAO. Shader files (.sdsl/.sdeffect) must be provided for
+        /// the SSAO effect to function correctly.
+        /// </remarks>
+        private void LoadSsaoShaders()
+        {
+            // Strategy 1: Try loading from compiled effect files using Effect.Load()
+            // Effect.Load() searches in standard content paths for compiled .sdeffect files
             try
             {
-                // Attempt to load effects - would need actual shader files
-                // _gtaoEffectBase = Effect.Load(_graphicsDevice, "GTAO");
-                // _bilateralBlurEffectBase = Effect.Load(_graphicsDevice, "BilateralBlur");
-                // if (_gtaoEffectBase != null) _gtaoEffect = new EffectInstance(_gtaoEffectBase);
-                // if (_bilateralBlurEffectBase != null) _bilateralBlurEffect = new EffectInstance(_bilateralBlurEffectBase);
+                _gtaoEffectBase = Effect.Load(_graphicsDevice, "GTAO");
+                if (_gtaoEffectBase != null)
+                {
+                    _gtaoEffect = new EffectInstance(_gtaoEffectBase);
+                    System.Console.WriteLine("[StrideSsaoEffect] Loaded GTAO effect from compiled file");
+                }
             }
-            catch
+            catch (Exception ex)
             {
-                // Fallback to SpriteBatch rendering without custom shaders
-                // This will still work but won't have the actual SSAO effect until shaders are added
+                System.Console.WriteLine($"[StrideSsaoEffect] Failed to load GTAO from compiled file: {ex.Message}");
             }
+
+            try
+            {
+                _bilateralBlurEffectBase = Effect.Load(_graphicsDevice, "BilateralBlur");
+                if (_bilateralBlurEffectBase != null)
+                {
+                    _bilateralBlurEffect = new EffectInstance(_bilateralBlurEffectBase);
+                    System.Console.WriteLine("[StrideSsaoEffect] Loaded BilateralBlur effect from compiled file");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"[StrideSsaoEffect] Failed to load BilateralBlur from compiled file: {ex.Message}");
+            }
+
+            // Strategy 2: Try loading from ContentManager if available
+            // Check if GraphicsDevice has access to ContentManager through services
+            if (_gtaoEffectBase == null || _bilateralBlurEffectBase == null)
+            {
+                try
+                {
+                    // Try to get ContentManager from GraphicsDevice services
+                    // Stride GraphicsDevice may have Services property that provides ContentManager
+                    var services = _graphicsDevice.Services;
+                    if (services != null)
+                    {
+                        var contentManager = services.GetService<ContentManager>();
+                        if (contentManager != null)
+                        {
+                            if (_gtaoEffectBase == null)
+                            {
+                                try
+                                {
+                                    _gtaoEffectBase = contentManager.Load<Effect>("GTAO");
+                                    if (_gtaoEffectBase != null)
+                                    {
+                                        _gtaoEffect = new EffectInstance(_gtaoEffectBase);
+                                        System.Console.WriteLine("[StrideSsaoEffect] Loaded GTAO from ContentManager");
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    System.Console.WriteLine($"[StrideSsaoEffect] Failed to load GTAO from ContentManager: {ex.Message}");
+                                }
+                            }
+
+                            if (_bilateralBlurEffectBase == null)
+                            {
+                                try
+                                {
+                                    _bilateralBlurEffectBase = contentManager.Load<Effect>("BilateralBlur");
+                                    if (_bilateralBlurEffectBase != null)
+                                    {
+                                        _bilateralBlurEffect = new EffectInstance(_bilateralBlurEffectBase);
+                                        System.Console.WriteLine("[StrideSsaoEffect] Loaded BilateralBlur from ContentManager");
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    System.Console.WriteLine($"[StrideSsaoEffect] Failed to load BilateralBlur from ContentManager: {ex.Message}");
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine($"[StrideSsaoEffect] Failed to access ContentManager: {ex.Message}");
+                }
+            }
+
+            // Final fallback: If all loading methods failed, effects remain null
+            // The rendering code will use SpriteBatch's default rendering (no custom shaders)
+            // Note: This means SSAO will not be computed until shader files are provided
+            if (_gtaoEffectBase == null && _bilateralBlurEffectBase == null)
+            {
+                System.Console.WriteLine("[StrideSsaoEffect] Warning: Could not load SSAO shaders. SSAO effect will not be computed. Shader files (.sdsl/.sdeffect) must be provided for SSAO to function.");
+            }
+            else if (_gtaoEffectBase == null || _bilateralBlurEffectBase == null)
+            {
+                System.Console.WriteLine("[StrideSsaoEffect] Warning: Some SSAO shaders failed to load. Effect may not function correctly.");
+            }
+            // Based on Stride Engine: Effects are loaded from compiled .sdeffect files (compiled from .sdsl source)
+            // Loading order:
+            // 1. Try Effect.Load() - standard Stride method for loading compiled effects
+            // 2. Try ContentManager if available through GraphicsDevice services
+            // 3. Fallback to SpriteBatch's default rendering if loading fails (no custom shaders)
+            LoadSsaoShaders();
         }
 
         /// <summary>
