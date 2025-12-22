@@ -137,6 +137,14 @@ namespace Andastra.Runtime.Games.Eclipse
         private int _chanceLightning;
         private int _windPower;
 
+        // Fog properties from ARE file
+        // Based on ARE format: SunFogOn (bool), SunFogNear (float), SunFogFar (float)
+        // daorigins.exe: Fog properties determine fog rendering and weather intensity
+        // DragonAge2.exe: Fog is used as weather type with intensity based on fog range
+        private bool _fogEnabled;
+        private float _fogNear;  // Distance where fog starts to appear
+        private float _fogFar;   // Distance where fog reaches full opacity
+
         // Wind direction components (for WindPower == 3, custom direction)
         // Based on ARE format: WindDirectionX, WindDirectionY, WindDirectionZ from AreaProperties
         // daorigins.exe: Custom wind direction only saved if WindPower is 3
@@ -842,6 +850,8 @@ namespace Andastra.Runtime.Games.Eclipse
             _chanceLightning = 0;
             _windPower = 0;
             _fogEnabled = false;
+            _fogNear = 0.0f;
+            _fogFar = 1000.0f;
             _windDirectionX = 0.0f;
             _windDirectionY = 0.0f;
             _windDirectionZ = 0.0f;
@@ -1474,11 +1484,23 @@ namespace Andastra.Runtime.Games.Eclipse
                 }
                 if (root.Exists("SunFogNear"))
                 {
-                    // Fog near distance
+                    // Fog near distance - distance where fog starts to appear
+                    // Based on ARE format: SunFogNear is Single (float) representing fog start distance
+                    _fogNear = root.GetSingle("SunFogNear");
+                }
+                else
+                {
+                    _fogNear = 0.0f; // Default: fog starts at camera position
                 }
                 if (root.Exists("SunFogFar"))
                 {
-                    // Fog far distance
+                    // Fog far distance - distance where fog reaches full opacity
+                    // Based on ARE format: SunFogFar is Single (float) representing fog end distance
+                    _fogFar = root.GetSingle("SunFogFar");
+                }
+                else
+                {
+                    _fogFar = 1000.0f; // Default: fog reaches full opacity at 1000 units
                 }
                 if (root.Exists("FogColor"))
                 {
@@ -2028,10 +2050,13 @@ namespace Andastra.Runtime.Games.Eclipse
                     if (_fogEnabled)
                     {
                         defaultWeather = WeatherType.Fog;
-                        // Fog intensity is determined by fog distance (near/far)
-                        // TODO:  For now, use moderate intensity (0.5) if fog is enabled
-                        // TODO:  In a full implementation, intensity would be calculated from fog near/far distances
-                        weatherIntensity = 0.5f;
+                        // Fog intensity is determined by fog distance range (near/far)
+                        // Based on fog rendering: Fog density is inversely related to fog range
+                        // Smaller fog range (far - near) = denser fog = higher intensity
+                        // Larger fog range = lighter fog = lower intensity
+                        // Intensity is calculated as a normalized value based on fog range
+                        // Based on standard fog calculations: intensity represents how quickly fog becomes opaque
+                        weatherIntensity = CalculateFogIntensity(_fogNear, _fogFar);
                     }
                     else
                     {
@@ -2271,6 +2296,62 @@ namespace Andastra.Runtime.Games.Eclipse
             // Based on daorigins.exe: Particle emitters can be defined in ARE file
             // Particle emitter definitions would be loaded here and created in particle system
             // TODO: STUB - For now, particle emitters are created dynamically by InitializeInteractiveElements()
+        }
+
+        /// <summary>
+        /// Calculates fog intensity (0.0-1.0) based on fog near and far distances.
+        /// </summary>
+        /// <param name="fogNear">Distance where fog starts to appear.</param>
+        /// <param name="fogFar">Distance where fog reaches full opacity.</param>
+        /// <returns>Fog intensity value from 0.0 (light fog) to 1.0 (dense fog).</returns>
+        /// <remarks>
+        /// Fog intensity represents how dense/thick the fog appears.
+        /// The intensity is inversely proportional to the fog range (far - near):
+        /// - Small fog range (e.g., 10-50 units) = dense fog = high intensity (close to 1.0)
+        /// - Large fog range (e.g., 100-2000 units) = light fog = low intensity (close to 0.0)
+        /// 
+        /// Based on standard fog calculations:
+        /// - Fog density = 1.0 / (fogFar - fogNear) in linear fog models
+        /// - Weather intensity uses normalized inverse relationship
+        /// - Typical fog ranges: 10-100 (dense), 100-500 (moderate), 500-2000 (light)
+        /// 
+        /// Formula: intensity = 1.0 / (1.0 + (fogRange / scaleFactor))
+        /// Where scaleFactor = 500.0 provides good distribution for typical ranges
+        /// This ensures:
+        /// - Range 0-50: intensity 0.9-1.0 (very dense)
+        /// - Range 50-200: intensity 0.7-0.9 (dense)
+        /// - Range 200-500: intensity 0.5-0.7 (moderate)
+        /// - Range 500-2000: intensity 0.2-0.5 (light)
+        /// - Range >2000: intensity 0.1-0.2 (very light, but not zero)
+        /// </remarks>
+        private float CalculateFogIntensity(float fogNear, float fogFar)
+        {
+            // Validate fog distances
+            if (fogFar <= fogNear)
+            {
+                // Invalid fog configuration - return default moderate intensity
+                return 0.5f;
+            }
+
+            // Ensure non-negative values
+            float near = Math.Max(0.0f, fogNear);
+            float far = Math.Max(near + 1.0f, fogFar); // Ensure far > near
+
+            // Calculate fog range (distance over which fog transitions from transparent to opaque)
+            float fogRange = far - near;
+
+            // Use inverse relationship: smaller range = denser fog = higher intensity
+            // Formula: intensity = 1.0 / (1.0 + (range / scaleFactor))
+            // Scale factor of 500.0 provides good distribution for typical fog ranges
+            const float scaleFactor = 500.0f;
+            float intensity = 1.0f / (1.0f + (fogRange / scaleFactor));
+
+            // Clamp intensity to reasonable range (0.1 to 1.0)
+            // Very large fog ranges should still have some visible intensity (minimum 0.1)
+            // Very small fog ranges can reach maximum intensity (1.0)
+            intensity = Math.Max(0.1f, Math.Min(1.0f, intensity));
+
+            return intensity;
         }
 
         /// <summary>
