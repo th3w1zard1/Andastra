@@ -2281,11 +2281,12 @@ namespace Andastra.Runtime.MonoGame.GUI
                 // Try "gui_actscroll" first, fallback to "gui_actscroll1"
                 // Based on Ghidra analysis: Original games use "gui_actscroll" or "gui_actscroll1" for button hover
                 string soundResRef = "gui_actscroll";
-                if (!_soundPlayer.Play(soundResRef, 1.0f))
+                _soundPlayer.PlaySound(soundResRef, null, 1.0f);
+                // Fallback to alternative sound name if first one fails (PlaySound returns 0 on failure)
+                if (_soundPlayer.PlaySound(soundResRef, null, 1.0f) == 0)
                 {
-                    // Fallback to alternative sound name
                     soundResRef = "gui_actscroll1";
-                    _soundPlayer.Play(soundResRef, 1.0f);
+                    _soundPlayer.PlaySound(soundResRef, null, 1.0f);
                 }
             }
             catch (Exception ex)
@@ -2312,11 +2313,12 @@ namespace Andastra.Runtime.MonoGame.GUI
                 // Try "gui_actclick" first, fallback to "gui_actclick1"
                 // Based on Ghidra analysis: Original games use "gui_actclick" or "gui_actclick1" for button clicks
                 string soundResRef = "gui_actclick";
-                if (!_soundPlayer.Play(soundResRef, 1.0f))
+                _soundPlayer.PlaySound(soundResRef, null, 1.0f);
+                // Fallback to alternative sound name if first one fails (PlaySound returns 0 on failure)
+                if (_soundPlayer.PlaySound(soundResRef, null, 1.0f) == 0)
                 {
-                    // Fallback to alternative sound name
                     soundResRef = "gui_actclick1";
-                    _soundPlayer.Play(soundResRef, 1.0f);
+                    _soundPlayer.PlaySound(soundResRef, null, 1.0f);
                 }
             }
             catch (Exception ex)

@@ -3484,22 +3484,35 @@ namespace Andastra.Runtime.MonoGame.Backends
                 };
             }
 
+            // Marshal struct array to unmanaged memory
+            IntPtr bindingsPtr = IntPtr.Zero;
+            if (bindings.Length > 0)
+            {
+                int structSize = Marshal.SizeOf(typeof(VkDescriptorSetLayoutBinding));
+                bindingsPtr = Marshal.AllocHGlobal(structSize * bindings.Length);
+                for (int i = 0; i < bindings.Length; i++)
+                {
+                    IntPtr structPtr = new IntPtr(bindingsPtr.ToInt64() + (i * structSize));
+                    Marshal.StructureToPtr(bindings[i], structPtr, false);
+                }
+            }
+
             VkDescriptorSetLayoutCreateInfo layoutCreateInfo = new VkDescriptorSetLayoutCreateInfo
             {
                 sType = VkStructureType.VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
                 pNext = IntPtr.Zero,
                 flags = 0,
                 bindingCount = (uint)bindings.Length,
-                pBindings = MarshalArray(bindings)
+                pBindings = bindingsPtr
             };
 
             IntPtr vkDescriptorSetLayout;
             CheckResult(vkCreateDescriptorSetLayout(_device, ref layoutCreateInfo, IntPtr.Zero, out vkDescriptorSetLayout), "vkCreateDescriptorSetLayout");
 
             // Free the marshalled array
-            if (layoutCreateInfo.pBindings != IntPtr.Zero)
+            if (bindingsPtr != IntPtr.Zero)
             {
-                Marshal.FreeHGlobal(layoutCreateInfo.pBindings);
+                Marshal.FreeHGlobal(bindingsPtr);
             }
 
             IntPtr handle = new IntPtr(_nextResourceHandle++);
