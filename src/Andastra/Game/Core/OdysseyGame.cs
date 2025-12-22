@@ -34,7 +34,7 @@ namespace Andastra.Runtime.Game.Core
     /// <summary>
     /// Odyssey game implementation using graphics abstraction layer.
     /// Supports both MonoGame and Stride backends.
-    /// Simplified version focused on getting menu working and game launching.
+    // TODO: / Simplified version focused on getting menu working and game launching.
     /// </summary>
     /// <remarks>
     /// Odyssey Game (Graphics Abstraction Implementation):
@@ -99,6 +99,11 @@ namespace Andastra.Runtime.Game.Core
         // Room rendering (using abstraction layer)
         private IRoomMeshRenderer _roomRenderer;
         private Dictionary<string, IRoomMeshData> _roomMeshes;
+        
+        // Room bounds cache for efficient player room detection
+        // Based on swkotor.exe and swkotor2.exe: Room bounds are calculated from MDL model geometry
+        // Original implementation: FUN_004e17a0 @ 0x004e17a0 (spatial query) checks room bounds for entity placement
+        private Dictionary<string, Tuple<System.Numerics.Vector3, System.Numerics.Vector3>> _roomBoundsCache;
 
         // Entity model rendering (using abstraction layer)
         private IEntityModelRenderer _entityModelRenderer;
@@ -275,6 +280,7 @@ namespace Andastra.Runtime.Game.Core
             // Initialize room renderer using abstraction layer
             _roomRenderer = _graphicsBackend.CreateRoomMeshRenderer();
             _roomMeshes = new Dictionary<string, IRoomMeshData>();
+            _roomBoundsCache = new Dictionary<string, Tuple<System.Numerics.Vector3, System.Numerics.Vector3>>();
 
             // Initialize entity model renderer using abstraction layer
             // Will be created when module loads with proper dependencies
@@ -1520,7 +1526,7 @@ namespace Andastra.Runtime.Game.Core
         ///   1. gui3D_room model is null or not loaded successfully
         ///   2. Model condition check determines default variant should be used
         /// - The original engine implementation checks model properties or conditions to determine variant
-        /// - For now, we use mainmenu01 as the default variant matching original engine default behavior
+        // TODO: / - For now, we use mainmenu01 as the default variant matching original engine default behavior
         /// </remarks>
         private string DetermineMenuVariant(MDL gui3DRoomModel)
         {
@@ -1551,7 +1557,7 @@ namespace Andastra.Runtime.Game.Core
             // - Check external conditions (game state, time, etc.)
             // - Implement variant selection logic once exact condition is determined via Ghidra analysis
 
-            // For now, return default variant matching original engine behavior
+            // TODO: STUB - For now, return default variant matching original engine behavior
             return defaultVariant;
         }
 
@@ -4042,7 +4048,315 @@ namespace Andastra.Runtime.Game.Core
         }
 
         /// <summary>
+        /// Calculates the bounding box of an MDL model by traversing all nodes and collecting mesh bounds.
+        /// Based on swkotor.exe and swkotor2.exe: Room bounds are calculated from MDL model geometry
+        /// Original implementation: FUN_004e17a0 @ 0x004e17a0 (spatial query) uses model bounding boxes for room detection
+        /// Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/gl/models/mdl.py:98-111 (bounds calculation)
+        /// </summary>
+        /// <param name="mdl">The MDL model to calculate bounds for.</param>
+        /// <returns>A tuple containing (min, max) bounding box corners in model space (centered at origin), or null if model is invalid.</returns>
+        [CanBeNull]
+        private Tuple<System.Numerics.Vector3, System.Numerics.Vector3> CalculateRoomBoundsFromMDL(
+            [CanBeNull] Andastra.Parsing.Formats.MDLData.MDL mdl)
+        {
+            if (mdl == null || mdl.Root == null)
+            {
+                return null;
+            }
+
+            // Initialize bounding box with extreme values
+            System.Numerics.Vector3 minBounds = new System.Numerics.Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+            System.Numerics.Vector3 maxBounds = new System.Numerics.Vector3(float.MinValue, float.MinValue, float.MinValue);
+
+            // Traverse all nodes recursively to collect mesh bounds
+            // Bounds are calculated in model space (centered at origin)
+            var nodesToProcess = new List<Tuple<MDLNode, System.Numerics.Matrix4x4>>();
+            nodesToProcess.Add(new Tuple<MDLNode, System.Numerics.Matrix4x4>(mdl.Root, System.Numerics.Matrix4x4.Identity));
+
+            while (nodesToProcess.Count > 0)
+            {
+                var nodeData = nodesToProcess[nodesToProcess.Count - 1];
+                nodesToProcess.RemoveAt(nodesToProcess.Count - 1);
+
+                MDLNode node = nodeData.Item1;
+                System.Numerics.Matrix4x4 parentTransform = nodeData.Item2;
+
+                // Build node transform (position + orientation)
+                System.Numerics.Matrix4x4 nodeTransform = System.Numerics.Matrix4x4.Identity;
+                
+                // Apply position
+                if (node.Position.X != 0.0f || node.Position.Y != 0.0f || node.Position.Z != 0.0f)
+                {
+                    System.Numerics.Matrix4x4 translation = System.Numerics.Matrix4x4.CreateTranslation(
+                        node.Position.X, node.Position.Y, node.Position.Z);
+                    nodeTransform = System.Numerics.Matrix4x4.Multiply(translation, nodeTransform);
+                }
+
+                // Apply orientation (quaternion)
+                if (node.Orientation.W != 0.0f || node.Orientation.X != 0.0f || 
+                    node.Orientation.Y != 0.0f || node.Orientation.Z != 0.0f)
+                {
+                    System.Numerics.Quaternion quat = new System.Numerics.Quaternion(
+                        node.Orientation.X, node.Orientation.Y, node.Orientation.Z, node.Orientation.W);
+                    System.Numerics.Matrix4x4 rotation = System.Numerics.Matrix4x4.CreateFromQuaternion(quat);
+                    nodeTransform = System.Numerics.Matrix4x4.Multiply(rotation, nodeTransform);
+                }
+
+                // Combine with parent transform
+                System.Numerics.Matrix4x4 worldTransform = System.Numerics.Matrix4x4.Multiply(nodeTransform, parentTransform);
+
+                // Check if node has mesh with bounding box
+                if (node.Mesh != null)
+                {
+                    // Get mesh bounding box (use BbMin/BbMax if available, otherwise use BBoxMinX/Y/Z)
+                    System.Numerics.Vector3 meshMin;
+                    System.Numerics.Vector3 meshMax;
+
+                    if (node.Mesh.BbMin.X < 1000000.0f && node.Mesh.BbMax.X > -1000000.0f)
+                    {
+                        // Use BbMin/BbMax (alternative format)
+                        meshMin = new System.Numerics.Vector3(
+                            node.Mesh.BbMin.X, node.Mesh.BbMin.Y, node.Mesh.BbMin.Z);
+                        meshMax = new System.Numerics.Vector3(
+                            node.Mesh.BbMax.X, node.Mesh.BbMax.Y, node.Mesh.BbMax.Z);
+                    }
+                    else if (node.Mesh.BBoxMinX < 1000000.0f && node.Mesh.BBoxMaxX > -1000000.0f)
+                    {
+                        // Use BBoxMinX/Y/Z and BBoxMaxX/Y/Z
+                        meshMin = new System.Numerics.Vector3(
+                            node.Mesh.BBoxMinX, node.Mesh.BBoxMinY, node.Mesh.BBoxMinZ);
+                        meshMax = new System.Numerics.Vector3(
+                            node.Mesh.BBoxMaxX, node.Mesh.BBoxMaxY, node.Mesh.BBoxMaxZ);
+                    }
+                    else
+                    {
+                        // No valid bounding box in mesh, skip this mesh
+                        // Add children to processing queue
+                        if (node.Children != null)
+                        {
+                            foreach (var child in node.Children)
+                            {
+                                nodesToProcess.Add(new Tuple<MDLNode, System.Numerics.Matrix4x4>(child, worldTransform));
+                            }
+                        }
+                        continue;
+                    }
+
+                    // Transform mesh bounding box corners to model space
+                    // We need to transform all 8 corners of the bounding box
+                    System.Numerics.Vector3[] corners = new System.Numerics.Vector3[8];
+                    corners[0] = new System.Numerics.Vector3(meshMin.X, meshMin.Y, meshMin.Z);
+                    corners[1] = new System.Numerics.Vector3(meshMax.X, meshMin.Y, meshMin.Z);
+                    corners[2] = new System.Numerics.Vector3(meshMin.X, meshMax.Y, meshMin.Z);
+                    corners[3] = new System.Numerics.Vector3(meshMax.X, meshMax.Y, meshMin.Z);
+                    corners[4] = new System.Numerics.Vector3(meshMin.X, meshMin.Y, meshMax.Z);
+                    corners[5] = new System.Numerics.Vector3(meshMax.X, meshMin.Y, meshMax.Z);
+                    corners[6] = new System.Numerics.Vector3(meshMin.X, meshMax.Y, meshMax.Z);
+                    corners[7] = new System.Numerics.Vector3(meshMax.X, meshMax.Y, meshMax.Z);
+
+                    // Transform each corner through node transform (to model space)
+                    for (int i = 0; i < 8; i++)
+                    {
+                        System.Numerics.Vector4 transformed = System.Numerics.Vector4.Transform(
+                            new System.Numerics.Vector4(corners[i], 1.0f), worldTransform);
+
+                        System.Numerics.Vector3 modelPoint = new System.Numerics.Vector3(transformed.X, transformed.Y, transformed.Z);
+
+                        // Update overall bounding box (in model space)
+                        minBounds.X = Math.Min(minBounds.X, modelPoint.X);
+                        minBounds.Y = Math.Min(minBounds.Y, modelPoint.Y);
+                        minBounds.Z = Math.Min(minBounds.Z, modelPoint.Z);
+                        maxBounds.X = Math.Max(maxBounds.X, modelPoint.X);
+                        maxBounds.Y = Math.Max(maxBounds.Y, modelPoint.Y);
+                        maxBounds.Z = Math.Max(maxBounds.Z, modelPoint.Z);
+                    }
+                }
+
+                // Add children to processing queue
+                if (node.Children != null)
+                {
+                    foreach (var child in node.Children)
+                    {
+                        nodesToProcess.Add(new Tuple<MDLNode, System.Numerics.Matrix4x4>(child, worldTransform));
+                    }
+                }
+            }
+
+            // Check if we found any valid bounds
+            if (minBounds.X >= maxBounds.X || minBounds.Y >= maxBounds.Y || minBounds.Z >= maxBounds.Z)
+            {
+                return null; // Invalid or empty bounds
+            }
+
+            return new Tuple<System.Numerics.Vector3, System.Numerics.Vector3>(minBounds, maxBounds);
+        }
+
+        /// <summary>
+        /// Gets the cached bounding box for a room, or calculates and caches it if not available.
+        /// Based on swkotor.exe and swkotor2.exe: Room bounds are cached for efficient spatial queries
+        /// </summary>
+        /// <param name="room">The room to get bounds for.</param>
+        /// <returns>A tuple containing (min, max) bounding box corners in world space, or null if bounds cannot be calculated.</returns>
+        [CanBeNull]
+        private Tuple<System.Numerics.Vector3, System.Numerics.Vector3> GetRoomBounds(Andastra.Runtime.Core.Module.RoomInfo room)
+        {
+            if (room == null || string.IsNullOrEmpty(room.ModelName))
+            {
+                return null;
+            }
+
+            // Check cache first (cached bounds are in model space, centered at origin)
+            if (_roomBoundsCache != null && _roomBoundsCache.TryGetValue(room.ModelName, out var cachedBounds))
+            {
+                // Transform cached bounds from model space to world space
+                // Cached bounds are in model space (centered at origin), need to apply room transform
+                System.Numerics.Vector3 roomPos = new System.Numerics.Vector3(room.Position.X, room.Position.Y, room.Position.Z);
+                
+                // Apply rotation if needed
+                if (Math.Abs(room.Rotation) > 0.001f)
+                {
+                    float rotationRadians = room.Rotation * (float)(Math.PI / 180.0);
+                    
+                    // Transform all 8 corners of the bounding box
+                    System.Numerics.Vector3[] corners = new System.Numerics.Vector3[8];
+                    corners[0] = new System.Numerics.Vector3(cachedBounds.Item1.X, cachedBounds.Item1.Y, cachedBounds.Item1.Z);
+                    corners[1] = new System.Numerics.Vector3(cachedBounds.Item2.X, cachedBounds.Item1.Y, cachedBounds.Item1.Z);
+                    corners[2] = new System.Numerics.Vector3(cachedBounds.Item1.X, cachedBounds.Item2.Y, cachedBounds.Item1.Z);
+                    corners[3] = new System.Numerics.Vector3(cachedBounds.Item2.X, cachedBounds.Item2.Y, cachedBounds.Item1.Z);
+                    corners[4] = new System.Numerics.Vector3(cachedBounds.Item1.X, cachedBounds.Item1.Y, cachedBounds.Item2.Z);
+                    corners[5] = new System.Numerics.Vector3(cachedBounds.Item2.X, cachedBounds.Item1.Y, cachedBounds.Item2.Z);
+                    corners[6] = new System.Numerics.Vector3(cachedBounds.Item1.X, cachedBounds.Item2.Y, cachedBounds.Item2.Z);
+                    corners[7] = new System.Numerics.Vector3(cachedBounds.Item2.X, cachedBounds.Item2.Y, cachedBounds.Item2.Z);
+
+                    // Rotate around Y axis, then translate
+                    System.Numerics.Matrix4x4 rotationMatrix = System.Numerics.Matrix4x4.CreateRotationY(rotationRadians);
+                    System.Numerics.Matrix4x4 translationMatrix = System.Numerics.Matrix4x4.CreateTranslation(roomPos);
+                    System.Numerics.Matrix4x4 transformMatrix = System.Numerics.Matrix4x4.Multiply(rotationMatrix, translationMatrix);
+
+                    // Find min/max after transformation
+                    System.Numerics.Vector3 minWorld = new System.Numerics.Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+                    System.Numerics.Vector3 maxWorld = new System.Numerics.Vector3(float.MinValue, float.MinValue, float.MinValue);
+
+                    for (int i = 0; i < 8; i++)
+                    {
+                        System.Numerics.Vector4 transformed = System.Numerics.Vector4.Transform(
+                            new System.Numerics.Vector4(corners[i], 1.0f), transformMatrix);
+                        System.Numerics.Vector3 worldPoint = new System.Numerics.Vector3(transformed.X, transformed.Y, transformed.Z);
+
+                        minWorld.X = Math.Min(minWorld.X, worldPoint.X);
+                        minWorld.Y = Math.Min(minWorld.Y, worldPoint.Y);
+                        minWorld.Z = Math.Min(minWorld.Z, worldPoint.Z);
+                        maxWorld.X = Math.Max(maxWorld.X, worldPoint.X);
+                        maxWorld.Y = Math.Max(maxWorld.Y, worldPoint.Y);
+                        maxWorld.Z = Math.Max(maxWorld.Z, worldPoint.Z);
+                    }
+
+                    return new Tuple<System.Numerics.Vector3, System.Numerics.Vector3>(minWorld, maxWorld);
+                }
+                else
+                {
+                    // No rotation, just translate
+                    System.Numerics.Vector3 minWorld = cachedBounds.Item1 + roomPos;
+                    System.Numerics.Vector3 maxWorld = cachedBounds.Item2 + roomPos;
+                    return new Tuple<System.Numerics.Vector3, System.Numerics.Vector3>(minWorld, maxWorld);
+                }
+            }
+
+            // Not in cache, need to calculate from MDL model
+            if (_session == null)
+            {
+                return null;
+            }
+
+            // Load MDL model
+            Andastra.Parsing.Formats.MDLData.MDL mdl = LoadMDLModel(room.ModelName);
+            if (mdl == null)
+            {
+                return null;
+            }
+
+            // Calculate bounds from MDL model in model space (centered at origin)
+            Tuple<System.Numerics.Vector3, System.Numerics.Vector3> modelSpaceBounds = CalculateRoomBoundsFromMDL(mdl);
+
+            if (modelSpaceBounds != null)
+            {
+                // Cache bounds in model space
+                _roomBoundsCache[room.ModelName] = modelSpaceBounds;
+
+                // Transform to world space for return value
+                System.Numerics.Vector3 roomPos = new System.Numerics.Vector3(room.Position.X, room.Position.Y, room.Position.Z);
+                
+                if (Math.Abs(room.Rotation) > 0.001f)
+                {
+                    float rotationRadians = room.Rotation * (float)(Math.PI / 180.0);
+                    System.Numerics.Matrix4x4 rotationMatrix = System.Numerics.Matrix4x4.CreateRotationY(rotationRadians);
+                    System.Numerics.Matrix4x4 translationMatrix = System.Numerics.Matrix4x4.CreateTranslation(roomPos);
+                    System.Numerics.Matrix4x4 transformMatrix = System.Numerics.Matrix4x4.Multiply(rotationMatrix, translationMatrix);
+
+                    // Transform all 8 corners
+                    System.Numerics.Vector3[] corners = new System.Numerics.Vector3[8];
+                    corners[0] = new System.Numerics.Vector3(modelSpaceBounds.Item1.X, modelSpaceBounds.Item1.Y, modelSpaceBounds.Item1.Z);
+                    corners[1] = new System.Numerics.Vector3(modelSpaceBounds.Item2.X, modelSpaceBounds.Item1.Y, modelSpaceBounds.Item1.Z);
+                    corners[2] = new System.Numerics.Vector3(modelSpaceBounds.Item1.X, modelSpaceBounds.Item2.Y, modelSpaceBounds.Item1.Z);
+                    corners[3] = new System.Numerics.Vector3(modelSpaceBounds.Item2.X, modelSpaceBounds.Item2.Y, modelSpaceBounds.Item1.Z);
+                    corners[4] = new System.Numerics.Vector3(modelSpaceBounds.Item1.X, modelSpaceBounds.Item1.Y, modelSpaceBounds.Item2.Z);
+                    corners[5] = new System.Numerics.Vector3(modelSpaceBounds.Item2.X, modelSpaceBounds.Item1.Y, modelSpaceBounds.Item2.Z);
+                    corners[6] = new System.Numerics.Vector3(modelSpaceBounds.Item1.X, modelSpaceBounds.Item2.Y, modelSpaceBounds.Item2.Z);
+                    corners[7] = new System.Numerics.Vector3(modelSpaceBounds.Item2.X, modelSpaceBounds.Item2.Y, modelSpaceBounds.Item2.Z);
+
+                    System.Numerics.Vector3 minWorld = new System.Numerics.Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+                    System.Numerics.Vector3 maxWorld = new System.Numerics.Vector3(float.MinValue, float.MinValue, float.MinValue);
+
+                    for (int i = 0; i < 8; i++)
+                    {
+                        System.Numerics.Vector4 transformed = System.Numerics.Vector4.Transform(
+                            new System.Numerics.Vector4(corners[i], 1.0f), transformMatrix);
+                        System.Numerics.Vector3 worldPoint = new System.Numerics.Vector3(transformed.X, transformed.Y, transformed.Z);
+
+                        minWorld.X = Math.Min(minWorld.X, worldPoint.X);
+                        minWorld.Y = Math.Min(minWorld.Y, worldPoint.Y);
+                        minWorld.Z = Math.Min(minWorld.Z, worldPoint.Z);
+                        maxWorld.X = Math.Max(maxWorld.X, worldPoint.X);
+                        maxWorld.Y = Math.Max(maxWorld.Y, worldPoint.Y);
+                        maxWorld.Z = Math.Max(maxWorld.Z, worldPoint.Z);
+                    }
+
+                    return new Tuple<System.Numerics.Vector3, System.Numerics.Vector3>(minWorld, maxWorld);
+                }
+                else
+                {
+                    // No rotation, just translate
+                    System.Numerics.Vector3 minWorld = modelSpaceBounds.Item1 + roomPos;
+                    System.Numerics.Vector3 maxWorld = modelSpaceBounds.Item2 + roomPos;
+                    return new Tuple<System.Numerics.Vector3, System.Numerics.Vector3>(minWorld, maxWorld);
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Checks if a point is inside an axis-aligned bounding box.
+        /// Based on swkotor.exe and swkotor2.exe: Point-in-AABB test for room detection
+        /// </summary>
+        /// <param name="point">The point to test.</param>
+        /// <param name="minBounds">The minimum corner of the bounding box.</param>
+        /// <param name="maxBounds">The maximum corner of the bounding box.</param>
+        /// <returns>True if the point is inside the bounding box, false otherwise.</returns>
+        private bool IsPointInsideBounds(
+            System.Numerics.Vector3 point,
+            System.Numerics.Vector3 minBounds,
+            System.Numerics.Vector3 maxBounds)
+        {
+            return point.X >= minBounds.X && point.X <= maxBounds.X &&
+                   point.Y >= minBounds.Y && point.Y <= maxBounds.Y &&
+                   point.Z >= minBounds.Z && point.Z <= maxBounds.Z;
+        }
+
+        /// <summary>
         /// Finds which room the player is currently in based on position.
+        /// Based on swkotor.exe and swkotor2.exe: FUN_004e17a0 @ 0x004e17a0 (spatial query) checks room bounds for entity placement
+        /// Original implementation: Checks if player position is inside room bounding boxes calculated from MDL model geometry
         /// </summary>
         private int FindPlayerRoom(Andastra.Runtime.Core.Module.RuntimeArea area, System.Numerics.Vector3 playerPosition)
         {
@@ -4051,8 +4365,25 @@ namespace Andastra.Runtime.Game.Core
                 return -1;
             }
 
-            // Find the room closest to the player (simple distance-based approach)
-            // In a full implementation, we'd check if player is inside room bounds
+            // First, try to find a room that contains the player position
+            for (int i = 0; i < area.Rooms.Count; i++)
+            {
+                Andastra.Runtime.Core.Module.RoomInfo room = area.Rooms[i];
+                
+                // Get room bounds (cached or calculated)
+                Tuple<System.Numerics.Vector3, System.Numerics.Vector3> bounds = GetRoomBounds(room);
+                if (bounds != null)
+                {
+                    // Check if player is inside room bounds
+                    if (IsPointInsideBounds(playerPosition, bounds.Item1, bounds.Item2))
+                    {
+                        return i; // Player is inside this room
+                    }
+                }
+            }
+
+            // If no room contains the player, fall back to closest room by distance
+            // This handles edge cases where player is between rooms or bounds calculation failed
             int closestRoomIndex = 0;
             float closestDistance = float.MaxValue;
 
