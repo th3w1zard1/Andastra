@@ -892,6 +892,9 @@ namespace Andastra.Parsing.Mods
         // Original: def _serialize_ncs_file(...) -> list[str]:
         /// <summary>
         /// Serialize a single NCS file's hack modifications.
+        /// Generates a section header and Hack entries for each bytecode modification.
+        /// Format: Hack{offset:08X}={value} where offset is 8-digit hex uppercase and value is either
+        /// a token reference (StrRef{id} or 2DAMEMORY{id}) or a direct numeric value.
         /// </summary>
         private List<string> SerializeNcsFile(ModificationsNCS modNcs)
         {
@@ -899,6 +902,10 @@ namespace Andastra.Parsing.Mods
             lines.Add($"[{modNcs.SourceFile}]");
 
             // Serialize each hack entry
+            // Based on swkotor2.exe: 0x004eb750 - NCS bytecode modification format
+            // TSLPatcher HACKList format: Hack{offset:08X}={value}
+            // Offset is byte offset in NCS file (8-digit hex uppercase)
+            // Value is either token reference (StrRef{id}, 2DAMEMORY{id}) or direct numeric value
             foreach (ModifyNCS modifier in modNcs.Modifiers)
             {
                 int offset = modifier.Offset;
@@ -908,21 +915,25 @@ namespace Andastra.Parsing.Mods
                 string valueStr;
                 if (tokenType == NCSTokenType.STRREF || tokenType == NCSTokenType.STRREF32)
                 {
-                    // StrRef token reference
+                    // StrRef token reference - references TLK memory token
+                    // Format: StrRef{tokenId} (e.g., StrRef5)
                     valueStr = $"StrRef{tokenIdOrValue}";
                 }
                 else if (tokenType == NCSTokenType.MEMORY_2DA || tokenType == NCSTokenType.MEMORY_2DA32)
                 {
-                    // 2DAMEMORY token reference
+                    // 2DAMEMORY token reference - references 2DA memory token
+                    // Format: 2DAMEMORY{tokenId} (e.g., 2DAMEMORY3)
                     valueStr = $"2DAMEMORY{tokenIdOrValue}";
                 }
                 else
                 {
-                    // Direct value (uint8, uint16, uint32)
+                    // Direct value (uint8, uint16, uint32) - literal numeric value
+                    // Format: direct integer value (e.g., 42, 0x1A)
                     valueStr = tokenIdOrValue.ToString();
                 }
 
                 // Format offset as 8-digit hex uppercase (e.g., Hack00001234=value)
+                // TSLPatcher requires exactly 8 hex digits, uppercase, zero-padded
                 lines.Add($"Hack{offset:X8}={FormatIniValue(valueStr)}");
             }
 
