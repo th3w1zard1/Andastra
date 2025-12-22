@@ -9,7 +9,22 @@ using Andastra.Parsing.Common;
 namespace Andastra.Parsing.Formats.MDLData
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_data.py
-    // Simplified data containers mirroring fields for MDL/MDX structures.
+    // Comprehensive data containers mirroring fields for MDL/MDX structures.
+    // 
+    // These classes represent high-level data structures for MDL/MDX model files used in BioWare games
+    // (KotOR, KotOR 2, Dragon Age, etc.). The structures are designed to match the binary format
+    // specification while providing a clean, object-oriented interface for model manipulation.
+    //
+    // References:
+    // - vendor/mdlops/MDLOpsM.pm - Authoritative MDL/MDX binary format specification
+    // - vendor/reone/src/libs/graphics/format/mdlmdxreader.cpp - Binary format reader implementation
+    // - vendor/kotorblender/io_scene_kotor/format/mdl/ - Blender MDL loader/exporter
+    // - vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_data.py - Python reference implementation
+    // - vendor/PyKotor/wiki/MDL-MDX-File-Format.md - Complete format documentation
+    //
+    // Note: Binary offset fields (e.g., RootNodeOffset, ParentNodeOffset, ChildArrayOffset) are
+    // handled internally by MDLBinaryReader/MDLBinaryWriter and are not exposed in these high-level
+    // data structures, as they are implementation details of the binary format rather than model data.
 
     public class MDL : IEquatable<MDL>
     {
