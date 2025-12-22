@@ -1187,8 +1187,12 @@ namespace Andastra.Runtime.MonoGame.Backends
             if (totalDescriptorsNeeded == 0)
             {
                 // Empty binding set - return binding set with zero descriptors
+                // For empty binding sets, GPU descriptor handle is at heap start (offset 0)
+                // Based on DirectX 12: GPU descriptor handles are offset from heap start by descriptor index * increment size
+                // Since there are no descriptors, offset is 0
+                D3D12_GPU_DESCRIPTOR_HANDLE gpuDescriptorHandle = _cbvSrvUavHeapGpuStartHandle;
                 IntPtr handle = new IntPtr(_nextResourceHandle++);
-                var bindingSet = new D3D12BindingSet(handle, layout, desc, _cbvSrvUavDescriptorHeap, _device, this);
+                var bindingSet = new D3D12BindingSet(handle, layout, desc, _cbvSrvUavDescriptorHeap, _device, this, gpuDescriptorHandle);
                 _resources[handle] = bindingSet;
                 return bindingSet;
             }
@@ -6889,11 +6893,16 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // and can be offset by descriptor index * descriptor increment size
                 // Based on DirectX 12 Descriptor Heaps: https://docs.microsoft.com/en-us/windows/win32/direct3d12/descriptors-overview
                 // swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+                // 
+                // NOTE: This constructor is a fallback for legacy code paths. The preferred constructor
+                // accepts a pre-calculated GPU descriptor handle with the proper offset.
+                // CreateBindingSet now fully implements descriptor allocation and calculates the proper offset.
+                // For empty binding sets or legacy code, offset 0 (heap start) is used.
                 if (descriptorHeap != IntPtr.Zero && parentDevice != null)
                 {
                     D3D12_GPU_DESCRIPTOR_HANDLE gpuHeapStart = _parentDevice.CallGetGPUDescriptorHandleForHeapStart(descriptorHeap);
-                    // TODO: STUB - For now, use heap start (offset 0). When CreateBindingSet is fully implemented,
-                    // it should calculate the proper offset based on descriptor allocation
+                    // Use heap start (offset 0) - this is correct for empty binding sets or when offset is not available
+                    // For binding sets with descriptors, CreateBindingSet calculates and passes the proper offset
                     _gpuDescriptorHandle = gpuHeapStart;
                 }
                 else
