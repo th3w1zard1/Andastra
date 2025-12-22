@@ -845,10 +845,36 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
         }
 
         /// <summary>
-        // TODO: / Remove a mock function.
+        /// Removes a mock function that was previously set via SetMock.
         /// </summary>
+        /// <param name="functionName">The name of the function to remove the mock for.</param>
+        /// <remarks>
+        /// After calling RemoveMock, the interpreter will no longer use the mock function
+        /// for the specified function name. If no mock was set for the function, this method
+        /// does nothing (idempotent operation).
+        /// 
+        /// When a mock is removed, the interpreter will return null/default values for
+        /// non-void functions that don't have mocks set, matching the behavior when no
+        /// mock is present.
+        /// 
+        /// This method is useful for testing scenarios where you want to temporarily
+        /// override a function's behavior and then restore the default behavior.
+        /// 
+        /// Example usage:
+        /// <code>
+        /// interpreter.SetMock("GetGlobalInt", (args) => 42);
+        /// // ... test code that uses the mock ...
+        /// interpreter.RemoveMock("GetGlobalInt");
+        /// // Function now returns default behavior (null/0)
+        /// </code>
+        /// </remarks>
         public void RemoveMock(string functionName)
         {
+            if (string.IsNullOrEmpty(functionName))
+            {
+                throw new ArgumentException("Function name cannot be null or empty.", nameof(functionName));
+            }
+
             _mocks.Remove(functionName);
         }
 
