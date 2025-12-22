@@ -1598,8 +1598,6 @@ namespace Andastra.Runtime.MonoGame.Backends
                     {
                         Marshal.FreeHGlobal(errorPtr);
                     }
-
-                    return library;
                 }
                 finally
                 {
