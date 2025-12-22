@@ -9070,6 +9070,104 @@ namespace Andastra.Runtime.MonoGame.Backends
                     (uint)drawCount,       // Number of draw commands to execute (uint32_t)
                     (uint)stride);         // Byte stride between commands (uint32_t, 0 = tightly packed)
             }
+
+            /// <summary>
+            /// Draws indexed primitives using indirect arguments from a buffer.
+            /// Records a vkCmdDrawIndexedIndirect command that reads draw parameters from the specified buffer.
+            /// 
+            /// The buffer must contain an array of VkDrawIndexedIndirectCommand structures, each containing:
+            /// - indexCount (uint32): Number of indices to draw
+            /// - instanceCount (uint32): Number of instances to draw
+            /// - firstIndex (uint32): First index to use (offset into index buffer)
+            /// - vertexOffset (int32): Value added to each vertex index before indexing into vertex buffer
+            /// - firstInstance (uint32): First instance ID to use
+            /// 
+            /// Based on Vulkan API: vkCmdDrawIndexedIndirect
+            /// https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdDrawIndexedIndirect.html
+            /// </summary>
+            /// <param name="argumentBuffer">Buffer containing the draw commands (VkDrawIndexedIndirectCommand structures).</param>
+            /// <param name="offset">Byte offset into the buffer where the first draw command is located. Must be aligned to 4 bytes.</param>
+            /// <param name="drawCount">Number of draw commands to execute. If 0, no draws will be executed.</param>
+            /// <param name="stride">Byte stride between draw commands. If 0, commands are tightly packed (20 bytes each). Must be 0 or at least 20 bytes.</param>
+            public void DrawIndexedIndirect(IBuffer argumentBuffer, int offset, int drawCount, int stride)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before drawing");
+                }
+
+                if (argumentBuffer == null)
+                {
+                    throw new ArgumentNullException(nameof(argumentBuffer));
+                }
+
+                // Get Vulkan buffer handle
+                IntPtr vkBuffer = argumentBuffer.NativeHandle;
+                if (vkBuffer == IntPtr.Zero)
+                {
+                    throw new ArgumentException("Argument buffer has invalid native handle", nameof(argumentBuffer));
+                }
+
+                // Validate offset alignment (must be aligned to 4 bytes for indirect drawing)
+                if (offset < 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(offset), "Offset must be non-negative");
+                }
+                if ((offset % 4) != 0)
+                {
+                    throw new ArgumentException($"Offset must be aligned to 4 bytes for indirect drawing. Current offset: {offset}", nameof(offset));
+                }
+
+                // Validate draw count is non-negative
+                if (drawCount < 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(drawCount), "Draw count must be non-negative");
+                }
+
+                // Validate stride
+                // Stride must be either 0 (tightly packed, 20 bytes per command) or at least sizeof(VkDrawIndexedIndirectCommand) = 20 bytes
+                const int VkDrawIndexedIndirectCommandSize = 20; // sizeof(VkDrawIndexedIndirectCommand) = 5 * uint32 = 20 bytes
+                if (stride < 0)
+                {
+                    throw new ArgumentException($"Stride must be non-negative. Current stride: {stride}", nameof(stride));
+                }
+
+                if (stride > 0 && stride < VkDrawIndexedIndirectCommandSize)
+                {
+                    throw new ArgumentException($"Stride must be either 0 (tightly packed) or at least {VkDrawIndexedIndirectCommandSize} bytes. Current stride: {stride}", nameof(stride));
+                }
+
+                // Validate vkCmdDrawIndexedIndirect function pointer is initialized
+                if (vkCmdDrawIndexedIndirect == null)
+                {
+                    throw new InvalidOperationException("vkCmdDrawIndexedIndirect function pointer not initialized. Call InitializeVulkanFunctions first. This indicates Vulkan may not be properly initialized.");
+                }
+
+                // Record the indirect indexed draw command to the command buffer
+                // Vulkan API signature:
+                // void vkCmdDrawIndexedIndirect(
+                //     VkCommandBuffer commandBuffer,
+                //     VkBuffer buffer,
+                //     VkDeviceSize offset,
+                //     uint32_t drawCount,
+                //     uint32_t stride);
+                //
+                // Parameters:
+                // - commandBuffer: The command buffer to record the command into (this._vkCommandBuffer)
+                // - buffer: The buffer containing the draw commands (vkBuffer)
+                // - offset: Byte offset into the buffer (offset)
+                // - drawCount: Number of draw commands to execute (drawCount)
+                // - stride: Byte stride between commands (stride, or 0 for tightly packed)
+                //
+                // Vulkan API Reference: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdDrawIndexedIndirect.html
+                vkCmdDrawIndexedIndirect(
+                    _vkCommandBuffer,      // Command buffer to record into
+                    vkBuffer,              // Buffer containing VkDrawIndexedIndirectCommand structures
+                    (ulong)offset,         // Byte offset into buffer (VkDeviceSize = ulong)
+                    (uint)drawCount,       // Number of draw commands to execute
+                    (uint)stride);         // Byte stride between commands (0 = tightly packed)
+            }
+
             public void SetComputeState(ComputeState state)
             {
                 if (!_isOpen)
