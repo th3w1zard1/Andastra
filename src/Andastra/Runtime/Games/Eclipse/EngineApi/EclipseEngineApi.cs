@@ -26,7 +26,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
     /// - Eclipse uses UnrealScript-like system, so function signatures differ from NWScript
     /// - Common Eclipse functions: Print, Random, GetObjectByTag, GetTag, GetPosition, GetFacing, SpawnCreature, CreateItem, etc.
     /// - Note: Function IDs are Eclipse-specific and differ from NWScript function IDs
-    /// 
+    ///
     /// CRITICAL: This class contains ONLY functions that are IDENTICAL between daorigins.exe and DragonAge2.exe.
     /// - All function implementations must be verified to match 1:1 in both executables
     /// - Game-specific differences must be implemented in subclasses (DragonAgeOriginsEngineApi, DragonAge2EngineApi)
@@ -37,17 +37,17 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
     {
         // Static dictionary to store area iteration state (since IArea doesn't support SetData/GetData)
         private static readonly System.Collections.Generic.Dictionary<string, AreaIterationState> _areaIterationStates = new System.Collections.Generic.Dictionary<string, AreaIterationState>();
-        
+
         // Static dictionary to store conversation state (since IArea doesn't support SetData/GetData)
         private static readonly System.Collections.Generic.Dictionary<string, ConversationState> _conversationStates = new System.Collections.Generic.Dictionary<string, ConversationState>();
-        
+
         // Helper class to store iteration state per area
         private class AreaIterationState
         {
             public System.Collections.Generic.List<Core.Interfaces.IEntity> Entities { get; set; }
             public int CurrentIndex { get; set; }
         }
-        
+
         // Helper class to store conversation state per area
         private class ConversationState
         {
@@ -55,7 +55,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             public uint TargetId { get; set; }
             public bool InConversation { get; set; }
         }
-        
+
         public EclipseEngineApi()
         {
         }
@@ -71,28 +71,28 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             RegisterFunctionName(3, "FloatToString");
             RegisterFunctionName(4, "PrintInteger");
             RegisterFunctionName(5, "PrintObject");
-            
+
             // Object functions
             RegisterFunctionName(27, "GetPosition");
             RegisterFunctionName(28, "GetFacing");
             RegisterFunctionName(41, "GetDistanceToObject");
             RegisterFunctionName(42, "GetIsObjectValid");
-            
+
             // Tag functions
             RegisterFunctionName(168, "GetTag");
-            
+
             // Global variables
             RegisterFunctionName(578, "GetGlobalBoolean");
             RegisterFunctionName(579, "SetGlobalBoolean");
             RegisterFunctionName(580, "GetGlobalNumber");
             RegisterFunctionName(581, "SetGlobalNumber");
-            
+
             // Local variables
             RegisterFunctionName(679, "GetLocalInt");
             RegisterFunctionName(680, "SetLocalInt");
             RegisterFunctionName(681, "GetLocalFloat");
             RegisterFunctionName(682, "SetLocalFloat");
-            
+
             // Eclipse-specific functions (common patterns across Dragon Age and )
             RegisterFunctionName(100, "SpawnCreature");
             RegisterFunctionName(101, "CreateItem");
@@ -115,7 +115,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             RegisterFunctionName(118, "GetIsWaypoint");
             RegisterFunctionName(119, "GetIsArea");
             RegisterFunctionName(120, "GetIsModule");
-            
+
             // Position and movement functions
             RegisterFunctionName(200, "GetObjectByTag");
             RegisterFunctionName(201, "GetFacing");
@@ -125,7 +125,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             RegisterFunctionName(205, "MoveToLocation");
             RegisterFunctionName(206, "GetDistanceBetween");
             RegisterFunctionName(207, "GetDistanceBetween2D");
-            
+
             // Combat functions
             RegisterFunctionName(300, "GetIsInCombat");
             RegisterFunctionName(301, "GetAttackTarget");
@@ -138,7 +138,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             RegisterFunctionName(308, "GetIsNeutral");
             RegisterFunctionName(309, "GetFaction");
             RegisterFunctionName(310, "SetFaction");
-            
+
             // Party management functions
             RegisterFunctionName(400, "GetPartyMemberCount");
             RegisterFunctionName(401, "GetPartyMemberByIndex");
@@ -146,14 +146,14 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             RegisterFunctionName(403, "AddPartyMember");
             RegisterFunctionName(404, "RemovePartyMember");
             RegisterFunctionName(405, "GetPlayerCharacter");
-            
+
             // Dialogue and conversation functions
             RegisterFunctionName(500, "StartConversation");
             RegisterFunctionName(501, "GetIsInConversation");
             RegisterFunctionName(502, "GetConversationSpeaker");
             RegisterFunctionName(503, "GetConversationTarget");
             RegisterFunctionName(504, "EndConversation");
-            
+
             // Quest system functions
             RegisterFunctionName(600, "SetQuestCompleted");
             RegisterFunctionName(601, "GetQuestCompleted");
@@ -161,7 +161,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             RegisterFunctionName(603, "GetQuestActive");
             RegisterFunctionName(604, "AddQuestEntry");
             RegisterFunctionName(605, "CompleteQuestEntry");
-            
+
             // Item and inventory functions
             RegisterFunctionName(700, "CreateItemOnObject");
             RegisterFunctionName(701, "DestroyItem");
@@ -170,7 +170,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             RegisterFunctionName(704, "SetItemStackSize");
             RegisterFunctionName(705, "GetFirstItemInInventory");
             RegisterFunctionName(706, "GetNextItemInInventory");
-            
+
             // Ability and spell functions
             RegisterFunctionName(800, "CastSpell");
             RegisterFunctionName(801, "CastSpellAtLocation");
@@ -179,13 +179,13 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             RegisterFunctionName(804, "GetAbilityModifier");
             RegisterFunctionName(805, "GetHasAbility");
             RegisterFunctionName(806, "GetSpellLevel");
-            
+
             // Area and module functions
             RegisterFunctionName(900, "GetAreaTag");
             RegisterFunctionName(901, "GetModuleFileName");
             RegisterFunctionName(902, "GetAreaByTag");
             RegisterFunctionName(903, "GetAreaOfObject");
-            
+
             // Utility functions
             RegisterFunctionName(1000, "GetName");
             RegisterFunctionName(1001, "SetName");
@@ -199,7 +199,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             // Eclipse-specific function dispatch
             // Most basic functions (Random, PrintString, GetTag, GetObjectByTag, etc.) are already in BaseEngineApi
             // Eclipse-specific functions are implemented below
-            
+
             switch (routineId)
             {
                 // Common functions (delegated to base class)
@@ -342,7 +342,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             Vector3 position = args.Count > 1 ? args[1].AsVector() : Vector3.Zero;
-            
+
             Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
@@ -352,7 +352,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     transform.Position = position;
                 }
             }
-            
+
             return Variable.Void();
         }
 
@@ -367,7 +367,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             float direction = args.Count > 1 ? args[1].AsFloat() : 0.0f;
-            
+
             Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
@@ -379,7 +379,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     transform.Facing = radians;
                 }
             }
-            
+
             return Variable.Void();
         }
 
@@ -394,22 +394,22 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         {
             uint objectId1 = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
             uint objectId2 = args.Count > 1 ? args[1].AsObjectId() : ObjectInvalid;
-            
+
             Core.Interfaces.IEntity entity1 = ResolveObject(objectId1, ctx);
             Core.Interfaces.IEntity entity2 = ResolveObject(objectId2, ctx);
-            
+
             if (entity1 != null && entity2 != null)
             {
                 ITransformComponent transform1 = entity1.GetComponent<ITransformComponent>();
                 ITransformComponent transform2 = entity2.GetComponent<ITransformComponent>();
-                
+
                 if (transform1 != null && transform2 != null)
                 {
                     float distance = Vector3.Distance(transform1.Position, transform2.Position);
                     return Variable.FromFloat(distance);
                 }
             }
-            
+
             return Variable.FromFloat(-1.0f);
         }
 
@@ -424,15 +424,15 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         {
             uint objectId1 = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
             uint objectId2 = args.Count > 1 ? args[1].AsObjectId() : ObjectInvalid;
-            
+
             Core.Interfaces.IEntity entity1 = ResolveObject(objectId1, ctx);
             Core.Interfaces.IEntity entity2 = ResolveObject(objectId2, ctx);
-            
+
             if (entity1 != null && entity2 != null)
             {
                 ITransformComponent transform1 = entity1.GetComponent<ITransformComponent>();
                 ITransformComponent transform2 = entity2.GetComponent<ITransformComponent>();
-                
+
                 if (transform1 != null && transform2 != null)
                 {
                     Vector3 pos1 = transform1.Position;
@@ -443,7 +443,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     return Variable.FromFloat(distance);
                 }
             }
-            
+
             return Variable.FromFloat(-1.0f);
         }
 
@@ -460,15 +460,15 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             string template = args.Count > 0 ? args[0].AsString() : string.Empty;
             Vector3 position = args.Count > 1 ? args[1].AsVector() : Vector3.Zero;
             float facing = args.Count > 2 ? args[2].AsFloat() : 0.0f;
-            
+
             if (string.IsNullOrEmpty(template) || ctx.World == null)
             {
                 return Variable.FromObject(ObjectInvalid);
             }
-            
+
             // Convert facing from degrees to radians for IWorld.CreateEntity
             float facingRadians = (float)(facing * Math.PI / 180.0);
-            
+
             // Create creature entity using IWorld.CreateEntity
             // Note: Eclipse uses template-based spawning, but IWorld.CreateEntity uses ObjectType
             // TODO: STUB - For now, create as ObjectType.Creature - template loading would need IEntityTemplate system
@@ -480,10 +480,10 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 {
                     creature.SetData("TemplateResRef", template);
                 }
-                
+
                 return Variable.FromObject(creature.ObjectId);
             }
-            
+
             return Variable.FromObject(ObjectInvalid);
         }
 
@@ -500,23 +500,23 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             string template = args.Count > 0 ? args[0].AsString() : string.Empty;
             uint targetId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
             int stackSize = args.Count > 2 ? args[2].AsInt() : 1;
-            
+
             if (string.IsNullOrEmpty(template) || ctx.World == null)
             {
                 return Variable.FromObject(ObjectInvalid);
             }
-            
+
             Core.Interfaces.IEntity target = ResolveObject(targetId, ctx);
             if (target == null)
             {
                 return Variable.FromObject(ObjectInvalid);
             }
-            
+
             // Create item entity using IWorld.CreateEntity
             // Get target's position for item creation
             ITransformComponent targetTransform = target.GetComponent<ITransformComponent>();
             Vector3 itemPosition = targetTransform != null ? targetTransform.Position : Vector3.Zero;
-            
+
             Core.Interfaces.IEntity item = ctx.World.CreateEntity(Core.Enums.ObjectType.Item, itemPosition, 0.0f);
             if (item != null)
             {
@@ -525,14 +525,14 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 {
                     item.SetData("TemplateResRef", template);
                 }
-                
+
                 // Set stack size in item component
                 IItemComponent itemComp = item.GetComponent<IItemComponent>();
                 if (itemComp != null)
                 {
                     itemComp.StackSize = Math.Max(1, stackSize);
                 }
-                
+
                 // Add item to target's inventory
                 IInventoryComponent inventory = target.GetComponent<IInventoryComponent>();
                 if (inventory != null)
@@ -553,7 +553,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     ctx.World.DestroyEntity(item.ObjectId);
                 }
             }
-            
+
             return Variable.FromObject(ObjectInvalid);
         }
 
@@ -579,12 +579,12 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         private Variable Func_DestroyObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
-            
+
             if (objectId == ObjectInvalid || ctx.World == null)
             {
                 return Variable.Void();
             }
-            
+
             Core.Interfaces.IEntity entity = ctx.World.GetEntity(objectId);
             if (entity != null)
             {
@@ -592,7 +592,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 // Destroy entity using IWorld.DestroyEntity
                 ctx.World.DestroyEntity(objectId);
             }
-            
+
             return Variable.Void();
         }
 
@@ -619,40 +619,40 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         {
             uint targetId = args.Count > 2 ? args[2].AsObjectId() : ObjectSelf;
             int nth = args.Count > 3 ? args[3].AsInt() : 0;
-            
+
             Core.Interfaces.IEntity target = ResolveObject(targetId, ctx);
             if (target == null || ctx.World == null)
             {
                 return Variable.FromObject(ObjectInvalid);
             }
-            
+
             ITransformComponent targetTransform = target.GetComponent<ITransformComponent>();
             if (targetTransform == null)
             {
                 return Variable.FromObject(ObjectInvalid);
             }
-            
+
             Console.WriteLine("[Eclipse] GetNearestCreature: Target 0x{0:X8}, nth {1}", targetId, nth);
-            
+
             // Search for creatures within reasonable radius (100 units default)
             // Get all creatures in radius, filter by criteria, sort by distance, return nth
             const float searchRadius = 100.0f;
             var candidates = new List<Tuple<Core.Interfaces.IEntity, float>>();
-            
+
             foreach (Core.Interfaces.IEntity entity in ctx.World.GetEntitiesInRadius(targetTransform.Position, searchRadius, Core.Enums.ObjectType.Creature))
             {
                 if (entity == null || entity.ObjectId == target.ObjectId)
                 {
                     continue;
                 }
-                
+
                 // Check if entity is a creature (has stats component)
                 IStatsComponent stats = entity.GetComponent<IStatsComponent>();
                 if (stats == null)
                 {
                     continue;
                 }
-                
+
                 // Apply criteria matching (nFirstCriteriaType, nFirstCriteriaValue, etc.)
                 // Criteria types: 0=None, 1=Perception, 2=Disposition, 3=Reputation, 4=Team, 5=Reaction, 6=Class, 7=Race, 8=Hp, 9=Tag, 10=NotDead, 11=InCombat, 12=TargetType, 13=CreatureType, 14=Allegiance, 15=Gender, 16=Player, 17=Party, 18=Area, 19=Location, 20=LineOfSight, 21=Distance, 22=HasItem, 23=HasSpell, 24=HasSkill, 25=HasFeat, 26=HasTalent, 27=HasEffect, 28=HasVariable, 29=HasLocalVariable, 30=HasGlobalVariable, 31=HasFaction, 32=HasAlignment, 33=HasGoodEvil, 34=HasLawfulChaotic, 35=HasLevel, 36=HasClass, 37=HasRace, 38=HasGender, 39=HasSubrace, 40=HasDeity, 41=HasDomain, 42=HasDomainSource, 43=HasAbilityScore, 44=HasAbilityModifier, 45=HasSkillRank, 46=HasFeatCount, 47=HasSpellCount, 48=HasTalentCount, 49=HasEffectCount, 50=HasItemCount, 51=HasVariableValue, 52=HasLocalVariableValue, 53=HasGlobalVariableValue, 54=HasFactionValue, 55=HasAlignmentValue, 56=HasGoodEvilValue, 57=HasLawfulChaoticValue, 58=HasLevelValue, 59=HasClassValue, 60=HasRaceValue, 61=HasGenderValue, 62=HasSubraceValue, 63=HasDeityValue, 64=HasDomainValue, 65=HasDomainSourceValue, 66=HasAbilityScoreValue, 67=HasAbilityModifierValue, 68=HasSkillRankValue, 69=HasFeatCountValue, 70=HasSpellCountValue, 71=HasTalentCountValue, 72=HasEffectCountValue, 73=HasItemCountValue
                 // Extract criteria from arguments
@@ -662,33 +662,33 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 int secondCriteriaValue = args.Count > 6 ? args[6].AsInt() : 0;
                 int thirdCriteriaType = args.Count > 7 ? args[7].AsInt() : 0;
                 int thirdCriteriaValue = args.Count > 8 ? args[8].AsInt() : 0;
-                
+
                 // Apply criteria matching
                 bool matchesCriteria = true;
-                
+
                 // First criteria
                 if (firstCriteriaType != 0)
                 {
                     matchesCriteria = MatchesCriteria(entity, firstCriteriaType, firstCriteriaValue, target, ctx);
                 }
-                
+
                 // Second criteria (if first matches)
                 if (matchesCriteria && secondCriteriaType != 0)
                 {
                     matchesCriteria = MatchesCriteria(entity, secondCriteriaType, secondCriteriaValue, target, ctx);
                 }
-                
+
                 // Third criteria (if first and second match)
                 if (matchesCriteria && thirdCriteriaType != 0)
                 {
                     matchesCriteria = MatchesCriteria(entity, thirdCriteriaType, thirdCriteriaValue, target, ctx);
                 }
-                
+
                 if (!matchesCriteria)
                 {
                     continue;
                 }
-                
+
                 // Calculate distance
                 ITransformComponent entityTransform = entity.GetComponent<ITransformComponent>();
                 if (entityTransform != null)
@@ -697,16 +697,16 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     candidates.Add(new Tuple<Core.Interfaces.IEntity, float>(entity, distance));
                 }
             }
-            
+
             // Sort by distance
             candidates.Sort((a, b) => a.Item2.CompareTo(b.Item2));
-            
+
             // Return nth nearest creature
             if (nth >= 0 && nth < candidates.Count)
             {
                 return Variable.FromObject(candidates[nth].Item1.ObjectId);
             }
-            
+
             return Variable.FromObject(ObjectInvalid);
         }
 
@@ -722,19 +722,19 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             int objectType = args.Count > 0 ? args[0].AsInt() : 0;
             uint targetId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
             int nth = args.Count > 2 ? args[2].AsInt() : 0;
-            
+
             Core.Interfaces.IEntity target = ResolveObject(targetId, ctx);
             if (target == null || ctx.World == null)
             {
                 return Variable.FromObject(ObjectInvalid);
             }
-            
+
             ITransformComponent targetTransform = target.GetComponent<ITransformComponent>();
             if (targetTransform == null)
             {
                 return Variable.FromObject(ObjectInvalid);
             }
-            
+
             Console.WriteLine("[Eclipse] GetNearestObject: Type {0}, Target 0x{1:X8}, nth {2}", objectType, targetId, nth);
             // Convert objectType to ObjectType enum mask
             // Eclipse object types: 1=Creature, 2=Item, 4=Trigger, 8=Door, 64=Placeable, etc.
@@ -744,24 +744,24 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             if ((objectType & 4) != 0) typeMask |= Core.Enums.ObjectType.Trigger;
             if ((objectType & 8) != 0) typeMask |= Core.Enums.ObjectType.Door;
             if ((objectType & 64) != 0) typeMask |= Core.Enums.ObjectType.Placeable;
-            
+
             // If no type specified, search all types
             if (typeMask == Core.Enums.ObjectType.Invalid)
             {
                 typeMask = Core.Enums.ObjectType.All;
             }
-            
+
             // Search for objects within reasonable radius (100 units default)
             const float searchRadius = 100.0f;
             var candidates = new List<Tuple<Core.Interfaces.IEntity, float>>();
-            
+
             foreach (Core.Interfaces.IEntity entity in ctx.World.GetEntitiesInRadius(targetTransform.Position, searchRadius, typeMask))
             {
                 if (entity == null || entity.ObjectId == target.ObjectId)
                 {
                     continue;
                 }
-                
+
                 // Calculate distance
                 ITransformComponent entityTransform = entity.GetComponent<ITransformComponent>();
                 if (entityTransform != null)
@@ -770,16 +770,16 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     candidates.Add(new Tuple<Core.Interfaces.IEntity, float>(entity, distance));
                 }
             }
-            
+
             // Sort by distance
             candidates.Sort((a, b) => a.Item2.CompareTo(b.Item2));
-            
+
             // Return nth nearest object
             if (nth >= 0 && nth < candidates.Count)
             {
                 return Variable.FromObject(candidates[nth].Item1.ObjectId);
             }
-            
+
             return Variable.FromObject(ObjectInvalid);
         }
 
@@ -793,13 +793,13 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         private Variable Func_GetObjectType(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            
+
             Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity == null)
             {
                 return Variable.FromInt(0); // OBJECT_TYPE_INVALID
             }
-            
+
             // Determine object type from components
             if (entity.GetComponent<IStatsComponent>() != null)
             {
@@ -822,7 +822,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             {
                 return Variable.FromInt(4); // OBJECT_TYPE_TRIGGER
             }
-            
+
             return Variable.FromInt(0); // OBJECT_TYPE_INVALID
         }
 
@@ -838,7 +838,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         private Variable Func_GetIsPC(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            
+
             Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
@@ -849,7 +849,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 {
                     return Variable.FromInt(1);
                 }
-                
+
                 // Check if entity is party member at index 0 (party leader)
                 Variable partyLeader = Func_GetPartyMemberByIndex(new[] { Variable.FromInt(0) }, ctx);
                 if (partyLeader.AsObjectId() != ObjectInvalid && partyLeader.AsObjectId() == objectId)
@@ -857,7 +857,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     return Variable.FromInt(1);
                 }
             }
-            
+
             return Variable.FromInt(0);
         }
 
@@ -867,7 +867,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         private Variable Func_GetIsNPC(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            
+
             Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
@@ -880,7 +880,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     }
                 }
             }
-            
+
             return Variable.FromInt(0);
         }
 
@@ -890,13 +890,13 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         private Variable Func_GetIsCreature(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            
+
             Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null && entity.GetComponent<IStatsComponent>() != null)
             {
                 return Variable.FromInt(1);
             }
-            
+
             return Variable.FromInt(0);
         }
 
@@ -906,13 +906,13 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         private Variable Func_GetIsItem(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            
+
             Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null && entity.GetComponent<IItemComponent>() != null)
             {
                 return Variable.FromInt(1);
             }
-            
+
             return Variable.FromInt(0);
         }
 
@@ -922,13 +922,13 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         private Variable Func_GetIsPlaceable(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            
+
             Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null && entity.GetComponent<IPlaceableComponent>() != null)
             {
                 return Variable.FromInt(1);
             }
-            
+
             return Variable.FromInt(0);
         }
 
@@ -938,13 +938,13 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         private Variable Func_GetIsDoor(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            
+
             Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null && entity.GetComponent<IDoorComponent>() != null)
             {
                 return Variable.FromInt(1);
             }
-            
+
             return Variable.FromInt(0);
         }
 
@@ -960,7 +960,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         private Variable Func_GetIsInCombat(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            
+
             Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null && ctx.World != null && ctx.World.CombatSystem != null)
             {
@@ -968,7 +968,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 bool inCombat = ctx.World.CombatSystem.IsInCombat(entity);
                 return Variable.FromInt(inCombat ? 1 : 0);
             }
-            
+
             return Variable.FromInt(0);
         }
 
@@ -984,7 +984,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         private Variable Func_GetAttackTarget(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint attackerId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            
+
             Core.Interfaces.IEntity attacker = ResolveObject(attackerId, ctx);
             if (attacker != null && ctx.World != null && ctx.World.CombatSystem != null)
             {
@@ -995,7 +995,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     return Variable.FromObject(target.ObjectId);
                 }
             }
-            
+
             return Variable.FromObject(ObjectInvalid);
         }
 
@@ -1011,7 +1011,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         private Variable Func_GetCurrentHP(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            
+
             Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
@@ -1021,7 +1021,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     return Variable.FromInt(stats.CurrentHP);
                 }
             }
-            
+
             return Variable.FromInt(0);
         }
 
@@ -1037,7 +1037,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         private Variable Func_GetMaxHP(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            
+
             Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
@@ -1047,7 +1047,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     return Variable.FromInt(stats.MaxHP);
                 }
             }
-            
+
             return Variable.FromInt(0);
         }
 
@@ -1064,7 +1064,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             int hp = args.Count > 1 ? args[1].AsInt() : 0;
-            
+
             Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
@@ -1076,7 +1076,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     stats.CurrentHP = clampedHP;
                 }
             }
-            
+
             return Variable.Void();
         }
 
@@ -1093,10 +1093,10 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         {
             uint objectId1 = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             uint objectId2 = args.Count > 1 ? args[1].AsObjectId() : ObjectInvalid;
-            
+
             Core.Interfaces.IEntity entity1 = ResolveObject(objectId1, ctx);
             Core.Interfaces.IEntity entity2 = ResolveObject(objectId2, ctx);
-            
+
             if (entity1 != null && entity2 != null)
             {
                 IFactionComponent faction1 = entity1.GetComponent<IFactionComponent>();
@@ -1105,7 +1105,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     return Variable.FromInt(faction1.IsHostile(entity2) ? 1 : 0);
                 }
             }
-            
+
             return Variable.FromInt(0);
         }
 
@@ -1122,10 +1122,10 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         {
             uint objectId1 = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             uint objectId2 = args.Count > 1 ? args[1].AsObjectId() : ObjectInvalid;
-            
+
             Core.Interfaces.IEntity entity1 = ResolveObject(objectId1, ctx);
             Core.Interfaces.IEntity entity2 = ResolveObject(objectId2, ctx);
-            
+
             if (entity1 != null && entity2 != null)
             {
                 IFactionComponent faction1 = entity1.GetComponent<IFactionComponent>();
@@ -1134,7 +1134,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     return Variable.FromInt(faction1.IsFriendly(entity2) ? 1 : 0);
                 }
             }
-            
+
             return Variable.FromInt(0);
         }
 
@@ -1151,10 +1151,10 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         {
             uint objectId1 = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             uint objectId2 = args.Count > 1 ? args[1].AsObjectId() : ObjectInvalid;
-            
+
             Core.Interfaces.IEntity entity1 = ResolveObject(objectId1, ctx);
             Core.Interfaces.IEntity entity2 = ResolveObject(objectId2, ctx);
-            
+
             if (entity1 != null && entity2 != null)
             {
                 IFactionComponent faction1 = entity1.GetComponent<IFactionComponent>();
@@ -1163,7 +1163,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     return Variable.FromInt(faction1.IsNeutral(entity2) ? 1 : 0);
                 }
             }
-            
+
             return Variable.FromInt(0);
         }
 
@@ -1179,7 +1179,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         private Variable Func_GetFaction(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            
+
             Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
@@ -1189,7 +1189,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     return Variable.FromInt(faction.FactionId);
                 }
             }
-            
+
             return Variable.FromInt(0);
         }
 
@@ -1206,7 +1206,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             int faction = args.Count > 1 ? args[1].AsInt() : 0;
-            
+
             Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
@@ -1216,7 +1216,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     factionComp.FactionId = faction;
                 }
             }
-            
+
             return Variable.Void();
         }
 
@@ -1236,7 +1236,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             {
                 return Variable.FromInt(0);
             }
-            
+
             // Count entities marked as party members
             int count = 0;
             foreach (Core.Interfaces.IEntity entity in ctx.World.GetAllEntities())
@@ -1246,7 +1246,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     count++;
                 }
             }
-            
+
             return Variable.FromInt(count);
         }
 
@@ -1263,12 +1263,12 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         private Variable Func_GetPartyMemberByIndex(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             int index = args.Count > 0 ? args[0].AsInt() : 0;
-            
+
             if (ctx == null || ctx.World == null || index < 0)
             {
                 return Variable.FromObject(ObjectInvalid);
             }
-            
+
             // Collect party members
             var partyMembers = new List<Core.Interfaces.IEntity>();
             foreach (Core.Interfaces.IEntity entity in ctx.World.GetAllEntities())
@@ -1278,13 +1278,13 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     partyMembers.Add(entity);
                 }
             }
-            
+
             // Return party member at index
             if (index >= 0 && index < partyMembers.Count)
             {
                 return Variable.FromObject(partyMembers[index].ObjectId);
             }
-            
+
             return Variable.FromObject(ObjectInvalid);
         }
 
@@ -1301,13 +1301,13 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         private Variable Func_IsObjectPartyMember(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            
+
             Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null && entity.HasData("IsPartyMember"))
             {
                 return Variable.FromInt(entity.GetData<bool>("IsPartyMember") ? 1 : 0);
             }
-            
+
             return Variable.FromInt(0);
         }
 
@@ -1324,14 +1324,14 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         private Variable Func_AddPartyMember(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint creatureId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
-            
+
             Core.Interfaces.IEntity creature = ResolveObject(creatureId, ctx);
             if (creature != null)
             {
                 // Mark entity as party member
                 creature.SetData("IsPartyMember", true);
             }
-            
+
             return Variable.Void();
         }
 
@@ -1348,14 +1348,14 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         private Variable Func_RemovePartyMember(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint creatureId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
-            
+
             Core.Interfaces.IEntity creature = ResolveObject(creatureId, ctx);
             if (creature != null)
             {
                 // Unmark entity as party member
                 creature.SetData("IsPartyMember", false);
             }
-            
+
             return Variable.Void();
         }
 
@@ -1454,14 +1454,14 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
             string conversation = args.Count > 1 ? args[1].AsString() : string.Empty;
-            
+
             Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null && !string.IsNullOrEmpty(conversation) && ctx.World != null && ctx.World.CurrentArea != null)
             {
                 // Store conversation state in entity data
                 entity.SetData("InConversation", true);
                 entity.SetData("ConversationResRef", conversation);
-                
+
                 // Store conversation state in static dictionary for area-based lookup
                 string areaKey = ctx.World.CurrentArea.ResRef ?? "default";
                 var conversationState = new ConversationState
@@ -1471,12 +1471,12 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     InConversation = true
                 };
                 _conversationStates[areaKey] = conversationState;
-                
+
                 // Eclipse uses UnrealScript message passing: ShowConversationGUIMessage @ 0x00ae8a50 (daorigins.exe), @ 0x00bfca24 (DragonAge2.exe)
                 // Full integration requires Eclipse dialogue system (Conversation class, message handlers)
                 // Current implementation stores state for script queries; full dialogue UI integration pending
             }
-            
+
             return Variable.Void();
         }
 
@@ -1493,13 +1493,13 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         private Variable Func_GetIsInConversation(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            
+
             Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null && entity.HasData("InConversation"))
             {
                 return Variable.FromInt(entity.GetData<bool>("InConversation") ? 1 : 0);
             }
-            
+
             return Variable.FromInt(0);
         }
 
@@ -1517,18 +1517,18 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         {
             string quest = args.Count > 0 ? args[0].AsString() : string.Empty;
             int completed = args.Count > 1 ? args[1].AsInt() : 0;
-            
+
             if (!string.IsNullOrEmpty(quest) && ctx != null && ctx.Globals != null)
             {
                 // Store quest completed state in global variables using quest name as key
                 string questKey = "Quest_" + quest + "_Completed";
                 ctx.Globals.SetGlobalBool(questKey, completed != 0);
-                
+
                 // Eclipse quest system uses "QuestCompleted" @ 0x00b0847c (daorigins.exe), @ 0x00c00438 (DragonAge2.exe)
                 // Full integration requires Eclipse quest system (quest tracking, journal, quest entries)
                 // Current implementation stores state in globals for script queries; full quest system integration pending
             }
-            
+
             return Variable.Void();
         }
 
@@ -1545,7 +1545,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         private Variable Func_GetQuestCompleted(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string quest = args.Count > 0 ? args[0].AsString() : string.Empty;
-            
+
             if (!string.IsNullOrEmpty(quest) && ctx != null && ctx.Globals != null)
             {
                 // Get quest completed state from global variables using quest name as key
@@ -1553,7 +1553,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 bool completed = ctx.Globals.GetGlobalBool(questKey);
                 return Variable.FromInt(completed ? 1 : 0);
             }
-            
+
             return Variable.FromInt(0);
         }
 
@@ -1570,7 +1570,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         {
             uint creatureId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             int slot = args.Count > 1 ? args[1].AsInt() : 0;
-            
+
             Core.Interfaces.IEntity creature = ResolveObject(creatureId, ctx);
             if (creature != null)
             {
@@ -1584,7 +1584,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     }
                 }
             }
-            
+
             return Variable.FromObject(ObjectInvalid);
         }
 
@@ -1594,7 +1594,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         private Variable Func_GetItemStackSize(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint itemId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
-            
+
             Core.Interfaces.IEntity item = ResolveObject(itemId, ctx);
             if (item != null)
             {
@@ -1605,7 +1605,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     return Variable.FromInt(itemComp.StackSize);
                 }
             }
-            
+
             return Variable.FromInt(0);
         }
 
@@ -1616,7 +1616,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         {
             uint itemId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
             int stackSize = args.Count > 1 ? args[1].AsInt() : 1;
-            
+
             Core.Interfaces.IEntity item = ResolveObject(itemId, ctx);
             if (item != null)
             {
@@ -1632,7 +1632,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     itemComp.StackSize = clampedSize;
                 }
             }
-            
+
             return Variable.Void();
         }
 
@@ -1650,7 +1650,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         {
             uint creatureId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             int ability = args.Count > 1 ? args[1].AsInt() : 0;
-            
+
             Core.Interfaces.IEntity creature = ResolveObject(creatureId, ctx);
             if (creature != null)
             {
@@ -1665,7 +1665,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     }
                 }
             }
-            
+
             return Variable.FromInt(0);
         }
 
@@ -1683,7 +1683,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         {
             uint creatureId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             int ability = args.Count > 1 ? args[1].AsInt() : 0;
-            
+
             Core.Interfaces.IEntity creature = ResolveObject(creatureId, ctx);
             if (creature != null)
             {
@@ -1698,7 +1698,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     }
                 }
             }
-            
+
             return Variable.FromInt(0);
         }
 
@@ -1714,7 +1714,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         private Variable Func_GetAreaTag(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint areaId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
-            
+
             // Try to get area from world
             if (ctx != null && ctx.World != null && ctx.World.CurrentArea != null)
             {
@@ -1724,7 +1724,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     return Variable.FromString(ctx.World.CurrentArea.Tag ?? string.Empty);
                 }
             }
-            
+
             // Fallback: try to get entity by ID and return its tag
             if (areaId != ObjectInvalid)
             {
@@ -1734,7 +1734,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     return Variable.FromString(entity.Tag ?? string.Empty);
                 }
             }
-            
+
             return Variable.FromString(string.Empty);
         }
 
@@ -1756,7 +1756,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 string moduleName = ctx.World.CurrentModule.ResRef ?? string.Empty;
                 return Variable.FromString(moduleName);
             }
-            
+
             return Variable.FromString(string.Empty);
         }
 
@@ -1772,7 +1772,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         private Variable Func_GetName(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            
+
             Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
@@ -1785,11 +1785,11 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                         return Variable.FromString(name);
                     }
                 }
-                
+
                 // Fallback to tag
                 return Variable.FromString(entity.Tag ?? string.Empty);
             }
-            
+
             return Variable.FromString(string.Empty);
         }
 
@@ -1806,14 +1806,14 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             string name = args.Count > 1 ? args[1].AsString() : string.Empty;
-            
+
             Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
                 // Set name in entity data
                 entity.SetData("Name", name);
             }
-            
+
             return Variable.Void();
         }
 
@@ -1831,26 +1831,26 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         {
             int objectType = args.Count > 0 ? args[0].AsInt() : 0;
             uint areaId = args.Count > 1 ? args[1].AsObjectId() : ObjectInvalid;
-            
+
             if (ctx == null || ctx.World == null)
             {
                 return Variable.FromObject(ObjectInvalid);
             }
-            
+
             // Get area - if invalid, use current area
             Core.Interfaces.IEntity areaEntity = null;
             if (areaId != ObjectInvalid)
             {
                 areaEntity = ResolveObject(areaId, ctx);
             }
-            
+
             if (areaEntity == null && ctx.World.CurrentArea != null)
             {
                 // Use current area - IArea doesn't have ObjectId, so use a special area ID
                 // For iteration purposes, we'll use area ResRef as the key
                 areaId = 0x7F000010; // Special area object ID
             }
-            
+
             // Convert objectType to ObjectType enum mask
             Core.Enums.ObjectType typeMask = Core.Enums.ObjectType.Invalid;
             if ((objectType & 1) != 0) typeMask |= Core.Enums.ObjectType.Creature;
@@ -1858,17 +1858,17 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             if ((objectType & 4) != 0) typeMask |= Core.Enums.ObjectType.Trigger;
             if ((objectType & 8) != 0) typeMask |= Core.Enums.ObjectType.Door;
             if ((objectType & 64) != 0) typeMask |= Core.Enums.ObjectType.Placeable;
-            
+
             if (typeMask == Core.Enums.ObjectType.Invalid)
             {
                 typeMask = Core.Enums.ObjectType.All;
             }
-            
+
             // Initialize iteration state using static dictionary keyed by area ResRef
             if (ctx.World.CurrentArea != null)
             {
                 string areaKey = ctx.World.CurrentArea.ResRef ?? "default";
-                
+
                 // Get first object
                 var entities = new List<Core.Interfaces.IEntity>();
                 foreach (Core.Interfaces.IEntity entity in ctx.World.GetAllEntities())
@@ -1877,7 +1877,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     {
                         continue;
                     }
-                    
+
                     // Check if entity is in the specified area (check if entity's world area matches)
                     // For Eclipse, entities are typically in the current area
                     if (areaId != ObjectInvalid)
@@ -1944,7 +1944,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                             continue;
                         }
                     }
-                    
+
                     // Check object type
                     bool matchesType = false;
                     if ((typeMask & Core.Enums.ObjectType.Creature) != 0 && entity.GetComponent<IStatsComponent>() != null)
@@ -1967,13 +1967,13 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     {
                         matchesType = true;
                     }
-                    
+
                     if (matchesType)
                     {
                         entities.Add(entity);
                     }
                 }
-                
+
                 if (entities.Count > 0)
                 {
                     // Store entity list for iteration in static dictionary
@@ -1985,7 +1985,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     return Variable.FromObject(entities[0].ObjectId);
                 }
             }
-            
+
             return Variable.FromObject(ObjectInvalid);
         }
 
@@ -2003,40 +2003,40 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         {
             int objectType = args.Count > 0 ? args[0].AsInt() : 0;
             uint areaId = args.Count > 1 ? args[1].AsObjectId() : ObjectInvalid;
-            
+
             if (ctx == null || ctx.World == null || ctx.World.CurrentArea == null)
             {
                 return Variable.FromObject(ObjectInvalid);
             }
-            
+
             // Check if iteration state exists in static dictionary
             if (ctx.World.CurrentArea == null)
             {
                 return Variable.FromObject(ObjectInvalid);
             }
-            
+
             string areaKey = ctx.World.CurrentArea.ResRef ?? "default";
             if (!_areaIterationStates.ContainsKey(areaKey))
             {
                 return Variable.FromObject(ObjectInvalid);
             }
-            
+
             var state = _areaIterationStates[areaKey];
             if (state.Entities == null || state.Entities.Count == 0)
             {
                 _areaIterationStates.Remove(areaKey);
                 return Variable.FromObject(ObjectInvalid);
             }
-            
+
             // Increment index
             state.CurrentIndex++;
-            
+
             // Return next entity
             if (state.CurrentIndex >= 0 && state.CurrentIndex < state.Entities.Count)
             {
                 return Variable.FromObject(state.Entities[state.CurrentIndex].ObjectId);
             }
-            
+
             // Iteration complete
             _areaIterationStates.Remove(areaKey);
             return Variable.FromObject(ObjectInvalid);
@@ -2054,13 +2054,13 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         private Variable Func_GetIsTrigger(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            
+
             Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null && entity.GetComponent<ITriggerComponent>() != null)
             {
                 return Variable.FromInt(1);
             }
-            
+
             return Variable.FromInt(0);
         }
 
@@ -2076,7 +2076,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         private Variable Func_GetIsWaypoint(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            
+
             Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
@@ -2089,7 +2089,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     return Variable.FromInt(1);
                 }
             }
-            
+
             return Variable.FromInt(0);
         }
 
@@ -2105,12 +2105,12 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         private Variable Func_GetIsArea(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            
+
             if (objectId == ObjectInvalid)
             {
                 return Variable.FromInt(0);
             }
-            
+
             // Check if objectId corresponds to an area
             // Areas are registered in the world with ObjectIds starting from 0x7F000010
             // Based on daorigins.exe/DragonAge2.exe: Areas have ObjectIds assigned when registered
@@ -2129,7 +2129,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     // objectId is a valid area ObjectId - return true
                     return Variable.FromInt(1);
                 }
-                
+
                 // Also check if objectId matches current area's ObjectId
                 // This handles the case where the current area might not be in the areas dictionary yet
                 // but we still want to recognize it as an area
@@ -2143,7 +2143,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     }
                 }
             }
-            
+
             // objectId does not correspond to an area
             return Variable.FromInt(0);
         }
@@ -2164,17 +2164,17 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         private Variable Func_GetIsModule(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            
+
             if (objectId == ObjectInvalid)
             {
                 return Variable.FromInt(0);
             }
-            
+
             // Module ObjectId is fixed at 0x7F000002 (common across all engines)
             // Based on World.ModuleObjectId constant and GetModuleId implementation
             // GetModule() returns this ObjectId when a module is loaded
             const uint ModuleObjectId = 0x7F000002;
-            
+
             // Primary check: Compare objectId directly with module ObjectId
             if (objectId == ModuleObjectId)
             {
@@ -2191,7 +2191,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 // This matches the behavior where GetModule() can return ModuleObjectId even if module is unloading
                 return Variable.FromInt(1);
             }
-            
+
             // Secondary check: Verify if the objectId matches the current module's ID
             // This handles cases where the module ObjectId might be retrieved via GetModule()
             if (ctx != null && ctx.World != null && ctx.World.CurrentModule != null)
@@ -2202,7 +2202,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     return Variable.FromInt(1);
                 }
             }
-            
+
             // Fallback check: Check if entity has module-specific data
             // This is a safety measure for edge cases where modules might be represented as entities
             Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
@@ -2210,7 +2210,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             {
                 return Variable.FromInt(1);
             }
-            
+
             return Variable.FromInt(0);
         }
 
@@ -2229,10 +2229,10 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             uint moveToId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             uint targetId = args.Count > 1 ? args[1].AsObjectId() : ObjectInvalid;
             int run = args.Count > 2 ? args[2].AsInt() : 0;
-            
+
             Core.Interfaces.IEntity moveToEntity = ResolveObject(moveToId, ctx);
             Core.Interfaces.IEntity targetEntity = ResolveObject(targetId, ctx);
-            
+
             if (moveToEntity != null && targetEntity != null)
             {
                 ITransformComponent targetTransform = targetEntity.GetComponent<ITransformComponent>();
@@ -2250,7 +2250,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     }
                 }
             }
-            
+
             return Variable.Void();
         }
 
@@ -2269,7 +2269,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             uint moveToId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             Vector3 destination = args.Count > 1 ? args[1].AsVector() : Vector3.Zero;
             int run = args.Count > 2 ? args[2].AsInt() : 0;
-            
+
             Core.Interfaces.IEntity moveToEntity = ResolveObject(moveToId, ctx);
             if (moveToEntity != null)
             {
@@ -2284,7 +2284,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     moveToEntity.SetData("MovementState", "Moving");
                 }
             }
-            
+
             return Variable.Void();
         }
 
@@ -2301,12 +2301,12 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         {
             uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             int damage = args.Count > 1 ? args[1].AsInt() : 0;
-            
+
             if (damage <= 0)
             {
                 return Variable.Void();
             }
-            
+
             Core.Interfaces.IEntity target = ResolveObject(targetId, ctx);
             if (target != null)
             {
@@ -2320,7 +2320,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     int previousHP = stats.CurrentHP;
                     int newHP = Math.Max(0, previousHP - damage);
                     stats.CurrentHP = newHP;
-                    
+
                     // Fire OnDamaged script event
                     // Based on daorigins.exe/DragonAge2.exe: OnDamaged event fires when entity takes damage
                     // Original implementation: Script event fires with damage source as triggerer (if available)
@@ -2329,7 +2329,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     {
                         ctx.World.EventBus.FireScriptEvent(target, ScriptEvent.OnDamaged, null);
                     }
-                    
+
                     // Check if entity is dead after damage application
                     // Based on daorigins.exe/DragonAge2.exe: Death is detected when CurrentHP <= 0
                     // Original implementation: OnDeath script event fires when HP reaches 0 or below
@@ -2344,7 +2344,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                         {
                             ctx.World.EventBus.FireScriptEvent(target, ScriptEvent.OnDeath, null);
                         }
-                        
+
                         // Notify combat system immediately when entity dies
                         // Based on daorigins.exe/DragonAge2.exe: Combat system handles death cleanup (removes from combat, updates state)
                         // Original implementation: When entity dies, it's immediately removed from combat to prevent further actions
@@ -2360,7 +2360,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     }
                 }
             }
-            
+
             return Variable.Void();
         }
 
@@ -2380,7 +2380,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             {
                 return Variable.FromObject(ObjectInvalid);
             }
-            
+
             // Get conversation speaker from world or current area
             // Since IArea doesn't support HasData/GetData, store conversation state in a static dictionary
             if (ctx.World.CurrentArea != null)
@@ -2395,7 +2395,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     }
                 }
             }
-            
+
             return Variable.FromObject(ObjectInvalid);
         }
 
@@ -2415,7 +2415,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             {
                 return Variable.FromObject(ObjectInvalid);
             }
-            
+
             // Get conversation target from world or current area
             // Since IArea doesn't support HasData/GetData, store conversation state in a static dictionary
             if (ctx.World.CurrentArea != null)
@@ -2430,7 +2430,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     }
                 }
             }
-            
+
             // Default to player character
             return Func_GetPlayerCharacter(args, ctx);
         }
@@ -2451,7 +2451,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             {
                 return Variable.Void();
             }
-            
+
             // Clear conversation state from all entities
             foreach (Core.Interfaces.IEntity entity in ctx.World.GetAllEntities())
             {
@@ -2461,7 +2461,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     entity.SetData("ConversationResRef", null);
                 }
             }
-            
+
             // Clear conversation state from current area
             // Since IArea doesn't support SetData, use static dictionary
             if (ctx.World.CurrentArea != null)
@@ -2472,7 +2472,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     _conversationStates.Remove(areaKey);
                 }
             }
-            
+
             return Variable.Void();
         }
 
@@ -2490,14 +2490,14 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         {
             string quest = args.Count > 0 ? args[0].AsString() : string.Empty;
             int active = args.Count > 1 ? args[1].AsInt() : 0;
-            
+
             if (!string.IsNullOrEmpty(quest) && ctx != null && ctx.Globals != null)
             {
                 // Store quest active state in global variables using quest name as key
                 string questKey = "Quest_" + quest + "_Active";
                 ctx.Globals.SetGlobalBool(questKey, active != 0);
             }
-            
+
             return Variable.Void();
         }
 
@@ -2514,7 +2514,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         private Variable Func_GetQuestActive(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string quest = args.Count > 0 ? args[0].AsString() : string.Empty;
-            
+
             if (!string.IsNullOrEmpty(quest) && ctx != null && ctx.Globals != null)
             {
                 // Get quest active state from global variables using quest name as key
@@ -2522,7 +2522,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 bool active = ctx.Globals.GetGlobalBool(questKey);
                 return Variable.FromInt(active ? 1 : 0);
             }
-            
+
             return Variable.FromInt(0);
         }
 
@@ -2540,7 +2540,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         {
             string quest = args.Count > 0 ? args[0].AsString() : string.Empty;
             string entry = args.Count > 1 ? args[1].AsString() : string.Empty;
-            
+
             if (!string.IsNullOrEmpty(quest) && !string.IsNullOrEmpty(entry) && ctx != null && ctx.Globals != null)
             {
                 // Store quest entry in global variables using quest name as key
@@ -2556,7 +2556,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     ctx.Globals.SetGlobalString(questKey, existingEntries + "|" + entry);
                 }
             }
-            
+
             return Variable.Void();
         }
 
@@ -2574,7 +2574,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         {
             string quest = args.Count > 0 ? args[0].AsString() : string.Empty;
             string entry = args.Count > 1 ? args[1].AsString() : string.Empty;
-            
+
             if (!string.IsNullOrEmpty(quest) && !string.IsNullOrEmpty(entry) && ctx != null && ctx.Globals != null)
             {
                 // Store completed quest entry in global variables using quest name as key
@@ -2589,7 +2589,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     ctx.Globals.SetGlobalString(questKey, existingEntries + "|" + entry);
                 }
             }
-            
+
             return Variable.Void();
         }
 
@@ -2605,7 +2605,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         private Variable Func_GetFirstItemInInventory(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint creatureId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            
+
             Core.Interfaces.IEntity creature = ResolveObject(creatureId, ctx);
             if (creature != null)
             {
@@ -2614,7 +2614,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 {
                     // Initialize iteration state
                     creature.SetData("InventoryIteration_Index", 0);
-                    
+
                     // Get first item
                     var items = new List<Core.Interfaces.IEntity>();
                     foreach (Core.Interfaces.IEntity item in inventory.GetAllItems())
@@ -2624,7 +2624,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                             items.Add(item);
                         }
                     }
-                    
+
                     if (items.Count > 0)
                     {
                         // Store item list for iteration
@@ -2633,7 +2633,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     }
                 }
             }
-            
+
             return Variable.FromObject(ObjectInvalid);
         }
 
@@ -2649,27 +2649,27 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         private Variable Func_GetNextItemInInventory(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint creatureId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            
+
             Core.Interfaces.IEntity creature = ResolveObject(creatureId, ctx);
             if (creature != null && creature.HasData("InventoryIteration_Items"))
             {
                 var items = creature.GetData<List<Core.Interfaces.IEntity>>("InventoryIteration_Items");
                 int currentIndex = creature.GetData<int>("InventoryIteration_Index");
-                
+
                 // Increment index
                 currentIndex++;
                 creature.SetData("InventoryIteration_Index", currentIndex);
-                
+
                 // Return next item
                 if (currentIndex >= 0 && currentIndex < items.Count)
                 {
                     return Variable.FromObject(items[currentIndex].ObjectId);
                 }
-                
+
                 // Iteration complete
                 creature.SetData("InventoryIteration_Items", null);
             }
-            
+
             return Variable.FromObject(ObjectInvalid);
         }
 
@@ -2687,20 +2687,20 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         {
             int spell = args.Count > 0 ? args[0].AsInt() : 0;
             uint targetId = args.Count > 1 ? args[1].AsObjectId() : ObjectInvalid;
-            
+
             if (ctx == null || ctx.Caller == null)
             {
                 return Variable.Void();
             }
-            
+
             Core.Interfaces.IEntity caster = ctx.Caller;
             Core.Interfaces.IEntity target = ResolveObject(targetId, ctx);
-            
+
             if (caster == null)
             {
                 return Variable.Void();
             }
-            
+
             // Cast spell on target
             // Based on daorigins.exe/DragonAge2.exe: CastSpell fires spell cast events and applies spell effects
             // Original implementation: Casts spell on target, fires OnSpellCastAt event, applies spell effects via spell system
@@ -2711,18 +2711,18 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             // 4. Apply spell effects to target(s) based on spell definition
             // 5. Fire spell events for script hooks
             // For now, we fire events and let scripts handle spell effects
-            
+
             if (target != null && ctx.World != null && ctx.World.EventBus != null)
             {
                 // Fire OnSpellCastAt script event for the caster
                 // Based on EclipseEntityFactory: OnSpellCastAt event is mapped from "ScriptSpellAt" field
                 // This allows scripts to react to spell casts and apply custom spell effects
                 ctx.World.EventBus.FireScriptEvent(caster, ScriptEvent.OnSpellCastAt, target);
-                
+
                 // Also fire OnSpellCastAt on the target so it can react to being targeted
                 // This allows target scripts to react to incoming spells
                 ctx.World.EventBus.FireScriptEvent(target, ScriptEvent.OnSpellCastAt, caster);
-                
+
                 // Store spell information in entity data for potential later processing
                 // This allows other systems (animations, effects, etc.) to query what spell was cast
                 caster.SetData("LastCastSpell", spell);
@@ -2730,7 +2730,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 target.SetData("LastSpellCastAt", spell);
                 target.SetData("LastSpellCastAtCaster", caster.ObjectId);
             }
-            
+
             return Variable.Void();
         }
 
@@ -2748,12 +2748,12 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         {
             int spell = args.Count > 0 ? args[0].AsInt() : 0;
             Vector3 target = args.Count > 1 ? args[1].AsVector() : Vector3.Zero;
-            
+
             if (ctx == null || ctx.Caller == null)
             {
                 return Variable.Void();
             }
-            
+
             // Cast spell at location
             // Based on daorigins.exe/DragonAge2.exe: CastSpellAtLocation fires spell cast events for area spells
             // Original implementation: Casts area spell at location, fires OnSpellCastAt event, applies area spell effects
@@ -2764,7 +2764,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             // 4. Apply spell effects to all entities in spell area of effect
             // 5. Fire spell events for script hooks
             // For now, we fire events and let scripts handle spell effects
-            
+
             Core.Interfaces.IEntity caster = ctx.Caller;
             if (caster != null && ctx.World != null && ctx.World.EventBus != null)
             {
@@ -2773,13 +2773,13 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 // This allows scripts to react to area spell casts and apply custom spell effects
                 // Note: Area spells affect all entities in a radius, scripts can query nearby entities
                 ctx.World.EventBus.FireScriptEvent(caster, ScriptEvent.OnSpellCastAt, null);
-                
+
                 // Store spell information in entity data for potential later processing
                 // This allows other systems (animations, effects, etc.) to query what spell was cast
                 caster.SetData("LastCastSpell", spell);
                 caster.SetData("LastCastSpellLocation", target);
             }
-            
+
             return Variable.Void();
         }
 
@@ -2810,7 +2810,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         {
             uint creatureId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             int ability = args.Count > 1 ? args[1].AsInt() : 0;
-            
+
             Core.Interfaces.IEntity creature = ResolveObject(creatureId, ctx);
             if (creature != null)
             {
@@ -2824,7 +2824,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     return Variable.FromInt(hasAbility ? 1 : 0);
                 }
             }
-            
+
             return Variable.FromInt(0);
         }
 
@@ -2841,7 +2841,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         {
             uint creatureId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             int spell = args.Count > 1 ? args[1].AsInt() : 0;
-            
+
             Core.Interfaces.IEntity creature = ResolveObject(creatureId, ctx);
             if (creature != null)
             {
@@ -2859,7 +2859,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     }
                 }
             }
-            
+
             return Variable.FromInt(0);
         }
 
@@ -2875,12 +2875,12 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         private Variable Func_GetAreaByTag(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string tag = args.Count > 0 ? args[0].AsString() : string.Empty;
-            
+
             if (string.IsNullOrEmpty(tag) || ctx == null || ctx.World == null)
             {
                 return Variable.FromObject(ObjectInvalid);
             }
-            
+
             // Check if current area matches tag
             if (ctx.World.CurrentArea != null && string.Equals(ctx.World.CurrentArea.Tag, tag, StringComparison.OrdinalIgnoreCase))
             {
@@ -2893,10 +2893,26 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     return Variable.FromObject(areaObjectId);
                 }
             }
-            
+
             // Search for area by tag (areas are typically loaded modules)
-            // TODO:  In full implementation, this would search loaded areas
-            // TODO: STUB - For now, return invalid if not current area
+            // Based on Eclipse engine: GetAreaByTag searches all registered areas
+            // Located via string reference: "AREANAME" @ 0x007be1dc (swkotor2.exe pattern, Eclipse uses similar system)
+            // Original implementation: Iterates through all loaded areas and returns first match by tag
+            // Cross-engine: Common implementation for both daorigins.exe and DragonAge2.exe
+            // Implementation: Search all registered areas in world, return AreaId of first matching tag
+            foreach (IArea area in ctx.World.GetAllAreas())
+            {
+                if (area != null && string.Equals(area.Tag, tag, StringComparison.OrdinalIgnoreCase))
+                {
+                    uint areaObjectId = ctx.World.GetAreaId(area);
+                    if (areaObjectId != 0)
+                    {
+                        return Variable.FromObject(areaObjectId);
+                    }
+                }
+            }
+
+            // No area found with matching tag
             return Variable.FromObject(ObjectInvalid);
         }
 
@@ -2912,12 +2928,12 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         private Variable Func_GetAreaOfObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            
+
             if (ctx == null || ctx.World == null)
             {
                 return Variable.FromObject(ObjectInvalid);
             }
-            
+
             // Get object's area
             Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null && entity.IsValid)
@@ -2935,7 +2951,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     }
                 }
             }
-            
+
             // Default to current area
             if (ctx.World.CurrentArea != null)
             {
@@ -2948,7 +2964,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     return Variable.FromObject(areaObjectId);
                 }
             }
-            
+
             return Variable.FromObject(ObjectInvalid);
         }
 
@@ -2981,17 +2997,17 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             string s = args.Count > 0 ? args[0].AsString() : string.Empty;
             int start = args.Count > 1 ? args[1].AsInt() : 0;
             int count = args.Count > 2 ? args[2].AsInt() : 0;
-            
+
             if (string.IsNullOrEmpty(s) || start < 0 || count <= 0)
             {
                 return Variable.FromString(string.Empty);
             }
-            
+
             if (start >= s.Length)
             {
                 return Variable.FromString(string.Empty);
             }
-            
+
             int actualCount = Math.Min(count, s.Length - start);
             return Variable.FromString(s.Substring(start, actualCount));
         }
@@ -3010,17 +3026,17 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             string s = args.Count > 0 ? args[0].AsString() : string.Empty;
             string subString = args.Count > 1 ? args[1].AsString() : string.Empty;
             int start = args.Count > 2 ? args[2].AsInt() : 0;
-            
+
             if (string.IsNullOrEmpty(s) || string.IsNullOrEmpty(subString) || start < 0)
             {
                 return Variable.FromInt(-1);
             }
-            
+
             if (start >= s.Length)
             {
                 return Variable.FromInt(-1);
             }
-            
+
             int index = s.IndexOf(subString, start, StringComparison.Ordinal);
             return Variable.FromInt(index);
         }
@@ -3040,19 +3056,19 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             {
                 return false;
             }
-            
+
             IStatsComponent stats = entity.GetComponent<IStatsComponent>();
             IPerceptionComponent perception = entity.GetComponent<IPerceptionComponent>();
             IFactionComponent faction = entity.GetComponent<IFactionComponent>();
             IInventoryComponent inventory = entity.GetComponent<IInventoryComponent>();
             ITransformComponent entityTransform = entity.GetComponent<ITransformComponent>();
             ITransformComponent targetTransform = target != null ? target.GetComponent<ITransformComponent>() : null;
-            
+
             switch (criteriaType)
             {
                 case 0: // None - always matches
                     return true;
-                    
+
                 case 1: // Perception
                     // criteriaValue: PERCEPTION_SEEN_AND_HEARD (0), PERCEPTION_NOT_SEEN_AND_NOT_HEARD (1), PERCEPTION_HEARD_AND_NOT_SEEN (2), PERCEPTION_SEEN_AND_NOT_HEARD (3), PERCEPTION_NOT_HEARD (4), PERCEPTION_HEARD (5), PERCEPTION_NOT_SEEN (6), PERCEPTION_SEEN (7)
                     if (perception == null || target == null)
@@ -3073,7 +3089,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                         case 7: return seen; // PERCEPTION_SEEN
                         default: return false;
                     }
-                    
+
                 case 2: // Disposition
                     // criteriaValue: Disposition value (typically 0-100, where 0-10=hostile, 11-89=neutral, 90-100=friendly)
                     if (faction == null || target == null)
@@ -3083,7 +3099,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     // Get reputation/disposition between entity and target
                     int disposition = GetDispositionValue(entity, target, ctx);
                     return disposition == criteriaValue;
-                    
+
                 case 3: // Reputation
                     // criteriaValue: Reputation value (0-100, where 0-10=hostile, 11-89=neutral, 90-100=friendly)
                     if (faction == null || target == null)
@@ -3092,12 +3108,12 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     }
                     int reputation = GetReputationValue(entity, target, ctx);
                     return reputation == criteriaValue;
-                    
+
                 case 4: // Team
                     // criteriaValue: Team ID
                     int entityTeam = entity.GetData<int>("Team", -1);
                     return entityTeam == criteriaValue;
-                    
+
                 case 5: // Reaction
                     // criteriaValue: Reaction type (0=hostile, 1=neutral, 2=friendly)
                     if (faction == null || target == null)
@@ -3106,17 +3122,17 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     }
                     int reaction = GetReactionType(entity, target, ctx);
                     return reaction == criteriaValue;
-                    
+
                 case 6: // Class
                     // criteriaValue: Class ID
                     int entityClass = entity.GetData<int>("Class", -1);
                     return entityClass == criteriaValue;
-                    
+
                 case 7: // Race
                     // criteriaValue: Race ID
                     int entityRace = entity.GetData<int>("Race", -1);
                     return entityRace == criteriaValue;
-                    
+
                 case 8: // Hp
                     // criteriaValue: HP threshold (0 = check if dead, >0 = check if HP >= value)
                     if (stats == null)
@@ -3128,14 +3144,14 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                         return stats.CurrentHP <= 0; // Dead
                     }
                     return stats.CurrentHP >= criteriaValue; // HP >= threshold
-                    
+
                 case 9: // Tag
                     // criteriaValue: Tag string ID or index
                     // Based on Eclipse engine: Tag criteria matching uses tag string ID or index to match entity tags
                     // Located via reverse engineering: Tag criteria system checks entity tags against criteria values
                     // If criteriaValue == 0: Check if entity has any tag (non-empty tag string)
                     // If criteriaValue > 0: criteriaValue represents a tag string ID or index that needs to be resolved
-                    // 
+                    //
                     // Tag resolution strategy:
                     // Since Eclipse engine may use tag IDs or indices, we need to resolve the criteriaValue to a tag string.
                     // The most practical approach is to look up tags from the world's entity tag collection and use
@@ -3146,7 +3162,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     {
                         return !string.IsNullOrEmpty(tag); // Has any tag
                     }
-                    
+
                     // For criteriaValue > 0, resolve tag string from world's tag collection
                     // Build a sorted list of unique tags from all entities in the world
                     // Use criteriaValue as 1-based index into this list for stable tag resolution
@@ -3155,7 +3171,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                         // Get all unique tags from world entities (sorted for stable indexing)
                         var allTags = new List<string>();
                         var tagSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                        
+
                         // Collect all unique tags from world entities
                         foreach (var worldEntity in ctx.World.GetAllEntities())
                         {
@@ -3168,10 +3184,10 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                                 }
                             }
                         }
-                        
+
                         // Sort tags for stable indexing (case-insensitive sort for consistency)
                         allTags.Sort(StringComparer.OrdinalIgnoreCase);
-                        
+
                         // Use criteriaValue as 1-based index into sorted tag list
                         // criteriaValue 1 = first tag, criteriaValue 2 = second tag, etc.
                         if (criteriaValue > 0 && criteriaValue <= allTags.Count)
@@ -3181,56 +3197,56 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                             return string.Equals(tag, targetTag, StringComparison.OrdinalIgnoreCase);
                         }
                     }
-                    
+
                     // If tag resolution failed (criteriaValue out of range or no world context),
                     // entity doesn't match the tag criteria
                     return false;
-                    
+
                 case 10: // NotDead
                     if (stats != null)
                     {
                         return stats.CurrentHP > 0;
                     }
                     return false;
-                    
+
                 case 11: // InCombat
                     if (ctx != null && ctx.World != null && ctx.World.CombatSystem != null)
                     {
                         return ctx.World.CombatSystem.IsInCombat(entity) == (criteriaValue != 0);
                     }
                     return criteriaValue == 0; // If no combat system, assume not in combat
-                    
+
                 case 12: // TargetType
                     // criteriaValue: ObjectType enum value
                     return (int)entity.ObjectType == criteriaValue;
-                    
+
                 case 13: // CreatureType
                     // criteriaValue: Creature type ID
                     int creatureType = entity.GetData<int>("CreatureType", -1);
                     return creatureType == criteriaValue;
-                    
+
                 case 14: // Allegiance
                     // criteriaValue: Allegiance ID
                     int allegiance = entity.GetData<int>("Allegiance", -1);
                     return allegiance == criteriaValue;
-                    
+
                 case 15: // Gender
                     // criteriaValue: Gender (0=male, 1=female, 2=other/unknown)
                     int gender = entity.GetData<int>("Gender", -1);
                     return gender == criteriaValue;
-                    
+
                 case 16: // Player
                     Variable isPC = Func_GetIsPC(new[] { Variable.FromObject(entity.ObjectId) }, ctx);
                     return (isPC.AsInt() != 0) == (criteriaValue != 0);
-                    
+
                 case 17: // Party
                     Variable isPartyMember = Func_IsObjectPartyMember(new[] { Variable.FromObject(entity.ObjectId) }, ctx);
                     return (isPartyMember.AsInt() != 0) == (criteriaValue != 0);
-                    
+
                 case 18: // Area
                     // criteriaValue: Area ID
                     return entity.AreaId == (uint)criteriaValue;
-                    
+
                 case 19: // Location
                     // criteriaValue: Location check - requires position comparison
                     if (entityTransform == null || targetTransform == null)
@@ -3239,7 +3255,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     }
                     // TODO:  For location matching, criteriaValue might be a radius - for now, check if in same area
                     return entity.AreaId == target.AreaId;
-                    
+
                 case 20: // LineOfSight
                     // criteriaValue: 1 = has line of sight, 0 = no line of sight
                     if (entityTransform == null || targetTransform == null || ctx == null || ctx.World == null)
@@ -3248,7 +3264,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     }
                     bool hasLOS = HasLineOfSight(entityTransform.Position, targetTransform.Position, ctx);
                     return hasLOS == (criteriaValue != 0);
-                    
+
                 case 21: // Distance
                     // criteriaValue: Maximum distance (in units)
                     if (entityTransform == null || targetTransform == null)
@@ -3257,7 +3273,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     }
                     float distance = Vector3.Distance(entityTransform.Position, targetTransform.Position);
                     return distance <= criteriaValue;
-                    
+
                 case 22: // HasItem
                     // criteriaValue: Item ID or tag index
                     if (inventory == null)
@@ -3266,7 +3282,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     }
                     // Check if entity has item with matching ID/tag
                     return HasItemByIdOrTag(entity, criteriaValue, ctx);
-                    
+
                 case 23: // HasSpell
                     // criteriaValue: Spell ID
                     if (stats == null)
@@ -3274,7 +3290,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                         return false;
                     }
                     return stats.HasSpell(criteriaValue);
-                    
+
                 case 24: // HasSkill
                     // criteriaValue: Skill ID (0 = has any skill, >0 = has specific skill with rank > 0)
                     if (stats == null)
@@ -3294,31 +3310,31 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                         return false;
                     }
                     return stats.GetSkillRank(criteriaValue) > 0;
-                    
+
                 case 25: // HasFeat
                     // criteriaValue: Feat ID
                     return HasFeat(entity, criteriaValue, ctx);
-                    
+
                 case 26: // HasTalent
                     // criteriaValue: Talent ID
                     return HasTalent(entity, criteriaValue, ctx);
-                    
+
                 case 27: // HasEffect
                     // criteriaValue: Effect ID
                     return HasEffect(entity, criteriaValue, ctx);
-                    
+
                 case 28: // HasVariable
                     // criteriaValue: Variable name ID or index
                     return HasVariable(entity, criteriaValue, ctx);
-                    
+
                 case 29: // HasLocalVariable
                     // criteriaValue: Local variable name ID or index
                     return HasLocalVariable(entity, criteriaValue, ctx);
-                    
+
                 case 30: // HasGlobalVariable
                     // criteriaValue: Global variable name ID or index
                     return HasGlobalVariable(criteriaValue, ctx);
-                    
+
                 case 31: // HasFaction
                     // criteriaValue: Faction ID
                     if (faction == null)
@@ -3326,22 +3342,22 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                         return false;
                     }
                     return faction.FactionId == criteriaValue;
-                    
+
                 case 32: // HasAlignment
                     // criteriaValue: Alignment value
                     int alignment = entity.GetData<int>("Alignment", -1);
                     return alignment == criteriaValue;
-                    
+
                 case 33: // HasGoodEvil
                     // criteriaValue: Good/Evil axis value (typically 0-100, where 0-49=evil, 50=neutral, 51-100=good)
                     int goodEvil = entity.GetData<int>("GoodEvil", -1);
                     return goodEvil == criteriaValue;
-                    
+
                 case 34: // HasLawfulChaotic
                     // criteriaValue: Lawful/Chaotic axis value (typically 0-100, where 0-49=chaotic, 50=neutral, 51-100=lawful)
                     int lawfulChaotic = entity.GetData<int>("LawfulChaotic", -1);
                     return lawfulChaotic == criteriaValue;
-                    
+
                 case 35: // HasLevel
                     // criteriaValue: Level threshold (0 = has any level, >0 = level >= value)
                     if (stats == null)
@@ -3353,42 +3369,42 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                         return stats.Level > 0;
                     }
                     return stats.Level >= criteriaValue;
-                    
+
                 case 36: // HasClass
                     // criteriaValue: Class ID (check if entity has this class)
                     int hasClass = entity.GetData<int>("Class", -1);
                     return hasClass == criteriaValue;
-                    
+
                 case 37: // HasRace
                     // criteriaValue: Race ID (check if entity has this race)
                     int hasRace = entity.GetData<int>("Race", -1);
                     return hasRace == criteriaValue;
-                    
+
                 case 38: // HasGender
                     // criteriaValue: Gender value (0=male, 1=female, 2=other)
                     int hasGender = entity.GetData<int>("Gender", -1);
                     return hasGender == criteriaValue;
-                    
+
                 case 39: // HasSubrace
                     // criteriaValue: Subrace ID
                     int subrace = entity.GetData<int>("Subrace", -1);
                     return subrace == criteriaValue;
-                    
+
                 case 40: // HasDeity
                     // criteriaValue: Deity ID
                     int deity = entity.GetData<int>("Deity", -1);
                     return deity == criteriaValue;
-                    
+
                 case 41: // HasDomain
                     // criteriaValue: Domain ID
                     int domain = entity.GetData<int>("Domain", -1);
                     return domain == criteriaValue;
-                    
+
                 case 42: // HasDomainSource
                     // criteriaValue: Domain source ID
                     int domainSource = entity.GetData<int>("DomainSource", -1);
                     return domainSource == criteriaValue;
-                    
+
                 case 43: // HasAbilityScore
                     // criteriaValue: Ability ID (0-5 for STR, DEX, CON, INT, WIS, CHA)
                     if (stats == null)
@@ -3404,7 +3420,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     Core.Enums.Ability ability = (Core.Enums.Ability)abilityId;
                     int abilityScore = stats.GetAbility(ability);
                     return abilityScore > 0; // Has non-zero ability score
-                    
+
                 case 44: // HasAbilityModifier
                     // criteriaValue: Ability ID (0-5) - check if has modifier > 0
                     if (stats == null)
@@ -3419,7 +3435,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     Core.Enums.Ability ability44 = (Core.Enums.Ability)abilityId44;
                     int modifier = stats.GetAbilityModifier(ability44);
                     return modifier > 0;
-                    
+
                 case 45: // HasSkillRank
                     // criteriaValue: Skill ID - check if has rank > 0
                     if (stats == null)
@@ -3428,27 +3444,27 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     }
                     int skillId = criteriaValue & 0xFF;
                     return stats.GetSkillRank(skillId) > 0;
-                    
+
                 case 46: // HasFeatCount
                     // criteriaValue: Minimum feat count
                     int featCount = GetFeatCount(entity, ctx);
                     return featCount >= criteriaValue;
-                    
+
                 case 47: // HasSpellCount
                     // criteriaValue: Minimum spell count
                     int spellCount = GetSpellCount(entity, ctx);
                     return spellCount >= criteriaValue;
-                    
+
                 case 48: // HasTalentCount
                     // criteriaValue: Minimum talent count
                     int talentCount = GetTalentCount(entity, ctx);
                     return talentCount >= criteriaValue;
-                    
+
                 case 49: // HasEffectCount
                     // criteriaValue: Minimum effect count
                     int effectCount = GetEffectCount(entity, ctx);
                     return effectCount >= criteriaValue;
-                    
+
                 case 50: // HasItemCount
                     // criteriaValue: Minimum item count
                     if (inventory == null)
@@ -3457,28 +3473,28 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     }
                     int itemCount = GetItemCount(entity, ctx);
                     return itemCount >= criteriaValue;
-                    
+
                 case 51: // HasVariableValue
                     // criteriaValue: Encoded as (variableId << 16) | expectedValue
                     int varId51 = (criteriaValue >> 16) & 0xFFFF;
                     int expectedValue51 = criteriaValue & 0xFFFF;
                     int varValue51 = GetVariableValue(entity, varId51, ctx);
                     return varValue51 == expectedValue51;
-                    
+
                 case 52: // HasLocalVariableValue
                     // criteriaValue: Encoded as (variableId << 16) | expectedValue
                     int varId52 = (criteriaValue >> 16) & 0xFFFF;
                     int expectedValue52 = criteriaValue & 0xFFFF;
                     int varValue52 = GetLocalVariableValue(entity, varId52, ctx);
                     return varValue52 == expectedValue52;
-                    
+
                 case 53: // HasGlobalVariableValue
                     // criteriaValue: Encoded as (variableId << 16) | expectedValue
                     int varId53 = (criteriaValue >> 16) & 0xFFFF;
                     int expectedValue53 = criteriaValue & 0xFFFF;
                     int varValue53 = GetGlobalVariableValue(varId53, ctx);
                     return varValue53 == expectedValue53;
-                    
+
                 case 54: // HasFactionValue
                     // criteriaValue: Faction ID
                     if (faction == null)
@@ -3486,22 +3502,22 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                         return false;
                     }
                     return faction.FactionId == criteriaValue;
-                    
+
                 case 55: // HasAlignmentValue
                     // criteriaValue: Alignment value
                     int alignment55 = entity.GetData<int>("Alignment", -1);
                     return alignment55 == criteriaValue;
-                    
+
                 case 56: // HasGoodEvilValue
                     // criteriaValue: Good/Evil value
                     int goodEvil56 = entity.GetData<int>("GoodEvil", -1);
                     return goodEvil56 == criteriaValue;
-                    
+
                 case 57: // HasLawfulChaoticValue
                     // criteriaValue: Lawful/Chaotic value
                     int lawfulChaotic57 = entity.GetData<int>("LawfulChaotic", -1);
                     return lawfulChaotic57 == criteriaValue;
-                    
+
                 case 58: // HasLevelValue
                     // criteriaValue: Level value
                     if (stats == null)
@@ -3509,42 +3525,42 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                         return false;
                     }
                     return stats.Level == criteriaValue;
-                    
+
                 case 59: // HasClassValue
                     // criteriaValue: Class ID
                     int class59 = entity.GetData<int>("Class", -1);
                     return class59 == criteriaValue;
-                    
+
                 case 60: // HasRaceValue
                     // criteriaValue: Race ID
                     int race60 = entity.GetData<int>("Race", -1);
                     return race60 == criteriaValue;
-                    
+
                 case 61: // HasGenderValue
                     // criteriaValue: Gender value
                     int gender61 = entity.GetData<int>("Gender", -1);
                     return gender61 == criteriaValue;
-                    
+
                 case 62: // HasSubraceValue
                     // criteriaValue: Subrace ID
                     int subrace62 = entity.GetData<int>("Subrace", -1);
                     return subrace62 == criteriaValue;
-                    
+
                 case 63: // HasDeityValue
                     // criteriaValue: Deity ID
                     int deity63 = entity.GetData<int>("Deity", -1);
                     return deity63 == criteriaValue;
-                    
+
                 case 64: // HasDomainValue
                     // criteriaValue: Domain ID
                     int domain64 = entity.GetData<int>("Domain", -1);
                     return domain64 == criteriaValue;
-                    
+
                 case 65: // HasDomainSourceValue
                     // criteriaValue: Domain source ID
                     int domainSource65 = entity.GetData<int>("DomainSource", -1);
                     return domainSource65 == criteriaValue;
-                    
+
                 case 66: // HasAbilityScoreValue
                     // criteriaValue: Encoded as (abilityId << 16) | expectedScore
                     if (stats == null)
@@ -3560,7 +3576,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     Core.Enums.Ability ability66 = (Core.Enums.Ability)abilityId66;
                     int actualScore = stats.GetAbility(ability66);
                     return actualScore == expectedScore;
-                    
+
                 case 67: // HasAbilityModifierValue
                     // criteriaValue: Encoded as (abilityId << 16) | expectedModifier
                     if (stats == null)
@@ -3576,7 +3592,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     Core.Enums.Ability ability67 = (Core.Enums.Ability)abilityId67;
                     int actualModifier = stats.GetAbilityModifier(ability67);
                     return actualModifier == expectedModifier;
-                    
+
                 case 68: // HasSkillRankValue
                     // criteriaValue: Encoded as (skillId << 16) | expectedRank
                     if (stats == null)
@@ -3587,27 +3603,27 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     int expectedRank = criteriaValue & 0xFFFF;
                     int actualRank = stats.GetSkillRank(skillId68);
                     return actualRank == expectedRank;
-                    
+
                 case 69: // HasFeatCountValue
                     // criteriaValue: Exact feat count
                     int featCount69 = GetFeatCount(entity, ctx);
                     return featCount69 == criteriaValue;
-                    
+
                 case 70: // HasSpellCountValue
                     // criteriaValue: Exact spell count
                     int spellCount70 = GetSpellCount(entity, ctx);
                     return spellCount70 == criteriaValue;
-                    
+
                 case 71: // HasTalentCountValue
                     // criteriaValue: Exact talent count
                     int talentCount71 = GetTalentCount(entity, ctx);
                     return talentCount71 == criteriaValue;
-                    
+
                 case 72: // HasEffectCountValue
                     // criteriaValue: Exact effect count
                     int effectCount72 = GetEffectCount(entity, ctx);
                     return effectCount72 == criteriaValue;
-                    
+
                 case 73: // HasItemCountValue
                     // criteriaValue: Exact item count
                     if (inventory == null)
@@ -3616,7 +3632,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     }
                     int itemCount73 = GetItemCount(entity, ctx);
                     return itemCount73 == criteriaValue;
-                    
+
                 default:
                     // Unknown criteria type - return false for safety
                     return false;
@@ -3636,13 +3652,13 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             {
                 return 50; // Neutral if entities are null
             }
-            
+
             IFactionComponent faction = entity.GetComponent<IFactionComponent>();
             if (faction == null)
             {
                 return 50; // Neutral if no faction component
             }
-            
+
             // Use faction reputation as disposition
             if (ctx != null && ctx.World != null && ctx.World.FactionManager != null)
             {
@@ -3653,7 +3669,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     return eclipseFactionManager.GetReputation(entity, target);
                 }
             }
-            
+
             // Fallback: Check if hostile/friendly
             if (faction.IsHostile(target))
             {
@@ -3665,7 +3681,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             }
             return 50; // Neutral
         }
-        
+
         /// <summary>
         /// Helper method to get reputation value between two entities
         /// </summary>
@@ -3678,7 +3694,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             // Reputation and disposition are the same in Eclipse engine
             return GetDispositionValue(entity, target, ctx);
         }
-        
+
         /// <summary>
         /// Helper method to get reaction type between two entities
         /// </summary>
@@ -3692,13 +3708,13 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             {
                 return 1; // Neutral
             }
-            
+
             IFactionComponent faction = entity.GetComponent<IFactionComponent>();
             if (faction == null)
             {
                 return 1; // Neutral
             }
-            
+
             int reputation = GetReputationValue(entity, target, ctx);
             if (reputation <= 10)
             {
@@ -3710,7 +3726,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             }
             return 1; // Neutral
         }
-        
+
         /// <summary>
         /// Helper method to check if there is line of sight between two positions
         /// </summary>
@@ -3729,7 +3745,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             {
                 return false;
             }
-            
+
             // Use eye height offsets for line-of-sight checks (matches PerceptionSystem behavior)
             // Eye position is 1.5 units above ground level - this represents where entities "see" from
             // Based on swkotor2.exe: Line-of-sight raycast implementation uses eye height offsets
@@ -3738,7 +3754,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             const float DefaultEyeHeight = 1.5f; // units above entity position
             Vector3 fromEyePos = from + Vector3.UnitZ * DefaultEyeHeight;
             Vector3 toEyePos = to + Vector3.UnitZ * DefaultEyeHeight;
-            
+
             // Handle edge case: same point always has line of sight
             Vector3 direction = toEyePos - fromEyePos;
             float distance = direction.Length();
@@ -3746,7 +3762,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             {
                 return true; // Same point, line of sight is clear
             }
-            
+
             // Check if navigation mesh is available for raycast
             if (ctx.World.CurrentArea == null || ctx.World.CurrentArea.NavigationMesh == null)
             {
@@ -3754,10 +3770,10 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 // Return false to indicate unknown visibility (safer than assuming visibility)
                 return false;
             }
-            
+
             // Normalize direction for raycast
             Vector3 normalizedDir = direction / distance;
-            
+
             // Perform raycast to check for obstructions
             // Based on swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 performs walkmesh raycasts for visibility checks
             Vector3 hitPoint;
@@ -3768,7 +3784,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 // Calculate distances from eye position
                 float distToHit = Vector3.Distance(fromEyePos, hitPoint);
                 float distToDest = distance;
-                
+
                 // If hit is very close to destination (within tolerance), consider line of sight clear
                 // This handles cases where the raycast hits the destination geometry itself
                 // Tolerance matches BaseNavigationMesh.LineOfSightTolerance (0.5 units)
@@ -3778,15 +3794,15 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 {
                     return true; // Hit is at or very close to destination, line of sight is clear
                 }
-                
+
                 // Hit is significantly before destination - line of sight is blocked
                 return false;
             }
-            
+
             // No hit found - line of sight is clear
             return true;
         }
-        
+
         /// <summary>
         /// Helper method to check if entity has item by ID or tag
         /// </summary>
@@ -3797,7 +3813,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             {
                 return false;
             }
-            
+
             // Check all items in inventory
             foreach (Core.Interfaces.IEntity item in inventory.GetAllItems())
             {
@@ -3805,20 +3821,20 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 {
                     continue;
                 }
-                
+
                 // Check by item ID (stored in entity data)
                 int itemId = item.GetData<int>("ItemId", -1);
                 if (itemId == itemIdOrTag)
                 {
                     return true;
                 }
-                
+
                 // TODO:  Check by tag (if itemIdOrTag is a tag index, would need lookup - for now skip)
             }
-            
+
             return false;
         }
-        
+
         /// <summary>
         /// Helper method to check if entity has a feat
         /// </summary>
@@ -3830,7 +3846,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             {
                 return featList.Contains(featId);
             }
-            
+
             // Also check stats component if it supports feats
             IStatsComponent stats = entity.GetComponent<IStatsComponent>();
             if (stats != null)
@@ -3842,10 +3858,10 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     return true;
                 }
             }
-            
+
             return false;
         }
-        
+
         /// <summary>
         /// Helper method to check if entity has a talent
         /// </summary>
@@ -3857,10 +3873,10 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             {
                 return talentList.Contains(talentId);
             }
-            
+
             return false;
         }
-        
+
         /// <summary>
         /// Helper method to check if entity has an effect
         /// </summary>
@@ -3872,10 +3888,10 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             {
                 return effectList.Contains(effectId);
             }
-            
+
             return false;
         }
-        
+
         /// <summary>
         /// Helper method to check if entity has a variable
         /// </summary>
@@ -3885,7 +3901,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             string varKey = $"Variable_{variableId}";
             return entity.HasData(varKey);
         }
-        
+
         /// <summary>
         /// Helper method to check if entity has a local variable
         /// </summary>
@@ -3895,7 +3911,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             string varKey = $"LocalVariable_{variableId}";
             return entity.HasData(varKey);
         }
-        
+
         /// <summary>
         /// Helper method to check if global variable exists
         /// </summary>
@@ -3905,14 +3921,14 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             {
                 return false;
             }
-            
+
             // Global variables are stored in world or module
             string varKey = $"GlobalVariable_{variableId}";
             // Would need access to world's variable storage
             // TODO: STUB - For now, return false
             return false;
         }
-        
+
         /// <summary>
         /// Helper method to get variable value
         /// </summary>
@@ -3921,7 +3937,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             string varKey = $"Variable_{variableId}";
             return entity.GetData<int>(varKey, 0);
         }
-        
+
         /// <summary>
         /// Helper method to get local variable value
         /// </summary>
@@ -3930,7 +3946,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             string varKey = $"LocalVariable_{variableId}";
             return entity.GetData<int>(varKey, 0);
         }
-        
+
         /// <summary>
         /// Helper method to get global variable value
         /// </summary>
@@ -3940,12 +3956,12 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             {
                 return 0;
             }
-            
+
             // Global variables are stored in world or module
             // TODO: STUB - For now, return 0
             return 0;
         }
-        
+
         /// <summary>
         /// Helper method to get feat count
         /// </summary>
@@ -3958,7 +3974,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             }
             return 0;
         }
-        
+
         /// <summary>
         /// Helper method to get spell count
         /// </summary>
@@ -3976,7 +3992,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             {
                 return 0;
             }
-            
+
             // Primary method: Use EclipseStatsComponent.GetKnownSpells() to get all known spells
             // This is the most efficient and accurate method, using the internal HashSet of known spells
             EclipseStatsComponent eclipseStats = stats as EclipseStatsComponent;
@@ -3990,7 +4006,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 }
                 return count;
             }
-            
+
             // Fallback method 1: Check entity data for stored spell list
             // This can happen if entity data was saved/loaded from disk
             List<int> spellList = entity.GetData<List<int>>("SpellList", null);
@@ -3998,7 +4014,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             {
                 return spellList.Count;
             }
-            
+
             // Fallback method 2: Check for KnownSpells/KnownTalents/KnownAbilities in entity data
             // Eclipse engine uses these keys to store known spells/talents/abilities
             object knownSpellsObj = entity.GetData("KnownSpells") ?? entity.GetData("KnownTalents") ?? entity.GetData("KnownAbilities");
@@ -4014,7 +4030,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     }
                     return count;
                 }
-                
+
                 // Try as generic IEnumerable (in case it's stored as List<object> or similar)
                 System.Collections.IEnumerable enumerable = knownSpellsObj as System.Collections.IEnumerable;
                 if (enumerable != null)
@@ -4027,7 +4043,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     return count;
                 }
             }
-            
+
             // Fallback method 3: Iterate through possible spell IDs and check HasSpell
             // This is the least efficient method but works as a last resort
             // In practice, this should rarely be needed since EclipseStatsComponent should be available
@@ -4042,7 +4058,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             }
             return fallbackCount;
         }
-        
+
         /// <summary>
         /// Helper method to get talent count
         /// </summary>
@@ -4055,7 +4071,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             }
             return 0;
         }
-        
+
         /// <summary>
         /// Helper method to get effect count
         /// </summary>
@@ -4068,7 +4084,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             }
             return 0;
         }
-        
+
         /// <summary>
         /// Helper method to get item count
         /// </summary>
@@ -4079,7 +4095,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             {
                 return 0;
             }
-            
+
             int count = 0;
             foreach (Core.Interfaces.IEntity item in inventory.GetAllItems())
             {
