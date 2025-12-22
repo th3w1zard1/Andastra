@@ -2741,7 +2741,9 @@ namespace Andastra.Runtime.MonoGame.Backends
                 VulkanFramebuffer vulkanFramebuffer = framebuffer as VulkanFramebuffer;
                 if (vulkanFramebuffer != null)
                 {
-                    vkRenderPass = vulkanFramebuffer.VkRenderPass;
+                    // TODO: STUB - VulkanFramebuffer needs a public VkRenderPass property
+                    // For now, get render pass from framebuffer description or create a new one
+                    vkRenderPass = CreateRenderPassFromFramebufferDesc(framebuffer.Desc);
                 }
 
                 // If framebuffer doesn't have a render pass, create one from its description

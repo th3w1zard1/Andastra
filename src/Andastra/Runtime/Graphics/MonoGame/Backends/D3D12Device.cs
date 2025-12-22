@@ -848,7 +848,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                 // Return pipeline with zero handles on failure (allows graceful degradation)
                 IntPtr handle = new IntPtr(_nextResourceHandle++);
-                var pipeline = new D3D12GraphicsPipeline(handle, desc, IntPtr.Zero, rootSignature, _device);
+                var pipeline = new D3D12GraphicsPipeline(handle, desc, IntPtr.Zero, rootSignature, _device, this);
                 _resources[handle] = pipeline;
 
                 Console.WriteLine($"[D3D12Device] WARNING: Failed to create graphics pipeline state: {ex.Message}");
@@ -1173,13 +1173,18 @@ namespace Andastra.Runtime.MonoGame.Backends
                     }
 
                     // Get blob size (ID3DBlob::GetBufferSize is at vtable index 3)
-                    IntPtr* blobVtable = *(IntPtr**)blobPtr;
-                    IntPtr getBufferSizePtr = blobVtable[3];
+                    IntPtr getBufferSizePtr;
+                    IntPtr getBufferPointerPtr;
+                    unsafe
+                    {
+                        IntPtr* blobVtable = *(IntPtr**)blobPtr;
+                        getBufferSizePtr = blobVtable[3];
+                        getBufferPointerPtr = blobVtable[4];
+                    }
                     GetBufferSizeDelegate getBufferSize = (GetBufferSizeDelegate)Marshal.GetDelegateForFunctionPointer(getBufferSizePtr, typeof(GetBufferSizeDelegate));
                     IntPtr blobSize = getBufferSize(blobPtr);
 
                     // Get blob buffer (ID3DBlob::GetBufferPointer is at vtable index 4)
-                    IntPtr getBufferPointerPtr = blobVtable[4];
                     GetBufferPointerDelegate getBufferPointer = (GetBufferPointerDelegate)Marshal.GetDelegateForFunctionPointer(getBufferPointerPtr, typeof(GetBufferPointerDelegate));
                     IntPtr blobBuffer = getBufferPointer(blobPtr);
 
