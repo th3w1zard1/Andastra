@@ -830,9 +830,46 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
 
                 if (entryJsrTarget >= 0 && entryJsrTarget > entryStubEnd && !entryJsrTargetIsLastRetn2)
                 {
-                    // TODO:  entryJsrTarget is valid and after entry stub and not the last RETN - use it
-                    mainStart = entryJsrTarget;
-                    Debug($"DEBUG NcsToAstConverter: Using entryJsrTarget {entryJsrTarget} as mainStart (after entry stub at {entryStubEnd})");
+                    // entryJsrTarget is valid and after entry stub and not the last RETN - use it
+                    // swkotor2.exe: 0x004eb750 - Entry JSR target points to main function start
+                    // This is the normal case: entry stub (JSR+RETN) calls main function at entryJsrTarget
+                    // Validation: Ensure entryJsrTarget is within valid instruction range
+                    if (entryJsrTarget < instructions.Count)
+                    {
+                        // Additional validation: Ensure entryJsrTarget doesn't point to another entry stub pattern
+                        // This can happen in malformed scripts or edge cases
+                        bool pointsToAnotherStub = false;
+                        if (entryJsrTarget < instructions.Count - 1)
+                        {
+                            // Check if entryJsrTarget points to a JSR+RETN pattern (another entry stub)
+                            if (instructions[entryJsrTarget].InsType == NCSInstructionType.JSR &&
+                                entryJsrTarget + 1 < instructions.Count &&
+                                instructions[entryJsrTarget + 1].InsType == NCSInstructionType.RETN)
+                            {
+                                pointsToAnotherStub = true;
+                                Debug($"DEBUG NcsToAstConverter: WARNING - entryJsrTarget {entryJsrTarget} points to another entry stub pattern (JSR+RETN), this may indicate malformed script");
+                            }
+                        }
+                        
+                        if (!pointsToAnotherStub)
+                        {
+                            // Valid entryJsrTarget - use it as mainStart
+                            mainStart = entryJsrTarget;
+                            Debug($"DEBUG NcsToAstConverter: Using entryJsrTarget {entryJsrTarget} as mainStart (after entry stub at {entryStubEnd}, valid main function entry point)");
+                        }
+                        else
+                        {
+                            // entryJsrTarget points to another stub - fall back to entryStubEnd
+                            mainStart = entryStubEnd;
+                            Debug($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} points to another entry stub, falling back to entryStubEnd {entryStubEnd} as mainStart");
+                        }
+                    }
+                    else
+                    {
+                        // entryJsrTarget is out of bounds - fall back to entryStubEnd
+                        mainStart = entryStubEnd;
+                        Debug($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} is out of bounds (instructions.Count={instructions.Count}), falling back to entryStubEnd {entryStubEnd} as mainStart");
+                    }
                 }
                 else if (alternativeMainStart >= 0)
                 {
