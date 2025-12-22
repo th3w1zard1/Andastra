@@ -9,7 +9,12 @@ using Andastra.Parsing.Common;
 namespace Andastra.Parsing.Formats.MDLData
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_data.py
-    // Comprehensive data containers mirroring fields for MDL/MDX structures.
+    // Comprehensive data containers mirroring all fields from MDL/MDX binary structures.
+    // Binary format references:
+    // - vendor/mdlops/MDLOpsM.pm:172 - Node header structure (80 bytes: "SSSSllffffffflllllllll")
+    // - vendor/PyKotor/wiki/MDL-MDX-File-Format.md - Complete format specification
+    // - vendor/reone/src/libs/graphics/format/mdlmdxreader.cpp - Binary parsing implementation
+    // - vendor/kotorblender/io_scene_kotor/format/mdl/reader.py - Python parsing reference
     // 
     // These classes represent high-level data structures for MDL/MDX model files used in BioWare games
     // (KotOR, KotOR 2, Dragon Age, etc.). The structures are designed to match the binary format
@@ -21,10 +26,6 @@ namespace Andastra.Parsing.Formats.MDLData
     // - vendor/kotorblender/io_scene_kotor/format/mdl/ - Blender MDL loader/exporter
     // - vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_data.py - Python reference implementation
     // - vendor/PyKotor/wiki/MDL-MDX-File-Format.md - Complete format documentation
-    //
-    // Note: Binary offset fields (e.g., RootNodeOffset, ParentNodeOffset, ChildArrayOffset) are
-    // handled internally by MDLBinaryReader/MDLBinaryWriter and are not exposed in these high-level
-    // data structures, as they are implementation details of the binary format rather than model data.
 
     public class MDL : IEquatable<MDL>
     {
@@ -1103,59 +1104,275 @@ namespace Andastra.Parsing.Formats.MDLData
         }
     }
 
+    /// <summary>
+    /// Represents a node in the MDL tree structure. Nodes form a hierarchical tree where each node
+    /// can contain geometric data (mesh, skin, dangly, saber, walkmesh), light sources, particle emitters,
+    /// or serve as positioning dummies. Controller keyframes can animate node properties over time.
+    /// 
+    /// Binary Format (80-byte node header):
+    /// - Offset 0x00: Node type flags (uint16) - bitmask indicating node features
+    /// - Offset 0x02: Node index (uint16) - sequential index of this node in the model
+    /// - Offset 0x04: Node name index (uint16) - index into the names array for this node's name
+    /// - Offset 0x06: Padding (uint16) - alignment padding
+    /// - Offset 0x08: Root node offset (uint32) - offset to the model's root node
+    /// - Offset 0x0C: Parent node offset (uint32) - offset to this node's parent node (0 if root)
+    /// - Offset 0x10: Position X (float) - node position in local space
+    /// - Offset 0x14: Position Y (float)
+    /// - Offset 0x18: Position Z (float)
+    /// - Offset 0x1C: Orientation W (float) - quaternion rotation (W, X, Y, Z order)
+    /// - Offset 0x20: Orientation X (float)
+    /// - Offset 0x24: Orientation Y (float)
+    /// - Offset 0x28: Orientation Z (float)
+    /// - Offset 0x2C: Child array offset (uint32) - offset to array of child node offsets
+    /// - Offset 0x30: Child count (uint32) - number of child nodes
+    /// - Offset 0x34: Child count duplicate (uint32) - duplicate value of child count
+    /// - Offset 0x38: Controller array offset (uint32) - offset to array of controller structures
+    /// - Offset 0x3C: Controller count (uint32) - number of controllers attached to this node
+    /// - Offset 0x40: Controller count duplicate (uint32) - duplicate value of controller count
+    /// - Offset 0x44: Controller data offset (uint32) - offset to controller keyframe/data array
+    /// - Offset 0x48: Controller data count (uint32) - number of floats in controller data array
+    /// - Offset 0x4C: Controller data count duplicate (uint32) - duplicate value of controller data count
+    /// 
+    /// References:
+    /// - vendor/mdlops/MDLOpsM.pm:172 - Node header structure definition
+    /// - vendor/mdlops/MDLOpsM.pm:1590-1622 - Node header reading implementation
+    /// - vendor/reone/include/reone/graphics/modelnode.h:31-287 - ModelNode class definition
+    /// - vendor/reone/src/libs/graphics/format/mdlmdxreader.cpp:182-290 - Node loading from MDL
+    /// - vendor/kotorblender/io_scene_kotor/format/mdl/reader.py:406-582 - Node reading
+    /// - vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_data.py:466-640 - PyKotor MDLNode
+    /// </summary>
     public class MDLNode : IEquatable<MDLNode>
     {
+        /// <summary>
+        /// Node name (ASCII string, max 32 chars in binary format).
+        /// Binary: Offset 0x04 - Node name index (uint16) into names array.
+        /// Reference: vendor/reone/src/libs/graphics/format/mdlmdxreader.cpp:212
+        /// </summary>
         public string Name { get; set; }
+        
+        /// <summary>
+        /// Model name for reference nodes (ASCII MDL format compatibility).
+        /// Used when node type includes REFERENCE flag (0x10).
+        /// Reference: vendor/reone/include/reone/graphics/modelnode.h:155-158
+        /// </summary>
         public string ModelName { get; set; }
+        
+        /// <summary>
+        /// Unique node number within model for quick lookups.
+        /// Binary: Offset 0x02 - Node index (uint16).
+        /// Reference: vendor/reone/src/libs/graphics/format/mdlmdxreader.cpp:202-203
+        /// </summary>
         public int NodeId { get; set; }
+        
+        /// <summary>
+        /// Local position relative to parent (x, y, z).
+        /// Binary: Offset 0x10-0x18 - Position X/Y/Z (float[3]).
+        /// Can be animated via position controller (type 8).
+        /// Reference: vendor/reone/include/reone/graphics/modelnode.h:243
+        /// </summary>
         public Vector3 Position { get; set; }
+        
+        /// <summary>
+        /// Local rotation as quaternion (x, y, z, w).
+        /// Binary: Offset 0x1C-0x28 - Orientation W/X/Y/Z (float[4], stored as W,X,Y,Z).
+        /// Quaternion format ensures smooth interpolation for animation.
+        /// Can be animated via orientation controller (type 20).
+        /// Reference: vendor/reone/include/reone/graphics/modelnode.h:244
+        /// </summary>
         public Vector4 Orientation { get; set; }
         /// <summary>
         /// Unknown field 0 in MDL node structure.
+        /// Binary: Not directly in node header - may be from trimesh subheader or computed during parsing.
         /// Based on MDLOps analysis, this may correspond to m_bUnknown1 field at index 18 in trimesh subheader.
         /// Possibly a boolean flag related to rendering or processing state.
-        /// Currently unimplemented - defaults to 0.
+        /// Reference: vendor/mdlops/MDLOpsM.pm - trimesh header analysis
         /// </summary>
         public int Unknown0 { get; set; }
 
         /// <summary>
         /// Unknown field 1 in MDL node structure.
-        /// Purpose unknown. Currently unimplemented - defaults to 0.
+        /// Binary: Not directly in node header - may be from trimesh subheader or computed during parsing.
+        /// Purpose unknown. Preserved for binary format compatibility.
         /// </summary>
         public int Unknown1 { get; set; }
 
         /// <summary>
         /// Unknown field 2 in MDL node structure.
+        /// Binary: Not directly in node header - may be from trimesh subheader or computed during parsing.
         /// Based on MDLOps analysis, this may correspond to 'unknown' field at index 32 in trimesh subheader.
-        /// Purpose unknown. Currently unimplemented - defaults to 0.
+        /// Purpose unknown. Preserved for binary format compatibility.
+        /// Reference: vendor/mdlops/MDLOpsM.pm - trimesh header analysis
         /// </summary>
         public int Unknown2 { get; set; }
+        /// <summary>
+        /// Whether this node ignores fog effects.
+        /// Binary: Derived from model header flags, not directly in node header.
+        /// Reference: vendor/mdlops/MDLOpsM.pm:797 - model header ignorefog flag
+        /// </summary>
         public bool IgnoreFog { get; set; }
+        
+        /// <summary>
+        /// Whether this node casts shadows.
+        /// Binary: Derived from mesh flags in trimesh subheader (offset 0x137).
+        /// Reference: vendor/PyKotor/wiki/MDL-MDX-File-Format.md - trimesh header Shadow field
+        /// </summary>
         public bool Shadow { get; set; }
+        
+        /// <summary>
+        /// Animation reference index (ASCII MDL format compatibility).
+        /// Binary: Not directly in node header - used for animation node references.
+        /// </summary>
         public int Animation { get; set; }
+        
+        /// <summary>
+        /// Position offset X component (ASCII MDL format compatibility).
+        /// Binary: Not directly in node header - typically derived from position controller or computed.
+        /// </summary>
         public float OffsetX { get; set; }
+        
+        /// <summary>
+        /// Position offset Y component (ASCII MDL format compatibility).
+        /// Binary: Not directly in node header - typically derived from position controller or computed.
+        /// </summary>
         public float OffsetY { get; set; }
+        
+        /// <summary>
+        /// Position offset Z component (ASCII MDL format compatibility).
+        /// Binary: Not directly in node header - typically derived from position controller or computed.
+        /// </summary>
         public float OffsetZ { get; set; }
+        
+        /// <summary>
+        /// Scale X component (ASCII MDL format compatibility).
+        /// Binary: Not directly in node header - can be animated via scale controller (type 9).
+        /// </summary>
         public float ScaleX { get; set; }
+        
+        /// <summary>
+        /// Scale Y component (ASCII MDL format compatibility).
+        /// Binary: Not directly in node header - can be animated via scale controller (type 9).
+        /// </summary>
         public float ScaleY { get; set; }
+        
+        /// <summary>
+        /// Scale Z component (ASCII MDL format compatibility).
+        /// Binary: Not directly in node header - can be animated via scale controller (type 9).
+        /// </summary>
         public float ScaleZ { get; set; }
+        
+        /// <summary>
+        /// Node type flags bitmask indicating node features.
+        /// Binary: Offset 0x00 - Node type flags (uint16).
+        /// Flags: HEADER (0x01), LIGHT (0x02), EMITTER (0x04), REFERENCE (0x10), MESH (0x20),
+        /// SKIN (0x40), DANGLY (0x100), AABB (0x200), SABER (0x800).
+        /// Reference: vendor/reone/src/libs/graphics/format/mdlmdxreader.cpp:135-150
+        /// </summary>
         public MDLNodeFlags NodeFlags { get; set; }
+        
+        /// <summary>
+        /// List of child nodes in hierarchy.
+        /// Binary: Offset 0x2C - Child array offset (uint32), Offset 0x30 - Child count (uint32).
+        /// Child nodes inherit parent transforms and can be enumerated for rendering.
+        /// Reference: vendor/reone/include/reone/graphics/modelnode.h:219
+        /// </summary>
         public List<MDLNode> Children { get; set; }
+        
+        /// <summary>
+        /// Animation controller keyframe data.
+        /// Binary: Offset 0x38 - Controller array offset (uint32), Offset 0x3C - Controller count (uint32),
+        /// Offset 0x44 - Controller data offset (uint32), Offset 0x48 - Controller data count (uint32).
+        /// Controllers animate position, orientation, scale, color, alpha, and other properties.
+        /// Reference: vendor/reone/include/reone/graphics/modelnode.h:34
+        /// </summary>
         public List<MDLController> Controllers { get; set; }
+        /// <summary>
+        /// Triangle mesh geometry data (vertices, faces, materials).
+        /// Binary: Present when node type includes MESH flag (0x20).
+        /// Trimesh header immediately follows 80-byte node header (332 bytes K1, 340 bytes K2).
+        /// Contains vertex data in companion MDX file.
+        /// Reference: vendor/reone/include/reone/graphics/modelnode.h:70-91
+        /// </summary>
         public MDLMesh Mesh { get; set; }
+        
+        /// <summary>
+        /// Reference node (links to external model).
+        /// Binary: Present when node type includes REFERENCE flag (0x10).
+        /// Reference header: 36 bytes (Z[32] model name + uint32 dummy rotation).
+        /// Used for equippable items, attached weapons, etc.
+        /// Reference: vendor/reone/include/reone/graphics/modelnode.h:155-158
+        /// </summary>
         public MDLReference Reference { get; set; }
+        
+        /// <summary>
+        /// Walkmesh AABB tree for collision/pathfinding.
+        /// Binary: Present when node type includes AABB flag (0x200).
+        /// Walkmesh header extends trimesh header with additional collision data.
+        /// Reference: vendor/reone/include/reone/graphics/modelnode.h:55-68
+        /// </summary>
         public MDLWalkmesh Walkmesh { get; set; }
 
-        // ASCII MDL format compatibility fields (matching PyKotor mdl_data.py)
+        /// <summary>
+        /// Node type for ASCII MDL format compatibility.
+        /// Binary: Derived from node type flags (offset 0x00).
+        /// Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_data.py:642
+        /// </summary>
         public MDLNodeType NodeType { get; set; }
+        
+        /// <summary>
+        /// Parent node ID for ASCII MDL format compatibility.
+        /// Binary: Offset 0x0C - Parent node offset (uint32), converted to ID during parsing.
+        /// Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_data.py:645
+        /// </summary>
         public int ParentId { get; set; }
+        
+        /// <summary>
+        /// Light source data (color, radius, flare properties).
+        /// Binary: Present when node type includes LIGHT flag (0x02).
+        /// Light header: 92 bytes (float[4] color + uint32[12] flares + int32 unknown).
+        /// Reference: vendor/reone/include/reone/graphics/modelnode.h:116-127
+        /// </summary>
         public MDLLight Light { get; set; }
+        
+        /// <summary>
+        /// Particle emitter data (spawn rate, velocity, textures).
+        /// Binary: Present when node type includes EMITTER flag (0x04).
+        /// Emitter header: 224 bytes (float[3] position + uint32[5] + 5x Z[32] strings + flags).
+        /// Reference: vendor/reone/include/reone/graphics/modelnode.h:129-153
+        /// </summary>
         public MDLEmitter Emitter { get; set; }
+        
+        /// <summary>
+        /// Lightsaber blade mesh with special rendering.
+        /// Binary: Present when node type includes SABER flag (0x800).
+        /// Saber header extends trimesh header with additional blade properties.
+        /// Single plane geometry rendered with additive blending.
+        /// Reference: vendor/reone/include/reone/graphics/modelnode.h:99
+        /// </summary>
         public MDLSaber Saber { get; set; }
+        
+        /// <summary>
+        /// Axis-aligned bounding box tree for walkmesh collision (alias for Walkmesh).
+        /// Binary: Present when node type includes AABB flag (0x200).
+        /// Reference: vendor/reone/include/reone/graphics/modelnode.h:55-68
+        /// </summary>
         public MDLWalkmesh Aabb { get; set; }
-        // Direct node properties matching PyKotor mdl_data.py:MDLNode structure
-        // Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_data.py:627,631
+        
+        /// <summary>
+        /// Skinned mesh with bone weighting for character animation.
+        /// Binary: Present when node type includes SKIN flag (0x40).
+        /// Skin header extends trimesh header with bone binding data (432 bytes K1, 440 bytes K2).
+        /// Vertices deform based on bone transforms using weight maps.
+        /// Reference: vendor/reone/include/reone/graphics/modelnode.h:36-41
+        /// </summary>
         public MDLSkin Skin { get; set; }
+        
+        /// <summary>
+        /// Cloth/hair physics mesh with constraint simulation.
+        /// Binary: Present when node type includes DANGLY flag (0x100).
+        /// Dangly header extends trimesh header with physics parameters (360 bytes K1, 368 bytes K2).
+        /// Vertices constrained by displacement, tightness, period values.
+        /// Reference: vendor/reone/include/reone/graphics/modelnode.h:47-53
+        /// </summary>
         public MDLDangly Dangly { get; set; }
 
         public MDLNode()
@@ -1193,11 +1410,19 @@ namespace Andastra.Parsing.Formats.MDLData
                    ScaleY.Equals(other.ScaleY) &&
                    ScaleZ.Equals(other.ScaleZ) &&
                    NodeFlags == other.NodeFlags &&
+                   NodeType == other.NodeType &&
+                   ParentId == other.ParentId &&
                    Children.SequenceEqual(other.Children) &&
                    Controllers.SequenceEqual(other.Controllers) &&
                    Equals(Mesh, other.Mesh) &&
                    Equals(Reference, other.Reference) &&
-                   Equals(Walkmesh, other.Walkmesh);
+                   Equals(Walkmesh, other.Walkmesh) &&
+                   Equals(Light, other.Light) &&
+                   Equals(Emitter, other.Emitter) &&
+                   Equals(Saber, other.Saber) &&
+                   Equals(Aabb, other.Aabb) &&
+                   Equals(Skin, other.Skin) &&
+                   Equals(Dangly, other.Dangly);
         }
 
         public override int GetHashCode()
@@ -1221,11 +1446,19 @@ namespace Andastra.Parsing.Formats.MDLData
             hash.Add(ScaleY);
             hash.Add(ScaleZ);
             hash.Add(NodeFlags);
+            hash.Add(NodeType);
+            hash.Add(ParentId);
             foreach (var c in Children) hash.Add(c);
             foreach (var c in Controllers) hash.Add(c);
             hash.Add(Mesh);
             hash.Add(Reference);
             hash.Add(Walkmesh);
+            hash.Add(Light);
+            hash.Add(Emitter);
+            hash.Add(Saber);
+            hash.Add(Aabb);
+            hash.Add(Skin);
+            hash.Add(Dangly);
             return hash.ToHashCode();
         }
     }
