@@ -176,7 +176,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         // TODO:  DirectX 12 function pointers for P/Invoke (simplified - full implementation requires extensive declarations)
         // In a complete implementation, these would be loaded via GetProcAddress or use SharpDX/Vortice wrapper
-        
+
         #endregion
 
         private readonly IntPtr _device;
@@ -743,7 +743,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     // Multiple binding layouts can be combined into a single root signature, but for simplicity,
                     // we use the root signature from the first binding layout
                     // In a full implementation, multiple root signatures could be combined or used separately
-                    
+
                     // Try to get root signature from first binding layout
                     var firstLayout = desc.BindingLayouts[0] as D3D12BindingLayout;
                     if (firstLayout != null)
@@ -752,7 +752,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                         // Based on D3D12BindingLayout implementation: Root signature is created during CreateBindingLayout
                         // and stored in the layout for reuse across multiple pipelines
                         rootSignature = firstLayout.GetRootSignature();
-                        
+
                         // Validate that root signature was successfully retrieved
                         if (rootSignature == IntPtr.Zero)
                         {
@@ -774,7 +774,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                         // For now, log a warning and continue with IntPtr.Zero
                         Console.WriteLine("[D3D12Device] WARNING: Binding layout is not D3D12BindingLayout, cannot extract root signature");
                     }
-                    
+
                     // Handle multiple binding layouts (if more than one is provided)
                     // Based on DirectX 12: Multiple root signatures can be used, but typically one is sufficient
                     // For graphics pipelines, we use the first root signature
@@ -852,7 +852,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 IntPtr handle = new IntPtr(_nextResourceHandle++);
                 var pipeline = new D3D12GraphicsPipeline(handle, desc, IntPtr.Zero, rootSignature, _device);
                 _resources[handle] = pipeline;
-                
+
                 Console.WriteLine($"[D3D12Device] WARNING: Failed to create graphics pipeline state: {ex.Message}");
                 return pipeline;
             }
@@ -1040,17 +1040,17 @@ namespace Andastra.Runtime.MonoGame.Backends
                             {
                                 // Access ID3DBlob vtable (same structure as blobPtr)
                                 IntPtr* errorBlobVtable = *(IntPtr**)errorBlobPtr;
-                                
+
                                 // Get error blob size (ID3DBlob::GetBufferSize is at vtable index 3)
                                 IntPtr getErrorBufferSizePtr = errorBlobVtable[3];
                                 GetBufferSizeDelegate getErrorBufferSize = (GetBufferSizeDelegate)Marshal.GetDelegateForFunctionPointer(getErrorBufferSizePtr, typeof(GetBufferSizeDelegate));
                                 IntPtr errorBlobSize = getErrorBufferSize(errorBlobPtr);
-                                
+
                                 // Get error blob buffer pointer (ID3DBlob::GetBufferPointer is at vtable index 4)
                                 IntPtr getErrorBufferPointerPtr = errorBlobVtable[4];
                                 GetBufferPointerDelegate getErrorBufferPointer = (GetBufferPointerDelegate)Marshal.GetDelegateForFunctionPointer(getErrorBufferPointerPtr, typeof(GetBufferPointerDelegate));
                                 IntPtr errorBlobBuffer = getErrorBufferPointer(errorBlobPtr);
-                                
+
                                 // Convert error blob buffer to string (null-terminated ANSI string)
                                 if (errorBlobBuffer != IntPtr.Zero && errorBlobSize.ToInt64() > 0)
                                 {
@@ -1528,7 +1528,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 for (int i = 0; i < geometryCount; i++)
                 {
                     var geometry = desc.BottomLevelGeometries[i];
-                    
+
                     if (geometry.Type != GeometryType.Triangles)
                     {
                         throw new NotSupportedException($"Geometry type {geometry.Type} is not yet supported. Only Triangles are supported.");
@@ -1567,7 +1567,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                             {
                                 indexBufferGpuVa = new IntPtr((long)(indexBufferGpuVaUlong + (ulong)triangles.IndexOffset));
                                 indexCount = (uint)triangles.IndexCount;
-                                
+
                                 // Determine index format from TextureFormat
                                 indexFormat = ConvertIndexFormatToD3D12(triangles.IndexFormat);
                             }
@@ -2388,7 +2388,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             _samplerDescriptorHeap = IntPtr.Zero;
                 }
             }
-            
+
             // Clear descriptor heap state
             _samplerHeapCpuStartHandle = IntPtr.Zero;
             _samplerHeapDescriptorIncrementSize = 0;
@@ -3819,6 +3819,46 @@ namespace Andastra.Runtime.MonoGame.Backends
         private delegate void GetCopyableFootprintsDelegate(IntPtr device, IntPtr pResourceDesc, uint FirstSubresource, uint NumSubresources, ulong BaseOffset, IntPtr pLayouts, IntPtr pNumRows, IntPtr pRowSizeInBytes, IntPtr pTotalBytes);
 
         /// <summary>
+        /// Calls ID3D12Device::GetCopyableFootprints through COM vtable.
+        /// VTable index 47 for ID3D12Device.
+        /// Based on DirectX 12 Resource Layout: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-getcopyablefootprints
+        /// GetCopyableFootprints returns the exact layout (row pitch, depth pitch, total size) for a texture subresource,
+        /// accounting for hardware-specific alignment requirements that may differ from theoretical calculations.
+        /// </summary>
+        private unsafe void CallGetCopyableFootprints(IntPtr device, IntPtr pResourceDesc, uint FirstSubresource, uint NumSubresources, ulong BaseOffset, IntPtr pLayouts, IntPtr pNumRows, IntPtr pRowSizeInBytes, IntPtr pTotalBytes)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return; // Cannot call on non-Windows platforms
+            }
+
+            if (device == IntPtr.Zero || pResourceDesc == IntPtr.Zero)
+            {
+                return; // Invalid parameters
+            }
+
+            // Get vtable pointer from device
+            IntPtr* vtable = *(IntPtr**)device;
+            if (vtable == null)
+            {
+                return; // Invalid vtable
+            }
+
+            // GetCopyableFootprints is at index 47 in ID3D12Device vtable
+            IntPtr methodPtr = vtable[47];
+            if (methodPtr == IntPtr.Zero)
+            {
+                return; // Method not available
+            }
+
+            GetCopyableFootprintsDelegate getCopyableFootprints =
+                (GetCopyableFootprintsDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(GetCopyableFootprintsDelegate));
+
+            getCopyableFootprints(device, pResourceDesc, FirstSubresource, NumSubresources, BaseOffset, pLayouts, pNumRows, pRowSizeInBytes, pTotalBytes);
+        }
+
+        /// <summary>
         /// Calls ID3D12Device::CheckFeatureSupport through COM vtable.
         /// VTable index 6 for ID3D12Device.
         /// Based on DirectX 12 Feature Support: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-checkfeaturesupport
@@ -3984,7 +4024,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// Calls ID3D12DescriptorHeap::GetGPUDescriptorHandleForHeapStart through COM vtable.
         /// VTable index 10 for ID3D12DescriptorHeap.
         /// Based on DirectX 12 Descriptor Heaps: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12descriptorheap-getgpudescriptorhandleforheapstart
-        /// 
+        ///
         /// DirectX 12 GPU descriptor handles are used to reference descriptors from command lists during GPU execution.
         /// The handle must be preserved until all referencing command lists have finished execution.
         /// swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
@@ -5334,7 +5374,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             // For most textures, we use the default mip settings (all mips, starting from mip 0)
             // In DirectX 12, -1 (0xFFFFFFFF) means "use all available mips"
             uint mipLevels = (desc.MipLevels > 0) ? unchecked((uint)desc.MipLevels) : unchecked((uint)(-1));
-            
+
             if (srvDimension == D3D12_SRV_DIMENSION_TEXTURE2D)
             {
                 srvDesc.Texture2D = new D3D12_TEX2D_SRV
@@ -6988,7 +7028,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // and can be offset by descriptor index * descriptor increment size
                 // Based on DirectX 12 Descriptor Heaps: https://docs.microsoft.com/en-us/windows/win32/direct3d12/descriptors-overview
                 // swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
-                // 
+                //
                 // NOTE: This constructor is a fallback for legacy code paths. The preferred constructor
                 // accepts a pre-calculated GPU descriptor handle with the proper offset.
                 // CreateBindingSet now fully implements descriptor allocation and calculates the proper offset.
@@ -7122,7 +7162,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // The backing buffer (ID3D12Resource) contains the acceleration structure data and must be released
                 // There is no separate COM interface for acceleration structures - they're just data in buffers
                 // Reference: https://docs.microsoft.com/en-us/windows/win32/direct3d12/direct3d-12-raytracing-acceleration-structure
-                
+
                 // Release scratch buffer first (temporary buffer used during building)
                 if (_scratchBuffer != null)
                 {
@@ -7130,14 +7170,14 @@ namespace Andastra.Runtime.MonoGame.Backends
                     _scratchBuffer = null;
                     _scratchBufferDeviceAddress = 0UL;
                 }
-                
+
                 // Release backing buffer (this is the ID3D12Resource that contains the acceleration structure data)
                 // Disposing the buffer releases the underlying ID3D12Resource via IUnknown::Release()
                 if (_backingBuffer != null)
                 {
                     _backingBuffer.Dispose();
                 }
-                
+
                 // Release acceleration structure COM object if it exists (currently always IntPtr.Zero, but future-proof)
                 // Note: In current D3D12 implementation, _d3d12AccelStruct is always IntPtr.Zero because
                 // acceleration structures are stored as data in buffers, not as separate COM objects
@@ -7361,14 +7401,14 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             /// <summary>
             /// Writes byte array data to a GPU buffer using D3D12 upload heap and CopyBufferRegion.
-            /// 
+            ///
             /// Implementation: Creates a temporary upload buffer (D3D12_HEAP_TYPE_UPLOAD), maps it for CPU access,
             /// copies the data, unmaps it, then uses CopyBufferRegion to copy from the staging buffer to the
             /// destination buffer. This is the standard D3D12 pattern for uploading buffer data.
-            /// 
+            ///
             /// Based on DirectX 12 Uploading Resource Data:
             /// https://docs.microsoft.com/en-us/windows/win32/direct3d12/uploading-resource-data
-            /// 
+            ///
             /// Pattern matches original engine behavior:
             /// - swkotor.exe: Uses DirectX 9 UpdateSubresource pattern (D3D12 equivalent is upload heap + CopyBufferRegion)
             /// - swkotor2.exe: Uses DirectX 9 UpdateSubresource pattern (D3D12 equivalent is upload heap + CopyBufferRegion)
@@ -7557,13 +7597,13 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             /// <summary>
             /// Writes typed array data to a GPU buffer using D3D12 upload heap and CopyBufferRegion.
-            /// 
+            ///
             /// Converts the typed array to bytes and writes using the same mechanism as WriteBuffer(byte[]).
             /// Uses D3D12 upload heap pattern: create staging buffer, map, copy data, unmap, then CopyBufferRegion.
-            /// 
+            ///
             /// Based on DirectX 12 Uploading Resource Data:
             /// https://docs.microsoft.com/en-us/windows/win32/direct3d12/uploading-resource-data
-            /// 
+            ///
             /// Pattern matches original engine behavior:
             /// - swkotor.exe: Uses DirectX 9 UpdateSubresource pattern (D3D12 equivalent is upload heap + CopyBufferRegion)
             /// - swkotor2.exe: Uses DirectX 9 UpdateSubresource pattern (D3D12 equivalent is upload heap + CopyBufferRegion)
@@ -7627,15 +7667,16 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
             /// <summary>
             /// Writes texture data to a texture subresource using a staging buffer.
-            /// 
+            ///
             /// Implementation: Creates a temporary upload buffer, copies data with proper row pitch alignment,
             /// then uses CopyTextureRegion to copy from the upload buffer to the texture.
-            /// 
+            ///
             /// Based on DirectX 12 UpdateSubresources pattern:
             /// https://docs.microsoft.com/en-us/windows/win32/direct3d12/uploading-resource-data
-            /// 
-            /// Note: This implementation uses approximate footprint calculations for standard formats.
-            // TODO: / A full implementation would use ID3D12Device::GetCopyableFootprints for exact layouts.
+            ///
+            /// Implementation uses ID3D12Device::GetCopyableFootprints for exact layout calculations,
+            /// ensuring hardware-specific alignment requirements are properly handled.
+            /// Based on DirectX 12 GetCopyableFootprints: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-getcopyablefootprints
             /// </summary>
             public void WriteTexture(ITexture texture, int mipLevel, int arraySlice, byte[] data)
             {
@@ -7686,29 +7727,109 @@ namespace Andastra.Runtime.MonoGame.Backends
                 uint mipHeight = unchecked((uint)Math.Max(1, desc.Height >> mipLevel));
                 uint mipDepth = unchecked((uint)Math.Max(1, (desc.Depth > 0 ? desc.Depth : 1) >> mipLevel));
 
-                // Get texture format and calculate bytes per pixel
+                // Calculate subresource index
+                // Subresource index = arraySlice * MipLevels + mipLevel
+                uint subresourceIndex = unchecked((uint)(arraySlice * desc.MipLevels + mipLevel));
+
+                // Get bytes per pixel for source data calculation (source data is tightly packed)
+                // Note: This is only used for reading from the source data array
+                // Destination uses exact row pitch from GetCopyableFootprints
                 uint bytesPerPixel = GetBytesPerPixelForTextureFormat(desc.Format);
                 if (bytesPerPixel == 0)
                 {
                     throw new NotSupportedException($"Texture format {desc.Format} is not supported for WriteTexture (compressed formats require special handling)");
                 }
 
-                // Calculate row pitch with D3D12 alignment (256 bytes)
-                // D3D12 requires row pitch to be aligned to D3D12_TEXTURE_DATA_PITCH_ALIGNMENT (256 bytes)
-                const uint D3D12_TEXTURE_DATA_PITCH_ALIGNMENT = 256;
-                uint rowPitch = (mipWidth * bytesPerPixel + D3D12_TEXTURE_DATA_PITCH_ALIGNMENT - 1) & ~(D3D12_TEXTURE_DATA_PITCH_ALIGNMENT - 1);
-                uint slicePitch = rowPitch * mipHeight;
-                uint totalSize = slicePitch * mipDepth;
-
-                // Validate data size matches expected size
-                if (data.Length < totalSize)
+                // Build texture resource description for GetCopyableFootprints
+                // Based on DirectX 12 GetCopyableFootprints: Requires full texture resource description
+                // We need to build the D3D12_RESOURCE_DESC that matches the texture we're writing to
+                uint dxgiFormat = ConvertTextureFormatToDxgiFormatForTexture(desc.Format);
+                if (dxgiFormat == 0)
                 {
-                    throw new ArgumentException($"Data array size ({data.Length}) is too small for texture subresource (expected at least {totalSize} bytes)", nameof(data));
+                    throw new NotSupportedException($"Texture format {desc.Format} cannot be converted to DXGI_FORMAT for GetCopyableFootprints");
                 }
 
-                // Calculate subresource index
-                // Subresource index = arraySlice * MipLevels + mipLevel
-                uint subresourceIndex = unchecked((uint)(arraySlice * desc.MipLevels + mipLevel));
+                uint resourceDimension = MapTextureDimensionToD3D12(desc.Dimension);
+
+                // Build resource description matching the texture
+                D3D12_RESOURCE_DESC textureResourceDesc = new D3D12_RESOURCE_DESC
+                {
+                    Dimension = resourceDimension,
+                    Alignment = 0, // D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT
+                    Width = unchecked((ulong)desc.Width),
+                    Height = unchecked((uint)desc.Height),
+                    DepthOrArraySize = unchecked((ushort)(desc.Dimension == TextureDimension.Texture3D ? desc.Depth : desc.ArraySize)),
+                    MipLevels = unchecked((ushort)desc.MipLevels),
+                    Format = dxgiFormat,
+                    SampleDesc = new D3D12_SAMPLE_DESC
+                    {
+                        Count = unchecked((uint)desc.SampleCount),
+                        Quality = 0
+                    },
+                    Layout = 0, // D3D12_TEXTURE_LAYOUT_UNKNOWN
+                    Flags = 0 // D3D12_RESOURCE_FLAG_NONE (flags don't affect footprint calculation)
+                };
+
+                // Get exact footprint using GetCopyableFootprints
+                // Based on DirectX 12 GetCopyableFootprints: Returns exact layout accounting for hardware alignment
+                IntPtr resourceDescPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(D3D12_RESOURCE_DESC)));
+                IntPtr layoutsPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT)));
+                IntPtr numRowsPtr = Marshal.AllocHGlobal(sizeof(uint));
+                IntPtr rowSizeInBytesPtr = Marshal.AllocHGlobal(sizeof(ulong));
+                IntPtr totalBytesPtr = Marshal.AllocHGlobal(sizeof(ulong));
+
+                D3D12_PLACED_SUBRESOURCE_FOOTPRINT placedFootprint;
+                uint numRows;
+                ulong rowSizeInBytes;
+                ulong totalBytes;
+
+                try
+                {
+                    // Marshal resource description to unmanaged memory
+                    Marshal.StructureToPtr(textureResourceDesc, resourceDescPtr, false);
+
+                    // Call GetCopyableFootprints to get exact layout for the specific subresource
+                    CallGetCopyableFootprints(
+                        _d3d12Device,
+                        resourceDescPtr,
+                        subresourceIndex, // FirstSubresource: the subresource we're writing to
+                        1, // NumSubresources: only need one subresource
+                        0, // BaseOffset: 0 for our staging buffer
+                        layoutsPtr, // pLayouts: will receive the footprint
+                        numRowsPtr, // pNumRows: number of rows
+                        rowSizeInBytesPtr, // pRowSizeInBytes: size of each row
+                        totalBytesPtr); // pTotalBytes: total size needed
+
+                    // Read back the results
+                    placedFootprint = (D3D12_PLACED_SUBRESOURCE_FOOTPRINT)Marshal.PtrToStructure(layoutsPtr, typeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT));
+                    numRows = (uint)Marshal.ReadInt32(numRowsPtr);
+                    rowSizeInBytes = (ulong)Marshal.ReadInt64(rowSizeInBytesPtr);
+                    totalBytes = (ulong)Marshal.ReadInt64(totalBytesPtr);
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(resourceDescPtr);
+                    Marshal.FreeHGlobal(layoutsPtr);
+                    Marshal.FreeHGlobal(numRowsPtr);
+                    Marshal.FreeHGlobal(rowSizeInBytesPtr);
+                    Marshal.FreeHGlobal(totalBytesPtr);
+                }
+
+                // Extract exact layout values from footprint
+                uint rowPitch = placedFootprint.Footprint.RowPitch;
+                uint footprintHeight = placedFootprint.Footprint.Height;
+                uint footprintDepth = placedFootprint.Footprint.Depth;
+
+                // Calculate slice pitch from row pitch and number of rows
+                // For 3D textures, depth pitch = rowPitch * numRows (for each depth slice)
+                // For 2D/1D array textures, each array slice uses rowPitch * numRows
+                ulong slicePitch = (ulong)rowPitch * (ulong)numRows;
+
+                // Validate data size matches expected size from GetCopyableFootprints
+                if (data.Length < (int)totalBytes)
+                {
+                    throw new ArgumentException($"Data array size ({data.Length}) is too small for texture subresource (expected at least {totalBytes} bytes from GetCopyableFootprints)", nameof(data));
+                }
 
                 // Create temporary upload buffer for staging directly using D3D12_HEAP_TYPE_UPLOAD
                 // Upload buffers use D3D12_HEAP_TYPE_UPLOAD and are CPU-writable, GPU-readable
@@ -7717,11 +7838,12 @@ namespace Andastra.Runtime.MonoGame.Backends
                 try
                 {
                     // Create resource description for staging buffer
+                    // Use totalBytes from GetCopyableFootprints for exact buffer size
                     D3D12_RESOURCE_DESC bufferDesc = new D3D12_RESOURCE_DESC
                     {
                         Dimension = D3D12_RESOURCE_DIMENSION_BUFFER,
                         Alignment = 0,
-                        Width = totalSize,
+                        Width = totalBytes, // Use exact size from GetCopyableFootprints
                         Height = 1,
                         DepthOrArraySize = 1,
                         MipLevels = 1,
@@ -7777,9 +7899,9 @@ namespace Andastra.Runtime.MonoGame.Backends
                         Marshal.FreeHGlobal(resourcePtr);
                     }
 
-                    // Map the staging buffer and copy data with proper row pitch
+                    // Map the staging buffer and copy data with exact row pitch from GetCopyableFootprints
                     // For upload heaps, we can map and write directly
-                    IntPtr mappedData = MapStagingBufferResource(stagingBufferResource, 0, totalSize);
+                    IntPtr mappedData = MapStagingBufferResource(stagingBufferResource, 0, (int)totalBytes);
                     if (mappedData == IntPtr.Zero)
                     {
                         throw new InvalidOperationException("Failed to map staging buffer");
@@ -7800,7 +7922,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                                     {
                                         uint srcRowOffset = (z * mipHeight * mipWidth * bytesPerPixel) + (y * mipWidth * bytesPerPixel);
                                         uint dstRowOffset = (z * slicePitch) + (y * rowPitch);
-                                        
+
                                         // C# 7.3 compatible: use pointer arithmetic and loop instead of System.Buffer.MemoryCopy
                                         byte* srcRowPtr = srcPtr + srcRowOffset;
                                         byte* dstRowPtr = dstPtr + dstRowOffset;
@@ -7816,7 +7938,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     }
                     finally
                     {
-                        UnmapStagingBufferResource(stagingBufferResource, 0, totalSize);
+                        UnmapStagingBufferResource(stagingBufferResource, 0, (int)totalBytes);
                     }
 
                     // Transition texture to COPY_DEST state
@@ -7839,25 +7961,19 @@ namespace Andastra.Runtime.MonoGame.Backends
                         throw new NotSupportedException($"Texture format {desc.Format} cannot be converted to DXGI_FORMAT");
                     }
 
-                    // Create footprint for the staging buffer
-                    D3D12_PLACED_SUBRESOURCE_FOOTPRINT placedFootprint = new D3D12_PLACED_SUBRESOURCE_FOOTPRINT
+                    // Use the exact footprint from GetCopyableFootprints for CopyTextureRegion
+                    // Set Offset to 0 since data starts at offset 0 in our staging buffer
+                    D3D12_PLACED_SUBRESOURCE_FOOTPRINT placedFootprintForCopy = new D3D12_PLACED_SUBRESOURCE_FOOTPRINT
                     {
                         Offset = 0, // Data starts at offset 0 in the staging buffer
-                        Footprint = new D3D12_SUBRESOURCE_FOOTPRINT
-                        {
-                            Format = dxgiFormat,
-                            Width = mipWidth,
-                            Height = mipHeight,
-                            Depth = mipDepth,
-                            RowPitch = rowPitch
-                        }
+                        Footprint = placedFootprint.Footprint // Use exact footprint from GetCopyableFootprints
                     };
 
                     var srcLocation = new D3D12_TEXTURE_COPY_LOCATION
                     {
                         pResource = stagingBufferResource,
                         Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT,
-                        PlacedFootprint = placedFootprint
+                        PlacedFootprint = placedFootprintForCopy // Use footprint with offset 0 for staging buffer
                     };
 
                     var dstLocation = new D3D12_TEXTURE_COPY_LOCATION
@@ -7967,7 +8083,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 //   ID3D12Resource* pSrcBuffer,
                 //   UINT64 SrcOffset,
                 //   UINT64 NumBytes)
-                // 
+                //
                 // Based on DirectX 12 documentation:
                 // - pDstBuffer: Destination buffer resource
                 // - DstOffset: Offset in bytes from the start of the destination buffer
@@ -8565,7 +8681,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             /// Calls ID3D12GraphicsCommandList::CopyBufferRegion through COM vtable.
             /// VTable index 46 for ID3D12GraphicsCommandList.
             /// Based on DirectX 12 Buffer Copy: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-copybufferregion
-            /// 
+            ///
             /// CopyBufferRegion copies a region of data from one buffer to another.
             /// Signature: void CopyBufferRegion(
             ///   ID3D12Resource* pDstBuffer,
@@ -9265,17 +9381,17 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             /// <summary>
             /// Inserts a UAV (Unordered Access View) barrier for a texture resource.
-            /// 
+            ///
             /// A UAV barrier ensures that all UAV writes to the resource have completed before
             /// subsequent operations (compute shaders, pixel shaders, etc.) can read from the resource.
             /// This is necessary when a resource is both written to and read from as a UAV in different
             /// draw/dispatch calls within the same command list.
-            /// 
+            ///
             /// Based on DirectX 12 API: ID3D12GraphicsCommandList::ResourceBarrier
             /// Located via DirectX 12 documentation: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-resourcebarrier
             /// Original implementation: Records a UAV barrier command into the command list
             /// UAV barriers use D3D12_RESOURCE_BARRIER_TYPE_UAV barrier type
-            /// 
+            ///
             /// Note: UAV barriers differ from transition barriers - they don't change resource state,
             /// they only synchronize access between UAV write and read operations.
             /// </summary>
@@ -9343,17 +9459,17 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             /// <summary>
             /// Inserts a UAV (Unordered Access View) barrier for a buffer resource.
-            /// 
+            ///
             /// A UAV barrier ensures that all UAV writes to the buffer have completed before
             /// subsequent operations (compute shaders, pixel shaders, etc.) can read from the buffer.
             /// This is necessary when a buffer is both written to and read from as a UAV in different
             /// draw/dispatch calls within the same command list.
-            /// 
+            ///
             /// Based on DirectX 12 API: ID3D12GraphicsCommandList::ResourceBarrier
             /// Located via DirectX 12 documentation: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-resourcebarrier
             /// Original implementation: Records a UAV barrier command into the command list
             /// UAV barriers use D3D12_RESOURCE_BARRIER_TYPE_UAV barrier type
-            /// 
+            ///
             /// Note: UAV barriers differ from transition barriers - they don't change resource state,
             /// they only synchronize access between UAV write and read operations.
             /// </summary>
@@ -9468,7 +9584,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     if (d3d12Framebuffer != null)
                     {
                         FramebufferDesc fbDesc = d3d12Framebuffer.Desc;
-                        
+
                         // Get render target views for color attachments
                         uint numRenderTargets = 0;
                         IntPtr renderTargetDescriptorsPtr = IntPtr.Zero;
@@ -9477,7 +9593,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                         if (fbDesc.ColorAttachments != null && fbDesc.ColorAttachments.Length > 0)
                         {
                             numRenderTargets = unchecked((uint)fbDesc.ColorAttachments.Length);
-                            
+
                             // Allocate memory for array of CPU descriptor handles
                             // D3D12_CPU_DESCRIPTOR_HANDLE is a struct with one IntPtr field
                             int handleSize = Marshal.SizeOf<D3D12_CPU_DESCRIPTOR_HANDLE>();
@@ -9535,7 +9651,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                                 // Allocate memory for depth-stencil descriptor handle
                                 int dsvHandleSize = Marshal.SizeOf<D3D12_CPU_DESCRIPTOR_HANDLE>();
                                 depthStencilDescriptorPtr = Marshal.AllocHGlobal(dsvHandleSize);
-                                
+
                                 D3D12_CPU_DESCRIPTOR_HANDLE dsvCpuHandle = new D3D12_CPU_DESCRIPTOR_HANDLE
                                 {
                                     ptr = dsvHandle
@@ -9693,7 +9809,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     // swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
                     GraphicsPipelineDesc pipelineDesc = d3d12Pipeline.Desc;
                     IBindingLayout[] pipelineBindingLayouts = pipelineDesc.BindingLayouts;
-                    
+
                     for (uint i = 0; i < state.BindingSets.Length; i++)
                     {
                         D3D12BindingSet d3d12BindingSet = state.BindingSets[i] as D3D12BindingSet;
@@ -9705,7 +9821,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                         // Determine root parameter index by matching binding set's layout to pipeline's binding layouts
                         // Root parameter index equals the index of the binding layout in the pipeline's BindingLayouts array
                         uint rootParameterIndex = i; // Default to sequential index as fallback
-                        
+
                         if (pipelineBindingLayouts != null && d3d12BindingSet.Layout != null)
                         {
                             // Find the index of this binding set's layout in the pipeline's binding layouts array
@@ -9748,7 +9864,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                         }
 
                         BufferDesc bufferDesc = vertexBuffers[i].Desc;
-                        
+
                         // Try to get stride from buffer's StructStride if available
                         if (bufferDesc.StructStride > 0)
                         {
@@ -9759,7 +9875,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                             // Calculate stride from input layout attributes for this buffer index
                             uint maxOffset = 0;
                             uint maxSize = 0;
-                            
+
                             foreach (VertexAttributeDesc attr in inputLayout.Attributes)
                             {
                                 if (attr.BufferIndex == i)
@@ -9767,7 +9883,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                                     // Calculate size of this attribute based on format
                                     uint attrSize = GetFormatSize(attr.Format);
                                     uint attrEnd = unchecked((uint)attr.Offset + attrSize);
-                                    
+
                                     if (attrEnd > maxOffset + maxSize)
                                     {
                                         maxOffset = unchecked((uint)attr.Offset);
@@ -9778,7 +9894,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                             // Stride is the maximum offset + size, rounded up to next 4-byte boundary for alignment
                             strides[i] = (maxOffset + maxSize + 3) & ~3U; // Align to 4 bytes
-                            
+
                             // If no attributes found, use a default stride based on buffer size
                             if (strides[i] == 0 && bufferDesc.ByteSize > 0)
                             {
@@ -10272,7 +10388,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     Marshal.FreeHGlobal(viewportsPtr);
                 }
             }
-            
+
             /// <summary>
             /// Sets a single scissor rectangle.
             /// Converts Rectangle (X, Y, Width, Height) to D3D12_RECT (left, top, right, bottom).
@@ -10784,7 +10900,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     // swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
                     ComputePipelineDesc pipelineDesc = d3d12Pipeline.Desc;
                     IBindingLayout[] pipelineBindingLayouts = pipelineDesc.BindingLayouts;
-                    
+
                     for (uint i = 0; i < state.BindingSets.Length; i++)
                     {
                         D3D12BindingSet d3d12BindingSet = state.BindingSets[i] as D3D12BindingSet;
@@ -10796,7 +10912,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                         // Determine root parameter index by matching binding set's layout to pipeline's binding layouts
                         // Root parameter index equals the index of the binding layout in the pipeline's BindingLayouts array
                         uint rootParameterIndex = i; // Default to sequential index as fallback
-                        
+
                         if (pipelineBindingLayouts != null && d3d12BindingSet.Layout != null)
                         {
                             // Find the index of this binding set's layout in the pipeline's binding layouts array
@@ -11595,23 +11711,23 @@ namespace Andastra.Runtime.MonoGame.Backends
             /// Compacts a bottom-level acceleration structure to reduce memory usage.
             /// Based on D3D12 DXR API: ID3D12GraphicsCommandList4::CopyRaytracingAccelerationStructure
             /// D3D12 DXR API Reference: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist4-copyraytracingaccelerationstructure
-            /// 
+            ///
             /// Compaction reduces the memory footprint of acceleration structures by removing internal padding
             /// and optimization data that isn't needed for ray traversal. This is useful for reducing memory
             /// usage when acceleration structures are built but no longer need to be updated.
-            /// 
+            ///
             /// Requirements:
             /// - Source acceleration structure must have been built with ALLOW_COMPACTION flag
             /// - Source acceleration structure must be fully built (not in build state)
             /// - Destination acceleration structure must be created with a buffer large enough for compacted data
             /// - Compacted size can be obtained from post-build info emitted during build, or estimated
-            /// 
+            ///
             /// Implementation:
             /// 1. Validates that source was built with ALLOW_COMPACTION flag
             /// 2. Gets GPU virtual addresses for source and destination buffers
             /// 3. Calls CopyRaytracingAccelerationStructure with COMPACT mode
             /// 4. The compacted acceleration structure is written to the destination buffer
-            /// 
+            ///
             /// Note: After compaction, the source acceleration structure can be disposed to free memory.
             /// The destination acceleration structure contains the compacted version and can be used for ray tracing.
             /// </summary>
@@ -12993,10 +13109,10 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// Calls ID3D12CommandQueue::ExecuteCommandLists through COM vtable.
         /// VTable index 4 for ID3D12CommandQueue (after IUnknown: QueryInterface, AddRef, Release, UpdateTileMappings).
         /// Based on DirectX 12 Command Queue: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12commandqueue-executecommandlists
-        /// 
+        ///
         /// ExecuteCommandLists submits command lists to the command queue for execution on the GPU.
         /// All command lists must be closed before execution.
-        /// 
+        ///
         /// Signature: void ExecuteCommandLists(UINT NumCommandLists, ID3D12CommandList* const* ppCommandLists)
         /// </summary>
         private unsafe void CallExecuteCommandLists(IntPtr commandQueue, uint numCommandLists, IntPtr ppCommandLists)
