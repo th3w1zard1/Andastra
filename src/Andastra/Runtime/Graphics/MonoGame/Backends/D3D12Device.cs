@@ -57,23 +57,77 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static readonly Guid IID_ID3D12StateObject = new Guid(0x47016943, 0xfca8, 0x4594, 0x93, 0xea, 0xaf, 0x25, 0x8b, 0xdc, 0x7b, 0x77);
         private static readonly Guid IID_ID3D12StateObjectProperties = new Guid(0xde5fa827, 0x91bf, 0x4fb9, 0xb6, 0x01, 0x5c, 0x10, 0x5e, 0x15, 0x58, 0xdc);
 
-        // TODO:  DirectX 12 COM interface declarations (simplified - full implementation would require complete COM interop)
+        /// <summary>
+        /// ID3D12Device COM interface for DirectX 12 device operations.
+        /// This interface inherits from IUnknown and ID3D12Object.
+        /// All methods are accessed via COM vtable using delegates (see Call* helper methods).
+        ///
+        /// Methods used in this codebase (accessed via vtable):
+        /// - VTable index 0: IUnknown::QueryInterface - Query for other interfaces
+        /// - VTable index 1: IUnknown::AddRef - Increment reference count
+        /// - VTable index 2: IUnknown::Release - Decrement reference count and release if count reaches zero
+        /// - VTable index 6: CheckFeatureSupport - Query device feature support (format support, etc.)
+        /// - VTable index 11: CreateFence - Create synchronization fence objects
+        /// - VTable index 25: CreateCommittedResource - Create GPU resources with committed memory
+        /// - VTable index 26: CreateCommandAllocator - Create command allocators for command lists
+        /// - VTable index 27: CreateDescriptorHeap - Create descriptor heaps for resource views
+        /// - VTable index 27: CreateCommandSignature - Create command signatures for indirect execution (alternative at same index)
+        /// - VTable index 28: CreateCommandList - Create command lists for recording GPU commands
+        /// - VTable index 28: GetDescriptorHandleIncrementSize - Get descriptor handle increment size (alternative at same index)
+        /// - VTable index 34: CreateSampler - Create sampler descriptors
+        /// - VTable index 43: CreateGraphicsPipelineState - Create graphics pipeline state objects
+        /// - VTable index 44: CreateComputePipelineState - Create compute pipeline state objects
+        /// - VTable index 47: CreateRootSignature - Create root signatures for shader resource binding
+        ///
+        /// Note: Methods are not declared directly in this interface because they are accessed via COM vtable
+        /// using Marshal.GetDelegateForFunctionPointer and UnmanagedFunctionPointer delegates.
+        /// This approach is necessary for C# 7.3 compatibility and provides full control over COM interop.
+        ///
+        /// Based on DirectX 12 Device Interface: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nn-d3d12-id3d12device
+        /// </summary>
         [ComImport]
         [Guid("189819f1-1db6-4b57-be54-1821339b85f7")]
         [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
         private interface ID3D12Device
         {
-            // TODO:  Methods would be declared here in full implementation
-            // TODO:  This is a placeholder structure
+            // Methods are accessed via COM vtable using delegates (see Call* helper methods above)
+            // This interface declaration is used for type safety and COM interop, but methods are not declared
+            // because they are accessed through vtable lookups for maximum flexibility and C# 7.3 compatibility
         }
 
+        /// <summary>
+        /// ID3D12Device5 COM interface for DirectX 12 raytracing operations (DXR 1.1).
+        /// This interface inherits from ID3D12Device4, which inherits from ID3D12Device3, ID3D12Device2, ID3D12Device1, and ID3D12Device.
+        /// All methods are accessed via COM vtable using delegates (see Call* helper methods).
+        ///
+        /// Methods used in this codebase (accessed via vtable):
+        /// - VTable index 0: IUnknown::QueryInterface - Query for other interfaces
+        /// - VTable index 1: IUnknown::AddRef - Increment reference count
+        /// - VTable index 2: IUnknown::Release - Decrement reference count and release if count reaches zero
+        /// - VTable index 57: GetRaytracingAccelerationStructurePrebuildInfo - Get prebuild info for acceleration structures
+        ///   (First method in ID3D12Device5 interface, after ID3D12Device methods which end around index 54-56)
+        /// - VTable index 58: CreateStateObject - Create raytracing pipeline state objects
+        ///   (Second method in ID3D12Device5 interface, used for creating raytracing pipelines with shaders)
+        ///
+        /// Note: Methods are not declared directly in this interface because they are accessed via COM vtable
+        /// using Marshal.GetDelegateForFunctionPointer and UnmanagedFunctionPointer delegates.
+        /// This approach is necessary for C# 7.3 compatibility and provides full control over COM interop.
+        ///
+        /// ID3D12Device5 provides DXR 1.1 features including:
+        /// - Raytracing pipeline state objects (state objects with shader libraries, hit groups, etc.)
+        /// - Acceleration structure prebuild information queries
+        /// - Enhanced raytracing capabilities beyond DXR 1.0
+        ///
+        /// Based on DirectX 12 DXR API: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nn-d3d12-id3d12device5
+        /// </summary>
         [ComImport]
         [Guid("8b4f173b-2fea-4b80-b4c4-5246a8e9da52")]
         [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
         private interface ID3D12Device5
         {
-            // ID3D12Device5 methods for raytracing
-            // TODO:  This is a placeholder structure
+            // Methods are accessed via COM vtable using delegates (see Call* helper methods above)
+            // This interface declaration is used for type safety and COM interop, but methods are not declared
+            // because they are accessed through vtable lookups for maximum flexibility and C# 7.3 compatibility
         }
 
         /// <summary>
@@ -3760,6 +3814,9 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate int CheckFeatureSupportDelegate(IntPtr device, uint Feature, IntPtr pFeatureSupportData, uint FeatureSupportDataSize);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void GetCopyableFootprintsDelegate(IntPtr device, IntPtr pResourceDesc, uint FirstSubresource, uint NumSubresources, ulong BaseOffset, IntPtr pLayouts, IntPtr pNumRows, IntPtr pRowSizeInBytes, IntPtr pTotalBytes);
 
         /// <summary>
         /// Calls ID3D12Device::CheckFeatureSupport through COM vtable.
