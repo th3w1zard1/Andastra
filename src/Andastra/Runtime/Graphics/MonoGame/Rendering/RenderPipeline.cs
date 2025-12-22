@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.MonoGame.Performance;
+using Andastra.Runtime.MonoGame.Interfaces;
 
 namespace Andastra.Runtime.MonoGame.Rendering
 {
@@ -31,6 +32,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
         private readonly Telemetry _telemetry;
         private readonly RenderStatistics _statistics;
         private readonly RenderSettings _settings;
+        private readonly ILightingSystem _lightingSystem;
 
         /// <summary>
         /// Initializes a new render pipeline.
@@ -38,11 +40,13 @@ namespace Andastra.Runtime.MonoGame.Rendering
         /// <param name="graphicsDevice">Graphics device for rendering operations.</param>
         /// <param name="resourceProvider">Resource provider for asset loading.</param>
         /// <param name="settings">Optional render settings. If null, post-processing checks will default to false.</param>
+        /// <param name="lightingSystem">Optional lighting system. If provided, used to check for shadow-casting lights.</param>
         /// <exception cref="ArgumentNullException">Thrown if graphicsDevice or resourceProvider is null.</exception>
         public RenderPipeline(
             GraphicsDevice graphicsDevice,
             IGameResourceProvider resourceProvider,
-            RenderSettings settings = null)
+            RenderSettings settings = null,
+            ILightingSystem lightingSystem = null)
         {
             if (graphicsDevice == null)
             {
@@ -63,6 +67,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
             _telemetry = new Telemetry();
             _statistics = new RenderStatistics();
             _settings = settings;
+            _lightingSystem = lightingSystem;
         }
 
         /// <summary>
@@ -168,8 +173,10 @@ namespace Andastra.Runtime.MonoGame.Rendering
             // Shadow maps must be rendered before lighting calculations
             // This is a modern enhancement - original KOTOR used simple depth testing
             // Check if we need shadow rendering (this would be determined by light setup)
-            // For now, we create the pass structure - actual shadow rendering logic would go here
-            bool hasShadowCastingLights = false; // TODO: Check light system for shadow-casting lights
+            // Based on swkotor2.exe shadow system: "SunShadows" @ 0x007bd5d8, "MoonShadows" @ 0x007bd628
+            // Original implementation: KOTOR 2 had shadow support with configurable sun/moon shadows
+            // Modern enhancement: Check all active lights for shadow casting capability
+            bool hasShadowCastingLights = HasShadowCastingLights();
             if (hasShadowCastingLights && queueCounts.ContainsKey(RenderQueue.QueueType.Opaque))
             {
                 FrameGraph.FrameGraphNode shadowPassNode = new FrameGraph.FrameGraphNode("ShadowPass");
@@ -571,6 +578,51 @@ namespace Andastra.Runtime.MonoGame.Rendering
         }
 
         /// <summary>
+        /// Checks if there are any active shadow-casting lights in the lighting system.
+        /// 
+        /// Queries the lighting system for all active lights and checks if any of them
+        /// have shadow casting enabled (CastShadows property). Only enabled lights are
+        /// considered, as disabled lights do not contribute to rendering.
+        /// 
+        /// If no lighting system is provided, returns false (no shadow-casting lights).
+        /// 
+        /// Based on swkotor2.exe shadow system:
+        /// - Original implementation: "SunShadows" @ 0x007bd5d8, "MoonShadows" @ 0x007bd628
+        /// - Original behavior: KOTOR 2 checked sun/moon light shadow casting flags
+        /// - Modern enhancement: Checks all dynamic lights for shadow casting capability
+        /// </summary>
+        /// <returns>True if there are any active shadow-casting lights, false otherwise.</returns>
+        private bool HasShadowCastingLights()
+        {
+            // If no lighting system is provided, there are no shadow-casting lights
+            if (_lightingSystem == null)
+            {
+                return false;
+            }
+
+            // Get all active lights from the lighting system
+            IDynamicLight[] activeLights = _lightingSystem.GetActiveLights();
+            if (activeLights == null)
+            {
+                return false;
+            }
+
+            // Check each active light to see if it casts shadows
+            // Only enabled lights are returned by GetActiveLights(), so we just need to check CastShadows
+            for (int i = 0; i < activeLights.Length; i++)
+            {
+                IDynamicLight light = activeLights[i];
+                if (light != null && light.CastShadows)
+                {
+                    return true;
+                }
+            }
+
+            // No shadow-casting lights found
+            return false;
+        }
+
+        /// <summary>
         /// Checks if post-processing is enabled based on render settings.
         /// Post-processing is considered enabled if any of the following effects are enabled:
         /// - Bloom (BloomEnabled)
@@ -630,7 +682,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
             // Check if tone mapping is enabled (non-default operator indicates active tone mapping)
             // Note: Tonemapper default is ACES, which is an active tone mapping operator
             // If we want to check for "disabled" tone mapping, we'd need a None operator
-            // For now, assume any tone mapper setting means post-processing is enabled
+            // TODO: STUB - For now, assume any tone mapper setting means post-processing is enabled
             // (In practice, tone mapping is always applied in HDR pipelines)
 
             // Check if color grading LUT is provided
