@@ -6173,7 +6173,18 @@ namespace Andastra.Runtime.MonoGame.Backends
                                     MaxRecursionDepth = desc.MaxRecursionDepth,
                                     DebugName = desc.DebugName
                                 };
-                                var pipeline = new VulkanRaytracingPipeline(handle, backendDesc, vkPipeline, pipelineLayout, sbtBuffer, _device);
+                                // Convert Backends.RaytracingPipelineDesc to Interfaces.RaytracingPipelineDesc
+                                Interfaces.RaytracingPipelineDesc interfaceDesc = new Interfaces.RaytracingPipelineDesc
+                                {
+                                    Shaders = desc.Shaders,
+                                    HitGroups = desc.HitGroups,
+                                    MaxPayloadSize = backendDesc.MaxPayloadSize,
+                                    MaxAttributeSize = backendDesc.MaxAttributeSize,
+                                    MaxRecursionDepth = backendDesc.MaxRecursionDepth,
+                                    GlobalBindingLayout = desc.GlobalBindingLayout,
+                                    DebugName = backendDesc.DebugName
+                                };
+                                var pipeline = new VulkanRaytracingPipeline(handle, interfaceDesc, vkPipeline, pipelineLayout, sbtBuffer, _device);
                                 _resources[handle] = pipeline;
 
                                 return pipeline;
@@ -7424,12 +7435,12 @@ namespace Andastra.Runtime.MonoGame.Backends
             private readonly IBuffer _sbtBuffer;
             private readonly IntPtr _device;
 
-            public VulkanRaytracingPipeline(IntPtr handle, RaytracingPipelineDesc desc)
+            public VulkanRaytracingPipeline(IntPtr handle, Interfaces.RaytracingPipelineDesc desc)
                 : this(handle, desc, IntPtr.Zero, IntPtr.Zero, null, IntPtr.Zero)
             {
             }
 
-            public VulkanRaytracingPipeline(IntPtr handle, RaytracingPipelineDesc desc, IntPtr vkPipeline, IntPtr vkPipelineLayout, IBuffer sbtBuffer, IntPtr device)
+            public VulkanRaytracingPipeline(IntPtr handle, Interfaces.RaytracingPipelineDesc desc, IntPtr vkPipeline, IntPtr vkPipelineLayout, IBuffer sbtBuffer, IntPtr device)
             {
                 _handle = handle;
                 Desc = desc;
@@ -11305,7 +11316,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 BufferDesc instanceBufferDesc = new BufferDesc
                 {
                     ByteSize = instanceBufferSize,
-                    Usage = BufferUsageFlags.AccelStructStorage,
+                    Usage = BufferUsageFlags.AccelStructStorage, // | BufferUsageFlags.AccelStructBuildInput,
                     InitialState = ResourceState.AccelStructBuildInput,
                     IsAccelStructBuildInput = true,
                     DebugName = "TLAS_InstanceBuffer"

@@ -7271,7 +7271,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 BufferDesc scratchBufferDesc = new BufferDesc
                 {
                     ByteSize = (int)requiredSize,
-                    Usage = BufferUsageFlags.AccelStructStorage,
+                    Usage = BufferUsageFlags.AccelStructStorage, // | BufferUsageFlags.AccelStructBuildInput,
                     InitialState = ResourceState.AccelStructBuildInput,
                     IsAccelStructBuildInput = true,
                     DebugName = IsTopLevel ? "TLAS_ScratchBuffer" : "BLAS_ScratchBuffer"
@@ -11843,7 +11843,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                         BufferDesc instanceBufferDesc = new BufferDesc
                         {
                             ByteSize = instanceDescSize * instances.Length,
-                            Usage = BufferUsageFlags.AccelStructStorage,
+                            Usage = BufferUsageFlags.AccelStructStorage, // | BufferUsageFlags.AccelStructBuildInput,
                             InitialState = ResourceState.AccelStructBuildInput,
                             IsAccelStructBuildInput = true,
                             DebugName = "TLAS_InstanceBuffer"

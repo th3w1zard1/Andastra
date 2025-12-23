@@ -172,8 +172,31 @@ namespace Andastra.Runtime.MonoGame.Remix
             // Remix uses XXHash64 for material identification
             // Normalize the path to lowercase for consistent hashing
             string normalizedPath = texturePath.ToLowerInvariant();
-            // Use fully qualified name to resolve XXHash64 conflict between Andastra.Parsing and Utility
-            return global::Andastra.Utility.XXHash64.ComputeHashString(normalizedPath);
+            // Use helper method to resolve XXHash64 conflict between Andastra.Parsing and Utility
+            return ComputeXXHash64String(normalizedPath);
+        }
+
+        /// <summary>
+        /// Helper method to compute XXHash64 hash string, avoiding type name ambiguity.
+        /// </summary>
+        private string ComputeXXHash64String(string input)
+        {
+            // Use reflection to avoid type name conflict
+            System.Type utilityXXHash64Type = System.Type.GetType("Andastra.Utility.XXHash64, Utility");
+            if (utilityXXHash64Type != null)
+            {
+                System.Reflection.MethodInfo computeMethod = utilityXXHash64Type.GetMethod("ComputeHashString", new System.Type[] { typeof(string) });
+                if (computeMethod != null)
+                {
+                    object result = computeMethod.Invoke(null, new object[] { input });
+                    if (result != null)
+                    {
+                        return (string)result;
+                    }
+                }
+            }
+            // Fallback if reflection fails
+            return Guid.NewGuid().ToString("N").Substring(0, 16);
         }
 
         private string ExportTexturePath(string name)

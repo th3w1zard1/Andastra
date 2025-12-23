@@ -416,7 +416,9 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             // Metal 3.0 raytracing: Create raytracing pipeline state
             // MTLRaytracingPipelineStateDescriptor contains shaders, hit groups, etc.
-            IntPtr pipelineDescriptor = MetalNative.CreateRaytracingPipelineDescriptor(_device, desc);
+            // Convert Interfaces.RaytracingPipelineDesc to Metal-specific format
+            RaytracingPipelineDesc metalDesc = ConvertRaytracingPipelineDesc(desc);
+            IntPtr pipelineDescriptor = MetalNative.CreateRaytracingPipelineDescriptor(_device, metalDesc);
             if (pipelineDescriptor == IntPtr.Zero)
             {
                 return null;
@@ -434,6 +436,89 @@ namespace Andastra.Runtime.MonoGame.Backends
             var pipeline = new MetalRaytracingPipeline(handle, desc, raytracingPipelineState);
             _raytracingPipelines[handle] = pipeline;
             return pipeline;
+        }
+
+        /// <summary>
+        /// Converts Interfaces.RaytracingPipelineDesc to Metal-specific RaytracingPipelineDesc.
+        /// Extracts shader bytecode from IShader objects and converts HitGroups to Metal format.
+        /// </summary>
+        private RaytracingPipelineDesc ConvertRaytracingPipelineDesc(Interfaces.RaytracingPipelineDesc desc)
+        {
+            RaytracingPipelineDesc metalDesc = new RaytracingPipelineDesc
+            {
+                MaxPayloadSize = desc.MaxPayloadSize,
+                MaxAttributeSize = desc.MaxAttributeSize,
+                MaxRecursionDepth = desc.MaxRecursionDepth,
+                DebugName = desc.DebugName
+            };
+
+            // Extract shader bytecode from IShader objects
+            // Metal expects byte arrays for shader code
+            if (desc.Shaders != null && desc.Shaders.Length > 0)
+            {
+                // Find ray generation shader
+                foreach (IShader shader in desc.Shaders)
+                {
+                    if (shader != null && shader.Type == ShaderType.RayGeneration)
+                    {
+                        metalDesc.RayGenShader = ExtractShaderBytecode(shader);
+                        break;
+                    }
+                }
+
+                // Find miss shader
+                foreach (IShader shader in desc.Shaders)
+                {
+                    if (shader != null && shader.Type == ShaderType.Miss)
+                    {
+                        metalDesc.MissShader = ExtractShaderBytecode(shader);
+                        break;
+                    }
+                }
+
+                // Find closest hit shader
+                foreach (IShader shader in desc.Shaders)
+                {
+                    if (shader != null && shader.Type == ShaderType.ClosestHit)
+                    {
+                        metalDesc.ClosestHitShader = ExtractShaderBytecode(shader);
+                        break;
+                    }
+                }
+
+                // Find any hit shader
+                foreach (IShader shader in desc.Shaders)
+                {
+                    if (shader != null && shader.Type == ShaderType.AnyHit)
+                    {
+                        metalDesc.AnyHitShader = ExtractShaderBytecode(shader);
+                        break;
+                    }
+                }
+            }
+
+            return metalDesc;
+        }
+
+        /// <summary>
+        /// Extracts bytecode from an IShader object.
+        /// </summary>
+        private byte[] ExtractShaderBytecode(IShader shader)
+        {
+            if (shader == null)
+            {
+                return null;
+            }
+
+            // Get bytecode from MetalShader's Desc, same as GetShaderBytecode
+            var metalShader = shader as MetalShader;
+            if (metalShader != null)
+            {
+                return metalShader.Desc.Bytecode;
+            }
+
+            // Fallback: return null if we can't extract bytecode
+            return null;
         }
 
         #endregion
@@ -1072,16 +1157,16 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
         }
 
-        private FillMode ConvertFillMode(FillMode mode)
+        private Interfaces.FillMode ConvertFillMode(Interfaces.FillMode mode)
         {
             switch (mode)
             {
-                case FillMode.Solid:
-                    return Andastra.Runtime.MonoGame.Rendering.FillMode.Solid;
-                case FillMode.Wireframe:
-                    return Andastra.Runtime.MonoGame.Rendering.FillMode.Wireframe;
+                case Interfaces.FillMode.Solid:
+                    return Interfaces.FillMode.Solid;
+                case Interfaces.FillMode.Wireframe:
+                    return Interfaces.FillMode.Wireframe;
                 default:
-                    return Andastra.Runtime.MonoGame.Rendering.FillMode.Solid;
+                    return Interfaces.FillMode.Solid;
             }
         }
 
@@ -1090,7 +1175,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             return new DepthStencilState
             {
                 DepthWriteEnable = state.DepthWriteEnable,
-                DepthFunc = ConvertCompareFunc(state.DepthFunc),
+                DepthFunc = state.DepthFunc, // DepthStencilState uses Interfaces.CompareFunc, no conversion needed
                 StencilEnable = state.StencilEnable,
                 StencilReadMask = state.StencilReadMask,
                 StencilWriteMask = state.StencilWriteMask
