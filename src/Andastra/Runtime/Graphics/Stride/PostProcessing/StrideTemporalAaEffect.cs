@@ -8,6 +8,7 @@ using Andastra.Runtime.Graphics.Common.Rendering;
 using RectangleF = Stride.Core.Mathematics.RectangleF;
 using Color = Stride.Core.Mathematics.Color;
 using Vector2 = Stride.Core.Mathematics.Vector2;
+using Matrix = Stride.Core.Mathematics.Matrix;
 
 namespace Andastra.Runtime.Stride.PostProcessing
 {
@@ -119,28 +120,84 @@ namespace Andastra.Runtime.Stride.PostProcessing
         private void InitializeTaaEffect()
         {
             // TAA effect will be loaded from compiled shader or created programmatically
-            // For now, we'll attempt to load from default Stride content paths
-            // If not found, we'll create a basic effect programmatically
+            // Strategy: Try loading from content first, then create programmatically if needed
 
             try
             {
-                // Try to load TAA effect from content
-                // Stride effects are typically stored as .sdeffect files
-                // This would be in the game's content directory
-                // For now, we'll create a placeholder that can be replaced with actual shader
+                // Strategy 1: Try loading TAA effect from compiled content files
+                try
+                {
+                    _taaEffectBase = Effect.Load(_graphicsDevice, "TemporalAA");
+                    if (_taaEffectBase != null)
+                    {
+                        _taaEffect = new EffectInstance(_taaEffectBase);
+                        _effectInitialized = true;
+                        System.Console.WriteLine("[StrideTemporalAaEffect] Loaded TemporalAA effect from compiled file");
+                        return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine($"[StrideTemporalAaEffect] Failed to load TemporalAA from compiled file: {ex.Message}");
+                }
 
-                // TODO: STUB - Load actual TAA shader from content or create programmatically
-                // A full TAA shader would implement:
-                // 1. Motion vector reprojection
-                // 2. Neighborhood clamping (AABB calculation)
-                // 3. Velocity-weighted blending
-                // 4. History clamping to reduce ghosting
+                // Strategy 2: Try loading from ContentManager if available
+                if (_taaEffectBase == null)
+                {
+                    try
+                    {
+                        var services = _graphicsDevice.Services;
+                        if (services != null)
+                        {
+                            var contentManager = services.GetService<ContentManager>();
+                            if (contentManager != null)
+                            {
+                                try
+                                {
+                                    _taaEffectBase = contentManager.Load<Effect>("TemporalAA");
+                                    if (_taaEffectBase != null)
+                                    {
+                                        _taaEffect = new EffectInstance(_taaEffectBase);
+                                        _effectInitialized = true;
+                                        System.Console.WriteLine("[StrideTemporalAaEffect] Loaded TemporalAA from ContentManager");
+                                        return;
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    System.Console.WriteLine($"[StrideTemporalAaEffect] Failed to load TemporalAA from ContentManager: {ex.Message}");
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Console.WriteLine($"[StrideTemporalAaEffect] Failed to access ContentManager: {ex.Message}");
+                    }
+                }
 
-                _effectInitialized = false; // Will be set to true when effect is properly loaded
+                // Strategy 3: Create TAA shader programmatically with full implementation
+                if (_taaEffectBase == null)
+                {
+                    _taaEffectBase = CreateTaaEffect();
+                    if (_taaEffectBase != null)
+                    {
+                        _taaEffect = new EffectInstance(_taaEffectBase);
+                        _effectInitialized = true;
+                        System.Console.WriteLine("[StrideTemporalAaEffect] Created TemporalAA effect programmatically");
+                    }
+                }
+
+                // Final fallback: Effect remains null, will use simple copy
+                if (_taaEffectBase == null)
+                {
+                    System.Console.WriteLine("[StrideTemporalAaEffect] Warning: Could not load or create TAA shader. Using fallback rendering.");
+                    _effectInitialized = false;
+                }
             }
-            catch
+            catch (Exception ex)
             {
-                // If effect loading fails, we'll use a fallback method
+                System.Console.WriteLine($"[StrideTemporalAaEffect] Exception while initializing TAA effect: {ex.Message}");
                 _effectInitialized = false;
             }
         }
@@ -343,10 +400,10 @@ namespace Andastra.Runtime.Stride.PostProcessing
             }
         }
 
-        private global::Stride.Core.Mathematics.Matrix ConvertToStrideMatrix(System.Numerics.Matrix4x4 matrix)
+        private Matrix ConvertToStrideMatrix(System.Numerics.Matrix4x4 matrix)
         {
             // Convert System.Numerics.Matrix4x4 to Stride.Core.Mathematics.Matrix
-            return new global::Stride.Core.Mathematics.Matrix(
+            return new Matrix(
                 matrix.M11, matrix.M12, matrix.M13, matrix.M14,
                 matrix.M21, matrix.M22, matrix.M23, matrix.M24,
                 matrix.M31, matrix.M32, matrix.M33, matrix.M34,
@@ -354,7 +411,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             );
         }
 
-        private System.Numerics.Matrix4x4 ConvertFromStrideMatrix(global::Stride.Core.Mathematics.Matrix matrix)
+        private System.Numerics.Matrix4x4 ConvertFromStrideMatrix(Matrix matrix)
         {
             // Convert Stride.Core.Mathematics.Matrix to System.Numerics.Matrix4x4
             return new System.Numerics.Matrix4x4(
