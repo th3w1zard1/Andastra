@@ -2816,43 +2816,6 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         }
 
         /// <summary>
-        /// Sets a cooldown for an item type on the owning entity.
-        /// This should be called when an item is used/consumed to prevent rapid reuse.
-        /// Based on daorigins.exe: Item cooldowns are applied when consumables are used.
-        /// </summary>
-        /// <param name="entity">Entity that owns the item (usually a player/creature)</param>
-        /// <param name="item">Item that was used</param>
-        /// <param name="cooldownSeconds">Cooldown duration in seconds</param>
-        public void SetItemCooldown(IEntity entity, IEntity item, float cooldownSeconds)
-        {
-            if (entity == null || item == null || cooldownSeconds <= 0)
-            {
-                return;
-            }
-
-            // Get item ResRef for cooldown tracking key
-            string itemResRef = null;
-            Type itemType = item.GetType();
-            PropertyInfo resRefProp = itemType.GetProperty("ResRef");
-            if (resRefProp != null)
-            {
-                object resRefObj = resRefProp.GetValue(item);
-                itemResRef = resRefObj as string;
-            }
-
-            if (string.IsNullOrEmpty(itemResRef))
-            {
-                // Cannot determine item type - cannot set cooldown
-                return;
-            }
-
-            // Set cooldown end time
-            DateTime cooldownEndTime = DateTime.Now.AddSeconds(cooldownSeconds);
-            string cooldownKey = $"ItemCooldown_{itemResRef}";
-            entity.SetData(cooldownKey, cooldownEndTime);
-        }
-
-        /// <summary>
         /// Gets the remaining cooldown time for an ability/talent in seconds.
         /// Based on daorigins.exe: Abilities/talents have cooldowns that prevent immediate reuse.
         /// </summary>
@@ -2866,18 +2829,114 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 return 0.0f;
             }
 
-            // Based on daorigins.exe: Ability/talent cooldowns are tracked per ability ID
-            // Check if entity has a cooldown component or stats component that tracks ability cooldowns
+            // Full implementation: Ability/talent cooldowns are tracked per ability ID on the entity
+            // Based on daorigins.exe: Ability cooldowns prevent spam usage of talents/spells
+            // Cooldowns are stored per ability ID to prevent rapid reuse
+
+            // Check if entity has ability cooldown tracking data
+            // Cooldowns are stored as entity data with key pattern: "AbilityCooldown_{abilityId}"
+            string cooldownKey = $"AbilityCooldown_{abilityId}";
+            if (entity.HasData(cooldownKey))
+            {
+                object cooldownObj = entity.GetData(cooldownKey);
+                if (cooldownObj is DateTime cooldownEndTime)
+                {
+                    // Calculate remaining cooldown time
+                    TimeSpan remainingTime = cooldownEndTime - DateTime.Now;
+                    if (remainingTime.TotalSeconds > 0)
+                    {
+                        return (float)remainingTime.TotalSeconds;
+                    }
+                    else
+                    {
+                        // Cooldown has expired - remove the tracking data
+                        entity.SetData(cooldownKey, null);
+                        return 0.0f;
+                    }
+                }
+            }
+
+            // Check stats component for ability cooldown information
+            // Some abilities might have base cooldown times defined in game data
             IStatsComponent stats = entity.GetComponent<IStatsComponent>();
             if (stats != null)
             {
-                // TODO: PLACEHOLDER - Full implementation would check ability cooldown from stats component
-                // Abilities/talents typically have cooldown times (5-60+ seconds depending on ability)
-                // Full implementation would access GetAbilityCooldownRemaining(abilityId) or similar method
-                // For now, return 0.0f (no cooldown) - cooldown tracking would be implemented in IStatsComponent or ICooldownComponent
+                // Try to get base cooldown from talents 2DA table
+                if (_world?.GameDataProvider != null)
+                {
+                    try
+                    {
+                        var talentsTable = _world.GameDataProvider.GetTable("talents");
+                        if (talentsTable != null && abilityId < talentsTable.RowCount)
+                        {
+                            var abilityRow = talentsTable.GetRow(abilityId);
+                            if (abilityRow != null)
+                            {
+                                // Check for cooldown column in talents table
+                                // Common columns: "CooldownTime", "Cooldown", "ReuseTime"
+                                float baseCooldown = 0.0f;
+                                bool hasCooldownData = false;
+
+                                // Try different column names for cooldown data
+                                string[] cooldownColumns = { "CooldownTime", "Cooldown", "ReuseTime", "CooldownSeconds" };
+                                foreach (string columnName in cooldownColumns)
+                                {
+                                    try
+                                    {
+                                        string cooldownStr = abilityRow.GetString(columnName);
+                                        if (!string.IsNullOrEmpty(cooldownStr) && float.TryParse(cooldownStr, out baseCooldown))
+                                        {
+                                            hasCooldownData = true;
+                                            break;
+                                        }
+                                    }
+                                    catch
+                                    {
+                                        // Column doesn't exist or is not accessible
+                                    }
+                                }
+
+                                // If we found cooldown data but no active cooldown, return 0
+                                // (ability is ready to use)
+                                if (hasCooldownData)
+                                {
+                                    // Could potentially return base cooldown for UI display purposes,
+                                    // but for cooldown checking we return 0 since no active cooldown exists
+                                    return 0.0f;
+                                }
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Table lookup failed - continue with entity data check
+                    }
+                }
             }
 
+            // No active cooldown for this ability
             return 0.0f;
+        }
+
+        /// <summary>
+        /// Sets a cooldown for an ability/talent on the owning entity.
+        /// This should be called when an ability is used to prevent rapid reuse.
+        /// Based on daorigins.exe: Ability cooldowns are applied when talents/spells are cast.
+        /// </summary>
+        /// <param name="entity">Entity that owns the ability (usually a player/creature)</param>
+        /// <param name="abilityId">Ability/talent ID that was used</param>
+        /// <param name="cooldownSeconds">Cooldown duration in seconds</param>
+        public void SetAbilityCooldown(IEntity entity, int abilityId, float cooldownSeconds)
+        {
+            if (entity == null || abilityId < 0 || cooldownSeconds <= 0)
+            {
+                return;
+            }
+
+            // Set cooldown end time
+            DateTime cooldownEndTime = DateTime.Now.AddSeconds(cooldownSeconds);
+            string cooldownKey = $"AbilityCooldown_{abilityId}";
+            entity.SetData(cooldownKey, cooldownEndTime);
         }
 
         /// <summary>
@@ -5912,7 +5971,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         /// <param name="indexBuffer">The source index buffer to convert</param>
         /// <param name="roomMesh">The room mesh containing index format information</param>
         /// <returns>DirectX 9 index buffer pointer, or IntPtr.Zero if conversion fails</returns>
-        private unsafe IntPtr ConvertToDirectX9IndexBuffer(object indexBuffer, object roomMesh)
+        private unsafe IntPtr ConvertToDirectX9IndexBuffer(dynamic indexBuffer, dynamic roomMesh)
         {
             try
             {
