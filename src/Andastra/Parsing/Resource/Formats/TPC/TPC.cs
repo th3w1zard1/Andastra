@@ -286,15 +286,501 @@ namespace Andastra.Parsing.Formats.TPC
         }
 
         // DXT compression helpers
-        // Based on standard DXT/S3TC compression algorithms (simplified implementation)
+        // Based on standard DXT/S3TC compression algorithms
+        // Reference: PyKotor compress_dxt.py - comprehensive BC1/DXT1 encoder implementation
+        // swkotor.exe/swkotor2.exe/daorigins.exe: DXT1 compression uses standard S3TC algorithm
 
         private static byte[] RgbToDxt1(byte[] rgb, int width, int height)
         {
-            // TODO: STUB - DXT1 compression is complex and lossy
-            // For now, return placeholder - in production would use proper DXT1 compression
-            // DXT1 compression requires block-based encoding with color endpoint selection
-            // This would require implementing BC1/DXT1 encoder algorithm
-            throw new NotImplementedException("DXT1 compression not yet implemented. Use decompression for DXT formats.");
+            // Calculate output size: 8 bytes per 4x4 block
+            int blockCountX = (width + 3) / 4;
+            int blockCountY = (height + 3) / 4;
+            int outputSize = blockCountX * blockCountY * 8;
+            byte[] dxt1Data = new byte[outputSize];
+
+            int dstOffset = 0;
+            for (int y = 0; y < height; y += 4)
+            {
+                for (int x = 0; x < width; x += 4)
+                {
+                    // Extract 4x4 block from source (16 pixels, 3 bytes each = 48 bytes, but we store as RGBA = 64 bytes)
+                    int[] block = ExtractBlock(rgb, x, y, width, height, 3);
+                    byte[] dest = new byte[8];
+                    CompressDxt1Block(dest, block);
+
+                    // Copy compressed block to output
+                    for (int i = 0; i < 8; i++)
+                    {
+                        dxt1Data[dstOffset + i] = dest[i];
+                    }
+                    dstOffset += 8;
+                }
+            }
+
+            return dxt1Data;
+        }
+
+        // Extract a 4x4 block from source image
+        // Returns array of 64 bytes (16 pixels * 4 components: R, G, B, A)
+        private static int[] ExtractBlock(byte[] src, int x, int y, int w, int h, int channels)
+        {
+            int[] block = new int[64]; // 16 pixels * 4 components
+            int blockIdx = 0;
+
+            for (int by = 0; by < 4; by++)
+            {
+                for (int bx = 0; bx < 4; bx++)
+                {
+                    int sx = x + bx;
+                    int sy = y + by;
+
+                    if (sx < w && sy < h)
+                    {
+                        int srcIdx = (sy * w + sx) * channels;
+                        // Copy RGB channels
+                        block[blockIdx] = src[srcIdx];
+                        block[blockIdx + 1] = src[srcIdx + 1];
+                        block[blockIdx + 2] = src[srcIdx + 2];
+                        if (channels == 3)
+                        {
+                            block[blockIdx + 3] = 255; // Add alpha for RGB
+                        }
+                        else
+                        {
+                            block[blockIdx + 3] = src[srcIdx + 3];
+                        }
+                    }
+                    else
+                    {
+                        // Out of bounds - fill with zeros
+                        block[blockIdx] = 0;
+                        block[blockIdx + 1] = 0;
+                        block[blockIdx + 2] = 0;
+                        block[blockIdx + 3] = 0;
+                    }
+                    blockIdx += 4;
+                }
+            }
+
+            return block;
+        }
+
+        // Compress a single DXT1 block (4x4 pixels = 8 bytes output)
+        private static void CompressDxt1Block(byte[] dest, int[] src)
+        {
+            CompressColorBlock(dest, src);
+        }
+
+        // Core color block compression algorithm
+        // Based on PyKotor _compress_color_block implementation
+        private static void CompressColorBlock(byte[] dest, int[] src)
+        {
+            // Check if all pixels are the same color
+            bool allSame = true;
+            for (int i = 4; i < 64; i += 4)
+            {
+                if (src[i] != src[0] || src[i + 1] != src[1] || src[i + 2] != src[2])
+                {
+                    allSame = false;
+                    break;
+                }
+            }
+
+            ushort max16;
+            ushort min16;
+            uint mask;
+
+            if (allSame)
+            {
+                // All pixels same - use single color
+                int r = src[0];
+                int g = src[1];
+                int b = src[2];
+                mask = 0xAAAAAAAA; // All pixels use color 0
+                max16 = As16Bit(QuantizeRb(r), QuantizeG(g), QuantizeRb(b));
+                min16 = As16Bit(QuantizeRb(r), QuantizeG(g), QuantizeRb(b));
+            }
+            else
+            {
+                // Dither block to improve quality
+                int[] dblock = DitherBlock(src);
+                var optimized = OptimizeColorsBlock(dblock);
+                max16 = optimized.max;
+                min16 = optimized.min;
+
+                if (max16 != min16)
+                {
+                    int[] color = EvalColors(max16, min16);
+                    mask = MatchColorsBlock(src, color);
+                }
+                else
+                {
+                    mask = 0;
+                }
+
+                // Refine block up to 2 iterations
+                for (int iter = 0; iter < 2; iter++)
+                {
+                    uint lastMask = mask;
+                    if (RefineBlock(src, ref max16, ref min16, mask))
+                    {
+                        if (max16 != min16)
+                        {
+                            int[] color = EvalColors(max16, min16);
+                            mask = MatchColorsBlock(src, color);
+                        }
+                        else
+                        {
+                            mask = 0;
+                            break;
+                        }
+                    }
+                    if (mask == lastMask)
+                    {
+                        break;
+                    }
+                }
+            }
+
+            // Ensure max16 >= min16 (swap if needed)
+            if (max16 < min16)
+            {
+                ushort temp = max16;
+                max16 = min16;
+                min16 = temp;
+                mask ^= 0x55555555; // Flip all bits
+            }
+
+            // Write block data: 2 bytes color0, 2 bytes color1, 4 bytes indices
+            dest[0] = (byte)(max16 & 0xFF);
+            dest[1] = (byte)(max16 >> 8);
+            dest[2] = (byte)(min16 & 0xFF);
+            dest[3] = (byte)(min16 >> 8);
+            dest[4] = (byte)(mask & 0xFF);
+            dest[5] = (byte)((mask >> 8) & 0xFF);
+            dest[6] = (byte)((mask >> 16) & 0xFF);
+            dest[7] = (byte)((mask >> 24) & 0xFF);
+        }
+
+        // Dither block to improve compression quality
+        private static int[] DitherBlock(int[] block)
+        {
+            int[] dblock = new int[64];
+            for (int i = 0; i < 64; i++)
+            {
+                dblock[i] = block[i];
+            }
+
+            int[] err = new int[8];
+            for (int ch = 0; ch < 3; ch++)
+            {
+                for (int y = 0; y < 4; y++)
+                {
+                    for (int x = 0; x < 4; x++)
+                    {
+                        int idx = (y * 4 + x) * 4 + ch;
+                        int old = dblock[idx];
+                        int newVal;
+                        if (ch != 1)
+                        {
+                            newVal = QuantizeRb(old);
+                        }
+                        else
+                        {
+                            newVal = QuantizeG(old);
+                        }
+                        dblock[idx] = newVal;
+                        int errVal = old - newVal;
+
+                        // Distribute error using Floyd-Steinberg dithering
+                        if (x < 3)
+                        {
+                            dblock[idx + 4] += (errVal * 7) >> 4;
+                        }
+                        if (y < 3)
+                        {
+                            if (x > 0)
+                            {
+                                dblock[idx + 12] += (errVal * 3) >> 4;
+                            }
+                            dblock[idx + 16] += (errVal * 5) >> 4;
+                            if (x < 3)
+                            {
+                                dblock[idx + 20] += errVal >> 4;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return dblock;
+        }
+
+        // Optimize color endpoints using principal component analysis
+        private static (ushort max, ushort min) OptimizeColorsBlock(int[] block)
+        {
+            int[] cov = new int[6];
+            int[] mu = new int[3];
+            int[] minColor = new int[3] { 255, 255, 255 };
+            int[] maxColor = new int[3] { 0, 0, 0 };
+
+            // Calculate mean and min/max
+            for (int i = 0; i < 16; i++)
+            {
+                int r = block[i * 4];
+                int g = block[i * 4 + 1];
+                int b = block[i * 4 + 2];
+                mu[0] += r;
+                mu[1] += g;
+                mu[2] += b;
+                if (r < minColor[0]) minColor[0] = r;
+                if (g < minColor[1]) minColor[1] = g;
+                if (b < minColor[2]) minColor[2] = b;
+                if (r > maxColor[0]) maxColor[0] = r;
+                if (g > maxColor[1]) maxColor[1] = g;
+                if (b > maxColor[2]) maxColor[2] = b;
+            }
+
+            mu[0] = (mu[0] + 8) >> 4;
+            mu[1] = (mu[1] + 8) >> 4;
+            mu[2] = (mu[2] + 8) >> 4;
+
+            // Calculate covariance matrix
+            for (int i = 0; i < 16; i++)
+            {
+                int r = block[i * 4] - mu[0];
+                int g = block[i * 4 + 1] - mu[1];
+                int b = block[i * 4 + 2] - mu[2];
+                cov[0] += r * r;
+                cov[1] += r * g;
+                cov[2] += r * b;
+                cov[3] += g * g;
+                cov[4] += g * b;
+                cov[5] += b * b;
+            }
+
+            // Calculate principal direction
+            int vfr = maxColor[0] - minColor[0];
+            int vfg = maxColor[1] - minColor[1];
+            int vfb = maxColor[2] - minColor[2];
+
+            // Power iteration (4 iterations)
+            for (int iter = 0; iter < 4; iter++)
+            {
+                int r = vfr * cov[0] + vfg * cov[1] + vfb * cov[2];
+                int g = vfr * cov[1] + vfg * cov[3] + vfb * cov[4];
+                int b = vfr * cov[2] + vfg * cov[4] + vfb * cov[5];
+                vfr = r;
+                vfg = g;
+                vfb = b;
+            }
+
+            // Normalize
+            int magn = Math.Max(Math.Max(Math.Abs(vfr), Math.Abs(vfg)), Math.Abs(vfb));
+            int v_r, v_g, v_b;
+            if (magn < 4)
+            {
+                v_r = 299;
+                v_g = 587;
+                v_b = 114;
+            }
+            else
+            {
+                v_r = (vfr * 512) / magn;
+                v_g = (vfg * 512) / magn;
+                v_b = (vfb * 512) / magn;
+            }
+
+            // Find min and max projections
+            float minD = float.MaxValue;
+            float maxD = float.MinValue;
+            int minP = 0;
+            int maxP = 0;
+
+            for (int i = 0; i < 16; i++)
+            {
+                int dot = block[i * 4] * v_r + block[i * 4 + 1] * v_g + block[i * 4 + 2] * v_b;
+                if (dot < minD)
+                {
+                    minD = dot;
+                    minP = i;
+                }
+                if (dot > maxD)
+                {
+                    maxD = dot;
+                    maxP = i;
+                }
+            }
+
+            return (
+                As16Bit(block[maxP * 4], block[maxP * 4 + 1], block[maxP * 4 + 2]),
+                As16Bit(block[minP * 4], block[minP * 4 + 1], block[minP * 4 + 2])
+            );
+        }
+
+        // Evaluate color palette from two endpoints
+        private static int[] EvalColors(ushort color0, ushort color1)
+        {
+            // Expand 565 to RGB
+            void Expand565(ushort c, out int r, out int g, out int b)
+            {
+                r = ((c >> 11) & 31) * 8;
+                g = ((c >> 5) & 63) * 4;
+                b = (c & 31) * 8;
+            }
+
+            Expand565(color0, out int r0, out int g0, out int b0);
+            Expand565(color1, out int r1, out int g1, out int b1);
+
+            // Generate 4-color palette
+            int[] colors = new int[16]
+            {
+                r0, g0, b0, 255,
+                r1, g1, b1, 255,
+                (2 * r0 + r1) / 3, (2 * g0 + g1) / 3, (2 * b0 + b1) / 3, 255,
+                (r0 + 2 * r1) / 3, (g0 + 2 * g1) / 3, (b0 + 2 * b1) / 3, 255
+            };
+
+            return colors;
+        }
+
+        // Match block pixels to color palette
+        private static uint MatchColorsBlock(int[] block, int[] color)
+        {
+            uint mask = 0;
+            int dirR = color[0] - color[4];
+            int dirG = color[1] - color[5];
+            int dirB = color[2] - color[6];
+
+            int[] dots = new int[16];
+            int[] stops = new int[4];
+
+            // Calculate dot products for all pixels
+            for (int i = 0; i < 16; i++)
+            {
+                dots[i] = block[i * 4] * dirR + block[i * 4 + 1] * dirG + block[i * 4 + 2] * dirB;
+            }
+
+            // Calculate dot products for color stops
+            for (int i = 0; i < 4; i++)
+            {
+                stops[i] = color[i * 4] * dirR + color[i * 4 + 1] * dirG + color[i * 4 + 2] * dirB;
+            }
+
+            // Determine thresholds
+            int c0Point = (stops[1] + stops[3]) >> 1;
+            int halfPoint = (stops[3] + stops[2]) >> 1;
+            int c3Point = (stops[2] + stops[0]) >> 1;
+
+            // Match each pixel to closest color
+            for (int i = 0; i < 16; i++)
+            {
+                int dot = dots[i];
+                int code;
+                if (dot < halfPoint)
+                {
+                    code = (dot < c0Point) ? 3 : 1;
+                }
+                else
+                {
+                    code = (dot < c3Point) ? 2 : 0;
+                }
+                mask |= (uint)(code << (i * 2));
+            }
+
+            return mask;
+        }
+
+        // Refine color endpoints based on current mask
+        private static bool RefineBlock(int[] block, ref ushort max16, ref ushort min16, uint mask)
+        {
+            ushort oldMin = min16;
+            ushort oldMax = max16;
+
+            int at1R = 0, at1G = 0, at1B = 0;
+            int at2R = 0, at2G = 0, at2B = 0;
+            int akku = 0;
+
+            uint currentMask = mask;
+            for (int i = 0; i < 16; i++)
+            {
+                int step = (int)(currentMask & 3);
+                int[] w1Table = new int[] { 3, 0, 2, 1 };
+                int w1 = w1Table[step];
+                int r = block[i * 4];
+                int g = block[i * 4 + 1];
+                int b = block[i * 4 + 2];
+
+                int[] akkuTable = new int[] { 0x090000, 0x000900, 0x040102, 0x010402 };
+                akku += akkuTable[step];
+
+                at1R += w1 * r;
+                at1G += w1 * g;
+                at1B += w1 * b;
+                at2R += r;
+                at2G += g;
+                at2B += b;
+
+                currentMask >>= 2;
+            }
+
+            at2R = 3 * at2R - at1R;
+            at2G = 3 * at2G - at1G;
+            at2B = 3 * at2B - at1B;
+
+            int xx = akku >> 16;
+            int yy = (akku >> 8) & 255;
+            int xy = akku & 255;
+
+            int denom = xx * yy - xy * xy;
+            if (denom == 0)
+            {
+                return false;
+            }
+
+            float fRb = (3.0f * 31.0f) / 255.0f / denom;
+            float fG = fRb * 63.0f / 31.0f;
+
+            max16 = (ushort)(
+                (Sclamp((at1R * yy - at2R * xy) * fRb + 0.5f, 0, 31) << 11) |
+                (Sclamp((at1G * yy - at2G * xy) * fG + 0.5f, 0, 63) << 5) |
+                Sclamp((at1B * yy - at2B * xy) * fRb + 0.5f, 0, 31)
+            );
+
+            min16 = (ushort)(
+                (Sclamp((at2R * xx - at1R * xy) * fRb + 0.5f, 0, 31) << 11) |
+                (Sclamp((at2G * xx - at1G * xy) * fG + 0.5f, 0, 63) << 5) |
+                Sclamp((at2B * xx - at1B * xy) * fRb + 0.5f, 0, 31)
+            );
+
+            return oldMin != min16 || oldMax != max16;
+        }
+
+        // Convert RGB to 16-bit 565 format
+        private static ushort As16Bit(int r, int g, int b)
+        {
+            return (ushort)(((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3));
+        }
+
+        // Clamp float to integer range
+        private static int Sclamp(float y, int p0, int p1)
+        {
+            int x = (int)y;
+            if (x < p0) return p0;
+            if (x > p1) return p1;
+            return x;
+        }
+
+        // Quantize red/blue channel to 5 bits
+        private static int QuantizeRb(int x)
+        {
+            return (x * 31 + 127) / 255;
+        }
+
+        // Quantize green channel to 6 bits
+        private static int QuantizeG(int x)
+        {
+            return (x * 63 + 127) / 255;
         }
 
         private static byte[] RgbaToDxt3(byte[] rgba, int width, int height)
@@ -883,10 +1369,10 @@ namespace Andastra.Parsing.Formats.TPC
             else if (sourceFormat == TPCTextureFormat.DXT3 || sourceFormat == TPCTextureFormat.DXT5)
             {
                 // Decompress DXT3/DXT5 to RGBA first
-                byte[] rgbaData = sourceFormat == TPCTextureFormat.DXT3 
-                    ? Dxt3ToRgba(data, width, height) 
+                byte[] rgbaData = sourceFormat == TPCTextureFormat.DXT3
+                    ? Dxt3ToRgba(data, width, height)
                     : Dxt5ToRgba(data, width, height);
-                
+
                 if (targetFormat == TPCTextureFormat.RGBA)
                 {
                     mipmap.Data = rgbaData;
