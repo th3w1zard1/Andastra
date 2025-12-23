@@ -405,25 +405,25 @@ namespace Andastra.Runtime.Stride.Graphics
             UpdateShaderParameters();
         }
 
-        protected override void OnAmbientLightColorChanged(Vector3Stride color)
+        protected override void OnAmbientLightColorChanged(System.Numerics.Vector3 color)
         {
             _parametersDirty = true;
             UpdateShaderParameters();
         }
 
-        protected override void OnDiffuseColorChanged(Vector3Stride color)
+        protected override void OnDiffuseColorChanged(System.Numerics.Vector3 color)
         {
             _parametersDirty = true;
             UpdateShaderParameters();
         }
 
-        protected override void OnEmissiveColorChanged(Vector3Stride color)
+        protected override void OnEmissiveColorChanged(System.Numerics.Vector3 color)
         {
             _parametersDirty = true;
             UpdateShaderParameters();
         }
 
-        protected override void OnSpecularColorChanged(Vector3Stride color)
+        protected override void OnSpecularColorChanged(System.Numerics.Vector3 color)
         {
             _parametersDirty = true;
             UpdateShaderParameters();
@@ -447,25 +447,25 @@ namespace Andastra.Runtime.Stride.Graphics
             UpdateShaderParameters();
         }
 
-        protected override void OnFogEnabledChanged(bool enabled)
+        protected virtual void OnFogEnabledChanged(bool enabled)
         {
             _parametersDirty = true;
             UpdateShaderParameters();
         }
 
-        protected override void OnFogColorChanged(Vector3 color)
+        protected virtual void OnFogColorChanged(System.Numerics.Vector3 color)
         {
             _parametersDirty = true;
             UpdateShaderParameters();
         }
 
-        protected override void OnFogStartChanged(float start)
+        protected virtual void OnFogStartChanged(float start)
         {
             _parametersDirty = true;
             UpdateShaderParameters();
         }
 
-        protected override void OnFogEndChanged(float end)
+        protected virtual void OnFogEndChanged(float end)
         {
             _parametersDirty = true;
             UpdateShaderParameters();
@@ -632,7 +632,7 @@ namespace Andastra.Runtime.Stride.Graphics
         /// Sets a Vector3 parameter in the effect.
         /// Maps BasicEffect parameter names to Stride's standard material and lighting keys.
         /// </summary>
-        private void SetVector3Parameter(string name, Vector3 value)
+        private void SetVector3Parameter(string name, Vector3Stride value)
         {
             if (_effectInstance == null || _parameterCollection == null)
             {

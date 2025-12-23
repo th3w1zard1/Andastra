@@ -449,7 +449,7 @@ namespace Andastra.Runtime.Games.Aurora.GUI
         /// <summary>
         /// Recursively renders a GUI control and its children.
         /// </summary>
-        private void RenderControl(GUIControl control, Vector2 parentOffset)
+        private void RenderControl(GUIControl control, Andastra.Runtime.Graphics.Vector2 parentOffset)
         {
             if (control == null)
             {
@@ -493,7 +493,7 @@ namespace Andastra.Runtime.Games.Aurora.GUI
         /// <summary>
         /// Renders a panel control.
         /// </summary>
-        private void RenderPanel(GUIPanel panel, Vector2 position, Vector2 size)
+        private void RenderPanel(GUIPanel panel, Andastra.Runtime.Graphics.Vector2 position, Andastra.Runtime.Graphics.Vector2 size)
         {
             // Render panel background using border fill texture if available
             if (panel.Border != null && !panel.Border.Fill.IsBlank)
@@ -511,7 +511,7 @@ namespace Andastra.Runtime.Games.Aurora.GUI
         /// <summary>
         /// Renders a button control.
         /// </summary>
-        private void RenderButton(GUIButton button, Vector2 position, Vector2 size)
+        private void RenderButton(GUIButton button, Andastra.Runtime.Graphics.Vector2 position, Andastra.Runtime.Graphics.Vector2 size)
         {
             bool isHighlighted = string.Equals(_highlightedButtonTag, button.Tag, StringComparison.OrdinalIgnoreCase);
             bool isSelected = button.IsSelected.HasValue && button.IsSelected.Value != 0;
@@ -565,7 +565,7 @@ namespace Andastra.Runtime.Games.Aurora.GUI
         /// <summary>
         /// Renders a label control.
         /// </summary>
-        private void RenderLabel(GUILabel label, Vector2 position, Vector2 size)
+        private void RenderLabel(GUILabel label, Andastra.Runtime.Graphics.Vector2 position, Andastra.Runtime.Graphics.Vector2 size)
         {
             if (label.GuiText != null && !string.IsNullOrEmpty(label.GuiText.Text))
             {
@@ -589,7 +589,7 @@ namespace Andastra.Runtime.Games.Aurora.GUI
         /// <summary>
         /// Renders a generic control.
         /// </summary>
-        private void RenderGenericControl(GUIControl control, Vector2 position, Vector2 size)
+        private void RenderGenericControl(GUIControl control, Andastra.Runtime.Graphics.Vector2 position, Andastra.Runtime.Graphics.Vector2 size)
         {
             // Render border/background if available
             if (control.Border != null && !control.Border.Fill.IsBlank)
@@ -606,7 +606,7 @@ namespace Andastra.Runtime.Games.Aurora.GUI
         /// <summary>
         /// Renders bitmap text character by character.
         /// </summary>
-        private void RenderBitmapText(BaseBitmapFont font, string text, Vector2 position, Andastra.Runtime.Graphics.Color color)
+        private void RenderBitmapText(BaseBitmapFont font, string text, Andastra.Runtime.Graphics.Vector2 position, Andastra.Runtime.Graphics.Color color)
         {
             if (font == null || string.IsNullOrEmpty(text))
             {
@@ -790,7 +790,7 @@ namespace Andastra.Runtime.Games.Aurora.GUI
         /// </summary>
         private class LoadedGui
         {
-            public GUI Gui { get; set; }
+            public Andastra.Parsing.Resource.Generics.GUI.GUI Gui { get; set; }
             public string Name { get; set; }
             public int Width { get; set; }
             public int Height { get; set; }

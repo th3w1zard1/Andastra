@@ -363,7 +363,7 @@ namespace Andastra.Parsing.Tools
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:436-479
         // Original: @classmethod def from_dict(cls, game: Game, data: dict[str, list[dict[str, str | list[str]]]]) -> StrRefReferenceCache:
-        public static StrRefReferenceCache FromDict(Game game, Dictionary<string, List<Dictionary<string, object>>> data)
+        public static StrRefReferenceCache FromDict(BioWareGame game, Dictionary<string, List<Dictionary<string, object>>> data)
         {
             var cache = new StrRefReferenceCache(game);
 
@@ -649,7 +649,7 @@ namespace Andastra.Parsing.Tools
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:707-755
         // Original: @classmethod def from_dict(cls, game: Game, data: dict[str, list[dict[str, str | int | list[str]]]]) -> TwoDAMemoryReferenceCache:
-        public static TwoDAMemoryReferenceCache FromDict(Game game, Dictionary<string, List<Dictionary<string, object>>> data)
+        public static TwoDAMemoryReferenceCache FromDict(BioWareGame game, Dictionary<string, List<Dictionary<string, object>>> data)
         {
             var cache = new TwoDAMemoryReferenceCache(game);
 

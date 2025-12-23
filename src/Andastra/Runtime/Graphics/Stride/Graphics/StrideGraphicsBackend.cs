@@ -12,7 +12,7 @@ namespace Andastra.Runtime.Stride.Graphics
     /// </summary>
     public class StrideGraphicsBackend : IGraphicsBackend
     {
-        private Game _game;
+        private Stride.Engine.Game _game;
         private StrideGraphicsDevice _graphicsDevice;
         private StrideContentManager _contentManager;
         private StrideWindow _window;
@@ -37,7 +37,7 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public StrideGraphicsBackend()
         {
-            _game = new Game();
+            _game = new Stride.Engine.Game();
         }
 
         public void Initialize(int width, int height, string title, bool fullscreen = false)

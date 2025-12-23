@@ -264,7 +264,7 @@ namespace Andastra.Parsing.Tools
         /// <summary>
         /// (untested) Sets the kotor install folder path value in the windows registry for the given game.
         /// </summary>
-        public static void SetWinregPath(Game game, string path)
+        public static void SetWinregPath(BioWareGame game, string path)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
