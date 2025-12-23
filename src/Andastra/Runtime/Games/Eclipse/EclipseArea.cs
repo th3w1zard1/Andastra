@@ -7637,14 +7637,14 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <remarks>
         /// Particle effects render their particles through the particle system's emitters.
         /// Based on daorigins.exe, DragonAge2.exe: Particle effects render particles as billboards.
-        /// 
+        ///
         /// Particle rendering implementation:
         /// - Based on daorigins.exe: Particles are rendered as billboarded quads that always face the camera
         /// - Each particle is rendered as a textured quad with position, size, and alpha
         /// - Billboard orientation is calculated from the view matrix (right and up vectors)
         /// - Particles are batched into vertex buffers for efficient rendering
         /// - Particle texture is selected based on emitter type (fire, smoke, magic, etc.)
-        /// 
+        ///
         /// daorigins.exe particle rendering (reverse engineered):
         /// - Function: Particle rendering in area render loop
         /// - Vertex format: Position (XYZ), Color (ARGB), Texture coordinates (UV)
@@ -7701,7 +7701,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 // Up vector = column 1: [M12, M22, M32]
                 Vector3 billboardRight = new Vector3(viewMatrix.M11, viewMatrix.M21, viewMatrix.M31);
                 Vector3 billboardUp = new Vector3(viewMatrix.M12, viewMatrix.M22, viewMatrix.M32);
-                
+
                 // Normalize vectors for consistent scaling
                 if (billboardRight.LengthSquared() > 0.0f)
                 {
@@ -7889,14 +7889,14 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <remarks>
         /// Based on daorigins.exe: Different emitter types use different particle textures.
         /// Particle textures are loaded from game resources using texture name from emitter or default texture mapping.
-        /// 
+        ///
         /// Default particle texture names in Dragon Age Origins:
         /// - Fire: "fx_fire", "particle_fire", "flame"
         /// - Smoke: "fx_smoke", "particle_smoke", "smoke"
         /// - Magic: "fx_magic", "particle_magic", "sparkle"
         /// - Environmental: "fx_dust", "particle_dust", "dust"
         /// - Explosion: "fx_explosion", "particle_explosion", "explosion"
-        /// 
+        ///
         /// Texture loading priority:
         /// 1. Try to load texture from resource provider if available
         /// 2. Fall back to default white texture if resource provider not available
