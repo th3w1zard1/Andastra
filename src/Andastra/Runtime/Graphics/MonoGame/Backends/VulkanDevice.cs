@@ -5111,11 +5111,11 @@ namespace Andastra.Runtime.MonoGame.Backends
                             // This uses the VK_KHR_acceleration_structure extension
                             // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkWriteDescriptorSetAccelerationStructureKHR.html
                             // Supports both single acceleration structure (backward compatibility) and array of acceleration structures
-                            
+
                             // Determine how many acceleration structures we need to bind
                             int accelStructCount = descriptorCount;
                             IAccelStruct[] accelStructArray = null;
-                            
+
                             // Check if array is provided (takes precedence)
                             if (item.AccelStructs != null && item.AccelStructs.Length > 0)
                             {
@@ -5130,7 +5130,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                                 accelStructArray = new IAccelStruct[] { item.AccelStruct };
                                 accelStructCount = 1;
                             }
-                            
+
                             // Only proceed if we have at least one acceleration structure
                             if (accelStructArray != null && accelStructCount > 0)
                             {
@@ -5142,7 +5142,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                                 // Create VkWriteDescriptorSetAccelerationStructureKHR structure
                                 // This structure is chained via pNext in VkWriteDescriptorSet
                                 // The structure contains an array of acceleration structure handles
-                                
+
                                 IntPtr accelStructHandlesArray = IntPtr.Zero;
                                 IntPtr accelStructInfoPtr = IntPtr.Zero;
 
@@ -5152,7 +5152,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                                     // Each handle is an IntPtr (VkAccelerationStructureKHR)
                                     int arraySizeBytes = accelStructCount * IntPtr.Size;
                                     accelStructHandlesArray = Marshal.AllocHGlobal(arraySizeBytes);
-                                    
+
                                     // Write all acceleration structure handles to the array
                                     for (int i = 0; i < accelStructCount; i++)
                                     {
@@ -5206,7 +5206,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                                     // Clear pointers to prevent double-free (they're now tracked in the list)
                                     accelStructInfoPtr = IntPtr.Zero;
                                     accelStructHandlesArray = IntPtr.Zero;
-                                    
+
                                     Console.WriteLine($"[VulkanDevice] Bound {accelStructCount} acceleration structure(s) to slot {item.Slot}");
                                 }
                                 catch (Exception ex)

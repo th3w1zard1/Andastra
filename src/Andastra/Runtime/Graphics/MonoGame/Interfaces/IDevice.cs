@@ -752,6 +752,12 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         public IBuffer Buffer;
         public ISampler Sampler;
         public IAccelStruct AccelStruct;
+        /// <summary>
+        /// Array of acceleration structures for array bindings.
+        /// If provided, this takes precedence over AccelStruct for array bindings.
+        /// For single bindings, AccelStruct can still be used for backward compatibility.
+        /// </summary>
+        public IAccelStruct[] AccelStructs;
         public int BufferOffset;
         public int BufferRange;
     }
