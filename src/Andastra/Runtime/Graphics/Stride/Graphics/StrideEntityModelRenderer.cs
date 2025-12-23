@@ -206,7 +206,7 @@ namespace Andastra.Runtime.Stride.Graphics
             Matrix strideProjection = ConvertToStrideMatrix(projectionMatrix);
 
             // Get command list for rendering
-            CommandList commandList = _graphicsDevice.ImmediateContext.CommandList;
+            CommandList commandList = _graphicsDevice.ImmediateContext();
 
             // Render all meshes
             foreach (MdlToStrideModelConverter.MeshData mesh in model.Meshes)
@@ -241,7 +241,7 @@ namespace Andastra.Runtime.Stride.Graphics
                     strideEffect.World = finalWorld;
                     strideEffect.View = viewMatrix;
                     strideEffect.Projection = projectionMatrix;
-                    
+
                     // Apply opacity from renderable component for fade-in/fade-out effects
                     // Based on swkotor2.exe: FadeTime @ 0x007c60ec (fade duration), alpha blending for entity rendering
                     // Opacity is updated by AppearAnimationFadeSystem for appear animations
