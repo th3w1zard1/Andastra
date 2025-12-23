@@ -241,7 +241,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             try
             {
                 // Use explicit type to avoid C# 7.3 inferred delegate type limitation
-                Stride.Rendering.CommandList commandList = _graphicsDevice.ImmediateContext();
+                StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext;
                 if (commandList == null)
                 {
                     return false;
@@ -482,7 +482,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             try
             {
                 // Use explicit type to avoid C# 7.3 inferred delegate type limitation
-                Stride.Rendering.CommandList commandList = _graphicsDevice.ImmediateContext();
+                StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext;
                 if (commandList == null)
                 {
                     Console.WriteLine("[StrideToneMapping] ImmediateContext not available");
@@ -790,7 +790,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 Vector4[] data = new Vector4[size];
 
                 // Use explicit type to avoid C# 7.3 inferred delegate type limitation
-                Stride.Rendering.CommandList commandList = _graphicsDevice.ImmediateContext();
+                StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext;
                 if (commandList == null)
                 {
                     Console.WriteLine("[StrideToneMapping] ReadTextureData: ImmediateContext not available");
@@ -888,7 +888,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 }
 
                 // Use explicit type to avoid C# 7.3 inferred delegate type limitation
-                Stride.Rendering.CommandList commandList = _graphicsDevice.ImmediateContext();
+                StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext;
                 if (commandList == null)
                 {
                     Console.WriteLine("[StrideToneMapping] WriteTextureData: ImmediateContext not available");
