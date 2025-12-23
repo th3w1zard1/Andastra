@@ -8,9 +8,9 @@ using Andastra.Runtime.MonoGame.Graphics;
 using Andastra.Runtime.Graphics;
 using Microsoft.Xna.Framework.Graphics;
 using DynamicLight = Andastra.Runtime.MonoGame.Lighting.DynamicLight;
-using EclipseILightingSystem = Andastra.Runtime.Games.Eclipse.ILightingSystem;
-using EclipseIUpdatable = Andastra.Runtime.Games.Eclipse.IUpdatable;
 using IDynamicLight = Andastra.Runtime.MonoGame.Interfaces.IDynamicLight;
+using Andastra.Runtime.Games.Eclipse;
+using ILightingSystem = Andastra.Runtime.Games.Eclipse.ILightingSystem;
 
 namespace Andastra.Runtime.Games.Eclipse.Lighting
 {
@@ -55,7 +55,7 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
     /// - daorigins.exe: Lighting system initialization and management
     /// - DragonAge2.exe: Enhanced lighting features and shadow casting
     /// </remarks>
-    public class EclipseLightingSystem : EclipseILightingSystem
+    public class EclipseLightingSystem : ILightingSystem
     {
         // Cluster configuration for light culling (similar to ClusteredLightingSystem)
         private const int ClusterCountX = 16;
@@ -1123,17 +1123,17 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
         /// <summary>
         /// Sets fog parameters.
         /// </summary>
-        /// <param name="fog">Fog settings.</param>
-        public void SetFog(FogSettings fog)
+        /// <param name="fogSettings">Fog settings to apply.</param>
+        public void SetFog(Andastra.Runtime.Games.Eclipse.Lighting.FogSettings fogSettings)
         {
-            _fog = fog;
+            _fog = fogSettings;
         }
 
         /// <summary>
         /// Gets current fog settings.
         /// </summary>
         /// <returns>Current fog settings.</returns>
-        public FogSettings GetFog()
+        public Andastra.Runtime.Games.Eclipse.Lighting.FogSettings GetFog()
         {
             return _fog;
         }
