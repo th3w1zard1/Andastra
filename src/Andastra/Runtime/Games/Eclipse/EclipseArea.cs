@@ -100,7 +100,7 @@ namespace Andastra.Runtime.Games.Eclipse
     /// </remarks>
     [PublicAPI]
     public class EclipseArea : BaseArea, IDialogueHistoryArea
-    {
+        {
         private readonly List<IEntity> _creatures = new List<IEntity>();
         private readonly List<IEntity> _placeables = new List<IEntity>();
         private readonly List<IEntity> _doors = new List<IEntity>();
@@ -9097,7 +9097,7 @@ float4 BloomCompositingPS(float2 texCoord : TEXCOORD0,
 technique BloomCompositing
 {
     pass Pass0
-    {
+        {
         // SpriteBatch handles vertex shader, we only need pixel shader
         PixelShader = compile ps_2_0 BloomCompositingPS();
     }
@@ -9213,7 +9213,7 @@ float4 BrightPassPS(float2 texCoord : TEXCOORD0,
 technique BrightPass
 {
     pass Pass0
-    {
+        {
         // SpriteBatch handles vertex shader, we only need pixel shader
         PixelShader = compile ps_2_0 BrightPassPS();
     }
@@ -9333,7 +9333,7 @@ float4 ToneMappingPS(float2 texCoord : TEXCOORD0,
 technique ToneMapping
 {
     pass Pass0
-    {
+        {
         // SpriteBatch handles vertex shader, we only need pixel shader
         PixelShader = compile ps_2_0 ToneMappingPS();
     }
@@ -9455,7 +9455,7 @@ float4 ColorGradingPS(float2 texCoord : TEXCOORD0,
 technique ColorGrading
 {
     pass Pass0
-    {
+        {
         // SpriteBatch handles vertex shader, we only need pixel shader
         PixelShader = compile ps_2_0 ColorGradingPS();
     }
@@ -10365,13 +10365,180 @@ technique ColorGrading
         {
             _dialogueHistory.Clear();
         }
+
+        /// <summary>
+        /// Updates physics collision shapes for modified geometry.
+        /// </summary>
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Physics collision shapes are updated when geometry is modified.
+        ///
+        /// Implementation details:
+        /// - daorigins.exe: 0x008f12a0 - Static geometry collision shape update function
+        /// - DragonAge2.exe: 0x009a45b0 - Enhanced collision shape rebuild for destructible geometry
+        ///
+        /// When geometry is modified (destroyed/deformed):
+        /// 1. Gets modified mesh data from geometry modification tracker
+        /// 2. Retrieves original mesh geometry (vertices, indices) from cached mesh data
+        /// 3. Builds destroyed face indices set and modified vertex positions dictionary
+        /// 4. Rebuilds collision shapes in physics system with updated geometry
+        /// 5. Recalculates collision bounds for efficient spatial queries
+        /// </remarks>
+        private void UpdatePhysicsCollisionShapes()
+        {
+            if (_physicsSystem == null || _geometryModificationTracker == null)
+            {
+                return;
+            }
+
+            EclipsePhysicsSystem physicsSystem = _physicsSystem as EclipsePhysicsSystem;
+            if (physicsSystem == null)
+            {
+                return;
+            }
+
+            // Get all modified meshes from tracker
+            // Based on daorigins.exe: Collision shapes are updated for all modified meshes
+            Dictionary<string, ModifiedMesh> modifiedMeshes = _geometryModificationTracker.GetModifiedMeshes();
+            if (modifiedMeshes == null || modifiedMeshes.Count == 0)
+            {
+                return; // No modifications to process
+            }
+
+            // Process each modified mesh
+            foreach (KeyValuePair<string, ModifiedMesh> modifiedMeshPair in modifiedMeshes)
+            {
+                string meshId = modifiedMeshPair.Key;
+                ModifiedMesh modifiedMesh = modifiedMeshPair.Value;
+
+                if (modifiedMesh == null || modifiedMesh.Modifications == null || modifiedMesh.Modifications.Count == 0)
+                {
+                    continue;
+                }
+
+                // Get original mesh data (from cached room or static object meshes)
+                IRoomMeshData originalMeshData = null;
+                if (_cachedRoomMeshes.TryGetValue(meshId, out originalMeshData))
+                {
+                    // Mesh is a room mesh
+                }
+                else if (_cachedStaticObjectMeshes.TryGetValue(meshId, out originalMeshData))
+                {
+                    // Mesh is a static object mesh
+                }
+
+                if (originalMeshData == null || originalMeshData.VertexBuffer == null || originalMeshData.IndexBuffer == null)
+                {
+                    continue; // Cannot update collision without original mesh data
+                }
+
+                // Extract vertex positions and indices from original mesh data BEFORE processing modifications
+                // Based on daorigins.exe: Vertex and index data is read directly from GPU buffers for collision shape updates
+                // DragonAge2.exe: Enhanced buffer reading with support for different vertex formats
+                // We need original positions early to calculate final positions from displacement when ModifiedPosition is zero
+                List<Vector3> vertices = ExtractVertexPositions(originalMeshData, meshId);
+                List<int> indices = ExtractIndices(originalMeshData, meshId);
+
+                if (vertices == null || vertices.Count == 0 || indices == null || indices.Count == 0)
+                {
+                    continue; // Cannot update collision without valid geometry data
+                }
+
+                // Collect all destroyed face indices from all modifications
+                // Based on daorigins.exe: Destroyed faces are excluded from collision shapes
+                HashSet<int> destroyedFaceIndices = new HashSet<int>();
+                Dictionary<int, Vector3> modifiedVertices = new Dictionary<int, Vector3>();
+
+                foreach (GeometryModification modification in modifiedMesh.Modifications)
+                {
+                    if (modification.ModificationType == GeometryModificationType.Destroyed)
+                    {
+                        // Add destroyed faces to set (these will be excluded from collision)
+                        if (modification.AffectedFaceIndices != null)
+                        {
+                            foreach (int faceIndex in modification.AffectedFaceIndices)
+                            {
+                                destroyedFaceIndices.Add(faceIndex);
+                            }
+                        }
+                    }
+                    else if (modification.ModificationType == GeometryModificationType.Deformed)
+                    {
+                        // Collect modified vertices for deformed geometry
+                        // Based on daorigins.exe: Deformed vertices update collision shape positions
+                        // daorigins.exe: 0x008f12a0 - When ModifiedPosition is zero, original position is retrieved and displacement is added
+                        // DragonAge2.exe: 0x009a45b0 - Enhanced vertex position calculation with proper original position lookup
+                        if (modification.ModifiedVertices != null)
+                        {
+                            foreach (ModifiedVertex modifiedVertex in modification.ModifiedVertices)
+                            {
+                                // Use ModifiedPosition if available, otherwise calculate from original + Displacement
+                                Vector3 finalPosition = modifiedVertex.ModifiedPosition;
+                                if (finalPosition == Vector3.Zero && modifiedVertex.Displacement != Vector3.Zero)
+                                {
+                                    // If ModifiedPosition is zero but Displacement is set, get original position and add displacement
+                                    // Based on daorigins.exe: Original vertex position is retrieved from mesh vertex buffer
+                                    // and displacement vector is added to calculate final deformed position
+                                    int vertexIndex = modifiedVertex.VertexIndex;
+                                    if (vertexIndex >= 0 && vertexIndex < vertices.Count)
+                                    {
+                                        Vector3 originalPosition = vertices[vertexIndex];
+                                        finalPosition = originalPosition + modifiedVertex.Displacement;
+                                    }
+                                    else
+                                    {
+                                        // Invalid vertex index - fall back to displacement only (should not happen in valid data)
+                                        finalPosition = modifiedVertex.Displacement;
+                                    }
+                                }
+
+                                // Store modified vertex position by vertex index
+                                if (!modifiedVertices.ContainsKey(modifiedVertex.VertexIndex))
+                                {
+                                    modifiedVertices[modifiedVertex.VertexIndex] = finalPosition;
+                                }
+                                else
+                                {
+                                    // If vertex is modified multiple times, use the latest modification
+                                    modifiedVertices[modifiedVertex.VertexIndex] = finalPosition;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (vertices == null || vertices.Count == 0 || indices == null || indices.Count == 0)
+                {
+                    continue; // Cannot update collision without valid geometry data
+                }
+
+                // Apply vertex modifications to vertex positions
+                // Based on daorigins.exe: Modified vertex positions are applied before collision shape rebuild
+                for (int i = 0; i < vertices.Count; i++)
+                {
+                    if (modifiedVertices.TryGetValue(i, out Vector3 modifiedPos))
+                    {
+                        vertices[i] = modifiedPos;
+                    }
+                }
+
+                // Update collision shape in physics system
+                // Based on daorigins.exe: 0x008f12a0 - UpdateStaticGeometryCollisionShape call
+                // DragonAge2.exe: 0x009a45b0 - Enhanced collision shape update with destroyed face exclusion
+                physicsSystem.UpdateStaticGeometryCollisionShape(
+                    meshId,
+                    vertices,
+                    indices,
+                    destroyedFaceIndices,
+                    modifiedVertices);
+            }
+        }
     }
 
     /// <summary>
     /// Interface for dynamic area effects in Eclipse engine.
     /// </summary>
     public interface IDynamicAreaEffect : IUpdatable
-    {
+        {
         /// <summary>
         /// Gets whether the effect is still active.
         /// </summary>
@@ -10391,7 +10558,7 @@ technique ColorGrading
     /// Based on daorigins.exe, DragonAge2.exe: Effects can provide custom rendering.
     /// </remarks>
     public interface IRenderableEffect
-    {
+        {
         /// <summary>
         /// Renders the effect.
         /// </summary>
@@ -10411,7 +10578,7 @@ technique ColorGrading
     /// Based on daorigins.exe, DragonAge2.exe: Particle effects use particle emitters.
     /// </remarks>
     public interface IParticleEffect : IDynamicAreaEffect
-    {
+        {
         /// <summary>
         /// Gets the particle emitters for this effect.
         /// </summary>
@@ -10426,7 +10593,7 @@ technique ColorGrading
     /// Based on daorigins.exe, DragonAge2.exe: Weather effects render rain, snow, fog.
     /// </remarks>
     public interface IWeatherEffect : IDynamicAreaEffect
-    {
+        {
         /// <summary>
         /// Gets the weather type for this effect.
         /// </summary>
@@ -10446,7 +10613,7 @@ technique ColorGrading
     /// Based on daorigins.exe, DragonAge2.exe: Environmental effects use particle systems.
     /// </remarks>
     public interface IEnvironmentalEffect : IDynamicAreaEffect
-    {
+        {
         /// <summary>
         /// Gets the particle emitters for this environmental effect (optional).
         /// </summary>
@@ -10465,7 +10632,7 @@ technique ColorGrading
     /// - Transition duration: How long the weather transition takes (smooth fade in/out)
     /// </remarks>
     internal class WeatherTransitionTrigger
-    {
+        {
         /// <summary>
         /// Trigger type (time-based or script-based).
         /// </summary>
@@ -10704,7 +10871,7 @@ technique ColorGrading
     /// Weather transition trigger type.
     /// </summary>
     internal enum WeatherTransitionTriggerType
-    {
+        {
         /// <summary>
         /// Time-based trigger (weather changes at specific time or intervals).
         /// </summary>
@@ -10724,7 +10891,7 @@ technique ColorGrading
     /// Based on Eclipse engine's dynamic area modification system.
     /// </remarks>
     public interface IAreaModification
-    {
+        {
         /// <summary>
         /// Applies the modification to an area.
         /// </summary>
@@ -10756,7 +10923,7 @@ technique ColorGrading
     /// - DragonAge2.exe: Enhanced lighting system with ambient color and intensity properties
     /// </remarks>
     public interface ILightingSystem : IUpdatable
-    {
+        {
         /// <summary>
         /// Gets or sets the ambient light color.
         /// </summary>
@@ -10808,7 +10975,7 @@ technique ColorGrading
     /// - DragonAge2.exe: Enhanced physics system with constraint support
     /// </remarks>
     public interface IPhysicsSystem
-    {
+        {
         /// <summary>
         /// Steps the physics simulation.
         /// </summary>
@@ -10856,7 +11023,7 @@ technique ColorGrading
     /// Interface for updatable objects.
     /// </summary>
     public interface IUpdatable
-    {
+        {
         void Update(float deltaTime);
     }
 
@@ -10868,7 +11035,7 @@ technique ColorGrading
     /// Used for spawning creatures, placeables, triggers, and other objects.
     /// </remarks>
     public class AddEntityModification : IAreaModification
-    {
+        {
         private readonly IEntity _entity;
 
         /// <summary>
@@ -10921,7 +11088,7 @@ technique ColorGrading
     /// Used for despawning, destruction, and cleanup.
     /// </remarks>
     public class RemoveEntityModification : IAreaModification
-    {
+        {
         private readonly IEntity _entity;
 
         /// <summary>
@@ -10972,7 +11139,7 @@ technique ColorGrading
     /// Based on Eclipse engine: Dynamic lights can be added at runtime for effects, explosions, etc.
     /// </remarks>
     public class AddLightModification : IAreaModification
-    {
+        {
         private readonly IDynamicLight _light;
 
         /// <summary>
@@ -11020,7 +11187,7 @@ technique ColorGrading
     /// Based on Eclipse engine: Dynamic lights can be removed at runtime.
     /// </remarks>
     public class RemoveLightModification : IAreaModification
-    {
+        {
         private readonly IDynamicLight _light;
 
         /// <summary>
@@ -11069,7 +11236,7 @@ technique ColorGrading
     /// Used for explosions, destruction, and environmental changes.
     /// </remarks>
     public class CreateWalkmeshHoleModification : IAreaModification
-    {
+        {
         private readonly Vector3 _center;
         private readonly float _radius;
 
@@ -11143,7 +11310,7 @@ technique ColorGrading
     /// Includes weather, particle effects, audio zones, and environmental changes.
     /// </remarks>
     public class AddAreaEffectModification : IAreaModification
-    {
+        {
         private readonly IDynamicAreaEffect _effect;
 
         /// <summary>
@@ -11192,7 +11359,7 @@ technique ColorGrading
     /// Based on Eclipse engine: Dynamic area effects can be removed at runtime.
     /// </remarks>
     public class RemoveAreaEffectModification : IAreaModification
-    {
+        {
         private readonly IDynamicAreaEffect _effect;
 
         /// <summary>
@@ -11242,7 +11409,7 @@ technique ColorGrading
     /// Includes unescapable flag, display name, tag, and other properties.
     /// </remarks>
     public class ChangeAreaPropertyModification : IAreaModification
-    {
+        {
         private readonly string _propertyName;
         private readonly object _propertyValue;
 
@@ -11325,7 +11492,7 @@ technique ColorGrading
     /// Creates physics debris, modifies walkmesh, and updates navigation.
     /// </remarks>
     public class DestroyDestructibleObjectModification : IAreaModification
-    {
+        {
         private readonly IEntity _destructibleEntity;
         private readonly Vector3 _explosionCenter;
         private readonly float _explosionRadius;
@@ -11571,8 +11738,66 @@ technique ColorGrading
                     // Mark entity as having physics
                     debrisEntity.SetData("HasPhysics", true);
                 }
-            }
         }
+    }
+
+    /// <summary>
+    /// Type of geometry modification.
+    /// </summary>
+    /// <remarks>
+    /// Based on daorigins.exe/DragonAge2.exe: Different modification types for destructible geometry.
+    /// </remarks>
+    public enum GeometryModificationType
+    {
+        /// <summary>
+        /// Geometry is destroyed (faces are removed, non-rendered, non-collidable).
+        /// </summary>
+        Destroyed = 0,
+
+        /// <summary>
+        /// Geometry is deformed (vertices are displaced, faces are distorted).
+        /// </summary>
+        Deformed = 1,
+
+        /// <summary>
+        /// Geometry generates debris (destroyed pieces become physics objects).
+        /// </summary>
+        Debris = 2
+    }
+
+    /// <summary>
+    /// Modified vertex data for geometry deformation.
+    /// </summary>
+    /// <remarks>
+    /// Based on daorigins.exe/DragonAge2.exe: Vertex modifications store position changes and displacements.
+    /// </remarks>
+    /// <summary>
+    /// Represents a modified vertex in destructible geometry.
+    /// </summary>
+    /// <remarks>
+    /// Based on daorigins.exe/DragonAge2.exe: Vertex modifications track position changes for deformed geometry.
+    /// </remarks>
+    public struct ModifiedVertex
+    {
+        /// <summary>
+        /// Original vertex index in the mesh.
+        /// </summary>
+        public int VertexIndex { get; set; }
+
+        /// <summary>
+        /// Modified vertex position (displacement from original).
+        /// </summary>
+        public Vector3 ModifiedPosition { get; set; }
+
+        /// <summary>
+        /// Displacement vector (direction and magnitude of deformation).
+        /// </summary>
+        public Vector3 Displacement { get; set; }
+
+        /// <summary>
+        /// Time of modification (for animation/deformation effects).
+        /// </summary>
+        public float ModificationTime { get; set; }
     }
 
     /// <summary>
@@ -11584,129 +11809,6 @@ technique ColorGrading
     /// </remarks>
     public class ModifyGeometryModification : IAreaModification
     {
-        private readonly string _meshId;
-        private readonly GeometryModificationType _modificationType;
-        private readonly List<int> _affectedFaceIndices;
-        private readonly List<ModifiedVertex> _modifiedVertices;
-        private readonly Vector3 _explosionCenter;
-        private readonly float _explosionRadius;
-        private readonly float _modificationTime;
-
-        /// <summary>
-        /// Creates a modification that modifies static geometry.
-        /// </summary>
-        /// <param name="meshId">Mesh identifier (model name/resref).</param>
-        /// <param name="modificationType">Type of modification.</param>
-        /// <param name="affectedFaceIndices">Indices of affected faces (triangle indices).</param>
-        /// <param name="modifiedVertices">Modified vertex data (position changes, deformations).</param>
-        /// <param name="explosionCenter">Center of explosion/destruction effect (for debris generation).</param>
-        /// <param name="explosionRadius">Radius of explosion effect.</param>
-        public ModifyGeometryModification(
-            string meshId,
-            GeometryModificationType modificationType,
-            List<int> affectedFaceIndices,
-            List<ModifiedVertex> modifiedVertices,
-            Vector3 explosionCenter,
-            float explosionRadius)
-        {
-            _meshId = meshId ?? throw new ArgumentNullException(nameof(meshId));
-            _modificationType = modificationType;
-            _affectedFaceIndices = affectedFaceIndices ?? new List<int>();
-            _modifiedVertices = modifiedVertices ?? new List<ModifiedVertex>();
-            _explosionCenter = explosionCenter;
-            _explosionRadius = explosionRadius > 0 ? explosionRadius : throw new ArgumentException("Explosion radius must be positive", nameof(explosionRadius));
-            _modificationTime = 0.0f; // Will be set to current time when applied
-        }
-
-        /// <summary>
-        /// Applies the modification by tracking geometry changes.
-        /// </summary>
-        /// <remarks>
-        /// Based on daorigins.exe/DragonAge2.exe: Geometry modifications are tracked for rendering and physics.
-        /// </remarks>
-        public void Apply(EclipseArea area)
-        {
-            if (area == null || string.IsNullOrEmpty(_meshId))
-            {
-                return;
-            }
-
-            // Apply geometry modification through tracker
-            // Based on daorigins.exe: Geometry modifications are stored and used for rendering/physics updates
-            area.ApplyGeometryModification(
-                _meshId,
-                _modificationType,
-                _affectedFaceIndices,
-                _modifiedVertices,
-                _explosionCenter,
-                _explosionRadius);
-
-            // Update physics collision shapes if geometry was modified
-            if (_modificationType == GeometryModificationType.Destroyed || _modificationType == GeometryModificationType.Deformed)
-            {
-                area.UpdatePhysicsCollisionShapes();
-            }
-        }
-
-        /// <summary>
-        /// Gets whether this modification requires navigation mesh updates.
-        /// Geometry modifications may affect navigation if they destroy or significantly deform terrain.
-        /// </summary>
-        public bool RequiresNavigationMeshUpdate => _modificationType == GeometryModificationType.Destroyed;
-
-        /// <summary>
-        /// Gets whether this modification requires physics system updates.
-        /// All geometry modifications require physics updates.
-        /// </summary>
-        public bool RequiresPhysicsUpdate => true;
-
-        /// <summary>
-        /// Gets whether this modification requires lighting system updates.
-        /// Geometry modifications don't typically require lighting updates unless they affect light sources.
-        /// </summary>
-        public bool RequiresLightingUpdate => false;
-    }
-
-    /// <summary>
-    /// Updates physics collision shapes for modified geometry.
-    /// </summary>
-    /// <remarks>
-    /// Based on daorigins.exe/DragonAge2.exe: Physics collision shapes are updated when geometry is modified.
-    ///
-    /// Implementation details:
-    /// - daorigins.exe: 0x008f12a0 - Static geometry collision shape update function
-    /// - DragonAge2.exe: 0x009a45b0 - Enhanced collision shape rebuild for destructible geometry
-    ///
-    /// When geometry is modified (destroyed/deformed):
-    /// 1. Gets modified mesh data from geometry modification tracker
-    /// 2. Retrieves original mesh geometry (vertices, indices) from cached mesh data
-    /// 3. Builds destroyed face indices set and modified vertex positions dictionary
-    /// 4. Rebuilds collision shapes in physics system with updated geometry
-    /// 5. Recalculates collision bounds for efficient spatial queries
-    /// </remarks>
-    private void UpdatePhysicsCollisionShapes()
-    {
-        if (_physicsSystem == null || _geometryModificationTracker == null)
-        {
-            return;
-        }
-
-            EclipsePhysicsSystem physicsSystem = _physicsSystem as EclipsePhysicsSystem;
-            if (physicsSystem == null)
-            {
-                return;
-            }
-
-            // Get all modified meshes from tracker
-            // Based on daorigins.exe: Collision shapes are updated for all modified meshes
-            Dictionary<string, ModifiedMesh> modifiedMeshes = _geometryModificationTracker.GetModifiedMeshes();
-            if (modifiedMeshes == null || modifiedMeshes.Count == 0)
-            {
-                return; // No modifications to process
-            }
-
-            // Process each modified mesh
-            foreach (KeyValuePair<string, ModifiedMesh> modifiedMeshPair in modifiedMeshes)
             {
                 string meshId = modifiedMeshPair.Key;
                 ModifiedMesh modifiedMesh = modifiedMeshPair.Value;
@@ -11844,126 +11946,126 @@ technique ColorGrading
         /// This cached data is used to rebuild collision shapes when geometry is modified.
         /// </remarks>
         private void CacheMeshGeometryFromMDL(string meshId, Andastra.Parsing.Formats.MDLData.MDL mdl)
-    {
-        if (string.IsNullOrEmpty(meshId) || mdl == null)
         {
-            return;
-        }
-
-        // Extract vertex positions and indices from MDL
-        List<Vector3> vertices = new List<Vector3>();
-        List<int> indices = new List<int>();
-
-        // Extract geometry from all meshes in MDL
-        // Based on daorigins.exe: MDL models contain mesh nodes with vertices and faces
-        ExtractGeometryFromMDL(mdl, vertices, indices);
-
-        if (vertices.Count == 0 || indices.Count == 0)
-        {
-            return; // No geometry to cache
-        }
-
-        // Cache the geometry data
-        CachedMeshGeometry cachedGeometry = new CachedMeshGeometry
-        {
-            MeshId = meshId,
-            Vertices = vertices,
-            Indices = indices
-        };
-
-        _cachedMeshGeometry[meshId] = cachedGeometry;
-    }
-
-    /// <summary>
-    /// Extracts vertex positions and indices from MDL model.
-    /// </summary>
-    /// <param name="mdl">Parsed MDL model data.</param>
-    /// <param name="vertices">Output list of vertex positions.</param>
-    /// <param name="indices">Output list of triangle indices.</param>
-    /// <remarks>
-    /// Based on daorigins.exe/DragonAge2.exe: MDL geometry extraction from all mesh nodes.
-    /// </remarks>
-    private void ExtractGeometryFromMDL(Andastra.Parsing.Formats.MDLData.MDL mdl, List<Vector3> vertices, List<int> indices)
-    {
-        if (mdl == null || mdl.Root == null)
-        {
-            return;
-        }
-
-        // Extract geometry from all nodes recursively
-        ExtractGeometryFromNode(mdl.Root, vertices, indices);
-    }
-
-    /// <summary>
-    /// Extracts geometry from an MDL node recursively.
-    /// </summary>
-    /// <param name="node">MDL node to extract geometry from.</param>
-    /// <param name="vertices">Output list of vertex positions.</param>
-    /// <param name="indices">Output list of triangle indices.</param>
-    /// <remarks>
-    /// Based on daorigins.exe/DragonAge2.exe: Recursive geometry extraction from MDL node hierarchy.
-    /// </remarks>
-    private void ExtractGeometryFromNode(Andastra.Parsing.Formats.MDLData.MDLNode node, List<Vector3> vertices, List<int> indices)
-    {
-        if (node == null)
-        {
-            return;
-        }
-
-        // Extract geometry from this node's mesh
-        if (node.Mesh != null)
-        {
-            var mesh = node.Mesh;
-            if (mesh.Vertices != null && mesh.Faces != null)
+            if (string.IsNullOrEmpty(meshId) || mdl == null)
             {
-                // Get current vertex offset (number of vertices already added)
-                int vertexOffset = vertices.Count;
+                return;
+            }
 
-                // Add vertices from this mesh
-                foreach (var vertex in mesh.Vertices)
+            // Extract vertex positions and indices from MDL
+            List<Vector3> vertices = new List<Vector3>();
+            List<int> indices = new List<int>();
+
+            // Extract geometry from all meshes in MDL
+            // Based on daorigins.exe: MDL models contain mesh nodes with vertices and faces
+            ExtractGeometryFromMDL(mdl, vertices, indices);
+
+            if (vertices.Count == 0 || indices.Count == 0)
+            {
+                return; // No geometry to cache
+            }
+
+            // Cache the geometry data
+            CachedMeshGeometry cachedGeometry = new CachedMeshGeometry
+            {
+                MeshId = meshId,
+                Vertices = vertices,
+                Indices = indices
+            };
+
+            _cachedMeshGeometry[meshId] = cachedGeometry;
+        }
+
+        /// <summary>
+        /// Extracts vertex positions and indices from MDL model.
+        /// </summary>
+        /// <param name="mdl">Parsed MDL model data.</param>
+        /// <param name="vertices">Output list of vertex positions.</param>
+        /// <param name="indices">Output list of triangle indices.</param>
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: MDL geometry extraction from all mesh nodes.
+        /// </remarks>
+        private void ExtractGeometryFromMDL(Andastra.Parsing.Formats.MDLData.MDL mdl, List<Vector3> vertices, List<int> indices)
+        {
+            if (mdl == null || mdl.Root == null)
+            {
+                return;
+            }
+
+            // Extract geometry from all nodes recursively
+            ExtractGeometryFromNode(mdl.Root, vertices, indices);
+        }
+
+        /// <summary>
+        /// Extracts geometry from an MDL node recursively.
+        /// </summary>
+        /// <param name="node">MDL node to extract geometry from.</param>
+        /// <param name="vertices">Output list of vertex positions.</param>
+        /// <param name="indices">Output list of triangle indices.</param>
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Recursive geometry extraction from MDL node hierarchy.
+        /// </remarks>
+        private void ExtractGeometryFromNode(Andastra.Parsing.Formats.MDLData.MDLNode node, List<Vector3> vertices, List<int> indices)
+        {
+            if (node == null)
+            {
+                return;
+            }
+
+            // Extract geometry from this node's mesh
+            if (node.Mesh != null)
+            {
+                var mesh = node.Mesh;
+                if (mesh.Vertices != null && mesh.Faces != null)
                 {
-                    vertices.Add(new Vector3(vertex.X, vertex.Y, vertex.Z));
+                    // Get current vertex offset (number of vertices already added)
+                    int vertexOffset = vertices.Count;
+
+                    // Add vertices from this mesh
+                    foreach (var vertex in mesh.Vertices)
+                    {
+                        vertices.Add(new Vector3(vertex.X, vertex.Y, vertex.Z));
+                    }
+
+                    // Add faces (triangles) from this mesh
+                    foreach (var face in mesh.Faces)
+                    {
+                        // MDL faces are triangles with vertex indices V1, V2, V3
+                        // Adjust indices by vertex offset to account for previous meshes
+                        indices.Add(vertexOffset + face.V1);
+                        indices.Add(vertexOffset + face.V2);
+                        indices.Add(vertexOffset + face.V3);
+                    }
                 }
+            }
 
-                // Add faces (triangles) from this mesh
-                foreach (var face in mesh.Faces)
+            // Recursively process child nodes
+            if (node.Children != null)
+            {
+                foreach (var child in node.Children)
                 {
-                    // MDL faces are triangles with vertex indices V1, V2, V3
-                    // Adjust indices by vertex offset to account for previous meshes
-                    indices.Add(vertexOffset + face.V1);
-                    indices.Add(vertexOffset + face.V2);
-                    indices.Add(vertexOffset + face.V3);
+                    ExtractGeometryFromNode(child, vertices, indices);
                 }
             }
         }
 
-        // Recursively process child nodes
-        if (node.Children != null)
+        /// <summary>
+        /// Extracts vertex positions from mesh data by reading directly from VertexBuffer.
+        /// </summary>
+        /// <param name="meshData">Mesh data containing VertexBuffer to read from.</param>
+        /// <param name="meshId">Mesh identifier (used for fallback to cached data).</param>
+        /// <returns>List of vertex positions extracted from VertexBuffer, or from cache if buffer read fails.</returns>
+        /// <remarks>
+        /// Based on daorigins.exe: 0x008f12a0 - Vertex data is read directly from GPU vertex buffer for collision shape updates.
+        /// DragonAge2.exe: 0x009a45b0 - Enhanced vertex buffer reading with support for multiple vertex formats.
+        ///
+        /// Implementation:
+        /// 1. Attempts to read vertex data directly from VertexBuffer
+        /// 2. Extracts position data from vertex format (Position is at offset 0 in most formats)
+        /// 3. Falls back to cached geometry data if buffer read fails or buffer is unavailable
+        /// </remarks>
+        private List<Vector3> ExtractVertexPositions(IRoomMeshData meshData, string meshId)
         {
-            foreach (var child in node.Children)
-            {
-                ExtractGeometryFromNode(child, vertices, indices);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Extracts vertex positions from mesh data by reading directly from VertexBuffer.
-    /// </summary>
-    /// <param name="meshData">Mesh data containing VertexBuffer to read from.</param>
-    /// <param name="meshId">Mesh identifier (used for fallback to cached data).</param>
-    /// <returns>List of vertex positions extracted from VertexBuffer, or from cache if buffer read fails.</returns>
-    /// <remarks>
-    /// Based on daorigins.exe: 0x008f12a0 - Vertex data is read directly from GPU vertex buffer for collision shape updates.
-    /// DragonAge2.exe: 0x009a45b0 - Enhanced vertex buffer reading with support for multiple vertex formats.
-    ///
-    /// Implementation:
-    /// 1. Attempts to read vertex data directly from VertexBuffer
-    /// 2. Extracts position data from vertex format (Position is at offset 0 in most formats)
-    /// 3. Falls back to cached geometry data if buffer read fails or buffer is unavailable
-    /// </remarks>
-    private List<Vector3> ExtractVertexPositions(IRoomMeshData meshData, string meshId)
-    {
             if (meshData == null || meshData.VertexBuffer == null)
             {
                 // Fallback to cached data if buffer is unavailable
@@ -12156,6 +12258,119 @@ technique ColorGrading
     }
 
     /// <summary>
+    /// Modification that modifies static geometry (destructible terrain, destroyed walls, deformed geometry).
+    /// </summary>
+    /// <remarks>
+    /// Based on daorigins.exe/DragonAge2.exe: Eclipse supports runtime geometry modifications.
+    /// Modifications include destroyed faces, deformed vertices, and debris generation.
+    /// </remarks>
+    public class ModifyGeometryModification : IAreaModification
+    {
+        private readonly string _meshId;
+        private readonly GeometryModificationType _modificationType;
+        private readonly List<int> _affectedFaceIndices;
+        private readonly List<ModifiedVertex> _modifiedVertices;
+        private readonly Vector3 _explosionCenter;
+        private readonly float _explosionRadius;
+        private readonly float _modificationTime;
+
+        /// <summary>
+        /// Creates a modification that modifies static geometry.
+        /// </summary>
+        /// <param name="meshId">Mesh identifier (model name/resref).</param>
+        /// <param name="modificationType">Type of modification.</param>
+        /// <param name="affectedFaceIndices">Indices of affected faces (triangle indices).</param>
+        /// <param name="modifiedVertices">Modified vertex data (position changes, deformations).</param>
+        /// <param name="explosionCenter">Center of explosion/destruction effect (for debris generation).</param>
+        /// <param name="explosionRadius">Radius of explosion effect.</param>
+        public ModifyGeometryModification(
+            string meshId,
+            GeometryModificationType modificationType,
+            List<int> affectedFaceIndices,
+            List<ModifiedVertex> modifiedVertices,
+            Vector3 explosionCenter,
+            float explosionRadius)
+        {
+            _meshId = meshId ?? throw new ArgumentNullException(nameof(meshId));
+            _modificationType = modificationType;
+            _affectedFaceIndices = affectedFaceIndices ?? new List<int>();
+            _modifiedVertices = modifiedVertices ?? new List<ModifiedVertex>();
+            _explosionCenter = explosionCenter;
+            _explosionRadius = explosionRadius > 0 ? explosionRadius : throw new ArgumentException("Explosion radius must be positive", nameof(explosionRadius));
+            _modificationTime = 0.0f; // Will be set to current time when applied
+        }
+
+        /// <summary>
+        /// Applies the modification by tracking geometry changes.
+        /// </summary>
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Geometry modifications are tracked for rendering and physics.
+        /// </remarks>
+        public void Apply(EclipseArea area)
+        {
+            if (area == null || string.IsNullOrEmpty(_meshId))
+            {
+                return;
+            }
+
+            // Apply geometry modification through tracker
+            // Based on daorigins.exe: Geometry modifications are stored and used for rendering/physics updates
+            area.ApplyGeometryModification(
+                _meshId,
+                _modificationType,
+                _affectedFaceIndices,
+                _modifiedVertices,
+                _explosionCenter,
+                _explosionRadius);
+
+            // Update physics collision shapes if geometry was modified
+            if (_modificationType == GeometryModificationType.Destroyed || _modificationType == GeometryModificationType.Deformed)
+            {
+                area.UpdatePhysicsCollisionShapes();
+            }
+        }
+
+        /// <summary>
+        /// Gets whether this modification requires navigation mesh updates.
+        /// Geometry modifications may affect navigation if they destroy or significantly deform terrain.
+        /// </summary>
+        public bool RequiresNavigationMeshUpdate
+        {
+            get
+            {
+                // Geometry modifications may affect navigation if they destroy or significantly deform terrain
+                return _modificationType == GeometryModificationType.Destroyed;
+            }
+        }
+
+        /// <summary>
+        /// Gets whether this modification requires physics system updates.
+        /// All geometry modifications require physics updates.
+        /// </summary>
+        public bool RequiresPhysicsUpdate
+        {
+            get
+            {
+                // All geometry modifications require physics updates
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Gets whether this modification requires lighting system updates.
+        /// Geometry modifications don't typically require lighting updates unless they affect light sources.
+        /// </summary>
+        public bool RequiresLightingUpdate
+        {
+            get
+            {
+                // Geometry modifications don't typically require lighting updates unless they affect light sources
+                return false;
+            }
+        }
+    }
+
+    /// <summary>
     /// Type of geometry modification.
     /// </summary>
     /// <remarks>
@@ -12186,7 +12401,7 @@ technique ColorGrading
     /// Based on daorigins.exe/DragonAge2.exe: Vertex modifications track position changes for deformed geometry.
     /// </remarks>
     public struct ModifiedVertex
-    {
+        {
         /// <summary>
         /// Original vertex index in the mesh.
         /// </summary>
@@ -12235,7 +12450,7 @@ technique ColorGrading
     /// - Generates debris physics objects from destroyed faces
     /// </remarks>
     internal class DestructibleGeometryModificationTracker
-    {
+        {
         // Modified mesh data by mesh ID (model name/resref)
         // Based on daorigins.exe: Modifications are tracked per mesh/model
         private readonly Dictionary<string, ModifiedMesh> _modifiedMeshes;
@@ -12639,7 +12854,7 @@ technique ColorGrading
     /// Based on daorigins.exe/DragonAge2.exe: Modified mesh data structure.
     /// </remarks>
     public class ModifiedMesh
-    {
+        {
         /// <summary>
         /// Mesh identifier (model name/resref).
         /// </summary>
@@ -12664,7 +12879,7 @@ technique ColorGrading
     /// Based on daorigins.exe/DragonAge2.exe: Modification data structure.
     /// </remarks>
     public class GeometryModification
-    {
+        {
         /// <summary>
         /// Unique modification ID.
         /// </summary>
@@ -12719,7 +12934,7 @@ technique ColorGrading
     /// Based on daorigins.exe/DragonAge2.exe: Debris physics objects.
     /// </remarks>
     public class DebrisPiece
-    {
+        {
         /// <summary>
         /// Mesh identifier that this debris came from.
         /// </summary>
