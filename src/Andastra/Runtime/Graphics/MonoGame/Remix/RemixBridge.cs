@@ -24,6 +24,7 @@ namespace Andastra.Runtime.MonoGame.Remix
     public class RemixBridge : IDisposable
     {
         private IntPtr _d3d9Handle;
+        private IntPtr _d3d9; // IDirect3D9* interface
         private IntPtr _deviceHandle;
         private bool _initialized;
         private bool _remixDetected;
@@ -115,8 +116,15 @@ namespace Andastra.Runtime.MonoGame.Remix
             if (_deviceHandle != IntPtr.Zero)
             {
                 // Release D3D9 device
-                Marshal.Release(_deviceHandle);
+                ReleaseDirect3D9Device(_deviceHandle);
                 _deviceHandle = IntPtr.Zero;
+            }
+
+            if (_d3d9 != IntPtr.Zero)
+            {
+                // Release D3D9 interface
+                ReleaseDirect3D9(_d3d9);
+                _d3d9 = IntPtr.Zero;
             }
 
             if (_d3d9Handle != IntPtr.Zero)
@@ -271,15 +279,88 @@ namespace Andastra.Runtime.MonoGame.Remix
                 return false;
             }
 
-            // TODO:  For actual implementation:
             // 1. Call Direct3DCreate9(D3D_SDK_VERSION)
+            Direct3DCreate9Delegate direct3DCreate9 = Marshal.GetDelegateForFunctionPointer<Direct3DCreate9Delegate>(createFunc);
+            IntPtr d3d9 = direct3DCreate9(D3D9Constants.D3D_SDK_VERSION);
+            if (d3d9 == IntPtr.Zero)
+            {
+                Console.WriteLine("[RemixBridge] Direct3DCreate9 returned null");
+                return false;
+            }
+
+            // Get adapter display mode
+            D3DDISPLAYMODE displayMode = new D3DDISPLAYMODE();
+            int hr = GetAdapterDisplayMode(d3d9, 0, ref displayMode);
+            if (hr < 0)
+            {
+                Console.WriteLine("[RemixBridge] Failed to get adapter display mode with HRESULT: 0x" + hr.ToString("X8"));
+                ReleaseDirect3D9(d3d9);
+                return false;
+            }
+
             // 2. Create D3D9 device with appropriate parameters
-            // 3. Store device handle
+            // Create present parameters matching Remix requirements
+            D3DPRESENT_PARAMETERS presentParams = new D3DPRESENT_PARAMETERS
+            {
+                BackBufferWidth = 800, // Default values - will be resized if needed
+                BackBufferHeight = 600,
+                BackBufferFormat = displayMode.Format,
+                BackBufferCount = 1,
+                MultiSampleType = 0, // D3DMULTISAMPLE_NONE
+                MultiSampleQuality = 0,
+                SwapEffect = 1, // D3DSWAPEFFECT_DISCARD
+                hDeviceWindow = windowHandle,
+                Windowed = 1, // Windowed mode for Remix
+                EnableAutoDepthStencil = 1,
+                AutoDepthStencilFormat = 75, // D3DFMT_D24S8
+                Flags = 0,
+                FullScreen_RefreshRateInHz = 0,
+                PresentationInterval = settings.EnableReflex ? 1u : 0x80000000u // D3DPRESENT_INTERVAL_ONE or D3DPRESENT_INTERVAL_IMMEDIATE
+            };
 
-            // Placeholder - actual P/Invoke implementation would go here
-            _deviceHandle = IntPtr.Zero; // Would be actual device
+            // Create device through COM vtable
+            Guid iidDevice = D3D9Constants.IID_IDirect3DDevice9;
+            IntPtr devicePtr = Marshal.AllocHGlobal(IntPtr.Size);
+            try
+            {
+                uint adapter = 0; // D3DADAPTER_DEFAULT
+                uint deviceType = 1; // D3DDEVTYPE_HAL
+                uint behaviorFlags = D3D9Constants.D3DCREATE_HARDWARE_VERTEXPROCESSING | D3D9Constants.D3DCREATE_MULTITHREADED;
 
-            return true;
+                hr = CreateDevice(d3d9, adapter, deviceType, windowHandle, behaviorFlags, ref presentParams, ref iidDevice, devicePtr);
+                if (hr < 0)
+                {
+                    // Try software vertex processing as fallback
+                    behaviorFlags = D3D9Constants.D3DCREATE_SOFTWARE_VERTEXPROCESSING | D3D9Constants.D3DCREATE_MULTITHREADED;
+                    hr = CreateDevice(d3d9, adapter, deviceType, windowHandle, behaviorFlags, ref presentParams, ref iidDevice, devicePtr);
+                }
+
+                if (hr < 0)
+                {
+                    Console.WriteLine("[RemixBridge] CreateDevice failed with HRESULT: 0x" + hr.ToString("X8"));
+                    ReleaseDirect3D9(d3d9);
+                    return false;
+                }
+
+                // 3. Store device handle
+                _deviceHandle = Marshal.ReadIntPtr(devicePtr);
+                if (_deviceHandle == IntPtr.Zero)
+                {
+                    Console.WriteLine("[RemixBridge] Device pointer is null");
+                    ReleaseDirect3D9(d3d9);
+                    return false;
+                }
+
+                // Store D3D9 interface for later cleanup
+                _d3d9 = d3d9;
+
+                Console.WriteLine("[RemixBridge] Direct3D9 device created successfully");
+                return true;
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(devicePtr);
+            }
         }
 
         private void QueryRemixCapabilities()
@@ -300,6 +381,128 @@ namespace Andastra.Runtime.MonoGame.Remix
         public void Dispose()
         {
             Shutdown();
+        }
+
+        /// <summary>
+        /// Gets adapter display mode using DirectX 9 COM vtable.
+        /// </summary>
+        private unsafe int GetAdapterDisplayMode(IntPtr d3d9, uint adapter, ref D3DDISPLAYMODE mode)
+        {
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT || d3d9 == IntPtr.Zero)
+            {
+                return -1; // E_FAIL
+            }
+
+            IntPtr* vtable = *(IntPtr**)d3d9;
+            // GetAdapterDisplayMode is at vtable index 11 in IDirect3D9
+            IntPtr methodPtr = vtable[11];
+            GetAdapterDisplayModeDelegate getMode = Marshal.GetDelegateForFunctionPointer<GetAdapterDisplayModeDelegate>(methodPtr);
+            return getMode(d3d9, adapter, ref mode);
+        }
+
+        /// <summary>
+        /// Creates device using DirectX 9 COM vtable.
+        /// </summary>
+        private unsafe int CreateDevice(IntPtr d3d9, uint adapter, uint deviceType, IntPtr hFocusWindow,
+            uint behaviorFlags, ref D3DPRESENT_PARAMETERS presentationParameters, ref Guid returnedDeviceInterface, IntPtr ppDevice)
+        {
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT || d3d9 == IntPtr.Zero)
+            {
+                return -1; // E_FAIL
+            }
+
+            IntPtr* vtable = *(IntPtr**)d3d9;
+            // CreateDevice is at vtable index 16 in IDirect3D9
+            IntPtr methodPtr = vtable[16];
+            CreateDeviceDelegate createDevice = Marshal.GetDelegateForFunctionPointer<CreateDeviceDelegate>(methodPtr);
+            return createDevice(d3d9, adapter, deviceType, hFocusWindow, behaviorFlags, ref presentationParameters, ref returnedDeviceInterface, ppDevice);
+        }
+
+        /// <summary>
+        /// Releases DirectX 9 device using COM Release().
+        /// </summary>
+        private unsafe void ReleaseDirect3D9Device(IntPtr device)
+        {
+            if (device == IntPtr.Zero)
+            {
+                return;
+            }
+
+            IntPtr* vtable = *(IntPtr**)device;
+            // Release is at vtable index 2 in IUnknown
+            IntPtr methodPtr = vtable[2];
+            ReleaseDelegate release = Marshal.GetDelegateForFunctionPointer<ReleaseDelegate>(methodPtr);
+            release(device);
+        }
+
+        /// <summary>
+        /// Releases DirectX 9 interface using COM Release().
+        /// </summary>
+        private unsafe void ReleaseDirect3D9(IntPtr d3d9)
+        {
+            if (d3d9 == IntPtr.Zero)
+            {
+                return;
+            }
+
+            IntPtr* vtable = *(IntPtr**)d3d9;
+            // Release is at vtable index 2 in IUnknown
+            IntPtr methodPtr = vtable[2];
+            ReleaseDelegate release = Marshal.GetDelegateForFunctionPointer<ReleaseDelegate>(methodPtr);
+            release(d3d9);
+        }
+
+        // DirectX 9 Function Delegates
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate IntPtr Direct3DCreate9Delegate(uint sdkVersion);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int GetAdapterDisplayModeDelegate(IntPtr d3d9, uint adapter, ref D3DDISPLAYMODE mode);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int CreateDeviceDelegate(IntPtr d3d9, uint adapter, uint deviceType, IntPtr hFocusWindow,
+            uint behaviorFlags, ref D3DPRESENT_PARAMETERS presentationParameters, ref Guid returnedDeviceInterface, IntPtr ppDevice);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate uint ReleaseDelegate(IntPtr comObject);
+
+        // DirectX 9 Structures
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3DDISPLAYMODE
+        {
+            public uint Width;
+            public uint Height;
+            public uint RefreshRate;
+            public uint Format;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3DPRESENT_PARAMETERS
+        {
+            public uint BackBufferWidth;
+            public uint BackBufferHeight;
+            public uint BackBufferFormat;
+            public uint BackBufferCount;
+            public uint MultiSampleType;
+            public uint MultiSampleQuality;
+            public uint SwapEffect;
+            public IntPtr hDeviceWindow;
+            public int Windowed;
+            public int EnableAutoDepthStencil;
+            public uint AutoDepthStencilFormat;
+            public uint Flags;
+            public uint FullScreen_RefreshRateInHz;
+            public uint PresentationInterval;
+        }
+
+        // DirectX 9 Constants
+        private static class D3D9Constants
+        {
+            public const uint D3D_SDK_VERSION = 32;
+            public const uint D3DCREATE_HARDWARE_VERTEXPROCESSING = 0x00000040;
+            public const uint D3DCREATE_SOFTWARE_VERTEXPROCESSING = 0x00000020;
+            public const uint D3DCREATE_MULTITHREADED = 0x00000004;
+            public static readonly Guid IID_IDirect3DDevice9 = new Guid("D0223B96-BF7A-43fd-92BD-A43B0D82B9EB");
         }
 
         private static class NativeMethods
