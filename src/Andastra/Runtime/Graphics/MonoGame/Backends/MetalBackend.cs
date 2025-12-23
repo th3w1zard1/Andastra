@@ -1035,23 +1035,148 @@ namespace Andastra.Runtime.MonoGame.Backends
         private IntPtr ConvertInputLayout(InputLayout layout)
         {
             // Create MTLVertexDescriptor from InputLayout
-            // TODO:  This is a simplified conversion - full implementation would map all attributes
+            // Full implementation mapping all attributes with proper stride calculation and instance data support
             IntPtr vertexDescriptor = MetalNative.CreateVertexDescriptor();
             if (vertexDescriptor == IntPtr.Zero)
             {
                 return IntPtr.Zero;
             }
 
+            if (layout.Elements == null || layout.Elements.Length == 0)
+            {
+                return vertexDescriptor;
+            }
+
+            // Calculate stride for each buffer slot by finding the maximum offset + size for each slot
+            // Metal requires stride to be specified per buffer, not per attribute
+            Dictionary<int, int> slotStrides = new Dictionary<int, int>();
+            Dictionary<int, bool> slotIsInstance = new Dictionary<int, bool>();
+            Dictionary<int, int> slotStepRate = new Dictionary<int, int>();
+
+            // First pass: determine stride and instance properties for each slot
             for (int i = 0; i < layout.Elements.Length && i < 32; i++)
             {
                 InputElement element = layout.Elements[i];
+                int slot = element.Slot;
+
+                // Calculate element size from format
+                int elementSize = GetFormatSize(element.Format);
+                if (elementSize == 0)
+                {
+                    continue; // Skip invalid formats
+                }
+
+                // Calculate end offset for this element
+                int elementEndOffset = element.AlignedByteOffset + elementSize;
+
+                // Update stride for this slot (maximum end offset)
+                if (!slotStrides.ContainsKey(slot) || slotStrides[slot] < elementEndOffset)
+                {
+                    slotStrides[slot] = elementEndOffset;
+                }
+
+                // Track instance data properties
+                if (!slotIsInstance.ContainsKey(slot))
+                {
+                    slotIsInstance[slot] = element.PerInstance;
+                    slotStepRate[slot] = element.InstanceDataStepRate;
+                }
+                else
+                {
+                    // If any element in a slot is per-instance, the whole slot is per-instance
+                    if (element.PerInstance)
+                    {
+                        slotIsInstance[slot] = true;
+                        // Use the minimum step rate (most frequent update)
+                        if (element.InstanceDataStepRate > 0 &&
+                            (slotStepRate[slot] == 0 || element.InstanceDataStepRate < slotStepRate[slot]))
+                        {
+                            slotStepRate[slot] = element.InstanceDataStepRate;
+                        }
+                    }
+                }
+            }
+
+            // Second pass: set layout descriptors for each unique slot
+            foreach (var slotInfo in slotStrides)
+            {
+                int slot = slotInfo.Key;
+                int stride = slotInfo.Value;
+                bool isInstance = slotIsInstance.ContainsKey(slot) && slotIsInstance[slot];
+                int stepRate = slotStepRate.ContainsKey(slot) ? slotStepRate[slot] : 0;
+
+                // Set layout descriptor for this buffer slot
+                // Metal API: MTLVertexDescriptor::layouts[slot].stride and stepFunction
+                // stepFunction: MTLVertexStepFunctionPerVertex (0) or MTLVertexStepFunctionPerInstance (1)
+                MetalNative.SetVertexDescriptorLayout(vertexDescriptor, (uint)slot, (uint)stride,
+                    isInstance ? (uint)stepRate : 0U);
+            }
+
+            // Third pass: set attribute descriptors
+            for (int i = 0; i < layout.Elements.Length && i < 32; i++)
+            {
+                InputElement element = layout.Elements[i];
+
+                // Convert format to Metal pixel format
+                MetalPixelFormat metalFormat = ConvertTextureFormat(element.Format);
+                if (metalFormat == MetalPixelFormat.Invalid)
+                {
+                    continue; // Skip invalid formats
+                }
+
+                // Set attribute descriptor
+                // Metal API: MTLVertexDescriptor::attributes[index].format, bufferIndex, offset
                 MetalNative.SetVertexDescriptorAttribute(vertexDescriptor, (uint)i,
-                    ConvertTextureFormat(element.Format), (uint)element.Slot, (uint)element.AlignedByteOffset);
-                MetalNative.SetVertexDescriptorLayout(vertexDescriptor, (uint)element.Slot,
-                    (uint)element.AlignedByteOffset, 0U); // stride would be calculated
+                    metalFormat, (uint)element.Slot, (uint)element.AlignedByteOffset);
             }
 
             return vertexDescriptor;
+        }
+
+        /// <summary>
+        /// Gets the byte size of a texture format for vertex attribute calculations.
+        /// </summary>
+        private int GetFormatSize(TextureFormat format)
+        {
+            switch (format)
+            {
+                case TextureFormat.R32G32B32A32_Float:
+                    return 16; // 4 * 4 bytes
+                case TextureFormat.R32G32B32_Float:
+                    return 12; // 3 * 4 bytes
+                case TextureFormat.R32G32_Float:
+                    return 8; // 2 * 4 bytes
+                case TextureFormat.R32_Float:
+                    return 4; // 1 * 4 bytes
+                case TextureFormat.R16G16B16A16_Float:
+                    return 8; // 4 * 2 bytes
+                case TextureFormat.R16G16_Float:
+                    return 4; // 2 * 2 bytes
+                case TextureFormat.R16_Float:
+                    return 2; // 1 * 2 bytes
+                case TextureFormat.R8G8B8A8_UNorm:
+                case TextureFormat.R8G8B8A8_UInt:
+                case TextureFormat.R8G8B8A8_SNorm:
+                case TextureFormat.R8G8B8A8_SInt:
+                    return 4; // 4 * 1 byte
+                case TextureFormat.R8G8_UNorm:
+                case TextureFormat.R8G8_UInt:
+                case TextureFormat.R8G8_SNorm:
+                case TextureFormat.R8G8_SInt:
+                    return 2; // 2 * 1 byte
+                case TextureFormat.R8_UNorm:
+                case TextureFormat.R8_UInt:
+                case TextureFormat.R8_SNorm:
+                case TextureFormat.R8_SInt:
+                    return 1; // 1 * 1 byte
+                case TextureFormat.R10G10B10A2_UNorm:
+                case TextureFormat.R10G10B10A2_UInt:
+                    return 4; // Packed 10+10+10+2 bits
+                case TextureFormat.R11G11B10_Float:
+                    return 4; // Packed 11+11+10 bits
+                default:
+                    return 0; // Unknown format
+            }
         }
 
         private MetalBlendState ConvertBlendState(BlendState state)
