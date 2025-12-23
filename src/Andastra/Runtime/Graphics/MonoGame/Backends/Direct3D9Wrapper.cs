@@ -400,7 +400,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 foreach (TextureMipmapData mipmap in data.Mipmaps)
                 {
                     uint level = unchecked((uint)mipmap.Level);
-                    
+
                     // Lock the texture surface for this mip level
                     // IDirect3DTexture9::LockRect(level, &lockedRect, NULL, 0)
                     D3D9LockedRect lockedRect;
@@ -472,7 +472,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 uint fvf = 0; // Flexible Vertex Format - will need to be set based on vertex layout
                 int hr = D3D9Methods.CreateVertexBuffer(
                     _device,
-                    (uint)desc.ByteSize,
+                    (uint)desc.SizeInBytes,
                     usage,
                     fvf,
                     pool,
@@ -502,7 +502,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // Create index buffer
                 // IDirect3DDevice9::CreateIndexBuffer(size, usage, format, pool, &buffer, NULL)
                 format = 0x00000020; // D3DFMT_INDEX16
-                if (desc.ByteSize > 65536 * 2) // More than 65536 16-bit indices
+                if (desc.SizeInBytes > 65536 * 2) // More than 65536 16-bit indices
                 {
                     format = 0x00000021; // D3DFMT_INDEX32
                 }
@@ -510,7 +510,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 IntPtr buffer = IntPtr.Zero;
                 int hr = D3D9Methods.CreateIndexBuffer(
                     _device,
-                    (uint)desc.ByteSize,
+                    (uint)desc.SizeInBytes,
                     usage,
                     format,
                     pool,

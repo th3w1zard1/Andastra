@@ -550,7 +550,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             // Create MTLBuffer
-            IntPtr buffer = MetalNative.CreateBuffer(_device, (uint)desc.ByteSize, ConvertBufferUsage(desc.Usage));
+            IntPtr buffer = MetalNative.CreateBuffer(_device, (uint)desc.SizeInBytes, ConvertBufferUsage(desc.Usage));
 
             if (buffer == IntPtr.Zero)
             {

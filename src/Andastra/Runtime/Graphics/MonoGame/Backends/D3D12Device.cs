@@ -2643,6 +2643,10 @@ namespace Andastra.Runtime.MonoGame.Backends
         private const uint D3D12_RESOURCE_BARRIER_TYPE_ALIASING = 1;
         private const uint D3D12_RESOURCE_BARRIER_TYPE_UAV = 2;
 
+        // D3D12_CLEAR_FLAGS constants for ClearDepthStencil
+        private const uint D3D12_CLEAR_FLAG_DEPTH = 0x1;
+        private const uint D3D12_CLEAR_FLAG_STENCIL = 0x2;
+
         // DirectX 12 Resource Barrier Flags
         private const uint D3D12_RESOURCE_BARRIER_FLAG_NONE = 0;
         private const uint D3D12_RESOURCE_BARRIER_FLAG_BEGIN_ONLY = 0x1;
@@ -8025,8 +8029,8 @@ namespace Andastra.Runtime.MonoGame.Backends
                     // Allocate memory for structures
                     int heapPropertiesSize = Marshal.SizeOf(typeof(D3D12_HEAP_PROPERTIES));
                     IntPtr heapPropertiesPtr = Marshal.AllocHGlobal(heapPropertiesSize);
-                    int resourceDescSize = Marshal.SizeOf(typeof(D3D12_RESOURCE_DESC));
-                    IntPtr resourceDescPtr = Marshal.AllocHGlobal(resourceDescSize);
+                    int bufferResourceDescSize = Marshal.SizeOf(typeof(D3D12_RESOURCE_DESC));
+                    IntPtr bufferResourceDescPtr = Marshal.AllocHGlobal(bufferResourceDescSize);
                     IntPtr resourcePtr = Marshal.AllocHGlobal(IntPtr.Size);
 
                     try
@@ -8060,7 +8064,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                     // Map the staging buffer and copy data with exact row pitch from GetCopyableFootprints
                     // For upload heaps, we can map and write directly
-                    IntPtr mappedData = MapStagingBufferResource(stagingBufferResource, 0, (int)totalBytes);
+                    IntPtr mappedData = MapStagingBufferResource(stagingBufferResource, 0, unchecked((int)totalBytes));
                     if (mappedData == IntPtr.Zero)
                     {
                         throw new InvalidOperationException("Failed to map staging buffer");
@@ -8080,7 +8084,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                                     for (uint y = 0; y < mipHeight; y++)
                                     {
                                         uint srcRowOffset = (z * mipHeight * mipWidth * bytesPerPixel) + (y * mipWidth * bytesPerPixel);
-                                        uint dstRowOffset = (z * slicePitch) + (y * rowPitch);
+                                        uint dstRowOffset = unchecked((uint)((z * slicePitch) + (y * rowPitch)));
 
                                         // C# 7.3 compatible: use pointer arithmetic and loop instead of System.Buffer.MemoryCopy
                                         byte* srcRowPtr = srcPtr + srcRowOffset;
@@ -8097,7 +8101,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     }
                     finally
                     {
-                        UnmapStagingBufferResource(stagingBufferResource, 0, (int)totalBytes);
+                        UnmapStagingBufferResource(stagingBufferResource, 0, unchecked((int)totalBytes));
                     }
 
                     // Transition texture to COPY_DEST state
@@ -8132,14 +8136,20 @@ namespace Andastra.Runtime.MonoGame.Backends
                     {
                         pResource = stagingBufferResource,
                         Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT,
-                        PlacedFootprint = placedFootprintForCopy // Use footprint with offset 0 for staging buffer
+                        Union = new D3D12_TEXTURE_COPY_LOCATION_UNION
+                        {
+                            PlacedFootprint = placedFootprintForCopy // Use footprint with offset 0 for staging buffer
+                        }
                     };
 
                     var dstLocation = new D3D12_TEXTURE_COPY_LOCATION
                     {
                         pResource = textureResource,
                         Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
-                        PlacedFootprint = new D3D12_PLACED_SUBRESOURCE_FOOTPRINT() // Initialize to zero, will set subresource index
+                        Union = new D3D12_TEXTURE_COPY_LOCATION_UNION
+                        {
+                            SubresourceIndex = subresourceIndex // Set subresource index
+                        }
                     };
 
                     // Allocate memory for copy location structures
@@ -8342,14 +8352,20 @@ namespace Andastra.Runtime.MonoGame.Backends
                 {
                     pResource = srcResource,
                     Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
-                    PlacedFootprint = new D3D12_PLACED_SUBRESOURCE_FOOTPRINT() // Initialize to zero
+                    Union = new D3D12_TEXTURE_COPY_LOCATION_UNION
+                    {
+                        SubresourceIndex = 0 // Copy from first subresource
+                    }
                 };
 
                 var dstLocation = new D3D12_TEXTURE_COPY_LOCATION
                 {
                     pResource = dstResource,
                     Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
-                    PlacedFootprint = new D3D12_PLACED_SUBRESOURCE_FOOTPRINT() // Initialize to zero
+                    Union = new D3D12_TEXTURE_COPY_LOCATION_UNION
+                    {
+                        SubresourceIndex = 0 // Copy to first subresource
+                    }
                 };
 
                 // Allocate memory for copy location structures
