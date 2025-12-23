@@ -143,7 +143,7 @@ namespace Andastra.Runtime.Stride.Backends
             {
                 Type = ResourceType.Texture,
                 Handle = handle,
-                NativeHandle = texture?.NativeDeviceTexture ?? IntPtr.Zero,
+                NativeHandle = texture?.NativePointer ?? IntPtr.Zero,
                 DebugName = desc.DebugName,
                 SizeInBytes = desc.Width * desc.Height * GetFormatSize(desc.Format)
             };
