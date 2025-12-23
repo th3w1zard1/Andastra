@@ -457,7 +457,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         }
 
         private void ApplyBilateralBlurPass(StrideGraphics.Texture source, StrideGraphics.Texture destination, StrideGraphics.Texture depthBuffer,
-            bool horizontal, int width, int height, CommandList commandList)
+            bool horizontal, int width, int height, StrideGraphics.CommandList commandList)
         {
             // Apply one pass of bilateral blur (either horizontal or vertical)
             // Bilateral blur weights samples by both spatial distance and depth difference

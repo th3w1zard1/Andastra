@@ -425,7 +425,7 @@ shader BlurEffect : ShaderBase
 
             // Get command list for rendering operations
             // Use explicit type to avoid C# 7.3 inferred delegate type limitation
-            CommandList commandList = _graphicsDevice.ImmediateContext();
+            StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext();
             if (commandList == null)
             {
                 return;
@@ -504,7 +504,7 @@ shader BlurEffect : ShaderBase
 
             // Get command list for rendering operations
             // Use explicit type to avoid C# 7.3 inferred delegate type limitation
-            CommandList commandList = _graphicsDevice.ImmediateContext();
+            StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext();
             if (commandList == null)
             {
                 return;
