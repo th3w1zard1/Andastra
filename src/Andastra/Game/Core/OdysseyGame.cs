@@ -2362,7 +2362,7 @@ namespace Andastra.Runtime.Game.Core
         /// Draws a rounded rectangle border with smooth corners.
         /// Creates the appearance of rounded corners using border lines with corner arcs.
         /// </summary>
-        private void DrawRoundedRectangle(ISpriteBatch spriteBatch, Rectangle rect, int borderThickness, Color color)
+        private void DrawRoundedRectangle(ISpriteBatch spriteBatch, Andastra.Runtime.Graphics.Rectangle rect, int borderThickness, GraphicsColor color)
         {
             int cornerRadius = borderThickness * 2;
             int cornerGap = cornerRadius;
@@ -2387,7 +2387,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Draws a corner arc (quarter circle border) for rounded rectangle corners.
         /// </summary>
-        private void DrawCornerArc(ISpriteBatch spriteBatch, int centerX, int centerY, int radius, int thickness, Color color, bool leftSide, bool topSide)
+        private void DrawCornerArc(ISpriteBatch spriteBatch, int centerX, int centerY, int radius, int thickness, GraphicsColor color, bool leftSide, bool topSide)
         {
             // Draw quarter circle arc using border approach
             for (int y = -radius; y <= 0; y++)
@@ -2409,7 +2409,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Draws a filled circle (approximated with rectangle).
         /// </summary>
-        private void DrawFilledCircle(ISpriteBatch spriteBatch, Rectangle bounds, Color color)
+        private void DrawFilledCircle(ISpriteBatch spriteBatch, Andastra.Runtime.Graphics.Rectangle bounds, GraphicsColor color)
         {
             int centerX = bounds.X + bounds.Width / 2;
             int centerY = bounds.Y + bounds.Height / 2;
