@@ -1,22 +1,24 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
+using Andastra.Runtime.Graphics;
 
 namespace Andastra.Runtime.MonoGame.Rendering
 {
     /// <summary>
     /// Command list optimizer for reducing draw call overhead.
-    /// 
+    ///
     /// Optimizes command lists by merging compatible commands,
     /// reducing CPU overhead and improving GPU utilization.
-    /// 
+    ///
     /// Features:
     /// - Command merging
     /// - Redundant call elimination
     /// - State change minimization
     /// - Draw call batching
-    /// 
+    ///
     /// Based on industry-standard command buffer optimization techniques:
     /// - Draw call batching by combining compatible draws
     /// - State sorting to minimize state changes
@@ -149,10 +151,10 @@ namespace Andastra.Runtime.MonoGame.Rendering
 
         /// <summary>
         /// Merges compatible commands to reduce draw calls.
-        /// 
+        ///
         /// This optimization reduces CPU overhead by combining multiple draw calls
         /// into a single call when they share the same render state and buffers.
-        /// 
+        ///
         /// Merging strategies:
         /// 1. For indexed draws with same buffers: Combine into single draw with adjusted ranges
         /// 2. For non-indexed draws with same buffers: Combine into single draw with adjusted ranges
@@ -198,7 +200,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
 
         /// <summary>
         /// Attempts to merge two draw commands.
-        /// 
+        ///
         /// Returns true if the commands were successfully merged into the first command,
         /// false if merging is not possible.
         /// </summary>
@@ -231,7 +233,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
 
         /// <summary>
         /// Attempts to merge two indexed draw commands.
-        /// 
+        ///
         /// Two indexed draws can be merged if they:
         /// 1. Use the same primitive type
         /// 2. Use the same vertex and index buffers
@@ -310,7 +312,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
 
         /// <summary>
         /// Attempts to merge two non-indexed draw commands.
-        /// 
+        ///
         /// Two non-indexed draws can be merged if they:
         /// 1. Use the same primitive type
         /// 2. Use the same vertex buffer
@@ -374,7 +376,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
 
         /// <summary>
         /// Attempts to merge two instanced draw commands.
-        /// 
+        ///
         /// Two instanced draws can be merged if they:
         /// 1. Use the same primitive type
         /// 2. Use the same vertex and index buffers
@@ -520,7 +522,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
 
         /// <summary>
         /// Checks if two commands can be merged.
-        /// 
+        ///
         /// Commands can be merged if they:
         /// 1. Have the same sort key (same render state, material, etc.)
         /// 2. Are the same command type (Draw, DrawIndexed, or DrawInstanced)
@@ -554,7 +556,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
 
         /// <summary>
         /// Extracts draw indexed command data from command data object.
-        /// 
+        ///
         /// Returns the extracted data if successful, null if the data format is not recognized.
         /// This ensures we only attempt to merge commands with known, valid data formats.
         /// </summary>
@@ -578,7 +580,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
 
         /// <summary>
         /// Extracts draw command data from command data object.
-        /// 
+        ///
         /// Returns the extracted data if successful, null if the data format is not recognized.
         /// This ensures we only attempt to merge commands with known, valid data formats.
         /// </summary>
@@ -602,10 +604,10 @@ namespace Andastra.Runtime.MonoGame.Rendering
 
         /// <summary>
         /// Extracts draw instanced command data from command data object.
-        /// 
+        ///
         /// Returns the extracted data if successful, null if the data format is not recognized.
         /// This ensures we only attempt to merge commands with known, valid data formats.
-        /// 
+        ///
         /// Handles both DrawInstancedCommandData and InstancedDrawCommandData (wrapper with instance matrices).
         /// </summary>
         private DrawInstancedCommandData? ExtractDrawInstancedData(object data)
@@ -634,7 +636,16 @@ namespace Andastra.Runtime.MonoGame.Rendering
 
         /// <summary>
         /// Checks if two buffer objects are equal.
-        /// Buffers are compared by reference equality or by comparing their identity.
+        /// Buffers are compared by reference equality, native handle identity, or buffer identity.
+        ///
+        /// Comparison strategy (in order of preference):
+        /// 1. Reference equality (fast path for same object instance)
+        /// 2. Native handle comparison (for IVertexBuffer/IIndexBuffer interfaces with NativeHandle)
+        /// 3. MonoGame buffer handle comparison (for VertexBuffer/IndexBuffer via reflection)
+        /// 4. GetHashCode/Equals comparison (fallback for other buffer types)
+        ///
+        /// This ensures that buffers representing the same GPU resource are correctly identified
+        /// even if they are different object instances, enabling proper command merging optimization.
         /// </summary>
         private bool AreBuffersEqual(object bufferA, object bufferB)
         {
@@ -648,17 +659,214 @@ namespace Andastra.Runtime.MonoGame.Rendering
                 return false; // One null, one not - not equal
             }
 
-            // Compare by reference equality
-            // TODO:  In a full implementation, might also check buffer identity or handle
-            return ReferenceEquals(bufferA, bufferB);
+            // Fast path: Reference equality check
+            if (ReferenceEquals(bufferA, bufferB))
+            {
+                return true; // Same object instance - definitely equal
+            }
+
+            // Check if both implement IVertexBuffer or IIndexBuffer interfaces
+            // These interfaces expose NativeHandle property for buffer identity comparison
+            IVertexBuffer vertexBufferA = bufferA as IVertexBuffer;
+            IVertexBuffer vertexBufferB = bufferB as IVertexBuffer;
+            if (vertexBufferA != null && vertexBufferB != null)
+            {
+                // Both are vertex buffers - compare native handles
+                IntPtr handleA = vertexBufferA.NativeHandle;
+                IntPtr handleB = vertexBufferB.NativeHandle;
+
+                // If both have valid native handles, compare them
+                if (handleA != IntPtr.Zero && handleB != IntPtr.Zero)
+                {
+                    return handleA == handleB; // Same native handle = same GPU resource
+                }
+
+                // If native handles are not available (e.g., MonoGame wrappers return IntPtr.Zero),
+                // fall through to other comparison methods
+            }
+
+            IIndexBuffer indexBufferA = bufferA as IIndexBuffer;
+            IIndexBuffer indexBufferB = bufferB as IIndexBuffer;
+            if (indexBufferA != null && indexBufferB != null)
+            {
+                // Both are index buffers - compare native handles
+                IntPtr handleA = indexBufferA.NativeHandle;
+                IntPtr handleB = indexBufferB.NativeHandle;
+
+                // If both have valid native handles, compare them
+                if (handleA != IntPtr.Zero && handleB != IntPtr.Zero)
+                {
+                    return handleA == handleB; // Same native handle = same GPU resource
+                }
+
+                // If native handles are not available, fall through to other comparison methods
+            }
+
+            // Check if both are MonoGame VertexBuffer or IndexBuffer types
+            // MonoGame buffers may have internal handles that we can access via reflection
+            // This is necessary because MonoGame's VertexBuffer/IndexBuffer don't expose handles directly
+            VertexBuffer mgVertexBufferA = bufferA as VertexBuffer;
+            VertexBuffer mgVertexBufferB = bufferB as VertexBuffer;
+            if (mgVertexBufferA != null && mgVertexBufferB != null)
+            {
+                // Try to get internal handle via reflection
+                IntPtr? handleA = GetMonoGameBufferHandle(mgVertexBufferA);
+                IntPtr? handleB = GetMonoGameBufferHandle(mgVertexBufferB);
+
+                if (handleA.HasValue && handleB.HasValue)
+                {
+                    return handleA.Value == handleB.Value; // Same internal handle = same GPU resource
+                }
+
+                // If reflection fails, use GetHashCode/Equals as fallback
+                // MonoGame buffers should have proper equality semantics
+                return mgVertexBufferA.Equals(mgVertexBufferB);
+            }
+
+            IndexBuffer mgIndexBufferA = bufferA as IndexBuffer;
+            IndexBuffer mgIndexBufferB = bufferB as IndexBuffer;
+            if (mgIndexBufferA != null && mgIndexBufferB != null)
+            {
+                // Try to get internal handle via reflection
+                IntPtr? handleA = GetMonoGameBufferHandle(mgIndexBufferA);
+                IntPtr? handleB = GetMonoGameBufferHandle(mgIndexBufferB);
+
+                if (handleA.HasValue && handleB.HasValue)
+                {
+                    return handleA.Value == handleB.Value; // Same internal handle = same GPU resource
+                }
+
+                // If reflection fails, use GetHashCode/Equals as fallback
+                return mgIndexBufferA.Equals(mgIndexBufferB);
+            }
+
+            // Final fallback: Use object.Equals for any other buffer types
+            // This handles custom buffer implementations that may override Equals
+            return bufferA.Equals(bufferB);
+        }
+
+        /// <summary>
+        /// Attempts to extract the native handle from a MonoGame buffer via reflection.
+        ///
+        /// MonoGame's VertexBuffer and IndexBuffer store internal handles that identify
+        /// the GPU resource, but these are not directly exposed. This method uses reflection
+        /// to access internal fields that may contain the buffer handle.
+        ///
+        /// Common internal field names in MonoGame:
+        /// - _glBuffer (OpenGL buffer ID)
+        /// - _d3dBuffer (DirectX buffer pointer)
+        /// - Handle (generic handle property)
+        ///
+        /// Returns the handle if found, null otherwise.
+        /// </summary>
+        private IntPtr? GetMonoGameBufferHandle(object buffer)
+        {
+            if (buffer == null)
+            {
+                return null;
+            }
+
+            Type bufferType = buffer.GetType();
+
+            // Try to find a Handle property (common in graphics APIs)
+            PropertyInfo handleProperty = bufferType.GetProperty("Handle", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            if (handleProperty != null)
+            {
+                object handleValue = handleProperty.GetValue(buffer);
+                if (handleValue != null)
+                {
+                    // Try to convert to IntPtr
+                    if (handleValue is IntPtr)
+                    {
+                        return (IntPtr)handleValue;
+                    }
+
+                    // Try to convert from uint (OpenGL buffer IDs are often uint)
+                    if (handleValue is uint)
+                    {
+                        return new IntPtr((uint)handleValue);
+                    }
+
+                    // Try to convert from int
+                    if (handleValue is int)
+                    {
+                        return new IntPtr((int)handleValue);
+                    }
+                }
+            }
+
+            // Try to find _glBuffer field (OpenGL buffer ID)
+            FieldInfo glBufferField = bufferType.GetField("_glBuffer", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (glBufferField != null)
+            {
+                object glBufferValue = glBufferField.GetValue(buffer);
+                if (glBufferValue != null)
+                {
+                    if (glBufferValue is uint)
+                    {
+                        return new IntPtr((uint)glBufferValue);
+                    }
+                    if (glBufferValue is int)
+                    {
+                        return new IntPtr((int)glBufferValue);
+                    }
+                    if (glBufferValue is IntPtr)
+                    {
+                        return (IntPtr)glBufferValue;
+                    }
+                }
+            }
+
+            // Try to find _d3dBuffer field (DirectX buffer pointer)
+            FieldInfo d3dBufferField = bufferType.GetField("_d3dBuffer", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (d3dBufferField != null)
+            {
+                object d3dBufferValue = d3dBufferField.GetValue(buffer);
+                if (d3dBufferValue != null)
+                {
+                    if (d3dBufferValue is IntPtr)
+                    {
+                        return (IntPtr)d3dBufferValue;
+                    }
+                }
+            }
+
+            // Try to find any field with "Handle" in the name
+            FieldInfo[] allFields = bufferType.GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+            foreach (FieldInfo field in allFields)
+            {
+                string fieldName = field.Name.ToLowerInvariant();
+                if (fieldName.Contains("handle") || fieldName.Contains("bufferid") || fieldName.Contains("resource"))
+                {
+                    object fieldValue = field.GetValue(buffer);
+                    if (fieldValue != null)
+                    {
+                        if (fieldValue is IntPtr)
+                        {
+                            return (IntPtr)fieldValue;
+                        }
+                        if (fieldValue is uint)
+                        {
+                            return new IntPtr((uint)fieldValue);
+                        }
+                        if (fieldValue is int)
+                        {
+                            return new IntPtr((int)fieldValue);
+                        }
+                    }
+                }
+            }
+
+            // Could not find handle via reflection
+            return null;
         }
 
         /// <summary>
         /// Attempts to convert two indexed draw commands with same geometry but different transforms to instanced rendering.
-        /// 
+        ///
         /// This optimization converts multiple draw calls of the same geometry with different world transforms
         /// into a single instanced draw call, dramatically reducing draw call overhead.
-        /// 
+        ///
         /// Requirements for instancing conversion:
         /// 1. Both commands must have the same geometry (same buffers, same indices, same vertex ranges)
         /// 2. Both commands must have world transform matrices available
@@ -728,7 +936,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
             // For MonoGame, we'll create a simple instance buffer with just the matrices
             // In a full implementation, this would use DynamicVertexBuffer with InstanceData structure
             // For now, we'll store the matrices in the command data and let the renderer handle buffer creation
-            
+
             // Create instanced draw command data
             // Both instances use the same geometry (firstData geometry)
             DrawInstancedCommandData instancedData = new DrawInstancedCommandData(
