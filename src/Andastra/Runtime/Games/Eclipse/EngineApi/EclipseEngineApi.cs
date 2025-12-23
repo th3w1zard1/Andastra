@@ -3280,13 +3280,14 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     return entity.AreaId == (uint)criteriaValue;
 
                 case 19: // Location
-                    // criteriaValue: Location check - requires position comparison
+                    // criteriaValue: Maximum radius distance for location matching (in units)
                     if (entityTransform == null || targetTransform == null)
                     {
                         return false;
                     }
-                    // TODO:  For location matching, criteriaValue might be a radius - for now, check if in same area
-                    return entity.AreaId == target.AreaId;
+                    // Check if target is within criteriaValue radius distance of entity
+                    float distance = Vector3.Distance(entityTransform.Position, targetTransform.Position);
+                    return distance <= criteriaValue;
 
                 case 20: // LineOfSight
                     // criteriaValue: 1 = has line of sight, 0 = no line of sight
