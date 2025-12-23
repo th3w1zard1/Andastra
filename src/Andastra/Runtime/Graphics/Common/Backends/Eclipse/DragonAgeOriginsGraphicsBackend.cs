@@ -4199,8 +4199,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             const uint D3DPT_TRIANGLELIST = 4;
             DrawPrimitiveDirectX9(D3DPT_TRIANGLELIST, 0, 2);
 
-            // TODO: Release vertex buffer when done
-            // In a full implementation, vertex buffers would be managed and reused
+            // Release vertex buffer when done
+            // Based on daorigins.exe: Vertex buffers must be released using IUnknown::Release after use
+            // In a full implementation, vertex buffers could be cached and reused for performance
+            ReleaseVertexBuffer(vertexBuffer);
         }
 
         /// <summary>
