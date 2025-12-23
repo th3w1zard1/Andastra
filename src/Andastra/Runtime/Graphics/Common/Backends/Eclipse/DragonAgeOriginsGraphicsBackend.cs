@@ -3565,7 +3565,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // Based on daorigins.exe: Character sheet uses a multi-column layout
             const float panelMargin = 20.0f;
             const float leftColumnX = panelMargin + 50.0f;
-            const float rightColumnX = viewportWidth / 2.0f + 50.0f;
+            float rightColumnX = viewportWidth / 2.0f + 50.0f;
             const float startY = panelMargin + 100.0f;
             const float lineHeight = 25.0f;
             const float lineSpacing = 5.0f;
@@ -3651,11 +3651,11 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // Based on daorigins.exe: Journal menu uses a two-panel layout (quests on left, details on right)
             const float panelMargin = 20.0f;
             const float leftPanelX = panelMargin + 50.0f;
-            const float leftPanelWidth = viewportWidth / 2.0f - 100.0f;
-            const float rightPanelX = viewportWidth / 2.0f + 50.0f;
-            const float rightPanelWidth = viewportWidth / 2.0f - 100.0f;
+            float leftPanelWidth = viewportWidth / 2.0f - 100.0f;
+            float rightPanelX = viewportWidth / 2.0f + 50.0f;
+            float rightPanelWidth = viewportWidth / 2.0f - 100.0f;
             const float startY = panelMargin + 100.0f;
-            const float panelHeight = viewportHeight - startY - panelMargin;
+            float panelHeight = viewportHeight - startY - panelMargin;
             const float lineHeight = 20.0f;
             const float lineSpacing = 5.0f;
 
@@ -3740,8 +3740,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             const float mapMargin = 50.0f;
             const float mapX = mapMargin;
             const float mapY = panelMargin + 80.0f;
-            const float mapWidth = viewportWidth - (mapMargin * 2.0f);
-            const float mapHeight = viewportHeight - mapY - mapMargin;
+            float mapWidth = viewportWidth - (mapMargin * 2.0f);
+            float mapHeight = viewportHeight - mapY - mapMargin;
 
             // Render map background
             // Based on daorigins.exe: Map is displayed on a dark background
@@ -3761,7 +3761,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // Based on daorigins.exe: Map texture is loaded from area data or world map
             if (_world != null)
             {
-                IArea currentArea = _world.GetCurrentArea();
+                IArea currentArea = _world.CurrentArea;
                 if (currentArea != null)
                 {
                     // Try to load map texture from area
@@ -5241,10 +5241,9 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // Create vertex buffer for checkbox quad
             // Based on daorigins.exe: UI elements use vertex buffers with 6 vertices (2 triangles) per quad
             const uint D3DUSAGE_WRITEONLY = 0x00000008;
-            const uint D3DPOOL_MANAGED = 1;
 
             IntPtr vertexBuffer = IntPtr.Zero;
-            int createResult = CreateVertexBufferDirectX9(24, D3DUSAGE_WRITEONLY, checkboxFVF, D3DPOOL_MANAGED, ref vertexBuffer);
+            int createResult = CreateVertexBufferDirectX9(24, D3DUSAGE_WRITEONLY, checkboxFVF, D3DPOOL.D3DPOOL_MANAGED, ref vertexBuffer);
             if (createResult < 0 || vertexBuffer == IntPtr.Zero)
             {
                 System.Console.WriteLine("[DragonAgeOriginsGraphicsBackend] RenderOptionsCheckbox: Failed to create vertex buffer for checkbox");
@@ -5391,6 +5390,42 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // Note: Text rendering now implemented using DirectX 9 font system
         }
 
+        // Options menu helper structures
+        // Based on daorigins.exe: Options menu uses categories and option types
+        private enum OptionsCategory
+        {
+            Graphics = 0,
+            Audio = 1,
+            Game = 2,
+            Feedback = 3,
+            Autopause = 4,
+            Controls = 5
+        }
+
+        private enum OptionType
+        {
+            Boolean = 0,
+            Numeric = 1,
+            Enum = 2
+        }
+
+        private class OptionItem
+        {
+            public string Name { get; set; }
+            public OptionType Type { get; set; }
+            public int MinValue { get; set; }
+            public int MaxValue { get; set; }
+            public int GetValue() { return 0; } // TODO: Get from actual game settings
+            public string GetStringValue() { return GetValue().ToString(); }
+        }
+
+        private Dictionary<OptionsCategory, List<OptionItem>> CreateDefaultOptions()
+        {
+            // TODO: Integrate with actual game settings system
+            // For now, return empty dictionary - options will be populated from actual settings
+            return new Dictionary<OptionsCategory, List<OptionItem>>();
+        }
+
         /// <summary>
         /// Renders the options list for the selected category.
         /// Based on daorigins.exe: Options are displayed as a scrollable list with labels and values.
@@ -5405,13 +5440,12 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
 
             // Get the current category and its options
             // Based on daorigins.exe: Options are organized by category with different types of controls
-            var currentCategory = (Andastra.Runtime.Game.GUI.OptionsMenu.OptionsCategory)_optionsMenuSelectedCategoryIndex;
+            OptionsCategory currentCategory = (OptionsCategory)_optionsMenuSelectedCategoryIndex;
 
             // Create options structure (simplified - would normally get from game settings)
             // TODO: Integrate with actual game settings system
             // For now, create default options structure
-            var gameSettings = new Andastra.Runtime.Core.GameSettings(); // Placeholder
-            var optionsByCategory = Andastra.Runtime.Game.GUI.OptionsMenu.CreateDefaultOptions(gameSettings);
+            var optionsByCategory = CreateDefaultOptions();
 
             if (!optionsByCategory.ContainsKey(currentCategory))
             {
@@ -5454,19 +5488,19 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
 
                 switch (option.Type)
                 {
-                    case Andastra.Runtime.Game.GUI.OptionsMenu.OptionType.Boolean:
+                    case OptionType.Boolean:
                         // Render checkbox for boolean options
                         bool boolValue = option.GetValue() > 0;
                         RenderOptionsCheckbox(controlX, controlY, 20.0f, 20.0f, boolValue);
                         break;
 
-                    case Andastra.Runtime.Game.GUI.OptionsMenu.OptionType.Numeric:
+                    case OptionType.Numeric:
                         // Render slider for numeric options
                         RenderOptionsSlider(controlX, controlY, controlWidth, controlHeight,
                                           option.MinValue, option.MaxValue, option.GetValue());
                         break;
 
-                    case Andastra.Runtime.Game.GUI.OptionsMenu.OptionType.Enum:
+                    case OptionType.Enum:
                         // TODO: Render dropdown/enum selector
                         // For now, just render as text
                         break;
@@ -7906,7 +7940,9 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
 
         /// <summary>
         /// Creates DirectX 9 texture from DDS data using D3DX.
-        /// Based on daorigins.exe: D3DXCreateTextureFromFileInMemoryEx @ 0x00be5864
+        /// Based on daorigins.exe: Uses D3DXCreateTextureFromFileInMemoryEx for texture loading.
+        /// daorigins.exe: String "D3DXCreateTextureFromFileInMemoryEx" found at 0x00be5864 (data section)
+        /// TODO: REVERSE_ENGINEER - Find actual call site function address (likely uses GetProcAddress dynamically)
         /// </summary>
         /// <param name="device">DirectX 9 device (IDirect3DDevice9*).</param>
         /// <param name="ddsData">DDS file data.</param>
@@ -7942,7 +7978,9 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             }
 
             // Get D3DXCreateTextureFromFileInMemoryEx function pointer
-            // Based on daorigins.exe: "D3DXCreateTextureFromFileInMemoryEx" @ 0x00be5864
+            // Based on daorigins.exe: Uses D3DXCreateTextureFromFileInMemoryEx for texture loading.
+            // daorigins.exe: String "D3DXCreateTextureFromFileInMemoryEx" found at 0x00be5864 (data section)
+            // TODO: REVERSE_ENGINEER - Find actual call site function address (likely uses GetProcAddress dynamically)
             IntPtr funcPtr = GetProcAddress(d3dx9Dll, "D3DXCreateTextureFromFileInMemoryEx");
             if (funcPtr == IntPtr.Zero)
             {
