@@ -91,20 +91,13 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
+        private StrideRenderTarget _currentRenderTarget;
+
         public IRenderTarget RenderTarget
         {
             get
             {
-                if (_graphicsContext == null)
-                {
-                    return null;
-                }
-                var rt = _graphicsContext.GetRenderTarget(0);
-                if (rt != null)
-                {
-                    return new StrideRenderTarget(rt, null, _graphicsContext);
-                }
-                return null;
+                return _currentRenderTarget;
             }
             set
             {
@@ -115,10 +108,12 @@ namespace Andastra.Runtime.Stride.Graphics
                 if (value == null)
                 {
                     _graphicsContext.SetRenderTarget(null, (StrideGraphics.Texture)null);
+                    _currentRenderTarget = null;
                 }
                 else if (value is StrideRenderTarget strideRt)
                 {
                     _graphicsContext.SetRenderTarget(null, strideRt.RenderTarget);
+                    _currentRenderTarget = strideRt;
                 }
                 else
                 {
