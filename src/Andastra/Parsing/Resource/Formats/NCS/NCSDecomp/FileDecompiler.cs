@@ -5717,40 +5717,307 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 // Only applies to generic subX names and matches on body patterns.
                 this.HeuristicRenameSubs();
 
-                // TODO:  If we have no subs, generate comprehensive stub so we always show something
+                // If we have no subs, generate comprehensive stub so we always show something
                 if (this.subs.Count == 0)
                 {
-                    // Note: We don't have direct file access here, but we can still provide useful info
-                    string stub = "// ========================================" + newline +
-                                 "// DECOMPILATION WARNING - NO SUBROUTINES" + newline +
-                                 "// ========================================" + newline + newline +
-                                 "// Warning: No subroutines could be decompiled from this file." + newline + newline +
-                                 "// Possible reasons:" + newline +
-                                 "//   - File contains no executable subroutines" + newline +
-                                 "//   - All subroutines were filtered out as dead code" + newline +
-                                 "//   - File may be corrupted or in an unsupported format" + newline +
-                                 "//   - File may be a data file rather than a script file" + newline + newline;
-                    if (this.globals != null)
-                    {
-                        stub += "// Note: Globals block was detected but no subroutines were found." + newline + newline;
-                    }
+                    StringBuilder stubBuilder = new StringBuilder();
+
+                    // Header with warning
+                    stubBuilder.Append("// ========================================" + newline);
+                    stubBuilder.Append("// DECOMPILATION WARNING - NO SUBROUTINES" + newline);
+                    stubBuilder.Append("// ========================================" + newline + newline);
+                    stubBuilder.Append("// Warning: No subroutines could be decompiled from this file." + newline + newline);
+                    stubBuilder.Append("// Possible reasons:" + newline);
+                    stubBuilder.Append("//   - File contains no executable subroutines" + newline);
+                    stubBuilder.Append("//   - All subroutines were filtered out as dead code" + newline);
+                    stubBuilder.Append("//   - File may be corrupted or in an unsupported format" + newline);
+                    stubBuilder.Append("//   - File may be a data file rather than a script file" + newline + newline);
+
+                    // Extract struct declarations if available
+                    string structDecls = "";
                     if (this.subdata != null)
                     {
                         try
                         {
-                            stub += "// Analysis data:" + newline;
-                            stub += "//   Total subroutines detected: " + this.subdata.NumSubs() + newline;
-                            stub += "//   Subroutines processed: " + this.subdata.CountSubsDone() + newline + newline;
+                            structDecls = this.subdata.GetStructDeclarations();
+                            if (!string.IsNullOrEmpty(structDecls) && structDecls.Trim().Length > 0)
+                            {
+                                stubBuilder.Append(structDecls + newline);
+                            }
                         }
-                        catch (Exception)
+                        catch (Exception e)
                         {
+                            Debug("Error generating struct declarations in stub: " + e.Message);
                         }
                     }
-                    stub += "// Minimal fallback function:" + newline +
-                           "void main() {" + newline +
-                           "    // No code could be decompiled" + newline +
-                           "}" + newline;
-                    this.code = stub;
+
+                    // Extract globals if available
+                    string globs = "";
+                    if (this.globals != null)
+                    {
+                        try
+                        {
+                            globs = this.globals.ToStringGlobals();
+                            if (!string.IsNullOrEmpty(globs) && globs.Trim().Length > 0)
+                            {
+                                stubBuilder.Append("// Globals" + newline);
+                                stubBuilder.Append(globs + newline);
+                            }
+                            else
+                            {
+                                stubBuilder.Append("// Note: Globals block was detected but no globals could be extracted." + newline + newline);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Debug("Error generating globals in stub: " + e.Message);
+                            stubBuilder.Append("// Note: Globals block was detected but failed to decompile." + newline + newline);
+                        }
+                    }
+
+                    // Try to extract subroutine information from subdata even if not in subs list
+                    StringBuilder protoBuilder = new StringBuilder();
+                    StringBuilder stubFuncBuilder = new StringBuilder();
+                    int detectedSubCount = 0;
+                    int processedSubCount = 0;
+
+                    if (this.subdata != null)
+                    {
+                        try
+                        {
+                            detectedSubCount = this.subdata.NumSubs();
+                            processedSubCount = this.subdata.CountSubsDone();
+
+                            stubBuilder.Append("// Analysis data:" + newline);
+                            stubBuilder.Append("//   Total subroutines detected: " + detectedSubCount + newline);
+                            stubBuilder.Append("//   Subroutines processed: " + processedSubCount + newline);
+
+                            // Try to extract subroutine prototypes and generate stubs
+                            if (detectedSubCount > 0)
+                            {
+                                stubBuilder.Append("//   Subroutines in list: 0 (none could be added to decompiled output)" + newline + newline);
+
+                                try
+                                {
+                                    // Try to iterate over subroutines in subdata
+                                    IEnumerator<object> subEnum = this.subdata.GetSubroutines();
+                                    int subIndex = 0;
+                                    bool hasMain = false;
+
+                                    while (subEnum.MoveNext())
+                                    {
+                                        object subObj = subEnum.Current;
+                                        if (subObj == null)
+                                        {
+                                            continue;
+                                        }
+
+                                        try
+                                        {
+                                            // Cast to ASubroutine (matching pattern from SubIterable)
+                                            ASubroutine iterSub = (ASubroutine)subObj;
+
+                                            // Get state using GetState method
+                                            SubroutineState state = this.subdata.GetState(iterSub);
+
+                                            if (state == null)
+                                            {
+                                                continue;
+                                            }
+
+                                            subIndex++;
+
+                                            // Try to get subroutine name
+                                            string subName = "sub" + subIndex;
+                                            try
+                                            {
+                                                var getNameMethod = state.GetType().GetMethod("GetName");
+                                                if (getNameMethod != null)
+                                                {
+                                                    object nameObj = getNameMethod.Invoke(state, null);
+                                                    if (nameObj != null)
+                                                    {
+                                                        subName = nameObj.ToString();
+                                                    }
+                                                }
+                                            }
+                                            catch (Exception)
+                                            {
+                                                // Use default name
+                                            }
+
+                                            // Check if this is main
+                                            bool isMain = false;
+                                            try
+                                            {
+                                                var isMainMethod = state.GetType().GetMethod("IsMain");
+                                                if (isMainMethod != null)
+                                                {
+                                                    object isMainObj = isMainMethod.Invoke(state, null);
+                                                    if (isMainObj is bool)
+                                                    {
+                                                        isMain = (bool)isMainObj;
+                                                        if (isMain)
+                                                        {
+                                                            hasMain = true;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            catch (Exception)
+                                            {
+                                                // Assume not main
+                                            }
+
+                                            // Try to get prototype
+                                            string proto = null;
+                                            try
+                                            {
+                                                var getProtoMethod = state.GetType().GetMethod("GetProto");
+                                                if (getProtoMethod != null)
+                                                {
+                                                    object protoObj = getProtoMethod.Invoke(state, null);
+                                                    if (protoObj != null)
+                                                    {
+                                                        proto = protoObj.ToString();
+                                                    }
+                                                }
+                                            }
+                                            catch (Exception)
+                                            {
+                                                // No prototype available
+                                            }
+
+                                            // Generate prototype if available and not main
+                                            if (!isMain && !string.IsNullOrEmpty(proto) && proto.Trim().Length > 0)
+                                            {
+                                                protoBuilder.Append(proto + ";" + newline);
+                                            }
+
+                                            // Generate stub function
+                                            if (isMain)
+                                            {
+                                                // Main function stub
+                                                stubFuncBuilder.Append("void main()" + newline);
+                                                stubFuncBuilder.Append("{" + newline);
+                                                stubFuncBuilder.Append("    // Subroutine detected but could not be fully decompiled" + newline);
+                                                stubFuncBuilder.Append("    // Name: " + subName + newline);
+                                                if (!string.IsNullOrEmpty(proto))
+                                                {
+                                                    stubFuncBuilder.Append("    // Prototype: " + proto + newline);
+                                                }
+                                                stubFuncBuilder.Append("}" + newline + newline);
+                                            }
+                                            else
+                                            {
+                                                // Non-main function stub
+                                                if (!string.IsNullOrEmpty(proto))
+                                                {
+                                                    stubFuncBuilder.Append(proto + newline);
+                                                }
+                                                else
+                                                {
+                                                    stubFuncBuilder.Append("void " + subName + "()" + newline);
+                                                }
+                                                stubFuncBuilder.Append("{" + newline);
+                                                stubFuncBuilder.Append("    // Subroutine detected but could not be fully decompiled" + newline);
+                                                stubFuncBuilder.Append("    // Name: " + subName + newline);
+                                                stubFuncBuilder.Append("}" + newline + newline);
+                                            }
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            Debug("Error extracting subroutine info in stub: " + e.Message);
+                                            // Continue with next subroutine
+                                        }
+                                    }
+
+                                    // If no main was found but we have subroutines, generate a default main
+                                    if (!hasMain && subIndex > 0)
+                                    {
+                                        stubFuncBuilder.Insert(0, "void main()" + newline +
+                                            "{" + newline +
+                                            "    // No main subroutine could be identified or decompiled" + newline +
+                                            "    // " + subIndex + " subroutine(s) were detected but could not be processed" + newline +
+                                            "}" + newline + newline);
+                                    }
+                                }
+                                catch (Exception e)
+                                {
+                                    Debug("Error iterating subroutines in stub: " + e.Message);
+                                    stubBuilder.Append("//   Error extracting subroutine details: " + e.Message + newline + newline);
+                                }
+                            }
+                            else
+                            {
+                                stubBuilder.Append(newline);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Debug("Error accessing subdata in stub: " + e.Message);
+                            stubBuilder.Append("//   Error accessing analysis data: " + e.Message + newline + newline);
+                        }
+                    }
+
+                    // Add prototypes section if we have any
+                    if (protoBuilder.Length > 0)
+                    {
+                        stubBuilder.Append("// Prototypes" + newline);
+                        stubBuilder.Append(protoBuilder.ToString());
+                        stubBuilder.Append(newline);
+                    }
+
+                    // Add function stubs if we generated any
+                    if (stubFuncBuilder.Length > 0)
+                    {
+                        stubBuilder.Append(stubFuncBuilder.ToString());
+                    }
+                    else
+                    {
+                        // Fallback: generate minimal main function
+                        stubBuilder.Append("// Minimal fallback function:" + newline);
+                        stubBuilder.Append("void main()" + newline);
+                        stubBuilder.Append("{" + newline);
+                        stubBuilder.Append("    // No code could be decompiled" + newline);
+                        if (detectedSubCount > 0)
+                        {
+                            stubBuilder.Append("    // " + detectedSubCount + " subroutine(s) were detected but could not be processed" + newline);
+                        }
+                        stubBuilder.Append("}" + newline);
+                    }
+
+                    // Add bytecode information if available
+                    if (this.originalbytecode != null && this.originalbytecode.Trim().Length > 0)
+                    {
+                        stubBuilder.Append(newline);
+                        stubBuilder.Append("// ========================================" + newline);
+                        stubBuilder.Append("// ORIGINAL BYTECODE INFORMATION" + newline);
+                        stubBuilder.Append("// ========================================" + newline);
+                        string[] bytecodeLines = this.originalbytecode.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                        int lineCount = bytecodeLines.Length;
+                        int maxLinesToShow = 50; // Show first 50 lines of bytecode
+
+                        stubBuilder.Append("// Bytecode length: " + this.originalbytecode.Length + " characters" + newline);
+                        stubBuilder.Append("// Bytecode lines: " + lineCount + newline);
+                        if (lineCount > maxLinesToShow)
+                        {
+                            stubBuilder.Append("// Showing first " + maxLinesToShow + " lines:" + newline);
+                        }
+                        stubBuilder.Append(newline);
+
+                        for (int i = 0; i < Math.Min(lineCount, maxLinesToShow); i++)
+                        {
+                            stubBuilder.Append("// " + bytecodeLines[i] + newline);
+                        }
+
+                        if (lineCount > maxLinesToShow)
+                        {
+                            stubBuilder.Append("// ... (" + (lineCount - maxLinesToShow) + " more lines)" + newline);
+                        }
+                    }
+
+                    this.code = stubBuilder.ToString();
                     return;
                 }
 
