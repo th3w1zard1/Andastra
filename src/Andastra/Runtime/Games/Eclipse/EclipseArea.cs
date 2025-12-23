@@ -11800,45 +11800,118 @@ technique ColorGrading
         public float ModificationTime { get; set; }
     }
 
+    /// <summary>
+    /// Modification that modifies static geometry (destructible terrain, destroyed walls, deformed geometry).
+    /// </summary>
+    /// <remarks>
+    /// Based on daorigins.exe/DragonAge2.exe: Eclipse supports runtime geometry modifications.
+    /// Modifications include destroyed faces, deformed vertices, and debris generation.
+    /// </remarks>
+    public class ModifyGeometryModification : IAreaModification
+    {
+        private readonly string _meshId;
+        private readonly GeometryModificationType _modificationType;
+        private readonly List<int> _affectedFaceIndices;
+        private readonly List<ModifiedVertex> _modifiedVertices;
+        private readonly Vector3 _explosionCenter;
+        private readonly float _explosionRadius;
+        private readonly float _modificationTime;
+
         /// <summary>
-        /// Caches mesh geometry data from MDL for collision shape updates.
+        /// Creates a modification that modifies static geometry.
         /// </summary>
         /// <param name="meshId">Mesh identifier (model name/resref).</param>
-        /// <param name="mdl">Parsed MDL model data.</param>
-        /// <remarks>
-        /// Based on daorigins.exe/DragonAge2.exe: Original geometry data is cached when meshes are loaded.
-        /// This cached data is used to rebuild collision shapes when geometry is modified.
-        /// </remarks>
-        private void CacheMeshGeometryFromMDL(string meshId, Andastra.Parsing.Formats.MDLData.MDL mdl)
+        /// <param name="modificationType">Type of modification.</param>
+        /// <param name="affectedFaceIndices">Indices of affected faces (triangle indices).</param>
+        /// <param name="modifiedVertices">Modified vertex data (position changes, deformations).</param>
+        /// <param name="explosionCenter">Center of explosion/destruction effect (for debris generation).</param>
+        /// <param name="explosionRadius">Radius of explosion effect.</param>
+        public ModifyGeometryModification(
+            string meshId,
+            GeometryModificationType modificationType,
+            List<int> affectedFaceIndices,
+            List<ModifiedVertex> modifiedVertices,
+            Vector3 explosionCenter,
+            float explosionRadius)
         {
-            if (string.IsNullOrEmpty(meshId) || mdl == null)
+            _meshId = meshId ?? throw new ArgumentNullException(nameof(meshId));
+            _modificationType = modificationType;
+            _affectedFaceIndices = affectedFaceIndices ?? new List<int>();
+            _modifiedVertices = modifiedVertices ?? new List<ModifiedVertex>();
+            _explosionCenter = explosionCenter;
+            _explosionRadius = explosionRadius > 0 ? explosionRadius : throw new ArgumentException("Explosion radius must be positive", nameof(explosionRadius));
+            _modificationTime = 0.0f; // Will be set to current time when applied
+        }
+
+        /// <summary>
+        /// Applies the modification by tracking geometry changes.
+        /// </summary>
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Geometry modifications are tracked for rendering and physics.
+        /// </remarks>
+        public void Apply(EclipseArea area)
+        {
+            if (area == null || string.IsNullOrEmpty(_meshId))
             {
                 return;
             }
 
-            // Extract vertex positions and indices from MDL
-            List<Vector3> vertices = new List<Vector3>();
-            List<int> indices = new List<int>();
+            // Apply geometry modification through tracker
+            // Based on daorigins.exe: Geometry modifications are stored and used for rendering/physics updates
+            area.ApplyGeometryModification(
+                _meshId,
+                _modificationType,
+                _affectedFaceIndices,
+                _modifiedVertices,
+                _explosionCenter,
+                _explosionRadius);
 
-            // Extract geometry from all meshes in MDL
-            // Based on daorigins.exe: MDL models contain mesh nodes with vertices and faces
-            ExtractGeometryFromMDL(mdl, vertices, indices);
-
-            if (vertices.Count == 0 || indices.Count == 0)
+            // Update physics collision shapes if geometry was modified
+            if (_modificationType == GeometryModificationType.Destroyed || _modificationType == GeometryModificationType.Deformed)
             {
-                return; // No geometry to cache
+                area.UpdatePhysicsCollisionShapes();
             }
-
-            // Cache the geometry data
-            CachedMeshGeometry cachedGeometry = new CachedMeshGeometry
-            {
-                MeshId = meshId,
-                Vertices = vertices,
-                Indices = indices
-            };
-
-            _cachedMeshGeometry[meshId] = cachedGeometry;
         }
+
+        /// <summary>
+        /// Gets whether this modification requires navigation mesh updates.
+        /// Geometry modifications may affect navigation if they destroy or significantly deform terrain.
+        /// </summary>
+        public bool RequiresNavigationMeshUpdate
+        {
+            get
+            {
+                // Geometry modifications may affect navigation if they destroy or significantly deform terrain
+                return _modificationType == GeometryModificationType.Destroyed;
+            }
+        }
+
+        /// <summary>
+        /// Gets whether this modification requires physics system updates.
+        /// All geometry modifications require physics updates.
+        /// </summary>
+        public bool RequiresPhysicsUpdate
+        {
+            get
+            {
+                // All geometry modifications require physics updates
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Gets whether this modification requires lighting system updates.
+        /// Geometry modifications don't typically require lighting updates unless they affect light sources.
+        /// </summary>
+        public bool RequiresLightingUpdate
+        {
+            get
+            {
+                // Geometry modifications don't typically require lighting updates unless they affect light sources
+                return false;
+            }
+        }
+    }
 
         /// <summary>
         /// Extracts vertex positions and indices from MDL model.
