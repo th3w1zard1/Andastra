@@ -2699,13 +2699,100 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // Texture coordinates: u=[0, 1], v=[0, 1]
             // Color: Semi-transparent dark background (ARGB: 0xE0000000 = dark with alpha)
 
-            // Note: In a full implementation, this would use a vertex buffer
-            // For now, we'll use immediate mode rendering if available, or skip if vertex buffers are required
+            // Create vertex buffer for menu background quad
             // Based on daorigins.exe: Menu rendering uses vertex buffers for efficiency
+            // Vertex structure: Position (x,y,z), Color (ARGB), Texture coordinates (u,v)
+            // FVF: D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1
 
-            // TODO: Implement vertex buffer creation and drawing for menu backgrounds
-            // This requires creating a vertex buffer, filling it with quad vertices, setting it as stream source,
-            // and calling DrawPrimitive with D3DPT_TRIANGLELIST, startVertex=0, primitiveCount=2 (2 triangles = 1 quad)
+            // Define vertex structure (24 bytes per vertex: 12 bytes position + 4 bytes color + 8 bytes texcoord)
+            const int vertexSize = 24;
+            const int vertexCount = 4; // 4 vertices for quad (2 triangles)
+            const int vertexBufferSize = vertexSize * vertexCount;
+
+            // Create vertex buffer
+            IntPtr vertexBufferPtr = IntPtr.Zero;
+            int createResult = CreateVertexBufferDirectX9(vertexBufferSize, D3DUSAGE_WRITEONLY, backgroundFVF, D3DPOOL_MANAGED, ref vertexBufferPtr);
+
+            if (createResult >= 0 && vertexBufferPtr != IntPtr.Zero)
+            {
+                try
+                {
+                    // Lock vertex buffer and fill with quad vertices
+                    IntPtr bufferData = IntPtr.Zero;
+                    int lockResult = LockVertexBufferDirectX9(vertexBufferPtr, 0, vertexBufferSize, ref bufferData, 0);
+
+                    if (lockResult >= 0 && bufferData != IntPtr.Zero)
+                    {
+                        try
+                        {
+                            // Get viewport dimensions for screen-space coordinates
+                            uint viewportWidth = GetViewportWidth();
+                            uint viewportHeight = GetViewportHeight();
+
+                            // Define quad vertices (clockwise winding for D3DPT_TRIANGLELIST)
+                            // Triangle 1: vertices 0, 1, 2
+                            // Triangle 2: vertices 0, 2, 3
+                            unsafe
+                            {
+                                float* vertices = (float*)bufferData.ToPointer();
+
+                                // Vertex 0: Top-left (0, 0)
+                                vertices[0] = 0.0f;           // x
+                                vertices[1] = 0.0f;           // y
+                                vertices[2] = 0.0f;           // z
+                                vertices[3] = 0xE0000000;     // color (dark semi-transparent)
+                                vertices[4] = 0.0f;           // u
+                                vertices[5] = 0.0f;           // v
+
+                                // Vertex 1: Top-right (viewportWidth, 0)
+                                vertices[6] = viewportWidth;  // x
+                                vertices[7] = 0.0f;           // y
+                                vertices[8] = 0.0f;           // z
+                                vertices[9] = 0xE0000000;     // color
+                                vertices[10] = 1.0f;          // u
+                                vertices[11] = 0.0f;          // v
+
+                                // Vertex 2: Bottom-right (viewportWidth, viewportHeight)
+                                vertices[12] = viewportWidth; // x
+                                vertices[13] = viewportHeight;// y
+                                vertices[14] = 0.0f;          // z
+                                vertices[15] = 0xE0000000;    // color
+                                vertices[16] = 1.0f;          // u
+                                vertices[17] = 1.0f;          // v
+
+                                // Vertex 3: Bottom-left (0, viewportHeight)
+                                vertices[18] = 0.0f;          // x
+                                vertices[19] = viewportHeight; // y
+                                vertices[20] = 0.0f;          // z
+                                vertices[21] = 0xE0000000;    // color
+                                vertices[22] = 0.0f;          // u
+                                vertices[23] = 1.0f;          // v
+                            }
+                        }
+                        finally
+                        {
+                            // Unlock vertex buffer
+                            UnlockVertexBufferDirectX9(vertexBufferPtr);
+                        }
+                    }
+
+                    // Set vertex buffer as stream source
+                    SetStreamSourceDirectX9(0, vertexBufferPtr, 0, vertexSize);
+
+                    // Draw the quad using triangle list (2 triangles, 4 vertices)
+                    // D3DPT_TRIANGLELIST = 4, startVertex = 0, primitiveCount = 2
+                    DrawPrimitiveDirectX9(D3DPT_TRIANGLELIST, 0, 2);
+                }
+                finally
+                {
+                    // Release vertex buffer
+                    if (vertexBufferPtr != IntPtr.Zero)
+                    {
+                        // Call Release on vertex buffer COM object
+                        Marshal.Release(vertexBufferPtr);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -3917,7 +4004,9 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             if (lockResult < 0 || vertexData == IntPtr.Zero)
             {
                 System.Console.WriteLine("[DragonAgeOriginsGraphicsBackend] RenderOptionsSliderBar: Failed to lock vertex buffer for slider bar");
-                // TODO: Release vertex buffer
+                // Release vertex buffer on error
+                // Based on daorigins.exe: Vertex buffers must be released using IUnknown::Release
+                ReleaseVertexBuffer(vertexBuffer);
                 return;
             }
 
@@ -3970,8 +4059,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             const uint D3DPT_TRIANGLELIST = 4;
             DrawPrimitiveDirectX9(D3DPT_TRIANGLELIST, 0, 2);
 
-            // TODO: Release vertex buffer when done
-            // In a full implementation, vertex buffers would be managed and reused
+            // Release vertex buffer when done
+            // Based on daorigins.exe: Vertex buffers must be released using IUnknown::Release after use
+            // In a full implementation, vertex buffers could be cached and reused for performance
+            ReleaseVertexBuffer(vertexBuffer);
         }
 
         /// <summary>
@@ -4053,7 +4144,9 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             if (lockResult < 0 || vertexData == IntPtr.Zero)
             {
                 System.Console.WriteLine("[DragonAgeOriginsGraphicsBackend] RenderOptionsSliderKnob: Failed to lock vertex buffer for slider knob");
-                // TODO: Release vertex buffer
+                // Release vertex buffer on error
+                // Based on daorigins.exe: Vertex buffers must be released using IUnknown::Release
+                ReleaseVertexBuffer(vertexBuffer);
                 return;
             }
 
@@ -4190,7 +4283,9 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             if (lockResult < 0 || vertexData == IntPtr.Zero)
             {
                 System.Console.WriteLine("[DragonAgeOriginsGraphicsBackend] RenderOptionsCheckbox: Failed to lock vertex buffer for checkbox");
-                // TODO: Release vertex buffer
+                // Release vertex buffer on error
+                // Based on daorigins.exe: Vertex buffers must be released using IUnknown::Release
+                ReleaseVertexBuffer(vertexBuffer);
                 return;
             }
 
@@ -4256,8 +4351,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             const uint D3DPT_TRIANGLELIST = 4;
             DrawPrimitiveDirectX9(D3DPT_TRIANGLELIST, 0, 2);
 
-            // TODO: Release vertex buffer when done
-            // In a full implementation, vertex buffers would be managed and reused
+            // Release vertex buffer when done
+            // Based on daorigins.exe: Vertex buffers must be released using IUnknown::Release after use
+            // In a full implementation, vertex buffers could be cached and reused for performance
+            ReleaseVertexBuffer(vertexBuffer);
         }
 
         /// <summary>
