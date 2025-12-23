@@ -14371,11 +14371,11 @@ technique ColorGrading
         }
     }
 
-    /// <summary>
-    /// Converts TPC texture data to RGBA format for MonoGame.
-    /// Based on daorigins.exe: TPC format conversion to DirectX 9 compatible format.
-    /// daorigins.exe: 0x00400000 - TPC texture format conversion and decompression
-    /// </summary>
+        /// <summary>
+        /// Converts TPC texture data to RGBA format for MonoGame.
+        /// Based on daorigins.exe: TPC format conversion to DirectX 9 compatible format.
+        /// daorigins.exe: 0x00400000 - TPC texture format conversion and decompression
+        /// </summary>
         /// <param name="tpc">Parsed TPC texture object.</param>
         /// <param name="width">Texture width.</param>
         /// <param name="height">Texture height.</param>
@@ -14649,11 +14649,11 @@ technique ColorGrading
 
         #region DXT Decompression
 
-    /// <summary>
-    /// Decompresses DXT1 (BC1) compressed texture data to RGBA.
-    /// Based on daorigins.exe: DXT1 decompression using S3TC algorithm.
-    /// DXT1 format: 8 bytes per 4x4 pixel block, 1-bit alpha support.
-    /// </summary>
+        /// <summary>
+        /// Decompresses DXT1 (BC1) compressed texture data to RGBA.
+        /// Based on daorigins.exe: DXT1 decompression using S3TC algorithm.
+        /// DXT1 format: 8 bytes per 4x4 pixel block, 1-bit alpha support.
+        /// </summary>
         /// <param name="input">Compressed DXT1 data.</param>
         /// <param name="output">Output RGBA buffer (must be width * height * 4 bytes).</param>
         /// <param name="width">Texture width.</param>
@@ -15063,14 +15063,14 @@ technique ColorGrading
 
         #endregion
 
-        /// <summary>
-        /// Represents a debris piece generated from destroyed geometry.
-        /// </summary>
-        /// <remarks>
-        /// Based on daorigins.exe/DragonAge2.exe: Debris pieces are physics objects created from destroyed geometry.
-        /// </remarks>
-        public class DebrisPiece
-        {
+    /// <summary>
+    /// Represents a debris piece generated from destroyed geometry.
+    /// </summary>
+    /// <remarks>
+    /// Based on daorigins.exe/DragonAge2.exe: Debris pieces are physics objects created from destroyed geometry.
+    /// </remarks>
+    public class DebrisPiece
+    {
             /// <summary>
             /// Mesh identifier (model name/resref) this debris came from.
             /// </summary>
