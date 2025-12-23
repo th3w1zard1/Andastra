@@ -158,6 +158,9 @@ namespace Andastra.Runtime.MonoGame.Backends
             VK_PIPELINE_STAGE_VERTEX_INPUT_BIT = 0x00000004,
             VK_PIPELINE_STAGE_VERTEX_SHADER_BIT = 0x00000008,
             VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT = 0x00000080,
+            VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT = 0x00000008,
+            VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT = 0x00000080,
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT = 0x00000080,
             VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT = 0x00000400,
             VK_PIPELINE_STAGE_TRANSFER_BIT = 0x00001000,
             VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT = 0x00002000,
@@ -214,6 +217,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL = 6,
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL = 7,
             VK_IMAGE_LAYOUT_PREINITIALIZED = 8,
+            VK_IMAGE_LAYOUT_PRESENT_SRC_KHR = 1000001002, // VK_KHR_swapchain extension
         }
 
         // Vulkan command buffer usage flags
@@ -8719,6 +8723,68 @@ namespace Andastra.Runtime.MonoGame.Backends
                         return 0;
                 }
             }
+
+            /// <summary>
+            /// Maps ResourceState to Vulkan image layout.
+            /// Based on Vulkan specification: Image layout transitions.
+            /// </summary>
+            private VkImageLayout MapResourceStateToVulkanImageLayout(ResourceState state, TextureFormat format)
+            {
+                switch (state)
+                {
+                    case ResourceState.Common:
+                        return VkImageLayout.VK_IMAGE_LAYOUT_GENERAL;
+                    case ResourceState.RenderTarget:
+                        return VkImageLayout.VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+                    case ResourceState.DepthWrite:
+                        return VkImageLayout.VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                    case ResourceState.DepthRead:
+                        return VkImageLayout.VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+                    case ResourceState.ShaderResource:
+                        return VkImageLayout.VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                    case ResourceState.UnorderedAccess:
+                        return VkImageLayout.VK_IMAGE_LAYOUT_GENERAL;
+                    case ResourceState.CopySource:
+                        return VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+                    case ResourceState.CopyDest:
+                        return VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+                    case ResourceState.Present:
+                        return VkImageLayout.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+                    default:
+                        return VkImageLayout.VK_IMAGE_LAYOUT_GENERAL;
+                }
+            }
+
+            /// <summary>
+            /// Gets pipeline stage flags for an image layout.
+            /// Based on Vulkan specification: Pipeline stage synchronization.
+            /// </summary>
+            private VkPipelineStageFlags GetPipelineStageForImageLayout(VkImageLayout layout)
+            {
+                switch (layout)
+                {
+                    case VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
+                    case VkImageLayout.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+                        return VkPipelineStageFlags.VK_PIPELINE_STAGE_TRANSFER_BIT;
+                    case VkImageLayout.VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
+                        return VkPipelineStageFlags.VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT |
+                               VkPipelineStageFlags.VK_PIPELINE_STAGE_VERTEX_SHADER_BIT |
+                               VkPipelineStageFlags.VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+                    case VkImageLayout.VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
+                        return VkPipelineStageFlags.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+                    case VkImageLayout.VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
+                    case VkImageLayout.VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL:
+                        return VkPipelineStageFlags.VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
+                               VkPipelineStageFlags.VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+                    case VkImageLayout.VK_IMAGE_LAYOUT_GENERAL:
+                        return VkPipelineStageFlags.VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+                    case VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED:
+                        return VkPipelineStageFlags.VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+                    default:
+                        return VkPipelineStageFlags.VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+                }
+            }
+
             /// <summary>
             /// Clears a color attachment of a framebuffer.
             /// Based on Vulkan API: https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdClearColorImage.html
@@ -9231,19 +9297,22 @@ namespace Andastra.Runtime.MonoGame.Backends
                 VkImageLayout currentLayout = GetImageLayout(imageHandle);
 
                 // Check if transition is needed
+                VkImageLayout targetLayout;
                 if (currentState == state)
                 {
                     // State hasn't changed, but we should verify layout matches
-                    VkImageLayout targetLayout = MapResourceStateToVulkanImageLayout(state, texture.Desc.Format);
+                    targetLayout = MapResourceStateToVulkanImageLayout(state, texture.Desc.Format);
                     if (currentLayout == targetLayout)
                     {
                         return; // Already in target state and layout, no barrier needed
                     }
                     // Layout mismatch - need to transition layout even though state is the same
                 }
-
-                // Map target state to Vulkan image layout
-                VkImageLayout targetLayout = MapResourceStateToVulkanImageLayout(state, texture.Desc.Format);
+                else
+                {
+                    // Map target state to Vulkan image layout
+                    targetLayout = MapResourceStateToVulkanImageLayout(state, texture.Desc.Format);
+                }
 
                 // If layout is the same, no barrier needed (unless access patterns changed)
                 if (currentLayout == targetLayout && currentState == state)
@@ -9835,7 +9904,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                             }
 
                             Marshal.WriteIntPtr(bufferHandlesPtr, i * IntPtr.Size, vkBuffer);
-                            Marshal.WriteInt64(offsetsPtr, i * sizeof(ulong), 0UL); // Offset is 0 for now - could be extended
+                            Marshal.WriteInt64(offsetsPtr, i * sizeof(ulong), (long)0UL); // Offset is 0 for now - could be extended
                         }
 
                         // Bind vertex buffers
@@ -11159,7 +11228,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                                         pNext = IntPtr.Zero,
                                         buffer = vkBuffer
                                     };
-                                    vertexBufferAddress = vkGetBufferDeviceAddressKHR(_device, ref bufferInfo);
+                                    vertexBufferAddress = vkGetBufferDeviceAddressKHR(_vkDevice, ref bufferInfo);
                                     if (triangles.VertexOffset > 0)
                                     {
                                         vertexBufferAddress += (ulong)triangles.VertexOffset;
@@ -11182,7 +11251,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                                         pNext = IntPtr.Zero,
                                         buffer = vkBuffer
                                     };
-                                    indexBufferAddress = vkGetBufferDeviceAddressKHR(_device, ref bufferInfo);
+                                    indexBufferAddress = vkGetBufferDeviceAddressKHR(_vkDevice, ref bufferInfo);
                                     if (triangles.IndexOffset > 0)
                                     {
                                         indexBufferAddress += (ulong)triangles.IndexOffset;
@@ -11205,7 +11274,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                                         pNext = IntPtr.Zero,
                                         buffer = vkBuffer
                                     };
-                                    transformBufferAddress = vkGetBufferDeviceAddressKHR(_device, ref bufferInfo);
+                                    transformBufferAddress = vkGetBufferDeviceAddressKHR(_vkDevice, ref bufferInfo);
                                     if (triangles.TransformOffset > 0)
                                     {
                                         transformBufferAddress += (ulong)triangles.TransformOffset;
@@ -11215,7 +11284,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                         }
 
                         // Convert vertex format to VkFormat
-                        VkFormat vertexFormat = ConvertToVkFormat(triangles.VertexFormat);
+                        VkFormat vertexFormat = _device.ConvertToVkFormat(triangles.VertexFormat);
                         if (vertexFormat == VkFormat.VK_FORMAT_UNDEFINED)
                         {
                             // Fallback: assume float3 format (R32G32B32_SFLOAT = 106)
@@ -11296,7 +11365,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                                             pNext = IntPtr.Zero,
                                             buffer = vkBuffer
                                         };
-                                        aabbBufferAddress = vkGetBufferDeviceAddressKHR(_device, ref bufferInfo);
+                                        aabbBufferAddress = vkGetBufferDeviceAddressKHR(_vkDevice, ref bufferInfo);
                                         if (aabbs.Offset > 0)
                                         {
                                             aabbBufferAddress += (ulong)aabbs.Offset;
@@ -11357,7 +11426,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     // Create build geometry info
                     // Convert AccelStructBuildFlags to Vulkan build flags
                     // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkBuildAccelerationStructureFlagsKHR.html
-                    VkBuildAccelerationStructureFlagsKHR buildFlags = ConvertAccelStructBuildFlagsToVkFlags(desc.BuildFlags);
+                    VkBuildAccelerationStructureFlagsKHR buildFlags = _device.ConvertAccelStructBuildFlagsToVkFlags(vulkanAccelStruct.Desc.BuildFlags);
 
                     // Allocate memory for geometry array
                     int geometrySize = Marshal.SizeOf(typeof(VkAccelerationStructureGeometryKHR));
@@ -11398,7 +11467,14 @@ namespace Andastra.Runtime.MonoGame.Backends
                         IntPtr maxPrimitiveCountsPtr = Marshal.AllocHGlobal(maxPrimitiveCounts.Length * sizeof(uint));
                         try
                         {
-                            Marshal.Copy(maxPrimitiveCounts, 0, maxPrimitiveCountsPtr, maxPrimitiveCounts.Length);
+                            unsafe
+                            {
+                                uint* ptr = (uint*)maxPrimitiveCountsPtr;
+                                for (int i = 0; i < maxPrimitiveCounts.Length; i++)
+                                {
+                                    ptr[i] = maxPrimitiveCounts[i];
+                                }
+                            }
 
                             VkAccelerationStructureBuildSizesInfoKHR sizeInfo = new VkAccelerationStructureBuildSizesInfoKHR
                             {
@@ -11410,7 +11486,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                             };
 
                             vkGetAccelerationStructureBuildSizesKHR(
-                                _device,
+                                _vkDevice,
                                 VkAccelerationStructureBuildTypeKHR.VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
                                 ref buildInfo,
                                 maxPrimitiveCountsPtr,
@@ -11445,7 +11521,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                                             pNext = IntPtr.Zero,
                                             buffer = vkScratchBuffer
                                         };
-                                        scratchBufferAddress = vkGetBufferDeviceAddressKHR(_device, ref scratchBufferInfo);
+                                        scratchBufferAddress = vkGetBufferDeviceAddressKHR(_vkDevice, ref scratchBufferInfo);
                                     }
                                 }
                             }
@@ -11622,7 +11698,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                         pNext = IntPtr.Zero,
                         buffer = vkInstanceBuffer
                     };
-                    ulong instanceBufferAddress = vkGetBufferDeviceAddressKHR(_device, ref instanceBufferInfo);
+                    ulong instanceBufferAddress = vkGetBufferDeviceAddressKHR(_vkDevice, ref instanceBufferInfo);
 
                     // Set up geometry data for instances
                     // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkAccelerationStructureGeometryInstancesDataKHR.html
@@ -11659,7 +11735,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                         // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkAccelerationStructureBuildGeometryInfoKHR.html
                         // Convert AccelStructBuildFlags to Vulkan build flags
                         // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkBuildAccelerationStructureFlagsKHR.html
-                        VkBuildAccelerationStructureFlagsKHR buildFlags = ConvertAccelStructBuildFlagsToVkFlags(desc.BuildFlags);
+                        VkBuildAccelerationStructureFlagsKHR buildFlags = _device.ConvertAccelStructBuildFlagsToVkFlags(vulkanAccelStruct.Desc.BuildFlags);
 
                         VkAccelerationStructureBuildGeometryInfoKHR buildInfo = new VkAccelerationStructureBuildGeometryInfoKHR
                         {
@@ -11693,7 +11769,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                             };
 
                             vkGetAccelerationStructureBuildSizesKHR(
-                                _device,
+                                _vkDevice,
                                 VkAccelerationStructureBuildTypeKHR.VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
                                 ref buildInfo,
                                 maxPrimitiveCountsPtr,
@@ -11729,7 +11805,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                                                 pNext = IntPtr.Zero,
                                                 buffer = vkScratchBuffer
                                             };
-                                            scratchBufferAddress = vkGetBufferDeviceAddressKHR(_device, ref scratchBufferInfo);
+                                            scratchBufferAddress = vkGetBufferDeviceAddressKHR(_vkDevice, ref scratchBufferInfo);
                                         }
                                     }
                                 }

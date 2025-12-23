@@ -1871,7 +1871,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 // Perform extension flag validation
                 // Condition 1: ((extensionFlags & validationFlag1) == validationFlag1 & validationFlag2) != 0
                 bool condition1 = ((_kotor2ExtensionFlags & _kotor2ExtensionValidationFlag1) ==
-                                   (_kotor2ExtensionValidationFlag1 & _kotor2ExtensionValidationFlag2)) != 0;
+                                   (_kotor2ExtensionValidationFlag1 & _kotor2ExtensionValidationFlag2));
 
                 // Condition 2: ((validationFlag3 & extensionFlags) == 0)
                 bool condition2 = ((_kotor2ExtensionValidationFlag3 & _kotor2ExtensionFlags) == 0);

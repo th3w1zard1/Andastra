@@ -20,6 +20,8 @@ using Andastra.Runtime.Games.Odyssey.Systems;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
+using RuntimeIModule = Andastra.Runtime.Core.Interfaces.IModule;
+using Loading = Andastra.Runtime.Engines.Odyssey.Loading;
 
 namespace Andastra.Runtime.Games.Odyssey
 {

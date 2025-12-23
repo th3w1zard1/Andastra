@@ -128,12 +128,12 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             if (_characterSkills.Count > 0)
             {
                 // Load upgrade UTI template to check for skill requirements
-                UTI upgradeUTI = LoadUpgradeUTITemplate(upgradeResRef);
-                if (upgradeUTI != null)
+                UTI upgradeUTITemplate = LoadUpgradeUTITemplate(upgradeResRef);
+                if (upgradeUTITemplate != null)
                 {
                     // Check if upgrade requires specific skills
                     // Some upgrades may have skill requirements stored in UTI properties or custom fields
-                    // For now, we use a general skill check: Repair (5) and Security (6) are commonly used for upgrades
+                    // TODO: STUBBED - For now, we use a general skill check: Repair (5) and Security (6) are commonly used for upgrades
                     // Higher skill ranks improve success rate
                     int repairSkill = GetCharacterSkillRank(5); // Repair skill
                     int securitySkill = GetCharacterSkillRank(6); // Security skill
@@ -142,7 +142,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
                     // Basic skill check: upgrades generally benefit from Repair and Security skills
                     // Very low skills (< 5) may reduce success rate, but we allow the upgrade to proceed
                     // This matches the original behavior where skills were not checked, but adds skill-based success modifiers
-                    // Future enhancements: Add skill-based success rate calculation for item creation
+                    // TODO: Future enhancements: Add skill-based success rate calculation for item creation
                 }
             }
 

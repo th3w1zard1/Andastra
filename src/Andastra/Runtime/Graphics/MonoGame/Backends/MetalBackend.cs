@@ -1156,17 +1156,17 @@ namespace Andastra.Runtime.MonoGame.Backends
                     return 2; // 1 * 2 bytes
                 case TextureFormat.R8G8B8A8_UNorm:
                 case TextureFormat.R8G8B8A8_UInt:
-                case TextureFormat.R8G8B8A8_SNorm:
+                // case TextureFormat.R8G8B8A8_SNorm: // TODO: Not available in MonoGame TextureFormat enum
                 case TextureFormat.R8G8B8A8_SInt:
                     return 4; // 4 * 1 byte
                 case TextureFormat.R8G8_UNorm:
                 case TextureFormat.R8G8_UInt:
-                case TextureFormat.R8G8_SNorm:
+                // case TextureFormat.R8G8_SNorm: // TODO: Not available in MonoGame TextureFormat enum
                 case TextureFormat.R8G8_SInt:
                     return 2; // 2 * 1 byte
                 case TextureFormat.R8_UNorm:
                 case TextureFormat.R8_UInt:
-                case TextureFormat.R8_SNorm:
+                // case TextureFormat.R8_SNorm: // TODO: Not available in MonoGame TextureFormat enum
                 case TextureFormat.R8_SInt:
                     return 1; // 1 * 1 byte
                 case TextureFormat.R10G10B10A2_UNorm:

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
@@ -28,6 +29,7 @@ using Andastra.Runtime.Core.Module;
 using Andastra.Runtime.Games.Eclipse.Lighting;
 using Andastra.Runtime.Games.Eclipse.Physics;
 using Andastra.Runtime.MonoGame.Enums;
+using Microsoft.Xna.Framework;
 using Andastra.Runtime.MonoGame.Interfaces;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.MonoGame.Converters;
@@ -881,10 +883,9 @@ namespace Andastra.Runtime.Games.Eclipse
                     }
                 }
 
-                    // Read SunFogColor from AreaProperties (takes precedence over root SunFogColor)
-                    // Note: SunFogColor is read but stored in weather system, not as private field
-                    // If needed in future, add private field: _sunFogColor
-                }
+                // Read SunFogColor from AreaProperties (takes precedence over root SunFogColor)
+                // Note: SunFogColor is read but stored in weather system, not as private field
+                // If needed in future, add private field: _sunFogColor
                 else
                 {
                     // If AreaProperties struct doesn't exist, try reading from root level
@@ -11630,69 +11631,3 @@ technique ColorGrading
     }
 }
 
-            ExplosionRadius = 0.0f;
-            ModificationTime = 0.0f;
-        }
-    }
-
-    /// <summary>
-    /// Represents a debris piece generated from destroyed geometry.
-    /// </summary>
-    /// <remarks>
-    /// Based on daorigins.exe/DragonAge2.exe: Debris physics objects.
-    /// </remarks>
-    public class DebrisPiece
-    {
-        /// <summary>
-        /// Mesh identifier that this debris came from.
-        /// </summary>
-        public string MeshId { get; set; }
-
-        /// <summary>
-        /// Face indices that form this debris piece.
-        /// </summary>
-        public List<int> FaceIndices { get; set; }
-
-        /// <summary>
-        /// Position of debris piece in world space.
-        /// </summary>
-        public Vector3 Position { get; set; }
-
-        /// <summary>
-        /// Linear velocity of debris piece.
-        /// </summary>
-        public Vector3 Velocity { get; set; }
-
-        /// <summary>
-        /// Rotation of debris piece (Euler angles).
-        /// </summary>
-        public Vector3 Rotation { get; set; }
-
-        /// <summary>
-        /// Angular velocity of debris piece.
-        /// </summary>
-        public Vector3 AngularVelocity { get; set; }
-
-        /// <summary>
-        /// Total lifetime of debris piece (seconds).
-        /// </summary>
-        public float LifeTime { get; set; }
-
-        /// <summary>
-        /// Remaining lifetime of debris piece (seconds).
-        /// </summary>
-        public float RemainingLifeTime { get; set; }
-
-        public DebrisPiece()
-        {
-            MeshId = string.Empty;
-            FaceIndices = new List<int>();
-            Position = Vector3.Zero;
-            Velocity = Vector3.Zero;
-            Rotation = Vector3.Zero;
-            AngularVelocity = Vector3.Zero;
-            LifeTime = 30.0f;
-            RemainingLifeTime = 30.0f;
-        }
-    }
-}

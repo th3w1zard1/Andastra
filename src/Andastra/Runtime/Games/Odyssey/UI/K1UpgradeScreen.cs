@@ -129,8 +129,8 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             if (_characterSkills.Count > 0)
             {
                 // Load upgrade UTI template to check for skill requirements
-                UTI upgradeUTI = LoadUpgradeUTITemplate(upgradeResRef);
-                if (upgradeUTI != null)
+                UTI upgradeUTITemplate = LoadUpgradeUTITemplate(upgradeResRef);
+                if (upgradeUTITemplate != null)
                 {
                     // Check if upgrade requires specific skills
                     // Some upgrades may have skill requirements stored in UTI properties or custom fields

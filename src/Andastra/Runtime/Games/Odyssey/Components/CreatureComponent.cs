@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Games.Common.Components;
 
 using ClassData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.ClassData;
 using FeatData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.FeatData;
@@ -59,12 +60,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
     /// - Equip_ItemList stores equipped items, ItemList stores inventory, PerceptionList stores perception data
     /// - CombatRoundData stores combat state (FUN_00529470 saves combat round data)
     /// </remarks>
-    public class CreatureComponent : IComponent
+    public class CreatureComponent : BaseCreatureComponent
     {
-        public IEntity Owner { get; set; }
-
-        public void OnAttach() { }
-        public void OnDetach() { }
 
         public CreatureComponent()
         {
@@ -453,7 +450,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
         /// <summary>
         /// Checks if creature has a feat.
         /// </summary>
-        public bool HasFeat(int featId)
+        public override bool HasFeat(int featId)
         {
             return FeatList.Contains(featId);
         }
@@ -544,6 +541,47 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
             // Odyssey uses different feat system (force powers, etc.)
 
             return -1;
+        }
+
+        /// <summary>
+        /// Gets feat data from game data provider (Odyssey-specific implementation).
+        /// </summary>
+        protected override BaseCreatureComponent.IFeatData GetFeatData(int featId, object gameDataProvider)
+        {
+            if (gameDataProvider == null)
+            {
+                return null;
+            }
+
+            var gameDataManager = gameDataProvider as Data.GameDataManager;
+            if (gameDataManager == null)
+            {
+                return null;
+            }
+
+            FeatData featData = gameDataManager.GetFeat(featId);
+            if (featData == null)
+            {
+                return null;
+            }
+
+            // Create adapter to convert FeatData to IFeatData
+            return new FeatDataAdapter(featData);
+        }
+
+        /// <summary>
+        /// Adapter to convert Odyssey FeatData to IFeatData interface.
+        /// </summary>
+        private class FeatDataAdapter : BaseCreatureComponent.IFeatData
+        {
+            private readonly FeatData _featData;
+
+            public FeatDataAdapter(FeatData featData)
+            {
+                _featData = featData ?? throw new System.ArgumentNullException("featData");
+            }
+
+            public int UsesPerDay => _featData.UsesPerDay;
         }
 
         /// <summary>

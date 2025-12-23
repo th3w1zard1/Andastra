@@ -1378,22 +1378,6 @@ namespace Andastra.Runtime.Games.Eclipse
                             }
                         }
                     }
-                        // ArmorClass is read-only and calculated, so we can't set it directly
-                        // It's calculated from base + modifiers + armor + effects
-
-                        // Restore ability scores (if StatsComponent supports setting them)
-                        // Note: Most implementations calculate abilities, but we try to set them
-                        // This may not work for all StatsComponent implementations
-                        try
-                        {
-                            // Try to set abilities if the component supports it
-                            // This is implementation-specific and may not work for all components
-                        }
-                        catch
-                        {
-                            // If setting abilities fails, we continue - abilities may be calculated
-                        }
-                    }
                 }
 
                 // Deserialize Inventory component

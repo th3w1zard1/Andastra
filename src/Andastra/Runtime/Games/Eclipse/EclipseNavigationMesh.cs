@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Games.Common;
 
 namespace Andastra.Runtime.Games.Eclipse

@@ -1257,8 +1257,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
                     if (latestEntry != null)
                     {
                         // Update latest entry with plot XP
-                        string entryText = latestEntry.Text ?? string.Empty;
-                        _journalSystem.UpdateEntry(plotLabel, latestEntry.State, entryText, plotXP);
+                        string latestEntryText = latestEntry.Text ?? string.Empty;
+                        _journalSystem.UpdateEntry(plotLabel, latestEntry.State, latestEntryText, plotXP);
                         return;
                     }
 

@@ -28,6 +28,7 @@ using JetBrains.Annotations;
 // Explicit type aliases to resolve ambiguity
 using SysVector3 = System.Numerics.Vector3;
 using KotorVector3 = System.Numerics.Vector3;
+using RuntimeObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 using OdyObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 using InstResourceResult = Andastra.Parsing.Installation.ResourceResult;
 using Andastra.Runtime.Engines.Odyssey.Components;
@@ -650,7 +651,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             {
                 var roomInfo = new RoomInfo
                 {
-                    ModelName = lytRoom.Model.ToLowerInvariant(),
+                    ModelName = lytRoom.Model.ToLower(),
                     Position = new SysVector3(lytRoom.Position.X, lytRoom.Position.Y, lytRoom.Position.Z),
                     Rotation = 0f, // LYT rooms don't have rotation, only position
                     VisibleRooms = new List<int>()
@@ -925,7 +926,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                     var cameraState = new Andastra.Runtime.Core.Save.EntityState
                     {
                         Position = new SysVector3(gitCamera.Position.X, gitCamera.Position.Y, gitCamera.Position.Z),
-                        ObjectType = ObjectType.Invalid, // Cameras don't have standard ObjectType
+                        ObjectType = RuntimeObjectType.Invalid, // Cameras don't have standard ObjectType
                         TemplateResRef = string.Empty, // Cameras don't have template ResRef
                         Tag = string.Empty // Cameras don't have tags
                     };

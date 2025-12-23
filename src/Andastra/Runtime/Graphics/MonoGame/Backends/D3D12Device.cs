@@ -886,7 +886,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 // On non-Windows platforms, return a pipeline with zero handles
                 IntPtr handle = new IntPtr(_nextResourceHandle++);
-                var pipeline = new D3D12ComputePipeline(handle, desc, IntPtr.Zero, IntPtr.Zero, _device);
+                var pipeline = new D3D12ComputePipeline(handle, desc, IntPtr.Zero, IntPtr.Zero, _device, this);
                 _resources[handle] = pipeline;
                 return pipeline;
             }
@@ -960,7 +960,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 }
 
                 IntPtr handle = new IntPtr(_nextResourceHandle++);
-                var pipeline = new D3D12ComputePipeline(handle, desc, pipelineState, rootSignature, _device);
+                var pipeline = new D3D12ComputePipeline(handle, desc, pipelineState, rootSignature, _device, this);
                 _resources[handle] = pipeline;
 
                 return pipeline;
@@ -2610,7 +2610,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// All COM interfaces inherit from IUnknown, which has Release at vtable index 2.
         /// Based on COM Reference Counting: https://docs.microsoft.com/en-us/windows/win32/api/unknwn/nf-unknwn-iunknown-release
         /// </summary>
-        private unsafe uint ReleaseComObject(IntPtr comObject)
+        protected unsafe uint ReleaseComObject(IntPtr comObject)
         {
             // Platform check: DirectX 12 COM is Windows-only
             if (Environment.OSVersion.Platform != PlatformID.Win32NT)
@@ -2950,6 +2950,17 @@ namespace Andastra.Runtime.MonoGame.Backends
         // Based on DirectX 12 DrawIndexedInstanced: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-drawindexedinstanced
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void DrawIndexedInstancedDelegate(IntPtr commandList, uint IndexCountPerInstance, uint InstanceCount, uint StartIndexLocation, int BaseVertexLocation, uint StartInstanceLocation);
+
+        // COM interface method delegate for DrawInstanced
+        // Based on DirectX 12 DrawInstanced: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-drawinstanced
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void DrawInstancedDelegate(IntPtr commandList, uint VertexCountPerInstance, uint InstanceCount, uint StartVertexLocation, uint StartInstanceLocation);
+
+        // COM interface method delegate for ClearUnorderedAccessViewUint
+        // Based on DirectX 12 ClearUnorderedAccessViewUint: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-clearunorderedaccessviewuint
+        // Values is a pointer to a uint[4] array containing RGBA/X/Y/Z/W clear values
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void ClearUnorderedAccessViewUintDelegate(IntPtr commandList, IntPtr ViewGPUHandleInCurrentHeap, IntPtr ViewCPUHandle, IntPtr pResource, IntPtr Values, uint NumRects, IntPtr pRects);
 
         // D3D12 GPU descriptor handle structure
         [StructLayout(LayoutKind.Sequential)]
@@ -7542,14 +7553,16 @@ namespace Andastra.Runtime.MonoGame.Backends
             private readonly IntPtr _d3d12PipelineState;
             private readonly IntPtr _rootSignature;
             private readonly IntPtr _device;
+            private readonly D3D12Device _parentDevice;
 
-            public D3D12ComputePipeline(IntPtr handle, ComputePipelineDesc desc, IntPtr d3d12PipelineState, IntPtr rootSignature, IntPtr device)
+            public D3D12ComputePipeline(IntPtr handle, ComputePipelineDesc desc, IntPtr d3d12PipelineState, IntPtr rootSignature, IntPtr device, D3D12Device parentDevice)
             {
                 _handle = handle;
                 Desc = desc;
                 _d3d12PipelineState = d3d12PipelineState;
                 _rootSignature = rootSignature;
                 _device = device;
+                _parentDevice = parentDevice;
             }
 
             // Accessors for command list to use
@@ -9583,6 +9596,66 @@ namespace Andastra.Runtime.MonoGame.Backends
                     (DrawIndexedInstancedDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(DrawIndexedInstancedDelegate));
 
                 drawIndexedInstanced(commandList, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::OMSetBlendFactor through COM vtable.
+            /// VTable index 48 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 OMSetBlendFactor: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-omsetblendfactor
+            /// </summary>
+            private unsafe void CallOMSetBlendFactor(IntPtr commandList, IntPtr BlendFactor)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // OMSetBlendFactor is at index 48 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[48];
+
+                // Create delegate from function pointer
+                OMSetBlendFactorDelegate omSetBlendFactor =
+                    (OMSetBlendFactorDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(OMSetBlendFactorDelegate));
+
+                omSetBlendFactor(commandList, BlendFactor);
+            }
+
+            /// <summary>
+            /// Calls ID3D12GraphicsCommandList::DrawInstanced through COM vtable.
+            /// VTable index 100 for ID3D12GraphicsCommandList.
+            /// Based on DirectX 12 DrawInstanced: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-drawinstanced
+            /// </summary>
+            private unsafe void CallDrawInstanced(IntPtr commandList, uint VertexCountPerInstance, uint InstanceCount, uint StartVertexLocation, uint StartInstanceLocation)
+            {
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return;
+                }
+
+                if (commandList == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                // Get vtable pointer
+                IntPtr* vtable = *(IntPtr**)commandList;
+                // DrawInstanced is at index 100 in ID3D12GraphicsCommandList vtable
+                IntPtr methodPtr = vtable[100];
+
+                // Create delegate from function pointer
+                DrawInstancedDelegate drawInstanced =
+                    (DrawInstancedDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(DrawInstancedDelegate));
+
+                drawInstanced(commandList, VertexCountPerInstance, InstanceCount, StartVertexLocation, StartInstanceLocation);
             }
 
             /// <summary>
@@ -12739,33 +12812,12 @@ namespace Andastra.Runtime.MonoGame.Backends
                 D3D12AccelStruct srcAccelStruct = src as D3D12AccelStruct;
                 D3D12AccelStruct destAccelStruct = dest as D3D12AccelStruct;
 
-                if (srcAccelStruct != null && destAccelStruct != null)
-                {
-                    // Access backing buffers through reflection or internal access
-                    // For now, we validate using the acceleration structure description sizes
-                    // Source buffer size is typically ResultDataMaxSizeInBytes from the description
-                    ulong srcResultSize = srcAccelStruct.Desc.ResultDataMaxSizeInBytes;
-                    ulong destResultSize = destAccelStruct.Desc.ResultDataMaxSizeInBytes;
-
-                    if (destResultSize < srcResultSize)
-                    {
-                        Console.WriteLine($"[D3D12Device] WARNING: Destination acceleration structure result data size {destResultSize} is smaller than source result data size {srcResultSize}. Compaction may fail if destination is too small.");
-                        // Note: We continue with the operation as the actual compacted size may be smaller than source
-                        // A full implementation would query post-build info for exact compacted size using
-                        // GetRaytracingAccelerationStructurePostbuildInfo, but that requires additional D3D12 API calls
-                    }
-                }
-
-                // Destination buffer should be at least as large as the source buffer's result data size
-                // In practice, compacted size is typically 50-70% of original, but we validate against source size
-                // as a conservative check. The caller should ensure destination is appropriately sized.
-                if (destBufferDesc.ByteSize < srcBufferDesc.ByteSize)
-                {
-                    Console.WriteLine($"[D3D12Device] WARNING: Destination buffer size {destBufferDesc.ByteSize} is smaller than source buffer size {srcBufferDesc.ByteSize}. Compaction may fail if destination is too small.");
-                    // Note: We continue with the operation as the actual compacted size may be smaller than source
-                    // A full implementation would query post-build info for exact compacted size using
-                    // GetRaytracingAccelerationStructurePostbuildInfo, but that requires additional D3D12 API calls
-                }
+                // Note: Validation of buffer sizes is the responsibility of the caller.
+                // The destination buffer should be at least as large as the source buffer's result data size.
+                // In practice, compacted size is typically 50-70% of original, but the caller should ensure
+                // destination is appropriately sized. A full implementation would query post-build info for
+                // exact compacted size using GetRaytracingAccelerationStructurePostbuildInfo, but that
+                // requires additional D3D12 API calls.
 
                 try
                 {
@@ -12773,7 +12825,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     // Based on D3D12 DXR API: CopyRaytracingAccelerationStructure copies the source acceleration
                     // structure to the destination while applying the specified transformation (compaction in this case)
                     // Mode: D3D12_RAYTRACING_ACCELERATION_STRUCTURE_COPY_MODE_COMPACT = 1
-                    CallCopyRaytracingAccelerationStructure(_d3d12CommandList, destGpuVa, srcGpuVa, D3D12_RAYTRACING_ACCELERATION_STRUCTURE_COPY_MODE_COMPACT);
+                    _device.CallCopyRaytracingAccelerationStructure(_d3d12CommandList, destGpuVa, srcGpuVa, D3D12_RAYTRACING_ACCELERATION_STRUCTURE_COPY_MODE_COMPACT);
                 }
                 catch (Exception ex)
                 {
