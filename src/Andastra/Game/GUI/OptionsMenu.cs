@@ -5,6 +5,9 @@ using Andastra.Runtime.Core.Audio;
 using Andastra.Runtime.Core.Dialogue;
 using Andastra.Runtime.Graphics;
 using Microsoft.Xna.Framework;
+using XnaVector2 = Microsoft.Xna.Framework.Vector2;
+using XnaRectangle = Microsoft.Xna.Framework.Rectangle;
+using XnaColor = Microsoft.Xna.Framework.Color;
 
 namespace Andastra.Runtime.Game.GUI
 {
@@ -230,8 +233,8 @@ namespace Andastra.Runtime.Game.GUI
 
             // Title
             string title = "Options";
-            Vector2 titleSize = font.MeasureString(title);
-            Vector2 titlePos = new Vector2((viewportWidth - titleSize.X) / 2, 30);
+            XnaVector2 titleSize = font.MeasureString(title);
+            XnaVector2 titlePos = new Vector2((viewportWidth - titleSize.X) / 2, 30);
             spriteBatch.DrawString(font, title, titlePos, new Color(255, 255, 255, 255));
 
             // Category tabs
@@ -246,13 +249,13 @@ namespace Andastra.Runtime.Game.GUI
             {
                 int x = categoryStartX + i * (categoryWidth + categorySpacing);
                 bool isSelected = (i == selectedCategoryIndex);
-                Color bgColor = isSelected ? new Color(100, 100, 150) : new Color(50, 50, 70);
-                Rectangle categoryRect = new Rectangle(x, categoryY, categoryWidth, categoryHeight);
+                XnaColor bgColor = isSelected ? new Color(100, 100, 150) : new Color(50, 50, 70);
+                XnaRectangle categoryRect = new Rectangle(x, categoryY, categoryWidth, categoryHeight);
                 spriteBatch.Draw(menuTexture, categoryRect, bgColor);
 
                 string categoryName = categories[i].ToString();
-                Vector2 categoryNameSize = font.MeasureString(categoryName);
-                Vector2 categoryNamePos = new Vector2(
+                XnaVector2 categoryNameSize = font.MeasureString(categoryName);
+                XnaVector2 categoryNamePos = new Vector2(
                     x + (categoryWidth - categoryNameSize.X) / 2,
                     categoryY + (categoryHeight - font.LineSpacing) / 2);
                 spriteBatch.DrawString(font, categoryName, categoryNamePos, new Color(255, 255, 255, 255));
@@ -277,8 +280,8 @@ namespace Andastra.Runtime.Game.GUI
                 {
                     int y = optionsStartY + (i - startIdx) * (optionHeight + optionSpacing);
                     bool isSelected = (i == selectedOptionIndex);
-                    Color bgColor = isSelected ? new Color(80, 80, 120) : new Color(40, 40, 60);
-                    Rectangle optionRect = new Rectangle(optionsStartX, y, optionWidth, optionHeight);
+                    XnaColor bgColor = isSelected ? new Color(80, 80, 120) : new Color(40, 40, 60);
+                    XnaRectangle optionRect = new Rectangle(optionsStartX, y, optionWidth, optionHeight);
                     spriteBatch.Draw(menuTexture, optionRect, bgColor);
 
                     OptionItem option = options[i];
@@ -297,15 +300,15 @@ namespace Andastra.Runtime.Game.GUI
                         valueText = option.GetStringValue();
                     }
                     string optionText = option.Name + ": " + valueText;
-                    Vector2 textPos = new Vector2(optionRect.X + 20, optionRect.Y + (optionHeight - font.LineSpacing) / 2);
+                    XnaVector2 textPos = new Vector2(optionRect.X + 20, optionRect.Y + (optionHeight - font.LineSpacing) / 2);
                     spriteBatch.DrawString(font, optionText, textPos, new Color(255, 255, 255, 255));
 
                     // Draw arrows for navigation hint
                     if (isSelected && option.Type != OptionType.Numeric)
                     {
                         string arrows = "< A/D >";
-                        Vector2 arrowsSize = font.MeasureString(arrows);
-                        Vector2 arrowsPos = new Vector2(optionRect.Right - arrowsSize.X - 20, optionRect.Y + (optionHeight - font.LineSpacing) / 2);
+                        XnaVector2 arrowsSize = font.MeasureString(arrows);
+                        XnaVector2 arrowsPos = new Vector2(optionRect.Right - arrowsSize.X - 20, optionRect.Y + (optionHeight - font.LineSpacing) / 2);
                         spriteBatch.DrawString(font, arrows, arrowsPos, new Color(200, 200, 200, 255));
                     }
                 }
@@ -325,8 +328,8 @@ namespace Andastra.Runtime.Game.GUI
             {
                 instructions = "Use Arrow Keys to navigate, A/D to change values, Enter to rebind keys, Escape to cancel";
             }
-            Vector2 instSize = font.MeasureString(instructions);
-            Vector2 instPos = new Vector2((viewportWidth - instSize.X) / 2, viewportHeight - 40);
+            XnaVector2 instSize = font.MeasureString(instructions);
+            XnaVector2 instPos = new Vector2((viewportWidth - instSize.X) / 2, viewportHeight - 40);
             spriteBatch.DrawString(font, instructions, instPos, new Color(211, 211, 211, 255));
 
             spriteBatch.End();

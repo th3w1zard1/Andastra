@@ -4,6 +4,9 @@ using System.Linq;
 using Andastra.Runtime.Core.Save;
 using Andastra.Runtime.Graphics;
 using Microsoft.Xna.Framework;
+using XnaVector2 = Microsoft.Xna.Framework.Vector2;
+using XnaRectangle = Microsoft.Xna.Framework.Rectangle;
+using XnaColor = Microsoft.Xna.Framework.Color;
 
 namespace Andastra.Runtime.Game.GUI
 {
@@ -149,8 +152,8 @@ namespace Andastra.Runtime.Game.GUI
 
             // Title
             string title = "Save Game";
-            Vector2 titleSize = font.MeasureString(title);
-            Vector2 titlePos = new Vector2((viewportWidth - titleSize.X) / 2, 50);
+            XnaVector2 titleSize = font.MeasureString(title);
+            XnaVector2 titlePos = new Vector2((viewportWidth - titleSize.X) / 2, 50);
             spriteBatch.DrawString(font, title, titlePos, Color.White);
 
             // Save list
@@ -165,22 +168,22 @@ namespace Andastra.Runtime.Game.GUI
             {
                 int y = startY + (i - startIndex) * (itemHeight + itemSpacing);
                 bool isSelected = (i == selectedIndex);
-                Color bgColor = isSelected ? new Color(100, 100, 150) : new Color(50, 50, 70);
+                XnaColor bgColor = isSelected ? new Color(100, 100, 150) : new Color(50, 50, 70);
 
-                Rectangle itemRect = new Rectangle(100, y, viewportWidth - 200, itemHeight);
+                XnaRectangle itemRect = new Rectangle(100, y, viewportWidth - 200, itemHeight);
                 spriteBatch.Draw(menuTexture, itemRect, bgColor);
 
                 if (i < availableSaves.Count)
                 {
                     SaveGameInfo save = availableSaves[i];
                     string saveText = $"{save.Name} - {save.ModuleName} - {save.SaveTime:g}";
-                    Vector2 textPos = new Vector2(itemRect.X + 10, itemRect.Y + (itemHeight - font.LineSpacing) / 2);
+                    XnaVector2 textPos = new Vector2(itemRect.X + 10, itemRect.Y + (itemHeight - font.LineSpacing) / 2);
                     spriteBatch.DrawString(font, saveText, textPos, new Color(255, 255, 255, 255));
                 }
                 else
                 {
                     string newSaveText = isEnteringName ? $"New Save: {newSaveName}_" : "New Save";
-                    Vector2 textPos = new Vector2(itemRect.X + 10, itemRect.Y + (itemHeight - font.LineSpacing) / 2);
+                    XnaVector2 textPos = new Vector2(itemRect.X + 10, itemRect.Y + (itemHeight - font.LineSpacing) / 2);
                     spriteBatch.DrawString(font, newSaveText, textPos, new Color(211, 211, 211, 255));
                 }
             }
@@ -189,8 +192,8 @@ namespace Andastra.Runtime.Game.GUI
             string instructions = isEnteringName
                 ? "Enter save name, then press Enter to save or Escape to cancel"
                 : "Select a save slot or create a new save. Press Escape to cancel.";
-            Vector2 instSize = font.MeasureString(instructions);
-            Vector2 instPos = new Vector2((viewportWidth - instSize.X) / 2, viewportHeight - 50);
+            XnaVector2 instSize = font.MeasureString(instructions);
+            XnaVector2 instPos = new Vector2((viewportWidth - instSize.X) / 2, viewportHeight - 50);
             spriteBatch.DrawString(font, instructions, instPos, new Color(211, 211, 211, 255));
 
             spriteBatch.End();
@@ -216,8 +219,8 @@ namespace Andastra.Runtime.Game.GUI
 
             // Title
             string title = "Load Game";
-            Vector2 titleSize = font.MeasureString(title);
-            Vector2 titlePos = new Vector2((viewportWidth - titleSize.X) / 2, 50);
+            XnaVector2 titleSize = font.MeasureString(title);
+            XnaVector2 titlePos = new Vector2((viewportWidth - titleSize.X) / 2, 50);
             spriteBatch.DrawString(font, title, titlePos, Color.White);
 
             // Save list
@@ -232,21 +235,21 @@ namespace Andastra.Runtime.Game.GUI
             {
                 int y = startY + (i - startIdx) * (itemHeight + itemSpacing);
                 bool isSelected = (i == selectedIndex);
-                Color bgColor = isSelected ? new Color(100, 100, 150) : new Color(50, 50, 70);
+                XnaColor bgColor = isSelected ? new Color(100, 100, 150) : new Color(50, 50, 70);
 
-                Rectangle itemRect = new Rectangle(100, y, viewportWidth - 200, itemHeight);
+                XnaRectangle itemRect = new Rectangle(100, y, viewportWidth - 200, itemHeight);
                 spriteBatch.Draw(menuTexture, itemRect, bgColor);
 
                 SaveGameInfo save = availableSaves[i];
                 string saveText = $"{save.Name} - {save.ModuleName} - {save.SaveTime:g}";
-                Vector2 textPos = new Vector2(itemRect.X + 10, itemRect.Y + (itemHeight - font.LineSpacing) / 2);
+                XnaVector2 textPos = new Vector2(itemRect.X + 10, itemRect.Y + (itemHeight - font.LineSpacing) / 2);
                 spriteBatch.DrawString(font, saveText, textPos, new Color(255, 255, 255, 255));
             }
 
             // Instructions
             string instructions = "Select a save to load. Press Escape to cancel.";
-            Vector2 instSize = font.MeasureString(instructions);
-            Vector2 instPos = new Vector2((viewportWidth - instSize.X) / 2, viewportHeight - 50);
+            XnaVector2 instSize = font.MeasureString(instructions);
+            XnaVector2 instPos = new Vector2((viewportWidth - instSize.X) / 2, viewportHeight - 50);
             spriteBatch.DrawString(font, instructions, instPos, new Color(211, 211, 211, 255));
 
             spriteBatch.End();

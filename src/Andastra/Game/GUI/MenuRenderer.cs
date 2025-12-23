@@ -1,6 +1,9 @@
 using System;
 using Andastra.Runtime.Graphics;
 using Microsoft.Xna.Framework;
+using XnaVector2 = Microsoft.Xna.Framework.Vector2;
+using XnaRectangle = Microsoft.Xna.Framework.Rectangle;
+using XnaColor = Microsoft.Xna.Framework.Color;
 
 namespace Andastra.Runtime.Game.GUI
 {
@@ -38,37 +41,37 @@ namespace Andastra.Runtime.Game.GUI
         private ITexture2D _whiteTexture; // 1x1 white texture for drawing rectangles
 
         // Layout
-        private Vector2 _screenCenter;
-        private Rectangle _mainPanelRect;
-        private Rectangle _headerRect;
+        private XnaVector2 _screenCenter;
+        private XnaRectangle _mainPanelRect;
+        private XnaRectangle _headerRect;
         private int _lastScreenWidth = 0;
         private int _lastScreenHeight = 0;
 
         // Colors
-        private readonly Color _backgroundColor = new Color(20, 30, 60, 255); // Dark blue background
-        private readonly Color _panelBackgroundColor = new Color(40, 50, 80, 255); // Panel background
-        private readonly Color _headerColor = new Color(255, 200, 50, 255); // Bright gold header
-        private readonly Color _borderColor = new Color(255, 255, 255, 255);
+        private readonly XnaColor _backgroundColor = new XnaColor(20, 30, 60, 255); // Dark blue background
+        private readonly XnaColor _panelBackgroundColor = new XnaColor(40, 50, 80, 255); // Panel background
+        private readonly XnaColor _headerColor = new XnaColor(255, 200, 50, 255); // Bright gold header
+        private readonly XnaColor _borderColor = new XnaColor(255, 255, 255, 255);
 
         // Button colors
-        private readonly Color _buttonStartColor = new Color(100, 255, 100, 255); // Bright green
-        private readonly Color _buttonStartSelectedColor = new Color(150, 255, 150, 255);
-        private readonly Color _buttonOptionsColor = new Color(100, 150, 255, 255); // Bright blue
-        private readonly Color _buttonOptionsSelectedColor = new Color(150, 180, 255, 255);
-        private readonly Color _buttonExitColor = new Color(255, 100, 100, 255); // Bright red
-        private readonly Color _buttonExitSelectedColor = new Color(255, 150, 150, 255);
+        private readonly XnaColor _buttonStartColor = new XnaColor(100, 255, 100, 255); // Bright green
+        private readonly XnaColor _buttonStartSelectedColor = new XnaColor(150, 255, 150, 255);
+        private readonly XnaColor _buttonOptionsColor = new XnaColor(100, 150, 255, 255); // Bright blue
+        private readonly XnaColor _buttonOptionsSelectedColor = new XnaColor(150, 180, 255, 255);
+        private readonly XnaColor _buttonExitColor = new XnaColor(255, 100, 100, 255); // Bright red
+        private readonly XnaColor _buttonExitSelectedColor = new XnaColor(255, 150, 150, 255);
 
         // Menu action callback
         public event EventHandler<int> MenuItemSelected;
 
         private struct MenuButton
         {
-            public Rectangle Rect;
-            public Color NormalColor;
-            public Color SelectedColor;
+            public XnaRectangle Rect;
+            public XnaColor NormalColor;
+            public XnaColor SelectedColor;
             public string Label;
 
-            public MenuButton(Rectangle rect, Color normalColor, Color selectedColor, string label)
+            public MenuButton(XnaRectangle rect, XnaColor normalColor, XnaColor selectedColor, string label)
             {
                 Rect = rect;
                 NormalColor = normalColor;
@@ -97,9 +100,9 @@ namespace Andastra.Runtime.Game.GUI
             for (int i = 0; i < _menuButtons.Length; i++)
             {
                 _menuButtons[i] = new MenuButton(
-                    new Rectangle(0, 0, 0, 0), // Will be set in CalculateLayout
-                    new Color(255, 255, 255, 255),
-                    new Color(255, 255, 255, 255),
+                    new XnaRectangle(0, 0, 0, 0), // Will be set in CalculateLayout
+                    new XnaColor(255, 255, 255, 255),
+                    new XnaColor(255, 255, 255, 255),
                     i == 0 ? "Start Game" : (i == 1 ? "Options" : "Exit")
                 );
             }
@@ -357,7 +360,7 @@ namespace Andastra.Runtime.Game.GUI
             for (int i = 0; i < _menuButtons.Length; i++)
             {
                 MenuButton button = _menuButtons[i];
-                Color color = (i == _selectedIndex) ? button.SelectedColor : button.NormalColor;
+                XnaColor color = (i == _selectedIndex) ? button.SelectedColor : button.NormalColor;
 
                 // Button background
                 _spriteBatch.Draw(_whiteTexture, button.Rect, color);
@@ -369,8 +372,8 @@ namespace Andastra.Runtime.Game.GUI
                 // Draw button text (if font is available)
                 if (_font != null)
                 {
-                    Vector2 textSize = _font.MeasureString(button.Label);
-                    Vector2 textPosition = new Vector2(
+                    XnaVector2 textSize = _font.MeasureString(button.Label);
+                    XnaVector2 textPosition = new Vector2(
                         button.Rect.X + (button.Rect.Width - textSize.X) * 0.5f,
                         button.Rect.Y + (button.Rect.Height - textSize.Y) * 0.5f
                     );

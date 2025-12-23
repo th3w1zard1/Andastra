@@ -1904,7 +1904,7 @@ namespace Andastra.Runtime.Game.Core
                 // Load portrait texture from installation
                 // Based on swkotor.exe and swkotor2.exe: Portraits are searched in PORTRAITS, OVERRIDE, and CHITIN locations
                 // Original implementation: Searches for TPC first, then TGA, in multiple search locations
-                Formats.TPC.TPC tpcTexture = _installation.Texture(
+                TPC tpcTexture = _installation.Texture(
                     portraitResRef,
                     new[]
                     {
@@ -1949,7 +1949,7 @@ namespace Andastra.Runtime.Game.Core
         /// </summary>
         /// <param name="tpc">TPC texture to convert.</param>
         /// <returns>Converted texture, or null if conversion failed.</returns>
-        private ITexture2D ConvertTpcToTexture2D(Formats.TPC.TPC tpc)
+        private ITexture2D ConvertTpcToTexture2D(TPC tpc)
         {
             if (tpc == null || tpc.Layers == null || tpc.Layers.Count == 0)
             {
@@ -1957,7 +1957,7 @@ namespace Andastra.Runtime.Game.Core
             }
 
             // Get first layer (largest mipmap)
-            Formats.TPC.TPCLayer layer = tpc.Layers[0];
+            TPCLayer layer = tpc.Layers[0];
             if (layer == null || layer.Mipmaps == null || layer.Mipmaps.Count == 0)
             {
                 return null;
