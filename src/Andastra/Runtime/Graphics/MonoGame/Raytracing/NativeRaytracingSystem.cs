@@ -286,7 +286,16 @@ namespace Andastra.Runtime.MonoGame.Raytracing
         /// </summary>
         private static T GetFunction<T>(string functionName) where T : class
         {
-            if (_oidnLibraryHandle == IntPtr.Zero)
+            return GetFunction<T>(_oidnLibraryHandle, functionName);
+        }
+
+        /// <summary>
+        /// Gets a function pointer from the specified loaded library.
+        /// Uses platform-specific function lookup (GetProcAddress on Windows, dlsym on Linux/macOS).
+        /// </summary>
+        private static T GetFunction<T>(IntPtr libraryHandle, string functionName) where T : class
+        {
+            if (libraryHandle == IntPtr.Zero)
             {
                 return null;
             }
@@ -297,11 +306,11 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                 bool isWindows = Environment.OSVersion.Platform == PlatformID.Win32NT;
                 if (isWindows)
                 {
-                    functionPtr = GetProcAddress(_oidnLibraryHandle, functionName);
+                    functionPtr = GetProcAddress(libraryHandle, functionName);
                 }
                 else
                 {
-                    functionPtr = dlsym(_oidnLibraryHandle, functionName);
+                    functionPtr = dlsym(libraryHandle, functionName);
                 }
 
                 if (functionPtr == IntPtr.Zero)
