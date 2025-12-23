@@ -162,37 +162,85 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             // Only applies to generic subX names and matches on body patterns.
             this.HeuristicRenameSubs();
 
-            // TODO:  If we have no subs, generate comprehensive stub so we always show something
+            // Generate comprehensive stub when no subroutines are available
+            // This ensures we always show something meaningful, following the same structure as normal code generation
             if (this.subs.Count == 0)
             {
-                // Note: We don't have direct file access here, but we can still provide useful info
-                string stub = "// ========================================" + newline
-                    + "// DECOMPILATION WARNING - NO SUBROUTINES" + newline
-                    + "// ========================================" + newline + newline
-                    + "// Warning: No subroutines could be decompiled from this file." + newline + newline
-                    + "// Possible reasons:" + newline + "//   - File contains no executable subroutines" + newline
-                    + "//   - All subroutines were filtered out as dead code" + newline
-                    + "//   - File may be corrupted or in an unsupported format" + newline
-                    + "//   - File may be a data file rather than a script file" + newline + newline;
+                // Generate struct declarations (if available)
+                string structDecls = "";
+                try
+                {
+                    if (this.subdata != null)
+                    {
+                        structDecls = this.subdata.GetStructDeclarations();
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug("Error generating struct declarations for stub: " + e.Message);
+                }
+
+                // Generate globals (if available)
+                string globs = "";
                 if (this.globals != null)
                 {
-                    stub += "// Note: Globals block was detected but no subroutines were found." + newline + newline;
+                    try
+                    {
+                        globs = "// Globals" + newline + this.globals.ToStringGlobals() + newline;
+                    }
+                    catch (Exception e)
+                    {
+                        Debug("Error generating globals code for stub: " + e.Message);
+                    }
                 }
+
+                // Generate comprehensive main() function stub
+                // Include diagnostic information about why no subroutines were found
+                StringBuilder mainStub = new StringBuilder();
+                mainStub.Append("// ========================================" + newline);
+                mainStub.Append("// DECOMPILATION WARNING - NO SUBROUTINES" + newline);
+                mainStub.Append("// ========================================" + newline + newline);
+                mainStub.Append("// Warning: No subroutines could be decompiled from this file." + newline + newline);
+                mainStub.Append("// Possible reasons:" + newline);
+                mainStub.Append("//   - File contains no executable subroutines" + newline);
+                mainStub.Append("//   - All subroutines were filtered out as dead code" + newline);
+                mainStub.Append("//   - File may be corrupted or in an unsupported format" + newline);
+                mainStub.Append("//   - File may be a data file rather than a script file" + newline + newline);
+
+                // Add analysis data if available
                 if (this.subdata != null)
                 {
                     try
                     {
-                        stub += "// Analysis data:" + newline;
-                        stub += "//   Total subroutines detected: " + this.subdata.NumSubs() + newline;
-                        stub += "//   Subroutines processed: " + this.subdata.CountSubsDone() + newline + newline;
+                        mainStub.Append("// Analysis data:" + newline);
+                        mainStub.Append("//   Total subroutines detected: " + this.subdata.NumSubs() + newline);
+                        mainStub.Append("//   Subroutines processed: " + this.subdata.CountSubsDone() + newline + newline);
                     }
                     catch (Exception)
                     {
+                        // Ignore errors in diagnostic information
                     }
                 }
-                stub += "// Minimal fallback function:" + newline + "void main() {" + newline
-                    + "    // No code could be decompiled" + newline + "}" + newline;
-                this.code = stub;
+
+                // Generate comprehensive main() function stub
+                // This provides a complete, compilable function structure
+                mainStub.Append("void main()" + newline);
+                mainStub.Append("{" + newline);
+                mainStub.Append("    // No code could be decompiled" + newline);
+                mainStub.Append("    // This function stub ensures the script has a valid entry point" + newline);
+                mainStub.Append("}" + newline);
+
+                // Combine all components in the same order as normal code generation:
+                // struct declarations + globals + function code
+                string generated = structDecls + globs + mainStub.ToString();
+
+                // Ensure we always have at least something, even if all components are empty
+                if (generated == null || generated.Trim().Equals(""))
+                {
+                    generated = "void main()" + newline + "{" + newline + "    // No code could be decompiled" + newline + "}" + newline;
+                }
+
+                this.code = generated;
                 return;
             }
 
