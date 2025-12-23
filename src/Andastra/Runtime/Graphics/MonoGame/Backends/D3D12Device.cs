@@ -13422,27 +13422,6 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             /// <summary>
             /// Begins a debug event region in the command list.
-                // For D3D12, we need to bind the descriptor set to the command list
-                // This is done by setting the descriptor heap and root descriptor table
-                D3D12BindingSet d3d12BindingSet = tempBindingSet as D3D12BindingSet;
-                if (d3d12BindingSet != null)
-                {
-                    // Get descriptor heap and GPU descriptor handle from binding set
-                    // The binding set should have been created with descriptors in a descriptor heap
-                    // We need to set the descriptor heap and bind the descriptor table
-                    // For now, we'll use the binding set's internal binding mechanism
-                    // In a full implementation, we would directly update root signature parameters
-                    // or descriptor heap entries and call SetGraphicsRootDescriptorTable
-
-                    // Note: The temporary binding set will be disposed when the device is disposed
-                    // In a production implementation, we might want to cache these or use a more efficient approach
-                    // For D3D12, push descriptors would ideally use root descriptors directly,
-                    // but that requires more complex root signature management
-                }
-            }
-
-            /// <summary>
-            /// Begins a debug event region in the command list.
             /// Based on DirectX 12 Debug Events: https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-beginevent
             /// Encodes event name as UTF-8 and passes to ID3D12GraphicsCommandList::BeginEvent.
             /// Color parameter is provided for cross-platform compatibility but D3D12 BeginEvent uses name only.
