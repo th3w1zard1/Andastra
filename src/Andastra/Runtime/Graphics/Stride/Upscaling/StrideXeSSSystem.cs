@@ -231,50 +231,50 @@ namespace Andastra.Runtime.Stride.Upscaling
                 try
                 {
                     var commandListType = commandList.GetType();
-                        var nativeProperty = commandListType.GetProperty("NativeCommandList");
-                        if (nativeProperty != null)
+                    var nativeProperty = commandListType.GetProperty("NativeCommandList");
+                    if (nativeProperty != null)
+                    {
+                        var value = nativeProperty.GetValue(commandList);
+                        if (value is IntPtr ptr)
                         {
-                            var value = nativeProperty.GetValue(commandList);
-                            if (value is IntPtr ptr)
-                            {
-                                return ptr;
-                            }
-                        }
-
-                        // Alternative property names for different backends
-                        // DirectX 12: D3D12CommandList
-                        var d3d12CommandListProperty = commandListType.GetProperty("D3D12CommandList");
-                        if (d3d12CommandListProperty != null)
-                        {
-                            var value = d3d12CommandListProperty.GetValue(commandList);
-                            if (value is IntPtr ptr)
-                            {
-                                return ptr;
-                            }
-                        }
-
-                        // Vulkan: VkCommandBuffer
-                        var vkCommandBufferProperty = commandListType.GetProperty("VkCommandBuffer");
-                        if (vkCommandBufferProperty != null)
-                        {
-                            var value = vkCommandBufferProperty.GetValue(commandList);
-                            if (value is IntPtr ptr)
-                            {
-                                return ptr;
-                            }
-                        }
-
-                        // Try NativePointer as alternative (used by some Stride resources)
-                        var nativePointerProperty = commandListType.GetProperty("NativePointer");
-                        if (nativePointerProperty != null)
-                        {
-                            var value = nativePointerProperty.GetValue(commandList);
-                            if (value is IntPtr ptr)
-                            {
-                                return ptr;
-                            }
+                            return ptr;
                         }
                     }
+
+                    // Alternative property names for different backends
+                    // DirectX 12: D3D12CommandList
+                    var d3d12CommandListProperty = commandListType.GetProperty("D3D12CommandList");
+                    if (d3d12CommandListProperty != null)
+                    {
+                        var value = d3d12CommandListProperty.GetValue(commandList);
+                        if (value is IntPtr ptr)
+                        {
+                            return ptr;
+                        }
+                    }
+
+                    // Vulkan: VkCommandBuffer
+                    var vkCommandBufferProperty = commandListType.GetProperty("VkCommandBuffer");
+                    if (vkCommandBufferProperty != null)
+                    {
+                        var value = vkCommandBufferProperty.GetValue(commandList);
+                        if (value is IntPtr ptr)
+                        {
+                            return ptr;
+                        }
+                    }
+
+                    // Try NativePointer as alternative (used by some Stride resources)
+                    var nativePointerProperty = commandListType.GetProperty("NativePointer");
+                    if (nativePointerProperty != null)
+                    {
+                        var value = nativePointerProperty.GetValue(commandList);
+                        if (value is IntPtr ptr)
+                        {
+                            return ptr;
+                        }
+                    }
+                }
                     catch (Exception ex)
                     {
                         Console.WriteLine($"[StrideXeSS] Exception getting command list through reflection: {ex.Message}");
