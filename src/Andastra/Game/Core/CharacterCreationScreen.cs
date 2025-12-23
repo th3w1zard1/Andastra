@@ -155,10 +155,12 @@ namespace Andastra.Runtime.Game.Core
             _portraitTextureCache = new Dictionary<int, ITexture2D>();
 
             // Initialize character data with defaults
+            // Convert BioWareGame to KotorGame for character creation data
+            KotorGame kotorGame = game.IsK1() ? KotorGame.K1 : KotorGame.K2;
             _characterData = new CharacterCreationData
             {
-                Game = game,
-                Class = game == KotorGame.K1 ? CharacterClass.Scout : CharacterClass.JediGuardian,
+                Game = kotorGame,
+                Class = kotorGame == KotorGame.K1 ? CharacterClass.Scout : CharacterClass.JediGuardian,
                 Gender = Gender.Male,
                 Appearance = 1,
                 Portrait = 0,
@@ -673,7 +675,7 @@ namespace Andastra.Runtime.Game.Core
         {
             // Get class data
             int classId = GetClassId(_characterData.Class);
-            ClassData classData = _gameDataManager.GetClass(classId);
+            Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.ClassData classData = _gameDataManager.GetClass(classId);
             if (classData == null)
             {
                 _availableSkillPoints = 0;
