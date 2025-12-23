@@ -3,6 +3,9 @@ using Andastra.Parsing.Common;
 using Andastra.Runtime.Engines.Common;
 using Andastra.Runtime.Engines.Odyssey;
 using Andastra.Runtime.Engines.Odyssey.Profiles;
+using Andastra.Runtime.Engines.Eclipse.Profiles;
+using Andastra.Runtime.Engines.Eclipse.DragonAgeOrigins;
+using Andastra.Runtime.Engines.Eclipse.DragonAge2;
 using Andastra.Runtime.Content.Interfaces;
 
 namespace Andastra.Runtime.Game.Core
@@ -138,15 +141,37 @@ namespace Andastra.Runtime.Game.Core
         /// </summary>
         private static IEngine CreateEclipseEngine(BioWareGame bioWareGame)
         {
-            // Eclipse Engine support is partially implemented but requires game-specific profiles
-            // For now, throw NotSupportedException with helpful message
-            // TODO: STUB - Implement Eclipse engine profile creation
-            // Full implementation would require:
-            // 1. EclipseEngineProfile classes for Dragon Age: Origins and Dragon Age 2
-            // 2. Game-specific resource providers
-            // 3. Module loading implementations
-            // 4. Game session implementations
-            throw new NotSupportedException($"Eclipse Engine games (e.g., {bioWareGame}) have base engine implementation but require game-specific profiles. Dragon Age: Origins and Dragon Age 2 support is planned but not yet complete.");
+            // Map BioWareGame to GameType for Eclipse profile factory
+            GameType gameType;
+            if (bioWareGame.IsDragonAgeOrigins())
+            {
+                gameType = GameType.DA_ORIGINS;
+            }
+            else if (bioWareGame.IsDragonAge2())
+            {
+                gameType = GameType.DA2;
+            }
+            else
+            {
+                throw new NotSupportedException($"Unsupported Eclipse game variant: {bioWareGame}");
+            }
+
+            // Create profile using Eclipse profile factory
+            IEngineProfile profile = EclipseProfileFactory.CreateProfile(gameType);
+
+            // Create and return appropriate Eclipse engine instance
+            if (gameType == GameType.DA_ORIGINS)
+            {
+                return new DragonAgeOriginsEngine(profile);
+            }
+            else if (gameType == GameType.DA2)
+            {
+                return new DragonAge2Engine(profile);
+            }
+            else
+            {
+                throw new NotSupportedException($"Unsupported Eclipse game type: {gameType}");
+            }
         }
 
         /// <summary>
