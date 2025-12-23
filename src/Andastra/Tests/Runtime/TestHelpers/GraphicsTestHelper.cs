@@ -460,14 +460,20 @@ namespace Andastra.Tests.Runtime.TestHelpers
                 var game = new global::Stride.Engine.Game();
 
                 // Set window properties for headless/minimal testing
-                game.Window.ClientSize = new Int2(1280, 720);
+                // Note: ClientSize property may not be available in all Stride versions
+                // Window properties are set via the Game constructor or Run method
                 game.Window.Title = "Stride Test";
                 game.Window.IsFullscreen = false;
                 game.Window.IsMouseVisible = false;
 
                 // Initialize the game to ensure GraphicsDevice is created
                 // In a headless environment, this might fail if no GPU is available
-                game.Initialize();
+                // Note: Initialize() is protected in Stride, so we use reflection if needed
+                var initializeMethod = typeof(global::Stride.Engine.Game).GetMethod("Initialize", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (initializeMethod != null)
+                {
+                    initializeMethod.Invoke(game, null);
+                }
 
                 // Return the GraphicsDevice from the game instance
                 if (game.GraphicsDevice != null)
@@ -510,9 +516,11 @@ namespace Andastra.Tests.Runtime.TestHelpers
 
             try
             {
+                // CommandList is optional and will be null for test scenarios
+                // In actual usage, it's obtained from Game.GraphicsContext.CommandList
                 return new Andastra.Runtime.Stride.Graphics.StrideGraphicsDevice(
                     strideDevice,
-                    strideDevice.ImmediateContext);
+                    null);
             }
             catch
             {
@@ -538,11 +546,16 @@ namespace Andastra.Tests.Runtime.TestHelpers
             try
             {
                 var game = new global::Stride.Engine.Game();
-                game.Window.ClientSize = new Int2(1280, 720);
+                // Note: ClientSize property may not be available in all Stride versions
                 game.Window.Title = "Stride Test";
                 game.Window.IsFullscreen = false;
                 game.Window.IsMouseVisible = false;
-                game.Initialize();
+                // Note: Initialize() is protected in Stride, so we use reflection if needed
+                var initializeMethod = typeof(global::Stride.Engine.Game).GetMethod("Initialize", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (initializeMethod != null)
+                {
+                    initializeMethod.Invoke(game, null);
+                }
 
                 if (game.GraphicsDevice != null)
                 {
@@ -563,6 +576,28 @@ namespace Andastra.Tests.Runtime.TestHelpers
         /// </summary>
         /// <param name="game">The Game instance to dispose.</param>
         /// <remarks>
+        /// Stride Cleanup:
+        /// - Disposes the Game instance which will clean up all graphics resources
+        /// - Handles disposal errors gracefully for test robustness
+        /// </remarks>
+        public static void CleanupTestStrideGame(global::Stride.Engine.Game game)
+        {
+            if (game != null)
+            {
+                try
+                {
+                    game.Dispose();
+                }
+                catch
+                {
+                    // Ignore disposal errors
+                }
+            }
+        }
+    }
+}
+
+
         /// Stride Cleanup:
         /// - Disposes the Game instance which will clean up all graphics resources
         /// - Handles disposal errors gracefully for test robustness
