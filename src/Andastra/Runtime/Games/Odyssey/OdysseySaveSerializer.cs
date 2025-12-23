@@ -195,27 +195,67 @@ namespace Andastra.Runtime.Games.Odyssey
                     // Reflection failed - try next method
                 }
 
-                // Priority 2: ModuleAreaMappings not available on Common.SaveGameData - skip this approach
-                // TODO: If ModuleAreaMappings is needed, add it to Common.SaveGameData or use a different approach
-                // ModuleAreaMappings requires Core.SaveGameData which is incompatible with Common.SaveGameData
+                // Priority 2: Try ModuleAreaMappings if we have Core.SaveGameData
+                // ModuleAreaMappings is only available on Core.SaveGameData, not Common.SaveGameData
+                if (coreSaveData != null && string.IsNullOrEmpty(lastModule))
+                {
+                    try
+                    {
+                        // Use reflection to access ModuleAreaMappings property if it exists
+                        var moduleAreaMappingsProperty = coreSaveData.GetType().GetProperty("ModuleAreaMappings");
+                        if (moduleAreaMappingsProperty != null)
                         {
-                            string moduleResRef = kvp.Key;
-                            List<string> areaList = kvp.Value;
-                            if (areaList != null && areaList.Contains(areaResRef, StringComparer.OrdinalIgnoreCase))
+                            var moduleAreaMappings = moduleAreaMappingsProperty.GetValue(coreSaveData);
+                            if (moduleAreaMappings != null)
                             {
-                                lastModule = moduleResRef;
-                                break;
+                                string areaResRef = saveData.CurrentAreaInstance.ResRef;
+                                if (!string.IsNullOrEmpty(areaResRef))
+                                {
+                                    // Use reflection to iterate over the dictionary
+                                    var getEnumeratorMethod = moduleAreaMappings.GetType().GetMethod("GetEnumerator");
+                                    if (getEnumeratorMethod != null)
+                                    {
+                                        var enumerator = getEnumeratorMethod.Invoke(moduleAreaMappings, null);
+                                        var moveNextMethod = enumerator.GetType().GetMethod("MoveNext");
+                                        var currentProperty = enumerator.GetType().GetProperty("Current");
+                                        
+                                        while ((bool)moveNextMethod.Invoke(enumerator, null))
+                                        {
+                                            var current = currentProperty.GetValue(enumerator);
+                                            var keyProperty = current.GetType().GetProperty("Key");
+                                            var valueProperty = current.GetType().GetProperty("Value");
+                                            
+                                            string moduleResRef = keyProperty.GetValue(current).ToString();
+                                            object areaListObj = valueProperty.GetValue(current);
+                                            
+                                            if (areaListObj != null)
+                                            {
+                                                var containsMethod = areaListObj.GetType().GetMethod("Contains", new[] { typeof(string) });
+                                                if (containsMethod != null)
+                                                {
+                                                    bool contains = (bool)containsMethod.Invoke(areaListObj, new object[] { areaResRef });
+                                                    if (contains)
+                                                    {
+                                                        lastModule = moduleResRef;
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
+                    catch
+                    {
+                        // Reflection failed - continue to next method
+                    }
                 }
-
-                // Priority 4: Try to infer from CurrentArea string if available
-                // ModuleAreaMappings not available on Common.SaveGameData
-                // TODO: If module inference from area is needed, add ModuleAreaMappings to Common.SaveGameData
             }
-            // Priority 5: Try to infer from CurrentArea string if CurrentAreaInstance is null
-            else if (!string.IsNullOrEmpty(saveData.CurrentArea) && saveData.ModuleAreaMappings != null && saveData.ModuleAreaMappings.Count > 0)
+            
+            // Priority 3: Try to infer from CurrentArea string if CurrentAreaInstance is null and we have Core.SaveGameData
+            if (string.IsNullOrEmpty(lastModule) && !string.IsNullOrEmpty(saveData.CurrentArea) && coreSaveData != null)
             {
                 foreach (var kvp in saveData.ModuleAreaMappings)
                 {
@@ -554,7 +594,8 @@ namespace Andastra.Runtime.Games.Odyssey
             // Validate that the GFF content type is NFO
             // This is a double-check since we already validated the signature
             // Based on swkotor2.exe: Content type validation @ 0x00707290
-            GFF gff = GFFAuto.ReadGff(nfoData);
+            // Explicitly specify default parameters to resolve overload ambiguity
+            GFF gff = GFFAuto.ReadGff(nfoData, 0, null);
             if (gff.Content != GFFContent.NFO)
             {
                 throw new InvalidDataException($"GFF content type is not NFO. Got: {gff.Content}");
