@@ -47,6 +47,31 @@ namespace Andastra.Runtime.Games.Eclipse
         private readonly AabbNode _staticAabbRoot;
         private readonly int _staticFaceCount;
 
+        // Surface material walkability lookup (based on surfacemat.2da)
+        // Based on daorigins.exe and DragonAge2.exe: Material walkability is hardcoded in the engine
+        // Matching BwmToEclipseNavigationMeshConverter.IsFaceWalkable and OdysseyNavigationMesh.WalkableMaterials
+        // Eclipse engine uses the same surface material system as Odyssey (KOTOR) engine
+        private static readonly HashSet<int> WalkableMaterials = new HashSet<int>
+        {
+            1,  // Dirt
+            3,  // Grass
+            4,  // Stone
+            5,  // Wood
+            6,  // Water (shallow)
+            9,  // Carpet
+            10, // Metal
+            11, // Puddles
+            12, // Swamp
+            13, // Mud
+            14, // Leaves
+            16, // BottomlessPit (walkable but dangerous)
+            18, // Door
+            20, // Sand
+            21, // BareBones
+            22, // StoneBridge
+            30  // Trigger (PyKotor extended)
+        };
+
         /// <summary>
         /// Gets the vertices of the navigation mesh.
         /// </summary>
@@ -1233,10 +1258,13 @@ namespace Andastra.Runtime.Games.Eclipse
                 }
             }
 
-            // TODO:  Check surface material (simplified - full implementation would use material lookup table)
+            // Check surface material using material lookup table
+            // Based on daorigins.exe and DragonAge2.exe: Material walkability is hardcoded in the engine
+            // Surface materials are looked up from surfacemat.2da to determine walkability
+            // Walkable materials include dirt, grass, stone, wood, water, carpet, metal, etc.
+            // Non-walkable materials include lava, deep water, non-walk surfaces, etc.
             int material = _staticSurfaceMaterials[faceIndex];
-            // Basic walkability: non-zero materials are generally walkable
-            return material != 0;
+            return WalkableMaterials.Contains(material);
         }
 
         /// <summary>
