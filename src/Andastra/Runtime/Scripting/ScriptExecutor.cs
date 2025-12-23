@@ -1,6 +1,4 @@
 using System;
-using System.IO;
-using System.Threading.Tasks;
 using Andastra.Parsing;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
@@ -122,10 +120,7 @@ namespace Andastra.Runtime.Scripting
             }
             else if (_resourceProvider is IGameResourceProvider resourceProvider)
             {
-                // TODO:  Use async method synchronously for now
-                var task = resourceProvider.GetResourceBytesAsync(new ResourceIdentifier(scriptResRef, ResourceType.NCS), System.Threading.CancellationToken.None);
-                task.Wait();
-                return task.Result;
+                return resourceProvider.GetResourceBytes(new ResourceIdentifier(scriptResRef, ResourceType.NCS));
             }
 
             return null;
