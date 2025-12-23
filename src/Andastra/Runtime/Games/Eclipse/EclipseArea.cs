@@ -7107,19 +7107,11 @@ namespace Andastra.Runtime.Games.Eclipse
                                             Vector3 objectPosition = staticObject.Position;
 
                                             // Get shadow map and light space matrix for soft shadow calculations
-                                            // Shadow maps are rendered in RenderShadowMaps() and stored in _shadowMaps
+                                            // Shadow maps are rendered in RenderShadowMaps() and stored in _shadowMaps or _cubeShadowMaps
+                                            // Based on daorigins.exe/DragonAge2.exe: Shadow maps are sampled as textures for depth comparison
                                             IntPtr shadowMap = IntPtr.Zero;
                                             Matrix4x4 lightSpaceMatrix = Matrix4x4.Identity;
-
-                                            // Try to get shadow map for this light if available
-                                            if (light.CastShadows && _shadowMaps.ContainsKey(light.LightId))
-                                            {
-                                                // Shadow map is available - extract texture handle for soft shadow calculations
-                                                // Based on daorigins.exe/DragonAge2.exe: Shadow maps are sampled as textures for depth comparison
-                                                IRenderTarget shadowMapRenderTarget = _shadowMaps[light.LightId];
-                                                shadowMap = GetShadowMapTextureHandle(shadowMapRenderTarget);
-                                                lightSpaceMatrix = light.ShadowLightSpaceMatrix;
-                                            }
+                                            GetShadowMapInfo(light, out shadowMap, out lightSpaceMatrix);
 
                                             // Calculate surface normal for static object (approximate as up vector)
                                             // In a full implementation, we would use the actual surface normal at the sampling point
