@@ -70,7 +70,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
         // - 0x007b5f88: 0A D7 23 3C = 0.009999999776482582f (approximately 0.01f)
         private const float PLOT_XP_BASE_MULTIPLIER = 100.0f; // _DAT_007b99b4 @ 0x007b99b4 - Verified via Ghidra
         private const float PLOT_XP_ADDITIONAL_MULTIPLIER = 0.009999999776482582f; // _DAT_007b5f88 @ 0x007b5f88 - Verified via Ghidra
-        
+
         // Plot XP threshold check (swkotor2.exe: FUN_005e6870 @ 0x005e6870)
         // Only processes XP if threshold < plotXpPercentage
         // Verified via Ghidra reverse engineering:
@@ -1035,7 +1035,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
             // 4. Update quest/journal state if plot label matches a quest
             if (node.PlotIndex >= 0)
             {
-                ProcessPlotIndex(node.PlotIndex, node.PlotXpPercentage);
+                ProcessPlotIndex(node.PlotIndex, node.PlotXpPercentage, questTag, questEntryIndex);
             }
         }
 
@@ -1044,6 +1044,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
         /// </summary>
         /// <param name="plotIndex">Plot index from plot.2da</param>
         /// <param name="plotXpPercentage">XP percentage multiplier (0.0-1.0)</param>
+        /// <param name="questTag">Quest tag from dialogue node (if available)</param>
+        /// <param name="questEntryIndex">Quest entry index from dialogue node (if available)</param>
         /// <remarks>
         /// Comprehensive PlotIndex Processing (swkotor2.exe: FUN_005e6870 @ 0x005e6870 -> FUN_0057eb20 @ 0x0057eb20):
         /// - FUN_005e6870: Checks if plotIndex != -1 and threshold < plotXpPercentage
@@ -1066,7 +1068,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
         ///   - nwmain.exe: Different plot system (needs reverse engineering)
         ///   - daorigins.exe: Plot system may differ (needs reverse engineering)
         /// </remarks>
-        private void ProcessPlotIndex(int plotIndex, float plotXpPercentage)
+        private void ProcessPlotIndex(int plotIndex, float plotXpPercentage, [CanBeNull] string questTag = null, int questEntryIndex = -1)
         {
             if (_gameDataManager == null)
             {
@@ -1123,10 +1125,10 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
             //   4. FUN_0057eb20 calculates: (plotXP * param_2) * _DAT_007b5f88 (additional multiplier)
             //   5. Award XP via FUN_0057ccd0 (party XP award function)
             //   6. Notify journal system via FUN_00681a10
-            if (!plotAlreadyTriggered && 
-                PLOT_XP_THRESHOLD < plotXpPercentage && 
-                _partySystem != null && 
-                baseXP.HasValue && 
+            if (!plotAlreadyTriggered &&
+                PLOT_XP_THRESHOLD < plotXpPercentage &&
+                _partySystem != null &&
+                baseXP.HasValue &&
                 baseXP.Value > 0)
             {
                 // Step 1: Calculate base multiplier value (swkotor2.exe: FUN_005e6870)
@@ -1139,7 +1141,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
                 // Where plotXP is baseXP from plot.2da and param_2 is multiplierValue from step 1
                 // Original implementation: (baseXP * multiplierValue) * additionalMultiplier
                 int finalXP = (int)((baseXP.Value * multiplierValue) * PLOT_XP_ADDITIONAL_MULTIPLIER);
-                
+
                 if (finalXP > 0)
                 {
                     // Award XP to all active party members (swkotor2.exe: FUN_0057ccd0 @ 0x0057ccd0)
@@ -1150,9 +1152,12 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
                     // Notify journal system (swkotor2.exe: FUN_00681a10 @ 0x00681a10)
                     // Original implementation: Journal system is notified when XP is awarded via plot
                     // This allows journal to track XP rewards and update UI accordingly
-                    // Note: Journal notification may be handled internally by the party system or journal system
-                    // The exact notification mechanism depends on the implementation of FUN_00681a10
-                    // TODO: STUB - For now, we rely on the party system's XP award mechanism which should handle journal updates
+                    // FUN_00681a10: Updates journal entry XPReward when plot XP is awarded
+                    // Original implementation flow:
+                    //   1. Finds journal entry associated with plot/quest
+                    //   2. Updates entry XPReward with plot XP amount
+                    //   3. Triggers journal UI update to display XP reward
+                    NotifyJournalOfPlotXP(plotLabel, finalXP, questTag, questEntryIndex);
                 }
             }
 
@@ -1181,6 +1186,92 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
                         // Quest not started yet - start it
                         _journalSystem.SetQuestState(plotLabel, 1);
                     }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Notifies journal system when plot XP is awarded (swkotor2.exe: FUN_00681a10 @ 0x00681a10).
+        /// </summary>
+        /// <param name="plotLabel">Plot label from plot.2da</param>
+        /// <param name="plotXP">XP amount awarded via plot</param>
+        /// <param name="questTag">Quest tag from dialogue node (if available)</param>
+        /// <param name="questEntryIndex">Quest entry index from dialogue node (if available)</param>
+        /// <remarks>
+        /// Journal Notification for Plot XP (swkotor2.exe: FUN_00681a10 @ 0x00681a10):
+        /// - Called from FUN_0057eb20 when plot XP is awarded
+        /// - Original implementation:
+        ///   1. Finds journal entry associated with plot/quest
+        ///   2. Updates entry XPReward with plot XP amount
+        ///   3. Triggers journal UI update to display XP reward
+        /// - Entry lookup priority:
+        ///   1. Use questTag and questEntryIndex from dialogue node (most accurate)
+        ///   2. Use plotLabel as quest tag and find latest entry (fallback)
+        ///   3. If no entry found, create one with plot XP (ensures XP is tracked)
+        /// - Original engine behavior: Journal entries track XP rewards from plot awards
+        ///   This allows the journal UI to display XP rewards associated with quest progress
+        /// </remarks>
+        private void NotifyJournalOfPlotXP(string plotLabel, int plotXP, [CanBeNull] string questTag, int questEntryIndex)
+        {
+            if (_journalSystem == null || plotXP <= 0)
+            {
+                return;
+            }
+
+            // Priority 1: Use quest tag and entry index from dialogue node (most accurate)
+            // This matches the journal entry that was just created/updated in ProcessQuestFields
+            if (!string.IsNullOrEmpty(questTag) && questEntryIndex >= 0)
+            {
+                JournalEntry entry = _journalSystem.GetEntryByState(questTag, questEntryIndex);
+                if (entry != null)
+                {
+                    // Update the entry's XPReward with plot XP
+                    // Original implementation: Plot XP replaces or adds to existing XPReward
+                    // Based on swkotor2.exe behavior: Plot XP is the actual reward, so we set it
+                    string entryText = entry.Text ?? string.Empty;
+                    _journalSystem.UpdateEntry(questTag, questEntryIndex, entryText, plotXP);
+                    return;
+                }
+
+                // If entry doesn't exist yet, try to find latest entry for this quest
+                JournalEntry latestEntry = _journalSystem.GetLatestEntryForQuest(questTag);
+                if (latestEntry != null)
+                {
+                    // Update latest entry with plot XP
+                    string entryText = latestEntry.Text ?? string.Empty;
+                    _journalSystem.UpdateEntry(questTag, latestEntry.State, entryText, plotXP);
+                    return;
+                }
+            }
+
+            // Priority 2: Use plotLabel as quest tag (fallback)
+            // Plot labels from plot.2da can match quest tags
+            if (!string.IsNullOrEmpty(plotLabel))
+            {
+                // Check if plotLabel matches a registered quest
+                QuestData quest = _journalSystem.GetQuest(plotLabel);
+                if (quest != null)
+                {
+                    // Find latest entry for this quest
+                    JournalEntry latestEntry = _journalSystem.GetLatestEntryForQuest(plotLabel);
+                    if (latestEntry != null)
+                    {
+                        // Update latest entry with plot XP
+                        string entryText = latestEntry.Text ?? string.Empty;
+                        _journalSystem.UpdateEntry(plotLabel, latestEntry.State, entryText, plotXP);
+                        return;
+                    }
+
+                    // If no entry exists, create one with plot XP
+                    // This ensures XP rewards are tracked even if no journal entry was created yet
+                    // Based on swkotor2.exe: Journal entries can be created when plot XP is awarded
+                    string entryText = GetQuestEntryTextFromJRL(plotLabel, 0);
+                    if (string.IsNullOrEmpty(entryText))
+                    {
+                        // Use empty text if JRL lookup fails (original engine behavior)
+                        entryText = string.Empty;
+                    }
+                    _journalSystem.AddEntry(plotLabel, 0, entryText, plotXP);
                 }
             }
         }
