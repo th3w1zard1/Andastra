@@ -6,7 +6,7 @@ using Stride.Core.Mathematics;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Graphics;
-using Andastra.Runtime.Games.Odyssey.Systems;
+using Andastra.Runtime.Engines.Odyssey.Systems;
 using Andastra.Runtime.Games.Odyssey.Data;
 using Andastra.Runtime.Stride.Converters;
 using Andastra.Parsing.Formats.MDLData;
