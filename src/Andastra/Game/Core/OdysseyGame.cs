@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -824,18 +825,18 @@ namespace Andastra.Runtime.Game.Core
             // Handle path selection navigation
             if (_isSelectingPath)
             {
-                if (IsKeyJustPressed(_previousMenuKeyboardState, currentKeyboardState, Keys.Up))
+                if (IsKeyJustPressed(_previousMenuKeyboardState, keyboardState, Keys.Up))
                 {
                     _selectedPathIndex = (_selectedPathIndex - 1 + _availablePaths.Count) % _availablePaths.Count;
                 }
 
-                if (IsKeyJustPressed(_previousMenuKeyboardState, currentKeyboardState, Keys.Down))
+                if (IsKeyJustPressed(_previousMenuKeyboardState, keyboardState, Keys.Down))
                 {
                     _selectedPathIndex = (_selectedPathIndex + 1) % _availablePaths.Count;
                 }
 
                 // ESC to cancel path selection
-                if (IsKeyJustPressed(_previousMenuKeyboardState, currentKeyboardState, Keys.Escape))
+                if (IsKeyJustPressed(_previousMenuKeyboardState, keyboardState, Keys.Escape))
                 {
                     _isSelectingPath = false;
                 }
@@ -843,20 +844,20 @@ namespace Andastra.Runtime.Game.Core
             else
             {
                 // Keyboard navigation
-                if (IsKeyJustPressed(_previousMenuKeyboardState, currentKeyboardState, Keys.Up))
+                if (IsKeyJustPressed(_previousMenuKeyboardState, keyboardState, Keys.Up))
                 {
                     _selectedMenuIndex = (_selectedMenuIndex - 1 + _menuItems.Length) % _menuItems.Length;
                 }
 
-                if (IsKeyJustPressed(_previousMenuKeyboardState, currentKeyboardState, Keys.Down))
+                if (IsKeyJustPressed(_previousMenuKeyboardState, keyboardState, Keys.Down))
                 {
                     _selectedMenuIndex = (_selectedMenuIndex + 1) % _menuItems.Length;
                 }
             }
 
             // Select menu item
-            if (IsKeyJustPressed(_previousMenuKeyboardState, currentKeyboardState, Keys.Enter) ||
-                IsKeyJustPressed(_previousMenuKeyboardState, currentKeyboardState, Keys.Space))
+            if (IsKeyJustPressed(_previousMenuKeyboardState, keyboardState, Keys.Enter) ||
+                IsKeyJustPressed(_previousMenuKeyboardState, keyboardState, Keys.Space))
             {
                 if (_isSelectingPath)
                 {
@@ -875,7 +876,7 @@ namespace Andastra.Runtime.Game.Core
             }
 
             // Mouse click
-            if (currentMouseState.LeftButton == ButtonState.Pressed &&
+            if (mouseState.LeftButton == ButtonState.Pressed &&
                 _previousMenuMouseState.LeftButton == ButtonState.Released)
             {
                 if (_hoveredMenuIndex >= 0 && _hoveredMenuIndex < _menuItems.Length)
@@ -884,8 +885,8 @@ namespace Andastra.Runtime.Game.Core
                 }
             }
 
-            _previousMenuKeyboardState = currentKeyboardState;
-            _previousMenuMouseState = currentMouseState;
+            _previousMenuKeyboardState = keyboardState;
+            _previousMenuMouseState = mouseState;
         }
 
         private bool IsKeyJustPressed(IKeyboardState previous, IKeyboardState current, Keys key)
