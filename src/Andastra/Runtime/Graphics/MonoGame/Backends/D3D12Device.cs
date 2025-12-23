@@ -1338,6 +1338,9 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         // Helper delegates for ID3DBlob interface
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int QueryInterfaceDelegate(IntPtr pThis, ref Guid riid, IntPtr ppvObject);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate IntPtr GetBufferSizeDelegate(IntPtr blob);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
@@ -14065,13 +14068,6 @@ namespace Andastra.Runtime.MonoGame.Backends
             IntPtr pDesc,
             ref Guid riid,
             IntPtr ppStateObject);
-
-        // COM interface method delegate for QueryInterface (IUnknown::QueryInterface)
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate int QueryInterfaceDelegate(
-            IntPtr comObject,
-            ref Guid riid,
-            IntPtr ppvObject);
 
         // COM interface method delegate for GetShaderIdentifier (ID3D12StateObjectProperties::GetShaderIdentifier)
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
