@@ -597,25 +597,3 @@ namespace Andastra.Tests.Runtime.TestHelpers
     }
 }
 
-
-        /// Stride Cleanup:
-        /// - Disposes the Game instance which will clean up all graphics resources
-        /// - Handles disposal errors gracefully for test robustness
-        /// </remarks>
-        public static void CleanupTestStrideGame(global::Stride.Engine.Game game)
-        {
-            if (game != null)
-            {
-                try
-                {
-                    game.Dispose();
-                }
-                catch
-                {
-                    // Ignore disposal errors
-                }
-            }
-        }
-    }
-}
-
