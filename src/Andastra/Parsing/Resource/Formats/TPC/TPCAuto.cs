@@ -353,10 +353,18 @@ namespace Andastra.Parsing.Formats.TPC
             }
             else if (fmt == ResourceType.BMP)
             {
-                // TODO: STUB - TPCBMPWriter implementation needed for BMP format support
-                // Matching PyKotor TPCBMPWriter from Libraries/PyKotor/src/pykotor/resource/formats/tpc/io_bmp.py
-                // swkotor.exe/swkotor2.exe: BMP format support for texture export
-                throw new NotImplementedException("BMP format support requires TPCBMPWriter implementation. Use TPC, TGA, or DDS format instead.");
+                if (target is string filepath)
+                {
+                    new TPCBMPWriter(tpc, filepath).Write();
+                }
+                else if (target is Stream stream)
+                {
+                    new TPCBMPWriter(tpc, stream).Write();
+                }
+                else
+                {
+                    throw new ArgumentException("Target must be string or Stream for BMP");
+                }
             }
             else if (fmt == ResourceType.DDS)
             {
@@ -411,7 +419,7 @@ namespace Andastra.Parsing.Formats.TPC
 
             ResourceType fmt = fileFormat ?? ResourceType.TPC;
 
-            // Use GetBytes() for DDS and TGA for performance (avoids MemoryStream overhead)
+            // Use GetBytes() for DDS, TGA, and BMP for performance (avoids MemoryStream overhead)
             if (fmt == ResourceType.DDS)
             {
                 using (var writer = new TPCDDSWriter(tpc))
@@ -423,6 +431,14 @@ namespace Andastra.Parsing.Formats.TPC
             if (fmt == ResourceType.TGA)
             {
                 using (var writer = new TPCTGAWriter(tpc))
+                {
+                    writer.Write(autoClose: false);
+                    return writer.GetBytes();
+                }
+            }
+            if (fmt == ResourceType.BMP)
+            {
+                using (var writer = new TPCBMPWriter(tpc))
                 {
                     writer.Write(autoClose: false);
                     return writer.GetBytes();
