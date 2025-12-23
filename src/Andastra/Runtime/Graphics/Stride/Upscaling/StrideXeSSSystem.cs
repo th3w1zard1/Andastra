@@ -213,7 +213,7 @@ namespace Andastra.Runtime.Stride.Upscaling
             // Stride's ImmediateContext() extension method provides access to the command list
             // This extension method retrieves the CommandList from the registry (registered via GraphicsDeviceExtensions.RegisterCommandList)
             // or creates a fallback CommandList if not registered
-            Stride.Graphics.CommandList commandList = _graphicsDevice.ImmediateContext();
+            CommandList commandList = _graphicsDevice.ImmediateContext();
             if (commandList != null)
             {
                 // Stride CommandList.NativeCommandList provides the native command list pointer
