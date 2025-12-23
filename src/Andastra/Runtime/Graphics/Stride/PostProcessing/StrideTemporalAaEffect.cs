@@ -7,6 +7,7 @@ using Andastra.Runtime.Graphics.Common.PostProcessing;
 using Andastra.Runtime.Graphics.Common.Rendering;
 using RectangleF = Stride.Core.Mathematics.RectangleF;
 using Color = Stride.Core.Mathematics.Color;
+using Vector2 = Stride.Core.Mathematics.Vector2;
 
 namespace Andastra.Runtime.Stride.PostProcessing
 {
@@ -26,7 +27,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         private Texture _historyBuffer;
         private Texture _outputBuffer;
         private int _frameIndex;
-        private Vector2[] _jitterSequence;
+        private global::Stride.Core.Mathematics.Vector2[] _jitterSequence;
         private Matrix4x4 _previousViewProjection;
         private SpriteBatch _spriteBatch;
         private EffectInstance _taaEffect;
@@ -46,12 +47,12 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// <summary>
         /// Gets the current frame's jitter offset for sub-pixel sampling.
         /// </summary>
-        public Vector2 GetJitterOffset(int targetWidth, int targetHeight)
+        public global::Stride.Core.Mathematics.Vector2 GetJitterOffset(int targetWidth, int targetHeight)
         {
-            if (!_enabled) return Vector2.Zero;
+            if (!_enabled) return global::Stride.Core.Mathematics.Vector2.Zero;
 
             var jitter = _jitterSequence[_frameIndex % _jitterSequence.Length];
-            return new Vector2(
+            return new global::Stride.Core.Mathematics.Vector2(
                 jitter.X * _jitterScale / targetWidth,
                 jitter.Y * _jitterScale / targetHeight
             );
@@ -345,7 +346,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         private Stride.Core.Mathematics.Matrix ConvertToStrideMatrix(System.Numerics.Matrix4x4 matrix)
         {
             // Convert System.Numerics.Matrix4x4 to Stride.Core.Mathematics.Matrix
-            return new Stride.Core.Mathematics.Matrix(
+            return new Matrix(
                 matrix.M11, matrix.M12, matrix.M13, matrix.M14,
                 matrix.M21, matrix.M22, matrix.M23, matrix.M24,
                 matrix.M31, matrix.M32, matrix.M33, matrix.M34,
@@ -353,7 +354,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             );
         }
 
-        private System.Numerics.Matrix4x4 ConvertFromStrideMatrix(Stride.Core.Mathematics.Matrix matrix)
+        private System.Numerics.Matrix4x4 ConvertFromStrideMatrix(global::Stride.Core.Mathematics.Matrix matrix)
         {
             // Convert Stride.Core.Mathematics.Matrix to System.Numerics.Matrix4x4
             return new System.Numerics.Matrix4x4(
