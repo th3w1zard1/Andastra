@@ -174,8 +174,82 @@ namespace Andastra.Runtime.MonoGame.Backends
             // See GetShaderIdentifierDelegate and CallStateObjectPropertiesGetShaderIdentifier() helper methods
         }
 
-        // TODO:  DirectX 12 function pointers for P/Invoke (simplified - full implementation requires extensive declarations)
-        // In a complete implementation, these would be loaded via GetProcAddress or use SharpDX/Vortice wrapper
+        // DirectX 12 function pointers for P/Invoke
+        // Based on DirectX 12 API: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/
+        // These functions are exported from d3d12.dll and are used for device creation, debugging, and root signature management
+
+        // D3D12CreateDevice function - Creates a DirectX 12 device
+        // Based on DirectX 12 Device Creation: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-d3d12createdevice
+        // HRESULT D3D12CreateDevice(IUnknown* pAdapter, D3D_FEATURE_LEVEL MinimumFeatureLevel, REFIID riid, void** ppDevice)
+        [DllImport(D3D12Library, CallingConvention = CallingConvention.StdCall, EntryPoint = "D3D12CreateDevice")]
+        private static extern int D3D12CreateDevice(
+            IntPtr pAdapter, // IUnknown* - DXGI adapter (can be null for default adapter)
+            uint MinimumFeatureLevel, // D3D_FEATURE_LEVEL - Minimum feature level required
+            ref Guid riid, // REFIID - Interface ID (e.g., IID_ID3D12Device)
+            out IntPtr ppDevice); // void** - Output device pointer
+
+        // D3D12GetDebugInterface function - Gets debug interface for DirectX 12 debugging
+        // Based on DirectX 12 Debug Interface: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-d3d12getdebuginterface
+        // HRESULT D3D12GetDebugInterface(REFIID riid, void** ppvDebug)
+        [DllImport(D3D12Library, CallingConvention = CallingConvention.StdCall, EntryPoint = "D3D12GetDebugInterface")]
+        private static extern int D3D12GetDebugInterface(
+            ref Guid riid, // REFIID - Interface ID (e.g., IID_ID3D12Debug)
+            out IntPtr ppvDebug); // void** - Output debug interface pointer
+
+        // D3D12EnableExperimentalFeatures function - Enables experimental DirectX 12 features
+        // Based on DirectX 12 Experimental Features: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-d3d12enableexperimentalfeatures
+        // HRESULT D3D12EnableExperimentalFeatures(UINT NumFeatures, const IID* pIIDs, void* pConfigurationStructs, UINT* pConfigurationStructSizes)
+        [DllImport(D3D12Library, CallingConvention = CallingConvention.StdCall, EntryPoint = "D3D12EnableExperimentalFeatures")]
+        private static extern int D3D12EnableExperimentalFeatures(
+            uint NumFeatures, // UINT - Number of features to enable
+            IntPtr pIIDs, // const IID* - Array of feature interface IDs
+            IntPtr pConfigurationStructs, // void* - Array of configuration structures
+            IntPtr pConfigurationStructSizes); // UINT* - Array of configuration structure sizes
+
+        // D3D12SerializeVersionedRootSignature function - Serializes a versioned root signature
+        // Based on DirectX 12 Versioned Root Signature: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-d3d12serializeversionedrootsignature
+        // HRESULT D3D12SerializeVersionedRootSignature(const D3D12_VERSIONED_ROOT_SIGNATURE_DESC* pRootSignatureDesc, ID3DBlob** ppBlob, ID3DBlob** ppErrorBlob)
+        [DllImport(D3D12Library, CallingConvention = CallingConvention.StdCall, EntryPoint = "D3D12SerializeVersionedRootSignature")]
+        private static extern int D3D12SerializeVersionedRootSignature(
+            IntPtr pRootSignatureDesc, // const D3D12_VERSIONED_ROOT_SIGNATURE_DESC*
+            out IntPtr ppBlob, // ID3DBlob** - Output serialized blob
+            out IntPtr ppErrorBlob); // ID3DBlob** - Output error blob (can be null)
+
+        // D3D12CreateVersionedRootSignatureDeserializer function - Creates a deserializer for versioned root signatures
+        // Based on DirectX 12 Versioned Root Signature Deserializer: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-d3d12createversionedrootsignaturedeserializer
+        // HRESULT D3D12CreateVersionedRootSignatureDeserializer(const void* pSrcData, SIZE_T SrcDataSizeInBytes, REFIID pRootSignatureDeserializerInterface, void** ppRootSignatureDeserializer)
+        [DllImport(D3D12Library, CallingConvention = CallingConvention.StdCall, EntryPoint = "D3D12CreateVersionedRootSignatureDeserializer")]
+        private static extern int D3D12CreateVersionedRootSignatureDeserializer(
+            IntPtr pSrcData, // const void* - Serialized root signature data
+            IntPtr SrcDataSizeInBytes, // SIZE_T - Size of serialized data in bytes
+            ref Guid pRootSignatureDeserializerInterface, // REFIID - Interface ID for deserializer
+            out IntPtr ppRootSignatureDeserializer); // void** - Output deserializer pointer
+
+        // DirectX 12 Feature Level constants (D3D_FEATURE_LEVEL)
+        // Based on DirectX 12 Feature Levels: https://docs.microsoft.com/en-us/windows/win32/api/d3dcommon/ne-d3dcommon-d3d_feature_level
+        private const uint D3D_FEATURE_LEVEL_12_0 = 0xc100; // DirectX 12.0 feature level
+        private const uint D3D_FEATURE_LEVEL_12_1 = 0xc200; // DirectX 12.1 feature level (DXR 1.0, mesh shaders, etc.)
+        private const uint D3D_FEATURE_LEVEL_12_2 = 0xc300; // DirectX 12.2 feature level (DXR 1.1, sampler feedback, etc.)
+
+        // DirectX 12 Debug Interface GUIDs
+        // Based on DirectX 12 Debug Interfaces: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nn-d3d12-id3d12debug
+        private static readonly Guid IID_ID3D12Debug = new Guid(0x344488b7, 0x6846, 0x474b, 0xb9, 0x89, 0xf0, 0x27, 0x44, 0x82, 0x45, 0xe0);
+        private static readonly Guid IID_ID3D12Debug1 = new Guid(0xaffaa4ca, 0x63fe, 0x4d8e, 0xb8, 0xad, 0x15, 0x90, 0x00, 0xaf, 0x43, 0x04);
+        private static readonly Guid IID_ID3D12Debug2 = new Guid(0x93a665c4, 0xea3f, 0x4729, 0x9e, 0x14, 0x69, 0x6e, 0x57, 0x58, 0x3e, 0x49);
+        private static readonly Guid IID_ID3D12Debug3 = new Guid(0x5cf4e58f, 0xf671, 0x4ff1, 0xa5, 0x42, 0x36, 0x86, 0xe3, 0xd1, 0x53, 0xd1);
+        private static readonly Guid IID_ID3D12Debug4 = new Guid(0x014b816e, 0x9ec5, 0x4a2f, 0x81, 0xbd, 0xdb, 0xbd, 0x1d, 0xfb, 0x4b, 0x36);
+        private static readonly Guid IID_ID3D12Debug5 = new Guid(0x548d6b12, 0x09a0, 0x4bec, 0xbb, 0xfd, 0xe0, 0x9f, 0x61, 0x0e, 0xaf, 0x7d);
+        private static readonly Guid IID_ID3D12Debug6 = new Guid(0x82a816d6, 0x5d01, 0x4157, 0x97, 0xd0, 0x49, 0x75, 0x46, 0xfb, 0x1b, 0x18);
+        private static readonly Guid IID_ID3D12DebugDevice = new Guid(0x3febd6dd, 0x49ec, 0x4fcd, 0x88, 0x6e, 0x5a, 0x8e, 0x5b, 0x6f, 0x0e, 0x12);
+        private static readonly Guid IID_ID3D12DebugDevice1 = new Guid(0xa9b71770, 0xd099, 0x4a65, 0xa6, 0x98, 0x3d, 0xee, 0x10, 0x02, 0x0f, 0x88);
+        private static readonly Guid IID_ID3D12DebugDevice2 = new Guid(0x60eccbc1, 0x378d, 0x4df1, 0x89, 0x4e, 0xf8, 0x29, 0x1b, 0x5a, 0x0c, 0x4a);
+        private static readonly Guid IID_ID3D12InfoQueue = new Guid(0x0740a3c1, 0x1e95, 0x4d07, 0x83, 0x2a, 0xaa, 0x11, 0xce, 0x86, 0x04, 0x20);
+
+        // DirectX 12 Experimental Feature GUIDs
+        // Based on DirectX 12 Experimental Features: https://docs.microsoft.com/en-us/windows/win32/direct3d12/experimental-features
+        private static readonly Guid D3D12ExperimentalShaderModels = new Guid(0x76f5573e, 0xf13a, 0x40f5, 0xb2, 0x97, 0x17, 0xce, 0x15, 0x60, 0x0b, 0x28);
+        private static readonly Guid D3D12TiledResourceTier4 = new Guid(0xc9c4725f, 0x81dc, 0x4c5f, 0x99, 0x6b, 0x8f, 0x10, 0x0b, 0x6b, 0x30, 0x4e);
+        private static readonly Guid D3D12MetaCommand = new Guid(0xc734c47e, 0x807f, 0x4157, 0x93, 0xc4, 0x92, 0x79, 0x34, 0x58, 0xbc, 0x55);
 
         #endregion
 
