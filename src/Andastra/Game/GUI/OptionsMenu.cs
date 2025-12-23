@@ -376,18 +376,18 @@ namespace Andastra.Runtime.Game.GUI
             // Audio options - based on swkotor2.exe audio configuration system
             var audioOptions = new List<OptionItem>
             {
-                new OptionItem("Master Volume", OptionType.Numeric, () => (int)(settings.MasterVolume * 100.0f),
+                new OptionItem("Master Volume", OptionType.Numeric, () => (int)(settings.Audio.MasterVolume * 100.0f),
                     v =>
                     {
-                        settings.MasterVolume = (float)v / 100.0f;
+                        settings.Audio.MasterVolume = (float)v / 100.0f;
                         // Apply master volume to all audio systems immediately if available
                         if (soundPlayer != null)
                         {
-                            soundPlayer.Volume = settings.MasterVolume;
+                            soundPlayer.SetMasterVolume(settings.Audio.MasterVolume);
                         }
                         if (musicPlayer != null)
                         {
-                            musicPlayer.Volume = settings.MasterVolume * settings.Audio.MusicVolume;
+                            musicPlayer.Volume = settings.Audio.MasterVolume * settings.Audio.MusicVolume;
                         }
                     }, 0, 100),
                 new OptionItem("Music Volume", OptionType.Numeric, () => (int)(settings.Audio.MusicVolume * 100.0f), v =>
@@ -400,11 +400,11 @@ namespace Andastra.Runtime.Game.GUI
                         musicPlayer.Volume = volume;
                     }
                 }, 0, 100),
-                new OptionItem("SFX Volume", OptionType.Numeric, () => (int)(settings.Audio.EffectsVolume * 100.0f),
+                new OptionItem("SFX Volume", OptionType.Numeric, () => (int)(settings.Audio.SfxVolume * 100.0f),
                     v =>
                     {
                         float volume = (float)v / 100.0f;
-                        settings.Audio.EffectsVolume = volume;
+                        settings.Audio.SfxVolume = volume;
                         // Apply SFX volume to sound player immediately if available
                         if (soundPlayer != null)
                         {
@@ -420,7 +420,7 @@ namespace Andastra.Runtime.Game.GUI
                         // Based on swkotor2.exe: VoiceVolume setting applied to voice-over playback
                         if (voicePlayer != null)
                         {
-                            voicePlayer.Volume = volume;
+                            voicePlayer.SetMasterVolume(volume);
                         }
                     }, 0, 100)
             };
@@ -473,7 +473,7 @@ namespace Andastra.Runtime.Game.GUI
             var controlsOptions = new List<OptionItem>
             {
                 // Mouse settings
-                new OptionItem("Mouse Sensitivity", OptionType.Numeric, () => (int)(settings.MouseSensitivity * 100), v => settings.MouseSensitivity = v / 100.0f, 1, 100),
+                new OptionItem("Mouse Sensitivity", OptionType.Numeric, () => (int)(settings.MouseSensitivity * 100), v => settings.MouseSensitivity = (float)v / 100.0f, 1, 100),
                 new OptionItem("Invert Mouse Y", OptionType.Boolean, () => settings.InvertMouseY ? 1 : 0, v => settings.InvertMouseY = v > 0, 0, 1),
 
                 // Key bindings - based on swkotor.exe and swkotor2.exe keymap.2da system
