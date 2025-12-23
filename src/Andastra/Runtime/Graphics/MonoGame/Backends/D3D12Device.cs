@@ -12773,49 +12773,6 @@ namespace Andastra.Runtime.MonoGame.Backends
                 }
             }
 
-            public void PushDescriptorSet(IBindingLayout bindingLayout, int setIndex, BindingSetItem[] items)
-            {
-                if (!_isOpen)
-                {
-                    throw new InvalidOperationException("Command list must be open before pushing descriptor set");
-                }
-
-                if (_d3d12CommandList == IntPtr.Zero)
-                {
-                    throw new InvalidOperationException("Command list is not initialized");
-                }
-
-                if (bindingLayout == null)
-                {
-                    throw new ArgumentNullException(nameof(bindingLayout));
-                }
-
-                if (items == null || items.Length == 0)
-                {
-                    throw new ArgumentException("Binding set items cannot be null or empty", nameof(items));
-                }
-
-                // Validate that binding layout supports push descriptors
-                if (!bindingLayout.Desc.IsPushDescriptor)
-                {
-                    throw new ArgumentException("Binding layout must have IsPushDescriptor = true to use push descriptors", nameof(bindingLayout));
-                }
-
-                // DirectX 12 does not have native push descriptor support like Vulkan
-                // However, we can simulate it by updating descriptors in a descriptor heap and binding them
-                // For now, we throw NotSupportedException as a proper implementation would require
-                // managing descriptor heaps and root signature tables
-                // 
-                // A full implementation would:
-                // 1. Allocate descriptors from a shader-visible descriptor heap
-                // 2. Update descriptors using CopyDescriptorsSimple or CopyDescriptors
-                // 3. Set descriptor heap on command list
-                // 4. Set root descriptor table pointing to the descriptors
-                //
-                // This is more complex than Vulkan's push descriptors and requires heap management
-                throw new NotSupportedException("Push descriptors are not directly supported in DirectX 12. Use CreateBindingSet instead, or implement descriptor heap management for push descriptor simulation.");
-            }
-
             public void BuildBottomLevelAccelStruct(IAccelStruct accelStruct, GeometryDesc[] geometries)
             {
                 if (!_isOpen)

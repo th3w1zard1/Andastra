@@ -2,6 +2,7 @@ using System;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.GUI;
+using Andastra.Runtime.MonoGame.GUI;
 using Andastra.Tests.Runtime.TestHelpers;
 using FluentAssertions;
 using Moq;
@@ -27,8 +28,8 @@ namespace Andastra.Tests.Runtime.Graphics.Common.GUI
         public void CreateMenuRenderer_WithNullBackend_ShouldThrowArgumentNullException()
         {
             // Act & Assert
-            MenuRendererFactory.Invoking(f => f.CreateMenuRenderer(null))
-                .Should().Throw<ArgumentNullException>()
+            Action act = () => MenuRendererFactory.CreateMenuRenderer(null);
+            act.Should().Throw<ArgumentNullException>()
                 .WithParameterName("graphicsBackend");
         }
 
@@ -41,8 +42,8 @@ namespace Andastra.Tests.Runtime.Graphics.Common.GUI
             mockBackend.Setup(b => b.BackendType).Returns(GraphicsBackendType.MonoGame);
 
             // Act & Assert
-            MenuRendererFactory.Invoking(f => f.CreateMenuRenderer(mockBackend.Object))
-                .Should().Throw<InvalidOperationException>()
+            Action act = () => MenuRendererFactory.CreateMenuRenderer(mockBackend.Object);
+            act.Should().Throw<InvalidOperationException>()
                 .WithMessage("*initialized*");
         }
 
@@ -58,7 +59,7 @@ namespace Andastra.Tests.Runtime.Graphics.Common.GUI
 
             // Assert
             renderer.Should().NotBeNull();
-            renderer.Should().BeOfType<MonoGame.GUI.MyraMenuRenderer>();
+            renderer.Should().BeOfType<MyraMenuRenderer>();
             renderer.IsInitialized.Should().BeTrue();
         }
 
