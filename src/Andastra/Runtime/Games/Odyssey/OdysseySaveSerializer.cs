@@ -136,7 +136,14 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // Note: Andastra.Runtime.Games.Common.SaveGameData and Andastra.Runtime.Core.Save.SaveGameData
-            // are unrelated types, so we cannot cast between them. Work with Common.SaveGameData only.
+            // are unrelated types, so we use reflection to check and access Core-specific properties
+            object coreSaveData = null;
+            var saveDataType = saveData.GetType();
+            var coreSaveDataTypeName = "Andastra.Runtime.Core.Save.SaveGameData";
+            if (saveDataType.FullName == coreSaveDataTypeName)
+            {
+                coreSaveData = saveData;
+            }
 
             // Create NFOData structure
             var nfo = new NFOData();
@@ -218,16 +225,16 @@ namespace Andastra.Runtime.Games.Odyssey
                                         var enumerator = getEnumeratorMethod.Invoke(moduleAreaMappings, null);
                                         var moveNextMethod = enumerator.GetType().GetMethod("MoveNext");
                                         var currentProperty = enumerator.GetType().GetProperty("Current");
-                                        
+
                                         while ((bool)moveNextMethod.Invoke(enumerator, null))
                                         {
                                             var current = currentProperty.GetValue(enumerator);
                                             var keyProperty = current.GetType().GetProperty("Key");
                                             var valueProperty = current.GetType().GetProperty("Value");
-                                            
+
                                             string moduleResRef = keyProperty.GetValue(current).ToString();
                                             object areaListObj = valueProperty.GetValue(current);
-                                            
+
                                             if (areaListObj != null)
                                             {
                                                 var containsMethod = areaListObj.GetType().GetMethod("Contains", new[] { typeof(string) });
@@ -253,19 +260,57 @@ namespace Andastra.Runtime.Games.Odyssey
                     }
                 }
             }
-            
+
             // Priority 3: Try to infer from CurrentArea string if CurrentAreaInstance is null and we have Core.SaveGameData
             if (string.IsNullOrEmpty(lastModule) && !string.IsNullOrEmpty(saveData.CurrentArea) && coreSaveData != null)
             {
-                foreach (var kvp in saveData.ModuleAreaMappings)
+                try
                 {
-                    string moduleResRef = kvp.Key;
-                    List<string> areaList = kvp.Value;
-                    if (areaList != null && areaList.Contains(saveData.CurrentArea, StringComparer.OrdinalIgnoreCase))
+                    // Use reflection to access ModuleAreaMappings property if it exists
+                    var moduleAreaMappingsProperty = coreSaveData.GetType().GetProperty("ModuleAreaMappings");
+                    if (moduleAreaMappingsProperty != null)
                     {
-                        lastModule = moduleResRef;
-                        break;
+                        var moduleAreaMappings = moduleAreaMappingsProperty.GetValue(coreSaveData);
+                        if (moduleAreaMappings != null)
+                        {
+                            // Use reflection to iterate over the dictionary
+                            var getEnumeratorMethod = moduleAreaMappings.GetType().GetMethod("GetEnumerator");
+                            if (getEnumeratorMethod != null)
+                            {
+                                var enumerator = getEnumeratorMethod.Invoke(moduleAreaMappings, null);
+                                var moveNextMethod = enumerator.GetType().GetMethod("MoveNext");
+                                var currentProperty = enumerator.GetType().GetProperty("Current");
+
+                                while ((bool)moveNextMethod.Invoke(enumerator, null))
+                                {
+                                    var current = currentProperty.GetValue(enumerator);
+                                    var keyProperty = current.GetType().GetProperty("Key");
+                                    var valueProperty = current.GetType().GetProperty("Value");
+
+                                    string moduleResRef = keyProperty.GetValue(current).ToString();
+                                    object areaListObj = valueProperty.GetValue(current);
+
+                                    if (areaListObj != null)
+                                    {
+                                        var containsMethod = areaListObj.GetType().GetMethod("Contains", new[] { typeof(string) });
+                                        if (containsMethod != null)
+                                        {
+                                            bool contains = (bool)containsMethod.Invoke(areaListObj, new object[] { saveData.CurrentArea });
+                                            if (contains)
+                                            {
+                                                lastModule = moduleResRef;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
+                }
+                catch
+                {
+                    // Reflection failed - continue
                 }
             }
 
