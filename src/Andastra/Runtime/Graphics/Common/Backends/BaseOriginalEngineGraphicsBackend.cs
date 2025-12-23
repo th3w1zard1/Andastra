@@ -830,7 +830,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
 
             // Step 4: Allocate texture storage (matching swkotor.exe: FUN_00427c90)
-            // Allocate storage without data - data loading is done separately
+            // Allocate storage without data - data loading is done separately via UploadOpenGLTextureData
             uint format = ConvertTextureFormatToOpenGL(desc.Format);
             uint dataFormat = ConvertTextureFormatToOpenGLDataFormat(desc.Format);
             uint dataType = ConvertTextureFormatToOpenGLDataType(desc.Format);
@@ -1453,6 +1453,49 @@ namespace Andastra.Runtime.Graphics.Common.Backends
             return ConvertTextureFormatToOpenGLDataType(format);
         }
 
+        /// <summary>
+        /// Converts BGRA byte array to RGBA format for OpenGL compatibility.
+        /// Matches original engine's BGRA to RGBA conversion (swkotor.exe: texture loading).
+        /// </summary>
+        /// <param name="bgraData">BGRA pixel data.</param>
+        /// <returns>RGBA pixel data.</returns>
+        protected virtual byte[] ConvertBGRAToRGBA(byte[] bgraData)
+        {
+            if (bgraData == null || bgraData.Length == 0 || bgraData.Length % 4 != 0)
+            {
+                return bgraData; // Return as-is if invalid
+            }
+
+            byte[] rgbaData = new byte[bgraData.Length];
+            for (int i = 0; i < bgraData.Length; i += 4)
+            {
+                // BGRA to RGBA: swap B and R components
+                rgbaData[i] = bgraData[i + 2];     // R = B
+                rgbaData[i + 1] = bgraData[i + 1]; // G = G
+                rgbaData[i + 2] = bgraData[i];     // B = R
+                rgbaData[i + 3] = bgraData[i + 3]; // A = A
+            }
+            return rgbaData;
+        }
+
+        /// <summary>
+        /// Gets a human-readable name for an OpenGL error code.
+        /// </summary>
+        protected virtual string GetGLErrorName(uint error)
+        {
+            switch (error)
+            {
+                case 0x0500: return "GL_INVALID_ENUM";
+                case 0x0501: return "GL_INVALID_VALUE";
+                case 0x0502: return "GL_INVALID_OPERATION";
+                case 0x0503: return "GL_STACK_OVERFLOW";
+                case 0x0504: return "GL_STACK_UNDERFLOW";
+                case 0x0505: return "GL_OUT_OF_MEMORY";
+                case 0x0506: return "GL_INVALID_FRAMEBUFFER_OPERATION";
+                default: return $"GL_ERROR_0x{error:X}";
+            }
+        }
+
         #endregion
 
         #region DirectX 9 P/Invoke Declarations (Windows-only)
@@ -1870,7 +1913,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         private static extern void glTexParameteri(uint target, uint pname, int param);
 
         [DllImport("opengl32.dll", EntryPoint = "glGetError")]
-        private static extern uint glGetError();
+        protected static extern uint glGetError();
 
         [DllImport("gdi32.dll")]
         private static extern bool SwapBuffers(IntPtr hdc);
