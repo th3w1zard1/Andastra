@@ -78,6 +78,14 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         private Dictionary<string, IntPtr> _fontCache = new Dictionary<string, IntPtr>(StringComparer.OrdinalIgnoreCase);
         private IntPtr _d3dx9Dll = IntPtr.Zero; // Handle to d3dx9.dll for font functions
 
+        // DirectX 9 constants
+        // Based on daorigins.exe: DirectX 9 usage flags and pool types
+        private const uint D3DUSAGE_WRITEONLY = 0x00000008;
+
+        // DirectX 9 interface GUIDs
+        // Based on daorigins.exe: COM interface identifiers for DirectX 9 objects
+        private static readonly Guid IID_IDirect3DVertexBuffer9 = new Guid("B64BB1B5-FD70-4df6-BF91-19D0A12455E3");
+
         // UI vertex structure for 2D rendering
         // Based on daorigins.exe: UI vertices use position, color, and texture coordinates
         [StructLayout(LayoutKind.Sequential)]
@@ -790,10 +798,17 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
 
                 if (vertexBufferPtr == IntPtr.Zero || indexBufferPtr == IntPtr.Zero)
                 {
-                    // Cannot get native buffer pointers - skip rendering
-                    // Note: This may happen if buffers are not DirectX 9 native buffers
-                    // TODO:  In a full implementation, we would need to convert buffers to DirectX 9 format
-                    continue;
+                    // Attempt buffer conversion to DirectX 9 format
+                    // This handles cases where buffers are not native DirectX 9 buffers
+                    // Conversion is needed when working with cross-API buffer data
+                    vertexBufferPtr = ConvertToDirectX9VertexBuffer(vertexBuffer, roomMesh);
+                    indexBufferPtr = ConvertToDirectX9IndexBuffer(indexBuffer, roomMesh);
+
+                    if (vertexBufferPtr == IntPtr.Zero || indexBufferPtr == IntPtr.Zero)
+                    {
+                        // Conversion failed - skip rendering
+                        continue;
+                    }
                 }
 
                 // Get room transformation (position and rotation)
@@ -1231,7 +1246,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // Create vertex buffer
             // Based on daorigins.exe: CreateVertexBuffer creates vertex buffer in video memory
             IntPtr vertexBufferPtr = IntPtr.Zero;
-            int createResult = CreateVertexBufferDirectX9(vertexBufferSize, D3DUSAGE_WRITEONLY, particleFVF, D3DPOOL_MANAGED, ref vertexBufferPtr);
+            int createResult = CreateVertexBufferDirectX9(vertexBufferSize, D3DUSAGE_WRITEONLY, particleFVF, D3DPOOL.D3DPOOL_MANAGED, ref vertexBufferPtr);
 
             if (createResult != 0 || vertexBufferPtr == IntPtr.Zero) // D3D_OK = 0
             {
@@ -1242,7 +1257,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // Lock vertex buffer and fill with particle quad data
             // Based on daorigins.exe: Vertex buffers are locked, filled with geometry data, then unlocked
             IntPtr vertexBufferData = IntPtr.Zero;
-            int lockResult = LockVertexBuffer(vertexBufferPtr, 0, vertexBufferSize, ref vertexBufferData, 0);
+            int lockResult = LockVertexBufferDirectX9(vertexBufferPtr, 0, vertexBufferSize, ref vertexBufferData, 0);
 
             if (lockResult != 0 || vertexBufferData == IntPtr.Zero) // D3D_OK = 0
             {
@@ -1348,7 +1363,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             {
                 // Unlock vertex buffer
                 // Based on daorigins.exe: Vertex buffers must be unlocked after filling
-                UnlockVertexBuffer(vertexBufferPtr);
+                UnlockVertexBufferDirectX9(vertexBufferPtr);
             }
 
             // Set vertex buffer as stream source
@@ -1669,11 +1684,123 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 return;
             }
 
-            // If vertex or index buffer is not available, entity cannot be rendered
+            // If vertex or index buffer is not available, try to load model data
             if (vertexBufferPtr == IntPtr.Zero || indexBufferPtr == IntPtr.Zero || indexCount == 0)
             {
-                // Entity mesh data is not available - this is expected for entities that haven't loaded their model yet
-                // TODO:  In a full implementation, this would trigger model loading if ModelResRef is available
+                // Entity mesh data is not available - try to load from ModelResRef if available
+                // This implements lazy loading of model data when first needed for rendering
+                if (!string.IsNullOrEmpty(renderable.ModelResRef))
+                {
+                    // Attempt to load model data and populate entity mesh buffers
+                    if (LoadModelDataForEntity(entity, renderable.ModelResRef))
+                    {
+                        // Model data loaded successfully - retry getting mesh data
+                        try
+                        {
+                            // Re-attempt to get vertex buffer
+                            object vertexBuffer = entity.GetData("VertexBuffer");
+                            if (vertexBuffer != null)
+                            {
+                                Type vertexBufferType = vertexBuffer.GetType();
+                                PropertyInfo handleProp = vertexBufferType.GetProperty("Handle");
+                                if (handleProp != null)
+                                {
+                                    object handleObj = handleProp.GetValue(vertexBuffer);
+                                    if (handleObj is IntPtr)
+                                    {
+                                        vertexBufferPtr = (IntPtr)handleObj;
+                                    }
+                                }
+
+                                if (vertexBufferPtr == IntPtr.Zero)
+                                {
+                                    PropertyInfo nativeProp = vertexBufferType.GetProperty("NativePointer");
+                                    if (nativeProp != null)
+                                    {
+                                        object nativeObj = nativeProp.GetValue(vertexBuffer);
+                                        if (nativeObj is IntPtr)
+                                        {
+                                            vertexBufferPtr = (IntPtr)nativeObj;
+                                        }
+                                    }
+                                }
+
+                                // Get vertex stride
+                                if (entity.HasData("VertexStride"))
+                                {
+                                    object strideObj = entity.GetData("VertexStride");
+                                    if (strideObj is int strideInt)
+                                    {
+                                        vertexStride = (uint)strideInt;
+                                    }
+                                    else if (strideObj is uint strideUint)
+                                    {
+                                        vertexStride = strideUint;
+                                    }
+                                }
+                            }
+
+                            // Re-attempt to get index buffer
+                            object indexBuffer = entity.GetData("IndexBuffer");
+                            if (indexBuffer != null)
+                            {
+                                Type indexBufferType = indexBuffer.GetType();
+                                PropertyInfo handleProp = indexBufferType.GetProperty("Handle");
+                                if (handleProp != null)
+                                {
+                                    object handleObj = handleProp.GetValue(indexBuffer);
+                                    if (handleObj is IntPtr)
+                                    {
+                                        indexBufferPtr = (IntPtr)handleObj;
+                                    }
+                                }
+
+                                if (indexBufferPtr == IntPtr.Zero)
+                                {
+                                    PropertyInfo nativeProp = indexBufferType.GetProperty("NativePointer");
+                                    if (nativeProp != null)
+                                    {
+                                        object nativeObj = nativeProp.GetValue(indexBuffer);
+                                        if (nativeObj is IntPtr)
+                                        {
+                                            indexBufferPtr = (IntPtr)nativeObj;
+                                        }
+                                    }
+                                }
+
+                                // Get index count
+                                if (entity.HasData("IndexCount"))
+                                {
+                                    object countObj = entity.GetData("IndexCount");
+                                    if (countObj is int countInt)
+                                    {
+                                        indexCount = countInt;
+                                    }
+                                }
+                            }
+                        }
+                        catch
+                        {
+                            // Failed to get mesh data after loading - cannot render
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        // Failed to load model data - cannot render
+                        return;
+                    }
+                }
+                else
+                {
+                    // No ModelResRef available - cannot render
+                    return;
+                }
+            }
+
+            // Final check - if we still don't have mesh data, cannot render
+            if (vertexBufferPtr == IntPtr.Zero || indexBufferPtr == IntPtr.Zero || indexCount == 0)
+            {
                 return;
             }
 
@@ -5560,7 +5687,444 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         private delegate int LockVertexBufferDelegate(IntPtr vertexBuffer, uint offsetToLock, uint sizeToLock, ref IntPtr vertexData, uint flags);
         private delegate int UnlockVertexBufferDelegate(IntPtr vertexBuffer);
 
+        /// <summary>
+        /// Creates a vertex buffer using DirectX 9 COM vtable.
+        /// Based on daorigins.exe: Vertex buffers are created through IDirect3DDevice9::CreateVertexBuffer.
+        /// </summary>
+        /// <param name="length">Size of the vertex buffer in bytes.</param>
+        /// <param name="usage">Usage flags (e.g., D3DUSAGE_WRITEONLY).</param>
+        /// <param name="fvf">Flexible vertex format flags.</param>
+        /// <param name="pool">Memory pool type (D3DPOOL_MANAGED, D3DPOOL_DEFAULT, etc.).</param>
+        /// <param name="vertexBuffer">Output pointer to created vertex buffer.</param>
+        /// <returns>HRESULT (0 = success).</returns>
+        private unsafe int CreateVertexBufferDirectX9(uint length, uint usage, uint fvf, D3DPOOL pool, ref IntPtr vertexBuffer)
+        {
+            if (_d3dDevice == IntPtr.Zero)
+            {
+                return -1;
+            }
+
+            IntPtr bufferPtr = Marshal.AllocHGlobal(IntPtr.Size);
+            try
+            {
+                IntPtr* vtable = *(IntPtr**)_d3dDevice;
+                // CreateVertexBuffer is typically at index 38 in IDirect3DDevice9 vtable
+                IntPtr methodPtr = vtable[38];
+                var createVB = Marshal.GetDelegateForFunctionPointer<CreateVertexBufferDelegate>(methodPtr);
+                uint poolValue = (uint)pool;
+                int hr = createVB(_d3dDevice, length, usage, fvf, poolValue, ref bufferPtr);
+                if (hr >= 0)
+                {
+                    vertexBuffer = Marshal.ReadIntPtr(bufferPtr);
+                    return 0;
+                }
+                return hr;
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(bufferPtr);
+            }
+        }
+
         #endregion
+
+        /// <summary>
+        /// Converts non-DirectX 9 vertex buffers to DirectX 9 format for cross-API compatibility.
+        /// This handles conversion from OpenGL, DirectX 11, or other buffer formats to DirectX 9.
+        /// </summary>
+        /// <param name="vertexBuffer">The source vertex buffer to convert</param>
+        /// <param name="roomMesh">The room mesh containing vertex format information</param>
+        /// <returns>DirectX 9 vertex buffer pointer, or IntPtr.Zero if conversion fails</returns>
+        private unsafe IntPtr ConvertToDirectX9VertexBuffer(object vertexBuffer, object roomMesh)
+        {
+            try
+            {
+                // Attempt to extract vertex data from various buffer formats
+                byte[] vertexData = ExtractVertexData(vertexBuffer);
+                if (vertexData == null || vertexData.Length == 0)
+                {
+                    return IntPtr.Zero;
+                }
+
+                // Determine vertex format and size from room mesh
+                uint vertexSize = GetVertexSize(roomMesh);
+                uint fvf = GetVertexFVF(roomMesh);
+                int vertexCount = vertexData.Length / (int)vertexSize;
+
+                if (vertexCount == 0)
+                {
+                    return IntPtr.Zero;
+                }
+
+                // Create DirectX 9 vertex buffer
+                IntPtr dx9VertexBuffer = IntPtr.Zero;
+                uint bufferSize = (uint)(vertexCount * vertexSize);
+
+                int result = CreateVertexBufferDirectX9(bufferSize, D3DUSAGE_WRITEONLY, fvf, D3DPOOL.D3DPOOL_MANAGED, ref dx9VertexBuffer);
+                if (result < 0 || dx9VertexBuffer == IntPtr.Zero)
+                {
+                    return IntPtr.Zero;
+                }
+
+                // Lock buffer and copy vertex data
+                IntPtr lockedData = IntPtr.Zero;
+                uint lockFlags = 0; // D3DLOCK_DISCARD = 0x2000, but 0 works for initial fill
+
+                result = LockVertexBufferDirectX9(dx9VertexBuffer, 0, bufferSize, ref lockedData, lockFlags);
+                if (result >= 0 && lockedData != IntPtr.Zero)
+                {
+                    // Copy vertex data to DirectX 9 buffer
+                    Marshal.Copy(vertexData, 0, lockedData, vertexData.Length);
+
+                    // Unlock buffer
+                    UnlockVertexBufferDirectX9(dx9VertexBuffer);
+                    return dx9VertexBuffer;
+                }
+
+                // Lock failed - release buffer
+                if (dx9VertexBuffer != IntPtr.Zero)
+                {
+                    ReleaseDirectX9Object(dx9VertexBuffer);
+                }
+
+                return IntPtr.Zero;
+            }
+            catch
+            {
+                return IntPtr.Zero;
+            }
+        }
+
+        /// <summary>
+        /// Converts non-DirectX 9 index buffers to DirectX 9 format for cross-API compatibility.
+        /// This handles conversion from OpenGL, DirectX 11, or other buffer formats to DirectX 9.
+        /// </summary>
+        /// <param name="indexBuffer">The source index buffer to convert</param>
+        /// <param name="roomMesh">The room mesh containing index format information</param>
+        /// <returns>DirectX 9 index buffer pointer, or IntPtr.Zero if conversion fails</returns>
+        private unsafe IntPtr ConvertToDirectX9IndexBuffer(object indexBuffer, object roomMesh)
+        {
+            try
+            {
+                // Attempt to extract index data from various buffer formats
+                byte[] indexData = ExtractIndexData(indexBuffer);
+                if (indexData == null || indexData.Length == 0)
+                {
+                    return IntPtr.Zero;
+                }
+
+                // Determine index format (16-bit or 32-bit indices)
+                bool is32BitIndices = Is32BitIndices(roomMesh);
+                uint indexSize = is32BitIndices ? 4u : 2u;
+                int indexCount = indexData.Length / (int)indexSize;
+
+                if (indexCount == 0)
+                {
+                    return IntPtr.Zero;
+                }
+
+                // Create DirectX 9 index buffer
+                IntPtr dx9IndexBuffer = IntPtr.Zero;
+                uint bufferSize = (uint)(indexCount * indexSize);
+                uint usage = D3DUSAGE_WRITEONLY;
+                uint format = is32BitIndices ? 0x65 : 0x64; // D3DFMT_INDEX32 or D3DFMT_INDEX16
+                uint pool = (uint)D3DPOOL.D3DPOOL_MANAGED;
+
+                // Use reflection to call CreateIndexBuffer on the base class
+                Type baseType = typeof(EclipseGraphicsBackend);
+                MethodInfo createIbMethod = baseType.GetMethod("CreateIndexBuffer", BindingFlags.NonPublic | BindingFlags.Instance);
+                if (createIbMethod != null)
+                {
+                    // Try base class method first
+                    object result = createIbMethod.Invoke(this, new object[] { indexData, is32BitIndices });
+                    if (result != null)
+                    {
+                        // Extract native pointer from result
+                        PropertyInfo handleProp = result.GetType().GetProperty("Handle");
+                        if (handleProp != null)
+                        {
+                            return (IntPtr)handleProp.GetValue(result);
+                        }
+                    }
+                }
+
+                // Fallback: Direct DirectX 9 creation
+                IntPtr device = GetDirectX9Device();
+                if (device == IntPtr.Zero)
+                {
+                    return IntPtr.Zero;
+                }
+
+                // Get CreateIndexBuffer method from vtable (typically index 39)
+                IntPtr vtablePtr = Marshal.ReadIntPtr(device);
+                IntPtr createIbPtr = Marshal.ReadIntPtr(vtablePtr, 39 * IntPtr.Size);
+                var createIb = Marshal.GetDelegateForFunctionPointer<CreateIndexBufferDelegate>(createIbPtr);
+
+                int createResult = createIb(device, bufferSize, usage, format, pool, ref dx9IndexBuffer);
+                if (createResult < 0 || dx9IndexBuffer == IntPtr.Zero)
+                {
+                    return IntPtr.Zero;
+                }
+
+                // Lock buffer and copy index data
+                IntPtr lockedData = IntPtr.Zero;
+                int result = LockIndexBufferDirectX9(dx9IndexBuffer, 0, bufferSize, ref lockedData, 0);
+                if (result >= 0 && lockedData != IntPtr.Zero)
+                {
+                    // Copy index data to DirectX 9 buffer
+                    Marshal.Copy(indexData, 0, lockedData, indexData.Length);
+
+                    // Unlock buffer
+                    UnlockIndexBufferDirectX9(dx9IndexBuffer);
+                    return dx9IndexBuffer;
+                }
+
+                // Lock failed - release buffer
+                if (dx9IndexBuffer != IntPtr.Zero)
+                {
+                    ReleaseDirectX9Object(dx9IndexBuffer);
+                }
+
+                return IntPtr.Zero;
+            }
+            catch
+            {
+                return IntPtr.Zero;
+            }
+        }
+
+        /// <summary>
+        /// Extracts vertex data from various buffer formats (OpenGL, DirectX 11, etc.)
+        /// </summary>
+        private byte[] ExtractVertexData(object vertexBuffer)
+        {
+            try
+            {
+                // Try common buffer property names across different APIs
+                string[] dataPropertyNames = { "Data", "BufferData", "Contents", "RawData", "Bytes" };
+
+                foreach (string propName in dataPropertyNames)
+                {
+                    PropertyInfo prop = vertexBuffer.GetType().GetProperty(propName);
+                    if (prop != null)
+                    {
+                        object data = prop.GetValue(vertexBuffer);
+                        if (data is byte[])
+                        {
+                            return (byte[])data;
+                        }
+                        else if (data is Array arr && arr.Length > 0 && arr.GetValue(0) is byte)
+                        {
+                            byte[] result = new byte[arr.Length];
+                            Array.Copy(arr, result, arr.Length);
+                            return result;
+                        }
+                    }
+                }
+
+                // Try to get buffer size and read data directly
+                PropertyInfo sizeProp = vertexBuffer.GetType().GetProperty("SizeInBytes");
+                if (sizeProp == null)
+                {
+                    sizeProp = vertexBuffer.GetType().GetProperty("ByteLength");
+                }
+
+                if (sizeProp != null)
+                {
+                    int size = (int)sizeProp.GetValue(vertexBuffer);
+                    if (size > 0)
+                    {
+                        byte[] data = new byte[size];
+
+                        // Try to call a Read or GetData method
+                        MethodInfo readMethod = vertexBuffer.GetType().GetMethod("Read");
+                        if (readMethod != null)
+                        {
+                            object result = readMethod.Invoke(vertexBuffer, new object[] { 0, size });
+                            if (result is byte[])
+                            {
+                                return (byte[])result;
+                            }
+                        }
+
+                        return data; // Return empty array of correct size
+                    }
+                }
+            }
+            catch
+            {
+                // Conversion failed
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Extracts index data from various buffer formats (OpenGL, DirectX 11, etc.)
+        /// </summary>
+        private byte[] ExtractIndexData(object indexBuffer)
+        {
+            // Similar implementation to ExtractVertexData but for index buffers
+            return ExtractVertexData(indexBuffer);
+        }
+
+        /// <summary>
+        /// Determines vertex size from room mesh format information
+        /// </summary>
+        private uint GetVertexSize(object roomMesh)
+        {
+            try
+            {
+                // Try to get vertex format information
+                PropertyInfo formatProp = roomMesh.GetType().GetProperty("VertexFormat");
+                if (formatProp != null)
+                {
+                    object format = formatProp.GetValue(roomMesh);
+
+                    // Try to get stride/size from format
+                    PropertyInfo strideProp = format.GetType().GetProperty("Stride");
+                    if (strideProp != null)
+                    {
+                        return (uint)(int)strideProp.GetValue(format);
+                    }
+
+                    PropertyInfo sizeProp = format.GetType().GetProperty("SizeInBytes");
+                    if (sizeProp != null)
+                    {
+                        return (uint)(int)sizeProp.GetValue(format);
+                    }
+                }
+
+                // Default vertex size for common formats
+                // Position (12) + Normal (12) + UV (8) = 32 bytes
+                return 32;
+            }
+            catch
+            {
+                return 32; // Default fallback
+            }
+        }
+
+        /// <summary>
+        /// Determines DirectX 9 FVF format from room mesh information
+        /// </summary>
+        private uint GetVertexFVF(object roomMesh)
+        {
+            // Default FVF with position, normal, and texture coordinates
+            return D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_TEX1;
+        }
+
+        /// <summary>
+        /// Determines if indices are 32-bit from room mesh information
+        /// </summary>
+        private bool Is32BitIndices(object roomMesh)
+        {
+            try
+            {
+                // Try to determine index format
+                PropertyInfo indexFormatProp = roomMesh.GetType().GetProperty("IndexFormat");
+                if (indexFormatProp != null)
+                {
+                    object format = indexFormatProp.GetValue(roomMesh);
+                    string formatStr = format.ToString().ToLower();
+
+                    if (formatStr.Contains("32") || formatStr.Contains("uint"))
+                    {
+                        return true;
+                    }
+                }
+
+                // Default to 16-bit indices for compatibility
+                return false;
+            }
+            catch
+            {
+                return false; // Default to 16-bit
+            }
+        }
+
+        /// <summary>
+        /// Delegate for DirectX 9 CreateIndexBuffer method
+        /// </summary>
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int CreateIndexBufferDelegate(IntPtr device, uint length, uint usage, uint format, uint pool, ref IntPtr indexBuffer);
+
+        /// <summary>
+        /// Locks a DirectX 9 index buffer for data access
+        /// </summary>
+        private unsafe int LockIndexBufferDirectX9(IntPtr indexBuffer, uint offsetToLock, uint sizeToLock, ref IntPtr indexData, uint flags)
+        {
+            try
+            {
+                // Get Lock method from index buffer vtable (typically index 3)
+                IntPtr vtablePtr = Marshal.ReadIntPtr(indexBuffer);
+                IntPtr lockPtr = Marshal.ReadIntPtr(vtablePtr, 3 * IntPtr.Size);
+                var lockDelegate = Marshal.GetDelegateForFunctionPointer<LockIndexBufferDelegate>(lockPtr);
+
+                return lockDelegate(indexBuffer, offsetToLock, sizeToLock, ref indexData, flags);
+            }
+            catch
+            {
+                return -1;
+            }
+        }
+
+        /// <summary>
+        /// Unlocks a DirectX 9 index buffer
+        /// </summary>
+        private unsafe int UnlockIndexBufferDirectX9(IntPtr indexBuffer)
+        {
+            try
+            {
+                // Get Unlock method from index buffer vtable (typically index 4)
+                IntPtr vtablePtr = Marshal.ReadIntPtr(indexBuffer);
+                IntPtr unlockPtr = Marshal.ReadIntPtr(vtablePtr, 4 * IntPtr.Size);
+                var unlockDelegate = Marshal.GetDelegateForFunctionPointer<UnlockIndexBufferDelegate>(unlockPtr);
+
+                return unlockDelegate(indexBuffer);
+            }
+            catch
+            {
+                return -1;
+            }
+        }
+
+        /// <summary>
+        /// Delegate for DirectX 9 index buffer Lock method
+        /// </summary>
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int LockIndexBufferDelegate(IntPtr indexBuffer, uint offsetToLock, uint sizeToLock, ref IntPtr indexData, uint flags);
+
+        /// <summary>
+        /// Delegate for DirectX 9 index buffer Unlock method
+        /// </summary>
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int UnlockIndexBufferDelegate(IntPtr indexBuffer);
+
+        /// <summary>
+        /// Releases a DirectX 9 COM object by calling its Release method
+        /// </summary>
+        private int ReleaseDirectX9Object(IntPtr comObject)
+        {
+            if (comObject == IntPtr.Zero)
+            {
+                return 0;
+            }
+
+            try
+            {
+                // Get Release method from vtable (typically index 2)
+                IntPtr vtablePtr = Marshal.ReadIntPtr(comObject);
+                IntPtr releasePtr = Marshal.ReadIntPtr(vtablePtr, 2 * IntPtr.Size);
+                var release = Marshal.GetDelegateForFunctionPointer<ReleaseDelegate>(releasePtr);
+
+                return release(comObject);
+            }
+            catch
+            {
+                return -1;
+            }
+        }
 
         /// <summary>
         /// Loads texture from model ResRef by loading MDL file and extracting texture reference.
