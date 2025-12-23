@@ -165,7 +165,7 @@ namespace Andastra.Runtime.Game.Core
 
                 if (_vm != null)
                 {
-                    _vm.Dispose();
+                    // NcsVm does not implement IDisposable
                     _vm = null;
                 }
 
