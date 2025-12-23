@@ -1534,6 +1534,16 @@ endmodel
             }
         }
 
+        public bool Exists(ResourceIdentifier id)
+        {
+            return ExistsAsync(id, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        public byte[] GetResourceBytes(ResourceIdentifier id)
+        {
+            return GetResourceBytesAsync(id, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
         #endregion
     }
 }

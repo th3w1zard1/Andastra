@@ -51,6 +51,16 @@ namespace Andastra.Runtime.Content.Interfaces
         Task<byte[]> GetResourceBytesAsync(ResourceIdentifier id, CancellationToken ct);
 
         /// <summary>
+        /// Checks if a resource exists synchronously (blocking wrapper).
+        /// </summary>
+        bool Exists(ResourceIdentifier id);
+
+        /// <summary>
+        /// Gets the raw bytes of a resource synchronously (blocking wrapper).
+        /// </summary>
+        byte[] GetResourceBytes(ResourceIdentifier id);
+
+        /// <summary>
         /// The game type (K1, K2, BaldursGate, , , etc.).
         /// </summary>
         GameType GameType { get; }

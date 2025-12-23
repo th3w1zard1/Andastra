@@ -4231,6 +4231,16 @@ namespace Andastra.Runtime.Games.Aurora
             }, ct);
         }
 
+        public bool Exists(ResourceIdentifier id)
+        {
+            return ExistsAsync(id, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        public byte[] GetResourceBytes(ResourceIdentifier id)
+        {
+            return GetResourceBytesAsync(id, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
         public Andastra.Runtime.Content.Interfaces.GameType GameType => Andastra.Runtime.Content.Interfaces.GameType.NWN;
     }
 

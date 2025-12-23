@@ -38,6 +38,9 @@ using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.MonoGame.Converters;
 using Andastra.Runtime.MonoGame.Graphics;
 using Andastra.Runtime.Core.Collision;
+// Type aliases for MonoGame graphics types in different namespace
+using MonoGameTexture2D = Andastra.Runtime.Graphics.MonoGame.Graphics.MonoGameTexture2D;
+using MonoGameGraphicsDevice = Andastra.Runtime.Graphics.MonoGame.Graphics.MonoGameGraphicsDevice;
 using XnaVertexPositionColor = Microsoft.Xna.Framework.Graphics.VertexPositionColor;
 using Andastra.Runtime.MonoGame.Rendering;
 using Microsoft.Xna.Framework.Graphics;
@@ -8736,7 +8739,7 @@ namespace Andastra.Runtime.Games.Eclipse
                         if (spriteBatch is Andastra.Runtime.MonoGame.Graphics.MonoGameSpriteBatch mgSpriteBatch)
                         {
                             // Get MonoGame texture
-                            if (hdrInput.ColorTexture is Andastra.Runtime.MonoGame.Graphics.MonoGameTexture2D mgInputTexture)
+                            if (hdrInput.ColorTexture is MonoGameTexture2D mgInputTexture)
                             {
                                 // Set shader parameter for threshold
                                 EffectParameter thresholdParam = brightPassEffect.Parameters["Threshold"];
@@ -9013,7 +9016,7 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Get MonoGame GraphicsDevice for ShaderCache
             GraphicsDevice mgDevice = null;
-            if (graphicsDevice is Andastra.Runtime.MonoGame.Graphics.MonoGameGraphicsDevice mgGraphicsDevice)
+            if (graphicsDevice is MonoGameGraphicsDevice mgGraphicsDevice)
             {
                 mgDevice = mgGraphicsDevice.Device;
             }
@@ -9118,7 +9121,7 @@ technique BloomCompositing
 
             // Get MonoGame GraphicsDevice for ShaderCache
             GraphicsDevice mgDevice = null;
-            if (graphicsDevice is Andastra.Runtime.MonoGame.Graphics.MonoGameGraphicsDevice mgGraphicsDevice)
+            if (graphicsDevice is MonoGameGraphicsDevice mgGraphicsDevice)
             {
                 mgDevice = mgGraphicsDevice.Device;
             }
@@ -9235,7 +9238,7 @@ technique BrightPass
 
             // Get MonoGame GraphicsDevice for ShaderCache
             GraphicsDevice mgDevice = null;
-            if (graphicsDevice is Andastra.Runtime.MonoGame.Graphics.MonoGameGraphicsDevice mgGraphicsDevice)
+            if (graphicsDevice is MonoGameGraphicsDevice mgGraphicsDevice)
             {
                 mgDevice = mgGraphicsDevice.Device;
             }
@@ -9354,7 +9357,7 @@ technique ToneMapping
 
             // Get MonoGame GraphicsDevice for ShaderCache
             GraphicsDevice mgDevice = null;
-            if (graphicsDevice is Andastra.Runtime.MonoGame.Graphics.MonoGameGraphicsDevice mgGraphicsDevice)
+            if (graphicsDevice is MonoGameGraphicsDevice mgGraphicsDevice)
             {
                 mgDevice = mgGraphicsDevice.Device;
             }
@@ -9512,7 +9515,7 @@ technique ColorGrading
                         if (spriteBatch is Andastra.Runtime.MonoGame.Graphics.MonoGameSpriteBatch mgSpriteBatch)
                         {
                             // Get MonoGame texture
-                            if (hdrInput.ColorTexture is Andastra.Runtime.MonoGame.Graphics.MonoGameTexture2D mgInputTexture)
+                            if (hdrInput.ColorTexture is MonoGameTexture2D mgInputTexture)
                             {
                                 // Set shader parameters for tone mapping
                                 EffectParameter exposureParam = toneMappingEffect.Parameters["Exposure"];

@@ -8,20 +8,21 @@ namespace Andastra.Parsing.Common
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/misc.py:287-529
     // Original: class Color:
-    public class Color : IEquatable<Color>
+    // Renamed to ParsingColor to avoid conflicts with Andastra.Runtime.Graphics.Color and Microsoft.Xna.Framework.Color
+    public partial class ParsingColor : IEquatable<ParsingColor>
     {
         public float R;
         public float G;
         public float B;
         public float A;
 
-        public static readonly Color RED = new Color(1.0f, 0.0f, 0.0f);
-        public static readonly Color GREEN = new Color(0.0f, 1.0f, 0.0f);
-        public static readonly Color BLUE = new Color(0.0f, 0.0f, 1.0f);
-        public static readonly Color BLACK = new Color(0.0f, 0.0f, 0.0f);
-        public static readonly Color WHITE = new Color(1.0f, 1.0f, 1.0f);
+        public static readonly ParsingColor RED = new ParsingColor(1.0f, 0.0f, 0.0f);
+        public static readonly ParsingColor GREEN = new ParsingColor(0.0f, 1.0f, 0.0f);
+        public static readonly ParsingColor BLUE = new ParsingColor(0.0f, 0.0f, 1.0f);
+        public static readonly ParsingColor BLACK = new ParsingColor(0.0f, 0.0f, 0.0f);
+        public static readonly ParsingColor WHITE = new ParsingColor(1.0f, 1.0f, 1.0f);
 
-        public Color(float r, float g, float b, float a = 1.0f)
+        public ParsingColor(float r, float g, float b, float a = 1.0f)
         {
             R = r;
             G = g;
@@ -29,45 +30,45 @@ namespace Andastra.Parsing.Common
             A = a;
         }
 
-        public static Color FromRgbInteger(int value)
+        public static ParsingColor FromRgbInteger(int value)
         {
             float r = (value & 0x000000FF) / 255f;
             float g = ((value & 0x0000FF00) >> 8) / 255f;
             float b = ((value & 0x00FF0000) >> 16) / 255f;
-            return new Color(r, g, b);
+            return new ParsingColor(r, g, b);
         }
 
-        public static Color FromRgbaInteger(int value)
+        public static ParsingColor FromRgbaInteger(int value)
         {
             float r = (value & 0x000000FF) / 255f;
             float g = ((value & 0x0000FF00) >> 8) / 255f;
             float b = ((value & 0x00FF0000) >> 16) / 255f;
             float a = ((value & unchecked((int)0xFF000000)) >> 24) / 255f;
-            return new Color(r, g, b, a);
+            return new ParsingColor(r, g, b, a);
         }
 
-        public static Color FromBgrInteger(int value)
+        public static ParsingColor FromBgrInteger(int value)
         {
             float r = ((value & 0x00FF0000) >> 16) / 255f;
             float g = ((value & 0x0000FF00) >> 8) / 255f;
             float b = (value & 0x000000FF) / 255f;
-            return new Color(r, g, b);
+            return new ParsingColor(r, g, b);
         }
 
-        public static Color FromRgbVector3(Vector3 vector)
+        public static ParsingColor FromRgbVector3(Vector3 vector)
         {
-            return new Color(vector.X, vector.Y, vector.Z);
+            return new ParsingColor(vector.X, vector.Y, vector.Z);
         }
 
-        public static Color FromBgrVector3(Vector3 vector)
+        public static ParsingColor FromBgrVector3(Vector3 vector)
         {
-            return new Color(vector.Z, vector.Y, vector.X);
+            return new ParsingColor(vector.Z, vector.Y, vector.X);
         }
 
-        public static Color FromHexString(string hex)
+        public static ParsingColor FromHexString(string hex)
         {
             string colorStr = hex.TrimStart('#').ToLowerInvariant();
-            Color instance = new Color(0, 0, 0);
+            ParsingColor instance = new ParsingColor(0, 0, 0);
 
             if (colorStr.Length == 3)
             {
@@ -150,7 +151,7 @@ namespace Andastra.Parsing.Common
             return (R, G, B, A == 0 ? 1.0f : A).GetHashCode();
         }
 
-        public bool Equals(Color other)
+        public bool Equals(ParsingColor other)
         {
             if (other == null)
             {
@@ -161,12 +162,26 @@ namespace Andastra.Parsing.Common
 
         public override bool Equals(object obj)
         {
-            Color other = obj as Color;
+            ParsingColor other = obj as ParsingColor;
             if (other == null)
             {
                 return false;
             }
             return Equals(other);
+        }
+    }
+
+    /// <summary>
+    /// Type alias for ParsingColor to maintain compatibility with code expecting Color.
+    /// </summary>
+    public class Color : ParsingColor
+    {
+        public Color(float r, float g, float b, float a = 1.0f) : base(r, g, b, a)
+        {
+        }
+
+        public Color(ParsingColor other) : base(other.R, other.G, other.B, other.A)
+        {
         }
     }
 

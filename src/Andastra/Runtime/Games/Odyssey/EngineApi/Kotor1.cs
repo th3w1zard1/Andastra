@@ -364,8 +364,6 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
 
         // KOTOR1 uses base class implementation - no override needed
         // Method removed to avoid hiding warning - switch statement calls base.Func_AssignCommand
-
-        // KOTOR1 uses base class implementation - no override needed
         // Method removed to avoid hiding warning - switch statement calls base.Func_DelayCommand
 
         // KOTOR1 has different ExecuteScript implementation (different error message, doesn't use _runScriptVar)
@@ -654,17 +652,9 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
 
         // KOTOR1 uses base class implementation - no override needed
         // Method removed to avoid hiding warning - switch statement calls base.Func_PrintObject
-
-        // KOTOR1 uses base class implementation - no override needed
         // Method removed to avoid hiding warning - switch statement calls base.Func_SetFacing
-
-        // KOTOR1 uses base class implementation - no override needed
         // Method removed to avoid hiding warning - switch statement calls base.Func_GetFacing
-
-        // KOTOR1 uses base class implementation - no override needed
         // Method removed to avoid hiding warning - switch statement calls base.Func_GetPosition
-
-        // KOTOR1 uses base class implementation - no override needed
         // Method removed to avoid hiding warning - switch statement calls base.Func_GetDistanceToObject
 
         private new Variable Func_GetObjectType(IReadOnlyList<Variable> args, IExecutionContext ctx)
@@ -5846,9 +5836,9 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
 
                 // Access ModuleTransitionSystem directly from World
                 // Cast to concrete World type to access ModuleTransitionSystem property
-                if (ctx.World is Entities.World world)
+                if (ctx.World is Andastra.Runtime.Core.Entities.World world)
                 {
-                    ModuleTransitionSystem moduleTransitionSystem = world.ModuleTransitionSystem;
+                    Andastra.Runtime.Core.Module.ModuleTransitionSystem moduleTransitionSystem = world.ModuleTransitionSystem;
                     if (moduleTransitionSystem != null)
                     {
                         // TransitionToModule is async, but we're in a synchronous NWScript context
