@@ -1115,7 +1115,7 @@ namespace Andastra.Runtime.Games.Aurora
                 // Get tile with lowest f-score
                 TileScore currentScore = GetMinTile(openSet);
                 openSet.Remove(currentScore);
-                var current = (currentScore.X, currentScore.Y);
+                var current = (x: currentScore.X, y: currentScore.Y);
                 inOpenSet.Remove(current);
 
                 // Goal reached - reconstruct path
@@ -1237,7 +1237,7 @@ namespace Andastra.Runtime.Games.Aurora
                     {
                         direction = Vector3.Normalize(direction);
                         // Check if any obstacle blocks the direct path
-                        foreach (Interfaces.ObstacleInfo obstacle in obstacles)
+                        foreach (ObstacleInfo obstacle in obstacles)
                         {
                             Vector3 toObstacle = obstacle.Position - start;
                             float projectionLength = Vector3.Dot(toObstacle, direction);
@@ -1271,10 +1271,10 @@ namespace Andastra.Runtime.Games.Aurora
             // If no path found, try with expanded obstacle radius
             if (path == null && obstacles != null && obstacles.Count > 0)
             {
-                var expandedObstacles = new List<Interfaces.ObstacleInfo>();
-                foreach (Interfaces.ObstacleInfo obstacle in obstacles)
+                var expandedObstacles = new List<ObstacleInfo>();
+                foreach (ObstacleInfo obstacle in obstacles)
                 {
-                    expandedObstacles.Add(new Interfaces.ObstacleInfo(obstacle.Position, obstacle.Radius * 1.5f));
+                    expandedObstacles.Add(new ObstacleInfo(obstacle.Position, obstacle.Radius * 1.5f));
                 }
                 return FindPathAroundObstacles(start, goal, expandedObstacles);
             }
@@ -1299,7 +1299,7 @@ namespace Andastra.Runtime.Games.Aurora
                 if (obstacles != null)
                 {
                     Vector3 neighborCenter = GetTileCenter(neighbor.x, neighbor.y);
-                    foreach (Interfaces.ObstacleInfo obstacle in obstacles)
+                    foreach (ObstacleInfo obstacle in obstacles)
                     {
                         if (Vector3.Distance(neighborCenter, obstacle.Position) < obstacle.Radius)
                         {
@@ -1348,7 +1348,7 @@ namespace Andastra.Runtime.Games.Aurora
         {
             var blockedTiles = new HashSet<(int x, int y)>();
 
-            foreach (Interfaces.ObstacleInfo obstacle in obstacles)
+            foreach (ObstacleInfo obstacle in obstacles)
             {
                 // Find tiles that intersect with obstacle
                 // Convert obstacle position to tile coordinates

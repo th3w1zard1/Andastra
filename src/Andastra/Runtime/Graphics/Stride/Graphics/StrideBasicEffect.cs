@@ -413,29 +413,36 @@ namespace Andastra.Runtime.Stride.Graphics
                 // Use pattern matching to handle different parameter types correctly
                 // Based on Stride API: Parameters.Set<T>(ValueParameterKey<T> key, T value) for value types
                 // and Parameters.Set<T>(ObjectParameterKey<T> key, T value) for reference types
+                // For value types, we need to create ValueParameterKey instances
                 if (key is ParameterKey<MatrixStride> matrixKey && value is MatrixStride matrixValue)
                 {
-                    parameters.Set(matrixKey, matrixValue);
+                    var valueKey = new ValueParameterKey<MatrixStride>(key.Name);
+                    parameters.Set(valueKey, matrixValue);
                 }
                 else if (key is ParameterKey<Color3> color3Key && value is Color3 color3Value)
                 {
-                    parameters.Set(color3Key, color3Value);
+                    var valueKey = new ValueParameterKey<Color3>(key.Name);
+                    parameters.Set(valueKey, color3Value);
                 }
                 else if (key is ParameterKey<Color4> color4Key && value is Color4 color4Value)
                 {
-                    parameters.Set(color4Key, color4Value);
+                    var valueKey = new ValueParameterKey<Color4>(key.Name);
+                    parameters.Set(valueKey, color4Value);
                 }
                 else if (key is ParameterKey<Vector3Stride> vector3Key && value is Vector3Stride vector3Value)
                 {
-                    parameters.Set(vector3Key, vector3Value);
+                    var valueKey = new ValueParameterKey<Vector3Stride>(key.Name);
+                    parameters.Set(valueKey, vector3Value);
                 }
                 else if (key is ParameterKey<float> floatKey && value is float floatValue)
                 {
-                    parameters.Set(floatKey, floatValue);
+                    var valueKey = new ValueParameterKey<float>(key.Name);
+                    parameters.Set(valueKey, floatValue);
                 }
                 else if (key is ParameterKey<bool> boolKey && value is bool boolValue)
                 {
-                    parameters.Set(boolKey, boolValue);
+                    var valueKey = new ValueParameterKey<bool>(key.Name);
+                    parameters.Set(valueKey, boolValue);
                 }
                 else if (key is ParameterKey<Texture> textureKey && value is Texture textureValue)
                 {
@@ -446,17 +453,22 @@ namespace Andastra.Runtime.Stride.Graphics
                     }
                     else
                     {
-                        // If it's not an ObjectParameterKey, skip it as it requires proper key type
+                        // If it's not an ObjectParameterKey, create one or skip it
                         // MaterialKeys like DiffuseMap are already ObjectParameterKey<Texture>
                         if (textureKey == MaterialKeys.DiffuseMap)
                         {
                             parameters.Set((ObjectParameterKey<Texture>)textureKey, textureValue);
                         }
+                        else
+                        {
+                            var objectKey = new ObjectParameterKey<Texture>(key.Name);
+                            parameters.Set(objectKey, textureValue);
+                        }
                     }
                 }
                 else
                 {
-                    // For unknown types, try using the generic Set method
+                    // For unknown types, try using the non-generic Set method
                     // This may fail for some types, but we catch the exception
                     parameters.Set(key, value);
                 }

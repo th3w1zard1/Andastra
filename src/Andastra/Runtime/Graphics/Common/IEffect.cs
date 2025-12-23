@@ -120,6 +120,12 @@ namespace Andastra.Runtime.Graphics
         /// Gets or sets the fog end distance (for linear fog).
         /// </summary>
         float FogEnd { get; set; }
+
+        /// <summary>
+        /// Applies the effect to the graphics device.
+        /// This applies all passes of the current technique.
+        /// </summary>
+        void Apply();
     }
 
     /// <summary>

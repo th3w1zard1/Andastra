@@ -7,11 +7,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Games.Common;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common;
 using Andastra.Runtime.Games.Aurora.Scene;
@@ -1360,7 +1362,7 @@ namespace Andastra.Runtime.Games.Aurora
                     if (waypointComponent != null && waypointComponent is Components.AuroraWaypointComponent auroraWaypoint)
                     {
                         auroraWaypoint.HasMapNote = waypoint.HasMapNote;
-                        if (waypoint.HasMapNote && waypoint.MapNote != null && !waypoint.MapNote.StringRef != -1)
+                        if (waypoint.HasMapNote && waypoint.MapNote != null && waypoint.MapNote.StringRef != -1)
                         {
                             auroraWaypoint.MapNote = waypoint.MapNote.ToString();
                             auroraWaypoint.MapNoteEnabled = waypoint.MapNoteEnabled;
@@ -1373,7 +1375,7 @@ namespace Andastra.Runtime.Games.Aurora
                     }
 
                     // Set waypoint name from GIT
-                    if (waypoint.Name != null && !waypoint.Name.StringRef != -1)
+                    if (waypoint.Name != null && waypoint.Name.StringRef != -1)
                     {
                         entity.SetData("WaypointName", waypoint.Name.ToString());
                     }
@@ -3557,7 +3559,7 @@ namespace Andastra.Runtime.Games.Aurora
 
                 // Apply effect and draw
                 basicEffect.Apply();
-                graphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, meshData.IndexCount / 3);
+                graphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, meshData.VertexCount, 0, meshData.IndexCount / 3);
             }
         }
 
@@ -3591,9 +3593,9 @@ namespace Andastra.Runtime.Games.Aurora
 
             // Render snow if active
             // Based on nwmain.exe: CNWSArea::RenderWeather renders snow particles
-            if (_isSnowing)
+            if (_isSnowing && _snowParticleSystem != null)
             {
-                RenderSnowParticles(graphicsDevice, basicEffect, viewMatrix, projectionMatrix);
+                _snowParticleSystem.Render(graphicsDevice, basicEffect, viewMatrix, projectionMatrix);
             }
 
             // Render lightning flash if active
@@ -3660,7 +3662,7 @@ namespace Andastra.Runtime.Games.Aurora
 
                 // Create white color with calculated alpha for brightness
                 // Based on nwmain.exe: Lightning flash is white with varying alpha for brightness control
-                Color flashColor = new Color(255, 255, 255, (byte)(alpha * 255));
+                Andastra.Runtime.Graphics.Color flashColor = new Andastra.Runtime.Graphics.Color(255, 255, 255, (byte)(alpha * 255));
 
                 // Render full-screen white overlay
                 // Based on nwmain.exe: Lightning flash covers entire screen

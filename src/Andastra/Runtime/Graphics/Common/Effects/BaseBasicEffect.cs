@@ -264,6 +264,22 @@ namespace Andastra.Runtime.Graphics.Common.Effects
 
         public virtual IEffectTechnique[] Techniques => _techniques ?? (_techniques = GetTechniquesInternal());
 
+        /// <summary>
+        /// Applies the effect to the graphics device.
+        /// This applies all passes of the current technique.
+        /// </summary>
+        public virtual void Apply()
+        {
+            IEffectTechnique technique = CurrentTechnique;
+            if (technique != null && technique.Passes != null)
+            {
+                foreach (IEffectPass pass in technique.Passes)
+                {
+                    pass.Apply();
+                }
+            }
+        }
+
         public virtual void Dispose()
         {
             _texture = null;
