@@ -151,7 +151,7 @@ namespace Andastra.Tests.Runtime.Core.Journal
             string questTag = "test_quest";
             int entryId = 0;
             JRL globalJrl = CreateTestJRL();
-            byte[] jrlData = JRLHelper.BytesJrl(globalJrl);
+            byte[] jrlData = JRLHelpers.BytesJrl(globalJrl);
 
             _mockResourceManager
                 .Setup(m => m.LookupResource("global", ResourceType.JRL, null, null))

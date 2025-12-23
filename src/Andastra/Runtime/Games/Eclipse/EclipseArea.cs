@@ -27,7 +27,6 @@ using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Runtime.Content.Converters;
 using Andastra.Runtime.Games.Eclipse.Loading;
-using Andastra.Runtime.Core.Module;
 using Andastra.Runtime.Games.Eclipse.Lighting;
 using Andastra.Runtime.Games.Eclipse.Physics;
 using Andastra.Parsing.Formats.TPC;
@@ -9450,6 +9449,111 @@ namespace Andastra.Runtime.Games.Eclipse
         }
 
         /// <summary>
+        /// Loads a texture from TPC format data.
+        /// Based on daorigins.exe: TPC texture loading and conversion to graphics API format.
+        /// </summary>
+        /// <param name="tpcData">TPC file data as byte array.</param>
+        /// <param name="textureName">Texture name for error reporting.</param>
+        /// <returns>ITexture2D instance or null on failure.</returns>
+        private ITexture2D LoadTextureFromTPCData(byte[] tpcData, string textureName)
+        {
+            if (_renderContext?.GraphicsDevice == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                // Parse TPC file using existing parser
+                // Based on daorigins.exe: TPC file parsing for texture data extraction
+                var tpc = TPCAuto.ReadTpc(tpcData);
+                if (tpc == null || tpc.Layers.Count == 0 || tpc.Layers[0].Mipmaps.Count == 0)
+                {
+                    System.Console.WriteLine($"[EclipseArea] LoadTextureFromTPCData: Failed to parse TPC texture '{textureName}'");
+                    return null;
+                }
+
+                // Get first mipmap (largest mip level)
+                // Based on daorigins.exe: Uses largest mipmap for texture creation
+                var mipmap = tpc.Layers[0].Mipmaps[0];
+                if (mipmap.Data == null || mipmap.Data.Length == 0)
+                {
+                    System.Console.WriteLine($"[EclipseArea] LoadTextureFromTPCData: TPC texture '{textureName}' has no mipmap data");
+                    return null;
+                }
+
+                // Convert TPC format to RGBA data for MonoGame
+                // Based on daorigins.exe: TPC formats converted to RGBA for DirectX 9
+                byte[] rgbaData = ConvertTPCToRGBA(tpc, mipmap.Width, mipmap.Height);
+                if (rgbaData == null)
+                {
+                    System.Console.WriteLine($"[EclipseArea] LoadTextureFromTPCData: Failed to convert TPC texture '{textureName}' to RGBA");
+                    return null;
+                }
+
+                // Create MonoGame texture from RGBA data
+                // Based on daorigins.exe: Texture creation from converted pixel data
+                var texture = _renderContext.GraphicsDevice.CreateTexture2D(mipmap.Width, mipmap.Height, rgbaData);
+                System.Console.WriteLine($"[EclipseArea] LoadTextureFromTPCData: Successfully loaded TPC texture '{textureName}' ({mipmap.Width}x{mipmap.Height})");
+                return texture;
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"[EclipseArea] LoadTextureFromTPCData: Exception loading TPC texture '{textureName}': {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Loads a texture from DDS format data.
+        /// Based on daorigins.exe: DDS texture loading for DirectX 9 compatibility.
+        /// </summary>
+        /// <param name="ddsData">DDS file data as byte array.</param>
+        /// <param name="textureName">Texture name for error reporting.</param>
+        /// <returns>ITexture2D instance or null on failure.</returns>
+        private ITexture2D LoadTextureFromDDSData(byte[] ddsData, string textureName)
+        {
+            if (_renderContext?.GraphicsDevice == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                // Parse DDS header to get dimensions and format
+                // Based on daorigins.exe: DDS header parsing for texture information
+                int width;
+                int height;
+                bool hasAlpha;
+                if (!TryParseDDSHeader(ddsData, out width, out height, out hasAlpha))
+                {
+                    System.Console.WriteLine($"[EclipseArea] LoadTextureFromDDSData: Failed to parse DDS header for texture '{textureName}'");
+                    return null;
+                }
+
+                // Extract pixel data from DDS
+                // Based on daorigins.exe: DDS pixel data extraction for DirectX 9
+                byte[] rgbaData = ExtractDDSDataToRGBA(ddsData, width, height, hasAlpha);
+                if (rgbaData == null)
+                {
+                    System.Console.WriteLine($"[EclipseArea] LoadTextureFromDDSData: Failed to extract DDS data for texture '{textureName}'");
+                    return null;
+                }
+
+                // Create MonoGame texture from RGBA data
+                // Based on daorigins.exe: Texture creation from DDS pixel data
+                var texture = _renderContext.GraphicsDevice.CreateTexture2D(width, height, rgbaData);
+                System.Console.WriteLine($"[EclipseArea] LoadTextureFromDDSData: Successfully loaded DDS texture '{textureName}' ({width}x{height})");
+                return texture;
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"[EclipseArea] LoadTextureFromDDSData: Exception loading DDS texture '{textureName}': {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Gets particle color for a given emitter type.
         /// </summary>
         /// <param name="emitterType">The particle emitter type.</param>
@@ -14265,113 +14369,9 @@ technique ColorGrading
             ExplosionRadius = 0.0f;
             ModificationTime = 0.0f;
         }
+    }
 
-        /// <summary>
-        /// Loads a texture from TPC format data.
-        /// Based on daorigins.exe: TPC texture loading and conversion to graphics API format.
-        /// </summary>
-        /// <param name="tpcData">TPC file data as byte array.</param>
-        /// <param name="textureName">Texture name for error reporting.</param>
-        /// <returns>ITexture2D instance or null on failure.</returns>
-        private ITexture2D LoadTextureFromTPCData(byte[] tpcData, string textureName)
-        {
-            if (_renderContext?.GraphicsDevice == null)
-            {
-                return null;
-            }
-
-            try
-            {
-                // Parse TPC file using existing parser
-                // Based on daorigins.exe: TPC file parsing for texture data extraction
-                var tpc = TPCAuto.ReadTpc(tpcData);
-                if (tpc == null || tpc.Layers.Count == 0 || tpc.Layers[0].Mipmaps.Count == 0)
-                {
-                    System.Console.WriteLine($"[EclipseArea] LoadTextureFromTPCData: Failed to parse TPC texture '{textureName}'");
-                    return null;
-                }
-
-                // Get first mipmap (largest mip level)
-                // Based on daorigins.exe: Uses largest mipmap for texture creation
-                var mipmap = tpc.Layers[0].Mipmaps[0];
-                if (mipmap.Data == null || mipmap.Data.Length == 0)
-                {
-                    System.Console.WriteLine($"[EclipseArea] LoadTextureFromTPCData: TPC texture '{textureName}' has no mipmap data");
-                    return null;
-                }
-
-                // Convert TPC format to RGBA data for MonoGame
-                // Based on daorigins.exe: TPC formats converted to RGBA for DirectX 9
-                byte[] rgbaData = ConvertTPCToRGBA(tpc, mipmap.Width, mipmap.Height);
-                if (rgbaData == null)
-                {
-                    System.Console.WriteLine($"[EclipseArea] LoadTextureFromTPCData: Failed to convert TPC texture '{textureName}' to RGBA");
-                    return null;
-                }
-
-                // Create MonoGame texture from RGBA data
-                // Based on daorigins.exe: Texture creation from converted pixel data
-                var texture = _renderContext.GraphicsDevice.CreateTexture2D(mipmap.Width, mipmap.Height, rgbaData);
-                System.Console.WriteLine($"[EclipseArea] LoadTextureFromTPCData: Successfully loaded TPC texture '{textureName}' ({mipmap.Width}x{mipmap.Height})");
-                return texture;
-            }
-            catch (Exception ex)
-            {
-                System.Console.WriteLine($"[EclipseArea] LoadTextureFromTPCData: Exception loading TPC texture '{textureName}': {ex.Message}");
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Loads a texture from DDS format data.
-        /// Based on daorigins.exe: DDS texture loading for DirectX 9 compatibility.
-        /// </summary>
-        /// <param name="ddsData">DDS file data as byte array.</param>
-        /// <param name="textureName">Texture name for error reporting.</param>
-        /// <returns>ITexture2D instance or null on failure.</returns>
-        private ITexture2D LoadTextureFromDDSData(byte[] ddsData, string textureName)
-        {
-            if (_renderContext?.GraphicsDevice == null)
-            {
-                return null;
-            }
-
-            try
-            {
-                // Parse DDS header to get dimensions and format
-                // Based on daorigins.exe: DDS header parsing for texture information
-                int width;
-                int height;
-                bool hasAlpha;
-                if (!TryParseDDSHeader(ddsData, out width, out height, out hasAlpha))
-                {
-                    System.Console.WriteLine($"[EclipseArea] LoadTextureFromDDSData: Failed to parse DDS header for texture '{textureName}'");
-                    return null;
-                }
-
-                // Extract pixel data from DDS
-                // Based on daorigins.exe: DDS pixel data extraction for DirectX 9
-                byte[] rgbaData = ExtractDDSDataToRGBA(ddsData, width, height, hasAlpha);
-                if (rgbaData == null)
-                {
-                    System.Console.WriteLine($"[EclipseArea] LoadTextureFromDDSData: Failed to extract DDS data for texture '{textureName}'");
-                    return null;
-                }
-
-                // Create MonoGame texture from RGBA data
-                // Based on daorigins.exe: Texture creation from DDS pixel data
-                var texture = _renderContext.GraphicsDevice.CreateTexture2D(width, height, rgbaData);
-                System.Console.WriteLine($"[EclipseArea] LoadTextureFromDDSData: Successfully loaded DDS texture '{textureName}' ({width}x{height})");
-                return texture;
-            }
-            catch (Exception ex)
-            {
-                System.Console.WriteLine($"[EclipseArea] LoadTextureFromDDSData: Exception loading DDS texture '{textureName}': {ex.Message}");
-                return null;
-            }
-        }
-
-        /// <summary>
+    /// <summary>
         /// Converts TPC texture data to RGBA format for MonoGame.
         /// Based on daorigins.exe: TPC format conversion to DirectX 9 compatible format.
         /// daorigins.exe: 0x00400000 - TPC texture format conversion and decompression
@@ -14658,7 +14658,7 @@ technique ColorGrading
         /// <param name="output">Output RGBA buffer (must be width * height * 4 bytes).</param>
         /// <param name="width">Texture width.</param>
         /// <param name="height">Texture height.</param>
-        private void DecompressDxt1(byte[] input, byte[] output, int width, int height)
+        private static void DecompressDxt1(byte[] input, byte[] output, int width, int height)
         {
             int blockCountX = (width + 3) / 4;
             int blockCountY = (height + 3) / 4;
@@ -14750,7 +14750,7 @@ technique ColorGrading
         /// <param name="output">Output RGBA buffer (must be width * height * 4 bytes).</param>
         /// <param name="width">Texture width.</param>
         /// <param name="height">Texture height.</param>
-        private void DecompressDxt3(byte[] input, byte[] output, int width, int height)
+        private static void DecompressDxt3(byte[] input, byte[] output, int width, int height)
         {
             int blockCountX = (width + 3) / 4;
             int blockCountY = (height + 3) / 4;
@@ -14837,7 +14837,7 @@ technique ColorGrading
         /// <param name="output">Output RGBA buffer (must be width * height * 4 bytes).</param>
         /// <param name="width">Texture width.</param>
         /// <param name="height">Texture height.</param>
-        private void DecompressDxt5(byte[] input, byte[] output, int width, int height)
+        private static void DecompressDxt5(byte[] input, byte[] output, int width, int height)
         {
             int blockCountX = (width + 3) / 4;
             int blockCountY = (height + 3) / 4;
@@ -14968,7 +14968,7 @@ technique ColorGrading
         /// <param name="output">Output RGBA buffer.</param>
         /// <param name="width">Texture width.</param>
         /// <param name="height">Texture height.</param>
-        private void ConvertBgraToRgba(byte[] input, byte[] output, int width, int height)
+        private static void ConvertBgraToRgba(byte[] input, byte[] output, int width, int height)
         {
             int pixelCount = width * height;
             for (int i = 0; i < pixelCount; i++)
@@ -14993,7 +14993,7 @@ technique ColorGrading
         /// <param name="output">Output RGBA buffer.</param>
         /// <param name="width">Texture width.</param>
         /// <param name="height">Texture height.</param>
-        private void ConvertRgbToRgba(byte[] input, byte[] output, int width, int height)
+        private static void ConvertRgbToRgba(byte[] input, byte[] output, int width, int height)
         {
             int pixelCount = width * height;
             for (int i = 0; i < pixelCount; i++)
@@ -15006,6 +15006,57 @@ technique ColorGrading
                     output[dstIdx + 1] = input[srcIdx + 1]; // G
                     output[dstIdx + 2] = input[srcIdx + 2]; // B
                     output[dstIdx + 3] = 255;               // A (fully opaque)
+                }
+            }
+        }
+
+        /// <summary>
+        /// Converts BGR pixel data to RGBA format (swaps R and B, adds alpha channel).
+        /// Based on daorigins.exe: BGR to RGBA conversion for DirectX 9 compatibility.
+        /// </summary>
+        /// <param name="input">Input BGR data.</param>
+        /// <param name="output">Output RGBA buffer.</param>
+        /// <param name="width">Texture width.</param>
+        /// <param name="height">Texture height.</param>
+        private static void ConvertBgrToRgba(byte[] input, byte[] output, int width, int height)
+        {
+            int pixelCount = width * height;
+            for (int i = 0; i < pixelCount; i++)
+            {
+                int srcIdx = i * 3;
+                int dstIdx = i * 4;
+                if (srcIdx + 2 < input.Length)
+                {
+                    output[dstIdx] = input[srcIdx + 2];     // R <- B
+                    output[dstIdx + 1] = input[srcIdx + 1]; // G <- G
+                    output[dstIdx + 2] = input[srcIdx];     // B <- R
+                    output[dstIdx + 3] = 255;               // A (fully opaque)
+                }
+            }
+        }
+
+        /// <summary>
+        /// Converts greyscale pixel data to RGBA format (replicates to all channels).
+        /// Based on daorigins.exe: Greyscale to RGBA conversion.
+        /// </summary>
+        /// <param name="input">Input greyscale data.</param>
+        /// <param name="output">Output RGBA buffer.</param>
+        /// <param name="width">Texture width.</param>
+        /// <param name="height">Texture height.</param>
+        private static void ConvertGreyscaleToRgba(byte[] input, byte[] output, int width, int height)
+        {
+            int pixelCount = width * height;
+            for (int i = 0; i < pixelCount; i++)
+            {
+                int srcIdx = i;
+                int dstIdx = i * 4;
+                if (srcIdx < input.Length)
+                {
+                    byte grey = input[srcIdx];
+                    output[dstIdx] = grey;         // R
+                    output[dstIdx + 1] = grey;     // G
+                    output[dstIdx + 2] = grey;     // B
+                    output[dstIdx + 3] = 255;       // A (fully opaque)
                 }
             }
         }
