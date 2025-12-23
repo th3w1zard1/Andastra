@@ -456,7 +456,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             // GLuint buffer;
             // glGenBuffers(1, &buffer)
             // glBindBuffer(target, buffer)
-            // glBufferData(target, desc.SizeInBytes, NULL, usage)
+            // glBufferData(target, desc.ByteSize, NULL, usage)
 
             IntPtr handle = new IntPtr(_nextResourceHandle++);
             _resources[handle] = new ResourceInfo
@@ -757,7 +757,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private const uint GL_HALF_FLOAT = 0x140B;
         private const uint GL_UNSIGNED_SHORT = 0x1403;
         private const uint GL_UNSIGNED_INT = 0x1405;
-        
+
         // Internal format constants (matching GLInternalFormat enum values)
         private const uint GL_RGBA8 = 0x8058;
         private const uint GL_RGB8 = 0x8051;
@@ -773,14 +773,14 @@ namespace Andastra.Runtime.MonoGame.Backends
         private const uint GL_R32F = 0x822E;
         private const uint GL_SRGB8_ALPHA8 = 0x8C43;
         private const uint GL_SRGB8 = 0x8C41;
-        
+
         // Compressed texture formats (S3TC/DXT)
         // Based on original engine: swkotor.exe and swkotor2.exe use S3TC compression
         private const uint GL_COMPRESSED_RGB_S3TC_DXT1_EXT = 0x83F0;
         private const uint GL_COMPRESSED_RGBA_S3TC_DXT1_EXT = 0x83F1;
         private const uint GL_COMPRESSED_RGBA_S3TC_DXT3_EXT = 0x83F2;
         private const uint GL_COMPRESSED_RGBA_S3TC_DXT5_EXT = 0x83F3;
-        
+
         // Error codes
         private const uint GL_NO_ERROR = 0x0000;
         private const uint GL_INVALID_ENUM = 0x0500;
@@ -1069,7 +1069,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// Converts BGRA pixel data to RGBA.
         /// Matches original engine behavior: swkotor.exe converts BGRA to RGBA for OpenGL.
         /// Based on swkotor.exe: FUN_00427c90 @ 0x00427c90 BGRA conversion.
-        /// 
+        ///
         /// BGRA format: [B, G, R, A] per pixel (4 bytes)
         /// RGBA format: [R, G, B, A] per pixel (4 bytes)
         /// Conversion: Swap B and R channels, keep G and A unchanged.
@@ -1088,7 +1088,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             byte[] rgbaData = new byte[bgraData.Length];
-            
+
             // Process complete 4-byte pixels
             int pixelCount = bgraData.Length / 4;
             for (int i = 0; i < pixelCount; i++)
@@ -1100,7 +1100,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 rgbaData[offset + 2] = bgraData[offset];     // B (from R position)
                 rgbaData[offset + 3] = bgraData[offset + 3]; // A (unchanged)
             }
-            
+
             // Copy any remaining bytes (shouldn't happen for valid texture data, but handle gracefully)
             int remainingBytes = bgraData.Length % 4;
             if (remainingBytes > 0)
@@ -1112,7 +1112,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 }
                 Console.WriteLine($"[OpenGLBackend] ConvertBGRAToRGBA: Warning - {remainingBytes} leftover bytes copied without conversion. This may indicate invalid BGRA texture data.");
             }
-            
+
             return rgbaData;
         }
 

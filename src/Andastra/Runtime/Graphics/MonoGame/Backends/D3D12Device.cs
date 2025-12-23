@@ -7670,7 +7670,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                         Guid iidResource = new Guid("696442be-a72e-4059-bc79-5b5c98040fad");
 
                         // Initial state is D3D12_RESOURCE_STATE_GENERIC_READ (0) for upload heap
-                        int hr = CallCreateCommittedResource(_d3d12Device, heapPropertiesPtr, 0, resourceDescPtr, 0, IntPtr.Zero, ref iidResource, resourcePtr);
+                        int hr = _device.CallCreateCommittedResource(_d3d12Device, heapPropertiesPtr, 0, resourceDescPtr, 0, IntPtr.Zero, ref iidResource, resourcePtr);
                         if (hr < 0)
                         {
                             throw new InvalidOperationException($"Failed to create staging buffer: HRESULT 0x{hr:X8}");
@@ -7749,7 +7749,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     // ID3D12Resource is a COM object that must be released via IUnknown::Release()
                     if (stagingBufferResource != IntPtr.Zero)
                     {
-                        ReleaseComObject(stagingBufferResource);
+                        _device.ReleaseComObject(stagingBufferResource);
                     }
                 }
             }
@@ -7948,7 +7948,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     Marshal.StructureToPtr(textureResourceDesc, resourceDescPtr, false);
 
                     // Call GetCopyableFootprints to get exact layout for the specific subresource
-                    CallGetCopyableFootprints(
+                    _device.CallGetCopyableFootprints(
                         _d3d12Device,
                         resourceDescPtr,
                         subresourceIndex, // FirstSubresource: the subresource we're writing to
@@ -8033,13 +8033,13 @@ namespace Andastra.Runtime.MonoGame.Backends
                     {
                         // Marshal structures to unmanaged memory
                         Marshal.StructureToPtr(heapProperties, heapPropertiesPtr, false);
-                        Marshal.StructureToPtr(bufferDesc, resourceDescPtr, false);
+                        Marshal.StructureToPtr(bufferDesc, bufferResourceDescPtr, false);
 
                         // IID_ID3D12Resource
                         Guid iidResource = new Guid("696442be-a72e-4059-bc79-5b5c98040fad");
 
                         // Initial state is D3D12_RESOURCE_STATE_GENERIC_READ (0) for upload heap
-                        int hr = CallCreateCommittedResource(_d3d12Device, heapPropertiesPtr, 0, resourceDescPtr, 0, IntPtr.Zero, ref iidResource, resourcePtr);
+                        int hr = _device.CallCreateCommittedResource(_d3d12Device, heapPropertiesPtr, 0, bufferResourceDescPtr, 0, IntPtr.Zero, ref iidResource, resourcePtr);
                         if (hr < 0)
                         {
                             throw new InvalidOperationException($"Failed to create staging buffer: HRESULT 0x{hr:X8}");
@@ -8054,7 +8054,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     finally
                     {
                         Marshal.FreeHGlobal(heapPropertiesPtr);
-                        Marshal.FreeHGlobal(resourceDescPtr);
+                        Marshal.FreeHGlobal(bufferResourceDescPtr);
                         Marshal.FreeHGlobal(resourcePtr);
                     }
 
@@ -8114,8 +8114,8 @@ namespace Andastra.Runtime.MonoGame.Backends
 
                     // Create copy locations for staging buffer (source) and texture (destination)
                     // For buffer-to-texture copy, source uses PLACED_FOOTPRINT type
-                    uint dxgiFormat = ConvertTextureFormatToDxgiFormatForTexture(desc.Format);
-                    if (dxgiFormat == 0)
+                    uint copyDxgiFormat = ConvertTextureFormatToDxgiFormatForTexture(desc.Format);
+                    if (copyDxgiFormat == 0)
                     {
                         throw new NotSupportedException($"Texture format {desc.Format} cannot be converted to DXGI_FORMAT");
                     }
@@ -8182,7 +8182,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     // Release staging buffer resource
                     if (stagingBufferResource != IntPtr.Zero)
                     {
-                        ReleaseComObject(stagingBufferResource);
+                        _device.ReleaseComObject(stagingBufferResource);
                     }
                 }
             }
@@ -8236,14 +8236,14 @@ namespace Andastra.Runtime.MonoGame.Backends
                     throw new ArgumentOutOfRangeException(nameof(srcOffset), $"Source offset {srcOffset} is out of range [0, {srcDesc.ByteSize})");
                 }
 
-                if (numBytes < 0)
+                if (size < 0)
                 {
-                    throw new ArgumentException("Number of bytes must be non-negative", nameof(numBytes));
+                    throw new ArgumentException("Number of bytes must be non-negative", nameof(size));
                 }
 
-                if (srcOffset + numBytes > srcDesc.ByteSize)
+                if (srcOffset + size > srcDesc.ByteSize)
                 {
-                    throw new ArgumentException($"Source range [{srcOffset}, {srcOffset + numBytes}) exceeds source buffer size {srcDesc.ByteSize}", nameof(numBytes));
+                    throw new ArgumentException($"Source range [{srcOffset}, {srcOffset + size}) exceeds source buffer size {srcDesc.ByteSize}", nameof(size));
                 }
 
                 // Validate destination buffer range
@@ -8252,9 +8252,9 @@ namespace Andastra.Runtime.MonoGame.Backends
                     throw new ArgumentOutOfRangeException(nameof(destOffset), $"Destination offset {destOffset} is out of range [0, {destDesc.ByteSize})");
                 }
 
-                if (destOffset + numBytes > destDesc.ByteSize)
+                if (destOffset + size > destDesc.ByteSize)
                 {
-                    throw new ArgumentException($"Destination range [{destOffset}, {destOffset + numBytes}) exceeds destination buffer size {destDesc.ByteSize}", nameof(numBytes));
+                    throw new ArgumentException($"Destination range [{destOffset}, {destOffset + size}) exceeds destination buffer size {destDesc.ByteSize}", nameof(size));
                 }
 
                 // Transition source buffer to COPY_SOURCE state

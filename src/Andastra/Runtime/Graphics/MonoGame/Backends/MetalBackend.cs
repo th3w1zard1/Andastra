@@ -58,7 +58,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         // Frame statistics
         private FrameStatistics _lastFrameStats;
-        
+
         // Frame tracking for multi-buffering
         private int _currentFrameIndex;
 
@@ -276,7 +276,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             // Reset frame statistics
             _lastFrameStats = new FrameStatistics();
-            
+
             // Frame index is advanced at EndFrame() for proper multi-buffering
             // This ensures frame index corresponds to the frame being rendered
         }
@@ -326,7 +326,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 MetalNative.ReleaseCommandBuffer(_currentCommandBuffer);
                 _currentCommandBuffer = IntPtr.Zero;
             }
-            
+
             // Advance frame index for multi-buffering
             // Metal typically uses triple buffering for optimal performance
             // Frame index cycles through 0, 1, 2 for resource management
@@ -550,7 +550,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             // Create MTLBuffer
-            IntPtr buffer = MetalNative.CreateBuffer(_device, (uint)desc.SizeInBytes, ConvertBufferUsage(desc.Usage));
+            IntPtr buffer = MetalNative.CreateBuffer(_device, (uint)desc.ByteSize, ConvertBufferUsage(desc.Usage));
 
             if (buffer == IntPtr.Zero)
             {
@@ -1526,7 +1526,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// Compiles a Metal shader library from source code at runtime.
         /// Metal API: [device newLibraryWithSource:source options:options error:&error]
         /// This enables runtime shader compilation from source code without requiring pre-compiled .metallib files.
-        /// 
+        ///
         /// Based on Metal API: MTLDevice::newLibraryWithSource:options:error:
         /// Metal API Reference: https://developer.apple.com/documentation/metal/mtldevice/1433401-newlibrarywithsource
         /// </summary>
@@ -1872,7 +1872,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 // Register selector for copyFromTexture:sourceSlice:sourceLevel:sourceOrigin:sourceSize:toTexture:destinationSlice:destinationLevel:destinationOrigin:
                 IntPtr selector = sel_registerName("copyFromTexture:sourceSlice:sourceLevel:sourceOrigin:sourceSize:toTexture:destinationSlice:destinationLevel:destinationOrigin:");
-                
+
                 // Call the method
                 // Note: On 64-bit systems, NSUInteger is 64-bit (ulong), so we cast uint to ulong
                 objc_msgSend_copyFromTexture(blitEncoder, selector, sourceTexture, (ulong)sourceSlice, (ulong)sourceLevel,

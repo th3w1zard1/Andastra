@@ -3635,9 +3635,9 @@ namespace Andastra.Runtime.MonoGame.Backends
             // Indirect dispatch buffer must contain at least 12 bytes (3 uint32 values: groupCountX, groupCountY, groupCountZ)
             // The offset must be within the buffer bounds and leave at least 12 bytes for the dispatch arguments
             BufferDesc bufferDesc = metalBuffer.Desc;
-            if (offset + 12 > bufferDesc.SizeInBytes)
+            if (offset + 12 > bufferDesc.ByteSize)
             {
-                throw new ArgumentException($"Offset {offset} plus 12 bytes (required for indirect dispatch arguments) exceeds buffer size {bufferDesc.SizeInBytes}", nameof(offset));
+                throw new ArgumentException($"Offset {offset} plus 12 bytes (required for indirect dispatch arguments) exceeds buffer size {bufferDesc.ByteSize}", nameof(offset));
             }
 
             // Get threadgroup size for indirect dispatch

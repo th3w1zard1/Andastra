@@ -7,7 +7,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
     /// <summary>
     /// Graphics device abstraction following NVRHI-style patterns.
     /// Provides a unified interface across Vulkan, D3D12, and D3D11.
-    /// 
+    ///
     /// This design follows the industry-standard pattern used by:
     /// - NVRHI (NVIDIA Rendering Hardware Interface)
     /// - Diligent Engine
@@ -19,144 +19,144 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         /// Gets the device capabilities and feature support.
         /// </summary>
         GraphicsCapabilities Capabilities { get; }
-        
+
         /// <summary>
         /// Gets the active graphics backend.
         /// </summary>
         GraphicsBackend Backend { get; }
-        
+
         /// <summary>
         /// Whether the device is valid and ready for rendering.
         /// </summary>
         bool IsValid { get; }
-        
+
         #region Resource Creation
-        
+
         /// <summary>
         /// Creates a texture resource.
         /// </summary>
         ITexture CreateTexture(TextureDesc desc);
-        
+
         /// <summary>
         /// Creates a buffer resource (vertex, index, constant, structured).
         /// </summary>
         IBuffer CreateBuffer(BufferDesc desc);
-        
+
         /// <summary>
         /// Creates a sampler state.
         /// </summary>
         ISampler CreateSampler(SamplerDesc desc);
-        
+
         /// <summary>
         /// Creates a shader module from bytecode.
         /// </summary>
         IShader CreateShader(ShaderDesc desc);
-        
+
         /// <summary>
         /// Creates a graphics pipeline state object.
         /// </summary>
         IGraphicsPipeline CreateGraphicsPipeline(GraphicsPipelineDesc desc, IFramebuffer framebuffer);
-        
+
         /// <summary>
         /// Creates a compute pipeline state object.
         /// </summary>
         IComputePipeline CreateComputePipeline(ComputePipelineDesc desc);
-        
+
         /// <summary>
         /// Creates a framebuffer (render target collection).
         /// </summary>
         IFramebuffer CreateFramebuffer(FramebufferDesc desc);
-        
+
         /// <summary>
         /// Creates a binding layout describing shader resource bindings.
         /// </summary>
         IBindingLayout CreateBindingLayout(BindingLayoutDesc desc);
-        
+
         /// <summary>
         /// Creates a binding set with actual resource bindings.
         /// </summary>
         IBindingSet CreateBindingSet(IBindingLayout layout, BindingSetDesc desc);
-        
+
         /// <summary>
         /// Creates a command list for recording rendering commands.
         /// </summary>
         ICommandList CreateCommandList(CommandListType type = CommandListType.Graphics);
-        
+
         /// <summary>
         /// Creates a handle for a native texture (for swap chain integration).
         /// </summary>
         ITexture CreateHandleForNativeTexture(IntPtr nativeHandle, TextureDesc desc);
-        
+
         #endregion
-        
+
         #region Raytracing Resources
-        
+
         /// <summary>
         /// Creates a bottom-level acceleration structure (BLAS).
         /// </summary>
         IAccelStruct CreateAccelStruct(AccelStructDesc desc);
-        
+
         /// <summary>
         /// Creates a raytracing pipeline state object.
         /// </summary>
         IRaytracingPipeline CreateRaytracingPipeline(RaytracingPipelineDesc desc);
-        
+
         #endregion
-        
+
         #region Command Execution
-        
+
         /// <summary>
         /// Executes a command list.
         /// </summary>
         void ExecuteCommandList(ICommandList commandList);
-        
+
         /// <summary>
         /// Executes multiple command lists.
         /// </summary>
         void ExecuteCommandLists(ICommandList[] commandLists);
-        
+
         /// <summary>
         /// Waits for all GPU operations to complete.
         /// </summary>
         void WaitIdle();
-        
+
         /// <summary>
         /// Signals a fence from the GPU.
         /// </summary>
         void Signal(IFence fence, ulong value);
-        
+
         /// <summary>
         /// Waits for a fence value on the CPU.
         /// </summary>
         void WaitFence(IFence fence, ulong value);
-        
+
         #endregion
-        
+
         #region Queries
-        
+
         /// <summary>
         /// Gets the required alignment for constant buffer offsets.
         /// </summary>
         int GetConstantBufferAlignment();
-        
+
         /// <summary>
         /// Gets the required alignment for texture data.
         /// </summary>
         int GetTextureAlignment();
-        
+
         /// <summary>
         /// Checks if a format is supported for a given usage.
         /// </summary>
         bool IsFormatSupported(TextureFormat format, TextureUsage usage);
-        
+
         /// <summary>
         /// Gets the current frame index (for multi-buffering).
         /// </summary>
         int GetCurrentFrameIndex();
-        
+
         #endregion
     }
-    
+
     /// <summary>
     /// Texture resource interface.
     /// </summary>
@@ -165,7 +165,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         TextureDesc Desc { get; }
         IntPtr NativeHandle { get; }
     }
-    
+
     /// <summary>
     /// Buffer resource interface.
     /// </summary>
@@ -174,7 +174,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         BufferDesc Desc { get; }
         IntPtr NativeHandle { get; }
     }
-    
+
     /// <summary>
     /// Sampler state interface.
     /// </summary>
@@ -182,7 +182,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
     {
         SamplerDesc Desc { get; }
     }
-    
+
     /// <summary>
     /// Shader module interface.
     /// </summary>
@@ -191,7 +191,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         ShaderDesc Desc { get; }
         ShaderType Type { get; }
     }
-    
+
     /// <summary>
     /// Graphics pipeline state interface.
     /// </summary>
@@ -199,7 +199,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
     {
         GraphicsPipelineDesc Desc { get; }
     }
-    
+
     /// <summary>
     /// Compute pipeline state interface.
     /// </summary>
@@ -207,7 +207,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
     {
         ComputePipelineDesc Desc { get; }
     }
-    
+
     /// <summary>
     /// Framebuffer interface.
     /// </summary>
@@ -216,7 +216,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         FramebufferDesc Desc { get; }
         FramebufferInfo GetInfo();
     }
-    
+
     /// <summary>
     /// Binding layout interface.
     /// </summary>
@@ -224,7 +224,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
     {
         BindingLayoutDesc Desc { get; }
     }
-    
+
     /// <summary>
     /// Binding set interface.
     /// </summary>
@@ -232,7 +232,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
     {
         IBindingLayout Layout { get; }
     }
-    
+
     /// <summary>
     /// Acceleration structure interface for raytracing.
     /// </summary>
@@ -242,14 +242,14 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         bool IsTopLevel { get; }
         ulong DeviceAddress { get; }
     }
-    
+
     /// <summary>
     /// Raytracing pipeline interface.
     /// </summary>
     public interface IRaytracingPipeline : IDisposable
     {
         RaytracingPipelineDesc Desc { get; }
-        
+
         /// <summary>
         /// Gets the shader identifier for a shader or hit group in the pipeline.
         /// Shader identifiers are opaque handles used in the shader binding table.
@@ -258,7 +258,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         /// <returns>Shader identifier bytes (typically 32 bytes for D3D12, variable for Vulkan). Returns null if the export name is not found.</returns>
         byte[] GetShaderIdentifier(string exportName);
     }
-    
+
     /// <summary>
     /// Fence for CPU-GPU synchronization.
     /// </summary>
@@ -266,7 +266,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
     {
         ulong CompletedValue { get; }
     }
-    
+
     /// <summary>
     /// Shader types.
     /// </summary>
@@ -286,7 +286,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         Intersection,
         Callable
     }
-    
+
     /// <summary>
     /// Command list types.
     /// </summary>
@@ -296,9 +296,9 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         Compute,
         Copy
     }
-    
+
     #region Descriptor Structs (NVRHI-style)
-    
+
     /// <summary>
     /// Texture descriptor following NVRHI patterns.
     /// </summary>
@@ -317,7 +317,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         public bool KeepInitialState;
         public ClearValue ClearValue;
         public string DebugName;
-        
+
         public static TextureDesc Create2D(int width, int height, TextureFormat format, string debugName = null)
         {
             return new TextureDesc
@@ -335,26 +335,26 @@ namespace Andastra.Runtime.MonoGame.Interfaces
                 DebugName = debugName
             };
         }
-        
+
         public TextureDesc SetIsRenderTarget(bool value)
         {
             if (value) Usage |= TextureUsage.RenderTarget;
             return this;
         }
-        
+
         public TextureDesc SetIsDepthStencil(bool value)
         {
             if (value) Usage |= TextureUsage.DepthStencil;
             return this;
         }
-        
+
         public TextureDesc SetIsUAV(bool value)
         {
             if (value) Usage |= TextureUsage.UnorderedAccess;
             return this;
         }
     }
-    
+
     /// <summary>
     /// Buffer descriptor following NVRHI patterns.
     /// </summary>
@@ -369,7 +369,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         public bool IsAccelStructBuildInput;
         public BufferHeapType HeapType;
         public string DebugName;
-        
+
         public BufferDesc SetByteSize(int size) { ByteSize = size; return this; }
         public BufferDesc SetStructStride(int stride) { StructStride = stride; return this; }
         public BufferDesc SetIsVertexBuffer(bool v) { if (v) Usage |= BufferUsageFlags.VertexBuffer; return this; }
@@ -388,7 +388,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         public BufferDesc SetHeapType(BufferHeapType heapType) { HeapType = heapType; return this; }
         public BufferDesc SetDebugName(string name) { DebugName = name; return this; }
     }
-    
+
     /// <summary>
     /// Sampler descriptor.
     /// </summary>
@@ -407,7 +407,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         public float MaxLod;
         public float[] BorderColor;
     }
-    
+
     /// <summary>
     /// Shader descriptor.
     /// </summary>
@@ -418,7 +418,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         public string EntryPoint;
         public string DebugName;
     }
-    
+
     /// <summary>
     /// Graphics pipeline descriptor following NVRHI patterns.
     /// </summary>
@@ -435,11 +435,11 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         public DepthStencilStateDesc DepthStencilState;
         public PrimitiveTopology PrimitiveTopology;
         public IBindingLayout[] BindingLayouts;
-        
+
         public GraphicsPipelineDesc SetVertexShader(IShader s) { VertexShader = s; return this; }
         public GraphicsPipelineDesc SetPixelShader(IShader s) { PixelShader = s; return this; }
         public GraphicsPipelineDesc SetInputLayout(InputLayoutDesc l) { InputLayout = l; return this; }
-        public GraphicsPipelineDesc AddBindingLayout(IBindingLayout l) 
+        public GraphicsPipelineDesc AddBindingLayout(IBindingLayout l)
         {
             if (BindingLayouts == null) BindingLayouts = new IBindingLayout[] { l };
             else
@@ -452,7 +452,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
             return this;
         }
     }
-    
+
     /// <summary>
     /// Compute pipeline descriptor.
     /// </summary>
@@ -461,7 +461,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         public IShader ComputeShader;
         public IBindingLayout[] BindingLayouts;
     }
-    
+
     /// <summary>
     /// Framebuffer descriptor following NVRHI patterns.
     /// </summary>
@@ -469,7 +469,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
     {
         public FramebufferAttachment[] ColorAttachments;
         public FramebufferAttachment DepthAttachment;
-        
+
         public FramebufferDesc AddColorAttachment(ITexture texture, int mipLevel = 0, int arraySlice = 0)
         {
             var attachment = new FramebufferAttachment { Texture = texture, MipLevel = mipLevel, ArraySlice = arraySlice };
@@ -483,14 +483,14 @@ namespace Andastra.Runtime.MonoGame.Interfaces
             }
             return this;
         }
-        
+
         public FramebufferDesc SetDepthAttachment(ITexture texture, int mipLevel = 0, int arraySlice = 0)
         {
             DepthAttachment = new FramebufferAttachment { Texture = texture, MipLevel = mipLevel, ArraySlice = arraySlice };
             return this;
         }
     }
-    
+
     /// <summary>
     /// Framebuffer attachment.
     /// </summary>
@@ -500,7 +500,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         public int MipLevel;
         public int ArraySlice;
     }
-    
+
     /// <summary>
     /// Framebuffer info for pipeline compatibility.
     /// </summary>
@@ -512,7 +512,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         public int Width;
         public int Height;
     }
-    
+
     /// <summary>
     /// Binding layout descriptor.
     /// </summary>
@@ -521,7 +521,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         public BindingLayoutItem[] Items;
         public bool IsPushDescriptor;
     }
-    
+
     /// <summary>
     /// Binding set descriptor.
     /// </summary>
@@ -529,7 +529,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
     {
         public BindingSetItem[] Items;
     }
-    
+
     /// <summary>
     /// Acceleration structure descriptor for raytracing.
     /// </summary>
@@ -540,7 +540,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         public GeometryDesc[] BottomLevelGeometries;
         public AccelStructBuildFlags BuildFlags;
         public string DebugName;
-        
+
         public AccelStructDesc SetIsTopLevel(bool v) { IsTopLevel = v; return this; }
         public AccelStructDesc SetTopLevelMaxInstances(int n) { TopLevelMaxInstances = n; return this; }
         public AccelStructDesc SetDebugName(string n) { DebugName = n; return this; }
@@ -557,7 +557,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
             return this;
         }
     }
-    
+
     /// <summary>
     /// Raytracing pipeline descriptor.
     /// </summary>
@@ -571,13 +571,13 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         public IBindingLayout GlobalBindingLayout;
         public string DebugName;
     }
-    
+
     #endregion
-    
+
     #region Supporting Enums and Structs
-    
+
     public enum TextureDimension { Texture1D, Texture2D, Texture3D, TextureCube, Texture1DArray, Texture2DArray, TextureCubeArray }
-    
+
     /// <summary>
     /// Buffer heap type for D3D12 backend, specifying memory placement strategy.
     /// Maps to D3D12_HEAP_TYPE values:
@@ -592,35 +592,35 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         /// Use this for vertex buffers, index buffers, constant buffers that are set once and used by GPU.
         /// </summary>
         Default = 0,
-        
+
         /// <summary>
         /// Upload heap type - CPU-writable, GPU-readable.
         /// Use this for buffers that are frequently updated from CPU (dynamic buffers, staging buffers).
         /// Allows direct CPU writes without needing temporary staging buffers.
         /// </summary>
         Upload = 1,
-        
+
         /// <summary>
         /// Readback heap type - CPU-readable, GPU-writable.
         /// Use this for buffers that need to be read back by CPU (e.g., query results, GPU compute outputs).
         /// </summary>
         Readback = 2
     }
-    
+
     public enum ResourceState
     {
         Common, VertexBuffer, IndexBuffer, ConstantBuffer, ShaderResource,
         UnorderedAccess, RenderTarget, DepthWrite, DepthRead, IndirectArgument,
         CopyDest, CopySource, Present, AccelStructRead, AccelStructWrite, AccelStructBuildInput
     }
-    
+
     public struct ClearValue
     {
         public float R, G, B, A;
         public float Depth;
         public byte Stencil;
     }
-    
+
     [Flags]
     public enum BufferUsageFlags
     {
@@ -634,16 +634,16 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         AccelStructStorage = 1 << 6,
         ShaderBindingTable = 1 << 7
     }
-    
+
     public enum SamplerFilter { Point, Linear, Anisotropic }
     public enum SamplerAddressMode { Wrap, Mirror, Clamp, Border, MirrorOnce }
     public enum PrimitiveTopology { PointList, LineList, LineStrip, TriangleList, TriangleStrip, PatchList }
-    
+
     public struct InputLayoutDesc
     {
         public VertexAttributeDesc[] Attributes;
     }
-    
+
     public struct VertexAttributeDesc
     {
         public string Name;
@@ -651,14 +651,37 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         public int Offset;
         public TextureFormat Format;
         public bool IsInstanced;
+
+        // Additional properties for D3D12 compatibility
+        public string SemanticName
+        {
+            get { return Name; }
+            set { Name = value; }
+        }
+
+        public int SemanticIndex { get; set; }
+
+        public int Slot
+        {
+            get { return BufferIndex; }
+            set { BufferIndex = value; }
+        }
+
+        public bool PerInstance
+        {
+            get { return IsInstanced; }
+            set { IsInstanced = value; }
+        }
+
+        public int InstanceStepRate { get; set; }
     }
-    
+
     public struct BlendStateDesc
     {
         public bool AlphaToCoverage;
         public RenderTargetBlendDesc[] RenderTargets;
     }
-    
+
     public struct RenderTargetBlendDesc
     {
         public bool BlendEnable;
@@ -666,7 +689,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         public BlendOp BlendOp, BlendOpAlpha;
         public byte WriteMask;
     }
-    
+
     public struct RasterStateDesc
     {
         public CullMode CullMode;
@@ -681,7 +704,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         public bool AntialiasedLineEnable;
         public bool ConservativeRaster;
     }
-    
+
     public struct DepthStencilStateDesc
     {
         public bool DepthTestEnable;
@@ -693,15 +716,15 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         public StencilOpDesc FrontFace;
         public StencilOpDesc BackFace;
     }
-    
+
     public struct StencilOpDesc
     {
         public StencilOp StencilFailOp, DepthFailOp, PassOp;
         public CompareFunc StencilFunc;
     }
-    
+
     public enum StencilOp { Keep, Zero, Replace, IncrSat, DecrSat, Invert, Incr, Decr }
-    
+
     public struct BindingLayoutItem
     {
         public int Slot;
@@ -709,9 +732,9 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         public ShaderStageFlags Stages;
         public int Count;
     }
-    
+
     public enum BindingType { Texture, Sampler, ConstantBuffer, StructuredBuffer, RWTexture, RWBuffer, AccelStruct }
-    
+
     [Flags]
     public enum ShaderStageFlags
     {
@@ -720,7 +743,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         RayGen = 64, Miss = 128, ClosestHit = 256, AnyHit = 512,
         AllRaytracing = RayGen | Miss | ClosestHit | AnyHit
     }
-    
+
     public struct BindingSetItem
     {
         public int Slot;
@@ -732,22 +755,22 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         public int BufferOffset;
         public int BufferRange;
     }
-    
+
     public struct GeometryDesc
     {
         public GeometryType Type;
         public GeometryTriangles Triangles;
         public GeometryAABBs AABBs;
         public GeometryFlags Flags;
-        
+
         public GeometryDesc SetTriangles(GeometryTriangles t) { Type = GeometryType.Triangles; Triangles = t; return this; }
     }
-    
+
     public enum GeometryType { Triangles, AABBs }
-    
+
     [Flags]
     public enum GeometryFlags { None = 0, Opaque = 1, NoDuplicateAnyHit = 2 }
-    
+
     public struct GeometryTriangles
     {
         public IBuffer VertexBuffer;
@@ -761,13 +784,13 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         public TextureFormat IndexFormat;
         public IBuffer TransformBuffer;
         public int TransformOffset;
-        
+
         public GeometryTriangles SetVertexBuffer(IBuffer b) { VertexBuffer = b; return this; }
         public GeometryTriangles SetVertexFormat(TextureFormat f) { VertexFormat = f; return this; }
         public GeometryTriangles SetVertexCount(int n) { VertexCount = n; return this; }
         public GeometryTriangles SetVertexStride(int s) { VertexStride = s; return this; }
     }
-    
+
     public struct GeometryAABBs
     {
         public IBuffer Buffer;
@@ -775,13 +798,13 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         public int Count;
         public int Stride;
     }
-    
+
     [Flags]
     public enum AccelStructBuildFlags
     {
         None = 0, AllowUpdate = 1, AllowCompaction = 2, PreferFastTrace = 4, PreferFastBuild = 8, MinimizeMemory = 16
     }
-    
+
     public struct HitGroup
     {
         public string Name;
@@ -790,7 +813,7 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         public IShader IntersectionShader;
         public bool IsProceduralPrimitive;
     }
-    
+
     #endregion
 }
 

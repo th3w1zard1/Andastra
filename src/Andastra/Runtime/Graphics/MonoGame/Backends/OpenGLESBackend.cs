@@ -487,7 +487,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             // GLuint buffer;
             // glGenBuffers(1, &buffer)
             // glBindBuffer(target, buffer)
-            // glBufferData(target, desc.SizeInBytes, NULL, usage)
+            // glBufferData(target, desc.ByteSize, NULL, usage)
 
             IntPtr handle = new IntPtr(_nextResourceHandle++);
             _resources[handle] = new ResourceInfo

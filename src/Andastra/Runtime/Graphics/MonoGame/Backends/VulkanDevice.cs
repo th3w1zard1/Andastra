@@ -6772,12 +6772,12 @@ namespace Andastra.Runtime.MonoGame.Backends
             // Fallback: assume common formats are supported for common usages
             switch (format)
             {
-                case TextureFormat.R8G8B8A8_UNORM:
-                case TextureFormat.R8G8B8A8_UNORM_SRGB:
+                case TextureFormat.R8G8B8A8_UNorm:
+                case TextureFormat.R8G8B8A8_UNorm_SRGB:
                     return (usage & (TextureUsage.ShaderResource | TextureUsage.RenderTarget)) != 0;
 
-                case TextureFormat.R16G16B16A16_FLOAT:
-                case TextureFormat.R32G32B32A32_FLOAT:
+                case TextureFormat.R16G16B16A16_Float:
+                case TextureFormat.R32G32B32A32_Float:
                     return (usage & (TextureUsage.ShaderResource | TextureUsage.RenderTarget | TextureUsage.UnorderedAccess)) != 0;
 
                 case TextureFormat.D24_UNorm_S8_UInt:
@@ -9061,7 +9061,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 VulkanBuffer vulkanBuffer = buffer as VulkanBuffer;
                 if (vulkanBuffer != null)
                 {
-                    bufferSize = (ulong)vulkanBuffer.Desc.SizeInBytes;
+                    bufferSize = (ulong)vulkanBuffer.Desc.ByteSize;
                 }
 
                 // Queue buffer barrier (will be flushed on CommitBarriers)
