@@ -1361,9 +1361,9 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Determine sign using cross product (right-hand rule)
             Vector3 cross = Vector3.Cross(refProjected, currentProjected);
-            float sign = Vector3.Dot(cross, hingeAxis) >= 0.0f ? 1.0f : -1.0f;
+            float signValue = Vector3.Dot(cross, hingeAxis) >= 0.0f ? 1.0f : -1.0f;
 
-            return angleBetween * sign;
+            return angleBetween * signValue;
         }
 
         /// <summary>
