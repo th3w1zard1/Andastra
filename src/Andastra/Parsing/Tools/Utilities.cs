@@ -57,7 +57,6 @@ namespace Andastra.Parsing.Tools
                 string text1 = GffToText(gff1);
                 string text2 = GffToText(gff2);
 
-                // TODO:  Simple unified diff (simplified version)
                 string result = GenerateUnifiedDiff(text1, text2, file1Path, file2Path, contextLines);
 
                 if (!string.IsNullOrEmpty(outputPath))
