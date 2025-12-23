@@ -8,7 +8,7 @@ using Andastra.Runtime.Graphics.Common.Backends;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Structs;
-using StrideGraphics = Andastra.Runtime.Stride.Graphics;
+using StrideGraphics = Stride.Graphics;
 
 namespace Andastra.Runtime.Stride.Backends
 {
@@ -35,7 +35,7 @@ namespace Andastra.Runtime.Stride.Backends
     /// </summary>
     public class StrideDirect3D12Backend : BaseDirect3D12Backend
     {
-        private global::Stride.Engine.BioWareGame _game;
+        private global::Stride.Engine.Game _game;
         private GraphicsDevice _strideDevice;
 
         // Bindless resource tracking
@@ -1005,7 +1005,7 @@ namespace Andastra.Runtime.Stride.Backends
         /// Converts a Stride TextureFilter to a D3D12_FILTER value.
         /// Based on DirectX 12 Filter Types: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ne-d3d12-d3d12_filter
         /// </summary>
-        private uint ConvertTextureFilterToD3D12(Stride.Graphics.TextureFilter filter, bool anisotropic)
+        private uint ConvertTextureFilterToD3D12(Andastra.Runtime.Graphics.TextureFilter filter, bool anisotropic)
         {
             if (anisotropic)
             {
@@ -1016,11 +1016,11 @@ namespace Andastra.Runtime.Stride.Backends
             // Stride uses enum values that may not match D3D12 exactly, so we check the actual enum values
             switch (filter)
             {
-                case Stride.Graphics.TextureFilter.Point:
+                case Andastra.Runtime.Graphics.TextureFilter.Point:
                     return D3D12_FILTER_MIN_MAG_MIP_POINT;
-                case Stride.Graphics.TextureFilter.Linear:
+                case Andastra.Runtime.Graphics.TextureFilter.Linear:
                     return D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-                case Stride.Graphics.TextureFilter.Anisotropic:
+                case Andastra.Runtime.Graphics.TextureFilter.Anisotropic:
                     return D3D12_FILTER_ANISOTROPIC;
                 default:
                     // Default to linear if unknown
@@ -1032,7 +1032,7 @@ namespace Andastra.Runtime.Stride.Backends
         /// Converts a Stride TextureAddressMode to a D3D12_TEXTURE_ADDRESS_MODE value.
         /// Based on DirectX 12 Texture Address Modes: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ne-d3d12-d3d12_texture_address_mode
         /// </summary>
-        private uint ConvertTextureAddressModeToD3D12(Stride.Graphics.TextureAddressMode mode)
+        private uint ConvertTextureAddressModeToD3D12(Andastra.Runtime.Graphics.TextureAddressMode mode)
         {
             // Stride and D3D12 use the same enum values for address modes
             // Wrap = 1, Mirror = 2, Clamp = 3, Border = 4, MirrorOnce = 5

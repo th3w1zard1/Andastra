@@ -17,7 +17,7 @@ namespace Andastra.Runtime.Stride.Backends
     /// </summary>
     public class StrideDirect3D11Backend : BaseDirect3D11Backend
     {
-        private global::Stride.Engine.BioWareGame _game;
+        private global::Stride.Engine.Game _game;
         private GraphicsDevice _strideDevice;
         private CommandList _commandList;
         private IntPtr _fallbackCommandList; // Cached fallback command list from fallback device

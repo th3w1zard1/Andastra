@@ -1997,7 +1997,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// - Line 48-52: LocName = ReadFieldCExoLocString("LocName")
         /// - Lines 69-96: WillNotBuy/WillOnlyBuy lists from "WillNotBuy"/"WillOnlyBuy" fields
         /// </remarks>
-        private async Task LoadStoreTemplateAsync(IEntity entity, Runtime.Games.Odyssey.Components.StoreComponent storeComponent, string utmResRef)
+        private async Task LoadStoreTemplateAsync(IEntity entity, Andastra.Runtime.Engines.Odyssey.Components.StoreComponent storeComponent, string utmResRef)
         {
             try
             {

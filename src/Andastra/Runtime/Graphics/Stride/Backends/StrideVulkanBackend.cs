@@ -24,7 +24,7 @@ namespace Andastra.Runtime.Stride.Backends
     /// </summary>
     public class StrideVulkanBackend : BaseVulkanBackend
     {
-        private global::Stride.Engine.BioWareGame _game;
+        private global::Stride.Engine.Game _game;
         private GraphicsDevice _strideDevice;
         private CommandList _commandList;
 
