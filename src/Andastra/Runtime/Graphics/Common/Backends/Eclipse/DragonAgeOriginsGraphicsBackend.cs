@@ -3167,8 +3167,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // Dialogue box dimensions: typically 600-800px wide, 200-400px tall depending on content
             const float dialogueBoxWidth = 700.0f;
             const float dialogueBoxHeight = 300.0f;
-            const float dialogueBoxX = (viewportWidth - dialogueBoxWidth) / 2.0f; // Center horizontally
-            const float dialogueBoxY = viewportHeight - dialogueBoxHeight - 50.0f; // Bottom with margin
+            float dialogueBoxX = (viewportWidth - dialogueBoxWidth) / 2.0f; // Center horizontally
+            float dialogueBoxY = viewportHeight - dialogueBoxHeight - 50.0f; // Bottom with margin
 
             // Get dialogue data from entity or world state
             // Based on daorigins.exe: Dialogue data is stored in conversation state or entity data
@@ -3187,8 +3187,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // Render speaker portrait (left side of dialogue box)
             // Based on daorigins.exe: Speaker portrait is rendered on the left side of dialogue box
             const float portraitSize = 128.0f;
-            const float portraitX = dialogueBoxX + 20.0f;
-            const float portraitY = dialogueBoxY + 20.0f;
+            float portraitX = dialogueBoxX + 20.0f;
+            float portraitY = dialogueBoxY + 20.0f;
             RenderDialoguePortrait(portraitX, portraitY, portraitSize, portraitSize, portraitResRef, conversationSpeaker);
 
             // Render speaker name (above dialogue text)
@@ -3242,18 +3242,20 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
 
             // Based on daorigins.exe: Check all entities in current area for conversation state
             // Eclipse uses entity data "InConversation" to track conversation state
-            var entities = _world.CurrentArea.GetEntities();
-            if (entities != null)
+            var entities = _world.CurrentArea.Creatures
+                .Concat(_world.CurrentArea.Placeables)
+                .Concat(_world.CurrentArea.Doors)
+                .Concat(_world.CurrentArea.Triggers)
+                .Concat(_world.CurrentArea.Waypoints)
+                .Concat(_world.CurrentArea.Sounds);
+            foreach (IEntity entity in entities)
             {
-                foreach (IEntity entity in entities)
+                if (entity != null && entity.IsValid && entity.HasData("InConversation"))
                 {
-                    if (entity != null && entity.IsValid && entity.HasData("InConversation"))
+                    bool inConversation = entity.GetData<bool>("InConversation", false);
+                    if (inConversation)
                     {
-                        bool inConversation = entity.GetData<bool>("InConversation", false);
-                        if (inConversation)
-                        {
-                            return entity;
-                        }
+                        return entity;
                     }
                 }
             }
@@ -3281,9 +3283,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             }
 
             // Fallback: Use entity name or tag
-            if (!string.IsNullOrEmpty(speaker.Name))
+            string entityName = speaker.GetData<string>("Name", string.Empty);
+            if (!string.IsNullOrEmpty(entityName))
             {
-                return speaker.Name;
+                return entityName;
             }
 
             if (!string.IsNullOrEmpty(speaker.Tag))

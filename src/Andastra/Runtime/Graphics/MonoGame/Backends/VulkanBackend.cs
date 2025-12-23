@@ -370,7 +370,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // For uploading data, we need to use a staging buffer and copy to the texture
                 // This is a simplified implementation - full implementation would use vkCmdCopyBufferToImage
 
-                // Note: In a full implementation, this would:
+                // TODO: SIMPLIFIED PLACEHOLDER - In a full implementation, this would:
                 // 1. Create a staging buffer with VK_BUFFER_USAGE_TRANSFER_SRC_BIT
                 // 2. Map the buffer and copy mipmap data
                 // 3. Use a command buffer to copy from staging buffer to texture image
@@ -413,7 +413,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 }
                 if ((desc.Usage & BufferUsage.Structured) != 0)
                 {
-                    usageFlags |= BufferUsageFlags.StructuredBuffer;
+                    usageFlags |= BufferUsageFlags.ShaderResource;
                 }
                 if ((desc.Usage & BufferUsage.Indirect) != 0)
                 {
@@ -421,7 +421,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 }
                 if ((desc.Usage & BufferUsage.AccelerationStructure) != 0)
                 {
-                    usageFlags |= BufferUsageFlags.AccelStructRead | BufferUsageFlags.AccelStructBuildInput;
+                    usageFlags |= BufferUsageFlags.AccelStructStorage;
                 }
 
                 BufferDesc bufferDesc = new BufferDesc
@@ -1034,7 +1034,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// <summary>
         /// Converts BlendFactor enum.
         /// </summary>
-        private BlendFactor ConvertBlendFactor(Enums.BlendFactor factor)
+        private BlendFactor ConvertBlendFactor(BlendFactor factor)
         {
             // The enum values should match, but we do explicit conversion for safety
             return (BlendFactor)(int)factor;
@@ -1043,7 +1043,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// <summary>
         /// Converts BlendOp enum.
         /// </summary>
-        private BlendOp ConvertBlendOp(Enums.BlendOp op)
+        private BlendOp ConvertBlendOp(BlendOp op)
         {
             return (BlendOp)(int)op;
         }
@@ -1072,7 +1072,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// <summary>
         /// Converts CullMode enum.
         /// </summary>
-        private CullMode ConvertCullMode(Enums.CullMode mode)
+        private CullMode ConvertCullMode(CullMode mode)
         {
             return (CullMode)(int)mode;
         }
@@ -1080,7 +1080,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// <summary>
         /// Converts FillMode enum.
         /// </summary>
-        private FillMode ConvertFillMode(Enums.FillMode mode)
+        private FillMode ConvertFillMode(FillMode mode)
         {
             return (FillMode)(int)mode;
         }
@@ -1118,7 +1118,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// <summary>
         /// Converts CompareFunc enum.
         /// </summary>
-        private CompareFunc ConvertCompareFunc(Enums.CompareFunc func)
+        private CompareFunc ConvertCompareFunc(CompareFunc func)
         {
             return (CompareFunc)(int)func;
         }
