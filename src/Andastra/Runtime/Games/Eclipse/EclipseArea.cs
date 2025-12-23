@@ -31,6 +31,8 @@ using Andastra.Runtime.Core.Module;
 using Andastra.Runtime.Games.Eclipse.Lighting;
 using Andastra.Runtime.Games.Eclipse.Physics;
 using Andastra.Parsing.Formats.TPC;
+using IPhysicsSystem = Andastra.Runtime.Games.Eclipse.IPhysicsSystem;
+using IUpdatable = Andastra.Runtime.Games.Eclipse.IUpdatable;
 using Andastra.Runtime.MonoGame.Enums;
 // Type aliases to resolve ambiguity between XNA and System.Numerics types
 using XnaMatrix = Microsoft.Xna.Framework.Matrix;
