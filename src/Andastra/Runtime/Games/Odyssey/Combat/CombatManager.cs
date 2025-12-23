@@ -116,6 +116,14 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
         private const float MaxXpShareDistance = 30.0f;
 
         /// <summary>
+        /// XP multiplier for Challenge Rating calculation.
+        /// KOTOR uses a simplified XP formula: XP = CR * XpPerChallengeRating.
+        /// This is a simplified version compared to full D&D 3.5 XP calculation.
+        /// Based on swkotor2.exe: XP award system uses CR * 100 formula.
+        /// </summary>
+        private const int XpPerChallengeRating = 100;
+
+        /// <summary>
         /// Event fired when an attack is made (Odyssey-specific type).
         /// </summary>
         public new event EventHandler<OdysseyCombatEventArgs> OnAttack;
@@ -717,7 +725,10 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
         ///   1. Member is in active party
         ///   2. Member is within MaxXpShareDistance of victim (default 30 meters)
         ///   3. Member is alive and not dead
-        // TODO: / - XP calculation: CR * 100 (simplified KOTOR formula, not full D&D 3.5)
+        /// - XP calculation: CR * XpPerChallengeRating (simplified KOTOR formula, not full D&D 3.5)
+        ///   - Formula: XP = ChallengeRating * 100
+        ///   - This is the standard KOTOR XP calculation, simplified from D&D 3.5 rules
+        ///   - Based on swkotor2.exe: XP award system uses CR * 100 formula
         /// - Each participating member receives full XP amount (not divided)
         /// - Original engine behavior: All party members in range receive full XP, not split
         /// </remarks>
@@ -741,9 +752,11 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
                 return; // No XP for CR 0 or negative
             }
 
-            // Calculate XP: Base formula is CR * 100, with diminishing returns
-            // KOTOR uses a simplified XP system compared to D&D 3.5
-            int xpAwarded = (int)(cr * 100);
+            // Calculate XP using KOTOR's simplified formula: CR * XpPerChallengeRating
+            // This is a simplified version compared to full D&D 3.5 XP calculation.
+            // Based on swkotor2.exe: XP award system uses CR * 100 formula.
+            // Formula: XP = ChallengeRating * XpPerChallengeRating
+            int xpAwarded = (int)(cr * XpPerChallengeRating);
 
             // Get victim position for distance calculations
             ITransformComponent victimTransform = victim.GetComponent<ITransformComponent>();
