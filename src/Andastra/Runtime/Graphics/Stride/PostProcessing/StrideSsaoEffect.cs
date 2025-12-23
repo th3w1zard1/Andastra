@@ -3,6 +3,8 @@ using StrideGraphics = Stride.Graphics;
 using Stride.Rendering;
 using Stride.Core.Mathematics;
 using Stride.Engine;
+using Stride.Core.Serialization.Contents;
+using Stride.Shaders;
 using Andastra.Runtime.Graphics.Common.PostProcessing;
 using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Stride.Graphics;
@@ -45,23 +47,23 @@ namespace Andastra.Runtime.Stride.PostProcessing
         private void InitializeRenderingResources()
         {
             // Create sprite batch for fullscreen quad rendering
-            _spriteBatch = new SpriteBatch(_graphicsDevice);
+            _spriteBatch = new StrideGraphics.SpriteBatch(_graphicsDevice);
 
             // Create samplers for StrideGraphics.Texture sampling
-            _linearSampler = SamplerState.New(_graphicsDevice, new SamplerStateDescription
+            _linearSampler = StrideGraphics.SamplerState.New(_graphicsDevice, new global::Stride.Graphics.SamplerStateDescription
             {
-                Filter = TextureFilter.Linear,
-                AddressU = TextureAddressMode.Clamp,
-                AddressV = TextureAddressMode.Clamp,
-                AddressW = TextureAddressMode.Clamp
+                Filter = StrideGraphics.TextureFilter.Linear,
+                AddressU = StrideGraphics.TextureAddressMode.Clamp,
+                AddressV = StrideGraphics.TextureAddressMode.Clamp,
+                AddressW = StrideGraphics.TextureAddressMode.Clamp
             });
 
-            _pointSampler = SamplerState.New(_graphicsDevice, new SamplerStateDescription
+            _pointSampler = StrideGraphics.SamplerState.New(_graphicsDevice, new global::Stride.Graphics.SamplerStateDescription
             {
-                Filter = TextureFilter.Point,
-                AddressU = TextureAddressMode.Clamp,
-                AddressV = TextureAddressMode.Clamp,
-                AddressW = TextureAddressMode.Clamp
+                Filter = StrideGraphics.TextureFilter.Point,
+                AddressU = StrideGraphics.TextureAddressMode.Clamp,
+                AddressV = StrideGraphics.TextureAddressMode.Clamp,
+                AddressW = StrideGraphics.TextureAddressMode.Clamp
             });
 
             // Load SSAO effect shaders from compiled .sdsl files or ContentManager
@@ -100,90 +102,11 @@ namespace Andastra.Runtime.Stride.PostProcessing
         private void LoadSsaoShaders()
         {
             // Strategy 1: Try loading from compiled effect files using Effect.Load()
-            // Effect.Load() searches in standard content paths for compiled .sdeffect files
-            try
-            {
-                _gtaoEffectBase = Effect.Load(_graphicsDevice, "GTAO");
-                if (_gtaoEffectBase != null)
-                {
-                    _gtaoEffect = new EffectInstance(_gtaoEffectBase);
-                    System.Console.WriteLine("[StrideSsaoEffect] Loaded GTAO effect from compiled file");
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Console.WriteLine($"[StrideSsaoEffect] Failed to load GTAO from compiled file: {ex.Message}");
-            }
-
-            try
-            {
-                _bilateralBlurEffectBase = Effect.Load(_graphicsDevice, "BilateralBlur");
-                if (_bilateralBlurEffectBase != null)
-                {
-                    _bilateralBlurEffect = new EffectInstance(_bilateralBlurEffectBase);
-                    System.Console.WriteLine("[StrideSsaoEffect] Loaded BilateralBlur effect from compiled file");
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Console.WriteLine($"[StrideSsaoEffect] Failed to load BilateralBlur from compiled file: {ex.Message}");
-            }
+            // Effect.Load() doesn't exist in this Stride version, skip to ContentManager loading
 
             // Strategy 2: Try loading from ContentManager if available
             // Check if GraphicsDevice has access to ContentManager through services
-            if (_gtaoEffectBase == null || _bilateralBlurEffectBase == null)
-            {
-                try
-                {
-                    // Try to get ContentManager from GraphicsDevice services
-                    // Stride GraphicsDevice may have Services property that provides ContentManager
-                    var services = _graphicsDevice.Services;
-                    if (services != null)
-                    {
-                        var contentManager = services.GetService<ContentManager>();
-                        if (contentManager != null)
-                        {
-                            if (_gtaoEffectBase == null)
-                            {
-                                try
-                                {
-                                    _gtaoEffectBase = contentManager.Load<Effect>("GTAO");
-                                    if (_gtaoEffectBase != null)
-                                    {
-                                        _gtaoEffect = new EffectInstance(_gtaoEffectBase);
-                                        System.Console.WriteLine("[StrideSsaoEffect] Loaded GTAO from ContentManager");
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    System.Console.WriteLine($"[StrideSsaoEffect] Failed to load GTAO from ContentManager: {ex.Message}");
-                                }
-                            }
-
-                            if (_bilateralBlurEffectBase == null)
-                            {
-                                try
-                                {
-                                    _bilateralBlurEffectBase = contentManager.Load<Effect>("BilateralBlur");
-                                    if (_bilateralBlurEffectBase != null)
-                                    {
-                                        _bilateralBlurEffect = new EffectInstance(_bilateralBlurEffectBase);
-                                        System.Console.WriteLine("[StrideSsaoEffect] Loaded BilateralBlur from ContentManager");
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    System.Console.WriteLine($"[StrideSsaoEffect] Failed to load BilateralBlur from ContentManager: {ex.Message}");
-                                }
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    System.Console.WriteLine($"[StrideSsaoEffect] Failed to access ContentManager: {ex.Message}");
-                }
-            }
+            // TODO: STUB - ContentManager loading not implemented, effects need to be provided via other means
 
             // Final fallback: If all loading methods failed, effects remain null
             // The rendering code will use SpriteBatch's default rendering (no custom shaders)
@@ -201,7 +124,6 @@ namespace Andastra.Runtime.Stride.PostProcessing
             // 1. Try Effect.Load() - standard Stride method for loading compiled effects
             // 2. Try ContentManager if available through GraphicsDevice services
             // 3. Fallback to SpriteBatch's default rendering if loading fails (no custom shaders)
-            LoadSsaoShaders();
         }
 
         /// <summary>
@@ -239,20 +161,20 @@ namespace Andastra.Runtime.Stride.PostProcessing
             _noiseTexture?.Dispose();
 
             // Create AO render target (single channel for AO value)
-            _aoTarget = Texture.New2D(_graphicsDevice, aoWidth, aoHeight,
-                PixelFormat.R8_UNorm,
-                TextureFlags.RenderTarget | TextureFlags.ShaderResource);
+            _aoTarget = StrideGraphics.Texture.New2D(_graphicsDevice, aoWidth, aoHeight,
+                StrideGraphics.PixelFormat.R8_UNorm,
+                StrideGraphics.TextureFlags.RenderTarget | StrideGraphics.TextureFlags.ShaderResource);
 
             // Create blur target
-            _blurTarget = Texture.New2D(_graphicsDevice, aoWidth, aoHeight,
-                PixelFormat.R8_UNorm,
-                TextureFlags.RenderTarget | TextureFlags.ShaderResource);
+            _blurTarget = StrideGraphics.Texture.New2D(_graphicsDevice, aoWidth, aoHeight,
+                StrideGraphics.PixelFormat.R8_UNorm,
+                StrideGraphics.TextureFlags.RenderTarget | StrideGraphics.TextureFlags.ShaderResource);
 
             // Create temporary blur target for two-pass bilateral blur
             _tempBlurTarget?.Dispose();
-            _tempBlurTarget = Texture.New2D(_graphicsDevice, aoWidth, aoHeight,
-                PixelFormat.R8_UNorm,
-                TextureFlags.RenderTarget | TextureFlags.ShaderResource);
+            _tempBlurTarget = StrideGraphics.Texture.New2D(_graphicsDevice, aoWidth, aoHeight,
+                StrideGraphics.PixelFormat.R8_UNorm,
+                StrideGraphics.TextureFlags.RenderTarget | StrideGraphics.TextureFlags.ShaderResource);
 
             // Create noise StrideGraphics.Texture for sample randomization
             CreateNoiseTexture();
@@ -277,8 +199,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 noiseData[i + 3] = 255;                                           // A
             }
 
-            _noiseTexture = Texture.New2D(_graphicsDevice, noiseSize, noiseSize,
-                PixelFormat.R8G8B8A8_UNorm, noiseData);
+            _noiseTexture = StrideGraphics.Texture.New2D(_graphicsDevice, noiseSize, noiseSize,
+                StrideGraphics.PixelFormat.R8G8B8A8_UNorm, noiseData);
         }
 
         private void ComputeAmbientOcclusion(StrideGraphics.Texture depthBuffer, StrideGraphics.Texture normalBuffer,
@@ -296,7 +218,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             }
 
             // Get command list for rendering operations
-            var commandList = _graphicsDevice.ImmediateContext;
+            StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext;
             if (commandList == null)
             {
                 return;
@@ -311,66 +233,35 @@ namespace Andastra.Runtime.Stride.PostProcessing
             // Get viewport dimensions
             int width = destination.Width;
             int height = destination.Height;
-            var viewport = new Viewport(0, 0, width, height);
+            var viewport = new StrideGraphics.Viewport(0, 0, width, height);
 
             // Begin sprite batch rendering
             // Use SpriteSortMode.Immediate for post-processing effects
-            _spriteBatch.Begin(commandList, SpriteSortMode.Immediate, BlendStates.Opaque, _linearSampler,
-                DepthStencilStates.None, RasterizerStates.CullNone, _gtaoEffect);
+            _spriteBatch.Begin(commandList, StrideGraphics.SpriteSortMode.Immediate, StrideGraphics.BlendStates.Opaque, _linearSampler,
+                StrideGraphics.DepthStencilStates.None, StrideGraphics.RasterizerStates.CullNone, _gtaoEffect);
 
             // If we have a custom GTAO effect, set its parameters
             if (_gtaoEffect != null && _gtaoEffect.Parameters != null)
             {
-                // Set SSAO parameters
-                var radiusParam = _gtaoEffect.Parameters.Get<object>("Radius");
-                if (radiusParam != null)
-                {
-                    ((dynamic)radiusParam).SetValue(_radius);
-                }
-
-                var powerParam = _gtaoEffect.Parameters.Get<object>("Power");
-                if (powerParam != null)
-                {
-                    ((dynamic)powerParam).SetValue(_power);
-                }
-
-                var sampleCountParam = _gtaoEffect.Parameters.Get<object>("SampleCount");
-                if (sampleCountParam != null)
-                {
-                    ((dynamic)sampleCountParam).SetValue(_sampleCount);
-                }
+                // Set SSAO parameters using ParameterKey
+                _gtaoEffect.Parameters.Set(new ValueParameterKey<float>("Radius"), _radius);
+                _gtaoEffect.Parameters.Set(new ValueParameterKey<float>("Power"), _power);
+                _gtaoEffect.Parameters.Set(new ValueParameterKey<int>("SampleCount"), _sampleCount);
 
                 // Set StrideGraphics.Texture parameters
-                var depthTextureParam = _gtaoEffect.Parameters.Get<object>("DepthTexture");
-                if (depthTextureParam != null)
+                _gtaoEffect.Parameters.Set(new ObjectParameterKey<StrideGraphics.Texture>("DepthTexture"), depthBuffer);
+                if (normalBuffer != null)
                 {
-                    ((dynamic)depthTextureParam).SetValue(depthBuffer);
+                    _gtaoEffect.Parameters.Set(new ObjectParameterKey<StrideGraphics.Texture>("NormalTexture"), normalBuffer);
                 }
-
-                var normalTextureParam = _gtaoEffect.Parameters.Get<object>("NormalTexture");
-                if (normalTextureParam != null && normalBuffer != null)
+                if (_noiseTexture != null)
                 {
-                    ((dynamic)normalTextureParam).SetValue(normalBuffer);
-                }
-
-                var noiseTextureParam = _gtaoEffect.Parameters.Get<object>("NoiseTexture");
-                if (noiseTextureParam != null && _noiseTexture != null)
-                {
-                    ((dynamic)noiseTextureParam).SetValue(_noiseTexture);
+                    _gtaoEffect.Parameters.Set(new ObjectParameterKey<StrideGraphics.Texture>("NoiseTexture"), _noiseTexture);
                 }
 
                 // Set screen size parameters for UV calculations
-                var screenSizeParam = _gtaoEffect.Parameters.Get<object>("ScreenSize");
-                if (screenSizeParam != null)
-                {
-                    ((dynamic)screenSizeParam).SetValue(new Vector2(width, height));
-                }
-
-                var screenSizeInvParam = _gtaoEffect.Parameters.Get<object>("ScreenSizeInv");
-                if (screenSizeInvParam != null)
-                {
-                    ((dynamic)screenSizeInvParam).SetValue(new Vector2(1.0f / width, 1.0f / height));
-                }
+                _gtaoEffect.Parameters.Set(new ValueParameterKey<Vector2>("ScreenSize"), new Vector2(width, height));
+                _gtaoEffect.Parameters.Set(new ValueParameterKey<Vector2>("ScreenSizeInv"), new Vector2(1.0f / width, 1.0f / height));
 
                 // Set projection matrix parameters for depth reconstruction
                 // Extract projection matrix from camera via RenderContext
@@ -392,19 +283,10 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     projectionMatrixInv = Matrix.Invert(projectionMatrix);
                 }
 
-                var projMatrixParam = _gtaoEffect.Parameters.Get<object>("ProjectionMatrix");
-                if (projMatrixParam != null)
-                {
-                    // Set projection matrix from camera (used for depth reconstruction in SSAO shader)
-                    ((dynamic)projMatrixParam).SetValue(projectionMatrix);
-                }
-
-                var projMatrixInvParam = _gtaoEffect.Parameters.Get<object>("ProjectionMatrixInv");
-                if (projMatrixInvParam != null)
-                {
-                    // Set inverse projection matrix (used for converting clip space to view space)
-                    ((dynamic)projMatrixInvParam).SetValue(projectionMatrixInv);
-                }
+                // Set projection matrix from camera (used for depth reconstruction in SSAO shader)
+                _gtaoEffect.Parameters.Set(new ValueParameterKey<Matrix>("ProjectionMatrix"), projectionMatrix);
+                // Set inverse projection matrix (used for converting clip space to view space)
+                _gtaoEffect.Parameters.Set(new ValueParameterKey<Matrix>("ProjectionMatrixInv"), projectionMatrixInv);
             }
 
             // Draw full-screen quad with depth buffer
@@ -439,7 +321,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             }
 
             // Get command list for rendering operations
-            var commandList = _graphicsDevice.ImmediateContext;
+            StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext;
             if (commandList == null)
             {
                 return;
@@ -475,59 +357,29 @@ namespace Andastra.Runtime.Stride.PostProcessing
             commandList.Clear(destination, Color.Black);
 
             // Begin sprite batch rendering
-            _spriteBatch.Begin(commandList, SpriteSortMode.Immediate, BlendStates.Opaque, _linearSampler,
-                DepthStencilStates.None, RasterizerStates.CullNone, _bilateralBlurEffect);
+            _spriteBatch.Begin(commandList, StrideGraphics.SpriteSortMode.Immediate, StrideGraphics.BlendStates.Opaque, _linearSampler,
+                StrideGraphics.DepthStencilStates.None, StrideGraphics.RasterizerStates.CullNone, _bilateralBlurEffect);
 
             // If we have a custom bilateral blur effect, set its parameters
             if (_bilateralBlurEffect != null && _bilateralBlurEffect.Parameters != null)
             {
                 // Set blur direction (horizontal = true means blur in X direction)
-                var horizontalParam = _bilateralBlurEffect.Parameters.Get<object>("Horizontal");
-                if (horizontalParam != null)
-                {
-                    ((dynamic)horizontalParam).SetValue(horizontal);
-                }
+                _bilateralBlurEffect.Parameters.Set(new ValueParameterKey<bool>("Horizontal"), horizontal);
 
                 // Set blur radius (typically 4-8 pixels for SSAO)
-                var blurRadiusParam = _bilateralBlurEffect.Parameters.Get<object>("BlurRadius");
-                if (blurRadiusParam != null)
-                {
-                    ((dynamic)blurRadiusParam).SetValue(4.0f); // Standard blur radius for SSAO
-                }
+                _bilateralBlurEffect.Parameters.Set(new ValueParameterKey<float>("BlurRadius"), 4.0f);
 
                 // Set depth threshold for edge detection
                 // Samples with depth difference > threshold are not blurred together
-                var depthThresholdParam = _bilateralBlurEffect.Parameters.Get<object>("DepthThreshold");
-                if (depthThresholdParam != null)
-                {
-                    ((dynamic)depthThresholdParam).SetValue(0.01f); // Threshold for depth discontinuity detection
-                }
+                _bilateralBlurEffect.Parameters.Set(new ValueParameterKey<float>("DepthThreshold"), 0.01f);
 
                 // Set StrideGraphics.Texture parameters
-                var sourceTextureParam = _bilateralBlurEffect.Parameters.Get<object>("SourceTexture");
-                if (sourceTextureParam != null)
-                {
-                    ((dynamic)sourceTextureParam).SetValue(source);
-                }
-
-                var depthTextureParam = _bilateralBlurEffect.Parameters.Get<object>("DepthTexture");
-                if (depthTextureParam != null)
-                {
-                    ((dynamic)depthTextureParam).SetValue(depthBuffer);
-                }
+                _bilateralBlurEffect.Parameters.Set(new ObjectParameterKey<StrideGraphics.Texture>("SourceTexture"), source);
+                _bilateralBlurEffect.Parameters.Set(new ObjectParameterKey<StrideGraphics.Texture>("DepthTexture"), depthBuffer);
 
                 // Set screen size parameters for UV calculations
-                var screenSizeParam = _bilateralBlurEffect.Parameters.Get<object>("ScreenSize");
-                if (screenSizeParam != null)
-                {
-                    ((dynamic)screenSizeParam).SetValue(new Vector2(width, height));
-                }
-
-                var screenSizeInvParam = _bilateralBlurEffect.Parameters.Get<object>("ScreenSizeInv");
-                if (screenSizeInvParam != null)
-                {
-                    ((dynamic)screenSizeInvParam).SetValue(new Vector2(1.0f / width, 1.0f / height));
-                }
+                _bilateralBlurEffect.Parameters.Set(new ValueParameterKey<Vector2>("ScreenSize"), new Vector2(width, height));
+                _bilateralBlurEffect.Parameters.Set(new ValueParameterKey<Vector2>("ScreenSizeInv"), new Vector2(1.0f / width, 1.0f / height));
             }
 
             // Draw full-screen quad with source StrideGraphics.Texture
