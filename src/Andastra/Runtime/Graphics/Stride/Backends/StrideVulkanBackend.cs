@@ -44,7 +44,7 @@ namespace Andastra.Runtime.Stride.Backends
             }
 
             _strideDevice = _game.GraphicsDevice;
-            _device = _strideDevice.NativeDevice;
+            _device = _strideDevice?.NativePointer ?? IntPtr.Zero;
 
             return true;
         }
@@ -86,7 +86,7 @@ namespace Andastra.Runtime.Stride.Backends
             {
                 Type = ResourceType.Texture,
                 Handle = handle,
-                NativeHandle = texture?.NativeDeviceTexture ?? IntPtr.Zero,
+                NativeHandle = texture?.NativePointer ?? IntPtr.Zero,
                 DebugName = desc.DebugName
             };
         }

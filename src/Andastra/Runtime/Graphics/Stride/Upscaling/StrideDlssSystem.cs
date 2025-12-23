@@ -576,7 +576,9 @@ namespace Andastra.Runtime.Stride.Upscaling
 
             // Stride GraphicsDevice.NativeDevice provides access to the underlying DirectX device
             // For DirectX 12, this should return the ID3D12Device* pointer
-            IntPtr nativeDevice = graphicsDevice.NativeDevice;
+            // TODO: FIXME - Need to find the correct way to get native device pointer from Stride GraphicsDevice
+            // For now, return IntPtr.Zero as this requires Stride-specific implementation
+            IntPtr nativeDevice = IntPtr.Zero;
             if (nativeDevice != IntPtr.Zero)
             {
                 return nativeDevice;
@@ -653,7 +655,7 @@ namespace Andastra.Runtime.Stride.Upscaling
                 {
                     // Create delegate for SetUlong method
                     NVSDK_NGX_Parameter_SetUlong setUlong = Marshal.GetDelegateForFunctionPointer<NVSDK_NGX_Parameter_SetUlong>(setUlongPtr);
-                    
+
                     // Call SetUlong
                     bool success = setUlong(parameters, name, value);
                     if (!success)
@@ -699,7 +701,7 @@ namespace Andastra.Runtime.Stride.Upscaling
                 {
                     // Create delegate for SetPtr method
                     NVSDK_NGX_Parameter_SetPtr setPtr = Marshal.GetDelegateForFunctionPointer<NVSDK_NGX_Parameter_SetPtr>(setPtrPtr);
-                    
+
                     // Call SetPtr
                     bool success = setPtr(parameters, name, value);
                     if (!success)
@@ -771,11 +773,11 @@ namespace Andastra.Runtime.Stride.Upscaling
                 return IntPtr.Zero;
 
             // Stride's ImmediateContext provides access to the command list
-            var immediateContext = _graphicsDevice.ImmediateContext;
+            Stride.Graphics.CommandList immediateContext = _graphicsDevice.ImmediateContext;
             if (immediateContext != null)
             {
                 // Stride CommandList.NativeCommandList provides the native D3D12 command list pointer
-                var commandList = immediateContext.CommandList;
+                Stride.Graphics.CommandList commandList = immediateContext;
                 if (commandList != null)
                 {
                     IntPtr nativeCommandList = commandList.NativeCommandList;
@@ -1008,7 +1010,9 @@ namespace Andastra.Runtime.Stride.Upscaling
             {
                 // Stride Texture.NativePointer provides access to the underlying D3D12 resource
                 // For D3D12, this should return the ID3D12Resource* pointer
-                IntPtr nativePointer = texture.NativePointer;
+                // TODO: FIXME - Need to find the correct way to get native pointer from Stride Texture
+                // For now, return IntPtr.Zero as this requires Stride-specific implementation
+                IntPtr nativePointer = IntPtr.Zero;
                 if (nativePointer != IntPtr.Zero)
                 {
                     return nativePointer;

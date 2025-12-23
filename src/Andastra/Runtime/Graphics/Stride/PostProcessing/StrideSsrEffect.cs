@@ -101,14 +101,14 @@ namespace Andastra.Runtime.Stride.PostProcessing
         {
             // Strategy 1: Try loading from compiled effect files using Effect.Load()
             // Effect.Load() searches in standard content paths for compiled .sdeffect files
+            // TODO: FIXME - Effect.Load() doesn't exist in newer Stride versions
+            // Need to use ContentManager or EffectSystem to load effects instead
+            // For now, skip this strategy and fall through to ContentManager loading
             try
             {
-                _fullscreenEffect = StrideGraphics.Effect.Load(_graphicsDevice, "SSREffect");
-                if (_fullscreenEffect != null)
-                {
-                    _ssrEffect = new EffectInstance(_fullscreenEffect);
-                    System.Console.WriteLine("[StrideSSR] Loaded SSREffect from compiled file");
-                }
+                // Effect.Load() is not available in current Stride version
+                // Skip this strategy and use ContentManager or compile from source instead
+                _fullscreenEffect = null;
             }
             catch (Exception ex)
             {
