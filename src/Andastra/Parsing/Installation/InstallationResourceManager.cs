@@ -17,7 +17,7 @@ namespace Andastra.Parsing.Installation
     /// Manages resource lookup and location for a game installation.
     /// Handles searching across override, modules, chitin, texture packs, and stream directories.
     /// </summary>
-    public class InstallationResourceManager
+    public class InstallationResourceManager : IResourceLookup
     {
         private readonly string _installPath;
         private readonly Game _game;

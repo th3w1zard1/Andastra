@@ -1,16 +1,21 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
+using Andastra.Parsing.Extract;
+using Andastra.Parsing.Common;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.MonoGame.Graphics;
 using Moq;
+using JetBrains.Annotations;
 #
 using Stride.Engine;
 using StrideGraphics = Stride.Graphics;
 using Stride.Core.Mathematics;
+
 
 namespace Andastra.Tests.Runtime.TestHelpers
 {
@@ -40,69 +45,322 @@ namespace Andastra.Tests.Runtime.TestHelpers
         }
 
         /// <summary>
-        // TODO: / Creates a mock Installation with resource lookup capabilities.
+        /// Creates a mock Installation with comprehensive resource lookup capabilities.
+        /// Provides a fully functional mock that supports all InstallationResourceManager methods
+        /// including LookupResource, LocateResource, ClearCache, ReloadModule, GetChitinResources,
+        /// and GetPatchErfResources. All Installation properties (Path, Game, Resources) are properly
+        /// configured. Based on swkotor2.exe resource management system (CExoKeyTable, CExoResMan).
         /// </summary>
+        /// <returns>A fully configured mock Installation instance ready for testing.</returns>
         public static Installation CreateMockInstallation()
         {
-            // For testing, we'll create a real Installation pointing to a test directory
-            // TODO:  In a real scenario, you'd use Moq to mock the Installation
-            string testPath = Path.Combine(Path.GetTempPath(), "AndastraTestInstallation");
-            if (!Directory.Exists(testPath))
-            {
-                Directory.CreateDirectory(testPath);
-            }
-
-            // Create a minimal installation structure
-            // TODO:  Note: This is a simplified version - real tests would need proper game files
-            try
-            {
-                return new Installation(testPath);
-            }
-            catch
-            {
-                // TODO:  If installation creation fails, create a mock
-                var mockInstallation = new Mock<Installation>(MockBehavior.Strict);
-                var mockResources = new Mock<IResourceLookup>(MockBehavior.Strict);
-                
-                mockInstallation.Setup(i => i.Resources).Returns(mockResources.Object);
-                
-                // Setup default resource lookup to return null (resource not found)
-                mockResources.Setup(r => r.LookupResource(
-                    It.IsAny<string>(),
-                    It.IsAny<ResourceType>(),
-                    It.IsAny<string[]>(),
-                    It.IsAny<string[]>()))
-                    .Returns((ResourceResult)null);
-
-                return mockInstallation.Object;
-            }
-        }
-
-        /// <summary>
-        // TODO: / Creates a mock Installation with specific resource data.
-        /// </summary>
-        public static Installation CreateMockInstallationWithResource(string resRef, ResourceType resourceType, byte[] data)
-        {
+            // Create a comprehensive mock Installation with full resource lookup capabilities
             var mockInstallation = new Mock<Installation>(MockBehavior.Strict);
             var mockResources = new Mock<IResourceLookup>(MockBehavior.Strict);
             
+            // Setup Installation properties
+            string mockPath = Path.Combine(Path.GetTempPath(), "AndastraTestInstallation");
+            Game mockGame = Game.K2; // Default to TSL for testing
+            
+            mockInstallation.Setup(i => i.Path).Returns(mockPath);
+            mockInstallation.Setup(i => i.Game).Returns(mockGame);
             mockInstallation.Setup(i => i.Resources).Returns(mockResources.Object);
             
-            // Setup resource lookup for specific resource
+            // Setup LookupResource with correct signature (SearchLocation[] and string)
+            // Supports both the actual API signature and the test signature for compatibility
+            mockResources.Setup(r => r.LookupResource(
+                It.IsAny<string>(),
+                It.IsAny<ResourceType>(),
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
+                .Returns((ResourceResult)null);
+            
+            // Setup LocateResource - returns empty list by default
+            mockResources.Setup(r => r.LocateResource(
+                It.IsAny<string>(),
+                It.IsAny<ResourceType>(),
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
+                .Returns(new List<LocationResult>());
+            
+            // Setup ClearCache - no-op for mocks
+            mockResources.Setup(r => r.ClearCache()).Verifiable();
+            
+            // Setup ReloadModule - no-op for mocks
+            mockResources.Setup(r => r.ReloadModule(It.IsAny<string>())).Verifiable();
+            
+            // Setup GetChitinResources - returns empty list by default
+            mockResources.Setup(r => r.GetChitinResources())
+                .Returns(new List<FileResource>());
+            
+            // Setup GetPatchErfResources - returns empty list by default
+            mockResources.Setup(r => r.GetPatchErfResources(It.IsAny<Game>()))
+                .Returns(new List<FileResource>());
+            
+            // Setup Installation.Resource method (delegates to Resources.LookupResource)
+            mockInstallation.Setup(i => i.Resource(
+                It.IsAny<string>(),
+                It.IsAny<ResourceType>(),
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
+                .Returns((string resname, ResourceType restype, SearchLocation[] searchOrder, string moduleRoot) =>
+                    mockResources.Object.LookupResource(resname, restype, searchOrder, moduleRoot));
+            
+            // Setup Installation.Locate method (delegates to Resources.LocateResource)
+            mockInstallation.Setup(i => i.Locate(
+                It.IsAny<string>(),
+                It.IsAny<ResourceType>(),
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
+                .Returns((string resname, ResourceType restype, SearchLocation[] searchOrder, string moduleRoot) =>
+                    mockResources.Object.LocateResource(resname, restype, searchOrder, moduleRoot));
+            
+            // Setup Installation.Texture method - returns null by default
+            mockInstallation.Setup(i => i.Texture(
+                It.IsAny<string>(),
+                It.IsAny<SearchLocation[]>()))
+                .Returns((Formats.TPC.TPC)null);
+            
+            // Setup Installation.GetModuleRoots - returns empty list by default
+            mockInstallation.Setup(i => i.GetModuleRoots())
+                .Returns(new List<string>());
+            
+            // Setup Installation.GetModuleFiles - returns empty list by default
+            mockInstallation.Setup(i => i.GetModuleFiles(It.IsAny<string>()))
+                .Returns(new List<string>());
+            
+            // Setup Installation.ClearCache - delegates to Resources.ClearCache
+            mockInstallation.Setup(i => i.ClearCache())
+                .Callback(() => mockResources.Object.ClearCache());
+            
+            // Setup Installation.ReloadModule - delegates to Resources.ReloadModule
+            mockInstallation.Setup(i => i.ReloadModule(It.IsAny<string>()))
+                .Callback((string moduleName) => mockResources.Object.ReloadModule(moduleName));
+            
+            // Setup Installation.ModulePath - returns mock modules path
+            mockInstallation.Setup(i => i.ModulePath())
+                .Returns(Installation.GetModulesPath(mockPath));
+            
+            // Setup Installation.OverridePath - returns mock override path
+            mockInstallation.Setup(i => i.OverridePath())
+                .Returns(Installation.GetOverridePath(mockPath));
+            
+            // Setup Installation.PackagePath - returns mock packages path
+            mockInstallation.Setup(i => i.PackagePath())
+                .Returns(Installation.GetPackagesPath(mockPath));
+            
+            // Setup Installation.ChitinResources - delegates to Resources.GetChitinResources
+            mockInstallation.Setup(i => i.ChitinResources())
+                .Returns(() => mockResources.Object.GetChitinResources());
+            
+            // Setup Installation.CoreResources - combines ChitinResources and GetPatchErfResources
+            mockInstallation.Setup(i => i.CoreResources())
+                .Returns(() =>
+                {
+                    var results = new List<FileResource>();
+                    results.AddRange(mockResources.Object.GetChitinResources());
+                    results.AddRange(mockResources.Object.GetPatchErfResources(mockGame));
+                    return results;
+                });
+            
+            // Setup Installation.OverrideList - returns empty list by default
+            mockInstallation.Setup(i => i.OverrideList())
+                .Returns(new List<string>());
+            
+            // Setup Installation.OverrideResources - returns empty list by default
+            mockInstallation.Setup(i => i.OverrideResources(It.IsAny<string>()))
+                .Returns(new List<FileResource>());
+            
+            // Setup Installation.Locations - returns empty dictionary by default
+            mockInstallation.Setup(i => i.Locations(
+                It.IsAny<List<ResourceIdentifier>>(),
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<List<LazyCapsule>>(),
+                It.IsAny<List<string>>(),
+                It.IsAny<string>()))
+                .Returns(new Dictionary<ResourceIdentifier, List<LocationResult>>());
+
+            return mockInstallation.Object;
+        }
+
+        /// <summary>
+        /// Creates a mock Installation with specific resource data pre-configured.
+        /// Provides a fully functional mock that returns the specified resource when looked up,
+        /// while all other resources return null. All InstallationResourceManager methods are
+        /// properly configured. Based on swkotor2.exe resource management system.
+        /// </summary>
+        /// <param name="resRef">The resource reference name to configure.</param>
+        /// <param name="resourceType">The resource type to configure.</param>
+        /// <param name="data">The byte data to return for the specified resource.</param>
+        /// <returns>A fully configured mock Installation instance with the specified resource available.</returns>
+        public static Installation CreateMockInstallationWithResource(string resRef, ResourceType resourceType, byte[] data)
+        {
+            // Create a comprehensive mock Installation with specific resource data
+            var mockInstallation = new Mock<Installation>(MockBehavior.Strict);
+            var mockResources = new Mock<IResourceLookup>(MockBehavior.Strict);
+            
+            // Setup Installation properties
+            string mockPath = Path.Combine(Path.GetTempPath(), "AndastraTestInstallation");
+            Game mockGame = Game.K2; // Default to TSL for testing
+            
+            mockInstallation.Setup(i => i.Path).Returns(mockPath);
+            mockInstallation.Setup(i => i.Game).Returns(mockGame);
+            mockInstallation.Setup(i => i.Resources).Returns(mockResources.Object);
+            
+            // Setup resource lookup for specific resource with correct signature
+            string mockFilePath = Path.Combine(mockPath, "override", $"{resRef}.{resourceType.Extension}");
+            var resourceResult = new ResourceResult(resRef, resourceType, mockFilePath, data);
+            
             mockResources.Setup(r => r.LookupResource(
                 resRef,
                 resourceType,
-                It.IsAny<string[]>(),
-                It.IsAny<string[]>()))
-                .Returns(new ResourceResult { Data = data });
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
+                .Returns(resourceResult);
 
-            // Setup default lookup to return null
+            // Setup default lookup to return null for all other resources
             mockResources.Setup(r => r.LookupResource(
-                It.Is<string>(s => s != resRef),
+                It.Is<string>(s => !string.Equals(s, resRef, StringComparison.OrdinalIgnoreCase)),
                 It.IsAny<ResourceType>(),
-                It.IsAny<string[]>(),
-                It.IsAny<string[]>()))
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
                 .Returns((ResourceResult)null);
+            
+            // Setup LocateResource - returns location for the specific resource, empty for others
+            mockResources.Setup(r => r.LocateResource(
+                resRef,
+                resourceType,
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
+                .Returns(new List<LocationResult>
+                {
+                    new LocationResult(mockFilePath, 0, data.Length)
+                });
+            
+            mockResources.Setup(r => r.LocateResource(
+                It.Is<string>(s => !string.Equals(s, resRef, StringComparison.OrdinalIgnoreCase)),
+                It.IsAny<ResourceType>(),
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
+                .Returns(new List<LocationResult>());
+            
+            // Setup ClearCache - no-op for mocks
+            mockResources.Setup(r => r.ClearCache()).Verifiable();
+            
+            // Setup ReloadModule - no-op for mocks
+            mockResources.Setup(r => r.ReloadModule(It.IsAny<string>())).Verifiable();
+            
+            // Setup GetChitinResources - returns empty list by default
+            mockResources.Setup(r => r.GetChitinResources())
+                .Returns(new List<FileResource>());
+            
+            // Setup GetPatchErfResources - returns empty list by default
+            mockResources.Setup(r => r.GetPatchErfResources(It.IsAny<Game>()))
+                .Returns(new List<FileResource>());
+            
+            // Setup Installation.Resource method (delegates to Resources.LookupResource)
+            mockInstallation.Setup(i => i.Resource(
+                It.IsAny<string>(),
+                It.IsAny<ResourceType>(),
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
+                .Returns((string resname, ResourceType restype, SearchLocation[] searchOrder, string moduleRoot) =>
+                    mockResources.Object.LookupResource(resname, restype, searchOrder, moduleRoot));
+            
+            // Setup Installation.Locate method (delegates to Resources.LocateResource)
+            mockInstallation.Setup(i => i.Locate(
+                It.IsAny<string>(),
+                It.IsAny<ResourceType>(),
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
+                .Returns((string resname, ResourceType restype, SearchLocation[] searchOrder, string moduleRoot) =>
+                    mockResources.Object.LocateResource(resname, restype, searchOrder, moduleRoot));
+            
+            // Setup Installation.Texture method - returns null by default (would need TPC parsing)
+            mockInstallation.Setup(i => i.Texture(
+                It.IsAny<string>(),
+                It.IsAny<SearchLocation[]>()))
+                .Returns((Formats.TPC.TPC)null);
+            
+            // Setup Installation.GetModuleRoots - returns empty list by default
+            mockInstallation.Setup(i => i.GetModuleRoots())
+                .Returns(new List<string>());
+            
+            // Setup Installation.GetModuleFiles - returns empty list by default
+            mockInstallation.Setup(i => i.GetModuleFiles(It.IsAny<string>()))
+                .Returns(new List<string>());
+            
+            // Setup Installation.ClearCache - delegates to Resources.ClearCache
+            mockInstallation.Setup(i => i.ClearCache())
+                .Callback(() => mockResources.Object.ClearCache());
+            
+            // Setup Installation.ReloadModule - delegates to Resources.ReloadModule
+            mockInstallation.Setup(i => i.ReloadModule(It.IsAny<string>()))
+                .Callback((string moduleName) => mockResources.Object.ReloadModule(moduleName));
+            
+            // Setup Installation.ModulePath - returns mock modules path
+            mockInstallation.Setup(i => i.ModulePath())
+                .Returns(Installation.GetModulesPath(mockPath));
+            
+            // Setup Installation.OverridePath - returns mock override path
+            mockInstallation.Setup(i => i.OverridePath())
+                .Returns(Installation.GetOverridePath(mockPath));
+            
+            // Setup Installation.PackagePath - returns mock packages path
+            mockInstallation.Setup(i => i.PackagePath())
+                .Returns(Installation.GetPackagesPath(mockPath));
+            
+            // Setup Installation.ChitinResources - delegates to Resources.GetChitinResources
+            mockInstallation.Setup(i => i.ChitinResources())
+                .Returns(() => mockResources.Object.GetChitinResources());
+            
+            // Setup Installation.CoreResources - combines ChitinResources and GetPatchErfResources
+            mockInstallation.Setup(i => i.CoreResources())
+                .Returns(() =>
+                {
+                    var results = new List<FileResource>();
+                    results.AddRange(mockResources.Object.GetChitinResources());
+                    results.AddRange(mockResources.Object.GetPatchErfResources(mockGame));
+                    return results;
+                });
+            
+            // Setup Installation.OverrideList - returns empty list by default
+            mockInstallation.Setup(i => i.OverrideList())
+                .Returns(new List<string>());
+            
+            // Setup Installation.OverrideResources - returns empty list by default
+            mockInstallation.Setup(i => i.OverrideResources(It.IsAny<string>()))
+                .Returns(new List<FileResource>());
+            
+            // Setup Installation.Locations - returns location for the specific resource, empty for others
+            mockInstallation.Setup(i => i.Locations(
+                It.IsAny<List<ResourceIdentifier>>(),
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<List<LazyCapsule>>(),
+                It.IsAny<List<string>>(),
+                It.IsAny<string>()))
+                .Returns((List<ResourceIdentifier> queries, SearchLocation[] order, List<LazyCapsule> capsules, List<string> folders, string moduleRoot) =>
+                {
+                    var results = new Dictionary<ResourceIdentifier, List<LocationResult>>();
+                    if (queries != null)
+                    {
+                        foreach (var query in queries)
+                        {
+                            if (string.Equals(query.ResName, resRef, StringComparison.OrdinalIgnoreCase) && query.ResType == resourceType)
+                            {
+                                results[query] = new List<LocationResult>
+                                {
+                                    new LocationResult(mockFilePath, 0, data.Length)
+                                };
+                            }
+                            else
+                            {
+                                results[query] = new List<LocationResult>();
+                            }
+                        }
+                    }
+                    return results;
+                });
 
             return mockInstallation.Object;
         }
