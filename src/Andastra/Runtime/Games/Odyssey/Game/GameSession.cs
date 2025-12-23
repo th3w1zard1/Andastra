@@ -1031,7 +1031,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             }
 
             // Initialize all other components (ComponentInitializer already handles this, but ensure they exist)
-            Systems.ComponentInitializer.InitializeComponents(playerEntity);
+            Andastra.Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(playerEntity);
 
             // Add player to party as leader
             _partySystem?.SetPlayerCharacter(playerEntity);
@@ -1171,7 +1171,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             // Module entities need IScriptHooksComponent for script execution
             // Based on swkotor2.exe: Module scripts require script hooks component
             // ComponentInitializer.InitializeComponents adds IScriptHooksComponent to all entities
-            Systems.ComponentInitializer.InitializeComponents(entity);
+            Andastra.Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(entity);
 
             // Ensure IScriptHooksComponent is present (ComponentInitializer should add it, but verify for safety)
             if (!entity.HasComponent<IScriptHooksComponent>())

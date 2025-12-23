@@ -1676,7 +1676,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 playerSpawn.Tag = "wp_player_spawn";
 
                 // Initialize waypoint component
-                Systems.ComponentInitializer.InitializeComponents(playerSpawn);
+                Andastra.Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(playerSpawn);
 
                 runtimeArea.AddEntity(playerSpawn);
             }
