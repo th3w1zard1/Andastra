@@ -19,7 +19,7 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public int Height => _depthBuffer.Height;
 
-        public IntPtr NativeHandle => _depthBuffer.NativeDeviceTexture;
+        public IntPtr NativeHandle => _depthBuffer?.NativePointer ?? IntPtr.Zero;
 
         public void Dispose()
         {

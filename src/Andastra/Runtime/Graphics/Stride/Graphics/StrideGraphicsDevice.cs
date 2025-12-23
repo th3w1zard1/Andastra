@@ -164,18 +164,23 @@ namespace Andastra.Runtime.Stride.Graphics
             return new StrideSpriteBatch(new StrideGraphics.SpriteBatch(_device), _graphicsContext);
         }
 
-        public IntPtr NativeHandle => _device.NativeDevice;
+        public IntPtr NativeHandle => _device?.NativePointer ?? IntPtr.Zero;
 
         // 3D Rendering Methods
         public void SetVertexBuffer(IVertexBuffer vertexBuffer)
         {
+            if (_graphicsContext == null)
+            {
+                throw new InvalidOperationException("CommandList is required for SetVertexBuffer");
+            }
+
             if (vertexBuffer == null)
             {
-                _device.SetVertexBuffer(0, null, 0, 0);
+                _graphicsContext.SetVertexBuffer(0, null, 0, 0);
             }
             else if (vertexBuffer is StrideVertexBuffer strideVb)
             {
-                _device.SetVertexBuffer(0, strideVb.Buffer, 0, strideVb.VertexStride);
+                _graphicsContext.SetVertexBuffer(0, strideVb.Buffer, 0, strideVb.VertexStride);
             }
             else
             {
@@ -185,13 +190,18 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public void SetIndexBuffer(IIndexBuffer indexBuffer)
         {
+            if (_graphicsContext == null)
+            {
+                throw new InvalidOperationException("CommandList is required for SetIndexBuffer");
+            }
+
             if (indexBuffer == null)
             {
-                _device.SetIndexBuffer(null, 0, false);
+                _graphicsContext.SetIndexBuffer(null, 0, false);
             }
             else if (indexBuffer is StrideIndexBuffer strideIb)
             {
-                _device.SetIndexBuffer(strideIb.Buffer, 0, strideIb.IsShort);
+                _graphicsContext.SetIndexBuffer(strideIb.Buffer, 0, strideIb.IsShort);
             }
             else
             {
@@ -201,7 +211,12 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public void DrawIndexedPrimitives(Andastra.Runtime.Graphics.PrimitiveType primitiveType, int baseVertex, int minVertexIndex, int numVertices, int startIndex, int primitiveCount)
         {
-            _device.DrawIndexed(
+            if (_graphicsContext == null)
+            {
+                throw new InvalidOperationException("CommandList is required for DrawIndexedPrimitives");
+            }
+
+            _graphicsContext.DrawIndexed(
                 ConvertPrimitiveType(primitiveType),
                 startIndex,
                 baseVertex,
@@ -211,7 +226,12 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public void DrawPrimitives(Andastra.Runtime.Graphics.PrimitiveType primitiveType, int vertexOffset, int primitiveCount)
         {
-            _device.Draw(
+            if (_graphicsContext == null)
+            {
+                throw new InvalidOperationException("CommandList is required for DrawPrimitives");
+            }
+
+            _graphicsContext.Draw(
                 ConvertPrimitiveType(primitiveType),
                 vertexOffset,
                 primitiveCount
@@ -220,13 +240,18 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public void SetRasterizerState(IRasterizerState rasterizerState)
         {
+            if (_graphicsContext == null)
+            {
+                throw new InvalidOperationException("CommandList is required for SetRasterizerState");
+            }
+
             if (rasterizerState == null)
             {
-                _device.SetRasterizerState(RasterizerStateDescription.Default);
+                _graphicsContext.SetRasterizerState(RasterizerStateDescription.Default);
             }
             else if (rasterizerState is StrideRasterizerState strideRs)
             {
-                _device.SetRasterizerState(strideRs.Description);
+                _graphicsContext.SetRasterizerState(strideRs.Description);
             }
             else
             {
@@ -236,13 +261,18 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public void SetDepthStencilState(IDepthStencilState depthStencilState)
         {
+            if (_graphicsContext == null)
+            {
+                throw new InvalidOperationException("CommandList is required for SetDepthStencilState");
+            }
+
             if (depthStencilState == null)
             {
-                _device.SetDepthStencilState(DepthStencilStateDescription.Default);
+                _graphicsContext.SetDepthStencilState(DepthStencilStateDescription.Default);
             }
             else if (depthStencilState is StrideDepthStencilState strideDs)
             {
-                _device.SetDepthStencilState(strideDs.Description);
+                _graphicsContext.SetDepthStencilState(strideDs.Description);
             }
             else
             {
@@ -252,13 +282,18 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public void SetBlendState(IBlendState blendState)
         {
+            if (_graphicsContext == null)
+            {
+                throw new InvalidOperationException("CommandList is required for SetBlendState");
+            }
+
             if (blendState == null)
             {
-                _device.SetBlendState(BlendStateDescription.Default);
+                _graphicsContext.SetBlendState(BlendStateDescription.Default);
             }
             else if (blendState is StrideBlendState strideBs)
             {
-                _device.SetBlendState(strideBs.Description);
+                _graphicsContext.SetBlendState(strideBs.Description);
             }
             else
             {
@@ -268,13 +303,18 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public void SetSamplerState(int index, ISamplerState samplerState)
         {
+            if (_graphicsContext == null)
+            {
+                throw new InvalidOperationException("CommandList is required for SetSamplerState");
+            }
+
             if (samplerState == null)
             {
-                _device.SetSamplerState(index, SamplerStateDescription.Default);
+                _graphicsContext.SetSamplerState(index, SamplerStateDescription.Default);
             }
             else if (samplerState is StrideSamplerState strideSs)
             {
-                _device.SetSamplerState(index, strideSs.Description);
+                _graphicsContext.SetSamplerState(index, strideSs.Description);
             }
             else
             {

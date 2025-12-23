@@ -353,39 +353,58 @@ namespace Andastra.Runtime.Stride.Graphics
             try
             {
                 // Use type-specific setters based on parameter key type
+                // Stride requires ValueParameterKey<T> for value types
                 if (key is ParameterKey<MatrixStride> matrixKey && value is MatrixStride matrixValue)
                 {
-                    collection.Set(matrixKey, matrixValue);
+                    var valueKey = new ValueParameterKey<MatrixStride>(key.Name);
+                    collection.Set(valueKey, matrixValue);
                 }
                 else if (key is ParameterKey<Vector3Stride> vector3Key && value is Vector3Stride vector3Value)
                 {
-                    collection.Set(vector3Key, vector3Value);
+                    var valueKey = new ValueParameterKey<Vector3Stride>(key.Name);
+                    collection.Set(valueKey, vector3Value);
                 }
                 else if (key is ParameterKey<Color3> color3Key && value is Color3 color3Value)
                 {
-                    collection.Set(color3Key, color3Value);
+                    var valueKey = new ValueParameterKey<Color3>(key.Name);
+                    collection.Set(valueKey, color3Value);
                 }
                 else if (key is ParameterKey<Color4> color4Key && value is Color4 color4Value)
                 {
-                    collection.Set(color4Key, color4Value);
+                    var valueKey = new ValueParameterKey<Color4>(key.Name);
+                    collection.Set(valueKey, color4Value);
                 }
                 else if (key is ParameterKey<float> floatKey && value is float floatValue)
                 {
-                    collection.Set(floatKey, floatValue);
+                    var valueKey = new ValueParameterKey<float>(key.Name);
+                    collection.Set(valueKey, floatValue);
                 }
                 else if (key is ParameterKey<bool> boolKey && value is bool boolValue)
                 {
-                    collection.Set(boolKey, boolValue);
+                    var valueKey = new ValueParameterKey<bool>(key.Name);
+                    collection.Set(valueKey, boolValue);
                 }
                 else if (key is ParameterKey<Texture> textureKey && value is Texture textureValue)
                 {
-                    // Texture is a reference type, use SetObject or MaterialKeys
-                    // For now, only handle if it's a known MaterialKey like DiffuseMap
-                    if (textureKey == MaterialKeys.DiffuseMap)
+                    // Texture is a reference type, requires ObjectParameterKey
+                    if (textureKey is ObjectParameterKey<Texture> objectTextureKey)
                     {
-                        collection.Set(textureKey, textureValue);
+                        collection.Set(objectTextureKey, textureValue);
                     }
-                    // For other texture keys, skip as they require ObjectParameterKey
+                    else
+                    {
+                        // If it's not an ObjectParameterKey, create one
+                        // MaterialKeys like DiffuseMap are already ObjectParameterKey<Texture>
+                        if (textureKey == MaterialKeys.DiffuseMap)
+                        {
+                            collection.Set((ObjectParameterKey<Texture>)textureKey, textureValue);
+                        }
+                        else
+                        {
+                            var objectKey = new ObjectParameterKey<Texture>(key.Name);
+                            collection.Set(objectKey, textureValue);
+                        }
+                    }
                 }
             }
             catch (Exception ex)
@@ -821,15 +840,18 @@ namespace Andastra.Runtime.Stride.Graphics
                     // Use pattern matching to determine the type and set appropriately
                     if (parameterValue is Color3 color3Val && parameterKey is ParameterKey<Color3> color3Key)
                     {
-                        _parameterCollection.Set(color3Key, color3Val);
+                        var valueKey = new ValueParameterKey<Color3>(parameterKey.Name);
+                        _parameterCollection.Set(valueKey, color3Val);
                     }
                     else if (parameterValue is Color4 color4Val && parameterKey is ParameterKey<Color4> color4Key)
                     {
-                        _parameterCollection.Set(color4Key, color4Val);
+                        var valueKey = new ValueParameterKey<Color4>(parameterKey.Name);
+                        _parameterCollection.Set(valueKey, color4Val);
                     }
                     else if (parameterValue is Vector3Stride vector3Val && parameterKey is ParameterKey<Vector3Stride> vector3Key)
                     {
-                        _parameterCollection.Set(vector3Key, vector3Val);
+                        var valueKey = new ValueParameterKey<Vector3Stride>(parameterKey.Name);
+                        _parameterCollection.Set(valueKey, vector3Val);
                     }
                 }
             }
@@ -886,11 +908,8 @@ namespace Andastra.Runtime.Stride.Graphics
                     {
                         try
                         {
-                            // For float parameters, use ValueParameterKey which is compatible with ParameterKey<float>
-                            if (parameterKey is ParameterKey<float> floatKey)
-                            {
-                                parameter.Set(floatKey, value);
-                            }
+                            // For float parameters, use ValueParameterKey
+                            parameter.Set(parameterKey, value);
                         }
                         catch (ArgumentException)
                         {

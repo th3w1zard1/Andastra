@@ -116,8 +116,11 @@ namespace Andastra.Runtime.Stride.Culling
 
                 // Copy depth buffer to Hi-Z buffer mip level 0
                 // Stride supports copying textures via CommandList
-                var commandList = _graphicsDevice.ImmediateContext.CommandList;
-                commandList.CopyRegion(depthBuffer, 0, null, _hiZBuffer, 0);
+                var commandList = _graphicsDevice.ImmediateContext();
+                if (commandList != null)
+                {
+                    commandList.CopyRegion(depthBuffer, 0, null, _hiZBuffer, 0);
+                }
 
                 // Generate mipmap levels by downsampling with max depth operation
                 // Each mip level stores the maximum depth from 2x2 region of previous level
@@ -215,7 +218,7 @@ namespace Andastra.Runtime.Stride.Culling
                         // Read full resolution texture (mip 0)
                         // Use format-aware depth reading to properly extract depth values
                         float[] fullResData = ReadDepthTextureData(_hiZBuffer, _width, _height);
-                        
+
                         if (fullResData == null || fullResData.Length == 0)
                         {
                             // If reading failed, return 0 (assume visible)
@@ -415,7 +418,7 @@ namespace Andastra.Runtime.Stride.Culling
 
                 // Get texture format to determine how to read the data
                 StrideGraphics.PixelFormat format = texture.Format;
-                
+
                 // Read texture data based on format
                 // Stride's GetData typically reads as Color4[], but we need to extract depth based on format
                 var colorData = new Color4[pixelCount];
@@ -442,21 +445,21 @@ namespace Andastra.Runtime.Stride.Culling
                     // - Bits 0-23: 24-bit depth value (normalized 0.0-1.0 range)
                     // - Bits 24-31: 8-bit stencil value
                     // - Depth value: stored as unsigned normalized integer (0 to 2^24-1 = 16777215)
-                    // 
+                    //
                     // When read as Color4, the format depends on GPU byte order and channel interpretation:
                     // - Little-endian (typical): R = bits 0-7, G = bits 8-15, B = bits 16-23, A = bits 24-31 (stencil)
                     // - Alternative packing: R = bits 16-23 (MSB), G = bits 8-15, B = bits 0-7 (LSB)
-                    // 
+                    //
                     // Proper extraction method:
                     // 1. Reconstruct 32-bit value from RGBA channels (handling byte order)
                     // 2. Extract depth bits (0-23) by masking: value & 0x00FFFFFF
                     // 3. Normalize to 0.0-1.0 range: depth / 16777215.0f
-                    // 
+                    //
                     // Based on DirectX/OpenGL D24S8 format specification and Stride's Color4 interpretation
                     for (int i = 0; i < pixelCount; i++)
                     {
                         Color4 color = colorData[i];
-                        
+
                         // Method 1: Reconstruct 32-bit value from normalized Color4 channels
                         // Convert normalized float channels (0.0-1.0) to byte values (0-255)
                         // Then reconstruct the 32-bit integer value
@@ -464,25 +467,25 @@ namespace Andastra.Runtime.Stride.Culling
                         byte gByte = (byte)Math.Min(255, Math.Max(0, (int)(color.G * 255.0f + 0.5f)));
                         byte bByte = (byte)Math.Min(255, Math.Max(0, (int)(color.B * 255.0f + 0.5f)));
                         byte aByte = (byte)Math.Min(255, Math.Max(0, (int)(color.A * 255.0f + 0.5f)));
-                        
+
                         // Reconstruct 32-bit value (little-endian: R=LSB, A=MSB)
                         // D24S8 format: depth in lower 24 bits, stencil in upper 8 bits
                         // Little-endian byte order: [R, G, B, A] = [byte0, byte1, byte2, byte3]
                         // Depth = (R | (G << 8) | (B << 16)) & 0x00FFFFFF
                         // Stencil = A (bits 24-31, but we only need depth)
                         uint depth24Bits = (uint)(rByte | (gByte << 8) | (bByte << 16));
-                        
+
                         // Extract depth bits (0-23) and normalize to 0.0-1.0 range
                         // Mask out stencil bits (24-31) to ensure we only get depth
                         depth24Bits &= 0x00FFFFFF; // Mask to 24 bits
                         float depth24 = depth24Bits / 16777215.0f; // 2^24 - 1 = 16777215
-                        
+
                         // Alternative method (if byte order is reversed):
                         // Some GPUs may pack as: R = MSB (bits 16-23), G = middle (bits 8-15), B = LSB (bits 0-7)
                         // In that case: depth24Bits = (uint)(bByte | (gByte << 8) | (rByte << 16))
                         // We try both methods and use the one that produces valid depth values
                         // For now, we use the standard little-endian interpretation
-                        
+
                         // Validate depth value (should be in 0.0-1.0 range)
                         if (depth24 < 0.0f || depth24 > 1.0f || float.IsNaN(depth24) || float.IsInfinity(depth24))
                         {
@@ -490,7 +493,7 @@ namespace Andastra.Runtime.Stride.Culling
                             // This handles edge cases where byte order might be different
                             depth24 = color.R;
                         }
-                        
+
                         depthData[i] = depth24;
                     }
                 }

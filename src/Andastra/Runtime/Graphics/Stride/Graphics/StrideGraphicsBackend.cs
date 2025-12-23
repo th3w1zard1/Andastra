@@ -75,6 +75,13 @@ namespace Andastra.Runtime.Stride.Graphics
                 _contentManager = new StrideContentManager(_game.Content, _game.GraphicsContext);
                 _window = new StrideWindow(_game.Window);
                 _inputManager = new StrideInputManager(_game.Input);
+
+                // Register the CommandList from GraphicsContext for use by ImmediateContext() extension method
+                // This allows code that only has access to GraphicsDevice to retrieve the CommandList
+                if (_game.GraphicsDevice != null && _game.GraphicsContext != null && _game.GraphicsContext.CommandList != null)
+                {
+                    GraphicsDeviceExtensions.RegisterCommandList(_game.GraphicsDevice, _game.GraphicsContext.CommandList);
+                }
             }
 
             // Stride uses a different game loop pattern
@@ -207,20 +214,18 @@ namespace Andastra.Runtime.Stride.Graphics
                 }
 
                 // Set VSync state via GraphicsDevice.Presenter
-                // Based on Stride API: GraphicsDevice.Presenter.VSyncMode
-                // VSyncMode: None = disabled, VerticalSync = enabled, Adaptive = adaptive sync
+                // Based on Stride API: GraphicsDevice.Presenter.Desynchronized
+                // Desynchronized = false means VSync enabled, true means VSync disabled
                 if (enabled)
                 {
-                    // Enable VSync (VerticalSync mode)
-                    // Based on Stride API: Presenter.VSyncMode = Presenter.VSyncMode.VerticalSync
-                    presenter.VSyncMode = Presenter.VSyncMode.VerticalSync;
+                    // Enable VSync (synchronize with vertical refresh)
+                    presenter.Desynchronized = false;
                     Console.WriteLine("[Stride] VSync enabled");
                 }
                 else
                 {
-                    // Disable VSync (None mode)
-                    // Based on Stride API: Presenter.VSyncMode = Presenter.VSyncMode.None
-                    presenter.VSyncMode = Presenter.VSyncMode.None;
+                    // Disable VSync (desynchronize from vertical refresh)
+                    presenter.Desynchronized = true;
                     Console.WriteLine("[Stride] VSync disabled");
                 }
             }
@@ -244,8 +249,10 @@ namespace Andastra.Runtime.Stride.Graphics
                 _contentManager = null;
             }
 
-            if (_game != null)
+            // Unregister CommandList when disposing
+            if (_game != null && _game.GraphicsDevice != null)
             {
+                GraphicsDeviceExtensions.UnregisterCommandList(_game.GraphicsDevice);
                 _game.Dispose();
                 _game = null;
             }

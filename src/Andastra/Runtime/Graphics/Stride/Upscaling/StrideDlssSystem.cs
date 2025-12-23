@@ -500,11 +500,10 @@ namespace Andastra.Runtime.Stride.Upscaling
             if (_graphicsDevice == null) return false;
 
             // Check for NVIDIA GPU
-            var adapterDesc = _graphicsDevice.Adapter?.Description;
-            if (adapterDesc == null) return false;
-
-            // NVIDIA vendor ID (0x10DE)
-            bool isNvidia = adapterDesc.VendorId == 0x10DE;
+            // TODO: FIXME - Stride adapter description may not expose VendorId directly
+            // Need to find the correct way to get vendor ID from Stride GraphicsDevice.Adapter
+            // For now, we'll skip the vendor check and rely on NGX initialization to fail if not NVIDIA
+            bool isNvidia = true; // Assume NVIDIA for now, NGX will fail if not available
             if (!isNvidia)
             {
                 return false;

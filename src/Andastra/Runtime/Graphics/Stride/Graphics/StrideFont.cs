@@ -29,7 +29,17 @@ namespace Andastra.Runtime.Stride.Graphics
             return new Andastra.Runtime.Graphics.Vector2(size.X, size.Y);
         }
 
-        public float LineSpacing => _font.LineSpacing;
+        public float LineSpacing
+        {
+            get
+            {
+                // Stride SpriteFont doesn't have a direct LineSpacing property
+                // Calculate line spacing based on font size (typical line spacing is 1.2x the font size)
+                // For Stride, we can use a default multiplier or calculate from character height
+                var testSize = _font.MeasureString("Ag");
+                return testSize.Y * 1.2f; // Approximate line spacing as 1.2x character height
+            }
+        }
     }
 }
 

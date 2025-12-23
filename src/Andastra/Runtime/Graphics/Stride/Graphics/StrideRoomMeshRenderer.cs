@@ -179,15 +179,15 @@ namespace Andastra.Runtime.Stride.Graphics
             }
 
             int baseVertexIndex = vertices.Count;
-            Color meshColor = Color.Gray;
+            Andastra.Runtime.Graphics.Color meshColor = Andastra.Runtime.Graphics.Color.Gray;
 
             // Transform and add vertices
-            foreach (Vector3 vertex in mesh.Vertices)
+            foreach (System.Numerics.Vector3 vertex in mesh.Vertices)
             {
                 // Transform vertex position using Matrix4x4.Transform
-                var vertexVec = new Vector4(vertex.X, vertex.Y, vertex.Z, 1.0f);
+                var vertexVec = new System.Numerics.Vector4(vertex.X, vertex.Y, vertex.Z, 1.0f);
                 var transformedVec = System.Numerics.Vector4.Transform(vertexVec, transform);
-                var transformedPos = new Vector3(transformedVec.X, transformedVec.Y, transformedVec.Z);
+                var transformedPos = new System.Numerics.Vector3(transformedVec.X, transformedVec.Y, transformedVec.Z);
 
                 vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(transformedPos, meshColor));
             }
