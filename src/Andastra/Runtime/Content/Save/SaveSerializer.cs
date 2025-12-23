@@ -2385,9 +2385,60 @@ namespace Andastra.Runtime.Content.Save
 
                     // Add powers from KnownPowers that belong to this class level
                     // Note: KnownPowers is a List<string>, we need to convert to integer IDs
-                    // TODO:  For now, we'll skip powers since we don't have a way to convert string names to IDs
-                    // This is acceptable as powers are typically derived from class levels during runtime
-                    // If KnownPowers contains numeric strings, we could parse them, but that's not standard
+                    // Based on swkotor2.exe: spells.2da system
+                    // Located via string references: "spells.2da" @ 0x007c2e60
+                    // Original implementation: spells.2da row index = spell/power ID, row label = spell label
+                    // The engine uses spell IDs (row indices) to store powers in UTC structures
+                    // Based on vendor/PyKotor/wiki/2DA-spells.md: spells.2da structure where row index directly corresponds to spell ID
+                    if (creatureState.KnownPowers != null)
+                    {
+                        foreach (string powerStr in creatureState.KnownPowers)
+                        {
+                            bool powerAdded = false;
+
+                            // Try to parse as integer (most common case - power IDs are typically numeric strings)
+                            if (int.TryParse(powerStr, out int powerId))
+                            {
+                                utcClass.Powers.Add(powerId);
+                                powerAdded = true;
+                            }
+                            else
+                            {
+                                // If powerStr is not numeric, try to look it up by label in spells.2da
+                                // This allows loading saves that contain power labels instead of IDs
+                                if (_gameDataManager != null)
+                                {
+                                    try
+                                    {
+                                        // Use dynamic to call GetTable without referencing Odyssey.Kotor
+                                        dynamic gameDataManager = _gameDataManager;
+                                        Andastra.Parsing.Formats.TwoDA.TwoDA spellsTable = gameDataManager.GetTable("spells");
+                                        if (spellsTable != null)
+                                        {
+                                            // Get row index by label - in spells.2da, row index IS the spell/power ID
+                                            // swkotor2.exe: spells.2da structure where row index directly corresponds to spell ID
+                                            // Based on vendor/PyKotor/wiki/2DA-spells.md: Row index = Spell ID (integer)
+                                            int powerRowIndex = spellsTable.GetRowIndex(powerStr);
+                                            utcClass.Powers.Add(powerRowIndex);
+                                            powerAdded = true;
+                                        }
+                                    }
+                                    catch (System.Collections.Generic.KeyNotFoundException)
+                                    {
+                                        // Power label not found in spells.2da, skip it (matches original behavior when label doesn't exist)
+                                    }
+                                    catch
+                                    {
+                                        // Any other error (table not available, etc.), skip this power
+                                        // This matches the original behavior of skipping invalid powers
+                                    }
+                                }
+                            }
+
+                            // If power was not added (either invalid ID or lookup failed), it's silently skipped
+                            // This matches the original engine behavior of ignoring invalid power references
+                        }
+                    }
 
                     utc.Classes.Add(utcClass);
                 }
