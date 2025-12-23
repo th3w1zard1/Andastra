@@ -2816,6 +2816,43 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         }
 
         /// <summary>
+        /// Sets a cooldown for an item type on the owning entity.
+        /// This should be called when an item is used/consumed to prevent rapid reuse.
+        /// Based on daorigins.exe: Item cooldowns are applied when consumables are used.
+        /// </summary>
+        /// <param name="entity">Entity that owns the item (usually a player/creature)</param>
+        /// <param name="item">Item that was used</param>
+        /// <param name="cooldownSeconds">Cooldown duration in seconds</param>
+        public void SetItemCooldown(IEntity entity, IEntity item, float cooldownSeconds)
+        {
+            if (entity == null || item == null || cooldownSeconds <= 0)
+            {
+                return;
+            }
+
+            // Get item ResRef for cooldown tracking key
+            string itemResRef = null;
+            Type itemType = item.GetType();
+            PropertyInfo resRefProp = itemType.GetProperty("ResRef");
+            if (resRefProp != null)
+            {
+                object resRefObj = resRefProp.GetValue(item);
+                itemResRef = resRefObj as string;
+            }
+
+            if (string.IsNullOrEmpty(itemResRef))
+            {
+                // Cannot determine item type - cannot set cooldown
+                return;
+            }
+
+            // Set cooldown end time
+            DateTime cooldownEndTime = DateTime.Now.AddSeconds(cooldownSeconds);
+            string cooldownKey = $"ItemCooldown_{itemResRef}";
+            entity.SetData(cooldownKey, cooldownEndTime);
+        }
+
+        /// <summary>
         /// Gets the remaining cooldown time for an ability/talent in seconds.
         /// Based on daorigins.exe: Abilities/talents have cooldowns that prevent immediate reuse.
         /// </summary>
@@ -5796,105 +5833,6 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             finally
             {
                 Marshal.FreeHGlobal(bufferPtr);
-            }
-        }
-
-        /// <summary>
-        /// Converts a vertex buffer to DirectX 9 format.
-        /// Based on daorigins.exe: Buffer conversion handles cross-API buffer data.
-        /// </summary>
-        /// <param name="vertexBuffer">Source vertex buffer object.</param>
-        /// <param name="meshData">Mesh data containing buffer information.</param>
-        /// <returns>DirectX 9 vertex buffer pointer, or IntPtr.Zero on failure.</returns>
-        private IntPtr ConvertToDirectX9VertexBuffer(dynamic vertexBuffer, dynamic meshData)
-        {
-            if (vertexBuffer == null || _d3dDevice == IntPtr.Zero)
-            {
-                return IntPtr.Zero;
-            }
-
-            try
-            {
-                // Try to get buffer size and data from the buffer object
-                int bufferSize = 0;
-                PropertyInfo sizeProp = vertexBuffer.GetType().GetProperty("SizeInBytes");
-                if (sizeProp != null)
-                {
-                    object sizeObj = sizeProp.GetValue(vertexBuffer);
-                    if (sizeObj is int)
-                    {
-                        bufferSize = (int)sizeObj;
-                    }
-                }
-
-                if (bufferSize <= 0)
-                {
-                    return IntPtr.Zero;
-                }
-
-                // Create DirectX 9 vertex buffer
-                IntPtr dx9Buffer = IntPtr.Zero;
-                uint fvf = 0; // Default FVF, should be determined from buffer format
-                int result = CreateVertexBufferDirectX9((uint)bufferSize, D3DUSAGE_WRITEONLY, fvf, D3DPOOL.D3DPOOL_DEFAULT, ref dx9Buffer);
-                if (result != 0 || dx9Buffer == IntPtr.Zero)
-                {
-                    return IntPtr.Zero;
-                }
-
-                // TODO: Copy vertex data from source buffer to DirectX 9 buffer
-                // This requires accessing the source buffer's data and copying it
-                // Implementation depends on the buffer interface
-
-                return dx9Buffer;
-            }
-            catch
-            {
-                return IntPtr.Zero;
-            }
-        }
-
-        /// <summary>
-        /// Converts an index buffer to DirectX 9 format.
-        /// Based on daorigins.exe: Buffer conversion handles cross-API buffer data.
-        /// </summary>
-        /// <param name="indexBuffer">Source index buffer object.</param>
-        /// <param name="meshData">Mesh data containing buffer information.</param>
-        /// <returns>DirectX 9 index buffer pointer, or IntPtr.Zero on failure.</returns>
-        private IntPtr ConvertToDirectX9IndexBuffer(dynamic indexBuffer, dynamic meshData)
-        {
-            if (indexBuffer == null || _d3dDevice == IntPtr.Zero)
-            {
-                return IntPtr.Zero;
-            }
-
-            try
-            {
-                // Try to get buffer size from the buffer object
-                int bufferSize = 0;
-                PropertyInfo sizeProp = indexBuffer.GetType().GetProperty("SizeInBytes");
-                if (sizeProp != null)
-                {
-                    object sizeObj = sizeProp.GetValue(indexBuffer);
-                    if (sizeObj is int)
-                    {
-                        bufferSize = (int)sizeObj;
-                    }
-                }
-
-                if (bufferSize <= 0)
-                {
-                    return IntPtr.Zero;
-                }
-
-                // TODO: Create DirectX 9 index buffer and copy data
-                // This requires implementing CreateIndexBufferDirectX9 similar to CreateVertexBufferDirectX9
-                // Implementation depends on the index buffer format (16-bit vs 32-bit)
-
-                return IntPtr.Zero; // Not yet implemented
-            }
-            catch
-            {
-                return IntPtr.Zero;
             }
         }
 
