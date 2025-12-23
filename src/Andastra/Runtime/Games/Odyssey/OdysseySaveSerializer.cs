@@ -132,6 +132,13 @@ namespace Andastra.Runtime.Games.Odyssey
         {
             if (saveData == null)
             {
+                return new byte[0];
+            }
+
+            // Cast to Core.SaveGameData to access Core-specific properties
+            var coreSaveData = saveData as Andastra.Runtime.Core.Save.SaveGameData;
+            if (coreSaveData == null)
+            {
                 throw new ArgumentNullException(nameof(saveData));
             }
 
@@ -163,9 +170,11 @@ namespace Andastra.Runtime.Games.Odyssey
             string lastModule = string.Empty;
 
             // Priority 1: Use CurrentModule if available (most direct)
-            if (!string.IsNullOrEmpty(saveData.CurrentModule))
+            // Cast to Core.SaveGameData to access Core-specific properties
+            var coreSaveData = saveData as Andastra.Runtime.Core.Save.SaveGameData;
+            if (coreSaveData != null && !string.IsNullOrEmpty(coreSaveData.CurrentModule))
             {
-                lastModule = saveData.CurrentModule;
+                lastModule = coreSaveData.CurrentModule;
             }
             // Priority 2: Try to extract from CurrentAreaInstance using reflection
             else if (saveData.CurrentAreaInstance != null)
@@ -198,13 +207,13 @@ namespace Andastra.Runtime.Games.Odyssey
                 }
 
                 // Priority 3: Infer from ModuleAreaMappings by finding which module contains this area
-                if (string.IsNullOrEmpty(lastModule) && saveData.ModuleAreaMappings != null && saveData.ModuleAreaMappings.Count > 0)
+                if (string.IsNullOrEmpty(lastModule) && coreSaveData != null && coreSaveData.ModuleAreaMappings != null && coreSaveData.ModuleAreaMappings.Count > 0)
                 {
                     string areaResRef = saveData.CurrentAreaInstance.ResRef;
                     if (!string.IsNullOrEmpty(areaResRef))
                     {
                         // Search through ModuleAreaMappings to find which module contains this area
-                        foreach (var kvp in saveData.ModuleAreaMappings)
+                        foreach (var kvp in coreSaveData.ModuleAreaMappings)
                         {
                             string moduleResRef = kvp.Key;
                             List<string> areaList = kvp.Value;
@@ -223,7 +232,7 @@ namespace Andastra.Runtime.Games.Odyssey
                     // If CurrentArea matches an area in ModuleAreaMappings, use that module
                     if (saveData.ModuleAreaMappings != null && saveData.ModuleAreaMappings.Count > 0)
                     {
-                        foreach (var kvp in saveData.ModuleAreaMappings)
+                        foreach (var kvp in coreSaveData.ModuleAreaMappings)
                         {
                             string moduleResRef = kvp.Key;
                             List<string> areaList = kvp.Value;
@@ -5267,7 +5276,7 @@ namespace Andastra.Runtime.Games.Odyssey
                     // If CurrentArea matches an area in ModuleAreaMappings, use that module
                     if (saveData.ModuleAreaMappings != null && saveData.ModuleAreaMappings.Count > 0)
                     {
-                        foreach (var kvp in saveData.ModuleAreaMappings)
+                        foreach (var kvp in coreSaveData.ModuleAreaMappings)
                         {
                             string moduleResRef = kvp.Key;
                             List<string> areaList = kvp.Value;
