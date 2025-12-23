@@ -260,7 +260,7 @@ namespace Andastra.Runtime.Games.Aurora.GUI
             UpdateHighlightedButton(currentMouseState.X, currentMouseState.Y);
 
             // Handle mouse clicks on buttons
-            if (_previousMouseState.LeftButton == ButtonState.Released && currentMouseState.LeftButton == ButtonState.Pressed)
+            if (_previousMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released && currentMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
             {
                 HandleMouseClick(currentMouseState.X, currentMouseState.Y);
             }
@@ -284,7 +284,7 @@ namespace Andastra.Runtime.Games.Aurora.GUI
             // Render all controls recursively
             foreach (var control in _currentGui.Gui.Controls)
             {
-                RenderControl(control, Vector2.Zero);
+                RenderControl(control, Andastra.Runtime.Graphics.Vector2.Zero);
             }
 
             _spriteBatch.End();
@@ -456,8 +456,8 @@ namespace Andastra.Runtime.Games.Aurora.GUI
                 return;
             }
 
-            Vector2 controlPosition = control.Position + parentOffset;
-            Vector2 controlSize = control.Size;
+            Andastra.Runtime.Graphics.Vector2 controlPosition = control.Position + parentOffset;
+            Andastra.Runtime.Graphics.Vector2 controlSize = control.Size;
 
             // Render control based on type
             switch (control.GuiType)
@@ -555,8 +555,8 @@ namespace Andastra.Runtime.Games.Aurora.GUI
                 BaseBitmapFont font = LoadFont(button.GuiText.Font.ToString());
                 if (font != null)
                 {
-                    Vector2 textSize = font.MeasureString(text);
-                    Vector2 textPos = CalculateTextPosition(button.GuiText.Alignment, position, size, textSize);
+                    Andastra.Runtime.Graphics.Vector2 textSize = font.MeasureString(text);
+                    Andastra.Runtime.Graphics.Vector2 textPos = CalculateTextPosition(button.GuiText.Alignment, position, size, textSize);
                     RenderBitmapText(font, text, textPos, textColor);
                 }
             }
@@ -579,8 +579,8 @@ namespace Andastra.Runtime.Games.Aurora.GUI
                 BaseBitmapFont font = LoadFont(label.GuiText.Font.ToString());
                 if (font != null)
                 {
-                    Vector2 textSize = font.MeasureString(text);
-                    Vector2 textPos = CalculateTextPosition(label.GuiText.Alignment, position, size, textSize);
+                    Andastra.Runtime.Graphics.Vector2 textSize = font.MeasureString(text);
+                    Andastra.Runtime.Graphics.Vector2 textPos = CalculateTextPosition(label.GuiText.Alignment, position, size, textSize);
                     RenderBitmapText(font, text, textPos, textColor);
                 }
             }
