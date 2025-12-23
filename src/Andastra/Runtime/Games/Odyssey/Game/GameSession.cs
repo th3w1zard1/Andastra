@@ -1488,7 +1488,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 int abilityId = quickSlots.GetQuickSlotAbility(slotIndex);
                 if (abilityId >= 0)
                 {
-                    // TODO:  Queue ActionCastSpellAtObject action (target self for now)
+                    // Queue ActionCastSpellAtObject action (target self for now)
                     // Based on swkotor2.exe: Spell casting from quick slots
                     // Located via string references: Quick slot system handles spell casting
                     // Original implementation: Quick slot ability usage casts spell at self or selected target
