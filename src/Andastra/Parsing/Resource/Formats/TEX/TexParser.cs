@@ -18,7 +18,7 @@ namespace Andastra.Parsing.Resource.Formats.TEX
     /// Format Support:
     /// - Eclipse TEX: May have a simple header or be DDS-compatible
     /// - Standard DDS variant: TEX files may contain DDS data with optional TEX header
-    // TODO: / - BioWare variant: Simplified header similar to BioWare DDS format
+    /// - BioWare variant: Simplified header similar to BioWare DDS format (width/height/bpp/dataSize/float, DXT1/DXT5 only, power-of-two)
     /// - Pixel formats: DXT1/DXT3/DXT5 compression, uncompressed RGB/RGBA/BGR/BGRA
     /// 
     /// Based on reverse engineering analysis:
@@ -239,21 +239,26 @@ namespace Andastra.Parsing.Resource.Formats.TEX
 
         /// <summary>
         /// Parses BioWare-style TEX header format.
+        /// Based on BioWare DDS variant format (daorigins.exe, DragonAge2.exe, swkotor.exe, swkotor2.exe).
+        /// BioWare DDS header structure:
+        /// - uint32: width (must be power-of-two)
+        /// - uint32: height (must be power-of-two)
+        /// - uint32: bytes-per-pixel (3 = DXT1, 4 = DXT5)
+        /// - uint32: data size (validated against expected size)
+        /// - float: unknown metadata (4 bytes, skipped)
+        /// - Pixel data: DXT1 or DXT5 compressed texture data
         /// </summary>
         private TexParseResult ParseBiowareTEX()
         {
-            // BioWare TEX format header structure:
-            // - uint32: width
-            // - uint32: height
-            // - uint32: format/bytes-per-pixel or format code
-            // - uint32: data size (optional, may be calculated)
-            // - float: unknown (possibly scale or other metadata, optional)
+            // BioWare DDS variant requires at least 20 bytes (width + height + bpp + dataSize + float)
+            const int BIOWARE_DDS_HEADER_SIZE = 20;
             
-            if (_reader.Remaining < MIN_TEX_HEADER_SIZE)
+            if (_reader.Remaining < BIOWARE_DDS_HEADER_SIZE)
             {
-                throw new ArgumentException("TEX file too small to contain valid header");
+                throw new ArgumentException("TEX file too small to contain valid BioWare DDS header");
             }
 
+            // Read width and height
             int width = (int)_reader.ReadUInt32();
             int height = (int)_reader.ReadUInt32();
             
@@ -267,112 +272,52 @@ namespace Andastra.Parsing.Resource.Formats.TEX
                 throw new ArgumentException("TEX file has invalid dimensions (width or height is 0)");
             }
 
-            // Read format identifier (may be bytes-per-pixel or format code)
-            uint formatValue = _reader.ReadUInt32();
-            
+            // BioWare DDS requires power-of-two dimensions
+            // Check: (x & (x - 1)) == 0 for power-of-two
+            if ((width & (width - 1)) != 0 || (height & (height - 1)) != 0)
+            {
+                throw new ArgumentException("BioWare DDS variant requires power-of-two dimensions");
+            }
+
+            // Read bytes-per-pixel (bpp)
+            // BioWare DDS only supports:
+            // - 3 = DXT1 (RGB compressed, no alpha)
+            // - 4 = DXT5 (RGBA compressed, with alpha)
+            int bpp = (int)_reader.ReadUInt32();
             TPCTextureFormat tpcFormat;
             TEXDataLayout dataLayout = TEXDataLayout.Direct;
             
-            // Determine format based on formatValue
-            // Common BioWare patterns:
-            // - 3 = DXT1 (RGB compressed, 4:1 ratio)
-            // - 4 = DXT5 (RGBA compressed, 4:1 ratio)
-            // - 24 = RGB uncompressed (3 bytes per pixel)
-            // - 32 = RGBA uncompressed (4 bytes per pixel)
-            // - 16 = 16-bit formats (ARGB4444, A1R5G5B5, R5G6B5)
-            if (formatValue == 3)
+            if (bpp == 3)
             {
                 tpcFormat = TPCTextureFormat.DXT1;
             }
-            else if (formatValue == 4)
+            else if (bpp == 4)
             {
                 tpcFormat = TPCTextureFormat.DXT5;
             }
-            else if (formatValue == 24)
-            {
-                tpcFormat = TPCTextureFormat.RGB;
-            }
-            else if (formatValue == 32)
-            {
-                tpcFormat = TPCTextureFormat.RGBA;
-            }
-            else if (formatValue == 16)
-            {
-                // 16-bit format - try to detect which one by examining pixel data
-                // Default to A1R5G5B5 as it's common in BioWare games
-                tpcFormat = TPCTextureFormat.RGBA;
-                dataLayout = TEXDataLayout.A1R5G5B5;
-            }
-            else if (formatValue == 2)
-            {
-                // DXT3 format
-                tpcFormat = TPCTextureFormat.DXT3;
-            }
             else
             {
-                // Unknown format, try to infer from file size
-                int remainingBytes = _reader.Remaining;
-                int expectedDXT1 = ((width + 3) / 4) * ((height + 3) / 4) * 8;
-                int expectedDXT5 = ((width + 3) / 4) * ((height + 3) / 4) * 16;
-                int expectedRGB = width * height * 3;
-                int expectedRGBA = width * height * 4;
-                
-                if (remainingBytes == expectedDXT1)
-                {
-                    tpcFormat = TPCTextureFormat.DXT1;
-                }
-                else if (remainingBytes == expectedDXT5)
-                {
-                    tpcFormat = TPCTextureFormat.DXT5;
-                }
-                else if (remainingBytes == expectedRGB)
-                {
-                    tpcFormat = TPCTextureFormat.RGB;
-                }
-                else if (remainingBytes == expectedRGBA)
-                {
-                    tpcFormat = TPCTextureFormat.RGBA;
-                }
-                else
-                {
-                    throw new ArgumentException($"Unknown TEX format code: {formatValue} (file size doesn't match expected formats)");
-                }
+                throw new ArgumentException($"Unsupported BioWare DDS bytes-per-pixel value: {bpp} (only 3=DXT1 and 4=DXT5 are supported)");
             }
 
-            // Check if there's a data size field (4 bytes)
-            // If present and doesn't match expected, use it to validate
-            if (_reader.Remaining >= 4)
+            // Read and validate data size
+            int dataSize = (int)_reader.ReadUInt32();
+            // Expected data size for first mipmap:
+            // - DXT1 (bpp=3): (width * height) / 2
+            // - DXT5 (bpp=4): width * height
+            int expectedDataSize = (bpp == 3) ? (width * height) / 2 : width * height;
+            
+            if (dataSize != expectedDataSize)
             {
-                uint dataSize = _reader.ReadUInt32();
-                int expectedSize = FileMipmapSize(width, height, tpcFormat, dataLayout);
-                
-                // Validate data size if it was provided
-                if (dataSize != 0 && dataSize != expectedSize)
-                {
-                    // Data size doesn't match - might be mipmap data or wrong format
-                    // Use the provided size if it's reasonable
-                    if (dataSize <= _reader.Remaining && dataSize > 0)
-                    {
-                        // Proceed with provided size (might include mipmaps)
-                    }
-                }
+                throw new ArgumentException($"BioWare DDS data size mismatch: {dataSize} != {expectedDataSize} (width={width}, height={height}, bpp={bpp})");
             }
 
-            // Skip optional float field if present (4 bytes)
-            // This is often present in BioWare formats but we don't need it
-            if (_reader.Remaining >= 4)
-            {
-                // Check if next bytes look like pixel data or a float
-                // If we're at the right position for pixel data, don't skip
-                int expectedPixelStart = MIN_TEX_HEADER_SIZE + (formatValue == 16 ? 4 : 0); // Extra 4 bytes for data size
-                int currentOffset = _reader.Position - _reader.Offset;
-                if (currentOffset < expectedPixelStart && _reader.Remaining > expectedPixelStart - currentOffset)
-                {
-                    _reader.Skip(4); // Skip float/metadata field
-                }
-            }
+            // Skip unknown float field (4 bytes)
+            // This field is present in BioWare DDS format but its purpose is unknown
+            _reader.Skip(4);
 
             // Read pixel data (first mipmap only for GUI textures)
+            // BioWare DDS may contain multiple mipmaps, but we only need the first one
             int fileSize = FileMipmapSize(width, height, tpcFormat, dataLayout);
             byte[] raw = _reader.ReadBytes(fileSize);
             if (raw.Length != fileSize)
