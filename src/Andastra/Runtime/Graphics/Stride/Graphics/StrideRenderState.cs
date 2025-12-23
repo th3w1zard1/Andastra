@@ -245,7 +245,7 @@ namespace Andastra.Runtime.Stride.Graphics
             {
                 var desc = _description;
                 var frontFace = desc.FrontFace;
-                frontFace.StencilDepthFail = ConvertStencilOperation(value);
+                frontFace.StencilDepthFail = (StrideGraphics.StencilOperation)ConvertStencilOperation(value);
                 desc.FrontFace = frontFace;
                 _description = desc;
             }
@@ -305,7 +305,7 @@ namespace Andastra.Runtime.Stride.Graphics
             set
             {
                 var desc = _description;
-                desc.StencilWriteMask = (uint)value;
+                desc.StencilWriteMask = value;
                 _description = desc;
             }
         }
