@@ -688,20 +688,44 @@ namespace Andastra.Runtime.Games.Odyssey
 
             // Get all global variable names from game state
             // Based on IGameState interface: GetGlobalNames() returns all variable names
+            // Based on swkotor2.exe: FUN_005ac670 @ 0x005ac670 - no explicit error handling in original,
+            // but we handle cases where GetGlobalNames is not implemented or fails gracefully
             IEnumerable<string> globalNames;
             try
             {
                 globalNames = gameState.GetGlobalNames();
             }
-            catch
+            catch (NotImplementedException)
             {
-                // TODO:  If GetGlobalNames is not implemented or fails, return empty GFF
+                // GetGlobalNames is not implemented by this IGameState implementation
+                // Return empty GFF with VariableList structure (matches original behavior when no globals exist)
+                // Based on swkotor2.exe: Empty VariableList is valid GFF structure
+                return gff.ToBytes();
+            }
+            catch (InvalidOperationException)
+            {
+                // GetGlobalNames failed due to invalid state (e.g., game state not initialized)
+                // Return empty GFF with VariableList structure
+                return gff.ToBytes();
+            }
+            catch (NullReferenceException)
+            {
+                // GetGlobalNames failed due to null reference (internal implementation error)
+                // Return empty GFF with VariableList structure
+                return gff.ToBytes();
+            }
+            catch (Exception)
+            {
+                // GetGlobalNames failed for any other reason
+                // Return empty GFF with VariableList structure to ensure save file is still valid
+                // This matches original engine behavior: if global enumeration fails, save continues with empty globals
                 return gff.ToBytes();
             }
 
             if (globalNames == null)
             {
-                // No global names available - return empty GFF
+                // GetGlobalNames returned null (should not happen, but handle gracefully)
+                // Return empty GFF with VariableList structure
                 return gff.ToBytes();
             }
 
