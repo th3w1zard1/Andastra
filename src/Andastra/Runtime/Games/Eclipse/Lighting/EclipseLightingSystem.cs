@@ -558,7 +558,7 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
         /// - Shadow map covers a fixed area around the scene (configurable size)
         /// - View matrix looks from light direction, projection is orthographic
         /// </remarks>
-        private void UpdateShadowMaps()
+        public void UpdateShadowMaps()
         {
             // Shadow map coverage area (world units)
             // Based on Eclipse engine: Shadow maps cover a reasonable area around the scene
@@ -1054,9 +1054,15 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
         /// </summary>
         /// <param name="viewMatrix">View matrix.</param>
         /// <param name="projectionMatrix">Projection matrix.</param>
-        public void UpdateClustering(Matrix4x4 viewMatrix, Matrix4x4 projectionMatrix)
+        /// <param name="forceUpdate">If true, forces update even if clusters are not dirty. Should be true when called from pre-render to ensure clustering is current with view/projection matrices.</param>
+        /// <remarks>
+        /// Light clustering depends on view/projection matrices, so it should be updated every frame
+        /// even if lights haven't changed, because the camera may have moved.
+        /// Based on daorigins.exe/DragonAge2.exe: Light clustering is updated every frame during pre-render.
+        /// </remarks>
+        public void UpdateClustering(Matrix4x4 viewMatrix, Matrix4x4 projectionMatrix, bool forceUpdate = false)
         {
-            if (!_clustersDirty)
+            if (!forceUpdate && !_clustersDirty)
             {
                 return;
             }

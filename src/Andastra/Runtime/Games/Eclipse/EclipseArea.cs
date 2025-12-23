@@ -81,7 +81,7 @@ namespace Andastra.Runtime.Games.Eclipse
     /// </summary>
     /// <remarks>
     /// Eclipse Area Implementation:
-        /// - Based on daorigins.exe, DragonAge2.exe
+    /// - Based on daorigins.exe, DragonAge2.exe
     /// - Most advanced area system of the BioWare engines
     /// - Complex lighting, physics, and environmental simulation
     /// - Real-time area effects and dynamic weather
@@ -101,7 +101,7 @@ namespace Andastra.Runtime.Games.Eclipse
     /// </remarks>
     [PublicAPI]
     public class EclipseArea : BaseArea, IDialogueHistoryArea
-        {
+    {
         private readonly List<IEntity> _creatures = new List<IEntity>();
         private readonly List<IEntity> _placeables = new List<IEntity>();
         private readonly List<IEntity> _doors = new List<IEntity>();
@@ -4844,7 +4844,8 @@ namespace Andastra.Runtime.Games.Eclipse
                     // Based on daorigins.exe/DragonAge2.exe: Light clustering assigns lights to spatial clusters for efficient culling
                     // UpdateClustering uses current view/projection matrices to determine which lights affect which screen-space clusters
                     // This optimizes rendering by allowing per-cluster light culling during geometry rendering
-                    eclipseLightingSystem.UpdateClustering(viewMatrix, projectionMatrix);
+                    // Force update every frame because clustering depends on view/projection matrices (camera position/orientation)
+                    eclipseLightingSystem.UpdateClustering(viewMatrix, projectionMatrix, forceUpdate: true);
 
                     // Submit light data to GPU buffers
                     // Based on daorigins.exe/DragonAge2.exe: Light data is uploaded to GPU buffers for efficient shader access
@@ -9512,15 +9513,15 @@ namespace Andastra.Runtime.Games.Eclipse
                             else
                             {
                                 // Fallback: Use sprite batch without shader
-                    spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.Opaque);
-                    spriteBatch.Draw(hdrScene.ColorTexture, destinationRect, GraphicsColor.White);
-                    spriteBatch.End();
+                                spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.Opaque);
+                                spriteBatch.Draw(hdrScene.ColorTexture, destinationRect, GraphicsColor.White);
+                                spriteBatch.End();
 
-                    spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.AdditiveBlend);
+                                spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.AdditiveBlend);
                                 byte intensityByte = (byte)(Math.Min(255, intensity * 255));
                                 GraphicsColor bloomColor = new GraphicsColor(intensityByte, intensityByte, intensityByte, intensityByte);
                                 spriteBatch.Draw(bloom.ColorTexture, destinationRect, bloomColor);
-                    spriteBatch.End();
+                                spriteBatch.End();
                             }
                         }
                         else
@@ -11228,7 +11229,7 @@ technique ColorGrading
     /// Interface for dynamic area effects in Eclipse engine.
     /// </summary>
     public interface IDynamicAreaEffect : IUpdatable
-        {
+    {
         /// <summary>
         /// Gets whether the effect is still active.
         /// </summary>
@@ -11248,7 +11249,7 @@ technique ColorGrading
     /// Based on daorigins.exe, DragonAge2.exe: Effects can provide custom rendering.
     /// </remarks>
     public interface IRenderableEffect
-        {
+    {
         /// <summary>
         /// Renders the effect.
         /// </summary>
@@ -11268,7 +11269,7 @@ technique ColorGrading
     /// Based on daorigins.exe, DragonAge2.exe: Particle effects use particle emitters.
     /// </remarks>
     public interface IParticleEffect : IDynamicAreaEffect
-        {
+    {
         /// <summary>
         /// Gets the particle emitters for this effect.
         /// </summary>
@@ -11283,7 +11284,7 @@ technique ColorGrading
     /// Based on daorigins.exe, DragonAge2.exe: Weather effects render rain, snow, fog.
     /// </remarks>
     public interface IWeatherEffect : IDynamicAreaEffect
-        {
+    {
         /// <summary>
         /// Gets the weather type for this effect.
         /// </summary>
@@ -11303,7 +11304,7 @@ technique ColorGrading
     /// Based on daorigins.exe, DragonAge2.exe: Environmental effects use particle systems.
     /// </remarks>
     public interface IEnvironmentalEffect : IDynamicAreaEffect
-        {
+    {
         /// <summary>
         /// Gets the particle emitters for this environmental effect (optional).
         /// </summary>
@@ -11322,7 +11323,7 @@ technique ColorGrading
     /// - Transition duration: How long the weather transition takes (smooth fade in/out)
     /// </remarks>
     internal class WeatherTransitionTrigger
-        {
+    {
         /// <summary>
         /// Trigger type (time-based or script-based).
         /// </summary>
@@ -11561,7 +11562,7 @@ technique ColorGrading
     /// Weather transition trigger type.
     /// </summary>
     internal enum WeatherTransitionTriggerType
-        {
+    {
         /// <summary>
         /// Time-based trigger (weather changes at specific time or intervals).
         /// </summary>
@@ -11581,7 +11582,7 @@ technique ColorGrading
     /// Based on Eclipse engine's dynamic area modification system.
     /// </remarks>
     public interface IAreaModification
-        {
+    {
         /// <summary>
         /// Applies the modification to an area.
         /// </summary>
@@ -11613,7 +11614,7 @@ technique ColorGrading
     /// - DragonAge2.exe: Enhanced lighting system with ambient color and intensity properties
     /// </remarks>
     public interface ILightingSystem : IUpdatable
-        {
+    {
         /// <summary>
         /// Gets or sets the ambient light color.
         /// </summary>
@@ -11665,7 +11666,7 @@ technique ColorGrading
     /// - DragonAge2.exe: Enhanced physics system with constraint support
     /// </remarks>
     public interface IPhysicsSystem
-        {
+    {
         /// <summary>
         /// Steps the physics simulation.
         /// </summary>
@@ -11713,7 +11714,7 @@ technique ColorGrading
     /// Interface for updatable objects.
     /// </summary>
     public interface IUpdatable
-        {
+    {
         void Update(float deltaTime);
     }
 
@@ -11725,7 +11726,7 @@ technique ColorGrading
     /// Used for spawning creatures, placeables, triggers, and other objects.
     /// </remarks>
     public class AddEntityModification : IAreaModification
-        {
+    {
         private readonly IEntity _entity;
 
         /// <summary>
@@ -11778,7 +11779,7 @@ technique ColorGrading
     /// Used for despawning, destruction, and cleanup.
     /// </remarks>
     public class RemoveEntityModification : IAreaModification
-        {
+    {
         private readonly IEntity _entity;
 
         /// <summary>
@@ -11829,7 +11830,7 @@ technique ColorGrading
     /// Based on Eclipse engine: Dynamic lights can be added at runtime for effects, explosions, etc.
     /// </remarks>
     public class AddLightModification : IAreaModification
-        {
+    {
         private readonly IDynamicLight _light;
 
         /// <summary>
@@ -11877,7 +11878,7 @@ technique ColorGrading
     /// Based on Eclipse engine: Dynamic lights can be removed at runtime.
     /// </remarks>
     public class RemoveLightModification : IAreaModification
-        {
+    {
         private readonly IDynamicLight _light;
 
         /// <summary>
@@ -11926,7 +11927,7 @@ technique ColorGrading
     /// Used for explosions, destruction, and environmental changes.
     /// </remarks>
     public class CreateWalkmeshHoleModification : IAreaModification
-        {
+    {
         private readonly Vector3 _center;
         private readonly float _radius;
 
@@ -12000,7 +12001,7 @@ technique ColorGrading
     /// Includes weather, particle effects, audio zones, and environmental changes.
     /// </remarks>
     public class AddAreaEffectModification : IAreaModification
-        {
+    {
         private readonly IDynamicAreaEffect _effect;
 
         /// <summary>
@@ -12049,7 +12050,7 @@ technique ColorGrading
     /// Based on Eclipse engine: Dynamic area effects can be removed at runtime.
     /// </remarks>
     public class RemoveAreaEffectModification : IAreaModification
-        {
+    {
         private readonly IDynamicAreaEffect _effect;
 
         /// <summary>
@@ -12099,7 +12100,7 @@ technique ColorGrading
     /// Includes unescapable flag, display name, tag, and other properties.
     /// </remarks>
     public class ChangeAreaPropertyModification : IAreaModification
-        {
+    {
         private readonly string _propertyName;
         private readonly object _propertyValue;
 
@@ -12182,7 +12183,7 @@ technique ColorGrading
     /// Creates physics debris, modifies walkmesh, and updates navigation.
     /// </remarks>
     public class DestroyDestructibleObjectModification : IAreaModification
-        {
+    {
         private readonly IEntity _destructibleEntity;
         private readonly Vector3 _explosionCenter;
         private readonly float _explosionRadius;
@@ -12428,67 +12429,67 @@ technique ColorGrading
                     // Mark entity as having physics
                     debrisEntity.SetData("HasPhysics", true);
                 }
+            }
         }
-    }
-
-    /// <summary>
-    /// Type of geometry modification.
-    /// </summary>
-    /// <remarks>
-    /// Based on daorigins.exe/DragonAge2.exe: Different modification types for destructible geometry.
-    /// </remarks>
-    public enum GeometryModificationType
-    {
-        /// <summary>
-        /// Geometry is destroyed (faces are removed, non-rendered, non-collidable).
-        /// </summary>
-        Destroyed = 0,
 
         /// <summary>
-        /// Geometry is deformed (vertices are displaced, faces are distorted).
+        /// Type of geometry modification.
         /// </summary>
-        Deformed = 1,
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Different modification types for destructible geometry.
+        /// </remarks>
+        public enum GeometryModificationType
+        {
+            /// <summary>
+            /// Geometry is destroyed (faces are removed, non-rendered, non-collidable).
+            /// </summary>
+            Destroyed = 0,
+
+            /// <summary>
+            /// Geometry is deformed (vertices are displaced, faces are distorted).
+            /// </summary>
+            Deformed = 1,
+
+            /// <summary>
+            /// Geometry generates debris (destroyed pieces become physics objects).
+            /// </summary>
+            Debris = 2
+        }
 
         /// <summary>
-        /// Geometry generates debris (destroyed pieces become physics objects).
+        /// Modified vertex data for geometry deformation.
         /// </summary>
-        Debris = 2
-    }
-
-    /// <summary>
-    /// Modified vertex data for geometry deformation.
-    /// </summary>
-    /// <remarks>
-    /// Based on daorigins.exe/DragonAge2.exe: Vertex modifications store position changes and displacements.
-    /// </remarks>
-    /// <summary>
-    /// Represents a modified vertex in destructible geometry.
-    /// </summary>
-    /// <remarks>
-    /// Based on daorigins.exe/DragonAge2.exe: Vertex modifications track position changes for deformed geometry.
-    /// </remarks>
-    public struct ModifiedVertex
-    {
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Vertex modifications store position changes and displacements.
+        /// </remarks>
         /// <summary>
-        /// Original vertex index in the mesh.
+        /// Represents a modified vertex in destructible geometry.
         /// </summary>
-        public int VertexIndex { get; set; }
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Vertex modifications track position changes for deformed geometry.
+        /// </remarks>
+        public struct ModifiedVertex
+        {
+            /// <summary>
+            /// Original vertex index in the mesh.
+            /// </summary>
+            public int VertexIndex { get; set; }
 
-        /// <summary>
-        /// Modified vertex position (displacement from original).
-        /// </summary>
-        public Vector3 ModifiedPosition { get; set; }
+            /// <summary>
+            /// Modified vertex position (displacement from original).
+            /// </summary>
+            public Vector3 ModifiedPosition { get; set; }
 
-        /// <summary>
-        /// Displacement vector (direction and magnitude of deformation).
-        /// </summary>
-        public Vector3 Displacement { get; set; }
+            /// <summary>
+            /// Displacement vector (direction and magnitude of deformation).
+            /// </summary>
+            public Vector3 Displacement { get; set; }
 
-        /// <summary>
-        /// Time of modification (for animation/deformation effects).
-        /// </summary>
-        public float ModificationTime { get; set; }
-    }
+            /// <summary>
+            /// Time of modification (for animation/deformation effects).
+            /// </summary>
+            public float ModificationTime { get; set; }
+        }
 
         /// <summary>
         /// Extracts vertex positions and indices from MDL model.
@@ -13036,7 +13037,7 @@ technique ColorGrading
     /// Based on daorigins.exe/DragonAge2.exe: Vertex modifications track position changes for deformed geometry.
     /// </remarks>
     public struct ModifiedVertex
-        {
+    {
         /// <summary>
         /// Original vertex index in the mesh.
         /// </summary>
@@ -13480,316 +13481,85 @@ technique ColorGrading
 
             return connectedFaces;
         }
-    }
-
-    /// <summary>
-    /// Represents a modified mesh with all its modifications.
-    /// </summary>
-    /// <remarks>
-    /// Based on daorigins.exe/DragonAge2.exe: Modified mesh data structure.
-    /// </remarks>
-    public class ModifiedMesh
-    {
-        /// <summary>
-        /// Mesh identifier (model name/resref).
-        /// </summary>
-        public string MeshId { get; set; }
 
         /// <summary>
-        /// List of modifications applied to this mesh.
+        /// Represents a modified mesh with all its modifications.
         /// </summary>
-        public List<GeometryModification> Modifications { get; set; }
-
-        public ModifiedMesh()
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Modified mesh data structure.
+        /// </remarks>
+        public class ModifiedMesh
         {
-            MeshId = string.Empty;
-            Modifications = new List<GeometryModification>();
-        }
-    }
+            /// <summary>
+            /// Mesh identifier (model name/resref).
+            /// </summary>
+            public string MeshId { get; set; }
 
-    /// <summary>
-    /// Represents a single geometry modification.
-    /// </summary>
-    /// <remarks>
-    /// Based on daorigins.exe/DragonAge2.exe: Modification data structure.
-    /// </remarks>
-    public class GeometryModification
-    {
-        /// <summary>
-        /// Unique modification ID.
-        /// </summary>
-        public int ModificationId { get; set; }
+            /// <summary>
+            /// List of modifications applied to this mesh.
+            /// </summary>
+            public List<GeometryModification> Modifications { get; set; }
 
-        /// <summary>
-        /// Type of modification.
-        /// </summary>
-        public GeometryModificationType ModificationType { get; set; }
-
-        /// <summary>
-        /// Indices of affected faces (triangle indices).
-        /// </summary>
-        public List<int> AffectedFaceIndices { get; set; }
-
-        /// <summary>
-        /// Modified vertex data.
-        /// </summary>
-        public List<ModifiedVertex> ModifiedVertices { get; set; }
-
-        /// <summary>
-        /// Center of explosion/destruction effect.
-        /// </summary>
-        public Vector3 ExplosionCenter { get; set; }
-
-        /// <summary>
-        /// Radius of explosion effect.
-        /// </summary>
-        public float ExplosionRadius { get; set; }
-
-        /// <summary>
-        /// Time of modification (for animation/deformation effects).
-        /// </summary>
-        public float ModificationTime { get; set; }
-
-        public GeometryModification()
-        {
-            ModificationId = 0;
-            ModificationType = GeometryModificationType.Destroyed;
-            AffectedFaceIndices = new List<int>();
-            ModifiedVertices = new List<ModifiedVertex>();
-            ExplosionCenter = Vector3.Zero;
-            ExplosionRadius = 0.0f;
-            ModificationTime = 0.0f;
-        }
-    }
-
-    /// <summary>
-    /// Loads a texture from TPC format data.
-    /// Based on daorigins.exe: TPC texture loading and conversion to graphics API format.
-    /// </summary>
-    /// <param name="tpcData">TPC file data as byte array.</param>
-    /// <param name="textureName">Texture name for error reporting.</param>
-    /// <returns>ITexture2D instance or null on failure.</returns>
-    private ITexture2D LoadTextureFromTPCData(byte[] tpcData, string textureName)
-    {
-        if (_renderContext?.GraphicsDevice == null)
-        {
-            return null;
-        }
-
-        try
-        {
-            // Parse TPC file using existing parser
-            // Based on daorigins.exe: TPC file parsing for texture data extraction
-            var tpc = TPCAuto.ReadTpc(tpcData);
-            if (tpc == null || tpc.Layers.Count == 0 || tpc.Layers[0].Mipmaps.Count == 0)
+            public ModifiedMesh()
             {
-                System.Console.WriteLine($"[EclipseArea] LoadTextureFromTPCData: Failed to parse TPC texture '{textureName}'");
-                return null;
+                MeshId = string.Empty;
+                Modifications = new List<GeometryModification>();
             }
-
-            // Get first mipmap (largest mip level)
-            // Based on daorigins.exe: Uses largest mipmap for texture creation
-            var mipmap = tpc.Layers[0].Mipmaps[0];
-            if (mipmap.Data == null || mipmap.Data.Length == 0)
-            {
-                System.Console.WriteLine($"[EclipseArea] LoadTextureFromTPCData: TPC texture '{textureName}' has no mipmap data");
-                return null;
-            }
-
-            // Convert TPC format to RGBA data for MonoGame
-            // Based on daorigins.exe: TPC formats converted to RGBA for DirectX 9
-            byte[] rgbaData = ConvertTPCToRGBA(tpc, mipmap.Width, mipmap.Height);
-            if (rgbaData == null)
-            {
-                System.Console.WriteLine($"[EclipseArea] LoadTextureFromTPCData: Failed to convert TPC texture '{textureName}' to RGBA");
-                return null;
-            }
-
-            // Create MonoGame texture from RGBA data
-            // Based on daorigins.exe: Texture creation from converted pixel data
-            var texture = _renderContext.GraphicsDevice.CreateTexture2D(mipmap.Width, mipmap.Height, rgbaData);
-            System.Console.WriteLine($"[EclipseArea] LoadTextureFromTPCData: Successfully loaded TPC texture '{textureName}' ({mipmap.Width}x{mipmap.Height})");
-            return texture;
-        }
-        catch (Exception ex)
-        {
-            System.Console.WriteLine($"[EclipseArea] LoadTextureFromTPCData: Exception loading TPC texture '{textureName}': {ex.Message}");
-            return null;
-        }
         }
 
         /// <summary>
-        /// Loads a texture from DDS format data.
-        /// Based on daorigins.exe: DDS texture loading for DirectX 9 compatibility.
+        /// Represents a single geometry modification.
         /// </summary>
-        /// <param name="ddsData">DDS file data as byte array.</param>
-        /// <param name="textureName">Texture name for error reporting.</param>
-        /// <returns>ITexture2D instance or null on failure.</returns>
-        private ITexture2D LoadTextureFromDDSData(byte[] ddsData, string textureName)
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Modification data structure.
+        /// </remarks>
+        public class GeometryModification
         {
-        if (_renderContext?.GraphicsDevice == null)
-        {
-            return null;
-        }
+            /// <summary>
+            /// Unique modification ID.
+            /// </summary>
+            public int ModificationId { get; set; }
 
-        try
-        {
-            // Parse DDS header to get dimensions and format
-            // Based on daorigins.exe: DDS header parsing for texture information
-            if (!TryParseDDSHeader(ddsData, out int width, out int height, out bool hasAlpha))
+            /// <summary>
+            /// Type of modification.
+            /// </summary>
+            public GeometryModificationType ModificationType { get; set; }
+
+            /// <summary>
+            /// Indices of affected faces (triangle indices).
+            /// </summary>
+            public List<int> AffectedFaceIndices { get; set; }
+
+            /// <summary>
+            /// Modified vertex data.
+            /// </summary>
+            public List<ModifiedVertex> ModifiedVertices { get; set; }
+
+            /// <summary>
+            /// Center of explosion/destruction effect.
+            /// </summary>
+            public Vector3 ExplosionCenter { get; set; }
+
+            /// <summary>
+            /// Radius of explosion effect.
+            /// </summary>
+            public float ExplosionRadius { get; set; }
+
+            /// <summary>
+            /// Time of modification (for animation/deformation effects).
+            /// </summary>
+            public float ModificationTime { get; set; }
+
+            public GeometryModification()
             {
-                System.Console.WriteLine($"[EclipseArea] LoadTextureFromDDSData: Failed to parse DDS header for texture '{textureName}'");
-                return null;
+                ModificationId = 0;
+                ModificationType = GeometryModificationType.Destroyed;
+                AffectedFaceIndices = new List<int>();
+                ModifiedVertices = new List<ModifiedVertex>();
+                ExplosionCenter = Vector3.Zero;
+                ExplosionRadius = 0.0f;
+                ModificationTime = 0.0f;
             }
-
-            // Extract pixel data from DDS
-            // Based on daorigins.exe: DDS pixel data extraction for DirectX 9
-            byte[] rgbaData = ExtractDDSDataToRGBA(ddsData, width, height, hasAlpha);
-            if (rgbaData == null)
-            {
-                System.Console.WriteLine($"[EclipseArea] LoadTextureFromDDSData: Failed to extract DDS data for texture '{textureName}'");
-                return null;
-            }
-
-            // Create MonoGame texture from RGBA data
-            // Based on daorigins.exe: Texture creation from DDS pixel data
-            var texture = _renderContext.GraphicsDevice.CreateTexture2D(width, height, rgbaData);
-            System.Console.WriteLine($"[EclipseArea] LoadTextureFromDDSData: Successfully loaded DDS texture '{textureName}' ({width}x{height})");
-            return texture;
         }
-        catch (Exception ex)
-        {
-            System.Console.WriteLine($"[EclipseArea] LoadTextureFromDDSData: Exception loading DDS texture '{textureName}': {ex.Message}");
-            return null;
-        }
-        }
-
-        /// <summary>
-        /// Converts TPC texture data to RGBA format for MonoGame.
-        /// Based on daorigins.exe: TPC format conversion to DirectX 9 compatible format.
-        /// </summary>
-        /// <param name="tpc">Parsed TPC texture object.</param>
-        /// <param name="width">Texture width.</param>
-        /// <param name="height">Texture height.</param>
-        /// <returns>RGBA pixel data as byte array, or null on failure.</returns>
-        private static byte[] ConvertTPCToRGBA(TPC tpc, int width, int height)
-        {
-        if (tpc == null || tpc.Layers.Count == 0 || tpc.Layers[0].Mipmaps.Count == 0)
-        {
-            return null;
-        }
-
-        var format = tpc.Format();
-        var mipmap = tpc.Layers[0].Mipmaps[0];
-        var compressedData = mipmap.Data;
-
-        // Handle different TPC formats
-        // Based on daorigins.exe: TPC format conversion for different compression types
-        switch (format)
-        {
-                case TPCTextureFormat.DXT1:
-                    // DXT1: 4x4 blocks, 8 bytes per block (RGB, 1-bit alpha)
-                    return TextureLoaderHelpers.DecompressDXT1(compressedData, width, height);
-
-                case TPCTextureFormat.DXT3:
-                    // DXT3: 4x4 blocks, 16 bytes per block (RGB, explicit alpha)
-                    return TextureLoaderHelpers.DecompressDXT3(compressedData, width, height);
-
-                case TPCTextureFormat.DXT5:
-                    // DXT5: 4x4 blocks, 16 bytes per block (RGB, interpolated alpha)
-                    return TextureLoaderHelpers.DecompressDXT5(compressedData, width, height);
-
-                case TPCTextureFormat.RGB:
-                    // RGB: 24-bit RGB, no alpha
-                    return TextureLoaderHelpers.ConvertRGBToRGBA(compressedData, width, height);
-
-                case TPCTextureFormat.RGBA:
-                    // RGBA: 32-bit RGBA, already in correct format
-                    return compressedData;
-
-                case TPCTextureFormat.Grayscale:
-                    // Grayscale: 8-bit grayscale, convert to RGBA
-                    return TextureLoaderHelpers.ConvertGrayscaleToRGBA(compressedData, width, height);
-
-            default:
-                System.Console.WriteLine($"[EclipseArea] ConvertTPCToRGBA: Unsupported TPC format {format}");
-                return null;
-        }
-        }
-
-        /// <summary>
-        /// Attempts to parse DDS header to extract texture information.
-        /// Based on daorigins.exe: DDS header parsing for texture dimensions and format.
-        /// </summary>
-        /// <param name="ddsData">DDS file data.</param>
-        /// <param name="width">Output texture width.</param>
-        /// <param name="height">Output texture height.</param>
-        /// <param name="hasAlpha">Output whether texture has alpha channel.</param>
-        /// <returns>True if header parsed successfully, false otherwise.</returns>
-        private bool TryParseDDSHeader(byte[] ddsData, out int width, out int height, out bool hasAlpha)
-    {
-        width = 0;
-        height = 0;
-        hasAlpha = false;
-
-        if (ddsData == null || ddsData.Length < 128)
-        {
-            return false;
-        }
-
-        // Check DDS magic number
-        if (ddsData[0] != 'D' || ddsData[1] != 'D' || ddsData[2] != 'S' || ddsData[3] != ' ')
-        {
-            return false;
-        }
-
-        // Parse DDS header (little-endian)
-        // Based on daorigins.exe: DDS header parsing for DirectX 9 texture creation
-        height = BitConverter.ToInt32(ddsData, 12);
-        width = BitConverter.ToInt32(ddsData, 16);
-
-        // Check pixel format (offset 80-111 in header)
-        uint pixelFormatFlags = BitConverter.ToUInt32(ddsData, 80);
-        uint fourCC = BitConverter.ToUInt32(ddsData, 84);
-
-        // Determine if texture has alpha
-        // Based on daorigins.exe: DDS format detection for alpha channel support
-        if ((pixelFormatFlags & 0x4) != 0) // DDPF_ALPHAPIXELS
-        {
-            hasAlpha = true;
-        }
-        else if (fourCC == 0x31545844) // "DXT1"
-        {
-            hasAlpha = false; // DXT1 has 1-bit alpha but we treat as opaque for simplicity
-        }
-        else if (fourCC == 0x33545844 || fourCC == 0x35545844) // "DXT3" or "DXT5"
-        {
-            hasAlpha = true; // DXT3/DXT5 have alpha
-        }
-
-        return width > 0 && height > 0;
     }
-
-        /// <summary>
-        /// Extracts pixel data from DDS format to RGBA.
-        /// Based on daorigins.exe: DDS pixel data extraction and conversion.
-        /// </summary>
-        /// <param name="ddsData">DDS file data.</param>
-        /// <param name="width">Texture width.</param>
-        /// <param name="height">Texture height.</param>
-        /// <param name="hasAlpha">Whether texture has alpha channel.</param>
-        /// <returns>RGBA pixel data as byte array, or null on failure.</returns>
-    private byte[] ExtractDDSDataToRGBA(byte[] ddsData, int width, int height, bool hasAlpha)
-    {
-        if (ddsData == null || ddsData.Length < 128)
-        {
-            return null;
-        }
-
-        // For this implementation, we'll use a simplified approach
-        // In a full implementation, this would decompress DXT formats
-        // Based on daorigins.exe: DDS decompression for DirectX 9 compatibility
-        // TODO: STUB - Full DXT decompression not implemented
-        return null;
-    }
-
+}
