@@ -13300,7 +13300,7 @@ technique ColorGrading
 
                     for (int i = 0; i < vertexCount; i++)
                     {
-                        positions.Add(vertices[i].Position);
+                        positions.Add(new Vector3(vertices[i].Position.X, vertices[i].Position.Y, vertices[i].Position.Z));
                     }
                 }
                 else if (vertexStride == 16)
@@ -14290,97 +14290,97 @@ technique ColorGrading
             }
         }
 
-    /// <summary>
-    /// Represents a modified mesh with all its modifications.
-    /// </summary>
-    /// <remarks>
-    /// Based on daorigins.exe/DragonAge2.exe: Modified mesh data structure.
-    /// </remarks>
-    public class ModifiedMesh
-    {
         /// <summary>
-        /// Mesh identifier (model name/resref).
+        /// Represents a modified mesh with all its modifications.
         /// </summary>
-        public string MeshId { get; set; }
-
-        /// <summary>
-        /// List of modifications applied to this mesh.
-        /// </summary>
-        public List<GeometryModification> Modifications { get; set; }
-
-        public ModifiedMesh()
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Modified mesh data structure.
+        /// </remarks>
+        public class ModifiedMesh
         {
-            MeshId = string.Empty;
-            Modifications = new List<GeometryModification>();
+            /// <summary>
+            /// Mesh identifier (model name/resref).
+            /// </summary>
+            public string MeshId { get; set; }
+
+            /// <summary>
+            /// List of modifications applied to this mesh.
+            /// </summary>
+            public List<GeometryModification> Modifications { get; set; }
+
+            public ModifiedMesh()
+            {
+                MeshId = string.Empty;
+                Modifications = new List<GeometryModification>();
+            }
         }
-    }
-
-    /// <summary>
-    /// Represents a single geometry modification.
-    /// </summary>
-    /// <remarks>
-    /// Based on daorigins.exe/DragonAge2.exe: Modification data structure.
-    /// </remarks>
-    public class GeometryModification
-    {
-        /// <summary>
-        /// Unique modification ID.
-        /// </summary>
-        public int ModificationId { get; set; }
 
         /// <summary>
-        /// Type of modification.
+        /// Represents a single geometry modification.
         /// </summary>
-        public GeometryModificationType ModificationType { get; set; }
-
-        /// <summary>
-        /// Indices of affected faces (triangle indices).
-        /// </summary>
-        public List<int> AffectedFaceIndices { get; set; }
-
-        /// <summary>
-        /// Modified vertex data.
-        /// </summary>
-        public List<ModifiedVertex> ModifiedVertices { get; set; }
-
-        /// <summary>
-        /// Center of explosion/destruction effect.
-        /// </summary>
-        public Vector3 ExplosionCenter { get; set; }
-
-        /// <summary>
-        /// Radius of explosion effect.
-        /// </summary>
-        public float ExplosionRadius { get; set; }
-
-        /// <summary>
-        /// Time of modification (for animation/deformation effects).
-        /// </summary>
-        public float ModificationTime { get; set; }
-
-        public GeometryModification()
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Modification data structure.
+        /// </remarks>
+        public class GeometryModification
         {
-            ModificationId = 0;
-            ModificationType = GeometryModificationType.Destroyed;
-            AffectedFaceIndices = new List<int>();
-            ModifiedVertices = new List<ModifiedVertex>();
-            ExplosionCenter = Vector3.Zero;
-            ExplosionRadius = 0.0f;
-            ModificationTime = 0.0f;
-        }
-    }
+            /// <summary>
+            /// Unique modification ID.
+            /// </summary>
+            public int ModificationId { get; set; }
 
-    /// <summary>
-    /// Converts TPC texture data to RGBA format for MonoGame.
-    /// Based on daorigins.exe: TPC format conversion to DirectX 9 compatible format.
-    /// daorigins.exe: 0x00400000 - TPC texture format conversion and decompression
-    /// </summary>
-    /// <param name="tpc">Parsed TPC texture object.</param>
-    /// <param name="width">Texture width.</param>
-    /// <param name="height">Texture height.</param>
-    /// <returns>RGBA pixel data as byte array, or null on failure.</returns>
-    private static byte[] ConvertTPCToRGBA(TPC tpc, int width, int height)
-    {
+            /// <summary>
+            /// Type of modification.
+            /// </summary>
+            public GeometryModificationType ModificationType { get; set; }
+
+            /// <summary>
+            /// Indices of affected faces (triangle indices).
+            /// </summary>
+            public List<int> AffectedFaceIndices { get; set; }
+
+            /// <summary>
+            /// Modified vertex data.
+            /// </summary>
+            public List<ModifiedVertex> ModifiedVertices { get; set; }
+
+            /// <summary>
+            /// Center of explosion/destruction effect.
+            /// </summary>
+            public Vector3 ExplosionCenter { get; set; }
+
+            /// <summary>
+            /// Radius of explosion effect.
+            /// </summary>
+            public float ExplosionRadius { get; set; }
+
+            /// <summary>
+            /// Time of modification (for animation/deformation effects).
+            /// </summary>
+            public float ModificationTime { get; set; }
+
+            public GeometryModification()
+            {
+                ModificationId = 0;
+                ModificationType = GeometryModificationType.Destroyed;
+                AffectedFaceIndices = new List<int>();
+                ModifiedVertices = new List<ModifiedVertex>();
+                ExplosionCenter = Vector3.Zero;
+                ExplosionRadius = 0.0f;
+                ModificationTime = 0.0f;
+            }
+        }
+
+        /// <summary>
+        /// Converts TPC texture data to RGBA format for MonoGame.
+        /// Based on daorigins.exe: TPC format conversion to DirectX 9 compatible format.
+        /// daorigins.exe: 0x00400000 - TPC texture format conversion and decompression
+        /// </summary>
+        /// <param name="tpc">Parsed TPC texture object.</param>
+        /// <param name="width">Texture width.</param>
+        /// <param name="height">Texture height.</param>
+        /// <returns>RGBA pixel data as byte array, or null on failure.</returns>
+        private static byte[] ConvertTPCToRGBA(TPC tpc, int width, int height)
+        {
             if (tpc == null || tpc.Layers.Count == 0 || tpc.Layers[0].Mipmaps.Count == 0)
             {
                 return null;
@@ -14648,17 +14648,17 @@ technique ColorGrading
 
         #region DXT Decompression
 
-    /// <summary>
-    /// Decompresses DXT1 (BC1) compressed texture data to RGBA.
-    /// Based on daorigins.exe: DXT1 decompression using S3TC algorithm.
-    /// DXT1 format: 8 bytes per 4x4 pixel block, 1-bit alpha support.
-    /// </summary>
+        /// <summary>
+        /// Decompresses DXT1 (BC1) compressed texture data to RGBA.
+        /// Based on daorigins.exe: DXT1 decompression using S3TC algorithm.
+        /// DXT1 format: 8 bytes per 4x4 pixel block, 1-bit alpha support.
+        /// </summary>
         /// <param name="input">Compressed DXT1 data.</param>
         /// <param name="output">Output RGBA buffer (must be width * height * 4 bytes).</param>
         /// <param name="width">Texture width.</param>
         /// <param name="height">Texture height.</param>
         private static void DecompressDxt1(byte[] input, byte[] output, int width, int height)
-    {
+        {
             int blockCountX = (width + 3) / 4;
             int blockCountY = (height + 3) / 4;
 
@@ -14749,7 +14749,7 @@ technique ColorGrading
         /// <param name="output">Output RGBA buffer (must be width * height * 4 bytes).</param>
         /// <param name="width">Texture width.</param>
         /// <param name="height">Texture height.</param>
-            private static void DecompressDxt3(byte[] input, byte[] output, int width, int height)
+        private static void DecompressDxt3(byte[] input, byte[] output, int width, int height)
         {
             int blockCountX = (width + 3) / 4;
             int blockCountY = (height + 3) / 4;
@@ -14827,17 +14827,17 @@ technique ColorGrading
             }
         }
 
-    /// <summary>
-    /// Decompresses DXT5 (BC3) compressed texture data to RGBA.
-    /// Based on daorigins.exe: DXT5 decompression with interpolated alpha channel.
-    /// DXT5 format: 16 bytes per 4x4 pixel block, interpolated 8-bit alpha per pixel.
-    /// </summary>
+        /// <summary>
+        /// Decompresses DXT5 (BC3) compressed texture data to RGBA.
+        /// Based on daorigins.exe: DXT5 decompression with interpolated alpha channel.
+        /// DXT5 format: 16 bytes per 4x4 pixel block, interpolated 8-bit alpha per pixel.
+        /// </summary>
         /// <param name="input">Compressed DXT5 data.</param>
         /// <param name="output">Output RGBA buffer (must be width * height * 4 bytes).</param>
         /// <param name="width">Texture width.</param>
         /// <param name="height">Texture height.</param>
         private static void DecompressDxt5(byte[] input, byte[] output, int width, int height)
-    {
+        {
             int blockCountX = (width + 3) / 4;
             int blockCountY = (height + 3) / 4;
 
@@ -14937,15 +14937,15 @@ technique ColorGrading
             }
         }
 
-    /// <summary>
-    /// Decodes a 5-6-5 RGB color value to RGBA.
-    /// Based on daorigins.exe: 5-6-5 color format decoding.
-    /// </summary>
+        /// <summary>
+        /// Decodes a 5-6-5 RGB color value to RGBA.
+        /// Based on daorigins.exe: 5-6-5 color format decoding.
+        /// </summary>
         /// <param name="color">16-bit color value in 5-6-5 format (R5G6B5).</param>
         /// <param name="output">Output buffer to write RGBA values.</param>
         /// <param name="offset">Offset in output buffer to write values.</param>
         private static void DecodeColor565(ushort color, byte[] output, int offset)
-    {
+        {
             // Extract 5-bit red, 6-bit green, 5-bit blue
             int r = (color >> 11) & 0x1F;
             int g = (color >> 5) & 0x3F;
@@ -14959,16 +14959,16 @@ technique ColorGrading
             output[offset + 3] = 255;                          // A: fully opaque
         }
 
-    /// <summary>
-    /// Converts BGRA pixel data to RGBA format.
-    /// Based on daorigins.exe: BGRA to RGBA conversion for DirectX 9 compatibility.
-    /// </summary>
+        /// <summary>
+        /// Converts BGRA pixel data to RGBA format.
+        /// Based on daorigins.exe: BGRA to RGBA conversion for DirectX 9 compatibility.
+        /// </summary>
         /// <param name="input">Input BGRA data.</param>
         /// <param name="output">Output RGBA buffer.</param>
         /// <param name="width">Texture width.</param>
         /// <param name="height">Texture height.</param>
         private static void ConvertBgraToRgba(byte[] input, byte[] output, int width, int height)
-    {
+        {
             int pixelCount = width * height;
             for (int i = 0; i < pixelCount; i++)
             {
@@ -14984,16 +14984,16 @@ technique ColorGrading
             }
         }
 
-    /// <summary>
-    /// Converts RGB pixel data to RGBA format (adds alpha channel).
-    /// Based on daorigins.exe: RGB to RGBA conversion.
-    /// </summary>
+        /// <summary>
+        /// Converts RGB pixel data to RGBA format (adds alpha channel).
+        /// Based on daorigins.exe: RGB to RGBA conversion.
+        /// </summary>
         /// <param name="input">Input RGB data.</param>
         /// <param name="output">Output RGBA buffer.</param>
         /// <param name="width">Texture width.</param>
         /// <param name="height">Texture height.</param>
         private static void ConvertRgbToRgba(byte[] input, byte[] output, int width, int height)
-    {
+        {
             int pixelCount = width * height;
             for (int i = 0; i < pixelCount; i++)
             {
@@ -15009,16 +15009,16 @@ technique ColorGrading
             }
         }
 
-    /// <summary>
-    /// Converts BGR pixel data to RGBA format (swaps R and B, adds alpha channel).
-    /// Based on daorigins.exe: BGR to RGBA conversion for DirectX 9 compatibility.
-    /// </summary>
+        /// <summary>
+        /// Converts BGR pixel data to RGBA format (swaps R and B, adds alpha channel).
+        /// Based on daorigins.exe: BGR to RGBA conversion for DirectX 9 compatibility.
+        /// </summary>
         /// <param name="input">Input BGR data.</param>
         /// <param name="output">Output RGBA buffer.</param>
         /// <param name="width">Texture width.</param>
         /// <param name="height">Texture height.</param>
         private static void ConvertBgrToRgba(byte[] input, byte[] output, int width, int height)
-    {
+        {
             int pixelCount = width * height;
             for (int i = 0; i < pixelCount; i++)
             {
@@ -15034,16 +15034,16 @@ technique ColorGrading
             }
         }
 
-    /// <summary>
-    /// Converts greyscale pixel data to RGBA format (replicates to all channels).
-    /// Based on daorigins.exe: Greyscale to RGBA conversion.
-    /// </summary>
+        /// <summary>
+        /// Converts greyscale pixel data to RGBA format (replicates to all channels).
+        /// Based on daorigins.exe: Greyscale to RGBA conversion.
+        /// </summary>
         /// <param name="input">Input greyscale data.</param>
         /// <param name="output">Output RGBA buffer.</param>
         /// <param name="width">Texture width.</param>
         /// <param name="height">Texture height.</param>
         private static void ConvertGreyscaleToRgba(byte[] input, byte[] output, int width, int height)
-    {
+        {
             int pixelCount = width * height;
             for (int i = 0; i < pixelCount; i++)
             {
@@ -15110,6 +15110,6 @@ technique ColorGrading
             /// </summary>
             public float RemainingLifeTime { get; set; }
         }
-        }
     }
+}
 
