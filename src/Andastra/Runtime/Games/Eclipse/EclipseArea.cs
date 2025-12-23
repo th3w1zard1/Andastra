@@ -5404,6 +5404,63 @@ namespace Andastra.Runtime.Games.Eclipse
         /// DragonAge2.exe: Enhanced shadow mapping with cascaded shadow maps and improved filtering
         /// </remarks>
         /// <summary>
+        /// Gets shadow map texture handle and light space matrix for a light.
+        /// Handles all light types: directional (single shadow map), point (cube shadow map), spot (single shadow map).
+        /// Based on daorigins.exe/DragonAge2.exe: Shadow maps are accessed as textures for depth sampling
+        /// </summary>
+        /// <param name="light">The light to get shadow map information for</param>
+        /// <param name="shadowMap">Output: Shadow map texture handle (IntPtr)</param>
+        /// <param name="lightSpaceMatrix">Output: Light space matrix for shadow sampling</param>
+        /// <returns>True if shadow map is available, false otherwise</returns>
+        private bool GetShadowMapInfo(IDynamicLight light, out IntPtr shadowMap, out Matrix4x4 lightSpaceMatrix)
+        {
+            shadowMap = IntPtr.Zero;
+            lightSpaceMatrix = Matrix4x4.Identity;
+
+            if (light == null || !light.CastShadows)
+            {
+                return false;
+            }
+
+            // Try to get light space matrix from dictionary
+            if (!_shadowLightSpaceMatrices.TryGetValue(light.LightId, out lightSpaceMatrix))
+            {
+                return false; // No shadow map available for this light
+            }
+
+            // Handle different light types
+            if (light.Type == LightType.Point)
+            {
+                // Point lights use cube shadow maps (6 faces)
+                if (_cubeShadowMaps.TryGetValue(light.LightId, out IRenderTarget[] cubeShadowMaps))
+                {
+                    if (cubeShadowMaps != null && cubeShadowMaps.Length > 0 && cubeShadowMaps[0] != null)
+                    {
+                        // For cube shadow maps, use the first face as the texture handle
+                        // Full implementation would use all 6 faces, but for compatibility with AreaLightCalculator
+                        // we use the first face. Proper cube map shadow sampling requires shader support.
+                        shadowMap = GetShadowMapTextureHandle(cubeShadowMaps[0]);
+                        return shadowMap != IntPtr.Zero;
+                    }
+                }
+            }
+            else
+            {
+                // Directional and spot lights use single shadow maps
+                if (_shadowMaps.TryGetValue(light.LightId, out IRenderTarget shadowMapRenderTarget))
+                {
+                    if (shadowMapRenderTarget != null)
+                    {
+                        shadowMap = GetShadowMapTextureHandle(shadowMapRenderTarget);
+                        return shadowMap != IntPtr.Zero;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Extracts the shadow map texture handle from an IRenderTarget for use in shadow sampling.
         /// Creates a GCHandle to keep the RenderTarget2D alive so IntPtr references remain valid.
         /// Caches handles per render target to avoid creating duplicate handles.
@@ -13036,7 +13093,8 @@ technique ColorGrading
     /// <remarks>
     /// Based on daorigins.exe/DragonAge2.exe: Vertex modifications track position changes for deformed geometry.
     /// </remarks>
-    public struct ModifiedVertex {
+    public struct ModifiedVertex
+    {
         /// <summary>
         /// Original vertex index in the mesh.
         /// </summary>
@@ -13063,6 +13121,67 @@ technique ColorGrading
             ModifiedPosition = modifiedPosition;
             Displacement = displacement;
             ModificationTime = modificationTime;
+        }
+    }
+
+    /// <summary>
+    /// Represents a debris piece from destroyed geometry.
+    /// </summary>
+    /// <remarks>
+    /// Based on daorigins.exe/DragonAge2.exe: Debris pieces are physics objects created from destroyed geometry.
+    /// </remarks>
+    public class DebrisPiece
+    {
+        /// <summary>
+        /// Mesh identifier (model name/resref).
+        /// </summary>
+        public string MeshId { get; set; }
+
+        /// <summary>
+        /// Face indices that make up this debris piece.
+        /// </summary>
+        public List<int> FaceIndices { get; set; }
+
+        /// <summary>
+        /// Current position of the debris piece.
+        /// </summary>
+        public Vector3 Position { get; set; }
+
+        /// <summary>
+        /// Current velocity of the debris piece.
+        /// </summary>
+        public Vector3 Velocity { get; set; }
+
+        /// <summary>
+        /// Current rotation of the debris piece.
+        /// </summary>
+        public Vector3 Rotation { get; set; }
+
+        /// <summary>
+        /// Angular velocity of the debris piece.
+        /// </summary>
+        public Vector3 AngularVelocity { get; set; }
+
+        /// <summary>
+        /// Total lifetime of the debris piece in seconds.
+        /// </summary>
+        public float LifeTime { get; set; }
+
+        /// <summary>
+        /// Remaining lifetime of the debris piece in seconds.
+        /// </summary>
+        public float RemainingLifeTime { get; set; }
+
+        public DebrisPiece()
+        {
+            MeshId = string.Empty;
+            FaceIndices = new List<int>();
+            Position = Vector3.Zero;
+            Velocity = Vector3.Zero;
+            Rotation = Vector3.Zero;
+            AngularVelocity = Vector3.Zero;
+            LifeTime = 0.0f;
+            RemainingLifeTime = 0.0f;
         }
     }
 
@@ -13482,83 +13601,144 @@ technique ColorGrading
         }
 
         /// <summary>
-        /// Represents a modified mesh with all its modifications.
+        /// Represents a debris piece generated from destroyed geometry.
         /// </summary>
         /// <remarks>
-        /// Based on daorigins.exe/DragonAge2.exe: Modified mesh data structure.
+        /// Based on daorigins.exe/DragonAge2.exe: Debris pieces are physics objects generated from destroyed geometry.
         /// </remarks>
-        public class ModifiedMesh
+        internal class DebrisPiece
         {
             /// <summary>
-            /// Mesh identifier (model name/resref).
+            /// Mesh identifier (model name/resref) this debris came from.
             /// </summary>
             public string MeshId { get; set; }
 
             /// <summary>
-            /// List of modifications applied to this mesh.
+            /// Face indices (triangle indices) that make up this debris piece.
             /// </summary>
-            public List<GeometryModification> Modifications { get; set; }
+            public List<int> FaceIndices { get; set; }
 
-            public ModifiedMesh()
+            /// <summary>
+            /// Current position of the debris piece.
+            /// </summary>
+            public Vector3 Position { get; set; }
+
+            /// <summary>
+            /// Current velocity of the debris piece.
+            /// </summary>
+            public Vector3 Velocity { get; set; }
+
+            /// <summary>
+            /// Current rotation of the debris piece.
+            /// </summary>
+            public Vector3 Rotation { get; set; }
+
+            /// <summary>
+            /// Current angular velocity of the debris piece.
+            /// </summary>
+            public Vector3 AngularVelocity { get; set; }
+
+            /// <summary>
+            /// Total lifetime of the debris piece in seconds.
+            /// </summary>
+            public float LifeTime { get; set; }
+
+            /// <summary>
+            /// Remaining lifetime of the debris piece in seconds.
+            /// </summary>
+            public float RemainingLifeTime { get; set; }
+
+            public DebrisPiece()
             {
                 MeshId = string.Empty;
-                Modifications = new List<GeometryModification>();
+                FaceIndices = new List<int>();
+                Position = Vector3.Zero;
+                Velocity = Vector3.Zero;
+                Rotation = Vector3.Zero;
+                AngularVelocity = Vector3.Zero;
+                LifeTime = 0.0f;
+                RemainingLifeTime = 0.0f;
             }
         }
+    }
+
+    /// <summary>
+    /// Represents a modified mesh with all its modifications.
+    /// </summary>
+    /// <remarks>
+    /// Based on daorigins.exe/DragonAge2.exe: Modified mesh data structure.
+    /// </remarks>
+    public class ModifiedMesh
+    {
+        /// <summary>
+        /// Mesh identifier (model name/resref).
+        /// </summary>
+        public string MeshId { get; set; }
 
         /// <summary>
-        /// Represents a single geometry modification.
+        /// List of modifications applied to this mesh.
         /// </summary>
-        /// <remarks>
-        /// Based on daorigins.exe/DragonAge2.exe: Modification data structure.
-        /// </remarks>
-        public class GeometryModification
+        public List<GeometryModification> Modifications { get; set; }
+
+        public ModifiedMesh()
         {
-            /// <summary>
-            /// Unique modification ID.
-            /// </summary>
-            public int ModificationId { get; set; }
+            MeshId = string.Empty;
+            Modifications = new List<GeometryModification>();
+        }
+    }
 
-            /// <summary>
-            /// Type of modification.
-            /// </summary>
-            public GeometryModificationType ModificationType { get; set; }
+    /// <summary>
+    /// Represents a single geometry modification.
+    /// </summary>
+    /// <remarks>
+    /// Based on daorigins.exe/DragonAge2.exe: Modification data structure.
+    /// </remarks>
+    public class GeometryModification
+    {
+        /// <summary>
+        /// Unique modification ID.
+        /// </summary>
+        public int ModificationId { get; set; }
 
-            /// <summary>
-            /// Indices of affected faces (triangle indices).
-            /// </summary>
-            public List<int> AffectedFaceIndices { get; set; }
+        /// <summary>
+        /// Type of modification.
+        /// </summary>
+        public GeometryModificationType ModificationType { get; set; }
 
-            /// <summary>
-            /// Modified vertex data.
-            /// </summary>
-            public List<ModifiedVertex> ModifiedVertices { get; set; }
+        /// <summary>
+        /// Indices of affected faces (triangle indices).
+        /// </summary>
+        public List<int> AffectedFaceIndices { get; set; }
 
-            /// <summary>
-            /// Center of explosion/destruction effect.
-            /// </summary>
-            public Vector3 ExplosionCenter { get; set; }
+        /// <summary>
+        /// Modified vertex data.
+        /// </summary>
+        public List<ModifiedVertex> ModifiedVertices { get; set; }
 
-            /// <summary>
-            /// Radius of explosion effect.
-            /// </summary>
-            public float ExplosionRadius { get; set; }
+        /// <summary>
+        /// Center of explosion/destruction effect.
+        /// </summary>
+        public Vector3 ExplosionCenter { get; set; }
 
-            /// <summary>
-            /// Time of modification (for animation/deformation effects).
-            /// </summary>
-            public float ModificationTime { get; set; }
+        /// <summary>
+        /// Radius of explosion effect.
+        /// </summary>
+        public float ExplosionRadius { get; set; }
 
-            public GeometryModification()
-            {
-                ModificationId = 0;
-                ModificationType = GeometryModificationType.Destroyed;
-                AffectedFaceIndices = new List<int>();
-                ModifiedVertices = new List<ModifiedVertex>();
-                ExplosionCenter = Vector3.Zero;
-                ExplosionRadius = 0.0f;
-                ModificationTime = 0.0f;
-            }
+        /// <summary>
+        /// Time of modification (for animation/deformation effects).
+        /// </summary>
+        public float ModificationTime { get; set; }
+
+        public GeometryModification()
+        {
+            ModificationId = 0;
+            ModificationType = GeometryModificationType.Destroyed;
+            AffectedFaceIndices = new List<int>();
+            ModifiedVertices = new List<ModifiedVertex>();
+            ExplosionCenter = Vector3.Zero;
+            ExplosionRadius = 0.0f;
+            ModificationTime = 0.0f;
         }
 
         /// <summary>
@@ -13768,66 +13948,67 @@ technique ColorGrading
             // TODO: STUB - Full DXT decompression not implemented
             return null;
         }
-    }
-
-    /// <summary>
-    /// Represents a debris piece generated from destroyed geometry.
-    /// </summary>
-    /// <remarks>
-    /// Based on daorigins.exe/DragonAge2.exe: Debris pieces are physics objects created from destroyed geometry.
-    /// </remarks>
-    public class DebrisPiece
-    {
-        /// <summary>
-        /// Mesh identifier (model name/resref) this debris came from.
-        /// </summary>
-        public string MeshId { get; set; }
 
         /// <summary>
-        /// Face indices that make up this debris piece.
+        /// Represents a debris piece generated from destroyed geometry.
         /// </summary>
-        public List<int> FaceIndices { get; set; }
-
-        /// <summary>
-        /// Current position of the debris piece.
-        /// </summary>
-        public Vector3 Position { get; set; }
-
-        /// <summary>
-        /// Current velocity of the debris piece.
-        /// </summary>
-        public Vector3 Velocity { get; set; }
-
-        /// <summary>
-        /// Current rotation of the debris piece.
-        /// </summary>
-        public Vector3 Rotation { get; set; }
-
-        /// <summary>
-        /// Angular velocity (rotation speed) of the debris piece.
-        /// </summary>
-        public Vector3 AngularVelocity { get; set; }
-
-        /// <summary>
-        /// Total lifetime of the debris piece in seconds.
-        /// </summary>
-        public float LifeTime { get; set; }
-
-        /// <summary>
-        /// Remaining lifetime of the debris piece in seconds.
-        /// </summary>
-        public float RemainingLifeTime { get; set; }
-
-        public DebrisPiece()
+        /// <remarks>
+        /// Based on daorigins.exe/DragonAge2.exe: Debris pieces are physics objects created from destroyed geometry.
+        /// </remarks>
+        public class DebrisPiece
         {
-            MeshId = string.Empty;
-            FaceIndices = new List<int>();
-            Position = Vector3.Zero;
-            Velocity = Vector3.Zero;
-            Rotation = Vector3.Zero;
-            AngularVelocity = Vector3.Zero;
-            LifeTime = 0.0f;
-            RemainingLifeTime = 0.0f;
+            /// <summary>
+            /// Mesh identifier (model name/resref) this debris came from.
+            /// </summary>
+            public string MeshId { get; set; }
+
+            /// <summary>
+            /// Face indices that make up this debris piece.
+            /// </summary>
+            public List<int> FaceIndices { get; set; }
+
+            /// <summary>
+            /// Current position of the debris piece.
+            /// </summary>
+            public Vector3 Position { get; set; }
+
+            /// <summary>
+            /// Current velocity of the debris piece.
+            /// </summary>
+            public Vector3 Velocity { get; set; }
+
+            /// <summary>
+            /// Current rotation of the debris piece.
+            /// </summary>
+            public Vector3 Rotation { get; set; }
+
+            /// <summary>
+            /// Angular velocity (rotation speed) of the debris piece.
+            /// </summary>
+            public Vector3 AngularVelocity { get; set; }
+
+            /// <summary>
+            /// Total lifetime of the debris piece in seconds.
+            /// </summary>
+            public float LifeTime { get; set; }
+
+            /// <summary>
+            /// Remaining lifetime of the debris piece in seconds.
+            /// </summary>
+            public float RemainingLifeTime { get; set; }
+
+            public DebrisPiece()
+            {
+                MeshId = string.Empty;
+                FaceIndices = new List<int>();
+                Position = Vector3.Zero;
+                Velocity = Vector3.Zero;
+                Rotation = Vector3.Zero;
+                AngularVelocity = Vector3.Zero;
+                LifeTime = 0.0f;
+                RemainingLifeTime = 0.0f;
+            }
         }
     }
 }
+
