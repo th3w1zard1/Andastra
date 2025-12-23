@@ -10,7 +10,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
 {
     public class PcodeReaderTest
     {
-        public static void Main(String[] args)
+        public static void RunTest(String[] args)
         {
 
             // Test parseFixedSizeArgs directly

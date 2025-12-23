@@ -3,6 +3,8 @@ using Eto.Forms;
 using Andastra.Parsing.Common;
 using Andastra.Runtime.Game.Core;
 using Andastra.Runtime.Graphics;
+using Andastra.Runtime.Core;
+using Andastra.Runtime.Graphics.Common.Enums;
 
 namespace Andastra.Runtime.Game
 {
@@ -56,7 +58,8 @@ namespace Andastra.Runtime.Game
                 // Show launcher UI
                 using (var launcher = new Andastra.Game.GUI.GameLauncher())
                 {
-                    if (launcher.ShowModal() != DialogResult.Ok || !launcher.StartClicked)
+                    launcher.ShowModal();
+                    if (!launcher.StartClicked)
                     {
                         app.Dispose();
                         return 0; // User cancelled

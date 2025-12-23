@@ -41,7 +41,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         private StrideGraphics.Texture _temporaryTexture;
         private StrideGraphics.SpriteBatch _spriteBatch;
         private StrideGraphics.Effect _fullscreenEffect;
-        private StrideGraphics.ConstantBuffer _ssrConstants;
+        private StrideGraphics.Buffer _ssrConstants;
         private StrideGraphics.SamplerState _linearSampler;
         private StrideGraphics.SamplerState _pointSampler;
         private bool _effectInitialized;
@@ -730,7 +730,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// Implements proper texture readback using Stride's GetData API.
         /// This is expensive and should only be used as CPU fallback when GPU shaders are not available.
         /// </summary>
-        private Vector4[] ReadTextureData(Texture texture)
+        private Vector4[] ReadTextureData(global::Stride.Graphics.Texture texture)
         {
             if (texture == null || _graphicsDevice == null)
             {
@@ -854,7 +854,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// Implements proper texture upload using Stride's SetData API.
         /// This is expensive and should only be used as CPU fallback when GPU shaders are not available.
         /// </summary>
-        private void WriteTextureData(Texture texture, Vector4[] data, int width, int height)
+        private void WriteTextureData(global::Stride.Graphics.Texture texture, Vector4[] data, int width, int height)
         {
             if (texture == null || data == null || _graphicsDevice == null)
             {
@@ -1364,7 +1364,7 @@ shader SSREffect : ShaderBase
         /// <param name="shaderSource">Shader source code.</param>
         /// <param name="shaderName">Shader name for identification.</param>
         /// <returns>Compiled Effect, or null if compilation fails.</returns>
-        private Effect CompileShaderWithCompiler(EffectCompiler compiler, string shaderSource, string shaderName)
+        private StrideGraphics.Effect CompileShaderWithCompiler(EffectCompiler compiler, string shaderSource, string shaderName)
         {
             try
             {
@@ -1452,7 +1452,7 @@ shader SSREffect : ShaderBase
         /// <param name="shaderSource">Shader source code.</param>
         /// <param name="shaderName">Shader name for identification.</param>
         /// <returns>Compiled Effect, or null if compilation fails.</returns>
-        private Effect CompileShaderFromFile(string shaderSource, string shaderName)
+        private StrideGraphics.Effect CompileShaderFromFile(string shaderSource, string shaderName)
         {
             string tempFilePath = null;
             try

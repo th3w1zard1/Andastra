@@ -56,7 +56,7 @@ namespace Andastra.Runtime.Stride.GUI
         private StrideGraphics.GraphicsDevice _graphicsDevice;
         private StrideGraphics.SpriteBatch _spriteBatch;
         private StrideGraphics.SpriteFont _font;
-        private global::Stride.Graphics.Texture2D _whiteTexture;
+        private global::Stride.Graphics.Texture _whiteTexture;
         private bool _isDisposed = false;
 
         /// <summary>
@@ -89,7 +89,7 @@ namespace Andastra.Runtime.Stride.GUI
                 _spriteBatch = new Stride.Graphics.SpriteBatch(_graphicsDevice);
 
                 // Create 1x1 white texture for drawing rectangles and backgrounds
-                _whiteTexture = Texture2D.New2D(_graphicsDevice, 1, 1, PixelFormat.R8G8B8A8_UNorm);
+                _whiteTexture = global::Stride.Graphics.Texture.New2D(_graphicsDevice, 1, 1, PixelFormat.R8G8B8A8_UNorm);
                 var whitePixel = new Color4(1.0f, 1.0f, 1.0f, 1.0f);
                 _whiteTexture.SetData(_graphicsDevice.ImmediateContext, new[] { whitePixel });
 

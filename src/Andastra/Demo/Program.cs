@@ -8,7 +8,7 @@ namespace Andastra.Demo
     /// </summary>
     public static class Program
     {
-        public static void Main(string[] args)
+        public static void RunDemo(string[] args)
         {
             Console.WriteLine("========================================");
             Console.WriteLine("   🎯 Andastra Vulkan Implementation");

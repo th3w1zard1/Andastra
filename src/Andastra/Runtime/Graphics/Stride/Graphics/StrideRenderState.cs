@@ -101,30 +101,30 @@ namespace Andastra.Runtime.Stride.Graphics
 
         internal RasterizerStateDescription Description => _description;
 
-        private static global::Stride.Graphics.CullFaceMode ConvertCullMode(Andastra.Runtime.Graphics.CullMode mode)
+        private static global::Stride.Graphics.CullMode ConvertCullMode(Andastra.Runtime.Graphics.CullMode mode)
         {
             switch (mode)
             {
                 case Andastra.Runtime.Graphics.CullMode.None:
-                    return global::Stride.Graphics.CullFaceMode.None;
+                    return global::Stride.Graphics.CullMode.None;
                 case Andastra.Runtime.Graphics.CullMode.CullClockwiseFace:
-                    return global::Stride.Graphics.CullFaceMode.Front;
+                    return global::Stride.Graphics.CullMode.Front;
                 case Andastra.Runtime.Graphics.CullMode.CullCounterClockwiseFace:
-                    return global::Stride.Graphics.CullFaceMode.Back;
+                    return global::Stride.Graphics.CullMode.Back;
                 default:
-                    return global::Stride.Graphics.CullFaceMode.Back;
+                    return global::Stride.Graphics.CullMode.Back;
             }
         }
 
-        private static Andastra.Runtime.Graphics.CullMode ConvertCullMode(global::Stride.Graphics.CullFaceMode mode)
+        private static Andastra.Runtime.Graphics.CullMode ConvertCullMode(global::Stride.Graphics.CullMode mode)
         {
             switch (mode)
             {
-                case global::Stride.Graphics.CullFaceMode.None:
+                case global::Stride.Graphics.CullMode.None:
                     return Andastra.Runtime.Graphics.CullMode.None;
-                case global::Stride.Graphics.CullFaceMode.Front:
+                case global::Stride.Graphics.CullMode.Front:
                     return Andastra.Runtime.Graphics.CullMode.CullClockwiseFace;
-                case global::Stride.Graphics.CullFaceMode.Back:
+                case global::Stride.Graphics.CullMode.Back:
                     return Andastra.Runtime.Graphics.CullMode.CullCounterClockwiseFace;
                 default:
                     return Andastra.Runtime.Graphics.CullMode.CullCounterClockwiseFace;

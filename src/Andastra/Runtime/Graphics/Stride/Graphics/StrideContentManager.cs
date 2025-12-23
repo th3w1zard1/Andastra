@@ -1,5 +1,4 @@
 using System;
-using StrideEngine = global::Stride.Engine;
 using StrideGraphics = global::Stride.Graphics;
 using Andastra.Runtime.Graphics;
 
@@ -10,11 +9,11 @@ namespace Andastra.Runtime.Stride.Graphics
     /// </summary>
     public class StrideContentManager : IContentManager
     {
-        private readonly global::Stride.Engine.ContentManager _contentManager;
+        private readonly dynamic _contentManager;
 
-        internal global::Stride.Engine.ContentManager ContentManager => _contentManager;
+        internal dynamic ContentManager => _contentManager;
 
-        public StrideContentManager(global::Stride.Engine.ContentManager contentManager)
+        public StrideContentManager(dynamic contentManager)
         {
             _contentManager = contentManager ?? throw new ArgumentNullException(nameof(contentManager));
         }
@@ -34,7 +33,7 @@ namespace Andastra.Runtime.Stride.Graphics
             }
             else if (typeof(ITexture2D).IsAssignableFrom(typeof(T)))
             {
-                var texture = _contentManager.Load<StrideGraphics.Texture2D>(assetName);
+                var texture = _contentManager.Load<global::Stride.Graphics.Texture>(assetName);
                 return new StrideTexture2D(texture) as T;
             }
             else
@@ -78,10 +77,10 @@ namespace Andastra.Runtime.Stride.Graphics
                 // Note: Stride's Load<T> requires a concrete type, so we use Texture2D as a test type
                 // If the asset exists but is wrong type, we'll still get an exception, which we interpret as "exists"
                 // The actual type checking happens during real Load calls
-                _contentManager.Load<StrideGraphics.Texture2D>(assetName);
+                _contentManager.Load<global::Stride.Graphics.Texture>(assetName);
                 return true; // Asset exists and can be loaded as Texture2D
             }
-            catch (global::Stride.Engine.Content.ContentManagerException)
+            catch (System.Exception)
             {
                 // ContentManagerException is thrown when asset is not found
                 // This is the primary indicator that the asset doesn't exist
