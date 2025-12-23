@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Myra;
 using Myra.Graphics2D.UI;
 using Andastra.Runtime.Graphics.Common.GUI;
+using Andastra.Parsing.Common;
 
 namespace Andastra.Runtime.MonoGame.GUI
 {
@@ -16,37 +17,37 @@ namespace Andastra.Runtime.MonoGame.GUI
     /// - Based on exhaustive reverse engineering of swkotor.exe and swkotor2.exe menu initialization
     /// - swkotor2.exe: FUN_006d2350 @ 0x006d2350 (menu constructor/initializer)
     /// - swkotor.exe: FUN_0067c4c0 @ 0x0067c4c0 (menu constructor/initializer)
-    /// 
+    ///
     /// Initialization Sequence (matching original engines):
     /// 1. Load "MAINMENU" GUI file first (swkotor2.exe: 0x006d2350:73, swkotor.exe: 0x0067c4c0:62)
     /// 2. If GUI load succeeds, load "RIMS:MAINMENU" RIM file (swkotor2.exe: 0x006d2350:76-80, swkotor.exe: 0x0067c4c0:65-69)
     /// 3. Clear menu flag at DAT_008283c0+0x34 (bit 2 = 0xfd mask) (swkotor2.exe: 0x006d2350:82)
     /// 4. Set up event handlers for menu buttons (0x27, 0x2d, 0, 1 events) (swkotor2.exe: 0x006d2350:89-95)
-    /// 
+    ///
     /// String References:
     /// - "RIMS:MAINMENU" @ swkotor2.exe:0x007b6044, swkotor.exe:0x0073e0a4 (main menu RIM file)
     /// - "MAINMENU" @ swkotor2.exe:0x007cc030, swkotor.exe:0x00752f64 (main menu GUI constant)
     /// - "mainmenu_p" @ swkotor2.exe:0x007cc000 (main menu panel)
     /// - "mainmenu01-05" @ swkotor2.exe:0x007cc108-0x007cc138 (menu variants, swkotor2.exe only)
     /// - "mainmenu" @ swkotor.exe:0x00752f4c (single menu panel, no variants)
-    /// 
+    ///
     /// Menu Variants (swkotor2.exe only):
     /// - Menu variant selection based on "gui3D_room" condition (swkotor2.exe: 0x006d2350:120-150)
     /// - Variants: mainmenu01 (default), mainmenu02, mainmenu03, mainmenu04, mainmenu05
     /// - swkotor.exe uses single "mainmenu" panel (no variants)
-    /// 
+    ///
     /// Event Handlers:
     /// - Menu buttons register handlers for events: 0x27, 0x2d, 0, 1 (swkotor2.exe: 0x006d2350:89-95)
     /// - Event 0x27: Button press/select
     /// - Event 0x2d: Button release/deselect
     /// - Event 0: Unknown (likely hover/enter)
     /// - Event 1: Unknown (likely leave/exit)
-    /// 
+    ///
     /// This Implementation:
     /// - Uses Myra UI library for modern, cross-platform menu rendering
     /// - Myra provides declarative UI with XML-based layouts and event handling
     /// - Matches original engine initialization sequence and event handling patterns
-    /// 
+    ///
     /// Inheritance:
     /// - BaseMenuRenderer (Runtime.Graphics.Common.GUI) - Common menu functionality
     ///   - MyraMenuRenderer (this class) - MonoGame-specific Myra UI implementation
@@ -111,8 +112,8 @@ namespace Andastra.Runtime.MonoGame.GUI
                 // Attempt to retrieve Game instance from GraphicsDevice
                 // MonoGame GraphicsDevice has an internal reference to the Game instance
                 // This is accessed via reflection since it's not publicly exposed
-                BioWareGame gameInstance = TryGetGameInstanceFromGraphicsDevice(_graphicsDevice);
-                
+                Microsoft.Xna.Framework.Game gameInstance = TryGetGameInstanceFromGraphicsDevice(_graphicsDevice);
+
                 // Initialize Myra environment with Game instance if available
                 // MyraEnvironment.Game enables proper input handling, resource management, and rendering context
                 // If Game is not available, Myra will still work but with manual rendering setup
@@ -209,7 +210,7 @@ namespace Andastra.Runtime.MonoGame.GUI
                         {
                             var graphicsDeviceServiceType = typeof(Microsoft.Xna.Framework.Graphics.IGraphicsDeviceService);
                             var graphicsDeviceService = getServiceMethod.Invoke(serviceProviderValue, new object[] { graphicsDeviceServiceType });
-                            if (graphicsDeviceService is Game gameInstance)
+                            if (graphicsDeviceService is Microsoft.Xna.Framework.Game gameInstance)
                             {
                                 Console.WriteLine("[MyraMenuRenderer] Game instance retrieved via ServiceProvider");
                                 return gameInstance;
@@ -224,7 +225,7 @@ namespace Andastra.Runtime.MonoGame.GUI
                 if (graphicsDeviceServiceField != null)
                 {
                     var graphicsDeviceServiceValue = graphicsDeviceServiceField.GetValue(graphicsDevice);
-                    if (graphicsDeviceServiceValue is Game gameInstance)
+                    if (graphicsDeviceServiceValue is Microsoft.Xna.Framework.Game gameInstance)
                     {
                         Console.WriteLine("[MyraMenuRenderer] Game instance retrieved via _graphicsDeviceService field");
                         return gameInstance;
@@ -243,7 +244,7 @@ namespace Andastra.Runtime.MonoGame.GUI
                         var gameProperty = graphicsDeviceManager.GetType().GetProperty("Game", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
                         if (gameProperty != null)
                         {
-                            var gameInstance = gameProperty.GetValue(graphicsDeviceManager) as Game;
+                            var gameInstance = gameProperty.GetValue(graphicsDeviceManager) as Microsoft.Xna.Framework.Game;
                             if (gameInstance != null)
                             {
                                 Console.WriteLine("[MyraMenuRenderer] Game instance retrieved via GraphicsDeviceManager");
@@ -273,7 +274,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         protected override void OnViewportChanged(int width, int height)
         {
             base.OnViewportChanged(width, height);
-            
+
             if (_rootPanel != null)
             {
                 _rootPanel.Width = width;
