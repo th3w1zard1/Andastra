@@ -210,6 +210,12 @@ namespace Andastra.Runtime.Games.Eclipse
         private readonly Dictionary<uint, IRenderTarget> _shadowMaps;
         private readonly Dictionary<uint, IRenderTarget[]> _cubeShadowMaps; // For point lights (6 faces)
         private readonly Dictionary<uint, Matrix4x4> _shadowLightSpaceMatrices; // Light space matrices for shadow sampling
+        // GCHandle tracking for shadow map texture access
+        // Based on daorigins.exe/DragonAge2.exe: Shadow maps are accessed as textures for sampling
+        // GCHandles keep RenderTarget2D objects alive so IntPtr references remain valid
+        // Maps IRenderTarget to GCHandle to avoid creating duplicate handles for the same render target
+        private readonly Dictionary<IRenderTarget, GCHandle> _shadowMapHandlesByTarget; // Maps IRenderTarget to GCHandle
+        private readonly Dictionary<IntPtr, GCHandle> _shadowMapHandlesByPtr; // Maps IntPtr to GCHandle for cleanup
 
         /// <summary>
         /// Bounding volume information for a mesh (from MDL data).
@@ -312,6 +318,8 @@ namespace Andastra.Runtime.Games.Eclipse
             _shadowMaps = new Dictionary<uint, IRenderTarget>();
             _cubeShadowMaps = new Dictionary<uint, IRenderTarget[]>();
             _shadowLightSpaceMatrices = new Dictionary<uint, Matrix4x4>();
+            _shadowMapHandlesByTarget = new Dictionary<IRenderTarget, GCHandle>();
+            _shadowMapHandlesByPtr = new Dictionary<IntPtr, GCHandle>();
 
             // Initialize frustum culling system
             // Based on daorigins.exe/DragonAge2.exe: Frustum culling is used for efficient rendering
@@ -4536,6 +4544,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <summary>
         /// Extracts the shadow map texture handle from an IRenderTarget for use in shadow sampling.
         /// Creates a GCHandle to keep the RenderTarget2D alive so IntPtr references remain valid.
+        /// Caches handles per render target to avoid creating duplicate handles.
         /// Based on daorigins.exe/DragonAge2.exe: Shadow maps are accessed as textures for depth sampling
         /// </summary>
         /// <param name="shadowMap">The shadow map render target</param>
@@ -4545,6 +4554,13 @@ namespace Andastra.Runtime.Games.Eclipse
             if (shadowMap == null)
             {
                 return IntPtr.Zero;
+            }
+
+            // Check if we already have a handle for this render target
+            if (_shadowMapHandlesByTarget.TryGetValue(shadowMap, out GCHandle existingHandle))
+            {
+                // Return the existing handle's IntPtr
+                return GCHandle.ToIntPtr(existingHandle);
             }
 
             // Cast to MonoGameRenderTarget to access underlying RenderTarget2D
@@ -4567,10 +4583,9 @@ namespace Andastra.Runtime.Games.Eclipse
             GCHandle handle = GCHandle.Alloc(renderTarget2D, GCHandleType.Normal);
             IntPtr handlePtr = GCHandle.ToIntPtr(handle);
 
-            // Store the handle in our tracking dictionary for cleanup
-            // Note: We use the IntPtr as the key, but we could also use a separate cleanup mechanism
-            // For now, handles will be cleaned up when shadow maps are removed or area is disposed
-            _shadowMapHandles[handlePtr] = handle;
+            // Store the handle in both tracking dictionaries for efficient lookup and cleanup
+            _shadowMapHandlesByTarget[shadowMap] = handle;
+            _shadowMapHandlesByPtr[handlePtr] = handle;
 
             return handlePtr;
         }
