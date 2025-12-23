@@ -12772,6 +12772,50 @@ namespace Andastra.Runtime.MonoGame.Backends
                     Marshal.FreeHGlobal(descPtr);
                 }
             }
+
+            public void PushDescriptorSet(IBindingLayout bindingLayout, int setIndex, BindingSetItem[] items)
+            {
+                if (!_isOpen)
+                {
+                    throw new InvalidOperationException("Command list must be open before pushing descriptor set");
+                }
+
+                if (_d3d12CommandList == IntPtr.Zero)
+                {
+                    throw new InvalidOperationException("Command list is not initialized");
+                }
+
+                if (bindingLayout == null)
+                {
+                    throw new ArgumentNullException(nameof(bindingLayout));
+                }
+
+                if (items == null || items.Length == 0)
+                {
+                    throw new ArgumentException("Binding set items cannot be null or empty", nameof(items));
+                }
+
+                // Validate that binding layout supports push descriptors
+                if (!bindingLayout.Desc.IsPushDescriptor)
+                {
+                    throw new ArgumentException("Binding layout must have IsPushDescriptor = true to use push descriptors", nameof(bindingLayout));
+                }
+
+                // DirectX 12 does not have native push descriptor support like Vulkan
+                // However, we can simulate it by updating descriptors in a descriptor heap and binding them
+                // For now, we throw NotSupportedException as a proper implementation would require
+                // managing descriptor heaps and root signature tables
+                // 
+                // A full implementation would:
+                // 1. Allocate descriptors from a shader-visible descriptor heap
+                // 2. Update descriptors using CopyDescriptorsSimple or CopyDescriptors
+                // 3. Set descriptor heap on command list
+                // 4. Set root descriptor table pointing to the descriptors
+                //
+                // This is more complex than Vulkan's push descriptors and requires heap management
+                throw new NotSupportedException("Push descriptors are not directly supported in DirectX 12. Use CreateBindingSet instead, or implement descriptor heap management for push descriptor simulation.");
+            }
+
             public void BuildBottomLevelAccelStruct(IAccelStruct accelStruct, GeometryDesc[] geometries)
             {
                 if (!_isOpen)
@@ -13479,39 +13523,6 @@ namespace Andastra.Runtime.MonoGame.Backends
                     // For D3D12, push descriptors would ideally use root descriptors directly,
                     // but that requires more complex root signature management
                 }
-            }
-
-            public void PushDescriptorSet(IBindingLayout bindingLayout, int setIndex, BindingSetItem[] items)
-            {
-                if (!_isOpen)
-                {
-                    throw new InvalidOperationException("Command list must be open to push descriptor set");
-                }
-
-                if (bindingLayout == null)
-                {
-                    throw new ArgumentNullException(nameof(bindingLayout));
-                }
-
-                if (items == null)
-                {
-                    throw new ArgumentNullException(nameof(items));
-                }
-
-                if (_d3d12CommandList == IntPtr.Zero)
-                {
-                    throw new InvalidOperationException("Command list is not initialized");
-                }
-
-                // TODO: STUB - Push descriptor set implementation for D3D12
-                // DirectX 12 equivalent: Uses root descriptors or updates descriptor tables directly
-                // This requires implementing root signature parameter updates or descriptor heap updates
-                // For now, this is a placeholder that validates inputs but doesn't perform the actual push operation
-                // A full implementation would:
-                // 1. Validate that bindingLayout.IsPushDescriptor is true
-                // 2. Update root signature parameters or descriptor heap entries based on items
-                // 3. Call appropriate D3D12 command list methods to bind descriptors
-                throw new NotImplementedException("PushDescriptorSet is not yet implemented for D3D12. Use binding sets instead.");
             }
 
             /// <summary>
