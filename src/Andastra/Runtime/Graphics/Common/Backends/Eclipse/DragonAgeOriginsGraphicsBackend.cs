@@ -22,6 +22,7 @@ using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Graphics.Common.Structs;
+using Andastra.Runtime.Core;
 using ResourceType = Andastra.Parsing.Resource.ResourceType;
 using ParsingResourceType = Andastra.Parsing.Resource.ResourceType;
 
@@ -51,6 +52,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         // World reference for accessing entities and areas for rendering
         // Matches daorigins.exe: Rendering system accesses world entities for scene rendering
         private IWorld _world;
+
+        // Game settings reference for accessing and updating game configuration
+        // Based on daorigins.exe: Options menu reads and writes settings to configuration system
+        private GameSettings _gameSettings;
 
         // Camera position for distance-based sorting of transparent entities
         // Based on daorigins.exe: Transparent objects are sorted by distance from camera for proper alpha blending
@@ -202,6 +207,16 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         public void SetWorld(IWorld world)
         {
             _world = world;
+        }
+
+        /// <summary>
+        /// Sets the game settings to use for options menu and configuration.
+        /// Based on daorigins.exe: Options menu reads from and writes to game settings system.
+        /// </summary>
+        /// <param name="gameSettings">The game settings to use for configuration.</param>
+        public void SetGameSettings(GameSettings gameSettings)
+        {
+            _gameSettings = gameSettings;
         }
 
         protected override bool DetermineGraphicsApi()
@@ -6057,15 +6072,719 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             public OptionType Type { get; set; }
             public int MinValue { get; set; }
             public int MaxValue { get; set; }
-            public int GetValue() { return 0; } // TODO: Get from actual game settings
-            public string GetStringValue() { return GetValue().ToString(); }
+            public GameSettings GameSettings { get; set; }
+            public OptionsCategory Category { get; set; }
+            public string SettingKey { get; set; } // Key to identify which setting this option represents
+
+            // Based on daorigins.exe: Options menu reads current values from game settings
+            public int GetValue()
+            {
+                if (GameSettings == null)
+                {
+                    return 0;
+                }
+
+                // Read value from GameSettings based on category and setting key
+                switch (Category)
+                {
+                    case OptionsCategory.Graphics:
+                        return GetGraphicsValue();
+                    case OptionsCategory.Audio:
+                        return GetAudioValue();
+                    case OptionsCategory.Game:
+                        return GetGameplayValue();
+                    case OptionsCategory.Feedback:
+                        return GetFeedbackValue();
+                    case OptionsCategory.Autopause:
+                        return GetAutopauseValue();
+                    case OptionsCategory.Controls:
+                        return GetControlsValue();
+                    default:
+                        return 0;
+                }
+            }
+
+            // Based on daorigins.exe: Graphics options include resolution, fullscreen, quality settings
+            private int GetGraphicsValue()
+            {
+                if (GameSettings.Graphics == null)
+                {
+                    return 0;
+                }
+
+                switch (SettingKey)
+                {
+                    case "Fullscreen":
+                        return GameSettings.Graphics.Fullscreen ? 1 : 0;
+                    case "VSync":
+                        return GameSettings.Graphics.VSync ? 1 : 0;
+                    case "TextureQuality":
+                        return GameSettings.Graphics.TextureQuality;
+                    case "ShadowQuality":
+                        return GameSettings.Graphics.ShadowQuality;
+                    case "AnisotropicFiltering":
+                        return GameSettings.Graphics.AnisotropicFiltering;
+                    case "AntiAliasing":
+                        return GameSettings.Graphics.AntiAliasing ? 1 : 0;
+                    default:
+                        return 0;
+                }
+            }
+
+            // Based on daorigins.exe: Audio options include volume levels and music enabled
+            private int GetAudioValue()
+            {
+                if (GameSettings.Audio == null)
+                {
+                    return 0;
+                }
+
+                switch (SettingKey)
+                {
+                    case "MasterVolume":
+                        return (int)(GameSettings.Audio.MasterVolume * 100.0f); // Convert 0.0-1.0 to 0-100
+                    case "MusicVolume":
+                        return (int)(GameSettings.Audio.MusicVolume * 100.0f);
+                    case "SfxVolume":
+                        return (int)(GameSettings.Audio.SfxVolume * 100.0f);
+                    case "VoiceVolume":
+                        return (int)(GameSettings.Audio.VoiceVolume * 100.0f);
+                    case "MusicEnabled":
+                        return GameSettings.Audio.MusicEnabled ? 1 : 0;
+                    default:
+                        return 0;
+                }
+            }
+
+            // Based on daorigins.exe: Gameplay options include auto-save, tooltips, subtitles
+            private int GetGameplayValue()
+            {
+                if (GameSettings.Gameplay == null)
+                {
+                    return 0;
+                }
+
+                switch (SettingKey)
+                {
+                    case "AutoSave":
+                        return GameSettings.Gameplay.AutoSave ? 1 : 0;
+                    case "AutoSaveInterval":
+                        return GameSettings.Gameplay.AutoSaveInterval;
+                    case "Tooltips":
+                        return GameSettings.Gameplay.Tooltips ? 1 : 0;
+                    case "Subtitles":
+                        return GameSettings.Gameplay.Subtitles ? 1 : 0;
+                    case "DialogueSpeed":
+                        return (int)(GameSettings.Gameplay.DialogueSpeed * 100.0f); // Convert 0.5-2.0 to 50-200
+                    case "ClassicControls":
+                        return GameSettings.Gameplay.ClassicControls ? 1 : 0;
+                    default:
+                        return 0;
+                }
+            }
+
+            // Based on daorigins.exe: Feedback options include tooltips, damage numbers, subtitles
+            private int GetFeedbackValue()
+            {
+                if (GameSettings.Feedback == null)
+                {
+                    return 0;
+                }
+
+                switch (SettingKey)
+                {
+                    case "TooltipsEnabled":
+                        return GameSettings.Feedback.TooltipsEnabled ? 1 : 0;
+                    case "TooltipDelay":
+                        return GameSettings.Feedback.TooltipDelay;
+                    case "ShowDamageNumbers":
+                        return GameSettings.Feedback.ShowDamageNumbers ? 1 : 0;
+                    case "ShowCombatDamageNumbers":
+                        return GameSettings.Feedback.ShowCombatDamageNumbers ? 1 : 0;
+                    case "ShowHitMissFeedback":
+                        return GameSettings.Feedback.ShowHitMissFeedback ? 1 : 0;
+                    case "ShowCombatFeedback":
+                        return GameSettings.Feedback.ShowCombatFeedback ? 1 : 0;
+                    case "ShowSubtitles":
+                        return GameSettings.Feedback.ShowSubtitles ? 1 : 0;
+                    case "ShowActionQueue":
+                        return GameSettings.Feedback.ShowActionQueue ? 1 : 0;
+                    case "ShowMinimap":
+                        return GameSettings.Feedback.ShowMinimap ? 1 : 0;
+                    case "ShowPartyHealthBars":
+                        return GameSettings.Feedback.ShowPartyHealthBars ? 1 : 0;
+                    case "ShowFloatingCombatText":
+                        return GameSettings.Feedback.ShowFloatingCombatText ? 1 : 0;
+                    case "ShowExperienceGains":
+                        return GameSettings.Feedback.ShowExperienceGains ? 1 : 0;
+                    case "ShowItemPickups":
+                        return GameSettings.Feedback.ShowItemPickups ? 1 : 0;
+                    case "ShowQuestUpdates":
+                        return GameSettings.Feedback.ShowQuestUpdates ? 1 : 0;
+                    case "ShowSkillCheckFeedback":
+                        return GameSettings.Feedback.ShowSkillCheckFeedback ? 1 : 0;
+                    default:
+                        return 0;
+                }
+            }
+
+            // Based on daorigins.exe: Autopause options control when the game automatically pauses
+            private int GetAutopauseValue()
+            {
+                if (GameSettings.Autopause == null)
+                {
+                    return 0;
+                }
+
+                switch (SettingKey)
+                {
+                    case "PauseOnLostFocus":
+                        return GameSettings.Autopause.PauseOnLostFocus ? 1 : 0;
+                    case "PauseOnConversation":
+                        return GameSettings.Autopause.PauseOnConversation ? 1 : 0;
+                    case "PauseOnContainer":
+                        return GameSettings.Autopause.PauseOnContainer ? 1 : 0;
+                    case "PauseOnCorpse":
+                        return GameSettings.Autopause.PauseOnCorpse ? 1 : 0;
+                    case "PauseOnAreaTransition":
+                        return GameSettings.Autopause.PauseOnAreaTransition ? 1 : 0;
+                    case "PauseOnPartyDeath":
+                        return GameSettings.Autopause.PauseOnPartyDeath ? 1 : 0;
+                    case "PauseOnPlayerDeath":
+                        return GameSettings.Autopause.PauseOnPlayerDeath ? 1 : 0;
+                    default:
+                        return 0;
+                }
+            }
+
+            // Based on daorigins.exe: Controls options include mouse sensitivity and inversion
+            private int GetControlsValue()
+            {
+                if (GameSettings.Controls == null)
+                {
+                    return 0;
+                }
+
+                switch (SettingKey)
+                {
+                    case "MouseSensitivity":
+                        return (int)(GameSettings.MouseSensitivity * 100.0f); // Convert 0.0-1.0 to 0-100
+                    case "InvertMouseY":
+                        return GameSettings.InvertMouseY ? 1 : 0;
+                    default:
+                        return 0;
+                }
+            }
+
+            public string GetStringValue()
+            {
+                if (GameSettings == null)
+                {
+                    return "0";
+                }
+
+                // For enum-type options, return descriptive strings
+                if (Type == OptionType.Enum)
+                {
+                    return GetEnumStringValue();
+                }
+
+                // For numeric options, return the numeric value as string
+                return GetValue().ToString();
+            }
+
+            // Based on daorigins.exe: Enum options display descriptive names for their values
+            private string GetEnumStringValue()
+            {
+                int value = GetValue();
+
+                switch (SettingKey)
+                {
+                    case "TextureQuality":
+                        switch (value)
+                        {
+                            case 0: return "Low";
+                            case 1: return "Medium";
+                            case 2: return "High";
+                            default: return value.ToString();
+                        }
+                    case "ShadowQuality":
+                        switch (value)
+                        {
+                            case 0: return "Off";
+                            case 1: return "Low";
+                            case 2: return "Medium";
+                            case 3: return "High";
+                            default: return value.ToString();
+                        }
+                    case "AnisotropicFiltering":
+                        switch (value)
+                        {
+                            case 0: return "Off";
+                            case 2: return "2x";
+                            case 4: return "4x";
+                            case 8: return "8x";
+                            case 16: return "16x";
+                            default: return value.ToString();
+                        }
+                    default:
+                        return value.ToString();
+                }
+            }
         }
 
+        // Based on daorigins.exe: Options menu populates all categories from game settings
         private Dictionary<OptionsCategory, List<OptionItem>> CreateDefaultOptions()
         {
-            // TODO: Integrate with actual game settings system
-            // For now, return empty dictionary - options will be populated from actual settings
-            return new Dictionary<OptionsCategory, List<OptionItem>>();
+            var optionsByCategory = new Dictionary<OptionsCategory, List<OptionItem>>();
+
+            if (_gameSettings == null)
+            {
+                // Return empty dictionary if no settings available
+                return optionsByCategory;
+            }
+
+            // Graphics options
+            // Based on daorigins.exe: Graphics category includes resolution, fullscreen, quality settings
+            var graphicsOptions = new List<OptionItem>();
+            graphicsOptions.Add(new OptionItem
+            {
+                Name = "Fullscreen",
+                Type = OptionType.Boolean,
+                MinValue = 0,
+                MaxValue = 1,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Graphics,
+                SettingKey = "Fullscreen"
+            });
+            graphicsOptions.Add(new OptionItem
+            {
+                Name = "VSync",
+                Type = OptionType.Boolean,
+                MinValue = 0,
+                MaxValue = 1,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Graphics,
+                SettingKey = "VSync"
+            });
+            graphicsOptions.Add(new OptionItem
+            {
+                Name = "Texture Quality",
+                Type = OptionType.Enum,
+                MinValue = 0,
+                MaxValue = 2,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Graphics,
+                SettingKey = "TextureQuality"
+            });
+            graphicsOptions.Add(new OptionItem
+            {
+                Name = "Shadow Quality",
+                Type = OptionType.Enum,
+                MinValue = 0,
+                MaxValue = 3,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Graphics,
+                SettingKey = "ShadowQuality"
+            });
+            graphicsOptions.Add(new OptionItem
+            {
+                Name = "Anisotropic Filtering",
+                Type = OptionType.Enum,
+                MinValue = 0,
+                MaxValue = 16,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Graphics,
+                SettingKey = "AnisotropicFiltering"
+            });
+            graphicsOptions.Add(new OptionItem
+            {
+                Name = "Anti-Aliasing",
+                Type = OptionType.Boolean,
+                MinValue = 0,
+                MaxValue = 1,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Graphics,
+                SettingKey = "AntiAliasing"
+            });
+            optionsByCategory[OptionsCategory.Graphics] = graphicsOptions;
+
+            // Audio options
+            // Based on daorigins.exe: Audio category includes volume levels and music enabled
+            var audioOptions = new List<OptionItem>();
+            audioOptions.Add(new OptionItem
+            {
+                Name = "Master Volume",
+                Type = OptionType.Numeric,
+                MinValue = 0,
+                MaxValue = 100,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Audio,
+                SettingKey = "MasterVolume"
+            });
+            audioOptions.Add(new OptionItem
+            {
+                Name = "Music Volume",
+                Type = OptionType.Numeric,
+                MinValue = 0,
+                MaxValue = 100,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Audio,
+                SettingKey = "MusicVolume"
+            });
+            audioOptions.Add(new OptionItem
+            {
+                Name = "Sound Effects Volume",
+                Type = OptionType.Numeric,
+                MinValue = 0,
+                MaxValue = 100,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Audio,
+                SettingKey = "SfxVolume"
+            });
+            audioOptions.Add(new OptionItem
+            {
+                Name = "Voice Volume",
+                Type = OptionType.Numeric,
+                MinValue = 0,
+                MaxValue = 100,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Audio,
+                SettingKey = "VoiceVolume"
+            });
+            audioOptions.Add(new OptionItem
+            {
+                Name = "Music Enabled",
+                Type = OptionType.Boolean,
+                MinValue = 0,
+                MaxValue = 1,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Audio,
+                SettingKey = "MusicEnabled"
+            });
+            optionsByCategory[OptionsCategory.Audio] = audioOptions;
+
+            // Gameplay options
+            // Based on daorigins.exe: Game category includes auto-save, tooltips, subtitles
+            var gameOptions = new List<OptionItem>();
+            gameOptions.Add(new OptionItem
+            {
+                Name = "Auto-Save",
+                Type = OptionType.Boolean,
+                MinValue = 0,
+                MaxValue = 1,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Game,
+                SettingKey = "AutoSave"
+            });
+            gameOptions.Add(new OptionItem
+            {
+                Name = "Auto-Save Interval",
+                Type = OptionType.Numeric,
+                MinValue = 60,
+                MaxValue = 600,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Game,
+                SettingKey = "AutoSaveInterval"
+            });
+            gameOptions.Add(new OptionItem
+            {
+                Name = "Tooltips",
+                Type = OptionType.Boolean,
+                MinValue = 0,
+                MaxValue = 1,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Game,
+                SettingKey = "Tooltips"
+            });
+            gameOptions.Add(new OptionItem
+            {
+                Name = "Subtitles",
+                Type = OptionType.Boolean,
+                MinValue = 0,
+                MaxValue = 1,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Game,
+                SettingKey = "Subtitles"
+            });
+            gameOptions.Add(new OptionItem
+            {
+                Name = "Dialogue Speed",
+                Type = OptionType.Numeric,
+                MinValue = 50,
+                MaxValue = 200,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Game,
+                SettingKey = "DialogueSpeed"
+            });
+            gameOptions.Add(new OptionItem
+            {
+                Name = "Classic Controls",
+                Type = OptionType.Boolean,
+                MinValue = 0,
+                MaxValue = 1,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Game,
+                SettingKey = "ClassicControls"
+            });
+            optionsByCategory[OptionsCategory.Game] = gameOptions;
+
+            // Feedback options
+            // Based on daorigins.exe: Feedback category includes various visual/audio feedback options
+            var feedbackOptions = new List<OptionItem>();
+            feedbackOptions.Add(new OptionItem
+            {
+                Name = "Tooltips Enabled",
+                Type = OptionType.Boolean,
+                MinValue = 0,
+                MaxValue = 1,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Feedback,
+                SettingKey = "TooltipsEnabled"
+            });
+            feedbackOptions.Add(new OptionItem
+            {
+                Name = "Tooltip Delay",
+                Type = OptionType.Numeric,
+                MinValue = 0,
+                MaxValue = 2000,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Feedback,
+                SettingKey = "TooltipDelay"
+            });
+            feedbackOptions.Add(new OptionItem
+            {
+                Name = "Show Damage Numbers",
+                Type = OptionType.Boolean,
+                MinValue = 0,
+                MaxValue = 1,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Feedback,
+                SettingKey = "ShowDamageNumbers"
+            });
+            feedbackOptions.Add(new OptionItem
+            {
+                Name = "Show Combat Damage Numbers",
+                Type = OptionType.Boolean,
+                MinValue = 0,
+                MaxValue = 1,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Feedback,
+                SettingKey = "ShowCombatDamageNumbers"
+            });
+            feedbackOptions.Add(new OptionItem
+            {
+                Name = "Show Hit/Miss Feedback",
+                Type = OptionType.Boolean,
+                MinValue = 0,
+                MaxValue = 1,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Feedback,
+                SettingKey = "ShowHitMissFeedback"
+            });
+            feedbackOptions.Add(new OptionItem
+            {
+                Name = "Show Combat Feedback",
+                Type = OptionType.Boolean,
+                MinValue = 0,
+                MaxValue = 1,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Feedback,
+                SettingKey = "ShowCombatFeedback"
+            });
+            feedbackOptions.Add(new OptionItem
+            {
+                Name = "Show Subtitles",
+                Type = OptionType.Boolean,
+                MinValue = 0,
+                MaxValue = 1,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Feedback,
+                SettingKey = "ShowSubtitles"
+            });
+            feedbackOptions.Add(new OptionItem
+            {
+                Name = "Show Action Queue",
+                Type = OptionType.Boolean,
+                MinValue = 0,
+                MaxValue = 1,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Feedback,
+                SettingKey = "ShowActionQueue"
+            });
+            feedbackOptions.Add(new OptionItem
+            {
+                Name = "Show Minimap",
+                Type = OptionType.Boolean,
+                MinValue = 0,
+                MaxValue = 1,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Feedback,
+                SettingKey = "ShowMinimap"
+            });
+            feedbackOptions.Add(new OptionItem
+            {
+                Name = "Show Party Health Bars",
+                Type = OptionType.Boolean,
+                MinValue = 0,
+                MaxValue = 1,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Feedback,
+                SettingKey = "ShowPartyHealthBars"
+            });
+            feedbackOptions.Add(new OptionItem
+            {
+                Name = "Show Floating Combat Text",
+                Type = OptionType.Boolean,
+                MinValue = 0,
+                MaxValue = 1,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Feedback,
+                SettingKey = "ShowFloatingCombatText"
+            });
+            feedbackOptions.Add(new OptionItem
+            {
+                Name = "Show Experience Gains",
+                Type = OptionType.Boolean,
+                MinValue = 0,
+                MaxValue = 1,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Feedback,
+                SettingKey = "ShowExperienceGains"
+            });
+            feedbackOptions.Add(new OptionItem
+            {
+                Name = "Show Item Pickups",
+                Type = OptionType.Boolean,
+                MinValue = 0,
+                MaxValue = 1,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Feedback,
+                SettingKey = "ShowItemPickups"
+            });
+            feedbackOptions.Add(new OptionItem
+            {
+                Name = "Show Quest Updates",
+                Type = OptionType.Boolean,
+                MinValue = 0,
+                MaxValue = 1,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Feedback,
+                SettingKey = "ShowQuestUpdates"
+            });
+            feedbackOptions.Add(new OptionItem
+            {
+                Name = "Show Skill Check Feedback",
+                Type = OptionType.Boolean,
+                MinValue = 0,
+                MaxValue = 1,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Feedback,
+                SettingKey = "ShowSkillCheckFeedback"
+            });
+            optionsByCategory[OptionsCategory.Feedback] = feedbackOptions;
+
+            // Autopause options
+            // Based on daorigins.exe: Autopause category controls when the game automatically pauses
+            var autopauseOptions = new List<OptionItem>();
+            autopauseOptions.Add(new OptionItem
+            {
+                Name = "Pause on Lost Focus",
+                Type = OptionType.Boolean,
+                MinValue = 0,
+                MaxValue = 1,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Autopause,
+                SettingKey = "PauseOnLostFocus"
+            });
+            autopauseOptions.Add(new OptionItem
+            {
+                Name = "Pause on Conversation",
+                Type = OptionType.Boolean,
+                MinValue = 0,
+                MaxValue = 1,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Autopause,
+                SettingKey = "PauseOnConversation"
+            });
+            autopauseOptions.Add(new OptionItem
+            {
+                Name = "Pause on Container",
+                Type = OptionType.Boolean,
+                MinValue = 0,
+                MaxValue = 1,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Autopause,
+                SettingKey = "PauseOnContainer"
+            });
+            autopauseOptions.Add(new OptionItem
+            {
+                Name = "Pause on Corpse",
+                Type = OptionType.Boolean,
+                MinValue = 0,
+                MaxValue = 1,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Autopause,
+                SettingKey = "PauseOnCorpse"
+            });
+            autopauseOptions.Add(new OptionItem
+            {
+                Name = "Pause on Area Transition",
+                Type = OptionType.Boolean,
+                MinValue = 0,
+                MaxValue = 1,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Autopause,
+                SettingKey = "PauseOnAreaTransition"
+            });
+            autopauseOptions.Add(new OptionItem
+            {
+                Name = "Pause on Party Death",
+                Type = OptionType.Boolean,
+                MinValue = 0,
+                MaxValue = 1,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Autopause,
+                SettingKey = "PauseOnPartyDeath"
+            });
+            autopauseOptions.Add(new OptionItem
+            {
+                Name = "Pause on Player Death",
+                Type = OptionType.Boolean,
+                MinValue = 0,
+                MaxValue = 1,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Autopause,
+                SettingKey = "PauseOnPlayerDeath"
+            });
+            optionsByCategory[OptionsCategory.Autopause] = autopauseOptions;
+
+            // Controls options
+            // Based on daorigins.exe: Controls category includes mouse sensitivity and inversion
+            var controlsOptions = new List<OptionItem>();
+            controlsOptions.Add(new OptionItem
+            {
+                Name = "Mouse Sensitivity",
+                Type = OptionType.Numeric,
+                MinValue = 0,
+                MaxValue = 100,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Controls,
+                SettingKey = "MouseSensitivity"
+            });
+            controlsOptions.Add(new OptionItem
+            {
+                Name = "Invert Mouse Y",
+                Type = OptionType.Boolean,
+                MinValue = 0,
+                MaxValue = 1,
+                GameSettings = _gameSettings,
+                Category = OptionsCategory.Controls,
+                SettingKey = "InvertMouseY"
+            });
+            optionsByCategory[OptionsCategory.Controls] = controlsOptions;
+
+            return optionsByCategory;
         }
 
         /// <summary>
@@ -6084,9 +6803,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // Based on daorigins.exe: Options are organized by category with different types of controls
             OptionsCategory currentCategory = (OptionsCategory)_optionsMenuSelectedCategoryIndex;
 
-            // Create options structure (simplified - would normally get from game settings)
-            // TODO: Integrate with actual game settings system
-            // For now, create default options structure
+            // Create options structure from game settings
+            // Based on daorigins.exe: Options menu reads all options from game settings system
             var optionsByCategory = CreateDefaultOptions();
 
             if (!optionsByCategory.ContainsKey(currentCategory))
