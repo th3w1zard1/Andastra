@@ -4463,7 +4463,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Original implementation: Iterates through vertex buffer and finds min/max positions
         /// This is a fallback method when MDL model bounds are not available
         /// Note: Vertex format may vary, so this method attempts to extract position data from common vertex formats
-        /// 
+        ///
         /// Implementation details:
         /// - Tries multiple vertex formats based on stride and common patterns
         /// - Supports: Position, PositionNormal, PositionNormalTexture, PositionColor, PositionColorTexture
@@ -4472,6 +4472,55 @@ namespace Andastra.Runtime.Games.Eclipse
         /// - Based on daorigins.exe: 0x004a2b80 (vertex buffer bounds calculation)
         /// - Based on DragonAge2.exe: 0x004b1c40 (enhanced vertex format detection)
         /// </remarks>
+
+        // Common vertex format structs for bounds calculation
+        // Based on daorigins.exe/DragonAge2.exe: Vertex formats used in Eclipse engine
+
+        // VertexPosition: Position only (12 bytes: 3 floats)
+        private struct VertexPosition
+        {
+            public Vector3 Position;
+        }
+
+        // VertexPositionNormal: Position + Normal (24 bytes: 6 floats)
+        private struct VertexPositionNormal
+        {
+            public Vector3 Position;
+            public Vector3 Normal;
+        }
+
+        // VertexPositionNormalTexture: Position + Normal + TextureCoordinate (32 bytes: 8 floats)
+        private struct VertexPositionNormalTexture
+        {
+            public Vector3 Position;
+            public Vector3 Normal;
+            public Vector2 TexCoord;
+        }
+
+        // VertexPositionColor: Position + Color (16 bytes: 3 floats + 4 bytes color)
+        private struct VertexPositionColor
+        {
+            public Vector3 Position;
+            public uint Color; // Packed color as uint
+        }
+
+        // VertexPositionColorTexture: Position + Color + TextureCoordinate (24 bytes: 3 floats + 4 bytes color + 2 floats)
+        private struct VertexPositionColorTexture
+        {
+            public Vector3 Position;
+            public uint Color; // Packed color as uint
+            public Vector2 TexCoord;
+        }
+
+        // VertexPositionNormalTextureColor: Position + Normal + TextureCoordinate + Color (36 bytes)
+        private struct VertexPositionNormalTextureColor
+        {
+            public Vector3 Position;
+            public Vector3 Normal;
+            public Vector2 TexCoord;
+            public uint Color; // Packed color as uint
+        }
+
         private Vector3 CalculateBoundsFromVertexBuffer(IVertexBuffer vertexBuffer)
         {
             if (vertexBuffer == null || vertexBuffer.VertexCount == 0)
@@ -4484,54 +4533,6 @@ namespace Andastra.Runtime.Games.Eclipse
                 int vertexCount = vertexBuffer.VertexCount;
                 int vertexStride = vertexBuffer.VertexStride;
 
-                // Common vertex format structs for bounds calculation
-                // Based on daorigins.exe/DragonAge2.exe: Vertex formats used in Eclipse engine
-                
-                // VertexPosition: Position only (12 bytes: 3 floats)
-                struct VertexPosition
-                {
-                    public Vector3 Position;
-                }
-
-                // VertexPositionNormal: Position + Normal (24 bytes: 6 floats)
-                struct VertexPositionNormal
-                {
-                    public Vector3 Position;
-                    public Vector3 Normal;
-                }
-
-                // VertexPositionNormalTexture: Position + Normal + TextureCoordinate (32 bytes: 8 floats)
-                struct VertexPositionNormalTexture
-                {
-                    public Vector3 Position;
-                    public Vector3 Normal;
-                    public Vector2 TexCoord;
-                }
-
-                // VertexPositionColor: Position + Color (16 bytes: 3 floats + 4 bytes color)
-                struct VertexPositionColor
-                {
-                    public Vector3 Position;
-                    public uint Color; // Packed color as uint
-                }
-
-                // VertexPositionColorTexture: Position + Color + TextureCoordinate (24 bytes: 3 floats + 4 bytes color + 2 floats)
-                struct VertexPositionColorTexture
-                {
-                    public Vector3 Position;
-                    public uint Color; // Packed color as uint
-                    public Vector2 TexCoord;
-                }
-
-                // VertexPositionNormalTextureColor: Position + Normal + TextureCoordinate + Color (36 bytes)
-                struct VertexPositionNormalTextureColor
-                {
-                    public Vector3 Position;
-                    public Vector3 Normal;
-                    public Vector2 TexCoord;
-                    public uint Color; // Packed color as uint
-                }
-
                 Vector3 minPos = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
                 Vector3 maxPos = new Vector3(float.MinValue, float.MinValue, float.MinValue);
                 bool foundPositions = false;
@@ -4539,14 +4540,14 @@ namespace Andastra.Runtime.Games.Eclipse
                 // Try different vertex formats based on stride
                 // Based on daorigins.exe: 0x004a2b80 - vertex format detection logic
                 // Based on DragonAge2.exe: 0x004b1c40 - enhanced format detection
-                
+
                 if (vertexStride == 12) // VertexPosition (3 floats = 12 bytes)
                 {
                     try
                     {
                         VertexPosition[] vertices = new VertexPosition[vertexCount];
                         vertexBuffer.GetData(vertices);
-                        
+
                         for (int i = 0; i < vertexCount; i++)
                         {
                             Vector3 pos = vertices[i].Position;
@@ -4570,7 +4571,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     {
                         VertexPositionColor[] vertices = new VertexPositionColor[vertexCount];
                         vertexBuffer.GetData(vertices);
-                        
+
                         for (int i = 0; i < vertexCount; i++)
                         {
                             Vector3 pos = vertices[i].Position;
@@ -4595,7 +4596,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     {
                         VertexPositionNormal[] vertices = new VertexPositionNormal[vertexCount];
                         vertexBuffer.GetData(vertices);
-                        
+
                         for (int i = 0; i < vertexCount; i++)
                         {
                             Vector3 pos = vertices[i].Position;
@@ -4615,7 +4616,7 @@ namespace Andastra.Runtime.Games.Eclipse
                         {
                             VertexPositionColorTexture[] vertices = new VertexPositionColorTexture[vertexCount];
                             vertexBuffer.GetData(vertices);
-                            
+
                             for (int i = 0; i < vertexCount; i++)
                             {
                                 Vector3 pos = vertices[i].Position;
@@ -4640,7 +4641,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     {
                         VertexPositionNormalTexture[] vertices = new VertexPositionNormalTexture[vertexCount];
                         vertexBuffer.GetData(vertices);
-                        
+
                         for (int i = 0; i < vertexCount; i++)
                         {
                             Vector3 pos = vertices[i].Position;
@@ -4664,7 +4665,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     {
                         VertexPositionNormalTextureColor[] vertices = new VertexPositionNormalTextureColor[vertexCount];
                         vertexBuffer.GetData(vertices);
-                        
+
                         for (int i = 0; i < vertexCount; i++)
                         {
                             Vector3 pos = vertices[i].Position;
@@ -4699,12 +4700,12 @@ namespace Andastra.Runtime.Games.Eclipse
                                 for (int i = 0; i < vertexCount; i++)
                                 {
                                     byte* vertexPtr = rawData + (i * vertexStride);
-                                    
+
                                     // Read position (first 3 floats = 12 bytes)
                                     float x = *(float*)(vertexPtr + 0);
                                     float y = *(float*)(vertexPtr + 4);
                                     float z = *(float*)(vertexPtr + 8);
-                                    
+
                                     Vector3 pos = new Vector3(x, y, z);
                                     if (pos.X < minPos.X) minPos.X = pos.X;
                                     if (pos.Y < minPos.Y) minPos.Y = pos.Y;
@@ -4727,7 +4728,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 if (foundPositions && minPos.X != float.MaxValue && maxPos.X != float.MinValue)
                 {
                     Vector3 boundsSize = maxPos - minPos;
-                    
+
                     // Ensure non-zero bounds (handle edge cases)
                     if (boundsSize.X > 0.0f && boundsSize.Y > 0.0f && boundsSize.Z > 0.0f)
                     {
@@ -5488,19 +5489,11 @@ namespace Andastra.Runtime.Games.Eclipse
                                             Vector3 roomCenter = room.Position;
 
                                             // Get shadow map and light space matrix for soft shadow calculations
-                                            // Shadow maps are rendered in RenderShadowMaps() and stored in _shadowMaps
+                                            // Shadow maps are rendered in RenderShadowMaps() and stored in _shadowMaps or _cubeShadowMaps
+                                            // Based on daorigins.exe/DragonAge2.exe: Shadow maps are sampled as textures for depth comparison
                                             IntPtr shadowMap = IntPtr.Zero;
                                             Matrix4x4 lightSpaceMatrix = Matrix4x4.Identity;
-
-                                            // Try to get shadow map for this light if available
-                                            if (light.CastShadows && _shadowMaps.ContainsKey(light.LightId))
-                                            {
-                                                // Shadow map is available - extract texture handle for soft shadow calculations
-                                                // Based on daorigins.exe/DragonAge2.exe: Shadow maps are sampled as textures for depth comparison
-                                                IRenderTarget shadowMapRenderTarget = _shadowMaps[light.LightId];
-                                                shadowMap = GetShadowMapTextureHandle(shadowMapRenderTarget);
-                                                lightSpaceMatrix = light.ShadowLightSpaceMatrix;
-                                            }
+                                            GetShadowMapInfo(light, out shadowMap, out lightSpaceMatrix);
 
                                             // Calculate surface normal for room (approximate as up vector)
                                             // In a full implementation, we would use the actual surface normal at the sampling point
@@ -8411,19 +8404,11 @@ namespace Andastra.Runtime.Games.Eclipse
                                             Vector3 entityPosition = position;
 
                                             // Get shadow map and light space matrix for soft shadow calculations
-                                            // Shadow maps are rendered in RenderShadowMaps() and stored in _shadowMaps
+                                            // Shadow maps are rendered in RenderShadowMaps() and stored in _shadowMaps or _cubeShadowMaps
+                                            // Based on daorigins.exe/DragonAge2.exe: Shadow maps are sampled as textures for depth comparison
                                             IntPtr shadowMap = IntPtr.Zero;
                                             Matrix4x4 lightSpaceMatrix = Matrix4x4.Identity;
-
-                                            // Try to get shadow map for this light if available
-                                            if (light.CastShadows && _shadowMaps.ContainsKey(light.LightId))
-                                            {
-                                                // Shadow map is available - extract texture handle for soft shadow calculations
-                                                // Based on daorigins.exe/DragonAge2.exe: Shadow maps are sampled as textures for depth comparison
-                                                IRenderTarget shadowMapRenderTarget = _shadowMaps[light.LightId];
-                                                shadowMap = GetShadowMapTextureHandle(shadowMapRenderTarget);
-                                                lightSpaceMatrix = light.ShadowLightSpaceMatrix;
-                                            }
+                                            GetShadowMapInfo(light, out shadowMap, out lightSpaceMatrix);
 
                                             // Calculate surface normal for entity (approximate as up vector)
                                             // In a full implementation, we would use the actual surface normal at the sampling point
@@ -14170,10 +14155,9 @@ technique ColorGrading
             // TODO: STUB - Full DXT decompression not implemented
             return null;
         }
-    }
 
-    /// <summary>
-    /// Represents a debris piece generated from destroyed geometry.
+        /// <summary>
+        /// Represents a debris piece generated from destroyed geometry.
         /// </summary>
         /// <remarks>
         /// Based on daorigins.exe/DragonAge2.exe: Debris pieces are physics objects created from destroyed geometry.
