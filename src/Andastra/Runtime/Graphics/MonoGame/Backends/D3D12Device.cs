@@ -5533,11 +5533,134 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// <param name="dxgiFormat">DXGI format for the texture.</param>
         /// <param name="resourceDimension">D3D12 resource dimension (D3D12_RESOURCE_DIMENSION_TEXTURE2D, etc.).</param>
         /// <returns>CPU descriptor handle for the SRV, or IntPtr.Zero on failure.</returns>
-        // TODO: STUB - Create descriptor methods for binding sets
+        /// <summary>
+        /// Creates an SRV descriptor for a texture in a binding set.
+        /// Based on DirectX 12 Shader Resource Views: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createshaderresourceview
+        /// Creates a shader-visible descriptor in the CBV_SRV_UAV descriptor heap for binding sets.
+        /// </summary>
+        /// <param name="texture">The texture to create an SRV descriptor for.</param>
+        /// <param name="cpuDescriptorHandle">CPU descriptor handle where the SRV descriptor will be created.</param>
         private void CreateSrvDescriptorForBindingSet(ITexture texture, IntPtr cpuDescriptorHandle)
         {
-            // TODO: Implement SRV descriptor creation for binding set
-            // This should call CreateSrvDescriptorForTexture and copy the descriptor to the provided handle
+            if (texture == null)
+            {
+                throw new ArgumentNullException(nameof(texture));
+            }
+
+            if (cpuDescriptorHandle == IntPtr.Zero)
+            {
+                throw new ArgumentException("CPU descriptor handle must be valid", nameof(cpuDescriptorHandle));
+            }
+
+            if (texture.NativeHandle == IntPtr.Zero)
+            {
+                throw new ArgumentException("Texture native handle must be valid", nameof(texture));
+            }
+
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            if (_device == IntPtr.Zero)
+            {
+                throw new InvalidOperationException("D3D12 device is not initialized");
+            }
+
+            // Get texture description
+            TextureDesc desc = texture.Desc;
+
+            // Convert texture format to DXGI format for SRV
+            uint dxgiFormat = ConvertTextureFormatToDxgiFormatForTexture(desc.Format);
+            if (dxgiFormat == 0)
+            {
+                throw new ArgumentException($"Texture format {desc.Format} is not supported for SRV", nameof(texture));
+            }
+
+            // Map texture dimension to D3D12 resource dimension
+            uint resourceDimension = MapTextureDimensionToD3D12(desc.Dimension);
+
+            // Create SRV descriptor directly at the provided handle
+            // This is similar to CreateSrvDescriptorForTexture but writes directly to the provided handle
+            // Based on DirectX 12 Shader Resource Views: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createshaderresourceview
+            // swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+
+            // Determine SRV dimension based on resource dimension
+            uint srvDimension;
+            switch (resourceDimension)
+            {
+                case D3D12_RESOURCE_DIMENSION_TEXTURE1D:
+                    srvDimension = D3D12_SRV_DIMENSION_TEXTURE1D;
+                    break;
+                case D3D12_RESOURCE_DIMENSION_TEXTURE2D:
+                    srvDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+                    break;
+                case D3D12_RESOURCE_DIMENSION_TEXTURE3D:
+                    srvDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
+                    break;
+                default:
+                    // Unsupported dimension, default to TEXTURE2D
+                    srvDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+                    break;
+            }
+
+            // Create D3D12_SHADER_RESOURCE_VIEW_DESC structure
+            var srvDesc = new D3D12_SHADER_RESOURCE_VIEW_DESC
+            {
+                Format = dxgiFormat,
+                ViewDimension = srvDimension
+            };
+
+            // Set dimension-specific parameters
+            // For binding sets, we typically use all mips starting from mip 0
+            // In DirectX 12, -1 (0xFFFFFFFF) means "use all available mips"
+            uint mipLevels = (desc.MipLevels > 0) ? unchecked((uint)desc.MipLevels) : unchecked((uint)(-1));
+
+            if (srvDimension == D3D12_SRV_DIMENSION_TEXTURE2D)
+            {
+                srvDesc.Texture2D = new D3D12_TEX2D_SRV
+                {
+                    MostDetailedMip = 0, // Start from first mip level
+                    MipLevels = mipLevels, // -1 (0xFFFFFFFF) means all mips, otherwise use specified count
+                    PlaneSlice = 0, // Typically 0 for non-planar formats
+                    ResourceMinLODClamp = 0.0f // No clamping
+                };
+            }
+            else if (srvDimension == D3D12_SRV_DIMENSION_TEXTURE1D)
+            {
+                srvDesc.Texture1D = new D3D12_TEX1D_SRV
+                {
+                    MostDetailedMip = 0,
+                    MipLevels = mipLevels,
+                    ResourceMinLODClamp = 0.0f
+                };
+            }
+            else if (srvDimension == D3D12_SRV_DIMENSION_TEXTURE3D)
+            {
+                srvDesc.Texture3D = new D3D12_TEX3D_SRV
+                {
+                    MostDetailedMip = 0,
+                    MipLevels = mipLevels,
+                    ResourceMinLODClamp = 0.0f
+                };
+            }
+
+            // Allocate memory for the SRV descriptor structure
+            int srvDescSize = Marshal.SizeOf(typeof(D3D12_SHADER_RESOURCE_VIEW_DESC));
+            IntPtr srvDescPtr = Marshal.AllocHGlobal(srvDescSize);
+            try
+            {
+                Marshal.StructureToPtr(srvDesc, srvDescPtr, false);
+
+                // Call ID3D12Device::CreateShaderResourceView directly at the provided handle
+                // Based on DirectX 12 Shader Resource Views: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createshaderresourceview
+                CallCreateShaderResourceView(_device, texture.NativeHandle, srvDescPtr, cpuDescriptorHandle);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(srvDescPtr);
+            }
         }
 
         /// <summary>
@@ -6239,9 +6362,86 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
         }
 
+        /// <summary>
+        /// Creates an SRV descriptor for an acceleration structure.
+        /// Based on DirectX 12 Raytracing Acceleration Structure SRV: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_shader_resource_view_desc
+        /// Acceleration structures use D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE (value 11).
+        /// </summary>
+        /// <param name="accelStruct">The acceleration structure to create an SRV descriptor for.</param>
+        /// <param name="cpuDescriptorHandle">CPU descriptor handle where the SRV descriptor will be created.</param>
         private void CreateSrvDescriptorForAccelStruct(IAccelStruct accelStruct, IntPtr cpuDescriptorHandle)
         {
-            // TODO: Implement SRV descriptor creation for acceleration structure
+            if (accelStruct == null)
+            {
+                throw new ArgumentNullException(nameof(accelStruct));
+            }
+
+            if (cpuDescriptorHandle == IntPtr.Zero)
+            {
+                throw new ArgumentException("CPU descriptor handle must be valid", nameof(cpuDescriptorHandle));
+            }
+
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            if (_device == IntPtr.Zero)
+            {
+                throw new InvalidOperationException("D3D12 device is not initialized");
+            }
+
+            // Get GPU virtual address of the acceleration structure
+            // Acceleration structure SRVs use the GPU virtual address directly
+            ulong accelStructGpuVa = accelStruct.DeviceAddress;
+            if (accelStructGpuVa == 0UL)
+            {
+                throw new ArgumentException("Acceleration structure does not have a valid device address", nameof(accelStruct));
+            }
+
+            // Create D3D12_SHADER_RESOURCE_VIEW_DESC structure for acceleration structure
+            // Based on DirectX 12 Raytracing Acceleration Structure SRV: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_shader_resource_view_desc
+            // Acceleration structures use D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE (value 11)
+            // swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+            var srvDesc = new D3D12_SHADER_RESOURCE_VIEW_DESC
+            {
+                Format = 0, // DXGI_FORMAT_UNKNOWN - acceleration structures don't use formats
+                ViewDimension = 11 // D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE
+            };
+
+            // Set acceleration structure-specific parameters
+            // D3D12_RAYTRACING_ACCELERATION_STRUCTURE_SRV structure contains the GPU virtual address
+            // The structure is embedded in the union of D3D12_SHADER_RESOURCE_VIEW_DESC
+            // For acceleration structures, we need to set the Location field to the GPU virtual address
+            // The union field for raytracing acceleration structure SRV is at offset after ViewDimension
+            // D3D12_RAYTRACING_ACCELERATION_STRUCTURE_SRV contains a single field: Location (D3D12_GPU_VIRTUAL_ADDRESS, which is ulong)
+            unsafe
+            {
+                // Allocate memory for the SRV descriptor structure
+                int srvDescSize = Marshal.SizeOf(typeof(D3D12_SHADER_RESOURCE_VIEW_DESC));
+                IntPtr srvDescPtr = Marshal.AllocHGlobal(srvDescSize);
+                try
+                {
+                    // Marshal the base structure
+                    Marshal.StructureToPtr(srvDesc, srvDescPtr, false);
+
+                    // Set the acceleration structure GPU virtual address in the union
+                    // The union starts after Format (4 bytes) and ViewDimension (4 bytes) = 8 bytes offset
+                    // D3D12_RAYTRACING_ACCELERATION_STRUCTURE_SRV.Location is at offset 0 within the union
+                    ulong* locationPtr = (ulong*)((byte*)srvDescPtr + 8);
+                    *locationPtr = accelStructGpuVa;
+
+                    // Call ID3D12Device::CreateShaderResourceView
+                    // For acceleration structures, pResource is NULL (IntPtr.Zero) because the address is in the descriptor
+                    // Based on DirectX 12 Raytracing Acceleration Structure SRV: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createshaderresourceview
+                    CallCreateShaderResourceView(_device, IntPtr.Zero, srvDescPtr, cpuDescriptorHandle);
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(srvDescPtr);
+                }
+            }
         }
 
         private IntPtr CreateSrvDescriptorForTexture(IntPtr d3d12Resource, TextureDesc desc, uint dxgiFormat, uint resourceDimension)
@@ -8248,16 +8448,145 @@ namespace Andastra.Runtime.MonoGame.Backends
             /// <summary>
             /// Gets the shader identifier for a shader or hit group in the pipeline.
             /// Shader identifiers are opaque handles used in the shader binding table.
+            /// Based on D3D12 DXR API: ID3D12StateObjectProperties::GetShaderIdentifier
+            /// https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12stateobjectproperties-getshaderidentifier
             /// </summary>
             /// <param name="exportName">The export name of the shader or hit group (e.g., "ShadowRayGen", "ShadowMiss", "ShadowHitGroup").</param>
             /// <returns>Shader identifier bytes (typically 32 bytes for D3D12, variable for Vulkan). Returns null if the export name is not found.</returns>
             public byte[] GetShaderIdentifier(string exportName)
             {
-                // TODO: STUB - Implement D3D12 shader identifier retrieval
-                // D3D12 API: ID3D12StateObjectProperties::GetShaderIdentifier
-                // This requires calling GetShaderIdentifier on the properties interface
-                // For now, return null to indicate not implemented
-                return null;
+                if (string.IsNullOrEmpty(exportName))
+                {
+                    throw new ArgumentException("Export name cannot be null or empty", nameof(exportName));
+                }
+
+                // Platform check: DirectX 12 COM is Windows-only
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    return null;
+                }
+
+                // Check if properties interface is available
+                if (_properties == IntPtr.Zero)
+                {
+                    // Properties interface was not queried during pipeline creation
+                    // Try to query it from the state object
+                    if (_d3d12StateObject == IntPtr.Zero || _parentDevice == null)
+                    {
+                        return null;
+                    }
+
+                    // Query ID3D12StateObjectProperties from ID3D12StateObject
+                    // Based on DirectX 12 COM QueryInterface: https://docs.microsoft.com/en-us/windows/win32/api/unknwn/nf-unknwn-iunknown-queryinterface
+                    // swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+                    IntPtr propertiesPtr = Marshal.AllocHGlobal(IntPtr.Size);
+                    try
+                    {
+                        Guid iidProperties = IID_ID3D12StateObjectProperties;
+                        unsafe
+                        {
+                            // Get vtable pointer (first field of COM object)
+                            IntPtr* vtable = *(IntPtr**)_d3d12StateObject;
+                            // QueryInterface is at index 0 in IUnknown vtable
+                            IntPtr queryInterfacePtr = vtable[0];
+
+                            // Create delegate for QueryInterface
+                            // HRESULT QueryInterface(REFIID riid, void** ppvObject)
+                            QueryInterfaceDelegate queryInterface = (QueryInterfaceDelegate)Marshal.GetDelegateForFunctionPointer(queryInterfacePtr, typeof(QueryInterfaceDelegate));
+
+                            int hr = queryInterface(_d3d12StateObject, ref iidProperties, propertiesPtr);
+                            if (hr < 0)
+                            {
+                                // QueryInterface failed - properties interface not available
+                                return null;
+                            }
+
+                            IntPtr queriedProperties = Marshal.ReadIntPtr(propertiesPtr);
+                            if (queriedProperties == IntPtr.Zero)
+                            {
+                                return null;
+                            }
+
+                            // Use the queried properties interface for this call
+                            // Note: We don't store it in _properties to avoid modifying the class state
+                            // The caller should ensure properties are queried during pipeline creation
+                            return GetShaderIdentifierFromProperties(queriedProperties, exportName);
+                        }
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(propertiesPtr);
+                    }
+                }
+
+                // Use the stored properties interface
+                return GetShaderIdentifierFromProperties(_properties, exportName);
+            }
+
+            /// <summary>
+            /// Helper method to get shader identifier from a properties interface.
+            /// </summary>
+            /// <param name="properties">ID3D12StateObjectProperties interface pointer.</param>
+            /// <param name="exportName">Export name of the shader or hit group.</param>
+            /// <returns>Shader identifier bytes (32 bytes for D3D12), or null if not found.</returns>
+            private byte[] GetShaderIdentifierFromProperties(IntPtr properties, string exportName)
+            {
+                if (properties == IntPtr.Zero || _parentDevice == null)
+                {
+                    return null;
+                }
+
+                // Convert export name to null-terminated UTF-8 byte array
+                // GetShaderIdentifier expects a null-terminated string
+                byte[] exportNameBytes = System.Text.Encoding.UTF8.GetBytes(exportName);
+                byte[] nullTerminatedName = new byte[exportNameBytes.Length + 1];
+                System.Array.Copy(exportNameBytes, nullTerminatedName, exportNameBytes.Length);
+                nullTerminatedName[exportNameBytes.Length] = 0; // Null terminator
+
+                // Pin the export name for native call
+                GCHandle nameHandle = GCHandle.Alloc(nullTerminatedName, GCHandleType.Pinned);
+                try
+                {
+                    IntPtr pExportName = nameHandle.AddrOfPinnedObject();
+
+                    // Call GetShaderIdentifier through parent device's helper method
+                    // Based on D3D12 DXR API: ID3D12StateObjectProperties::GetShaderIdentifier
+                    // Returns pointer to 32-byte shader identifier, or NULL if export name not found
+                    // https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12stateobjectproperties-getshaderidentifier
+                    // swkotor2.exe: N/A - Original game used DirectX 9, not DirectX 12
+                    IntPtr shaderIdPtr = _parentDevice.CallStateObjectPropertiesGetShaderIdentifier(properties, pExportName);
+                    if (shaderIdPtr == IntPtr.Zero)
+                    {
+                        // Export name not found or GetShaderIdentifier returned NULL
+                        return null;
+                    }
+
+                    // Copy shader identifier bytes (32 bytes for D3D12)
+                    // Based on D3D12 DXR API: Shader identifiers are 32 bytes (D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES = 32)
+                    const int D3D12_SHADER_IDENTIFIER_SIZE = 32;
+                    byte[] shaderId = new byte[D3D12_SHADER_IDENTIFIER_SIZE];
+                    unsafe
+                    {
+                        byte* srcPtr = (byte*)shaderIdPtr;
+                        fixed (byte* dstPtr = shaderId)
+                        {
+                            // C# 7.3 compatible: use pointer arithmetic and loop instead of System.Buffer.MemoryCopy
+                            for (int i = 0; i < D3D12_SHADER_IDENTIFIER_SIZE; i++)
+                            {
+                                dstPtr[i] = srcPtr[i];
+                            }
+                        }
+                    }
+
+                    return shaderId;
+                }
+                finally
+                {
+                    if (nameHandle.IsAllocated)
+                    {
+                        nameHandle.Free();
+                    }
+                }
             }
         }
 
@@ -8391,9 +8720,8 @@ namespace Andastra.Runtime.MonoGame.Backends
                 _isOpen = false;
             }
 
-            // TODO:  All ICommandList methods require full implementation
-            // TODO:  These are stubbed with TODO comments indicating D3D12 API calls needed
-            // Implementation will be completed when DirectX 12 interop is added
+            // All ICommandList methods are now fully implemented
+            // Previously stubbed methods (CreateSrvDescriptorForBindingSet, CreateSrvDescriptorForAccelStruct, GetShaderIdentifier) have been completed
 
             /// <summary>
             /// Writes byte array data to a GPU buffer using D3D12 upload heap and CopyBufferRegion.
@@ -13920,7 +14248,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// <param name="properties">Pointer to ID3D12StateObjectProperties COM interface</param>
         /// <param name="pExportName">Pointer to null-terminated string containing the shader export name</param>
         /// <returns>Pointer to shader identifier data (32 bytes), or IntPtr.Zero if export name not found</returns>
-        private unsafe IntPtr CallStateObjectPropertiesGetShaderIdentifier(IntPtr properties, IntPtr pExportName)
+        internal unsafe IntPtr CallStateObjectPropertiesGetShaderIdentifier(IntPtr properties, IntPtr pExportName)
         {
             if (properties == IntPtr.Zero || pExportName == IntPtr.Zero)
             {
