@@ -5730,7 +5730,7 @@ namespace Andastra.Runtime.Games.Eclipse
                                     var mgEffect = effectField.GetValue(monoGameEffect) as Microsoft.Xna.Framework.Graphics.BasicEffect;
                                     if (mgEffect != null)
                                     {
-                                        Microsoft.Xna.Framework.Graphics.DirectionalLight directionalLight;
+                                        Microsoft.Xna.Framework.Graphics.DirectionalLight directionalLight = mgEffect.DirectionalLight0; // Default to slot 0
 
                                         // Select which DirectionalLight slot to use (0, 1, or 2)
                                         switch (lightsApplied)
@@ -7202,10 +7202,10 @@ namespace Andastra.Runtime.Games.Eclipse
                     // Use cached bounding volume from MDL for frustum test
                     // Transform bounding sphere center from model space to world space
                     // Based on daorigins.exe/DragonAge2.exe: Bounding volumes are in model space, must be transformed to world space
-                    float rotationRadians = (float)(staticObject.Rotation * Math.PI / 180.0);
-                    Matrix4x4 rotationMatrix = Matrix4x4.CreateRotationY(rotationRadians);
-                    Matrix4x4 translationMatrix = Matrix4x4.CreateTranslation(staticObject.Position);
-                    Matrix4x4 worldMatrix = rotationMatrix * translationMatrix;
+                    float staticObjectRotationRadians = (float)(staticObject.Rotation * Math.PI / 180.0);
+                    Matrix4x4 staticObjectRotationMatrix = Matrix4x4.CreateRotationY(staticObjectRotationRadians);
+                    Matrix4x4 staticObjectTranslationMatrix = Matrix4x4.CreateTranslation(staticObject.Position);
+                    Matrix4x4 staticObjectWorldMatrix = staticObjectRotationMatrix * staticObjectTranslationMatrix;
 
                     // Calculate bounding sphere center in model space (center of bounding box)
                     Vector3 modelSpaceCenter = new Vector3(
@@ -7215,7 +7215,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     );
 
                     // Transform center to world space
-                    Vector3 worldSpaceCenter = Vector3.Transform(modelSpaceCenter, worldMatrix);
+                    Vector3 worldSpaceCenter = Vector3.Transform(modelSpaceCenter, staticObjectWorldMatrix);
 
                     // Use the larger of MDL radius or computed radius from bounding box for conservative culling
                     Vector3 boundingBoxSize = boundingVolume.BMax - boundingVolume.BMin;
@@ -8196,7 +8196,7 @@ namespace Andastra.Runtime.Games.Eclipse
                         else
                         {
                             // Calculate from original position + displacement
-                            Vector3 originalPos = modifiedVerticesArray[vertexIndex].Position;
+                            Microsoft.Xna.Framework.Vector3 originalPos = modifiedVerticesArray[vertexIndex].Position;
                             newPosition = new Vector3(
                                 originalPos.X + modifiedVertex.Displacement.X,
                                 originalPos.Y + modifiedVertex.Displacement.Y,
@@ -8715,7 +8715,7 @@ namespace Andastra.Runtime.Games.Eclipse
                                     var mgEffect = effectField.GetValue(monoGameEffect) as Microsoft.Xna.Framework.Graphics.BasicEffect;
                                     if (mgEffect != null)
                                     {
-                                        Microsoft.Xna.Framework.Graphics.DirectionalLight directionalLight;
+                                        Microsoft.Xna.Framework.Graphics.DirectionalLight directionalLight = mgEffect.DirectionalLight0; // Default to slot 0
 
                                         // Select which DirectionalLight slot to use (0, 1, or 2)
                                         switch (lightsApplied)
@@ -8819,7 +8819,7 @@ namespace Andastra.Runtime.Games.Eclipse
                                                 directionalLight.SpecularColor = directionalLight.DiffuseColor;
                                             }
                                         }
-                                        else if (light.Type == Andastra.Runtime.Graphics.MonoGame.Enums.LightType.Area)
+                                        else if (light.Type == LightType.Area)
                                         {
                                             // Area light: comprehensive implementation with true area light rendering
                                             // Based on daorigins.exe/DragonAge2.exe: Area lights use multiple samples and soft shadows
@@ -8919,7 +8919,7 @@ namespace Andastra.Runtime.Games.Eclipse
             }
 
             IRoomMeshRenderer roomMeshRenderer = _renderContext.RoomMeshRenderer;
-            IGraphicsDevice graphicsDevice = _renderContext.GraphicsDevice;
+            IGraphicsDevice contextGraphicsDevice = _renderContext.GraphicsDevice;
 
             // Get or load entity model mesh data
             IRoomMeshData entityMeshData;
@@ -8951,8 +8951,8 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Set up rendering states
             // Eclipse entities use depth testing and back-face culling
-            graphicsDevice.SetDepthStencilState(graphicsDevice.CreateDepthStencilState());
-            graphicsDevice.SetRasterizerState(graphicsDevice.CreateRasterizerState());
+            contextGraphicsDevice.SetDepthStencilState(contextGraphicsDevice.CreateDepthStencilState());
+            contextGraphicsDevice.SetRasterizerState(contextGraphicsDevice.CreateRasterizerState());
 
             // Set up blend state for opacity/alpha blending if needed
             // Based on swkotor2.exe: Entities with opacity < 1.0 use alpha blending
@@ -8965,7 +8965,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 // - Color: SourceAlpha * SourceColor + InverseSourceAlpha * DestinationColor
                 // - Alpha: SourceAlpha * SourceAlpha + InverseSourceAlpha * DestinationAlpha
                 // Based on swkotor2.exe: Standard alpha blending uses D3DBLEND_SRCALPHA and D3DBLEND_INVSRCALPHA
-                IBlendState blendState = graphicsDevice.CreateBlendState();
+                IBlendState blendState = contextGraphicsDevice.CreateBlendState();
                 blendState.BlendEnable = true;
                 blendState.ColorBlendFunction = GraphicsBlendFunction.Add;
                 blendState.ColorSourceBlend = GraphicsBlend.SourceAlpha;
@@ -8976,7 +8976,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 blendState.ColorWriteChannels = GraphicsColorWriteChannels.All;
                 blendState.BlendFactor = new GraphicsColor(255, 255, 255, 255); // White blend factor (no tinting)
                 blendState.MultiSampleMask = -1; // Enable all samples
-                graphicsDevice.SetBlendState(blendState);
+                contextGraphicsDevice.SetBlendState(blendState);
             }
             else
             {
@@ -9002,11 +9002,11 @@ namespace Andastra.Runtime.Games.Eclipse
             basicEffect.Alpha = opacity;
 
             // Set rendering states for entity geometry
-            graphicsDevice.SetSamplerState(0, graphicsDevice.CreateSamplerState());
+            contextGraphicsDevice.SetSamplerState(0, contextGraphicsDevice.CreateSamplerState());
 
             // Set vertex and index buffers
-            graphicsDevice.SetVertexBuffer(entityMeshData.VertexBuffer);
-            graphicsDevice.SetIndexBuffer(entityMeshData.IndexBuffer);
+            contextGraphicsDevice.SetVertexBuffer(entityMeshData.VertexBuffer);
+            contextGraphicsDevice.SetIndexBuffer(entityMeshData.IndexBuffer);
 
             // Apply basic effect and render
             // Eclipse would use more advanced shaders, but basic effect provides foundation
@@ -9016,8 +9016,8 @@ namespace Andastra.Runtime.Games.Eclipse
 
                 // Draw indexed primitives (triangles)
                 // Based on daorigins.exe/DragonAge2.exe: Entity geometry uses indexed triangle lists
-                graphicsDevice.DrawIndexedPrimitives(
-                    PrimitiveType.TriangleList,
+                contextGraphicsDevice.DrawIndexedPrimitives(
+                    GraphicsPrimitiveType.TriangleList,
                     0, // base vertex
                     0, // min vertex index
                     entityMeshData.IndexCount, // index count
@@ -9337,7 +9337,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     // Draw indexed primitives (triangles)
                     int primitiveCount = indexCount / 3; // 3 indices per triangle
                     graphicsDevice.DrawIndexedPrimitives(
-                        XnaPrimitiveType.TriangleList,
+                        GraphicsPrimitiveType.TriangleList,
                         0, // baseVertex
                         0, // minVertexIndex
                         vertexCount, // numVertices
@@ -10067,13 +10067,13 @@ namespace Andastra.Runtime.Games.Eclipse
                         graphicsDevice.RenderTarget = output;
                         graphicsDevice.Clear(new GraphicsColor(0, 0, 0, 0));
 
-                        ISpriteBatch spriteBatch = graphicsDevice.CreateSpriteBatch();
-                        if (spriteBatch != null && input.ColorTexture != null)
+                        ISpriteBatch fallbackSpriteBatch = graphicsDevice.CreateSpriteBatch();
+                        if (fallbackSpriteBatch != null && input.ColorTexture != null)
                         {
-                            spriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.Opaque);
+                            fallbackSpriteBatch.Begin(GraphicsSpriteSortMode.Immediate, GraphicsBlendState.Opaque);
                             GraphicsRectangle destinationRect = new GraphicsRectangle(0, 0, output.Width, output.Height);
-                            spriteBatch.Draw(input.ColorTexture, destinationRect, GraphicsColor.White);
-                            spriteBatch.End();
+                            fallbackSpriteBatch.Draw(input.ColorTexture, destinationRect, GraphicsColor.White);
+                            fallbackSpriteBatch.End();
                         }
 
                         return;
