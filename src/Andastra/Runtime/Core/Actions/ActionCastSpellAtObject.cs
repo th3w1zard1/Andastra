@@ -40,10 +40,12 @@ namespace Andastra.Runtime.Core.Actions
     ///   - "CSWClass::LoadSpellsTable: Can't load spells.2da" @ 0x007c4918
     /// - Debug: "        SpellsPerDayLeft: " @ 0x007cafe4, "KnownSpells: " @ 0x007cb010
     /// - Script hooks: "k_def_spellat01" @ 0x007c7ed4 (spell defense script example)
-    /// - Visual effect errors:
-    // TODO: /   - "CSWCAnimBase::LoadModel(): The headconjure dummy has an orientation....It shouldn't!!  The %s model needs to be fixed or else the spell visuals will not be correct." @ 0x007ce278
-    // TODO: /   - "CSWCAnimBase::LoadModel(): The handconjure dummy has an orientation....It shouldn't!!  The %s model needs to be fixed or else the spell visuals will not be correct." @ 0x007ce320
-    /// - GUI: "LBL_FORCE" @ 0x007cfc30, "LBL_FORCE_STAT" @ 0x007cfc5c, "LBL_FORCEMASTERY" @ 0x007cfd20
+            /// - Visual effect errors:
+            ///   - "CSWCAnimBase::LoadModel(): The headconjure dummy has an orientation....It shouldn't!!  The %s model needs to be fixed or else the spell visuals will not be correct." @ 0x007ce278
+            ///   - "CSWCAnimBase::LoadModel(): The handconjure dummy has an orientation....It shouldn't!!  The %s model needs to be fixed or else the spell visuals will not be correct." @ 0x007ce320
+            ///   - Fixed: headconjure and handconjure dummy nodes are forced to identity orientation (0,0,0,1) in model converters to ensure spell visuals work correctly
+            ///   - Based on swkotor2.exe: FUN_006f8590 @ 0x006f8590 checks for headconjure/handconjure nodes and validates orientation
+            /// - GUI: "LBL_FORCE" @ 0x007cfc30, "LBL_FORCE_STAT" @ 0x007cfc5c, "LBL_FORCEMASTERY" @ 0x007cfd20
     /// - "PB_FORCE%d" @ 0x007ccf6c (force progress bar format), "ForceDisplay" @ 0x007d2e70
     /// - Original implementation: Moves caster to range, faces target, plays casting animation, applies spell effects
     /// - Spell casting range: ~10.0 units (CastRange)
