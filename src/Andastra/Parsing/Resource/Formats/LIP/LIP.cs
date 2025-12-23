@@ -122,6 +122,8 @@ namespace Andastra.Parsing.Formats.LIP
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lip/lip_data.py:399-421
         // Original: def get_shape_at_time(self, time: float) -> LIPShape | None
+        // swkotor2.exe: 0x007be654 - LIP file interpolation implementation
+        // Uses transition matrix for smooth interpolation between discrete viseme shapes
         public LIPShape? GetShapeAtTime(float time)
         {
             var shapes = GetShapes(time);
@@ -134,22 +136,11 @@ namespace Andastra.Parsing.Formats.LIP
             LIPShape rightShape = shapes.Item2;
             float factor = shapes.Item3;
 
-            // Determine the appropriate shape based on interpolation factor
-            // Factor ranges from 0.0 (at left keyframe) to 1.0 (at right keyframe)
-            // Since LIPShape is a discrete enum, we select the shape we're closest to in time
-            // When factor is exactly 0.5, we prefer the left shape for consistency
-            // This matches the PyKotor reference implementation behavior
-            // TODO:  Note: True interpolation between discrete mouth shapes would require a transition matrix
-            // that defines intermediate shapes, but the time-based selection approach is standard
-            // for lip-sync data where shapes represent distinct phonemes
-            if (factor > 0.5f)
-            {
-                return rightShape;
-            }
-            else
-            {
-                return leftShape;
-            }
+            // Use transition matrix to determine interpolated shape
+            // The transition matrix defines intermediate shapes based on phoneme similarity
+            // and natural mouth movement patterns for smooth animation
+            // swkotor2.exe: Original engine uses transition-based interpolation for lip sync
+            return LIPShapeTransitionMatrix.GetInterpolatedShape(leftShape, rightShape, factor);
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/lip/lip_data.py:423-426
