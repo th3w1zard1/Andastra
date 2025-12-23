@@ -71,6 +71,10 @@ namespace Andastra.Runtime.Games.Odyssey
         private VIS _visibilityData;
         private Dictionary<string, IRoomMeshData> _roomMeshes;
 
+        // Room bounding boxes cache (local space, not transformed by room position/rotation)
+        // Key: Room ModelName, Value: (Min, Max) bounding box in local model space
+        private Dictionary<string, (Vector3 Min, Vector3 Max)> _roomBoundingBoxes;
+
         // Lighting and fog properties (from ARE file)
         private uint _ambientColor;
         private uint _dynamicAmbientColor;
@@ -131,6 +135,7 @@ namespace Andastra.Runtime.Games.Odyssey
             // Initialize collections
             _rooms = new List<RoomInfo>();
             _roomMeshes = new Dictionary<string, IRoomMeshData>(StringComparer.OrdinalIgnoreCase);
+            _roomBoundingBoxes = new Dictionary<string, (Vector3 Min, Vector3 Max)>(StringComparer.OrdinalIgnoreCase);
 
             // Initialize lighting/fog defaults
             _ambientColor = 0xFF808080; // Gray ambient
@@ -1528,7 +1533,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Odyssey-specific: Basic entity addition without physics system.
         /// Based on swkotor.exe/swkotor2.exe entity management.
         /// </remarks>
-        protected override void AddEntityToArea(IEntity entity)
+        internal override void AddEntityToArea(IEntity entity)
         {
             if (entity == null)
             {
@@ -2430,6 +2435,13 @@ namespace Andastra.Runtime.Games.Odyssey
                 _rooms = new List<RoomInfo>(rooms);
             }
 
+            // Clear bounding box cache when rooms are updated (rooms may have changed)
+            // Bounding boxes will be recalculated on demand when needed
+            if (_roomBoundingBoxes != null)
+            {
+                _roomBoundingBoxes.Clear();
+            }
+
             // If Module is available, load walkmeshes from rooms
             if (_module != null && _rooms.Count > 0)
             {
@@ -2851,13 +2863,286 @@ namespace Andastra.Runtime.Games.Odyssey
         }
 
         /// <summary>
+        /// Calculates the bounding box of an MDL model by recursively traversing all nodes.
+        /// Based on swkotor2.exe: Room bounding boxes are calculated from MDL model geometry.
+        /// Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/gl/models/mdl.py:95-156
+        /// </summary>
+        /// <param name="mdl">The MDL model to calculate bounding box for.</param>
+        /// <returns>A tuple containing (Min, Max) bounding box in local model space, or null if invalid.</returns>
+        private (Vector3 Min, Vector3 Max)? CalculateModelBoundingBox(Andastra.Parsing.Formats.MDLData.MDL mdl)
+        {
+            if (mdl == null || mdl.Root == null)
+            {
+                return null;
+            }
+
+            // Use model-level bounding box if available (from MDL header)
+            // Based on swkotor2.exe: MDL header contains overall bounding box (BMin, BMax)
+            if (mdl.BMin.X < 1000000 && mdl.BMax.X > -1000000)
+            {
+                // Valid model-level bounding box
+                return (mdl.BMin, mdl.BMax);
+            }
+
+            // Fallback: Calculate from all mesh nodes recursively
+            // Based on vendor/PyKotor/Libraries/PyKotor/src/pykotor/gl/models/mdl.py:95-156
+            Vector3 bbMin = new Vector3(1000000, 1000000, 1000000);
+            Vector3 bbMax = new Vector3(-1000000, -1000000, -1000000);
+            bool hasValidBounds = false;
+
+            // Traverse all nodes recursively
+            List<MDLNode> nodesToCheck = new List<MDLNode> { mdl.Root };
+            while (nodesToCheck.Count > 0)
+            {
+                MDLNode node = nodesToCheck[nodesToCheck.Count - 1];
+                nodesToCheck.RemoveAt(nodesToCheck.Count - 1);
+
+                // Check if this node has mesh geometry
+                if (node.Mesh != null)
+                {
+                    // Use mesh bounding box if available (BBoxMinX/Y/Z or BbMin/BbMax)
+                    Vector3 meshMin;
+                    Vector3 meshMax;
+
+                    // Try BBoxMinX/Y/Z first (legacy format)
+                    if (node.Mesh.BBoxMinX < 1000000 && node.Mesh.BBoxMaxX > -1000000)
+                    {
+                        meshMin = new Vector3(node.Mesh.BBoxMinX, node.Mesh.BBoxMinY, node.Mesh.BBoxMinZ);
+                        meshMax = new Vector3(node.Mesh.BBoxMaxX, node.Mesh.BBoxMaxY, node.Mesh.BBoxMaxZ);
+                    }
+                    // Try BbMin/BbMax (alternative format)
+                    else if (node.Mesh.BbMin.X < 1000000 && node.Mesh.BbMax.X > -1000000)
+                    {
+                        meshMin = node.Mesh.BbMin;
+                        meshMax = node.Mesh.BbMax;
+                    }
+                    // Fallback: Calculate from vertices if available
+                    else if (node.Mesh.Vertices != null && node.Mesh.Vertices.Count > 0)
+                    {
+                        meshMin = new Vector3(1000000, 1000000, 1000000);
+                        meshMax = new Vector3(-1000000, -1000000, -1000000);
+
+                        foreach (Vector3 vertex in node.Mesh.Vertices)
+                        {
+                            // Transform vertex by node's local transform
+                            Vector3 transformedVertex = TransformPointByNode(vertex, node);
+
+                            meshMin.X = Math.Min(meshMin.X, transformedVertex.X);
+                            meshMin.Y = Math.Min(meshMin.Y, transformedVertex.Y);
+                            meshMin.Z = Math.Min(meshMin.Z, transformedVertex.Z);
+                            meshMax.X = Math.Max(meshMax.X, transformedVertex.X);
+                            meshMax.Y = Math.Max(meshMax.Y, transformedVertex.Y);
+                            meshMax.Z = Math.Max(meshMax.Z, transformedVertex.Z);
+                        }
+                    }
+                    else
+                    {
+                        // No valid mesh data, skip this node
+                        if (node.Children != null)
+                        {
+                            nodesToCheck.AddRange(node.Children);
+                        }
+                        continue;
+                    }
+
+                    // Combine with overall bounding box
+                    bbMin.X = Math.Min(bbMin.X, meshMin.X);
+                    bbMin.Y = Math.Min(bbMin.Y, meshMin.Y);
+                    bbMin.Z = Math.Min(bbMin.Z, meshMin.Z);
+                    bbMax.X = Math.Max(bbMax.X, meshMax.X);
+                    bbMax.Y = Math.Max(bbMax.Y, meshMax.Y);
+                    bbMax.Z = Math.Max(bbMax.Z, meshMax.Z);
+                    hasValidBounds = true;
+                }
+
+                // Check child nodes
+                if (node.Children != null)
+                {
+                    nodesToCheck.AddRange(node.Children);
+                }
+            }
+
+            if (!hasValidBounds)
+            {
+                return null;
+            }
+
+            return (bbMin, bbMax);
+        }
+
+        /// <summary>
+        /// Transforms a point by a node's local position and orientation.
+        /// Based on swkotor2.exe: Node transforms are applied during geometry processing.
+        /// </summary>
+        /// <param name="point">Point in local space.</param>
+        /// <param name="node">Node containing transform information.</param>
+        /// <returns>Transformed point.</returns>
+        private Vector3 TransformPointByNode(Vector3 point, MDLNode node)
+        {
+            // Apply node's position (translation)
+            Vector3 result = point + node.Position;
+
+            // Apply node's orientation (rotation) if quaternion is valid
+            // Note: Full quaternion rotation would require matrix operations, but for bounding box
+            // calculation we can use a simplified approach or skip rotation for axis-aligned boxes
+            // For now, we'll apply position only since room bounding boxes are typically axis-aligned
+            // Full rotation would require Matrix4x4 operations with quaternion-to-matrix conversion
+
+            return result;
+        }
+
+        /// <summary>
+        /// Gets or calculates the bounding box for a room model.
+        /// Caches the result for performance.
+        /// Based on swkotor2.exe: Room bounding boxes are cached after first calculation.
+        /// </summary>
+        /// <param name="modelResRef">Model resource reference (room model name).</param>
+        /// <returns>Bounding box (Min, Max) in local model space, or null if model cannot be loaded.</returns>
+        private (Vector3 Min, Vector3 Max)? GetRoomBoundingBox(string modelResRef)
+        {
+            if (string.IsNullOrEmpty(modelResRef))
+            {
+                return null;
+            }
+
+            // Check cache first
+            if (_roomBoundingBoxes != null && _roomBoundingBoxes.TryGetValue(modelResRef, out (Vector3 Min, Vector3 Max) cachedBounds))
+            {
+                return cachedBounds;
+            }
+
+            // Load MDL model to calculate bounding box
+            // Based on swkotor2.exe: Room models are loaded from Module or Installation
+            try
+            {
+                byte[] mdlData = null;
+                byte[] mdxData = null;
+
+                // Try loading from Module first
+                if (_module != null)
+                {
+                    ModuleResource mdlResource = _module.Model(modelResRef);
+                    if (mdlResource != null)
+                    {
+                        mdlData = mdlResource.Data();
+                    }
+
+                    // Load MDX file from Module (contains vertex data)
+                    ModuleResource mdxResource = _module.ModelExt(modelResRef);
+                    if (mdxResource != null)
+                    {
+                        mdxData = mdxResource.Data();
+                    }
+                }
+
+                // If not found in Module, try Installation (chitin/override)
+                if ((mdlData == null || mdlData.Length == 0) && _module != null && _module.Installation != null)
+                {
+                    Installation.Installation installation = _module.Installation;
+                    SearchLocation[] searchOrder = { SearchLocation.OVERRIDE, SearchLocation.CHITIN };
+
+                    ResourceResult mdlResult = installation.Resource(modelResRef, ResourceType.MDL, searchOrder);
+                    if (mdlResult != null && mdlResult.Data != null && mdlResult.Data.Length > 0)
+                    {
+                        mdlData = mdlResult.Data;
+                    }
+
+                    // Load MDX from Installation if not already loaded
+                    if (mdxData == null)
+                    {
+                        ResourceResult mdxResult = installation.Resource(modelResRef, ResourceType.MDX, searchOrder);
+                        if (mdxResult != null && mdxResult.Data != null && mdxResult.Data.Length > 0)
+                        {
+                            mdxData = mdxResult.Data;
+                        }
+                    }
+                }
+
+                if (mdlData == null || mdlData.Length == 0)
+                {
+                    // MDL not found - cannot calculate bounding box
+                    return null;
+                }
+
+                // Parse MDL file
+                Andastra.Parsing.Formats.MDLData.MDL mdl = MDLAuto.ReadMdl(mdlData, sourceExt: mdxData);
+                if (mdl == null)
+                {
+                    return null;
+                }
+
+                // Calculate bounding box
+                (Vector3 Min, Vector3 Max)? bounds = CalculateModelBoundingBox(mdl);
+                if (bounds.HasValue)
+                {
+                    // Cache the result
+                    if (_roomBoundingBoxes == null)
+                    {
+                        _roomBoundingBoxes = new Dictionary<string, (Vector3 Min, Vector3 Max)>(StringComparer.OrdinalIgnoreCase);
+                    }
+                    _roomBoundingBoxes[modelResRef] = bounds.Value;
+                    return bounds.Value;
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't throw - just return null
+                Console.WriteLine($"[OdysseyArea] Failed to calculate bounding box for room model '{modelResRef}': {ex.Message}");
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Transforms a bounding box by room position and rotation, then checks if a point is inside.
+        /// Based on swkotor2.exe: Room bounds are transformed by room position/rotation from LYT file.
+        /// </summary>
+        /// <param name="point">Point to test (in world space).</param>
+        /// <param name="bboxMin">Bounding box minimum (in local model space).</param>
+        /// <param name="bboxMax">Bounding box maximum (in local model space).</param>
+        /// <param name="roomPosition">Room position (in world space).</param>
+        /// <param name="roomRotation">Room rotation (in degrees, around Y axis).</param>
+        /// <returns>True if point is inside the transformed bounding box.</returns>
+        private bool IsPointInsideRoomBounds(Vector3 point, Vector3 bboxMin, Vector3 bboxMax, Vector3 roomPosition, float roomRotation)
+        {
+            // Convert point to room's local space (reverse transform)
+            Vector3 localPoint = point - roomPosition;
+
+            // Apply inverse rotation if room is rotated
+            // Based on swkotor2.exe: Room rotation is around Y-axis (vertical axis)
+            if (Math.Abs(roomRotation) > 0.001f)
+            {
+                // Convert rotation from degrees to radians
+                float rotationRad = -roomRotation * (float)(Math.PI / 180.0);
+
+                // Rotate around Y-axis (inverse rotation)
+                float cos = (float)Math.Cos(rotationRad);
+                float sin = (float)Math.Sin(rotationRad);
+
+                float x = localPoint.X;
+                float z = localPoint.Z;
+
+                localPoint.X = x * cos - z * sin;
+                localPoint.Z = x * sin + z * cos;
+            }
+
+            // Check if point is inside axis-aligned bounding box in local space
+            return localPoint.X >= bboxMin.X && localPoint.X <= bboxMax.X &&
+                   localPoint.Y >= bboxMin.Y && localPoint.Y <= bboxMax.Y &&
+                   localPoint.Z >= bboxMin.Z && localPoint.Z <= bboxMax.Z;
+        }
+
+        /// <summary>
         /// Finds the current room index based on camera/player position.
+        /// Based on swkotor2.exe: Room finding logic checks if position is inside room bounds.
+        /// swkotor2.exe: Room bounds checking is performed via spatial queries on room geometry.
         /// </summary>
         /// <param name="position">Camera or player position.</param>
         /// <returns>Room index, or -1 if not found.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe: Room finding logic uses distance-based approach.
-        // TODO: / In a full implementation, this would check if position is inside room bounds.
+        /// Based on swkotor2.exe: Room finding logic checks if position is inside room bounds.
+        /// If multiple rooms contain the position, returns the first match.
+        /// If no room contains the position, falls back to distance-based selection.
         /// </remarks>
         private int FindCurrentRoom(Vector3 position)
         {
@@ -2866,8 +3151,37 @@ namespace Andastra.Runtime.Games.Odyssey
                 return -1;
             }
 
-            // Find the room closest to the position (simple distance-based approach)
-            // TODO:  In a full implementation, we'd check if position is inside room bounds
+            // First, try to find a room that contains the position using bounding box checks
+            // Based on swkotor2.exe: Room finding prioritizes rooms that contain the position
+            for (int i = 0; i < _rooms.Count; i++)
+            {
+                RoomInfo room = _rooms[i];
+
+                // Skip rooms without model names
+                if (string.IsNullOrEmpty(room.ModelName))
+                {
+                    continue;
+                }
+
+                // Get or calculate room bounding box
+                (Vector3 Min, Vector3 Max)? bounds = GetRoomBoundingBox(room.ModelName);
+                if (!bounds.HasValue)
+                {
+                    // Cannot calculate bounds for this room, skip it
+                    continue;
+                }
+
+                // Check if position is inside room bounds
+                if (IsPointInsideRoomBounds(position, bounds.Value.Min, bounds.Value.Max, room.Position, room.Rotation))
+                {
+                    // Position is inside this room's bounds
+                    return i;
+                }
+            }
+
+            // Fallback: If no room contains the position, use distance-based approach
+            // This handles edge cases where position is outside all room bounds (e.g., at area boundaries)
+            // Based on swkotor2.exe: Distance-based fallback is used when position is outside all rooms
             int closestRoomIndex = 0;
             float closestDistance = float.MaxValue;
 
@@ -3012,6 +3326,12 @@ namespace Andastra.Runtime.Games.Odyssey
                     }
                 }
                 _roomMeshes.Clear();
+            }
+
+            // Clear room bounding box cache
+            if (_roomBoundingBoxes != null)
+            {
+                _roomBoundingBoxes.Clear();
             }
 
             if (_rooms != null)

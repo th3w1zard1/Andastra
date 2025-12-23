@@ -2351,7 +2351,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// Aurora-specific: Basic entity addition without physics system.
         /// Based on nwmain.exe entity management.
         /// </remarks>
-        protected override void AddEntityToArea(IEntity entity)
+        internal override void AddEntityToArea(IEntity entity)
         {
             if (entity == null)
             {

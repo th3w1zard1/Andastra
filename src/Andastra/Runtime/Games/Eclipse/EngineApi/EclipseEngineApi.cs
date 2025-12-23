@@ -3304,8 +3304,8 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     {
                         return false;
                     }
-                    float distance = Vector3.Distance(entityTransform.Position, targetTransform.Position);
-                    return distance <= criteriaValue;
+                    float distance21 = Vector3.Distance(entityTransform.Position, targetTransform.Position);
+                    return distance21 <= criteriaValue;
 
                 case 22: // HasItem
                     // criteriaValue: Item ID or tag index

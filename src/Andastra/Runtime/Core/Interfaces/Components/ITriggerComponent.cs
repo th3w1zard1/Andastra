@@ -124,6 +124,11 @@ namespace Andastra.Runtime.Core.Interfaces.Components
         bool HasFired { get; set; }
 
         /// <summary>
+        /// Whether this trigger is an area transition (Type == 1 and has LinkedTo but no LinkedToModule).
+        /// </summary>
+        bool IsAreaTransition { get; }
+
+        /// <summary>
         /// Tests if a point is inside the trigger volume.
         /// </summary>
         bool ContainsPoint(System.Numerics.Vector3 point);

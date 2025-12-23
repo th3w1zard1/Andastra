@@ -4399,7 +4399,11 @@ namespace Andastra.Runtime.Games.Odyssey
                 // Add entity to appropriate area collection
                 // Based on swkotor2.exe: Entities are added to type-specific area collections
                 // Located via string references: Area entity collections (Creatures, Placeables, Doors, etc.)
-                odysseyArea.AddEntityToArea(entity);
+                // Note: AddEntityToArea is protected, so we use the internal method via BaseArea
+                if (odysseyArea is BaseArea baseArea)
+                {
+                    baseArea.AddEntityToArea(entity);
+                }
 
                 System.Diagnostics.Debug.WriteLine($"[OdysseySaveSerializer] SpawnDynamicEntities: Successfully spawned entity {entity.ObjectId} ({spawnedState.BlueprintResRef}) at {position}");
             }
@@ -4878,7 +4882,15 @@ namespace Andastra.Runtime.Games.Odyssey
                         destination.SetString(label, source.GetString(label) ?? "");
                         break;
                     case GFFFieldType.ResRef:
-                        destination.SetResRef(label, source.GetResRef(label) ?? "");
+                        ResRef resRefValue = source.GetResRef(label);
+                        if (resRefValue == null || resRefValue.IsBlank())
+                        {
+                            destination.SetResRef(label, ResRef.FromBlank());
+                        }
+                        else
+                        {
+                            destination.SetResRef(label, resRefValue);
+                        }
                         break;
                     case GFFFieldType.LocalizedString:
                         destination.SetLocString(label, source.GetLocString(label));

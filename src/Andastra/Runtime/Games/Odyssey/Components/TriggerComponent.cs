@@ -219,7 +219,7 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// <summary>
         /// Whether this trigger is an area transition.
         /// </summary>
-        public bool IsAreaTransition
+        public override bool IsAreaTransition
         {
             get { return Type == 1 && !string.IsNullOrEmpty(LinkedTo) && string.IsNullOrEmpty(LinkedToModule); }
         }

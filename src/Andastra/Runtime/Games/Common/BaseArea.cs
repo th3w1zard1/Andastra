@@ -551,8 +551,9 @@ namespace Andastra.Runtime.Games.Common
         /// </summary>
         /// <remarks>
         /// Engine-specific implementation: Each engine manages its own entity collections.
+        /// Made internal to allow access from save serializers and event dispatchers.
         /// </remarks>
-        protected abstract void AddEntityToArea(IEntity entity);
+        internal abstract void AddEntityToArea(IEntity entity);
 
         /// <summary>
         /// Updates area state each frame.

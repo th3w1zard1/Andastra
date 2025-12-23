@@ -214,6 +214,17 @@ namespace Andastra.Runtime.Games.Common.Components
         public virtual bool HasFired { get; set; }
 
         /// <summary>
+        /// Whether this trigger is an area transition (Type == 1 and has LinkedTo but no LinkedToModule).
+        /// </summary>
+        /// <remarks>
+        /// Common across all engines: Area transitions link to waypoints in the same module
+        /// </remarks>
+        public virtual bool IsAreaTransition
+        {
+            get { return TriggerType == 1 && !string.IsNullOrEmpty(LinkedTo) && string.IsNullOrEmpty(LinkedToModule); }
+        }
+
+        /// <summary>
         /// Tests if a point is inside the trigger volume.
         /// </summary>
         /// <remarks>
