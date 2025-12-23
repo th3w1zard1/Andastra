@@ -24,6 +24,7 @@ using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.MonoGame.Graphics.Cursor;
 using Andastra.Runtime.Engines.Odyssey.EngineApi;
+using Andastra.Runtime.Engines.Odyssey.Game;
 using Andastra.Runtime.Scripting.EngineApi;
 using Andastra.Runtime.Scripting.VM;
 using Andastra.Runtime.Core.Audio;
@@ -42,7 +43,7 @@ namespace Andastra.Runtime.Game.Core
     /// <summary>
     /// Odyssey game implementation using graphics abstraction layer.
     /// Supports both MonoGame and Stride backends.
-    // TODO: / Simplified version focused on getting menu working and game launching.
+    // TODO: Full implementation - currently a simplified version focused on getting menu working and game launching.
     /// </summary>
     /// <remarks>
     /// Odyssey Game (Graphics Abstraction Implementation):
@@ -146,6 +147,10 @@ namespace Andastra.Runtime.Game.Core
         private System.Numerics.Vector3 _mainMenuCameraHookPosition;
         private bool _mainMenuModelLoaded = false;
         private bool _gui3DRoomLoaded = false;
+        private IEntityModelRenderer _menuEntityModelRenderer;
+        private ICameraController _menuCameraController;
+        private System.Numerics.Matrix4x4 _menuViewMatrix;
+        private System.Numerics.Matrix4x4 _menuProjectionMatrix;
         private Installation _menuInstallation;
         private string _menuVariant = "mainmenu01"; // Default variant, K2 only
         private System.Numerics.Matrix4x4 _mainMenuViewMatrix;
@@ -2515,9 +2520,9 @@ namespace Andastra.Runtime.Game.Core
                 if (_world != null)
                 {
                     string savesPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Odyssey", "Saves");
-                    var gameDataManager = new Odyssey.Kotor.Data.GameDataManager(_session.Installation);
-                    var serializer = new Odyssey.Content.Save.SaveSerializer(gameDataManager);
-                    var dataProvider = new Odyssey.Content.Save.SaveDataProvider(savesPath, serializer);
+                    var gameDataManager = new Andastra.Runtime.Engines.Odyssey.Data.GameDataManager(_session.Installation);
+                    var serializer = new Andastra.Runtime.Games.Odyssey.OdysseySaveSerializer(gameDataManager);
+                    var dataProvider = new Andastra.Runtime.Content.Save.SaveDataProvider(savesPath, serializer);
                     _saveSystem = new Andastra.Runtime.Core.Save.SaveSystem(_world, dataProvider);
                     _saveSystem.SetScriptGlobals(_globals);
                     RefreshSaveList();
@@ -3200,7 +3205,7 @@ namespace Andastra.Runtime.Game.Core
                     return null;
                 }
 
-                ModuleResource mdlResource = module.Resource(modelResRef, ResourceType.MDL);
+                Andastra.Parsing.Common.ModuleResource mdlResource = module.Resource(modelResRef, ResourceType.MDL);
                 if (mdlResource == null)
                 {
                     return null;
@@ -3284,15 +3289,18 @@ namespace Andastra.Runtime.Game.Core
         [CanBeNull]
         private Andastra.Parsing.Formats.MDLData.MDL LoadMenuModel(string modelName)
         {
-            if (string.IsNullOrEmpty(modelName) || _settings.Installation == null)
+            if (string.IsNullOrEmpty(modelName) || string.IsNullOrEmpty(_settings.GamePath))
             {
                 return null;
             }
 
             try
             {
+                // Create installation from game path if needed
+                var installation = new Andastra.Parsing.Installation.Installation(_settings.GamePath);
+                
                 // Use installation resource manager to find the MDL file
-                var resourceResult = _settings.Installation.Resources.LookupResource(modelName, ResourceType.MDL);
+                var resourceResult = installation.Resources.LookupResource(modelName, ResourceType.MDL);
                 if (resourceResult == null)
                 {
                     Console.WriteLine($"[Odyssey] Could not find MDL resource: {modelName}");
@@ -3828,7 +3836,7 @@ namespace Andastra.Runtime.Game.Core
             }
 
             // Try to get conversation from ScriptHooksComponent local string
-            Kotor.Components.ScriptHooksComponent scriptsComponent = entity.GetComponent<Odyssey.Kotor.Components.ScriptHooksComponent>();
+            Andastra.Runtime.Engines.Odyssey.Components.ScriptHooksComponent scriptsComponent = entity.GetComponent<Andastra.Runtime.Engines.Odyssey.Components.ScriptHooksComponent>();
             if (scriptsComponent != null)
             {
                 string conversation = scriptsComponent.GetLocalString("Conversation");
@@ -3839,7 +3847,7 @@ namespace Andastra.Runtime.Game.Core
             }
 
             // Try to get from PlaceableComponent
-            Kotor.Components.PlaceableComponent placeableComponent = entity.GetComponent<Odyssey.Kotor.Components.PlaceableComponent>();
+            Andastra.Runtime.Games.Odyssey.Components.PlaceableComponent placeableComponent = entity.GetComponent<Andastra.Runtime.Games.Odyssey.Components.PlaceableComponent>();
             if (placeableComponent != null && !string.IsNullOrEmpty(placeableComponent.Conversation))
             {
                 return placeableComponent.Conversation;
@@ -3987,7 +3995,7 @@ namespace Andastra.Runtime.Game.Core
                         System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                     if (transitionSystem != null)
                     {
-                        var moduleTransitionSystem = transitionSystem.GetValue(_session) as Odyssey.Kotor.Game.ModuleTransitionSystem;
+                        var moduleTransitionSystem = transitionSystem.GetValue(_session) as Andastra.Runtime.Games.Odyssey.Game.ModuleTransitionSystem;
                         if (moduleTransitionSystem != null)
                         {
                             moduleTransitionSystem.TransitionThroughDoor(doorEntity, _session.PlayerEntity);
@@ -4477,7 +4485,7 @@ namespace Andastra.Runtime.Game.Core
                 return;
             }
 
-            Kotor.Dialogue.DialogueState state = _session.DialogueManager.CurrentState;
+            Andastra.Runtime.Games.Odyssey.Dialogue.DialogueState state = _session.DialogueManager.CurrentState;
             if (state == null)
             {
                 return;
@@ -4498,8 +4506,8 @@ namespace Andastra.Runtime.Game.Core
                 if (!string.IsNullOrEmpty(dialogueText))
                 {
                     // Word wrap dialogue text (simple implementation)
-                    Vector2 textPos = new Vector2(padding, dialogueBoxY + padding);
-                    _spriteBatch.DrawString(_font, dialogueText, textPosMicrosoft.Xna.Framework.Color.White);
+                    Andastra.Runtime.Graphics.Vector2 textPos = new Andastra.Runtime.Graphics.Vector2(padding, dialogueBoxY + padding);
+                    _spriteBatch.DrawString(_font, dialogueText, textPos, Color.White);
                 }
             }
 
@@ -4517,14 +4525,14 @@ namespace Andastra.Runtime.Game.Core
                     }
 
                     string replyLabel = $"[{i + 1}] {replyText}";
-                    Vector2 replyPos = new Vector2(padding, replyY + (i * 20));
-                    _spriteBatch.DrawString(_font, replyLabel, replyPosMicrosoft.Xna.Framework.Color.Yellow);
+                    Andastra.Runtime.Graphics.Vector2 replyPos = new Andastra.Runtime.Graphics.Vector2(padding, replyY + (i * 20));
+                    _spriteBatch.DrawString(_font, replyLabel, replyPos, Color.Yellow);
                 }
 
                 // Draw instruction text
                 string instructionText = "Press 1-9 to select reply, ESC to abort";
-                Vector2 instructionPos = new Vector2(padding, dialogueBoxY + dialogueBoxHeight - 20);
-                _spriteBatch.DrawString(_font, instructionText, instructionPosMicrosoft.Xna.Framework.Color.Gray);
+                Andastra.Runtime.Graphics.Vector2 instructionPos = new Andastra.Runtime.Graphics.Vector2(padding, dialogueBoxY + dialogueBoxHeight - 20);
+                _spriteBatch.DrawString(_font, instructionText, instructionPos, Color.Gray);
             }
         }
 
@@ -5141,7 +5149,7 @@ namespace Andastra.Runtime.Game.Core
                 foreach (var resourceId in bikResources)
                 {
                     // Add movie name (without .bik extension) to list
-                    string movieName = resourceId.ResRef;
+                    string movieName = resourceId.ResName;
                     if (!string.IsNullOrEmpty(movieName))
                     {
                         _availableMovies.Add(movieName);

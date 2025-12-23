@@ -149,6 +149,15 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         }
 
         /// <summary>
+        /// Gets the world instance.
+        /// </summary>
+        [CanBeNull]
+        public World World
+        {
+            get { return _world; }
+        }
+
+        /// <summary>
         /// Gets the cached Andastra.Parsing Module object for the currently loaded module.
         /// Returns null if no module is loaded. This provides efficient access to module resources
         /// without creating a new Module object on every access.
