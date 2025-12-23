@@ -5,6 +5,7 @@ using Stride.Core.Mathematics;
 using Stride.Engine;
 using Andastra.Runtime.Graphics.Common.PostProcessing;
 using Andastra.Runtime.Graphics.Common.Rendering;
+using Andastra.Runtime.Stride.Graphics;
 
 namespace Andastra.Runtime.Stride.PostProcessing
 {

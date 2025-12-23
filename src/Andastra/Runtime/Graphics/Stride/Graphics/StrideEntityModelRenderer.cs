@@ -13,6 +13,7 @@ using Andastra.Parsing.Formats.MDLData;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Installation;
 using Andastra.Runtime.Stride.Graphics;
+using Andastra.Runtime.Stride.Graphics;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Stride.Graphics
@@ -313,8 +314,8 @@ namespace Andastra.Runtime.Stride.Graphics
             effect.VertexColorEnabled = false;
             effect.TextureEnabled = true;
             effect.LightingEnabled = true;
-            effect.AmbientLightColor = new Vector3(0.3f, 0.3f, 0.3f);
-            effect.DiffuseColor = new Vector3(1.0f, 1.0f, 1.0f);
+            effect.AmbientLightColor = new System.Numerics.Vector3(0.3f, 0.3f, 0.3f);
+            effect.DiffuseColor = new System.Numerics.Vector3(1.0f, 1.0f, 1.0f);
             return effect;
         }
 

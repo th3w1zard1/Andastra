@@ -10,6 +10,7 @@ using Stride.Shaders.Compiler;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.PostProcessing;
 using Andastra.Runtime.Graphics.Common.Rendering;
+using Andastra.Runtime.Stride.Graphics;
 using Matrix = Stride.Core.Mathematics.Matrix;
 using Vector2 = Stride.Core.Mathematics.Vector2;
 using Vector3 = Stride.Core.Mathematics.Vector3;

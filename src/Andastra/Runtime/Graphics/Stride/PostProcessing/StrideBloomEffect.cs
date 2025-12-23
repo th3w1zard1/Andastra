@@ -8,6 +8,7 @@ using Stride.Shaders;
 using Stride.Shaders.Compiler;
 using Andastra.Runtime.Graphics.Common.PostProcessing;
 using Andastra.Runtime.Graphics.Common.Rendering;
+using Andastra.Runtime.Stride.Graphics;
 
 namespace Andastra.Runtime.Stride.PostProcessing
 {

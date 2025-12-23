@@ -3,6 +3,7 @@ using System.Numerics;
 using StrideGraphics = Stride.Graphics;
 using Stride.Core.Mathematics;
 using Andastra.Runtime.Graphics.Common.Culling;
+using Andastra.Runtime.Stride.Graphics;
 
 namespace Andastra.Runtime.Stride.Culling
 {

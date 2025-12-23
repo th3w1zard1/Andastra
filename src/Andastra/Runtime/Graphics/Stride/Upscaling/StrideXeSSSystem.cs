@@ -4,6 +4,7 @@ using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Upscaling;
 using Andastra.Runtime.Graphics.Common.Rendering;
+using Andastra.Runtime.Stride.Graphics;
 
 namespace Andastra.Runtime.Stride.Upscaling
 {
