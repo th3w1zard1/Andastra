@@ -3075,13 +3075,13 @@ namespace Andastra.Runtime.Game.Core
                 // Bottom face
                 new VertexPositionColor(new Vector3(-0.5f, -0.5f, 0), Microsoft.Xna.Framework.Color.Blue),
                 new VertexPositionColor(new Vector3(0.5f, -0.5f, 0), Microsoft.Xna.Framework.Color.Blue),
-                new VertexPositionColor(new Vector3(0.5f, 0.5f, 0)Microsoft.Xna.Framework.Color.Blue),
-                new VertexPositionColor(new Vector3(-0.5f, 0.5f, 0)Microsoft.Xna.Framework.Color.Blue),
+                new VertexPositionColor(new Vector3(0.5f, 0.5f, 0), Microsoft.Xna.Framework.Color.Blue),
+                new VertexPositionColor(new Vector3(-0.5f, 0.5f, 0), Microsoft.Xna.Framework.Color.Blue),
                 // Top face
-                new VertexPositionColor(new Vector3(-0.5f, -0.5f, 2)Microsoft.Xna.Framework.Color.Blue),
-                new VertexPositionColor(new Vector3(0.5f, -0.5f, 2)Microsoft.Xna.Framework.Color.Blue),
-                new VertexPositionColor(new Vector3(0.5f, 0.5f, 2)Microsoft.Xna.Framework.Color.Blue),
-                new VertexPositionColor(new Vector3(-0.5f, 0.5f, 2)Microsoft.Xna.Framework.Color.Blue)
+                new VertexPositionColor(new Vector3(-0.5f, -0.5f, 2), Microsoft.Xna.Framework.Color.Blue),
+                new VertexPositionColor(new Vector3(0.5f, -0.5f, 2), Microsoft.Xna.Framework.Color.Blue),
+                new VertexPositionColor(new Vector3(0.5f, 0.5f, 2), Microsoft.Xna.Framework.Color.Blue),
+                new VertexPositionColor(new Vector3(-0.5f, 0.5f, 2), Microsoft.Xna.Framework.Color.Blue)
             };
 
             short[] playerIndices = new short[]
