@@ -92,7 +92,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         {
             if (_graphicsContext != null)
             {
-                return _graphicsContext.CommandList;
+                return _graphicsContext;
             }
             return null;
         }
@@ -438,7 +438,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         {
             if (_fsrTemporalEffect == null || graphicsContext == null) return;
 
-            var commandList = graphicsContext.CommandList;
+            var commandList = graphicsContext;
             if (commandList == null) return;
 
             // Bind resources through EffectInstance.Parameters
@@ -466,7 +466,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         {
             if (_fsrTemporalEffect == null || depth == null || graphicsContext == null) return;
 
-            var commandList = graphicsContext.CommandList;
+            var commandList = graphicsContext;
             if (commandList == null) return;
 
             // Bind resources
@@ -492,7 +492,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         {
             if (_fsrTemporalEffect == null || reactivityMask == null || graphicsContext == null) return;
 
-            var commandList = graphicsContext.CommandList;
+            var commandList = graphicsContext;
             if (commandList == null) return;
 
             // Bind resources
@@ -519,7 +519,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         {
             if (_fsrTemporalEffect == null || graphicsContext == null) return;
 
-            var commandList = graphicsContext.CommandList;
+            var commandList = graphicsContext;
             if (commandList == null) return;
 
             // Bind input resources
@@ -552,7 +552,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         {
             if (_fsrEasuEffect == null || graphicsContext == null) return;
 
-            var commandList = graphicsContext.CommandList;
+            var commandList = graphicsContext;
             if (commandList == null) return;
 
             // Bind resources
@@ -577,7 +577,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         {
             if (_fsrRcasEffect == null || graphicsContext == null) return;
 
-            var commandList = graphicsContext.CommandList;
+            var commandList = graphicsContext;
             if (commandList == null) return;
 
             // Bind resources
@@ -605,7 +605,7 @@ namespace Andastra.Runtime.Stride.Upscaling
             var graphicsContext = GetGraphicsContext();
             if (graphicsContext == null) return;
 
-            var commandList = graphicsContext.CommandList;
+            var commandList = graphicsContext;
             if (commandList == null) return;
 
             // Copy current frame to history texture for next frame

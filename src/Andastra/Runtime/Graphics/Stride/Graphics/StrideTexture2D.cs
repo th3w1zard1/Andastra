@@ -41,21 +41,21 @@ namespace Andastra.Runtime.Stride.Graphics
                 colorData[i] = new Stride.Core.Mathematics.Color(data[offset], data[offset + 1], data[offset + 2], data[offset + 3]);
             }
 
-            if (_graphicsContext == null || _graphicsContext.CommandList == null)
+            if (_graphicsContext == null)
             {
-                throw new InvalidOperationException("GraphicsContext is required for Texture.SetData() but is not available. StrideTexture2D must be created with a valid GraphicsContext.");
+                throw new InvalidOperationException("CommandList is required for Texture.SetData() but is not available. StrideTexture2D must be created with a valid CommandList.");
             }
-            _texture.SetData(_graphicsContext.CommandList, colorData);
+            _texture.SetData(_graphicsContext, colorData);
         }
 
         public byte[] GetData()
         {
             var colorData = new Stride.Core.Mathematics.Color[_texture.Width * _texture.Height];
-            if (_graphicsContext == null || _graphicsContext.CommandList == null)
+            if (_graphicsContext == null)
             {
-                throw new InvalidOperationException("GraphicsContext is required for Texture.GetData() but is not available. StrideTexture2D must be created with a valid GraphicsContext.");
+                throw new InvalidOperationException("CommandList is required for Texture.GetData() but is not available. StrideTexture2D must be created with a valid CommandList.");
             }
-            _texture.GetData(_graphicsContext.CommandList, colorData);
+            _texture.GetData(_graphicsContext, colorData);
 
             var byteData = new byte[colorData.Length * 4];
             for (int i = 0; i < colorData.Length; i++)

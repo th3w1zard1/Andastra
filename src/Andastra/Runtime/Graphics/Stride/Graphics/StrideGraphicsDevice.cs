@@ -113,7 +113,7 @@ namespace Andastra.Runtime.Stride.Graphics
                 var graphicsContext = this.ImmediateContext;
                 if (graphicsContext != null)
                 {
-                    texture.SetData(graphicsContext.CommandList, colorData);
+                    texture.SetData(graphicsContext, colorData);
                 }
             }
             return new StrideTexture2D(texture, _graphicsContext);
