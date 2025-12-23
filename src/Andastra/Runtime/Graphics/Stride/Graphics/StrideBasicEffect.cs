@@ -17,7 +17,7 @@ namespace Andastra.Runtime.Stride.Graphics
     /// <summary>
     /// Stride implementation of IBasicEffect.
     /// Inherits from BaseBasicEffect to share common implementation logic.
-    /// 
+    ///
     /// Since Stride doesn't have BasicEffect like MonoGame, this implementation uses
     /// Stride's Material and EffectInstance system to provide equivalent functionality.
     /// All shader parameters (matrices, colors, textures, flags) are properly set and applied.
@@ -41,7 +41,7 @@ namespace Andastra.Runtime.Stride.Graphics
         /// <summary>
         /// Initializes the effect by creating a proper Material with MaterialDescriptor
         /// and extracting the EffectInstance from it.
-        /// 
+        ///
         /// This creates a Material that supports all BasicEffect features:
         /// - Transformation matrices (World, View, Projection)
         /// - Lighting (ambient, diffuse, specular, emissive)
@@ -49,7 +49,7 @@ namespace Andastra.Runtime.Stride.Graphics
         /// - Vertex colors
         /// - Fog
         /// - Alpha blending
-        /// 
+        ///
         /// Based on MonoGame BasicEffect API and Stride Material system.
         /// Original game: DirectX 9 fixed-function pipeline (swkotor2.exe: d3d9.dll @ 0x0080a6c0)
         /// </summary>
@@ -59,21 +59,21 @@ namespace Andastra.Runtime.Stride.Graphics
             {
                 // Create MaterialDescriptor to configure the shader features
                 var materialDescriptor = new MaterialDescriptor();
-                
+
                 // Create a material pass descriptor for the main rendering pass
                 var materialPass = new MaterialPassDescriptor();
-                
+
                 // Set up material attributes based on BasicEffect features
                 // Diffuse color and alpha
                 materialDescriptor.Attributes.Diffuse = new MaterialDiffuseMapFeature(
                     new ComputeColor(new Color4(_diffuseColor.X, _diffuseColor.Y, _diffuseColor.Z, _alpha))
                 );
-                
+
                 // Emissive color
                 materialDescriptor.Attributes.Emissive = new MaterialEmissiveMapFeature(
                     new ComputeColor(new Color3(_emissiveColor.X, _emissiveColor.Y, _emissiveColor.Z))
                 );
-                
+
                 // Specular properties (if lighting is enabled)
                 if (_lightingEnabled && _specularPower > 0.0f)
                 {
@@ -82,7 +82,7 @@ namespace Andastra.Runtime.Stride.Graphics
                         new ComputeFloat(_specularPower)
                     );
                 }
-                
+
                 // Create the Material from the descriptor
                 // In Stride, Materials are created and then built from MaterialDescriptors to generate EffectInstances
                 // Based on Stride API: Material constructor creates Material, MaterialDescriptor configures it
@@ -92,23 +92,23 @@ namespace Andastra.Runtime.Stride.Graphics
                 // The MaterialDescriptor will be used by the rendering system to build the Material
                 // and generate EffectInstances in the Material's passes
                 _material = new Material();
-                
+
                 // Note: In Stride, MaterialDescriptor is typically applied when Material is built by renderer
                 // For BasicEffect compatibility without a precompiled shader, we use ParameterCollection
                 // to manage parameters. The EffectInstance will be created with null Effect for now,
                 // and will work with the Material when it's built by the rendering system
-                
+
                 // Create parameter collection for managing shader parameters
                 // This will be used to store all BasicEffect parameters
                 _parameterCollection = new ParameterCollection();
                 InitializeParameters(_parameterCollection);
-                
+
                 // Create a basic effect instance for parameter management
                 // Since Stride doesn't have a built-in BasicEffect shader, we use
                 // a parameter collection approach that works with the Material system
                 // The EffectInstance will be properly initialized with parameters
                 _effectInstance = CreateBasicEffectInstance(_parameterCollection);
-                
+
                 // Mark parameters as dirty to ensure initial setup
                 _parametersDirty = true;
             }
@@ -122,7 +122,7 @@ namespace Andastra.Runtime.Stride.Graphics
                 _parametersDirty = true;
             }
         }
-        
+
         /// <summary>
         /// Initializes all BasicEffect parameters in the parameter collection.
         /// This sets up all the standard transformation, material, lighting, and feature parameters.
@@ -137,45 +137,47 @@ namespace Andastra.Runtime.Stride.Graphics
             parameterCollection.Set(TransformationKeys.WorldView, MatrixStride.Identity);
             parameterCollection.Set(TransformationKeys.ViewProjection, MatrixStride.Identity);
             parameterCollection.Set(TransformationKeys.WorldViewProjection, MatrixStride.Identity);
-            
+
             // Material colors - using Stride's material keys
             parameterCollection.Set(MaterialKeys.DiffuseValue, new Color4(_diffuseColor.X * _alpha, _diffuseColor.Y * _alpha, _diffuseColor.Z * _alpha, _alpha));
             parameterCollection.Set(MaterialKeys.EmissiveValue, new Color3(_emissiveColor.X, _emissiveColor.Y, _emissiveColor.Z));
             parameterCollection.Set(MaterialKeys.SpecularValue, new Color3(_specularColor.X, _specularColor.Y, _specularColor.Z));
-            parameterCollection.Set(MaterialKeys.SpecularPowerValue, _specularPower);
-            
+            // MaterialKeys.SpecularPowerValue doesn't exist in Stride API
+            // Use a custom parameter key for specular power
+            parameterCollection.Set(new ValueParameterKey<float>("SpecularPower"), _specularPower);
+
             // Lighting - using Stride's lighting keys
             parameterCollection.Set(LightingKeys.AmbientLightColor, new Color3(_ambientLightColor.X, _ambientLightColor.Y, _ambientLightColor.Z));
-            
+
             // Feature flags - custom BasicEffect parameters
             parameterCollection.Set(new ValueParameterKey<bool>("VertexColorEnabled"), _vertexColorEnabled);
             parameterCollection.Set(new ValueParameterKey<bool>("LightingEnabled"), _lightingEnabled);
             parameterCollection.Set(new ValueParameterKey<bool>("TextureEnabled"), _textureEnabled);
-            
+
             // Fog parameters - custom BasicEffect parameters
             parameterCollection.Set(new ValueParameterKey<bool>("FogEnabled"), _fogEnabled);
             parameterCollection.Set(new ValueParameterKey<Color3>("FogColor"), new Color3(_fogColor.X, _fogColor.Y, _fogColor.Z));
             parameterCollection.Set(new ValueParameterKey<float>("FogStart"), _fogStart);
             parameterCollection.Set(new ValueParameterKey<float>("FogEnd"), _fogEnd);
-            
+
             // Alpha parameter
             parameterCollection.Set(new ValueParameterKey<float>("Alpha"), _alpha);
         }
-        
+
         /// <summary>
         /// Creates a basic EffectInstance for parameter management.
         /// This EffectInstance will be used to store and set shader parameters
         /// that can be applied when rendering.
-        /// 
+        ///
         /// Since Stride doesn't have BasicEffect built-in, we create a parameter
         /// collection that can be used with custom shaders or Material passes.
-        /// 
+        ///
         /// Implementation strategy:
         /// 1. First, try to get EffectInstance from built Material passes (if Material was built)
         /// 2. If Material not built or no EffectInstance available, create one with null Effect
         /// 3. Use ParameterCollection to manage all BasicEffect parameters
         /// 4. Parameters are synchronized between ParameterCollection and EffectInstance
-        /// 
+        ///
         /// Based on Stride API: EffectInstance requires an Effect, but can be created with null
         /// for parameter management. The actual Effect will come from Material when it's built.
         /// Original game: DirectX 9 fixed-function pipeline (swkotor2.exe: d3d9.dll @ 0x0080a6c0)
@@ -186,7 +188,7 @@ namespace Andastra.Runtime.Stride.Graphics
         private EffectInstance CreateBasicEffectInstance(ParameterCollection parameterCollection)
         {
             EffectInstance effectInstance = null;
-            
+
             // Strategy 1: Try to get EffectInstance from Material passes if Material is built
             // Based on Stride API: Material.GetPasses() returns MaterialPass objects with EffectInstances
             // Materials built from MaterialDescriptor contain EffectInstances in their passes
@@ -214,13 +216,13 @@ namespace Andastra.Runtime.Stride.Graphics
                                 // Copy parameters to MaterialPass's ParameterCollection
                                 CopyParametersToParameterCollection(parameterCollection, firstPass.Parameters);
                             }
-                            
+
                             // Copy parameters from our collection to the Material's EffectInstance
                             if (effectInstance.Parameters != null && parameterCollection != null)
                             {
                                 CopyParametersToEffectInstance(parameterCollection, effectInstance);
                             }
-                            
+
                             return effectInstance;
                         }
                     }
@@ -231,24 +233,24 @@ namespace Andastra.Runtime.Stride.Graphics
                     Console.WriteLine($"[StrideBasicEffect] Could not get EffectInstance from Material passes: {ex.Message}");
                 }
             }
-            
+
             // Strategy 2: Create EffectInstance with null Effect for parameter management
             // This is a valid approach in Stride for managing parameters before Material is built
             // Based on Stride API: EffectInstance constructor accepts null Effect for parameter-only instances
             // The EffectInstance will work with ParameterCollection to manage shader parameters
             // When the Material is built, it will provide the actual Effect, and parameters will be applied
             effectInstance = new EffectInstance(null);
-            
+
             // Initialize parameters in the effect instance's parameter collection
             // Copy parameters from our collection to the effect instance
             if (effectInstance.Parameters != null && parameterCollection != null)
             {
                 CopyParametersToEffectInstance(parameterCollection, effectInstance);
             }
-            
+
             return effectInstance;
         }
-        
+
         /// <summary>
         /// Copies parameters from a ParameterCollection to an EffectInstance's Parameters.
         /// This synchronizes parameter values between the collection and the effect instance.
@@ -261,7 +263,7 @@ namespace Andastra.Runtime.Stride.Graphics
             {
                 return;
             }
-            
+
             try
             {
                 // Copy all parameters to the effect instance
@@ -297,7 +299,7 @@ namespace Andastra.Runtime.Stride.Graphics
                 Console.WriteLine($"[StrideBasicEffect] Error copying parameters to EffectInstance: {ex.Message}");
             }
         }
-        
+
         /// <summary>
         /// Copies parameters from one ParameterCollection to another.
         /// </summary>
@@ -309,7 +311,7 @@ namespace Andastra.Runtime.Stride.Graphics
             {
                 return;
             }
-            
+
             try
             {
                 // Copy all parameters from source to target
@@ -336,7 +338,7 @@ namespace Andastra.Runtime.Stride.Graphics
                 Console.WriteLine($"[StrideBasicEffect] Error copying parameters to ParameterCollection: {ex.Message}");
             }
         }
-        
+
         /// <summary>
         /// Sets a parameter in a ParameterCollection by type.
         /// </summary>
@@ -346,7 +348,7 @@ namespace Andastra.Runtime.Stride.Graphics
             {
                 return;
             }
-            
+
             try
             {
                 // Use type-specific setters based on parameter key type
@@ -390,7 +392,7 @@ namespace Andastra.Runtime.Stride.Graphics
                 Console.WriteLine($"[StrideBasicEffect] Error setting parameter '{key.Name}' in ParameterCollection: {ex.Message}");
             }
         }
-        
+
         /// <summary>
         /// Sets a parameter in an EffectInstance's Parameters collection by type.
         /// Handles different parameter types (Matrix, Vector3, Color3, Color4, float, bool, Texture).
@@ -404,38 +406,52 @@ namespace Andastra.Runtime.Stride.Graphics
             {
                 return;
             }
-            
+
             try
             {
-                // Handle different parameter types using type-specific ParameterKey<T> setters
-                // Based on Stride API: Parameters.Set<T>(ParameterKey<T> key, T value)
-                if (key.Type == typeof(MatrixStride) && value is MatrixStride)
+                // Use pattern matching to handle different parameter types correctly
+                // Based on Stride API: Parameters.Set<T>(ValueParameterKey<T> key, T value) for value types
+                // and Parameters.Set<T>(ObjectParameterKey<T> key, T value) for reference types
+                if (key is ParameterKey<MatrixStride> matrixKey && value is MatrixStride matrixValue)
                 {
-                    parameters.Set((ParameterKey<MatrixStride>)key, (MatrixStride)value);
+                    parameters.Set(matrixKey, matrixValue);
                 }
-                else if (key.Type == typeof(Color3) && value is Color3)
+                else if (key is ParameterKey<Color3> color3Key && value is Color3 color3Value)
                 {
-                    parameters.Set((ParameterKey<Color3>)key, (Color3)value);
+                    parameters.Set(color3Key, color3Value);
                 }
-                else if (key.Type == typeof(Color4) && value is Color4)
+                else if (key is ParameterKey<Color4> color4Key && value is Color4 color4Value)
                 {
-                    parameters.Set((ParameterKey<Color4>)key, (Color4)value);
+                    parameters.Set(color4Key, color4Value);
                 }
-                else if (key.Type == typeof(Vector3Stride) && value is Vector3Stride)
+                else if (key is ParameterKey<Vector3Stride> vector3Key && value is Vector3Stride vector3Value)
                 {
-                    parameters.Set((ParameterKey<Vector3Stride>)key, (Vector3Stride)value);
+                    parameters.Set(vector3Key, vector3Value);
                 }
-                else if (key.Type == typeof(float) && value is float)
+                else if (key is ParameterKey<float> floatKey && value is float floatValue)
                 {
-                    parameters.Set((ParameterKey<float>)key, (float)value);
+                    parameters.Set(floatKey, floatValue);
                 }
-                else if (key.Type == typeof(bool) && value is bool)
+                else if (key is ParameterKey<bool> boolKey && value is bool boolValue)
                 {
-                    parameters.Set((ParameterKey<bool>)key, (bool)value);
+                    parameters.Set(boolKey, boolValue);
                 }
-                else if (key.Type == typeof(Texture) && value is Texture)
+                else if (key is ParameterKey<Texture> textureKey && value is Texture textureValue)
                 {
-                    parameters.Set((ParameterKey<Texture>)key, (Texture)value);
+                    // Texture is a reference type, requires ObjectParameterKey
+                    if (textureKey is ObjectParameterKey<Texture> objectTextureKey)
+                    {
+                        parameters.Set(objectTextureKey, textureValue);
+                    }
+                    else
+                    {
+                        // If it's not an ObjectParameterKey, skip it as it requires proper key type
+                        // MaterialKeys like DiffuseMap are already ObjectParameterKey<Texture>
+                        if (textureKey == MaterialKeys.DiffuseMap)
+                        {
+                            parameters.Set((ObjectParameterKey<Texture>)textureKey, textureValue);
+                        }
+                    }
                 }
                 else
                 {
@@ -596,7 +612,7 @@ namespace Andastra.Runtime.Stride.Graphics
                 // Set material colors
                 // Note: DiffuseColor includes alpha in Stride, so we handle it specially
                 SetVector3Parameter("AmbientLightColor", _ambientLightColor);
-                
+
                 // Diffuse color with alpha - update as Color4
                 if (_parameterCollection != null)
                 {
@@ -612,7 +628,7 @@ namespace Andastra.Runtime.Stride.Graphics
                         catch (ArgumentException) { }
                     }
                 }
-                
+
                 SetVector3Parameter("EmissiveColor", _emissiveColor);
                 SetVector3Parameter("SpecularColor", _specularColor);
                 SetFloatParameter("SpecularPower", _specularPower);
@@ -707,7 +723,7 @@ namespace Andastra.Runtime.Stride.Graphics
                 if (parameterKey != null)
                 {
                     _parameterCollection.Set(parameterKey, strideMatrix);
-                    
+
                     var parameter = _effectInstance.Parameters;
                     if (parameter != null)
                     {
@@ -744,11 +760,11 @@ namespace Andastra.Runtime.Stride.Graphics
             {
                 Vector3Stride strideVector = new Vector3Stride(value.X, value.Y, value.Z);
                 Color3 color3Value = new Color3(value.X, value.Y, value.Z);
-                
+
                 // Map BasicEffect parameter names to Stride's standard keys
                 ParameterKey parameterKey = null;
                 object parameterValue = null;
-                
+
                 if (name == "AmbientLightColor")
                 {
                     parameterKey = LightingKeys.AmbientLightColor;
@@ -783,44 +799,23 @@ namespace Andastra.Runtime.Stride.Graphics
                     parameterValue = strideVector;
                 }
 
-                // Set parameter in both the parameter collection and effect instance
+                // Set parameter in the parameter collection
+                // Note: EffectInstance.Parameters.Set may have type resolution issues with non-generic ParameterKey,
+                // so we only set on ParameterCollection here. MaterialKeys are set directly elsewhere (e.g., line 612).
                 if (parameterKey != null && parameterValue != null)
                 {
-                    if (parameterKey.Type == typeof(Color3) && parameterValue is Color3)
+                    // Use pattern matching to determine the type and set appropriately
+                    if (parameterValue is Color3 color3Val && parameterKey is ParameterKey<Color3> color3Key)
                     {
-                        _parameterCollection.Set((ParameterKey<Color3>)parameterKey, (Color3)parameterValue);
-                        if (_effectInstance.Parameters != null)
-                        {
-                            try
-                            {
-                                _effectInstance.Parameters.Set((ParameterKey<Color3>)parameterKey, (Color3)parameterValue);
-                            }
-                            catch (ArgumentException) { }
-                        }
+                        _parameterCollection.Set(color3Key, color3Val);
                     }
-                    else if (parameterKey.Type == typeof(Color4) && parameterValue is Color4)
+                    else if (parameterValue is Color4 color4Val && parameterKey is ParameterKey<Color4> color4Key)
                     {
-                        _parameterCollection.Set((ParameterKey<Color4>)parameterKey, (Color4)parameterValue);
-                        if (_effectInstance.Parameters != null)
-                        {
-                            try
-                            {
-                                _effectInstance.Parameters.Set((ParameterKey<Color4>)parameterKey, (Color4)parameterValue);
-                            }
-                            catch (ArgumentException) { }
-                        }
+                        _parameterCollection.Set(color4Key, color4Val);
                     }
-                    else if (parameterKey.Type == typeof(Vector3Stride) && parameterValue is Vector3Stride)
+                    else if (parameterValue is Vector3Stride vector3Val && parameterKey is ParameterKey<Vector3Stride> vector3Key)
                     {
-                        _parameterCollection.Set((ParameterKey<Vector3Stride>)parameterKey, (Vector3Stride)parameterValue);
-                        if (_effectInstance.Parameters != null)
-                        {
-                            try
-                            {
-                                _effectInstance.Parameters.Set((ParameterKey<Vector3Stride>)parameterKey, (Vector3Stride)parameterValue);
-                            }
-                            catch (ArgumentException) { }
-                        }
+                        _parameterCollection.Set(vector3Key, vector3Val);
                     }
                 }
             }
@@ -845,10 +840,12 @@ namespace Andastra.Runtime.Stride.Graphics
             {
                 // Map BasicEffect parameter names to Stride's standard keys
                 ParameterKey<float> parameterKey = null;
-                
+
                 if (name == "SpecularPower")
                 {
-                    parameterKey = MaterialKeys.SpecularPowerValue;
+                    // MaterialKeys.SpecularPowerValue doesn't exist in Stride API
+                    // Use a custom parameter key for specular power
+                    parameterKey = new ValueParameterKey<float>("SpecularPower");
                 }
                 else if (name == "Alpha")
                 {
@@ -869,13 +866,17 @@ namespace Andastra.Runtime.Stride.Graphics
                 if (parameterKey != null)
                 {
                     _parameterCollection.Set(parameterKey, value);
-                    
+
                     var parameter = _effectInstance.Parameters;
                     if (parameter != null)
                     {
                         try
                         {
-                            parameter.Set(parameterKey, value);
+                            // For float parameters, use ValueParameterKey which is compatible with ParameterKey<float>
+                            if (parameterKey is ParameterKey<float> floatKey)
+                            {
+                                parameter.Set(floatKey, value);
+                            }
                         }
                         catch (ArgumentException)
                         {
@@ -905,10 +906,10 @@ namespace Andastra.Runtime.Stride.Graphics
             {
                 // Create parameter key for boolean feature flags
                 var parameterKey = new ValueParameterKey<bool>(name);
-                
+
                 // Set parameter in both the parameter collection and effect instance
                 _parameterCollection.Set(parameterKey, value);
-                
+
                 var parameter = _effectInstance.Parameters;
                 if (parameter != null)
                 {
@@ -947,12 +948,12 @@ namespace Andastra.Runtime.Stride.Graphics
                 {
                     // Use Stride's diffuse map key for the main texture
                     var textureKey = MaterialKeys.DiffuseMap;
-                    
+
                     // Set texture in parameter collection
                     if (texture != null)
                     {
                         _parameterCollection.Set(textureKey, texture);
-                        
+
                         var parameter = _effectInstance.Parameters;
                         if (parameter != null)
                         {
@@ -991,7 +992,7 @@ namespace Andastra.Runtime.Stride.Graphics
         /// Updates material properties based on current effect state.
         /// This configures the Material with all BasicEffect parameters,
         /// building it if necessary to create a valid EffectInstance.
-        /// 
+        ///
         /// Based on MonoGame BasicEffect material properties.
         /// Original game: DirectX 9 fixed-function materials (swkotor2.exe: d3d9.dll material states)
         /// </summary>
@@ -1006,7 +1007,7 @@ namespace Andastra.Runtime.Stride.Graphics
             {
                 // Create MaterialDescriptor with current BasicEffect state
                 var materialDescriptor = new MaterialDescriptor();
-                
+
                 // Update material diffuse color with alpha
                 var diffuseColor = new Color4(
                     _diffuseColor.X * _alpha,
@@ -1036,12 +1037,13 @@ namespace Andastra.Runtime.Stride.Graphics
                         _specularColor.Y,
                         _specularColor.Z
                     );
+                    // MaterialSpecularMapFeature constructor requires ComputeColor and ComputeFloat
                     materialDescriptor.Attributes.Specular = new MaterialSpecularMapFeature(
-                        new ComputeColor(new Color4(specularColor, 1.0f))
+                        new ComputeColor(new Color3(specularColor.R, specularColor.G, specularColor.B)),
+                        new ComputeFloat(_specularPower)
                     );
-                    materialDescriptor.Attributes.SpecularIntensity = new ComputeFloat(_specularPower);
                 }
-                
+
                 // Update texture if enabled
                 if (_textureEnabled && _texture != null)
                 {
@@ -1053,21 +1055,21 @@ namespace Andastra.Runtime.Stride.Graphics
                         );
                     }
                 }
-                
+
                 // Update Material with current BasicEffect state
                 // Based on Stride API: Materials are built by the rendering system when used
                 // We update the MaterialDescriptor configuration here, and the Material will use it
                 // when built by the renderer. The EffectInstance will be available from Material passes
                 // after the Material is built.
-                // 
+                //
                 // For immediate parameter management, we use ParameterCollection which works with
                 // both the current EffectInstance (if Material is built) and will be applied when
                 // the Material is built by the rendering system.
-                // 
+                //
                 // Original implementation: Materials are built by the rendering system during rendering
                 // Our ParameterCollection-based approach ensures parameters are ready when Material is built
                 // and can be applied to EffectInstance from Material passes when available
-                
+
                 // Try to get EffectInstance from Material passes if Material is already built
                 // This can happen if Material was built by the rendering system
                 if (_material != null && _material.Passes != null && _material.Passes.Count > 0)

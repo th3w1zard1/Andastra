@@ -4036,7 +4036,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// </remarks>
         public byte[] LoadResource(ResRef resRef, ResourceType resourceType)
         {
-            if (_resourceLoader == null || resRef == null || resRef.IsBlank)
+            if (_resourceLoader == null || resRef == null || resRef.IsBlank())
             {
                 return null;
             }
