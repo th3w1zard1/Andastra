@@ -821,7 +821,7 @@ namespace Andastra.Runtime.Stride.Upscaling
                     try
                     {
                         var commandListType = commandList.GetType();
-                        
+
                         // Try NativeCommandList first (standard Stride API)
                         var nativeProperty = commandListType.GetProperty("NativeCommandList",
                             BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
@@ -1056,30 +1056,14 @@ namespace Andastra.Runtime.Stride.Upscaling
 
             try
             {
-                // Stride Texture.NativePointer provides access to the underlying D3D12 resource
-                // For D3D12, this returns the ID3D12Resource* pointer
-                // This is the standard Stride API as used in StrideDirect3D12Backend.cs line 109
-                IntPtr nativePointer = texture.NativePointer;
-                if (nativePointer != IntPtr.Zero)
-                {
-                    return nativePointer;
-                }
-
-                // Alternative: StrideTexture2D uses NativeDeviceTexture property
-                // Check for NativeDeviceTexture as fallback (used in StrideTexture2D.cs line 28)
+                // Stride Texture native resource access via reflection
+                // For D3D12, we need to get the ID3D12Resource* pointer
+                // Stride API may use NativePointer, NativeDeviceTexture, or NativeResource depending on backend
                 var textureType = texture.GetType();
-                var nativeDeviceTextureProperty = textureType.GetProperty("NativeDeviceTexture");
-                if (nativeDeviceTextureProperty != null)
-                {
-                    var value = nativeDeviceTextureProperty.GetValue(texture);
-                    if (value is IntPtr ptr && ptr != IntPtr.Zero)
-                    {
-                        return ptr;
-                    }
-                }
-
-                // Fallback: Try to get through reflection if NativePointer is not available
-                var nativePointerProperty = textureType.GetProperty("NativePointer");
+                
+                // Try NativePointer first (used by D3D12 and Vulkan backends)
+                var nativePointerProperty = textureType.GetProperty("NativePointer",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                 if (nativePointerProperty != null)
                 {
                     var value = nativePointerProperty.GetValue(texture);
@@ -1089,8 +1073,21 @@ namespace Andastra.Runtime.Stride.Upscaling
                     }
                 }
 
-                // Alternative: Check for D3D12-specific properties
-                var nativeResourceProperty = textureType.GetProperty("NativeResource");
+                // Try NativeDeviceTexture (used by D3D11 backend and StrideTexture2D)
+                var nativeDeviceTextureProperty = textureType.GetProperty("NativeDeviceTexture",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                if (nativeDeviceTextureProperty != null)
+                {
+                    var value = nativeDeviceTextureProperty.GetValue(texture);
+                    if (value is IntPtr ptr && ptr != IntPtr.Zero)
+                    {
+                        return ptr;
+                    }
+                }
+
+                // Try NativeResource (alternative property name)
+                var nativeResourceProperty = textureType.GetProperty("NativeResource",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                 if (nativeResourceProperty != null)
                 {
                     var value = nativeResourceProperty.GetValue(texture);
@@ -1101,14 +1098,16 @@ namespace Andastra.Runtime.Stride.Upscaling
                 }
 
                 // Alternative: Check for Resource property (Stride internal)
-                var resourceProperty = textureType.GetProperty("Resource");
+                var resourceProperty = textureType.GetProperty("Resource",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                 if (resourceProperty != null)
                 {
                     var resource = resourceProperty.GetValue(texture);
                     if (resource != null)
                     {
                         var resourceType = resource.GetType();
-                        var nativePtrProperty = resourceType.GetProperty("NativePointer");
+                        var nativePtrProperty = resourceType.GetProperty("NativePointer",
+                            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                         if (nativePtrProperty != null)
                         {
                             var value = nativePtrProperty.GetValue(resource);
