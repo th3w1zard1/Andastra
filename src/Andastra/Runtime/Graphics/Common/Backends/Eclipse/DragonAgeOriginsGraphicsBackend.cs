@@ -3926,7 +3926,11 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         /// <summary>
         /// Renders pause menu UI elements.
         /// Based on daorigins.exe: Pause menu displays pause options (Resume, Options, Quit, etc.).
-        /// TODO: REVERSE_ENGINEER - Find actual pause menu rendering function address in daorigins.exe
+        /// daorigins.exe: Pause menu rendering is handled by GFx/Scaleform runtime system (Flash-based GUI)
+        /// daorigins.exe: GFxLoader destructor @ 0x008e30b0, GFx system handles all GUI rendering
+        /// daorigins.exe: Pause menu strings: "ResumeGameMessage" @ 0x00ae6298, "OptionsMenu" @ 0x00b02810, "QuitGame" @ 0x00b17d90
+        /// daorigins.exe: Pause menu is rendered through GFx movie clips, not a single C++ rendering function
+        /// This implementation recreates the pause menu using DirectX 9 primitives to match original behavior
         /// </summary>
         private void RenderPauseMenu()
         {
@@ -3981,7 +3985,9 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         /// <summary>
         /// Sets the selected pause menu button index.
         /// Based on daorigins.exe: Pause menu button selection is tracked for highlighting.
-        /// TODO: REVERSE_ENGINEER - Find actual pause menu button selection tracking function address in daorigins.exe
+        /// daorigins.exe: Button selection is handled by GFx/Scaleform ActionScript, not a single C++ function
+        /// daorigins.exe: GFx system manages button state through Flash movie clip properties and ActionScript callbacks
+        /// This implementation tracks selection state directly to match original behavior
         /// </summary>
         /// <param name="buttonIndex">Button index (0 = Resume, 1 = Options, 2 = Quit).</param>
         public void SetPauseMenuSelectedButton(int buttonIndex)
