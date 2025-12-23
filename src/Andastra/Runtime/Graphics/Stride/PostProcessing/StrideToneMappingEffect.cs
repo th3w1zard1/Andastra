@@ -6,6 +6,7 @@ using Stride.Engine;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.PostProcessing;
 using Andastra.Runtime.Graphics.Common.Rendering;
+using Andastra.Runtime.Stride.Graphics;
 using Vector2 = Stride.Core.Mathematics.Vector2;
 using Vector3 = Stride.Core.Mathematics.Vector3;
 using Vector4 = Stride.Core.Mathematics.Vector4;
@@ -239,7 +240,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
             try
             {
-                var commandList = _graphicsDevice.ImmediateContext;
+                // Use explicit type to avoid C# 7.3 inferred delegate type limitation
+                CommandList commandList = _graphicsDevice.ImmediateContext();
                 if (commandList == null)
                 {
                     return false;
@@ -479,7 +481,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
             try
             {
-                var commandList = _graphicsDevice.ImmediateContext;
+                // Use explicit type to avoid C# 7.3 inferred delegate type limitation
+                CommandList commandList = _graphicsDevice.ImmediateContext();
                 if (commandList == null)
                 {
                     Console.WriteLine("[StrideToneMapping] ImmediateContext not available");
@@ -786,7 +789,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 int size = width * height;
                 Vector4[] data = new Vector4[size];
 
-                var commandList = _graphicsDevice.ImmediateContext;
+                // Use explicit type to avoid C# 7.3 inferred delegate type limitation
+                CommandList commandList = _graphicsDevice.ImmediateContext();
                 if (commandList == null)
                 {
                     Console.WriteLine("[StrideToneMapping] ReadTextureData: ImmediateContext not available");
@@ -883,7 +887,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     return;
                 }
 
-                var commandList = _graphicsDevice.ImmediateContext;
+                // Use explicit type to avoid C# 7.3 inferred delegate type limitation
+                CommandList commandList = _graphicsDevice.ImmediateContext();
                 if (commandList == null)
                 {
                     Console.WriteLine("[StrideToneMapping] WriteTextureData: ImmediateContext not available");
