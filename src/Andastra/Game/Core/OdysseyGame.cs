@@ -1180,7 +1180,7 @@ namespace Andastra.Runtime.Game.Core
                         }
                         else if (!string.IsNullOrEmpty(_settings.GamePath))
                         {
-                            installation = new Installation(_settings.GamePath, _settings.Game == Andastra.Runtime.Core.KotorGame.K1 ? Andastra.Parsing.Common.BioWareGame.K1 : Andastra.Parsing.Common.BioWareGame.K2);
+                            installation = new Installation(_settings.GamePath);
                         }
 
                         if (installation == null)
@@ -1462,8 +1462,8 @@ namespace Andastra.Runtime.Game.Core
                 // Based on swkotor.exe and swkotor2.exe: gui3D_room is loaded to determine menu variant (K2) and for 3D rendering
                 try
                 {
-                    var gui3DRoomRes = resourceProvider.GetResource("gui3D_room", ResourceType.MDL);
-                    if (gui3DRoomRes != null)
+                    var gui3DRoomRes = resourceProvider.GetResourceBytes(new ResourceIdentifier("gui3D_room", ResourceType.MDL));
+                    if (gui3DRoomRes != null && gui3DRoomRes.Length > 0)
                     {
                         // Use MDLAuto for loading (handles both binary and ASCII formats)
                         _gui3DRoomModel = MDLAuto.Load(gui3DRoomRes);
