@@ -315,15 +315,11 @@ namespace Andastra.Tests.Runtime.TestHelpers
             float scaleY = 1.0f,
             float scaleZ = 1.0f)
         {
-            // Use BaseTransformComponent as a concrete implementation
-            // We'll need to create an engine-specific one, but for testing we can use reflection
-            // TODO:  or create a minimal mock
-            var mockTransform = new Mock<ITransformComponent>(MockBehavior.Strict);
-            mockTransform.Setup(t => t.Position).Returns(new Vector3(x, y, z));
-            mockTransform.Setup(t => t.Facing).Returns(facing);
-            mockTransform.Setup(t => t.Scale).Returns(new Vector3(scaleX, scaleY, scaleZ));
-            mockTransform.Setup(t => t.Parent).Returns((IEntity)null);
-            return mockTransform.Object;
+            // Use TestTransformComponent as a minimal concrete implementation of BaseTransformComponent
+            // This provides real implementation behavior instead of mocking, making tests more reliable
+            var transform = new TestTransformComponent(new Vector3(x, y, z), facing);
+            transform.Scale = new Vector3(scaleX, scaleY, scaleZ);
+            return transform;
         }
 
         /// <summary>
@@ -595,6 +591,47 @@ namespace Andastra.Tests.Runtime.TestHelpers
             mockItem.SetupProperty(i => i.AreaId, 0u);
             mockItem.SetupProperty(i => i.World, (IWorld)null);
             return mockItem.Object;
+        }
+    }
+
+    /// <summary>
+    /// Minimal concrete implementation of BaseTransformComponent for testing purposes.
+    /// </summary>
+    /// <remarks>
+    /// This class provides a concrete implementation of BaseTransformComponent that can be instantiated
+    /// in tests. BaseTransformComponent is abstract to prevent direct instantiation in production code,
+    /// but for testing we need a concrete class that uses the real implementation logic.
+    /// 
+    /// This implementation uses all the functionality from BaseTransformComponent including:
+    /// - Position, Facing, Scale properties with proper change tracking
+    /// - Forward/Right direction vectors calculated from facing angle
+    /// - WorldMatrix computation with caching and parent transform support
+    /// - All utility methods (Translate, MoveForward, Rotate, LookAt, DistanceTo, etc.)
+    /// 
+    /// This is superior to mocking because:
+    /// - Uses real implementation logic, making tests more reliable
+    /// - Avoids the complexity of mocking all methods and properties
+    /// - Tests actual behavior rather than mock setup
+    /// - Automatically includes all BaseTransformComponent functionality
+    /// </remarks>
+    internal class TestTransformComponent : BaseTransformComponent
+    {
+        /// <summary>
+        /// Creates a new TestTransformComponent with default values.
+        /// </summary>
+        public TestTransformComponent()
+            : base()
+        {
+        }
+
+        /// <summary>
+        /// Creates a new TestTransformComponent with specified position and facing.
+        /// </summary>
+        /// <param name="position">Initial position.</param>
+        /// <param name="facing">Initial facing angle in radians.</param>
+        public TestTransformComponent(Vector3 position, float facing)
+            : base(position, facing)
+        {
         }
     }
 }
