@@ -11,6 +11,8 @@ using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Games.Odyssey.Components;
 using Andastra.Runtime.Games.Odyssey.Systems;
+using Andastra.Runtime.Engines.Odyssey.Components;
+using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common;
 using Andastra.Runtime.Engines.Odyssey.Data;
@@ -1079,7 +1081,7 @@ namespace Andastra.Runtime.Game.Core
 
             // Add transform component (required by EntityModelRenderer for rendering)
             // Based on swkotor.exe and swkotor2.exe: Entity transform component provides position/rotation for rendering
-            var transformComponent = new Andastra.Runtime.Games.Odyssey.Components.TransformComponent(Vector3.Zero, 0f);
+            var transformComponent = new TransformComponent(Vector3.Zero, 0f);
             transformComponent.Owner = _previewEntity;
             _previewEntity.AddComponent<ITransformComponent>(transformComponent);
 

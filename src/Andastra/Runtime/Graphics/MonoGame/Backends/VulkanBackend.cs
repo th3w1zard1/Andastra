@@ -372,7 +372,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 // 3. Use a command buffer to copy from staging buffer to texture image (vkCmdCopyBufferToImage)
                 // 4. Transition image layout from VK_IMAGE_LAYOUT_UNDEFINED to VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
                 // 5. Transition image layout from VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-                // 
+                //
                 // Based on Vulkan API specification:
                 // - vkCreateBuffer: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateBuffer.html
                 // - vkCmdCopyBufferToImage: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdCopyBufferToImage.html

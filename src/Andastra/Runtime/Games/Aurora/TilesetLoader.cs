@@ -366,21 +366,31 @@ namespace Andastra.Runtime.Games.Aurora
 
                 foreach (var face in walkmesh.Faces)
                 {
-                    if (face.Vertices == null || face.Vertices.Count < 3)
-                    {
-                        continue;
-                    }
+                    // Face has V1, V2, V3 properties (not a Vertices list)
+                    // All faces are triangles, so we always have 3 vertices
+                    var v0 = face.V1;
+                    var v1 = face.V2;
+                    var v2 = face.V3;
 
                     // Check if point is within face bounds (simple bounding box check first)
                     float minX = float.MaxValue, maxX = float.MinValue;
                     float minZ = float.MaxValue, maxZ = float.MinValue;
-                    foreach (var vertex in face.Vertices)
-                    {
-                        if (vertex.X < minX) minX = vertex.X;
-                        if (vertex.X > maxX) maxX = vertex.X;
-                        if (vertex.Z < minZ) minZ = vertex.Z;
-                        if (vertex.Z > maxZ) maxZ = vertex.Z;
-                    }
+                    
+                    // Check all three vertices
+                    if (v0.X < minX) minX = v0.X;
+                    if (v0.X > maxX) maxX = v0.X;
+                    if (v0.Z < minZ) minZ = v0.Z;
+                    if (v0.Z > maxZ) maxZ = v0.Z;
+                    
+                    if (v1.X < minX) minX = v1.X;
+                    if (v1.X > maxX) maxX = v1.X;
+                    if (v1.Z < minZ) minZ = v1.Z;
+                    if (v1.Z > maxZ) maxZ = v1.Z;
+                    
+                    if (v2.X < minX) minX = v2.X;
+                    if (v2.X > maxX) maxX = v2.X;
+                    if (v2.Z < minZ) minZ = v2.Z;
+                    if (v2.Z > maxZ) maxZ = v2.Z;
 
                     // Quick bounding box rejection
                     if (worldX < minX || worldX > maxX || worldZ < minZ || worldZ > maxZ)
@@ -390,11 +400,7 @@ namespace Andastra.Runtime.Games.Aurora
 
                     // Check if point is inside face using barycentric coordinates
                     // For triangle faces, use barycentric interpolation
-                    if (face.Vertices.Count == 3)
-                    {
-                        var v0 = face.Vertices[0];
-                        var v1 = face.Vertices[1];
-                        var v2 = face.Vertices[2];
+                    // All BWM faces are triangles, so we always have 3 vertices
 
                         // Compute barycentric coordinates
                         float denom = (v1.Z - v2.Z) * (v0.X - v2.X) + (v2.X - v1.X) * (v0.Z - v2.Z);

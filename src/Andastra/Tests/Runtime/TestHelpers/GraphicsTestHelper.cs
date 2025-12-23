@@ -7,6 +7,7 @@ using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Extract;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Formats.TPC;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.MonoGame.Graphics;
 using Moq;
@@ -132,7 +133,7 @@ namespace Andastra.Tests.Runtime.TestHelpers
                 .Returns(new List<FileResource>());
 
             // Setup GetPatchErfResources - returns empty list by default
-            mockResources.Setup(r => r.GetPatchErfResources(It.IsAny<Game>()))
+            mockResources.Setup(r => r.GetPatchErfResources(It.IsAny<BioWareGame>()))
                 .Returns(new List<FileResource>());
 
             // Setup Installation.Resource method (delegates to Resources.LookupResource)
@@ -157,7 +158,7 @@ namespace Andastra.Tests.Runtime.TestHelpers
             mockInstallation.Setup(i => i.Texture(
                 It.IsAny<string>(),
                 It.IsAny<SearchLocation[]>()))
-                .Returns((Formats.TPC.TPC)null);
+                .Returns((TPC)null);
 
             // Setup Installation.GetModuleRoots - returns empty list by default
             mockInstallation.Setup(i => i.GetModuleRoots())
@@ -213,7 +214,7 @@ namespace Andastra.Tests.Runtime.TestHelpers
             mockInstallation.Setup(i => i.Locations(
                 It.IsAny<List<ResourceIdentifier>>(),
                 It.IsAny<SearchLocation[]>(),
-                It.IsAny<List<LazyCapsule>>(),
+                It.IsAny<List<ExtractLazyCapsule>>(),
                 It.IsAny<List<string>>(),
                 It.IsAny<string>()))
                 .Returns(new Dictionary<ResourceIdentifier, List<LocationResult>>());
@@ -308,7 +309,7 @@ namespace Andastra.Tests.Runtime.TestHelpers
                 .Returns(new List<FileResource>());
 
             // Setup GetPatchErfResources - returns empty list by default
-            mockResources.Setup(r => r.GetPatchErfResources(It.IsAny<Game>()))
+            mockResources.Setup(r => r.GetPatchErfResources(It.IsAny<BioWareGame>()))
                 .Returns(new List<FileResource>());
 
             // Setup Installation.Resource method (delegates to Resources.LookupResource)
@@ -333,7 +334,7 @@ namespace Andastra.Tests.Runtime.TestHelpers
             mockInstallation.Setup(i => i.Texture(
                 It.IsAny<string>(),
                 It.IsAny<SearchLocation[]>()))
-                .Returns((Formats.TPC.TPC)null);
+                .Returns((TPC)null);
 
             // Setup Installation.GetModuleRoots - returns empty list by default
             mockInstallation.Setup(i => i.GetModuleRoots())

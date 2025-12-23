@@ -352,9 +352,14 @@ namespace Andastra.Runtime.Game.Core
                         // Create sound player for GUI button sounds (hover and click)
                         // Based on swkotor.exe FUN_0067ace0: Button sounds ("gui_actscroll", "gui_actclick")
                         // Based on swkotor2.exe FUN_006d0790: Button sounds ("gui_actscroll", "gui_actclick")
-                        var guiSoundPlayer = _graphicsBackend.CreateSoundPlayer(resourceProvider);
+                        var guiSoundPlayerObj = _graphicsBackend.CreateSoundPlayer(resourceProvider);
+                        Andastra.Runtime.Core.Audio.ISoundPlayer guiSoundPlayer = null;
+                        if (guiSoundPlayerObj is Andastra.Runtime.Core.Audio.ISoundPlayer soundPlayer)
+                        {
+                            guiSoundPlayer = soundPlayer;
+                        }
 
-                        _guiManager = new Andastra.Runtime.MonoGame.GUI.KotorGuiManager(installation, mgDevice.Device, guiSoundPlayer);
+                        _guiManager = new Andastra.Runtime.MonoGame.GUI.KotorGuiManager(mgDevice.Device, installation, guiSoundPlayer);
 
                         // Subscribe to button click events
                         // Based on swkotor.exe FUN_0067c4c0: Button event handlers (0x27 hover, 0x2d leave, 0 click, 1 release)
@@ -977,7 +982,8 @@ namespace Andastra.Runtime.Game.Core
                 int buttonY = startY - titleOffset + i * (buttonHeight + buttonSpacing);
                 Rectangle buttonRect = new GraphicsRectangle(centerX - buttonWidth / 2, buttonY, buttonWidth, buttonHeight);
 
-                if (buttonRect.Contains(mousePos))
+                if (mousePos.X >= buttonRect.X && mousePos.X < buttonRect.X + buttonRect.Width &&
+                    mousePos.Y >= buttonRect.Y && mousePos.Y < buttonRect.Y + buttonRect.Height)
                 {
                     _hoveredMenuIndex = i;
                     _selectedMenuIndex = i; // Update selection on hover
