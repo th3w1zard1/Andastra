@@ -1675,6 +1675,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private GraphicsState _currentGraphicsState; // Current graphics state for draw commands
         private RaytracingState _currentRaytracingState; // Current raytracing state for dispatch rays commands
         private bool _hasRaytracingState; // Whether raytracing state has been set
+        private Vector4 _currentBlendConstant; // Current blend constant color for dynamic blending
 
         public MetalCommandList(IntPtr handle, CommandListType type, MetalBackend backend)
         {
@@ -1691,6 +1692,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             _currentGraphicsState = default(GraphicsState); // Initialize to default state
             _currentRaytracingState = default(RaytracingState); // Initialize to default state
             _hasRaytracingState = false;
+            _currentBlendConstant = new Vector4(0.0f, 0.0f, 0.0f, 0.0f); // Initialize to default blend constant (transparent black)
         }
 
         public void Open()
@@ -3477,6 +3479,27 @@ namespace Andastra.Runtime.MonoGame.Backends
                             // Set render pipeline state
                             MetalNative.SetRenderPipelineState(_currentRenderCommandEncoder, renderPipelineState);
 
+                            // Apply current blend constant if it has been set
+                            // This ensures the blend color is applied when the render command encoder is created
+                            if (_currentBlendConstant.W != 0.0f || _currentBlendConstant.X != 0.0f || 
+                                _currentBlendConstant.Y != 0.0f || _currentBlendConstant.Z != 0.0f)
+                            {
+                                try
+                                {
+                                    IntPtr selector = MetalNative.RegisterSelector("setBlendColorRed:green:blue:alpha:");
+                                    if (selector != IntPtr.Zero)
+                                    {
+                                        MetalNative.objc_msgSend_void_float4(_currentRenderCommandEncoder, selector,
+                                            _currentBlendConstant.X, _currentBlendConstant.Y, 
+                                            _currentBlendConstant.Z, _currentBlendConstant.W);
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine($"[MetalCommandList] SetGraphicsState: Exception applying blend constant: {ex.Message}");
+                                }
+                            }
+
                             // Set viewport if provided
                             // GraphicsState has Viewport (singular) which is a ViewportState
                             // ViewportState contains Viewports array
@@ -3720,30 +3743,23 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         /// <summary>
         /// Sets the blend constant color for blending operations.
+        /// Based on Metal API: MTLRenderCommandEncoder::setBlendColorRed:green:blue:alpha:
+        /// Metal API Reference: https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1516253-setblendcolorred
         /// </summary>
         /// <param name="color">The blend constant color (RGBA components in range [0.0, 1.0]).</param>
         /// <remarks>
         /// Blend Constant Color:
         /// - Used when blend factors are set to BlendFactor.BlendFactor or InverseBlendFactor
-        /// - Metal does not support dynamic blend constant color changes at runtime
-        /// - Blend constants in Metal must be specified in the MTLRenderPipelineColorAttachmentDescriptor
-        ///   when creating the render pipeline state (MTLRenderPipelineState)
-        /// - Unlike Vulkan (vkCmdSetBlendConstants) or D3D12 (OMSetBlendFactor), Metal blend constants
-        ///   are fixed at pipeline creation time and cannot be changed dynamically during rendering
+        /// - Metal supports dynamic blend constant color changes via MTLRenderCommandEncoder::setBlendColorRed:green:blue:alpha:
+        /// - This method sets the blend color that will be used for subsequent draw calls
+        /// - The blend color is applied immediately to the current render command encoder
+        /// - Equivalent to Vulkan's vkCmdSetBlendConstants and D3D12's OMSetBlendFactor
         ///
-        /// Metal API Limitation:
-        /// - MTLRenderPipelineColorAttachmentDescriptor.blendColor property exists but is ignored
-        ///   (Metal documentation states it's reserved for future use)
-        /// - Blend factors must use static values (One, Zero, SrcColor, etc.) rather than dynamic constants
-        ///
-        /// Workaround Options (for future enhancement if dynamic blend constants are required):
-        /// - Use shader uniforms/constants to pass blend color if dynamic blending is required
-        /// - Create separate pipeline states with different blend configurations if needed
-        /// - Use pre-multiplied alpha or other static blend modes instead
-        ///
-        /// This method stores the blend constant color but does not apply it immediately,
-        /// as Metal does not support dynamic blend constant changes.
-        /// The stored value may be used when creating pipeline states that require blend constants.
+        /// Implementation Details:
+        /// - The blend color is set on the active render command encoder using Objective-C interop
+        /// - Color components are clamped to [0.0, 1.0] range as required by Metal
+        /// - If no render command encoder is active, the value is stored and applied when one becomes available
+        /// - The blend color persists for all subsequent draw calls until changed
         /// </remarks>
         public void SetBlendConstant(Vector4 color)
         {
@@ -3752,26 +3768,40 @@ namespace Andastra.Runtime.MonoGame.Backends
                 return;
             }
 
-            // Metal does not support dynamic blend constant color changes
-            // Blend constants must be specified at pipeline creation time
-            // Store the value for potential use in pipeline creation, but cannot apply it dynamically
-            // This matches Metal API limitations: blend constants are fixed at MTLRenderPipelineState creation
-
-            // Validate color components are in valid range [0.0, 1.0]
-            // Clamp values to ensure they're within Metal's expected range
+            // Validate and clamp color components to valid range [0.0, 1.0]
+            // Metal requires blend color components to be in this range
             float r = Math.Max(0.0f, Math.Min(1.0f, color.X));
             float g = Math.Max(0.0f, Math.Min(1.0f, color.Y));
             float b = Math.Max(0.0f, Math.Min(1.0f, color.Z));
             float a = Math.Max(0.0f, Math.Min(1.0f, color.W));
 
-            // Note: Metal doesn't have vkCmdSetBlendConstants or OMSetBlendFactor equivalent
-            // Blend constants in Metal are part of the pipeline state descriptor, not dynamic state
-            // This implementation stores the value but cannot apply it until pipeline creation time
-            //
-            // If dynamic blend constants are required, consider:
-            // 1. Using shader uniforms to pass blend color values
-            // 2. Creating multiple pipeline states with different blend configurations
-            // 3. Using static blend factors instead of BlendFactor.BlendFactor
+            // Store the blend constant for reference
+            _currentBlendConstant = new Vector4(r, g, b, a);
+
+            // Apply blend color to the current render command encoder if available
+            // Metal API: MTLRenderCommandEncoder::setBlendColorRed:green:blue:alpha:
+            // Method signature: - (void)setBlendColorRed:(float)red green:(float)green blue:(float)blue alpha:(float)alpha;
+            if (_currentRenderCommandEncoder != IntPtr.Zero)
+            {
+                try
+                {
+                    IntPtr selector = MetalNative.RegisterSelector("setBlendColorRed:green:blue:alpha:");
+                    if (selector != IntPtr.Zero)
+                    {
+                        MetalNative.objc_msgSend_void_float4(_currentRenderCommandEncoder, selector, r, g, b, a);
+                    }
+                    else
+                    {
+                        Console.WriteLine("[MetalCommandList] SetBlendConstant: Failed to register selector for setBlendColorRed:green:blue:alpha:");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[MetalCommandList] SetBlendConstant: Exception setting blend color: {ex.Message}");
+                }
+            }
+            // Note: If render command encoder is not yet available, the blend constant will be applied
+            // when SetGraphicsState is called, which ensures a render command encoder is created
         }
 
         /// <summary>
@@ -5845,6 +5875,9 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
         public static extern void objc_msgSend_void_object(IntPtr receiver, IntPtr selector, IntPtr obj);
+
+        [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void objc_msgSend_void_float4(IntPtr receiver, IntPtr selector, float red, float green, float blue, float alpha);
 
         [DllImport(LibObjCForDevice, EntryPoint = "objc_msgSend", CallingConvention = CallingConvention.Cdecl)]
         private static extern void objc_msgSend_void_int_object(IntPtr receiver, IntPtr selector, int index, IntPtr obj);
