@@ -1553,10 +1553,7 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                         StabilizationStrength = 1.0f // Stabilization strength
                     };
 
-                    fixed (NRDMethodSettings* settingsPtr = &methodSettings)
-                    {
-                        _nrdSetMethodSettings(_nrdDenoiser, NRD_METHOD_REBLUR_DIFFUSE_SPECULAR, new IntPtr(settingsPtr));
-                    }
+                    _nrdSetMethodSettings(_nrdDenoiser, NRD_METHOD_REBLUR_DIFFUSE_SPECULAR, new IntPtr(&methodSettings));
                 }
 
                 // Update common settings with current frame parameters
@@ -1657,11 +1654,11 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                                 // Dispatch using NRD-provided thread group dimensions and offsets
                                 uint groupCountX = (uint)(width + dispatchDesc.ThreadGroupDimX - 1) / dispatchDesc.ThreadGroupDimX;
                                 uint groupCountY = (uint)(height + dispatchDesc.ThreadGroupDimY - 1) / dispatchDesc.ThreadGroupDimY;
-                                
+
                                 // Apply thread group offsets if provided by NRD
                                 // Note: Some backends support dispatch with offsets directly
                                 // For backends that don't, we rely on shader-side offset handling
-                                
+
                                 commandList.Dispatch((int)groupCountX, (int)groupCountY, (int)dispatchDesc.ThreadGroupDimZ);
 
                                 bindingSet.Dispose();
@@ -3747,17 +3744,17 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
 
         /// <summary>
         /// Writes shader binding table records with shader identifiers retrieved from the raytracing pipeline.
-        /// 
+        ///
         /// Shader Binding Table (SBT) structure:
         /// - Each record contains a shader identifier (32 bytes for D3D12, variable for Vulkan/Metal)
         /// - Records are aligned to D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT (32 bytes)
         /// - Additional space (64 bytes total) allows for local root signature arguments
-        /// 
+        ///
         /// Based on D3D12 DXR API:
         /// - ID3D12StateObjectProperties::GetShaderIdentifier returns 32-byte opaque handles
         /// - SBT records must be written to GPU-accessible memory before DispatchRays
         /// - Records are written at specific offsets: RayGen (0), Miss (64), HitGroup (128)
-        /// 
+        ///
         /// swkotor2.exe: N/A (DirectX 9, no raytracing support)
         /// Modern engines: Retrieve shader identifiers after pipeline creation via GetShaderIdentifier
         /// </summary>
