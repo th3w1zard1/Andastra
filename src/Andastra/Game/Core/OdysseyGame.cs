@@ -665,7 +665,7 @@ namespace Andastra.Runtime.Game.Core
             // Render cursor using sprite batch
             // Cursor rendered with alpha blending on top of everything
             _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Default);
-            _spriteBatch.Draw(cursorTexture, renderPosition, Color.White);
+            _spriteBatch.Draw(cursorTexture, renderPositionMicrosoft.Xna.Framework.Color.White);
             _spriteBatch.End();
         }
 
@@ -2123,7 +2123,7 @@ namespace Andastra.Runtime.Game.Core
 
                     if (isSelected)
                     {
-                        DrawRectangleBorder(_spriteBatch, itemRect, 2, Color.White);
+                        DrawRectangleBorder(_spriteBatch, itemRect, 2Microsoft.Xna.Framework.Color.White);
                     }
 
                     // Draw path text
@@ -2292,7 +2292,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Draws a line between two points.
         /// </summary>
-        private void DrawLine(ISpriteBatch spriteBatch, int x1, int y1, int x2, int y2, int thickness, Color color)
+        private void DrawLine(ISpriteBatch spriteBatch, int x1, int y1, int x2, int y2, int thickness, Microsoft.Xna.Framework.Color color)
         {
             float dx = x2 - x1;
             float dy = y2 - y1;
@@ -2332,7 +2332,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Draws a diagonal line between two points.
         /// </summary>
-        private void DrawDiagonalLine(ISpriteBatch spriteBatch, int x1, int y1, int x2, int y2, int thickness, Color color)
+        private void DrawDiagonalLine(ISpriteBatch spriteBatch, int x1, int y1, int x2, int y2, int thickness, Microsoft.Xna.Framework.Color color)
         {
             DrawLine(spriteBatch, x1, y1, x2, y2, thickness, color);
         }
@@ -2341,7 +2341,7 @@ namespace Andastra.Runtime.Game.Core
         /// Draws a rounded rectangle border with smooth corners.
         /// Creates the appearance of rounded corners using border lines with corner arcs.
         /// </summary>
-        private void DrawRoundedRectangle(ISpriteBatch spriteBatch, Rectangle rect, int borderThickness, Color color)
+        private void DrawRoundedRectangle(ISpriteBatch spriteBatch, Microsoft.Xna.Framework.Rectangle rect, int borderThickness, Microsoft.Xna.Framework.Color color)
         {
             int cornerRadius = borderThickness * 2;
             int cornerGap = cornerRadius;
@@ -2366,7 +2366,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Draws a corner arc (quarter circle border) for rounded rectangle corners.
         /// </summary>
-        private void DrawCornerArc(ISpriteBatch spriteBatch, int centerX, int centerY, int radius, int thickness, Color color, bool leftSide, bool topSide)
+        private void DrawCornerArc(ISpriteBatch spriteBatch, int centerX, int centerY, int radius, int thicknessMicrosoft.Xna.Framework.Color color, bool leftSide, bool topSide)
         {
             // Draw quarter circle arc using border approach
             for (int y = -radius; y <= 0; y++)
@@ -2388,7 +2388,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Draws a filled circle (approximated with rectangle).
         /// </summary>
-        private void DrawFilledCircle(ISpriteBatch spriteBatch, Rectangle bounds, Color color)
+        private void DrawFilledCircle(ISpriteBatch spriteBatch, Rectangle boundsMicrosoft.Xna.Framework.Color color)
         {
             int centerX = bounds.X + bounds.Width / 2;
             int centerY = bounds.Y + bounds.Height / 2;
@@ -2781,7 +2781,7 @@ namespace Andastra.Runtime.Game.Core
                 }
                 if (_font != null)
                 {
-                    _spriteBatch.DrawString(_font, statusText, new Vector2(10, 10), Color.White);
+                    _spriteBatch.DrawString(_font, statusText, new Vector2(10, 10)Microsoft.Xna.Framework.Color.White);
                 }
             }
             // If no font, we just skip text rendering - the 3D scene is still visible
@@ -3073,15 +3073,15 @@ namespace Andastra.Runtime.Game.Core
             var playerVertices = new VertexPositionColor[]
             {
                 // Bottom face
-                new VertexPositionColor(new Vector3(-0.5f, -0.5f, 0), Color.Blue),
-                new VertexPositionColor(new Vector3(0.5f, -0.5f, 0), Color.Blue),
-                new VertexPositionColor(new Vector3(0.5f, 0.5f, 0), Color.Blue),
-                new VertexPositionColor(new Vector3(-0.5f, 0.5f, 0), Color.Blue),
+                new VertexPositionColor(new Vector3(-0.5f, -0.5f, 0)Microsoft.Xna.Framework.Color.Blue),
+                new VertexPositionColor(new Vector3(0.5f, -0.5f, 0)Microsoft.Xna.Framework.Color.Blue),
+                new VertexPositionColor(new Vector3(0.5f, 0.5f, 0)Microsoft.Xna.Framework.Color.Blue),
+                new VertexPositionColor(new Vector3(-0.5f, 0.5f, 0)Microsoft.Xna.Framework.Color.Blue),
                 // Top face
-                new VertexPositionColor(new Vector3(-0.5f, -0.5f, 2), Color.Blue),
-                new VertexPositionColor(new Vector3(0.5f, -0.5f, 2), Color.Blue),
-                new VertexPositionColor(new Vector3(0.5f, 0.5f, 2), Color.Blue),
-                new VertexPositionColor(new Vector3(-0.5f, 0.5f, 2), Color.Blue)
+                new VertexPositionColor(new Vector3(-0.5f, -0.5f, 2)Microsoft.Xna.Framework.Color.Blue),
+                new VertexPositionColor(new Vector3(0.5f, -0.5f, 2)Microsoft.Xna.Framework.Color.Blue),
+                new VertexPositionColor(new Vector3(0.5f, 0.5f, 2)Microsoft.Xna.Framework.Color.Blue),
+                new VertexPositionColor(new Vector3(-0.5f, 0.5f, 2)Microsoft.Xna.Framework.Color.Blue)
             };
 
             short[] playerIndices = new short[]
@@ -4485,7 +4485,7 @@ namespace Andastra.Runtime.Game.Core
                 {
                     // Word wrap dialogue text (simple implementation)
                     Vector2 textPos = new Vector2(padding, dialogueBoxY + padding);
-                    _spriteBatch.DrawString(_font, dialogueText, textPos, Color.White);
+                    _spriteBatch.DrawString(_font, dialogueText, textPosMicrosoft.Xna.Framework.Color.White);
                 }
             }
 
@@ -4504,13 +4504,13 @@ namespace Andastra.Runtime.Game.Core
 
                     string replyLabel = $"[{i + 1}] {replyText}";
                     Vector2 replyPos = new Vector2(padding, replyY + (i * 20));
-                    _spriteBatch.DrawString(_font, replyLabel, replyPos, Color.Yellow);
+                    _spriteBatch.DrawString(_font, replyLabel, replyPosMicrosoft.Xna.Framework.Color.Yellow);
                 }
 
                 // Draw instruction text
                 string instructionText = "Press 1-9 to select reply, ESC to abort";
                 Vector2 instructionPos = new Vector2(padding, dialogueBoxY + dialogueBoxHeight - 20);
-                _spriteBatch.DrawString(_font, instructionText, instructionPos, Color.Gray);
+                _spriteBatch.DrawString(_font, instructionText, instructionPosMicrosoft.Xna.Framework.Color.Gray);
             }
         }
 
