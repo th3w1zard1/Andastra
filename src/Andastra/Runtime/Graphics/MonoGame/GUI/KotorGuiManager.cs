@@ -8,7 +8,7 @@ using XnaVector2 = Microsoft.Xna.Framework.Vector2;
 using XnaColor = Microsoft.Xna.Framework.Color;
 using XnaRectangle = Microsoft.Xna.Framework.Rectangle;
 using XnaSpriteEffects = Microsoft.Xna.Framework.Graphics.SpriteEffects;
-using ParsingColor = Andastra.Parsing.Common.Color;
+using ParsingColor = Andastra.Parsing.Common.ParsingColor;
 using Andastra.Parsing;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
@@ -84,11 +84,6 @@ namespace Andastra.Runtime.MonoGame.GUI
         private int _selectedButtonIndex = -1; // For keyboard navigation
         private List<GUIButton> _buttonList; // Ordered list of buttons for keyboard navigation
         private readonly Andastra.Runtime.Core.Audio.ISoundPlayer _soundPlayer; // For button click/hover sounds
-
-        /// <summary>
-        /// Event fired when a GUI button is clicked.
-        /// </summary>
-        public event Action<string, int> OnButtonClicked;
 
         /// <summary>
         /// Event fired when a GUI checkbox is clicked.

@@ -55,9 +55,9 @@ namespace Andastra.Parsing.Resource.Generics.ARE
         public float GrassProbLR { get; set; }
         public float GrassProbUL { get; set; }
         public float GrassProbUR { get; set; }
-        public Color GrassAmbient { get; set; } = new Color(0.0f, 0.0f, 0.0f);
-        public Color GrassDiffuse { get; set; } = new Color(0.0f, 0.0f, 0.0f);
-        public Color GrassEmissive { get; set; } = new Color(0.0f, 0.0f, 0.0f);
+        public ParsingColor GrassAmbient { get; set; } = new ParsingColor(0.0f, 0.0f, 0.0f);
+        public ParsingColor GrassDiffuse { get; set; } = new ParsingColor(0.0f, 0.0f, 0.0f);
+        public ParsingColor GrassEmissive { get; set; } = new ParsingColor(0.0f, 0.0f, 0.0f);
 
         // Fog and lighting
         public bool FogEnabled { get; set; }
@@ -88,11 +88,11 @@ namespace Andastra.Parsing.Resource.Generics.ARE
         // Load screen
         public int LoadScreenID { get; set; }
 
-        // Color fields
-        public Color SunAmbient { get; set; } = new Color(0.0f, 0.0f, 0.0f);
-        public Color SunDiffuse { get; set; } = new Color(0.0f, 0.0f, 0.0f);
-        public Color DynamicLight { get; set; } = new Color(0.0f, 0.0f, 0.0f);
-        public Color FogColor { get; set; } = new Color(0.0f, 0.0f, 0.0f);
+        // ParsingColor fields
+        public ParsingColor SunAmbient { get; set; } = new ParsingColor(0.0f, 0.0f, 0.0f);
+        public ParsingColor SunDiffuse { get; set; } = new ParsingColor(0.0f, 0.0f, 0.0f);
+        public ParsingColor DynamicLight { get; set; } = new ParsingColor(0.0f, 0.0f, 0.0f);
+        public ParsingColor FogColor { get; set; } = new ParsingColor(0.0f, 0.0f, 0.0f);
 
         // K2-specific dirty formula fields
         public int DirtyFormula1 { get; set; }
@@ -104,9 +104,9 @@ namespace Andastra.Parsing.Resource.Generics.ARE
         public int DirtyFunc1 { get; set; }
         public int DirtyFunc2 { get; set; }
         public int DirtyFunc3 { get; set; }
-        public Color DirtyArgb1 { get; set; } = new Color(0.0f, 0.0f, 0.0f);
-        public Color DirtyArgb2 { get; set; } = new Color(0.0f, 0.0f, 0.0f);
-        public Color DirtyArgb3 { get; set; } = new Color(0.0f, 0.0f, 0.0f);
+        public ParsingColor DirtyArgb1 { get; set; } = new ParsingColor(0.0f, 0.0f, 0.0f);
+        public ParsingColor DirtyArgb2 { get; set; } = new ParsingColor(0.0f, 0.0f, 0.0f);
+        public ParsingColor DirtyArgb3 { get; set; } = new ParsingColor(0.0f, 0.0f, 0.0f);
 
         // Sun fog properties (aliases for Fog properties for editor compatibility)
         public bool SunFogEnabled
@@ -124,7 +124,7 @@ namespace Andastra.Parsing.Resource.Generics.ARE
             get => FogFar;
             set => FogFar = value;
         }
-        public Color SunFogColor
+        public ParsingColor SunFogColor
         {
             get => FogColor;
             set => FogColor = value;
@@ -134,10 +134,10 @@ namespace Andastra.Parsing.Resource.Generics.ARE
         public int ChancesOfFog { get; set; }
         public int Weather { get; set; }
         public string SkyBox { get; set; } = string.Empty;
-        public Color DawnAmbient { get; set; } = new Color(0.0f, 0.0f, 0.0f);
-        public Color DayAmbient { get; set; } = new Color(0.0f, 0.0f, 0.0f);
-        public Color DuskAmbient { get; set; } = new Color(0.0f, 0.0f, 0.0f);
-        public Color NightAmbient { get; set; } = new Color(0.0f, 0.0f, 0.0f);
+        public ParsingColor DawnAmbient { get; set; } = new ParsingColor(0.0f, 0.0f, 0.0f);
+        public ParsingColor DayAmbient { get; set; } = new ParsingColor(0.0f, 0.0f, 0.0f);
+        public ParsingColor DuskAmbient { get; set; } = new ParsingColor(0.0f, 0.0f, 0.0f);
+        public ParsingColor NightAmbient { get; set; } = new ParsingColor(0.0f, 0.0f, 0.0f);
         public float DawnDir1 { get; set; }
         public float DawnDir2 { get; set; }
         public float DawnDir3 { get; set; }
@@ -150,18 +150,18 @@ namespace Andastra.Parsing.Resource.Generics.ARE
         public float NightDir1 { get; set; }
         public float NightDir2 { get; set; }
         public float NightDir3 { get; set; }
-        public Color DawnColor1 { get; set; } = new Color(0.0f, 0.0f, 0.0f);
-        public Color DawnColor2 { get; set; } = new Color(0.0f, 0.0f, 0.0f);
-        public Color DawnColor3 { get; set; } = new Color(0.0f, 0.0f, 0.0f);
-        public Color DayColor1 { get; set; } = new Color(0.0f, 0.0f, 0.0f);
-        public Color DayColor2 { get; set; } = new Color(0.0f, 0.0f, 0.0f);
-        public Color DayColor3 { get; set; } = new Color(0.0f, 0.0f, 0.0f);
-        public Color DuskColor1 { get; set; } = new Color(0.0f, 0.0f, 0.0f);
-        public Color DuskColor2 { get; set; } = new Color(0.0f, 0.0f, 0.0f);
-        public Color DuskColor3 { get; set; } = new Color(0.0f, 0.0f, 0.0f);
-        public Color NightColor1 { get; set; } = new Color(0.0f, 0.0f, 0.0f);
-        public Color NightColor2 { get; set; } = new Color(0.0f, 0.0f, 0.0f);
-        public Color NightColor3 { get; set; } = new Color(0.0f, 0.0f, 0.0f);
+        public ParsingColor DawnColor1 { get; set; } = new ParsingColor(0.0f, 0.0f, 0.0f);
+        public ParsingColor DawnColor2 { get; set; } = new ParsingColor(0.0f, 0.0f, 0.0f);
+        public ParsingColor DawnColor3 { get; set; } = new ParsingColor(0.0f, 0.0f, 0.0f);
+        public ParsingColor DayColor1 { get; set; } = new ParsingColor(0.0f, 0.0f, 0.0f);
+        public ParsingColor DayColor2 { get; set; } = new ParsingColor(0.0f, 0.0f, 0.0f);
+        public ParsingColor DayColor3 { get; set; } = new ParsingColor(0.0f, 0.0f, 0.0f);
+        public ParsingColor DuskColor1 { get; set; } = new ParsingColor(0.0f, 0.0f, 0.0f);
+        public ParsingColor DuskColor2 { get; set; } = new ParsingColor(0.0f, 0.0f, 0.0f);
+        public ParsingColor DuskColor3 { get; set; } = new ParsingColor(0.0f, 0.0f, 0.0f);
+        public ParsingColor NightColor1 { get; set; } = new ParsingColor(0.0f, 0.0f, 0.0f);
+        public ParsingColor NightColor2 { get; set; } = new ParsingColor(0.0f, 0.0f, 0.0f);
+        public ParsingColor NightColor3 { get; set; } = new ParsingColor(0.0f, 0.0f, 0.0f);
         public ResRef OnEnter2 { get; set; } = ResRef.FromBlank();
         public ResRef OnExit2 { get; set; } = ResRef.FromBlank();
         public ResRef OnHeartbeat2 { get; set; } = ResRef.FromBlank();
@@ -177,12 +177,12 @@ namespace Andastra.Parsing.Resource.Generics.ARE
         public uint Flags { get; set; }
         public int ModSpotCheck { get; set; }
         public int ModListenCheck { get; set; }
-        public Color MoonAmbient { get; set; } = new Color(0.0f, 0.0f, 0.0f);
-        public Color MoonDiffuse { get; set; } = new Color(0.0f, 0.0f, 0.0f);
+        public ParsingColor MoonAmbient { get; set; } = new ParsingColor(0.0f, 0.0f, 0.0f);
+        public ParsingColor MoonDiffuse { get; set; } = new ParsingColor(0.0f, 0.0f, 0.0f);
         public bool MoonFog { get; set; }
         public float MoonFogNear { get; set; }
         public float MoonFogFar { get; set; }
-        public Color MoonFogColorDeprecated { get; set; } = new Color(0.0f, 0.0f, 0.0f);
+        public ParsingColor MoonFogColorDeprecated { get; set; } = new ParsingColor(0.0f, 0.0f, 0.0f);
         public bool MoonShadows { get; set; }
         public bool IsNight { get; set; }
         public int LightingScheme { get; set; }

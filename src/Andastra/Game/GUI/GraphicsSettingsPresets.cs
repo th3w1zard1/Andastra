@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Runtime.Graphics.Common.Enums;
-using Andastra.Runtime.Stride.Graphics;
+using Andastra.Runtime.Graphics;
 
 namespace Andastra.Game.GUI
 {

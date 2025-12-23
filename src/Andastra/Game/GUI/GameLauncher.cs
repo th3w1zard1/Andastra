@@ -238,8 +238,6 @@ namespace Andastra.Game.GUI
 
         }
 
-        private List<GraphicsBackendItem> _graphicsBackendItems;
-
         private void PopulateGraphicsBackendComboBox()
         {
             _graphicsBackendComboBox.Items.Clear();

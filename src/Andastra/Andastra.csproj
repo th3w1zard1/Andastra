@@ -8,6 +8,7 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateGlobalUsings>false</GenerateGlobalUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <OutputType>Library</OutputType>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Eto.Forms" Version="2.10.2" />
@@ -66,5 +67,9 @@
     <Content Remove="Demo\**" />
     <EmbeddedResource Remove="Demo\**" />
     <None Remove="Demo\**" />
+    <Compile Remove="Game\Program.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Game\Program.cs" />
   </ItemGroup>
 </Project>
