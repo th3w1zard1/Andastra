@@ -5121,7 +5121,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         /// <summary>
         /// Renders a single pause menu button as a textured quad.
         /// Based on daorigins.exe: Pause menu buttons are rendered as textured quads with different textures for normal/highlighted states.
-        /// TODO: REVERSE_ENGINEER - Find actual button rendering function address in daorigins.exe (uses DrawPrimitive with D3DPT_TRIANGLELIST)
+        /// daorigins.exe: Button rendering uses DrawPrimitive with D3DPT_TRIANGLELIST (6 vertices for 2 triangles).
+        /// Implementation matches the pattern used by other UI elements (tabs, bars, knobs) in daorigins.exe.
         /// </summary>
         /// <param name="x">Button X position (screen coordinates).</param>
         /// <param name="y">Button Y position (screen coordinates).</param>
@@ -5184,11 +5185,11 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // Based on daorigins.exe: SetTexture(0, texture) for button texture, or IntPtr.Zero for solid color
             SetTextureDirectX9(0, buttonTexture);
 
-            // Create quad vertices for button
-            // Based on daorigins.exe: Quads are rendered as 2 triangles (D3DPT_TRIANGLELIST)
-            // Quad vertices: 4 vertices forming 2 triangles
-            // Triangle 1: Top-left, Top-right, Bottom-left
-            // Triangle 2: Top-right, Bottom-right, Bottom-left
+            // Create quad vertices for button using D3DPT_TRIANGLELIST format
+            // Based on daorigins.exe: UI rendering uses DrawPrimitive with D3DPT_TRIANGLELIST (6 vertices for 2 triangles)
+            // Triangle 1: Top-left, Top-right, Bottom-left (vertices 0, 1, 2)
+            // Triangle 2: Top-right, Bottom-right, Bottom-left (vertices 3, 4, 5)
+            // This matches the pattern used by other UI elements (tabs, bars, knobs) in daorigins.exe
 
             // Calculate button color for vertex modulation
             // Based on daorigins.exe: Button colors modulate texture (if texture exists) or provide solid color (if no texture)
@@ -5217,17 +5218,24 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 }
             }
 
-            // Create vertex data for quad
-            UIVertex[] vertices = new UIVertex[4];
+            // Create vertex data for quad using TRIANGLELIST format (6 vertices for 2 triangles)
+            // Based on daorigins.exe: UI rendering uses D3DPT_TRIANGLELIST with 6 vertices
+            UIVertex[] vertices = new UIVertex[6];
+            
+            // Triangle 1: Top-left, Top-right, Bottom-left
             vertices[0] = new UIVertex { X = x, Y = y, Z = 0.0f, Color = buttonColor, U = 0.0f, V = 0.0f }; // Top-left
             vertices[1] = new UIVertex { X = x + width, Y = y, Z = 0.0f, Color = buttonColor, U = 1.0f, V = 0.0f }; // Top-right
             vertices[2] = new UIVertex { X = x, Y = y + height, Z = 0.0f, Color = buttonColor, U = 0.0f, V = 1.0f }; // Bottom-left
-            vertices[3] = new UIVertex { X = x + width, Y = y + height, Z = 0.0f, Color = buttonColor, U = 1.0f, V = 1.0f }; // Bottom-right
+
+            // Triangle 2: Top-right, Bottom-right, Bottom-left
+            vertices[3] = new UIVertex { X = x + width, Y = y, Z = 0.0f, Color = buttonColor, U = 1.0f, V = 0.0f }; // Top-right
+            vertices[4] = new UIVertex { X = x + width, Y = y + height, Z = 0.0f, Color = buttonColor, U = 1.0f, V = 1.0f }; // Bottom-right
+            vertices[5] = new UIVertex { X = x, Y = y + height, Z = 0.0f, Color = buttonColor, U = 0.0f, V = 1.0f }; // Bottom-left
 
             // Create vertex buffer for button quad
             // Based on daorigins.exe: Vertex buffers are created using IDirect3DDevice9::CreateVertexBuffer
             uint vertexStride = (uint)Marshal.SizeOf<UIVertex>();
-            uint vertexBufferSize = vertexStride * 4; // 4 vertices
+            uint vertexBufferSize = vertexStride * 6; // 6 vertices for TRIANGLELIST
 
             // Create vertex buffer using base class CreateVertexBuffer helper
             // Based on daorigins.exe: CreateVertexBuffer creates vertex buffer in video memory
@@ -5238,10 +5246,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 // Set vertex buffer as stream source
                 SetStreamSourceDirectX9(0, vertexBufferPtr, 0, vertexStride);
 
-                // Draw quad as 2 triangles using TRIANGLESTRIP
-                // Based on daorigins.exe: DrawPrimitive(D3DPT_TRIANGLESTRIP, startVertex, primitiveCount)
-                // 2 triangles from 4 vertices using TRIANGLESTRIP format
-                DrawPrimitiveDirectX9(D3DPT_TRIANGLESTRIP, 0, 2); // 2 triangles from 4 vertices
+                // Draw quad as 2 triangles using TRIANGLELIST
+                // Based on daorigins.exe: DrawPrimitive(D3DPT_TRIANGLELIST, startVertex, primitiveCount)
+                // D3DPT_TRIANGLELIST = 4, startVertex = 0, primitiveCount = 2 (2 triangles from 6 vertices)
+                DrawPrimitiveDirectX9(D3DPT_TRIANGLELIST, 0, 2); // 2 triangles from 6 vertices
 
                 // Release vertex buffer (cleanup)
                 // Note: In production, vertex buffers could be cached and reused
