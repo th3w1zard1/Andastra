@@ -1821,11 +1821,79 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 DrawQuad(slotX, actionBarY, borderWidth, slotSize, borderColor, IntPtr.Zero); // Left border
                 DrawQuad(slotX + slotSize - borderWidth, actionBarY, borderWidth, slotSize, borderColor, IntPtr.Zero); // Right border
 
-                // TODO: PLACEHOLDER - Action bar slot content rendering would require:
-                // - Ability/spell/item icons from game resources
-                // - Cooldown indicators
-                // - Hotkey labels (1-9)
-                // - Full implementation would integrate with ability/item system
+                // Render action bar slot content: icons, cooldowns, and hotkey labels
+                // Based on daorigins.exe: Action bar slots display item/ability icons with cooldown overlays and hotkey numbers
+                if (_world != null)
+                {
+                    // Get player entity for quick slot access
+                    IEntity player = _world.GetEntityByTag("Player", 0);
+                    if (player == null)
+                    {
+                        player = _world.GetEntityByTag("PlayerCharacter", 0);
+                    }
+
+                    if (player != null)
+                    {
+                        // Get quick slot component to access action bar slots
+                        IQuickSlotComponent quickSlots = player.GetComponent<IQuickSlotComponent>();
+                        if (quickSlots != null)
+                        {
+                            // Get slot type (item or ability)
+                            int slotType = quickSlots.GetQuickSlotType(i);
+
+                            if (slotType == 0)
+                            {
+                                // Item slot
+                                IEntity slotItem = quickSlots.GetQuickSlotItem(i);
+                                if (slotItem != null)
+                                {
+                                    // Load and render item icon
+                                    string itemIconResRef = GetItemIconResRef(slotItem);
+                                    IntPtr itemIconTexture = LoadUITexture(itemIconResRef);
+                                    if (itemIconTexture != IntPtr.Zero)
+                                    {
+                                        // Render item icon
+                                        DrawQuad(slotX, actionBarY, slotSize, slotSize, 0xFFFFFFFF, itemIconTexture);
+                                    }
+
+                                    // Render cooldown indicator if item is on cooldown
+                                    float itemCooldown = GetItemCooldown(player, slotItem);
+                                    if (itemCooldown > 0.0f)
+                                    {
+                                        RenderCooldownOverlay(slotX, actionBarY, slotSize, slotSize, itemCooldown);
+                                    }
+                                }
+                            }
+                            else if (slotType == 1)
+                            {
+                                // Ability/talent slot
+                                int abilityId = quickSlots.GetQuickSlotAbility(i);
+                                if (abilityId >= 0)
+                                {
+                                    // Load and render ability/talent icon
+                                    string abilityIconResRef = GetAbilityIconResRef(abilityId);
+                                    IntPtr abilityIconTexture = LoadUITexture(abilityIconResRef);
+                                    if (abilityIconTexture != IntPtr.Zero)
+                                    {
+                                        // Render ability icon
+                                        DrawQuad(slotX, actionBarY, slotSize, slotSize, 0xFFFFFFFF, abilityIconTexture);
+                                    }
+
+                                    // Render cooldown indicator if ability is on cooldown
+                                    float abilityCooldown = GetAbilityCooldown(player, abilityId);
+                                    if (abilityCooldown > 0.0f)
+                                    {
+                                        RenderCooldownOverlay(slotX, actionBarY, slotSize, slotSize, abilityCooldown);
+                                    }
+                                }
+                            }
+
+                            // Render hotkey label (1-9) in bottom-right corner of slot
+                            int hotkeyNumber = i + 1; // Slots 0-8 map to hotkeys 1-9
+                            RenderHotkeyLabel(slotX, actionBarY, slotSize, slotSize, hotkeyNumber);
+                        }
+                    }
+                }
             }
         }
 
@@ -2024,7 +2092,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         /// </summary>
         /// <param name="player">Player entity.</param>
         /// <param name="slotIndex">Action bar slot index (0-8, corresponding to hotkeys 1-9).</param>
-        /// <returns>Item entity for the slot, or null if empty.</returns>
+        /// <returns>Item entity for the slot, or null if empty or ability.</returns>
         private IEntity GetActionBarSlotItem(IEntity player, int slotIndex)
         {
             if (player == null)
@@ -2032,20 +2100,16 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 return null;
             }
 
-            // Based on daorigins.exe: Action bar slots can contain abilities, spells, or items
-            // For now, we'll check inventory for usable items (potions, scrolls, etc.)
-            // Full implementation would integrate with ability system for spells/powers
-            IInventoryComponent inventory = player.GetComponent<IInventoryComponent>();
-            if (inventory != null)
+            // Based on daorigins.exe: Action bar slots use quick slot component for item/ability storage
+            // Quick slot component stores items and abilities/talents in slots 0-8 (mapped to hotkeys 1-9)
+            IQuickSlotComponent quickSlots = player.GetComponent<IQuickSlotComponent>();
+            if (quickSlots != null)
             {
-                // Action bar typically uses inventory slots starting from a specific offset
-                // For consumables: slots might be in a separate "quick items" section
-                // Simplified: check if slot has an item that can be used
-                // Full implementation would have separate action bar storage or ability system
-                IEntity item = inventory.GetItemInSlot(100 + slotIndex); // Use high slot numbers for action bar
-                if (item != null)
+                // Check if slot contains an item (slot type 0 = item)
+                int slotType = quickSlots.GetQuickSlotType(slotIndex);
+                if (slotType == 0)
                 {
-                    return item;
+                    return quickSlots.GetQuickSlotItem(slotIndex);
                 }
             }
 
@@ -2114,6 +2178,179 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
 
             // Fallback: use item resref directly (some items have icon with same name)
             return itemResRef;
+        }
+
+        /// <summary>
+        /// Gets the icon resource reference for an ability/talent.
+        /// Based on daorigins.exe: Ability/talent icons are stored as TPC textures, typically named based on ability ID or from abilities/talents 2DA table.
+        /// </summary>
+        /// <param name="abilityId">Ability/talent ID.</param>
+        /// <returns>Icon texture resource reference, or empty string if not found.</returns>
+        private string GetAbilityIconResRef(int abilityId)
+        {
+            if (abilityId < 0)
+            {
+                return string.Empty;
+            }
+
+            // Based on daorigins.exe: Ability/talent icons are typically named "icon_ability_{id}" or from abilities/talents 2DA table
+            // Eclipse engine uses talents system (similar to Odyssey's force powers)
+            // Try common naming conventions for ability icons
+            string[] iconNamePatterns = new[]
+            {
+                "icon_talent_" + abilityId.ToString("D3"), // icon_talent_001, icon_talent_002, etc.
+                "icon_ability_" + abilityId.ToString("D3"), // icon_ability_001, icon_ability_002, etc.
+                "talent_" + abilityId.ToString("D3") + "_icon", // talent_001_icon, talent_002_icon, etc.
+                "ability_" + abilityId.ToString("D3") + "_icon", // ability_001_icon, ability_002_icon, etc.
+            };
+
+            // Try each pattern
+            foreach (string iconResRef in iconNamePatterns)
+            {
+                if (_resourceProvider != null)
+                {
+                    var iconId = new ResourceIdentifier(iconResRef, ParsingResourceType.TPC);
+                    Task<bool> existsTask = _resourceProvider.ExistsAsync(iconId, CancellationToken.None);
+                    existsTask.Wait();
+                    if (existsTask.Result)
+                    {
+                        return iconResRef;
+                    }
+                }
+            }
+
+            // TODO: PLACEHOLDER - Full implementation would look up icon from abilities/talents 2DA table
+            // Based on daorigins.exe: Abilities/talents 2DA table contains "icon" column with icon resref
+            // This would require access to EclipseTwoDATableManager or IGameDataProvider to query 2DA tables
+            // For now, return empty string if pattern matching fails
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// Gets the remaining cooldown time for an item in seconds.
+        /// Based on daorigins.exe: Items can have cooldowns that prevent immediate reuse.
+        /// </summary>
+        /// <param name="entity">Entity that owns the item.</param>
+        /// <param name="item">Item entity to check cooldown for.</param>
+        /// <returns>Remaining cooldown time in seconds, or 0.0f if not on cooldown.</returns>
+        private float GetItemCooldown(IEntity entity, IEntity item)
+        {
+            if (entity == null || item == null)
+            {
+                return 0.0f;
+            }
+
+            // Based on daorigins.exe: Item cooldowns are tracked per item type
+            // Check if entity has a cooldown component or if items have cooldown tracking
+            // For now, simplified implementation - full version would track item cooldowns per entity
+            // TODO: PLACEHOLDER - Full implementation would integrate with item cooldown tracking system
+            // Cooldowns are typically tracked per item type (not per item instance)
+            // Common item cooldown: potions/consumables typically have 1-5 second cooldowns
+            // Full implementation would access cooldown tracking from ICooldownComponent or similar
+            return 0.0f;
+        }
+
+        /// <summary>
+        /// Gets the remaining cooldown time for an ability/talent in seconds.
+        /// Based on daorigins.exe: Abilities/talents have cooldowns that prevent immediate reuse.
+        /// </summary>
+        /// <param name="entity">Entity that owns the ability.</param>
+        /// <param name="abilityId">Ability/talent ID to check cooldown for.</param>
+        /// <returns>Remaining cooldown time in seconds, or 0.0f if not on cooldown.</returns>
+        private float GetAbilityCooldown(IEntity entity, int abilityId)
+        {
+            if (entity == null || abilityId < 0)
+            {
+                return 0.0f;
+            }
+
+            // Based on daorigins.exe: Ability/talent cooldowns are tracked per ability ID
+            // Check if entity has a cooldown component or stats component that tracks ability cooldowns
+            IStatsComponent stats = entity.GetComponent<IStatsComponent>();
+            if (stats != null)
+            {
+                // TODO: PLACEHOLDER - Full implementation would check ability cooldown from stats component
+                // Abilities/talents typically have cooldown times (5-60+ seconds depending on ability)
+                // Full implementation would access GetAbilityCooldownRemaining(abilityId) or similar method
+                // For now, return 0.0f (no cooldown) - cooldown tracking would be implemented in IStatsComponent or ICooldownComponent
+            }
+
+            return 0.0f;
+        }
+
+        /// <summary>
+        /// Renders a cooldown overlay on top of an action bar slot icon.
+        /// Based on daorigins.exe: Cooldown overlays show remaining cooldown time as a semi-transparent dark overlay covering the icon.
+        /// </summary>
+        /// <param name="x">Slot X position (screen coordinates).</param>
+        /// <param name="y">Slot Y position (screen coordinates).</param>
+        /// <param name="width">Slot width in pixels.</param>
+        /// <param name="height">Slot height in pixels.</param>
+        /// <param name="cooldownRemaining">Remaining cooldown time in seconds.</param>
+        private void RenderCooldownOverlay(float x, float y, float width, float height, float cooldownRemaining)
+        {
+            // Based on daorigins.exe: Cooldown overlay is a semi-transparent dark overlay (usually black with ~50% alpha)
+            // The overlay covers the icon from top to bottom proportionally to remaining cooldown
+            // Assumes a maximum cooldown time for display purposes (typical abilities: 5-60 seconds)
+            const float maxCooldownDisplayTime = 60.0f; // Maximum cooldown time to display (60 seconds)
+            float cooldownPercent = System.Math.Min(1.0f, cooldownRemaining / maxCooldownDisplayTime);
+            
+            if (cooldownPercent <= 0.0f)
+            {
+                return; // No cooldown, don't render overlay
+            }
+
+            // Calculate overlay height based on cooldown percentage
+            // Cooldown overlay covers from top to bottom (100% cooldown = full overlay, 0% = no overlay)
+            float overlayHeight = height * cooldownPercent;
+            
+            // Cooldown overlay color: Black with 50% alpha (0x80000000)
+            uint cooldownOverlayColor = 0x80000000; // ARGB: 50% alpha black
+            
+            // Render cooldown overlay covering the icon from top
+            DrawQuad(x, y, width, overlayHeight, cooldownOverlayColor, IntPtr.Zero);
+            
+            // Optionally render cooldown time text (if text rendering is available)
+            // Based on daorigins.exe: Some versions show cooldown time in seconds as text overlay
+            // For now, visual overlay only - text rendering would require font system
+        }
+
+        /// <summary>
+        /// Renders a hotkey label (number 1-9) in the bottom-right corner of an action bar slot.
+        /// Based on daorigins.exe: Hotkey labels show the number key (1-9) that activates the slot.
+        /// </summary>
+        /// <param name="x">Slot X position (screen coordinates).</param>
+        /// <param name="y">Slot Y position (screen coordinates).</param>
+        /// <param name="width">Slot width in pixels.</param>
+        /// <param name="height">Slot height in pixels.</param>
+        /// <param name="hotkeyNumber">Hotkey number (1-9).</param>
+        private void RenderHotkeyLabel(float x, float y, float width, float height, int hotkeyNumber)
+        {
+            if (hotkeyNumber < 1 || hotkeyNumber > 9)
+            {
+                return; // Invalid hotkey number
+            }
+
+            // Based on daorigins.exe: Hotkey labels are rendered in bottom-right corner of slot
+            // Label is a small text/number overlay showing the hotkey number
+            // Hotkey labels are typically white/yellow text with dark background or shadow for visibility
+            
+            // Position: Bottom-right corner with small margin (2-3 pixels from edge)
+            const float labelMargin = 2.0f;
+            const float labelSize = 16.0f; // Size of hotkey label (text height)
+            float labelX = x + width - labelSize - labelMargin;
+            float labelY = y + height - labelSize - labelMargin;
+            
+            // Background: Small dark background quad for label (for text visibility)
+            uint labelBackgroundColor = 0xCC000000; // Black with 80% alpha
+            DrawQuad(labelX - 1.0f, labelY - 1.0f, labelSize + 2.0f, labelSize + 2.0f, labelBackgroundColor, IntPtr.Zero);
+            
+            // TODO: STUB - Text rendering for hotkey number
+            // Based on daorigins.exe: Hotkey labels use DirectX 9 font rendering (ID3DXFont::DrawText)
+            // Text color: White (0xFFFFFFFF) or yellow (0xFFFFFF00) for visibility
+            // Font size: Small (typically 10-12pt)
+            // For now, visual placeholder (background) only - text rendering requires font system
+            // RenderTextDirectX9(labelX, labelY, hotkeyNumber.ToString(), 0xFFFFFFFF);
         }
 
         /// <summary>
@@ -2725,7 +2962,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
 
             // TODO: Implement actual text rendering using DirectX 9 font system
             // Text rendering would use ID3DXFont::DrawText or similar DirectX 9 text rendering API
-            // For now, this is a placeholder - text rendering would require font loading and text rendering pipeline
+            // TODO: STUB -  For now, this is a placeholder - text rendering would require font loading and text rendering pipeline
             // Based on daorigins.exe: Text rendering uses DirectX 9 font rendering with proper text centering
             // Text color: White (0xFFFFFFFF) for normal buttons, brighter for selected buttons
             uint textColor = 0xFFFFFFFF; // White, fully opaque
