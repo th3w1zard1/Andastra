@@ -658,11 +658,11 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public float MipMapLevelOfDetailBias
         {
-            get { return _description.MipMapLevelOfDetailBias; }
+            get { return (float)_description.MipMapLevelOfDetailBias; }
             set
             {
                 var desc = _description;
-                desc.MipMapLevelOfDetailBias = value;
+                desc.MipMapLevelOfDetailBias = (double)value;
                 _description = desc;
             }
         }
