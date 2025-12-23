@@ -41,7 +41,7 @@ namespace Andastra.Runtime.MonoGame.Graphics
 
         public MonoGameGraphicsBackend()
         {
-            _game = new Game();
+            _game = new Microsoft.Xna.Framework.Game();
             _graphicsDeviceManager = new GraphicsDeviceManager(_game);
         }
 
