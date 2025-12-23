@@ -398,11 +398,211 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 }
                 catch (Exception e)
                 {
-                    // TODO:  Last resort: create comprehensive fallback stub data so we always have something to show
-                    Debug("Critical error during decompilation, creating fallback stub: " + e.Message);
+                    // Last resort: create comprehensive fallback stub data so we always have something to show
+                    // Based on NCSDecomp implementation: Always return comprehensive fallback stub with all available information
+                    // This ensures the decompiler always produces output, even when critical errors occur
+                    // The stub includes detailed error information, file metadata, extracted bytecode information, and function stubs
+                    Debug("Critical error during decompilation, creating comprehensive fallback stub: " + e.Message);
                     e.PrintStackTrace(JavaSystem.@out);
                     data = new Utils.FileScriptData();
-                    data.SetCode(this.GenerateComprehensiveFallbackStub(file, "Initial decompilation attempt", e, null));
+
+                    // Try to extract information from the NCS file even if decompilation failed
+                    // This allows us to create a more comprehensive fallback stub with actual extracted data
+                    string decodedCommands = null;
+                    List<ExtractedSubroutineInfo> extractedSubs = null;
+                    Dictionary<string, object> fileInfo = null;
+
+                    try
+                    {
+                        // Step 1: Try to decode bytecode even if decompilation failed
+                        // This allows us to extract subroutine signatures and other information
+                        if (this.actions != null && file != null && file.Exists() && file.Length > 0)
+                        {
+                            try
+                            {
+                                Debug("Attempting to decode bytecode for comprehensive fallback stub...");
+                                using (var fileStream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read))
+                                using (var bufferedStream = new BufferedStream(fileStream))
+                                using (var binaryReader = new System.IO.BinaryReader(bufferedStream))
+                                {
+                                    decodedCommands = new Decoder(binaryReader, this.actions).Decode();
+                                    Debug("Successfully decoded bytecode for fallback stub (length: " + (decodedCommands != null ? decodedCommands.Length : 0) + " characters)");
+                                }
+                            }
+                            catch (Exception decodeEx)
+                            {
+                                Debug("Failed to decode bytecode for fallback stub: " + decodeEx.Message);
+                                // Continue without decoded commands - we'll still create a comprehensive stub
+                            }
+
+                            // Step 2: If we have decoded commands, try to extract subroutine information
+                            if (decodedCommands != null && decodedCommands.Length > 0)
+                            {
+                                try
+                                {
+                                    extractedSubs = this.ExtractSubroutineInformation(decodedCommands);
+                                    if (extractedSubs != null && extractedSubs.Count > 0)
+                                    {
+                                        Debug("Extracted information for " + extractedSubs.Count + " subroutines from decoded commands");
+                                    }
+                                }
+                                catch (Exception extractEx)
+                                {
+                                    Debug("Failed to extract subroutine information: " + extractEx.Message);
+                                    // Continue without extracted subroutines - we'll still create a comprehensive stub
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception extractEx)
+                    {
+                        Debug("Error during information extraction for fallback stub: " + extractEx.Message);
+                        // Continue with basic stub - we've already logged the error
+                    }
+
+                    // Step 3: Extract file information (size, header, etc.)
+                    try
+                    {
+                        fileInfo = this.ExtractBasicNcsInformation(file);
+                        // Add file header hex if available
+                        if (fileInfo != null && file != null && file.Exists() && file.Length > 0)
+                        {
+                            try
+                            {
+                                using (var fileStream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read))
+                                {
+                                    byte[] header = new byte[Math.Min(16, (int)file.Length)];
+                                    int read = fileStream.Read(header, 0, header.Length);
+                                    if (read > 0)
+                                    {
+                                        fileInfo["file_header_hex"] = this.BytesToHex(header, read);
+                                    }
+                                }
+                            }
+                            catch (Exception headerEx)
+                            {
+                                Debug("Failed to read file header: " + headerEx.Message);
+                            }
+                        }
+                    }
+                    catch (Exception fileInfoEx)
+                    {
+                        Debug("Failed to extract file information: " + fileInfoEx.Message);
+                        fileInfo = null;
+                    }
+
+                    // Step 4: Build comprehensive additional information
+                    StringBuilder additionalInfo = new StringBuilder();
+                    additionalInfo.Append("Critical error occurred during initial decompilation attempt.\n");
+                    additionalInfo.Append("Exception type: ").Append(e.GetType().Name).Append("\n");
+                    additionalInfo.Append("Exception message: ").Append(e.Message != null ? e.Message.Replace("\n", " ").Replace("\r", "") : "null").Append("\n\n");
+
+                    if (fileInfo != null && fileInfo.Count > 0)
+                    {
+                        additionalInfo.Append("NCS File Information:\n");
+                        if (fileInfo.ContainsKey("actual_file_size"))
+                        {
+                            additionalInfo.Append("  File size: ").Append(fileInfo["actual_file_size"]).Append(" bytes\n");
+                        }
+                        else if (fileInfo.ContainsKey("file_size"))
+                        {
+                            additionalInfo.Append("  File size: ").Append(fileInfo["file_size"]).Append(" bytes\n");
+                        }
+                        if (fileInfo.ContainsKey("instruction_count"))
+                        {
+                            additionalInfo.Append("  Estimated instruction count: ").Append(fileInfo["instruction_count"]).Append("\n");
+                            if (fileInfo.ContainsKey("instruction_count_note"))
+                            {
+                                additionalInfo.Append("  Note: ").Append(fileInfo["instruction_count_note"]).Append("\n");
+                            }
+                        }
+                        if (fileInfo.ContainsKey("code_size_bytes"))
+                        {
+                            additionalInfo.Append("  Estimated code size: ").Append(fileInfo["code_size_bytes"]).Append(" bytes\n");
+                        }
+                        if (fileInfo.ContainsKey("file_header_hex"))
+                        {
+                            additionalInfo.Append("  File header (hex): ").Append(fileInfo["file_header_hex"]).Append("\n");
+                        }
+                        if (fileInfo.ContainsKey("signature"))
+                        {
+                            additionalInfo.Append("  Signature: ").Append(fileInfo["signature"]).Append("\n");
+                        }
+                        if (fileInfo.ContainsKey("version"))
+                        {
+                            additionalInfo.Append("  Version: ").Append(fileInfo["version"]).Append("\n");
+                        }
+                        additionalInfo.Append("\n");
+                    }
+
+                    if (extractedSubs != null && extractedSubs.Count > 0)
+                    {
+                        additionalInfo.Append("Extracted Subroutine Information:\n");
+                        additionalInfo.Append("  Detected subroutines: ").Append(extractedSubs.Count).Append("\n");
+                        foreach (ExtractedSubroutineInfo subInfo in extractedSubs)
+                        {
+                            additionalInfo.Append("    - ").Append(subInfo.Signature != null ? subInfo.Signature : "unknown signature").Append("\n");
+                        }
+                        additionalInfo.Append("\n");
+                    }
+
+                    if (decodedCommands != null && decodedCommands.Length > 0)
+                    {
+                        additionalInfo.Append("Decoded Commands:\n");
+                        additionalInfo.Append("  Successfully decoded bytecode (length: ").Append(decodedCommands.Length).Append(" characters)\n");
+                        additionalInfo.Append("  Decoded commands are available but could not be parsed into an AST.\n");
+                        additionalInfo.Append("  This may indicate malformed bytecode or an unsupported format variant.\n\n");
+                    }
+
+                    additionalInfo.Append("RECOVERY NOTE:\n");
+                    additionalInfo.Append("  The decompiler attempted to extract as much information as possible from the NCS file.\n");
+                    if (extractedSubs != null && extractedSubs.Count > 0)
+                    {
+                        additionalInfo.Append("  Function stubs have been generated based on detected subroutine signatures.\n");
+                    }
+                    else if (decodedCommands != null && decodedCommands.Length > 0)
+                    {
+                        additionalInfo.Append("  Decoded commands are available but could not be parsed into function signatures.\n");
+                    }
+                    else
+                    {
+                        additionalInfo.Append("  Bytecode decoding failed - only basic file information is available.\n");
+                    }
+                    additionalInfo.Append("  This fallback stub provides a syntactically valid NSS file that can be compiled.\n");
+
+                    // Step 5: Generate comprehensive fallback stub with all available information
+                    string stubCode;
+                    if (extractedSubs != null && extractedSubs.Count > 0)
+                    {
+                        // Use stub with extracted subroutines if available
+                        stubCode = this.GenerateComprehensiveFallbackStubWithSubroutines(
+                            file,
+                            "Initial decompilation attempt",
+                            e,
+                            additionalInfo.ToString(),
+                            extractedSubs);
+                    }
+                    else if (decodedCommands != null && decodedCommands.Length > 0)
+                    {
+                        // Use stub with preserved commands if available
+                        stubCode = this.GenerateComprehensiveFallbackStubWithPreservedCommands(
+                            file,
+                            "Initial decompilation attempt",
+                            e,
+                            additionalInfo.ToString(),
+                            decodedCommands);
+                    }
+                    else
+                    {
+                        // Use basic comprehensive stub if no additional information is available
+                        stubCode = this.GenerateComprehensiveFallbackStub(
+                            file,
+                            "Initial decompilation attempt",
+                            e,
+                            additionalInfo.ToString());
+                    }
+
+                    data.SetCode(stubCode);
                     this.filedata[file] = data;
                 }
             }
@@ -1441,7 +1641,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     // Use reflection or a method to access subdata if available
                     // Since subdata is private, we'll try to extract struct declarations through available methods
                     // Check if we can get struct declarations through subdata
-                    var subdataField = typeof(Utils.FileScriptData).GetField("subdata", 
+                    var subdataField = typeof(Utils.FileScriptData).GetField("subdata",
                         System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                     if (subdataField != null)
                     {
@@ -2649,7 +2849,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                                 }
                             }
                         }
-                        
+
                         // Ensure we have parameter types for all parameters
                         while (info.ParameterTypes.Count < paramCount)
                         {
