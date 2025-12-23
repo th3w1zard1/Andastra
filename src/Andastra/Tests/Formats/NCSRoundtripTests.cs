@@ -3321,7 +3321,7 @@ namespace Andastra.Parsing.Tests.Formats
         /// Attempts to identify the action name at a given bytecode offset.
         /// Returns null if unable to determine.
         /// Matching Java implementation at vendor/DeNCS/src/test/java/com/kotor/resource/formats/ncs/NCSDecompCLIRoundTripTest.java:3656-3699
-        /// 
+        ///
         /// Implementation: Full NCS structure analysis - parses the NCS file to locate the instruction
         /// containing the given offset, and if it's an ACTION instruction, extracts the action ID properly.
         /// Based on swkotor2.exe ACTION opcode structure: bytecode (0x05) + qualifier (1 byte) + routine ID (uint16 big-endian) + arg count (uint8)

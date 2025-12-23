@@ -115,10 +115,10 @@ namespace Andastra.Parsing.Formats.TPC
         private static ResourceType DoCheck(byte[] sample)
         {
             // Check for standard DDS magic "DDS "
-            if (sample.Length >= 4 && 
-                sample[0] == (byte)'D' && 
-                sample[1] == (byte)'D' && 
-                sample[2] == (byte)'S' && 
+            if (sample.Length >= 4 &&
+                sample[0] == (byte)'D' &&
+                sample[1] == (byte)'D' &&
+                sample[2] == (byte)'S' &&
                 sample[3] == (byte)' ')
             {
                 return ResourceType.DDS;
@@ -134,8 +134,8 @@ namespace Andastra.Parsing.Formats.TPC
                 uint dataSize = BitConverter.ToUInt32(sample, 12);
 
                 // Validate BioWare DDS header: reasonable dimensions and bpp values
-                if (width > 0 && width < 0x8000 && 
-                    height > 0 && height < 0x8000 && 
+                if (width > 0 && width < 0x8000 &&
+                    height > 0 && height < 0x8000 &&
                     (bpp == 3 || bpp == 4))
                 {
                     // Calculate expected data size based on bpp

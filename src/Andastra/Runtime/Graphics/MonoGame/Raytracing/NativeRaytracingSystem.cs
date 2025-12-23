@@ -5869,24 +5869,3 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
 }
 
 
-        {
-            public Vector3 LightDirection;      // 12 bytes
-            public float MaxDistance;            // 4 bytes
-            public float SoftShadowAngle;       // 4 bytes
-            public int SamplesPerPixel;         // 4 bytes
-            public int RenderWidth;             // 4 bytes
-            public int RenderHeight;            // 4 bytes
-            // Total: 32 bytes (aligned)
-        }
-
-        /// <summary>
-        /// Cached texture information for quick lookups.
-        /// </summary>
-        private struct TextureInfo
-        {
-            public int Width;
-            public int Height;
-        }
-    }
-}
-

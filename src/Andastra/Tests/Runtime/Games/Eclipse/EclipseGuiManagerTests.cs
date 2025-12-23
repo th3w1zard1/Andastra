@@ -27,11 +27,11 @@ namespace Andastra.Tests.Runtime.Games.Eclipse
         {
             _graphicsDevice = GraphicsTestHelper.CreateTestIGraphicsDevice();
             _mockResourceLookup = new Mock<IResourceLookup>(MockBehavior.Strict);
-            
+
             var mockInstallation = new Mock<Installation>(MockBehavior.Strict);
             mockInstallation.Setup(i => i.Resources).Returns(_mockResourceLookup.Object);
             _installation = mockInstallation.Object;
-            
+
             _guiManager = new EclipseGuiManager(_graphicsDevice, _installation);
         }
 
@@ -47,12 +47,12 @@ namespace Andastra.Tests.Runtime.Games.Eclipse
             // Arrange
             string guiName = "mainmenu";
             byte[] guiData = CreateTestGUIData();
-            
+
             _mockResourceLookup.Setup(r => r.LookupResource(
                 guiName,
                 ResourceType.GUI,
-                It.IsAny<string[]>(),
-                It.IsAny<string[]>()))
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
                 .Returns(new ResourceResult(guiName, ResourceType.GUI, "test.gui", guiData));
 
             // Act
@@ -67,7 +67,7 @@ namespace Andastra.Tests.Runtime.Games.Eclipse
         {
             // Arrange
             string guiName = "missing_gui";
-            
+
             _mockResourceLookup.Setup(r => r.LookupResource(
                 guiName,
                 ResourceType.GUI,
@@ -100,12 +100,12 @@ namespace Andastra.Tests.Runtime.Games.Eclipse
             // Arrange
             string guiName = "test_gui";
             byte[] guiData = CreateTestGUIData();
-            
+
             _mockResourceLookup.Setup(r => r.LookupResource(
                 guiName,
                 ResourceType.GUI,
-                It.IsAny<string[]>(),
-                It.IsAny<string[]>()))
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
                 .Returns(new ResourceResult(guiName, ResourceType.GUI, "test.gui", guiData));
 
             _guiManager.LoadGui(guiName, 1920, 1080);
@@ -133,12 +133,12 @@ namespace Andastra.Tests.Runtime.Games.Eclipse
             // Arrange
             string guiName = "test_gui";
             byte[] guiData = CreateTestGUIData();
-            
+
             _mockResourceLookup.Setup(r => r.LookupResource(
                 guiName,
                 ResourceType.GUI,
-                It.IsAny<string[]>(),
-                It.IsAny<string[]>()))
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
                 .Returns(new ResourceResult(guiName, ResourceType.GUI, "test.gui", guiData));
 
             _guiManager.LoadGui(guiName, 1920, 1080);

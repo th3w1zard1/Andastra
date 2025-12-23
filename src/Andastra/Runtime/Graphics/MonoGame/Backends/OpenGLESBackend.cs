@@ -1494,7 +1494,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// </summary>
         private void SetDefaultState()
         {
-            if (_glEnable == null || _glDepthFunc == null || _glCullFace == null || 
+            if (_glEnable == null || _glDepthFunc == null || _glCullFace == null ||
                 _glFrontFace == null || _glBlendFunc == null || _glClearColor == null)
             {
                 Console.WriteLine("[OpenGLESBackend] SetDefaultState: Functions not loaded, skipping state setup");

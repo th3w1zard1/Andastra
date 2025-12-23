@@ -5293,7 +5293,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     {
                         // Bind argument buffer at the specified set index
                         // Metal API: [computeEncoder setBuffer:argumentBuffer offset:0 atIndex:setIndex]
-                        MetalNative.SetComputeBuffer(_currentComputeCommandEncoder, argumentBuffer, 0UL, (uint)(setIndex + 10));
+                        MetalNative.SetBuffer(_currentComputeCommandEncoder, argumentBuffer, 0UL, (uint)(setIndex + 10));
                     }
                 }
             }

@@ -112,6 +112,11 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
         /// </summary>
         public int PortraitId { get; set; }
 
+        /// <summary>
+        /// Gender (0 = Male, 1 = Female).
+        /// </summary>
+        public int Gender { get; set; }
+
         #endregion
 
         #region Vital Statistics

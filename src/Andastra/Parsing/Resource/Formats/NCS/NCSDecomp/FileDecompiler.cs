@@ -5712,6 +5712,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             public virtual void GenerateCode()
             {
                 string newline = Environment.NewLine;
+                string structDecls = "";
+                string globs = "";
 
                 // Heuristic renaming for common library helpers when symbol data is missing.
                 // Only applies to generic subX names and matches on body patterns.
@@ -5734,15 +5736,15 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     stubBuilder.Append("//   - File may be a data file rather than a script file" + newline + newline);
 
                     // Extract struct declarations if available
-                    string structDecls = "";
+                    string stubStructDecls = "";
                     if (this.subdata != null)
                     {
                         try
                         {
-                            structDecls = this.subdata.GetStructDeclarations();
-                            if (!string.IsNullOrEmpty(structDecls) && structDecls.Trim().Length > 0)
+                            stubStructDecls = this.subdata.GetStructDeclarations();
+                            if (!string.IsNullOrEmpty(stubStructDecls) && stubStructDecls.Trim().Length > 0)
                             {
-                                stubBuilder.Append(structDecls + newline);
+                                stubBuilder.Append(stubStructDecls + newline);
                             }
                         }
                         catch (Exception e)
@@ -5752,16 +5754,16 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     }
 
                     // Extract globals if available
-                    string globs = "";
+                    string stubGlobs = "";
                     if (this.globals != null)
                     {
                         try
                         {
-                            globs = this.globals.ToStringGlobals();
-                            if (!string.IsNullOrEmpty(globs) && globs.Trim().Length > 0)
+                            stubGlobs = this.globals.ToStringGlobals();
+                            if (!string.IsNullOrEmpty(stubGlobs) && stubGlobs.Trim().Length > 0)
                             {
                                 stubBuilder.Append("// Globals" + newline);
-                                stubBuilder.Append(globs + newline);
+                                stubBuilder.Append(stubGlobs + newline);
                             }
                             else
                             {
@@ -6052,7 +6054,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     }
                 }
 
-                string globs = "";
+                globs = "";
                 if (this.globals != null)
                 {
                     try
@@ -6073,7 +6075,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     protobuff.Append(newline);
                 }
 
-                string structDecls = "";
+                structDecls = "";
                 try
                 {
                     if (this.subdata != null)

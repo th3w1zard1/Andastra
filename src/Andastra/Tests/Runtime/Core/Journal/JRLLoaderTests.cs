@@ -36,11 +36,11 @@ namespace Andastra.Tests.Runtime.Core.Journal
             // Arrange
             string jrlResRef = "test_quest";
             JRL testJrl = CreateTestJRL();
-            byte[] jrlData = JRLHelper.BytesJrl(testJrl);
+            byte[] jrlData = JRLHelpers.BytesJrl(testJrl);
 
             var resourceResult = new ResourceResult(jrlResRef, ResourceType.JRL, "", jrlData);
             _mockResourceManager
-                .Setup(m => m.LookupResource(jrlResRef, ResourceType.JRL))
+                .Setup(m => m.LookupResource(jrlResRef, ResourceType.JRL, null, null))
                 .Returns(resourceResult);
 
             // Act
@@ -54,7 +54,7 @@ namespace Andastra.Tests.Runtime.Core.Journal
             // Verify caching - second call should use cache
             JRL cachedJrl = _jrlLoader.LoadJRL(jrlResRef);
             cachedJrl.Should().BeSameAs(loadedJrl);
-            _mockResourceManager.Verify(m => m.LookupResource(jrlResRef, ResourceType.JRL), Times.Once);
+            _mockResourceManager.Verify(m => m.LookupResource(jrlResRef, ResourceType.JRL, It.IsAny<SearchLocation[]>(), It.IsAny<string>()), Times.Once);
         }
 
         [Fact]
@@ -64,7 +64,7 @@ namespace Andastra.Tests.Runtime.Core.Journal
             string jrlResRef = "nonexistent";
 
             _mockResourceManager
-                .Setup(m => m.LookupResource(jrlResRef, ResourceType.JRL))
+                .Setup(m => m.LookupResource(jrlResRef, ResourceType.JRL, null, null))
                 .Returns((ResourceResult)null);
 
             // Act
@@ -82,11 +82,11 @@ namespace Andastra.Tests.Runtime.Core.Journal
             string questTag = "test_quest";
             int entryId = 0;
             JRL testJrl = CreateTestJRL();
-            byte[] jrlData = JRLHelper.BytesJrl(testJrl);
+            byte[] jrlData = JRLHelpers.BytesJrl(testJrl);
 
             var resourceResult = new ResourceResult(jrlResRef, ResourceType.JRL, "", jrlData);
             _mockResourceManager
-                .Setup(m => m.LookupResource(jrlResRef, ResourceType.JRL))
+                .Setup(m => m.LookupResource(jrlResRef, ResourceType.JRL, null, null))
                 .Returns(resourceResult);
 
             // Create mock TLK for text resolution
@@ -108,11 +108,11 @@ namespace Andastra.Tests.Runtime.Core.Journal
             string questTag = "nonexistent_quest";
             int entryId = 0;
             JRL testJrl = CreateTestJRL();
-            byte[] jrlData = JRLHelper.BytesJrl(testJrl);
+            byte[] jrlData = JRLHelpers.BytesJrl(testJrl);
 
             var resourceResult = new ResourceResult(jrlResRef, ResourceType.JRL, "", jrlData);
             _mockResourceManager
-                .Setup(m => m.LookupResource(jrlResRef, ResourceType.JRL))
+                .Setup(m => m.LookupResource(jrlResRef, ResourceType.JRL, null, null))
                 .Returns(resourceResult);
 
             // Act
@@ -130,11 +130,11 @@ namespace Andastra.Tests.Runtime.Core.Journal
             string questTag = "test_quest";
             int entryId = 999; // Invalid entry ID
             JRL testJrl = CreateTestJRL();
-            byte[] jrlData = JRLHelper.BytesJrl(testJrl);
+            byte[] jrlData = JRLHelpers.BytesJrl(testJrl);
 
             var resourceResult = new ResourceResult(jrlResRef, ResourceType.JRL, "", jrlData);
             _mockResourceManager
-                .Setup(m => m.LookupResource(jrlResRef, ResourceType.JRL))
+                .Setup(m => m.LookupResource(jrlResRef, ResourceType.JRL, null, null))
                 .Returns(resourceResult);
 
             // Act
@@ -154,7 +154,7 @@ namespace Andastra.Tests.Runtime.Core.Journal
             byte[] jrlData = JRLHelper.BytesJrl(globalJrl);
 
             _mockResourceManager
-                .Setup(m => m.LookupResource("global", ResourceType.JRL))
+                .Setup(m => m.LookupResource("global", ResourceType.JRL, null, null))
                 .Returns(new ResourceResult("global", ResourceType.JRL, "test.jrl", jrlData));
 
             // Create mock TLK for text resolution
@@ -175,11 +175,11 @@ namespace Andastra.Tests.Runtime.Core.Journal
             string jrlResRef = "test_quest";
             string questTag = "test_quest";
             JRL testJrl = CreateTestJRL();
-            byte[] jrlData = JRLHelper.BytesJrl(testJrl);
+            byte[] jrlData = JRLHelpers.BytesJrl(testJrl);
 
             var resourceResult = new ResourceResult(jrlResRef, ResourceType.JRL, "", jrlData);
             _mockResourceManager
-                .Setup(m => m.LookupResource(jrlResRef, ResourceType.JRL))
+                .Setup(m => m.LookupResource(jrlResRef, ResourceType.JRL, null, null))
                 .Returns(resourceResult);
 
             // Act
@@ -197,11 +197,11 @@ namespace Andastra.Tests.Runtime.Core.Journal
             string jrlResRef = "test_quest";
             string questTag = "nonexistent_quest";
             JRL testJrl = CreateTestJRL();
-            byte[] jrlData = JRLHelper.BytesJrl(testJrl);
+            byte[] jrlData = JRLHelpers.BytesJrl(testJrl);
 
             var resourceResult = new ResourceResult(jrlResRef, ResourceType.JRL, "", jrlData);
             _mockResourceManager
-                .Setup(m => m.LookupResource(jrlResRef, ResourceType.JRL))
+                .Setup(m => m.LookupResource(jrlResRef, ResourceType.JRL, null, null))
                 .Returns(resourceResult);
 
             // Act
@@ -217,11 +217,11 @@ namespace Andastra.Tests.Runtime.Core.Journal
             // Arrange
             string jrlResRef = "test_quest";
             JRL testJrl = CreateTestJRL();
-            byte[] jrlData = JRLHelper.BytesJrl(testJrl);
+            byte[] jrlData = JRLHelpers.BytesJrl(testJrl);
 
             var resourceResult = new ResourceResult(jrlResRef, ResourceType.JRL, "", jrlData);
             _mockResourceManager
-                .Setup(m => m.LookupResource(jrlResRef, ResourceType.JRL))
+                .Setup(m => m.LookupResource(jrlResRef, ResourceType.JRL, null, null))
                 .Returns(resourceResult);
 
             _jrlLoader.LoadJRL(jrlResRef);

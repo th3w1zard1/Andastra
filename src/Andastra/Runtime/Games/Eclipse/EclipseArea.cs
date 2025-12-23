@@ -13540,62 +13540,6 @@ technique ColorGrading
     }
 
     /// <summary>
-    /// Loads a texture from TPC format data.
-    /// Based on daorigins.exe: TPC texture loading and conversion to graphics API format.
-    /// </summary>
-    /// <param name="tpcData">TPC file data as byte array.</param>
-    /// <param name="textureName">Texture name for error reporting.</param>
-    /// <returns>ITexture2D instance or null on failure.</returns>
-    private ITexture2D LoadTextureFromTPCData(byte[] tpcData, string textureName)
-    {
-        if (_renderContext?.GraphicsDevice == null)
-        {
-            return null;
-        }
-
-        try
-        {
-            // Parse TPC file using existing parser
-            // Based on daorigins.exe: TPC file parsing for texture data extraction
-            var tpc = TPCAuto.ReadTpc(tpcData);
-            if (tpc == null || tpc.Layers.Count == 0 || tpc.Layers[0].Mipmaps.Count == 0)
-            {
-                System.Console.WriteLine($"[EclipseArea] LoadTextureFromTPCData: Failed to parse TPC texture '{textureName}'");
-                return null;
-            }
-
-            // Get first mipmap (largest mip level)
-            // Based on daorigins.exe: Uses largest mipmap for texture creation
-            var mipmap = tpc.Layers[0].Mipmaps[0];
-            if (mipmap.Data == null || mipmap.Data.Length == 0)
-            {
-                System.Console.WriteLine($"[EclipseArea] LoadTextureFromTPCData: TPC texture '{textureName}' has no mipmap data");
-                return null;
-            }
-
-            // Convert TPC format to RGBA data for MonoGame
-            // Based on daorigins.exe: TPC formats converted to RGBA for DirectX 9
-            byte[] rgbaData = ConvertTPCToRGBA(tpc, mipmap.Width, mipmap.Height);
-            if (rgbaData == null)
-            {
-                System.Console.WriteLine($"[EclipseArea] LoadTextureFromTPCData: Failed to convert TPC texture '{textureName}' to RGBA");
-                return null;
-            }
-
-            // Create MonoGame texture from RGBA data
-            // Based on daorigins.exe: Texture creation from converted pixel data
-            var texture = _renderContext.GraphicsDevice.CreateTexture2D(mipmap.Width, mipmap.Height, rgbaData);
-            System.Console.WriteLine($"[EclipseArea] LoadTextureFromTPCData: Successfully loaded TPC texture '{textureName}' ({mipmap.Width}x{mipmap.Height})");
-            return texture;
-        }
-        catch (Exception ex)
-        {
-            System.Console.WriteLine($"[EclipseArea] LoadTextureFromTPCData: Exception loading TPC texture '{textureName}': {ex.Message}");
-            return null;
-        }
-    }
-
-    /// <summary>
     /// Loads a texture from DDS format data.
     /// Based on daorigins.exe: DDS texture loading for DirectX 9 compatibility.
     /// </summary>
@@ -14158,6 +14102,7 @@ technique ColorGrading
         rgb888[offset + 1] = (byte)((g6 * 255) / 63); // Green
         rgb888[offset + 2] = (byte)((b5 * 255) / 31); // Blue
     }
+    }
 
     /// <summary>
     /// Represents a debris piece generated from destroyed geometry.
@@ -14166,7 +14111,7 @@ technique ColorGrading
     /// Based on daorigins.exe/DragonAge2.exe: Debris physics objects.
     /// </remarks>
     public class DebrisPiece
-        {
+    {
         /// <summary>
         /// Mesh identifier that this debris came from.
         /// </summary>
@@ -14218,6 +14163,7 @@ technique ColorGrading
             LifeTime = 30.0f;
             RemainingLifeTime = 30.0f;
         }
+    }
     }
 }
 

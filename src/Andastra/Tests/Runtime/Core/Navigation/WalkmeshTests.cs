@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using Xunit;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.BWM;
 using Andastra.Parsing.Resource.Formats.LYT;
+using Andastra.Parsing.Common;
 
 namespace Andastra.Tests.Runtime.Core.Navigation
 {
@@ -256,8 +258,8 @@ namespace Andastra.Tests.Runtime.Core.Navigation
             // Assert: Both methods produce identical results
             if (room1a.Faces != null && room1a.Faces.Count > 0 && room1b.Faces != null && room1b.Faces.Count > 0)
             {
-                Assert.Equal(room1a._faces[0].Trans1, room1b._faces[0].Trans1);
-                Assert.Equal(room1a._faces[0].Trans2, room1b._faces[0].Trans2);
+                Assert.Equal(room1a.Faces[0].Trans1, room1b.Faces[0].Trans1);
+                Assert.Equal(room1a.Faces[0].Trans2, room1b.Faces[0].Trans2);
             }
         }
 
