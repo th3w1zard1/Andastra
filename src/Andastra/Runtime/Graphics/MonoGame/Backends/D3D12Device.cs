@@ -5438,9 +5438,174 @@ namespace Andastra.Runtime.MonoGame.Backends
             // This should call CreateSrvDescriptorForTexture and copy the descriptor to the provided handle
         }
 
+        /// <summary>
+        /// Creates a UAV descriptor for a texture in a binding set.
+        /// Based on DirectX 12 Unordered Access Views: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createunorderedaccessview
+        /// Creates a shader-visible descriptor in the CBV_SRV_UAV descriptor heap for binding sets.
+        /// </summary>
+        /// <param name="texture">The texture to create a UAV descriptor for.</param>
+        /// <param name="cpuDescriptorHandle">CPU descriptor handle where the UAV descriptor will be created.</param>
         private void CreateUavDescriptorForBindingSet(ITexture texture, IntPtr cpuDescriptorHandle)
         {
-            // TODO: Implement UAV descriptor creation for binding set
+            if (texture == null)
+            {
+                throw new ArgumentNullException(nameof(texture));
+            }
+
+            if (cpuDescriptorHandle == IntPtr.Zero)
+            {
+                throw new ArgumentException("CPU descriptor handle must be valid", nameof(cpuDescriptorHandle));
+            }
+
+            if (texture.NativeHandle == IntPtr.Zero)
+            {
+                throw new ArgumentException("Texture native handle must be valid", nameof(texture));
+            }
+
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            if (_device == IntPtr.Zero)
+            {
+                throw new InvalidOperationException("D3D12 device is not initialized");
+            }
+
+            // Get texture description
+            TextureDesc desc = texture.Desc;
+
+            // Convert texture format to DXGI format for UAV
+            uint dxgiFormat = ConvertTextureFormatToDxgiFormatForUav(desc.Format);
+            if (dxgiFormat == 0)
+            {
+                throw new ArgumentException($"Texture format {desc.Format} is not supported for UAV", nameof(texture));
+            }
+
+            // Map texture dimension to D3D12 UAV dimension
+            // Based on DirectX 12 UAV Dimensions: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ne-d3d12-d3d12_uav_dimension
+            uint uavDimension;
+            switch (desc.Dimension)
+            {
+                case TextureDimension.Texture1D:
+                    uavDimension = D3D12_UAV_DIMENSION_TEXTURE1D;
+                    break;
+                case TextureDimension.Texture1DArray:
+                    uavDimension = D3D12_UAV_DIMENSION_TEXTURE1DARRAY;
+                    break;
+                case TextureDimension.Texture2D:
+                    uavDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+                    break;
+                case TextureDimension.Texture2DArray:
+                    uavDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
+                    break;
+                case TextureDimension.Texture3D:
+                    uavDimension = D3D12_UAV_DIMENSION_TEXTURE3D;
+                    break;
+                case TextureDimension.TextureCube:
+                    // Cubemaps are treated as 2D texture arrays (6 slices) in D3D12
+                    uavDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
+                    break;
+                case TextureDimension.TextureCubeArray:
+                    // Cube arrays are treated as 2D texture arrays in D3D12
+                    uavDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
+                    break;
+                default:
+                    // Default to 2D texture
+                    uavDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+                    break;
+            }
+
+            // Create D3D12_UNORDERED_ACCESS_VIEW_DESC structure
+            var uavDesc = new D3D12_UNORDERED_ACCESS_VIEW_DESC
+            {
+                Format = dxgiFormat,
+                ViewDimension = uavDimension
+            };
+
+            // Set dimension-specific parameters
+            // For binding sets, we typically use mip level 0 (the most detailed mip)
+            uint mipSlice = 0;
+
+            if (uavDimension == D3D12_UAV_DIMENSION_TEXTURE1D)
+            {
+                uavDesc.Texture1D = new D3D12_TEX1D_UAV
+                {
+                    MipSlice = mipSlice
+                };
+            }
+            else if (uavDimension == D3D12_UAV_DIMENSION_TEXTURE1DARRAY)
+            {
+                uint arraySize = desc.ArraySize > 0 ? unchecked((uint)desc.ArraySize) : 1;
+                uavDesc.Texture1DArray = new D3D12_TEX1D_ARRAY_UAV
+                {
+                    MipSlice = mipSlice,
+                    FirstArraySlice = 0, // Start from first array slice
+                    ArraySize = arraySize // Number of array slices
+                };
+            }
+            else if (uavDimension == D3D12_UAV_DIMENSION_TEXTURE2D)
+            {
+                uavDesc.Texture2D = new D3D12_TEX2D_UAV
+                {
+                    MipSlice = mipSlice,
+                    PlaneSlice = 0 // Typically 0 for non-planar formats
+                };
+            }
+            else if (uavDimension == D3D12_UAV_DIMENSION_TEXTURE2DARRAY)
+            {
+                uint arraySize;
+                if (desc.Dimension == TextureDimension.TextureCube)
+                {
+                    // Cubemaps have 6 faces
+                    arraySize = 6;
+                }
+                else if (desc.Dimension == TextureDimension.TextureCubeArray)
+                {
+                    // Cube arrays have 6 faces per cube * number of cubes
+                    arraySize = unchecked((uint)(6 * desc.ArraySize));
+                }
+                else
+                {
+                    // Regular 2D texture array
+                    arraySize = desc.ArraySize > 0 ? unchecked((uint)desc.ArraySize) : 1;
+                }
+
+                uavDesc.Texture2DArray = new D3D12_TEX2D_ARRAY_UAV
+                {
+                    MipSlice = mipSlice,
+                    FirstArraySlice = 0, // Start from first array slice
+                    ArraySize = arraySize, // Number of array slices
+                    PlaneSlice = 0 // Typically 0 for non-planar formats
+                };
+            }
+            else if (uavDimension == D3D12_UAV_DIMENSION_TEXTURE3D)
+            {
+                uint depth = desc.Depth > 0 ? unchecked((uint)desc.Depth) : 1;
+                uavDesc.Texture3D = new D3D12_TEX3D_UAV
+                {
+                    MipSlice = mipSlice,
+                    FirstWSlice = 0, // Start from first depth slice
+                    WSize = depth // Number of depth slices
+                };
+            }
+
+            // Allocate memory for the UAV descriptor structure
+            int uavDescSize = Marshal.SizeOf(typeof(D3D12_UNORDERED_ACCESS_VIEW_DESC));
+            IntPtr uavDescPtr = Marshal.AllocHGlobal(uavDescSize);
+            try
+            {
+                Marshal.StructureToPtr(uavDesc, uavDescPtr, false);
+
+                // Call ID3D12Device::CreateUnorderedAccessView
+                // pCounterResource is NULL for textures (counters are for structured buffers)
+                CallCreateUnorderedAccessView(_device, texture.NativeHandle, IntPtr.Zero, uavDescPtr, cpuDescriptorHandle);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(uavDescPtr);
+            }
         }
 
         private void CreateCbvDescriptorForBindingSet(IBuffer buffer, int offset, int range, IntPtr cpuDescriptorHandle)
@@ -5450,7 +5615,145 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         private void CreateSrvDescriptorForStructuredBuffer(IBuffer buffer, int offset, int range, IntPtr cpuDescriptorHandle)
         {
-            // TODO: Implement SRV descriptor creation for structured buffer
+            // Validate inputs
+            if (buffer == null)
+            {
+                return;
+            }
+
+            if (cpuDescriptorHandle == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            if (_device == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Get D3D12 resource from buffer's native handle
+            // buffer.NativeHandle is the ID3D12Resource* pointer
+            IntPtr d3d12Resource = buffer.NativeHandle;
+            if (d3d12Resource == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Get buffer description
+            BufferDesc desc = buffer.Desc;
+
+            // Structured buffers require a non-zero stride
+            // StructStride is the size in bytes of each structured element
+            int structStride = desc.StructStride;
+            if (structStride <= 0)
+            {
+                // Invalid stride for structured buffer - structured buffers must have a positive stride
+                return;
+            }
+
+            // Validate offset is aligned to struct stride
+            // In D3D12, structured buffer SRV offset should be aligned to element boundaries
+            if (offset < 0)
+            {
+                return;
+            }
+
+            if (offset % structStride != 0)
+            {
+                // Offset must be aligned to struct stride for structured buffers
+                // Round down to nearest element boundary
+                offset = (offset / structStride) * structStride;
+            }
+
+            // Calculate element offset (FirstElement)
+            ulong firstElement = (ulong)(offset / structStride);
+
+            // Calculate number of elements (NumElements)
+            // If range is 0 or -1, use all remaining elements from offset to end of buffer
+            uint numElements;
+            if (range <= 0)
+            {
+                // Use all remaining elements from offset to end of buffer
+                int remainingBytes = desc.ByteSize - offset;
+                if (remainingBytes < 0)
+                {
+                    return; // Invalid offset beyond buffer size
+                }
+                numElements = (uint)(remainingBytes / structStride);
+            }
+            else
+            {
+                // Use specified range, must be aligned to struct stride
+                int alignedRange = (range / structStride) * structStride;
+                if (alignedRange <= 0)
+                {
+                    return; // Range too small
+                }
+
+                // Validate range doesn't exceed buffer bounds
+                if (offset + alignedRange > desc.ByteSize)
+                {
+                    // Clamp to buffer size
+                    alignedRange = desc.ByteSize - offset;
+                    if (alignedRange < 0)
+                    {
+                        return;
+                    }
+                    alignedRange = (alignedRange / structStride) * structStride;
+                }
+
+                numElements = (uint)(alignedRange / structStride);
+            }
+
+            if (numElements == 0)
+            {
+                return; // No elements to view
+            }
+
+            // Create D3D12_SHADER_RESOURCE_VIEW_DESC structure
+            // For structured buffers, use D3D12_SRV_DIMENSION_BUFFER
+            var srvDesc = new D3D12_SHADER_RESOURCE_VIEW_DESC
+            {
+                Format = 0, // DXGI_FORMAT_UNKNOWN - structured buffers don't use formats
+                ViewDimension = D3D12_SRV_DIMENSION_BUFFER
+            };
+
+            // Set buffer-specific parameters
+            // D3D12_BUFFER_SRV structure for structured buffer view
+            srvDesc.Buffer = new D3D12_BUFFER_SRV
+            {
+                FirstElement = firstElement, // Offset in elements
+                NumElements = numElements, // Number of elements
+                StructureByteStride = (uint)structStride, // Stride for structured buffers
+                Flags = 0 // D3D12_BUFFER_SRV_FLAG_NONE (0) - structured buffers don't use raw view flags
+            };
+
+            // Allocate memory for the SRV descriptor structure
+            int srvDescSize = Marshal.SizeOf(typeof(D3D12_SHADER_RESOURCE_VIEW_DESC));
+            IntPtr srvDescPtr = Marshal.AllocHGlobal(srvDescSize);
+            try
+            {
+                Marshal.StructureToPtr(srvDesc, srvDescPtr, false);
+
+                // Call ID3D12Device::CreateShaderResourceView
+                // Based on DirectX 12 Shader Resource Views: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createshaderresourceview
+                // void CreateShaderResourceView(
+                //   ID3D12Resource *pResource,
+                //   const D3D12_SHADER_RESOURCE_VIEW_DESC *pDesc,
+                //   D3D12_CPU_DESCRIPTOR_HANDLE DestDescriptor
+                // );
+                CallCreateShaderResourceView(_device, d3d12Resource, srvDescPtr, cpuDescriptorHandle);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(srvDescPtr);
+            }
         }
 
         private void CreateUavDescriptorForBuffer(IBuffer buffer, int offset, int range, IntPtr cpuDescriptorHandle)
