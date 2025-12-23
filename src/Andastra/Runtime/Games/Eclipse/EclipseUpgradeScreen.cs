@@ -683,7 +683,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// - Armor upgrades can only be applied to armor
         /// - Other item type upgrades follow similar patterns
         ///
-        // TODO: / Full implementation based on:
+        /// Full implementation based on:
         /// - daorigins.exe: ItemUpgrade @ 0x00aef22c - checks baseitems.2da itemclass/weapontype
         /// </remarks>
         private bool CheckItemTypeCompatibility(IItemComponent targetItem, IItemComponent upgradeItem)
