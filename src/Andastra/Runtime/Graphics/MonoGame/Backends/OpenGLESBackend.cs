@@ -42,6 +42,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         private IntPtr _eglSurface;
         private IntPtr _eglConfig;
         private IntPtr _windowHandle;
+        private bool _isPBufferSurface; // True if using pbuffer, false if using window surface
 
         // Framebuffer objects
         private uint _defaultFramebuffer;
@@ -261,6 +262,16 @@ namespace Andastra.Runtime.MonoGame.Backends
             // GLenum error = glGetError()
         }
 
+        /// <summary>
+        /// Resizes the rendering surface and updates the viewport.
+        /// 
+        /// For EGL window surfaces: The native window typically handles resizing automatically,
+        /// but we query the actual surface size and update the viewport accordingly.
+        /// For EGL pbuffer surfaces: The surface must be destroyed and recreated with new dimensions
+        /// since pbuffers have fixed sizes.
+        /// 
+        /// Based on EGL 1.5 specification and OpenGL ES 3.2 surface management requirements.
+        /// </summary>
         public void Resize(int width, int height)
         {
             if (!_initialized)
@@ -268,14 +279,115 @@ namespace Andastra.Runtime.MonoGame.Backends
                 return;
             }
 
-            // Update viewport
-            // glViewport(0, 0, width, height)
+            // Validate dimensions
+            if (width <= 0 || height <= 0)
+            {
+                Console.WriteLine($"[OpenGLESBackend] Resize: Invalid dimensions {width}x{height}, minimum is 1x1");
+                width = Math.Max(1, width);
+                height = Math.Max(1, height);
+            }
 
-            // For EGL, if surface needs resizing, we may need to recreate it
-            // TODO: STUB - For now, assume the surface handles resizing automatically
+            // Make sure context is current before resizing
+            if (!eglMakeCurrent(_eglDisplay, _eglSurface, _eglSurface, _eglContext))
+            {
+                Console.WriteLine("[OpenGLESBackend] Resize: Warning - Failed to make context current");
+                return;
+            }
 
-            _settings.Width = width;
-            _settings.Height = height;
+            // Handle surface resizing based on surface type
+            if (_isPBufferSurface)
+            {
+                // Pbuffer surfaces have fixed dimensions and must be recreated
+                // Save reference to old surface before replacing it
+                IntPtr oldSurface = _eglSurface;
+
+                // Update settings with new dimensions
+                _settings.Width = width;
+                _settings.Height = height;
+
+                // Create new pbuffer surface with new dimensions
+                // Note: We create the new surface before destroying the old one to allow recovery on failure
+                int[] pbufferAttribs = new int[]
+                {
+                    EGL_WIDTH, width,
+                    EGL_HEIGHT, height,
+                    EGL_NONE
+                };
+
+                IntPtr newSurface = eglCreatePbufferSurface(_eglDisplay, _eglConfig, pbufferAttribs);
+                if (newSurface == IntPtr.Zero || newSurface == new IntPtr(-1))
+                {
+                    uint error = eglGetError();
+                    Console.WriteLine($"[OpenGLESBackend] Resize: Failed to create new pbuffer surface with error 0x{error:X}, keeping old surface");
+                    // Old surface is still valid, context is still current with it
+                    return;
+                }
+
+                // New surface created successfully, now we can safely replace the old one
+                // Make context non-current before destroying old surface
+                eglMakeCurrent(_eglDisplay, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+
+                // Destroy old pbuffer surface
+                if (oldSurface != IntPtr.Zero)
+                {
+                    eglDestroySurface(_eglDisplay, oldSurface);
+                }
+
+                // Update surface reference to new surface
+                _eglSurface = newSurface;
+
+                // Make context current with new surface
+                if (!eglMakeCurrent(_eglDisplay, _eglSurface, _eglSurface, _eglContext))
+                {
+                    Console.WriteLine("[OpenGLESBackend] Resize: Failed to make context current with new pbuffer surface");
+                    // Surface is created but context is not current - this is an error state
+                    // The surface will be cleaned up on shutdown
+                    return;
+                }
+            }
+            else
+            {
+                // Window surfaces resize automatically with the native window
+                // Query the actual surface size to ensure it matches (some implementations
+                // may report slightly different sizes due to DPI scaling or rounding)
+                int surfaceWidth = 0;
+                int surfaceHeight = 0;
+
+                if (eglQuerySurface(_eglDisplay, _eglSurface, EGL_WIDTH, ref surfaceWidth) &&
+                    eglQuerySurface(_eglDisplay, _eglSurface, EGL_HEIGHT, ref surfaceHeight))
+                {
+                    // Use the actual surface dimensions if they differ from requested
+                    // This handles cases where the window manager enforces minimum sizes,
+                    // DPI scaling, or other platform-specific constraints
+                    if (surfaceWidth > 0 && surfaceHeight > 0)
+                    {
+                        width = surfaceWidth;
+                        height = surfaceHeight;
+                    }
+                }
+                else
+                {
+                    uint error = eglGetError();
+                    Console.WriteLine($"[OpenGLESBackend] Resize: Failed to query window surface size, using requested dimensions. Error: 0x{error:X}");
+                }
+
+                // Update settings with actual surface dimensions
+                _settings.Width = width;
+                _settings.Height = height;
+            }
+
+            // Update OpenGL ES viewport to match new surface size
+            glViewport(0, 0, width, height);
+
+            // Check for OpenGL ES errors
+            uint glError = glGetError();
+            if (glError != GL_NO_ERROR)
+            {
+                string errorName = GetGLESErrorName(glError);
+                Console.WriteLine($"[OpenGLESBackend] Resize: OpenGL ES error {errorName} (0x{glError:X}) setting viewport");
+            }
+
+            Console.WriteLine($"[OpenGLESBackend] Resize: Surface resized to {width}x{height} (surface type: {(_isPBufferSurface ? "pbuffer" : "window")})");
         }
 
         public IntPtr CreateTexture(TextureDescription desc)
@@ -689,6 +801,8 @@ namespace Andastra.Runtime.MonoGame.Backends
                 };
 
                 _eglSurface = eglCreatePbufferSurface(_eglDisplay, _eglConfig, pbufferAttribs);
+                _isPBufferSurface = true;
+                _windowHandle = IntPtr.Zero;
             }
             else
             {
@@ -699,6 +813,8 @@ namespace Andastra.Runtime.MonoGame.Backends
                 };
 
                 _eglSurface = eglCreateWindowSurface(_eglDisplay, _eglConfig, nativeWindow, windowAttribs);
+                _isPBufferSurface = false;
+                _windowHandle = nativeWindow;
             }
 
             if (_eglSurface == IntPtr.Zero || _eglSurface == new IntPtr(-1))
@@ -1215,6 +1331,10 @@ namespace Andastra.Runtime.MonoGame.Backends
         [DllImport("libEGL.dll", EntryPoint = "eglGetError")]
         private static extern uint eglGetError();
 
+        [DllImport("libEGL.dll", EntryPoint = "eglQuerySurface")]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool eglQuerySurface(IntPtr display, IntPtr surface, int attribute, ref int value);
+
         #endregion
 
         #region OpenGL ES P/Invoke Declarations
@@ -1240,6 +1360,9 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         [DllImport("libGLESv2.dll", EntryPoint = "glDeleteTextures")]
         private static extern void glDeleteTextures(int n, ref uint textures);
+
+        [DllImport("libGLESv2.dll", EntryPoint = "glViewport")]
+        private static extern void glViewport(int x, int y, int width, int height);
 
         // OpenGL ES constants
         private const uint GL_TEXTURE_2D = 0x0DE1;
