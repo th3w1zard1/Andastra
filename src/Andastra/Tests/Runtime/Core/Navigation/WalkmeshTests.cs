@@ -40,8 +40,10 @@ namespace Andastra.Tests.Runtime.Core.Navigation
             {
                 WalkmeshType = BWMType.AreaModel,
                 Position = Vector3.Zero,
-                RelativeUsePosition = Vector3.Zero,
-                AbsoluteUsePosition = Vector3.Zero
+                RelativeHook1 = Vector3.Zero,
+                RelativeHook2 = Vector3.Zero,
+                AbsoluteHook1 = Vector3.Zero,
+                AbsoluteHook2 = Vector3.Zero
             };
 
             // Add some walkmesh vertices

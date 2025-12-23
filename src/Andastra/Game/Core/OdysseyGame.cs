@@ -321,7 +321,7 @@ namespace Andastra.Runtime.Game.Core
                 // Create resource provider from installation if game path is available
                 if (!string.IsNullOrEmpty(_settings.GamePath) && Directory.Exists(_settings.GamePath))
                 {
-                    var installation = new Installation(_settings.GamePath, _settings.Game == Andastra.Runtime.Core.KotorGame.K1 ? Andastra.Parsing.Common.BioWareGame.K1 : Andastra.Parsing.Common.BioWareGame.K2);
+                    var installation = new Installation(_settings.GamePath);
                     var resourceProvider = new GameResourceProvider(installation);
 
                     // Create music player from graphics backend
@@ -354,7 +354,7 @@ namespace Andastra.Runtime.Game.Core
                         // Based on swkotor2.exe FUN_006d0790: Button sounds ("gui_actscroll", "gui_actclick")
                         var guiSoundPlayer = _graphicsBackend.CreateSoundPlayer(resourceProvider);
 
-                        _guiManager = new Andastra.Runtime.Graphics.MonoGame.GUI.KotorGuiManager(installation, mgDevice.Device, guiSoundPlayer);
+                        _guiManager = new Andastra.Runtime.MonoGame.GUI.KotorGuiManager(installation, mgDevice.Device, guiSoundPlayer);
 
                         // Subscribe to button click events
                         // Based on swkotor.exe FUN_0067c4c0: Button event handlers (0x27 hover, 0x2d leave, 0 click, 1 release)
@@ -763,8 +763,8 @@ namespace Andastra.Runtime.Game.Core
                 // Update cursor position and pressed state
                 if (_cursorManager != null)
                 {
-                    System.Drawing.Point cursorMousePos = mouseState.Position;
-                    _cursorManager.Position = new GraphicsVector2(cursorMousePos.X, cursorMousePos.Y);
+                    GraphicsVector2 cursorMousePos = mouseState.Position;
+                    _cursorManager.Position = cursorMousePos;
                     _cursorManager.IsPressed = mouseState.LeftButton == ButtonState.Pressed;
                 }
 
@@ -790,7 +790,7 @@ namespace Andastra.Runtime.Game.Core
 
             // Track mouse hover
             _hoveredMenuIndex = -1;
-            System.Drawing.Point mousePos = mouseState.Position;
+            GraphicsVector2 mousePos = mouseState.Position;
 
             // Check which button the mouse is over
             for (int i = 0; i < _menuItems.Length; i++)
@@ -824,7 +824,7 @@ namespace Andastra.Runtime.Game.Core
                 }
 
                 // Update cursor position and pressed state
-                _cursorManager.Position = new GraphicsVector2(mousePos.X, mousePos.Y);
+                _cursorManager.Position = mousePos;
                 _cursorManager.IsPressed = mouseState.LeftButton == ButtonState.Pressed;
             }
 
@@ -3332,10 +3332,10 @@ namespace Andastra.Runtime.Game.Core
                 }
 
                 // Load MDL using MDLAuto (same as LoadMDLModel method)
-                string activePath = resourceResult.Activate();
+                string activePath = resourceResult.FilePath;
                 if (string.IsNullOrEmpty(activePath))
                 {
-                    Console.WriteLine($"[Odyssey] Could not activate MDL resource: {modelName}");
+                    Console.WriteLine($"[Odyssey] Could not get file path for MDL resource: {modelName}");
                     return null;
                 }
 

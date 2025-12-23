@@ -115,7 +115,7 @@ namespace Andastra.Tests.Runtime.Parsing.MDL
             {
                 row.Data = new List<float> { 1.0f };
             }
-            else if (controllerType == MDLControllerType.Color)
+            else if (controllerType == MDLControllerType.ParsingColor)
             {
                 row.Data = new List<float> { 1.0f, 1.0f, 1.0f };
             }
@@ -447,7 +447,7 @@ donemodel test
             var mdl = MDLAsciiTestHelpers.CreateTestMDL("light_test");
             var node = MDLAsciiTestHelpers.CreateTestNode("light_node", MDLNodeType.Light);
             node.Light = new MDLLight();
-            node.Light.Color = new Color(1.0f, 1.0f, 1.0f);
+            node.Light.Color = new ParsingColor(1.0f, 1.0f, 1.0f);
             node.Light.FlareRadius = 10.0f;
             mdl.Root.Children.Add(node);
 

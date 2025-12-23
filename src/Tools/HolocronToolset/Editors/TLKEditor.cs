@@ -1,4 +1,3 @@
-using Andastra.Parsing.Common;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -13,14 +12,15 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
+using Avalonia.Controls.Window;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
+using Andastra.Parsing.Common.Language;
 using Andastra.Parsing.Formats.TLK;
 using Andastra.Parsing.Resource;
 using HolocronToolset.Common;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
-using Window = Avalonia.Controls.Window;
-using TLK = Andastra.Parsing.Formats.TLK.TLK;
 
 namespace HolocronToolset.Editors
 {

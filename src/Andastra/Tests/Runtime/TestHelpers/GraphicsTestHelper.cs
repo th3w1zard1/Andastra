@@ -14,6 +14,9 @@ using JetBrains.Annotations;
 using Stride.Engine;
 using StrideGraphics = Stride.Graphics;
 using Stride.Core.Mathematics;
+using InstallationResourceResult = Andastra.Parsing.Installation.ResourceResult;
+using ExtractResourceResult = Andastra.Parsing.Extract.ExtractResourceResult;
+using ExtractLazyCapsule = Andastra.Parsing.Extract.Capsule.LazyCapsule;
 
 
 namespace Andastra.Tests.Runtime.TestHelpers
@@ -29,8 +32,13 @@ namespace Andastra.Tests.Runtime.TestHelpers
         public static GraphicsDevice CreateTestGraphicsDevice()
         {
             // Create a minimal Game instance for testing
-            var game = new Game();
-            game.Initialize();
+            // Note: Game.Initialize() is protected, so we use reflection to call it
+            var game = new Microsoft.Xna.Framework.Game();
+            var initializeMethod = typeof(Microsoft.Xna.Framework.Game).GetMethod("Initialize", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (initializeMethod != null)
+            {
+                initializeMethod.Invoke(game, null);
+            }
             return game.GraphicsDevice;
         }
 
@@ -40,7 +48,7 @@ namespace Andastra.Tests.Runtime.TestHelpers
         public static IGraphicsDevice CreateTestIGraphicsDevice()
         {
             var mgDevice = CreateTestGraphicsDevice();
-            return new MonoGameGraphicsDevice(mgDevice);
+            return new Andastra.Runtime.Graphics.MonoGame.Graphics.MonoGameGraphicsDevice(mgDevice);
         }
 
         /// <summary>
@@ -70,7 +78,7 @@ namespace Andastra.Tests.Runtime.TestHelpers
             // Create a comprehensive mock Installation with full resource lookup capabilities
             // Based on swkotor2.exe: 0x0041d1e0 (FUN_0041d1e0 - CExoKeyTable resource lookup)
             var mockInstallation = new Mock<Installation>(MockBehavior.Strict);
-            var mockResources = new Mock<IResourceLookup>(MockBehavior.Strict);
+            var mockResources = new Mock<InstallationResourceManager>(MockBehavior.Strict);
 
             // Setup Installation properties
             string mockPath = Path.Combine(Path.GetTempPath(), "AndastraTestInstallation");
@@ -240,7 +248,7 @@ namespace Andastra.Tests.Runtime.TestHelpers
             // Create a comprehensive mock Installation with specific resource data
             // Based on swkotor2.exe: 0x0041d1e0 (FUN_0041d1e0 - CExoKeyTable resource lookup)
             var mockInstallation = new Mock<Installation>(MockBehavior.Strict);
-            var mockResources = new Mock<IResourceLookup>(MockBehavior.Strict);
+            var mockResources = new Mock<InstallationResourceManager>(MockBehavior.Strict);
 
             // Setup Installation properties
             string mockPath = Path.Combine(Path.GetTempPath(), "AndastraTestInstallation");

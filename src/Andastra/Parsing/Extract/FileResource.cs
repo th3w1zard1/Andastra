@@ -334,7 +334,7 @@ namespace Andastra.Parsing.Extract
     /// <summary>
     /// Result containing resource data and metadata.
     /// </summary>
-    public sealed class ResourceResult
+    public sealed class ExtractResourceResult
     {
         public string ResName { get; }
         public ResourceType ResType { get; }
@@ -342,7 +342,7 @@ namespace Andastra.Parsing.Extract
         public byte[] Data { get; }
         public FileResource FileResource { get; private set; }
 
-        public ResourceResult(string resName, ResourceType resType, string filePath, byte[] data)
+        public ExtractResourceResult(string resName, ResourceType resType, string filePath, byte[] data)
         {
             ResName = resName;
             ResType = resType;
@@ -366,7 +366,7 @@ namespace Andastra.Parsing.Extract
 
         public override string ToString()
         {
-            return $"ResourceResult({ResName}, {ResType}, {FilePath}, byte[{Data.Length}])";
+            return $"ExtractResourceResult({ResName}, {ResType}, {FilePath}, byte[{Data.Length}])";
         }
     }
 

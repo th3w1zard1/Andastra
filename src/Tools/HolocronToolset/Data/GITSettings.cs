@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using Avalonia.Input;
 using Andastra.Parsing.Common;
-using KotorColor = Andastra.Parsing.Common.Color;
+using KotorColor = Andastra.Parsing.Common.ParsingColor;
 
 namespace HolocronToolset.Data
 {

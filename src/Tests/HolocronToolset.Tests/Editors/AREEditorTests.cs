@@ -1593,11 +1593,11 @@ namespace HolocronToolset.Tests.Editors
             // Matching Python: test_colors = [Color(1.0, 0.0, 0.0), ...]
             var testColors = new[]
             {
-                new Andastra.Parsing.Common.Color(1.0f, 0.0f, 0.0f),  // Red
-                new Andastra.Parsing.Common.Color(0.0f, 1.0f, 0.0f),  // Green
-                new Andastra.Parsing.Common.Color(0.0f, 0.0f, 1.0f),  // Blue
-                new Andastra.Parsing.Common.Color(0.5f, 0.5f, 0.5f),  // Gray
-                new Andastra.Parsing.Common.Color(1.0f, 1.0f, 1.0f)   // White
+                new Andastra.Parsing.Common.ParsingColor(1.0f, 0.0f, 0.0f),  // Red
+                new Andastra.Parsing.Common.ParsingColor(0.0f, 1.0f, 0.0f),  // Green
+                new Andastra.Parsing.Common.ParsingColor(0.0f, 0.0f, 1.0f),  // Blue
+                new Andastra.Parsing.Common.ParsingColor(0.5f, 0.5f, 0.5f),  // Gray
+                new Andastra.Parsing.Common.ParsingColor(1.0f, 1.0f, 1.0f)   // White
             };
 
             foreach (var color in testColors)

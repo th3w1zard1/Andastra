@@ -296,9 +296,9 @@ namespace Andastra.Parsing.Extract.Capsule
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/capsule.py:105-151
         // Original: def batch(self, queries: list[ResourceIdentifier]) -> dict[ResourceIdentifier, ResourceResult | None]:
-        public Dictionary<ResourceIdentifier, ResourceResult> Batch(List<ResourceIdentifier> queries)
+        public Dictionary<ResourceIdentifier, ExtractResourceResult> Batch(List<ResourceIdentifier> queries)
         {
-            var results = new Dictionary<ResourceIdentifier, ResourceResult>();
+            var results = new Dictionary<ResourceIdentifier, ExtractResourceResult>();
             using (var reader = Andastra.Parsing.Common.RawBinaryReader.FromFile(_filepath))
             {
                 foreach (var query in queries)
@@ -313,7 +313,7 @@ namespace Andastra.Parsing.Extract.Capsule
 
                     reader.Seek(resource.Offset);
                     byte[] data = reader.ReadBytes(resource.Size);
-                    results[query] = new ResourceResult(
+                    results[query] = new ExtractResourceResult(
                         query.ResName,
                         query.ResType,
                         _filepath,

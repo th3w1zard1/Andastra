@@ -547,7 +547,7 @@ namespace Andastra.Parsing.Resource.Generics.DLG
             {
                 gffStruct.SetString("LinkComment", link.Comment);
             }
-            
+
             // K2-specific link fields - only write for K2
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/io/gff.py:368-384
             // Original: if game.is_k2(): gff_struct.set_resref("Active2", ...), etc.

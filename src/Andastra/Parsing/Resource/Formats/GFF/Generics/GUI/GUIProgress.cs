@@ -16,7 +16,7 @@ namespace Andastra.Parsing.Resource.Generics.GUI
         public int FillStyle { get; set; }
         public int Dimension { get; set; }
         public int InnerOffset { get; set; }
-        public Color Color { get; set; }
+        public ParsingColor Color { get; set; }
         public int? Pulsing { get; set; }
         public int? InnerOffsetY { get; set; }
         public int? StartFromLeft { get; set; }
@@ -38,7 +38,7 @@ namespace Andastra.Parsing.Resource.Generics.GUI
         public int FillStyle { get; set; }
         public int Dimension { get; set; }
         public int? InnerOffset { get; set; }
-        public Color Color { get; set; }
+        public ParsingColor Color { get; set; }
         public int? Pulsing { get; set; }
         public int? InnerOffsetY { get; set; }
 
@@ -59,7 +59,7 @@ namespace Andastra.Parsing.Resource.Generics.GUI
         public int FillStyle { get; set; }
         public int Dimension { get; set; }
         public int? InnerOffset { get; set; }
-        public Color Color { get; set; }
+        public ParsingColor Color { get; set; }
         public int? Pulsing { get; set; }
         public int? InnerOffsetY { get; set; }
 

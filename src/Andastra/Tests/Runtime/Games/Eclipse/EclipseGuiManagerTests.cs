@@ -53,7 +53,7 @@ namespace Andastra.Tests.Runtime.Games.Eclipse
                 ResourceType.GUI,
                 It.IsAny<string[]>(),
                 It.IsAny<string[]>()))
-                .Returns(new ResourceResult { Data = guiData });
+                .Returns(new ResourceResult(guiName, ResourceType.GUI, "test.gui", guiData));
 
             // Act
             bool result = _guiManager.LoadGui(guiName, 1920, 1080);
@@ -106,7 +106,7 @@ namespace Andastra.Tests.Runtime.Games.Eclipse
                 ResourceType.GUI,
                 It.IsAny<string[]>(),
                 It.IsAny<string[]>()))
-                .Returns(new ResourceResult { Data = guiData });
+                .Returns(new ResourceResult(guiName, ResourceType.GUI, "test.gui", guiData));
 
             _guiManager.LoadGui(guiName, 1920, 1080);
 
@@ -139,7 +139,7 @@ namespace Andastra.Tests.Runtime.Games.Eclipse
                 ResourceType.GUI,
                 It.IsAny<string[]>(),
                 It.IsAny<string[]>()))
-                .Returns(new ResourceResult { Data = guiData });
+                .Returns(new ResourceResult(guiName, ResourceType.GUI, "test.gui", guiData));
 
             _guiManager.LoadGui(guiName, 1920, 1080);
 

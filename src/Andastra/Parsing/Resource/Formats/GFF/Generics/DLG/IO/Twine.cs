@@ -35,12 +35,12 @@ namespace Andastra.Parsing.Resource.Generics.DLG.IO
             {
                 return null;
             }
-            
+
             colorStr = colorStr.Trim();
-            
+
             // Try hex format first (for HTML format)
             // Based on PyKotor: HTML format uses Color.from_hex_string(ParsingColor)
-            if (colorStr.StartsWith("#") || 
+            if (colorStr.StartsWith("#") ||
                 (colorStr.Length >= 3 && colorStr.Length <= 8 && IsHexString(colorStr)))
             {
                 try
@@ -54,7 +54,7 @@ namespace Andastra.Parsing.Resource.Generics.DLG.IO
                     // Invalid hex format, try space-separated format below
                 }
             }
-            
+
             // Try space-separated float format (for JSON format)
             // Based on PyKotor: JSON format uses "r g b a" or "r g b" (alpha defaults to 1.0)
             // Example: "1 0 0 1" or "0.5 0.3 0.2" or "1.0 0.0 0.0 1.0"
@@ -72,13 +72,13 @@ namespace Andastra.Parsing.Resource.Generics.DLG.IO
                         {
                             a = parsedA;
                         }
-                        
+
                         // Clamp values to valid range [0.0, 1.0]
                         r = Math.Max(0.0f, Math.Min(1.0f, r));
                         g = Math.Max(0.0f, Math.Min(1.0f, g));
                         b = Math.Max(0.0f, Math.Min(1.0f, b));
                         a = Math.Max(0.0f, Math.Min(1.0f, a));
-                        
+
                         return new Color(r, g, b, a);
                     }
                 }
@@ -87,11 +87,11 @@ namespace Andastra.Parsing.Resource.Generics.DLG.IO
                     // Invalid format, return null below
                 }
             }
-            
+
             // Failed to parse
             return null;
         }
-        
+
         /// <summary>
         /// Checks if a string contains only hexadecimal characters.
         /// </summary>
@@ -101,7 +101,7 @@ namespace Andastra.Parsing.Resource.Generics.DLG.IO
             {
                 return false;
             }
-            
+
             foreach (char c in str)
             {
                 if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')))
@@ -111,7 +111,7 @@ namespace Andastra.Parsing.Resource.Generics.DLG.IO
             }
             return true;
         }
-        
+
         /// <summary>
         /// Reads a Twine file and converts it to a DLG.
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/io/twine.py:59-72
@@ -125,7 +125,7 @@ namespace Andastra.Parsing.Resource.Generics.DLG.IO
 
             string content = File.ReadAllText(path, Encoding.UTF8);
             TwineStory story;
-            
+
             if (content.Trim().StartsWith("{"))
             {
                 story = ReadJson(content);
@@ -484,7 +484,7 @@ namespace Andastra.Parsing.Resource.Generics.DLG.IO
                 string sizeStr = pData.Attribute("size")?.Value ?? "100,100";
                 var positionParts = positionStr.Split(',');
                 var sizeParts = sizeStr.Split(',');
-                
+
                 var passageMetadata = new PassageMetadata
                 {
                     Position = positionParts.Length >= 2 && float.TryParse(positionParts[0], out float px) && float.TryParse(positionParts[1], out float py)
@@ -1027,10 +1027,10 @@ namespace Andastra.Parsing.Resource.Generics.DLG.IO
                     return nodeNames[node];
                 }
 
-                string baseName = (node is DLGEntry entry && !string.IsNullOrEmpty(entry.Speaker)) 
-                    ? entry.Speaker 
+                string baseName = (node is DLGEntry entry && !string.IsNullOrEmpty(entry.Speaker))
+                    ? entry.Speaker
                     : (node is DLGEntry ? "Entry" : "Reply");
-                
+
                 if (!nameRegistry.ContainsKey(baseName))
                 {
                     nameRegistry[baseName] = 0;

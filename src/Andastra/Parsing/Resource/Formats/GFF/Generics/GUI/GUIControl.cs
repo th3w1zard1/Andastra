@@ -21,7 +21,7 @@ namespace Andastra.Parsing.Resource.Generics.GUI
         public Vector4 Extent { get; set; } = new Vector4(0, 0, 0, 0);
         public GUIBorder Border { get; set; }
         public Color Color { get; set; }
-        
+
         /// <summary>
         /// Gets or sets the alpha transparency value (0.0-1.0).
         /// This property provides convenient access to the Color's alpha channel.
@@ -54,7 +54,7 @@ namespace Andastra.Parsing.Resource.Generics.GUI
                 }
             }
         }
-        
+
         public GUIBorder Hilight { get; set; }
         public string ParentTag { get; set; }
         public int? ParentId { get; set; }

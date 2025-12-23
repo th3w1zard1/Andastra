@@ -28,7 +28,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.SyntaxHighlighting
     public static class NWScriptSyntaxHighlighter
     {
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/NWScriptSyntaxHighlighter.java:30-36
-        // Original: Color scheme
+        // Original: ParsingColor scheme
         // Color scheme (RGB values)
         public static readonly (int R, int G, int B) KeywordColor = (0, 0, 255); // Blue
         public static readonly (int R, int G, int B) TypeColor = (128, 0, 128); // Purple

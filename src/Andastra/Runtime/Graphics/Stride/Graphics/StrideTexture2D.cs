@@ -1,5 +1,5 @@
 using System;
-using StrideGraphics = Stride.Graphics;
+using StrideGraphics = global::Stride.Graphics;
 using Andastra.Runtime.Graphics;
 
 namespace Andastra.Runtime.Stride.Graphics
@@ -9,11 +9,11 @@ namespace Andastra.Runtime.Stride.Graphics
     /// </summary>
     public class StrideTexture2D : ITexture2D
     {
-        private readonly StrideGraphics.Texture2D _texture;
+        private readonly global::Stride.Graphics.Texture _texture;
 
-        internal StrideGraphics.Texture2D Texture => _texture;
+        internal global::Stride.Graphics.Texture Texture => _texture;
 
-        public StrideTexture2D(StrideGraphics.Texture2D texture)
+        public StrideTexture2D(global::Stride.Graphics.Texture texture)
         {
             _texture = texture ?? throw new ArgumentNullException(nameof(texture));
         }

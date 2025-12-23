@@ -8,10 +8,10 @@ namespace Andastra.Runtime.Stride.Graphics
     /// </summary>
     public class StrideRenderTarget : IRenderTarget
     {
-        internal readonly global::Stride.Graphics.Texture2D RenderTarget;
-        private readonly global::Stride.Graphics.Texture2D _depthBuffer;
+        internal readonly global::Stride.Graphics.Texture RenderTarget;
+        private readonly global::Stride.Graphics.Texture _depthBuffer;
 
-        public StrideRenderTarget(global::Stride.Graphics.Texture2D renderTarget, global::Stride.Graphics.Texture2D depthBuffer = null)
+        public StrideRenderTarget(global::Stride.Graphics.Texture renderTarget, global::Stride.Graphics.Texture depthBuffer = null)
         {
             RenderTarget = renderTarget ?? throw new ArgumentNullException(nameof(renderTarget));
             _depthBuffer = depthBuffer;

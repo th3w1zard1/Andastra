@@ -2758,7 +2758,7 @@ namespace Andastra.Runtime.Games.Odyssey
                     Installation.Installation installation = _module.Installation;
                     SearchLocation[] searchOrder = { SearchLocation.OVERRIDE, SearchLocation.CHITIN };
 
-                    Installation.ResourceResult mdlResult = installation.Resource(modelResRef, ResourceType.MDL, searchOrder);
+                    ResourceResult mdlResult = installation.Resource(modelResRef, ResourceType.MDL, searchOrder);
                     if (mdlResult != null && mdlResult.Data != null && mdlResult.Data.Length > 0)
                     {
                         mdlData = mdlResult.Data;
@@ -2767,7 +2767,7 @@ namespace Andastra.Runtime.Games.Odyssey
                     // Load MDX from Installation if not already loaded
                     if (mdxData == null)
                     {
-                        Installation.ResourceResult mdxResult = installation.Resource(modelResRef, ResourceType.MDX, searchOrder);
+                        ResourceResult mdxResult = installation.Resource(modelResRef, ResourceType.MDX, searchOrder);
                         if (mdxResult != null && mdxResult.Data != null && mdxResult.Data.Length > 0)
                         {
                             mdxData = mdxResult.Data;

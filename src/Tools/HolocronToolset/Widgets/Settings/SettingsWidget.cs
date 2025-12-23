@@ -155,7 +155,7 @@ namespace HolocronToolset.Widgets.Settings
             // Get raw value from settings (may be any type) and validate it
             object rawValue = _settings.GetValue<object>(colourName, 0);
             int colorValue = ValidateColour(colourName, rawValue);
-            widget.SetColor(Andastra.Parsing.Common.Color.FromRgbaInteger(colorValue));
+            widget.SetColor(Andastra.Parsing.Common.ParsingColor.FromRgbaInteger(colorValue));
             _colours[colourName] = widget;
         }
 

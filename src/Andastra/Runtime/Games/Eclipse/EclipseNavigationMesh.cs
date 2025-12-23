@@ -1425,8 +1425,6 @@ namespace Andastra.Runtime.Games.Eclipse
             return false;
         }
 
-        // RayAabbIntersect is now provided by BaseNavigationMesh base class
-
         /// <summary>
         /// Tests ray-triangle intersection.
         /// </summary>

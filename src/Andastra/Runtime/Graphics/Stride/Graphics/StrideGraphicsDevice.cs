@@ -146,7 +146,6 @@ namespace Andastra.Runtime.Stride.Graphics
         public IntPtr NativeHandle => _device.NativeDevice;
 
         // 3D Rendering Methods
-
         public void SetVertexBuffer(IVertexBuffer vertexBuffer)
         {
             if (vertexBuffer == null)

@@ -246,7 +246,7 @@ namespace Andastra.Runtime.Game.GUI
                 int x = categoryStartX + i * (categoryWidth + categorySpacing);
                 bool isSelected = (i == selectedCategoryIndex);
                 Color bgColor = isSelected ? new Color(100, 100, 150) : new Color(50, 50, 70);
-                XnaRectangle categoryRect = new Rectangle(x, categoryY, categoryWidth, categoryHeight);
+                Rectangle categoryRect = new Rectangle(x, categoryY, categoryWidth, categoryHeight);
                 spriteBatch.Draw(menuTexture, categoryRect, bgColor);
 
                 string categoryName = categories[i].ToString();
@@ -277,7 +277,7 @@ namespace Andastra.Runtime.Game.GUI
                     int y = optionsStartY + (i - startIdx) * (optionHeight + optionSpacing);
                     bool isSelected = (i == selectedOptionIndex);
                     Color bgColor = isSelected ? new Color(80, 80, 120) : new Color(40, 40, 60);
-                    XnaRectangle optionRect = new Rectangle(optionsStartX, y, optionWidth, optionHeight);
+                    Rectangle optionRect = new Rectangle(optionsStartX, y, optionWidth, optionHeight);
                     spriteBatch.Draw(menuTexture, optionRect, bgColor);
 
                     OptionItem option = options[i];

@@ -25,7 +25,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.SyntaxHighlighting
     public static class BytecodeSyntaxHighlighter
     {
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/BytecodeSyntaxHighlighter.java:27-32
-        // Original: Color scheme constants
+        // Original: ParsingColor scheme constants
         // Color scheme (RGB values)
         public static readonly (int R, int G, int B) InstructionColor = (0, 0, 255); // Blue
         public static readonly (int R, int G, int B) AddressColor = (128, 128, 128); // Gray

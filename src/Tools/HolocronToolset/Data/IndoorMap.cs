@@ -77,7 +77,7 @@ namespace HolocronToolset.Data
             List<IndoorMapRoom> rooms = null,
             string moduleId = null,
             LocalizedString name = null,
-            Andastra.Parsing.Common.Color lighting = null,
+            Andastra.Parsing.Common.ParsingColor lighting = null,
             string skybox = null,
             System.Numerics.Vector3? warpPoint = null,
             bool? targetGameType = null)
@@ -85,7 +85,7 @@ namespace HolocronToolset.Data
             Rooms = rooms ?? new List<IndoorMapRoom>();
             ModuleId = moduleId ?? "test01";
             Name = name ?? LocalizedString.FromEnglish("New Module");
-            Lighting = lighting ?? new Andastra.Parsing.Common.Color(0.5f, 0.5f, 0.5f);
+            Lighting = lighting ?? new Andastra.Parsing.Common.ParsingColor(0.5f, 0.5f, 0.5f);
             Skybox = skybox ?? "";
             WarpPoint = warpPoint ?? System.Numerics.Vector3.Zero;
             // targetGameType: null = use installation.Tsl, true = TSL/K2, false = K1
@@ -95,7 +95,7 @@ namespace HolocronToolset.Data
         public List<IndoorMapRoom> Rooms { get; set; }
         public string ModuleId { get; set; }
         public LocalizedString Name { get; set; }
-        public Andastra.Parsing.Common.Color Lighting { get; set; }
+        public Andastra.Parsing.Common.ParsingColor Lighting { get; set; }
         public string Skybox { get; set; }
         public System.Numerics.Vector3 WarpPoint { get; set; }
         // TargetGameType: null = use installation.Tsl, true = TSL/K2, false = K1
@@ -2297,7 +2297,7 @@ namespace HolocronToolset.Data
             Rooms.Clear();
             ModuleId = "test01";
             Name = LocalizedString.FromEnglish("New Module");
-            Lighting = new Andastra.Parsing.Common.Color(0.5f, 0.5f, 0.5f);
+            Lighting = new Andastra.Parsing.Common.ParsingColor(0.5f, 0.5f, 0.5f);
             TargetGameType = null;
         }
 

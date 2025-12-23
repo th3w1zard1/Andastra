@@ -8,9 +8,9 @@ namespace Andastra.Runtime.Stride.Graphics
     /// </summary>
     public class StrideDepthStencilBuffer : IDepthStencilBuffer
     {
-        private readonly global::Stride.Graphics.Texture2D _depthBuffer;
+        private readonly global::Stride.Graphics.Texture _depthBuffer;
 
-        public StrideDepthStencilBuffer(global::Stride.Graphics.Texture2D depthBuffer)
+        public StrideDepthStencilBuffer(global::Stride.Graphics.Texture depthBuffer)
         {
             _depthBuffer = depthBuffer ?? throw new ArgumentNullException(nameof(depthBuffer));
         }

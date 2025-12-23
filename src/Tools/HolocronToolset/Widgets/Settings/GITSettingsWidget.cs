@@ -9,7 +9,7 @@ using HolocronToolset.Data;
 using HolocronToolset.Widgets;
 using HolocronToolset.Widgets.Edit;
 using Andastra.Parsing.Common;
-using KotorColor = Andastra.Parsing.Common.Color;
+using KotorColor = Andastra.Parsing.Common.ParsingColor;
 
 namespace HolocronToolset.Widgets.Settings
 {

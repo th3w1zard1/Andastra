@@ -365,7 +365,7 @@ namespace Andastra.Parsing.Formats.TPC
         /// <summary>
         /// Decompresses DXT3 (BC2) compressed texture data to RGBA format.
         /// Based on standard DXT/S3TC decompression algorithm.
-        /// DXT3 uses 4x4 pixel blocks with 16 bytes per block (8 bytes explicit alpha + 8 bytes DXT1 color).
+        /// DXT3 uses 4x4 pixel blocks with 16 bytes per block (8 bytes explicit alpha + 8 bytes DXT1 ParsingColor).
         /// </summary>
         private void DecompressDxt3ToRgba(byte[] dxt3, byte[] rgba, int width, int height)
         {
@@ -446,7 +446,7 @@ namespace Andastra.Parsing.Formats.TPC
         /// <summary>
         /// Decompresses DXT5 (BC3) compressed texture data to RGBA format.
         /// Based on standard DXT/S3TC decompression algorithm.
-        /// DXT5 uses 4x4 pixel blocks with 16 bytes per block (8 bytes interpolated alpha + 8 bytes DXT1 color).
+        /// DXT5 uses 4x4 pixel blocks with 16 bytes per block (8 bytes interpolated alpha + 8 bytes DXT1 ParsingColor).
         /// </summary>
         private void DecompressDxt5ToRgba(byte[] dxt5, byte[] rgba, int width, int height)
         {

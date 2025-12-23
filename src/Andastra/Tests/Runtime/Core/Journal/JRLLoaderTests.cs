@@ -155,7 +155,7 @@ namespace Andastra.Tests.Runtime.Core.Journal
 
             _mockResourceManager
                 .Setup(m => m.LookupResource("global", ResourceType.JRL))
-                .Returns(new ResourceResult { Data = jrlData });
+                .Returns(new ResourceResult("global", ResourceType.JRL, "test.jrl", jrlData));
 
             // Create mock TLK for text resolution
             TLK testTlk = CreateTestTLK("Global quest entry text");

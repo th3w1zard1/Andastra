@@ -958,7 +958,7 @@ shader FSRTemporal : ComputeShaderBase
         public static readonly ParameterKey<Texture> InputHistory = ParameterKeys.New<Texture>();
         public static readonly ParameterKey<Texture> OutputColor = ParameterKeys.New<Texture>();
         public static readonly ParameterKey<Texture> OutputLock = ParameterKeys.New<Texture>();
-        public static readonly ParameterKey<FsrConstants> FsrConstants = ParameterKeys.New<FsrConstants>();
+        public static readonly ParameterKey<StrideFsrSystem.FsrConstants> FsrConstants = ParameterKeys.New<StrideFsrSystem.FsrConstants>();
     }
 }
 

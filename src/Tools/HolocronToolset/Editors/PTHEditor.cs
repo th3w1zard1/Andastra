@@ -8,7 +8,7 @@ using Andastra.Parsing.Common;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource;
 using HolocronToolset.Data;
-using KotorColor = Andastra.Parsing.Common.Color;
+using KotorColor = Andastra.Parsing.Common.ParsingColor;
 using Window = Avalonia.Controls.Window;
 using PTH = Andastra.Parsing.Resource.Generics.PTH;
 using PathSelection = HolocronToolset.Editors.PathSelection;

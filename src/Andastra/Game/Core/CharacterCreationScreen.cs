@@ -18,6 +18,11 @@ using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Common;
 using FeatData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.FeatData;
 using JetBrains.Annotations;
+using GraphicsColor = Andastra.Runtime.Graphics.Color;
+using ParsingColor = Andastra.Parsing.Common.Color;
+using GraphicsVector2 = Andastra.Runtime.Graphics.Vector2;
+using RuntimeObjectType = Andastra.Runtime.Core.Enums.ObjectType;
+using ParsingObjectType = Andastra.Parsing.Common.ParsingObjectType;
 
 namespace Andastra.Runtime.Game.Core
 {
@@ -1067,7 +1072,7 @@ namespace Andastra.Runtime.Game.Core
 
             // Create a temporary entity for preview
             // Based on swkotor.exe and swkotor2.exe: Character preview uses temporary creature entity
-            _previewEntity = new Entity(ObjectType.Creature, null);
+            _previewEntity = new Entity(RuntimeObjectType.Creature, null);
             _previewEntity.Tag = "CharacterPreview";
             _previewEntity.Position = Vector3.Zero;
             _previewEntity.Facing = 0f;
@@ -1186,11 +1191,11 @@ namespace Andastra.Runtime.Game.Core
             int previewHeight = 400;
 
             // Draw preview background
-            Color previewBgColor = new Color(30, 30, 30, 200);
+            GraphicsColor previewBgColor = new GraphicsColor(30, 30, 30, 200);
             DrawRectangle(spriteBatch, new Rectangle(previewX, previewY, previewWidth, previewHeight), previewBgColor);
 
             // Draw preview border
-            Color previewBorderColor = new Color(100, 100, 100, 255);
+            GraphicsColor previewBorderColor = new GraphicsColor(100, 100, 100, 255);
             DrawRectangleOutline(spriteBatch, new Rectangle(previewX, previewY, previewWidth, previewHeight), previewBorderColor, 2);
 
             // Render 3D model if renderer is initialized
@@ -1236,7 +1241,7 @@ namespace Andastra.Runtime.Game.Core
 
                             // Clear render target with dark background
                             // Based on swkotor.exe and swkotor2.exe: Character preview uses dark background color
-                            _graphicsDevice.Clear(new Color(20, 20, 25, 255));
+                            _graphicsDevice.Clear(new GraphicsColor(20, 20, 25, 255));
                             _graphicsDevice.ClearDepth(1.0f);
 
                             // Apply rotation to view matrix for animated rotation
@@ -1275,7 +1280,7 @@ namespace Andastra.Runtime.Game.Core
 
                         // Draw the rendered preview texture as a sprite in the preview area
                         // Based on swkotor.exe and swkotor2.exe: Preview texture drawn to screen position
-                        spriteBatch.Draw(_previewTexture, new Rectangle(previewX, previewY, previewWidth, previewHeight), Color.White);
+                        spriteBatch.Draw(_previewTexture, new Rectangle(previewX, previewY, previewWidth, previewHeight), GraphicsGraphicsColor.White);
                     }
                 }
                 catch (Exception ex)
@@ -1312,20 +1317,20 @@ namespace Andastra.Runtime.Game.Core
                 bool isSelected = (i == _selectedClassIndex);
 
                 int y = startY + (i * itemHeight);
-                Color textColor = isSelected ? Color.Yellow : Color.White;
+                GraphicsColor textColor = isSelected ? GraphicsColor.Yellow : GraphicsColor.White;
 
                 // Draw selection indicator
                 if (isSelected)
                 {
-                    DrawRectangle(spriteBatch, new Rectangle(50, y - 2, 400, itemHeight), new Color(100, 100, 100, 100));
+                    DrawRectangle(spriteBatch, new Rectangle(50, y - 2, 400, itemHeight), new GraphicsColor(100, 100, 100, 100));
                 }
 
                 // Draw class name
-                spriteBatch.DrawString(font, className, new Vector2(60, y), textColor);
+                spriteBatch.DrawString(font, className, new GraphicsVector2(60, y), textColor);
             }
 
             // Render step title
-            spriteBatch.DrawString(font, "Select Class", new Vector2(50, 100), Color.White);
+            spriteBatch.DrawString(font, "Select Class", new GraphicsVector2(50, 100), GraphicsColor.White);
         }
 
         /// <summary>
@@ -1343,23 +1348,23 @@ namespace Andastra.Runtime.Game.Core
             int itemHeight = 50;
 
             // Render Quick option
-            Color quickColor = _isQuickMode ? Color.Yellow : Color.White;
-            spriteBatch.DrawString(font, "Quick Character", new Vector2(50, startY), quickColor);
+            GraphicsColor quickColor = _isQuickMode ? GraphicsColor.Yellow : GraphicsColor.White;
+            spriteBatch.DrawString(font, "Quick Character", new GraphicsVector2(50, startY), quickColor);
             if (_isQuickMode)
             {
-                DrawRectangle(spriteBatch, new Rectangle(45, startY - 2, 300, itemHeight), new Color(100, 100, 100, 100));
+                DrawRectangle(spriteBatch, new Rectangle(45, startY - 2, 300, itemHeight), new GraphicsColor(100, 100, 100, 100));
             }
 
             // Render Custom option
-            Color customColor = !_isQuickMode ? Color.Yellow : Color.White;
-            spriteBatch.DrawString(font, "Custom Character", new Vector2(50, startY + itemHeight), customColor);
+            GraphicsColor customColor = !_isQuickMode ? GraphicsColor.Yellow : GraphicsColor.White;
+            spriteBatch.DrawString(font, "Custom Character", new GraphicsVector2(50, startY + itemHeight), customColor);
             if (!_isQuickMode)
             {
-                DrawRectangle(spriteBatch, new Rectangle(45, startY + itemHeight - 2, 300, itemHeight), new Color(100, 100, 100, 100));
+                DrawRectangle(spriteBatch, new Rectangle(45, startY + itemHeight - 2, 300, itemHeight), new GraphicsColor(100, 100, 100, 100));
             }
 
             // Render step title
-            spriteBatch.DrawString(font, "Character Creation Mode", new Vector2(50, 100), Color.White);
+            spriteBatch.DrawString(font, "Character Creation Mode", new GraphicsVector2(50, 100), GraphicsColor.White);
         }
 
         /// <summary>
@@ -1399,34 +1404,34 @@ namespace Andastra.Runtime.Game.Core
 
             // Render points remaining
             string pointsText = $"Points Remaining: {pointsRemaining} / {maxPoints}";
-            spriteBatch.DrawString(font, pointsText, new Vector2(50, 100), Color.Cyan);
+            spriteBatch.DrawString(font, pointsText, new GraphicsVector2(50, 100), GraphicsColor.Cyan);
 
             // Render attributes
             for (int i = 0; i < attributeNames.Length; i++)
             {
                 bool isSelected = (i == _selectedAttributeIndex);
                 int y = startY + (i * itemHeight);
-                Color textColor = isSelected ? Color.Yellow : Color.White;
+                GraphicsColor textColor = isSelected ? GraphicsColor.Yellow : GraphicsColor.White;
 
                 // Draw selection indicator
                 if (isSelected)
                 {
-                    DrawRectangle(spriteBatch, new Rectangle(45, y - 2, 450, itemHeight), new Color(100, 100, 100, 100));
+                    DrawRectangle(spriteBatch, new Rectangle(45, y - 2, 450, itemHeight), new GraphicsColor(100, 100, 100, 100));
                 }
 
                 // Draw attribute name and value
                 string attributeText = $"{attributeNames[i]}: {attributeValues[i]}";
-                spriteBatch.DrawString(font, attributeText, new Vector2(60, y), textColor);
+                spriteBatch.DrawString(font, attributeText, new GraphicsVector2(60, y), textColor);
 
                 // Draw adjustment indicators
                 if (isSelected)
                 {
-                    spriteBatch.DrawString(font, "< - >", new Vector2(350, y), Color.Gray);
+                    spriteBatch.DrawString(font, "< - >", new GraphicsVector2(350, y), GraphicsColor.Gray);
                 }
             }
 
             // Render step title
-            spriteBatch.DrawString(font, "Adjust Attributes", new Vector2(50, 70), Color.White);
+            spriteBatch.DrawString(font, "Adjust Attributes", new GraphicsVector2(50, 70), GraphicsColor.White);
         }
 
         /// <summary>
@@ -1445,16 +1450,16 @@ namespace Andastra.Runtime.Game.Core
             }
 
             // Render step title
-            spriteBatch.DrawString(font, "Allocate Skill Points", new Vector2(50, 50), Color.White);
+            spriteBatch.DrawString(font, "Allocate Skill Points", new GraphicsVector2(50, 50), GraphicsColor.White);
 
             // Render instruction text
             string instructionText = "Use Up/Down to navigate, Left/Right to adjust ranks, Enter/Space to continue";
-            spriteBatch.DrawString(font, instructionText, new Vector2(50, 80), Color.Gray);
+            spriteBatch.DrawString(font, instructionText, new GraphicsVector2(50, 80), GraphicsColor.Gray);
 
             // Render available skill points
             string pointsText = $"Available Skill Points: {_availableSkillPoints}";
-            Color pointsColor = _availableSkillPoints > 0 ? Color.Cyan : Color.Red;
-            spriteBatch.DrawString(font, pointsText, new Vector2(50, 105), pointsColor);
+            GraphicsColor pointsColor = _availableSkillPoints > 0 ? GraphicsColor.Cyan : GraphicsColor.Red;
+            spriteBatch.DrawString(font, pointsText, new GraphicsVector2(50, 105), pointsColor);
 
             // Get class ID for class skill checking
             int classId = GetClassId(_characterData.Class);
@@ -1492,24 +1497,24 @@ namespace Andastra.Runtime.Game.Core
                 // Draw selection indicator background
                 if (isSelected)
                 {
-                    DrawRectangle(spriteBatch, new Rectangle(45, y - 2, listWidth, itemHeight), new Color(100, 100, 100, 150));
+                    DrawRectangle(spriteBatch, new Rectangle(45, y - 2, listWidth, itemHeight), new GraphicsColor(100, 100, 100, 150));
                 }
 
                 // Draw class skill indicator (different background for class skills)
                 if (isClassSkill)
                 {
-                    DrawRectangle(spriteBatch, new Rectangle(45, y - 2, 20, itemHeight), new Color(40, 80, 120, 200));
+                    DrawRectangle(spriteBatch, new Rectangle(45, y - 2, 20, itemHeight), new GraphicsColor(40, 80, 120, 200));
                 }
 
                 // Determine text color based on state
-                Color textColor = Color.White;
+                GraphicsColor textColor = GraphicsColor.White;
                 if (isSelected)
                 {
-                    textColor = Color.Yellow;
+                    textColor = GraphicsColor.Yellow;
                 }
                 else if (isClassSkill)
                 {
-                    textColor = new Color(144, 200, 238, 255); // Light blue for class skills
+                    textColor = new GraphicsColor(144, 200, 238, 255); // Light blue for class skills
                 }
 
                 // Render skill name
@@ -1521,15 +1526,15 @@ namespace Andastra.Runtime.Game.Core
 
                 // Render class skill indicator
                 string classSkillIndicator = isClassSkill ? "[C]" : "[X]";
-                Color indicatorColor = isClassSkill ? new Color(144, 200, 238, 255) : Color.Gray;
-                spriteBatch.DrawString(font, classSkillIndicator, new Vector2(50, y), indicatorColor);
+                GraphicsColor indicatorColor = isClassSkill ? new GraphicsColor(144, 200, 238, 255) : GraphicsColor.Gray;
+                spriteBatch.DrawString(font, classSkillIndicator, new GraphicsVector2(50, y), indicatorColor);
 
                 // Render skill name
-                spriteBatch.DrawString(font, skillName, new Vector2(90, y), textColor);
+                spriteBatch.DrawString(font, skillName, new GraphicsVector2(90, y), textColor);
 
                 // Render rank display
                 string rankText = $"Rank: {currentRank}/{maxRank}";
-                spriteBatch.DrawString(font, rankText, new Vector2(280, y), textColor);
+                spriteBatch.DrawString(font, rankText, new GraphicsVector2(280, y), textColor);
 
                 // Render adjustment controls
                 if (isSelected)
@@ -1537,26 +1542,26 @@ namespace Andastra.Runtime.Game.Core
                     // Render decrease button indicator
                     if (canDecrease)
                     {
-                        spriteBatch.DrawString(font, "<", new Vector2(380, y), Color.White);
+                        spriteBatch.DrawString(font, "<", new GraphicsVector2(380, y), GraphicsColor.White);
                     }
                     else
                     {
-                        spriteBatch.DrawString(font, "<", new Vector2(380, y), Color.DarkGray);
+                        spriteBatch.DrawString(font, "<", new GraphicsVector2(380, y), GraphicsColor.DarkGray);
                     }
 
                     // Render increase button indicator
                     if (canIncrease)
                     {
-                        spriteBatch.DrawString(font, ">", new Vector2(400, y), Color.White);
+                        spriteBatch.DrawString(font, ">", new GraphicsVector2(400, y), GraphicsColor.White);
                     }
                     else
                     {
-                        spriteBatch.DrawString(font, ">", new Vector2(400, y), Color.DarkGray);
+                        spriteBatch.DrawString(font, ">", new GraphicsVector2(400, y), GraphicsColor.DarkGray);
                     }
 
                     // Render point cost
                     string costText = $"({pointCost} pt)";
-                    spriteBatch.DrawString(font, costText, new Vector2(420, y), Color.Gray);
+                    spriteBatch.DrawString(font, costText, new GraphicsVector2(420, y), GraphicsColor.Gray);
                 }
             }
 
@@ -1572,12 +1577,12 @@ namespace Andastra.Runtime.Game.Core
                     int descriptionWidth = 220;
 
                     // Draw description panel background
-                    DrawRectangle(spriteBatch, new Rectangle(descriptionX - 5, descriptionY - 5, descriptionWidth + 10, 200), new Color(30, 30, 30, 220));
-                    DrawRectangleOutline(spriteBatch, new Rectangle(descriptionX - 5, descriptionY - 5, descriptionWidth + 10, 200), Color.White, 2);
+                    DrawRectangle(spriteBatch, new Rectangle(descriptionX - 5, descriptionY - 5, descriptionWidth + 10, 200), new GraphicsColor(30, 30, 30, 220));
+                    DrawRectangleOutline(spriteBatch, new Rectangle(descriptionX - 5, descriptionY - 5, descriptionWidth + 10, 200), GraphicsColor.White, 2);
 
                     // Render skill name
                     string descSkillName = selectedSkillData.Name ?? $"Skill {selectedSkillId}";
-                    spriteBatch.DrawString(font, descSkillName, new Vector2(descriptionX, descriptionY), Color.White);
+                    spriteBatch.DrawString(font, descSkillName, new GraphicsVector2(descriptionX, descriptionY), GraphicsColor.White);
                     descriptionY += 25;
 
                     // Render description
@@ -1593,7 +1598,7 @@ namespace Andastra.Runtime.Game.Core
                         string testLine = currentLine + (currentLine.Length > 0 ? " " : "") + word;
                         if (testLine.Length > maxCharsPerLine && currentLine.Length > 0)
                         {
-                            spriteBatch.DrawString(font, currentLine, new Vector2(descriptionX, descriptionY), new Color(211, 211, 211, 255)); // Light gray
+                            spriteBatch.DrawString(font, currentLine, new GraphicsVector2(descriptionX, descriptionY), new GraphicsColor(211, 211, 211, 255)); // Light gray
                             descriptionY += lineHeight;
                             currentLine = word;
                         }
@@ -1609,15 +1614,15 @@ namespace Andastra.Runtime.Game.Core
                     }
                     if (currentLine.Length > 0 && descriptionY <= 135 + 170)
                     {
-                        spriteBatch.DrawString(font, currentLine, new Vector2(descriptionX, descriptionY), new Color(211, 211, 211, 255)); // Light gray
+                        spriteBatch.DrawString(font, currentLine, new GraphicsVector2(descriptionX, descriptionY), new GraphicsColor(211, 211, 211, 255)); // Light gray
                     }
 
                     // Render class skill info
                     descriptionY += 20;
                     bool isClassSkill = _gameDataManager.IsClassSkill(selectedSkillId, classId);
                     string classSkillText = isClassSkill ? "Class Skill (1 point per rank)" : "Cross-Class Skill (2 points per rank)";
-                    Color classSkillColor = isClassSkill ? new Color(144, 200, 238, 255) : Color.Gray;
-                    spriteBatch.DrawString(font, classSkillText, new Vector2(descriptionX, descriptionY), classSkillColor);
+                    GraphicsColor classSkillColor = isClassSkill ? new GraphicsColor(144, 200, 238, 255) : GraphicsColor.Gray;
+                    spriteBatch.DrawString(font, classSkillText, new GraphicsVector2(descriptionX, descriptionY), classSkillColor);
                 }
             }
         }
@@ -1638,15 +1643,15 @@ namespace Andastra.Runtime.Game.Core
             }
 
             // Render step title
-            spriteBatch.DrawString(font, "Select Feats", new Vector2(50, 50), Color.White);
+            spriteBatch.DrawString(font, "Select Feats", new GraphicsVector2(50, 50), GraphicsColor.White);
 
             // Render instruction text
             string instructionText = "Use Up/Down to navigate, Enter/Space to select/deselect, Tab to continue";
-            spriteBatch.DrawString(font, instructionText, new Vector2(50, 80), Color.Gray);
+            spriteBatch.DrawString(font, instructionText, new GraphicsVector2(50, 80), GraphicsColor.Gray);
 
             // Render selected feats count
             string selectedCountText = $"Selected: {_characterData.SelectedFeats.Count}";
-            spriteBatch.DrawString(font, selectedCountText, new Vector2(50, 105), Color.Cyan);
+            spriteBatch.DrawString(font, selectedCountText, new GraphicsVector2(50, 105), GraphicsColor.Cyan);
 
             // Render feat list
             int listStartY = 135;
@@ -1662,7 +1667,7 @@ namespace Andastra.Runtime.Game.Core
             if (_availableFeatIds.Count > maxVisibleItems)
             {
                 string scrollHint = $"Showing {visibleStart + 1}-{visibleEnd} of {_availableFeatIds.Count}";
-                spriteBatch.DrawString(font, scrollHint, new Vector2(50, listStartY + (maxVisibleItems * itemHeight) + 5), Color.DarkGray);
+                spriteBatch.DrawString(font, scrollHint, new GraphicsVector2(50, listStartY + (maxVisibleItems * itemHeight) + 5), GraphicsColor.DarkGray);
             }
 
             // Render visible feats
@@ -1684,28 +1689,28 @@ namespace Andastra.Runtime.Game.Core
                 // Draw selection indicator background
                 if (isSelected)
                 {
-                    DrawRectangle(spriteBatch, new Rectangle(45, y - 2, listWidth, itemHeight), new Color(100, 100, 100, 150));
+                    DrawRectangle(spriteBatch, new Rectangle(45, y - 2, listWidth, itemHeight), new GraphicsColor(100, 100, 100, 150));
                 }
 
                 // Draw taken indicator (different background for selected feats)
                 if (isTaken)
                 {
-                    DrawRectangle(spriteBatch, new Rectangle(45, y - 2, 20, itemHeight), new Color(40, 120, 40, 200));
+                    DrawRectangle(spriteBatch, new Rectangle(45, y - 2, 20, itemHeight), new GraphicsColor(40, 120, 40, 200));
                 }
 
                 // Determine text color based on state
-                Color textColor = Color.White;
+                GraphicsColor textColor = GraphicsColor.White;
                 if (!meetsPrereqs)
                 {
-                    textColor = Color.DarkGray; // Gray out feats that don't meet prerequisites
+                    textColor = GraphicsColor.DarkGray; // Gray out feats that don't meet prerequisites
                 }
                 else if (isTaken)
                 {
-                    textColor = new Color(144, 238, 144, 255); // Light green for selected feats
+                    textColor = new GraphicsColor(144, 238, 144, 255); // Light green for selected feats
                 }
                 else if (isSelected)
                 {
-                    textColor = Color.Yellow; // Yellow for currently selected item
+                    textColor = GraphicsColor.Yellow; // Yellow for currently selected item
                 }
 
                 // Render feat name
@@ -1717,14 +1722,14 @@ namespace Andastra.Runtime.Game.Core
 
                 // Render selection indicator
                 string indicator = isTaken ? "[X]" : "[ ]";
-                spriteBatch.DrawString(font, indicator, new Vector2(50, y), textColor);
+                spriteBatch.DrawString(font, indicator, new GraphicsVector2(50, y), textColor);
 
-                spriteBatch.DrawString(font, featName, new Vector2(90, y), textColor);
+                spriteBatch.DrawString(font, featName, new GraphicsVector2(90, y), textColor);
 
                 // Render prerequisite warning if not met
                 if (!meetsPrereqs && isSelected)
                 {
-                    spriteBatch.DrawString(font, " (Prerequisites not met)", new Vector2(90 + font.MeasureString(featName).X, y), Color.Red);
+                    spriteBatch.DrawString(font, " (Prerequisites not met)", new GraphicsVector2(90 + font.MeasureString(featName).X, y), GraphicsColor.Red);
                 }
             }
 
@@ -1740,12 +1745,12 @@ namespace Andastra.Runtime.Game.Core
                     int descriptionWidth = 250;
 
                     // Draw description panel background
-                    DrawRectangle(spriteBatch, new Rectangle(descriptionX - 5, descriptionY - 5, descriptionWidth + 10, 250), new Color(30, 30, 30, 220));
-                    DrawRectangleOutline(spriteBatch, new Rectangle(descriptionX - 5, descriptionY - 5, descriptionWidth + 10, 250), Color.White, 2);
+                    DrawRectangle(spriteBatch, new Rectangle(descriptionX - 5, descriptionY - 5, descriptionWidth + 10, 250), new GraphicsColor(30, 30, 30, 220));
+                    DrawRectangleOutline(spriteBatch, new Rectangle(descriptionX - 5, descriptionY - 5, descriptionWidth + 10, 250), GraphicsColor.White, 2);
 
                     // Render feat name
                     string descFeatName = selectedFeatData.Name ?? $"Feat {selectedFeatId}";
-                    spriteBatch.DrawString(font, descFeatName, new Vector2(descriptionX, descriptionY), Color.White);
+                    spriteBatch.DrawString(font, descFeatName, new GraphicsVector2(descriptionX, descriptionY), GraphicsColor.White);
                     descriptionY += 25;
 
                     // Render description
@@ -1761,7 +1766,7 @@ namespace Andastra.Runtime.Game.Core
                         string testLine = currentLine + (currentLine.Length > 0 ? " " : "") + word;
                         if (testLine.Length > maxCharsPerLine && currentLine.Length > 0)
                         {
-                            spriteBatch.DrawString(font, currentLine, new Vector2(descriptionX, descriptionY), new Color(211, 211, 211, 255)); // Light gray
+                            spriteBatch.DrawString(font, currentLine, new GraphicsVector2(descriptionX, descriptionY), new GraphicsColor(211, 211, 211, 255)); // Light gray
                             descriptionY += lineHeight;
                             currentLine = word;
                         }
@@ -1777,7 +1782,7 @@ namespace Andastra.Runtime.Game.Core
                     }
                     if (currentLine.Length > 0 && descriptionY <= 135 + 220)
                     {
-                        spriteBatch.DrawString(font, currentLine, new Vector2(descriptionX, descriptionY), new Color(211, 211, 211, 255)); // Light gray
+                        spriteBatch.DrawString(font, currentLine, new GraphicsVector2(descriptionX, descriptionY), new GraphicsColor(211, 211, 211, 255)); // Light gray
                     }
 
                     // Render prerequisites
@@ -1787,8 +1792,8 @@ namespace Andastra.Runtime.Game.Core
                         FeatData prereqFeat = _gameDataManager.GetFeat(selectedFeatData.PrereqFeat1);
                         string prereqName = prereqFeat?.Name ?? $"Feat {selectedFeatData.PrereqFeat1}";
                         bool hasPrereq = _characterData.SelectedFeats.Contains(selectedFeatData.PrereqFeat1);
-                        Color prereqColor = hasPrereq ? Color.Green : Color.Red;
-                        spriteBatch.DrawString(font, $"Requires: {prereqName}", new Vector2(descriptionX, descriptionY), prereqColor);
+                        GraphicsColor prereqColor = hasPrereq ? GraphicsColor.Green : GraphicsColor.Red;
+                        spriteBatch.DrawString(font, $"Requires: {prereqName}", new GraphicsVector2(descriptionX, descriptionY), prereqColor);
                     }
                 }
             }
@@ -1808,14 +1813,14 @@ namespace Andastra.Runtime.Game.Core
             }
 
             // Render step title
-            spriteBatch.DrawString(font, "Select Portrait", new Vector2(50, 100), Color.White);
+            spriteBatch.DrawString(font, "Select Portrait", new GraphicsVector2(50, 100), GraphicsColor.White);
 
             // Render current portrait number
             string portraitText = $"Portrait: {_characterData.Portrait}";
-            spriteBatch.DrawString(font, portraitText, new Vector2(50, 150), Color.White);
+            spriteBatch.DrawString(font, portraitText, new GraphicsVector2(50, 150), GraphicsColor.White);
 
             // Render navigation hints
-            spriteBatch.DrawString(font, "Use Left/Right arrows to change portrait", new Vector2(50, 200), Color.Gray);
+            spriteBatch.DrawString(font, "Use Left/Right arrows to change portrait", new GraphicsVector2(50, 200), GraphicsColor.Gray);
 
             // Render portrait thumbnail
             RenderPortraitThumbnail(spriteBatch);
@@ -1844,8 +1849,8 @@ namespace Andastra.Runtime.Game.Core
                 int thumbnailX = 50;
                 int thumbnailY = 250;
                 int thumbnailSize = 128;
-                DrawRectangle(spriteBatch, new Rectangle(thumbnailX, thumbnailY, thumbnailSize, thumbnailSize), new Color(50, 50, 50, 200));
-                DrawRectangleOutline(spriteBatch, new Rectangle(thumbnailX, thumbnailY, thumbnailSize, thumbnailSize), Color.Gray, 2);
+                DrawRectangle(spriteBatch, new Rectangle(thumbnailX, thumbnailY, thumbnailSize, thumbnailSize), new GraphicsColor(50, 50, 50, 200));
+                DrawRectangleOutline(spriteBatch, new Rectangle(thumbnailX, thumbnailY, thumbnailSize, thumbnailSize), GraphicsColor.Gray, 2);
                 return;
             }
 
@@ -1857,8 +1862,8 @@ namespace Andastra.Runtime.Game.Core
                 int thumbnailX = 50;
                 int thumbnailY = 250;
                 int thumbnailSize = 128;
-                DrawRectangle(spriteBatch, new Rectangle(thumbnailX, thumbnailY, thumbnailSize, thumbnailSize), new Color(50, 50, 50, 200));
-                DrawRectangleOutline(spriteBatch, new Rectangle(thumbnailX, thumbnailY, thumbnailSize, thumbnailSize), Color.Gray, 2);
+                DrawRectangle(spriteBatch, new Rectangle(thumbnailX, thumbnailY, thumbnailSize, thumbnailSize), new GraphicsColor(50, 50, 50, 200));
+                DrawRectangleOutline(spriteBatch, new Rectangle(thumbnailX, thumbnailY, thumbnailSize, thumbnailSize), GraphicsColor.Gray, 2);
                 return;
             }
 
@@ -1870,13 +1875,13 @@ namespace Andastra.Runtime.Game.Core
             int thumbnailSize = 128; // Standard portrait thumbnail size
 
             // Draw selection border (highlight current portrait)
-            Color selectionColor = Color.Yellow;
+            GraphicsColor selectionColor = GraphicsColor.Yellow;
             int borderThickness = 3;
             DrawRectangleOutline(spriteBatch, new Rectangle(thumbnailX - borderThickness, thumbnailY - borderThickness, thumbnailSize + (borderThickness * 2), thumbnailSize + (borderThickness * 2)), selectionColor, borderThickness);
 
             // Draw portrait texture
             Rectangle thumbnailRect = new Rectangle(thumbnailX, thumbnailY, thumbnailSize, thumbnailSize);
-            spriteBatch.Draw(portraitTexture, thumbnailRect, Color.White);
+            spriteBatch.Draw(portraitTexture, thumbnailRect, GraphicsColor.White);
         }
 
         /// <summary>
@@ -2156,27 +2161,27 @@ namespace Andastra.Runtime.Game.Core
             }
 
             // Render step title
-            spriteBatch.DrawString(font, "Enter Character Name", new Vector2(50, 100), Color.White);
+            spriteBatch.DrawString(font, "Enter Character Name", new GraphicsVector2(50, 100), GraphicsColor.White);
 
             // Render name input field background
             int inputX = 50;
             int inputY = 150;
             int inputWidth = 400;
             int inputHeight = 40;
-            DrawRectangle(spriteBatch, new Rectangle(inputX, inputY, inputWidth, inputHeight), new Color(50, 50, 50, 200));
-            DrawRectangleOutline(spriteBatch, new Rectangle(inputX, inputY, inputWidth, inputHeight), Color.White, 2);
+            DrawRectangle(spriteBatch, new Rectangle(inputX, inputY, inputWidth, inputHeight), new GraphicsColor(50, 50, 50, 200));
+            DrawRectangleOutline(spriteBatch, new Rectangle(inputX, inputY, inputWidth, inputHeight), GraphicsColor.White, 2);
 
             // Render current name
             string displayName = string.IsNullOrEmpty(_characterData.Name) ? "Enter name..." : _characterData.Name;
-            Color nameColor = string.IsNullOrEmpty(_characterData.Name) ? Color.Gray : Color.White;
-            spriteBatch.DrawString(font, displayName, new Vector2(inputX + 10, inputY + 10), nameColor);
+            GraphicsColor nameColor = string.IsNullOrEmpty(_characterData.Name) ? GraphicsColor.Gray : GraphicsColor.White;
+            spriteBatch.DrawString(font, displayName, new GraphicsVector2(inputX + 10, inputY + 10), nameColor);
 
             // Render cursor (blinking)
             float time = (float)(DateTime.Now.Millisecond % 1000) / 1000.0f;
             if (time < 0.5f)
             {
                 int cursorX = inputX + 10 + (int)font.MeasureString(displayName).X;
-                spriteBatch.DrawString(font, "|", new Vector2(cursorX, inputY + 10), Color.White);
+                spriteBatch.DrawString(font, "|", new GraphicsVector2(cursorX, inputY + 10), GraphicsColor.White);
             }
         }
 
@@ -2194,42 +2199,42 @@ namespace Andastra.Runtime.Game.Core
             }
 
             // Render step title
-            spriteBatch.DrawString(font, "Character Summary", new Vector2(50, 50), Color.White);
+            spriteBatch.DrawString(font, "Character Summary", new GraphicsVector2(50, 50), GraphicsColor.White);
 
             int y = 100;
             int lineHeight = 25;
 
             // Render character information
-            spriteBatch.DrawString(font, $"Name: {_characterData.Name}", new Vector2(50, y), Color.White);
+            spriteBatch.DrawString(font, $"Name: {_characterData.Name}", new GraphicsVector2(50, y), GraphicsColor.White);
             y += lineHeight;
 
-            spriteBatch.DrawString(font, $"Class: {GetClassName(_characterData.Class)}", new Vector2(50, y), Color.White);
+            spriteBatch.DrawString(font, $"Class: {GetClassName(_characterData.Class)}", new GraphicsVector2(50, y), GraphicsColor.White);
             y += lineHeight;
 
-            spriteBatch.DrawString(font, $"Gender: {_characterData.Gender}", new Vector2(50, y), Color.White);
+            spriteBatch.DrawString(font, $"Gender: {_characterData.Gender}", new GraphicsVector2(50, y), GraphicsColor.White);
             y += lineHeight;
 
-            spriteBatch.DrawString(font, $"Portrait: {_characterData.Portrait}", new Vector2(50, y), Color.White);
+            spriteBatch.DrawString(font, $"Portrait: {_characterData.Portrait}", new GraphicsVector2(50, y), GraphicsColor.White);
             y += lineHeight * 2;
 
             // Render attributes
-            spriteBatch.DrawString(font, "Attributes:", new Vector2(50, y), Color.Cyan);
+            spriteBatch.DrawString(font, "Attributes:", new GraphicsVector2(50, y), GraphicsColor.Cyan);
             y += lineHeight;
-            spriteBatch.DrawString(font, $"  STR: {_characterData.Strength}", new Vector2(70, y), Color.White);
+            spriteBatch.DrawString(font, $"  STR: {_characterData.Strength}", new GraphicsVector2(70, y), GraphicsColor.White);
             y += lineHeight;
-            spriteBatch.DrawString(font, $"  DEX: {_characterData.Dexterity}", new Vector2(70, y), Color.White);
+            spriteBatch.DrawString(font, $"  DEX: {_characterData.Dexterity}", new GraphicsVector2(70, y), GraphicsColor.White);
             y += lineHeight;
-            spriteBatch.DrawString(font, $"  CON: {_characterData.Constitution}", new Vector2(70, y), Color.White);
+            spriteBatch.DrawString(font, $"  CON: {_characterData.Constitution}", new GraphicsVector2(70, y), GraphicsColor.White);
             y += lineHeight;
-            spriteBatch.DrawString(font, $"  INT: {_characterData.Intelligence}", new Vector2(70, y), Color.White);
+            spriteBatch.DrawString(font, $"  INT: {_characterData.Intelligence}", new GraphicsVector2(70, y), GraphicsColor.White);
             y += lineHeight;
-            spriteBatch.DrawString(font, $"  WIS: {_characterData.Wisdom}", new Vector2(70, y), Color.White);
+            spriteBatch.DrawString(font, $"  WIS: {_characterData.Wisdom}", new GraphicsVector2(70, y), GraphicsColor.White);
             y += lineHeight;
-            spriteBatch.DrawString(font, $"  CHA: {_characterData.Charisma}", new Vector2(70, y), Color.White);
+            spriteBatch.DrawString(font, $"  CHA: {_characterData.Charisma}", new GraphicsVector2(70, y), GraphicsColor.White);
             y += lineHeight * 2;
 
             // Render skills
-            spriteBatch.DrawString(font, "Skills:", new Vector2(50, y), Color.Cyan);
+            spriteBatch.DrawString(font, "Skills:", new GraphicsVector2(50, y), GraphicsColor.Cyan);
             y += lineHeight;
 
             int classId = GetClassId(_characterData.Class);
@@ -2239,13 +2244,13 @@ namespace Andastra.Runtime.Game.Core
                 int rank = _characterData.SkillRanks.ContainsKey(i) ? _characterData.SkillRanks[i] : 0;
                 bool isClassSkill = _gameDataManager.IsClassSkill(i, classId);
                 string classSkillIndicator = isClassSkill ? " [C]" : " [X]";
-                spriteBatch.DrawString(font, $"  {skillNames[i]}: {rank}{classSkillIndicator}", new Vector2(70, y), Color.White);
+                spriteBatch.DrawString(font, $"  {skillNames[i]}: {rank}{classSkillIndicator}", new GraphicsVector2(70, y), GraphicsColor.White);
                 y += lineHeight;
             }
             y += lineHeight;
 
             // Render completion hint
-            spriteBatch.DrawString(font, "Press Enter to finish character creation", new Vector2(50, y), Color.Yellow);
+            spriteBatch.DrawString(font, "Press Enter to finish character creation", new GraphicsVector2(50, y), GraphicsColor.Yellow);
         }
 
         /// <summary>
@@ -2272,24 +2277,24 @@ namespace Andastra.Runtime.Game.Core
             if (_currentStep != CreationStep.ClassSelection)
             {
                 int backX = 50;
-                DrawRectangle(spriteBatch, new Rectangle(backX, buttonY, buttonWidth, buttonHeight), new Color(80, 80, 80, 200));
-                DrawRectangleOutline(spriteBatch, new Rectangle(backX, buttonY, buttonWidth, buttonHeight), Color.White, 2);
-                spriteBatch.DrawString(font, "Back", new Vector2(backX + 25, buttonY + 10), Color.White);
+                DrawRectangle(spriteBatch, new Rectangle(backX, buttonY, buttonWidth, buttonHeight), new GraphicsColor(80, 80, 80, 200));
+                DrawRectangleOutline(spriteBatch, new Rectangle(backX, buttonY, buttonWidth, buttonHeight), GraphicsColor.White, 2);
+                spriteBatch.DrawString(font, "Back", new GraphicsVector2(backX + 25, buttonY + 10), GraphicsColor.White);
             }
 
             // Render Cancel button
             int cancelX = _currentStep != CreationStep.ClassSelection ? 170 : 50;
-            DrawRectangle(spriteBatch, new Rectangle(cancelX, buttonY, buttonWidth, buttonHeight), new Color(120, 40, 40, 200));
-            DrawRectangleOutline(spriteBatch, new Rectangle(cancelX, buttonY, buttonWidth, buttonHeight), Color.White, 2);
-            spriteBatch.DrawString(font, "Cancel", new Vector2(cancelX + 15, buttonY + 10), Color.White);
+            DrawRectangle(spriteBatch, new Rectangle(cancelX, buttonY, buttonWidth, buttonHeight), new GraphicsColor(120, 40, 40, 200));
+            DrawRectangleOutline(spriteBatch, new Rectangle(cancelX, buttonY, buttonWidth, buttonHeight), GraphicsColor.White, 2);
+            spriteBatch.DrawString(font, "Cancel", new GraphicsVector2(cancelX + 15, buttonY + 10), GraphicsColor.White);
 
             // Render Next/Finish button
             string nextButtonText = (_currentStep == CreationStep.Summary) ? "Finish" : "Next";
             int nextX = _graphicsDevice.Viewport.Width - buttonWidth - 50;
-            Color nextButtonColor = (_currentStep == CreationStep.Summary) ? new Color(40, 120, 40, 200) : new Color(80, 80, 80, 200);
+            GraphicsColor nextButtonColor = (_currentStep == CreationStep.Summary) ? new GraphicsColor(40, 120, 40, 200) : new GraphicsColor(80, 80, 80, 200);
             DrawRectangle(spriteBatch, new Rectangle(nextX, buttonY, buttonWidth, buttonHeight), nextButtonColor);
-            DrawRectangleOutline(spriteBatch, new Rectangle(nextX, buttonY, buttonWidth, buttonHeight), Color.White, 2);
-            spriteBatch.DrawString(font, nextButtonText, new Vector2(nextX + 20, buttonY + 10), Color.White);
+            DrawRectangleOutline(spriteBatch, new Rectangle(nextX, buttonY, buttonWidth, buttonHeight), GraphicsColor.White, 2);
+            spriteBatch.DrawString(font, nextButtonText, new GraphicsVector2(nextX + 20, buttonY + 10), GraphicsColor.White);
         }
 
         /// <summary>

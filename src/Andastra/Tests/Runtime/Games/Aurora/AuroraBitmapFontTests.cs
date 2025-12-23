@@ -27,7 +27,7 @@ namespace Andastra.Tests.Runtime.Games.Aurora
         {
             _graphicsDevice = GraphicsTestHelper.CreateTestIGraphicsDevice();
             _mockResourceLookup = new Mock<IResourceLookup>(MockBehavior.Strict);
-            
+
             var mockInstallation = new Mock<Installation>(MockBehavior.Strict);
             mockInstallation.Setup(i => i.Resources).Returns(_mockResourceLookup.Object);
             _installation = mockInstallation.Object;
@@ -45,23 +45,23 @@ namespace Andastra.Tests.Runtime.Games.Aurora
             string fontResRef = "fnt_d16x16";
             TPC testTpc = FontTestHelper.CreateTestTPC(256, 256, TPCTextureFormat.RGBA);
             TXI testTxi = FontTestHelper.CreateTestTXI(16.0f, 8.0f, 12.0f, 1.0f, 2.0f, 16, 16, 256.0f);
-            
+
             byte[] tpcData = TPCAuto.BytesTpc(testTpc, ResourceType.TPC);
             byte[] txiData = TXIAuto.BytesTxi(testTxi);
-            
+
             _mockResourceLookup.Setup(r => r.LookupResource(
                 fontResRef,
                 ResourceType.TPC,
                 It.IsAny<string[]>(),
                 It.IsAny<string[]>()))
-                .Returns(new ResourceResult { Data = tpcData });
-            
+                .Returns(new ResourceResult(fontResRef, ResourceType.TPC, "test.tpc", tpcData));
+
             _mockResourceLookup.Setup(r => r.LookupResource(
                 fontResRef,
                 ResourceType.TXI,
                 It.IsAny<string[]>(),
                 It.IsAny<string[]>()))
-                .Returns(new ResourceResult { Data = txiData });
+                .Returns(new ResourceResult(fontResRef, ResourceType.TXI, "test.txi", txiData));
 
             // Act
             AuroraBitmapFont font = AuroraBitmapFont.Load(fontResRef, _installation, _graphicsDevice);
@@ -86,20 +86,20 @@ namespace Andastra.Tests.Runtime.Games.Aurora
             byte[] tgaData = FontTestHelper.CreateTestTPCData(128, 128);
             TXI testTxi = FontTestHelper.CreateTestTXI(12.0f, 6.0f, 10.0f, 0.5f, 1.0f, 16, 16, 128.0f);
             byte[] txiData = TXIAuto.BytesTxi(testTxi);
-            
+
             _mockResourceLookup.Setup(r => r.LookupResource(
                 fontResRef,
                 ResourceType.TGA,
                 It.IsAny<string[]>(),
                 It.IsAny<string[]>()))
-                .Returns(new ResourceResult { Data = tgaData });
-            
+                .Returns(new ResourceResult(fontResRef, ResourceType.TGA, "test.tga", tgaData));
+
             _mockResourceLookup.Setup(r => r.LookupResource(
                 fontResRef,
                 ResourceType.TXI,
                 It.IsAny<string[]>(),
                 It.IsAny<string[]>()))
-                .Returns(new ResourceResult { Data = txiData });
+                .Returns(new ResourceResult(fontResRef, ResourceType.TXI, "test.txi", txiData));
 
             // Act
             AuroraBitmapFont font = AuroraBitmapFont.Load(fontResRef, _installation, _graphicsDevice);
@@ -114,14 +114,14 @@ namespace Andastra.Tests.Runtime.Games.Aurora
         {
             // Arrange
             string fontResRef = "fnt_missing";
-            
+
             _mockResourceLookup.Setup(r => r.LookupResource(
                 fontResRef,
                 ResourceType.TPC,
                 It.IsAny<string[]>(),
                 It.IsAny<string[]>()))
                 .Returns((ResourceResult)null);
-            
+
             _mockResourceLookup.Setup(r => r.LookupResource(
                 fontResRef,
                 ResourceType.TGA,
@@ -143,14 +143,14 @@ namespace Andastra.Tests.Runtime.Games.Aurora
             string fontResRef = "fnt_no_txi";
             TPC testTpc = FontTestHelper.CreateTestTPC(256, 256);
             byte[] tpcData = TPCAuto.BytesTpc(testTpc, ResourceType.TPC);
-            
+
             _mockResourceLookup.Setup(r => r.LookupResource(
                 fontResRef,
                 ResourceType.TPC,
                 It.IsAny<string[]>(),
                 It.IsAny<string[]>()))
-                .Returns(new ResourceResult { Data = tpcData });
-            
+                .Returns(new ResourceResult(fontResRef, ResourceType.TPC, "test.tpc", tpcData));
+
             _mockResourceLookup.Setup(r => r.LookupResource(
                 fontResRef,
                 ResourceType.TXI,
@@ -172,10 +172,10 @@ namespace Andastra.Tests.Runtime.Games.Aurora
             string fontResRef = "fnt_test";
             TPC testTpc = FontTestHelper.CreateTestTPC(256, 256);
             TXI testTxi = FontTestHelper.CreateTestTXI(16.0f, 8.0f, 12.0f, 1.0f, 2.0f, 16, 16, 256.0f);
-            
+
             byte[] tpcData = TPCAuto.BytesTpc(testTpc, ResourceType.TPC);
             byte[] txiData = TXIAuto.BytesTxi(testTxi);
-            
+
             _mockResourceLookup.Setup(r => r.LookupResource(
                 It.IsAny<string>(),
                 It.IsAny<ResourceType>(),
@@ -184,9 +184,9 @@ namespace Andastra.Tests.Runtime.Games.Aurora
                 .Returns<string, ResourceType, string[], string[]>((resRef, resType, _, __) =>
                 {
                     if (resType == ResourceType.TPC)
-                        return new ResourceResult { Data = tpcData };
+                        return new ResourceResult(resRef, ResourceType.TPC, "test.tpc", tpcData);
                     if (resType == ResourceType.TXI)
-                        return new ResourceResult { Data = txiData };
+                        return new ResourceResult(resRef, ResourceType.TXI, "test.txi", txiData);
                     return null;
                 });
 
@@ -210,10 +210,10 @@ namespace Andastra.Tests.Runtime.Games.Aurora
             string fontResRef = "fnt_test";
             TPC testTpc = FontTestHelper.CreateTestTPC(256, 256);
             TXI testTxi = FontTestHelper.CreateTestTXI(16.0f, 8.0f, 12.0f, 1.0f, 2.0f, 16, 16, 256.0f);
-            
+
             byte[] tpcData = TPCAuto.BytesTpc(testTpc, ResourceType.TPC);
             byte[] txiData = TXIAuto.BytesTxi(testTxi);
-            
+
             _mockResourceLookup.Setup(r => r.LookupResource(
                 It.IsAny<string>(),
                 It.IsAny<ResourceType>(),
@@ -222,9 +222,9 @@ namespace Andastra.Tests.Runtime.Games.Aurora
                 .Returns<string, ResourceType, string[], string[]>((resRef, resType, _, __) =>
                 {
                     if (resType == ResourceType.TPC)
-                        return new ResourceResult { Data = tpcData };
+                        return new ResourceResult(resRef, ResourceType.TPC, "test.tpc", tpcData);
                     if (resType == ResourceType.TXI)
-                        return new ResourceResult { Data = txiData };
+                        return new ResourceResult(resRef, ResourceType.TXI, "test.txi", txiData);
                     return null;
                 });
 
@@ -248,10 +248,10 @@ namespace Andastra.Tests.Runtime.Games.Aurora
             string fontResRef = "fnt_test";
             TPC testTpc = FontTestHelper.CreateTestTPC(256, 256);
             TXI testTxi = FontTestHelper.CreateTestTXI(16.0f, 8.0f, 12.0f, 1.0f, 2.0f, 16, 16, 256.0f);
-            
+
             byte[] tpcData = TPCAuto.BytesTpc(testTpc, ResourceType.TPC);
             byte[] txiData = TXIAuto.BytesTxi(testTxi);
-            
+
             _mockResourceLookup.Setup(r => r.LookupResource(
                 It.IsAny<string>(),
                 It.IsAny<ResourceType>(),
@@ -260,9 +260,9 @@ namespace Andastra.Tests.Runtime.Games.Aurora
                 .Returns<string, ResourceType, string[], string[]>((resRef, resType, _, __) =>
                 {
                     if (resType == ResourceType.TPC)
-                        return new ResourceResult { Data = tpcData };
+                        return new ResourceResult(resRef, ResourceType.TPC, "test.tpc", tpcData);
                     if (resType == ResourceType.TXI)
-                        return new ResourceResult { Data = txiData };
+                        return new ResourceResult(resRef, ResourceType.TXI, "test.txi", txiData);
                     return null;
                 });
 
@@ -287,10 +287,10 @@ namespace Andastra.Tests.Runtime.Games.Aurora
             string fontResRef = "fnt_test";
             TPC testTpc = FontTestHelper.CreateTestTPC(256, 256);
             TXI testTxi = FontTestHelper.CreateTestTXI(16.0f, 8.0f, 12.0f, 1.0f, 2.0f, 16, 16, 256.0f);
-            
+
             byte[] tpcData = TPCAuto.BytesTpc(testTpc, ResourceType.TPC);
             byte[] txiData = TXIAuto.BytesTxi(testTxi);
-            
+
             _mockResourceLookup.Setup(r => r.LookupResource(
                 It.IsAny<string>(),
                 It.IsAny<ResourceType>(),
@@ -299,9 +299,9 @@ namespace Andastra.Tests.Runtime.Games.Aurora
                 .Returns<string, ResourceType, string[], string[]>((resRef, resType, _, __) =>
                 {
                     if (resType == ResourceType.TPC)
-                        return new ResourceResult { Data = tpcData };
+                        return new ResourceResult(resRef, ResourceType.TPC, "test.tpc", tpcData);
                     if (resType == ResourceType.TXI)
-                        return new ResourceResult { Data = txiData };
+                        return new ResourceResult(resRef, ResourceType.TXI, "test.txi", txiData);
                     return null;
                 });
 
@@ -326,10 +326,10 @@ namespace Andastra.Tests.Runtime.Games.Aurora
             string fontResRef = "fnt_test";
             TPC testTpc = FontTestHelper.CreateTestTPC(256, 256);
             TXI testTxi = FontTestHelper.CreateTestTXI(16.0f, 8.0f, 12.0f, 1.0f, 2.0f, 16, 16, 256.0f);
-            
+
             byte[] tpcData = TPCAuto.BytesTpc(testTpc, ResourceType.TPC);
             byte[] txiData = TXIAuto.BytesTxi(testTxi);
-            
+
             _mockResourceLookup.Setup(r => r.LookupResource(
                 It.IsAny<string>(),
                 It.IsAny<ResourceType>(),
@@ -338,9 +338,9 @@ namespace Andastra.Tests.Runtime.Games.Aurora
                 .Returns<string, ResourceType, string[], string[]>((resRef, resType, _, __) =>
                 {
                     if (resType == ResourceType.TPC)
-                        return new ResourceResult { Data = tpcData };
+                        return new ResourceResult(resRef, ResourceType.TPC, "test.tpc", tpcData);
                     if (resType == ResourceType.TXI)
-                        return new ResourceResult { Data = txiData };
+                        return new ResourceResult(resRef, ResourceType.TXI, "test.txi", txiData);
                     return null;
                 });
 
@@ -361,10 +361,10 @@ namespace Andastra.Tests.Runtime.Games.Aurora
             string fontResRef = "fnt_test";
             TPC testTpc = FontTestHelper.CreateTestTPC(512, 512);
             TXI testTxi = FontTestHelper.CreateTestTXI(20.0f, 10.0f, 15.0f, 2.0f, 3.0f, 32, 32, 512.0f);
-            
+
             byte[] tpcData = TPCAuto.BytesTpc(testTpc, ResourceType.TPC);
             byte[] txiData = TXIAuto.BytesTxi(testTxi);
-            
+
             _mockResourceLookup.Setup(r => r.LookupResource(
                 It.IsAny<string>(),
                 It.IsAny<ResourceType>(),
@@ -373,9 +373,9 @@ namespace Andastra.Tests.Runtime.Games.Aurora
                 .Returns<string, ResourceType, string[], string[]>((resRef, resType, _, __) =>
                 {
                     if (resType == ResourceType.TPC)
-                        return new ResourceResult { Data = tpcData };
+                        return new ResourceResult(resRef, ResourceType.TPC, "test.tpc", tpcData);
                     if (resType == ResourceType.TXI)
-                        return new ResourceResult { Data = txiData };
+                        return new ResourceResult(resRef, ResourceType.TXI, "test.txi", txiData);
                     return null;
                 });
 

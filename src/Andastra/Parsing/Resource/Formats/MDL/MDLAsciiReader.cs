@@ -800,7 +800,7 @@ namespace Andastra.Parsing.Formats.MDL
             var match = Regex.Match(line, @"^\s*ambient\s+(\S+)\s+(\S+)\s+(\S+)", RegexOptions.IgnoreCase);
             if (match.Success)
             {
-                var color = new Color(
+                var color = new ParsingColor(
                     float.Parse(match.Groups[1].Value),
                     float.Parse(match.Groups[2].Value),
                     float.Parse(match.Groups[3].Value));
@@ -808,11 +808,10 @@ namespace Andastra.Parsing.Formats.MDL
                 return true;
             }
 
-            // Parse diffuse color
-            match = Regex.Match(line, @"^\s*diffuse\s+(\S+)\s+(\S+)\s+(\S+)", RegexOptions.IgnoreCase);
+            // Parse diffuse ParsingColor match = Regex.Match(line, @"^\s*diffuse\s+(\S+)\s+(\S+)\s+(\S+)", RegexOptions.IgnoreCase);
             if (match.Success)
             {
-                var color = new Color(
+                var color = new ParsingColor(
                     float.Parse(match.Groups[1].Value),
                     float.Parse(match.Groups[2].Value),
                     float.Parse(match.Groups[3].Value));

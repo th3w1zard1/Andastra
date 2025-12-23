@@ -303,7 +303,7 @@ namespace Andastra.Game.GUI
             var windowWidthNumeric = new NumericStepper { Value = _settings.WindowWidth ?? 1280, MinValue = 320, MaxValue = 7680 };
             _controlMap["WindowWidth"] = windowWidthNumeric;
             layout.Rows.Add(CreateLabeledControl("Width:", windowWidthNumeric, ref row, "WindowWidth"));
-            
+
             var windowHeightNumeric = new NumericStepper { Value = _settings.WindowHeight ?? 720, MinValue = 240, MaxValue = 4320 };
             _controlMap["WindowHeight"] = windowHeightNumeric;
             layout.Rows.Add(CreateLabeledControl("Height:", windowHeightNumeric, ref row, "WindowHeight"));
@@ -644,7 +644,7 @@ namespace Andastra.Game.GUI
                 colorWriteChannelsCombo.Items.Add("Blue");
                 colorWriteChannelsCombo.Items.Add("Alpha");
                 colorWriteChannelsCombo.Items.Add("All");
-                var channels = i == 0 ? _settings.BlendColorWriteChannels : 
+                var channels = i == 0 ? _settings.BlendColorWriteChannels :
                               i == 1 ? _settings.BlendColorWriteChannels1 :
                               i == 2 ? _settings.BlendColorWriteChannels2 : _settings.BlendColorWriteChannels3;
                 colorWriteChannelsCombo.SelectedValue = channels?.ToString() ?? "All";

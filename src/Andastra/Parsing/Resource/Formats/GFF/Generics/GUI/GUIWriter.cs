@@ -105,7 +105,7 @@ namespace Andastra.Parsing.Resource.Generics.GUI
             }
 
             // Color and Alpha
-            // Based on PyKotor: COLOR is Vector3 (RGB), ALPHA is separate float field
+            // Based on PyKotor: ParsingColor is Vector3 (RGB), ALPHA is separate float field
             // Original implementation: swkotor.exe/swkotor2.exe stores COLOR as RGB and ALPHA separately
             if (control.Color != null)
             {

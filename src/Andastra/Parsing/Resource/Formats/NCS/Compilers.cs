@@ -256,7 +256,7 @@ namespace Andastra.Parsing.Formats.NCS
         public NCS CompileScriptToNcs(
             string sourcePath,
             string outputPath,
-            [CanBeNull] Game game,
+            [CanBeNull] BioWareGame game,
             List<NCSOptimizer> optimizers = null,
             bool debug = false)
         {

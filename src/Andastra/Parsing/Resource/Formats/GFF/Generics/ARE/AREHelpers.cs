@@ -501,7 +501,7 @@ namespace Andastra.Parsing.Resource.Generics.ARE
                 root.SetSingle("MoonFogNear", are.MoonFogNear);
                 // Matching Python: root.set_single("MoonFogFar", moon_fog_far)
                 root.SetSingle("MoonFogFar", are.MoonFogFar);
-                // Matching Python: root.set_uint32("MoonFogColor", are.moon_fog_color)
+                // Matching Python: root.set_uint32("MoonFogColor", are.moon_fog_ParsingColor)
                 root.SetUInt32("MoonFogColor", (uint)are.MoonFogColorDeprecated.ToRgbInteger());
                 // Matching Python: root.set_uint8("MoonShadows", are.moon_shadows)
                 root.SetUInt8("MoonShadows", are.MoonShadows ? (byte)1 : (byte)0);

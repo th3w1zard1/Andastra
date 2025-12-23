@@ -58,8 +58,8 @@ namespace Andastra.Game.GUI
                 MonoGameGraphicsProfile = "Reach",
 
                 // Rasterizer
-                RasterizerCullMode = (Andastra.Runtime.Graphics.Common.Enums.CullMode?)Andastra.Runtime.Graphics.CullMode.CullCounterClockwiseFace,
-                RasterizerFillMode = (Andastra.Runtime.Graphics.Common.Enums.FillMode?)Andastra.Runtime.Graphics.FillMode.Solid,
+                RasterizerCullMode = Andastra.Runtime.Graphics.Common.Enums.CullMode.Back,
+                RasterizerFillMode = Andastra.Runtime.Graphics.Common.Enums.FillMode.Solid,
                 RasterizerDepthBiasEnabled = false,
                 RasterizerMultiSampleAntiAlias = false,
 

@@ -27,7 +27,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
         [CanBeNull]
         private readonly List<ScriptConstant> _constants;
 
-        public NssCompiler(Game game, [CanBeNull] List<string> libraryLookup = null, bool debug = false,
+        public NssCompiler(BioWareGame game, [CanBeNull] List<string> libraryLookup = null, bool debug = false,
             [CanBeNull] List<ScriptFunction> functions = null, [CanBeNull] List<ScriptConstant> constants = null)
         {
             _game = game;

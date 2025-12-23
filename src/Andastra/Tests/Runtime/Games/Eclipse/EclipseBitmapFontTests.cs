@@ -53,14 +53,14 @@ namespace Andastra.Tests.Runtime.Games.Eclipse
                 ResourceType.TPC,
                 It.IsAny<string[]>(),
                 It.IsAny<string[]>()))
-                .Returns(new ResourceResult { Data = tpcData });
+                .Returns(new ResourceResult(fontResRef, ResourceType.TPC, "test.tpc", tpcData));
             
             _mockResourceLookup.Setup(r => r.LookupResource(
                 fontResRef,
                 ResourceType.TXI,
                 It.IsAny<string[]>(),
                 It.IsAny<string[]>()))
-                .Returns(new ResourceResult { Data = txiData });
+                .Returns(new ResourceResult(fontResRef, ResourceType.TXI, "test.txi", txiData));
 
             // Act
             EclipseBitmapFont font = EclipseBitmapFont.Load(fontResRef, _installation, _graphicsDevice);
@@ -91,14 +91,14 @@ namespace Andastra.Tests.Runtime.Games.Eclipse
                 ResourceType.TGA,
                 It.IsAny<string[]>(),
                 It.IsAny<string[]>()))
-                .Returns(new ResourceResult { Data = tgaData });
+                .Returns(new ResourceResult(fontResRef, ResourceType.TGA, "test.tga", tgaData));
             
             _mockResourceLookup.Setup(r => r.LookupResource(
                 fontResRef,
                 ResourceType.TXI,
                 It.IsAny<string[]>(),
                 It.IsAny<string[]>()))
-                .Returns(new ResourceResult { Data = txiData });
+                .Returns(new ResourceResult(fontResRef, ResourceType.TXI, "test.txi", txiData));
 
             // Act
             EclipseBitmapFont font = EclipseBitmapFont.Load(fontResRef, _installation, _graphicsDevice);
@@ -154,9 +154,9 @@ namespace Andastra.Tests.Runtime.Games.Eclipse
                 .Returns<string, ResourceType, string[], string[]>((resRef, resType, _, __) =>
                 {
                     if (resType == ResourceType.TPC)
-                        return new ResourceResult { Data = tpcData };
+                        return new ResourceResult(resRef, ResourceType.TPC, "test.tpc", tpcData);
                     if (resType == ResourceType.TXI)
-                        return new ResourceResult { Data = txiData };
+                        return new ResourceResult(resRef, ResourceType.TXI, "test.txi", txiData);
                     return null;
                 });
 
@@ -190,9 +190,9 @@ namespace Andastra.Tests.Runtime.Games.Eclipse
                 .Returns<string, ResourceType, string[], string[]>((resRef, resType, _, __) =>
                 {
                     if (resType == ResourceType.TPC)
-                        return new ResourceResult { Data = tpcData };
+                        return new ResourceResult(resRef, ResourceType.TPC, "test.tpc", tpcData);
                     if (resType == ResourceType.TXI)
-                        return new ResourceResult { Data = txiData };
+                        return new ResourceResult(resRef, ResourceType.TXI, "test.txi", txiData);
                     return null;
                 });
 
@@ -229,9 +229,9 @@ namespace Andastra.Tests.Runtime.Games.Eclipse
                 .Returns<string, ResourceType, string[], string[]>((resRef, resType, _, __) =>
                 {
                     if (resType == ResourceType.TPC)
-                        return new ResourceResult { Data = tpcData };
+                        return new ResourceResult(resRef, ResourceType.TPC, "test.tpc", tpcData);
                     if (resType == ResourceType.TXI)
-                        return new ResourceResult { Data = txiData };
+                        return new ResourceResult(resRef, ResourceType.TXI, "test.txi", txiData);
                     return null;
                 });
 
@@ -266,9 +266,9 @@ namespace Andastra.Tests.Runtime.Games.Eclipse
                 .Returns<string, ResourceType, string[], string[]>((resRef, resType, _, __) =>
                 {
                     if (resType == ResourceType.TPC)
-                        return new ResourceResult { Data = tpcData };
+                        return new ResourceResult(resRef, ResourceType.TPC, "test.tpc", tpcData);
                     if (resType == ResourceType.TXI)
-                        return new ResourceResult { Data = txiData };
+                        return new ResourceResult(resRef, ResourceType.TXI, "test.txi", txiData);
                     return null;
                 });
 

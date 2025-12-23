@@ -372,7 +372,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// </summary>
         /// <param name="device">Stride GraphicsDevice to query</param>
         /// <returns>Detected NGX backend type, or DirectX12 as fallback if detection fails</returns>
-        public static NgxBackend GetNgxBackend(Stride.Graphics.GraphicsDevice device)
+        public static NgxBackend GetNgxBackend(global::Stride.Graphics.GraphicsDevice device)
         {
             if (device == null)
             {
