@@ -378,12 +378,12 @@ namespace Andastra.Runtime.Stride.Audio
                 // Create a temporary SoundInstance for the DynamicSoundSource constructor
                 // This is needed because DynamicSoundSource requires a SoundInstance in its constructor
                 // We'll create the actual SoundInstance after, and update the DynamicSoundSource
-                // TODO:  Use the cached dummy source pattern to break circular dependency
-                var tempListener = new AudioListener();
-                var tempDummySource = DummyDynamicSoundSourceForInit.Create(_audioEngine, tempListener);
+                // Use the cached dummy source pattern to break circular dependency - reuse _audioListener
+                // to ensure the cache key matches and the cached dummy SoundInstance is reused efficiently
+                var tempDummySource = DummyDynamicSoundSourceForInit.Create(_audioEngine, _audioListener);
                 var tempSoundInstance = new SoundInstance(
                     _audioEngine,
-                    tempListener,
+                    _audioListener,
                     tempDummySource,
                     wavFile.SampleRate,
                     wavFile.Channels == 1,
