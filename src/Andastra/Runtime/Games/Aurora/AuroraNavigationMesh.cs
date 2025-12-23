@@ -179,7 +179,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// Each tile represents a walkable surface area, and points are tested against
         /// the containing tile's walkability flag.
         /// </remarks>
-        public bool IsPointWalkable(Vector3 point)
+        public override bool IsPointWalkable(Vector3 point)
         {
             // Handle empty tile grid
             if (_tileWidth <= 0 || _tileHeight <= 0 || _tiles == null || _tiles.Length == 0)
@@ -251,7 +251,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// Each tile represents a walkable surface area, and projection involves finding
         /// the height at the point's X/Z coordinates within the containing tile.
         /// </remarks>
-        public bool ProjectToWalkmesh(Vector3 point, out Vector3 result, out float height)
+        public override bool ProjectToWalkmesh(Vector3 point, out Vector3 result, out float height)
         {
             result = point;
             height = point.Y;
@@ -1028,7 +1028,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// 5. Convert tile path to world coordinates
         /// 6. Apply path smoothing using line-of-sight checks
         /// </remarks>
-        public IList<Vector3> FindPath(Vector3 start, Vector3 goal)
+        public override IList<Vector3> FindPath(Vector3 start, Vector3 goal)
         {
             // Handle empty tile grid
             if (_tileWidth <= 0 || _tileHeight <= 0 || _tiles == null || _tiles.Length == 0)
@@ -1190,7 +1190,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// - nwmain.exe: CNWSArea::InterTileDFSSoundPath @ 0x14036e260 - tile neighbor traversal
         /// - nwmain.exe: CPathfindInformation class - pathfinding context and obstacle data
         /// </remarks>
-        public IList<Vector3> FindPathAroundObstacles(Vector3 start, Vector3 goal, IList<Interfaces.ObstacleInfo> obstacles)
+        public override IList<Vector3> FindPathAroundObstacles(Vector3 start, Vector3 goal, IList<Andastra.Runtime.Core.Interfaces.ObstacleInfo> obstacles)
         {
             // Handle empty tile grid
             if (_tileWidth <= 0 || _tileHeight <= 0 || _tiles == null || _tiles.Length == 0)
@@ -1290,7 +1290,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// When start and goal are on the same tile but an obstacle blocks the direct path,
         /// we try to route through adjacent tiles.
         /// </remarks>
-        private IList<Vector3> FindPathAroundObstacleOnSameTile(Vector3 start, Vector3 goal, int tileX, int tileY, IList<Interfaces.ObstacleInfo> obstacles)
+        private IList<Vector3> FindPathAroundObstacleOnSameTile(Vector3 start, Vector3 goal, int tileX, int tileY, IList<Andastra.Runtime.Core.Interfaces.ObstacleInfo> obstacles)
         {
             var candidateTiles = new List<(int x, int y)>();
             foreach ((int x, int y) neighbor in GetTileNeighbors(tileX, tileY))
@@ -1344,7 +1344,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// Based on nwmain.exe: CPathfindInformation obstacle blocking logic.
         /// Checks all tiles and marks those that contain or are too close to obstacles.
         /// </remarks>
-        private HashSet<(int x, int y)> BuildBlockedTilesSet(IList<Interfaces.ObstacleInfo> obstacles)
+        private HashSet<(int x, int y)> BuildBlockedTilesSet(IList<Andastra.Runtime.Core.Interfaces.ObstacleInfo> obstacles)
         {
             var blockedTiles = new HashSet<(int x, int y)>();
 
@@ -1590,7 +1590,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// If tiles contain walkmesh data (via GetWalkMesh), this could be extended to support
         /// multiple faces per tile, but the current implementation uses one face per tile.
         /// </remarks>
-        public int FindFaceAt(Vector3 position)
+        public override int FindFaceAt(Vector3 position)
         {
             // Handle empty tile grid
             if (_tileWidth <= 0 || _tileHeight <= 0 || _tiles == null || _tiles.Length == 0)
@@ -1672,7 +1672,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// maps to a tile in the grid. The face center is simply the center point of the corresponding tile,
         /// which is at (tileX + 0.5) * TileSize for X/Z coordinates and sampled height for Y coordinate.
         /// </remarks>
-        public Vector3 GetFaceCenter(int faceIndex)
+        public override Vector3 GetFaceCenter(int faceIndex)
         {
             // Handle empty tile grid
             if (_tileWidth <= 0 || _tileHeight <= 0 || _tiles == null || _tiles.Length == 0)
@@ -1747,7 +1747,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// returned face indices will be walkable. This matches the behavior expected by pathfinding
         /// algorithms that use GetAdjacentFaces to traverse the navigation mesh.
         /// </remarks>
-        public IEnumerable<int> GetAdjacentFaces(int faceIndex)
+        public override IEnumerable<int> GetAdjacentFaces(int faceIndex)
         {
             // Handle empty tile grid
             if (_tileWidth <= 0 || _tileHeight <= 0 || _tiles == null || _tiles.Length == 0)
@@ -1838,7 +1838,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// Walkability is determined by the tile's IsWalkable flag, which indicates whether
         /// the tile has walkable surfaces.
         /// </remarks>
-        public bool IsWalkable(int faceIndex)
+        public override bool IsWalkable(int faceIndex)
         {
             // Handle empty tile grid
             if (_tileWidth <= 0 || _tileHeight <= 0 || _tiles == null || _tiles.Length == 0)
@@ -1929,7 +1929,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// Aurora uses a tile-based system where each face index maps to a tile in the grid.
         /// Surface materials are determined by the tile's material from the tileset data.
         /// </remarks>
-        public int GetSurfaceMaterial(int faceIndex)
+        public override int GetSurfaceMaterial(int faceIndex)
         {
             // Handle empty tile grid
             if (_tileWidth <= 0 || _tileHeight <= 0 || _tiles == null || _tiles.Length == 0)
@@ -2017,7 +2017,7 @@ namespace Andastra.Runtime.Games.Aurora
         ///
         /// Based on nwmain.exe: CNWTileSurfaceMesh raycast implementation
         /// </remarks>
-        public bool Raycast(Vector3 origin, Vector3 direction, float maxDistance, out Vector3 hitPoint, out int hitFace)
+        public override bool Raycast(Vector3 origin, Vector3 direction, float maxDistance, out Vector3 hitPoint, out int hitFace)
         {
             hitPoint = origin;
             hitFace = -1;
@@ -2366,7 +2366,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// Wrapper around HasLineOfSight for INavigationMesh interface compatibility.
         /// Based on nwmain.exe: Aurora line of sight testing.
         /// </remarks>
-        public bool TestLineOfSight(Vector3 from, Vector3 to)
+        public override bool TestLineOfSight(Vector3 from, Vector3 to)
         {
             return HasLineOfSight(from, to);
         }
@@ -2378,9 +2378,29 @@ namespace Andastra.Runtime.Games.Aurora
         /// Wrapper around ProjectToWalkmesh for INavigationMesh interface compatibility.
         /// Based on nwmain.exe: Aurora walkmesh projection system.
         /// </remarks>
-        public bool ProjectToSurface(Vector3 point, out Vector3 result, out float height)
+        public override bool ProjectToSurface(Vector3 point, out Vector3 result, out float height)
         {
             return ProjectToWalkmesh(point, out result, out height);
+        }
+
+        /// <summary>
+        /// Projects a point onto the walkmesh surface.
+        /// </summary>
+        /// <param name="point">Point to project.</param>
+        /// <returns>Projected point, or null if projection failed.</returns>
+        /// <remarks>
+        /// Wrapper around ProjectToWalkmesh for INavigationMesh interface compatibility.
+        /// Based on nwmain.exe: Aurora walkmesh projection system.
+        /// </remarks>
+        public override Vector3? ProjectPoint(Vector3 point)
+        {
+            Vector3 result;
+            float height;
+            if (ProjectToWalkmesh(point, out result, out height))
+            {
+                return result;
+            }
+            return null;
         }
     }
 }
