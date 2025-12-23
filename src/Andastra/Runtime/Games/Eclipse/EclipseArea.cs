@@ -7053,7 +7053,7 @@ namespace Andastra.Runtime.Games.Eclipse
                                 GraphicsPrimitiveType.TriangleList,
                                 0,
                                 0,
-                                staticObjectMeshData.VertexCount,
+                                staticObjectMeshData.VertexBuffer.VertexCount,
                                 0,
                                 staticObjectMeshData.IndexCount / 3
                             );
@@ -7349,7 +7349,7 @@ namespace Andastra.Runtime.Games.Eclipse
                                     var mgEffect = effectField.GetValue(monoGameEffect) as Microsoft.Xna.Framework.Graphics.BasicEffect;
                                     if (mgEffect != null)
                                     {
-                                        Microsoft.Xna.Framework.Graphics.DirectionalLight directionalLight;
+                                        Microsoft.Xna.Framework.Graphics.DirectionalLight directionalLight = mgEffect.DirectionalLight0; // Default to slot 0
 
                                         // Select which DirectionalLight slot to use (0, 1, or 2)
                                         switch (lightsApplied)
@@ -14290,8 +14290,8 @@ technique ColorGrading
             }
         }
 
-        /// <summary>
-        /// Represents a modified mesh with all its modifications.
+    /// <summary>
+    /// Represents a modified mesh with all its modifications.
     /// </summary>
     /// <remarks>
     /// Based on daorigins.exe/DragonAge2.exe: Modified mesh data structure.
