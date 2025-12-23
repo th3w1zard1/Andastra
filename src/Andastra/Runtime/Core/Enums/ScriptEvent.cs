@@ -81,13 +81,16 @@ namespace Andastra.Runtime.Core.Enums
         OnDamaged,
         OnHeartbeat,
         OnPerception,
+        OnNotice, // Aurora alias for OnPerception (maps to ScriptOnNotice)
         OnCombatRoundEnd,
         OnEndCombatRound,
         OnConversation,
+        OnDialogue, // Aurora alias for OnConversation (maps to ScriptDialogue)
         OnDisturbed,
         OnBlocked,
         OnEndRound,
         OnSpellCastAt,
+        OnSpellAt, // Aurora alias for OnSpellCastAt (maps to ScriptSpellAt)
         OnAttacked,
         OnPhysicalAttacked,
         OnRested,

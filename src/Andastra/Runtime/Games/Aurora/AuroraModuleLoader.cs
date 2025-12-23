@@ -37,7 +37,7 @@ namespace Andastra.Runtime.Games.Aurora
     /// - Cross-engine: Similar functions in swkotor.exe (Odyssey), daorigins.exe (Eclipse)
     /// - Inheritance: BaseEngineModule (Runtime.Games.Common) implements common module loading/unloading
     ///   - Aurora: AuroraModuleLoader : BaseEngineModule (Runtime.Games.Aurora) - Aurora-specific module file formats (Module.ifo, ARE, GIT, HAK files)
-    /// 
+    ///
     /// Aurora Module Loading Sequence (Reverse Engineered):
     /// 1. Validate module name (non-null, non-empty)
     /// 2. Check if module exists (HasModule) - checks for Module.ifo in module directory or HAK files
@@ -50,19 +50,19 @@ namespace Andastra.Runtime.Games.Aurora
     /// 9. Spawn entities from GIT - create creatures, placeables, doors, triggers, waypoints
     /// 10. Set current module/area/navigation mesh
     /// 11. Trigger module load scripts (OnModuleLoad, OnClientEnter)
-    /// 
+    ///
     /// Aurora-Specific Features:
     /// - HAK file support: Module resources can be in HAK (Hak Archive) files
     /// - Module.ifo format: GFF-based module information file
     /// - Tile-based areas: Aurora uses tile-based area construction (different from Odyssey)
     /// - Enhanced scripting: Module-level scripts (OnModuleLoad, OnModuleHeartbeat, OnClientEnter, OnClientLeave)
     /// - Module overrides: Module-specific resource overrides in module directory
-    /// 
+    ///
     /// Resource Loading Precedence (Aurora):
     /// 1. Module overrides (module-specific directory)
     /// 2. HAK files (in load order)
     /// 3. Base game resources
-    /// 
+    ///
     /// Ghidra Reverse Engineering Requirements:
     /// - nwmain.exe: CNWSModule::LoadModule function address and implementation
     /// - nwmain.exe: CServerExoApp::LoadModule function address and implementation
@@ -74,20 +74,20 @@ namespace Andastra.Runtime.Games.Aurora
     /// - nwmain.exe: Module script execution (OnModuleLoad, OnModuleHeartbeat, etc.)
     /// - nwmain.exe: String references: "MODULES", "Module.ifo", "HAK", module state flags
     /// - nwn2main.exe: Similar analysis for Neverwinter Nights 2
-    /// 
+    ///
     /// Module State Management (Aurora):
     /// - ModuleLoaded flag: Set when module resources are loaded
     /// - ModuleRunning flag: Set when module starts running (after entity spawning)
     /// - Module state transitions: Idle -> Loading -> Loaded -> Running -> Unloading -> Idle
     /// - Module flags stored in CServerExoApp or CNWSModule structure (needs Ghidra verification)
-    /// 
+    ///
     /// File Formats (Aurora):
     /// - Module.ifo: GFF format - module information, properties, area list, entry point
     /// - ARE: Area properties file - area geometry, properties, environmental settings
     /// - GIT: Game instance template - entity instances (creatures, placeables, doors, triggers, waypoints)
     /// - HAK: Hak Archive - compressed resource archive (similar to ERF format)
     /// - 2DA: Two-dimensional array - game data tables (appearance, feats, etc.)
-    /// 
+    ///
     /// Cross-Engine Comparison:
     /// - Odyssey: IFO/LYT/VIS/GIT/ARE files, module state flags similar to Aurora
     /// - Aurora: Module.ifo/ARE/GIT/HAK files, tile-based areas, enhanced scripting
@@ -143,7 +143,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// 10. Set current module/area/navigation mesh (0.9 progress)
         /// 11. Trigger module load scripts (0.95 progress)
         /// 12. Complete (1.0 progress)
-        /// 
+        ///
         /// Based on nwmain.exe: CNWSModule::LoadModule implementation pattern.
         /// </remarks>
         public override async Task LoadModuleAsync(string moduleName, [CanBeNull] Action<float> progressCallback = null)
@@ -250,7 +250,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// - Checks for Module.ifo in module directory: MODULES\{moduleName}\Module.ifo
         /// - Also checks HAK files for Module.ifo (Aurora-specific)
         /// - Returns false for invalid input or missing modules
-        /// 
+        ///
         /// Based on nwmain.exe: Module existence checking pattern.
         /// </remarks>
         public override bool HasModule(string moduleName)
@@ -292,7 +292,7 @@ namespace Andastra.Runtime.Games.Aurora
                             // Based on nwmain.exe: HAK files use ERF format (same as MOD files)
                             // Parse HAK file as ERF and check if it contains Module.ifo for this module
                             var erf = ERFAuto.ReadErf(hakFilePath);
-                            
+
                             // Check if HAK file contains Module.ifo for this module
                             // Module.ifo in HAK files is stored as: ResName = moduleName, ResType = IFO
                             // Based on nwmain.exe: Resource lookup uses ResName (16-char resref) and ResType
@@ -330,7 +330,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// - Free HAK file resources
         /// - Clear module info
         /// - Reset module state
-        /// 
+        ///
         /// Called by base class UnloadModule() before resetting common state.
         /// Based on nwmain.exe: Module unloading pattern.
         /// </remarks>
@@ -360,7 +360,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// - GFF format file containing module information
         /// - Contains: Module properties, entry area, area list, module scripts, etc.
         /// - Loaded from: MODULES\{moduleName}\Module.ifo or HAK files
-        /// 
+        ///
         /// Based on nwmain.exe: Module.ifo loading and parsing.
         /// </remarks>
         private async Task<GFFStruct> LoadModuleInfoAsync(string moduleName)
@@ -370,11 +370,11 @@ namespace Andastra.Runtime.Games.Aurora
                 // Try to load Module.ifo from module directory
                 string modulePath = _auroraResourceProvider.ModulePath();
                 string moduleIfoPath = Path.Combine(modulePath, moduleName, "Module.ifo");
-                
+
                 if (File.Exists(moduleIfoPath))
                 {
                     byte[] ifoData = await Task.Run(() => File.ReadAllBytes(moduleIfoPath));
-                    var gff = new GFF(ifoData);
+                    var gff = GFF.FromBytes(ifoData);
                     return gff.Root;
                 }
 
@@ -404,7 +404,7 @@ namespace Andastra.Runtime.Games.Aurora
                             // Based on nwmain.exe: HAK files use ERF format (same as MOD files)
                             // Parse HAK file as ERF and check if it contains Module.ifo for this module
                             var erf = ERFAuto.ReadErf(hakFilePath);
-                            
+
                             // Check if HAK file contains Module.ifo for this module
                             // Module.ifo in HAK files is stored as: ResName = moduleName, ResType = IFO
                             // Based on nwmain.exe: Resource lookup uses ResName (16-char resref) and ResType
@@ -414,7 +414,7 @@ namespace Andastra.Runtime.Games.Aurora
                             {
                                 // Module.ifo found in HAK file - parse and return
                                 // Based on nwmain.exe: Module.ifo is GFF format, parsed using CResGFF
-                                var gff = new GFF(moduleIfoData);
+                                var gff = GFF.FromBytes(moduleIfoData);
                                 if (gff?.Root != null)
                                 {
                                     return gff.Root;
@@ -451,7 +451,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// - Loaded in order specified in Module.ifo
         /// - Resources in HAK files have lower precedence than module overrides
         /// - HAK files are ERF format archives containing module resources
-        /// 
+        ///
         /// Module.ifo HAK File Specification:
         /// - Mod_HakList (preferred): List field containing structs with StructID 8
         ///   - Each struct has Mod_Hak field (CExoString) with HAK filename (without .hak extension)
@@ -459,20 +459,20 @@ namespace Andastra.Runtime.Games.Aurora
         /// - Mod_Hak (obsolete fallback): Single CExoString field with semicolon-separated HAK filenames
         ///   - Used only if Mod_HakList does not exist
         ///   - Semicolon-separated list of HAK filenames (without .hak extension)
-        /// 
+        ///
         /// HAK File Path Resolution:
         /// - HAK files are located in "hak" directory under installation path
         /// - Full path: {installationPath}\hak\{hakFileName}.hak
         /// - HAK filenames in Module.ifo do not include the .hak extension
         /// - Missing HAK files are skipped (not an error - module can load without them)
-        /// 
+        ///
         /// Resource Precedence (Aurora):
         /// 1. Override directory (highest priority)
         /// 2. Module-specific resources
         /// 3. HAK files (in Module.ifo order, first HAK has highest priority)
         /// 4. Base game resources
         /// 5. Hardcoded resources (lowest priority)
-        /// 
+        ///
         /// Based on nwmain.exe reverse engineering (Ghidra MCP analysis):
         /// - Module.ifo parsing functions reference Mod_HakList/Mod_Hak strings:
         ///   - "Mod_HakList" string @ 0x140def690, referenced by functions @ 0x14047f60e, 0x1404862d9
@@ -483,7 +483,7 @@ namespace Andastra.Runtime.Games.Aurora
         ///   - Earlier HAK files in the list have higher priority (checked first during resource lookup)
         /// - HAK file paths resolved from "hak" directory + filename + ".hak" extension
         /// - Resource lookup uses CExoResMan::ServiceFromEncapsulated @ 0x140192cf0 for HAK files
-        /// 
+        ///
         /// Official BioWare Documentation:
         /// - vendor/PyKotor/wiki/Bioware-Aurora-IFO.md: Mod_HakList structure (StructID 8)
         /// - vendor/PyKotor/wiki/Bioware-Aurora-IFO.md: Mod_Hak field (obsolete, semicolon-separated)
@@ -632,23 +632,23 @@ namespace Andastra.Runtime.Games.Aurora
         /// - Specified in Module.ifo structure as Mod_Entry_Area field (CResRef type)
         /// - First area loaded when module starts
         /// - Player spawns in entry area
-        /// 
+        ///
         /// Module.ifo Field (Aurora):
         /// - Mod_Entry_Area: CResRef (ResRef) - Starting area ResRef where player spawns
         /// - Field type: ResRef (16-character resource reference name)
         /// - Default value: Blank ResRef (empty string) if field is missing
-        /// 
+        ///
         /// Based on nwmain.exe: Entry area extraction from Module.ifo.
         /// - nwmain.exe: CNWSModule::SaveModule @ 0x1404861e3 line 59 writes Mod_Entry_Area using CResGFF::WriteFieldCResRef
         /// - nwmain.exe: String reference "Mod_Entry_Area" @ 0x140def8c0, referenced by function @ 0x1404863ce
         /// - Original implementation: CResGFF::WriteFieldCResRef(param_1, param_2, *(CResRef **)(param_3 + 0x108), "Mod_Entry_Area")
         /// - Reading implementation: CResGFF::ReadFieldCResRef or similar function reads Mod_Entry_Area from GFF structure
-        /// 
+        ///
         /// Official BioWare Documentation:
         /// - vendor/PyKotor/wiki/Bioware-Aurora-IFO.md: Mod_Entry_Area field (CResRef type, page 97-99)
         /// - vendor/PyKotor/wiki/GFF-IFO.md: Mod_Entry_Area field (ResRef type, starting area ResRef)
         /// - vendor/xoreos/src/aurora/ifofile.cpp:203 - _entryArea = ifoTop.getString("Mod_Entry_Area")
-        /// 
+        ///
         /// Reference Implementations:
         /// - src/Andastra/Parsing/Resource/Formats/GFF/Generics/IFOHelpers.cs:173 - root.Acquire&lt;ResRef&gt;("Mod_Entry_Area", ResRef.FromBlank())
         /// - vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/generics/ifo.py:137 - root.acquire("Mod_Entry_Area", ResRef.from_blank())
@@ -694,7 +694,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// - Area properties file containing area geometry, properties, environmental settings
         /// - Loaded from: Module directory, HAK files, or base resources
         /// - Resource precedence: Module override -> HAK files -> Base resources
-        /// 
+        ///
         /// Based on nwmain.exe: ARE file loading.
         /// </remarks>
         private async Task<byte[]> LoadAreaFileAsync(string areaResRef)
@@ -729,7 +729,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// - Contains: Creatures, placeables, doors, triggers, waypoints, sounds
         /// - Loaded from: Module directory, HAK files, or base resources
         /// - Resource precedence: Module override -> HAK files -> Base resources
-        /// 
+        ///
         /// Based on nwmain.exe: GIT file loading.
         /// </remarks>
         private async Task<byte[]> LoadGitFileAsync(string areaResRef)
@@ -764,7 +764,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// - Parses GIT file to extract entity instances
         /// - Creates entities: Creatures, placeables, doors, triggers, waypoints, sounds, encounters, stores
         /// - Adds entities to world and area
-        /// 
+        ///
         /// Based on nwmain.exe: Entity spawning from GIT files.
         /// - nwmain.exe: CNWSArea::LoadCreatures @ 0x140362fc0 (approximate - needs Ghidra verification)
         /// - nwmain.exe: CNWSArea::LoadDoors @ 0x1403631a0 (approximate - needs Ghidra verification)
@@ -774,16 +774,16 @@ namespace Andastra.Runtime.Games.Aurora
         /// - nwmain.exe: CNWSArea::LoadSounds @ 0x140364000 (approximate - needs Ghidra verification)
         /// - nwmain.exe: CNWSArea::LoadEncounters @ 0x140364120 (approximate - needs Ghidra verification)
         /// - nwmain.exe: CNWSArea::LoadStores @ 0x140364240 (approximate - needs Ghidra verification)
-        /// 
+        ///
         /// Spawn order: Waypoints -> Doors -> Placeables -> Creatures -> Triggers -> Sounds -> Encounters -> Stores
         /// Each entity gets: ObjectId (assigned by world), Tag, Position, Orientation, Template data
-        /// 
+        ///
         /// GIT file format (GFF with "GIT " signature):
         /// - Root struct contains lists: "Creature List", "Door List", "Placeable List", "TriggerList", "WaypointList", "SoundList", "Encounter List", "StoreList"
         /// - Each list contains structs with entity instance data (TemplateResRef, Tag, Position, Orientation, type-specific fields)
         /// - Position fields: "XPosition", "YPosition", "ZPosition" for most types, "X", "Y", "Z" for doors/placeables
         /// - Orientation fields: "XOrientation", "YOrientation", "ZOrientation" (float, converted to quaternion), "Bearing" (float) for doors/placeables
-        /// 
+        ///
         /// Based on official BioWare Aurora Engine GIT format specification:
         /// - vendor/PyKotor/wiki/Bioware-Aurora-GIT.md
         /// - vendor/xoreos-docs/specs/bioware/GIT_Format.pdf
@@ -804,7 +804,7 @@ namespace Andastra.Runtime.Games.Aurora
             // Based on nwmain.exe: GIT file is GFF format with "GIT " signature
             var gitLoader = new GITLoader(_resourceProvider);
             GITData git = null;
-            
+
             try
             {
                 // Parse GIT data from byte array
@@ -819,7 +819,7 @@ namespace Andastra.Runtime.Games.Aurora
                         // Invalid GFF - cannot spawn entities
                         return;
                     }
-                    
+
                     // Parse GIT structure using GITLoader's parsing logic
                     git = ParseGITData(gff.Root);
                 }
@@ -1101,17 +1101,17 @@ namespace Andastra.Runtime.Games.Aurora
             instance.ZPosition = GetFloat(s, "ZPosition");
             instance.XOrientation = GetFloat(s, "XOrientation");
             instance.YOrientation = GetFloat(s, "YOrientation");
-            
+
             // Parse HasMapNote, MapNoteEnabled, and MapNote according to nwmain.exe behavior
             // Based on nwmain.exe: CNWSWaypoint::LoadWaypoint @ 0x140509f80 line 67
             instance.HasMapNote = GetByte(s, "HasMapNote") != 0;
-            
+
             // Based on nwmain.exe: Only read MapNote and MapNoteEnabled if HasMapNote is true
             if (instance.HasMapNote)
             {
                 // Based on nwmain.exe: CNWSWaypoint::LoadWaypoint @ 0x140509f80 line 69
                 instance.MapNoteEnabled = GetByte(s, "MapNoteEnabled") != 0;
-                
+
                 // Based on nwmain.exe: CNWSWaypoint::LoadWaypoint @ 0x140509f80 lines 71-76
                 // MapNote is a CExoLocString (LocalizedString), not a byte
                 LocalizedString mapNoteLocString = s.GetLocString("MapNote");
@@ -1130,10 +1130,10 @@ namespace Andastra.Runtime.Games.Aurora
                 instance.MapNoteEnabled = false;
                 instance.MapNoteText = string.Empty;
             }
-            
+
             // Legacy property for backwards compatibility
             instance.MapNote = instance.HasMapNote;
-            
+
             return instance;
         }
 
@@ -1358,7 +1358,7 @@ namespace Andastra.Runtime.Games.Aurora
                 // Original implementation: CNWSDoor::LoadDoor reads these fields from GIT door struct and sets door properties
                 // Transition system: Doors with LinkedTo/LinkedToModule trigger area/module transitions when opened
                 // TransitionDestin specifies waypoint tag where party spawns after transition (empty = use default entry waypoint)
-                
+
                 // Set LinkedTo (waypoint/door tag for area transitions)
                 if (!string.IsNullOrEmpty(door.LinkedTo))
                 {
@@ -1606,13 +1606,13 @@ namespace Andastra.Runtime.Games.Aurora
         /// - SpawnPointList loaded from GIT: X, Y, Z, Orientation fields (nwmain.exe: 0x14043dc52 lines 170-230)
         /// - Geometry loaded from GIT: List of vertices with X, Y, Z fields
         /// - Adds encounter to area
-        /// 
+        ///
         /// GIT Encounter Structure (nwmain.exe: CNWSEncounter::ReadEncounterFromGff):
         /// - XPosition, YPosition, ZPosition: Encounter position
         /// - SpawnPointList: List of spawn points with X, Y, Z, Orientation fields
         /// - Geometry: List of vertices with X, Y, Z fields defining encounter polygon area
         /// - Active, Reset, ResetTime, SpawnOption, MaxCreatures, RecCreatures, PlayerOnly, Faction, Difficulty fields
-        /// 
+        ///
         /// Based on nwmain.exe: CNWSEncounter::ReadEncounterFromGff @ 0x14043d1c0:
         /// - Lines 170-230: Loads SpawnPointList from GIT, reads X, Y, Z, Orientation for each spawn point
         /// - Spawn points are stored in encounter object at offset 0x3a0 (CEncounterSpawnPoint array)
@@ -1712,7 +1712,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// - Loads item lists: ItemsForSale from UTM ItemList, WillNotBuy/WillOnlyBuy from GIT
         /// - Sets OnOpenStore script from UTM template
         /// - Adds store to area
-        /// 
+        ///
         /// Store properties loaded from UTM template (nwmain.exe: CNWSStore::LoadFromTemplate @ 0x1404fbb11):
         /// - MarkUp: Store markup percentage (buy price multiplier)
         /// - MarkDown: Store markdown percentage (sell price multiplier)
@@ -1723,7 +1723,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// - BM_MarkDown: Black market markdown percentage
         /// - OnOpenStore: Script to run when store opens
         /// - ItemList: List of items for sale (InventoryRes, Infinite flags)
-        /// 
+        ///
         /// Store properties loaded from GIT struct (nwmain.exe: CNWSStore::LoadStore @ 0x1404fbbf0):
         /// - Tag: Store tag identifier
         /// - LocName: Localized store name
@@ -1785,7 +1785,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// - Calls CNWSCreatureStats::LoadCreatureStats to load properties from UTC GFF
         /// - Sets all creature properties: stats, appearance, feats, classes, inventory, equipment, scripts
         /// - Applies template data to AuroraCreatureComponent
-        /// 
+        ///
         /// UTC file format (GFF with "UTC " signature):
         /// - TemplateResRef: ResRef - Template resource reference (self-reference)
         /// - Tag: String - Creature tag identifier
@@ -1812,13 +1812,13 @@ namespace Andastra.Runtime.Games.Aurora
         /// - Equip_ItemList: List - Equipped items by slot
         /// - ItemList: List - Inventory items
         /// - Script hooks: ResRef - OnHeartbeat, OnDeath, OnSpawn, etc.
-        /// 
+        ///
         /// Based on nwmain.exe: CNWSCreature::LoadCreature @ 0x1403975e0:
         /// - Line 36: Reads TemplateResRef from GIT struct
         /// - If TemplateResRef is not blank, loads UTC file and applies properties
         /// - CNWSCreatureStats::LoadCreatureStats loads stats from UTC GFF
         /// - Properties are applied to creature object after template loading
-        /// 
+        ///
         /// Based on swkotor.exe, swkotor2.exe: UTC template loading:
         /// - swkotor.exe: FUN_005026d0, swkotor2.exe: FUN_005261b0 - Load creature from UTC template
         /// - UTCHelpers.ConstructUtc parses UTC GFF and creates UTC object
@@ -1944,7 +1944,7 @@ namespace Andastra.Runtime.Games.Aurora
                 foreach (var equipmentKvp in utc.Equipment)
                 {
                     int slot = (int)equipmentKvp.Key;
-                    if (equipmentKvp.Value != null && equipmentKvp.Value.ResRef != null && !equipmentKvp.Value.ResRef.IsBlank)
+                    if (equipmentKvp.Value != null && equipmentKvp.Value.ResRef != null && !equipmentKvp.Value.ResRef.IsBlank())
                     {
                         creatureComponent.EquippedItems[slot] = equipmentKvp.Value.ResRef.ToString();
                     }
@@ -1975,7 +1975,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// - Sets MarkUp, MarkDown, StoreGold, IdentifyPrice, MaxBuyPrice, BlackMarket, BM_MarkDown
         /// - Loads ItemList and creates store inventory items
         /// - Sets OnOpenStore script
-        /// 
+        ///
         /// UTM file format (GFF with "UTM " signature):
         /// - MarkUp: INT - Store markup percentage (buy price multiplier)
         /// - MarkDown: INT - Store markdown percentage (sell price multiplier)
@@ -1988,7 +1988,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// - ItemList: List - List of items for sale (struct with InventoryRes, Infinite)
         /// - LocName: LocString - Localized store name
         /// - Tag: String - Store tag identifier
-        /// 
+        ///
         /// Based on nwmain.exe: CNWSStore::LoadStore @ 0x1404fbbf0:
         /// - Line 55: BlackMarket = ReadFieldBYTEasBOOL("BlackMarket", 0)
         /// - Line 57: BM_MarkDown = ReadFieldINT("BM_MarkDown", 0)
@@ -2042,7 +2042,7 @@ namespace Andastra.Runtime.Games.Aurora
                 storeComponent.CanBuy = utm.CanBuy;
 
                 // OnOpenStore: Line 36 - ReadFieldResRef("OnOpenStore")
-                if (utm.OnOpenScript != null && !utm.OnOpenScript.IsBlank)
+                if (utm.OnOpenScript != null && !utm.OnOpenScript.IsBlank())
                 {
                     storeComponent.OnOpenStore = utm.OnOpenScript.ToString();
                 }
@@ -2092,7 +2092,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// - OnModuleLoad: Called when module is loaded
         /// - OnClientEnter: Called when client enters module
         /// - OnModuleHeartbeat: Called periodically while module is running
-        /// 
+        ///
         /// Based on nwmain.exe: Module script execution.
         /// - nwmain.exe: CNWSModule::ExecuteScriptOnModule (needs Ghidra address verification)
         /// - Module scripts are stored in Module.ifo GFF structure (Mod_OnModLoad, Mod_OnClientEntr fields)
@@ -2101,7 +2101,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// - Script hooks are set on module entity's IScriptHooksComponent
         /// - EventBus.FireScriptEvent queues script execution for processing
         /// - OnModuleLoad executes first, then OnClientEnter executes with player character as triggerer
-        /// 
+        ///
         /// Module Script Execution Sequence (Aurora):
         /// 1. Extract script ResRefs from Module.ifo GFF structure
         /// 2. Create or get module entity (Tag = moduleName)
@@ -2109,7 +2109,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// 4. Set script hooks on component (OnModuleLoad, OnClientEnter)
         /// 5. Fire OnModuleLoad script event (no triggerer)
         /// 6. Fire OnClientEnter script event (player character as triggerer)
-        /// 
+        ///
         /// Script Field Names (Module.ifo GFF):
         /// - Mod_OnModLoad: OnModuleLoad script ResRef
         /// - Mod_OnClientEntr: OnClientEnter script ResRef
@@ -2131,11 +2131,11 @@ namespace Andastra.Runtime.Games.Aurora
             ResRef onClientEnterResRef = _currentModuleInfo.GetResRef("Mod_OnClientEntr");
 
             // Convert ResRef to string (empty string if blank)
-            string onModuleLoadScript = onModuleLoadResRef != null && !onModuleLoadResRef.IsBlank() 
-                ? onModuleLoadResRef.ToString() 
+            string onModuleLoadScript = onModuleLoadResRef != null && !onModuleLoadResRef.IsBlank()
+                ? onModuleLoadResRef.ToString()
                 : string.Empty;
-            string onClientEnterScript = onClientEnterResRef != null && !onClientEnterResRef.IsBlank() 
-                ? onClientEnterResRef.ToString() 
+            string onClientEnterScript = onClientEnterResRef != null && !onClientEnterResRef.IsBlank()
+                ? onClientEnterResRef.ToString()
                 : string.Empty;
 
             // If no scripts are defined, skip execution
@@ -2180,7 +2180,7 @@ namespace Andastra.Runtime.Games.Aurora
                 // Component can be added at runtime - entity component system supports dynamic component addition
                 scriptHooksComponent = new BaseScriptHooksComponent();
                 moduleEntity.AddComponent<IScriptHooksComponent>(scriptHooksComponent);
-                
+
                 // Verify component was successfully added
                 scriptHooksComponent = moduleEntity.GetComponent<IScriptHooksComponent>();
                 if (scriptHooksComponent == null)

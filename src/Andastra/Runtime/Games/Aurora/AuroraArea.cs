@@ -1709,8 +1709,8 @@ namespace Andastra.Runtime.Games.Aurora
                     bool isWalkable = false; // Default: not walkable
                     if (isLoaded && _tilesetLoader != null && !_tileset.IsBlank())
                     {
-                        string tilesetResRef = _tileset.ToString();
-                        if (!string.IsNullOrEmpty(tilesetResRef))
+                        string walkabilityTilesetResRef = _tileset.ToString();
+                        if (!string.IsNullOrEmpty(walkabilityTilesetResRef))
                         {
                             try
                             {
@@ -1719,7 +1719,7 @@ namespace Andastra.Runtime.Games.Aurora
                                 // - Gets tile data from tileset using Tile_ID
                                 // - Loads walkmesh (WOK file) for tile model
                                 // - Checks if any faces have walkable surface materials
-                                isWalkable = _tilesetLoader.GetTileWalkability(tilesetResRef, tileId);
+                                isWalkable = _tilesetLoader.GetTileWalkability(walkabilityTilesetResRef, tileId);
                             }
                             catch
                             {
@@ -1748,8 +1748,8 @@ namespace Andastra.Runtime.Games.Aurora
                     int surfaceMaterial = 0; // Default: Undefined
                     if (isLoaded && _tilesetLoader != null && !_tileset.IsBlank())
                     {
-                        string tilesetResRef = _tileset.ToString();
-                        if (!string.IsNullOrEmpty(tilesetResRef))
+                        string materialTilesetResRef = _tileset.ToString();
+                        if (!string.IsNullOrEmpty(materialTilesetResRef))
                         {
                             try
                             {
@@ -1758,7 +1758,7 @@ namespace Andastra.Runtime.Games.Aurora
                                 // - Gets tile data from tileset using Tile_ID
                                 // - Loads walkmesh (WOK file) for tile model
                                 // - Extracts surface material from walkmesh
-                                surfaceMaterial = _tilesetLoader.GetTileSurfaceMaterial(tilesetResRef, tileId);
+                                surfaceMaterial = _tilesetLoader.GetTileSurfaceMaterial(materialTilesetResRef, tileId);
                             }
                             catch
                             {

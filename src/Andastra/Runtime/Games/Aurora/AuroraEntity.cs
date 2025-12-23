@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using JetBrains.Annotations;
@@ -227,7 +228,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// - CNWSCreature constructor creates creature instances with component initialization
         /// - LoadCreatures @ 0x140360570 loads creature list from area GIT and creates entities with creature components
         /// - Components attached: StatsComponent, InventoryComponent, ActionQueueComponent, CreatureComponent, FactionComponent, PerceptionComponent, RenderableComponent, AnimationComponent
-        /// 
+        ///
         /// Component attachment order (based on nwmain.exe):
         /// 1. StatsComponent - Required for HP, abilities, skills, saves
         /// 2. InventoryComponent - Required for equipped items and inventory bag
@@ -375,7 +376,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// - Containers (HasInventory=true) can store items, open/close states
         /// - Lock system: KeyRequired flag, KeyName tag, LockDC difficulty class
         /// - Aurora-specific: GroundPile, Portrait, LightState, Description, Portal, trap system differences
-        /// 
+        ///
         /// Component attachment pattern:
         /// - Based on nwmain.exe: Placeable components are attached during entity creation from GIT templates
         /// - CNWSPlaceable constructor creates placeable instances with component initialization
@@ -481,7 +482,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// Updates all attached components.
         /// Processes any pending script events.
         /// Handles component interactions.
-        /// 
+        ///
         /// Based on nwmain.exe: Entity update loop processes components in dependency order.
         /// Component update order:
         /// 1. TransformComponent (position, orientation updates)
@@ -489,7 +490,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// 3. StatsComponent (HP regeneration, stat updates)
         /// 4. PerceptionComponent (perception checks, uses transform position)
         /// 5. Other components (in arbitrary order)
-        /// 
+        ///
         /// Component interactions:
         /// - Transform changes trigger perception updates
         /// - HP changes trigger death state updates
@@ -534,9 +535,9 @@ namespace Andastra.Runtime.Games.Aurora
             foreach (var component in GetAllComponents())
             {
                 // Skip already-updated components
-                if (component == transformComponent || 
-                    component == actionQueueComponent || 
-                    component == statsComponent || 
+                if (component == transformComponent ||
+                    component == actionQueueComponent ||
+                    component == statsComponent ||
                     component == perceptionComponent)
                 {
                     continue;
@@ -749,7 +750,7 @@ namespace Andastra.Runtime.Games.Aurora
                 // Known spells are stored as a GFFList with each entry containing a SpellId field
                 // Located via string references: "KnownSpells" in nwmain.exe creature save format
                 var spellsList = root.Acquire<GFFList>("KnownSpells", new GFFList());
-                
+
                 // Get all known spells from stats component
                 // Based on nwmain.exe: Spell knowledge is stored per creature and serialized to save games
                 // Use reflection to access GetKnownSpells method if available (AuroraStatsComponent has this method)
@@ -861,7 +862,7 @@ namespace Andastra.Runtime.Games.Aurora
                 // Serialize script ResRefs for all event types
                 // Map ScriptEvent enum to Aurora field names
                 var scriptsStruct = root.Acquire<GFFStruct>("Scripts", new GFFStruct());
-                
+
                 // Aurora-specific script field name mapping
                 var scriptFieldMap = new Dictionary<ScriptEvent, string>
                 {
@@ -886,8 +887,8 @@ namespace Andastra.Runtime.Games.Aurora
                     if (!string.IsNullOrEmpty(scriptResRef))
                     {
                         // Use Aurora field name if mapped, otherwise use enum name
-                        string fieldName = scriptFieldMap.ContainsKey(eventType) 
-                            ? scriptFieldMap[eventType] 
+                        string fieldName = scriptFieldMap.ContainsKey(eventType)
+                            ? scriptFieldMap[eventType]
                             : eventType.ToString();
                         scriptsStruct.SetString(fieldName, scriptResRef);
                     }
@@ -1050,7 +1051,7 @@ namespace Andastra.Runtime.Games.Aurora
             GFF gff = GFF.FromBytes(data);
             if (gff == null || gff.Root == null)
             {
-                throw new InvalidDataException("Invalid GFF data for entity deserialization");
+                throw new System.IO.InvalidDataException("Invalid GFF data for entity deserialization");
             }
 
             var root = gff.Root;
@@ -1072,7 +1073,7 @@ namespace Andastra.Runtime.Games.Aurora
                 int objectTypeValue = root.GetInt32("ObjectType");
                 if (objectTypeValue != (int)_objectType)
                 {
-                    throw new InvalidDataException($"Deserialized ObjectType {objectTypeValue} does not match entity ObjectType {(int)_objectType}");
+                    throw new System.IO.InvalidDataException($"Deserialized ObjectType {objectTypeValue} does not match entity ObjectType {(int)_objectType}");
                 }
             }
             if (root.Exists("AreaId"))
@@ -1135,13 +1136,13 @@ namespace Andastra.Runtime.Games.Aurora
                         FieldInfo dataFieldForParent = baseEntityTypeForParent.GetField("_data", BindingFlags.NonPublic | BindingFlags.Instance);
                         if (dataFieldForParent != null)
                         {
-                            var data = dataFieldForParent.GetValue(this) as Dictionary<string, object>;
-                            if (data == null)
+                            var entityData = dataFieldForParent.GetValue(this) as Dictionary<string, object>;
+                            if (entityData == null)
                             {
-                                data = new Dictionary<string, object>();
-                                dataFieldForParent.SetValue(this, data);
+                                entityData = new Dictionary<string, object>();
+                                dataFieldForParent.SetValue(this, entityData);
                             }
-                            data["_ParentObjectId"] = parentObjectId;
+                            entityData["_ParentObjectId"] = parentObjectId;
                         }
                     }
                 }
@@ -1268,7 +1269,7 @@ namespace Andastra.Runtime.Games.Aurora
                             statsComponentForSpells.Owner = this;
                             AddComponent<IStatsComponent>(statsComponentForSpells);
                         }
-                        
+
                         // Use reflection to access AddSpell method if available (AuroraStatsComponent has this method)
                         Type statsTypeForSpells = statsComponentForSpells.GetType();
                         System.Reflection.MethodInfo addSpellMethod = statsTypeForSpells.GetMethod("AddSpell", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
@@ -1335,13 +1336,13 @@ namespace Andastra.Runtime.Games.Aurora
                     FieldInfo dataFieldForItems = baseEntityTypeForItems.GetField("_data", BindingFlags.NonPublic | BindingFlags.Instance);
                     if (dataFieldForItems != null)
                     {
-                        var data = dataFieldForItems.GetValue(this) as Dictionary<string, object>;
-                        if (data == null)
+                        var entityData = dataFieldForItems.GetValue(this) as Dictionary<string, object>;
+                        if (entityData == null)
                         {
-                            data = new Dictionary<string, object>();
-                            dataFieldForItems.SetValue(this, data);
+                            entityData = new Dictionary<string, object>();
+                            dataFieldForItems.SetValue(this, entityData);
                         }
-                        data["_ItemReferences"] = itemReferences;
+                        entityData["_ItemReferences"] = itemReferences;
                     }
                 }
             }
@@ -1636,13 +1637,13 @@ namespace Andastra.Runtime.Games.Aurora
 
                         if (dataField != null)
                         {
-                            var data = dataField.GetValue(this) as Dictionary<string, object>;
-                            if (data == null)
+                            var entityData = dataField.GetValue(this) as Dictionary<string, object>;
+                            if (entityData == null)
                             {
-                                data = new Dictionary<string, object>();
-                                dataField.SetValue(this, data);
+                                entityData = new Dictionary<string, object>();
+                                dataField.SetValue(this, entityData);
                             }
-                            data.Clear();
+                            entityData.Clear();
 
                             for (int i = 0; i < dataList.Count; i++)
                             {
@@ -1702,7 +1703,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// - ActionQueueComponent requires TransformComponent (for movement actions)
         /// - CombatComponent requires StatsComponent (for HP, AC, attack calculations)
         /// - InventoryComponent requires StatsComponent (for encumbrance calculations)
-        /// 
+        ///
         /// Located via string references: Component validation in nwmain.exe entity system.
         /// </remarks>
         protected override void ValidateComponentDependencies(System.Type componentType)
@@ -1711,7 +1712,7 @@ namespace Andastra.Runtime.Games.Aurora
             base.ValidateComponentDependencies(componentType);
 
             // Aurora-specific: ActionQueueComponent requires TransformComponent
-            if (componentType == typeof(IActionQueueComponent) || 
+            if (componentType == typeof(IActionQueueComponent) ||
                 typeof(IActionQueueComponent).IsAssignableFrom(componentType))
             {
                 if (!HasComponent<ITransformComponent>())
@@ -1731,7 +1732,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// - When StatsComponent is attached, notify CombatComponent to recalculate combat stats
         /// - When InventoryComponent is attached, notify StatsComponent to recalculate encumbrance
         /// - When TransformComponent is attached, notify ActionQueueComponent to update position
-        /// 
+        ///
         /// Located via string references: Component interaction patterns in nwmain.exe.
         /// </remarks>
         protected override void HandleComponentAttached(IComponent component)
@@ -1779,7 +1780,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// - Position changes trigger perception updates
         /// - Inventory changes affect encumbrance and movement speed
         /// - Action queue execution may modify transform through movement actions
-        /// 
+        ///
         /// Located via string references: Component interaction patterns in nwmain.exe update loop.
         /// </remarks>
         protected override void HandleComponentInteractions(float deltaTime)
