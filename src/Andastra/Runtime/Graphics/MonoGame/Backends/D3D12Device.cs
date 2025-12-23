@@ -5773,9 +5773,241 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
         }
 
+        /// <summary>
+        /// Creates a UAV descriptor for a buffer in a binding set.
+        /// Based on DirectX 12 Unordered Access Views: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createunorderedaccessview
+        /// Creates a shader-visible descriptor in the CBV_SRV_UAV descriptor heap for binding sets.
+        /// Supports both structured buffers (with stride) and raw buffers (byte-addressable, stride = 0).
+        /// </summary>
+        /// <param name="buffer">The buffer to create a UAV descriptor for.</param>
+        /// <param name="offset">Offset in bytes from the start of the buffer.</param>
+        /// <param name="range">Range in bytes to view. If 0 or -1, uses all remaining bytes from offset to end of buffer.</param>
+        /// <param name="cpuDescriptorHandle">CPU descriptor handle where the UAV descriptor will be created.</param>
         private void CreateUavDescriptorForBuffer(IBuffer buffer, int offset, int range, IntPtr cpuDescriptorHandle)
         {
-            // TODO: Implement UAV descriptor creation for buffer
+            // Validate inputs
+            if (buffer == null)
+            {
+                return;
+            }
+
+            if (cpuDescriptorHandle == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            if (_device == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Get D3D12 resource from buffer's native handle
+            // buffer.NativeHandle is the ID3D12Resource* pointer
+            IntPtr d3d12Resource = buffer.NativeHandle;
+            if (d3d12Resource == IntPtr.Zero)
+            {
+                return;
+            }
+
+            // Get buffer description
+            BufferDesc desc = buffer.Desc;
+
+            // Determine if this is a structured buffer (has stride) or raw buffer (no stride)
+            int structStride = desc.StructStride;
+
+            // Create D3D12_UNORDERED_ACCESS_VIEW_DESC structure
+            // For buffers, use D3D12_UAV_DIMENSION_BUFFER
+            var uavDesc = new D3D12_UNORDERED_ACCESS_VIEW_DESC
+            {
+                Format = 0, // DXGI_FORMAT_UNKNOWN - buffers don't use formats (format is determined by shader)
+                ViewDimension = D3D12_UAV_DIMENSION_BUFFER
+            };
+
+            // Set buffer-specific parameters
+            // D3D12_BUFFER_UAV structure for buffer unordered access view
+            D3D12_BUFFER_UAV bufferUav;
+
+            if (structStride > 0)
+            {
+                // Structured buffer: element-based addressing
+                // Validate offset is aligned to struct stride
+                // In D3D12, structured buffer UAV offset should be aligned to element boundaries
+                if (offset < 0)
+                {
+                    return;
+                }
+
+                if (offset % structStride != 0)
+                {
+                    // Offset must be aligned to struct stride for structured buffers
+                    // Round down to nearest element boundary
+                    offset = (offset / structStride) * structStride;
+                }
+
+                // Calculate element offset (FirstElement)
+                ulong firstElement = (ulong)(offset / structStride);
+
+                // Calculate number of elements (NumElements)
+                // If range is 0 or -1, use all remaining elements from offset to end of buffer
+                uint numElements;
+                if (range <= 0)
+                {
+                    // Use all remaining elements from offset to end of buffer
+                    int remainingBytes = desc.ByteSize - offset;
+                    if (remainingBytes < 0)
+                    {
+                        return; // Invalid offset beyond buffer size
+                    }
+                    numElements = (uint)(remainingBytes / structStride);
+                }
+                else
+                {
+                    // Use specified range, must be aligned to struct stride
+                    int alignedRange = (range / structStride) * structStride;
+                    if (alignedRange <= 0)
+                    {
+                        return; // Range too small
+                    }
+
+                    // Validate range doesn't exceed buffer bounds
+                    if (offset + alignedRange > desc.ByteSize)
+                    {
+                        // Clamp to buffer size
+                        alignedRange = desc.ByteSize - offset;
+                        if (alignedRange < 0)
+                        {
+                            return;
+                        }
+                        alignedRange = (alignedRange / structStride) * structStride;
+                    }
+
+                    numElements = (uint)(alignedRange / structStride);
+                }
+
+                if (numElements == 0)
+                {
+                    return; // No elements to view
+                }
+
+                // Structured buffer UAV: element-based addressing with stride
+                bufferUav = new D3D12_BUFFER_UAV
+                {
+                    FirstElement = firstElement, // Offset in elements
+                    NumElements = numElements, // Number of elements
+                    StructureByteStride = (uint)structStride, // Stride for structured buffers
+                    CounterOffsetInBytes = 0, // No counter resource (append/consume buffers not supported yet)
+                    Flags = D3D12_BUFFER_UAV_FLAG_NONE // Structured buffers don't use raw view flags
+                };
+            }
+            else
+            {
+                // Raw buffer: byte-addressable
+                // For raw buffers, FirstElement and NumElements are in bytes (not elements)
+                // Raw buffers are accessed as byte-addressable buffers in shaders
+                if (offset < 0)
+                {
+                    return;
+                }
+
+                // For raw buffers, offset and range should be aligned to 4 bytes (DWORD alignment)
+                // D3D12 requires raw buffer views to be DWORD-aligned
+                int dwordAlignment = 4;
+                if (offset % dwordAlignment != 0)
+                {
+                    // Round down to nearest DWORD boundary
+                    offset = (offset / dwordAlignment) * dwordAlignment;
+                }
+
+                // Calculate byte offset (FirstElement in bytes for raw buffers)
+                ulong firstElementBytes = (ulong)offset;
+
+                // Calculate number of bytes (NumElements in bytes for raw buffers)
+                // If range is 0 or -1, use all remaining bytes from offset to end of buffer
+                uint numElementsBytes;
+                if (range <= 0)
+                {
+                    // Use all remaining bytes from offset to end of buffer
+                    int remainingBytes = desc.ByteSize - offset;
+                    if (remainingBytes < 0)
+                    {
+                        return; // Invalid offset beyond buffer size
+                    }
+                    // Align to DWORD boundary
+                    numElementsBytes = (uint)((remainingBytes / dwordAlignment) * dwordAlignment);
+                }
+                else
+                {
+                    // Use specified range, must be aligned to DWORD boundary
+                    int alignedRange = (range / dwordAlignment) * dwordAlignment;
+                    if (alignedRange <= 0)
+                    {
+                        return; // Range too small
+                    }
+
+                    // Validate range doesn't exceed buffer bounds
+                    if (offset + alignedRange > desc.ByteSize)
+                    {
+                        // Clamp to buffer size
+                        alignedRange = desc.ByteSize - offset;
+                        if (alignedRange < 0)
+                        {
+                            return;
+                        }
+                        alignedRange = (alignedRange / dwordAlignment) * dwordAlignment;
+                    }
+
+                    numElementsBytes = (uint)alignedRange;
+                }
+
+                if (numElementsBytes == 0)
+                {
+                    return; // No bytes to view
+                }
+
+                // Raw buffer UAV: byte-addressable with DWORD alignment
+                // For raw buffers, StructureByteStride must be 0
+                // Flags must include D3D12_BUFFER_UAV_FLAG_RAW to indicate raw view
+                bufferUav = new D3D12_BUFFER_UAV
+                {
+                    FirstElement = firstElementBytes, // Offset in bytes (for raw buffers)
+                    NumElements = numElementsBytes, // Number of bytes (for raw buffers)
+                    StructureByteStride = 0, // Must be 0 for raw buffers
+                    CounterOffsetInBytes = 0, // No counter resource (append/consume buffers not supported yet)
+                    Flags = D3D12_BUFFER_UAV_FLAG_RAW // Indicates raw byte-addressable buffer view
+                };
+            }
+
+            // Set the buffer UAV structure in the descriptor
+            uavDesc.Buffer = bufferUav;
+
+            // Allocate memory for the UAV descriptor structure
+            int uavDescSize = Marshal.SizeOf(typeof(D3D12_UNORDERED_ACCESS_VIEW_DESC));
+            IntPtr uavDescPtr = Marshal.AllocHGlobal(uavDescSize);
+            try
+            {
+                Marshal.StructureToPtr(uavDesc, uavDescPtr, false);
+
+                // Call ID3D12Device::CreateUnorderedAccessView
+                // Based on DirectX 12 Unordered Access Views: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createunorderedaccessview
+                // void CreateUnorderedAccessView(
+                //   ID3D12Resource *pResource,
+                //   ID3D12Resource *pCounterResource,  // NULL for buffers without append/consume counters
+                //   const D3D12_UNORDERED_ACCESS_VIEW_DESC *pDesc,
+                //   D3D12_CPU_DESCRIPTOR_HANDLE DestDescriptor
+                // );
+                // pCounterResource is NULL for buffers (counters are for append/consume structured buffers, not yet supported)
+                CallCreateUnorderedAccessView(_device, d3d12Resource, IntPtr.Zero, uavDescPtr, cpuDescriptorHandle);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(uavDescPtr);
+            }
         }
 
         private void CreateSrvDescriptorForAccelStruct(IAccelStruct accelStruct, IntPtr cpuDescriptorHandle)
@@ -6394,6 +6626,7 @@ namespace Andastra.Runtime.MonoGame.Backends
 
         /// <summary>
         /// D3D12_BUFFER_UAV structure for buffer unordered access views.
+        /// Based on DirectX 12 Buffer UAV: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_buffer_uav
         /// </summary>
         [StructLayout(LayoutKind.Sequential)]
         private struct D3D12_BUFFER_UAV
@@ -6404,6 +6637,13 @@ namespace Andastra.Runtime.MonoGame.Backends
             public ulong CounterOffsetInBytes; // Offset for counter (0 if no counter)
             public uint Flags; // D3D12_BUFFER_UAV_FLAGS
         }
+
+        /// <summary>
+        /// D3D12_BUFFER_UAV_FLAGS constants for buffer unordered access view flags.
+        /// Based on DirectX 12 Buffer UAV Flags: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ne-d3d12-d3d12_buffer_uav_flags
+        /// </summary>
+        private const uint D3D12_BUFFER_UAV_FLAG_NONE = 0;
+        private const uint D3D12_BUFFER_UAV_FLAG_RAW = 0x00000001; // Indicates raw byte-addressable buffer view
 
         /// <summary>
         /// D3D12_SHADER_RESOURCE_VIEW_DESC structure for shader resource views.
