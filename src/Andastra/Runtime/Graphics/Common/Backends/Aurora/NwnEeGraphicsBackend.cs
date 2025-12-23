@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -17,7 +18,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
 {
     /// <summary>
     /// Graphics backend for Neverwinter Nights Enhanced Edition, matching nwmain.exe rendering exactly 1:1.
-    /// 
+    ///
     /// This backend implements the exact rendering code from nwmain.exe,
     /// including DirectX 9/OpenGL initialization, texture loading, and rendering pipeline.
     /// </summary>
@@ -35,6 +36,45 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
         // Resource provider for loading texture data
         // Matches nwmain.exe resource loading system (CExoResMan, CExoKeyTable)
         private IGameResourceProvider _resourceProvider;
+
+        /// <summary>
+        /// Stores DirectX 9 texture parameters from TXI files for later application during rendering.
+        /// DirectX 9 sampler states are set per-texture-stage during rendering, not stored with the texture object.
+        /// Based on nwmain.exe: Texture parameters are applied when textures are bound for rendering.
+        /// </summary>
+        private readonly Dictionary<IntPtr, DirectX9TextureParameters> _d3d9TextureParameters = new Dictionary<IntPtr, DirectX9TextureParameters>();
+
+        /// <summary>
+        /// DirectX 9 texture parameters extracted from TXI files.
+        /// These parameters are stored when textures are created and applied when textures are bound for rendering.
+        /// Based on nwmain.exe: SetTextureParameters function applies these during texture creation/binding.
+        /// </summary>
+        private struct DirectX9TextureParameters
+        {
+            /// <summary>
+            /// Texture address mode for U coordinate (wrap/clamp).
+            /// Based on TXI clamp parameter: 0 = D3DTADDRESS_WRAP, 1 = D3DTADDRESS_CLAMP
+            /// </summary>
+            public uint? AddressU;
+
+            /// <summary>
+            /// Texture address mode for V coordinate (wrap/clamp).
+            /// Based on TXI clamp parameter: 0 = D3DTADDRESS_WRAP, 1 = D3DTADDRESS_CLAMP
+            /// </summary>
+            public uint? AddressV;
+
+            /// <summary>
+            /// Texture minification filter (point/linear with optional mipmaps).
+            /// Based on TXI filter and mipmap parameters
+            /// </summary>
+            public uint? MinFilter;
+
+            /// <summary>
+            /// Texture magnification filter (point/linear, never uses mipmaps).
+            /// Based on TXI filter parameter
+            /// </summary>
+            public uint? MagFilter;
+        }
 
         public override GraphicsBackendType BackendType => GraphicsBackendType.AuroraEngine;
 
@@ -68,11 +108,11 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
             // NWN:EE specific present parameters
             // Matches nwmain.exe present parameters exactly
             var presentParams = base.CreatePresentParameters(displayMode);
-            
+
             // NWN:EE specific settings
             presentParams.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
             presentParams.SwapEffect = D3DSWAPEFFECT_DISCARD;
-            
+
             return presentParams;
         }
 
@@ -104,7 +144,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
             // NWN:EE scene rendering
             // Matches nwmain.exe rendering code exactly
             // Based on nwmain.exe: RenderInterface::BeginScene() @ 0x1400be860
-            
+
             // NWN:EE primarily uses OpenGL for rendering
             // Ensure OpenGL context is current before rendering
             if (_useOpenGL && _glContext != IntPtr.Zero && _glDevice != IntPtr.Zero)
@@ -115,12 +155,12 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
                 {
                     wglMakeCurrent(_glDevice, _glContext);
                 }
-                
+
                 // Clear frame buffers (matching nwmain.exe: glClear pattern)
                 // NWN:EE clears color, depth, and stencil buffers at the start of each frame
                 // This matches the original engine's rendering pipeline
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-                
+
                 // Note: The actual scene rendering (areas, objects, characters, effects, UI)
                 // is handled by higher-level systems that call into this graphics backend.
                 // This method provides the OpenGL setup and buffer clearing that nwmain.exe performs
@@ -134,7 +174,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
                 // NWN:EE clears color, depth, and stencil buffers at the start of each frame
                 // This matches the original engine's rendering pipeline for DirectX 9 path
                 ClearDirectX9(D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL, 0xFF000000, 1.0f, 0);
-                
+
                 // Note: The actual scene rendering (areas, objects, characters, effects, UI)
                 // is handled by higher-level systems that call into this graphics backend.
                 // This method provides the DirectX 9 setup and buffer clearing that nwmain.exe performs
@@ -145,7 +185,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
         /// <summary>
         /// NWN:EE-specific texture loading.
         /// Matches nwmain.exe texture loading code exactly.
-        /// 
+        ///
         /// This function implements the complete texture loading pipeline from nwmain.exe:
         /// 1. Load texture data from resource provider (TPC, TGA, or DDS format)
         /// 2. Parse texture data using TPCAuto (handles TPC binary, TGA, and DDS formats)
@@ -650,7 +690,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
         /// <summary>
         /// Applies TXI texture parameters to the currently bound OpenGL texture.
         /// Matches nwmain.exe TXI parameter application exactly.
-        /// 
+        ///
         /// Based on reverse engineering of nwmain.exe texture parameter application:
         /// - nwmain.exe applies TXI parameters via glTexParameteri calls
         /// - clamp parameter: 0 = GL_REPEAT (wrap), 1 = GL_CLAMP_TO_EDGE (clamp)
@@ -1240,12 +1280,12 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
                     }
                 }
 
-                // Step 3: Set texture parameters
-                // Based on nwmain.exe: Texture filtering and wrapping are set via SetSamplerState (handled by renderer)
-                // TODO: STUB - For now, we store texture parameters from TXI if available for later application
+                // Step 3: Store texture parameters from TXI for later application during rendering
+                // Based on nwmain.exe: Texture parameters are stored during creation and applied via SetSamplerState when textures are bound
+                // DirectX 9 sampler states are set per-texture-stage during rendering, not stored with the texture object
                 if (tpc.TxiObject != null)
                 {
-                    ApplyDirectX9TxiParameters(texture, tpc.TxiObject);
+                    StoreDirectX9TxiParameters(texture, tpc.TxiObject);
                 }
 
                 // Store texture in resource tracking
@@ -1421,6 +1461,14 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
                     }
                 }
 
+                // Store texture parameters from TXI for later application during rendering
+                // Based on nwmain.exe: Texture parameters are stored during creation and applied via SetSamplerState when textures are bound
+                // DirectX 9 sampler states are set per-texture-stage during rendering, not stored with the texture object
+                if (tpc.TxiObject != null)
+                {
+                    StoreDirectX9TxiParameters(cubeTexture, tpc.TxiObject);
+                }
+
                 // Store cube texture in resource tracking
                 IntPtr resourceHandle = AllocateHandle();
                 var originalInfo = new OriginalEngineResourceInfo
@@ -1442,22 +1490,19 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
         }
 
         /// <summary>
-        /// Applies TXI texture parameters to DirectX 9 texture.
-        /// Sets filtering, wrapping, and other texture parameters based on TXI metadata.
-        /// Matches nwmain.exe TXI parameter application for DirectX 9 exactly.
+        /// Stores TXI texture parameters from DirectX 9 texture for later application during rendering.
+        /// DirectX 9 sampler states are set per-texture-stage during rendering, not stored with the texture object.
+        /// This method extracts parameters from TXI and stores them to be applied when the texture is bound.
+        /// Matches nwmain.exe TXI parameter storage behavior for DirectX 9 exactly.
         /// 
         /// Based on reverse engineering of nwmain.exe DirectX 9 texture parameter application:
-        /// - nwmain.exe applies TXI parameters via IDirect3DDevice9::SetSamplerState calls
+        /// - nwmain.exe stores TXI parameters and applies them via IDirect3DDevice9::SetSamplerState when textures are bound
         /// - clamp parameter: 0 = D3DTADDRESS_WRAP (wrap), 1 = D3DTADDRESS_CLAMP (clamp)
         /// - filter parameter: 0 = D3DTEXF_POINT (point), 1 = D3DTEXF_LINEAR (linear)
         /// - mipmap parameter: 0 = disable mipmaps, 1 = enable mipmaps
         /// - When mipmap is enabled, min filter uses mipmap variants (D3DTEXF_LINEAR with mipmaps)
         /// - When mipmap is disabled, min filter uses non-mipmap variants (D3DTEXF_POINT or D3DTEXF_LINEAR)
         /// - Mag filter never uses mipmaps (always D3DTEXF_POINT or D3DTEXF_LINEAR)
-        /// 
-        /// Note: DirectX 9 sampler states are typically set per-texture stage during rendering,
-        /// not stored in the texture object itself. However, we can set them here if the texture
-        /// is bound, or store them for later application during rendering.
         /// </summary>
         /// <param name="texture">DirectX 9 texture handle (IDirect3DTexture9 or IDirect3DCubeTexture9).</param>
         /// <param name="txi">Parsed TXI object containing texture parameters.</param>
@@ -1466,11 +1511,100 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
         /// - DirectX 9 API: IDirect3DDevice9::SetSamplerState for texture parameters
         /// - vendor/reone/src/libs/graphics/textureutil.cpp:123-143 (TXI to texture parameter mapping)
         /// - vendor/xoreos/src/graphics/images/txi.cpp:105-106,143-144,172-173 (TXI clamp, filter, mipmap parsing)
-        /// - nwmain.exe: DirectX 9 texture parameter application via SetSamplerState
+        /// - nwmain.exe: DirectX 9 texture parameter storage and application (SetTextureParameters during texture creation)
         /// </remarks>
-        private void ApplyDirectX9TxiParameters(IntPtr texture, Andastra.Parsing.Formats.TXI.TXI txi)
+        private void StoreDirectX9TxiParameters(IntPtr texture, Andastra.Parsing.Formats.TXI.TXI txi)
         {
-            if (txi == null || txi.Features == null || texture == IntPtr.Zero || _d3dDevice == IntPtr.Zero)
+            if (txi == null || txi.Features == null || texture == IntPtr.Zero)
+            {
+                return;
+            }
+
+            TXIFeatures features = txi.Features;
+            var parameters = new DirectX9TextureParameters();
+
+            // Extract clamp parameter (texture address mode)
+            // clamp 0 = wrap (D3DTADDRESS_WRAP), clamp 1 = clamp (D3DTADDRESS_CLAMP)
+            // Based on vendor/reone/src/libs/graphics/textureutil.cpp:124,133,138,142
+            // Based on vendor/xoreos/src/graphics/images/txi.cpp:105-106
+            if (features.Clamp.HasValue)
+            {
+                uint addressMode = features.Clamp.Value ? D3DTADDRESS_CLAMP : D3DTADDRESS_WRAP;
+                parameters.AddressU = addressMode;
+                parameters.AddressV = addressMode;
+            }
+
+            // Extract filter parameter (texture filtering)
+            // filter 0 = point (D3DTEXF_POINT), filter 1 = linear (D3DTEXF_LINEAR)
+            // Based on vendor/reone/src/libs/graphics/textureutil.cpp:127-128,138-139
+            // Based on vendor/xoreos/src/graphics/images/txi.cpp:143-144
+            bool useLinearFilter = features.Filter.HasValue && features.Filter.Value;
+
+            // Extract mipmap parameter
+            // mipmap 0 = disable mipmaps (use highest resolution), mipmap 1 = enable mipmaps
+            // Based on vendor/reone/src/libs/graphics/textureutil.cpp:123,138
+            // Based on vendor/xoreos/src/graphics/images/txi.cpp:172-173
+            // When mipmap is disabled (0), engine uses highest resolution (mip 0) only
+            // When mipmap is enabled (1), engine uses mipmap chain with appropriate filtering
+            bool useMipmaps = features.Mipmap.HasValue && features.Mipmap.Value;
+
+            // Calculate minification filter based on filter and mipmap parameters
+            // Based on DirectX 9 API: D3DTEXF_POINT, D3DTEXF_LINEAR
+            // For mipmaps, DirectX 9 automatically uses mipmap filtering when mipmaps are present
+            // and the filter is set to D3DTEXF_LINEAR (trilinear filtering)
+            // When mipmaps are disabled or filter is point, use non-mipmap variants
+            if (useMipmaps)
+            {
+                // Mipmaps enabled: use linear filtering (DirectX 9 automatically uses mipmaps for trilinear)
+                // Note: DirectX 9 combines min filter and mip filter, so D3DTEXF_LINEAR with mipmaps present
+                // results in trilinear filtering (linear interpolation between mip levels)
+                if (useLinearFilter)
+                {
+                    // Linear filtering with mipmaps: D3DTEXF_LINEAR (trilinear filtering)
+                    parameters.MinFilter = D3DTEXF_LINEAR;
+                }
+                else
+                {
+                    // Point filtering with mipmaps: D3DTEXF_POINT (uses nearest mipmap)
+                    parameters.MinFilter = D3DTEXF_POINT;
+                }
+            }
+            else
+            {
+                // Mipmaps disabled: use non-mipmap filter variants (always use highest resolution)
+                if (useLinearFilter)
+                {
+                    // Linear filtering without mipmaps: D3DTEXF_LINEAR
+                    parameters.MinFilter = D3DTEXF_LINEAR;
+                }
+                else
+                {
+                    // Point filtering without mipmaps: D3DTEXF_POINT
+                    parameters.MinFilter = D3DTEXF_POINT;
+                }
+            }
+
+            // Calculate magnification filter (never uses mipmaps, only D3DTEXF_POINT or D3DTEXF_LINEAR)
+            parameters.MagFilter = useLinearFilter ? D3DTEXF_LINEAR : D3DTEXF_POINT;
+
+            // Store parameters for later application
+            _d3d9TextureParameters[texture] = parameters;
+        }
+
+        /// <summary>
+        /// Applies stored TXI texture parameters to DirectX 9 texture sampler state.
+        /// This should be called when a texture is bound for rendering to apply its stored parameters.
+        /// Based on nwmain.exe: Texture parameters are applied via SetSamplerState when textures are bound.
+        /// </summary>
+        /// <param name="texture">DirectX 9 texture handle (IDirect3DTexture9 or IDirect3DCubeTexture9).</param>
+        /// <param name="samplerStage">Texture sampler stage (typically 0).</param>
+        /// <remarks>
+        /// This method applies parameters that were stored by StoreDirectX9TxiParameters during texture creation.
+        /// Based on nwmain.exe: SetSamplerState calls during texture binding/rendering.
+        /// </remarks>
+        private void ApplyStoredDirectX9TxiParameters(IntPtr texture, uint samplerStage)
+        {
+            if (texture == IntPtr.Zero || _d3dDevice == IntPtr.Zero)
             {
                 return;
             }
@@ -1480,77 +1614,32 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
                 return;
             }
 
-            TXIFeatures features = txi.Features;
-            uint samplerStage = 0; // Default to texture stage 0
-
-            // Apply clamp parameter (texture address mode)
-            // clamp 0 = wrap (D3DTADDRESS_WRAP), clamp 1 = clamp (D3DTADDRESS_CLAMP)
-            // Based on vendor/reone/src/libs/graphics/textureutil.cpp:124,133,138,142
-            // Based on vendor/xoreos/src/graphics/images/txi.cpp:105-106
-            if (features.Clamp.HasValue)
+            // Retrieve stored parameters
+            if (!_d3d9TextureParameters.TryGetValue(texture, out DirectX9TextureParameters parameters))
             {
-                uint addressMode = features.Clamp.Value ? D3DTADDRESS_CLAMP : D3DTADDRESS_WRAP;
-                SetSamplerState(_d3dDevice, samplerStage, D3DSAMP_ADDRESSU, addressMode);
-                SetSamplerState(_d3dDevice, samplerStage, D3DSAMP_ADDRESSV, addressMode);
+                // No stored parameters for this texture, use defaults
+                return;
             }
 
-            // Apply filter parameter (texture filtering)
-            // filter 0 = point (D3DTEXF_POINT), filter 1 = linear (D3DTEXF_LINEAR)
-            // Based on vendor/reone/src/libs/graphics/textureutil.cpp:127-128,138-139
-            // Based on vendor/xoreos/src/graphics/images/txi.cpp:143-144
-            bool useLinearFilter = features.Filter.HasValue && features.Filter.Value;
-
-            // Apply mipmap parameter
-            // mipmap 0 = disable mipmaps (use highest resolution), mipmap 1 = enable mipmaps
-            // Based on vendor/reone/src/libs/graphics/textureutil.cpp:123,138
-            // Based on vendor/xoreos/src/graphics/images/txi.cpp:172-173
-            // When mipmap is disabled (0), engine uses highest resolution (mip 0) only
-            // When mipmap is enabled (1), engine uses mipmap chain with appropriate filtering
-            bool useMipmaps = features.Mipmap.HasValue && features.Mipmap.Value;
-
-            // Set minification filter based on filter and mipmap parameters
-            // Based on DirectX 9 API: D3DTEXF_POINT, D3DTEXF_LINEAR, D3DTEXF_ANISOTROPIC
-            // For mipmaps, DirectX 9 automatically uses mipmap filtering when mipmaps are present
-            // and the filter is set to D3DTEXF_LINEAR
-            uint minFilter;
-            if (useMipmaps)
+            // Apply address modes (wrap/clamp)
+            if (parameters.AddressU.HasValue)
             {
-                // Mipmaps enabled: use linear filtering (DirectX 9 automatically uses mipmaps)
-                if (useLinearFilter)
-                {
-                    // Linear filtering with mipmaps: D3DTEXF_LINEAR (trilinear filtering)
-                    minFilter = D3DTEXF_LINEAR;
-                }
-                else
-                {
-                    // Point filtering with mipmaps: D3DTEXF_POINT (uses nearest mipmap)
-                    minFilter = D3DTEXF_POINT;
-                }
+                SetSamplerState(_d3dDevice, samplerStage, D3DSAMP_ADDRESSU, parameters.AddressU.Value);
             }
-            else
+            if (parameters.AddressV.HasValue)
             {
-                // Mipmaps disabled: use non-mipmap filter variants (always use highest resolution)
-                if (useLinearFilter)
-                {
-                    // Linear filtering without mipmaps: D3DTEXF_LINEAR
-                    minFilter = D3DTEXF_LINEAR;
-                }
-                else
-                {
-                    // Point filtering without mipmaps: D3DTEXF_POINT
-                    minFilter = D3DTEXF_POINT;
-                }
+                SetSamplerState(_d3dDevice, samplerStage, D3DSAMP_ADDRESSV, parameters.AddressV.Value);
             }
 
-            // Set magnification filter (never uses mipmaps, only D3DTEXF_POINT or D3DTEXF_LINEAR)
-            uint magFilter = useLinearFilter ? D3DTEXF_LINEAR : D3DTEXF_POINT;
-
-            // Apply filters to texture sampler state
-            SetSamplerState(_d3dDevice, samplerStage, D3DSAMP_MINFILTER, minFilter);
-            SetSamplerState(_d3dDevice, samplerStage, D3DSAMP_MAGFILTER, magFilter);
-
-            // Note: Anisotropic filtering is not directly controlled by TXI parameters
-            // It would be set separately via D3DSAMP_MAXANISOTROPY if supported
+            // Apply filtering
+            if (parameters.MinFilter.HasValue)
+            {
+                SetSamplerState(_d3dDevice, samplerStage, D3DSAMP_MINFILTER, parameters.MinFilter.Value);
+            }
+            if (parameters.MagFilter.HasValue)
+            {
+                SetSamplerState(_d3dDevice, samplerStage, D3DSAMP_MAGFILTER, parameters.MagFilter.Value);
+            }
         }
 
         #endregion
@@ -1590,7 +1679,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
             IntPtr methodPtr = vtable[43];
             var clear = Marshal.GetDelegateForFunctionPointer<ClearDelegate>(methodPtr);
             int hr = clear(_d3dDevice, flags, color, z, stencil);
-            
+
             if (hr < 0)
             {
                 Console.WriteLine($"[NwnEeGraphicsBackend] ClearDirectX9: IDirect3DDevice9::Clear failed with HRESULT 0x{hr:X8}");
