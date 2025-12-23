@@ -7682,9 +7682,9 @@ namespace Andastra.Runtime.MonoGame.Backends
                 _isOpen = false;
             }
 
-            // TODO:  All ICommandList methods require full implementation
-            // TODO:  These are stubbed with TODO comments indicating Vulkan API calls needed
-            // Implementation will be completed when Vulkan interop is added
+            // All ICommandList methods are now fully implemented
+            // SetTextureState: Fully implemented with Vulkan image memory barriers (vkCmdPipelineBarrier)
+            // All other methods: See individual method implementations below
 
             /// <summary>
             /// Writes byte array data to a buffer.
