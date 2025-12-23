@@ -17,7 +17,7 @@ namespace Andastra.Tests.Runtime.Parsing.MDL
     /// Exhaustive and comprehensive unit tests for ASCII MDL format handling.
     /// 
     /// This test module provides meticulous coverage of ALL MDL/MDX ASCII format features:
-    // TODO: / - All node types (dummy, trimesh, light, emitter, reference, saber, aabb, skin, dangly)
+    /// - All node types (dummy, trimesh, light, emitter, reference, saber, aabb, skin, dangly)
     /// - All controller types (position, orientation, scale, alpha, color, radius, etc.)
     /// - All mesh data (verts, faces, tverts, bones, weights, constraints)
     /// - Animations with various configurations
@@ -437,6 +437,515 @@ donemodel test
                 meshNode.Mesh.Should().NotBeNull();
                 meshNode.Mesh.VertexPositions.Count.Should().Be(3);
                 meshNode.Mesh.Faces.Count.Should().Be(1);
+            }
+        }
+
+        [Fact]
+        public void WriteLightNode()
+        {
+            var mdl = MDLAsciiTestHelpers.CreateTestMDL("light_test");
+            var node = MDLAsciiTestHelpers.CreateTestNode("light_node", MDLNodeType.Light);
+            node.Light = new MDLLight();
+            node.Light.Color = new Color(1.0f, 1.0f, 1.0f);
+            node.Light.FlareRadius = 10.0f;
+            mdl.Root.Children.Add(node);
+
+            using (var stream = new MemoryStream())
+            {
+                var writer = new MDLAsciiWriter(mdl, stream);
+                writer.Write();
+
+                stream.Position = 0;
+                using (var reader = new StreamReader(stream, Encoding.UTF8))
+                {
+                    var content = reader.ReadToEnd();
+                    content.Should().Contain("node light light_node");
+                }
+            }
+        }
+
+        [Fact]
+        public void ReadLightNode()
+        {
+            var asciiContent = @"# ASCII MDL
+newmodel test
+setsupermodel test null
+classification other
+classification_unk1 0
+ignorefog 1
+compress_quaternions 0
+setanimationscale 0.971
+
+beginmodelgeom test
+  bmin -5 -5 -1
+  bmax 5 5 10
+  radius 7
+
+  node light light_node
+  {
+    parent -1
+    position 0 0 0
+    orientation 0 0 0 1
+    flareradius 5.0
+    priority 1
+  }
+
+endmodelgeom test
+
+donemodel test
+";
+
+            var asciiBytes = Encoding.UTF8.GetBytes(asciiContent);
+            using (var reader = new MDLAsciiReader(asciiBytes))
+            {
+                var mdl = reader.Load();
+
+                var lightNode = mdl.Get("light_node");
+                lightNode.Should().NotBeNull();
+                lightNode.NodeType.Should().Be(MDLNodeType.Light);
+                lightNode.Light.Should().NotBeNull();
+                lightNode.Light.FlareRadius.Should().BeApproximately(5.0f, 0.001f);
+            }
+        }
+
+        [Fact]
+        public void WriteEmitterNode()
+        {
+            var mdl = MDLAsciiTestHelpers.CreateTestMDL("emitter_test");
+            var node = MDLAsciiTestHelpers.CreateTestNode("emitter_node", MDLNodeType.Emitter);
+            node.Emitter = new MDLEmitter();
+            node.Emitter.UpdateType = MDLUpdateType.Fountain;
+            node.Emitter.RenderType = MDLRenderType.Normal;
+            node.Emitter.Texture = "test_texture";
+            mdl.Root.Children.Add(node);
+
+            using (var stream = new MemoryStream())
+            {
+                var writer = new MDLAsciiWriter(mdl, stream);
+                writer.Write();
+
+                stream.Position = 0;
+                using (var reader = new StreamReader(stream, Encoding.UTF8))
+                {
+                    var content = reader.ReadToEnd();
+                    content.Should().Contain("node emitter emitter_node");
+                }
+            }
+        }
+
+        [Fact]
+        public void ReadEmitterNode()
+        {
+            var asciiContent = @"# ASCII MDL
+newmodel test
+setsupermodel test null
+classification other
+classification_unk1 0
+ignorefog 1
+compress_quaternions 0
+setanimationscale 0.971
+
+beginmodelgeom test
+  bmin -5 -5 -1
+  bmax 5 5 10
+  radius 7
+
+  node emitter emitter_node
+  {
+    parent -1
+    position 0 0 0
+    orientation 0 0 0 1
+    update fountain
+    render normal
+    texture test_texture
+  }
+
+endmodelgeom test
+
+donemodel test
+";
+
+            var asciiBytes = Encoding.UTF8.GetBytes(asciiContent);
+            using (var reader = new MDLAsciiReader(asciiBytes))
+            {
+                var mdl = reader.Load();
+
+                var emitterNode = mdl.Get("emitter_node");
+                emitterNode.Should().NotBeNull();
+                emitterNode.NodeType.Should().Be(MDLNodeType.Emitter);
+                emitterNode.Emitter.Should().NotBeNull();
+            }
+        }
+
+        [Fact]
+        public void WriteReferenceNode()
+        {
+            var mdl = MDLAsciiTestHelpers.CreateTestMDL("reference_test");
+            var node = MDLAsciiTestHelpers.CreateTestNode("ref_node", MDLNodeType.Reference);
+            node.Reference = new MDLReference();
+            node.Reference.Model = "test_ref.mdl";
+            mdl.Root.Children.Add(node);
+
+            using (var stream = new MemoryStream())
+            {
+                var writer = new MDLAsciiWriter(mdl, stream);
+                writer.Write();
+
+                stream.Position = 0;
+                using (var reader = new StreamReader(stream, Encoding.UTF8))
+                {
+                    var content = reader.ReadToEnd();
+                    content.Should().Contain("node reference ref_node");
+                }
+            }
+        }
+
+        [Fact]
+        public void ReadReferenceNode()
+        {
+            var asciiContent = @"# ASCII MDL
+newmodel test
+setsupermodel test null
+classification other
+classification_unk1 0
+ignorefog 1
+compress_quaternions 0
+setanimationscale 0.971
+
+beginmodelgeom test
+  bmin -5 -5 -1
+  bmax 5 5 10
+  radius 7
+
+  node reference ref_node
+  {
+    parent -1
+    position 0 0 0
+    orientation 0 0 0 1
+    refmodel test_ref.mdl
+  }
+
+endmodelgeom test
+
+donemodel test
+";
+
+            var asciiBytes = Encoding.UTF8.GetBytes(asciiContent);
+            using (var reader = new MDLAsciiReader(asciiBytes))
+            {
+                var mdl = reader.Load();
+
+                var refNode = mdl.Get("ref_node");
+                refNode.Should().NotBeNull();
+                refNode.NodeType.Should().Be(MDLNodeType.Reference);
+                refNode.Reference.Should().NotBeNull();
+                refNode.Reference.Model.Should().Be("test_ref.mdl");
+            }
+        }
+
+        [Fact]
+        public void WriteSaberNode()
+        {
+            var mdl = MDLAsciiTestHelpers.CreateTestMDL("saber_test");
+            var node = MDLAsciiTestHelpers.CreateTestNode("saber_node", MDLNodeType.Saber);
+            node.Saber = new MDLSaber();
+            node.Saber.SaberLength = 1.0f;
+            node.Saber.SaberWidth = 0.1f;
+            mdl.Root.Children.Add(node);
+
+            using (var stream = new MemoryStream())
+            {
+                var writer = new MDLAsciiWriter(mdl, stream);
+                writer.Write();
+
+                stream.Position = 0;
+                using (var reader = new StreamReader(stream, Encoding.UTF8))
+                {
+                    var content = reader.ReadToEnd();
+                    content.Should().Contain("node lightsaber saber_node");
+                }
+            }
+        }
+
+        [Fact]
+        public void ReadSaberNode()
+        {
+            var asciiContent = @"# ASCII MDL
+newmodel test
+setsupermodel test null
+classification other
+classification_unk1 0
+ignorefog 1
+compress_quaternions 0
+setanimationscale 0.971
+
+beginmodelgeom test
+  bmin -5 -5 -1
+  bmax 5 5 10
+  radius 7
+
+  node lightsaber saber_node
+  {
+    parent -1
+    position 0 0 0
+    orientation 0 0 0 1
+    saberlength 1.0
+    saberwidth 0.1
+  }
+
+endmodelgeom test
+
+donemodel test
+";
+
+            var asciiBytes = Encoding.UTF8.GetBytes(asciiContent);
+            using (var reader = new MDLAsciiReader(asciiBytes))
+            {
+                var mdl = reader.Load();
+
+                var saberNode = mdl.Get("saber_node");
+                saberNode.Should().NotBeNull();
+                saberNode.NodeType.Should().Be(MDLNodeType.Saber);
+                saberNode.Saber.Should().NotBeNull();
+                saberNode.Saber.SaberLength.Should().BeApproximately(1.0f, 0.001f);
+            }
+        }
+
+        [Fact]
+        public void WriteAabbNode()
+        {
+            var mdl = MDLAsciiTestHelpers.CreateTestMDL("aabb_test");
+            var node = MDLAsciiTestHelpers.CreateTestNode("aabb_node", MDLNodeType.Aabb);
+            node.Aabb = new MDLWalkmesh();
+            var aabbNode1 = new MDLNode();
+            aabbNode1.Position = new Vector3(0.0f, 0.0f, 0.0f);
+            var aabbNode2 = new MDLNode();
+            aabbNode2.Position = new Vector3(1.0f, 1.0f, 1.0f);
+            node.Aabb.Aabbs.Add(aabbNode1);
+            node.Aabb.Aabbs.Add(aabbNode2);
+            mdl.Root.Children.Add(node);
+
+            using (var stream = new MemoryStream())
+            {
+                var writer = new MDLAsciiWriter(mdl, stream);
+                writer.Write();
+
+                stream.Position = 0;
+                using (var reader = new StreamReader(stream, Encoding.UTF8))
+                {
+                    var content = reader.ReadToEnd();
+                    content.Should().Contain("node aabb aabb_node");
+                    content.Should().Contain("aabb 2");
+                }
+            }
+        }
+
+        [Fact]
+        public void ReadAabbNode()
+        {
+            var asciiContent = @"# ASCII MDL
+newmodel test
+setsupermodel test null
+classification other
+classification_unk1 0
+ignorefog 1
+compress_quaternions 0
+setanimationscale 0.971
+
+beginmodelgeom test
+  bmin -5 -5 -1
+  bmax 5 5 10
+  radius 7
+
+  node aabb aabb_node
+  {
+    parent -1
+    position 0 0 0
+    orientation 0 0 0 1
+    aabb 2
+      0 0.0 0.0 0.0
+      1 1.0 1.0 1.0
+  }
+
+endmodelgeom test
+
+donemodel test
+";
+
+            var asciiBytes = Encoding.UTF8.GetBytes(asciiContent);
+            using (var reader = new MDLAsciiReader(asciiBytes))
+            {
+                var mdl = reader.Load();
+
+                var aabbNode = mdl.Get("aabb_node");
+                aabbNode.Should().NotBeNull();
+                aabbNode.NodeType.Should().Be(MDLNodeType.Aabb);
+                aabbNode.Aabb.Should().NotBeNull();
+                aabbNode.Aabb.Aabbs.Count.Should().Be(2);
+            }
+        }
+
+        [Fact]
+        public void WriteSkinNode()
+        {
+            var mdl = MDLAsciiTestHelpers.CreateTestMDL("skin_test");
+            var node = MDLAsciiTestHelpers.CreateTestNode("skin_node", MDLNodeType.Trimesh);
+            var mesh = MDLAsciiTestHelpers.CreateTestMesh();
+            var skin = new MDLSkin();
+            skin.BoneIndices = new List<int> { 0, 1 };
+            skin.Qbones = new List<Vector4> { new Vector4(0.0f, 0.0f, 0.0f, 1.0f), new Vector4(0.0f, 0.0f, 0.0f, 1.0f) };
+            skin.Tbones = new List<Vector3> { Vector3.Zero, Vector3.Zero };
+            mesh.Skin = skin;
+            node.Mesh = mesh;
+            mdl.Root.Children.Add(node);
+
+            using (var stream = new MemoryStream())
+            {
+                var writer = new MDLAsciiWriter(mdl, stream);
+                writer.Write();
+
+                stream.Position = 0;
+                using (var reader = new StreamReader(stream, Encoding.UTF8))
+                {
+                    var content = reader.ReadToEnd().ToLowerInvariant();
+                    content.Should().Contain("node trimesh skin_node");
+                    content.Should().Contain("bones");
+                }
+            }
+        }
+
+        [Fact]
+        public void ReadSkinNode()
+        {
+            var asciiContent = @"# ASCII MDL
+newmodel test
+setsupermodel test null
+classification other
+classification_unk1 0
+ignorefog 1
+compress_quaternions 0
+setanimationscale 0.971
+
+beginmodelgeom test
+  bmin -5 -5 -1
+  bmax 5 5 10
+  radius 7
+
+  node trimesh skin_node
+  {
+    parent -1
+    position 0 0 0
+    orientation 0 0 0 1
+    verts 1
+      0 0 0
+    bones 2
+      0 0 0 0 0 1 0 0 0
+      1 1 0 0 0 1 0 0 0
+    faces 0
+  }
+
+endmodelgeom test
+
+donemodel test
+";
+
+            var asciiBytes = Encoding.UTF8.GetBytes(asciiContent);
+            using (var reader = new MDLAsciiReader(asciiBytes))
+            {
+                var mdl = reader.Load();
+
+                var skinNode = mdl.Get("skin_node");
+                skinNode.Should().NotBeNull();
+                skinNode.Mesh.Should().NotBeNull();
+                skinNode.Mesh.Skin.Should().NotBeNull();
+            }
+        }
+
+        [Fact]
+        public void WriteDanglyNode()
+        {
+            var mdl = MDLAsciiTestHelpers.CreateTestMDL("dangly_test");
+            var node = MDLAsciiTestHelpers.CreateTestNode("dangly_node", MDLNodeType.Danglymesh);
+            var dangly = new MDLDangly();
+            dangly.Texture1 = "test_texture";
+            dangly.Render = true;
+            dangly.Displacement = 0.1f;
+            dangly.Tightness = 0.5f;
+            dangly.Period = 1.0f;
+            dangly.VertexPositions = new List<Vector3>
+            {
+                new Vector3(0.0f, 0.0f, 0.0f),
+                new Vector3(1.0f, 0.0f, 0.0f),
+                new Vector3(0.0f, 1.0f, 0.0f),
+            };
+            var face = new MDLFace();
+            face.V1 = 0;
+            face.V2 = 1;
+            face.V3 = 2;
+            face.Material = 0;
+            dangly.Faces = new List<MDLFace> { face };
+            node.Mesh = dangly;
+            mdl.Root.Children.Add(node);
+
+            using (var stream = new MemoryStream())
+            {
+                var writer = new MDLAsciiWriter(mdl, stream);
+                writer.Write();
+
+                stream.Position = 0;
+                using (var reader = new StreamReader(stream, Encoding.UTF8))
+                {
+                    var content = reader.ReadToEnd().ToLowerInvariant();
+                    content.Should().Contain("node danglymesh dangly_node");
+                }
+            }
+        }
+
+        [Fact]
+        public void ReadDanglyNode()
+        {
+            var asciiContent = @"# ASCII MDL
+newmodel test
+setsupermodel test null
+classification other
+classification_unk1 0
+ignorefog 1
+compress_quaternions 0
+setanimationscale 0.971
+
+beginmodelgeom test
+  bmin -5 -5 -1
+  bmax 5 5 10
+  radius 7
+
+  node danglymesh dangly_node
+  {
+    parent -1
+    position 0 0 0
+    orientation 0 0 0 1
+    verts 3
+      0 0 0
+      1 0 0
+      0 1 0
+    faces 1
+      0 1 2 0
+  }
+
+endmodelgeom test
+
+donemodel test
+";
+
+            var asciiBytes = Encoding.UTF8.GetBytes(asciiContent);
+            using (var reader = new MDLAsciiReader(asciiBytes))
+            {
+                var mdl = reader.Load();
+
+                var danglyNode = mdl.Get("dangly_node");
+                danglyNode.Should().NotBeNull();
+                danglyNode.NodeType.Should().Be(MDLNodeType.Danglymesh);
+                danglyNode.Mesh.Should().NotBeNull();
+                danglyNode.Mesh.Should().BeOfType<MDLDangly>();
             }
         }
     }
