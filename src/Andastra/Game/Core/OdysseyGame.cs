@@ -28,6 +28,7 @@ using Andastra.Runtime.Engines.Odyssey.Game;
 using Andastra.Runtime.Scripting.EngineApi;
 using Andastra.Runtime.Scripting.VM;
 using Andastra.Runtime.Core.Audio;
+using GraphicsVector2 = Andastra.Runtime.Graphics.Vector2;
 
 namespace Andastra.Runtime.Game.Core
 {
@@ -674,17 +675,17 @@ namespace Andastra.Runtime.Game.Core
 
             ICursor cursor = _cursorManager.CurrentCursor;
             ITexture2D cursorTexture = _cursorManager.IsPressed ? cursor.TextureDown : cursor.TextureUp;
-            Vector2 position = _cursorManager.Position;
+            GraphicsVector2 position = _cursorManager.Position;
 
             // Offset position by hotspot (cursor click point)
-            Vector2 renderPosition = new Vector2(
+            GraphicsVector2 renderPosition = new GraphicsVector2(
                 position.X - cursor.HotspotX,
                 position.Y - cursor.HotspotY);
 
             // Render cursor using sprite batch
             // Cursor rendered with alpha blending on top of everything
             _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Default);
-            _spriteBatch.Draw(cursorTexture, renderPosition, Microsoft.Xna.Framework.Color.White);
+            _spriteBatch.Draw(cursorTexture, renderPosition, new Color(255, 255, 255, 255));
             _spriteBatch.End();
         }
 
@@ -761,7 +762,7 @@ namespace Andastra.Runtime.Game.Core
                 if (_cursorManager != null)
                 {
                     Point mousePos = mouseState.Position;
-                    _cursorManager.Position = new Vector2(mousePos.X, mousePos.Y);
+                    _cursorManager.Position = new GraphicsVector2(mousePos.X, mousePos.Y);
                     _cursorManager.IsPressed = mouseState.LeftButton == ButtonState.Pressed;
                 }
 
@@ -816,7 +817,7 @@ namespace Andastra.Runtime.Game.Core
                 }
 
                 // Update cursor position and pressed state
-                _cursorManager.Position = new Vector2(mousePos.X, mousePos.Y);
+                _cursorManager.Position = new GraphicsVector2(mousePos.X, mousePos.Y);
                 _cursorManager.IsPressed = mouseState.LeftButton == ButtonState.Pressed;
             }
 
@@ -1940,23 +1941,23 @@ namespace Andastra.Runtime.Game.Core
                 string version = "Demo Build";
 
                 // Title - large with shadow
-                Vector2 titleSize = _font.MeasureString(title);
-                Vector2 titlePos = new Vector2(centerX - titleSize.X / 2, startY - titleOffset - 80);
+                GraphicsVector2 titleSize = _font.MeasureString(title);
+                GraphicsVector2 titlePos = new GraphicsVector2(centerX - titleSize.X / 2, startY - titleOffset - 80);
 
                 // Draw shadow first (offset by 3 pixels)
-                _spriteBatch.DrawString(_font, title, titlePos + new Vector2(3, 3), new Color(0, 0, 0, 180));
+                _spriteBatch.DrawString(_font, title, titlePos + new GraphicsVector2(3, 3), new Color(0, 0, 0, 180));
                 // Draw main title text
                 _spriteBatch.DrawString(_font, title, titlePos, new Color(255, 215, 0, 255)); // Gold color
 
                 // Subtitle
-                Vector2 subtitleSize = _font.MeasureString(subtitle);
-                Vector2 subtitlePos = new Vector2(centerX - subtitleSize.X / 2, titlePos.Y + titleSize.Y + 10);
-                _spriteBatch.DrawString(_font, subtitle, subtitlePos + new Vector2(2, 2), new Color(0, 0, 0, 150));
+                GraphicsVector2 subtitleSize = _font.MeasureString(subtitle);
+                GraphicsVector2 subtitlePos = new GraphicsVector2(centerX - subtitleSize.X / 2, titlePos.Y + titleSize.Y + 10);
+                _spriteBatch.DrawString(_font, subtitle, subtitlePos + new GraphicsVector2(2, 2), new Color(0, 0, 0, 150));
                 _spriteBatch.DrawString(_font, subtitle, subtitlePos, new Color(200, 200, 220, 255));
 
                 // Version label
-                Vector2 versionSize = _font.MeasureString(version);
-                Vector2 versionPos = new Vector2(centerX - versionSize.X / 2, subtitlePos.Y + subtitleSize.Y + 15);
+                GraphicsVector2 versionSize = _font.MeasureString(version);
+                GraphicsVector2 versionPos = new GraphicsVector2(centerX - versionSize.X / 2, subtitlePos.Y + subtitleSize.Y + 15);
                 _spriteBatch.DrawString(_font, version, versionPos, new Color(150, 150, 150, 255));
             }
             else
@@ -2036,14 +2037,14 @@ namespace Andastra.Runtime.Game.Core
                 // Draw button text with shadow
                 if (_font != null)
                 {
-                    Vector2 textSize = _font.MeasureString(_menuItems[i]);
-                    Vector2 textPos = new Vector2(
+                    GraphicsVector2 textSize = _font.MeasureString(_menuItems[i]);
+                    GraphicsVector2 textPos = new GraphicsVector2(
                         scaledButtonRect.X + (scaledButtonRect.Width - textSize.X) / 2,
                         scaledButtonRect.Y + (scaledButtonRect.Height - textSize.Y) / 2
                     );
 
                     // Draw text shadow
-                    _spriteBatch.DrawString(_font, _menuItems[i], textPos + new Vector2(2, 2), new Color(0, 0, 0, 200));
+                    _spriteBatch.DrawString(_font, _menuItems[i], textPos + new GraphicsVector2(2, 2), new Color(0, 0, 0, 200));
                     // Draw main text
                     _spriteBatch.DrawString(_font, _menuItems[i], textPos, buttonTextColor);
                 }
@@ -2120,9 +2121,9 @@ namespace Andastra.Runtime.Game.Core
                 if (_font != null)
                 {
                     string pathTitle = "Select Installation Path:";
-                    Vector2 titleSize = _font.MeasureString(pathTitle);
-                    Vector2 titlePos = new Vector2(centerX - titleSize.X / 2, pathSelectorY + 5);
-                    _spriteBatch.DrawString(_font, pathTitle, titlePos + new Vector2(1, 1), new Color(0, 0, 0, 150));
+                    GraphicsVector2 titleSize = _font.MeasureString(pathTitle);
+                    GraphicsVector2 titlePos = new GraphicsVector2(centerX - titleSize.X / 2, pathSelectorY + 5);
+                    _spriteBatch.DrawString(_font, pathTitle, titlePos + new GraphicsVector2(1, 1), new Color(0, 0, 0, 150));
                     _spriteBatch.DrawString(_font, pathTitle, titlePos, new Color(200, 200, 220, 255));
                 }
 
@@ -2142,7 +2143,7 @@ namespace Andastra.Runtime.Game.Core
 
                     if (isSelected)
                     {
-                        DrawRectangleBorder(_spriteBatch, itemRect, 2, Microsoft.Xna.Framework.Color.White);
+                        DrawRectangleBorder(_spriteBatch, itemRect, 2, new Color(255, 255, 255, 255));
                     }
 
                     // Draw path text
@@ -2150,7 +2151,7 @@ namespace Andastra.Runtime.Game.Core
                     {
                         string pathText = _availablePaths[i];
                         // Truncate if too long
-                        Vector2 textSize = _font.MeasureString(pathText);
+                        GraphicsVector2 textSize = _font.MeasureString(pathText);
                         if (textSize.X > itemRect.Width - 20)
                         {
                             // Truncate with ellipsis
@@ -2162,8 +2163,8 @@ namespace Andastra.Runtime.Game.Core
                             pathText = pathText + "...";
                         }
 
-                        Vector2 textPos = new Vector2(itemRect.X + 10, itemRect.Y + (itemRect.Height - textSize.Y) / 2);
-                        _spriteBatch.DrawString(_font, pathText, textPos + new Vector2(1, 1), new Color(0, 0, 0, 200));
+                        GraphicsVector2 textPos = new GraphicsVector2(itemRect.X + 10, itemRect.Y + (itemRect.Height - textSize.Y) / 2);
+                        _spriteBatch.DrawString(_font, pathText, textPos + new GraphicsVector2(1, 1), new Color(0, 0, 0, 200));
                         _spriteBatch.DrawString(_font, pathText, textPos, isSelected ? Color.White : new Color(180, 180, 200, 255));
                     }
                 }
@@ -2172,9 +2173,9 @@ namespace Andastra.Runtime.Game.Core
                 if (_font != null)
                 {
                     string instructions = "Arrow Keys: Navigate  |  Enter: Select  |  ESC: Cancel";
-                    Vector2 instSize = _font.MeasureString(instructions);
-                    Vector2 instPos = new Vector2(centerX - instSize.X / 2, pathSelectorY + pathSelectorHeight + (Math.Min(_availablePaths.Count, maxVisiblePaths) * pathItemHeight) + 10);
-                    _spriteBatch.DrawString(_font, instructions, instPos + new Vector2(1, 1), new Color(0, 0, 0, 150));
+                    GraphicsVector2 instSize = _font.MeasureString(instructions);
+                    GraphicsVector2 instPos = new GraphicsVector2(centerX - instSize.X / 2, pathSelectorY + pathSelectorHeight + (Math.Min(_availablePaths.Count, maxVisiblePaths) * pathItemHeight) + 10);
+                    _spriteBatch.DrawString(_font, instructions, instPos + new GraphicsVector2(1, 1), new Color(0, 0, 0, 150));
                     _spriteBatch.DrawString(_font, instructions, instPos, new Color(150, 150, 170, 255));
                 }
             }
@@ -2188,11 +2189,11 @@ namespace Andastra.Runtime.Game.Core
                     {
                         instructions += "  |  Select 'Start Game' to choose installation path";
                     }
-                    Vector2 instSize = _font.MeasureString(instructions);
-                    Vector2 instPos = new Vector2(centerX - instSize.X / 2, viewportHeight - 60);
+                    GraphicsVector2 instSize = _font.MeasureString(instructions);
+                    GraphicsVector2 instPos = new GraphicsVector2(centerX - instSize.X / 2, viewportHeight - 60);
 
                     // Shadow
-                    _spriteBatch.DrawString(_font, instructions, instPos + new Vector2(1, 1), new Color(0, 0, 0, 150));
+                    _spriteBatch.DrawString(_font, instructions, instPos + new GraphicsVector2(1, 1), new Color(0, 0, 0, 150));
                     // Main text
                     _spriteBatch.DrawString(_font, instructions, instPos, new Color(150, 150, 170, 255));
                 }
@@ -2237,7 +2238,7 @@ namespace Andastra.Runtime.Game.Core
             _spriteBatch.End();
         }
 
-        private void DrawRectangleBorder(ISpriteBatch spriteBatch, Microsoft.Xna.Framework.Rectangle rect, int thickness, Microsoft.Xna.Framework.Color color)
+        private void DrawRectangleBorder(ISpriteBatch spriteBatch, Rectangle rect, int thickness, Color color)
         {
             // Top
             spriteBatch.Draw(_menuTexture, new Rectangle(rect.X, rect.Y, rect.Width, thickness), color);
@@ -2253,7 +2254,7 @@ namespace Andastra.Runtime.Game.Core
         /// Draws a filled triangle using rectangles (approximation).
         /// Used for play button icon when font is not available.
         /// </summary>
-        private void DrawTriangle(ISpriteBatch spriteBatch, int[] x, int[] y, Microsoft.Xna.Framework.Color color)
+        private void DrawTriangle(ISpriteBatch spriteBatch, int[] x, int[] y, Color color)
         {
             // Simple triangle drawing using line approximation
             // Draw lines between points
@@ -2291,7 +2292,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Draws a filled triangle with smooth rendering.
         /// </summary>
-        private void DrawFilledTriangle(ISpriteBatch spriteBatch, int[] x, int[] y, Microsoft.Xna.Framework.Color color)
+        private void DrawFilledTriangle(ISpriteBatch spriteBatch, int[] x, int[] y, Color color)
         {
             DrawTriangle(spriteBatch, x, y, color);
         }
@@ -2299,7 +2300,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Draws a triangle outline (border only).
         /// </summary>
-        private void DrawTriangleOutline(ISpriteBatch spriteBatch, int[] x, int[] y, Microsoft.Xna.Framework.Color color)
+        private void DrawTriangleOutline(ISpriteBatch spriteBatch, int[] x, int[] y, Color color)
         {
             int thickness = 2;
             // Draw three edges of the triangle
@@ -2311,7 +2312,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Draws a line between two points.
         /// </summary>
-        private void DrawLine(ISpriteBatch spriteBatch, int x1, int y1, int x2, int y2, int thickness, Microsoft.Xna.Framework.Color color)
+        private void DrawLine(ISpriteBatch spriteBatch, int x1, int y1, int x2, int y2, int thickness, Color color)
         {
             float dx = x2 - x1;
             float dy = y2 - y1;
@@ -2351,7 +2352,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Draws a diagonal line between two points.
         /// </summary>
-        private void DrawDiagonalLine(ISpriteBatch spriteBatch, int x1, int y1, int x2, int y2, int thickness, Microsoft.Xna.Framework.Color color)
+        private void DrawDiagonalLine(ISpriteBatch spriteBatch, int x1, int y1, int x2, int y2, int thickness, Color color)
         {
             DrawLine(spriteBatch, x1, y1, x2, y2, thickness, color);
         }
@@ -2360,7 +2361,7 @@ namespace Andastra.Runtime.Game.Core
         /// Draws a rounded rectangle border with smooth corners.
         /// Creates the appearance of rounded corners using border lines with corner arcs.
         /// </summary>
-        private void DrawRoundedRectangle(ISpriteBatch spriteBatch, Microsoft.Xna.Framework.Rectangle rect, int borderThickness, Microsoft.Xna.Framework.Color color)
+        private void DrawRoundedRectangle(ISpriteBatch spriteBatch, Rectangle rect, int borderThickness, Color color)
         {
             int cornerRadius = borderThickness * 2;
             int cornerGap = cornerRadius;
@@ -2385,7 +2386,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Draws a corner arc (quarter circle border) for rounded rectangle corners.
         /// </summary>
-        private void DrawCornerArc(ISpriteBatch spriteBatch, int centerX, int centerY, int radius, int thickness, Microsoft.Xna.Framework.Color color, bool leftSide, bool topSide)
+        private void DrawCornerArc(ISpriteBatch spriteBatch, int centerX, int centerY, int radius, int thickness, Color color, bool leftSide, bool topSide)
         {
             // Draw quarter circle arc using border approach
             for (int y = -radius; y <= 0; y++)
@@ -2407,7 +2408,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Draws a filled circle (approximated with rectangle).
         /// </summary>
-        private void DrawFilledCircle(ISpriteBatch spriteBatch, Microsoft.Xna.Framework.Rectangle bounds, Microsoft.Xna.Framework.Color color)
+        private void DrawFilledCircle(ISpriteBatch spriteBatch, Rectangle bounds, Color color)
         {
             int centerX = bounds.X + bounds.Width / 2;
             int centerY = bounds.Y + bounds.Height / 2;
@@ -2800,7 +2801,7 @@ namespace Andastra.Runtime.Game.Core
                 }
                 if (_font != null)
                 {
-                    _spriteBatch.DrawString(_font, statusText, new Vector2(10, 10), Microsoft.Xna.Framework.Color.White);
+                    _spriteBatch.DrawString(_font, statusText, new GraphicsVector2(10, 10), Microsoft.Xna.Framework.Color.White);
                 }
             }
             // If no font, we just skip text rendering - the 3D scene is still visible
@@ -4506,7 +4507,7 @@ namespace Andastra.Runtime.Game.Core
                 if (!string.IsNullOrEmpty(dialogueText))
                 {
                     // Word wrap dialogue text (simple implementation)
-                    Andastra.Runtime.Graphics.Vector2 textPos = new Andastra.Runtime.Graphics.Vector2(padding, dialogueBoxY + padding);
+                    GraphicsVector2 textPos = new GraphicsVector2(padding, dialogueBoxY + padding);
                     _spriteBatch.DrawString(_font, dialogueText, textPos, Color.White);
                 }
             }
@@ -4525,13 +4526,13 @@ namespace Andastra.Runtime.Game.Core
                     }
 
                     string replyLabel = $"[{i + 1}] {replyText}";
-                    Andastra.Runtime.Graphics.Vector2 replyPos = new Andastra.Runtime.Graphics.Vector2(padding, replyY + (i * 20));
+                    GraphicsGraphicsVector2 replyPos = new GraphicsVector2(padding, replyY + (i * 20));
                     _spriteBatch.DrawString(_font, replyLabel, replyPos, Color.Yellow);
                 }
 
                 // Draw instruction text
                 string instructionText = "Press 1-9 to select reply, ESC to abort";
-                Andastra.Runtime.Graphics.Vector2 instructionPos = new Andastra.Runtime.Graphics.Vector2(padding, dialogueBoxY + dialogueBoxHeight - 20);
+                Andastra.Runtime.Graphics.GraphicsVector2 instructionPos = new Andastra.Runtime.Graphics.Vector2(padding, dialogueBoxY + dialogueBoxHeight - 20);
                 _spriteBatch.DrawString(_font, instructionText, instructionPos, Color.Gray);
             }
         }
@@ -4905,8 +4906,8 @@ namespace Andastra.Runtime.Game.Core
 
             // Title
             string title = "Save Game";
-            Vector2 titleSize = _font.MeasureString(title);
-            Vector2 titlePos = new Vector2((viewportWidth - titleSize.X) / 2, 50);
+            GraphicsVector2 titleSize = _font.MeasureString(title);
+            GraphicsVector2 titlePos = new GraphicsVector2((viewportWidth - titleSize.X) / 2, 50);
             _spriteBatch.DrawString(_font, title, titlePos, new Color(255, 255, 255, 255));
 
             // Save list
@@ -4930,13 +4931,13 @@ namespace Andastra.Runtime.Game.Core
                 {
                     Andastra.Runtime.Core.Save.SaveGameInfo save = _availableSaves[i];
                     string saveText = $"{save.Name} - {save.ModuleName} - {save.SaveTime:g}";
-                    Vector2 textPos = new Vector2(itemRect.X + 10, itemRect.Y + (itemHeight - _font.LineSpacing) / 2);
+                    GraphicsVector2 textPos = new GraphicsVector2(itemRect.X + 10, itemRect.Y + (itemHeight - _font.LineSpacing) / 2);
                     _spriteBatch.DrawString(_font, saveText, textPos, new Color(255, 255, 255, 255));
                 }
                 else
                 {
                     string newSaveText = "New Save";
-                    Vector2 textPos = new Vector2(itemRect.X + 10, itemRect.Y + (itemHeight - _font.LineSpacing) / 2);
+                    GraphicsVector2 textPos = new GraphicsVector2(itemRect.X + 10, itemRect.Y + (itemHeight - _font.LineSpacing) / 2);
                     _spriteBatch.DrawString(_font, newSaveText, textPos, new Color(211, 211, 211, 255));
                 }
             }
@@ -4951,8 +4952,8 @@ namespace Andastra.Runtime.Game.Core
             {
                 instructions = "Select a save slot or create a new save. Press Escape to cancel.";
             }
-            Vector2 instSize = _font.MeasureString(instructions);
-            Vector2 instPos = new Vector2((viewportWidth - instSize.X) / 2, viewportHeight - 50);
+            GraphicsVector2 instSize = _font.MeasureString(instructions);
+            GraphicsVector2 instPos = new GraphicsVector2((viewportWidth - instSize.X) / 2, viewportHeight - 50);
             _spriteBatch.DrawString(_font, instructions, instPos, new Color(211, 211, 211, 255));
 
             // Display text input if entering save name
@@ -4972,8 +4973,8 @@ namespace Andastra.Runtime.Game.Core
 
                 // Draw label
                 string label = "Save Name:";
-                Vector2 labelSize = _font.MeasureString(label);
-                Vector2 labelPos = new Vector2(inputBoxX, inputBoxY - labelSize.Y - 10);
+                GraphicsVector2 labelSize = _font.MeasureString(label);
+                GraphicsVector2 labelPos = new GraphicsVector2(inputBoxX, inputBoxY - labelSize.Y - 10);
                 _spriteBatch.DrawString(_font, label, labelPos, new Color(255, 255, 255, 255));
 
                 // Draw entered text
@@ -4987,7 +4988,7 @@ namespace Andastra.Runtime.Game.Core
                     displayText += "_";
                 }
 
-                Vector2 textSize = _font.MeasureString(displayText);
+                GraphicsVector2 textSize = _font.MeasureString(displayText);
 
                 // Clamp text to fit in box with padding
                 int maxTextWidth = inputBoxWidth - 20;
@@ -5004,7 +5005,7 @@ namespace Andastra.Runtime.Game.Core
                     textSize = _font.MeasureString(displayText);
                 }
 
-                Vector2 textPos = new Vector2(inputBoxX + 10, inputBoxY + (inputBoxHeight - textSize.Y) / 2);
+                GraphicsVector2 textPos = new GraphicsVector2(inputBoxX + 10, inputBoxY + (inputBoxHeight - textSize.Y) / 2);
                 _spriteBatch.DrawString(_font, displayText, textPos, new Color(255, 255, 255, 255));
             }
 
@@ -5030,8 +5031,8 @@ namespace Andastra.Runtime.Game.Core
 
             // Title
             string title = "Load Game";
-            Vector2 titleSize = _font.MeasureString(title);
-            Vector2 titlePos = new Vector2((viewportWidth - titleSize.X) / 2, 50);
+            GraphicsVector2 titleSize = _font.MeasureString(title);
+            GraphicsVector2 titlePos = new GraphicsVector2((viewportWidth - titleSize.X) / 2, 50);
             _spriteBatch.DrawString(_font, title, titlePos, new Color(255, 255, 255, 255));
 
             // Save list
@@ -5053,14 +5054,14 @@ namespace Andastra.Runtime.Game.Core
 
                 Andastra.Runtime.Core.Save.SaveGameInfo save = _availableSaves[i];
                 string saveText = $"{save.Name} - {save.ModuleName} - {save.SaveTime:g}";
-                Vector2 textPos = new Vector2(itemRect.X + 10, itemRect.Y + (itemHeight - _font.LineSpacing) / 2);
+                GraphicsVector2 textPos = new GraphicsVector2(itemRect.X + 10, itemRect.Y + (itemHeight - _font.LineSpacing) / 2);
                 _spriteBatch.DrawString(_font, saveText, textPos, new Color(255, 255, 255, 255));
             }
 
             // Instructions
             string instructions = "Select a save to load. Press Escape to cancel.";
-            Vector2 instSize = _font.MeasureString(instructions);
-            Vector2 instPos = new Vector2((viewportWidth - instSize.X) / 2, viewportHeight - 50);
+            GraphicsVector2 instSize = _font.MeasureString(instructions);
+            GraphicsVector2 instPos = new GraphicsVector2((viewportWidth - instSize.X) / 2, viewportHeight - 50);
             _spriteBatch.DrawString(_font, instructions, instPos, new Color(211, 211, 211, 255));
 
             _spriteBatch.End();
@@ -5363,16 +5364,16 @@ namespace Andastra.Runtime.Game.Core
 
             // Title
             string title = "Movies";
-            Vector2 titleSize = _font.MeasureString(title);
-            Vector2 titlePos = new Vector2((viewportWidth - titleSize.X) / 2, 50);
+            GraphicsVector2 titleSize = _font.MeasureString(title);
+            GraphicsVector2 titlePos = new GraphicsVector2((viewportWidth - titleSize.X) / 2, 50);
             _spriteBatch.DrawString(_font, title, titlePos, new Color(255, 255, 255, 255));
 
             // If playing movie, show playback status
             if (_isPlayingMovie)
             {
                 string playingText = "Playing movie... Press Escape to cancel.";
-                Vector2 playingSize = _font.MeasureString(playingText);
-                Vector2 playingPos = new Vector2((viewportWidth - playingSize.X) / 2, viewportHeight / 2);
+                GraphicsVector2 playingSize = _font.MeasureString(playingText);
+                GraphicsVector2 playingPos = new GraphicsVector2((viewportWidth - playingSize.X) / 2, viewportHeight / 2);
                 _spriteBatch.DrawString(_font, playingText, playingPos, new Color(255, 255, 0, 255));
                 _spriteBatch.End();
                 return;
@@ -5382,8 +5383,8 @@ namespace Andastra.Runtime.Game.Core
             if (_availableMovies == null || _availableMovies.Count == 0)
             {
                 string noMoviesText = "No movies found.";
-                Vector2 noMoviesSize = _font.MeasureString(noMoviesText);
-                Vector2 noMoviesPos = new Vector2((viewportWidth - noMoviesSize.X) / 2, viewportHeight / 2);
+                GraphicsVector2 noMoviesSize = _font.MeasureString(noMoviesText);
+                GraphicsVector2 noMoviesPos = new GraphicsVector2((viewportWidth - noMoviesSize.X) / 2, viewportHeight / 2);
                 _spriteBatch.DrawString(_font, noMoviesText, noMoviesPos, new Color(211, 211, 211, 255));
             }
             else
@@ -5405,15 +5406,15 @@ namespace Andastra.Runtime.Game.Core
                     _spriteBatch.Draw(_menuTexture, itemRect, bgColor);
 
                     string movieName = _availableMovies[i];
-                    Vector2 textPos = new Vector2(itemRect.X + 10, itemRect.Y + (itemHeight - _font.LineSpacing) / 2);
+                    GraphicsVector2 textPos = new GraphicsVector2(itemRect.X + 10, itemRect.Y + (itemHeight - _font.LineSpacing) / 2);
                     _spriteBatch.DrawString(_font, movieName, textPos, new Color(255, 255, 255, 255));
                 }
             }
 
             // Instructions
             string instructions = "Select a movie to play. Press Escape to cancel.";
-            Vector2 instSize = _font.MeasureString(instructions);
-            Vector2 instPos = new Vector2((viewportWidth - instSize.X) / 2, viewportHeight - 50);
+            GraphicsVector2 instSize = _font.MeasureString(instructions);
+            GraphicsVector2 instPos = new GraphicsVector2((viewportWidth - instSize.X) / 2, viewportHeight - 50);
             _spriteBatch.DrawString(_font, instructions, instPos, new Color(211, 211, 211, 255));
 
             _spriteBatch.End();
