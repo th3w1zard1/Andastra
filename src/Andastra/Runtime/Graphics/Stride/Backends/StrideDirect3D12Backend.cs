@@ -1864,12 +1864,12 @@ namespace Andastra.Runtime.Stride.Backends
                 IntPtr numRowsPtr = Marshal.AllocHGlobal(sizeof(uint));
                 IntPtr rowSizeInBytesPtr = Marshal.AllocHGlobal(sizeof(ulong));
                 IntPtr totalBytesPtr = Marshal.AllocHGlobal(sizeof(ulong));
-                
+
                 D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint;
                 uint numRows;
                 ulong rowSizeInBytes;
                 ulong totalBytes;
-                
+
                 try
                 {
                     int footprintsHr = GetCopyableFootprints(
@@ -1930,7 +1930,7 @@ namespace Andastra.Runtime.Stride.Backends
                 // Use totalBytes from GetCopyableFootprints for accurate buffer size
                 // This ensures the readback buffer can hold all the texture data
                 ulong readbackBufferSize = totalBytes;
-                
+
                 var readbackResourceDesc = new D3D12_RESOURCE_DESC
                 {
                     Dimension = D3D12_RESOURCE_DIMENSION_BUFFER,
@@ -2069,15 +2069,111 @@ namespace Andastra.Runtime.Stride.Backends
                         CloseCommandList(nativeCommandList);
 
                         // Step 8: Execute command list and wait for GPU completion
-                        // Since we don't have direct access to the command queue through Stride,
-                        // we'll use Stride's WaitIdle to ensure GPU completion
-                        // TODO:  In a full implementation with direct queue access, we would:
-                        // - ExecuteCommandLists(commandQueue, [nativeCommandList], 1)
-                        // - SignalFence(commandQueue, fence, 1)
-                        // - Wait for fence completion
+                        // Full implementation with direct queue access and fence synchronization
+                        // Based on DirectX 12 Command Queue execution pattern:
+                        // https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12commandqueue-executecommandlists
+                        // https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12commandqueue-signal
+                        // https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12fence-getcompletedvalue
 
-                        // Use Stride's synchronization mechanism
-                        OnWaitForGpu();
+                        IntPtr commandQueue = GetNativeCommandQueue();
+                        IntPtr fence = IntPtr.Zero;
+                        IntPtr fencePtr = IntPtr.Zero;
+
+                        if (commandQueue != IntPtr.Zero)
+                        {
+                            // Create fence for GPU synchronization
+                            // Initial value: 0, flags: 0 (no special flags)
+                            fencePtr = Marshal.AllocHGlobal(IntPtr.Size);
+                            try
+                            {
+                                int fenceHr = CreateFence(_device, 0, 0, ref IID_ID3D12Fence, fencePtr);
+                                if (fenceHr >= 0)
+                                {
+                                    fence = Marshal.ReadIntPtr(fencePtr);
+                                    if (fence != IntPtr.Zero)
+                                    {
+                                        // Execute command list on the queue
+                                        IntPtr[] commandLists = new IntPtr[] { nativeCommandList };
+                                        ExecuteCommandLists(commandQueue, commandLists, 1);
+
+                                        // Signal fence with value 1 to track completion
+                                        // The fence will be signaled by the GPU when the command list execution completes
+                                        ulong fenceValue = 1;
+                                        ulong signaledValue = SignalFence(commandQueue, fence, fenceValue);
+
+                                        if (signaledValue > 0)
+                                        {
+                                            // Wait for fence completion using polling
+                                            // Poll GetFenceCompletedValue until it reaches the signaled value
+                                            // This ensures the GPU has finished executing the command list
+                                            const int maxWaitIterations = 1000000; // Prevent infinite loop
+                                            const int sleepMs = 1; // Sleep 1ms between polls to avoid CPU spinning
+                                            int iteration = 0;
+
+                                            while (iteration < maxWaitIterations)
+                                            {
+                                                ulong completedValue = GetFenceCompletedValue(fence);
+                                                if (completedValue >= fenceValue)
+                                                {
+                                                    // Fence has reached the target value - GPU work is complete
+                                                    break;
+                                                }
+
+                                                // Sleep briefly to avoid excessive CPU usage
+                                                System.Threading.Thread.Sleep(sleepMs);
+                                                iteration++;
+                                            }
+
+                                            if (iteration >= maxWaitIterations)
+                                            {
+                                                Console.WriteLine("[StrideDX12] OnReadSamplerFeedback: Fence wait timeout - falling back to WaitIdle");
+                                                OnWaitForGpu();
+                                            }
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine("[StrideDX12] OnReadSamplerFeedback: Failed to signal fence - falling back to WaitIdle");
+                                            OnWaitForGpu();
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine("[StrideDX12] OnReadSamplerFeedback: Fence creation returned null - falling back to WaitIdle");
+                                        OnWaitForGpu();
+                                    }
+                                }
+                                else
+                                {
+                                    Console.WriteLine($"[StrideDX12] OnReadSamplerFeedback: Failed to create fence, HRESULT 0x{fenceHr:X8} - falling back to WaitIdle");
+                                    OnWaitForGpu();
+                                }
+                            }
+                            finally
+                            {
+                                // Clean up fence COM object
+                                if (fence != IntPtr.Zero)
+                                {
+                                    IntPtr vtable = Marshal.ReadIntPtr(fence);
+                                    if (vtable != IntPtr.Zero)
+                                    {
+                                        IntPtr releasePtr = Marshal.ReadIntPtr(vtable, 2 * IntPtr.Size); // IUnknown::Release at index 2
+                                        if (releasePtr != IntPtr.Zero)
+                                        {
+                                            var releaseDelegate = (ReleaseDelegate)Marshal.GetDelegateForFunctionPointer(
+                                                releasePtr, typeof(ReleaseDelegate));
+                                            releaseDelegate(fence);
+                                        }
+                                    }
+                                }
+                                Marshal.FreeHGlobal(fencePtr);
+                            }
+                        }
+                        else
+                        {
+                            // Command queue not available - use Stride's synchronization mechanism as fallback
+                            // This is acceptable when direct queue access is not possible through Stride's API
+                            OnWaitForGpu();
+                        }
 
                         // Step 9: Map readback buffer using ID3D12Resource::Map
                         IntPtr mappedDataPtr = Marshal.AllocHGlobal(IntPtr.Size);
@@ -3356,7 +3452,7 @@ namespace Andastra.Runtime.Stride.Backends
         /// 2. Reflection-based access to internal command queue fields
         /// 3. Access through GraphicsContext if available
         /// 4. Fallback to IntPtr.Zero (synchronization handled via WaitIdle)
-        /// 
+        ///
         /// Based on DirectX 12 Command Queue: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nn-d3d12-id3d12commandqueue
         /// </remarks>
         private IntPtr GetNativeCommandQueue()
@@ -3365,7 +3461,7 @@ namespace Andastra.Runtime.Stride.Backends
             // In Stride, the command queue is typically accessed through the GraphicsContext
             // For DirectX 12, command queues are created by the application, not queried from the device
             // Stride manages command queues internally, so we need to access them through reflection
-            
+
             if (_strideDevice == null)
             {
                 return IntPtr.Zero;
@@ -3432,7 +3528,7 @@ namespace Andastra.Runtime.Stride.Backends
             try
             {
                 Type deviceType = _strideDevice.GetType();
-                
+
                 // Common field names for command queue storage in graphics backends
                 string[] possibleFieldNames = new string[]
                 {
@@ -3489,7 +3585,7 @@ namespace Andastra.Runtime.Stride.Backends
                 if (_commandList != null)
                 {
                     Type commandListType = _commandList.GetType();
-                    
+
                     // Try to get command queue from command list
                     PropertyInfo listQueueProp = commandListType.GetProperty("NativeCommandQueue", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                     if (listQueueProp == null)
@@ -3521,12 +3617,12 @@ namespace Andastra.Runtime.Stride.Backends
         /// <summary>
         /// Converts TextureFormat to DXGI_FORMAT for sampler feedback textures.
         /// Sampler feedback textures use specialized formats that track mip level access.
-        /// 
+        ///
         /// DirectX 12 sampler feedback formats are independent of base texture formats.
         /// There are two feedback format types:
         /// - MIN_MIP_OPAQUE (189): Tracks the minimum mip level accessed per 8x8 tile (most common)
         /// - MIP_REGION_USED_OPAQUE (190): Tracks which specific mip regions are used (more detailed)
-        /// 
+        ///
         /// Based on DirectX 12 Ultimate Sampler Feedback specification:
         /// https://docs.microsoft.com/en-us/windows/win32/direct3d12/sampler-feedback
         /// </summary>
@@ -3542,7 +3638,7 @@ namespace Andastra.Runtime.Stride.Backends
 
             // Sampler feedback formats work independently of base texture formats.
             // The format parameter is used to select the type of feedback information desired.
-            // 
+            //
             // Mapping strategy:
             // 1. Default to MIN_MIP_OPAQUE for all standard texture formats (most common use case)
             //    - MIN_MIP_OPAQUE is the default because it's simpler and covers most streaming/texture optimization needs

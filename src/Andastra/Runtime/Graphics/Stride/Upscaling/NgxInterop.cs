@@ -7,14 +7,14 @@ namespace Andastra.Runtime.Stride.Upscaling
     /// <summary>
     /// Native interop declarations for NVIDIA NGX SDK (Neural Graphics Framework).
     /// Provides P/Invoke bindings for DLSS, DLAA, and other NGX features.
-    /// 
+    ///
     /// Based on NVIDIA NGX SDK API:
     /// - NVSDK_NGX_Init
     /// - NVSDK_NGX_CreateFeature
     /// - NVSDK_NGX_EvaluateFeature
     /// - NVSDK_NGX_ReleaseFeature
     /// - NVSDK_NGX_Shutdown
-    /// 
+    ///
     /// Documentation: https://developer.nvidia.com/dlss
     /// </summary>
     internal static class NgxInterop
@@ -305,6 +305,31 @@ namespace Andastra.Runtime.Stride.Upscaling
 
         #endregion
 
+        #region COM Interface GUIDs
+
+        /// <summary>
+        /// COM interface GUID for ID3D11Device (DirectX 11 device interface).
+        /// Used for QueryInterface to detect DirectX 11 backend.
+        /// GUID: {db6f6ddb-ac77-4e88-8253-819df9bbf140}
+        /// </summary>
+        private static readonly Guid IID_ID3D11Device = new Guid(0xdb6f6ddb, 0xac77, 0x4e88, 0x82, 0x53, 0x81, 0x9d, 0xf9, 0xbb, 0xf1, 0x40);
+
+        /// <summary>
+        /// COM interface GUID for ID3D12Device (DirectX 12 device interface).
+        /// Used for QueryInterface to detect DirectX 12 backend.
+        /// GUID: {189819f1-1db6-4b57-be54-1821339b85f7}
+        /// </summary>
+        private static readonly Guid IID_ID3D12Device = new Guid(0x189819f1, 0x1db6, 0x4b57, 0xbe, 0x54, 0x18, 0x21, 0x33, 0x9b, 0x85, 0xf7);
+
+        /// <summary>
+        /// COM interface method delegate for IUnknown::QueryInterface.
+        /// Used to query COM objects for specific interface types.
+        /// </summary>
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int QueryInterfaceDelegate(IntPtr comObject, ref Guid riid, out IntPtr ppvObject);
+
+        #endregion
+
         #region Helper Methods
 
         /// <summary>
@@ -333,26 +358,20 @@ namespace Andastra.Runtime.Stride.Upscaling
 
         /// <summary>
         /// Get NGX backend type from Stride GraphicsDevice.
-        /// Detects the underlying graphics API (DirectX 11, DirectX 12, or Vulkan) by querying device properties.
+        /// Detects the underlying graphics API (DirectX 11, DirectX 12, or Vulkan) using multiple detection strategies.
+        /// 
+        /// Detection Strategy (in order of priority):
+        /// 1. Property-based detection: Checks for backend-specific properties (D3D12Device, D3D11Device, VkDevice, etc.)
+        /// 2. COM QueryInterface detection: Uses NativeDevice with COM QueryInterface to identify DirectX device types
+        /// 3. Type name analysis: Examines device type name for backend hints (D3D12, D3D11, Vulkan)
+        /// 4. Fallback: Returns DirectX12 if all detection methods fail (most common backend for DLSS)
+        /// 
         /// Based on Stride Graphics API: GraphicsDevice exposes backend-specific properties via reflection.
+        /// Based on NVIDIA NGX SDK documentation: Each backend requires different initialization functions.
+        /// Backend type must match the actual graphics API in use for proper NGX initialization.
         /// </summary>
         /// <param name="device">Stride GraphicsDevice to query</param>
         /// <returns>Detected NGX backend type, or DirectX12 as fallback if detection fails</returns>
-        /// <remarks>
-        /// Backend Detection Strategy:
-        /// - DirectX 12: Checks for "D3D12Device" property (ID3D12Device* pointer)
-        /// - Vulkan: Checks for "VkDevice" or "VulkanDevice" property (VkDevice handle)
-        /// - DirectX 11: Checks for "D3D11Device" property (ID3D11Device* pointer)
-        /// - Fallback: Returns DirectX12 if no backend-specific properties are found
-        /// 
-        /// Detection uses reflection to query device type properties, following the pattern established
-        /// in StrideDlssSystem.GetD3D12Device() for consistency with existing codebase.
-        /// 
-        /// Based on NVIDIA NGX SDK documentation:
-        /// - NGX supports all three backends: DirectX 11, DirectX 12, and Vulkan
-        /// - Each backend requires different initialization functions and device pointers
-        /// - Backend type must match the actual graphics API in use for proper NGX initialization
-        /// </remarks>
         public static NgxBackend GetNgxBackend(Stride.Graphics.GraphicsDevice device)
         {
             if (device == null)
@@ -361,73 +380,176 @@ namespace Andastra.Runtime.Stride.Upscaling
                 return NgxBackend.DirectX12;
             }
 
-            // Use reflection to detect backend by checking for backend-specific device properties
-            // Stride GraphicsDevice exposes different properties depending on the underlying graphics API
             try
             {
                 Type deviceType = device.GetType();
+                string deviceTypeName = deviceType.FullName ?? deviceType.Name;
                 
-                // Check for DirectX 12 backend (highest priority - most common for DLSS)
+                // Strategy 1: Check for backend-specific device properties via reflection
                 // DirectX 12 devices expose a "D3D12Device" property
                 PropertyInfo d3d12DeviceProperty = deviceType.GetProperty("D3D12Device", BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic);
                 if (d3d12DeviceProperty != null)
                 {
                     object d3d12DeviceValue = d3d12DeviceProperty.GetValue(device);
-                    if (d3d12DeviceValue != null)
+                    if (d3d12DeviceValue != null && !(d3d12DeviceValue is IntPtr && (IntPtr)d3d12DeviceValue == IntPtr.Zero))
                     {
-                        // Property exists and has a value - this is a DirectX 12 device
+                        // Property exists and has a valid value - this is a DirectX 12 device
                         return NgxBackend.DirectX12;
                     }
                 }
 
-                // Check for Vulkan backend
-                // Vulkan devices expose a "VkDevice" or "VulkanDevice" property
+                // Check for Vulkan backend properties
                 PropertyInfo vkDeviceProperty = deviceType.GetProperty("VkDevice", BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic);
                 if (vkDeviceProperty != null)
                 {
                     object vkDeviceValue = vkDeviceProperty.GetValue(device);
-                    if (vkDeviceValue != null)
+                    if (vkDeviceValue != null && !(vkDeviceValue is IntPtr && (IntPtr)vkDeviceValue == IntPtr.Zero))
                     {
-                        // Property exists and has a value - this is a Vulkan device
                         return NgxBackend.Vulkan;
                     }
                 }
 
-                // Alternative Vulkan property name check
                 PropertyInfo vulkanDeviceProperty = deviceType.GetProperty("VulkanDevice", BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic);
                 if (vulkanDeviceProperty != null)
                 {
                     object vulkanDeviceValue = vulkanDeviceProperty.GetValue(device);
-                    if (vulkanDeviceValue != null)
+                    if (vulkanDeviceValue != null && !(vulkanDeviceValue is IntPtr && (IntPtr)vulkanDeviceValue == IntPtr.Zero))
                     {
-                        // Property exists and has a value - this is a Vulkan device
                         return NgxBackend.Vulkan;
                     }
                 }
 
-                // Check for DirectX 11 backend
-                // DirectX 11 devices expose a "D3D11Device" property
+                // Check for DirectX 11 backend property
                 PropertyInfo d3d11DeviceProperty = deviceType.GetProperty("D3D11Device", BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic);
                 if (d3d11DeviceProperty != null)
                 {
                     object d3d11DeviceValue = d3d11DeviceProperty.GetValue(device);
-                    if (d3d11DeviceValue != null)
+                    if (d3d11DeviceValue != null && !(d3d11DeviceValue is IntPtr && (IntPtr)d3d11DeviceValue == IntPtr.Zero))
                     {
-                        // Property exists and has a value - this is a DirectX 11 device
                         return NgxBackend.DirectX11;
                     }
                 }
 
-                // Fallback: If no backend-specific properties are found, default to DirectX 12
-                // DirectX 12 is the most common backend for DLSS and provides the best feature support
-                // TODO:  This matches the original stub behavior for backward compatibility
+                // Strategy 2: Use COM QueryInterface on NativeDevice to detect DirectX backend type
+                // This is more reliable than property checks as it directly queries the COM interface
+                PropertyInfo nativeDeviceProperty = deviceType.GetProperty("NativeDevice", BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic);
+                if (nativeDeviceProperty != null)
+                {
+                    object nativeDeviceValue = nativeDeviceProperty.GetValue(device);
+                    if (nativeDeviceValue is IntPtr nativeDevice && nativeDevice != IntPtr.Zero)
+                    {
+                        // Try to query for ID3D12Device interface (DirectX 12)
+                        NgxBackend comDetectedBackend = DetectBackendViaComQueryInterface(nativeDevice);
+                        if (comDetectedBackend != NgxBackend.DirectX12) // If not fallback, return detected backend
+                        {
+                            return comDetectedBackend;
+                        }
+                    }
+                }
+
+                // Strategy 3: Analyze device type name for backend hints
+                // Stride backend implementations often have backend names in their type names
+                if (deviceTypeName.IndexOf("D3D12", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    deviceTypeName.IndexOf("Direct3D12", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    deviceTypeName.IndexOf("DirectX12", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return NgxBackend.DirectX12;
+                }
+
+                if (deviceTypeName.IndexOf("D3D11", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    deviceTypeName.IndexOf("Direct3D11", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    deviceTypeName.IndexOf("DirectX11", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return NgxBackend.DirectX11;
+                }
+
+                if (deviceTypeName.IndexOf("Vulkan", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    deviceTypeName.IndexOf("Vk", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return NgxBackend.Vulkan;
+                }
+
+                // Strategy 4: Fallback to DirectX 12
+                // DirectX 12 is the most common backend for DLSS on Windows and provides the best feature support
+                // This fallback ensures the function always returns a valid backend type even if detection fails
+                // DLSS is primarily used on Windows with DirectX 12, making this a reasonable default
                 return NgxBackend.DirectX12;
             }
             catch (Exception ex)
             {
-                // If reflection fails for any reason, log and return default fallback
+                // If detection fails for any reason, log and return default fallback
                 // This ensures the function never throws and always returns a valid backend type
                 System.Console.WriteLine($"[NgxInterop] Exception detecting backend type: {ex.Message}");
+                return NgxBackend.DirectX12;
+            }
+        }
+
+        /// <summary>
+        /// Detects graphics backend type by using COM QueryInterface on a native device pointer.
+        /// Attempts to query for ID3D12Device and ID3D11Device interfaces to determine the backend.
+        /// </summary>
+        /// <param name="nativeDevice">Native device pointer (should be a COM interface pointer)</param>
+        /// <returns>Detected backend type, or DirectX12 as fallback if detection fails</returns>
+        private static NgxBackend DetectBackendViaComQueryInterface(IntPtr nativeDevice)
+        {
+            if (nativeDevice == IntPtr.Zero)
+            {
+                return NgxBackend.DirectX12; // Fallback
+            }
+
+            try
+            {
+                // Get the COM vtable pointer (first field of COM object)
+                IntPtr vtable = Marshal.ReadIntPtr(nativeDevice);
+                if (vtable == IntPtr.Zero)
+                {
+                    // Not a valid COM interface - could be Vulkan (non-COM) or invalid pointer
+                    return NgxBackend.DirectX12; // Fallback
+                }
+
+                // Get QueryInterface function pointer from vtable (index 0)
+                IntPtr queryInterfacePtr = Marshal.ReadIntPtr(vtable, 0);
+                if (queryInterfacePtr == IntPtr.Zero)
+                {
+                    return NgxBackend.DirectX12; // Fallback
+                }
+
+                // Create delegate for QueryInterface
+                QueryInterfaceDelegate queryInterface = Marshal.GetDelegateForFunctionPointer<QueryInterfaceDelegate>(queryInterfacePtr);
+
+                // Try to query for ID3D12Device interface (DirectX 12)
+                IntPtr d3d12Device;
+                Guid riidD3d12 = IID_ID3D12Device;
+                int hr = queryInterface(nativeDevice, ref riidD3d12, out d3d12Device);
+                if (hr >= 0 && d3d12Device != IntPtr.Zero) // S_OK or S_FALSE indicates success
+                {
+                    // QueryInterface succeeded - this is a DirectX 12 device
+                    // Release the queried interface (we only needed it for detection)
+                    Marshal.Release(d3d12Device);
+                    return NgxBackend.DirectX12;
+                }
+
+                // Try to query for ID3D11Device interface (DirectX 11)
+                IntPtr d3d11Device;
+                Guid riidD3d11 = IID_ID3D11Device;
+                hr = queryInterface(nativeDevice, ref riidD3d11, out d3d11Device);
+                if (hr >= 0 && d3d11Device != IntPtr.Zero) // S_OK or S_FALSE indicates success
+                {
+                    // QueryInterface succeeded - this is a DirectX 11 device
+                    // Release the queried interface (we only needed it for detection)
+                    Marshal.Release(d3d11Device);
+                    return NgxBackend.DirectX11;
+                }
+
+                // Neither DirectX 11 nor DirectX 12 interface found
+                // Could be Vulkan (non-COM), or an unsupported backend
+                // Return fallback
+                return NgxBackend.DirectX12;
+            }
+            catch (Exception ex)
+            {
+                // COM QueryInterface failed - return fallback
+                System.Console.WriteLine($"[NgxInterop] Exception during COM QueryInterface backend detection: {ex.Message}");
                 return NgxBackend.DirectX12;
             }
         }
