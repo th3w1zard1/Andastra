@@ -812,36 +812,47 @@ namespace Andastra.Runtime.Stride.Upscaling
             global::Stride.Graphics.CommandList immediateContext = _graphicsDevice.ImmediateContext();
             if (immediateContext != null)
             {
-                // Stride CommandList.NativeCommandList provides the native D3D12 command list pointer
+                // Stride CommandList native command list access via reflection
+                // For DirectX 12, we need to get the ID3D12GraphicsCommandList* pointer
                 global::Stride.Graphics.CommandList commandList = immediateContext;
                 if (commandList != null)
                 {
-                    IntPtr nativeCommandList = commandList.NativeCommandList;
-                    if (nativeCommandList != IntPtr.Zero)
-                    {
-                        return nativeCommandList;
-                    }
-
-                    // Fallback: Try through reflection
+                    // Use reflection to access native command list pointer (property may not be public)
                     try
                     {
                         var commandListType = commandList.GetType();
-                        var nativeProperty = commandListType.GetProperty("NativeCommandList");
+                        
+                        // Try NativeCommandList first (standard Stride API)
+                        var nativeProperty = commandListType.GetProperty("NativeCommandList",
+                            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                         if (nativeProperty != null)
                         {
                             var value = nativeProperty.GetValue(commandList);
-                            if (value is IntPtr ptr)
+                            if (value is IntPtr ptr && ptr != IntPtr.Zero)
+                            {
+                                return ptr;
+                            }
+                        }
+
+                        // Try NativePointer as alternative (used by some Stride resources)
+                        var nativePointerProperty = commandListType.GetProperty("NativePointer",
+                            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                        if (nativePointerProperty != null)
+                        {
+                            var value = nativePointerProperty.GetValue(commandList);
+                            if (value is IntPtr ptr && ptr != IntPtr.Zero)
                             {
                                 return ptr;
                             }
                         }
 
                         // Alternative property names
-                        var d3d12CommandListProperty = commandListType.GetProperty("D3D12CommandList");
+                        var d3d12CommandListProperty = commandListType.GetProperty("D3D12CommandList",
+                            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                         if (d3d12CommandListProperty != null)
                         {
                             var value = d3d12CommandListProperty.GetValue(commandList);
-                            if (value is IntPtr ptr)
+                            if (value is IntPtr ptr && ptr != IntPtr.Zero)
                             {
                                 return ptr;
                             }
