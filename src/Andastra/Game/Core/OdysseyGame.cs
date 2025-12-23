@@ -2635,7 +2635,7 @@ namespace Andastra.Runtime.Game.Core
             // Triangle 1: bottom-left, bottom-right, top-right
             // Triangle 2: bottom-left, top-right, top-left
             // Winding order: Counter-clockwise (standard for front-facing geometry)
-            short[] groundIndices = new short[]
+            int[] groundIndices = new int[]
             {
                 0, 1, 2, // First triangle: bottom-left -> bottom-right -> top-right
                 0, 2, 3  // Second triangle: bottom-left -> top-right -> top-left
@@ -3014,7 +3014,7 @@ namespace Andastra.Runtime.Game.Core
                 new VertexPositionColor(new System.Numerics.Vector3(-hw, hw, entityHeight), entityColor)
             };
 
-            short[] entityIndices = new short[]
+            int[] entityIndices = new int[]
             {
                 // Bottom
                 0, 1, 2, 0, 2, 3,
@@ -3120,7 +3120,7 @@ namespace Andastra.Runtime.Game.Core
                 new VertexPositionColor(new Vector3(-0.5f, 0.5f, 2), Microsoft.Xna.Framework.Color.Blue)
             };
 
-            short[] playerIndices = new short[]
+            int[] playerIndices = new int[]
             {
                 // Bottom
                 0, 1, 2, 0, 2, 3,
