@@ -45,6 +45,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
         private readonly List<RenderTarget2D> _atlasPages;
         private readonly int _pageSize;
         private readonly int _padding;
+        private readonly SpriteBatch _spriteBatch;
         private int _currentX;
         private int _currentY;
         private int _currentRowHeight;
@@ -76,6 +77,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
             _padding = padding;
             _entries = new Dictionary<string, AtlasEntry>();
             _atlasPages = new List<RenderTarget2D>();
+            _spriteBatch = new SpriteBatch(graphicsDevice);
             _currentX = _padding;
             _currentY = _padding;
             _currentRowHeight = 0;
@@ -206,15 +208,82 @@ namespace Andastra.Runtime.MonoGame.Rendering
             _currentRowHeight = 0;
         }
 
+        /// <summary>
+        /// Copies a texture to the atlas at the specified position.
+        /// </summary>
+        /// <param name="texture">Texture to copy.</param>
+        /// <param name="x">X position in atlas.</param>
+        /// <param name="y">Y position in atlas.</param>
+        /// <remarks>
+        /// Texture Atlas Copy Implementation:
+        /// - Copies source texture to atlas render target using SpriteBatch
+        /// - Saves and restores the current render target to avoid side effects
+        /// - Uses opaque blending to ensure textures are copied without transparency issues
+        /// - Based on standard MonoGame render target blitting pattern
+        /// </remarks>
         private void CopyTextureToAtlas(Texture2D texture, int x, int y)
         {
-            // Copy texture data to atlas render target
-            // Would use SpriteBatch or render target copy
-            // TODO:  Placeholder - requires actual implementation
+            if (texture == null)
+            {
+                throw new ArgumentNullException(nameof(texture));
+            }
+            if (_atlasPages.Count == 0)
+            {
+                throw new InvalidOperationException("No atlas pages available.");
+            }
+            if (_currentPage < 0 || _currentPage >= _atlasPages.Count)
+            {
+                throw new InvalidOperationException($"Invalid current page index: {_currentPage}");
+            }
+
+            RenderTarget2D currentPage = _atlasPages[_currentPage];
+            if (currentPage == null)
+            {
+                throw new InvalidOperationException("Current atlas page is null.");
+            }
+
+            // Save the current render target state
+            RenderTargetBinding[] previousRenderTargets = _graphicsDevice.GetRenderTargets();
+
+            try
+            {
+                // Set the atlas page as the render target
+                _graphicsDevice.SetRenderTarget(currentPage);
+
+                // Begin sprite batch with opaque blending for accurate texture copying
+                _spriteBatch.Begin(
+                    SpriteSortMode.Immediate,
+                    BlendState.Opaque,
+                    SamplerState.PointClamp,
+                    DepthStencilState.None,
+                    RasterizerState.CullNone
+                );
+
+                // Draw the texture at the specified position
+                // Use PointClamp to avoid filtering artifacts when copying
+                Rectangle destinationRectangle = new Rectangle(x, y, texture.Width, texture.Height);
+                _spriteBatch.Draw(texture, destinationRectangle, Color.White);
+
+                // End sprite batch
+                _spriteBatch.End();
+            }
+            finally
+            {
+                // Restore the previous render target state
+                if (previousRenderTargets != null && previousRenderTargets.Length > 0)
+                {
+                    _graphicsDevice.SetRenderTargets(previousRenderTargets);
+                }
+                else
+                {
+                    _graphicsDevice.SetRenderTarget(null);
+                }
+            }
         }
 
         public void Dispose()
         {
+            _spriteBatch?.Dispose();
             foreach (RenderTarget2D page in _atlasPages)
             {
                 page?.Dispose();
