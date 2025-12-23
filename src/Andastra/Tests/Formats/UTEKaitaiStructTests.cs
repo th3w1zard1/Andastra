@@ -1813,8 +1813,8 @@ public class {testClassName} {{
         {
             var data = new UteParsedData
             {
-                FileType = gff.FileType,
-                FileVersion = gff.FileVersion,
+                FileType = gff.Header.FileType,
+                FileVersion = gff.Header.FileVersion,
                 Tag = ute.Tag ?? "",
                 TemplateResRef = ute.ResRef?.ToString() ?? "",
                 Active = ute.Active,

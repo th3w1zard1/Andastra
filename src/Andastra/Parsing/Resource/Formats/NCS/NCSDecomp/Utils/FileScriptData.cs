@@ -167,12 +167,12 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             if (this.subs.Count == 0)
             {
                 // Generate struct declarations (if available)
-                string structDecls = "";
+                string stubStructDecls = "";
                 try
                 {
                     if (this.subdata != null)
                     {
-                        structDecls = this.subdata.GetStructDeclarations();
+                        stubStructDecls = this.subdata.GetStructDeclarations();
                     }
                 }
                 catch (Exception e)
@@ -181,12 +181,12 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 }
 
                 // Generate globals (if available)
-                string globs = "";
+                string stubGlobs = "";
                 if (this.globals != null)
                 {
                     try
                     {
-                        globs = "// Globals" + newline + this.globals.ToStringGlobals() + newline;
+                        stubGlobs = "// Globals" + newline + this.globals.ToStringGlobals() + newline;
                     }
                     catch (Exception e)
                     {
@@ -232,15 +232,15 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
 
                 // Combine all components in the same order as normal code generation:
                 // struct declarations + globals + function code
-                string generated = structDecls + globs + mainStub.ToString();
+                string stubGenerated = stubStructDecls + stubGlobs + mainStub.ToString();
 
                 // Ensure we always have at least something, even if all components are empty
-                if (generated == null || generated.Trim().Equals(""))
+                if (stubGenerated == null || stubGenerated.Trim().Equals(""))
                 {
-                    generated = "void main()" + newline + "{" + newline + "    // No code could be decompiled" + newline + "}" + newline;
+                    stubGenerated = "void main()" + newline + "{" + newline + "    // No code could be decompiled" + newline + "}" + newline;
                 }
 
-                this.code = generated;
+                this.code = stubGenerated;
                 return;
             }
 

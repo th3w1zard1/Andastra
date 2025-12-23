@@ -635,18 +635,9 @@ namespace Andastra.Runtime.Core.Actions
 
             try
             {
-                // Get animation component from caster
-                IAnimationComponent animationComponent = caster.GetComponent<IAnimationComponent>();
-                if (animationComponent != null)
-                {
-                    // Play casting animation
-                    // Animation component should handle blending and interruption
-                    animationComponent.PlayAnimation(animationName, AnimationBlendMode.Override, 0.2f);
-                }
-                else
-                {
-                    // Try to access animation system through World interface
-                    if (caster.World != null)
+                // Try to access animation system through World interface first
+                // Animation system supports string-based animation names
+                if (caster.World != null)
                     {
                         System.Type worldType = caster.World.GetType();
 
