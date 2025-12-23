@@ -4,6 +4,9 @@ using System.Numerics;
 using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
 using System.Runtime.InteropServices;
+using System.IO;
+using System.Text;
+using System.Diagnostics;
 
 namespace Andastra.Runtime.MonoGame.Raytracing
 {
@@ -2346,40 +2349,485 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
         /// or glslc for Vulkan backends. If the compiler is not available, returns null.
         /// 
         /// In production, shaders should be pre-compiled offline and embedded as resources.
+        /// This runtime compilation is provided as a fallback for development and testing.
+        /// 
+        /// swkotor2.exe: N/A (modern raytracing shader compilation, not in original game)
         /// </summary>
         private byte[] CompileHlslToBytecode(string hlslSource, string shaderName, GraphicsBackend backend)
         {
-            // Compiling shaders at runtime requires:
-            // 1. DXC compiler executable (for D3D12) or glslc (for Vulkan)
-            // 2. File system access to write temporary files
-            // 3. Process execution to run the compiler
-            //
-            // This is complex and error-prone. For a fully functional implementation,
-            // we would need to either:
-            // - Embed pre-compiled shader bytecode as resources
-            // - Use a shader compilation library (e.g., D3DCompiler, DXC library)
-            // - Provide shader source files that are compiled at build time
-            //
-            // TODO: STUB - For now, we return null and log that pre-compiled bytecode is required.
-            // The embedded HLSL source code is available for offline compilation.
-            
-            Console.WriteLine($"[NativeRT] Runtime shader compilation not implemented for {backend} backend");
-            Console.WriteLine($"[NativeRT] Shader source code is embedded but must be compiled offline.");
-            Console.WriteLine($"[NativeRT] To compile {shaderName}:");
+            if (string.IsNullOrEmpty(hlslSource))
+            {
+                Console.WriteLine($"[NativeRT] CompileHlslToBytecode: Empty HLSL source for {shaderName}");
+                return null;
+            }
             
             switch (backend)
             {
                 case GraphicsBackend.Direct3D12:
-                    Console.WriteLine($"[NativeRT]   1. Save HLSL source to {shaderName}.hlsl");
-                    Console.WriteLine($"[NativeRT]   2. Run: dxc.exe -T cs_6_0 -E main {shaderName}.hlsl -Fo {shaderName}.dxil");
-                    Console.WriteLine($"[NativeRT]   3. Embed {shaderName}.dxil as resource or place in Shaders/ directory");
-                    break;
+                    return CompileHlslToDxil(hlslSource, shaderName);
                     
                 case GraphicsBackend.Vulkan:
-                    Console.WriteLine($"[NativeRT]   1. Convert HLSL to GLSL (or write GLSL version)");
-                    Console.WriteLine($"[NativeRT]   2. Run: glslc -fshader-stage=compute {shaderName}.glsl -o {shaderName}.spv");
-                    Console.WriteLine($"[NativeRT]   3. Embed {shaderName}.spv as resource or place in Shaders/ directory");
-                    break;
+                    return CompileHlslToSpirv(hlslSource, shaderName);
+                    
+                default:
+                    Console.WriteLine($"[NativeRT] CompileHlslToBytecode: Unsupported backend {backend} for shader {shaderName}");
+                    return null;
+            }
+        }
+
+        /// <summary>
+        /// Compiles HLSL source code to DXIL bytecode using DXC compiler.
+        /// 
+        /// DXC (DirectX Shader Compiler) is the modern HLSL compiler that produces DXIL.
+        /// This method locates DXC, writes the HLSL source to a temporary file, executes
+        /// DXC to compile it, and reads the resulting DXIL bytecode.
+        /// 
+        /// swkotor2.exe: N/A (modern raytracing shader compilation, not in original game)
+        /// </summary>
+        private byte[] CompileHlslToDxil(string hlslSource, string shaderName)
+        {
+            string dxcPath = FindDXCPath();
+            if (string.IsNullOrEmpty(dxcPath))
+            {
+                Console.WriteLine($"[NativeRT] DXC compiler not found. Cannot compile {shaderName} to DXIL.");
+                Console.WriteLine($"[NativeRT] DXC can be installed via Windows SDK or downloaded from:");
+                Console.WriteLine($"[NativeRT]   https://github.com/microsoft/DirectXShaderCompiler/releases");
+                return null;
+            }
+
+            // Determine shader type from shader name (default to compute for denoisers)
+            ShaderType shaderType = ShaderType.Compute;
+            if (shaderName.Contains("RayGen") || shaderName.Contains("RayGeneration"))
+            {
+                shaderType = ShaderType.RayGeneration;
+            }
+            else if (shaderName.Contains("Miss"))
+            {
+                shaderType = ShaderType.Miss;
+            }
+            else if (shaderName.Contains("ClosestHit"))
+            {
+                shaderType = ShaderType.ClosestHit;
+            }
+            else if (shaderName.Contains("AnyHit"))
+            {
+                shaderType = ShaderType.AnyHit;
+            }
+
+            string shaderTarget = GetDxilShaderTarget(shaderType);
+            string entryPoint = GetShaderEntryPoint(shaderType);
+
+            // Create temporary files
+            string tempSourceFile = Path.Combine(Path.GetTempPath(), $"rt_shader_{Guid.NewGuid()}.hlsl");
+            string tempOutputFile = Path.Combine(Path.GetTempPath(), $"rt_shader_{Guid.NewGuid()}.dxil");
+
+            try
+            {
+                // Write HLSL source to temporary file
+                File.WriteAllText(tempSourceFile, hlslSource, Encoding.UTF8);
+
+                // Build DXC command line arguments
+                // -T: shader target (e.g., cs_6_0, lib_6_3)
+                // -E: entry point name
+                // -Fo: output file
+                // -spirv: not used for DXIL (only for SPIR-V output)
+                // -WX: treat warnings as errors (optional, can be removed for more lenient compilation)
+                string arguments = $"-T {shaderTarget} -E {entryPoint} \"{tempSourceFile}\" -Fo \"{tempOutputFile}\"";
+
+                ProcessStartInfo startInfo = new ProcessStartInfo
+                {
+                    FileName = dxcPath,
+                    Arguments = arguments,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                };
+
+                using (Process process = Process.Start(startInfo))
+                {
+                    if (process == null)
+                    {
+                        Console.WriteLine($"[NativeRT] Failed to start DXC process for {shaderName}");
+                        return null;
+                    }
+
+                    // Wait for compilation with timeout (30 seconds)
+                    bool completed = process.WaitForExit(30000);
+                    if (!completed)
+                    {
+                        Console.WriteLine($"[NativeRT] DXC compilation timeout for {shaderName}");
+                        try
+                        {
+                            process.Kill();
+                        }
+                        catch
+                        {
+                            // Ignore kill errors
+                        }
+                        return null;
+                    }
+
+                    if (process.ExitCode != 0)
+                    {
+                        string error = process.StandardError.ReadToEnd();
+                        string output = process.StandardOutput.ReadToEnd();
+                        Console.WriteLine($"[NativeRT] DXC compilation failed for {shaderName} (exit code {process.ExitCode})");
+                        if (!string.IsNullOrEmpty(error))
+                        {
+                            Console.WriteLine($"[NativeRT] DXC error output: {error}");
+                        }
+                        if (!string.IsNullOrEmpty(output))
+                        {
+                            Console.WriteLine($"[NativeRT] DXC standard output: {output}");
+                        }
+                        return null;
+                    }
+
+                    // Read compiled DXIL bytecode
+                    if (File.Exists(tempOutputFile))
+                    {
+                        byte[] bytecode = File.ReadAllBytes(tempOutputFile);
+                        Console.WriteLine($"[NativeRT] Successfully compiled {shaderName} to DXIL ({bytecode.Length} bytes)");
+                        return bytecode;
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[NativeRT] DXC succeeded but output file not found: {tempOutputFile}");
+                        return null;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[NativeRT] Exception during DXC compilation of {shaderName}: {ex.Message}");
+                return null;
+            }
+            finally
+            {
+                // Cleanup temporary files
+                try
+                {
+                    if (File.Exists(tempSourceFile))
+                    {
+                        File.Delete(tempSourceFile);
+                    }
+                    if (File.Exists(tempOutputFile))
+                    {
+                        File.Delete(tempOutputFile);
+                    }
+                }
+                catch
+                {
+                    // Ignore cleanup errors
+                }
+            }
+        }
+
+        /// <summary>
+        /// Compiles HLSL source code to SPIR-V bytecode using DXC compiler with SPIR-V backend.
+        /// 
+        /// DXC supports compiling HLSL directly to SPIR-V using the -spirv flag.
+        /// This is preferred over converting HLSL to GLSL first, as it maintains better
+        /// compatibility and handles HLSL-specific features correctly.
+        /// 
+        /// Alternative: If DXC with SPIR-V is not available, this could fall back to
+        /// glslc after converting HLSL to GLSL, but that conversion is complex and
+        /// error-prone, so we only support DXC with SPIR-V output.
+        /// 
+        /// swkotor2.exe: N/A (modern raytracing shader compilation, not in original game)
+        /// </summary>
+        private byte[] CompileHlslToSpirv(string hlslSource, string shaderName)
+        {
+            // Try DXC with SPIR-V output first (preferred method)
+            string dxcPath = FindDXCPath();
+            if (!string.IsNullOrEmpty(dxcPath))
+            {
+                // DXC can compile HLSL directly to SPIR-V using -spirv flag
+                return CompileHlslToSpirvWithDXC(hlslSource, shaderName, dxcPath);
+            }
+
+            // Fallback to glslc (requires HLSL to GLSL conversion, which is complex)
+            // For now, we only support DXC with SPIR-V output
+            Console.WriteLine($"[NativeRT] DXC compiler not found. Cannot compile {shaderName} to SPIR-V.");
+            Console.WriteLine($"[NativeRT] DXC with SPIR-V support is required for Vulkan raytracing shaders.");
+            Console.WriteLine($"[NativeRT] DXC can be installed via Windows SDK or downloaded from:");
+            Console.WriteLine($"[NativeRT]   https://github.com/microsoft/DirectXShaderCompiler/releases");
+            return null;
+        }
+
+        /// <summary>
+        /// Compiles HLSL source code to SPIR-V using DXC with -spirv flag.
+        /// 
+        /// DXC supports compiling HLSL directly to SPIR-V, which is the preferred
+        /// method for Vulkan raytracing shaders as it maintains HLSL semantics.
+        /// 
+        /// swkotor2.exe: N/A (modern raytracing shader compilation, not in original game)
+        /// </summary>
+        private byte[] CompileHlslToSpirvWithDXC(string hlslSource, string shaderName, string dxcPath)
+        {
+            // Determine shader type from shader name (default to compute for denoisers)
+            ShaderType shaderType = ShaderType.Compute;
+            if (shaderName.Contains("RayGen") || shaderName.Contains("RayGeneration"))
+            {
+                shaderType = ShaderType.RayGeneration;
+            }
+            else if (shaderName.Contains("Miss"))
+            {
+                shaderType = ShaderType.Miss;
+            }
+            else if (shaderName.Contains("ClosestHit"))
+            {
+                shaderType = ShaderType.ClosestHit;
+            }
+            else if (shaderName.Contains("AnyHit"))
+            {
+                shaderType = ShaderType.AnyHit;
+            }
+
+            // For SPIR-V output, we still use HLSL shader targets but add -spirv flag
+            // DXC will convert the HLSL target to appropriate SPIR-V shader stage
+            string shaderTarget = GetDxilShaderTarget(shaderType);
+            string entryPoint = GetShaderEntryPoint(shaderType);
+
+            // Create temporary files
+            string tempSourceFile = Path.Combine(Path.GetTempPath(), $"rt_shader_{Guid.NewGuid()}.hlsl");
+            string tempOutputFile = Path.Combine(Path.GetTempPath(), $"rt_shader_{Guid.NewGuid()}.spv");
+
+            try
+            {
+                // Write HLSL source to temporary file
+                File.WriteAllText(tempSourceFile, hlslSource, Encoding.UTF8);
+
+                // Build DXC command line arguments for SPIR-V output
+                // -T: shader target (e.g., cs_6_0, lib_6_3)
+                // -E: entry point name
+                // -spirv: output SPIR-V instead of DXIL
+                // -Fo: output file
+                string arguments = $"-T {shaderTarget} -E {entryPoint} -spirv \"{tempSourceFile}\" -Fo \"{tempOutputFile}\"";
+
+                ProcessStartInfo startInfo = new ProcessStartInfo
+                {
+                    FileName = dxcPath,
+                    Arguments = arguments,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                };
+
+                using (Process process = Process.Start(startInfo))
+                {
+                    if (process == null)
+                    {
+                        Console.WriteLine($"[NativeRT] Failed to start DXC process for {shaderName}");
+                        return null;
+                    }
+
+                    // Wait for compilation with timeout (30 seconds)
+                    bool completed = process.WaitForExit(30000);
+                    if (!completed)
+                    {
+                        Console.WriteLine($"[NativeRT] DXC compilation timeout for {shaderName}");
+                        try
+                        {
+                            process.Kill();
+                        }
+                        catch
+                        {
+                            // Ignore kill errors
+                        }
+                        return null;
+                    }
+
+                    if (process.ExitCode != 0)
+                    {
+                        string error = process.StandardError.ReadToEnd();
+                        string output = process.StandardOutput.ReadToEnd();
+                        Console.WriteLine($"[NativeRT] DXC SPIR-V compilation failed for {shaderName} (exit code {process.ExitCode})");
+                        if (!string.IsNullOrEmpty(error))
+                        {
+                            Console.WriteLine($"[NativeRT] DXC error output: {error}");
+                        }
+                        if (!string.IsNullOrEmpty(output))
+                        {
+                            Console.WriteLine($"[NativeRT] DXC standard output: {output}");
+                        }
+                        return null;
+                    }
+
+                    // Read compiled SPIR-V bytecode
+                    if (File.Exists(tempOutputFile))
+                    {
+                        byte[] bytecode = File.ReadAllBytes(tempOutputFile);
+                        Console.WriteLine($"[NativeRT] Successfully compiled {shaderName} to SPIR-V ({bytecode.Length} bytes)");
+                        return bytecode;
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[NativeRT] DXC succeeded but output file not found: {tempOutputFile}");
+                        return null;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[NativeRT] Exception during DXC SPIR-V compilation of {shaderName}: {ex.Message}");
+                return null;
+            }
+            finally
+            {
+                // Cleanup temporary files
+                try
+                {
+                    if (File.Exists(tempSourceFile))
+                    {
+                        File.Delete(tempSourceFile);
+                    }
+                    if (File.Exists(tempOutputFile))
+                    {
+                        File.Delete(tempOutputFile);
+                    }
+                }
+                catch
+                {
+                    // Ignore cleanup errors
+                }
+            }
+        }
+
+        /// <summary>
+        /// Finds the path to DXC (DirectX Shader Compiler) executable.
+        /// 
+        /// DXC is typically installed with:
+        /// - Windows SDK (in Windows Kits bin directory)
+        /// - Visual Studio (in VS installation directory)
+        /// - Standalone download from GitHub
+        /// 
+        /// This method searches common installation locations and PATH.
+        /// 
+        /// swkotor2.exe: N/A (modern raytracing shader compilation, not in original game)
+        /// </summary>
+        private string FindDXCPath()
+        {
+            string dxcExeName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dxc.exe" : "dxc";
+
+            // 1. Try Windows SDK installation directory
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+                string programFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+
+                // Windows 10 SDK typically installs to Program Files (x86)\Windows Kits\10\bin\<version>\x64
+                string[] windowsKitsPaths = new[]
+                {
+                    Path.Combine(programFilesX86, "Windows Kits", "10", "bin"),
+                    Path.Combine(programFiles, "Windows Kits", "10", "bin")
+                };
+
+                foreach (string kitsPath in windowsKitsPaths)
+                {
+                    if (Directory.Exists(kitsPath))
+                    {
+                        // Search for latest version directory
+                        string[] versionDirs = Directory.GetDirectories(kitsPath);
+                        Array.Sort(versionDirs);
+                        Array.Reverse(versionDirs); // Start with latest version
+
+                        foreach (string versionDir in versionDirs)
+                        {
+                            // Try x64 first, then x86
+                            string[] archDirs = new[]
+                            {
+                                Path.Combine(versionDir, "x64"),
+                                Path.Combine(versionDir, "x86")
+                            };
+
+                            foreach (string archDir in archDirs)
+                            {
+                                string dxcPath = Path.Combine(archDir, dxcExeName);
+                                if (File.Exists(dxcPath))
+                                {
+                                    return dxcPath;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 2. Try Visual Studio installation directory
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+                string programFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+
+                // Visual Studio typically installs DXC in VC\Tools\MSVC\<version>\bin\Hostx64\x64
+                string[] vsPaths = new[]
+                {
+                    Path.Combine(programFiles, "Microsoft Visual Studio"),
+                    Path.Combine(programFilesX86, "Microsoft Visual Studio")
+                };
+
+                foreach (string vsBasePath in vsPaths)
+                {
+                    if (Directory.Exists(vsBasePath))
+                    {
+                        // Search for VS installation directories (e.g., 2022, 2019, etc.)
+                        string[] vsVersions = Directory.GetDirectories(vsBasePath);
+                        foreach (string vsVersionPath in vsVersions)
+                        {
+                            string vcToolsPath = Path.Combine(vsVersionPath, "VC", "Tools", "MSVC");
+                            if (Directory.Exists(vcToolsPath))
+                            {
+                                // Search for MSVC version directories
+                                string[] msvcVersions = Directory.GetDirectories(vcToolsPath);
+                                foreach (string msvcVersionPath in msvcVersions)
+                                {
+                                    string dxcPath = Path.Combine(msvcVersionPath, "bin", "Hostx64", "x64", dxcExeName);
+                                    if (File.Exists(dxcPath))
+                                    {
+                                        return dxcPath;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 3. Try PATH environment variable
+            string pathEnv = Environment.GetEnvironmentVariable("PATH");
+            if (!string.IsNullOrEmpty(pathEnv))
+            {
+                string[] paths = pathEnv.Split(Path.PathSeparator);
+                foreach (string path in paths)
+                {
+                    if (!string.IsNullOrEmpty(path))
+                    {
+                        string dxcPath = Path.Combine(path, dxcExeName);
+                        if (File.Exists(dxcPath))
+                        {
+                            return dxcPath;
+                        }
+                    }
+                }
+            }
+
+            // 4. Try current directory and common tool locations
+            string[] commonPaths = new[]
+            {
+                Path.Combine(Directory.GetCurrentDirectory(), dxcExeName),
+                Path.Combine(Directory.GetCurrentDirectory(), "tools", dxcExeName),
+                Path.Combine(Directory.GetCurrentDirectory(), "bin", dxcExeName)
+            };
+
+            foreach (string commonPath in commonPaths)
+            {
+                if (File.Exists(commonPath))
+                {
+                    return commonPath;
+                }
             }
             
             return null;
