@@ -44,6 +44,34 @@ namespace Andastra.Parsing.Resource.Generics.UTM
         // Original: can_sell: Derived from "BuySellFlag" bit 1. Whether merchant can sell items.
         public bool CanSell { get; set; } = false;
 
+        // Store properties from Bioware Aurora Store format
+        // These fields are present in all Store Structs (both blueprints and instances)
+        // Based on Bioware Aurora Engine Store Format documentation
+        // Based on nwmain.exe: CNWSStore::LoadStore @ 0x1404fbbf0
+        // - Line 63: StoreGold = ReadFieldINT("StoreGold", -1)
+        // - Line 65: IdentifyPrice = ReadFieldINT("IdentifyPrice", 100)
+        // - Line 67: MaxBuyPrice = ReadFieldINT("MaxBuyPrice", -1)
+        /// <summary>
+        /// StoreGold: INT - Amount of gold store has available for buying items.
+        /// -1 = unlimited gold, 0+ = specific amount
+        /// Based on nwmain.exe: CNWSStore::LoadStore @ 0x1404fbbf0 line 63 - ReadFieldINT("StoreGold", -1)
+        /// </summary>
+        public int StoreGold { get; set; } = -1;
+
+        /// <summary>
+        /// IdentifyPrice: INT - Price to identify items.
+        /// -1 = store will not identify items, 0+ = price to identify
+        /// Based on nwmain.exe: CNWSStore::LoadStore @ 0x1404fbbf0 line 65 - ReadFieldINT("IdentifyPrice", 100)
+        /// </summary>
+        public int IdentifyPrice { get; set; } = 100;
+
+        /// <summary>
+        /// MaxBuyPrice: INT - Maximum price store will pay for an item.
+        /// -1 = no limit, 0+ = maximum price
+        /// Based on nwmain.exe: CNWSStore::LoadStore @ 0x1404fbbf0 line 67 - ReadFieldINT("MaxBuyPrice", -1)
+        /// </summary>
+        public int MaxBuyPrice { get; set; } = -1;
+
         // Inventory items
         // Matching PyKotor implementation: self.inventory: list[InventoryItem] = list(inventory) if inventory is not None else []
         // Original: inventory: "ItemList" field. List of items in merchant inventory.
