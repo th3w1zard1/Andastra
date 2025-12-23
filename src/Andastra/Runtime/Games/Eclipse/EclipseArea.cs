@@ -7632,17 +7632,17 @@ namespace Andastra.Runtime.Games.Eclipse
             }
 
             // Get all modified meshes from tracker
-            Dictionary<string, ModifiedMesh> modifiedMeshes = _geometryModificationTracker.GetModifiedMeshes();
+            Dictionary<string, DestructibleGeometryModificationTracker.ModifiedMesh> modifiedMeshes = _geometryModificationTracker.GetModifiedMeshes();
             if (modifiedMeshes == null || modifiedMeshes.Count == 0)
             {
                 return; // No modifications to render
             }
 
             // Iterate through each modified mesh
-            foreach (KeyValuePair<string, ModifiedMesh> modifiedMeshPair in modifiedMeshes)
+            foreach (KeyValuePair<string, DestructibleGeometryModificationTracker.ModifiedMesh> modifiedMeshPair in modifiedMeshes)
             {
                 string meshId = modifiedMeshPair.Key;
-                ModifiedMesh modifiedMesh = modifiedMeshPair.Value;
+                DestructibleGeometryModificationTracker.ModifiedMesh modifiedMesh = modifiedMeshPair.Value;
 
                 if (modifiedMesh == null || modifiedMesh.Modifications == null || modifiedMesh.Modifications.Count == 0)
                 {
@@ -7669,7 +7669,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 HashSet<int> destroyedFaceIndices = new HashSet<int>();
                 List<ModifiedVertex> allModifiedVertices = new List<ModifiedVertex>();
 
-                foreach (GeometryModification modification in modifiedMesh.Modifications)
+                foreach (DestructibleGeometryModificationTracker.GeometryModification modification in modifiedMesh.Modifications)
                 {
                     if (modification.ModificationType == GeometryModificationType.Destroyed)
                     {
@@ -11547,7 +11547,7 @@ technique ColorGrading
             }
 
             // Get all modified meshes from the tracker
-            Dictionary<string, ModifiedMesh> modifiedMeshes = _geometryModificationTracker.GetModifiedMeshes();
+            Dictionary<string, DestructibleGeometryModificationTracker.ModifiedMesh> modifiedMeshes = _geometryModificationTracker.GetModifiedMeshes();
             if (modifiedMeshes == null || modifiedMeshes.Count == 0)
             {
                 return;
@@ -11557,7 +11557,7 @@ technique ColorGrading
             foreach (var meshEntry in modifiedMeshes)
             {
                 string meshId = meshEntry.Key;
-                ModifiedMesh modifiedMesh = meshEntry.Value;
+                DestructibleGeometryModificationTracker.ModifiedMesh modifiedMesh = meshEntry.Value;
 
                 if (string.IsNullOrEmpty(meshId) || modifiedMesh == null || modifiedMesh.Modifications == null)
                 {
@@ -11582,7 +11582,7 @@ technique ColorGrading
                 Dictionary<int, Vector3> modifiedVertices = new Dictionary<int, Vector3>();
 
                 // Process all modifications for this mesh
-                foreach (GeometryModification modification in modifiedMesh.Modifications)
+                foreach (DestructibleGeometryModificationTracker.GeometryModification modification in modifiedMesh.Modifications)
                 {
                     if (modification == null)
                     {
@@ -11743,7 +11743,7 @@ technique ColorGrading
             // Check if any modifications might have affected light sources (e.g., destroyed light fixtures)
             if (_geometryModificationTracker != null)
             {
-                Dictionary<string, ModifiedMesh> modifiedMeshes = _geometryModificationTracker.GetModifiedMeshes();
+                Dictionary<string, DestructibleGeometryModificationTracker.ModifiedMesh> modifiedMeshes = _geometryModificationTracker.GetModifiedMeshes();
                 if (modifiedMeshes != null && modifiedMeshes.Count > 0)
                 {
                     // Check if any modified meshes contain light sources
@@ -11887,17 +11887,17 @@ technique ColorGrading
 
             // Get all modified meshes from tracker
             // Based on daorigins.exe: Collision shapes are updated for all modified meshes
-            Dictionary<string, ModifiedMesh> modifiedMeshes = _geometryModificationTracker.GetModifiedMeshes();
+            Dictionary<string, DestructibleGeometryModificationTracker.ModifiedMesh> modifiedMeshes = _geometryModificationTracker.GetModifiedMeshes();
             if (modifiedMeshes == null || modifiedMeshes.Count == 0)
             {
                 return; // No modifications to process
             }
 
             // Process each modified mesh
-            foreach (KeyValuePair<string, ModifiedMesh> modifiedMeshPair in modifiedMeshes)
+            foreach (KeyValuePair<string, DestructibleGeometryModificationTracker.ModifiedMesh> modifiedMeshPair in modifiedMeshes)
             {
                 string meshId = modifiedMeshPair.Key;
-                ModifiedMesh modifiedMesh = modifiedMeshPair.Value;
+                DestructibleGeometryModificationTracker.ModifiedMesh modifiedMesh = modifiedMeshPair.Value;
 
                 if (modifiedMesh == null || modifiedMesh.Modifications == null || modifiedMesh.Modifications.Count == 0)
                 {
@@ -11937,7 +11937,7 @@ technique ColorGrading
                 HashSet<int> destroyedFaceIndices = new HashSet<int>();
                 Dictionary<int, Vector3> modifiedVertices = new Dictionary<int, Vector3>();
 
-                foreach (GeometryModification modification in modifiedMesh.Modifications)
+                foreach (DestructibleGeometryModificationTracker.GeometryModification modification in modifiedMesh.Modifications)
                 {
                     if (modification.ModificationType == GeometryModificationType.Destroyed)
                     {
