@@ -705,7 +705,7 @@ namespace Andastra.Runtime.Games.Aurora
                 }
                 else
                 {
-                    _onEnter = ResRef.FromBlank();
+                    _onEnter = Andastra.Parsing.Common.ResRef.FromBlank();
                 }
 
                 if (root.Exists("OnExit"))
@@ -714,7 +714,7 @@ namespace Andastra.Runtime.Games.Aurora
                 }
                 else
                 {
-                    _onExit = ResRef.FromBlank();
+                    _onExit = Andastra.Parsing.Common.ResRef.FromBlank();
                 }
 
                 if (root.Exists("OnHeartbeat"))
@@ -723,7 +723,7 @@ namespace Andastra.Runtime.Games.Aurora
                 }
                 else
                 {
-                    _onHeartbeat = ResRef.FromBlank();
+                    _onHeartbeat = Andastra.Parsing.Common.ResRef.FromBlank();
                 }
 
                 if (root.Exists("OnUserDefined"))
@@ -732,7 +732,7 @@ namespace Andastra.Runtime.Games.Aurora
                 }
                 else
                 {
-                    _onUserDefined = ResRef.FromBlank();
+                    _onUserDefined = Andastra.Parsing.Common.ResRef.FromBlank();
                 }
 
                 // Read tileset and tile layout
@@ -743,7 +743,7 @@ namespace Andastra.Runtime.Games.Aurora
                 }
                 else
                 {
-                    _tileset = ResRef.FromBlank();
+                    _tileset = Andastra.Parsing.Common.ResRef.FromBlank();
                 }
 
                 if (root.Exists("Width"))
@@ -877,11 +877,11 @@ namespace Andastra.Runtime.Games.Aurora
             _currentFogColor = _sunFogColor;
             _currentFogAmount = _sunFogAmount;
 
-            _onEnter = ResRef.FromBlank();
-            _onExit = ResRef.FromBlank();
-            _onHeartbeat = ResRef.FromBlank();
-            _onUserDefined = ResRef.FromBlank();
-            _tileset = ResRef.FromBlank();
+            _onEnter = Andastra.Parsing.Common.ResRef.FromBlank();
+            _onExit = Andastra.Parsing.Common.ResRef.FromBlank();
+            _onHeartbeat = Andastra.Parsing.Common.ResRef.FromBlank();
+            _onUserDefined = Andastra.Parsing.Common.ResRef.FromBlank();
+            _tileset = Andastra.Parsing.Common.ResRef.FromBlank();
             _width = 0;
             _height = 0;
             _flags = 0;
@@ -953,10 +953,10 @@ namespace Andastra.Runtime.Games.Aurora
 
             // Script hooks - set to empty ResRefs if not specified
             // Based on lines 51-57: WriteFieldCResRef("OnEnter", "OnExit", "OnHeartbeat", "OnUserDefined")
-            root.SetResRef("OnEnter", ResRef.FromBlank());
-            root.SetResRef("OnExit", ResRef.FromBlank());
-            root.SetResRef("OnHeartbeat", ResRef.FromBlank());
-            root.SetResRef("OnUserDefined", ResRef.FromBlank());
+            root.SetResRef("OnEnter", Andastra.Parsing.Common.ResRef.FromBlank());
+            root.SetResRef("OnExit", Andastra.Parsing.Common.ResRef.FromBlank());
+            root.SetResRef("OnHeartbeat", Andastra.Parsing.Common.ResRef.FromBlank());
+            root.SetResRef("OnUserDefined", Andastra.Parsing.Common.ResRef.FromBlank());
 
             // Lighting defaults - based on lines 61-65: WriteFieldDWORD/BYTE for lighting
             root.SetUInt32("SunAmbientColor", 0);
@@ -1005,7 +1005,7 @@ namespace Andastra.Runtime.Games.Aurora
             root.SetUInt8("PlayerVsPlayer", 0);
 
             // Tileset - based on line 97: WriteFieldCResRef("Tileset")
-            root.SetResRef("Tileset", ResRef.FromBlank());
+            root.SetResRef("Tileset", Andastra.Parsing.Common.ResRef.FromBlank());
 
             // Comments - based on line 30: WriteFieldCExoString("Comments")
             root.SetString("Comments", "");
@@ -1568,7 +1568,7 @@ namespace Andastra.Runtime.Games.Aurora
                 // Read tileset resref from root struct (needed for surface material lookup)
                 // Based on ARE format: Tileset is CResRef
                 // We read this here so it's available for tile surface material lookup
-                ResRef tilesetResRef = ResRef.FromBlank();
+                Andastra.Parsing.Common.ResRef tilesetResRef = Andastra.Parsing.Common.ResRef.FromBlank();
                 if (root.Exists("Tileset"))
                 {
                     tilesetResRef = root.GetResRef("Tileset");
