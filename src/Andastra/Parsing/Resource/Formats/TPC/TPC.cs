@@ -785,22 +785,178 @@ namespace Andastra.Parsing.Formats.TPC
 
         private static byte[] RgbaToDxt3(byte[] rgba, int width, int height)
         {
-            // TODO: STUB - DXT3 compression is complex and lossy
-            // For now, return placeholder - in production would use proper DXT3 compression
-            // DXT3 compression requires block-based encoding with explicit alpha and color endpoint selection
-            throw new NotImplementedException("DXT3 compression not yet implemented. Use decompression for DXT formats.");
+            // Calculate output size: 16 bytes per 4x4 block
+            int blockCountX = (width + 3) / 4;
+            int blockCountY = (height + 3) / 4;
+            int outputSize = blockCountX * blockCountY * 16;
+            byte[] dxt3Data = new byte[outputSize];
+
+            int dstOffset = 0;
+            for (int y = 0; y < height; y += 4)
+            {
+                for (int x = 0; x < width; x += 4)
+                {
+                    // Extract 4x4 block from source (16 pixels, 4 bytes each = 64 bytes)
+                    int[] block = ExtractBlock(rgba, x, y, width, height, 4);
+                    byte[] dest = new byte[16];
+                    CompressDxt3Block(dest, block);
+
+                    // Copy compressed block to output
+                    for (int i = 0; i < 16; i++)
+                    {
+                        dxt3Data[dstOffset + i] = dest[i];
+                    }
+                    dstOffset += 16;
+                }
+            }
+
+            return dxt3Data;
         }
 
         private static byte[] RgbaToDxt5(byte[] rgba, int width, int height)
         {
-            // TODO: STUB - DXT5 compression is complex and lossy
-            // For now, return placeholder - in production would use proper DXT5 compression
-            // DXT5 compression requires block-based encoding with interpolated alpha and color endpoint selection
-            throw new NotImplementedException("DXT5 compression not yet implemented. Use decompression for DXT formats.");
+            // Calculate output size: 16 bytes per 4x4 block
+            int blockCountX = (width + 3) / 4;
+            int blockCountY = (height + 3) / 4;
+            int outputSize = blockCountX * blockCountY * 16;
+            byte[] dxt5Data = new byte[outputSize];
+
+            int dstOffset = 0;
+            for (int y = 0; y < height; y += 4)
+            {
+                for (int x = 0; x < width; x += 4)
+                {
+                    // Extract 4x4 block from source (16 pixels, 4 bytes each = 64 bytes)
+                    int[] block = ExtractBlock(rgba, x, y, width, height, 4);
+                    byte[] dest = new byte[16];
+                    CompressDxt5Block(dest, block);
+
+                    // Copy compressed block to output
+                    for (int i = 0; i < 16; i++)
+                    {
+                        dxt5Data[dstOffset + i] = dest[i];
+                    }
+                    dstOffset += 16;
+                }
+            }
+
+            return dxt5Data;
+        }
+
+        // Compress a single DXT3 block (4x4 pixels = 16 bytes output: 8 bytes alpha + 8 bytes color)
+        private static void CompressDxt3Block(byte[] dest, int[] src)
+        {
+            CompressAlphaBlockDxt3(dest, src);
+            CompressColorBlock(dest, 8, src);
+        }
+
+        // Compress explicit alpha for DXT3 (4 bits per pixel, 16 pixels = 64 bits = 8 bytes)
+        // Based on PyKotor _compress_alpha_block_dxt3 implementation
+        private static void CompressAlphaBlockDxt3(byte[] dest, int[] src)
+        {
+            // DXT3 stores alpha as 4 bits per pixel, packed into 8 bytes
+            // Each byte contains 2 alpha values: lower 4 bits for first pixel, upper 4 bits for second pixel
+            for (int i = 0; i < 8; i++)
+            {
+                // Get alpha values for two pixels
+                int alpha1 = src[i * 8 + 3] >> 4; // First pixel alpha (upper 4 bits)
+                int alpha2 = src[i * 8 + 7] >> 4; // Second pixel alpha (upper 4 bits)
+                dest[i] = (byte)((alpha2 << 4) | alpha1);
+            }
+        }
+
+        // Compress a single DXT5 block (4x4 pixels = 16 bytes output: 8 bytes interpolated alpha + 8 bytes color)
+        private static void CompressDxt5Block(byte[] dest, int[] src)
+        {
+            CompressAlphaBlockDxt5(dest, src);
+            CompressColorBlock(dest, 8, src);
+        }
+
+        // Compress interpolated alpha for DXT5 (similar to color interpolation)
+        // Based on PyKotor _compress_alpha_block_dxt5 implementation
+        private static void CompressAlphaBlockDxt5(byte[] dest, int[] src)
+        {
+            // Extract alpha channel from all 16 pixels
+            int[] alpha = new int[16];
+            for (int i = 0; i < 16; i++)
+            {
+                alpha[i] = src[i * 4 + 3];
+            }
+
+            // Find min and max alpha values
+            int minA = alpha[0];
+            int maxA = alpha[0];
+            for (int i = 1; i < 16; i++)
+            {
+                if (alpha[i] < minA) minA = alpha[i];
+                if (alpha[i] > maxA) maxA = alpha[i];
+            }
+
+            // If all alphas are the same, use simple encoding
+            if (minA == maxA)
+            {
+                dest[0] = (byte)maxA;
+                dest[1] = (byte)minA;
+                for (int i = 2; i < 8; i++)
+                {
+                    dest[i] = 0;
+                }
+                return;
+            }
+
+            // Ensure maxA >= minA (swap if needed)
+            if (minA > maxA)
+            {
+                int temp = minA;
+                minA = maxA;
+                maxA = temp;
+            }
+
+            dest[0] = (byte)maxA;
+            dest[1] = (byte)minA;
+
+            // Calculate indices for each pixel
+            ulong indices = 0;
+            for (int i = 0; i < 16; i++)
+            {
+                int code;
+                if (alpha[i] == 0)
+                {
+                    code = 6;
+                }
+                else if (alpha[i] == 255)
+                {
+                    code = 7;
+                }
+                else
+                {
+                    // Interpolate: t = (alpha[i] - minA) * 7 / (maxA - minA)
+                    int t = (alpha[i] - minA) * 7 / (maxA - minA);
+                    code = Math.Min(7, t);
+                }
+
+                indices |= (ulong)code << (3 * i);
+            }
+
+            // Write indices (6 bytes, 48 bits for 16 pixels * 3 bits)
+            for (int i = 0; i < 6; i++)
+            {
+                dest[2 + i] = (byte)((indices >> (8 * i)) & 0xFF);
+            }
+        }
+
+        // Overload CompressColorBlock to support offset for DXT3/DXT5
+        private static void CompressColorBlock(byte[] dest, int offset, int[] src)
+        {
+            byte[] tempDest = new byte[8];
+            CompressColorBlock(tempDest, src);
+            for (int i = 0; i < 8; i++)
+            {
+                dest[offset + i] = tempDest[i];
+            }
         }
 
         // DXT decompression implementation (based on TpcToMonoGameTextureConverter.cs)
-
         private static void DecompressDxt1(byte[] input, byte[] output, int width, int height)
         {
             int blockCountX = (width + 3) / 4;
