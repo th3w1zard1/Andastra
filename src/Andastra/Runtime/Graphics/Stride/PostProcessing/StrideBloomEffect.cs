@@ -98,10 +98,11 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 {
                     // Try to get ContentManager from GraphicsDevice services
                     // Stride GraphicsDevice may have Services property that provides ContentManager
-                    var services = _graphicsDevice.Services();
+                    // Use explicit type to avoid C# 7.3 inferred delegate type limitation
+                    object services = _graphicsDevice.Services();
                     if (services != null)
                     {
-                        var contentManager = services.GetService<ContentManager>();
+                        var contentManager = ((dynamic)services).GetService<ContentManager>();
                         if (contentManager != null)
                         {
                             if (_brightPassEffectBase == null)
@@ -423,7 +424,8 @@ shader BlurEffect : ShaderBase
             }
 
             // Get command list for rendering operations
-            var commandList = _graphicsDevice.ImmediateContext;
+            // Use explicit type to avoid C# 7.3 inferred delegate type limitation
+            CommandList commandList = _graphicsDevice.ImmediateContext();
             if (commandList == null)
             {
                 return;
@@ -501,7 +503,8 @@ shader BlurEffect : ShaderBase
             }
 
             // Get command list for rendering operations
-            var commandList = _graphicsDevice.ImmediateContext;
+            // Use explicit type to avoid C# 7.3 inferred delegate type limitation
+            CommandList commandList = _graphicsDevice.ImmediateContext();
             if (commandList == null)
             {
                 return;
@@ -614,12 +617,14 @@ shader BlurEffect : ShaderBase
                 // Strategy 1: Try to get EffectCompiler from GraphicsDevice services
                 // Based on Stride API: GraphicsDevice.Services provides access to EffectSystem
                 // EffectSystem contains EffectCompiler for runtime shader compilation
-                var services = _graphicsDevice.Services;
+                // Use explicit type to avoid C# 7.3 inferred delegate type limitation
+                object services = _graphicsDevice.Services();
                 if (services != null)
                 {
-                    // Try to get EffectCompiler from services
+                    // Try to get EffectCompiler from services using dynamic to avoid type issues
                     // EffectCompiler is typically available through EffectSystem service
-                    var effectCompiler = services.GetService<EffectCompiler>();
+                    dynamic servicesDynamic = services;
+                    var effectCompiler = servicesDynamic.GetService<EffectCompiler>();
                     if (effectCompiler != null)
                     {
                         return CompileShaderWithCompiler(effectCompiler, shaderSource, shaderName);
@@ -627,7 +632,7 @@ shader BlurEffect : ShaderBase
 
                     // Try to get EffectSystem from services (EffectCompiler may be accessed through it)
                     // Based on Stride architecture: EffectSystem manages effect compilation
-                    var effectSystem = services.GetService<Stride.Shaders.Compiler.EffectCompiler>();
+                    var effectSystem = servicesDynamic.GetService<Stride.Shaders.Compiler.EffectCompiler>();
                     if (effectSystem != null)
                     {
                         // EffectSystem may provide access to EffectCompiler
@@ -756,10 +761,12 @@ shader BlurEffect : ShaderBase
 
                 // Try to compile shader from file
                 // Based on Stride API: EffectCompiler can compile from file paths
-                var services = _graphicsDevice.Services;
+                // Use explicit type to avoid C# 7.3 inferred delegate type limitation
+                object services = _graphicsDevice.Services();
                 if (services != null)
                 {
-                    var effectCompiler = services.GetService<EffectCompiler>();
+                    dynamic servicesDynamic = services;
+                    var effectCompiler = servicesDynamic.GetService<EffectCompiler>();
                     if (effectCompiler != null)
                     {
                         // Create compilation source from file
