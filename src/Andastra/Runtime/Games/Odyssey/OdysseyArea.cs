@@ -609,7 +609,7 @@ namespace Andastra.Runtime.Games.Odyssey
             // Based on ARE format: ResRef is stored at root level
             if (!string.IsNullOrEmpty(_resRef))
             {
-                root.SetResRef("ResRef", ResRef.FromString(_resRef));
+                root.SetResRef("ResRef", new ResRef(_resRef));
             }
 
             // Write lighting properties to root (based on LoadAreaProperties pattern)

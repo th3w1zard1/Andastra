@@ -29,7 +29,8 @@ using Andastra.Runtime.Core.Module;
 using Andastra.Runtime.Games.Eclipse.Lighting;
 using Andastra.Runtime.Games.Eclipse.Physics;
 using Andastra.Runtime.MonoGame.Enums;
-using Microsoft.Xna.Framework;
+// Type aliases to resolve ambiguity between XNA and System.Numerics types
+using XnaMatrix = Microsoft.Xna.Framework.Matrix;
 using Andastra.Runtime.MonoGame.Interfaces;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.MonoGame.Converters;
@@ -6342,9 +6343,9 @@ namespace Andastra.Runtime.Games.Eclipse
         /// </summary>
         /// <param name="matrix">Matrix4x4 to convert.</param>
         /// <returns>XNA Matrix.</returns>
-        private static Matrix ConvertMatrix4x4ToXnaMatrix(Matrix4x4 matrix)
+        private static XnaMatrix ConvertMatrix4x4ToXnaMatrix(Matrix4x4 matrix)
         {
-            return new Matrix(
+            return new XnaMatrix(
                 matrix.M11, matrix.M12, matrix.M13, matrix.M14,
                 matrix.M21, matrix.M22, matrix.M23, matrix.M24,
                 matrix.M31, matrix.M32, matrix.M33, matrix.M34,

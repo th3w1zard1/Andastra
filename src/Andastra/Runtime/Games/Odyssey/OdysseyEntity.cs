@@ -1150,8 +1150,8 @@ namespace Andastra.Runtime.Games.Odyssey
                         FieldInfo dataFieldForParent = baseEntityTypeForParent.GetField("_data", BindingFlags.NonPublic | BindingFlags.Instance);
                         if (dataFieldForParent != null)
                         {
-                            var data = dataFieldForParent.GetValue(this) as Dictionary<string, object>;
-                            if (data == null)
+                            var parentData = dataFieldForParent.GetValue(this) as Dictionary<string, object>;
+                            if (parentData == null)
                             {
                                 data = new Dictionary<string, object>();
                                 dataFieldForParent.SetValue(this, data);
@@ -1223,7 +1223,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 var doorComponent = GetComponent<IDoorComponent>();
                 if (doorComponent == null && _objectType == ObjectType.Door)
                 {
-                    doorComponent = new Components.DoorComponent();
+                    doorComponent = new Andastra.Runtime.Games.Odyssey.Components.DoorComponent();
                     doorComponent.Owner = this;
                     AddComponent<IDoorComponent>(doorComponent);
                 }
@@ -1476,8 +1476,8 @@ namespace Andastra.Runtime.Games.Odyssey
                         FieldInfo dataFieldForItems = baseEntityTypeForItems.GetField("_data", BindingFlags.NonPublic | BindingFlags.Instance);
                         if (dataFieldForItems != null)
                         {
-                            var data = dataFieldForItems.GetValue(this) as Dictionary<string, object>;
-                            if (data == null)
+                            var itemsData = dataFieldForItems.GetValue(this) as Dictionary<string, object>;
+                            if (itemsData == null)
                             {
                                 data = new Dictionary<string, object>();
                                 dataFieldForItems.SetValue(this, data);
@@ -1625,8 +1625,8 @@ namespace Andastra.Runtime.Games.Odyssey
 
                         if (dataField != null)
                         {
-                            var data = dataField.GetValue(this) as Dictionary<string, object>;
-                            if (data == null)
+                            var fieldData = dataField.GetValue(this) as Dictionary<string, object>;
+                            if (fieldData == null)
                             {
                                 data = new Dictionary<string, object>();
                                 dataField.SetValue(this, data);

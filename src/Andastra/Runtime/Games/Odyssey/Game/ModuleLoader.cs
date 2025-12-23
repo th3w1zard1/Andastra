@@ -651,7 +651,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             {
                 var roomInfo = new RoomInfo
                 {
-                    ModelName = lytRoom.Model.ToLower(),
+                    ModelName = lytRoom.Model?.ToString().ToLowerInvariant() ?? string.Empty,
                     Position = new SysVector3(lytRoom.Position.X, lytRoom.Position.Y, lytRoom.Position.Z),
                     Rotation = 0f, // LYT rooms don't have rotation, only position
                     VisibleRooms = new List<int>()
@@ -973,7 +973,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             // Set waypoint name from GIT (LocalizedName)
             if (waypoint.Name != null && waypoint.Name.StringRef != -1)
             {
-                entity.DisplayName = waypoint.Name.ToString();
+                entity.SetData("DisplayName", waypoint.Name.ToString());
             }
 
             // Load waypoint template (UTW) if ResRef is provided
@@ -1525,9 +1525,10 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                     }
 
                     // Set entity display name from UTW (only if not already set from GIT)
-                    if (string.IsNullOrEmpty(entity.DisplayName) && utw.Name != null && utw.Name.StringRef != -1)
+                    object existingDisplayName = entity.GetData("DisplayName");
+                    if ((existingDisplayName == null || string.IsNullOrEmpty(existingDisplayName.ToString())) && utw.Name != null && utw.Name.StringRef != -1)
                     {
-                        entity.DisplayName = utw.Name.ToString();
+                        entity.SetData("DisplayName", utw.Name.ToString());
                     }
 
                     // Apply UTW properties to waypoint component

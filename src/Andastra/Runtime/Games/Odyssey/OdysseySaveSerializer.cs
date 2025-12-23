@@ -574,7 +574,7 @@ namespace Andastra.Runtime.Games.Odyssey
             // Validate that the GFF content type is NFO
             // This is a double-check since we already validated the signature
             // Based on swkotor2.exe: Content type validation @ 0x00707290
-            GFF gff = GFFAuto.ReadGff(nfoData);
+            GFF gff = GFFAuto.ReadGff(nfoData, (int)ResourceType.NFO);
             if (gff.Content != GFFContent.NFO)
             {
                 throw new InvalidDataException($"GFF content type is not NFO. Got: {gff.Content}");
@@ -674,9 +674,9 @@ namespace Andastra.Runtime.Games.Odyssey
             {
                 // Return empty GFF if game state is null
                 var emptyGff = new GFF();
-                var root = emptyGff.Root;
-                var varList = new GFFList();
-                root.SetList("VariableList", varList);
+                var emptyRoot = emptyGff.Root;
+                var emptyVarList = new GFFList();
+                emptyRoot.SetList("VariableList", emptyVarList);
                 return emptyGff.ToBytes();
             }
 

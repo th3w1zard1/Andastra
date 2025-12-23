@@ -5,6 +5,10 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Engines.Odyssey.Data;
 using Andastra.Runtime.Engines.Odyssey.Components;
+using Andastra.Runtime.Games.Odyssey.Components;
+using AppearanceData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.AppearanceData;
+using PlaceableData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.PlaceableData;
+using DoorData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.DoorData;
 
 namespace Andastra.Runtime.Engines.Odyssey.Systems
 {

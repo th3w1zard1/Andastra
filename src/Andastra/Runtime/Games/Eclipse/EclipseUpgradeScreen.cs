@@ -17,7 +17,8 @@ using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Games.Eclipse.GUI;
 using Andastra.Runtime.Graphics;
 using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Resource.Formats.GFF.Generics.UTI;
+using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Resource.Generics.UTI;
 
 namespace Andastra.Runtime.Games.Eclipse
 {

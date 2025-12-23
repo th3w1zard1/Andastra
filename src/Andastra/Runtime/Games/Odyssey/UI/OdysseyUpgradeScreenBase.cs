@@ -1122,7 +1122,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             // Create item entity
             // Based on swkotor.exe: FUN_0055d330 @ 0x0055d330 - creates item entity using World.CreateEntity
             // Based on swkotor2.exe: FUN_00567ce0 @ 0x00567ce0 - creates item entity using World.CreateEntity
-            IEntity itemEntity = _world.CreateEntity(ObjectType.Item, Vector3.Zero, 0f);
+            IEntity itemEntity = _world.CreateEntity(ObjectType.Item, System.Numerics.Vector3.Zero, 0f);
             if (itemEntity == null)
             {
                 // Failed to create item entity

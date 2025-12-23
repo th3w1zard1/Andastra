@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Andastra.Runtime.Core.Entities;
@@ -940,7 +941,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 // - Class skills vs cross-class skills affect point cost but not the final rank calculation
                 // - Final skill rank = INT modifier + allocated skill points (from characterData.SkillRanks)
                 int intModifier = (characterData.Intelligence - 10) / 2;
-                
+
                 // Get skill ranks allocated during character creation
                 System.Collections.Generic.Dictionary<int, int> skillRanks = characterData.SkillRanks;
                 if (skillRanks == null)
@@ -948,7 +949,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                     // If no skill ranks provided, initialize empty dictionary
                     skillRanks = new System.Collections.Generic.Dictionary<int, int>();
                 }
-                
+
                 // Set skills for all 8 KOTOR skills
                 for (int skillId = 0; skillId < 8; skillId++)
                 {
@@ -958,19 +959,19 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                     {
                         allocatedPoints = skillRanks[skillId];
                     }
-                    
+
                     // Final skill rank = INT modifier + allocated skill points
                     // Based on swkotor.exe and swkotor2.exe: Skill rank calculation
                     // Original implementation: Skill rank = ability modifier + skill ranks
                     // Level 1 characters have no class-based skill ranks yet, only INT modifier and allocated points
                     int finalSkillRank = intModifier + allocatedPoints;
-                    
+
                     // Ensure skill rank is non-negative (can't go below 0)
                     if (finalSkillRank < 0)
                     {
                         finalSkillRank = 0;
                     }
-                    
+
                     statsComp.SetSkillRank(skillId, finalSkillRank);
                 }
 
