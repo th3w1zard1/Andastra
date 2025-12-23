@@ -14,6 +14,7 @@ using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource.Generics.UTC;
 using Andastra.Parsing.Common;
 using Andastra.Runtime.Core.Save;
+using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
 
 namespace Andastra.Runtime.Content.Save
 {
@@ -2270,10 +2271,13 @@ namespace Andastra.Runtime.Content.Save
                 }
 
                 // Convert CreatureState to UTC format
-                UTC utc = CreateUtcFromCreatureState(memberState.State, templateResRef);
+                // Get stack size information for items (needed for save game serialization)
+                UTC utc = CreateUtcFromCreatureState(memberState.State, templateResRef, out Dictionary<string, int> itemStackSizes);
 
-                // Serialize UTC to bytes
-                byte[] utcData = UTCHelpers.BytesUtc(utc, Game.K2, ResourceType.UTC);
+                // Serialize UTC to bytes with StackSize support for save games
+                // Based on swkotor2.exe: FUN_005675e0 @ 0x005675e0 writes StackSize to ItemList struct when serializing creatures
+                // swkotor2.exe: SerializeCreature_K2 @ 0x005226d0 calls FUN_005675e0 for each inventory item
+                byte[] utcData = SerializeUtcForSaveGame(utc, Game.K2, itemStackSizes);
 
                 // Create ResRef for cached character (AVAILNPC + index)
                 string cachedResRef = "AVAILNPC" + index.ToString();
@@ -2292,8 +2296,9 @@ namespace Andastra.Runtime.Content.Save
         /// </summary>
         /// <param name="creatureState">The creature state to convert.</param>
         /// <param name="templateResRef">The template ResRef for the creature.</param>
+        /// <param name="itemStackSizes">Output parameter: Dictionary mapping item TemplateResRef to stack size.</param>
         /// <returns>A UTC object containing the creature data.</returns>
-        private UTC CreateUtcFromCreatureState(CreatureState creatureState, string templateResRef)
+        private UTC CreateUtcFromCreatureState(CreatureState creatureState, string templateResRef, out Dictionary<string, int> itemStackSizes)
         {
             if (creatureState == null)
             {
@@ -2447,22 +2452,70 @@ namespace Andastra.Runtime.Content.Save
             }
 
             // Set inventory from Inventory list
+            // Based on swkotor2.exe: ItemList in UTC format stores one entry per unique item template
+            // StackSize is written when serializing creatures in save games (FUN_005675e0 @ 0x005675e0 line 15)
+            // swkotor2.exe: SerializeCreature_K2 @ 0x005226d0 iterates through inventory and calls FUN_005675e0 for each item
+            // FUN_005675e0 writes StackSize, Charges, Upgrades, and other item properties to ItemList struct
+            // For save game UTC files, StackSize is preserved in the ItemList structure
             if (creatureState.Inventory != null)
             {
+                // Group identical items by TemplateResRef to handle stacks properly
+                // Based on swkotor2.exe: Items with the same template are grouped, StackSize is written per entry
+                // Original implementation: One ItemList entry per unique item template with StackSize field
+                Dictionary<string, ItemState> groupedItems = new Dictionary<string, ItemState>(StringComparer.OrdinalIgnoreCase);
+
                 foreach (ItemState itemState in creatureState.Inventory)
                 {
                     if (itemState != null && !string.IsNullOrEmpty(itemState.TemplateResRef))
                     {
-                        // Create InventoryItem for each item in inventory
-                        // Note: StackSize and other item properties are not directly stored in UTC ItemList
-                        // UTC ItemList only stores ResRef and Droppable flag
-                        // TODO:  For simplicity, we add one entry per stack (in a full implementation, we might need to handle stacks differently)
-                        for (int i = 0; i < itemState.StackSize; i++)
+                        // Group items by TemplateResRef - if same template exists, combine stack sizes
+                        // Based on swkotor2.exe: Items with same template are combined with total StackSize
+                        if (groupedItems.TryGetValue(itemState.TemplateResRef, out ItemState existingItem))
                         {
-                            utc.Inventory.Add(new InventoryItem(ResRef.FromString(itemState.TemplateResRef), true));
+                            // Combine stacks: add stack sizes together
+                            // Based on swkotor2.exe: StackSize is cumulative for identical items
+                            existingItem.StackSize += itemState.StackSize;
+                            // Preserve other properties from the first item (charges, identified, upgrades)
+                            // If items have different properties, we use the first item's properties
+                        }
+                        else
+                        {
+                            // First occurrence of this item template - add to grouped items
+                            groupedItems[itemState.TemplateResRef] = itemState;
                         }
                     }
                 }
+
+                // Add one InventoryItem per unique item template
+                // StackSize will be written directly to GFF structure when serializing for save games
+                // Based on swkotor2.exe: ItemList contains one entry per unique item with StackSize field
+                foreach (ItemState groupedItem in groupedItems.Values)
+                {
+                    // Create InventoryItem for each unique item template
+                    // Note: InventoryItem doesn't store StackSize, but we'll write it directly to GFF when serializing
+                    utc.Inventory.Add(new InventoryItem(ResRef.FromString(groupedItem.TemplateResRef), true));
+                }
+
+                // Store stack size information for later use when serializing UTC for save games
+                // This allows us to write StackSize directly to the GFF structure even though InventoryItem doesn't support it
+                // Based on swkotor2.exe: StackSize is written to ItemList struct when serializing creatures in save games
+                Dictionary<string, int> itemStackSizes = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+                foreach (ItemState groupedItem in groupedItems.Values)
+                {
+                    itemStackSizes[groupedItem.TemplateResRef] = groupedItem.StackSize;
+                }
+
+                // Store stack sizes for later use when serializing UTC for save games
+                // Based on swkotor2.exe: StackSize is written to ItemList struct when serializing creatures in save games
+                itemStackSizes = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+                foreach (ItemState groupedItem in groupedItems.Values)
+                {
+                    itemStackSizes[groupedItem.TemplateResRef] = groupedItem.StackSize;
+                }
+            }
+            else
+            {
+                itemStackSizes = new Dictionary<string, int>();
             }
 
             // Set default flags for companion characters
@@ -2470,6 +2523,64 @@ namespace Andastra.Runtime.Content.Save
             utc.Plot = false; // Companions are typically not plot-critical (can be overridden if needed)
 
             return utc;
+        }
+
+        /// <summary>
+        /// Serializes a UTC object to bytes for save game format, including StackSize in ItemList.
+        /// Based on swkotor2.exe: FUN_005675e0 @ 0x005675e0 writes StackSize to ItemList struct when serializing creatures in save games.
+        /// swkotor2.exe: SerializeCreature_K2 @ 0x005226d0 calls FUN_005675e0 for each inventory item.
+        /// </summary>
+        /// <param name="utc">The UTC object to serialize.</param>
+        /// <param name="game">The game version.</param>
+        /// <param name="itemStackSizes">Dictionary mapping item TemplateResRef to stack size.</param>
+        /// <returns>Serialized UTC data as byte array.</returns>
+        private byte[] SerializeUtcForSaveGame(UTC utc, Game game, Dictionary<string, int> itemStackSizes)
+        {
+            if (utc == null)
+            {
+                throw new ArgumentNullException(nameof(utc));
+            }
+
+            // Create GFF structure using standard DismantleUtc
+            GFF gff = UTCHelpers.DismantleUtc(utc, game);
+            GFFStruct root = gff.Root;
+
+            // Modify ItemList to include StackSize for each item
+            // Based on swkotor2.exe: FUN_005675e0 @ 0x005675e0 line 15 writes StackSize as WORD (ushort)
+            // swkotor2.exe: StackSize is written to ItemList struct when serializing creatures in save games
+            if (itemStackSizes != null && itemStackSizes.Count > 0 && utc.Inventory != null && utc.Inventory.Count > 0)
+            {
+                GFFList itemList = root.Acquire<GFFList>("ItemList", new GFFList());
+                if (itemList != null && itemList.Count > 0)
+                {
+                    // Update each item struct in ItemList to include StackSize
+                    // Based on swkotor2.exe: ItemList contains one entry per unique item with StackSize field
+                    for (int i = 0; i < itemList.Count && i < utc.Inventory.Count; i++)
+                    {
+                        GFFStruct itemStruct = itemList[i];
+                        if (itemStruct != null)
+                        {
+                            InventoryItem item = utc.Inventory[i];
+                            if (item != null && itemStackSizes.TryGetValue(item.ResRef.ToString(), out int stackSize))
+                            {
+                                // Write StackSize to ItemList struct
+                                // Based on swkotor2.exe: FUN_005675e0 @ 0x005675e0 line 15 writes StackSize as WORD (ushort)
+                                // However, save game format uses DWORD (uint) for StackSize (see SerializeInventory line 2066)
+                                // We'll use DWORD to match the save game format
+                                itemStruct.SetUInt32("StackSize", (uint)Math.Max(1, stackSize));
+                            }
+                            else
+                            {
+                                // Default to stack size of 1 if not found in dictionary
+                                itemStruct.SetUInt32("StackSize", 1);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Serialize GFF to bytes
+            return GFFAuto.BytesGff(gff, ResourceType.UTC);
         }
 
         // Serialize cached modules (nested ERF/RIM files) - previously visited areas
