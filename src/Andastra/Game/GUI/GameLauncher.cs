@@ -37,6 +37,8 @@ namespace Andastra.Game.GUI
         private Label _graphicsBackendLabel;
         private Label _pathLabel;
         private GraphicsSettingsData _graphicsSettings;
+        private List<GraphicsBackendItem> _graphicsBackendItems;
+        private List<GameItem> _gameItems;
 
         /// <summary>
         /// Gets the selected game.
@@ -76,6 +78,7 @@ namespace Andastra.Game.GUI
             SelectedGame = GameType.K1; // Default
             SelectedGraphicsBackend = GraphicsBackendType.MonoGame; // Default
             _graphicsSettings = new GraphicsSettingsData();
+            _gameItems = new List<GameItem>();
 
             InitializeComponent();
             PopulateGameComboBox();
@@ -207,32 +210,54 @@ namespace Andastra.Game.GUI
         private void PopulateGameComboBox()
         {
             _gameComboBox.Items.Clear();
+            _gameItems.Clear();
 
             // Odyssey Engine
-            _gameComboBox.Items.Add(new GameItem(BioWareGame.K1, "Knights of the Old Republic (KotOR 1)"));
-            _gameComboBox.Items.Add(new GameItem(BioWareGame.K2, "Knights of the Old Republic II: The Sith Lords (KotOR 2)"));
+            var k1Item = new GameItem(BioWareGame.K1, "Knights of the Old Republic (KotOR 1)");
+            var k2Item = new GameItem(BioWareGame.K2, "Knights of the Old Republic II: The Sith Lords (KotOR 2)");
+            _gameItems.Add(k1Item);
+            _gameItems.Add(k2Item);
+            _gameComboBox.Items.Add(k1Item.ToString());
+            _gameComboBox.Items.Add(k2Item.ToString());
 
             // Aurora Engine
-            _gameComboBox.Items.Add(new GameItem(BioWareGame.NWN, "Neverwinter Nights"));
-            _gameComboBox.Items.Add(new GameItem(BioWareGame.NWN2, "Neverwinter Nights 2"));
+            var nwnItem = new GameItem(BioWareGame.NWN, "Neverwinter Nights");
+            var nwn2Item = new GameItem(BioWareGame.NWN2, "Neverwinter Nights 2");
+            _gameItems.Add(nwnItem);
+            _gameItems.Add(nwn2Item);
+            _gameComboBox.Items.Add(nwnItem.ToString());
+            _gameComboBox.Items.Add(nwn2Item.ToString());
 
             // Eclipse Engine - Dragon Age
-            _gameComboBox.Items.Add(new GameItem(BioWareGame.DA, "Dragon Age: Origins"));
-            _gameComboBox.Items.Add(new GameItem(BioWareGame.DA2, "Dragon Age II"));
+            var daItem = new GameItem(BioWareGame.DA, "Dragon Age: Origins");
+            var da2Item = new GameItem(BioWareGame.DA2, "Dragon Age II");
+            _gameItems.Add(daItem);
+            _gameItems.Add(da2Item);
+            _gameComboBox.Items.Add(daItem.ToString());
+            _gameComboBox.Items.Add(da2Item.ToString());
 
         }
+
+        private List<GraphicsBackendItem> _graphicsBackendItems;
 
         private void PopulateGraphicsBackendComboBox()
         {
             _graphicsBackendComboBox.Items.Clear();
-            _graphicsBackendComboBox.Items.Add(new GraphicsBackendItem(GraphicsBackendType.MonoGame, "MonoGame"));
-            _graphicsBackendComboBox.Items.Add(new GraphicsBackendItem(GraphicsBackendType.Stride, "Stride"));
+            _graphicsBackendItems = new List<GraphicsBackendItem>();
+            var mgItem = new GraphicsBackendItem(GraphicsBackendType.MonoGame, "MonoGame");
+            var strideItem = new GraphicsBackendItem(GraphicsBackendType.Stride, "Stride");
+            _graphicsBackendItems.Add(mgItem);
+            _graphicsBackendItems.Add(strideItem);
+            _graphicsBackendComboBox.Items.Add(mgItem.ToString());
+            _graphicsBackendComboBox.Items.Add(strideItem.ToString());
         }
 
         private void GraphicsBackendComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (_graphicsBackendComboBox.SelectedValue is GraphicsBackendItem backendItem)
+            int selectedIndex = _graphicsBackendComboBox.SelectedIndex;
+            if (selectedIndex >= 0 && selectedIndex < _graphicsBackendItems.Count)
             {
+                var backendItem = _graphicsBackendItems[selectedIndex];
                 SelectedGraphicsBackend = backendItem.BackendType;
             }
         }
@@ -261,9 +286,10 @@ namespace Andastra.Game.GUI
 
         private void GameComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (_gameComboBox.SelectedValue is GameItem gameItem)
+            int selectedIndex = _gameComboBox.SelectedIndex;
+            if (selectedIndex >= 0 && selectedIndex < _gameItems.Count)
             {
-                SelectedGame = gameItem.Game;
+                SelectedGame = _gameItems[selectedIndex].Game;
                 UpdatePathComboBox();
             }
         }
