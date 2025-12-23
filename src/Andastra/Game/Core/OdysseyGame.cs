@@ -2234,7 +2234,7 @@ namespace Andastra.Runtime.Game.Core
         /// Draws a filled triangle using rectangles (approximation).
         /// Used for play button icon when font is not available.
         /// </summary>
-        private void DrawTriangle(ISpriteBatch spriteBatch, int[] x, int[] y, Color color)
+        private void DrawTriangle(ISpriteBatch spriteBatch, int[] x, int[] y, Microsoft.Xna.Framework.Color color)
         {
             // Simple triangle drawing using line approximation
             // Draw lines between points
@@ -2272,7 +2272,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Draws a filled triangle with smooth rendering.
         /// </summary>
-        private void DrawFilledTriangle(ISpriteBatch spriteBatch, int[] x, int[] y, Color color)
+        private void DrawFilledTriangle(ISpriteBatch spriteBatch, int[] x, int[] y, Microsoft.Xna.Framework.Color color)
         {
             DrawTriangle(spriteBatch, x, y, color);
         }

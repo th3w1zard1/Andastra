@@ -7,6 +7,7 @@ using Xunit;
 using FluentAssertions;
 using Andastra.Parsing.Formats.MDL;
 using Andastra.Parsing.Formats.MDLData;
+using MDLModel = Andastra.Parsing.Formats.MDLData.MDL;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Resource;
 using System.Numerics;
@@ -38,7 +39,7 @@ namespace Andastra.Tests.Runtime.Parsing.MDL
         /// <summary>
         /// Create a basic test MDL with minimal data.
         /// </summary>
-        public static MDL CreateTestMDL(string name = "test_model")
+        public static MDLModel CreateTestMDL(string name = "test_model")
         {
             var mdl = new MDL();
             mdl.Name = name;
