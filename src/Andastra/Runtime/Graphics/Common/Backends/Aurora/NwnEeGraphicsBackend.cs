@@ -497,7 +497,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
                 Handle = resourceHandle,
                 NativeHandle = new IntPtr(textureId),
                 ResourceType = OriginalEngineResourceType.OpenGLTexture,
-                DebugName = debugName
+                DebugName = debugName,
+                OpenGLTextureTarget = GL_TEXTURE_2D
             };
             _originalResources[resourceHandle] = originalInfo;
 
@@ -617,7 +618,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
                 Handle = resourceHandle,
                 NativeHandle = new IntPtr(textureId),
                 ResourceType = OriginalEngineResourceType.OpenGLTexture,
-                DebugName = debugName
+                DebugName = debugName,
+                OpenGLTextureTarget = GL_TEXTURE_CUBE_MAP
             };
             _originalResources[resourceHandle] = originalInfo;
 
@@ -717,10 +719,12 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
 
             TXIFeatures features = txi.Features;
 
-            // Determine texture target (check if we're bound to a cube map)
-            // Note: This assumes the texture is already bound when this is called
-            // TODO:  For cube maps, we would need to track the target, but for now we use GL_TEXTURE_2D
-            // as cube maps are handled in CreateOpenGLCubeMapFromTpc which calls this method
+            // Texture target is passed as parameter and is correct for the currently bound texture.
+            // For cube maps, GL_TEXTURE_CUBE_MAP is passed from CreateOpenGLCubeMapFromTpc.
+            // For 2D textures, GL_TEXTURE_2D is passed from CreateOpenGLTextureFromTpc.
+            // The texture target is also stored in OriginalEngineResourceInfo.OpenGLTextureTarget
+            // for later use when binding textures for rendering.
+            // Based on nwmain.exe: Texture target tracking ensures correct binding and parameter application.
 
             // Apply clamp parameter (texture wrapping)
             // clamp 0 = repeat (GL_REPEAT), clamp 1 = clamp to edge (GL_CLAMP_TO_EDGE)
@@ -1494,7 +1498,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
         /// DirectX 9 sampler states are set per-texture-stage during rendering, not stored with the texture object.
         /// This method extracts parameters from TXI and stores them to be applied when the texture is bound.
         /// Matches nwmain.exe TXI parameter storage behavior for DirectX 9 exactly.
-        /// 
+        ///
         /// Based on reverse engineering of nwmain.exe DirectX 9 texture parameter application:
         /// - nwmain.exe stores TXI parameters and applies them via IDirect3DDevice9::SetSamplerState when textures are bound
         /// - clamp parameter: 0 = D3DTADDRESS_WRAP (wrap), 1 = D3DTADDRESS_CLAMP (clamp)

@@ -842,7 +842,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends
                 Handle = handle,
                 NativeHandle = nativeHandle,
                 ResourceType = OriginalEngineResourceType.OpenGLTexture,
-                DebugName = desc.DebugName
+                DebugName = desc.DebugName,
+                OpenGLTextureTarget = GL_TEXTURE_2D
             };
             _originalResources[handle] = originalInfo;
 
@@ -1726,6 +1727,13 @@ namespace Andastra.Runtime.Graphics.Common.Backends
             /// 0 means not set or not applicable.
             /// </summary>
             public uint OpenGLBufferTarget;
+            /// <summary>
+            /// OpenGL texture target (GL_TEXTURE_2D or GL_TEXTURE_CUBE_MAP).
+            /// Only used for OpenGL textures (ResourceType == OpenGLTexture).
+            /// 0 means not set or not applicable.
+            /// Based on nwmain.exe: Texture target is tracked to ensure correct binding and parameter application.
+            /// </summary>
+            public uint OpenGLTextureTarget;
         }
 
         /// <summary>
