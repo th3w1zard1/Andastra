@@ -41,6 +41,15 @@ using Andastra.Runtime.MonoGame.Rendering;
 using Microsoft.Xna.Framework.Graphics;
 using Andastra.Runtime.MonoGame.Culling;
 using Andastra.Runtime.MonoGame.Lighting;
+// Type aliases to resolve ambiguity between XNA/MonoGame and Andastra types
+using XnaColor = Microsoft.Xna.Framework.Color;
+using XnaRectangle = Microsoft.Xna.Framework.Rectangle;
+using XnaBlendState = Microsoft.Xna.Framework.Graphics.BlendState;
+using XnaSpriteSortMode = Microsoft.Xna.Framework.Graphics.SpriteSortMode;
+using XnaPrimitiveType = Microsoft.Xna.Framework.Graphics.PrimitiveType;
+using ParsingResourceType = Andastra.Parsing.Resource.ResourceType;
+using ContentSearchLocation = Andastra.Runtime.Content.Interfaces.SearchLocation;
+using ParsingSearchLocation = Andastra.Parsing.Installation.SearchLocation;
 
 namespace Andastra.Runtime.Games.Eclipse
 {
@@ -2017,8 +2026,8 @@ namespace Andastra.Runtime.Games.Eclipse
             try
             {
                 // Try to load WOK resource with the same resref as the area
-                ResourceResult wokResource = _module.Installation.Resource(_resRef, ResourceType.WOK,
-                    new[] { SearchLocation.CHITIN, SearchLocation.CUSTOM_MODULES });
+                ResourceResult wokResource = _module.Installation.Resource(_resRef, ParsingResourceType.WOK,
+                    new[] { ParsingSearchLocation.CHITIN, ParsingSearchLocation.CUSTOM_MODULES });
 
                 if (wokResource?.Data != null)
                 {
@@ -6921,7 +6930,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 {
                     // Create ResourceIdentifier for MDL file
                     // Based on Eclipse engine: Resources are identified by ResRef and ResourceType
-                    ResourceIdentifier mdlResourceId = new ResourceIdentifier(modelResRef, ResourceType.MDL);
+                    ResourceIdentifier mdlResourceId = new ResourceIdentifier(modelResRef, ParsingResourceType.MDL);
 
                     // Load MDL data asynchronously (use GetAwaiter().GetResult() for synchronous context)
                     // Based on IGameResourceProvider: GetResourceBytesAsync loads resource data
@@ -6934,7 +6943,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     if (mdlData != null && mdlData.Length > 0)
                     {
                         // Create ResourceIdentifier for MDX file
-                        ResourceIdentifier mdxResourceId = new ResourceIdentifier(modelResRef, ResourceType.MDX);
+                        ResourceIdentifier mdxResourceId = new ResourceIdentifier(modelResRef, ParsingResourceType.MDX);
 
                         // Load MDX data asynchronously
                         // Eclipse resource provider searches for MDX in same locations as MDL
