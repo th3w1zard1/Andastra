@@ -49,7 +49,7 @@ namespace Andastra.Parsing.Resource.Generics.GUI
                 else
                 {
                     // Update existing Color's alpha channel
-                    // Based on PyKotor: control.color.a = alpha (updates alpha on existing Color)
+                    // Based on PyKotor: control.color.a = alpha (updates alpha on existing ParsingColor)
                     Color = new Color(Color.R, Color.G, Color.B, value);
                 }
             }

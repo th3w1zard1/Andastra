@@ -96,7 +96,7 @@ namespace Andastra.Parsing.Resource.Generics.GUI
             }
 
             // Load color
-            // Based on PyKotor: COLOR is Vector3 (RGB), ALPHA is separate float field
+            // Based on PyKotor: ParsingColor is Vector3 (RGB), ALPHA is separate float field
             // Original implementation: swkotor.exe/swkotor2.exe stores COLOR as RGB and ALPHA separately
             if (gffStruct.Exists("COLOR"))
             {
@@ -112,7 +112,7 @@ namespace Andastra.Parsing.Resource.Generics.GUI
             {
                 float alpha = gffStruct.GetSingle("ALPHA");
                 // Update Color's alpha channel using the Alpha property
-                // This handles both cases: Color exists (updates alpha) or Color is null (creates default white with alpha)
+                // This handles both cases: ParsingColor exists (updates alpha) or Color is null (creates default white with alpha)
                 control.Alpha = alpha;
             }
 
@@ -289,7 +289,7 @@ namespace Andastra.Parsing.Resource.Generics.GUI
             if (selectedStruct.Exists("COLOR"))
             {
                 var vec = selectedStruct.GetVector3("COLOR");
-                selected.Color = new Color(vec.X, vec.Y, vec.Z, 1.0f);
+                selected.Color = new ParsingColor(vec.X, vec.Y, vec.Z, 1.0f);
             }
 
             selected.Pulsing = selectedStruct.Exists("PULSING") ? (int?)selectedStruct.GetUInt8("PULSING") : null;
@@ -315,7 +315,7 @@ namespace Andastra.Parsing.Resource.Generics.GUI
             if (hilightSelectedStruct.Exists("COLOR"))
             {
                 var vec = hilightSelectedStruct.GetVector3("COLOR");
-                hilightSelected.Color = new Color(vec.X, vec.Y, vec.Z, 1.0f);
+                hilightSelected.Color = new ParsingColor(vec.X, vec.Y, vec.Z, 1.0f);
             }
 
             hilightSelected.Pulsing = hilightSelectedStruct.Exists("PULSING") ? (int?)hilightSelectedStruct.GetUInt8("PULSING") : null;
@@ -470,7 +470,7 @@ namespace Andastra.Parsing.Resource.Generics.GUI
             if (progressStruct.Exists("COLOR"))
             {
                 var vec = progressStruct.GetVector3("COLOR");
-                progress.Color = new Color(vec.X, vec.Y, vec.Z, 1.0f);
+                progress.Color = new ParsingColor(vec.X, vec.Y, vec.Z, 1.0f);
             }
 
             progress.Pulsing = progressStruct.Exists("PULSING") ? (int?)progressStruct.GetUInt8("PULSING") : null;

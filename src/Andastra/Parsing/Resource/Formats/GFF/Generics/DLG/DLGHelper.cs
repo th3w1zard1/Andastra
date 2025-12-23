@@ -245,7 +245,8 @@ namespace Andastra.Parsing.Resource.Generics.DLG
             if (gffStruct.Exists("FadeColor"))
             {
                 var fadeColorVec = gffStruct.Acquire("FadeColor", new Vector3(0, 0, 0));
-                node.FadeColor = Color.FromBgrVector3(fadeColorVec);
+                ParsingColor fadeColor = ParsingColor.FromBgrVector3(fadeColorVec);
+                node.FadeColor = new Color(fadeColor);
             }
         }
 

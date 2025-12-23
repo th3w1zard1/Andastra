@@ -39,14 +39,15 @@ namespace Andastra.Parsing.Resource.Generics.DLG.IO
             colorStr = colorStr.Trim();
             
             // Try hex format first (for HTML format)
-            // Based on PyKotor: HTML format uses Color.from_hex_string(color)
+            // Based on PyKotor: HTML format uses Color.from_hex_string(ParsingColor)
             if (colorStr.StartsWith("#") || 
                 (colorStr.Length >= 3 && colorStr.Length <= 8 && IsHexString(colorStr)))
             {
                 try
                 {
-                    // Color.FromHexString handles # prefix and various hex formats
-                    return Color.FromHexString(colorStr);
+                    // ParsingColor.FromHexString handles # prefix and various hex formats
+                    ParsingColor parsedColor = ParsingColor.FromHexString(colorStr);
+                    return new Color(parsedColor);
                 }
                 catch (ArgumentException)
                 {
@@ -231,7 +232,8 @@ namespace Andastra.Parsing.Resource.Generics.DLG.IO
                         else
                         {
                             // Fallback to default color if parsing fails
-                            twineMetadata.TagColors[prop.Name] = Color.FromBgrInteger(0);
+                            ParsingColor fallbackColor = ParsingColor.FromBgrInteger(0);
+                            twineMetadata.TagColors[prop.Name] = new Color(fallbackColor);
                         }
                     }
                 }
@@ -444,17 +446,17 @@ namespace Andastra.Parsing.Resource.Generics.DLG.IO
             }
 
             // Get tag colors
-            // Based on PyKotor: HTML format uses hex colors, parsed via Color.from_hex_string(color)
+            // Based on PyKotor: HTML format uses hex colors, parsed via Color.from_hex_string(ParsingColor)
             // Example: <tw-tag name="entry" color="#ff0000" />
             foreach (var tag in storyData.Descendants("tw-tag"))
             {
                 string name = tag.Attribute("name")?.Value?.Trim() ?? "";
-                string color = tag.Attribute("color")?.Value?.Trim() ?? "";
-                if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(color))
+                string colorStr = tag.Attribute("color")?.Value?.Trim() ?? "";
+                if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(colorStr))
                 {
                     // Parse color string (supports hex and space-separated float formats)
                     // HTML format typically uses hex, but we support both for compatibility
-                    Color parsedColor = ParseTwineColorString(color);
+                    Color parsedColor = ParseTwineColorString(colorStr);
                     if (parsedColor != null)
                     {
                         twineMetadata.TagColors[name] = parsedColor;
@@ -462,7 +464,8 @@ namespace Andastra.Parsing.Resource.Generics.DLG.IO
                     else
                     {
                         // Fallback to default color if parsing fails
-                        twineMetadata.TagColors[name] = Color.FromBgrInteger(0);
+                        ParsingColor fallbackColor = ParsingColor.FromBgrInteger(0);
+                        twineMetadata.TagColors[name] = new Color(fallbackColor);
                     }
                 }
             }
