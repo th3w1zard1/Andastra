@@ -446,6 +446,16 @@ shader TemporalAAEffect : ShaderBase
         // Preserve alpha from current frame
         return float4(resultColor, currentColor.a);
     }
+
+    // Technique definition for Stride shader compilation
+    technique TemporalAA
+    {
+        pass Pass0
+        {
+            VertexShader = compile vs_5_0 VS();
+            PixelShader = compile ps_5_0 PS();
+        }
+    }
 };";
 
                 // Compile shader source using EffectCompiler
