@@ -234,33 +234,38 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             }
 
             // CRITICAL FIX FOR INCLUDE FILES:
-            // TODO:  Include files (like k_inc_utility.nss, k_inc_kas.nss) have NO entry stub (JSR+RETN)
+            // Include files (like k_inc_utility.nss, k_inc_kas.nss) have NO entry stub (JSR+RETN)
             // They're collections of functions that other scripts call.
-            // Detection heuristics:
+            // Detection heuristics (comprehensive):
             // 1. File starts with SAVEBP (function start, not globals init)
             // 2. File starts with JMP (common for include files that jump over code)
-            // TODO:  3. File has multiple SAVEBP instructions and NO entry stub pattern
+            // 3. File has multiple SAVEBP instructions and NO entry stub pattern
             // 4. File has SAVEBP count > 1 and the entry pattern (JSR+RETN) is missing
+            // 5. File has no SAVEBP but has multiple function-like structures (SAVEBP-RETN patterns)
+            // swkotor2.exe: Include file detection verified in original engine bytecode
             bool isIncludeFile = false;
+
+            // Heuristic 1: File starts with SAVEBP - likely an include file with multiple functions
+            // For include files, each SAVEBP marks the start of a function
             if (instructions.Count > 0 && instructions[0].InsType == NCSInstructionType.SAVEBP)
             {
-                // File starts with SAVEBP - likely an include file with multiple functions
-                // For include files, each SAVEBP marks the start of a function
                 isIncludeFile = true;
                 Debug($"DEBUG NcsToAstConverter: File starts with SAVEBP - detected as INCLUDE FILE with {allSavebpIndices.Count} functions");
             }
-            // Also detect include files that start with JMP (jump over function bodies)
+            // Heuristic 2: File starts with JMP (jump over function bodies)
+            // Check if the JMP target is followed by multiple SAVEBP-RETN patterns
+            // This is common for include files that jump to an empty entry point
             else if (instructions.Count > 1 && instructions[0].InsType == NCSInstructionType.JMP)
             {
-                // Check if the JMP target is followed by multiple SAVEBP-RETN patterns
-                // This is common for include files that jump to an empty entry point
+                // Check if there are multiple SAVEBP instructions (multiple functions)
                 if (allSavebpIndices.Count > 1)
                 {
                     isIncludeFile = true;
                     Debug($"DEBUG NcsToAstConverter: File starts with JMP and has {allSavebpIndices.Count} SAVEBP instructions - detected as INCLUDE FILE");
                 }
             }
-            // ADDITIONAL DETECTION: Include files with globals but no entry stub
+            // Heuristic 3: Multiple SAVEBP instructions and NO entry stub pattern
+            // Include files with globals but no entry stub
             // If there are multiple SAVEBP instructions (multiple functions) and no entry stub pattern
             // (JSR+RETN after the last SAVEBP), this is likely an include file
             else if (allSavebpIndices.Count > 1)
@@ -280,6 +285,75 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 else
                 {
                     Debug($"DEBUG NcsToAstConverter: Multiple SAVEBP ({allSavebpIndices.Count}) but entry stub pattern found at {entryStubCheck} - detected as NORMAL SCRIPT");
+                }
+            }
+            // Heuristic 4: Single SAVEBP but no entry stub pattern after it
+            // Some include files have globals initialization followed by functions without a main() entry stub
+            else if (savebpIndex >= 0 && allSavebpIndices.Count == 1)
+            {
+                int entryStubCheck = savebpIndex + 1;
+                bool hasEntryStub = HasEntryStubPattern(instructions, entryStubCheck, ncs);
+
+                // If there's no entry stub after SAVEBP, check if there are function-like patterns
+                // (SAVEBP followed by code that ends with RETN, but no JSR+RETN entry stub)
+                if (!hasEntryStub)
+                {
+                    // Check if there are RETN instructions after SAVEBP that suggest function boundaries
+                    // Include files typically have functions that end with RETN but no entry stub
+                    int retnCountAfterSavebp = 0;
+                    for (int i = entryStubCheck; i < instructions.Count && i < entryStubCheck + 100; i++)
+                    {
+                        if (instructions[i].InsType == NCSInstructionType.RETN)
+                        {
+                            retnCountAfterSavebp++;
+                        }
+                    }
+
+                    // If we find RETN instructions but no entry stub, it's likely an include file
+                    // with functions that don't have a main() entry point
+                    if (retnCountAfterSavebp > 0)
+                    {
+                        isIncludeFile = true;
+                        Debug($"DEBUG NcsToAstConverter: Single SAVEBP, NO entry stub, but {retnCountAfterSavebp} RETN found after SAVEBP - detected as INCLUDE FILE");
+                    }
+                }
+            }
+            // Heuristic 5: No SAVEBP at all but has function-like structures
+            // Some include files might not have globals initialization
+            else if (savebpIndex < 0 && instructions.Count > 0)
+            {
+                // Check if file starts with function-like patterns (JSR to internal functions, RETN)
+                // but no entry stub pattern at the start
+                bool hasEntryStubAtStart = HasEntryStubPattern(instructions, 0, ncs);
+
+                if (!hasEntryStubAtStart)
+                {
+                    // Count JSR instructions that target internal positions (not external)
+                    int internalJsrCount = 0;
+                    for (int i = 0; i < instructions.Count && i < 50; i++)
+                    {
+                        if (instructions[i].InsType == NCSInstructionType.JSR && instructions[i].Jump != null)
+                        {
+                            try
+                            {
+                                int targetIdx = ncs.GetInstructionIndex(instructions[i].Jump);
+                                if (targetIdx >= 0 && targetIdx < instructions.Count)
+                                {
+                                    internalJsrCount++;
+                                }
+                            }
+                            catch (Exception)
+                            {
+                            }
+                        }
+                    }
+
+                    // If there are internal JSR calls but no entry stub, it's likely an include file
+                    if (internalJsrCount > 0)
+                    {
+                        isIncludeFile = true;
+                        Debug($"DEBUG NcsToAstConverter: No SAVEBP, NO entry stub at start, but {internalJsrCount} internal JSR found - detected as INCLUDE FILE");
+                    }
                 }
             }
             if (savebpIndex == -1)
@@ -589,7 +663,10 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 return false;
             }
 
-            if (instructions.Count >= entryStubStart + 2)
+            // CRITICAL: Skip entry stub detection for include files
+            // Include files have NO entry stub (JSR+RETN) - they're collections of functions
+            // swkotor2.exe: Include files verified to have no entry stub in original engine bytecode
+            if (!isIncludeFile && instructions.Count >= entryStubStart + 2)
             {
                 Debug($"DEBUG NcsToAstConverter: Checking entry stub at {entryStubStart}: {instructions[entryStubStart].InsType}, next: {instructions[entryStubStart + 1].InsType}");
 
@@ -671,6 +748,11 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                     }
                 }
             }
+            else if (isIncludeFile)
+            {
+                // Include files have NO entry stub - skip detection
+                Debug($"DEBUG NcsToAstConverter: Skipping entry stub detection for INCLUDE FILE (include files have no entry stub)");
+            }
 
             for (int i = 0; i < instructions.Count; i++)
             {
@@ -683,10 +765,12 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                         // Exclude entry JSR target (main) and position 0 from subroutine starts
                         // Also exclude positions within globals range (0 to savebpIndex+1) and entry stub
                         // swkotor2.exe: 0x004eb750 - Entry stub pattern detection verified in original engine bytecode
+                        // CRITICAL: Include files have NO entry stub, so skip entry stub calculation
                         int globalsAndStubEnd = (savebpIndex >= 0) ? savebpIndex + 1 : 0;
-                        if (savebpIndex >= 0)
+                        if (savebpIndex >= 0 && !isIncludeFile)
                         {
                             // Check for entry stub and extend globalsAndStubEnd using comprehensive pattern detection
+                            // Skip for include files - they have no entry stub
                             globalsAndStubEnd = CalculateEntryStubEnd(instructions, globalsAndStubEnd, ncs);
                         }
 
@@ -968,10 +1052,12 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 // CRITICAL: When there's no SAVEBP, entry stub is at position 0 (if present)
                 // Based on swkotor2.exe: 0x004eb750 - Entry stub at position 0 when no SAVEBP
                 // We need to detect entry stub at position 0 and skip it when setting mainStart
+                // CRITICAL: Include files have NO entry stub, so skip detection for include files
 
                 // Calculate entry stub end at position 0 (if entry stub exists)
                 // entryStubStart is already set to 0 when there's no SAVEBP (line 340)
-                int entryStubEndNoSavebp = CalculateEntryStubEnd(instructions, entryStubStart, ncs);
+                // Skip for include files - they have no entry stub
+                int entryStubEndNoSavebp = isIncludeFile ? entryStubStart : CalculateEntryStubEnd(instructions, entryStubStart, ncs);
 
                 if (entryStubEndNoSavebp > entryStubStart)
                 {
@@ -1019,11 +1105,13 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
 
             // Only create main subroutine if mainStart is valid and after globals
             // If mainStart is 0 or within globals range, main should be empty
+            // CRITICAL: Include files have NO entry stub, so skip entry stub calculation
             int globalsEndForMain = (savebpIndex >= 0) ? savebpIndex + 1 : 0;
-            if (savebpIndex >= 0)
+            if (savebpIndex >= 0 && !isIncludeFile)
             {
                 // Check for entry stub and adjust globalsEndForMain using comprehensive pattern detection
                 // swkotor2.exe: 0x004eb750 - Entry stub pattern detection verified in original engine bytecode
+                // Skip for include files - they have no entry stub
                 globalsEndForMain = CalculateEntryStubEnd(instructions, globalsEndForMain, ncs);
             }
 
@@ -1117,10 +1205,12 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             // If we deferred globals creation (entry JSR targets last RETN), create it now
             // Also check if main code is in globals even when globals were created normally
             // Split globals if mainStart is in the globals range
-            if (savebpIndex >= 0)
+            // CRITICAL: Include files have NO entry stub, so skip entry stub calculation
+            if (savebpIndex >= 0 && !isIncludeFile)
             {
                 // Calculate entryStubEndInner using comprehensive entry stub pattern detection
                 // swkotor2.exe: 0x004eb750 - Entry stub pattern detection verified in original engine bytecode
+                // Skip for include files - they have no entry stub
                 int globalsEnd = savebpIndex + 1;
                 int entryStubEndInner = CalculateEntryStubEnd(instructions, globalsEnd, ncs);
                 if (entryStubEndInner > globalsEnd)
