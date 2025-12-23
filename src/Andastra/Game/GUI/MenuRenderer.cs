@@ -426,7 +426,7 @@ namespace Andastra.Runtime.Game.GUI
             _spriteBatch.End();
         }
 
-        private void DrawBorder(ISpriteBatch spriteBatch, Rectangle rect, int thickness, Color color)
+        private void DrawBorder(ISpriteBatch spriteBatch, XnaRectangle rect, int thickness, XnaColor color)
         {
             // Top border
             spriteBatch.Draw(_whiteTexture,

@@ -15,6 +15,7 @@ using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common;
 using Andastra.Runtime.Engines.Odyssey.Data;
 using Andastra.Parsing.Formats.TPC;
+using FeatData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.FeatData;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Game.Core
@@ -1997,7 +1998,7 @@ namespace Andastra.Runtime.Game.Core
         /// <param name="height">Texture height.</param>
         /// <param name="format">TPC texture format.</param>
         /// <returns>RGBA byte array, or null if conversion failed.</returns>
-        private byte[] ConvertTpcDataToRgba(byte[] tpcData, int width, int height, Formats.TPC.TPCTextureFormat format)
+        private byte[] ConvertTpcDataToRgba(byte[] tpcData, int width, int height, TPCTextureFormat format)
         {
             if (tpcData == null || tpcData.Length == 0 || width <= 0 || height <= 0)
             {

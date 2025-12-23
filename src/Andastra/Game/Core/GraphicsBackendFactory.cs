@@ -1,5 +1,6 @@
 using System;
 using Andastra.Runtime.Graphics;
+using Andastra.Runtime.Graphics.Common.Enums;
 
 namespace Andastra.Runtime.Game.Core
 {

@@ -9,6 +9,7 @@ using Andastra.Parsing.Tools;
 using Andastra.Runtime.Core;
 using Andastra.Runtime.Game.Core;
 using Andastra.Runtime.Graphics.Common.Enums;
+using GameType = Andastra.Parsing.Common.Game;
 
 namespace Andastra.Game.GUI
 {
@@ -40,7 +41,7 @@ namespace Andastra.Game.GUI
         /// <summary>
         /// Gets the selected game.
         /// </summary>
-        public Game SelectedGame { get; private set; }
+        public GameType SelectedGame { get; private set; }
 
         /// <summary>
         /// Gets the selected graphics backend.
@@ -72,7 +73,7 @@ namespace Andastra.Game.GUI
             Resizable = false;
             WindowStyle = WindowStyle.Default;
 
-            SelectedGame = Game.K1; // Default
+            SelectedGame = GameType.K1; // Default
             SelectedGraphicsBackend = GraphicsBackendType.MonoGame; // Default
             _graphicsSettings = new GraphicsSettingsData();
 
@@ -571,7 +572,7 @@ namespace Andastra.Game.GUI
 
             public GameItem(Game game, string displayName)
             {
-                Game = game;
+                GameType = game;
                 DisplayName = displayName;
             }
 

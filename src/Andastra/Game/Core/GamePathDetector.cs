@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using Microsoft.Win32;
 using Andastra.Parsing.Common;
 using Andastra.Runtime.Core;
+using GameType = Andastra.Parsing.Common.Game;
 
 namespace Andastra.Runtime.Game.Core
 {
@@ -529,7 +530,7 @@ namespace Andastra.Runtime.Game.Core
         /// Finds all installation paths for NWN, DA, ME games from default locations.
         /// Similar to FindKotorPathsFromDefault but for other BioWare games.
         /// </summary>
-        public static List<string> FindGamePathsFromDefault(Game game)
+        public static List<string> FindGamePathsFromDefault(GameType game)
         {
             var paths = new List<string>();
 
@@ -584,7 +585,7 @@ namespace Andastra.Runtime.Game.Core
         /// Tries to get the game path from environment variables.
         /// Supports NWN_PATH, NWN2_PATH, DA_PATH, DA2_PATH, ME_PATH, ME2_PATH, ME3_PATH.
         /// </summary>
-        private static string TryEnvironmentVariableForGame(Game game)
+        private static string TryEnvironmentVariableForGame(GameType game)
         {
             // Load .env file if it exists
             LoadEnvFile();
@@ -607,7 +608,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Gets the environment variable name for a game.
         /// </summary>
-        private static string GetEnvironmentVariableName(Game game)
+        private static string GetEnvironmentVariableName(GameType game)
         {
             switch (game)
             {
@@ -627,7 +628,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Tries to get the game path from Windows registry.
         /// </summary>
-        private static string TryRegistryForGame(Game game)
+        private static string TryRegistryForGame(GameType game)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -691,7 +692,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Gets registry key paths for a game.
         /// </summary>
-        private static string[] GetRegistryKeysForGame(Game game)
+        private static string[] GetRegistryKeysForGame(GameType game)
         {
             switch (game)
             {
@@ -729,7 +730,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Tries to find game paths in Steam library locations.
         /// </summary>
-        private static List<string> TrySteamPathsForGame(Game game)
+        private static List<string> TrySteamPathsForGame(GameType game)
         {
             var paths = new List<string>();
             string steamApps = null;
@@ -793,7 +794,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Gets the Steam game folder name for a game.
         /// </summary>
-        private static string GetSteamGameName(Game game)
+        private static string GetSteamGameName(GameType game)
         {
             switch (game)
             {
@@ -813,7 +814,7 @@ namespace Andastra.Runtime.Game.Core
         /// <summary>
         /// Tries to find game paths in GOG installation locations.
         /// </summary>
-        private static List<string> TryGogPathsForGame(Game game)
+        private static List<string> TryGogPathsForGame(GameType game)
         {
             var paths = new List<string>();
             string[] gogPaths = GetGogPathsForGame(game);
