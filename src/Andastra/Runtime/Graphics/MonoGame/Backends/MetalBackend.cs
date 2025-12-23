@@ -987,6 +987,12 @@ namespace Andastra.Runtime.MonoGame.Backends
         {
             switch (format)
             {
+                case TextureFormat.R8_SNorm:
+                    return MetalPixelFormat.R8SNorm;
+                case TextureFormat.R8G8_SNorm:
+                    return MetalPixelFormat.RG8SNorm;
+                case TextureFormat.R8G8B8A8_SNorm:
+                    return MetalPixelFormat.RGBA8SNorm;
                 case TextureFormat.R8G8B8A8_UNorm:
                     return MetalPixelFormat.RGBA8UNorm;
                 case TextureFormat.R8G8B8A8_UNorm_SRGB:
@@ -1156,17 +1162,17 @@ namespace Andastra.Runtime.MonoGame.Backends
                     return 2; // 1 * 2 bytes
                 case TextureFormat.R8G8B8A8_UNorm:
                 case TextureFormat.R8G8B8A8_UInt:
-                // case TextureFormat.R8G8B8A8_SNorm: // TODO: Not available in MonoGame TextureFormat enum
+                case TextureFormat.R8G8B8A8_SNorm:
                 case TextureFormat.R8G8B8A8_SInt:
                     return 4; // 4 * 1 byte
                 case TextureFormat.R8G8_UNorm:
                 case TextureFormat.R8G8_UInt:
-                // case TextureFormat.R8G8_SNorm: // TODO: Not available in MonoGame TextureFormat enum
+                case TextureFormat.R8G8_SNorm:
                 case TextureFormat.R8G8_SInt:
                     return 2; // 2 * 1 byte
                 case TextureFormat.R8_UNorm:
                 case TextureFormat.R8_UInt:
-                // case TextureFormat.R8_SNorm: // TODO: Not available in MonoGame TextureFormat enum
+                case TextureFormat.R8_SNorm:
                 case TextureFormat.R8_SInt:
                     return 1; // 1 * 1 byte
                 case TextureFormat.R10G10B10A2_UNorm:
@@ -1335,11 +1341,13 @@ namespace Andastra.Runtime.MonoGame.Backends
                 case TextureFormat.R8_UNorm:
                 case TextureFormat.R8_UInt:
                 case TextureFormat.R8_SInt:
+                case TextureFormat.R8_SNorm:
                     return (uint)width;
 
                 // 2 bytes per pixel formats
                 case TextureFormat.R8G8_UNorm:
                 case TextureFormat.R8G8_UInt:
+                case TextureFormat.R8G8_SNorm:
                 case TextureFormat.R16_Float:
                 case TextureFormat.R16_UNorm:
                 case TextureFormat.R16_UInt:
@@ -1350,6 +1358,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 case TextureFormat.R8G8B8A8_UNorm:
                 case TextureFormat.R8G8B8A8_UNorm_SRGB:
                 case TextureFormat.R8G8B8A8_UInt:
+                case TextureFormat.R8G8B8A8_SNorm:
                 case TextureFormat.B8G8R8A8_UNorm:
                 case TextureFormat.B8G8R8A8_UNorm_SRGB:
                 case TextureFormat.R16G16_Float:
@@ -1431,11 +1440,13 @@ namespace Andastra.Runtime.MonoGame.Backends
                 case TextureFormat.R8_UNorm:
                 case TextureFormat.R8_UInt:
                 case TextureFormat.R8_SInt:
+                case TextureFormat.R8_SNorm:
                     return (uint)(width * height);
 
                 // 2 bytes per pixel formats
                 case TextureFormat.R8G8_UNorm:
                 case TextureFormat.R8G8_UInt:
+                case TextureFormat.R8G8_SNorm:
                 case TextureFormat.R16_Float:
                 case TextureFormat.R16_UNorm:
                 case TextureFormat.R16_UInt:
@@ -1446,6 +1457,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 case TextureFormat.R8G8B8A8_UNorm:
                 case TextureFormat.R8G8B8A8_UNorm_SRGB:
                 case TextureFormat.R8G8B8A8_UInt:
+                case TextureFormat.R8G8B8A8_SNorm:
                 case TextureFormat.B8G8R8A8_UNorm:
                 case TextureFormat.B8G8R8A8_UNorm_SRGB:
                 case TextureFormat.R16G16_Float:
@@ -2029,6 +2041,9 @@ namespace Andastra.Runtime.MonoGame.Backends
     internal enum MetalPixelFormat : uint
     {
         Invalid = 0,
+        R8SNorm = 11,
+        RG8SNorm = 12,
+        RGBA8SNorm = 13,
         RGBA8UNorm = 70,
         RGBA8UNormSRGB = 71,
         BGRA8UNorm = 80,
