@@ -41,7 +41,7 @@ namespace Andastra.Runtime.Scripting.VM
     /// - String handling: Strings stored in string pool with integer handles (off-stack storage)
     /// - Based on NCS file format documentation in vendor/PyKotor/wiki/NCS-File-Format.md
     /// </remarks>
-    public class NcsVm : INcsVm
+    public class NcsVm : INcsVm, IDisposable
     {
         private const int DefaultMaxInstructions = 100000;
         private const uint ObjectInvalid = 0x7F000000;
@@ -1331,7 +1331,38 @@ namespace Andastra.Runtime.Scripting.VM
             _nextLocationId = LocationIdBase;
         }
 
+        /// <summary>
+        /// Clears all string objects from the string pool.
+        /// </summary>
+        private void ClearStrings()
+        {
+            _stringPool.Clear();
+            _nextStringHandle = 1; // Start at 1, 0 reserved for null/empty
+        }
+
+        /// <summary>
+        /// Clears vector-related resources.
+        /// Note: Vectors are stored on the stack, so this is a no-op for now.
+        /// </summary>
+        private void ClearVectors()
+        {
+            // Vectors are stored directly on the stack, no pool to clear
+        }
+
         #endregion
+
+        /// <summary>
+        /// Disposes of resources used by the NCS VM.
+        /// </summary>
+        public void Dispose()
+        {
+            // Clear all pools and reset state
+            ClearStrings();
+            ClearVectors();
+            ClearLocations();
+            _code = null;
+            _stack = null;
+        }
     }
 }
 
