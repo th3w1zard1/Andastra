@@ -1917,6 +1917,8 @@ namespace Andastra.Runtime.MonoGame.Backends
         private static vkCmdClearColorImageDelegate vkCmdClearColorImage;
         private static vkGetPhysicalDeviceFormatPropertiesDelegate vkGetPhysicalDeviceFormatProperties;
         private static vkGetPhysicalDeviceMemoryPropertiesDelegate vkGetPhysicalDeviceMemoryProperties;
+        // Cached vkGetInstanceProcAddr delegate for loading instance-level functions
+        private static vkGetInstanceProcAddrDelegate vkGetInstanceProcAddr;
         private static vkCmdUpdateBufferDelegate vkCmdUpdateBuffer;
         private static vkCmdCopyBufferDelegate vkCmdCopyBuffer;
         private static vkCmdCopyBufferToImageDelegate vkCmdCopyBufferToImage;
@@ -2624,56 +2626,70 @@ namespace Andastra.Runtime.MonoGame.Backends
                     return;
                 }
 
-                vkGetInstanceProcAddrDelegate vkGetInstanceProcAddr = (vkGetInstanceProcAddrDelegate)Marshal.GetDelegateForFunctionPointer(vkGetInstanceProcAddrPtr, typeof(vkGetInstanceProcAddrDelegate));
+                // Cache vkGetInstanceProcAddr delegate for use in loading other instance-level functions
+                if (vkGetInstanceProcAddr == null)
+                {
+                    vkGetInstanceProcAddr = (vkGetInstanceProcAddrDelegate)Marshal.GetDelegateForFunctionPointer(vkGetInstanceProcAddrPtr, typeof(vkGetInstanceProcAddrDelegate));
+                }
+
+                vkGetInstanceProcAddrDelegate vkGetInstanceProcAddrLocal = vkGetInstanceProcAddr;
 
                 IntPtr ptr;
 
-                ptr = vkGetInstanceProcAddr(instance, "vkDestroyInstance");
+                ptr = vkGetInstanceProcAddrLocal(instance, "vkDestroyInstance");
                 if (ptr != IntPtr.Zero)
                 {
                     vkDestroyInstance = (vkDestroyInstanceDelegate)Marshal.GetDelegateForFunctionPointer(ptr, typeof(vkDestroyInstanceDelegate));
                 }
 
-                ptr = vkGetInstanceProcAddr(instance, "vkEnumeratePhysicalDevices");
+                ptr = vkGetInstanceProcAddrLocal(instance, "vkEnumeratePhysicalDevices");
                 if (ptr != IntPtr.Zero)
                 {
                     vkEnumeratePhysicalDevices = (vkEnumeratePhysicalDevicesDelegate)Marshal.GetDelegateForFunctionPointer(ptr, typeof(vkEnumeratePhysicalDevicesDelegate));
                 }
 
-                ptr = vkGetInstanceProcAddr(instance, "vkGetPhysicalDeviceProperties");
+                ptr = vkGetInstanceProcAddrLocal(instance, "vkGetPhysicalDeviceProperties");
                 if (ptr != IntPtr.Zero)
                 {
                     vkGetPhysicalDeviceProperties = (vkGetPhysicalDevicePropertiesDelegate)Marshal.GetDelegateForFunctionPointer(ptr, typeof(vkGetPhysicalDevicePropertiesDelegate));
                 }
 
-                ptr = vkGetInstanceProcAddr(instance, "vkGetPhysicalDeviceProperties2");
+                ptr = vkGetInstanceProcAddrLocal(instance, "vkGetPhysicalDeviceProperties2");
                 if (ptr != IntPtr.Zero)
                 {
                     vkGetPhysicalDeviceProperties2 = (vkGetPhysicalDeviceProperties2Delegate)Marshal.GetDelegateForFunctionPointer(ptr, typeof(vkGetPhysicalDeviceProperties2Delegate));
                 }
 
-                ptr = vkGetInstanceProcAddr(instance, "vkGetPhysicalDeviceFeatures");
+                ptr = vkGetInstanceProcAddrLocal(instance, "vkGetPhysicalDeviceFeatures");
                 if (ptr != IntPtr.Zero)
                 {
                     vkGetPhysicalDeviceFeatures = (vkGetPhysicalDeviceFeaturesDelegate)Marshal.GetDelegateForFunctionPointer(ptr, typeof(vkGetPhysicalDeviceFeaturesDelegate));
                 }
 
-                ptr = vkGetInstanceProcAddr(instance, "vkGetPhysicalDeviceQueueFamilyProperties");
+                ptr = vkGetInstanceProcAddrLocal(instance, "vkGetPhysicalDeviceQueueFamilyProperties");
                 if (ptr != IntPtr.Zero)
                 {
                     vkGetPhysicalDeviceQueueFamilyProperties = (vkGetPhysicalDeviceQueueFamilyPropertiesDelegate)Marshal.GetDelegateForFunctionPointer(ptr, typeof(vkGetPhysicalDeviceQueueFamilyPropertiesDelegate));
                 }
 
-                ptr = vkGetInstanceProcAddr(instance, "vkCreateDevice");
+                ptr = vkGetInstanceProcAddrLocal(instance, "vkCreateDevice");
                 if (ptr != IntPtr.Zero)
                 {
                     vkCreateDevice = (vkCreateDeviceDelegate)Marshal.GetDelegateForFunctionPointer(ptr, typeof(vkCreateDeviceDelegate));
                 }
 
-                ptr = vkGetInstanceProcAddr(instance, "vkEnumerateDeviceExtensionProperties");
+                ptr = vkGetInstanceProcAddrLocal(instance, "vkEnumerateDeviceExtensionProperties");
                 if (ptr != IntPtr.Zero)
                 {
                     vkEnumerateDeviceExtensionProperties = (vkEnumerateDeviceExtensionPropertiesDelegate)Marshal.GetDelegateForFunctionPointer(ptr, typeof(vkEnumerateDeviceExtensionPropertiesDelegate));
+                }
+
+                // Load vkGetPhysicalDeviceFormatProperties (instance-level function for querying format support)
+                // Based on Vulkan API: https://docs.vulkan.org/refpages/latest/refpages/source/vkGetPhysicalDeviceFormatProperties.html
+                ptr = vkGetInstanceProcAddrLocal(instance, "vkGetPhysicalDeviceFormatProperties");
+                if (ptr != IntPtr.Zero)
+                {
+                    vkGetPhysicalDeviceFormatProperties = (vkGetPhysicalDeviceFormatPropertiesDelegate)Marshal.GetDelegateForFunctionPointer(ptr, typeof(vkGetPhysicalDeviceFormatPropertiesDelegate));
                 }
 
                 NativeMethods.FreeLibrary(vulkanLib);
@@ -7094,19 +7110,42 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             // Load vkGetPhysicalDeviceFormatProperties function pointer if not already loaded
+            // vkGetPhysicalDeviceFormatProperties is an instance-level function, loaded via vkGetInstanceProcAddr
+            // Based on Vulkan API: https://docs.vulkan.org/refpages/latest/refpages/source/vkGetPhysicalDeviceFormatProperties.html
             if (vkGetPhysicalDeviceFormatProperties == null)
             {
-                // vkGetPhysicalDeviceFormatProperties is an instance-level function, loaded via vkGetInstanceProcAddr
-                // TODO: STUB - For now, try loading via P/Invoke (in a real implementation, this would use vkGetInstanceProcAddr)
-                string vulkanLib = VulkanLibrary;
-                IntPtr libHandle = NativeMethods.LoadLibrary(vulkanLib);
-                if (libHandle != IntPtr.Zero)
+                // Ensure instance is valid
+                if (_instance == IntPtr.Zero)
                 {
-                    IntPtr funcPtr = NativeMethods.GetProcAddress(libHandle, "vkGetPhysicalDeviceFormatProperties");
-                    if (funcPtr != IntPtr.Zero)
+                    return IsFormatSupportedFallback(format, usage);
+                }
+
+                // Load vkGetInstanceProcAddr if not already cached
+                if (vkGetInstanceProcAddr == null)
+                {
+                    IntPtr vulkanLib = NativeMethods.LoadLibrary(VulkanLibrary);
+                    if (vulkanLib == IntPtr.Zero)
                     {
-                        vkGetPhysicalDeviceFormatProperties = (vkGetPhysicalDeviceFormatPropertiesDelegate)Marshal.GetDelegateForFunctionPointer(funcPtr, typeof(vkGetPhysicalDeviceFormatPropertiesDelegate));
+                        return IsFormatSupportedFallback(format, usage);
                     }
+
+                    IntPtr vkGetInstanceProcAddrPtr = NativeMethods.GetProcAddress(vulkanLib, "vkGetInstanceProcAddr");
+                    if (vkGetInstanceProcAddrPtr == IntPtr.Zero)
+                    {
+                        NativeMethods.FreeLibrary(vulkanLib);
+                        return IsFormatSupportedFallback(format, usage);
+                    }
+
+                    // Cache the delegate
+                    vkGetInstanceProcAddr = (vkGetInstanceProcAddrDelegate)Marshal.GetDelegateForFunctionPointer(vkGetInstanceProcAddrPtr, typeof(vkGetInstanceProcAddrDelegate));
+                    NativeMethods.FreeLibrary(vulkanLib);
+                }
+
+                // Load vkGetPhysicalDeviceFormatProperties using vkGetInstanceProcAddr
+                IntPtr funcPtr = vkGetInstanceProcAddr(_instance, "vkGetPhysicalDeviceFormatProperties");
+                if (funcPtr != IntPtr.Zero)
+                {
+                    vkGetPhysicalDeviceFormatProperties = (vkGetPhysicalDeviceFormatPropertiesDelegate)Marshal.GetDelegateForFunctionPointer(funcPtr, typeof(vkGetPhysicalDeviceFormatPropertiesDelegate));
                 }
             }
 
@@ -8775,10 +8814,10 @@ namespace Andastra.Runtime.MonoGame.Backends
             /// <summary>
             /// Calculates the total data size in bytes for a texture mip level.
             /// Properly handles both uncompressed and compressed (block-based) formats.
-            /// 
+            ///
             /// For uncompressed formats: size = width * height * depth * bytesPerPixel
             /// For compressed formats: size = (block-aligned width) * (block-aligned height) * depth * bytesPerBlock / pixelsPerBlock
-            /// 
+            ///
             /// Based on DirectX texture format specifications and Vulkan format requirements.
             /// Reference: https://docs.microsoft.com/en-us/windows/win32/direct3d10/d3d10-graphics-programming-guide-resources-block-compression
             /// </summary>
@@ -8847,7 +8886,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             /// Calculates the data size for a compressed (block-based) texture format.
             /// Compressed formats use fixed block sizes (e.g., 4x4 pixels per block for BC formats).
             /// Dimensions must be block-aligned (rounded up to nearest block boundary).
-            /// 
+            ///
             /// BC formats: 4x4 pixel blocks
             /// ASTC formats: variable block sizes (4x4, 5x5, 6x6, 8x8, 10x10, 12x12)
             /// </summary>
