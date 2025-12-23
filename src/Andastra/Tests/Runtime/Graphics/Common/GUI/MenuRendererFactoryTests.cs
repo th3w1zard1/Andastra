@@ -83,7 +83,32 @@ namespace Andastra.Tests.Runtime.Graphics.Common.GUI
         {
             // Arrange
             // Note: Stride backend requires actual Stride GraphicsDevice
-            // TODO:  For testing, we'll mock it and expect null if device extraction fails
+            // Try to create a real Stride device wrapper if available, otherwise skip test
+            var strideWrapper = GraphicsTestHelper.CreateTestStrideIGraphicsDevice();
+            if (strideWrapper == null)
+            {
+                // Skip test if Stride device cannot be created (e.g., no GPU in headless CI environment)
+                return;
+            }
+
+            var mockBackend = CreateMockGraphicsBackend(GraphicsBackendType.Stride, strideWrapper, true);
+            mockBackend.Setup(b => b.ContentManager).Returns((IContentManager)null);
+
+            // Act
+            var renderer = MenuRendererFactory.CreateMenuRenderer(mockBackend.Object);
+
+            // Assert
+            // If Stride device is available, renderer should be created successfully
+            renderer.Should().NotBeNull();
+            renderer.Should().BeOfType<Stride.GUI.StrideMenuRenderer>();
+            renderer.IsInitialized.Should().BeTrue();
+        }
+
+        [Fact]
+        public void CreateMenuRenderer_WithStrideBackend_AndNonStrideDevice_ShouldReturnNull()
+        {
+            // Arrange
+            // Use MonoGame device (not Stride device) - this will cause type check to fail
             var graphicsDevice = GraphicsTestHelper.CreateTestIGraphicsDevice();
             var mockBackend = CreateMockGraphicsBackend(GraphicsBackendType.Stride, graphicsDevice, true);
             mockBackend.Setup(b => b.ContentManager).Returns((IContentManager)null);
@@ -92,12 +117,49 @@ namespace Andastra.Tests.Runtime.Graphics.Common.GUI
             var renderer = MenuRendererFactory.CreateMenuRenderer(mockBackend.Object);
 
             // Assert
-            // Stride renderer creation may fail if device is not Stride device
-            // This is expected behavior - factory should handle gracefully
-            if (renderer != null)
-            {
-                renderer.Should().BeOfType<Stride.GUI.StrideMenuRenderer>();
-            }
+            // Device extraction fails because graphicsDevice is not StrideGraphicsDevice
+            // Factory should return null when device extraction fails
+            renderer.Should().BeNull("device extraction should fail when GraphicsDevice is not StrideGraphicsDevice");
+        }
+
+        [Fact]
+        public void CreateMenuRenderer_WithStrideBackend_AndNullDevice_ShouldReturnNull()
+        {
+            // Arrange
+            var mockBackend = CreateMockGraphicsBackend(GraphicsBackendType.Stride, null, true);
+            mockBackend.Setup(b => b.ContentManager).Returns((IContentManager)null);
+
+            // Act
+            var renderer = MenuRendererFactory.CreateMenuRenderer(mockBackend.Object);
+
+            // Assert
+            // Factory should return null when GraphicsDevice is null
+            renderer.Should().BeNull("factory should return null when GraphicsDevice is null");
+        }
+
+        [Fact]
+        public void CreateMenuRenderer_WithStrideBackend_AndMockDevice_ShouldReturnNull()
+        {
+            // Arrange
+            // Create a mock IGraphicsDevice that is not StrideGraphicsDevice
+            // This simulates the case where device extraction fails
+            var mockGraphicsDevice = new Mock<IGraphicsDevice>(MockBehavior.Strict);
+            mockGraphicsDevice.Setup(d => d.Viewport).Returns(new Andastra.Runtime.Graphics.Viewport(0, 0, 1920, 1080, 0.0f, 1.0f));
+            mockGraphicsDevice.Setup(d => d.RenderTarget).Returns((IRenderTarget)null);
+            mockGraphicsDevice.Setup(d => d.DepthStencilBuffer).Returns((IDepthStencilBuffer)null);
+            mockGraphicsDevice.Setup(d => d.NativeHandle).Returns(IntPtr.Zero);
+            mockGraphicsDevice.Setup(d => d.Dispose());
+
+            var mockBackend = CreateMockGraphicsBackend(GraphicsBackendType.Stride, mockGraphicsDevice.Object, true);
+            mockBackend.Setup(b => b.ContentManager).Returns((IContentManager)null);
+
+            // Act
+            var renderer = MenuRendererFactory.CreateMenuRenderer(mockBackend.Object);
+
+            // Assert
+            // Device extraction fails because mock device is not StrideGraphicsDevice
+            // Factory should return null when device extraction fails
+            renderer.Should().BeNull("device extraction should fail when GraphicsDevice is not StrideGraphicsDevice type");
         }
 
         [Fact]

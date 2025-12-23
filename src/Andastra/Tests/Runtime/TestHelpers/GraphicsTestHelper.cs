@@ -488,6 +488,40 @@ namespace Andastra.Tests.Runtime.TestHelpers
         }
 
         /// <summary>
+        /// Creates a test StrideGraphicsDevice wrapper (IGraphicsDevice) for Stride backend tests.
+        /// Returns null if device creation fails (e.g., no GPU available in headless environment).
+        /// </summary>
+        /// <returns>StrideGraphicsDevice wrapper instance, or null if creation fails.</returns>
+        /// <remarks>
+        /// StrideGraphicsDevice Wrapper Creation for Tests:
+        /// - Creates a real Stride GraphicsDevice using CreateTestStrideGraphicsDevice
+        /// - Wraps it in StrideGraphicsDevice for use with IGraphicsBackend
+        /// - Returns null if device creation fails (allows tests to skip gracefully)
+        /// - Based on StrideGraphicsBackend device wrapping pattern
+        /// - Tests should check for null and skip if device creation fails
+        /// </remarks>
+        public static IGraphicsDevice CreateTestStrideIGraphicsDevice()
+        {
+            var strideDevice = CreateTestStrideGraphicsDevice();
+            if (strideDevice == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                return new Andastra.Runtime.Stride.Graphics.StrideGraphicsDevice(
+                    strideDevice,
+                    strideDevice.ImmediateContext);
+            }
+            catch
+            {
+                // If wrapper creation fails, return null so tests can skip gracefully
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Creates a test Stride Game instance for tests that need full game context.
         /// Returns null if game creation fails.
         /// </summary>
