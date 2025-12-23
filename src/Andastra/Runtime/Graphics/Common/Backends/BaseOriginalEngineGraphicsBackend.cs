@@ -916,8 +916,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends
             uint target = (desc.Usage & BufferUsage.Vertex) != 0 ? GL_ARRAY_BUFFER : GL_ELEMENT_ARRAY_BUFFER;
             glBindBuffer(target, bufferId);
 
-            // Step 3: Upload buffer data (if provided)
-            // TODO:  Note: For now, we create an empty buffer. Actual data upload should be done separately.
+            // Step 3: Allocate buffer storage
+            // Create empty buffer - data upload is done separately via UploadOpenGLBufferData method.
+            // This matches the original engine pattern: create buffer, then upload data separately.
+            // Matches swkotor.exe: FUN_00427c90 buffer creation pattern (glGenBuffers + glBufferData with NULL data).
             glBufferData(target, (IntPtr)desc.SizeInBytes, IntPtr.Zero, GL_STATIC_DRAW);
 
             // Unbind buffer
@@ -930,7 +932,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends
                 Handle = handle,
                 NativeHandle = nativeHandle,
                 ResourceType = OriginalEngineResourceType.OpenGLBuffer,
-                DebugName = desc.DebugName
+                DebugName = desc.DebugName,
+                OpenGLBufferTarget = target // Store target for later use in UploadOpenGLBufferData
             };
             _originalResources[handle] = originalInfo;
 
@@ -946,10 +949,113 @@ namespace Andastra.Runtime.Graphics.Common.Backends
             };
         }
 
+        /// <summary>
+        /// Uploads data to an OpenGL buffer.
+        /// Matches original engine's OpenGL buffer data upload pattern.
+        /// 
+        /// This function implements the exact OpenGL buffer data upload sequence:
+        /// 1. Ensure OpenGL context is current
+        /// 2. Get buffer target (GL_ARRAY_BUFFER or GL_ELEMENT_ARRAY_BUFFER)
+        /// 3. Bind buffer
+        /// 4. Upload data using glBufferData (full buffer) or glBufferSubData (partial update)
+        /// 5. Unbind buffer
+        /// 
+        /// Matches swkotor.exe: FUN_00427c90 buffer upload pattern (glBufferData with actual data pointer).
+        /// Based on original engine behavior: buffers are created empty, then data is uploaded separately.
+        /// </summary>
+        /// <param name="handle">Buffer handle returned from CreateBuffer.</param>
+        /// <param name="data">Pointer to data to upload.</param>
+        /// <param name="dataSize">Size of data in bytes.</param>
+        /// <param name="offset">Offset in bytes from start of buffer (0 for full buffer update).</param>
+        /// <returns>True if upload succeeded, false otherwise.</returns>
+        protected virtual bool UploadOpenGLBufferData(IntPtr handle, IntPtr data, int dataSize, int offset = 0)
+        {
+            if (_glContext == IntPtr.Zero || _glDevice == IntPtr.Zero)
+            {
+                Console.WriteLine("[OriginalEngine] OpenGL context not initialized");
+                return false;
+            }
+
+            if (handle == IntPtr.Zero || data == IntPtr.Zero || dataSize <= 0)
+            {
+                Console.WriteLine("[OriginalEngine] UploadOpenGLBufferData: Invalid parameters");
+                return false;
+            }
+
+            // Get resource info
+            if (!_originalResources.TryGetValue(handle, out var originalInfo))
+            {
+                Console.WriteLine("[OriginalEngine] UploadOpenGLBufferData: Invalid buffer handle");
+                return false;
+            }
+
+            if (originalInfo.ResourceType != OriginalEngineResourceType.OpenGLBuffer)
+            {
+                Console.WriteLine("[OriginalEngine] UploadOpenGLBufferData: Handle is not an OpenGL buffer");
+                return false;
+            }
+
+            // Ensure OpenGL context is current
+            if (wglGetCurrentContext() != _glContext)
+            {
+                if (!wglMakeCurrent(_glDevice, _glContext))
+                {
+                    Console.WriteLine("[OriginalEngine] UploadOpenGLBufferData: Failed to make OpenGL context current");
+                    return false;
+                }
+            }
+
+            uint bufferId = (uint)originalInfo.NativeHandle.ToInt32();
+            
+            // Get buffer target from stored info (set during buffer creation)
+            uint target = originalInfo.OpenGLBufferTarget;
+            if (target == 0)
+            {
+                // Fallback: if target wasn't stored (shouldn't happen for buffers created via CreateOpenGLBuffer),
+                // default to GL_ARRAY_BUFFER. This is a safety fallback for backwards compatibility.
+                target = GL_ARRAY_BUFFER;
+                Console.WriteLine("[OriginalEngine] UploadOpenGLBufferData: Buffer target not stored, using GL_ARRAY_BUFFER as fallback");
+            }
+            
+            // Bind buffer
+            glBindBuffer(target, bufferId);
+
+            try
+            {
+                if (offset == 0 && dataSize > 0)
+                {
+                    // Full buffer update using glBufferData
+                    // This replaces the entire buffer contents
+                    glBufferData(target, (IntPtr)dataSize, data, GL_STATIC_DRAW);
+                    Console.WriteLine($"[OriginalEngine] Uploaded {dataSize} bytes to OpenGL buffer {bufferId} (full update)");
+                }
+                else
+                {
+                    // Partial buffer update using glBufferSubData
+                    // This updates a portion of the buffer starting at offset
+                    if (offset < 0 || offset + dataSize < 0)
+                    {
+                        Console.WriteLine("[OriginalEngine] UploadOpenGLBufferData: Invalid offset");
+                        return false;
+                    }
+                    glBufferSubData(target, (IntPtr)offset, (IntPtr)dataSize, data);
+                    Console.WriteLine($"[OriginalEngine] Uploaded {dataSize} bytes to OpenGL buffer {bufferId} at offset {offset} (partial update)");
+                }
+            }
+            finally
+            {
+                // Unbind buffer
+                glBindBuffer(target, 0);
+            }
+
+            return true;
+        }
+
         // OpenGL buffer functions
         private const uint GL_ARRAY_BUFFER = 0x8892;
         private const uint GL_ELEMENT_ARRAY_BUFFER = 0x8893;
         private const uint GL_STATIC_DRAW = 0x88E4;
+        private const uint GL_DYNAMIC_DRAW = 0x88E8;
 
         [DllImport("opengl32.dll", EntryPoint = "glGenBuffers")]
         private static extern void glGenBuffers(int n, ref uint buffers);
@@ -959,6 +1065,9 @@ namespace Andastra.Runtime.Graphics.Common.Backends
 
         [DllImport("opengl32.dll", EntryPoint = "glBufferData")]
         private static extern void glBufferData(uint target, IntPtr size, IntPtr data, uint usage);
+
+        [DllImport("opengl32.dll", EntryPoint = "glBufferSubData")]
+        private static extern void glBufferSubData(uint target, IntPtr offset, IntPtr size, IntPtr data);
 
         /// <summary>
         /// Destroys an OpenGL resource.
@@ -1611,6 +1720,12 @@ namespace Andastra.Runtime.Graphics.Common.Backends
             public IntPtr NativeHandle;
             public OriginalEngineResourceType ResourceType;
             public string DebugName;
+            /// <summary>
+            /// OpenGL buffer target (GL_ARRAY_BUFFER or GL_ELEMENT_ARRAY_BUFFER).
+            /// Only used for OpenGL buffers (ResourceType == OpenGLBuffer).
+            /// 0 means not set or not applicable.
+            /// </summary>
+            public uint OpenGLBufferTarget;
         }
 
         /// <summary>
