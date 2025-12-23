@@ -1,4 +1,4 @@
-﻿//
+//
 using System;
 using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
 using System.Collections.Generic;
@@ -776,7 +776,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
 
         private int CompileAndCompare(NcsFile file, string code, Utils.FileScriptData data)
         {
-            Game game = this.MapGameType();
+            BioWareGame game = this.MapGameType();
             NCS originalNcs = null;
             byte[] originalBytes = null;
             try
@@ -1327,7 +1327,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
 
             // Decompiler configuration
             stub.Append("// Decompiler Configuration:").Append(newline);
-            stub.Append("//   Game Mode: ").Append(isK2Selected ? "KotOR 2 (TSL)" : "KotOR 1").Append(newline);
+            stub.Append("//   BioWareGame Mode: ").Append(isK2Selected ? "KotOR 2 (TSL)" : "KotOR 1").Append(newline);
             stub.Append("//   Prefer Switches: ").Append(preferSwitches).Append(newline);
             stub.Append("//   Strict Signatures: ").Append(strictSignatures).Append(newline);
             stub.Append("//   Actions Data Loaded: ").Append(this.actions != null).Append(newline);
@@ -1730,7 +1730,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             // Expected file and search paths
             stub.Append("// Actions Data File Requirements:").Append(newline);
             stub.Append("//   Expected File: ").Append(expectedFile).Append(newline);
-            stub.Append("//   Game Type: ").Append(isK2Selected ? "KotOR 2 (TSL)" : "KotOR 1").Append(newline);
+            stub.Append("//   BioWareGame Type: ").Append(isK2Selected ? "KotOR 2 (TSL)" : "KotOR 1").Append(newline);
             stub.Append(newline);
 
             // Get all candidate paths that were searched
@@ -2753,10 +2753,10 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
         {
             if (this.gameType == NWScriptLocator.GameType.TSL)
             {
-                return Game.K2;
+                return BioWareGame.K2;
             }
 
-            return Game.K1;
+            return BioWareGame.K1;
         }
 
         // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1852-1865
@@ -3778,9 +3778,13 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 Debug("Error during decompilation: " + e.Message);
                 e.PrintStackTrace(JavaSystem.@out);
 
-                // TODO:  Always return a FileScriptData, even if it's just a minimal stub
+                // Always return a FileScriptData, even if it's just a minimal stub
+                // Based on NCSDecomp implementation: Always return a comprehensive fallback stub instead of null
+                // This ensures the decompiler always produces output, even when critical errors occur
+                // The stub includes detailed error information, file metadata, and a minimal valid NSS function
                 if (data == null)
                 {
+                    Debug("WARNING: data is null in catch block, creating new FileScriptData for fallback stub");
                     data = new Utils.FileScriptData();
                 }
 
@@ -4082,25 +4086,68 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 }
 
                 // Generate comprehensive stub using extracted information
-                string errorStub;
-                if (extractedSubs.Count > 0)
+                // Always ensure we have a valid FileScriptData before setting code
+                // Based on NCSDecomp implementation: Always return a comprehensive fallback stub instead of null
+                if (data == null)
                 {
-                    Debug("Generating comprehensive fallback stub with " + extractedSubs.Count + " extracted subroutine(s)");
-                    errorStub = this.GenerateComprehensiveFallbackStubWithSubroutines(file, "General decompilation pipeline", e, partialInfo, extractedSubs);
-                }
-                else if (commands != null && commands.Trim().Length > 0)
-                {
-                    Debug("Generating comprehensive fallback stub with preserved commands");
-                    errorStub = this.GenerateComprehensiveFallbackStubWithPreservedCommands(file, "General decompilation pipeline", e, partialInfo, commands);
-                }
-                else
-                {
-                    Debug("Generating basic comprehensive fallback stub (no extracted information available)");
-                    errorStub = this.GenerateComprehensiveFallbackStub(file, "General decompilation pipeline", e, partialInfo);
+                    Debug("CRITICAL: data is still null before generating stub, creating emergency FileScriptData");
+                    data = new Utils.FileScriptData();
                 }
 
-                data.SetCode(errorStub);
-                Debug("Created comprehensive fallback stub code with " + extractedSubs.Count + " extracted subroutine(s).");
+                string errorStub;
+                try
+                {
+                    if (extractedSubs.Count > 0)
+                    {
+                        Debug("Generating comprehensive fallback stub with " + extractedSubs.Count + " extracted subroutine(s)");
+                        errorStub = this.GenerateComprehensiveFallbackStubWithSubroutines(file, "General decompilation pipeline", e, partialInfo, extractedSubs);
+                    }
+                    else if (commands != null && commands.Trim().Length > 0)
+                    {
+                        Debug("Generating comprehensive fallback stub with preserved commands");
+                        errorStub = this.GenerateComprehensiveFallbackStubWithPreservedCommands(file, "General decompilation pipeline", e, partialInfo, commands);
+                    }
+                    else
+                    {
+                        Debug("Generating basic comprehensive fallback stub (no extracted information available)");
+                        errorStub = this.GenerateComprehensiveFallbackStub(file, "General decompilation pipeline", e, partialInfo);
+                    }
+                }
+                catch (Exception stubEx)
+                {
+                    Debug("ERROR: Failed to generate comprehensive fallback stub: " + stubEx.Message);
+                    Debug("Creating minimal emergency stub as last resort");
+                    // Last resort: create a minimal stub that's guaranteed to work
+                    errorStub = "// ========================================\n" +
+                                "// EMERGENCY FALLBACK STUB\n" +
+                                "// ========================================\n" +
+                                "// Decompilation failed and stub generation also failed.\n" +
+                                "// File: " + (file != null ? file.Name : "(unknown)") + "\n" +
+                                "// Error: " + e.GetType().Name + ": " + (e.Message != null ? e.Message : "(no message)") + "\n" +
+                                "// Stub Generation Error: " + stubEx.GetType().Name + ": " + (stubEx.Message != null ? stubEx.Message : "(no message)") + "\n" +
+                                "// ========================================\n\n" +
+                                "void main()\n" +
+                                "{\n" +
+                                "    // Emergency fallback - decompilation failed\n" +
+                                "}\n";
+                }
+
+                // Always set code, even if stub generation failed (we have emergency stub)
+                try
+                {
+                    data.SetCode(errorStub);
+                    Debug("Created comprehensive fallback stub code with " + extractedSubs.Count + " extracted subroutine(s).");
+                }
+                catch (Exception setCodeEx)
+                {
+                    Debug("CRITICAL: Failed to set code on FileScriptData: " + setCodeEx.Message);
+                    // Even if SetCode fails, we still return the FileScriptData (it will have null/empty code)
+                    // This ensures we always return a FileScriptData object, even if it's incomplete
+                }
+
+                // Always return a FileScriptData, even if it's just a minimal stub
+                // This is guaranteed because we check and create data at the start of the catch block
+                // and again before setting code, so data can never be null at this point
                 return data;
             }
             finally
