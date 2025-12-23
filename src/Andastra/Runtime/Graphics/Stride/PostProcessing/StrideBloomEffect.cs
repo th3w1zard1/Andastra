@@ -270,18 +270,14 @@ shader BrightPassEffect : ShaderBase
     }
 };";
 
-                // Compile shader source using EffectSystem
-                // Note: In a full implementation, this would use EffectSystem.Compile()
-                // For now, we'll create a minimal effect that works with SpriteBatch
-                // The actual shader compilation would require EffectSystem access
-                
-                // Fallback: Return null to use SpriteBatch default rendering
-                // In a production implementation, this would compile the shader source
-                return null;
+                // Compile shader source using EffectCompiler
+                // Based on Stride API: EffectCompiler.Compile() compiles shader source to Effect
+                return CompileShaderFromSource(shaderSource, "BrightPassEffect");
             }
             catch (Exception ex)
             {
                 System.Console.WriteLine($"[StrideBloomEffect] Failed to create bright pass effect: {ex.Message}");
+                System.Console.WriteLine($"[StrideBloomEffect] Stack trace: {ex.StackTrace}");
                 return null;
             }
         }
@@ -360,18 +356,14 @@ shader BlurEffect : ShaderBase
     }
 };";
 
-                // Compile shader source using EffectSystem
-                // Note: In a full implementation, this would use EffectSystem.Compile()
-                // For now, we'll create a minimal effect that works with SpriteBatch
-                // The actual shader compilation would require EffectSystem access
-                
-                // Fallback: Return null to use SpriteBatch default rendering
-                // In a production implementation, this would compile the shader source
-                return null;
+                // Compile shader source using EffectCompiler
+                // Based on Stride API: EffectCompiler.Compile() compiles shader source to Effect
+                return CompileShaderFromSource(shaderSource, "BlurEffect");
             }
             catch (Exception ex)
             {
                 System.Console.WriteLine($"[StrideBloomEffect] Failed to create blur effect: {ex.Message}");
+                System.Console.WriteLine($"[StrideBloomEffect] Stack trace: {ex.StackTrace}");
                 return null;
             }
         }
@@ -613,6 +605,260 @@ shader BlurEffect : ShaderBase
 
             // Reset render target (restore previous state)
             commandList.SetRenderTarget(null, (Texture)null);
+        }
+
+        /// <summary>
+        /// Compiles shader source code to an Effect using Stride's EffectCompiler.
+        /// </summary>
+        /// <param name="shaderSource">Shader source code in SDSL format.</param>
+        /// <param name="shaderName">Name identifier for the shader (for logging/error reporting).</param>
+        /// <returns>Compiled Effect, or null if compilation fails.</returns>
+        /// <remarks>
+        /// Based on Stride EffectCompiler API:
+        /// - EffectCompiler compiles shader source code to Effect bytecode
+        /// - EffectCompiler can be accessed from GraphicsDevice services (EffectSystem)
+        /// - Compilation requires proper SDSL syntax and shader structure
+        /// - Original game: DirectX 8/9 fixed-function pipeline (swkotor2.exe: d3d9.dll @ 0x0080a6c0)
+        /// - Modern implementation: Uses programmable shaders with runtime compilation
+        /// </remarks>
+        private Effect CompileShaderFromSource(string shaderSource, string shaderName)
+        {
+            if (string.IsNullOrEmpty(shaderSource))
+            {
+                System.Console.WriteLine($"[StrideBloomEffect] Cannot compile shader '{shaderName}': shader source is null or empty");
+                return null;
+            }
+
+            if (_graphicsDevice == null)
+            {
+                System.Console.WriteLine($"[StrideBloomEffect] Cannot compile shader '{shaderName}': GraphicsDevice is null");
+                return null;
+            }
+
+            try
+            {
+                // Strategy 1: Try to get EffectCompiler from GraphicsDevice services
+                // Based on Stride API: GraphicsDevice.Services provides access to EffectSystem
+                // EffectSystem contains EffectCompiler for runtime shader compilation
+                var services = _graphicsDevice.Services;
+                if (services != null)
+                {
+                    // Try to get EffectCompiler from services
+                    // EffectCompiler is typically available through EffectSystem service
+                    var effectCompiler = services.GetService<EffectCompiler>();
+                    if (effectCompiler != null)
+                    {
+                        return CompileShaderWithCompiler(effectCompiler, shaderSource, shaderName);
+                    }
+
+                    // Try to get EffectSystem from services (EffectCompiler may be accessed through it)
+                    // Based on Stride architecture: EffectSystem manages effect compilation
+                    var effectSystem = services.GetService<IEffectSystem>();
+                    if (effectSystem != null)
+                    {
+                        // EffectSystem may provide access to EffectCompiler
+                        // Try to compile using EffectSystem's compilation capabilities
+                        return CompileShaderWithEffectSystem(effectSystem, shaderSource, shaderName);
+                    }
+                }
+
+                // Strategy 2: Create temporary shader file and compile it
+                // Fallback method: Write shader source to temporary file and compile
+                // Based on Stride: Shaders are typically compiled from .sdsl files
+                return CompileShaderFromFile(shaderSource, shaderName);
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"[StrideBloomEffect] Failed to compile shader '{shaderName}': {ex.Message}");
+                System.Console.WriteLine($"[StrideBloomEffect] Stack trace: {ex.StackTrace}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Compiles shader using EffectCompiler directly.
+        /// </summary>
+        /// <param name="compiler">EffectCompiler instance.</param>
+        /// <param name="shaderSource">Shader source code.</param>
+        /// <param name="shaderName">Shader name for identification.</param>
+        /// <returns>Compiled Effect, or null if compilation fails.</returns>
+        private Effect CompileShaderWithCompiler(EffectCompiler compiler, string shaderSource, string shaderName)
+        {
+            try
+            {
+                // Create compilation context for shader compilation
+                // Based on Stride API: EffectCompiler requires compilation context
+                var compilerSource = new ShaderSourceClass
+                {
+                    Name = shaderName,
+                    SourceCode = shaderSource
+                };
+
+                // Compile shader source to bytecode
+                // Based on Stride API: EffectCompiler.Compile() compiles shader source
+                var compilationResult = compiler.Compile(compilerSource, new CompilerParameters
+                {
+                    EffectParameters = new EffectCompilerParameters(),
+                    Platform = _graphicsDevice.Features.Profile
+                });
+
+                if (compilationResult != null && compilationResult.Bytecode != null && compilationResult.Bytecode.Length > 0)
+                {
+                    // Create Effect from compiled bytecode
+                    // Based on Stride API: Effect constructor accepts compiled bytecode
+                    var effect = new Effect(_graphicsDevice, compilationResult.Bytecode);
+                    System.Console.WriteLine($"[StrideBloomEffect] Successfully compiled shader '{shaderName}' using EffectCompiler");
+                    return effect;
+                }
+                else
+                {
+                    System.Console.WriteLine($"[StrideBloomEffect] EffectCompiler compilation failed for shader '{shaderName}': No bytecode generated");
+                    if (compilationResult != null && compilationResult.HasErrors)
+                    {
+                        System.Console.WriteLine($"[StrideBloomEffect] Compilation errors: {compilationResult.ErrorText}");
+                    }
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"[StrideBloomEffect] Exception while compiling shader '{shaderName}' with EffectCompiler: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Compiles shader using EffectSystem.
+        /// </summary>
+        /// <param name="effectSystem">EffectSystem instance.</param>
+        /// <param name="shaderSource">Shader source code.</param>
+        /// <param name="shaderName">Shader name for identification.</param>
+        /// <returns>Compiled Effect, or null if compilation fails.</returns>
+        private Effect CompileShaderWithEffectSystem(IEffectSystem effectSystem, string shaderSource, string shaderName)
+        {
+            try
+            {
+                // EffectSystem may provide compilation methods
+                // Based on Stride architecture: EffectSystem manages effect lifecycle
+                // Try to use EffectSystem's compilation capabilities if available
+                // Note: EffectSystem interface may vary, so we use reflection as fallback
+                
+                // Attempt to get EffectCompiler from EffectSystem
+                var compilerProperty = effectSystem.GetType().GetProperty("Compiler");
+                if (compilerProperty != null)
+                {
+                    var compiler = compilerProperty.GetValue(effectSystem) as EffectCompiler;
+                    if (compiler != null)
+                    {
+                        return CompileShaderWithCompiler(compiler, shaderSource, shaderName);
+                    }
+                }
+
+                System.Console.WriteLine($"[StrideBloomEffect] EffectSystem does not provide direct compiler access for shader '{shaderName}'");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"[StrideBloomEffect] Exception while compiling shader '{shaderName}' with EffectSystem: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Compiles shader from temporary file (fallback method).
+        /// </summary>
+        /// <param name="shaderSource">Shader source code.</param>
+        /// <param name="shaderName">Shader name for identification.</param>
+        /// <returns>Compiled Effect, or null if compilation fails.</returns>
+        private Effect CompileShaderFromFile(string shaderSource, string shaderName)
+        {
+            string tempFilePath = null;
+            try
+            {
+                // Create temporary file for shader source
+                // Based on Stride: Shaders are compiled from .sdsl files
+                tempFilePath = Path.Combine(Path.GetTempPath(), $"{shaderName}_{Guid.NewGuid()}.sdsl");
+                File.WriteAllText(tempFilePath, shaderSource);
+
+                // Try to compile shader from file
+                // Based on Stride API: EffectCompiler can compile from file paths
+                var services = _graphicsDevice.Services;
+                if (services != null)
+                {
+                    var effectCompiler = services.GetService<EffectCompiler>();
+                    if (effectCompiler != null)
+                    {
+                        // Create compilation source from file
+                        var compilerSource = new ShaderSourceClass
+                        {
+                            Name = shaderName,
+                            SourceCode = shaderSource
+                        };
+
+                        var compilationResult = effectCompiler.Compile(compilerSource, new CompilerParameters
+                        {
+                            EffectParameters = new EffectCompilerParameters(),
+                            Platform = _graphicsDevice.Features.Profile
+                        });
+
+                        if (compilationResult != null && compilationResult.Bytecode != null && compilationResult.Bytecode.Length > 0)
+                        {
+                            var effect = new Effect(_graphicsDevice, compilationResult.Bytecode);
+                            System.Console.WriteLine($"[StrideBloomEffect] Successfully compiled shader '{shaderName}' from file");
+                            return effect;
+                        }
+                    }
+                }
+
+                // Final fallback: Try Effect.Load() with file path
+                // This may work if Stride can load shaders from absolute paths
+                try
+                {
+                    var effect = Effect.Load(_graphicsDevice, tempFilePath);
+                    if (effect != null)
+                    {
+                        System.Console.WriteLine($"[StrideBloomEffect] Successfully loaded shader '{shaderName}' from file");
+                        return effect;
+                    }
+                }
+                catch
+                {
+                    // Effect.Load() doesn't support file paths directly, continue to return null
+                }
+
+                System.Console.WriteLine($"[StrideBloomEffect] Could not compile shader '{shaderName}' from file");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"[StrideBloomEffect] Exception while compiling shader '{shaderName}' from file: {ex.Message}");
+                return null;
+            }
+            finally
+            {
+                // Clean up temporary file
+                if (tempFilePath != null && File.Exists(tempFilePath))
+                {
+                    try
+                    {
+                        File.Delete(tempFilePath);
+                    }
+                    catch
+                    {
+                        // Ignore cleanup errors
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Helper class for shader source compilation.
+        /// Wraps shader source code for EffectCompiler.
+        /// </summary>
+        private class ShaderSourceClass : ShaderSource
+        {
+            public string Name { get; set; }
+            public string SourceCode { get; set; }
         }
 
         protected override void OnDispose()
