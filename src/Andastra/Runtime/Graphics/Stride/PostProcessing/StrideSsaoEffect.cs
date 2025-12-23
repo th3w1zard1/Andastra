@@ -1,5 +1,5 @@
 using System;
-using Stride.Graphics;
+using StrideGraphics = Stride.Graphics;
 using Stride.Rendering;
 using Stride.Core.Mathematics;
 using Stride.Engine;
@@ -23,20 +23,20 @@ namespace Andastra.Runtime.Stride.PostProcessing
     /// </summary>
     public class StrideSsaoEffect : BaseSsaoEffect
     {
-        private GraphicsDevice _graphicsDevice;
+        private StrideGraphics.GraphicsDevice _graphicsDevice;
         private StrideGraphics.Texture _aoTarget;
         private StrideGraphics.Texture _blurTarget;
         private StrideGraphics.Texture _noiseTexture;
-        private SpriteBatch _spriteBatch;
-        private SamplerState _linearSampler;
-        private SamplerState _pointSampler;
+        private StrideGraphics.SpriteBatch _spriteBatch;
+        private StrideGraphics.SamplerState _linearSampler;
+        private StrideGraphics.SamplerState _pointSampler;
         private EffectInstance _gtaoEffect;
         private EffectInstance _bilateralBlurEffect;
-        private Effect _gtaoEffectBase;
-        private Effect _bilateralBlurEffectBase;
+        private StrideGraphics.Effect _gtaoEffectBase;
+        private StrideGraphics.Effect _bilateralBlurEffectBase;
         private StrideGraphics.Texture _tempBlurTarget;
 
-        public StrideSsaoEffect(GraphicsDevice graphicsDevice)
+        public StrideSsaoEffect(StrideGraphics.GraphicsDevice graphicsDevice)
         {
             _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException(nameof(graphicsDevice));
             InitializeRenderingResources();
@@ -82,7 +82,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// - Effect.Load() loads from default content paths
         /// - ContentManager.Load&lt;Effect&gt;() loads from content manager
         /// - EffectSystem can compile shaders at runtime from source (requires EffectSystem access)
-        /// 
+        ///
         /// Shader Requirements:
         /// - GTAO shader: Computes ambient occlusion using Ground Truth Ambient Occlusion algorithm
         ///   - Inputs: DepthTexture, NormalTexture, NoiseTexture, ProjectionMatrix, ProjectionMatrixInv
@@ -92,7 +92,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         ///   - Inputs: SourceTexture, DepthTexture
         ///   - Parameters: Horizontal (bool), BlurRadius, DepthThreshold, ScreenSize, ScreenSizeInv
         ///   - Output: Blurred single-channel AO value (R8_UNorm)
-        /// 
+        ///
         /// Note: If shader files are not available, the effect will use SpriteBatch's default rendering
         /// which will not compute actual SSAO. Shader files (.sdsl/.sdeffect) must be provided for
         /// the SSAO effect to function correctly.
@@ -378,20 +378,20 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 // Based on GTAO/SSAO implementation: Projection matrix is essential for accurate depth reconstruction
                 Matrix projectionMatrix = Matrix.Identity;
                 Matrix projectionMatrixInv = Matrix.Identity;
-                
+
                 // Get projection matrix from RenderContext's RenderView (camera projection)
                 // Stride RenderContext provides camera matrices through RenderView property
                 if (context != null && context.RenderView != null)
                 {
                     // RenderView.Projection contains the camera's projection matrix
                     projectionMatrix = context.RenderView.Projection;
-                    
+
                     // Calculate inverse projection matrix for depth reconstruction
                     // Inverse projection is used to convert from clip space back to view space
                     // This is needed by SSAO shader to reconstruct view-space positions from depth buffer
                     projectionMatrixInv = Matrix.Invert(projectionMatrix);
                 }
-                
+
                 var projMatrixParam = _gtaoEffect.Parameters.Get<object>("ProjectionMatrix");
                 if (projMatrixParam != null)
                 {
@@ -410,7 +410,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             // Draw full-screen quad with depth buffer
             // Rectangle covering entire destination render target
             var destinationRect = new RectangleF(0, 0, width, height);
-            
+
             // Use depth buffer as source for GTAO computation
             // The shader will sample from depth and normal buffers to compute occlusion
             if (depthBuffer != null)
@@ -432,7 +432,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             // Prevents blurring across depth discontinuities
             // Uses separable two-pass blur: horizontal then vertical
 
-            if (source == null || destination == null || depthBuffer == null || 
+            if (source == null || destination == null || depthBuffer == null ||
                 _graphicsDevice == null || _spriteBatch == null || _tempBlurTarget == null)
             {
                 return;

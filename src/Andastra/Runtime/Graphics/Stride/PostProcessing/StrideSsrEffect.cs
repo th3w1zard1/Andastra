@@ -353,10 +353,10 @@ namespace Andastra.Runtime.Stride.PostProcessing
             // If we have a shader effect, use GPU-based ray marching
             if (_ssrEffect != null && _fullscreenEffect != null)
             {
-                var commandList = _graphicsDevice.ImmediateContext();
+                var commandList = _graphicsDevice.ImmediateContext;
                 if (commandList != null)
                 {
-                    ExecuteSsrGpu(input, depth, normal, roughness, lightmap, output, StrideGraphics.CommandList);
+                    ExecuteSsrGpu(input, depth, normal, roughness, lightmap, output, commandList);
                 }
                 else
                 {
@@ -444,7 +444,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             commandList.Clear(output, Stride.Core.Mathematics.Color.Transparent);
 
             // Begin sprite batch rendering with custom effect
-            _spriteBatch.Begin(StrideGraphics.CommandList, SpriteSortMode.Immediate, _ssrEffect);
+            _spriteBatch.Begin(commandList, SpriteSortMode.Immediate, _ssrEffect);
 
             // Draw fullscreen quad
             var destinationRect = new RectangleF(0, 0, output.Width, output.Height);
@@ -743,7 +743,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// </summary>
         private Vector4[] ReadTextureData(StrideGraphics.Texture texture)
         {
-            if (StrideGraphics.Texture == null || _graphicsDevice == null)
+            if (texture == null || _graphicsDevice == null)
             {
                 return null;
             }
@@ -756,7 +756,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 var data = new Vector4[size];
 
                 // Get ImmediateContext (StrideGraphics.CommandList) from GraphicsDevice
-                var commandList = _graphicsDevice.ImmediateContext();
+                var commandList = _graphicsDevice.ImmediateContext;
                 if (commandList == null)
                 {
                     Console.WriteLine("[StrideSSR] ReadTextureData: ImmediateContext not available");
@@ -776,7 +776,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 {
                     // Read as Color array (Stride's standard format)
                     var colorData = new Stride.Core.Mathematics.Color[size];
-                    texture.GetData(StrideGraphics.CommandList, colorData);
+                    texture.GetData(commandList, colorData);
 
                     // Convert Color[] to Vector4[]
                     for (int i = 0; i < size; i++)
@@ -793,7 +793,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 {
                     // For depth textures, read as float array
                     var floatData = new float[size];
-                    texture.GetData(StrideGraphics.CommandList, floatData);
+                    texture.GetData(commandList, floatData);
 
                     // Convert float[] to Vector4[] (depth in X, others zero)
                     for (int i = 0; i < size; i++)
@@ -805,7 +805,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 else if (format == PixelFormat.R8_UNorm || format == PixelFormat.A8_UNorm)
                 {
                     var byteData = new byte[size];
-                    texture.GetData(StrideGraphics.CommandList, byteData);
+                    texture.GetData(commandList, byteData);
 
                     // Convert byte[] to Vector4[] (single channel in X, others zero)
                     for (int i = 0; i < size; i++)
@@ -819,7 +819,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 {
                     // Try to read as Vector4 array directly
                     var vectorData = new Stride.Core.Mathematics.Vector4[size];
-                    texture.GetData(StrideGraphics.CommandList, vectorData);
+                    texture.GetData(commandList, vectorData);
 
                     // Convert Stride Vector4 to System.Numerics Vector4
                     for (int i = 0; i < size; i++)
@@ -835,7 +835,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     try
                     {
                         var colorData = new Stride.Core.Mathematics.Color[size];
-                        texture.GetData(StrideGraphics.CommandList, colorData);
+                        texture.GetData(commandList, colorData);
 
                         for (int i = 0; i < size; i++)
                         {
@@ -867,7 +867,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// </summary>
         private void WriteTextureData(StrideGraphics.Texture texture, Vector4[] data, int width, int height)
         {
-            if (StrideGraphics.Texture == null || data == null || _graphicsDevice == null)
+            if (texture == null || data == null || _graphicsDevice == null)
             {
                 return;
             }
@@ -889,7 +889,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 }
 
                 // Get ImmediateContext (StrideGraphics.CommandList) from GraphicsDevice
-                var commandList = _graphicsDevice.ImmediateContext();
+                var commandList = _graphicsDevice.ImmediateContext;
                 if (commandList == null)
                 {
                     Console.WriteLine("[StrideSSR] WriteTextureData: ImmediateContext not available");
@@ -924,7 +924,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                             (byte)(a * 255.0f));
                     }
 
-                    texture.SetData(StrideGraphics.CommandList, colorData);
+                    texture.SetData(commandList, colorData);
                 }
                 // For HDR formats (R32G32B32A32_Float), write directly as Vector4
                 else if (format == PixelFormat.R32G32B32A32_Float ||
@@ -939,7 +939,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                         vectorData[i] = new Stride.Core.Mathematics.Vector4(v.X, v.Y, v.Z, v.W);
                     }
 
-                    texture.SetData(StrideGraphics.CommandList, vectorData);
+                    texture.SetData(commandList, vectorData);
                 }
                 // For depth textures, extract depth channel
                 else if (format == PixelFormat.D32_Float ||
@@ -953,7 +953,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                         floatData[i] = data[i].X;
                     }
 
-                    texture.SetData(StrideGraphics.CommandList, floatData);
+                    texture.SetData(commandList, floatData);
                 }
                 // For single-channel formats, extract single channel
                 else if (format == PixelFormat.R8_UNorm || format == PixelFormat.A8_UNorm)
@@ -967,7 +967,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                         byteData[i] = (byte)(value * 255.0f);
                     }
 
-                    texture.SetData(StrideGraphics.CommandList, byteData);
+                    texture.SetData(commandList, byteData);
                 }
                 else
                 {
@@ -992,7 +992,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                                 (byte)(a * 255.0f));
                         }
 
-                        texture.SetData(StrideGraphics.CommandList, colorData);
+                        texture.SetData(commandList, colorData);
                     }
                     catch (Exception ex)
                     {
@@ -1034,7 +1034,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
             // Update constant buffer
             // In Stride, constant buffers are updated through Buffer.SetData() or EffectInstance.Parameters
-            var commandList = _graphicsDevice.ImmediateContext();
+            var commandList = _graphicsDevice.ImmediateContext;
             if (commandList != null && _ssrConstants != null)
             {
                 // Convert struct to byte array for SetData

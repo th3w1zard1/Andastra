@@ -98,8 +98,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
             // Create sprite batch for fullscreen quad rendering
             _spriteBatch = new SpriteBatch(_graphicsDevice);
 
-            // Create samplers for StrideGraphics.Texture sampling
-            // Linear sampler for smooth StrideGraphics.Texture filtering (used for history and current frame)
+            // Create samplers for texture sampling
+            // Linear sampler for smooth texture filtering (used for history and current frame)
             _linearSampler = SamplerState.New(_graphicsDevice, new SamplerStateDescription
             {
                 Filter = TextureFilter.Linear,
@@ -557,7 +557,7 @@ shader TemporalAAEffect : ShaderBase
                 if (compilationResult != null && compilationResult.Bytecode != null && compilationResult.Bytecode.Length > 0)
                 {
                     // Create Effect from compiled bytecode
-                    var effect = new Stride.Rendering.Effect(_graphicsDevice, compilationResult.Bytecode);
+                    var effect = new Effect(_graphicsDevice, compilationResult.Bytecode);
                     System.Console.WriteLine($"[StrideTemporalAaEffect] Successfully compiled shader '{shaderName}' using EffectCompiler");
                     return effect;
                 }
@@ -646,7 +646,7 @@ shader TemporalAAEffect : ShaderBase
 
                         if (compilationResult != null && compilationResult.Bytecode != null && compilationResult.Bytecode.Length > 0)
                         {
-                            var effect = new Stride.Rendering.Effect(_graphicsDevice, compilationResult.Bytecode);
+                            var effect = new Effect(_graphicsDevice, compilationResult.Bytecode);
                             System.Console.WriteLine($"[StrideTemporalAaEffect] Successfully compiled shader '{shaderName}' from file");
                             return effect;
                         }
@@ -719,12 +719,12 @@ shader TemporalAAEffect : ShaderBase
             _outputBuffer?.Dispose();
 
             // History buffer stores previous frame result
-            _historyBuffer = Texture.New2D(_graphicsDevice, width, height,
-                format, TextureFlags.RenderTarget | TextureFlags.ShaderResource);
+            _historyBuffer = StrideGraphics.Texture.New2D(_graphicsDevice, width, height,
+                format, StrideGraphics.TextureFlags.RenderTarget | StrideGraphics.TextureFlags.ShaderResource);
 
             // Output buffer for current frame result
-            _outputBuffer = Texture.New2D(_graphicsDevice, width, height,
-                format, TextureFlags.RenderTarget | TextureFlags.ShaderResource);
+            _outputBuffer = StrideGraphics.Texture.New2D(_graphicsDevice, width, height,
+                format, StrideGraphics.TextureFlags.RenderTarget | StrideGraphics.TextureFlags.ShaderResource);
 
             _initialized = true;
         }
@@ -749,7 +749,7 @@ shader TemporalAAEffect : ShaderBase
             }
 
             // Get command list for rendering operations
-            var commandList = _graphicsDevice.ImmediateContext();
+            var commandList = _graphicsDevice.ImmediateContext;
             if (commandList == null)
             {
                 return;
@@ -774,7 +774,7 @@ shader TemporalAAEffect : ShaderBase
             if (_effectInitialized && _taaEffect != null)
             {
                 // Begin sprite batch rendering with TAA effect
-                _spriteBatch.Begin(StrideGraphics.CommandList, SpriteSortMode.Immediate, BlendStates.Opaque,
+                _spriteBatch.Begin(commandList, SpriteSortMode.Immediate, BlendStates.Opaque,
                     _linearSampler, DepthStencilStates.None, RasterizerStates.CullNone, _taaEffect);
 
                 // Set TAA shader parameters
@@ -892,7 +892,7 @@ shader TemporalAAEffect : ShaderBase
                 }
 
                 // Draw full-screen quad with TAA shader
-                // SpriteBatch.Draw with a null StrideGraphics.Texture and full-screen destination
+                // SpriteBatch.Draw with a null texture and full-screen destination
                 // will use the bound effect to render the full-screen quad
                 _spriteBatch.Draw(currentFrame, new RectangleF(0, 0, width, height), Color.White);
                 _spriteBatch.End();
@@ -903,7 +903,7 @@ shader TemporalAAEffect : ShaderBase
                 // This fallback is used when shader compilation fails or effect is not initialized
                 // It provides basic functionality by copying current frame without temporal accumulation
                 // For production use, ensure TAA shader is properly compiled and initialized
-                _spriteBatch.Begin(StrideGraphics.CommandList, SpriteSortMode.Immediate, BlendStates.Opaque,
+                _spriteBatch.Begin(commandList, SpriteSortMode.Immediate, BlendStates.Opaque,
                     _linearSampler, DepthStencilStates.None, RasterizerStates.CullNone);
                 _spriteBatch.Draw(currentFrame, new RectangleF(0, 0, width, height), Color.White);
                 _spriteBatch.End();
@@ -935,7 +935,7 @@ shader TemporalAAEffect : ShaderBase
         private void CopyToHistory(StrideGraphics.Texture source, StrideGraphics.Texture destination, RenderContext context)
         {
             // Copy current output to history buffer for next frame
-            // Uses Stride's CommandList.CopyRegion for efficient GPU-side StrideGraphics.Texture copy
+            // Uses Stride's CommandList.CopyRegion for efficient GPU-side texture copy
             // This is essential for TAA as it maintains temporal history between frames
 
             if (source == null || destination == null)
@@ -943,9 +943,9 @@ shader TemporalAAEffect : ShaderBase
                 return;
             }
 
-            // Get StrideGraphics.CommandList from GraphicsDevice's ImmediateContext
+            // Get CommandList from GraphicsDevice's ImmediateContext
             // ImmediateContext provides the command list for immediate-mode rendering
-            var commandList = _graphicsDevice.ImmediateContext();
+            var commandList = _graphicsDevice.ImmediateContext;
             if (commandList == null)
             {
                 // If ImmediateContext is not available, fall back to alternative copy method
@@ -953,19 +953,19 @@ shader TemporalAAEffect : ShaderBase
                 return;
             }
 
-            // CopyRegion performs a GPU-side StrideGraphics.Texture copy operation
+            // CopyRegion performs a GPU-side texture copy operation
             // Parameters:
-            // - source: Source StrideGraphics.Texture to copy from
+            // - source: Source texture to copy from
             // - sourceSubresource: Mip level and array slice (0 = base mip, main slice)
-            // - sourceBox: Region to copy (null = entire StrideGraphics.Texture)
-            // - destination: Destination StrideGraphics.Texture to copy to
+            // - sourceBox: Region to copy (null = entire texture)
+            // - destination: Destination texture to copy to
             // - destinationSubresource: Mip level and array slice for destination (0 = base mip, main slice)
             //
             // This is more efficient than CPU-side copies as it:
             // 1. Stays on GPU (no CPU-GPU transfer overhead)
             // 2. Can be pipelined with other GPU operations
             // 3. Supports format conversion if needed
-            // 4. Handles StrideGraphics.Texture layout transitions automatically
+            // 4. Handles texture layout transitions automatically
             commandList.CopyRegion(source, 0, null, destination, 0);
         }
 

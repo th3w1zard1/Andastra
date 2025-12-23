@@ -1,5 +1,5 @@
 using System;
-using Stride.Graphics;
+using StrideGraphics = Stride.Graphics;
 using Stride.Rendering;
 using Stride.Core.Mathematics;
 using Stride.Engine;
@@ -29,17 +29,17 @@ namespace Andastra.Runtime.Stride.PostProcessing
     /// </summary>
     public class StrideColorGradingEffect : BaseColorGradingEffect
     {
-        private GraphicsDevice _graphicsDevice;
+        private StrideGraphics.GraphicsDevice _graphicsDevice;
         private EffectInstance _colorGradingEffect;
         private new StrideGraphics.Texture _lutTexture;
         private StrideGraphics.Texture _temporaryTexture;
         private int _lutSize; // Size of the 3D LUT (16 or 32)
         private bool _effectInitialized;
-        private SpriteBatch _spriteBatch;
-        private SamplerState _linearSampler;
+        private StrideGraphics.SpriteBatch _spriteBatch;
+        private StrideGraphics.SamplerState _linearSampler;
         private bool _renderingResourcesInitialized;
 
-        public StrideColorGradingEffect(GraphicsDevice graphicsDevice)
+        public StrideColorGradingEffect(StrideGraphics.GraphicsDevice graphicsDevice)
         {
             _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException(nameof(graphicsDevice));
             _lutSize = 0;
@@ -107,9 +107,9 @@ namespace Andastra.Runtime.Stride.PostProcessing
         }
 
         /// <summary>
-        /// Loads a 3D LUT StrideGraphics.Texture for color grading.
+        /// Loads a 3D LUT texture for color grading.
         /// </summary>
-        /// <param name="lutTexture">3D StrideGraphics.Texture (16x16x16 or 32x32x32) containing color transform.</param>
+        /// <param name="lutTexture">3D texture (16x16x16 or 32x32x32) containing color transform.</param>
         public void LoadLut(StrideGraphics.Texture lutTexture)
         {
             if (lutTexture == null)
@@ -258,7 +258,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
             try
             {
-                var commandList = _graphicsDevice.ImmediateContext();
+                StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext;
                 if (commandList == null)
                 {
                     return false;
@@ -280,7 +280,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 // BlendStates.Opaque: overwrite pixels (no blending for post-processing)
                 // DepthStencilStates.None: no depth testing needed for fullscreen quad
                 // RasterizerStates.CullNone: render both front and back faces
-                _spriteBatch.Begin(StrideGraphics.CommandList, SpriteSortMode.Immediate, BlendStates.Opaque, _linearSampler,
+                _spriteBatch.Begin(commandList, SpriteSortMode.Immediate, BlendStates.Opaque, _linearSampler,
                     DepthStencilStates.None, RasterizerStates.CullNone, _colorGradingEffect);
 
                 // Set shader parameters
@@ -516,7 +516,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
             try
             {
-                var commandList = _graphicsDevice.ImmediateContext();
+                StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext;
                 if (commandList == null)
                 {
                     Console.WriteLine("[StrideColorGrading] ImmediateContext not available");
@@ -717,7 +717,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// </summary>
         private Vector4[] ReadTextureData(StrideGraphics.Texture texture)
         {
-            if (StrideGraphics.Texture == null || _graphicsDevice == null)
+            if (texture == null || _graphicsDevice == null)
             {
                 return null;
             }
@@ -730,7 +730,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 Vector4[] data = new Vector4[size];
 
                 // Get ImmediateContext (StrideGraphics.CommandList) from GraphicsDevice
-                var commandList = _graphicsDevice.ImmediateContext();
+                StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext;
                 if (commandList == null)
                 {
                     Console.WriteLine("[StrideColorGrading] ReadTextureData: ImmediateContext not available");
@@ -749,7 +749,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 {
                     // Read as Color array
                     var colorData = new Color[size];
-                    texture.GetData(StrideGraphics.CommandList, colorData);
+                    texture.GetData(commandList, colorData);
 
                     // Convert Color[] to Vector4[]
                     for (int i = 0; i < size; i++)
@@ -771,7 +771,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 {
                     // Half-precision float format
                     var colorData = new Color[size];
-                    texture.GetData(StrideGraphics.CommandList, colorData);
+                    texture.GetData(commandList, colorData);
                     for (int i = 0; i < size; i++)
                     {
                         var color = colorData[i];
@@ -784,7 +784,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     try
                     {
                         var colorData = new Color[size];
-                        texture.GetData(StrideGraphics.CommandList, colorData);
+                        texture.GetData(commandList, colorData);
                         for (int i = 0; i < size; i++)
                         {
                             var color = colorData[i];
@@ -815,7 +815,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// </summary>
         private void WriteTextureData(StrideGraphics.Texture texture, Vector4[] data, int width, int height)
         {
-            if (StrideGraphics.Texture == null || data == null || _graphicsDevice == null)
+            if (texture == null || data == null || _graphicsDevice == null)
             {
                 return;
             }
@@ -836,7 +836,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 }
 
                 // Get ImmediateContext (StrideGraphics.CommandList) from GraphicsDevice
-                var commandList = _graphicsDevice.ImmediateContext();
+                StrideGraphics.CommandList commandList = _graphicsDevice.ImmediateContext;
                 if (commandList == null)
                 {
                     Console.WriteLine("[StrideColorGrading] WriteTextureData: ImmediateContext not available");

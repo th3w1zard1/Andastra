@@ -53,7 +53,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
             // Create sprite batch for fullscreen quad rendering
             _spriteBatch = new SpriteBatch(_graphicsDevice);
 
-            // Create linear sampler for StrideGraphics.Texture sampling
+            // Create linear sampler for texture sampling
             _linearSampler = SamplerState.New(_graphicsDevice, new SamplerStateDescription
             {
                 Filter = TextureFilter.Linear,
@@ -247,7 +247,7 @@ shader MotionBlurEffect : ShaderBase
 
             float2 sampleCoord = input.TexCoord + currentOffset * ScreenSizeInv;
 
-            // Clamp to StrideGraphics.Texture bounds
+            // Clamp to texture bounds
             sampleCoord = clamp(sampleCoord, float2(0, 0), float2(1, 1));
 
             // Sample color and depth
@@ -383,7 +383,7 @@ shader MotionBlurEffect : ShaderBase
                 {
                     // Create Effect from compiled bytecode
                     // Based on Stride API: Effect constructor accepts compiled bytecode
-                    var effect = new Stride.Rendering.Effect(_graphicsDevice, compilationResult.Bytecode);
+                    var effect = new Effect(_graphicsDevice, compilationResult.Bytecode);
                     System.Console.WriteLine($"[StrideMotionBlurEffect] Successfully compiled shader '{shaderName}' using EffectCompiler");
                     return effect;
                 }
@@ -480,7 +480,7 @@ shader MotionBlurEffect : ShaderBase
 
                         if (compilationResult != null && compilationResult.Bytecode != null && compilationResult.Bytecode.Length > 0)
                         {
-                            var effect = new Stride.Rendering.Effect(_graphicsDevice, compilationResult.Bytecode);
+                            var effect = new Effect(_graphicsDevice, compilationResult.Bytecode);
                             System.Console.WriteLine($"[StrideMotionBlurEffect] Successfully compiled shader '{shaderName}' from file");
                             return effect;
                         }
@@ -587,7 +587,7 @@ shader MotionBlurEffect : ShaderBase
         /// <param name="deltaTime">Frame delta time for exposure simulation.</param>
         /// <param name="width">Render width.</param>
         /// <param name="height">Render height.</param>
-        /// <returns>Output StrideGraphics.Texture with motion blur applied.</returns>
+        /// <returns>Output texture with motion blur applied.</returns>
         public StrideGraphics.Texture Apply(StrideGraphics.Texture input, StrideGraphics.Texture motionVectors, StrideGraphics.Texture depth, float deltaTime,
             int width, int height)
         {
@@ -622,10 +622,10 @@ shader MotionBlurEffect : ShaderBase
 
             _temporaryTexture?.Dispose();
 
-            var desc = TextureDescription.New2D(width, height, 1, format,
-                TextureFlags.ShaderResource | TextureFlags.RenderTarget);
+            var desc = StrideGraphics.TextureDescription.New2D(width, height, 1, format,
+                StrideGraphics.TextureFlags.ShaderResource | StrideGraphics.TextureFlags.RenderTarget);
 
-            _temporaryTexture = Texture.New(_graphicsDevice, desc);
+            _temporaryTexture = StrideGraphics.Texture.New(_graphicsDevice, desc);
         }
 
         private void ExecuteMotionBlur(StrideGraphics.Texture input, StrideGraphics.Texture motionVectors, StrideGraphics.Texture depth,
@@ -644,7 +644,7 @@ shader MotionBlurEffect : ShaderBase
             }
 
             // Get command list for rendering operations
-            var commandList = _graphicsDevice.ImmediateContext();
+            var commandList = _graphicsDevice.ImmediateContext;
             if (commandList == null)
             {
                 return;
@@ -655,7 +655,7 @@ shader MotionBlurEffect : ShaderBase
 
             try
             {
-                // Set render target to output StrideGraphics.Texture
+                // Set render target to output texture
                 commandList.SetRenderTarget(null, output);
 
                 // Clear render target to black
@@ -669,7 +669,7 @@ shader MotionBlurEffect : ShaderBase
                 System.Console.WriteLine($"[StrideMotionBlur] Applying blur: {_sampleCount} samples, intensity {effectiveIntensity:F2}, max velocity {clampedVelocity:F2}");
 
                 // Begin sprite batch rendering with motion blur effect
-                _spriteBatch.Begin(StrideGraphics.CommandList, SpriteSortMode.Immediate, BlendStates.Opaque,
+                _spriteBatch.Begin(commandList, SpriteSortMode.Immediate, BlendStates.Opaque,
                     _linearSampler, DepthStencilStates.None, RasterizerStates.CullNone, _motionBlurEffect);
 
                 // Set shader parameters if effect is available
@@ -706,7 +706,7 @@ shader MotionBlurEffect : ShaderBase
                         depthThresholdParam.SetValue(depthThreshold);
                     }
 
-                    // Set StrideGraphics.Texture parameters
+                    // Set texture parameters
                     var colorTextureParam = _motionBlurEffect.Parameters.Get("ColorTexture");
                     if (colorTextureParam != null)
                     {
@@ -749,7 +749,7 @@ shader MotionBlurEffect : ShaderBase
             finally
             {
                 // Restore previous render target
-                commandList.SetRenderTarget(null, previousRenderTarget?.StrideGraphics.Texture);
+                commandList.SetRenderTarget(null, previousRenderTarget?.Texture);
             }
         }
     }
