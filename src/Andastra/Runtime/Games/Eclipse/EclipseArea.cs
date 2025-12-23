@@ -175,6 +175,12 @@ namespace Andastra.Runtime.Games.Eclipse
         private float _windDirectionY;
         private float _windDirectionZ;
 
+        // Weather transition triggers
+        // Based on daorigins.exe: Weather transitions can be triggered by time or script events
+        // DragonAge2.exe: Enhanced transition system with multiple trigger types
+        private readonly List<WeatherTransitionTrigger> _weatherTransitionTriggers;
+        private float _areaTimeElapsed; // Total time elapsed in area (for time-based transitions)
+
         // Cached room mesh data for rendering (loaded on demand)
         private readonly Dictionary<string, IRoomMeshData> _cachedRoomMeshes;
 
@@ -380,6 +386,8 @@ namespace Andastra.Runtime.Games.Eclipse
             _shadowLightSpaceMatrices = new Dictionary<uint, Matrix4x4>();
             _shadowMapHandlesByTarget = new Dictionary<IRenderTarget, GCHandle>();
             _shadowMapHandlesByPtr = new Dictionary<IntPtr, GCHandle>();
+            _weatherTransitionTriggers = new List<WeatherTransitionTrigger>();
+            _areaTimeElapsed = 0.0f;
 
             // Initialize frustum culling system
             // Based on daorigins.exe/DragonAge2.exe: Frustum culling is used for efficient rendering
@@ -2853,13 +2861,15 @@ namespace Andastra.Runtime.Games.Eclipse
             // 4. Set up weather transitions based on time or script events
             // Based on daorigins.exe: Weather transitions can be triggered by scripts or time
             // Weather transitions are handled by the weather system, but we can set up triggers here
+            // DragonAge2.exe: Enhanced transition system with multiple trigger types
             if (_weatherSystem != null)
             {
-                // Check for weather transition triggers in area data
+                // Load weather transition triggers from area data
                 // Based on daorigins.exe: Weather transitions can be scripted or time-based
-                // This would typically be configured in area data or module scripts
-                // TODO: STUB - For now, we mark the area as supporting weather transitions
-                // Note: Weather transition support is determined by area properties, not stored as entity data
+                // Transition triggers may be stored in ARE file or configured via module scripts
+                // For now, we set up default time-based transitions based on weather chance values
+                // In a full implementation, transition triggers would be read from ARE file or script configuration
+                SetupWeatherTransitionTriggers();
             }
 
             // 5. Create particle emitters for interactive elements (torches, fires, etc.)
@@ -3948,11 +3958,19 @@ namespace Andastra.Runtime.Games.Eclipse
                 _physicsSystem.StepSimulation(deltaTime);
             }
 
+            // Update area time for time-based weather transitions
+            // Based on daorigins.exe: Area time tracks elapsed time for time-based events
+            _areaTimeElapsed += deltaTime;
+
             // Update weather system
             // Based on weather system update in daorigins.exe, DragonAge2.exe
             if (_weatherSystem != null)
             {
                 _weatherSystem.Update(deltaTime);
+
+                // Process time-based weather transition triggers
+                // Based on daorigins.exe: Time-based transitions are checked each frame
+                ProcessTimeBasedWeatherTransitions();
             }
 
             // Update particle system with wind effects
@@ -9990,6 +10008,269 @@ technique ColorGrading
         /// Gets the particle emitters for this environmental effect (optional).
         /// </summary>
         IEnumerable<IParticleEmitter> ParticleEmitters { get; }
+    }
+
+    /// <summary>
+    /// Weather transition trigger for time-based or script-based weather changes.
+    /// </summary>
+    /// <remarks>
+    /// Weather Transition Trigger Implementation:
+    /// - Based on daorigins.exe: Weather transitions can be triggered by time or script events
+    /// - DragonAge2.exe: Enhanced transition system with multiple trigger types
+    /// - Time-based triggers: Weather changes at specific times or intervals
+    /// - Script-based triggers: Weather changes triggered by script events or entity interactions
+    /// - Transition duration: How long the weather transition takes (smooth fade in/out)
+    /// </remarks>
+    internal class WeatherTransitionTrigger
+    {
+        /// <summary>
+        /// Trigger type (time-based or script-based).
+        /// </summary>
+        public WeatherTransitionTriggerType TriggerType { get; set; }
+
+        /// <summary>
+        /// Target weather type for the transition.
+        /// </summary>
+        public WeatherType TargetWeather { get; set; }
+
+        /// <summary>
+        /// Target weather intensity (0.0 to 1.0).
+        /// </summary>
+        public float TargetIntensity { get; set; }
+
+        /// <summary>
+        /// Transition duration in seconds (how long the fade takes).
+        /// </summary>
+        public float TransitionDuration { get; set; }
+
+        /// <summary>
+        /// Target wind direction (optional, null to keep current).
+        /// </summary>
+        [CanBeNull]
+        public Vector3? TargetWindDirection { get; set; }
+
+        /// <summary>
+        /// Target wind speed (optional, null to keep current).
+        /// </summary>
+        [CanBeNull]
+        public float? TargetWindSpeed { get; set; }
+
+        // Time-based trigger properties
+        /// <summary>
+        /// For time-based triggers: Time in seconds when transition should occur.
+        /// </summary>
+        public float TriggerTime { get; set; }
+
+        /// <summary>
+        /// For time-based triggers: Whether to repeat the transition at intervals.
+        /// </summary>
+        public bool RepeatInterval { get; set; }
+
+        /// <summary>
+        /// For time-based triggers: Interval in seconds for repeating transitions.
+        /// </summary>
+        public float RepeatIntervalSeconds { get; set; }
+
+        // Script-based trigger properties
+        /// <summary>
+        /// For script-based triggers: Script event type that triggers the transition.
+        /// </summary>
+        public ScriptEvent? TriggerEvent { get; set; }
+
+        /// <summary>
+        /// For script-based triggers: Entity tag that must trigger the event (null for any entity).
+        /// </summary>
+        [CanBeNull]
+        public string TriggerEntityTag { get; set; }
+
+        /// <summary>
+        /// Whether this trigger has been fired (for one-time triggers).
+        /// </summary>
+        public bool HasBeenFired { get; set; }
+
+        /// <summary>
+        /// Last time this trigger was fired (for interval-based triggers).
+        /// </summary>
+        public float LastFiredTime { get; set; }
+
+        /// <summary>
+        /// Creates a time-based weather transition trigger.
+        /// </summary>
+        /// <param name="targetWeather">Target weather type.</param>
+        /// <param name="targetIntensity">Target intensity (0.0 to 1.0).</param>
+        /// <param name="triggerTime">Time in seconds when transition should occur.</param>
+        /// <param name="transitionDuration">Transition duration in seconds.</param>
+        /// <param name="repeatInterval">Whether to repeat at intervals.</param>
+        /// <param name="repeatIntervalSeconds">Interval in seconds for repeating.</param>
+        /// <param name="targetWindDirection">Optional target wind direction.</param>
+        /// <param name="targetWindSpeed">Optional target wind speed.</param>
+        /// <returns>Created weather transition trigger.</returns>
+        public static WeatherTransitionTrigger CreateTimeBased(
+            WeatherType targetWeather,
+            float targetIntensity,
+            float triggerTime,
+            float transitionDuration = 5.0f,
+            bool repeatInterval = false,
+            float repeatIntervalSeconds = 0.0f,
+            [CanBeNull] Vector3? targetWindDirection = null,
+            [CanBeNull] float? targetWindSpeed = null)
+        {
+            return new WeatherTransitionTrigger
+            {
+                TriggerType = WeatherTransitionTriggerType.TimeBased,
+                TargetWeather = targetWeather,
+                TargetIntensity = targetIntensity,
+                TransitionDuration = transitionDuration,
+                TriggerTime = triggerTime,
+                RepeatInterval = repeatInterval,
+                RepeatIntervalSeconds = repeatIntervalSeconds,
+                TargetWindDirection = targetWindDirection,
+                TargetWindSpeed = targetWindSpeed,
+                HasBeenFired = false,
+                LastFiredTime = -1.0f
+            };
+        }
+
+        /// <summary>
+        /// Creates a script-based weather transition trigger.
+        /// </summary>
+        /// <param name="targetWeather">Target weather type.</param>
+        /// <param name="targetIntensity">Target intensity (0.0 to 1.0).</param>
+        /// <param name="triggerEvent">Script event type that triggers the transition.</param>
+        /// <param name="transitionDuration">Transition duration in seconds.</param>
+        /// <param name="triggerEntityTag">Optional entity tag filter (null for any entity).</param>
+        /// <param name="targetWindDirection">Optional target wind direction.</param>
+        /// <param name="targetWindSpeed">Optional target wind speed.</param>
+        /// <returns>Created weather transition trigger.</returns>
+        public static WeatherTransitionTrigger CreateScriptBased(
+            WeatherType targetWeather,
+            float targetIntensity,
+            ScriptEvent triggerEvent,
+            float transitionDuration = 5.0f,
+            [CanBeNull] string triggerEntityTag = null,
+            [CanBeNull] Vector3? targetWindDirection = null,
+            [CanBeNull] float? targetWindSpeed = null)
+        {
+            return new WeatherTransitionTrigger
+            {
+                TriggerType = WeatherTransitionTriggerType.ScriptBased,
+                TargetWeather = targetWeather,
+                TargetIntensity = targetIntensity,
+                TransitionDuration = transitionDuration,
+                TriggerEvent = triggerEvent,
+                TriggerEntityTag = triggerEntityTag,
+                TargetWindDirection = targetWindDirection,
+                TargetWindSpeed = targetWindSpeed,
+                HasBeenFired = false,
+                LastFiredTime = -1.0f
+            };
+        }
+
+        /// <summary>
+        /// Checks if this trigger should fire based on current time.
+        /// </summary>
+        /// <param name="currentTime">Current area time in seconds.</param>
+        /// <returns>True if trigger should fire.</returns>
+        public bool ShouldFireTimeBased(float currentTime)
+        {
+            if (TriggerType != WeatherTransitionTriggerType.TimeBased)
+            {
+                return false;
+            }
+
+            if (RepeatInterval)
+            {
+                // Interval-based: Fire if enough time has passed since last fire
+                if (LastFiredTime < 0.0f)
+                {
+                    // First fire: Check if trigger time has passed
+                    if (currentTime >= TriggerTime)
+                    {
+                        return true;
+                    }
+                }
+                else
+                {
+                    // Subsequent fires: Check if interval has passed
+                    if (currentTime >= LastFiredTime + RepeatIntervalSeconds)
+                    {
+                        return true;
+                    }
+                }
+            }
+            else
+            {
+                // One-time: Fire if trigger time has passed and not yet fired
+                if (!HasBeenFired && currentTime >= TriggerTime)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Checks if this trigger should fire based on script event.
+        /// </summary>
+        /// <param name="eventType">Script event type.</param>
+        /// <param name="entityTag">Entity tag that triggered the event.</param>
+        /// <returns>True if trigger should fire.</returns>
+        public bool ShouldFireScriptBased(ScriptEvent eventType, [CanBeNull] string entityTag)
+        {
+            if (TriggerType != WeatherTransitionTriggerType.ScriptBased)
+            {
+                return false;
+            }
+
+            if (!TriggerEvent.HasValue || TriggerEvent.Value != eventType)
+            {
+                return false;
+            }
+
+            // If entity tag filter is set, check if it matches
+            if (!string.IsNullOrEmpty(TriggerEntityTag))
+            {
+                if (string.IsNullOrEmpty(entityTag) || !string.Equals(TriggerEntityTag, entityTag, StringComparison.OrdinalIgnoreCase))
+                {
+                    return false;
+                }
+            }
+
+            // One-time triggers: Check if already fired
+            if (HasBeenFired)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Marks this trigger as fired.
+        /// </summary>
+        /// <param name="currentTime">Current area time in seconds.</param>
+        public void MarkFired(float currentTime)
+        {
+            HasBeenFired = true;
+            LastFiredTime = currentTime;
+        }
+    }
+
+    /// <summary>
+    /// Weather transition trigger type.
+    /// </summary>
+    internal enum WeatherTransitionTriggerType
+    {
+        /// <summary>
+        /// Time-based trigger (weather changes at specific time or intervals).
+        /// </summary>
+        TimeBased,
+
+        /// <summary>
+        /// Script-based trigger (weather changes when script event fires).
+        /// </summary>
+        ScriptBased
     }
 
     /// <summary>
