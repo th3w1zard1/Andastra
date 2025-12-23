@@ -4450,7 +4450,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Based on swkotor2.exe: Template resource types determine ObjectType
         /// UTC = Creature, UTP = Placeable, UTD = Door, UTT = Trigger, UTW = Waypoint, UTS = Sound
         /// </remarks>
-        private ObjectType InferObjectTypeFromBlueprint(string blueprintResRef, Andastra.Parsing.Common.Module module)
+        private Andastra.Runtime.Core.Enums.ObjectType InferObjectTypeFromBlueprint(string blueprintResRef, Andastra.Parsing.Common.Module module)
         {
             if (string.IsNullOrEmpty(blueprintResRef) || module == null)
             {
@@ -4508,7 +4508,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <remarks>
         /// Based on swkotor2.exe: Entities can be created with specific ObjectId to preserve save game references
         /// </remarks>
-        private IEntity CreateEntityWithObjectId(ObjectType objectType, uint objectId, System.Numerics.Vector3 position, float facing)
+        private IEntity CreateEntityWithObjectId(Andastra.Runtime.Core.Enums.ObjectType objectType, uint objectId, System.Numerics.Vector3 position, float facing)
         {
             // Create entity using Core.Entities.Entity constructor with specific ObjectId
             // Based on swkotor2.exe: Entity constructor accepts ObjectId parameter
@@ -4524,7 +4524,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <remarks>
         /// Based on swkotor2.exe: EntityFactory creates entities from templates
         /// </remarks>
-        private IEntity CreateEntityFromTemplate(Loading.EntityFactory entityFactory, Andastra.Parsing.Common.Module module, string templateResRef, ObjectType objectType, System.Numerics.Vector3 position, float facing)
+        private IEntity CreateEntityFromTemplate(Loading.EntityFactory entityFactory, Andastra.Parsing.Common.Module module, string templateResRef, Andastra.Runtime.Core.Enums.ObjectType objectType, System.Numerics.Vector3 position, float facing)
         {
             if (entityFactory == null || module == null || string.IsNullOrEmpty(templateResRef))
             {
@@ -4560,7 +4560,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Based on swkotor2.exe: Template data is loaded into entity after creation
         /// Used when entity is created with specific ObjectId (not via EntityFactory)
         /// </remarks>
-        private void LoadTemplateIntoEntity(IEntity entity, Andastra.Parsing.Common.Module module, string templateResRef, ObjectType objectType)
+        private void LoadTemplateIntoEntity(IEntity entity, Andastra.Parsing.Common.Module module, string templateResRef, Andastra.Runtime.Core.Enums.ObjectType objectType)
         {
             if (entity == null || module == null || string.IsNullOrEmpty(templateResRef))
             {
