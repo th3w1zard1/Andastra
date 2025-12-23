@@ -275,10 +275,9 @@ namespace Andastra.Runtime.Stride.Upscaling
                         }
                     }
                 }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"[StrideXeSS] Exception getting command list through reflection: {ex.Message}");
-                    }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[StrideXeSS] Exception getting command list through reflection: {ex.Message}");
                 }
             }
 
