@@ -140,9 +140,8 @@ namespace Andastra.Runtime.Stride.Upscaling
                         var deviceGraphicsContext = graphicsContextProp.GetValue(_graphicsDevice) as GraphicsContext;
                         if (deviceGraphicsContext != null)
                         {
-                            // Update effect parameters first
-                            effectInstance.UpdateEffect(deviceGraphicsContext);
-                            // Then apply (this sets pipeline state and resource sets)
+                            // Apply effect (this updates resource sets from Parameters and sets pipeline state)
+                            // EffectInstance.Apply() handles both updating parameters and applying the effect
                             effectInstance.Apply(deviceGraphicsContext);
                             return;
                         }
@@ -203,11 +202,11 @@ namespace Andastra.Runtime.Stride.Upscaling
                     try
                     {
                         var effectType = effect.GetType();
-                        
+
                         // Try to get Passes property first
-                        var passesProperty = effectType.GetProperty("Passes", 
+                        var passesProperty = effectType.GetProperty("Passes",
                             System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                        
+
                         if (passesProperty != null)
                         {
                             var passes = passesProperty.GetValue(effect);
@@ -222,8 +221,8 @@ namespace Andastra.Runtime.Stride.Upscaling
                                     if (count > 0)
                                     {
                                         // Get first pass using indexer or Get method
-                                        var indexer = passesType.GetProperty("Item", 
-                                            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance, 
+                                        var indexer = passesType.GetProperty("Item",
+                                            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance,
                                             null, null, new[] { typeof(int) }, null);
                                         if (indexer != null)
                                         {
