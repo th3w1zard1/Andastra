@@ -288,7 +288,7 @@ namespace Andastra.Runtime.Games.Eclipse
 
             return true;
         }
-        
+
         public override Vector3? ProjectPoint(Vector3 point)
         {
             if (ProjectToWalkmesh(point, out Vector3 result, out float height))
@@ -401,7 +401,7 @@ namespace Andastra.Runtime.Games.Eclipse
         {
             return ProjectToWalkmeshInternal(point, out result, out height);
         }
-        
+
         private bool ProjectToWalkmeshInternal(Vector3 point, out Vector3 result, out float height)
         {
             result = point;
@@ -1046,7 +1046,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Implementation based on reverse engineering of:
         /// - daorigins.exe: Dynamic obstacle avoidance in pathfinding (Ghidra analysis needed: search for pathfinding with obstacle avoidance)
         /// - DragonAge2.exe: Enhanced dynamic obstacle avoidance with spatial acceleration (Ghidra analysis needed: search for navigation mesh pathfinding with obstacles)
-        /// 
+        ///
         /// Algorithm:
         /// 1. Convert ObstacleInfo (position, radius) to DynamicObstacle (with bounds, height, influence radius)
         /// 2. Get height at obstacle positions from navigation mesh
@@ -1055,7 +1055,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// 5. Update dynamic obstacle system to mark affected faces
         /// 6. Call FindPath which uses CalculateObstaclePenalty to avoid obstacles
         /// 7. Clean up temporary obstacles after pathfinding
-        /// 
+        ///
         /// Note: Temporary obstacles use IDs in the range [-1000000, -1000000 + obstacleCount) to avoid conflicts
         /// with permanent obstacles which typically use positive IDs.
         /// </remarks>
@@ -1077,7 +1077,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 for (int i = 0; i < obstacles.Count; i++)
                 {
                     ObstacleInfo obstacleInfo = obstacles[i];
-                    
+
                     // Skip invalid obstacles (zero or negative radius)
                     if (obstacleInfo.Radius <= 0.0f)
                     {
@@ -1103,7 +1103,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     // We convert this to an axis-aligned bounding box
                     float radius = obstacleInfo.Radius;
                     Vector3 position = obstacleInfo.Position;
-                    
+
                     // Create axis-aligned bounding box centered at position with radius in all directions
                     Vector3 boundsMin = new Vector3(
                         position.X - radius,
@@ -1693,14 +1693,14 @@ namespace Andastra.Runtime.Games.Eclipse
         /// </summary>
         /// <remarks>
         /// Higher penalty for positions that are exposed to threats.
-        /// 
+        ///
         // TODO: / Full implementation:
         /// 1. Queries combat system for active threats when world is available
         /// 2. Checks line of sight from threats to position
         /// 3. Calculates exposure based on distance and cover availability
-        /// 
+        ///
         /// When world is not available, uses improved heuristic based on path geometry.
-        /// 
+        ///
         /// Based on daorigins.exe: Tactical pathfinding with threat assessment
         /// Based on DragonAge2.exe: Enhanced tactical pathfinding with threat exposure calculation
         /// </remarks>
@@ -1733,7 +1733,7 @@ namespace Andastra.Runtime.Games.Eclipse
             // In Eclipse, threats are typically enemies that are in combat or hostile
             // Get all entities within search radius
             var nearbyEntities = _world.GetEntitiesInRadius(position, threatSearchRadius);
-            
+
             if (nearbyEntities == null)
             {
                 return 0.0f;
@@ -1792,10 +1792,10 @@ namespace Andastra.Runtime.Games.Eclipse
 
                     // Check if position has cover from this threat
                     float coverProtection = CalculateCoverProtection(position, threatPosition);
-                    
+
                     // Exposure = distance factor * (1 - cover protection)
                     float exposure = distanceFactor * (1.0f - coverProtection);
-                    
+
                     // Apply penalty
                     totalPenalty += baseThreatPenalty * exposure;
                 }
@@ -1813,7 +1813,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// 1. Entity must be alive (dead entities are not threats)
         /// 2. Entity is in combat (entities actively fighting are threats)
         /// 3. Entity is hostile to player/party (faction-based threat assessment)
-        /// 
+        ///
         /// Based on daorigins.exe: Tactical pathfinding with threat assessment
         /// Based on DragonAge2.exe: Enhanced threat assessment using faction relationships
         /// </remarks>
@@ -1828,13 +1828,30 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Check if entity is in combat
             // Entities in combat are actively fighting and pose a threat
-            // Try to find combat system through world to check combat state
-            if (_world != null)
+            // Based on daorigins.exe: Tactical pathfinding with combat state checking
+            // Based on DragonAge2.exe: Enhanced threat assessment using combat state
+            // Located via string reference: "InCombat" @ 0x00af76b0 (daorigins.exe), @ 0x00bf4c10 (DragonAge2.exe)
+            // Original implementation: Checks if object is currently engaged in combat using CombatSystem
+            // Cross-engine: Common implementation for both daorigins.exe and DragonAge2.exe
+            if (_world != null && _world.CombatSystem != null)
             {
-                // Check if entity has combat-related components or is engaged in combat
-                // In Eclipse, entities in combat typically have combat targets or are being targeted
-                // We can infer combat state by checking if entity has recent combat activity
-                // TODO: STUB - For now, we'll check faction relationships instead (more reliable without direct combat system access)
+                // Check if entity is in combat using CombatSystem
+                // Based on EclipseEngineApi.Func_GetIsInCombat: Uses World.CombatSystem.IsInCombat(entity)
+                bool inCombat = _world.CombatSystem.IsInCombat(entity);
+                if (inCombat)
+                {
+                    return true; // Entity is in combat - it's a threat
+                }
+
+                // Also check if entity has a combat target (actively targeting another entity)
+                // Based on EclipseEngineApi.Func_GetAttackTarget: Uses World.CombatSystem.GetTarget(entity)
+                // Located via string reference: "CombatTarget" @ 0x00af7840 (daorigins.exe), @ 0x00bf4dc0 (DragonAge2.exe)
+                // Entities with active combat targets are engaged in combat behavior
+                IEntity combatTarget = _world.CombatSystem.GetTarget(entity);
+                if (combatTarget != null && combatTarget.IsValid)
+                {
+                    return true; // Entity has a combat target - it's actively fighting and is a threat
+                }
             }
 
             // Check faction relationships - entity is a threat if hostile to player/party
@@ -1868,7 +1885,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 // Check entities near the pathfinding area (between start and end)
                 Vector3 pathCenter = (start + end) * 0.5f;
                 float checkRadius = Vector3.Distance(start, end) * 0.5f + 10.0f; // Check radius around path
-                
+
                 foreach (IEntity nearbyEntity in _world.GetEntitiesInRadius(pathCenter, checkRadius, ObjectType.Creature | ObjectType.Player))
                 {
                     if (nearbyEntity == null || !nearbyEntity.IsValid || nearbyEntity == entity)
@@ -2015,7 +2032,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <remarks>
         /// Lower cost (bonus) for positions near cover.
         /// Uses the cover point system to find nearby cover and calculate bonus based on proximity and quality.
-        /// 
+        ///
         /// Algorithm:
         /// 1. Query nearby cover points within search radius
         /// 2. Calculate bonus based on distance to nearest cover point and its quality
@@ -2042,11 +2059,11 @@ namespace Andastra.Runtime.Games.Eclipse
             {
                 // Calculate 2D distance to cover point (ignoring height for cover assessment)
                 float distSq = Vector3Extensions.DistanceSquared2D(position, coverPoint.Position);
-                
+
                 if (distSq <= radiusSq)
                 {
                     float distance = (float)Math.Sqrt(distSq);
-                    
+
                     // Track nearest cover point
                     if (distance < nearestCoverDistance)
                     {
@@ -2061,18 +2078,18 @@ namespace Andastra.Runtime.Games.Eclipse
             {
                 // Normalize distance (0.0 = at cover point, 1.0 = at search radius)
                 float normalizedDistance = nearestCoverDistance / coverSearchRadius;
-                
+
                 // Bonus decreases with distance (closer is better)
                 // Quality factor multiplies the bonus (better cover = larger bonus)
                 // Maximum bonus when very close to high-quality cover
                 float distanceFactor = 1.0f - normalizedDistance; // 1.0 at cover point, 0.0 at radius
                 float qualityFactor = bestCoverQuality; // 0.0 to 1.0
-                
+
                 // Combine factors: quality determines max bonus, distance determines how much we get
                 // Base bonus range: 0.0 to -2.0 (negative because it's a cost reduction/bonus)
                 float maxBonus = -2.0f * qualityFactor; // Higher quality = larger bonus
                 bonus = maxBonus * distanceFactor; // Closer = more of the bonus
-                
+
                 // Ensure bonus is negative (cost reduction)
                 bonus = Math.Max(bonus, -2.0f);
                 bonus = Math.Min(bonus, 0.0f);
@@ -2115,12 +2132,12 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <remarks>
         /// Combines distance heuristic with tactical considerations.
         /// Incorporates threat exposure to guide pathfinding away from dangerous areas.
-        /// 
+        ///
         /// The heuristic adds a bounded threat modifier to the distance:
         /// - Threats near the target position increase the heuristic value
         /// - This guides A* to prefer safer paths when multiple routes exist
         /// - The modifier is bounded to maintain heuristic admissibility (not overestimating)
-        /// 
+        ///
         /// Based on daorigins.exe: Tactical pathfinding with threat-aware heuristics
         /// Based on DragonAge2.exe: Enhanced tactical pathfinding with dynamic threat assessment
         /// </remarks>
@@ -2224,12 +2241,12 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <remarks>
         /// Higher modifier for positions that are exposed to multiple threats or close to threats.
         /// This modifier is used in the A* heuristic to guide pathfinding away from dangerous areas.
-        /// 
+        ///
         /// The modifier considers:
         /// - Distance to threats (closer = higher modifier)
         /// - Number of threats (more threats = higher modifier)
         /// - Line of sight from threats (exposed positions = higher modifier)
-        /// 
+        ///
         /// Returns a non-negative value representing the threat exposure cost.
         /// </remarks>
         private float CalculateThreatHeuristicModifier(Vector3 position, List<Vector3> threatPositions)
@@ -2277,16 +2294,16 @@ namespace Andastra.Runtime.Games.Eclipse
                 // Modifier decreases exponentially with distance
                 float normalizedDistance = (distanceToThreat - minThreatDistance) / (maxThreatDistance - minThreatDistance);
                 normalizedDistance = Math.Max(0.0f, Math.Min(1.0f, normalizedDistance));
-                
+
                 // Exponential decay: closer threats have much more influence
                 float distanceFactor = (float)Math.Pow(1.0 - normalizedDistance, 1.0 / distanceDecayFactor);
-                
+
                 // Check if position has cover from this threat
                 float coverProtection = CalculateCoverProtection(position, threatPosition);
-                
+
                 // Exposure factor: higher for positions with less cover
                 float exposureFactor = 1.0f - coverProtection;
-                
+
                 // Apply modifier
                 totalModifier += baseThreatCost * distanceFactor * exposureFactor;
             }
@@ -2407,7 +2424,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <remarks>
         /// Samples height from dynamic terrain data.
         /// Considers real-time terrain deformation and movable objects.
-        /// 
+        ///
         /// Implementation based on reverse engineering of:
         /// - daorigins.exe: Dynamic height sampling with physics integration
         ///   (Ghidra analysis needed: search for height sampling functions, walkmesh projection functions)
@@ -2415,19 +2432,19 @@ namespace Andastra.Runtime.Games.Eclipse
         ///   (Ghidra analysis needed: search for multi-level navigation height functions)
         /// - /: Physics-aware height sampling
         ///   (Ghidra analysis needed: search for physics integration in height sampling)
-        /// 
+        ///
         /// Common pattern across Eclipse engines:
         /// 1. Project point to navigation surface (static geometry, dynamic obstacles, multi-level surfaces)
         /// 2. Extract height from best projection candidate
         /// 3. Handle destructible terrain modifications
         /// 4. Consider physics bodies and movable objects
-        /// 
+        ///
         /// Algorithm:
         /// 1. Use ProjectToWalkmesh to find the best projection candidate
         /// 2. Extract height from the projected result
         /// 3. Handles static geometry, dynamic obstacles, destructible modifications, and multi-level surfaces
         /// 4. Returns false if no valid surface is found
-        /// 
+        ///
         /// Note: Function addresses to be determined via Ghidra MCP reverse engineering:
         /// - daorigins.exe: Height sampling function (search for "GetHeight", "SampleHeight", "ProjectToSurface" references)
         /// - DragonAge2.exe: Multi-level height sampling function (search for navigation mesh height functions)
@@ -2537,12 +2554,12 @@ namespace Andastra.Runtime.Games.Eclipse
         /// </summary>
         /// <remarks>
         /// Eclipse-specific: Uses base class common algorithm with dynamic obstacles and destructible modifications.
-        /// 
+        ///
         /// Implementation based on reverse engineering of:
         /// - daorigins.exe: Dynamic line of sight with destructible environment support
         /// - DragonAge2.exe: Enhanced dynamic line of sight with physics integration
         /// - /: Physics-aware line of sight with dynamic obstacles
-        /// 
+        ///
         /// Note: Function addresses to be determined via Ghidra MCP reverse engineering:
         /// - daorigins.exe: Line of sight function (search for "HasLineOfSight", "LineOfSight", "Raycast" references)
         /// - DragonAge2.exe: Enhanced line of sight function (search for dynamic obstacle integration)
@@ -3754,11 +3771,11 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <remarks>
         /// Advanced AI positioning for combat.
         /// Considers flanking, high ground, cover availability.
-        /// 
+        ///
         /// Implementation based on reverse engineering of:
         /// - daorigins.exe: Tactical position analysis with terrain feature detection
         /// - DragonAge2.exe: Enhanced tactical positioning with threat-aware analysis
-        /// 
+        ///
         /// Algorithm:
         /// 1. Sample candidate positions within radius using grid-based or face-based sampling
         /// 2. Filter to only walkable positions
@@ -3770,7 +3787,7 @@ namespace Andastra.Runtime.Games.Eclipse
         ///    - Visibility analysis (fields of view and cover)
         /// 4. Calculate tactical value rating based on combination of factors
         /// 5. Sort by tactical value and return top positions
-        /// 
+        ///
         /// Note: Function addresses to be determined via Ghidra MCP reverse engineering:
         /// - daorigins.exe: Tactical position finding function (search for "FindTacticalPosition", "TacticalAnalysis", "CombatPosition" references)
         /// - DragonAge2.exe: Enhanced tactical position function (search for tactical positioning system)
@@ -3782,7 +3799,7 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Sample candidate positions within radius
             var candidates = new List<TacticalCandidate>();
-            
+
             // Use face-based sampling: analyze faces within radius
             if (_staticFaceCount > 0)
             {
@@ -3869,7 +3886,7 @@ namespace Andastra.Runtime.Games.Eclipse
             foreach (int faceIndex in nearbyFaces)
             {
                 Vector3 faceCenter = GetStaticFaceCenter(faceIndex);
-                
+
                 // Add face center as candidate
                 if (ProjectToWalkmesh(faceCenter, out Vector3 projectedCenter, out float centerHeight))
                 {
@@ -3931,7 +3948,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 {
                     Vector3 gridPos = center + new Vector3(x * gridSpacing, y * gridSpacing, 0.0f);
                     float dist2D = Vector3Extensions.Distance2D(center, gridPos);
-                    
+
                     if (dist2D <= radius)
                     {
                         if (ProjectToWalkmesh(gridPos, out Vector3 projected, out float height))
