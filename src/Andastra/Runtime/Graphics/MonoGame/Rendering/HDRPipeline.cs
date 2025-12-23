@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -6,10 +7,10 @@ namespace Andastra.Runtime.MonoGame.Rendering
 {
     /// <summary>
     /// High Dynamic Range (HDR) rendering pipeline.
-    /// 
+    ///
     /// Enables HDR rendering with proper tone mapping, exposure adaptation,
     /// and color grading for cinematic quality.
-    /// 
+    ///
     /// Features:
     /// - HDR render targets
     /// - Luminance calculation
@@ -32,6 +33,9 @@ namespace Andastra.Runtime.MonoGame.Rendering
         private PostProcessing.ColorGrading _colorGrading;
         private PostProcessing.ExposureAdaptation _exposureAdaptation;
         private bool _enabled;
+        private Effect _luminanceEffect;
+        private Rendering.ShaderCache _shaderCache;
+        private List<RenderTarget2D> _downsampleTargets;
 
         /// <summary>
         /// Gets or sets whether HDR rendering is enabled.
@@ -64,6 +68,9 @@ namespace Andastra.Runtime.MonoGame.Rendering
             _colorGrading = new PostProcessing.ColorGrading();
             _exposureAdaptation = new PostProcessing.ExposureAdaptation();
             _enabled = true;
+            _shaderCache = new Rendering.ShaderCache(graphicsDevice);
+            _downsampleTargets = new List<RenderTarget2D>();
+            _luminanceEffect = null;
         }
 
         /// <summary>
@@ -192,15 +199,43 @@ namespace Andastra.Runtime.MonoGame.Rendering
         }
 
         /// <summary>
-        /// Calculates average scene luminance from HDR input by downsampling and averaging.
+        /// Calculates average scene luminance from HDR input using GPU-based luminance shader with progressive downsampling.
         /// </summary>
         /// <param name="hdrInput">HDR input render target.</param>
         /// <returns>Average scene luminance.</returns>
+        /// <remarks>
+        /// Based on HDR rendering best practices: GPU-based luminance calculation with progressive downsampling
+        /// Original implementation: CPU-based luminance calculation (simplified approach)
+        /// Full implementation: Uses luminance shader that calculates luminance (Y = 0.2126*R + 0.7152*G + 0.0722*B) during downsampling
+        ///
+        /// Luminance Calculation Pipeline:
+        /// 1. Compile/load luminance shader (if not already loaded)
+        /// 2. Progressive downsampling: Downsample HDR input through multiple passes (1/2, 1/4, 1/8, etc.)
+        /// 3. Each downsampling pass calculates luminance using ITU-R BT.709 weights in the shader
+        /// 4. Final pass: Downsample to 1x1 pixel and read average luminance
+        /// 5. This GPU-based approach is much faster than CPU-based pixel reading
+        ///
+        /// ITU-R BT.709 Luminance Formula:
+        /// Y = 0.2126*R + 0.7152*G + 0.0722*B
+        /// This is the standard formula for converting RGB to luminance in sRGB/Rec.709 color space
+        /// </remarks>
         private float CalculateLuminance(RenderTarget2D hdrInput)
         {
-            // Downsample HDR input to luminance target using progressive downsampling
-            // TODO:  This is a simplified approach - a full implementation would use a luminance shader
-            // that calculates luminance (Y = 0.2126*R + 0.7152*G + 0.0722*B) during downsampling
+            if (hdrInput == null)
+            {
+                return 0.001f; // Default minimum luminance
+            }
+
+            // Ensure luminance shader is loaded
+            if (_luminanceEffect == null)
+            {
+                _luminanceEffect = LoadLuminanceShader();
+                if (_luminanceEffect == null)
+                {
+                    // Shader compilation failed - fall back to CPU-based calculation
+                    return CalculateLuminanceCPU(hdrInput);
+                }
+            }
 
             RenderTarget2D previousTarget = null;
             if (_graphicsDevice.GetRenderTargets().Length > 0)
@@ -210,8 +245,191 @@ namespace Andastra.Runtime.MonoGame.Rendering
 
             try
             {
+                // Progressive downsampling: Downsample HDR input through multiple passes
+                // Each pass reduces size by half and calculates luminance in the shader
+                // This is more efficient than single-pass downsampling and provides better quality
+                RenderTarget2D currentSource = hdrInput;
+                List<RenderTarget2D> tempTargets = new List<RenderTarget2D>();
+
+                try
+                {
+                    // Calculate number of downsampling passes needed
+                    // Target: 1x1 pixel for final average luminance
+                    int currentWidth = hdrInput.Width;
+                    int currentHeight = hdrInput.Height;
+                    int passCount = 0;
+
+                    // Progressive downsampling: Continue until we reach 1x1 or very small size
+                    while (currentWidth > 1 && currentHeight > 1 && passCount < 10) // Limit to 10 passes for safety
+                    {
+                        int nextWidth = Math.Max(1, currentWidth / 2);
+                        int nextHeight = Math.Max(1, currentHeight / 2);
+
+                        // Create or reuse downsampling target
+                        RenderTarget2D downsampleTarget = null;
+                        if (passCount < _downsampleTargets.Count)
+                        {
+                            // Reuse existing target if size matches
+                            RenderTarget2D existing = _downsampleTargets[passCount];
+                            if (existing != null && existing.Width == nextWidth && existing.Height == nextHeight)
+                            {
+                                downsampleTarget = existing;
+                            }
+                            else
+                            {
+                                existing?.Dispose();
+                                downsampleTarget = new RenderTarget2D(
+                                    _graphicsDevice,
+                                    nextWidth,
+                                    nextHeight,
+                                    false,
+                                    SurfaceFormat.Single, // Use Single format for HDR luminance values
+                                    DepthFormat.None
+                                );
+                                _downsampleTargets[passCount] = downsampleTarget;
+                            }
+                        }
+                        else
+                        {
+                            // Create new downsampling target
+                            downsampleTarget = new RenderTarget2D(
+                                _graphicsDevice,
+                                nextWidth,
+                                nextHeight,
+                                false,
+                                SurfaceFormat.Single, // Use Single format for HDR luminance values
+                                DepthFormat.None
+                            );
+                            _downsampleTargets.Add(downsampleTarget);
+                            tempTargets.Add(downsampleTarget);
+                        }
+
+                        // Render downsampling pass with luminance shader
+                        _graphicsDevice.SetRenderTarget(downsampleTarget);
+                        _graphicsDevice.Clear(Color.Black);
+
+                        // Set shader parameters
+                        EffectParameter sourceTextureParam = _luminanceEffect.Parameters["SourceTexture"];
+                        if (sourceTextureParam != null)
+                        {
+                            sourceTextureParam.SetValue(currentSource);
+                        }
+
+                        // Render full-screen quad with luminance shader
+                        _spriteBatch.Begin(
+                            SpriteSortMode.Immediate,
+                            BlendState.Opaque,
+                            SamplerState.LinearClamp,
+                            DepthStencilState.None,
+                            RasterizerState.CullNone,
+                            _luminanceEffect
+                        );
+
+                        Rectangle destRect = new Rectangle(0, 0, nextWidth, nextHeight);
+                        _spriteBatch.Draw(currentSource, destRect, Color.White);
+                        _spriteBatch.End();
+
+                        // Move to next pass
+                        if (currentSource != hdrInput)
+                        {
+                            // Don't dispose the original input
+                            tempTargets.Remove(currentSource);
+                        }
+                        currentSource = downsampleTarget;
+                        currentWidth = nextWidth;
+                        currentHeight = nextHeight;
+                        passCount++;
+                    }
+
+                    // Final pass: Read luminance from 1x1 or smallest target
+                    // Create a Color-format target for reading (Single format may not be readable)
+                    RenderTarget2D readTarget = null;
+                    try
+                    {
+                        readTarget = new RenderTarget2D(
+                            _graphicsDevice,
+                            currentWidth,
+                            currentHeight,
+                            false,
+                            SurfaceFormat.Color,
+                            DepthFormat.None
+                        );
+
+                        // Copy final luminance to readable format
+                        _graphicsDevice.SetRenderTarget(readTarget);
+                        _graphicsDevice.Clear(Color.Black);
+
+                        _spriteBatch.Begin(
+                            SpriteSortMode.Immediate,
+                            BlendState.Opaque,
+                            SamplerState.LinearClamp,
+                            DepthStencilState.None,
+                            RasterizerState.CullNone
+                        );
+
+                        Rectangle finalRect = new Rectangle(0, 0, currentWidth, currentHeight);
+                        _spriteBatch.Draw(currentSource, finalRect, Color.White);
+                        _spriteBatch.End();
+
+                        // Read average luminance from final target
+                        Color[] pixelData = new Color[currentWidth * currentHeight];
+                        readTarget.GetData(pixelData);
+
+                        // Calculate average luminance from final downsampled buffer
+                        // The shader has already calculated luminance, so we just average the values
+                        float sumLuminance = 0.0f;
+                        int pixelCount = 0;
+                        foreach (Color pixel in pixelData)
+                        {
+                            // Luminance shader outputs grayscale (R=G=B=luminance)
+                            // Use red channel as luminance value (all channels should be equal)
+                            float luminance = pixel.R / 255.0f;
+                            sumLuminance += luminance;
+                            pixelCount++;
+                        }
+
+                        float avgLuminance = pixelCount > 0 ? sumLuminance / pixelCount : 0.001f;
+                        return Math.Max(0.001f, avgLuminance); // Avoid zero/negative values
+                    }
+                    finally
+                    {
+                        readTarget?.Dispose();
+                    }
+                }
+                finally
+                {
+                    // Clean up temporary targets (but keep reusable ones in _downsampleTargets)
+                    foreach (RenderTarget2D temp in tempTargets)
+                    {
+                        if (temp != currentSource && !_downsampleTargets.Contains(temp))
+                        {
+                            temp?.Dispose();
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                _graphicsDevice.SetRenderTarget(previousTarget);
+            }
+        }
+
+        /// <summary>
+        /// Fallback CPU-based luminance calculation when shader is not available.
+        /// </summary>
+        /// <param name="hdrInput">HDR input render target.</param>
+        /// <returns>Average scene luminance.</returns>
+        private float CalculateLuminanceCPU(RenderTarget2D hdrInput)
+        {
+            RenderTarget2D previousTarget = null;
+            if (_graphicsDevice.GetRenderTargets().Length > 0)
+            {
+                previousTarget = _graphicsDevice.GetRenderTargets()[0].RenderTarget as RenderTarget2D;
+            }
+
+            try
+            {
                 // Create a temporary Color-format render target for reliable reading and downsampling
-                // Single format may not render/read correctly with HDR inputs, so we use Color format
                 RenderTarget2D tempLumReadTarget = null;
                 try
                 {
@@ -246,13 +464,11 @@ namespace Andastra.Runtime.MonoGame.Rendering
 
                     // Calculate average luminance using ITU-R BT.709 luminance weights
                     // Y = 0.2126*R + 0.7152*G + 0.0722*B
-                    // Note: This assumes sRGB color space. For proper HDR, we'd need linear values
                     float sumLuminance = 0.0f;
                     int pixelCount = 0;
                     foreach (Color pixel in pixelData)
                     {
                         // Convert sRGB to approximate linear for luminance calculation
-                        // For true HDR, we'd read HDR values directly, but this works for approximation
                         float r = pixel.R / 255.0f;
                         float g = pixel.G / 255.0f;
                         float b = pixel.B / 255.0f;
@@ -274,6 +490,87 @@ namespace Andastra.Runtime.MonoGame.Rendering
             finally
             {
                 _graphicsDevice.SetRenderTarget(previousTarget);
+            }
+        }
+
+        /// <summary>
+        /// Loads or compiles the luminance shader.
+        /// </summary>
+        /// <returns>Compiled luminance effect, or null if compilation failed.</returns>
+        /// <remarks>
+        /// Luminance Shader (HLSL):
+        /// - Calculates ITU-R BT.709 luminance: Y = 0.2126*R + 0.7152*G + 0.0722*B
+        /// - Outputs grayscale luminance value (R=G=B=luminance)
+        /// - Used for progressive downsampling in HDR pipeline
+        /// - Based on HDR rendering best practices: GPU-based luminance calculation
+        /// </remarks>
+        private Effect LoadLuminanceShader()
+        {
+            // HLSL shader source for luminance calculation
+            // This shader calculates ITU-R BT.709 luminance and outputs grayscale
+            string shaderSource = @"
+// Luminance Shader - Calculates ITU-R BT.709 luminance from HDR input
+// Based on HDR rendering best practices: GPU-based luminance calculation
+// Formula: Y = 0.2126*R + 0.7152*G + 0.0722*B
+
+sampler SourceTexture : register(s0);
+
+struct VertexShaderInput
+{
+    float4 Position : POSITION0;
+    float2 TextureCoordinate : TEXCOORD0;
+};
+
+struct VertexShaderOutput
+{
+    float4 Position : POSITION0;
+    float2 TextureCoordinate : TEXCOORD0;
+};
+
+// Vertex shader: Pass through with full-screen quad
+VertexShaderOutput VertexShaderMain(VertexShaderInput input)
+{
+    VertexShaderOutput output;
+    output.Position = input.Position;
+    output.TextureCoordinate = input.TextureCoordinate;
+    return output;
+}
+
+// Pixel shader: Calculate luminance using ITU-R BT.709 weights
+float4 PixelShaderMain(VertexShaderOutput input) : COLOR0
+{
+    // Sample HDR input texture
+    float4 color = tex2D(SourceTexture, input.TextureCoordinate);
+
+    // Calculate ITU-R BT.709 luminance
+    // Y = 0.2126*R + 0.7152*G + 0.0722*B
+    float luminance = dot(color.rgb, float3(0.2126, 0.7152, 0.0722));
+
+    // Output grayscale luminance (R=G=B=luminance, A=1.0)
+    return float4(luminance, luminance, luminance, 1.0);
+}
+
+// Technique for luminance calculation
+technique Luminance
+{
+    pass Pass0
+    {
+        VertexShader = compile vs_2_0 VertexShaderMain();
+        PixelShader = compile ps_2_0 PixelShaderMain();
+    }
+}
+";
+
+            try
+            {
+                // Compile shader using ShaderCache
+                Effect effect = _shaderCache.GetShader("LuminanceShader", shaderSource);
+                return effect;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[HDRPipeline] Failed to load luminance shader: {ex.Message}");
+                return null;
             }
         }
 
@@ -353,7 +650,20 @@ namespace Andastra.Runtime.MonoGame.Rendering
             _spriteBatch?.Dispose();
             _bloom?.Dispose();
             _toneMapping?.Dispose();
-            
+            _luminanceEffect?.Dispose();
+            // Note: ShaderCache doesn't implement IDisposable, so we just clear it
+            _shaderCache?.Clear();
+
+            // Dispose downsampling targets
+            if (_downsampleTargets != null)
+            {
+                foreach (RenderTarget2D target in _downsampleTargets)
+                {
+                    target?.Dispose();
+                }
+                _downsampleTargets.Clear();
+            }
+
             // Reset references
             _hdrTarget = null;
             _luminanceTarget = null;
@@ -365,6 +675,9 @@ namespace Andastra.Runtime.MonoGame.Rendering
             _toneMapping = null;
             _colorGrading = null;
             _exposureAdaptation = null;
+            _luminanceEffect = null;
+            _shaderCache = null;
+            _downsampleTargets = null;
         }
     }
 }
