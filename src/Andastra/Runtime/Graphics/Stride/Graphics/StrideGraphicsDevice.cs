@@ -22,6 +22,7 @@ namespace Andastra.Runtime.Stride.Graphics
         private SamplerStateDescription[] _currentSamplerStates;
         private bool _stateDirty;
         private PipelineStateKey _lastPipelineStateKey;
+        private Andastra.Runtime.Graphics.Viewport _currentViewport;
 
         /// <summary>
         /// Pipeline state cache key for tracking state combinations.
@@ -86,8 +87,29 @@ namespace Andastra.Runtime.Stride.Graphics
         {
             get
             {
-                var vp = _device.Viewport;
-                return new Andastra.Runtime.Graphics.Viewport(vp.X, vp.Y, vp.Width, vp.Height, vp.MinDepth, vp.MaxDepth);
+                // In Stride, viewport is not a property of GraphicsDevice
+                // Return tracked viewport or default based on backbuffer size
+                if (_currentViewport.Width == 0 && _currentViewport.Height == 0)
+                {
+                    // Initialize with default viewport based on presentation parameters
+                    // Stride doesn't expose viewport directly, so we use a reasonable default
+                    var presentParams = _device.Presenter?.Description;
+                    if (presentParams != null)
+                    {
+                        _currentViewport = new Andastra.Runtime.Graphics.Viewport(
+                            0, 0,
+                            presentParams.BackBufferWidth,
+                            presentParams.BackBufferHeight,
+                            0.0f, 1.0f
+                        );
+                    }
+                    else
+                    {
+                        // Fallback to a default viewport
+                        _currentViewport = new Andastra.Runtime.Graphics.Viewport(0, 0, 1920, 1080, 0.0f, 1.0f);
+                    }
+                }
+                return _currentViewport;
             }
         }
 
