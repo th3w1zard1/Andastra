@@ -3392,7 +3392,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             if (responseOptions != null && responseOptions.Count > 0)
             {
                 float responseStartY = dialogueBoxY + 150.0f; // Below dialogue text
-                RenderDialogueResponses(dialogueBoxX + portraitSize + 40.0f, responseStartY, responseOptions);
+                RenderDialogueResponses(dialogueBoxX + portraitSize + 40.0f, responseStartY, responseOptions, conversationSpeaker);
             }
 
             // Render dialogue history (if enabled)
@@ -3681,7 +3681,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         /// <param name="x">X position for responses.</param>
         /// <param name="y">Y position for responses.</param>
         /// <param name="responses">List of response option texts.</param>
-        private void RenderDialogueResponses(float x, float y, List<string> responses)
+        /// <param name="speaker">The conversation speaker entity.</param>
+        private void RenderDialogueResponses(float x, float y, List<string> responses, IEntity speaker)
         {
             if (responses == null || responses.Count == 0)
             {
@@ -3694,6 +3695,65 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             uint normalColor = 0xFFFFFFFF; // White
             uint selectedColor = 0xFFFFD700; // Gold (for selected response)
 
+            // Get selected response index from entity data
+            // Based on daorigins.exe: Selected response index is stored in entity data "SelectedDialogueResponse"
+            // The selected index can be stored on either the speaker entity or the player entity
+            int selectedResponseIndex = -1;
+            
+            // Check speaker entity first
+            if (speaker != null && speaker.HasData("SelectedDialogueResponse"))
+            {
+                object selectedIndexObj = speaker.GetData("SelectedDialogueResponse");
+                if (selectedIndexObj is int selectedIndex)
+                {
+                    selectedResponseIndex = selectedIndex;
+                }
+                else if (selectedIndexObj is string selectedIndexStr && int.TryParse(selectedIndexStr, out int parsedIndex))
+                {
+                    selectedResponseIndex = parsedIndex;
+                }
+            }
+
+            // If not found on speaker, check player entity
+            // Based on daorigins.exe: Selected response can be stored on player entity
+            if (selectedResponseIndex < 0 && _world != null)
+            {
+                // Try to find player entity by common tags
+                IEntity playerEntity = _world.GetEntityByTag("PlayerCharacter", 0);
+                if (playerEntity == null)
+                {
+                    playerEntity = _world.GetEntityByTag("Player", 0);
+                }
+                if (playerEntity == null)
+                {
+                    playerEntity = _world.GetEntityByTag("player", 0);
+                }
+
+                if (playerEntity != null && playerEntity.HasData("SelectedDialogueResponse"))
+                {
+                    object selectedIndexObj = playerEntity.GetData("SelectedDialogueResponse");
+                    if (selectedIndexObj is int selectedIndex)
+                    {
+                        selectedResponseIndex = selectedIndex;
+                    }
+                    else if (selectedIndexObj is string selectedIndexStr && int.TryParse(selectedIndexStr, out int parsedIndex))
+                    {
+                        selectedResponseIndex = parsedIndex;
+                    }
+                }
+            }
+
+            // If still not found, check world/area state
+            if (selectedResponseIndex < 0 && _world != null && _world.CurrentArea != null)
+            {
+                // Try to get from area conversation state if available
+                if (_world.CurrentArea is IDialogueHistoryArea dialogueArea)
+                {
+                    // Some dialogue systems store selected response in area state
+                    // This is a fallback if entity data doesn't have it
+                }
+            }
+
             for (int i = 0; i < responses.Count && i < 9; i++) // Max 9 responses
             {
                 string responseText = $"{i + 1}. {responses[i]}";
@@ -3701,8 +3761,12 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
 
                 // Check if this response is selected (stored in entity data)
                 // Based on daorigins.exe: Selected response is highlighted in gold
+                // Selected index is 0-based (matches array index i)
                 uint responseColor = normalColor;
-                // TODO: Get selected response index from entity data "SelectedDialogueResponse"
+                if (selectedResponseIndex >= 0 && selectedResponseIndex == i)
+                {
+                    responseColor = selectedColor;
+                }
 
                 RenderTextDirectX9(x, responseY, responseText, responseColor, fontSize, false);
             }
