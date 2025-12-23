@@ -166,7 +166,7 @@ namespace Andastra.Runtime.Games.Odyssey
             string lastModule = string.Empty;
 
             // Priority 1: Try to extract from CurrentAreaInstance using reflection
-            else if (saveData.CurrentAreaInstance != null)
+            if (saveData.CurrentAreaInstance != null)
             {
                 try
                 {
@@ -197,13 +197,7 @@ namespace Andastra.Runtime.Games.Odyssey
 
                 // Priority 2: ModuleAreaMappings not available on Common.SaveGameData - skip this approach
                 // TODO: If ModuleAreaMappings is needed, add it to Common.SaveGameData or use a different approach
-                if (false) // Disabled: ModuleAreaMappings requires Core.SaveGameData which is incompatible
-                {
-                    string areaResRef = saveData.CurrentAreaInstance.ResRef;
-                    if (!string.IsNullOrEmpty(areaResRef))
-                    {
-                        // This code path is disabled as it requires Core.SaveGameData
-                        foreach (var kvp in new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>())
+                // ModuleAreaMappings requires Core.SaveGameData which is incompatible with Common.SaveGameData
                         {
                             string moduleResRef = kvp.Key;
                             List<string> areaList = kvp.Value;
@@ -217,23 +211,8 @@ namespace Andastra.Runtime.Games.Odyssey
                 }
 
                 // Priority 4: Try to infer from CurrentArea string if available
-                if (string.IsNullOrEmpty(lastModule) && !string.IsNullOrEmpty(saveData.CurrentArea))
-                {
-                    // If CurrentArea matches an area in ModuleAreaMappings, use that module
-                    if (saveData.ModuleAreaMappings != null && saveData.ModuleAreaMappings.Count > 0)
-                    {
-                        foreach (var kvp in coreSaveData.ModuleAreaMappings)
-                        {
-                            string moduleResRef = kvp.Key;
-                            List<string> areaList = kvp.Value;
-                            if (areaList != null && areaList.Contains(saveData.CurrentArea, StringComparer.OrdinalIgnoreCase))
-                            {
-                                lastModule = moduleResRef;
-                                break;
-                            }
-                        }
-                    }
-                }
+                // ModuleAreaMappings not available on Common.SaveGameData
+                // TODO: If module inference from area is needed, add ModuleAreaMappings to Common.SaveGameData
             }
             // Priority 5: Try to infer from CurrentArea string if CurrentAreaInstance is null
             else if (!string.IsNullOrEmpty(saveData.CurrentArea) && saveData.ModuleAreaMappings != null && saveData.ModuleAreaMappings.Count > 0)
@@ -5221,13 +5200,8 @@ namespace Andastra.Runtime.Games.Odyssey
                 // Located via string reference: "Mod_Area_list" @ 0x007be748 (swkotor2.exe)
                 string moduleName = null;
 
-                // Priority 1: Use CurrentModule if available (most direct)
-                if (coreSaveData != null && !string.IsNullOrEmpty(coreSaveData.CurrentModule))
-                {
-                    moduleName = coreSaveData.CurrentModule;
-                }
-                // Priority 2: Try to get module name from area instance via reflection
-                else
+                // Priority 1: Try to get module name from area instance via reflection
+                // CurrentModule property not available on Common.SaveGameData
                 {
                     try
                     {
@@ -5263,20 +5237,8 @@ namespace Andastra.Runtime.Games.Odyssey
                     // Based on swkotor2.exe: Module state lookup by area name
                     // Original implementation: Searches ModuleAreaMappings to find which module contains the current area
                     // Located via string reference: "Mod_Area_list" @ 0x007be748 (swkotor2.exe)
-                    // If CurrentArea matches an area in ModuleAreaMappings, use that module
-                    if (saveData.ModuleAreaMappings != null && saveData.ModuleAreaMappings.Count > 0)
-                    {
-                        foreach (var kvp in coreSaveData.ModuleAreaMappings)
-                        {
-                            string moduleResRef = kvp.Key;
-                            List<string> areaList = kvp.Value;
-                            if (areaList != null && areaList.Contains(saveData.CurrentArea, StringComparer.OrdinalIgnoreCase))
-                            {
-                                moduleName = moduleResRef;
-                                break;
-                            }
-                        }
-                    }
+                    // ModuleAreaMappings not available on Common.SaveGameData
+                    // TODO: If module inference from area is needed, add ModuleAreaMappings to Common.SaveGameData
                 }
 
                 // Serialize area state if we have module name
