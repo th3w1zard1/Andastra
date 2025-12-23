@@ -1710,14 +1710,14 @@ namespace Andastra.Runtime.Game.Core
             string hookNodeName = string.Format("camerahook{0}", hookIndex);
 
             // Search for camera hook node recursively in the model's node tree
-            if (model.RootNode != null)
+            if (model.Root != null)
             {
-                MDLNode hookNode = FindNodeByName(model.RootNode, hookNodeName);
+                MDLNode hookNode = FindNodeByName(model.Root, hookNodeName);
                 if (hookNode != null)
                 {
                     // Transform node position to world space
                     // Based on swkotor2.exe: FUN_006c6020 transforms node local position to world space
-                    System.Numerics.Matrix4x4 nodeTransform = GetNodeWorldTransform(model.RootNode, hookNode);
+                    System.Numerics.Matrix4x4 nodeTransform = GetNodeWorldTransform(model.Root, hookNode);
                     System.Numerics.Vector3 localPos = hookNode.Position;
                     System.Numerics.Vector3 worldPos = System.Numerics.Vector3.Transform(localPos, nodeTransform);
                     return worldPos;
