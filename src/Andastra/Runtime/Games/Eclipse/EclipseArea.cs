@@ -2945,14 +2945,14 @@ namespace Andastra.Runtime.Games.Eclipse
                     {
                         int weatherTypeInt = trigger.GetData<int>("TargetWeatherType");
                         float weatherIntensity = trigger.GetData<float>("TargetWeatherIntensity");
-                        
+
                         if (Enum.IsDefined(typeof(WeatherType), weatherTypeInt))
                         {
                             WeatherType targetWeather = (WeatherType)weatherTypeInt;
-                            float transitionDuration = trigger.HasData("WeatherTransitionDuration") 
-                                ? trigger.GetData<float>("WeatherTransitionDuration") 
+                            float transitionDuration = trigger.HasData("WeatherTransitionDuration")
+                                ? trigger.GetData<float>("WeatherTransitionDuration")
                                 : 5.0f;
-                            
+
                             // Start weather transition
                             EclipseWeatherSystem eclipseWeather = _weatherSystem as EclipseWeatherSystem;
                             if (eclipseWeather != null)
@@ -3181,7 +3181,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     {
                         // Check if script names suggest environmental changes
                         string scriptCheck = (onEnterScript ?? onUsedScript ?? onHeartbeatScript ?? string.Empty).ToLowerInvariant();
-                        if (scriptCheck.Contains("weather") || scriptCheck.Contains("particle") || 
+                        if (scriptCheck.Contains("weather") || scriptCheck.Contains("particle") ||
                             scriptCheck.Contains("lighting") || scriptCheck.Contains("environment") ||
                             scriptCheck.Contains("fog") || scriptCheck.Contains("wind") || scriptCheck.Contains("storm"))
                         {
@@ -3207,12 +3207,12 @@ namespace Andastra.Runtime.Games.Eclipse
                     // Based on daorigins.exe: Environmental triggers modify weather, lighting, or particle effects when activated
                     // This handler will be called when trigger fires (OnEnter, OnUsed, etc.)
                     // The handler checks trigger data for environmental change properties and applies them
-                    
+
                     // Store reference to area systems for environmental changes
                     trigger.SetData("WeatherSystem", _weatherSystem);
                     trigger.SetData("LightingSystem", _lightingSystem);
                     trigger.SetData("ParticleSystem", _particleSystem);
-                    
+
                     // Register trigger for environmental change event handling
                     // Based on daorigins.exe: Environmental triggers are registered with event system
                     // When trigger fires, environmental change handler is called
@@ -3368,14 +3368,14 @@ namespace Andastra.Runtime.Games.Eclipse
                                     placeable.SetData("LightRadius", lightRadius);
                                     placeable.SetData("LightIntensity", lightIntensity);
                                     placeable.SetData("LightColor", lightColor);
-                                    
+
                                     // Store base light properties for environmental state adjustments
                                     // Based on daorigins.exe: Dynamic lights respond to environmental state (weather, time of day)
                                     // DragonAge2.exe: Enhanced lighting system with environmental state integration
                                     placeable.SetData("BaseLightIntensity", lightIntensity);
                                     placeable.SetData("BaseLightColor", lightColor);
                                     placeable.SetData("BaseLightRadius", lightRadius);
-                                    
+
                                     // Initialize light with current environmental state
                                     // Based on daorigins.exe: Lights are adjusted based on weather and time of day
                                     UpdateLightingForEnvironmentalState(dynamicLight, placeable);
@@ -8846,7 +8846,7 @@ namespace Andastra.Runtime.Games.Eclipse
             }
 
             // Initialize post-processing resources if needed
-            Viewport viewport = graphicsDevice.Viewport;
+            GraphicsViewport viewport = graphicsDevice.Viewport;
             int currentWidth = viewport.Width;
             int currentHeight = viewport.Height;
 
@@ -8917,9 +8917,9 @@ namespace Andastra.Runtime.Games.Eclipse
                 if (finalTarget != null && finalTarget.ColorTexture != null)
                 {
                     // Get viewport dimensions for fullscreen blit
-                    Viewport viewport = graphicsDevice.Viewport;
-                    int viewportWidth = viewport.Width;
-                    int viewportHeight = viewport.Height;
+                    GraphicsViewport viewportLocal = graphicsDevice.Viewport;
+                    int viewportWidth = viewportLocal.Width;
+                    int viewportHeight = viewportLocal.Height;
 
                     // Set render target to null (back buffer) for final output
                     // daorigins.exe: Back buffer is the default render target (null render target)
