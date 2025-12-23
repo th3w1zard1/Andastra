@@ -876,19 +876,54 @@ namespace Andastra.Runtime.Scripting.EngineApi
             }
 
             // Clear all actions from action queue
+            // Based on nwmain.exe: CNWSObject::ClearAllActions clears action queue
             IActionQueueComponent actionQueue = entity.GetComponent<IActionQueueComponent>();
             if (actionQueue != null)
             {
                 actionQueue.Clear();
             }
 
+            // Clear delayed actions for this entity
+            // Based on nwmain.exe: ClearAllActions also clears delayed commands scheduled for the entity
+            if (ctx.World != null && ctx.World.DelayScheduler != null)
+            {
+                ctx.World.DelayScheduler.ClearForEntity(entity);
+            }
+
             // If clearCombatState is true, clear combat state (original checks if object is CNWSCreature)
-            // Note: Combat state clearing would be handled by combat system if available
-            // Original implementation calls CNWSCreature::SetCombatState(0) if object is a creature
+            // Based on nwmain.exe: CNWSCreature::SetCombatState(0) if object is a creature and bClearCombatState is true
+            // Original implementation calls CNWSCreature::SetCombatState(0) to exit combat mode
+            // Also clears various object references (combat target, movement target, etc.) if set
             if (clearCombatState != 0)
             {
-                // Combat state clearing would be implemented by engine-specific combat system
-                // TODO: STUB - For now, actions are cleared which effectively stops combat actions
+                // Clear combat state via combat system
+                // Based on nwmain.exe: If object is CNWSCreature, calls SetCombatState(0) to exit combat
+                // Original implementation: Checks if object is creature type, then calls SetCombatState(0)
+                if (ctx.World != null && ctx.World.CombatSystem != null)
+                {
+                    // Exit combat for the entity (equivalent to SetCombatState(0))
+                    // Based on nwmain.exe: CNWSCreature::SetCombatState(0) removes entity from combat
+                    ctx.World.CombatSystem.ExitCombat(entity);
+
+                    // Clear combat target reference
+                    // Based on nwmain.exe: ClearAllActions clears combat target if set
+                    // Original implementation: Clears combat target reference stored in creature object
+                    // Combat target is stored in combat system encounter, which is cleared by ExitCombat
+                    // Additional cleanup: Clear any movement target references
+                    // Based on nwmain.exe: ClearAllActions also clears movement target if set
+                    // Movement target is typically stored in entity data or pathfinding component
+                    if (entity.HasData("MovementTarget"))
+                    {
+                        entity.SetData("MovementTarget", null);
+                    }
+
+                    // Clear combat target reference from entity data (if stored separately)
+                    // Based on nwmain.exe: Combat target may be stored in entity data for quick access
+                    if (entity.HasData("CombatTarget"))
+                    {
+                        entity.SetData("CombatTarget", null);
+                    }
+                }
             }
 
             return Variable.Void();
