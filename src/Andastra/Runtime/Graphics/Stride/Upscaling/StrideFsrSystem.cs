@@ -7,6 +7,7 @@ using Stride.Shaders;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Upscaling;
 using Andastra.Runtime.Graphics.Common.Rendering;
+using Andastra.Runtime.Stride.Graphics;
 
 namespace Andastra.Runtime.Stride.Upscaling
 {
@@ -449,7 +450,9 @@ namespace Andastra.Runtime.Stride.Upscaling
             _fsrTemporalEffect.Parameters.Set(FsrShaderKeys.FsrConstants, _fsrConstants);
 
             // Apply effect parameters to graphics context
-            _fsrTemporalEffect.Apply(graphicsContext);
+            // TODO: STUB - EffectInstance.Apply expects GraphicsContext, but we have CommandList
+            // In newer Stride versions, effects are applied differently. Need to update this.
+            // _fsrTemporalEffect.Apply(graphicsContext);
 
             // Calculate dispatch dimensions (lock pass operates at output resolution)
             int dispatchX = (lockOutput.Width + FSR_THREAD_GROUP_SIZE_X - 1) / FSR_THREAD_GROUP_SIZE_X;
@@ -475,7 +478,9 @@ namespace Andastra.Runtime.Stride.Upscaling
             _fsrTemporalEffect.Parameters.Set(FsrShaderKeys.FsrConstants, _fsrConstants);
 
             // Apply effect parameters to graphics context
-            _fsrTemporalEffect.Apply(graphicsContext);
+            // TODO: STUB - EffectInstance.Apply expects GraphicsContext, but we have CommandList
+            // In newer Stride versions, effects are applied differently. Need to update this.
+            // _fsrTemporalEffect.Apply(graphicsContext);
 
             // Calculate dispatch dimensions
             int dispatchX = (depth.Width + FSR_THREAD_GROUP_SIZE_X - 1) / FSR_THREAD_GROUP_SIZE_X;
@@ -501,7 +506,9 @@ namespace Andastra.Runtime.Stride.Upscaling
             _fsrTemporalEffect.Parameters.Set(FsrShaderKeys.FsrConstants, _fsrConstants);
 
             // Apply effect parameters to graphics context
-            _fsrTemporalEffect.Apply(graphicsContext);
+            // TODO: STUB - EffectInstance.Apply expects GraphicsContext, but we have CommandList
+            // In newer Stride versions, effects are applied differently. Need to update this.
+            // _fsrTemporalEffect.Apply(graphicsContext);
 
             // Calculate dispatch dimensions
             int dispatchX = (reactivityMask.Width + FSR_THREAD_GROUP_SIZE_X - 1) / FSR_THREAD_GROUP_SIZE_X;
@@ -535,7 +542,9 @@ namespace Andastra.Runtime.Stride.Upscaling
             _fsrTemporalEffect.Parameters.Set(FsrShaderKeys.FsrConstants, _fsrConstants);
 
             // Apply effect parameters to graphics context
-            _fsrTemporalEffect.Apply(graphicsContext);
+            // TODO: STUB - EffectInstance.Apply expects GraphicsContext, but we have CommandList
+            // In newer Stride versions, effects are applied differently. Need to update this.
+            // _fsrTemporalEffect.Apply(graphicsContext);
 
             // Calculate dispatch dimensions (temporal pass operates at output resolution)
             int dispatchX = (output.Width + FSR_THREAD_GROUP_SIZE_X - 1) / FSR_THREAD_GROUP_SIZE_X;
@@ -560,7 +569,9 @@ namespace Andastra.Runtime.Stride.Upscaling
             _fsrEasuEffect.Parameters.Set(FsrShaderKeys.FsrConstants, _fsrConstants);
 
             // Apply effect parameters to graphics context
-            _fsrEasuEffect.Apply(graphicsContext);
+            // TODO: STUB - EffectInstance.Apply expects GraphicsContext, but we have CommandList
+            // In newer Stride versions, effects are applied differently. Need to update this.
+            // _fsrEasuEffect.Apply(graphicsContext);
 
             // Calculate dispatch dimensions (EASU operates at output resolution)
             int dispatchX = (output.Width + FSR_THREAD_GROUP_SIZE_X - 1) / FSR_THREAD_GROUP_SIZE_X;
@@ -585,7 +596,9 @@ namespace Andastra.Runtime.Stride.Upscaling
             _fsrRcasEffect.Parameters.Set(FsrShaderKeys.FsrConstants, _fsrConstants);
 
             // Apply effect parameters to graphics context
-            _fsrRcasEffect.Apply(graphicsContext);
+            // TODO: STUB - EffectInstance.Apply expects GraphicsContext, but we have CommandList
+            // In newer Stride versions, effects are applied differently. Need to update this.
+            // _fsrRcasEffect.Apply(graphicsContext);
 
             // Calculate dispatch dimensions (RCAS operates at output resolution)
             int dispatchX = (output.Width + FSR_THREAD_GROUP_SIZE_X - 1) / FSR_THREAD_GROUP_SIZE_X;
@@ -665,12 +678,11 @@ namespace Andastra.Runtime.Stride.Upscaling
             effect = null;
             try
             {
-                effect = Effect.Load(_graphicsDevice, shaderName);
-                if (effect != null)
-                {
-                    Console.WriteLine($"[StrideFSR] Loaded {shaderName} shader from compiled file");
-                    return true;
-                }
+                // TODO: STUB - Effect.Load doesn't exist in newer Stride versions
+                // Need to use ContentManager or EffectCompiler to load effects
+                // For now, return false to indicate shader needs to be created programmatically
+                Console.WriteLine($"[StrideFSR] Effect.Load not available, {shaderName} will be created programmatically");
+                return false;
             }
             catch (Exception ex)
             {
@@ -891,7 +903,7 @@ shader FSRTemporal : ComputeShaderBase
             {
                 // Based on Stride shader compilation API
                 // EffectCompiler can compile shader source at runtime
-                var services = _graphicsDevice.Services;
+                var services = _graphicsDevice.Services();
                 if (services != null)
                 {
                     // Try to get EffectCompiler through services
