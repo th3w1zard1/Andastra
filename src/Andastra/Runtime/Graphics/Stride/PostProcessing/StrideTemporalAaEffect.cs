@@ -47,12 +47,12 @@ namespace Andastra.Runtime.Stride.PostProcessing
         /// <summary>
         /// Gets the current frame's jitter offset for sub-pixel sampling.
         /// </summary>
-        public global::Stride.Core.Mathematics.Vector2 GetJitterOffset(int targetWidth, int targetHeight)
+        public Vector2 GetJitterOffset(int targetWidth, int targetHeight)
         {
-            if (!_enabled) return global::Stride.Core.Mathematics.Vector2.Zero;
+            if (!_enabled) return Vector2.Zero;
 
             var jitter = _jitterSequence[_frameIndex % _jitterSequence.Length];
-            return new global::Stride.Core.Mathematics.Vector2(
+            return new Vector2(
                 jitter.X * _jitterScale / targetWidth,
                 jitter.Y * _jitterScale / targetHeight
             );
@@ -305,7 +305,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     var prevViewProjParam = _taaEffect.Parameters.Get("PreviousViewProjection");
                     if (prevViewProjParam != null)
                     {
-                        // Convert System.Numerics.Matrix4x4 to Stride.Core.Mathematics.Matrix
+                        // Convert System.Numerics.Matrix4x4 to global::Stride.Core.Mathematics.Matrix
                         var strideMatrix = ConvertToStrideMatrix(_previousViewProjection);
                         prevViewProjParam.SetValue(strideMatrix);
                     }
@@ -343,10 +343,10 @@ namespace Andastra.Runtime.Stride.PostProcessing
             }
         }
 
-        private Stride.Core.Mathematics.Matrix ConvertToStrideMatrix(System.Numerics.Matrix4x4 matrix)
+        private global::Stride.Core.Mathematics.Matrix ConvertToStrideMatrix(System.Numerics.Matrix4x4 matrix)
         {
             // Convert System.Numerics.Matrix4x4 to Stride.Core.Mathematics.Matrix
-            return new Matrix(
+            return new global::Stride.Core.Mathematics.Matrix(
                 matrix.M11, matrix.M12, matrix.M13, matrix.M14,
                 matrix.M21, matrix.M22, matrix.M23, matrix.M24,
                 matrix.M31, matrix.M32, matrix.M33, matrix.M34,
