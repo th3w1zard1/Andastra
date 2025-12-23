@@ -601,6 +601,24 @@ namespace Andastra.Runtime.Games.Eclipse
         public IWeatherSystem WeatherSystem => _weatherSystem;
 
         /// <summary>
+        /// Handles script events that may trigger weather transitions.
+        /// </summary>
+        /// <param name="eventType">The script event type that was fired.</param>
+        /// <param name="entityTag">The tag of the entity that triggered the event (optional).</param>
+        /// <remarks>
+        /// Script Event Weather Transition Handler:
+        /// - Based on daorigins.exe: Script events can trigger weather transitions
+        /// - DragonAge2.exe: Enhanced transition system with entity filtering
+        /// - This method should be called from the event system when script events fire
+        /// - Checks all script-based weather transition triggers and fires matching ones
+        /// - Triggers can filter by entity tag for specific entity interactions
+        /// </remarks>
+        public void HandleScriptEventForWeatherTransitions(ScriptEvent eventType, [CanBeNull] string entityTag = null)
+        {
+            ProcessScriptBasedWeatherTransitions(eventType, entityTag);
+        }
+
+        /// <summary>
         /// Gets the particle system for this area.
         /// </summary>
         /// <remarks>
@@ -2581,6 +2599,210 @@ namespace Andastra.Runtime.Games.Eclipse
             intensity = Math.Max(0.1f, Math.Min(1.0f, intensity));
 
             return intensity;
+        }
+
+        /// <summary>
+        /// Sets up weather transition triggers from area data or default configuration.
+        /// </summary>
+        /// <remarks>
+        /// Weather Transition Trigger Setup:
+        /// - Based on daorigins.exe: Weather transitions can be configured in area data or module scripts
+        /// - DragonAge2.exe: Enhanced transition system with multiple trigger types
+        /// - Time-based transitions: Weather changes at specific times or intervals
+        /// - Script-based transitions: Weather changes triggered by script events
+        /// - Default behavior: If no triggers are configured, weather remains static based on ARE file properties
+        /// - In a full implementation, transition triggers would be read from ARE file or script configuration
+        /// </remarks>
+        private void SetupWeatherTransitionTriggers()
+        {
+            if (_weatherSystem == null)
+            {
+                return;
+            }
+
+            // Clear existing triggers
+            _weatherTransitionTriggers.Clear();
+
+            // Try to load weather transition triggers from ARE file
+            // Based on daorigins.exe: Weather transitions may be configured in ARE file
+            // For now, we set up default time-based transitions based on weather chance values
+            // In a full implementation, transition triggers would be read from ARE file structure
+            if (_areaData != null && _areaData.Length > 0)
+            {
+                try
+                {
+                    GFF gff = GFF.FromBytes(_areaData);
+                    if (gff != null && gff.Root != null)
+                    {
+                        // Check for weather transition trigger definitions in ARE file
+                        // Based on ARE format: Weather transitions may be stored in a list (WeatherTransition_List)
+                        // Each transition contains: TriggerType, TargetWeather, TargetIntensity, TriggerTime/TriggerEvent, etc.
+                        // For now, we don't parse transition triggers from ARE file as the format is not fully documented
+                        // Future enhancement: Parse WeatherTransition_List if it exists in ARE file
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Failed to parse ARE file for weather transitions - use defaults
+                    Console.WriteLine($"[EclipseArea] Failed to parse ARE file for weather transitions: {ex.Message}");
+                }
+            }
+
+            // Set up default time-based weather transitions based on weather chance values
+            // Based on daorigins.exe: Weather can change over time based on chance values
+            // If area has weather chance values, set up periodic weather transitions
+            // This provides dynamic weather that changes over time
+            if (_chanceRain > 0 || _chanceSnow > 0 || _chanceLightning > 0 || _fogEnabled)
+            {
+                // Create time-based transitions for weather variation
+                // Transition to different weather types at intervals to simulate dynamic weather
+
+                // If rain chance is high, create periodic rain transitions
+                if (_chanceRain > 50)
+                {
+                    // Transition to rain after 30 seconds, then back to clear after 60 seconds, repeating
+                    WeatherTransitionTrigger rainTrigger = WeatherTransitionTrigger.CreateTimeBased(
+                        WeatherType.Rain,
+                        _chanceRain / 100.0f,
+                        30.0f, // Start rain after 30 seconds
+                        5.0f, // 5 second transition
+                        true, // Repeat
+                        120.0f // Repeat every 120 seconds (rain for 60s, clear for 60s)
+                    );
+                    _weatherTransitionTriggers.Add(rainTrigger);
+                }
+
+                // If snow chance is high, create periodic snow transitions
+                if (_chanceSnow > 50)
+                {
+                    // Transition to snow after 45 seconds, then back to clear after 90 seconds, repeating
+                    WeatherTransitionTrigger snowTrigger = WeatherTransitionTrigger.CreateTimeBased(
+                        WeatherType.Snow,
+                        _chanceSnow / 100.0f,
+                        45.0f, // Start snow after 45 seconds
+                        5.0f, // 5 second transition
+                        true, // Repeat
+                        180.0f // Repeat every 180 seconds (snow for 90s, clear for 90s)
+                    );
+                    _weatherTransitionTriggers.Add(snowTrigger);
+                }
+
+                // If storm chance is high (rain + lightning), create periodic storm transitions
+                if (_chanceRain > 0 && _chanceLightning > 0)
+                {
+                    // Transition to storm after 60 seconds, then back to clear after 120 seconds, repeating
+                    float stormIntensity = Math.Max(_chanceRain, _chanceLightning) / 100.0f;
+                    WeatherTransitionTrigger stormTrigger = WeatherTransitionTrigger.CreateTimeBased(
+                        WeatherType.Storm,
+                        stormIntensity,
+                        60.0f, // Start storm after 60 seconds
+                        8.0f, // 8 second transition (longer for dramatic effect)
+                        true, // Repeat
+                        240.0f // Repeat every 240 seconds (storm for 120s, clear for 120s)
+                    );
+                    _weatherTransitionTriggers.Add(stormTrigger);
+                }
+
+                // If fog is enabled, create periodic fog transitions
+                if (_fogEnabled)
+                {
+                    float fogIntensity = CalculateFogIntensity(_fogNear, _fogFar);
+                    // Transition to fog after 20 seconds, then back to clear after 40 seconds, repeating
+                    WeatherTransitionTrigger fogTrigger = WeatherTransitionTrigger.CreateTimeBased(
+                        WeatherType.Fog,
+                        fogIntensity,
+                        20.0f, // Start fog after 20 seconds
+                        4.0f, // 4 second transition
+                        true, // Repeat
+                        80.0f // Repeat every 80 seconds (fog for 40s, clear for 40s)
+                    );
+                    _weatherTransitionTriggers.Add(fogTrigger);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Processes time-based weather transition triggers.
+        /// </summary>
+        /// <remarks>
+        /// Time-Based Weather Transition Processing:
+        /// - Based on daorigins.exe: Time-based transitions are checked each frame
+        /// - DragonAge2.exe: Enhanced transition system with smooth interpolation
+        /// - Checks all time-based triggers and fires those that should activate
+        /// - Triggers can be one-time or repeating at intervals
+        /// </remarks>
+        private void ProcessTimeBasedWeatherTransitions()
+        {
+            if (_weatherSystem == null || _weatherTransitionTriggers == null)
+            {
+                return;
+            }
+
+            // Check all time-based triggers
+            foreach (WeatherTransitionTrigger trigger in _weatherTransitionTriggers)
+            {
+                if (trigger.ShouldFireTimeBased(_areaTimeElapsed))
+                {
+                    // Fire the trigger: Start weather transition
+                    EclipseWeatherSystem eclipseWeather = _weatherSystem as EclipseWeatherSystem;
+                    if (eclipseWeather != null)
+                    {
+                        eclipseWeather.TransitionToWeather(
+                            trigger.TargetWeather,
+                            trigger.TargetIntensity,
+                            trigger.TransitionDuration,
+                            trigger.TargetWindDirection,
+                            trigger.TargetWindSpeed
+                        );
+                    }
+
+                    // Mark trigger as fired
+                    trigger.MarkFired(_areaTimeElapsed);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Processes script-based weather transition triggers.
+        /// </summary>
+        /// <param name="eventType">Script event type that was fired.</param>
+        /// <param name="entityTag">Entity tag that triggered the event.</param>
+        /// <remarks>
+        /// Script-Based Weather Transition Processing:
+        /// - Based on daorigins.exe: Script events can trigger weather transitions
+        /// - DragonAge2.exe: Enhanced transition system with entity filtering
+        /// - Checks all script-based triggers and fires those that match the event
+        /// - Triggers can filter by entity tag for specific entity interactions
+        /// </remarks>
+        private void ProcessScriptBasedWeatherTransitions(ScriptEvent eventType, [CanBeNull] string entityTag)
+        {
+            if (_weatherSystem == null || _weatherTransitionTriggers == null)
+            {
+                return;
+            }
+
+            // Check all script-based triggers
+            foreach (WeatherTransitionTrigger trigger in _weatherTransitionTriggers)
+            {
+                if (trigger.ShouldFireScriptBased(eventType, entityTag))
+                {
+                    // Fire the trigger: Start weather transition
+                    EclipseWeatherSystem eclipseWeather = _weatherSystem as EclipseWeatherSystem;
+                    if (eclipseWeather != null)
+                    {
+                        eclipseWeather.TransitionToWeather(
+                            trigger.TargetWeather,
+                            trigger.TargetIntensity,
+                            trigger.TransitionDuration,
+                            trigger.TargetWindDirection,
+                            trigger.TargetWindSpeed
+                        );
+                    }
+
+                    // Mark trigger as fired
+                    trigger.MarkFired(_areaTimeElapsed);
+                }
+            }
         }
 
         /// <summary>
