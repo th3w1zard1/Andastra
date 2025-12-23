@@ -2218,7 +2218,7 @@ namespace Andastra.Runtime.Game.Core
             _spriteBatch.End();
         }
 
-        private void DrawRectangleBorder(ISpriteBatch spriteBatch, Rectangle rect, int thickness, Color color)
+        private void DrawRectangleBorder(ISpriteBatch spriteBatch, Microsoft.Xna.Framework.Rectangle rect, int thickness, Microsoft.Xna.Framework.Color color)
         {
             // Top
             spriteBatch.Draw(_menuTexture, new Rectangle(rect.X, rect.Y, rect.Width, thickness), color);
