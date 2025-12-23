@@ -1167,11 +1167,11 @@ namespace Andastra.Runtime.MonoGame.Raytracing
                     // Load function pointers
                     // Note: NRD SDK uses C++ mangled names, which may require name mangling resolution
                     // For now, we use expected exported function names
-                    _nrdCreateDenoiser = GetFunction<nrdCreateDenoiserDelegate>("nrdCreateDenoiser");
-                    _nrdDestroyDenoiser = GetFunction<nrdDestroyDenoiserDelegate>("nrdDestroyDenoiser");
-                    _nrdSetMethodSettings = GetFunction<nrdSetMethodSettingsDelegate>("nrdSetMethodSettings");
-                    _nrdGetComputeDispatches = GetFunction<nrdGetComputeDispatchesDelegate>("nrdGetComputeDispatches");
-                    _nrdSetCommonSettings = GetFunction<nrdSetCommonSettingsDelegate>("nrdSetCommonSettings");
+                    _nrdCreateDenoiser = GetFunction<nrdCreateDenoiserDelegate>(_nrdLibraryHandle, "nrdCreateDenoiser");
+                    _nrdDestroyDenoiser = GetFunction<nrdDestroyDenoiserDelegate>(_nrdLibraryHandle, "nrdDestroyDenoiser");
+                    _nrdSetMethodSettings = GetFunction<nrdSetMethodSettingsDelegate>(_nrdLibraryHandle, "nrdSetMethodSettings");
+                    _nrdGetComputeDispatches = GetFunction<nrdGetComputeDispatchesDelegate>(_nrdLibraryHandle, "nrdGetComputeDispatches");
+                    _nrdSetCommonSettings = GetFunction<nrdSetCommonSettingsDelegate>(_nrdLibraryHandle, "nrdSetCommonSettings");
 
                     // Verify all functions loaded
                     if (_nrdCreateDenoiser == null || _nrdDestroyDenoiser == null ||
