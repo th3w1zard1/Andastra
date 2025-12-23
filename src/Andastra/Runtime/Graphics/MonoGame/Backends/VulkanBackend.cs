@@ -365,25 +365,103 @@ namespace Andastra.Runtime.MonoGame.Backends
 
             try
             {
-                // Upload texture data using VulkanDevice
-                // VulkanDevice.CreateTexture already creates the texture with proper memory allocation
-                // For uploading data, we need to use a staging buffer and copy to the texture
-                // This is a simplified implementation - full implementation would use vkCmdCopyBufferToImage
+                // Upload texture data using VulkanDevice command list
+                // Implementation follows Vulkan best practices:
+                // 1. Create a staging buffer with VK_BUFFER_USAGE_TRANSFER_SRC_BIT for each mipmap
+                // 2. Map the buffer and copy mipmap data from CPU to GPU-visible memory
+                // 3. Use a command buffer to copy from staging buffer to texture image (vkCmdCopyBufferToImage)
+                // 4. Transition image layout from VK_IMAGE_LAYOUT_UNDEFINED to VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+                // 5. Transition image layout from VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+                // 
+                // Based on Vulkan API specification:
+                // - vkCreateBuffer: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateBuffer.html
+                // - vkCmdCopyBufferToImage: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdCopyBufferToImage.html
+                // - Image layout transitions: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkImageLayout.html
 
-                // TODO: SIMPLIFIED PLACEHOLDER - In a full implementation, this would:
-                // 1. Create a staging buffer with VK_BUFFER_USAGE_TRANSFER_SRC_BIT
-                // 2. Map the buffer and copy mipmap data
-                // 3. Use a command buffer to copy from staging buffer to texture image
-                // 4. Transition image layout from VK_IMAGE_LAYOUT_UNDEFINED to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-                // For now, we mark the texture as having upload data available
-                // The actual upload will happen when the texture is first used in a render pass
+                // Validate texture format matches
+                if (texture.Desc.Format != data.Format)
+                {
+                    Console.WriteLine($"[VulkanBackend] UploadTextureData: Texture format mismatch (texture: {texture.Desc.Format}, data: {data.Format})");
+                    return false;
+                }
 
-                Console.WriteLine($"[VulkanBackend] UploadTextureData: Texture data prepared for {data.Mipmaps.Length} mipmap levels");
-                return true;
+                // Create a copy command list for transfer operations
+                ICommandList commandList = _device.CreateCommandList(CommandListType.Copy);
+                if (commandList == null)
+                {
+                    Console.WriteLine("[VulkanBackend] UploadTextureData: Failed to create command list");
+                    return false;
+                }
+
+                try
+                {
+                    // Open command list for recording
+                    commandList.Open();
+
+                    // Upload each mipmap level
+                    // WriteTexture handles staging buffer creation, data copying, layout transitions, and vkCmdCopyBufferToImage internally
+                    for (int i = 0; i < data.Mipmaps.Length; i++)
+                    {
+                        TextureMipmapData mipmap = data.Mipmaps[i];
+
+                        // Validate mipmap level matches expected
+                        if (mipmap.Level != i)
+                        {
+                            Console.WriteLine($"[VulkanBackend] UploadTextureData: Mipmap level mismatch at index {i} (expected {i}, got {mipmap.Level})");
+                            continue;
+                        }
+
+                        // Validate mipmap data
+                        if (mipmap.Data == null || mipmap.Data.Length == 0)
+                        {
+                            Console.WriteLine($"[VulkanBackend] UploadTextureData: Mipmap level {i} has no data");
+                            continue;
+                        }
+
+                        // Calculate expected data size for this mipmap
+                        int bytesPerPixel = GetBytesPerPixel(data.Format);
+                        int expectedSize = mipmap.Width * mipmap.Height * bytesPerPixel;
+                        if (mipmap.Data.Length < expectedSize)
+                        {
+                            Console.WriteLine($"[VulkanBackend] UploadTextureData: Mipmap level {i} data size mismatch (expected {expectedSize}, got {mipmap.Data.Length})");
+                            continue;
+                        }
+
+                        // WriteTexture handles:
+                        // - Creating staging buffer with VK_BUFFER_USAGE_TRANSFER_SRC_BIT
+                        // - Mapping buffer and copying data
+                        // - Transitioning image layout to TRANSFER_DST_OPTIMAL
+                        // - Recording vkCmdCopyBufferToImage command
+                        // - Transitioning image layout to SHADER_READ_ONLY_OPTIMAL
+                        // - Cleaning up staging buffer
+                        commandList.WriteTexture(texture, mipmap.Level, 0, mipmap.Data);
+                    }
+
+                    // Close command list to finish recording
+                    commandList.Close();
+
+                    // Execute the command list to perform the upload
+                    _device.ExecuteCommandList(commandList);
+
+                    // Wait for device to complete the upload operations
+                    // This ensures the texture data is fully uploaded before returning
+                    // vkDeviceWaitIdle blocks until all submitted command buffers have completed execution
+                    // Based on Vulkan API: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkDeviceWaitIdle.html
+                    _device.WaitIdle();
+
+                    Console.WriteLine($"[VulkanBackend] UploadTextureData: Successfully uploaded {data.Mipmaps.Length} mipmap levels for texture {texture.Desc.DebugName ?? "unnamed"}");
+                    return true;
+                }
+                finally
+                {
+                    // Dispose command list to release resources
+                    commandList.Dispose();
+                }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[VulkanBackend] Exception uploading texture data: {ex.Message}");
+                Console.WriteLine($"[VulkanBackend] Stack trace: {ex.StackTrace}");
                 return false;
             }
         }
