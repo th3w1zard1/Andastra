@@ -41,6 +41,11 @@ namespace Andastra.Game.GUI
         private List<GameItem> _gameItems;
 
         /// <summary>
+        /// Gets or sets the dialog result.
+        /// </summary>
+        public DialogResult Result { get; set; }
+
+        /// <summary>
         /// Gets the selected game.
         /// </summary>
         public GameType SelectedGame { get; private set; }

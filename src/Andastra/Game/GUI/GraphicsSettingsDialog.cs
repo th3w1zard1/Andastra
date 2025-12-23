@@ -38,6 +38,11 @@ namespace Andastra.Game.GUI
         public GraphicsSettingsData Settings => _settings;
 
         /// <summary>
+        /// Gets or sets the dialog result.
+        /// </summary>
+        public DialogResult Result { get; set; }
+
+        /// <summary>
         /// Creates a new graphics settings dialog.
         /// </summary>
         /// <param name="backendType">The selected graphics backend.</param>
