@@ -795,7 +795,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 }
 
                 // Verify GFF content type is GIT
-                if (gff.ContentType != GFFContent.GIT)
+                if (gff.Content != GFFContent.GIT)
                 {
                     // Try to parse anyway - some GIT files may have incorrect content type
                     // This is a defensive measure for compatibility
@@ -1098,7 +1098,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 }
 
                 // Verify GFF content type is ARE
-                if (gff.ContentType != GFFContent.ARE)
+                if (gff.Content != GFFContent.ARE)
                 {
                     // Try to parse anyway - some ARE files may have incorrect content type
                     // This is a defensive measure for compatibility
