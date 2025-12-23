@@ -3710,9 +3710,10 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
                 CallableSize = 0
             };
 
-            // Write SBT records (in real implementation, this would contain actual shader identifiers)
-            // TODO: STUB - For now, we'll write placeholder data - the actual shader identifiers would be
-            // retrieved from the pipeline state object after creation
+            // Write SBT records with shader identifiers retrieved from the raytracing pipeline
+            // Shader identifiers are opaque handles obtained via IRaytracingPipeline.GetShaderIdentifier()
+            // after the pipeline has been created. This populates the shader binding table with
+            // the actual identifiers needed for DispatchRays.
             WriteShaderBindingTable();
 
             // Create initial binding set (will be updated each frame with current resources)
