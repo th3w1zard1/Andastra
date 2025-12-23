@@ -371,13 +371,11 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             catch (DecompilerException e)
             {
                 Debug("Error loading actions data: " + e.Message);
-                // TODO:  Create comprehensive fallback stub for actions data loading failure
+                // Comprehensive fallback stub for actions data loading failure
+                // This extracts basic NCS information without actions data and provides detailed diagnostics
                 Utils.FileScriptData errorData = new Utils.FileScriptData();
                 string expectedFile = isK2Selected ? "tsl_nwscript.nss" : "k1_nwscript.nss";
-                string stubCode = this.GenerateComprehensiveFallbackStub(file, "Actions data loading", e,
-                    "The actions data table (nwscript.nss) is required to decompile NCS files.\n" +
-                    "Expected file: " + expectedFile + "\n" +
-                    "Please ensure the appropriate nwscript.nss file is available in tools/ directory, working directory, or configured path.");
+                string stubCode = this.GenerateComprehensiveActionsDataFailureStub(file, e, expectedFile);
                 errorData.SetCode(stubCode);
                 this.filedata[file] = errorData;
                 return PARTIAL_COMPILE;
@@ -1395,6 +1393,473 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
         }
 
         /// <summary>
+        /// Extracts basic information from an NCS file without requiring actions data.
+        /// This allows us to provide useful diagnostic information even when nwscript.nss is missing.
+        /// Based on NCS file format: vendor/reone/src/libs/script/format/ncsreader.cpp:28-40
+        /// </summary>
+        /// <param name="file">The NCS file to analyze</param>
+        /// <returns>A dictionary containing extracted information, or null if extraction fails</returns>
+        private Dictionary<string, object> ExtractBasicNcsInformation(NcsFile file)
+        {
+            Dictionary<string, object> info = new Dictionary<string, object>();
+
+            if (file == null || !file.Exists())
+            {
+                info["error"] = "File does not exist or is null";
+                return info;
+            }
+
+            try
+            {
+                // Read NCS file header and basic structure
+                // NCS header format: "NCS " (4 bytes) + "V1.0" (4 bytes) + magic byte (1 byte) + size (4 bytes)
+                using (System.IO.FileStream fs = new System.IO.FileStream(file.GetAbsolutePath(), System.IO.FileMode.Open, System.IO.FileAccess.Read))
+                using (System.IO.BinaryReader reader = new System.IO.BinaryReader(fs))
+                {
+                    if (fs.Length < 13)
+                    {
+                        info["error"] = "File too small to contain valid NCS header (minimum 13 bytes)";
+                        info["file_size"] = fs.Length;
+                        return info;
+                    }
+
+                    // Read file signature
+                    byte[] signatureBytes = reader.ReadBytes(4);
+                    string signature = System.Text.Encoding.ASCII.GetString(signatureBytes);
+                    info["signature"] = signature;
+
+                    if (signature != "NCS ")
+                    {
+                        info["error"] = "Invalid NCS signature: expected 'NCS ', got '" + signature + "'";
+                        return info;
+                    }
+
+                    // Read version
+                    byte[] versionBytes = reader.ReadBytes(4);
+                    string version = System.Text.Encoding.ASCII.GetString(versionBytes);
+                    info["version"] = version;
+
+                    if (version != "V1.0")
+                    {
+                        info["error"] = "Unsupported NCS version: expected 'V1.0', got '" + version + "'";
+                        return info;
+                    }
+
+                    // Read magic byte (should be 0x42)
+                    byte magicByte = reader.ReadByte();
+                    info["magic_byte"] = string.Format("0x{0:X2}", magicByte);
+
+                    if (magicByte != 0x42)
+                    {
+                        info["error"] = "Invalid magic byte: expected 0x42, got " + info["magic_byte"];
+                        return info;
+                    }
+
+                    // Read file size (big-endian uint32)
+                    byte[] sizeBytes = reader.ReadBytes(4);
+                    if (BitConverter.IsLittleEndian)
+                    {
+                        Array.Reverse(sizeBytes);
+                    }
+                    uint declaredSize = BitConverter.ToUInt32(sizeBytes, 0);
+                    info["declared_size"] = declaredSize;
+                    info["actual_file_size"] = fs.Length;
+
+                    if (declaredSize > fs.Length)
+                    {
+                        info["size_warning"] = "Declared size (" + declaredSize + ") is larger than actual file size (" + fs.Length + ")";
+                    }
+
+                    // Count instructions (basic scan without full parsing)
+                    // This is a simplified count - we just scan for instruction boundaries
+                    int instructionCount = 0;
+                    int codeStartOffset = 13; // Header is 13 bytes
+                    long codeSize = Math.Min(declaredSize - codeStartOffset, fs.Length - codeStartOffset);
+
+                    if (codeSize > 0)
+                    {
+                        fs.Position = codeStartOffset;
+                        long bytesScanned = 0;
+                        int maxInstructionsToCount = 10000; // Limit to avoid excessive scanning
+
+                        while (bytesScanned < codeSize && instructionCount < maxInstructionsToCount)
+                        {
+                            if (fs.Position >= fs.Length)
+                            {
+                                break;
+                            }
+
+                            // Each instruction has at least 2 bytes (bytecode + qualifier)
+                            if (fs.Position + 2 > fs.Length)
+                            {
+                                break;
+                            }
+
+                            byte bytecode = reader.ReadByte();
+                            byte qualifier = reader.ReadByte();
+                            bytesScanned += 2;
+
+                            // Calculate instruction size based on bytecode and qualifier
+                            int instructionSize = 2; // Base: bytecode + qualifier
+
+                            // Add argument size based on instruction type
+                            // This is a simplified calculation - full parsing would be more accurate
+                            if (bytecode == 0x04) // CONSTx
+                            {
+                                // CONSTx instructions have type-specific argument sizes
+                                if (qualifier == 0x03 || qualifier == 0x04) // INT or FLOAT
+                                {
+                                    instructionSize += 4;
+                                }
+                                else if (qualifier == 0x05) // STRING
+                                {
+                                    // String: 2 bytes length + string data
+                                    if (fs.Position + 2 <= fs.Length)
+                                    {
+                                        byte[] lenBytes = reader.ReadBytes(2);
+                                        if (BitConverter.IsLittleEndian)
+                                        {
+                                            Array.Reverse(lenBytes);
+                                        }
+                                        ushort strLen = BitConverter.ToUInt16(lenBytes, 0);
+                                        instructionSize += 2 + strLen;
+                                        bytesScanned += 2 + strLen;
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
+                                }
+                                else if (qualifier == 0x06) // OBJECT
+                                {
+                                    instructionSize += 4;
+                                }
+                            }
+                            else if (bytecode == 0x01 || bytecode == 0x03) // CPDOWNSP or CPTOPSP
+                            {
+                                instructionSize += 6; // Stack offset (4 bytes) + size (2 bytes)
+                            }
+                            else if (bytecode == 0x05) // ACTION
+                            {
+                                instructionSize += 3; // Action ID (2 bytes) + argument count (1 byte)
+                            }
+                            else if (bytecode == 0x0D || bytecode == 0x0E) // JMP, JSR, JZ, JNZ
+                            {
+                                instructionSize += 4; // Jump offset (4 bytes)
+                            }
+                            else if (bytecode == 0x0F) // DESTRUCT
+                            {
+                                instructionSize += 6; // Size (2 bytes) + stack offset (4 bytes)
+                            }
+                            else if (bytecode == 0x10) // STORE_STATE
+                            {
+                                instructionSize += 8; // Size (4 bytes) + stack offset (4 bytes)
+                            }
+
+                            // Advance to next instruction
+                            if (fs.Position + (instructionSize - 2) <= fs.Length)
+                            {
+                                fs.Position += (instructionSize - 2);
+                                bytesScanned += (instructionSize - 2);
+                            }
+                            else
+                            {
+                                break;
+                            }
+
+                            instructionCount++;
+                        }
+
+                        if (instructionCount >= maxInstructionsToCount)
+                        {
+                            info["instruction_count_note"] = "Instruction count limited to " + maxInstructionsToCount + " (file may contain more)";
+                        }
+                    }
+
+                    info["instruction_count"] = instructionCount;
+                    info["code_size_bytes"] = codeSize;
+                    info["extraction_success"] = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                info["error"] = "Failed to extract NCS information: " + ex.Message;
+                info["exception_type"] = ex.GetType().Name;
+            }
+
+            return info;
+        }
+
+        /// <summary>
+        /// Generates a comprehensive fallback stub specifically for actions data loading failures.
+        /// This method extracts basic NCS information without actions data and provides detailed
+        /// diagnostic information including all candidate paths that were searched.
+        /// </summary>
+        /// <param name="file">The NCS file being decompiled</param>
+        /// <param name="exception">The exception that occurred during actions data loading</param>
+        /// <param name="expectedFile">The expected nwscript.nss filename (k1_nwscript.nss or tsl_nwscript.nss)</param>
+        /// <returns>Comprehensive fallback stub with diagnostic information and extracted NCS data</returns>
+        private string GenerateComprehensiveActionsDataFailureStub(NcsFile file, DecompilerException exception, string expectedFile)
+        {
+            StringBuilder stub = new StringBuilder();
+            string newline = Environment.NewLine;
+
+            // Header
+            stub.Append("// ========================================").Append(newline);
+            stub.Append("// ACTIONS DATA LOADING FAILURE - FALLBACK STUB").Append(newline);
+            stub.Append("// ========================================").Append(newline);
+            stub.Append(newline);
+
+            // File information
+            stub.Append("// NCS File Information:").Append(newline);
+            if (file != null)
+            {
+                stub.Append("//   Name: ").Append(file.Name).Append(newline);
+                stub.Append("//   Path: ").Append(file.GetAbsolutePath()).Append(newline);
+                if (file.Exists())
+                {
+                    stub.Append("//   Size: ").Append(file.Length).Append(" bytes").Append(newline);
+                    stub.Append("//   Last Modified: ").Append(file.LastWriteTime.ToString()).Append(newline);
+                }
+                else
+                {
+                    stub.Append("//   Status: FILE DOES NOT EXIST").Append(newline);
+                }
+            }
+            else
+            {
+                stub.Append("//   Status: FILE IS NULL").Append(newline);
+            }
+            stub.Append(newline);
+
+            // Extract basic NCS information without actions data
+            stub.Append("// Extracted NCS Information (without actions data):").Append(newline);
+            Dictionary<string, object> ncsInfo = this.ExtractBasicNcsInformation(file);
+            if (ncsInfo != null)
+            {
+                if (ncsInfo.ContainsKey("extraction_success") && (bool)ncsInfo["extraction_success"])
+                {
+                    if (ncsInfo.ContainsKey("signature"))
+                    {
+                        stub.Append("//   Signature: ").Append(ncsInfo["signature"]).Append(newline);
+                    }
+                    if (ncsInfo.ContainsKey("version"))
+                    {
+                        stub.Append("//   Version: ").Append(ncsInfo["version"]).Append(newline);
+                    }
+                    if (ncsInfo.ContainsKey("magic_byte"))
+                    {
+                        stub.Append("//   Magic Byte: ").Append(ncsInfo["magic_byte"]).Append(newline);
+                    }
+                    if (ncsInfo.ContainsKey("declared_size"))
+                    {
+                        stub.Append("//   Declared Size: ").Append(ncsInfo["declared_size"]).Append(" bytes").Append(newline);
+                    }
+                    if (ncsInfo.ContainsKey("actual_file_size"))
+                    {
+                        stub.Append("//   Actual File Size: ").Append(ncsInfo["actual_file_size"]).Append(" bytes").Append(newline);
+                    }
+                    if (ncsInfo.ContainsKey("instruction_count"))
+                    {
+                        stub.Append("//   Estimated Instruction Count: ").Append(ncsInfo["instruction_count"]).Append(newline);
+                        if (ncsInfo.ContainsKey("instruction_count_note"))
+                        {
+                            stub.Append("//   Note: ").Append(ncsInfo["instruction_count_note"]).Append(newline);
+                        }
+                    }
+                    if (ncsInfo.ContainsKey("code_size_bytes"))
+                    {
+                        stub.Append("//   Code Section Size: ").Append(ncsInfo["code_size_bytes"]).Append(" bytes").Append(newline);
+                    }
+                    if (ncsInfo.ContainsKey("size_warning"))
+                    {
+                        stub.Append("//   Warning: ").Append(ncsInfo["size_warning"]).Append(newline);
+                    }
+                }
+                else if (ncsInfo.ContainsKey("error"))
+                {
+                    stub.Append("//   Error: ").Append(ncsInfo["error"]).Append(newline);
+                }
+            }
+            else
+            {
+                stub.Append("//   Error: Failed to extract NCS information").Append(newline);
+            }
+            stub.Append(newline);
+
+            // Exception information
+            stub.Append("// Exception Details:").Append(newline);
+            if (exception != null)
+            {
+                stub.Append("//   Type: ").Append(exception.GetType().Name).Append(newline);
+                stub.Append("//   Message: ").Append(exception.Message != null ? exception.Message : "(no message)").Append(newline);
+
+                Exception cause = exception.InnerException;
+                if (cause != null)
+                {
+                    stub.Append("//   Caused by: ").Append(cause.GetType().Name).Append(newline);
+                    stub.Append("//   Cause Message: ").Append(cause.Message != null ? cause.Message : "(no message)").Append(newline);
+                }
+
+                // Include stack trace summary
+                System.Diagnostics.StackTrace stack = new System.Diagnostics.StackTrace(exception, true);
+                if (stack != null && stack.FrameCount > 0)
+                {
+                    stub.Append("//   Stack Trace (first 5 frames):").Append(newline);
+                    int maxFrames = Math.Min(5, stack.FrameCount);
+                    for (int i = 0; i < maxFrames; i++)
+                    {
+                        var frame = stack.GetFrame(i);
+                        if (frame != null)
+                        {
+                            stub.Append("//     at ").Append(frame.ToString()).Append(newline);
+                        }
+                    }
+                    if (stack.FrameCount > maxFrames)
+                    {
+                        stub.Append("//     ... (").Append(stack.FrameCount - maxFrames).Append(" more frames)").Append(newline);
+                    }
+                }
+            }
+            else
+            {
+                stub.Append("//   No exception information available").Append(newline);
+            }
+            stub.Append(newline);
+
+            // Expected file and search paths
+            stub.Append("// Actions Data File Requirements:").Append(newline);
+            stub.Append("//   Expected File: ").Append(expectedFile).Append(newline);
+            stub.Append("//   Game Type: ").Append(isK2Selected ? "KotOR 2 (TSL)" : "KotOR 1").Append(newline);
+            stub.Append(newline);
+
+            // Get all candidate paths that were searched
+            stub.Append("// Searched Locations (checked in order):").Append(newline);
+            try
+            {
+                List<string> candidatePaths = NWScriptLocator.GetCandidatePaths(this.gameType);
+                int pathIndex = 1;
+                foreach (string path in candidatePaths)
+                {
+                    stub.Append("//   ").Append(pathIndex).Append(". ").Append(path);
+                    try
+                    {
+                        NcsFile testFile = new NcsFile(path);
+                        if (testFile.Exists() && testFile.IsFile())
+                        {
+                            stub.Append(" [EXISTS]");
+                        }
+                        else
+                        {
+                            stub.Append(" [NOT FOUND]");
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        stub.Append(" [ERROR CHECKING]");
+                    }
+                    stub.Append(newline);
+                    pathIndex++;
+                }
+            }
+            catch (Exception ex)
+            {
+                stub.Append("//   Error retrieving candidate paths: ").Append(ex.Message).Append(newline);
+            }
+            stub.Append(newline);
+
+            // Check settings paths
+            stub.Append("// Configuration Paths:").Append(newline);
+            try
+            {
+                string settingsPath = isK2Selected
+                    ? Decompiler.settings.GetProperty("K2 nwscript Path")
+                    : Decompiler.settings.GetProperty("K1 nwscript Path");
+                if (!string.IsNullOrEmpty(settingsPath))
+                {
+                    stub.Append("//   Configured Path: ").Append(settingsPath);
+                    try
+                    {
+                        NcsFile configFile = new NcsFile(settingsPath);
+                        if (configFile.Exists() && configFile.IsFile())
+                        {
+                            stub.Append(" [EXISTS]").Append(newline);
+                        }
+                        else
+                        {
+                            stub.Append(" [NOT FOUND]").Append(newline);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        stub.Append(" [ERROR CHECKING]").Append(newline);
+                    }
+                }
+                else
+                {
+                    stub.Append("//   No path configured in settings (using default search locations)").Append(newline);
+                }
+            }
+            catch (Exception)
+            {
+                stub.Append("//   Settings not available (CLI mode)").Append(newline);
+            }
+            stub.Append(newline);
+
+            // System information
+            stub.Append("// System Information:").Append(newline);
+            stub.Append("//   .NET Version: ").Append(Environment.Version.ToString()).Append(newline);
+            stub.Append("//   OS: ").Append(Environment.OSVersion.ToString()).Append(newline);
+            stub.Append("//   Working Directory: ").Append(JavaSystem.GetProperty("user.dir")).Append(newline);
+            stub.Append(newline);
+
+            // Timestamp
+            stub.Append("// Error Timestamp: ").Append(DateTime.Now.ToString()).Append(newline);
+            stub.Append(newline);
+
+            // Detailed recommendations
+            stub.Append("// Recommendations and Solutions:").Append(newline);
+            stub.Append("//   1. Download the appropriate nwscript.nss file:").Append(newline);
+            stub.Append("//      - KotOR 1: k1_nwscript.nss").Append(newline);
+            stub.Append("//      - KotOR 2 (TSL): tsl_nwscript.nss").Append(newline);
+            stub.Append("//   2. Place the file in one of the following locations:").Append(newline);
+            stub.Append("//      - tools/ directory (in working directory)").Append(newline);
+            stub.Append("//      - Working directory (current directory)").Append(newline);
+            stub.Append("//      - Application directory/tools/").Append(newline);
+            stub.Append("//      - Application directory").Append(newline);
+            stub.Append("//   3. Configure the path in Settings (GUI mode):").Append(newline);
+            stub.Append("//      - Go to Settings -> NCS Decompiler").Append(newline);
+            stub.Append("//      - Set 'K1 nwscript Path' or 'K2 nwscript Path' as appropriate").Append(newline);
+            stub.Append("//   4. Verify the file:").Append(newline);
+            stub.Append("//      - File must exist and be readable").Append(newline);
+            stub.Append("//      - File must contain valid NWScript function definitions").Append(newline);
+            stub.Append("//      - File should match the game version (K1 vs K2)").Append(newline);
+            stub.Append("//").Append(newline);
+            stub.Append("// Note: The actions data table (nwscript.nss) is REQUIRED for decompilation.").Append(newline);
+            stub.Append("//       Without it, function calls cannot be resolved to their names and signatures.").Append(newline);
+            stub.Append("//       The decompiler needs this file to map ACTION opcodes to function names.").Append(newline);
+            stub.Append(newline);
+
+            // Minimal valid NSS stub
+            stub.Append("// Minimal valid NSS stub - compilable fallback function").Append(newline);
+            stub.Append("// This stub is generated when actions data loading fails completely").Append(newline);
+            stub.Append("// It provides a syntactically valid NSS file that can be compiled").Append(newline);
+            stub.Append(newline);
+            stub.Append("void main()").Append(newline);
+            stub.Append("{").Append(newline);
+            stub.Append("    // Actions data loading failed - decompilation cannot proceed").Append(newline);
+            stub.Append("    // Expected file: ").Append(expectedFile).Append(newline);
+            if (exception != null && exception.Message != null)
+            {
+                stub.Append("    // Error: ").Append(exception.Message.Replace("\n", " ").Replace("\r", "")).Append(newline);
+            }
+            stub.Append("    // This is a minimal valid NSS stub - function body is empty but syntactically correct").Append(newline);
+            stub.Append("}").Append(newline);
+
+            return stub.ToString();
+        }
+
+        /// <summary>
         /// Represents extracted subroutine information from decoded commands.
         /// Used when parsing fails but we can still extract function signatures.
         /// </summary>
@@ -1580,6 +2045,141 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             }
 
             return subroutines.Count > 0 ? subroutines : null;
+        }
+
+        /// <summary>
+        /// Extracts subroutine information from SubroutineState.
+        /// Builds function signature from state's return type and parameter information.
+        /// </summary>
+        /// <param name="subroutine">The ASubroutine object</param>
+        /// <param name="state">The SubroutineState containing type information</param>
+        /// <param name="nodedata">NodeAnalysisData for position information</param>
+        /// <returns>ExtractedSubroutineInfo if extraction succeeds, null otherwise</returns>
+        private ExtractedSubroutineInfo ExtractSubroutineInfoFromState(ASubroutine subroutine, SubroutineState state, NodeAnalysisData nodedata)
+        {
+            try
+            {
+                if (subroutine == null || state == null)
+                {
+                    return null;
+                }
+
+                ExtractedSubroutineInfo info = new ExtractedSubroutineInfo();
+
+                // Try to get subroutine name from nodedata or use default
+                string subName = null;
+                try
+                {
+                    int pos = nodedata.TryGetPos(subroutine);
+                    // Try to get name from position if available
+                    // For now, we'll use a generic name pattern
+                    subName = "sub_" + (pos >= 0 ? pos.ToString() : "unknown");
+                }
+                catch (Exception)
+                {
+                    subName = "sub_unknown";
+                }
+
+                info.Name = subName;
+
+                // Extract return type
+                try
+                {
+                    Type returnType = state.Type();
+                    if (returnType != null)
+                    {
+                        string returnTypeStr = returnType.ToString();
+                        if (!string.IsNullOrEmpty(returnTypeStr))
+                        {
+                            info.ReturnType = returnTypeStr;
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    // Default to void if return type extraction fails
+                    info.ReturnType = "void";
+                }
+
+                // Extract parameter information
+                try
+                {
+                    int paramCount = state.GetParamCount();
+                    info.ParameterCount = paramCount;
+
+                    if (paramCount > 0)
+                    {
+                        List<object> paramsList = state.Params();
+                        if (paramsList != null)
+                        {
+                            foreach (object paramObj in paramsList)
+                            {
+                                if (paramObj is Type paramType)
+                                {
+                                    string paramTypeStr = paramType.ToString();
+                                    if (!string.IsNullOrEmpty(paramTypeStr))
+                                    {
+                                        info.ParameterTypes.Add(paramTypeStr);
+                                    }
+                                    else
+                                    {
+                                        info.ParameterTypes.Add("int"); // Default fallback
+                                    }
+                                }
+                                else
+                                {
+                                    info.ParameterTypes.Add("int"); // Default fallback
+                                }
+                            }
+                        }
+                        
+                        // Ensure we have parameter types for all parameters
+                        while (info.ParameterTypes.Count < paramCount)
+                        {
+                            info.ParameterTypes.Add("int"); // Default fallback
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    // If parameter extraction fails, assume no parameters
+                    info.ParameterCount = 0;
+                }
+
+                // Build full signature
+                StringBuilder sigBuilder = new StringBuilder();
+                
+                // Add return type (default to void if not set)
+                if (string.IsNullOrEmpty(info.ReturnType))
+                {
+                    info.ReturnType = "void";
+                }
+                sigBuilder.Append(info.ReturnType).Append(" ");
+
+                // Add function name
+                sigBuilder.Append(info.Name).Append("(");
+
+                // Add parameters
+                if (info.ParameterCount > 0 && info.ParameterTypes.Count > 0)
+                {
+                    for (int i = 0; i < info.ParameterCount; i++)
+                    {
+                        if (i > 0) sigBuilder.Append(", ");
+                        string paramType = i < info.ParameterTypes.Count ? info.ParameterTypes[i] : "int";
+                        sigBuilder.Append(paramType).Append(" param").Append(i + 1);
+                    }
+                }
+
+                sigBuilder.Append(")");
+                info.Signature = sigBuilder.ToString();
+
+                return info;
+            }
+            catch (Exception e)
+            {
+                Debug("Error extracting subroutine info from state: " + e.Message);
+                return null;
+            }
         }
 
         /// <summary>
@@ -3330,53 +3930,177 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     Debug("Could not generate partial code: " + genEx.Message);
                 }
 
-                // TODO:  Last resort: create comprehensive stub with any available partial information
+                // Last resort: create comprehensive stub with any available partial information
+                Debug("Creating comprehensive fallback stub with all available partial information...");
+                List<ExtractedSubroutineInfo> extractedSubs = new List<ExtractedSubroutineInfo>();
                 string partialInfo = "Partial decompilation state:\n";
+
                 try
                 {
-                    if (data != null)
+                    // Extract subroutine information from decoded commands string
+                    if (commands != null && commands.Trim().Length > 0)
                     {
-                        Dictionary<string, List<object>> vars = data.GetVars();
-                        if (vars != null && vars.Count > 0)
+                        try
                         {
-                            partialInfo += "  Subroutines with variable data: " + vars.Count + "\n";
+                            List<ExtractedSubroutineInfo> commandsSubs = this.ExtractSubroutineInformation(commands);
+                            if (commandsSubs != null && commandsSubs.Count > 0)
+                            {
+                                Debug("Extracted " + commandsSubs.Count + " subroutine(s) from decoded commands");
+                                extractedSubs.AddRange(commandsSubs);
+                                partialInfo += "  Subroutines extracted from commands: " + commandsSubs.Count + "\n";
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug("Error extracting subroutines from commands: " + ex.Message);
                         }
                     }
-                    if (subdata != null)
+                    else
+                    {
+                        partialInfo += "  Commands decoded: no\n";
+                    }
+
+                    // Extract subroutine information from subdata (more reliable if available)
+                    if (subdata != null && nodedata != null)
                     {
                         try
                         {
                             partialInfo += "  Total subroutines detected: " + subdata.NumSubs() + "\n";
                             partialInfo += "  Subroutines fully typed: " + subdata.CountSubsDone() + "\n";
+
+                            // Extract subroutine signatures from subdata
+                            int subdataSubCount = 0;
+                            Dictionary<string, ExtractedSubroutineInfo> subdataSubsMap = new Dictionary<string, ExtractedSubroutineInfo>();
+
+                            try
+                            {
+                                foreach (ASubroutine iterSub in this.SubIterable(subdata))
+                                {
+                                    try
+                                    {
+                                        SubroutineState state = subdata.GetState(iterSub);
+                                        if (state != null)
+                                        {
+                                            ExtractedSubroutineInfo subInfo = this.ExtractSubroutineInfoFromState(iterSub, state, nodedata);
+                                            if (subInfo != null)
+                                            {
+                                                // Use name as key to deduplicate with commands-extracted subs
+                                                string key = subInfo.Name != null ? subInfo.Name.ToLowerInvariant() : ("sub_" + subdataSubCount);
+                                                if (!subdataSubsMap.ContainsKey(key))
+                                                {
+                                                    subdataSubsMap[key] = subInfo;
+                                                    subdataSubCount++;
+                                                }
+                                                else
+                                                {
+                                                    // Prefer subdata version (more reliable) - replace existing
+                                                    subdataSubsMap[key] = subInfo;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Debug("Error extracting subroutine info from state: " + ex.Message);
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug("Error iterating subroutines from subdata: " + ex.Message);
+                            }
+
+                            if (subdataSubCount > 0)
+                            {
+                                Debug("Extracted " + subdataSubCount + " subroutine(s) from subdata");
+                                // Merge with commands-extracted subs, preferring subdata versions
+                                Dictionary<string, ExtractedSubroutineInfo> combinedMap = new Dictionary<string, ExtractedSubroutineInfo>();
+
+                                // Add commands-extracted subs first
+                                foreach (ExtractedSubroutineInfo cmdSub in extractedSubs)
+                                {
+                                    if (cmdSub.Name != null)
+                                    {
+                                        string key = cmdSub.Name.ToLowerInvariant();
+                                        if (!combinedMap.ContainsKey(key))
+                                        {
+                                            combinedMap[key] = cmdSub;
+                                        }
+                                    }
+                                }
+
+                                // Add/replace with subdata-extracted subs (more reliable)
+                                foreach (ExtractedSubroutineInfo subdataSub in subdataSubsMap.Values)
+                                {
+                                    if (subdataSub.Name != null)
+                                    {
+                                        string key = subdataSub.Name.ToLowerInvariant();
+                                        combinedMap[key] = subdataSub; // Replace if exists, add if new
+                                    }
+                                }
+
+                                extractedSubs = new List<ExtractedSubroutineInfo>(combinedMap.Values);
+                                partialInfo += "  Subroutines extracted from subdata: " + subdataSubCount + "\n";
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug("Error extracting subroutines from subdata: " + ex.Message);
+                        }
+                    }
+
+                    // Gather additional partial information
+                    if (data != null)
+                    {
+                        try
+                        {
+                            Dictionary<string, List<object>> vars = data.GetVars();
+                            if (vars != null && vars.Count > 0)
+                            {
+                                partialInfo += "  Subroutines with variable data: " + vars.Count + "\n";
+                            }
                         }
                         catch (Exception)
                         {
                         }
                     }
-                    if (commands != null)
-                    {
-                        partialInfo += "  Commands decoded: " + commands.Length + " characters\n";
-                    }
+
                     if (ast != null)
                     {
                         partialInfo += "  Parse tree created: yes\n";
                     }
-                    if (nodedata != null)
-                    {
-                        partialInfo += "  Node analysis data available: yes\n";
-                    }
+
                     if (mainsub != null)
                     {
                         partialInfo += "  Main subroutine identified: yes\n";
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    partialInfo += "  (Unable to gather partial state information)\n";
+                    Debug("Error gathering partial state information: " + ex.Message);
+                    partialInfo += "  (Error gathering partial state information: " + ex.Message + ")\n";
                 }
-                string errorStub = this.GenerateComprehensiveFallbackStub(file, "General decompilation pipeline", e, partialInfo);
+
+                // Generate comprehensive stub using extracted information
+                string errorStub;
+                if (extractedSubs.Count > 0)
+                {
+                    Debug("Generating comprehensive fallback stub with " + extractedSubs.Count + " extracted subroutine(s)");
+                    errorStub = this.GenerateComprehensiveFallbackStubWithSubroutines(file, "General decompilation pipeline", e, partialInfo, extractedSubs);
+                }
+                else if (commands != null && commands.Trim().Length > 0)
+                {
+                    Debug("Generating comprehensive fallback stub with preserved commands");
+                    errorStub = this.GenerateComprehensiveFallbackStubWithPreservedCommands(file, "General decompilation pipeline", e, partialInfo, commands);
+                }
+                else
+                {
+                    Debug("Generating basic comprehensive fallback stub (no extracted information available)");
+                    errorStub = this.GenerateComprehensiveFallbackStub(file, "General decompilation pipeline", e, partialInfo);
+                }
+
                 data.SetCode(errorStub);
-                Debug("Created fallback stub code due to decompilation errors.");
+                Debug("Created comprehensive fallback stub code with " + extractedSubs.Count + " extracted subroutine(s).");
                 return data;
             }
             finally
