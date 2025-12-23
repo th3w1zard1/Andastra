@@ -1241,68 +1241,6 @@ namespace Andastra.Runtime.Games.Odyssey
             return hit;
         }
 
-        /// <summary>
-        /// Tests if a ray intersects an axis-aligned bounding box.
-        /// </summary>
-        /// <remarks>
-        /// Uses the slab method for efficient AABB-ray intersection testing.
-        /// Based on standard ray-AABB intersection algorithm used in swkotor2.exe.
-        /// </remarks>
-        private new bool RayAabbIntersect(Vector3 origin, Vector3 direction, Vector3 bbMin, Vector3 bbMax, float maxDist)
-        {
-            // Avoid division by zero
-            float invDirX = direction.X != 0f ? 1f / direction.X : float.MaxValue;
-            float invDirY = direction.Y != 0f ? 1f / direction.Y : float.MaxValue;
-            float invDirZ = direction.Z != 0f ? 1f / direction.Z : float.MaxValue;
-
-            float tmin = (bbMin.X - origin.X) * invDirX;
-            float tmax = (bbMax.X - origin.X) * invDirX;
-
-            if (invDirX < 0)
-            {
-                float temp = tmin;
-                tmin = tmax;
-                tmax = temp;
-            }
-
-            float tymin = (bbMin.Y - origin.Y) * invDirY;
-            float tymax = (bbMax.Y - origin.Y) * invDirY;
-
-            if (invDirY < 0)
-            {
-                float temp = tymin;
-                tymin = tymax;
-                tymax = temp;
-            }
-
-            if (tmin > tymax || tymin > tmax)
-            {
-                return false;
-            }
-
-            if (tymin > tmin) tmin = tymin;
-            if (tymax < tmax) tmax = tymax;
-
-            float tzmin = (bbMin.Z - origin.Z) * invDirZ;
-            float tzmax = (bbMax.Z - origin.Z) * invDirZ;
-
-            if (invDirZ < 0)
-            {
-                float temp = tzmin;
-                tzmin = tzmax;
-                tzmax = temp;
-            }
-
-            if (tmin > tzmax || tzmin > tmax)
-            {
-                return false;
-            }
-
-            if (tzmin > tmin) tmin = tzmin;
-
-            if (tmin < 0) tmin = tmax;
-            return tmin >= 0 && tmin <= maxDist;
-        }
 
         /// <summary>
         /// Tests if a ray intersects a triangle face.
