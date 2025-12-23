@@ -1889,11 +1889,11 @@ namespace Andastra.Runtime.Games.Eclipse
                 float coverProtection = CalculateCoverProtection(position, threatPosition);
 
                 // 3. Threat priority: Scale by entity combat state and stats
-                float threatPriority = CalculateThreatPriority(entity, stats);
+                float threatPriorityValue = CalculateThreatPriority(entity, stats);
 
                 // Combined exposure calculation
                 // Exposure = distance factor * (1 - cover protection) * threat priority
-                float exposure = distanceFactor * (1.0f - coverProtection) * threatPriority;
+                float exposure = distanceFactor * (1.0f - coverProtection) * threatPriorityValue;
 
                 // Apply penalty scaled by exposure
                 totalPenalty += baseThreatPenalty * exposure;
