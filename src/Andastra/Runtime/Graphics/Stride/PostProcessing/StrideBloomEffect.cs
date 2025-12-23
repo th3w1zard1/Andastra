@@ -346,7 +346,7 @@ shader BlurEffect : ShaderBase
         /// <summary>
         /// Applies bloom effect to the input texture.
         /// </summary>
-        public Texture Apply(Texture hdrInput, RenderContext context)
+        public StrideGraphics.Texture Apply(StrideGraphics.Texture hdrInput, RenderContext context)
         {
             if (!_enabled || hdrInput == null) return hdrInput;
 
@@ -356,7 +356,7 @@ shader BlurEffect : ShaderBase
             ExtractBrightAreas(hdrInput, _brightPassTarget, context);
 
             // Step 2: Multi-pass blur
-            Texture blurSource = _brightPassTarget;
+            StrideGraphics.Texture blurSource = _brightPassTarget;
             for (int i = 0; i < _blurPasses; i++)
             {
                 ApplyGaussianBlur(blurSource, _blurTargets[i], i % 2 == 0, context);
@@ -367,7 +367,7 @@ shader BlurEffect : ShaderBase
             return _blurTargets[_blurPasses - 1] ?? hdrInput;
         }
 
-        private void EnsureRenderTargets(int width, int height, PixelFormat format)
+        private void EnsureRenderTargets(int width, int height, StrideGraphics.PixelFormat format)
         {
             bool needsRecreate = _brightPassTarget == null ||
                                  _brightPassTarget.Width != width ||
@@ -389,21 +389,21 @@ shader BlurEffect : ShaderBase
             }
 
             // Create bright pass target
-            _brightPassTarget = Texture.New2D(_graphicsDevice, width, height,
-                format, TextureFlags.RenderTarget | TextureFlags.ShaderResource);
+            _brightPassTarget = StrideGraphics.Texture.New2D(_graphicsDevice, width, height,
+                format, StrideGraphics.TextureFlags.RenderTarget | StrideGraphics.TextureFlags.ShaderResource);
 
             // Create blur targets (at progressively lower resolutions for performance)
-            _blurTargets = new Texture[_blurPasses];
+            _blurTargets = new StrideGraphics.Texture[_blurPasses];
             int blurWidth = width / 2;
             int blurHeight = height / 2;
 
             for (int i = 0; i < _blurPasses; i++)
             {
-                _blurTargets[i] = Texture.New2D(_graphicsDevice,
+                _blurTargets[i] = StrideGraphics.Texture.New2D(_graphicsDevice,
                     Math.Max(1, blurWidth),
                     Math.Max(1, blurHeight),
                     format,
-                    TextureFlags.RenderTarget | TextureFlags.ShaderResource);
+                    StrideGraphics.TextureFlags.RenderTarget | StrideGraphics.TextureFlags.ShaderResource);
 
                 blurWidth /= 2;
                 blurHeight /= 2;
@@ -488,10 +488,10 @@ shader BlurEffect : ShaderBase
             _spriteBatch.End();
 
             // Reset render target (restore previous state)
-            commandList.SetRenderTarget(null, (Texture)null);
+            commandList.SetRenderTarget(null, (StrideGraphics.Texture)null);
         }
 
-        private void ApplyGaussianBlur(Texture source, Texture destination, bool horizontal, RenderContext context)
+        private void ApplyGaussianBlur(StrideGraphics.Texture source, StrideGraphics.Texture destination, bool horizontal, RenderContext context)
         {
             // Apply separable Gaussian blur
             // horizontal: blur in X direction
@@ -581,7 +581,7 @@ shader BlurEffect : ShaderBase
             _spriteBatch.End();
 
             // Reset render target (restore previous state)
-            commandList.SetRenderTarget(null, (Texture)null);
+            commandList.SetRenderTarget(null, (StrideGraphics.Texture)null);
         }
 
         /// <summary>
