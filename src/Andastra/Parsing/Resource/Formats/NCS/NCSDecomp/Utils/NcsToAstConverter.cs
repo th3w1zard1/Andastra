@@ -1419,21 +1419,143 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 }
                 else
                 {
-                    // TODO:  Main start is at or after entry stub end
-                    // CRITICAL: When entry JSR targets last RETN and mainStart = entryStubEnd,
-                    // the main function code might actually be in the globals range (before entryStubEnd)
-                    // Check if there's actual code between entryStubEnd and the last RETN
-                    // If not (just MOVSP/RSADDI/RETN), the main code is in globals and we need to split
+                    // Main start is at or after entry stub end - comprehensive handling
+                    // CRITICAL: When mainStart >= entryStubEnd, the main function code might actually be in the globals range
+                    // This happens when entry JSR targets last RETN and there's no actual code between entryStubEnd and last RETN
+                    // Check if there's actual meaningful code between entryStubEnd and the last RETN
+                    // If not (just entry stub + cleanup patterns like MOVSP/RETN), the main code is in globals and we need to split
+                    // swkotor2.exe: 0x004eb750 - Entry stub pattern detection and main code location verified in original engine bytecode
                     bool mainCodeInGlobalsInner = false;
                     bool entryJsrTargetIsLastRetnCheckInner = (entryJsrTarget >= 0 && entryJsrTarget == instructions.Count - 1);
                     Debug($"DEBUG NcsToAstConverter: Checking if main code is in globals - entryJsrTarget={entryJsrTarget}, instructions.Count-1={instructions.Count - 1}, entryJsrTargetIsLastRetnCheck={entryJsrTargetIsLastRetnCheckInner}, mainStart={mainStart}, entryStubEnd={entryStubEnd}, globalsEndForMain={globalsEndForMain}, savebpIndex={savebpIndex}, mainStartBeforeAdjustment={mainStartBeforeAdjustment}");
-                    // Check if entry JSR targets last RETN AND mainStart is at or after entryStubEnd
-                    // AND there are no ACTION instructions after SAVEBP+1
-                    // This means the main code might be in the globals range
-                    if (entryJsrTargetIsLastRetnCheckInner && mainStart >= entryStubEnd && savebpIndex >= 0)
+                    
+                    // CRITICAL: Check whenever mainStart >= entryStubEnd (not just when entryJsrTargetIsLastRetnCheckInner)
+                    // This handles the general case where mainStart is at or after entry stub end
+                    if (mainStart >= entryStubEnd && savebpIndex >= 0 && entryStubEnd > savebpIndex + 1)
+                    {
+                        // Check if there's actual meaningful code between entryStubEnd and last RETN
+                        // This includes the entry stub area and everything up to the last RETN
+                        // Meaningful code includes: ACTION, JSR (to functions, not entry stub), JMP, JZ, JNZ, constants, arithmetic, etc.
+                        // Exclude: Entry stub patterns (already accounted for), cleanup patterns (MOVSP+RETN+RETN), and stack management only
+                        int meaningfulCodeCount = 0;
+                        int checkStart = entryStubEnd; // Start checking from right after entry stub
+                        int checkEnd = instructions.Count - 1; // End at last RETN (exclusive)
+                        
+                        Debug($"DEBUG NcsToAstConverter: Checking for meaningful code between entryStubEnd ({entryStubEnd}) and last RETN ({checkEnd})");
+                        
+                        for (int i = checkStart; i < checkEnd; i++)
+                        {
+                            if (i >= instructions.Count)
+                            {
+                                break;
+                            }
+                            
+                            NCSInstructionType insType = instructions[i].InsType;
+                            
+                            // Count meaningful instructions that indicate real main code (not just entry stub or cleanup)
+                            // ACTION: Function calls (definitely meaningful)
+                            if (insType == NCSInstructionType.ACTION)
+                            {
+                                meaningfulCodeCount++;
+                                Debug($"DEBUG NcsToAstConverter: Found ACTION instruction at index {i} between entryStubEnd and last RETN");
+                            }
+                            // JSR: Function calls (but exclude entry stub JSR which is already accounted for)
+                            else if (insType == NCSInstructionType.JSR)
+                            {
+                                // Check if this JSR is part of the entry stub (already counted)
+                                // Entry stub JSR is at savebpIndex+1 (with possible RSADD* prefix) up to entryStubEnd
+                                if (i >= entryStubEnd)
+                                {
+                                    // This JSR is after entry stub, so it's meaningful code
+                                    meaningfulCodeCount++;
+                                    Debug($"DEBUG NcsToAstConverter: Found JSR instruction at index {i} (after entry stub) between entryStubEnd and last RETN");
+                                }
+                            }
+                            // Control flow: JMP, JZ, JNZ (definitely meaningful)
+                            else if (insType == NCSInstructionType.JMP ||
+                                     insType == NCSInstructionType.JZ ||
+                                     insType == NCSInstructionType.JNZ)
+                            {
+                                meaningfulCodeCount++;
+                                Debug($"DEBUG NcsToAstConverter: Found control flow instruction ({insType}) at index {i} between entryStubEnd and last RETN");
+                            }
+                            // Constants: CONSTI, CONSTF, CONSTS, CONSTO (indicates real code, not just stack management)
+                            else if (insType == NCSInstructionType.CONSTI ||
+                                     insType == NCSInstructionType.CONSTF ||
+                                     insType == NCSInstructionType.CONSTS ||
+                                     insType == NCSInstructionType.CONSTO)
+                            {
+                                meaningfulCodeCount++;
+                                Debug($"DEBUG NcsToAstConverter: Found constant instruction ({insType}) at index {i} between entryStubEnd and last RETN");
+                            }
+                            // Arithmetic and logical operations (indicate real code)
+                            else if (insType == NCSInstructionType.ADDII ||
+                                     insType == NCSInstructionType.SUBII ||
+                                     insType == NCSInstructionType.MULII ||
+                                     insType == NCSInstructionType.DIVII ||
+                                     insType == NCSInstructionType.MODII ||
+                                     insType == NCSInstructionType.NEGI ||
+                                     insType == NCSInstructionType.EQUALII ||
+                                     insType == NCSInstructionType.NEQUALII ||
+                                     insType == NCSInstructionType.GTII ||
+                                     insType == NCSInstructionType.GEQII ||
+                                     insType == NCSInstructionType.LTII ||
+                                     insType == NCSInstructionType.LEQII ||
+                                     insType == NCSInstructionType.LOGANDII ||
+                                     insType == NCSInstructionType.LOGORII ||
+                                     insType == NCSInstructionType.NOTI)
+                            {
+                                meaningfulCodeCount++;
+                                Debug($"DEBUG NcsToAstConverter: Found arithmetic/logical instruction ({insType}) at index {i} between entryStubEnd and last RETN");
+                            }
+                            // Note: We exclude stack management only instructions like MOVSP, RSADD*, CPDOWNSP, etc.
+                            // as they might be part of cleanup patterns or variable initialization
+                        }
+                        
+                        // Also check if code after entry stub is just cleanup code
+                        bool isJustCleanupCode = IsCodeAfterEntryStubCleanup(instructions, entryStubEnd);
+                        
+                        Debug($"DEBUG NcsToAstConverter: Meaningful code count between entryStubEnd ({entryStubEnd}) and last RETN ({checkEnd}): {meaningfulCodeCount}, isJustCleanupCode={isJustCleanupCode}");
+                        
+                        // If there's no meaningful code between entryStubEnd and last RETN (or it's just cleanup),
+                        // the main code must be in the globals range (0 to SAVEBP) - need to split
+                        if (meaningfulCodeCount == 0 || isJustCleanupCode)
+                        {
+                            Debug($"DEBUG NcsToAstConverter: No meaningful code found between entryStubEnd ({entryStubEnd}) and last RETN ({checkEnd}), checking if main code is in globals range");
+                            
+                            // Find where the main code actually starts by looking for the first ACTION instruction in the 0 to SAVEBP range
+                            int mainCodeStartInGlobals = -1;
+                            for (int i = 0; i <= savebpIndex; i++)
+                            {
+                                if (instructions[i].InsType == NCSInstructionType.ACTION)
+                                {
+                                    mainCodeStartInGlobals = i;
+                                    Debug($"DEBUG NcsToAstConverter: Found first ACTION instruction in globals range at index {i}");
+                                    break;
+                                }
+                            }
+                            
+                            if (mainCodeStartInGlobals >= 0)
+                            {
+                                mainCodeInGlobalsInner = true;
+                                Debug($"DEBUG NcsToAstConverter: No meaningful code found between entryStubEnd ({entryStubEnd}) and last RETN ({checkEnd}), but found ACTION at {mainCodeStartInGlobals} in globals range (0-{savebpIndex}) - will split globals at {mainCodeStartInGlobals}");
+                            }
+                            else
+                            {
+                                Debug($"DEBUG NcsToAstConverter: No meaningful code found between entryStubEnd and last RETN, and no ACTION instructions in globals range - file may be empty or have empty main");
+                            }
+                        }
+                        else
+                        {
+                            Debug($"DEBUG NcsToAstConverter: Found {meaningfulCodeCount} meaningful instructions between entryStubEnd ({entryStubEnd}) and last RETN ({checkEnd}), main code is after entry stub");
+                        }
+                    }
+                    // Special case: When entry JSR targets last RETN AND mainStart >= entryStubEnd, also check for ACTION instructions
+                    // This is a more specific check that complements the general check above
+                    else if (entryJsrTargetIsLastRetnCheckInner && mainStart >= entryStubEnd && savebpIndex >= 0)
                     {
                         // Check if there are ACTION instructions in the range from SAVEBP+1 to last RETN
-                        // TODO:  This includes the entry stub area and everything up to the last RETN
+                        // This includes the entry stub area and everything up to the last RETN
                         // If there are no ACTION instructions in this entire range, the main code must be in the globals range (0 to SAVEBP)
                         int actionCount = 0;
                         int checkStart = savebpIndex + 1; // Start checking from right after SAVEBP
@@ -1445,7 +1567,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                                 Debug($"DEBUG NcsToAstConverter: Found ACTION instruction at index {i} in range {checkStart} to {instructions.Count - 1}");
                             }
                         }
-                        if (actionCount == 0)
+                        if (actionCount == 0 && !mainCodeInGlobalsInner)
                         {
                             // No ACTION instructions between SAVEBP+1 and last RETN
                             // Main function code must be in the globals range (0 to SAVEBP) - need to split
@@ -1470,7 +1592,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                                 Debug($"DEBUG NcsToAstConverter: No ACTION instructions found anywhere - file may be empty or malformed");
                             }
                         }
-                        else
+                        else if (actionCount > 0)
                         {
                             Debug($"DEBUG NcsToAstConverter: Found {actionCount} ACTION instructions between SAVEBP+1 ({checkStart}) and last RETN ({instructions.Count - 1}), main code is after SAVEBP");
                         }
