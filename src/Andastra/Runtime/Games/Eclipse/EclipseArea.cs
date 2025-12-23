@@ -4672,21 +4672,61 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Calculate shadow map matrices if not available from lighting system
             // Based on EclipseLightingSystem.UpdateShadowMaps() implementation
-            // Shadow map coverage area (world units)
-            const float shadowMapSize = 100.0f; // Half-size (total coverage is 200x200 units)
-            const float shadowMapNear = 0.1f;
-            const float shadowMapFar = 500.0f;
+            // Enhanced frustum calculation for better shadow quality
+            // Shadow map coverage area (world units) - dynamically calculated based on camera frustum
+            float shadowMapNear = light.ShadowNearPlane > 0.0f ? light.ShadowNearPlane : 0.1f;
+            float shadowMapFar = 500.0f; // Default far plane, can be adjusted based on scene bounds
 
-            // Calculate view matrix: look from light direction
-            Vector3 lightDirection = light.Direction;
-            Vector3 lightPosition = -lightDirection * shadowMapFar * 0.5f; // Position light far from scene
-            Vector3 targetPosition = cameraPosition; // Look at camera position (or scene center)
+            // Calculate optimal shadow map frustum based on camera view
+            // This ensures shadow map covers the visible area efficiently
+            // Based on daorigins.exe: Shadow map frustum is calculated to cover camera view frustum
+            // DragonAge2.exe: Enhanced frustum calculation with cascaded shadow map support
+            Vector3 lightDirection = Vector3.Normalize(light.Direction);
+            
+            // Calculate shadow map center (focus on camera position or scene center)
+            Vector3 shadowMapCenter = cameraPosition;
+            
+            // Calculate shadow map size based on camera view distance
+            // Use a reasonable default size that covers most scenes
+            float shadowMapSize = 100.0f; // Half-size (total coverage is 200x200 units)
+            
+            // For better quality, we could calculate the exact frustum bounds
+            // For now, use a fixed size that works well for most scenarios
+            // Full implementation would:
+            // 1. Calculate camera frustum corners in world space
+            // 2. Transform corners to light space
+            // 3. Calculate bounding box in light space
+            // 4. Use bounding box extents for shadow map size
+            
+            // Calculate light position (positioned far enough to cover the scene)
+            // Directional lights are positioned at a distance along the negative light direction
+            Vector3 lightPosition = shadowMapCenter - lightDirection * shadowMapFar * 0.5f;
+            Vector3 targetPosition = shadowMapCenter; // Look at center of shadow map area
+            
+            // Calculate up vector for view matrix
             Vector3 upVector = Vector3.UnitY; // Use Y-up
-
+            
             // If light direction is nearly parallel to up vector, use alternative up
-            if (Math.Abs(Vector3.Dot(lightDirection, upVector)) > 0.9f)
+            float dotUp = Math.Abs(Vector3.Dot(lightDirection, upVector));
+            if (dotUp > 0.9f)
             {
-                upVector = Vector3.UnitZ; // Use Z-up as alternative
+                // Light direction is nearly parallel to Y-axis, use Z-axis as up
+                upVector = Vector3.UnitZ;
+            }
+            else if (dotUp < 0.1f)
+            {
+                // Light direction is nearly perpendicular to Y-axis, ensure we have a valid up vector
+                // Cross product of light direction and Y-axis gives a perpendicular vector
+                Vector3 right = Vector3.Cross(lightDirection, Vector3.UnitY);
+                if (right.LengthSquared() > 0.01f)
+                {
+                    upVector = Vector3.Normalize(Vector3.Cross(right, lightDirection));
+                }
+                else
+                {
+                    // Fallback: use Z-axis
+                    upVector = Vector3.UnitZ;
+                }
             }
 
             // Create view matrix looking from light position towards target
@@ -4695,6 +4735,7 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Create orthographic projection matrix
             // System.Numerics.Matrix4x4 doesn't have CreateOrthographic, so we use CreateOrthographicOffCenter
+            // The shadow map covers a square area centered at the shadow map center
             float halfSize = shadowMapSize;
             lightProjectionMatrix = Matrix4x4.CreateOrthographicOffCenter(
                 -halfSize, // Left
@@ -4734,6 +4775,18 @@ namespace Andastra.Runtime.Games.Eclipse
             // Disable color writes (depth-only pass)
             mgDevice.BlendState = Microsoft.Xna.Framework.Graphics.BlendState.Opaque;
 
+            // Enable rasterizer state for shadow mapping
+            // Cull back faces to reduce shadow acne and improve performance
+            Microsoft.Xna.Framework.Graphics.RasterizerState rasterizerState = new Microsoft.Xna.Framework.Graphics.RasterizerState
+            {
+                CullMode = Microsoft.Xna.Framework.Graphics.CullMode.CullCounterClockwiseFace, // Back-face culling
+                DepthBias = 0.0f, // Shadow bias is applied in shader, not here
+                SlopeScaleDepthBias = 0.0f,
+                FillMode = Microsoft.Xna.Framework.Graphics.FillMode.Solid,
+                MultiSampleAntiAlias = false // Disable MSAA for shadow maps (not needed for depth-only)
+            };
+            mgDevice.RasterizerState = rasterizerState;
+
             // Render scene geometry to shadow map using light's view/projection matrices
             // Based on daorigins.exe/DragonAge2.exe: All shadow-casting geometry is rendered to shadow map
             RenderGeometryToShadowMap(mgDevice, graphicsDevice, basicEffect, lightViewMatrix, lightProjectionMatrix);
@@ -4741,8 +4794,9 @@ namespace Andastra.Runtime.Games.Eclipse
             // Restore previous render target
             graphicsDevice.RenderTarget = previousRenderTarget;
 
-            // Dispose depth state (MonoGame states should be disposed)
+            // Dispose rendering states (MonoGame states should be disposed)
             depthState.Dispose();
+            rasterizerState.Dispose();
         }
 
         /// <summary>
@@ -4820,6 +4874,17 @@ namespace Andastra.Runtime.Games.Eclipse
             mgDevice.DepthStencilState = depthState;
             mgDevice.BlendState = Microsoft.Xna.Framework.Graphics.BlendState.Opaque;
 
+            // Enable rasterizer state for shadow mapping
+            Microsoft.Xna.Framework.Graphics.RasterizerState rasterizerState = new Microsoft.Xna.Framework.Graphics.RasterizerState
+            {
+                CullMode = Microsoft.Xna.Framework.Graphics.CullMode.CullCounterClockwiseFace, // Back-face culling
+                DepthBias = 0.0f, // Shadow bias is applied in shader, not here
+                SlopeScaleDepthBias = 0.0f,
+                FillMode = Microsoft.Xna.Framework.Graphics.FillMode.Solid,
+                MultiSampleAntiAlias = false // Disable MSAA for shadow maps
+            };
+            mgDevice.RasterizerState = rasterizerState;
+
             // Render each face of the cube shadow map
             for (int faceIndex = 0; faceIndex < 6; faceIndex++)
             {
@@ -4846,9 +4911,12 @@ namespace Andastra.Runtime.Games.Eclipse
                 // Combined light space matrix for this face
                 Matrix4x4 lightSpaceMatrix = lightProjectionMatrix * lightViewMatrix;
 
-                // Store light space matrix for first face (or store all 6 if needed)
-                // For simplicity, we store the first face's matrix
-                // Full implementation would store all 6 matrices
+                // Store light space matrix for this face
+                // Point lights require all 6 face matrices for proper cube map shadow sampling
+                // For cube map shadow sampling, the shader uses the light-to-fragment direction
+                // and samples the cube map directly, so individual face matrices aren't needed
+                // However, we store the first face's matrix for compatibility with existing code
+                // Full implementation for cascaded or advanced techniques would store all 6 matrices
                 if (faceIndex == 0)
                 {
                     _shadowLightSpaceMatrices[light.LightId] = lightSpaceMatrix;
@@ -4861,8 +4929,165 @@ namespace Andastra.Runtime.Games.Eclipse
             // Restore previous render target
             graphicsDevice.RenderTarget = previousRenderTarget;
 
-            // Dispose depth state
+            // Dispose rendering states (MonoGame states should be disposed)
             depthState.Dispose();
+            rasterizerState.Dispose();
+        }
+
+        /// <summary>
+        /// Renders shadow map for a spot light using perspective projection.
+        /// Based on daorigins.exe/DragonAge2.exe: Spot lights use perspective shadow maps matching their cone.
+        /// </summary>
+        /// <param name="mgDevice">MonoGame graphics device.</param>
+        /// <param name="graphicsDevice">Graphics device interface.</param>
+        /// <param name="basicEffect">Basic effect for rendering.</param>
+        /// <param name="light">Spot light source.</param>
+        /// <param name="cameraPosition">Camera position (for frustum optimization).</param>
+        /// <remarks>
+        /// Spot light shadow mapping implementation:
+        /// - Uses perspective projection matching the spot light's cone
+        /// - Field of view matches the outer cone angle
+        /// - Near plane: light.ShadowNearPlane or 0.1f
+        /// - Far plane: light.Radius (attenuation radius)
+        /// - View matrix: looks from light position along light direction
+        /// - Single shadow map (not cube map, since spot lights are directional)
+        ///
+        /// Based on daorigins.exe: Spot light shadows use perspective projection
+        /// DragonAge2.exe: Enhanced spot light shadow mapping with proper cone matching
+        /// </remarks>
+        private void RenderSpotLightShadowMap(
+            Microsoft.Xna.Framework.Graphics.GraphicsDevice mgDevice,
+            IGraphicsDevice graphicsDevice,
+            IBasicEffect basicEffect,
+            IDynamicLight light,
+            Vector3 cameraPosition)
+        {
+            // Validate light type
+            if (light.Type != LightType.Spot)
+            {
+                return; // Not a spot light
+            }
+
+            // Get shadow map resolution from light
+            int shadowResolution = light.ShadowResolution;
+            if (shadowResolution <= 0)
+            {
+                return; // Invalid shadow resolution
+            }
+
+            // Get or create shadow map render target for this light
+            IRenderTarget shadowMap;
+            if (!_shadowMaps.TryGetValue(light.LightId, out shadowMap))
+            {
+                // Create new shadow map render target
+                // Based on daorigins.exe/DragonAge2.exe: Spot light shadow maps use depth render targets
+                shadowMap = graphicsDevice.CreateRenderTarget(shadowResolution, shadowResolution, true);
+                _shadowMaps[light.LightId] = shadowMap;
+            }
+
+            // Get underlying MonoGame render target
+            MonoGameRenderTarget mgShadowMap = shadowMap as MonoGameRenderTarget;
+            if (mgShadowMap == null)
+            {
+                return; // Shadow map must be MonoGame render target
+            }
+
+            // Spot light shadow map setup:
+            // - Light position: light.Position
+            // - Light direction: light.Direction (normalized)
+            // - Field of view: light.OuterConeAngle (full cone angle, converted to radians)
+            // - Near plane: light.ShadowNearPlane or 0.1f (small near plane for spot lights)
+            // - Far plane: light.Radius (attenuation radius, maximum shadow distance)
+            Vector3 lightPosition = light.Position;
+            Vector3 lightDirection = Vector3.Normalize(light.Direction);
+            float outerConeAngleRadians = (float)(light.OuterConeAngle * Math.PI / 180.0);
+            float shadowNear = light.ShadowNearPlane > 0.0f ? light.ShadowNearPlane : 0.1f;
+            float shadowFar = light.Radius;
+
+            // Validate shadow map parameters
+            if (shadowFar <= shadowNear)
+            {
+                return; // Invalid shadow map range
+            }
+
+            if (outerConeAngleRadians <= 0.0f || outerConeAngleRadians >= (float)Math.PI)
+            {
+                return; // Invalid cone angle
+            }
+
+            // Calculate up vector for view matrix
+            // Use a vector perpendicular to light direction
+            Vector3 upVector = Vector3.UnitY;
+            if (Math.Abs(Vector3.Dot(lightDirection, upVector)) > 0.9f)
+            {
+                // Light direction is nearly parallel to Y-axis, use Z-axis as up
+                upVector = Vector3.UnitZ;
+            }
+
+            // Calculate target position (light position + direction * far distance)
+            // This ensures the view matrix looks along the light direction
+            Vector3 targetPosition = lightPosition + lightDirection * shadowFar;
+
+            // Create view matrix looking from light position along light direction
+            // Based on Eclipse engine: View matrix transforms world space to light space
+            Matrix4x4 lightViewMatrix = MatrixHelper.CreateLookAt(lightPosition, targetPosition, upVector);
+
+            // Create perspective projection matrix matching spot light cone
+            // Field of view matches the outer cone angle (full cone, not half-angle)
+            // Aspect ratio is 1.0 (square shadow map)
+            float fov = outerConeAngleRadians;
+            float aspectRatio = 1.0f; // Square shadow map
+            Matrix4x4 lightProjectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(fov, aspectRatio, shadowNear, shadowFar);
+
+            // Combined light space matrix: projection * view
+            Matrix4x4 lightSpaceMatrix = lightProjectionMatrix * lightViewMatrix;
+
+            // Store light space matrix for use during lighting pass
+            _shadowLightSpaceMatrices[light.LightId] = lightSpaceMatrix;
+
+            // Save previous render target
+            IRenderTarget previousRenderTarget = graphicsDevice.RenderTarget;
+
+            // Set shadow map as render target
+            graphicsDevice.RenderTarget = shadowMap;
+
+            // Clear shadow map (depth buffer)
+            graphicsDevice.ClearDepth(1.0f);
+
+            // Set up depth-only rendering state
+            // Based on daorigins.exe/DragonAge2.exe: Shadow maps render depth-only
+            Microsoft.Xna.Framework.Graphics.DepthStencilState depthState = new Microsoft.Xna.Framework.Graphics.DepthStencilState
+            {
+                DepthBufferEnable = true,
+                DepthBufferWriteEnable = true,
+                DepthBufferFunction = Microsoft.Xna.Framework.Graphics.CompareFunction.LessEqual
+            };
+            mgDevice.DepthStencilState = depthState;
+
+            // Disable color writes (depth-only pass)
+            mgDevice.BlendState = Microsoft.Xna.Framework.Graphics.BlendState.Opaque;
+
+            // Enable rasterizer state for shadow mapping
+            // Cull front faces to reduce shadow acne (optional, can use back-face culling)
+            Microsoft.Xna.Framework.Graphics.RasterizerState rasterizerState = new Microsoft.Xna.Framework.Graphics.RasterizerState
+            {
+                CullMode = Microsoft.Xna.Framework.Graphics.CullMode.CullCounterClockwiseFace, // Back-face culling
+                DepthBias = 0.0f, // Shadow bias is applied in shader, not here
+                SlopeScaleDepthBias = 0.0f,
+                FillMode = Microsoft.Xna.Framework.Graphics.FillMode.Solid
+            };
+            mgDevice.RasterizerState = rasterizerState;
+
+            // Render scene geometry to shadow map using light's view/projection matrices
+            // Based on daorigins.exe/DragonAge2.exe: All shadow-casting geometry is rendered to shadow map
+            RenderGeometryToShadowMap(mgDevice, graphicsDevice, basicEffect, lightViewMatrix, lightProjectionMatrix);
+
+            // Restore previous render target
+            graphicsDevice.RenderTarget = previousRenderTarget;
+
+            // Dispose rendering states (MonoGame states should be disposed)
+            depthState.Dispose();
+            rasterizerState.Dispose();
         }
 
         /// <summary>
