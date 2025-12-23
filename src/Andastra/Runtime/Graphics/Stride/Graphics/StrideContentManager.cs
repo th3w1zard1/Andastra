@@ -82,12 +82,6 @@ namespace Andastra.Runtime.Stride.Graphics
                 _contentManager.Load<global::Stride.Graphics.Texture>(assetName);
                 return true; // Asset exists and can be loaded as Texture2D
             }
-            catch (System.Exception)
-            {
-                // ContentManagerException is thrown when asset is not found
-                // This is the primary indicator that the asset doesn't exist
-                return false;
-            }
             catch (System.IO.FileNotFoundException)
             {
                 // FileNotFoundException indicates asset file doesn't exist
@@ -98,8 +92,10 @@ namespace Andastra.Runtime.Stride.Graphics
                 // DirectoryNotFoundException indicates asset directory doesn't exist
                 return false;
             }
-            catch
+            catch (System.Exception)
             {
+                // ContentManagerException is thrown when asset is not found
+                // This is the primary indicator that the asset doesn't exist
                 // Other exceptions (e.g., wrong type, corrupted file, etc.)
                 // For existence checking purposes, if we got an exception other than "not found",
                 // it means the asset file exists but there's some other issue (wrong type, corrupted, etc.)

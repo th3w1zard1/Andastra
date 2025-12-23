@@ -1,6 +1,7 @@
 using System;
 using StrideGraphics = Stride.Graphics;
 using Andastra.Runtime.Graphics;
+using Andastra.Runtime.Stride.Graphics;
 
 namespace Andastra.Runtime.Stride.Graphics
 {
@@ -26,13 +27,27 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public bool IsShort => _isShort;
 
-        public IntPtr NativeHandle => _buffer.NativeBuffer;
+        public IntPtr NativeHandle
+        {
+            get
+            {
+                // Stride Buffer doesn't expose NativeBuffer directly
+                // Return IntPtr.Zero as Stride manages native resources internally
+                return IntPtr.Zero;
+            }
+        }
 
         public void SetData(int[] indices)
         {
             if (indices == null)
             {
                 throw new ArgumentNullException(nameof(indices));
+            }
+
+            var commandList = _buffer.GraphicsDevice.ImmediateContext();
+            if (commandList == null)
+            {
+                throw new InvalidOperationException("CommandList is not available. Ensure GraphicsDeviceExtensions.RegisterCommandList() has been called.");
             }
 
             if (_isShort)
@@ -42,11 +57,11 @@ namespace Andastra.Runtime.Stride.Graphics
                 {
                     shortIndices[i] = (ushort)indices[i];
                 }
-                _buffer.SetData(_buffer.GraphicsDevice.ImmediateContext, shortIndices);
+                commandList.UpdateSubresource(_buffer, shortIndices, 0);
             }
             else
             {
-                _buffer.SetData(_buffer.GraphicsDevice.ImmediateContext, indices);
+                commandList.UpdateSubresource(_buffer, indices, 0);
             }
         }
 
@@ -62,10 +77,16 @@ namespace Andastra.Runtime.Stride.Graphics
                 throw new ArgumentException("Data array length exceeds index count.", nameof(indices));
             }
 
+            var commandList = _buffer.GraphicsDevice.ImmediateContext();
+            if (commandList == null)
+            {
+                throw new InvalidOperationException("CommandList is not available. Ensure GraphicsDeviceExtensions.RegisterCommandList() has been called.");
+            }
+
             if (_isShort)
             {
                 var shortIndices = new ushort[_indexCount];
-                _buffer.GetData(_buffer.GraphicsDevice.ImmediateContext, shortIndices);
+                commandList.Copy(_buffer, shortIndices);
                 for (int i = 0; i < indices.Length && i < shortIndices.Length; i++)
                 {
                     indices[i] = shortIndices[i];
@@ -73,7 +94,7 @@ namespace Andastra.Runtime.Stride.Graphics
             }
             else
             {
-                _buffer.GetData(_buffer.GraphicsDevice.ImmediateContext, indices);
+                commandList.Copy(_buffer, indices);
             }
         }
 

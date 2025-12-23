@@ -1060,7 +1060,7 @@ namespace Andastra.Runtime.Stride.Upscaling
                 // For D3D12, we need to get the ID3D12Resource* pointer
                 // Stride API may use NativePointer, NativeDeviceTexture, or NativeResource depending on backend
                 var textureType = texture.GetType();
-                
+
                 // Try NativePointer first (used by D3D12 and Vulkan backends)
                 var nativePointerProperty = textureType.GetProperty("NativePointer",
                     BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);

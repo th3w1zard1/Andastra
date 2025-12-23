@@ -83,13 +83,13 @@ namespace Andastra.Runtime.Stride.Upscaling
         public override int FsrVersion => 2; // FSR 2.x
         public override bool FrameGenerationAvailable => CheckFrameGenerationSupport();
 
-        public StrideFsrSystem(StrideGraphics.GraphicsDevice graphicsDevice, CommandList graphicsContext = null)
+        public StrideFsrSystem(StrideGraphics.GraphicsDevice graphicsDevice, Stride.Rendering.CommandList graphicsContext = null)
         {
             _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException(nameof(graphicsDevice));
             _graphicsContext = graphicsContext;
         }
 
-        private CommandList GetCommandList()
+        private Stride.Rendering.CommandList GetCommandList()
         {
             if (_graphicsContext != null)
             {
@@ -98,7 +98,7 @@ namespace Andastra.Runtime.Stride.Upscaling
             return null;
         }
 
-        private CommandList GetGraphicsContext()
+        private Stride.Rendering.CommandList GetGraphicsContext()
         {
             return _graphicsContext;
         }
@@ -120,7 +120,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// 3. Set compute pipeline state on CommandList
         /// 4. Dispatch compute shader (done by caller)
         /// </summary>
-        private void ApplyEffectInstanceToCommandList(EffectInstance effectInstance, CommandList commandList)
+        private void ApplyEffectInstanceToCommandList(EffectInstance effectInstance, Stride.Rendering.CommandList commandList)
         {
             if (effectInstance == null || commandList == null || effectInstance.Effect == null)
             {
@@ -338,8 +338,8 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// <summary>
         /// Applies FSR upscaling to the input frame.
         /// </summary>
-        public Texture Apply(Texture input, Texture motionVectors, Texture depth,
-            Texture reactivityMask, int targetWidth, int targetHeight, float deltaTime)
+        public StrideGraphics.Texture Apply(StrideGraphics.Texture input, StrideGraphics.Texture motionVectors, StrideGraphics.Texture depth,
+            StrideGraphics.Texture reactivityMask, int targetWidth, int targetHeight, float deltaTime)
         {
             if (!IsEnabled || input == null) return input;
 
@@ -357,7 +357,7 @@ namespace Andastra.Runtime.Stride.Upscaling
             return _outputTexture ?? input;
         }
 
-        private void EnsureOutputTexture(int width, int height, PixelFormat format)
+        private void EnsureOutputTexture(int width, int height, StrideGraphics.PixelFormat format)
         {
             if (_outputTexture != null &&
                 _outputTexture.Width == width &&
@@ -605,8 +605,8 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// <summary>
         /// Executes FSR Lock pass: Detects disocclusions and areas needing special handling.
         /// </summary>
-        private void ExecuteFsrLockPass(CommandList graphicsContext, Texture input, Texture depth,
-            Texture motionVectors, Texture lockOutput)
+        private void ExecuteFsrLockPass(Stride.Rendering.CommandList graphicsContext, StrideGraphics.Texture input, StrideGraphics.Texture depth,
+            StrideGraphics.Texture motionVectors, StrideGraphics.Texture lockOutput)
         {
             if (_fsrTemporalEffect == null || graphicsContext == null) return;
 
@@ -635,7 +635,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// <summary>
         /// Executes FSR Depth Clip pass: Clips depth values for better temporal stability.
         /// </summary>
-        private void ExecuteFsrDepthClipPass(CommandList graphicsContext, Texture depth, Texture lockTexture)
+        private void ExecuteFsrDepthClipPass(Stride.Rendering.CommandList graphicsContext, StrideGraphics.Texture depth, StrideGraphics.Texture lockTexture)
         {
             if (_fsrTemporalEffect == null || depth == null || graphicsContext == null) return;
 
@@ -662,7 +662,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// <summary>
         /// Executes FSR Reactive Mask pass: Processes reactivity mask.
         /// </summary>
-        private void ExecuteFsrReactiveMaskPass(CommandList graphicsContext, Texture reactivityMask, Texture lockTexture)
+        private void ExecuteFsrReactiveMaskPass(Stride.Rendering.CommandList graphicsContext, StrideGraphics.Texture reactivityMask, StrideGraphics.Texture lockTexture)
         {
             if (_fsrTemporalEffect == null || reactivityMask == null || graphicsContext == null) return;
 
@@ -689,8 +689,8 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// <summary>
         /// Executes FSR Temporal accumulation pass: Main upscaling pass using temporal data.
         /// </summary>
-        private void ExecuteFsrTemporalPass(CommandList graphicsContext, Texture input, Texture motionVectors,
-            Texture depth, Texture lockTexture, Texture reactivityMask, Texture historyTexture, Texture output)
+        private void ExecuteFsrTemporalPass(Stride.Rendering.CommandList graphicsContext, StrideGraphics.Texture input, StrideGraphics.Texture motionVectors,
+            StrideGraphics.Texture depth, StrideGraphics.Texture lockTexture, StrideGraphics.Texture reactivityMask, StrideGraphics.Texture historyTexture, StrideGraphics.Texture output)
         {
             if (_fsrTemporalEffect == null || graphicsContext == null) return;
 
@@ -724,7 +724,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// <summary>
         /// Executes FSR EASU pass: Edge-adaptive spatial upsampling (FSR 1.0).
         /// </summary>
-        private void ExecuteFsrEasuPass(CommandList graphicsContext, Texture input, Texture output)
+        private void ExecuteFsrEasuPass(Stride.Rendering.CommandList graphicsContext, StrideGraphics.Texture input, StrideGraphics.Texture output)
         {
             if (_fsrEasuEffect == null || graphicsContext == null) return;
 
@@ -750,7 +750,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         /// <summary>
         /// Executes FSR RCAS pass: Robust contrast adaptive sharpening.
         /// </summary>
-        private void ExecuteFsrRcasPass(CommandList graphicsContext, Texture input, Texture output)
+        private void ExecuteFsrRcasPass(Stride.Rendering.CommandList graphicsContext, StrideGraphics.Texture input, StrideGraphics.Texture output)
         {
             if (_fsrRcasEffect == null || graphicsContext == null) return;
 

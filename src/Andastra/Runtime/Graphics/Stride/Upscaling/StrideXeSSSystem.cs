@@ -285,6 +285,7 @@ namespace Andastra.Runtime.Stride.Upscaling
             return IntPtr.Zero;
         }
 
+
         private bool CheckXeSSAvailability()
         {
             if (_graphicsDevice == null) return false;

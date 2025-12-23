@@ -647,11 +647,11 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public int MaxMipLevel
         {
-            get { return _description.MaxMipLevels; }
+            get { return _description.MaxMipLevel; }
             set
             {
                 var desc = _description;
-                desc.MaxMipLevels = value;
+                desc.MaxMipLevel = value;
                 _description = desc;
             }
         }

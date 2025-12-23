@@ -142,7 +142,7 @@ namespace Andastra.Runtime.Stride.Remix
             {
                 Guid iidDevice = IID_IDirect3DDevice9;
                 uint behaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING | D3DCREATE_MULTITHREADED;
-                
+
                 // Try hardware vertex processing first
                 hr = CreateDevice(d3d9, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, windowHandle,
                     behaviorFlags, ref presentParams, ref iidDevice, devicePtr);

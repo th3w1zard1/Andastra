@@ -146,7 +146,7 @@ namespace Andastra.Runtime.Stride.Backends
             {
                 Type = ResourceType.Texture,
                 Handle = handle,
-                NativeHandle = texture?.NativePointer ?? IntPtr.Zero,
+                NativeHandle = texture?.NativeDeviceTexture ?? IntPtr.Zero,
                 DebugName = desc.DebugName,
                 SizeInBytes = desc.Width * desc.Height * GetFormatSize(desc.Format)
             };
@@ -160,7 +160,7 @@ namespace Andastra.Runtime.Stride.Backends
             if ((desc.Usage & BufferUsage.Constant) != 0) flags |= BufferFlags.ConstantBuffer;
             if ((desc.Usage & BufferUsage.Structured) != 0) flags |= BufferFlags.StructuredBuffer;
 
-            var buffer = Buffer.New(_strideDevice, desc.SizeInBytes, flags);
+            var buffer = Stride.Graphics.Buffer.New(_strideDevice, desc.SizeInBytes, flags);
 
             return new ResourceInfo
             {
@@ -278,7 +278,7 @@ namespace Andastra.Runtime.Stride.Backends
             var flags = BufferFlags.StructuredBuffer | BufferFlags.ShaderResource;
             if (!cpuWritable) flags |= BufferFlags.UnorderedAccess;
 
-            var buffer = Buffer.Structured.New(_strideDevice, elementCount, elementStride,
+            var buffer = Stride.Graphics.Buffer.Structured.New(_strideDevice, elementCount, elementStride,
                 cpuWritable);
 
             return new ResourceInfo
@@ -2329,7 +2329,7 @@ namespace Andastra.Runtime.Stride.Backends
 
             // Create a buffer with acceleration structure build input usage
             // This buffer stores instance descriptors and needs to be accessible by the build process
-            var bufferDesc = new BufferDescription
+            var bufferDesc = new Andastra.Runtime.Graphics.Common.Structs.BufferDescription
             {
                 SizeInBytes = sizeInBytes,
                 Usage = BufferUsage.AccelerationStructure, // Instance buffer for TLAS
@@ -2379,7 +2379,7 @@ namespace Andastra.Runtime.Stride.Backends
             // Create a buffer with acceleration structure usage flag
             // This buffer stores the final acceleration structure data and needs to be
             // accessible by raytracing shaders
-            var bufferDesc = new BufferDescription
+            var bufferDesc = new Andastra.Runtime.Graphics.Common.Structs.BufferDescription
             {
                 SizeInBytes = (int)sizeInBytes,
                 Usage = BufferUsage.AccelerationStructure,
@@ -2489,7 +2489,7 @@ namespace Andastra.Runtime.Stride.Backends
         /// The fallback device can create or provide command lists that are compatible with DXR fallback operations.
         /// </summary>
         /// <returns>Handle to the fallback command list, or IntPtr.Zero if unavailable</returns>
-        private IntPtr GetFallbackCommandList()
+        private unsafe IntPtr GetFallbackCommandList()
         {
             // If fallback device is not available, cannot get fallback command list
             if (!_useDxrFallbackLayer || _raytracingFallbackDevice == IntPtr.Zero)
@@ -2546,7 +2546,7 @@ namespace Andastra.Runtime.Stride.Backends
                     // Method 2: Use the native Stride command list pointer
                     // The DXR fallback layer may accept the native D3D11 command list pointer directly
                     // and wrap it internally to provide DXR API compatibility
-                    IntPtr nativeCommandList = _commandList.NativeCommandList;
+                    IntPtr nativeCommandList = GetNativeCommandListHandle(_commandList);
                     if (nativeCommandList != IntPtr.Zero)
                     {
                         // Cache the native command list as the fallback command list
@@ -2566,12 +2566,54 @@ namespace Andastra.Runtime.Stride.Backends
             // Fallback: Use the native Stride command list pointer
             // The DXR fallback layer may accept this and wrap it internally
             // This is the current implementation approach since the fallback device is set to the native D3D11 device
-            IntPtr fallbackCmdList = _commandList?.NativeCommandList ?? IntPtr.Zero;
+            IntPtr fallbackCmdList = _commandList != null ? GetNativeCommandListHandle(_commandList) : IntPtr.Zero;
             if (fallbackCmdList != IntPtr.Zero)
             {
                 _fallbackCommandList = fallbackCmdList;
             }
             return fallbackCmdList;
+        }
+
+        /// <summary>
+        /// Gets the native command list handle from Stride's CommandList using reflection.
+        /// </summary>
+        private IntPtr GetNativeCommandListHandle(global::Stride.Graphics.CommandList commandList)
+        {
+            if (commandList == null)
+            {
+                return IntPtr.Zero;
+            }
+
+            try
+            {
+                var commandListType = commandList.GetType();
+                var nativeProperty = commandListType.GetProperty("NativeCommandList", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (nativeProperty != null)
+                {
+                    var value = nativeProperty.GetValue(commandList);
+                    if (value is IntPtr)
+                    {
+                        return (IntPtr)value;
+                    }
+                }
+
+                // Try NativePointer as alternative
+                var nativePointerProperty = commandListType.GetProperty("NativePointer", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (nativePointerProperty != null)
+                {
+                    var value = nativePointerProperty.GetValue(commandList);
+                    if (value is IntPtr)
+                    {
+                        return (IntPtr)value;
+                    }
+                }
+            }
+            catch
+            {
+                // If reflection fails, return IntPtr.Zero
+            }
+
+            return IntPtr.Zero;
         }
 
         /// <summary>

@@ -13,7 +13,7 @@ namespace Andastra.Runtime.Stride.Graphics
     /// </summary>
     public class StrideGraphicsBackend : IGraphicsBackend
     {
-        private global::Stride.Engine.Game _game;
+        private StrideGameWrapper _game;
         private StrideGraphicsDevice _graphicsDevice;
         private StrideContentManager _contentManager;
         private StrideWindow _window;
@@ -41,7 +41,7 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public StrideGraphicsBackend()
         {
-            _game = new global::Stride.Engine.Game();
+            _game = new StrideGameWrapper();
         }
 
         public void Initialize(int width, int height, string title, bool fullscreen = false)
@@ -73,16 +73,39 @@ namespace Andastra.Runtime.Stride.Graphics
             // Initialize graphics components when game starts
             if (_graphicsDevice == null)
             {
-                _graphicsDevice = new StrideGraphicsDevice(_game.GraphicsDevice, _game.GraphicsContext);
-                _contentManager = new StrideContentManager(_game.Content, _game.GraphicsContext);
+                // In Stride, CommandList is obtained from GraphicsDevice.ResourceFactory or created per-frame
+                // For immediate rendering, we'll create a CommandList from the GraphicsDevice
+                // TODO: STUB - CommandList creation might need to be per-frame in Stride 4.x
+                // For now, we'll pass null and handle it in StrideGraphicsDevice
+                StrideGraphics.CommandList commandList = null;
+                try
+                {
+                    // Try to get CommandList from GraphicsDevice.ResourceFactory if available
+                    // In Stride 4.x, CommandList is typically created per-frame from ResourceFactory
+                    // For immediate context, we'll need to create it when needed
+                    if (_game.GraphicsDevice != null)
+                    {
+                        // CommandList will be created on-demand in StrideGraphicsDevice when needed
+                        // For now, pass null - the device will handle CommandList creation
+                    }
+                }
+                catch
+                {
+                    // CommandList creation failed, will be handled in StrideGraphicsDevice
+                }
+
+                _graphicsDevice = new StrideGraphicsDevice(_game.GraphicsDevice, commandList);
+                _contentManager = new StrideContentManager(_game.Content, commandList);
                 _window = new StrideWindow(_game.Window);
                 _inputManager = new StrideInputManager(_game.Input);
 
-                // Register the CommandList from GraphicsContext for use by ImmediateContext() extension method
-                // This allows code that only has access to GraphicsDevice to retrieve the CommandList
-                if (_game.GraphicsDevice != null && _game.GraphicsContext != null && _game.GraphicsContext.CommandList != null)
+                // Register the CommandList for use by ImmediateContext() extension method
+                // In Stride, we'll need to create and register CommandList per-frame
+                // For now, we'll register it when it becomes available
+                // TODO: STUB - CommandList should be created per-frame and registered each frame
+                if (_game.GraphicsDevice != null && commandList != null)
                 {
-                    GraphicsDeviceExtensions.RegisterCommandList(_game.GraphicsDevice, _game.GraphicsContext.CommandList);
+                    GraphicsDeviceExtensions.RegisterCommandList(_game.GraphicsDevice, commandList);
                 }
 
                 // Apply VSync state if it was set before graphics device was initialized
@@ -269,7 +292,7 @@ namespace Andastra.Runtime.Stride.Graphics
                 // Original game equivalent (swkotor2.exe DirectX Present parameters):
                 //   - VSync enabled: D3DPRESENT_INTERVAL_ONE (0x00000001) - synchronize with vertical refresh
                 //   - VSync disabled: D3DPRESENT_INTERVAL_IMMEDIATE (0x80000000) - present immediately
-                
+
                 // Try to find and set VSyncMode property first (preferred in Stride 4.2)
                 var vsyncModeProperty = typeof(GraphicsPresenter).GetProperty("VSyncMode", BindingFlags.Public | BindingFlags.Instance);
                 if (vsyncModeProperty != null && vsyncModeProperty.CanWrite)

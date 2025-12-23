@@ -112,30 +112,11 @@ namespace Andastra.Runtime.Stride.Graphics
                 }
             }
 
-            // Fallback: Try to create a new CommandList using ResourceFactory
-            // Note: This creates a new CommandList each time, which is not ideal for immediate rendering
-            // but provides a fallback if the CommandList wasn't registered
-            try
-            {
-                // In newer Stride versions, ResourceFactory.CreateCommandList() creates a new command list
-                // This is not the immediate context, but can be used as a fallback
-                var resourceFactory = device.ResourceFactory;
-                if (resourceFactory != null)
-                {
-                    // Create a new command list - this is not the immediate context but can be used
-                    // The caller should prefer using the registered CommandList from GraphicsContext
-                    var fallbackCommandList = resourceFactory.CreateCommandList();
-                    return fallbackCommandList;
-                }
-            }
-            catch (Exception)
-            {
-                // ResourceFactory.CreateCommandList() may not be available or may throw
-                // Return null in this case
-            }
-
-            // If both methods fail, return null
-            // Calling code should handle null case and register the CommandList if available
+            // Fallback: In Stride 4.2, GraphicsDevice doesn't have ResourceFactory
+            // CommandList should be registered via RegisterCommandList() from Game.GraphicsContext.CommandList
+            // If not registered, return null - calling code should register the CommandList if available
+            // TODO: STUB - CommandList creation through GraphicsDevice is not available in Stride 4.2
+            // The CommandList must be registered via RegisterCommandList() from Game.GraphicsContext.CommandList
             return null;
         }
 

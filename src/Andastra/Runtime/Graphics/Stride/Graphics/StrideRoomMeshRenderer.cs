@@ -62,7 +62,7 @@ namespace Andastra.Runtime.Stride.Graphics
             // Create vertex buffer using abstraction layer
             var vertexArray = vertices.ToArray();
             meshData.VertexBuffer = new StrideVertexBuffer(
-                Stride.Graphics.Buffer.Vertex.New(_graphicsDevice, vertexArray, Stride.Graphics.GraphicsResourceUsage.Dynamic),
+                global::Stride.Graphics.Buffer.Vertex.New(_graphicsDevice, vertexArray, global::Stride.Graphics.GraphicsResourceUsage.Dynamic),
                 vertexArray.Length,
                 System.Runtime.InteropServices.Marshal.SizeOf<VertexPositionColor>()
             );
@@ -71,7 +71,7 @@ namespace Andastra.Runtime.Stride.Graphics
             meshData.IndexCount = indices.Count;
             var indexArray = indices.ToArray();
             meshData.IndexBuffer = new StrideIndexBuffer(
-                Stride.Graphics.Buffer.Index.New(_graphicsDevice, indexArray, Stride.Graphics.GraphicsResourceUsage.Dynamic),
+                global::Stride.Graphics.Buffer.Index.New(_graphicsDevice, indexArray, global::Stride.Graphics.GraphicsResourceUsage.Dynamic),
                 indexArray.Length,
                 false
             );
@@ -131,14 +131,14 @@ namespace Andastra.Runtime.Stride.Graphics
             );
 
             // Create translation
-            Vector3 translation = new Vector3(
+            System.Numerics.Vector3 translation = new System.Numerics.Vector3(
                 node.Position.X,
                 node.Position.Y,
                 node.Position.Z
             );
 
             // Create scale
-            Vector3 scale = new Vector3(
+            System.Numerics.Vector3 scale = new System.Numerics.Vector3(
                 node.ScaleX,
                 node.ScaleY,
                 node.ScaleZ
