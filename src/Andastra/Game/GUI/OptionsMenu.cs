@@ -4,9 +4,7 @@ using Andastra.Runtime.Core;
 using Andastra.Runtime.Core.Audio;
 using Andastra.Runtime.Core.Dialogue;
 using Andastra.Runtime.Graphics;
-using Vector2 = Odyssey.Graphics.Vector2;
-using Rectangle = Odyssey.Graphics.Rectangle;
-using Color = Odyssey.Graphics.Color;
+using Microsoft.Xna.Framework;
 
 namespace Andastra.Runtime.Game.GUI
 {
