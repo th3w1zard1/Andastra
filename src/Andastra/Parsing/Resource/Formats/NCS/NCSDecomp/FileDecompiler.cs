@@ -2085,7 +2085,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 // Extract return type
                 try
                 {
-                    Type returnType = state.Type();
+                    UtilsType returnType = state.Type();
                     if (returnType != null)
                     {
                         string returnTypeStr = returnType.ToString();
@@ -2114,7 +2114,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                         {
                             foreach (object paramObj in paramsList)
                             {
-                                if (paramObj is Type paramType)
+                                if (paramObj is UtilsType paramType)
                                 {
                                     string paramTypeStr = paramType.ToString();
                                     if (!string.IsNullOrEmpty(paramTypeStr))
@@ -2148,7 +2148,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
 
                 // Build full signature
                 StringBuilder sigBuilder = new StringBuilder();
-                
+
                 // Add return type (default to void if not set)
                 if (string.IsNullOrEmpty(info.ReturnType))
                 {
