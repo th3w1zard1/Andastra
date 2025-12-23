@@ -29,6 +29,8 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public IInputManager InputManager => _inputManager;
 
+        public bool IsInitialized => _isInitialized;
+
         /// <summary>
         /// Gets whether the graphics backend supports VSync (vertical synchronization).
         /// Stride supports VSync through GraphicsDevice.Presenter when initialized.

@@ -2401,7 +2401,7 @@ namespace Andastra.Runtime.Stride.Backends
         // Helper method to call CreateDescriptorHeap using vtable offset (more reliable)
         // d3d12.dll: ID3D12Device vtable - CreateDescriptorHeap is at index 27
         // This method tries P/Invoke first, then falls back to vtable calling if P/Invoke fails
-        private static unsafe int CreateDescriptorHeapVTable(IntPtr device, IntPtr pDescriptorHeapDesc, ref Guid riid, IntPtr ppvHeap)
+        private static unsafe int CreateDescriptorHeapVTableStatic(IntPtr device, IntPtr pDescriptorHeapDesc, ref Guid riid, IntPtr ppvHeap)
         {
             // ID3D12Device vtable layout (verified):
             // [0] QueryInterface
@@ -2419,13 +2419,13 @@ namespace Andastra.Runtime.Stride.Backends
             {
                 // Fallback: Use vtable calling convention when P/Invoke fails
                 // This can happen if d3d12.dll is not found or mangled names don't match
-                return CreateDescriptorHeapVTableFallback(device, pDescriptorHeapDesc, ref riid, ppvHeap);
+                return CreateDescriptorHeapVTableStaticFallback(device, pDescriptorHeapDesc, ref riid, ppvHeap);
             }
             catch (EntryPointNotFoundException)
             {
                 // Fallback: Use vtable calling convention when entry point is not found
                 // This can happen if mangled C++ names don't match the DLL
-                return CreateDescriptorHeapVTableFallback(device, pDescriptorHeapDesc, ref riid, ppvHeap);
+                return CreateDescriptorHeapVTableStaticFallback(device, pDescriptorHeapDesc, ref riid, ppvHeap);
             }
         }
 
@@ -2434,7 +2434,7 @@ namespace Andastra.Runtime.Stride.Backends
         /// VTable index 27 for ID3D12Device (verified in d3d12.dll).
         /// Platform: Windows only (x64/x86) - DirectX 12 COM is Windows-specific
         /// </summary>
-        private static unsafe int CreateDescriptorHeapVTableFallback(IntPtr device, IntPtr pDescriptorHeapDesc, ref Guid riid, IntPtr ppvHeap)
+        private static unsafe int CreateDescriptorHeapVTableStaticFallback(IntPtr device, IntPtr pDescriptorHeapDesc, ref Guid riid, IntPtr ppvHeap)
         {
             // Platform check: DirectX 12 COM is Windows-only
             if (Environment.OSVersion.Platform != PlatformID.Win32NT)

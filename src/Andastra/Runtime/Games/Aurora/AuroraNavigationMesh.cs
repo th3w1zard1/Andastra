@@ -20,7 +20,7 @@ namespace Andastra.Runtime.Games.Aurora
     /// - Tile location stored at offsets 0x1c (X) and 0x20 (Y) in CNWTile::GetLocation
     /// - SurfaceMaterial: Surface material index from tileset (0-30, corresponds to surfacemat.2da)
     /// </remarks>
-    internal struct AuroraTile
+    public struct AuroraTile
     {
         /// <summary>
         /// Tile ID (index into tileset).

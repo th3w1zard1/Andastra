@@ -471,15 +471,6 @@ namespace Andastra.Runtime.Stride.Audio
                     byte[] silenceBuffer = new byte[bufferSizeBytes];
                     FillBuffer(silenceBuffer, bufferSizeBytes, AudioLayer.BufferType.EndOfStream);
                 }
-                    int bytesPerSample = 2; // 16-bit audio = 2 bytes per sample
-                    int samplesPerChannel = 4096; // Standard buffer size in samples
-                    int bufferSizeBytes = samplesPerChannel * bytesPerSample * 1; // 1 channel (mono)
-
-                    // Fill buffer with silence (zero bytes) and mark as end of stream
-                    // This is a dummy source, so we always provide silence
-                    byte[] silenceBuffer = new byte[bufferSizeBytes];
-                    FillBuffer(silenceBuffer, bufferSizeBytes, AudioLayer.BufferType.EndOfStream);
-                }
             }
         }
     }

@@ -27,7 +27,7 @@ namespace Andastra.Runtime.Stride.Upscaling
         // NGX Result codes
         private enum NVSDK_NGX_Result
         {
-            NVSDK_NGX_Result_Success = 0x1,
+            NVSDK_NGX_Result_Success = (int)0x1,
             NVSDK_NGX_Result_Fail = 0xBAD00000,
             NVSDK_NGX_Result_FAIL_FeatureNotSupported = NVSDK_NGX_Result_Fail | 1,
             NVSDK_NGX_Result_FAIL_PlatformError = NVSDK_NGX_Result_Fail | 2,
