@@ -341,6 +341,32 @@ namespace Andastra.Runtime.Stride.Audio
             {
             }
 
+            public override int MaxNumberOfBuffers => 1;
+
+            public override void SetLooped(bool looped)
+            {
+                // Dummy source doesn't loop
+            }
+
+            protected override void ExtractAndFillData()
+            {
+                if (!CanFill)
+                {
+                    return;
+                }
+
+                // Calculate buffer size for mono 16-bit audio at 44100 Hz
+                // Standard buffer size: 4096 samples * 2 bytes per sample * 1 channel (mono)
+                int bytesPerSample = 2; // 16-bit audio = 2 bytes per sample
+                int samplesPerChannel = 4096; // Standard buffer size in samples
+                int bufferSizeBytes = samplesPerChannel * bytesPerSample * 1; // 1 channel (mono)
+
+                // Fill buffer with silence (zero bytes) and mark as end of stream
+                // This is a dummy source, so we always provide silence
+                byte[] silenceBuffer = new byte[bufferSizeBytes];
+                FillBuffer(silenceBuffer, bufferSizeBytes, AudioLayer.BufferType.EndOfStream);
+            }
+
             /// <summary>
             /// Factory method to create a DummyDynamicSoundSourceForInit instance.
             /// Uses cached dummy SoundInstance to break circular dependency.
@@ -418,6 +444,32 @@ namespace Andastra.Runtime.Stride.Audio
                     // This constructor is only called during cached instance creation.
                     // The base DynamicSoundSource class handles null SoundInstance during
                     // initialization, allowing this two-phase init pattern to work.
+                }
+
+                public override int MaxNumberOfBuffers => 1;
+
+                public override void SetLooped(bool looped)
+                {
+                    // Dummy source doesn't loop
+                }
+
+                protected override void ExtractAndFillData()
+                {
+                    if (!CanFill)
+                    {
+                        return;
+                    }
+
+                    // Calculate buffer size for mono 16-bit audio at 44100 Hz
+                    // Standard buffer size: 4096 samples * 2 bytes per sample * 1 channel (mono)
+                    int bytesPerSample = 2; // 16-bit audio = 2 bytes per sample
+                    int samplesPerChannel = 4096; // Standard buffer size in samples
+                    int bufferSizeBytes = samplesPerChannel * bytesPerSample * 1; // 1 channel (mono)
+
+                    // Fill buffer with silence (zero bytes) and mark as end of stream
+                    // This is a dummy source, so we always provide silence
+                    byte[] silenceBuffer = new byte[bufferSizeBytes];
+                    FillBuffer(silenceBuffer, bufferSizeBytes, AudioLayer.BufferType.EndOfStream);
                 }
 
                 public override int MaxNumberOfBuffers => 1;
