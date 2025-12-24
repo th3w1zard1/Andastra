@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using Andastra.Parsing.Resource;
 using Avalonia;
+using Avalonia.Input;
 using FluentAssertions;
 using HolocronToolset.Common.Widgets;
 using HolocronToolset.Widgets;
@@ -5351,52 +5352,132 @@ xyz uvw";
             // Verify initial state: column selection mode should be false
             codeEditor.ColumnSelectionMode.Should().BeFalse("Column selection mode should be false initially");
 
-            // Simulate Alt+Shift mouse press by calling OnPointerPressed via reflection
-            // TODO:  Create a mock PointerPressedEventArgs
-            // Since we can't easily create PointerPressedEventArgs in tests, we'll test the behavior
-            // by directly invoking the method that handles the column selection mode activation
+            // Simulate Alt+Shift mouse press by creating a proper PointerPressedEventArgs
+            // Create a mock pointer device and pointer event args to test column selection activation
+            var pointerDevice = new MockPointerDevice();
 
-            // Use reflection to call OnPointerPressed with Alt+Shift modifiers
+            // Create pointer point with left button pressed at position (10, 10)
+            var pointerPoint = new PointerPoint(
+                1, // pointerId
+                Avalonia.Point.Zero, // position (will be updated by GetCurrentPoint)
+                new PointerPointProperties(
+                    isLeftButtonPressed: true,
+                    isRightButtonPressed: false,
+                    isMiddleButtonPressed: false,
+                    isXButton1Pressed: false,
+                    isXButton2Pressed: false,
+                    isHorizontalMouseWheel: false,
+                    isEraser: false,
+                    isInverted: false,
+                    isBarrelButtonPressed: false,
+                    pressure: 1.0f,
+                    twist: 0.0f,
+                    tangentialPressure: 0.0f,
+                    xtilt: 0.0f,
+                    ytilt: 0.0f
+                )
+            );
+
+            // Create PointerPressedEventArgs with Alt+Shift modifiers
+            var pointerPressedEventArgs = new PointerPressedEventArgs(
+                pointerDevice,
+                timestamp: 0,
+                pointerPoint,
+                keyModifiers: KeyModifiers.Alt | KeyModifiers.Shift,
+                clickCount: 1
+            );
+
+            // Verify the ColumnSelectionMode property exists and is accessible
+            var columnSelectionModeProperty = typeof(HolocronToolset.Widgets.CodeEditor).GetProperty("ColumnSelectionMode",
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            columnSelectionModeProperty.Should().NotBeNull("CodeEditor should have ColumnSelectionMode property");
+
+            // Test that column selection mode can be read
+            bool initialMode = codeEditor.ColumnSelectionMode;
+            initialMode.Should().BeFalse("Column selection mode should be false initially");
+
+            // Get the OnPointerPressed method via reflection
             var onPointerPressedMethod = typeof(HolocronToolset.Widgets.CodeEditor).GetMethod("OnPointerPressed",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
             if (onPointerPressedMethod != null)
             {
-                // TODO:  Create a mock pointer pressed event
-                // In Avalonia, we need to create a PointerPressedEventArgs
-                // Since this is complex, we'll test the column selection mode property directly
-                // by simulating the state change
+                // Create a mock PointerPoint with the correct position relative to the control
+                var mockPointerPoint = new PointerPoint(
+                    1,
+                    new Avalonia.Point(10, 10), // Click position
+                    new PointerPointProperties(
+                        isLeftButtonPressed: true,
+                        isRightButtonPressed: false,
+                        isMiddleButtonPressed: false,
+                        isXButton1Pressed: false,
+                        isXButton2Pressed: false,
+                        isHorizontalMouseWheel: false,
+                        isEraser: false,
+                        isInverted: false,
+                        isBarrelButtonPressed: false,
+                        pressure: 1.0f,
+                        twist: 0.0f,
+                        tangentialPressure: 0.0f,
+                        xtilt: 0.0f,
+                        ytilt: 0.0f
+                    )
+                );
 
-                // For testing purposes, we'll verify that the ColumnSelectionMode property exists
-                // TODO:  and can be accessed. The actual pointer event simulation would require
-                // a more complex setup with Avalonia's input system.
+                // Update the event args with the correct pointer point
+                typeof(PointerPressedEventArgs)
+                    .GetProperty("Pointer", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?
+                    .SetValue(pointerPressedEventArgs, mockPointerPoint);
 
-                // Verify the property exists and is accessible
-                var columnSelectionModeProperty = typeof(HolocronToolset.Widgets.CodeEditor).GetProperty("ColumnSelectionMode",
-                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-                columnSelectionModeProperty.Should().NotBeNull("CodeEditor should have ColumnSelectionMode property");
+                // Invoke OnPointerPressed with the mock event args
+                onPointerPressedMethod.Invoke(codeEditor, new object[] { pointerPressedEventArgs });
 
-                // Test that column selection mode can be read
-                bool initialMode = codeEditor.ColumnSelectionMode;
-                initialMode.Should().BeFalse("Column selection mode should be false initially");
+                // Verify that column selection mode was activated
+                bool activatedMode = codeEditor.ColumnSelectionMode;
+                activatedMode.Should().BeTrue("Column selection mode should be activated after Alt+Shift+LeftButton press");
 
-                // Note: In a full integration test with UI, we would simulate the actual pointer event
-                // with Alt+Shift modifiers. For unit testing, we verify the property exists and
-                // the initial state is correct. The actual pointer event handling is tested through
-                // the OnPointerPressed implementation which checks for Alt+Shift modifiers.
+                // Test deactivation by creating a pointer released event
+                var pointerReleasedEventArgs = new PointerReleasedEventArgs(
+                    pointerDevice,
+                    timestamp: 0,
+                    pointerPoint,
+                    keyModifiers: KeyModifiers.None,
+                    intermediatePoints: null
+                );
 
-                // Verify that the code editor has the necessary infrastructure for column selection
-                // The OnPointerPressed method should handle Alt+Shift+LeftButton to activate column selection mode
-                // This is verified by the implementation in CodeEditor.OnPointerPressed
+                // Get and invoke OnPointerReleased method
+                var onPointerReleasedMethod = typeof(HolocronToolset.Widgets.CodeEditor).GetMethod("OnPointerReleased",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (onPointerReleasedMethod != null)
+                {
+                    onPointerReleasedMethod.Invoke(codeEditor, new object[] { pointerReleasedEventArgs });
+                }
+
+                // Verify that column selection mode remains active until explicitly deactivated
+                // (OnPointerReleased doesn't deactivate column selection mode - it's deactivated on next press without modifiers)
+                bool afterReleaseMode = codeEditor.ColumnSelectionMode;
+                afterReleaseMode.Should().BeTrue("Column selection mode should remain active after pointer release");
+
+                // Test deactivation by pressing without Alt+Shift
+                var normalPointerPressedEventArgs = new PointerPressedEventArgs(
+                    pointerDevice,
+                    timestamp: 0,
+                    new PointerPoint(1, new Avalonia.Point(20, 20),
+                        new PointerPointProperties(isLeftButtonPressed: true)),
+                    keyModifiers: KeyModifiers.None,
+                    clickCount: 1
+                );
+
+                onPointerPressedMethod.Invoke(codeEditor, new object[] { normalPointerPressedEventArgs });
+
+                // Verify that column selection mode was deactivated
+                bool deactivatedMode = codeEditor.ColumnSelectionMode;
+                deactivatedMode.Should().BeFalse("Column selection mode should be deactivated after normal button press");
             }
             else
             {
                 // If reflection fails, at least verify the property exists
-                var columnSelectionModeProperty = typeof(HolocronToolset.Widgets.CodeEditor).GetProperty("ColumnSelectionMode",
-                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
                 columnSelectionModeProperty.Should().NotBeNull("CodeEditor should have ColumnSelectionMode property");
-
-                // Verify initial state
                 codeEditor.ColumnSelectionMode.Should().BeFalse("Column selection mode should be false initially");
             }
 
@@ -6909,6 +6990,30 @@ void helper() {
                     return true;
             }
             return false;
+        }
+
+        /// <summary>
+        /// Mock pointer device implementation for testing pointer events.
+        /// Provides the minimal IPointer interface required for PointerPressedEventArgs construction.
+        /// </summary>
+        private class MockPointerDevice : IPointer
+        {
+            public int Id => 1;
+
+            public PointerType Type => PointerType.Mouse;
+
+            public bool IsPrimary => true;
+
+            public bool Captured => false;
+
+            public IInputElement? CapturedElement => null;
+
+            public event EventHandler? CaptureLost;
+
+            public void Capture(IInputElement? control)
+            {
+                // Mock implementation - no actual capture logic needed for testing
+            }
         }
     }
 }
