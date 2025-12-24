@@ -2,13 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Andastra.Parsing.Extract;
 using Andastra.Parsing.Resource;
 using HolocronToolset.Data;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia;
 
 namespace HolocronToolset.Dialogs
 {
@@ -25,6 +27,7 @@ namespace HolocronToolset.Dialogs
         private string _resourceName;
         private ResourceType _resourceType;
         private HTInstallation _installation;
+        public bool DialogResult { get; private set; }
 
         // Public parameterless constructor for XAML
         public ResourceLocationDialog() : this(null, null, null, null, null)
@@ -87,7 +90,7 @@ namespace HolocronToolset.Dialogs
             infoPanel.Children.Add(nameLabel);
             infoPanel.Children.Add(_resourceNameText);
 
-            var typeLabel = new TextBlock { Text = "Resource Type:", FontWeight = Avalonia.Media.FontWeight.Bold, Margin = new Avalonia.Thickness(0, 10, 0, 0) };
+            var typeLabel = new TextBlock { Text = "Resource Type:", FontWeight = Avalonia.Media.FontWeight.Bold, Margin = new Thickness(0, 10, 0, 0) };
             _resourceTypeText = new TextBlock { Text = _resourceType?.Extension ?? "" };
             infoPanel.Children.Add(typeLabel);
             infoPanel.Children.Add(_resourceTypeText);
@@ -99,7 +102,7 @@ namespace HolocronToolset.Dialogs
             {
                 Text = "Locations:",
                 FontWeight = Avalonia.Media.FontWeight.Bold,
-                Margin = new Avalonia.Thickness(0, 10, 0, 5)
+                Margin = new Thickness(0, 10, 0, 5)
             };
             mainPanel.Children.Add(tableLabel);
 
@@ -141,7 +144,7 @@ namespace HolocronToolset.Dialogs
                 Orientation = Orientation.Horizontal,
                 Spacing = 10,
                 HorizontalAlignment = HorizontalAlignment.Right,
-                Margin = new Avalonia.Thickness(0, 10, 0, 0)
+                Margin = new Thickness(0, 10, 0, 0)
             };
 
             _openButton = new Button
@@ -152,7 +155,11 @@ namespace HolocronToolset.Dialogs
             _openButton.Click += (s, e) => OpenSelectedLocation();
 
             _closeButton = new Button { Content = "Close" };
-            _closeButton.Click += (s, e) => Close();
+            _closeButton.Click += (s, e) =>
+            {
+                DialogResult = true;
+                Close();
+            };
 
             buttonPanel.Children.Add(_openButton);
             buttonPanel.Children.Add(_closeButton);
@@ -183,7 +190,11 @@ namespace HolocronToolset.Dialogs
             }
             if (_closeButton != null)
             {
-                _closeButton.Click += (s, e) => Close();
+                _closeButton.Click += (s, e) =>
+                {
+                    DialogResult = true;
+                    Close();
+                };
             }
             if (_locationsTable != null)
             {
@@ -292,21 +303,60 @@ namespace HolocronToolset.Dialogs
             }
         }
 
-        // Show the dialog and return true if user clicked OK/Close
-        // TODO:  Matching PyKotor implementation pattern - simplified synchronous ShowDialog
-        // TODO:  Note: In a full implementation, this would use ShowDialogAsync for proper modal behavior
+        /// <summary>
+        /// Shows the dialog modally synchronously and returns true when the dialog is closed.
+        /// This method blocks until the dialog is closed.
+        /// </summary>
+        /// <param name="parent">The parent window for the dialog. If null, the main window will be used.</param>
+        /// <returns>Always returns true since this dialog only has informational/close functionality.</returns>
         public new bool ShowDialog(Window parent = null)
         {
-            if (parent != null)
+            Task<bool> dialogTask = ShowDialogAsync(parent);
+            return dialogTask.GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Shows the dialog modally asynchronously and returns a Task that completes when the dialog is closed.
+        /// </summary>
+        /// <param name="parent">The parent window for the dialog. If null, the main window will be used.</param>
+        /// <returns>A Task that completes with true when the dialog is closed.</returns>
+        public async Task<bool> ShowDialogAsync(Window parent = null)
+        {
+            DialogResult = false;
+
+            Window dialogParent = parent;
+            if (dialogParent == null)
             {
-                // Set parent window for modal behavior
-                // TODO:  Note: This is a simplified implementation - in a full implementation, we'd use ShowDialogAsync
-                Show();
+                // Find the main window if no parent is specified
+                if (Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                {
+                    dialogParent = desktop.MainWindow;
+                }
+            }
+
+            if (dialogParent != null)
+            {
+                // Show dialog modally with parent
+                await base.ShowDialog(dialogParent);
             }
             else
             {
+                // No parent available, show non-modally but still wait for close
+                TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
+
+                EventHandler closedHandler = null;
+                closedHandler = (s, e) =>
+                {
+                    this.Closed -= closedHandler;
+                    tcs.SetResult(true);
+                };
+                this.Closed += closedHandler;
+
                 Show();
+
+                await tcs.Task;
             }
+
             return true;
         }
     }

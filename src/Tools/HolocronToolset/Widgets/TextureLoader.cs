@@ -52,13 +52,13 @@ namespace HolocronToolset.Widgets
         private CancellationTokenSource _cancellationTokenSource;
         private Task _loaderTask;
         private Installation _installation;
-        
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/texture_loader.py:56-57
         // Original: request_queue: "Queue[tuple[str, ResourceType, Any, int] | None]"
         // Original: result_queue: "Queue[tuple[Any, bytes | None, str | None]]"
         private readonly ConcurrentQueue<TextureLoadRequest> _requestQueue;
         private readonly ConcurrentQueue<TextureLoadResult> _resultQueue;
-        
+
         // Sentinel value for shutdown (matching PyKotor SHUTDOWN_SENTINEL)
         private static readonly TextureLoadRequest ShutdownSentinel = new TextureLoadRequest(null, ResourceType.INVALID, null, 0);
 
@@ -72,7 +72,7 @@ namespace HolocronToolset.Widgets
             _requestQueue = new ConcurrentQueue<TextureLoadRequest>();
             _resultQueue = new ConcurrentQueue<TextureLoadResult>();
         }
-        
+
         // Public method to queue a texture load request
         // Matching PyKotor: self._loadRequestQueue.put_nowait((resref, restype, context, icon_size))
         public void QueueTextureLoad(string resRef, ResourceType resType, object context, int iconSize = 64)
@@ -80,14 +80,14 @@ namespace HolocronToolset.Widgets
             var request = new TextureLoadRequest(resRef, resType, context, iconSize);
             _requestQueue.Enqueue(request);
         }
-        
+
         // Public method to retrieve results (non-blocking)
         // Matching PyKotor: result = self._result_queue.get(timeout=0.5)
         public bool TryGetResult(out TextureLoadResult result)
         {
             return _resultQueue.TryDequeue(out result);
         }
-        
+
         // Public method to request shutdown
         // Matching PyKotor: self._request_queue.put(self.SHUTDOWN_SENTINEL, timeout=1.0)
         public void RequestShutdown()
@@ -280,7 +280,7 @@ namespace HolocronToolset.Widgets
             {
                 tga = TGA.ReadTga(ms);
             }
-            
+
             // TGA.ReadTga already returns RGBA8888 data (see TGA.cs implementation)
             // Matching PyKotor: if img.mode != "RGBA": img = img.convert("RGBA")
             byte[] rgbaData = tga.Data; // Already RGBA8888 from TGA reader
@@ -297,31 +297,79 @@ namespace HolocronToolset.Widgets
             return new TPCMipmap(iconSize, iconSize, TPCTextureFormat.RGBA, rgbaData);
         }
 
-        // TODO:  Helper method to resize image data (simplified nearest-neighbor)
+        /// <summary>
+        /// Resizes image data using nearest-neighbor interpolation algorithm.
+        /// This method provides high-quality image resizing while maintaining pixel-perfect accuracy
+        /// for cases where exact pixel mapping is required.
+        /// </summary>
+        /// <param name="sourceData">Source image data in RGBA8888 format (4 bytes per pixel)</param>
+        /// <param name="sourceWidth">Width of the source image in pixels</param>
+        /// <param name="sourceHeight">Height of the source image in pixels</param>
+        /// <param name="targetWidth">Desired width of the target image in pixels</param>
+        /// <param name="targetHeight">Desired height of the target image in pixels</param>
+        /// <returns>Resized image data in RGBA8888 format</returns>
+        /// <exception cref="ArgumentNullException">Thrown when sourceData is null</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when dimensions are invalid</exception>
         private byte[] ResizeImage(byte[] sourceData, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight)
         {
-            byte[] targetData = new byte[targetWidth * targetHeight * 4];
-            
-            for (int y = 0; y < targetHeight; y++)
+            // Validate input parameters
+            if (sourceData == null)
+                throw new ArgumentNullException(nameof(sourceData));
+
+            if (sourceWidth <= 0 || sourceHeight <= 0 || targetWidth <= 0 || targetHeight <= 0)
+                throw new ArgumentOutOfRangeException("Image dimensions must be positive");
+
+            if (sourceData.Length < sourceWidth * sourceHeight * 4)
+                throw new ArgumentException("Source data buffer is too small for the specified dimensions");
+
+            // Handle trivial case - same dimensions
+            if (sourceWidth == targetWidth && sourceHeight == targetHeight)
             {
-                for (int x = 0; x < targetWidth; x++)
+                return (byte[])sourceData.Clone();
+            }
+
+            // Allocate target buffer
+            byte[] targetData = new byte[targetWidth * targetHeight * 4];
+
+            // Calculate scaling ratios with floating point precision for accurate mapping
+            double scaleX = (double)sourceWidth / targetWidth;
+            double scaleY = (double)sourceHeight / targetHeight;
+
+            // Pre-calculate source dimensions for bounds checking
+            int sourcePixels = sourceWidth * sourceHeight;
+            int targetPixels = targetWidth * targetHeight;
+
+            // Perform nearest-neighbor interpolation
+            for (int targetY = 0; targetY < targetHeight; targetY++)
+            {
+                for (int targetX = 0; targetX < targetWidth; targetX++)
                 {
-                    int srcX = (x * sourceWidth) / targetWidth;
-                    int srcY = (y * sourceHeight) / targetHeight;
-                    
-                    int srcIdx = (srcY * sourceWidth + srcX) * 4;
-                    int dstIdx = (y * targetWidth + x) * 4;
-                    
-                    if (srcIdx < sourceData.Length && dstIdx < targetData.Length)
+                    // Calculate source coordinates using floating-point arithmetic
+                    // Add 0.5 to sample from the center of the target pixel
+                    double sourceXFloat = (targetX + 0.5) * scaleX - 0.5;
+                    double sourceYFloat = (targetY + 0.5) * scaleY - 0.5;
+
+                    // Clamp coordinates to valid range and convert to integer
+                    int sourceX = Math.Max(0, Math.Min(sourceWidth - 1, (int)Math.Round(sourceXFloat)));
+                    int sourceY = Math.Max(0, Math.Min(sourceHeight - 1, (int)Math.Round(sourceYFloat)));
+
+                    // Calculate array indices
+                    int sourceIndex = (sourceY * sourceWidth + sourceX) * 4;
+                    int targetIndex = (targetY * targetWidth + targetX) * 4;
+
+                    // Ensure indices are within bounds (extra safety check)
+                    if (sourceIndex >= 0 && sourceIndex + 3 < sourceData.Length &&
+                        targetIndex >= 0 && targetIndex + 3 < targetData.Length)
                     {
-                        targetData[dstIdx] = sourceData[srcIdx];
-                        targetData[dstIdx + 1] = sourceData[srcIdx + 1];
-                        targetData[dstIdx + 2] = sourceData[srcIdx + 2];
-                        targetData[dstIdx + 3] = sourceData[srcIdx + 3];
+                        // Copy RGBA pixel data
+                        targetData[targetIndex] = sourceData[sourceIndex];         // R
+                        targetData[targetIndex + 1] = sourceData[sourceIndex + 1]; // G
+                        targetData[targetIndex + 2] = sourceData[sourceIndex + 2]; // B
+                        targetData[targetIndex + 3] = sourceData[sourceIndex + 3]; // A
                     }
                 }
             }
-            
+
             return targetData;
         }
 
@@ -336,7 +384,7 @@ namespace HolocronToolset.Widgets
             // - format (4 bytes, int - TPCTextureFormat value)
             // - data_length (4 bytes, int)
             // - data (variable length bytes)
-            
+
             using (var ms = new MemoryStream())
             using (var writer = new BinaryWriter(ms))
             {
@@ -345,12 +393,12 @@ namespace HolocronToolset.Widgets
                 writer.Write(mipmap.Height);
                 writer.Write((int)mipmap.TpcFormat);
                 writer.Write(mipmap.Data != null ? mipmap.Data.Length : 0);
-                
+
                 if (mipmap.Data != null && mipmap.Data.Length > 0)
                 {
                     writer.Write(mipmap.Data);
                 }
-                
+
                 return ms.ToArray();
             }
         }
