@@ -231,15 +231,6 @@ namespace HolocronToolset.Tests.Windows
         [Fact]
         public void TestAddRoomCommandUndoRedo()
         {
-            // TODO: STUB - Implement test_add_room_command_undo_redo (vendor/PyKotor/Tools/HolocronToolset/tests/gui/windows/test_indoor_builder.py:403-426)
-            // Original: def test_add_room_command_undo_redo(self, qtbot: QtBot, builder_no_kits: IndoorMapBuilder, real_kit_component: KitComponent): Test AddRoomCommand performs undo/redo correctly.
-            // NOTE: This test requires full IndoorMapBuilder implementation with:
-            // - _map property (IndoorMap)
-            // - _undo_stack property (undo/redo system)
-            // - AddRoomCommand class
-            // - IndoorMapRenderer with selection support
-            // TODO: STUB - Currently IndoorBuilderWindow is a stub, so this test will fail until implementation is complete.
-            // However, per user requirement of "zero omissions", the test is ported with full structure.
 
             string tempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             string kitsDir = Path.Combine(tempPath, "kits");
