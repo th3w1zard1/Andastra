@@ -69,7 +69,9 @@
         "--project",
         "${workspaceFolder}/src/Andastra/Andastra.csproj",
         "--configuration",
-        "Debug"
+        "Debug",
+        "--verbosity",
+        "diagnostic"
       ],
       "cwd": "${workspaceFolder}",
       "stopAtEntry": false,
@@ -85,11 +87,15 @@
       },
       "env": {
         "DOTNET_ENVIRONMENT": "Development",
-        "DOTNET_LOGGING_DEBUG": "Microsoft.Extensions.Hosting,Microsoft.AspNetCore.Hosting,Microsoft.AspNetCore.Server.Kestrel",
+        "DOTNET_LOGGING_DEBUG": "Microsoft.Extensions.Hosting,Microsoft.AspNetCore.Hosting,Microsoft.AspNetCore.Server.Kestrel,Microsoft.Extensions.Logging",
+        "DOTNET_WATCH_SUPPRESS_LAUNCH_BROWSER": "true",
+        "DOTNET_CLI_TELEMETRY_OPTOUT": "false",
         "Logging__LogLevel__Default": "Trace",
         "Logging__LogLevel__Microsoft": "Trace",
         "Logging__LogLevel__Microsoft.Hosting.Lifetime": "Trace",
-        "Logging__LogLevel__System": "Trace"
+        "Logging__LogLevel__System": "Trace",
+        "Logging__LogLevel__Microsoft.Extensions.Hosting": "Trace",
+        "Logging__LogLevel__Microsoft.Extensions.Logging": "Trace"
       }
     },
     {
@@ -100,10 +106,12 @@
       "args": [
         "watch",
         "run",
-        " --project",
+        "--project",
         "${workspaceFolder}/src/Andastra/Andastra.csproj",
         "--configuration",
-        "Release"
+        "Release",
+        "--verbosity",
+        "diagnostic"
       ],
       "cwd": "${workspaceFolder}",
       "stopAtEntry": false,
@@ -119,11 +127,15 @@
       },
       "env": {
         "DOTNET_ENVIRONMENT": "Production",
-        "DOTNET_LOGGING_DEBUG": "Microsoft.Extensions.Hosting,Microsoft.AspNetCore.Hosting,Microsoft.AspNetCore.Server.Kestrel",
+        "DOTNET_LOGGING_DEBUG": "Microsoft.Extensions.Hosting,Microsoft.AspNetCore.Hosting,Microsoft.AspNetCore.Server.Kestrel,Microsoft.Extensions.Logging",
+        "DOTNET_WATCH_SUPPRESS_LAUNCH_BROWSER": "true",
+        "DOTNET_CLI_TELEMETRY_OPTOUT": "false",
         "Logging__LogLevel__Default": "Trace",
         "Logging__LogLevel__Microsoft": "Trace",
         "Logging__LogLevel__Microsoft.Hosting.Lifetime": "Trace",
-        "Logging__LogLevel__System": "Trace"
+        "Logging__LogLevel__System": "Trace",
+        "Logging__LogLevel__Microsoft.Extensions.Hosting": "Trace",
+        "Logging__LogLevel__Microsoft.Extensions.Logging": "Trace"
       }
     },
     {

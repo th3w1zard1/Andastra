@@ -273,7 +273,21 @@
         "clear": false
       },
       "isBackground": true,
-      "dependsOn": "restore"
+      "dependsOn": "restore",
+      "options": {
+        "env": {
+          "DOTNET_ENVIRONMENT": "Development",
+          "DOTNET_LOGGING_DEBUG": "Microsoft.Extensions.Hosting,Microsoft.AspNetCore.Hosting,Microsoft.AspNetCore.Server.Kestrel,Microsoft.Extensions.Logging",
+          "DOTNET_WATCH_SUPPRESS_LAUNCH_BROWSER": "true",
+          "DOTNET_CLI_TELEMETRY_OPTOUT": "false",
+          "Logging__LogLevel__Default": "Trace",
+          "Logging__LogLevel__Microsoft": "Trace",
+          "Logging__LogLevel__Microsoft.Hosting.Lifetime": "Trace",
+          "Logging__LogLevel__System": "Trace",
+          "Logging__LogLevel__Microsoft.Extensions.Hosting": "Trace",
+          "Logging__LogLevel__Microsoft.Extensions.Logging": "Trace"
+        }
+      }
     },
     {
       "label": "watch-andastra-release",
@@ -298,7 +312,21 @@
         "clear": false
       },
       "isBackground": true,
-      "dependsOn": "restore"
+      "dependsOn": "restore",
+      "options": {
+        "env": {
+          "DOTNET_ENVIRONMENT": "Production",
+          "DOTNET_LOGGING_DEBUG": "Microsoft.Extensions.Hosting,Microsoft.AspNetCore.Hosting,Microsoft.AspNetCore.Server.Kestrel,Microsoft.Extensions.Logging",
+          "DOTNET_WATCH_SUPPRESS_LAUNCH_BROWSER": "true",
+          "DOTNET_CLI_TELEMETRY_OPTOUT": "false",
+          "Logging__LogLevel__Default": "Trace",
+          "Logging__LogLevel__Microsoft": "Trace",
+          "Logging__LogLevel__Microsoft.Hosting.Lifetime": "Trace",
+          "Logging__LogLevel__System": "Trace",
+          "Logging__LogLevel__Microsoft.Extensions.Hosting": "Trace",
+          "Logging__LogLevel__Microsoft.Extensions.Logging": "Trace"
+        }
+      }
     }
   ]
 }
