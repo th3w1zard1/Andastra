@@ -51,9 +51,19 @@ namespace Andastra.Parsing.Formats.GFF
             else if (format == ResourceType.GFF_XML)
             {
                 var reader = new GFFXmlReader();
-                if (source is string filePath)
+                if (source is string str)
                 {
-                    return reader.Load(File.ReadAllText(filePath));
+                    // Check if the string is XML content (starts with '<') or a file path
+                    if (str.TrimStart().StartsWith("<"))
+                    {
+                        // Raw XML content - pass directly to reader
+                        return reader.Load(str);
+                    }
+                    else
+                    {
+                        // File path - read file content first
+                        return reader.Load(File.ReadAllText(str));
+                    }
                 }
                 else if (source is byte[] bytes)
                 {
@@ -65,7 +75,7 @@ namespace Andastra.Parsing.Formats.GFF
                 }
                 else
                 {
-                    throw new ArgumentException("Source must be a file path, byte array, or stream.", nameof(source));
+                    throw new ArgumentException("Source must be XML content, file path, byte array, or stream.", nameof(source));
                 }
             }
             else if (format.IsGff())
