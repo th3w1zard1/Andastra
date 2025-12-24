@@ -1,6 +1,8 @@
 using System;
 using System.CommandLine;
+using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using KotorCLI.Configuration;
 using KotorCLI.Logging;
 using Tomlyn.Model;
@@ -87,8 +89,19 @@ namespace KotorCLI.Commands
 
                         if (verbose)
                         {
-                            // TODO: List source files when verbose mode is enabled
-                            logger.Info("TODO: STUB -   Source files: (verbose listing not yet implemented)");
+                            var sourceFiles = GetTargetSourceFiles(config, target, rootDir);
+                            if (sourceFiles.Count > 0)
+                            {
+                                logger.Info("  Source files:");
+                                foreach (var sourceFile in sourceFiles.OrderBy(f => f))
+                                {
+                                    logger.Info($"    {sourceFile}");
+                                }
+                            }
+                            else
+                            {
+                                logger.Info("  Source files: (none found)");
+                            }
                         }
                     }
                 }
@@ -100,6 +113,125 @@ namespace KotorCLI.Commands
                 logger.Error($"Failed to list targets: {ex.Message}");
                 return 1;
             }
+        }
+
+        private static List<string> GetTargetSourceFiles(KotorCLIConfig config, TomlTable target, string rootDir)
+        {
+            var sourceFiles = new List<string>();
+
+            // Get source patterns from target configuration
+            var sources = config.GetTargetSources(target);
+            var includePatterns = sources.ContainsKey("include") ? sources["include"] : new List<string>();
+            var excludePatterns = sources.ContainsKey("exclude") ? sources["exclude"] : new List<string>();
+
+            // If no include patterns defined, use default patterns
+            if (includePatterns.Count == 0)
+            {
+                includePatterns.Add("**/*.nss");  // Default NWScript source files
+                includePatterns.Add("**/*.ncs");  // Default compiled scripts
+            }
+
+            // Find all files matching include patterns
+            foreach (var pattern in includePatterns)
+            {
+                var expandedPattern = config.ResolveTargetValue(target, "sources", pattern);
+                if (expandedPattern is string patternStr)
+                {
+                    var matches = FindFilesMatchingPattern(rootDir, patternStr);
+                    foreach (var match in matches)
+                    {
+                        // Check if file should be excluded
+                        bool excluded = false;
+                        foreach (var excludePattern in excludePatterns)
+                        {
+                            var expandedExclude = config.ResolveTargetValue(target, "sources", excludePattern);
+                            if (expandedExclude is string excludeStr && MatchPattern(match, Path.Combine(rootDir, excludeStr)))
+                            {
+                                excluded = true;
+                                break;
+                            }
+                        }
+
+                        if (!excluded)
+                        {
+                            // Convert to relative path from root directory
+                            var relativePath = GetRelativePath(rootDir, match);
+                            if (!sourceFiles.Contains(relativePath))
+                            {
+                                sourceFiles.Add(relativePath);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return sourceFiles;
+        }
+
+        private static List<string> FindFilesMatchingPattern(string rootDir, string pattern)
+        {
+            var results = new List<string>();
+
+            try
+            {
+                // Handle different pattern types
+                if (pattern.Contains("**"))
+                {
+                    // Recursive pattern - search all subdirectories
+                    var searchPattern = pattern.Replace("**/", "").Replace("/**", "").Replace("**", "*");
+                    if (Directory.Exists(rootDir))
+                    {
+                        results.AddRange(Directory.GetFiles(rootDir, searchPattern, SearchOption.AllDirectories));
+                    }
+                }
+                else if (pattern.Contains("*") || pattern.Contains("?"))
+                {
+                    // Simple wildcard pattern
+                    var directory = Path.GetDirectoryName(Path.Combine(rootDir, pattern));
+                    var filePattern = Path.GetFileName(pattern);
+
+                    if (Directory.Exists(directory))
+                    {
+                        results.AddRange(Directory.GetFiles(directory, filePattern, SearchOption.TopDirectoryOnly));
+                    }
+                }
+                else
+                {
+                    // Exact file path
+                    var fullPath = Path.Combine(rootDir, pattern);
+                    if (File.Exists(fullPath))
+                    {
+                        results.Add(fullPath);
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // Ignore errors and continue
+            }
+
+            return results;
+        }
+
+        private static bool MatchPattern(string path, string pattern)
+        {
+            // Simple pattern matching - convert glob pattern to regex
+            var regexPattern = "^" + Regex.Escape(pattern).Replace("\\*", ".*").Replace("\\?", ".") + "$";
+            return Regex.IsMatch(path, regexPattern, RegexOptions.IgnoreCase);
+        }
+
+        private static string GetRelativePath(string rootDir, string fullPath)
+        {
+            if (fullPath.StartsWith(rootDir, StringComparison.OrdinalIgnoreCase))
+            {
+                var relativePath = fullPath.Substring(rootDir.Length);
+                if (relativePath.StartsWith(Path.DirectorySeparatorChar.ToString()) || relativePath.StartsWith(Path.AltDirectorySeparatorChar.ToString()))
+                {
+                    relativePath = relativePath.Substring(1);
+                }
+                return relativePath;
+            }
+            return fullPath;
         }
 
         private static T GetTomlValue<T>(Tomlyn.Model.TomlTable table, string key)
