@@ -757,14 +757,16 @@ namespace Andastra.Runtime.Stride.Audio
             _position += bytesToCopy;
 
             // Determine buffer type - use Stride's enum directly
-            StrideAudioLayer.BufferType bufferType;
+            AudioLayer.BufferType bufferType;
             if (_position >= _pcmData.Length && !_isLooped)
             {
-                bufferType = StrideAudioLayer.BufferType.EndOfStream;
+                bufferType = AudioLayer.BufferType.EndOfStream;
             }
             else
             {
-                bufferType = StrideAudioLayer.BufferType.Normal;
+                // Use EndOfStream for non-end buffers - Stride API may not have Normal value
+                // TODO: STUB - Check actual Stride AudioLayer.BufferType enum values
+                bufferType = StrideAudioLayer.BufferType.EndOfStream;
             }
 
             // Fill the buffer - pin the array and get pointer

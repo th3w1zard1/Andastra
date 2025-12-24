@@ -169,7 +169,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 {
                     try
                     {
-                        var contentManager = _services.GetService(typeof(ContentManager)) as ContentManager;
+                        var contentManager = GetServiceHelper<ContentManager>(_services);
                         if (contentManager != null)
                         {
                             if (_gtaoEffectBase == null)
