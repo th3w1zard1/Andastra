@@ -6495,7 +6495,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                                 var sbtBufferDesc = new BufferDesc
                                 {
                                     ByteSize = (int)sbtSize,
-                                    Usage = BufferUsageFlags.ShaderResource | BufferUsageFlags.TransferDst
+                                    Usage = BufferUsageFlags.ShaderResource
                                 };
                                 IBuffer sbtBuffer = CreateBuffer(sbtBufferDesc);
 
@@ -8030,7 +8030,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
         }
 
-        private class VulkanCommandList : ICommandList, IResource
+        public class VulkanCommandList : ICommandList, IResource
         {
             private readonly IntPtr _handle;
             internal readonly CommandListType _type;

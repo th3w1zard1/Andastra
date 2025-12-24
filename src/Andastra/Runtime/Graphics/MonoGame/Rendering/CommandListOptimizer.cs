@@ -1011,15 +1011,15 @@ namespace Andastra.Runtime.MonoGame.Rendering
         {
             switch (primitiveType)
             {
-                case PrimitiveType.TriangleList:
+                case XnaPrimitiveType.TriangleList:
                     return 3;
-                case PrimitiveType.TriangleStrip:
+                case XnaPrimitiveType.TriangleStrip:
                     return 1; // Triangle strip uses 1 index per triangle after first
-                case PrimitiveType.LineList:
+                case XnaPrimitiveType.LineList:
                     return 2;
-                case PrimitiveType.LineStrip:
+                case XnaPrimitiveType.LineStrip:
                     return 1; // Line strip uses 1 index per line after first
-                case PrimitiveType.PointList:
+                case XnaPrimitiveType.PointList:
                     return 1;
                 default:
                     return 3; // Default to triangle list

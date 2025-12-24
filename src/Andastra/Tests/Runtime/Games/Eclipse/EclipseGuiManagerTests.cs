@@ -1,5 +1,6 @@
 using System;
 using System.Numerics;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics.GUI;
@@ -28,8 +29,17 @@ namespace Andastra.Tests.Runtime.Games.Eclipse
             _graphicsDevice = GraphicsTestHelper.CreateTestIGraphicsDevice();
             _mockResourceLookup = new Mock<IResourceLookup>(MockBehavior.Strict);
 
+            var mockResourceManager = new Mock<InstallationResourceManager>(MockBehavior.Strict, "C:\\Test", BioWareGame.DA);
+            mockResourceManager.Setup(r => r.LookupResource(
+                It.IsAny<string>(),
+                It.IsAny<ResourceType>(),
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
+                .Returns<string, ResourceType, SearchLocation[], string>((resname, restype, searchOrder, moduleRoot) =>
+                    _mockResourceLookup.Object.LookupResource(resname, restype, searchOrder, moduleRoot));
+
             var mockInstallation = new Mock<Installation>(MockBehavior.Strict);
-            mockInstallation.Setup(i => i.Resources).Returns(_mockResourceLookup.Object);
+            mockInstallation.Setup(i => i.Resources).Returns(mockResourceManager.Object);
             _installation = mockInstallation.Object;
 
             _guiManager = new EclipseGuiManager(_graphicsDevice, _installation);
@@ -71,8 +81,8 @@ namespace Andastra.Tests.Runtime.Games.Eclipse
             _mockResourceLookup.Setup(r => r.LookupResource(
                 guiName,
                 ResourceType.GUI,
-                It.IsAny<string[]>(),
-                It.IsAny<string[]>()))
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
                 .Returns((ResourceResult)null);
 
             // Act
