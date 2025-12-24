@@ -12,18 +12,18 @@ namespace Andastra.Parsing
     public abstract class BinaryFormatReaderBase
     {
         protected readonly byte[] Data;
-        protected readonly Andastra.Parsing.Common.BinaryReader Reader;
+        protected readonly Andastra.Parsing.Common.RawBinaryReader Reader;
 
         protected BinaryFormatReaderBase(byte[] data, [CanBeNull] Encoding encoding = null)
         {
             Data = data;
-            Reader = Andastra.Parsing.Common.BinaryReader.FromBytes(data, 0, null);
+            Reader = Andastra.Parsing.Common.RawBinaryReader.FromBytes(data, 0, null);
         }
 
         protected BinaryFormatReaderBase(string filepath, [CanBeNull] Encoding encoding = null)
         {
             Data = File.ReadAllBytes(filepath);
-            Reader = Andastra.Parsing.Common.BinaryReader.FromBytes(Data, 0, null);
+            Reader = Andastra.Parsing.Common.RawBinaryReader.FromBytes(Data, 0, null);
         }
 
         protected BinaryFormatReaderBase(Stream source, [CanBeNull] Encoding encoding = null)
@@ -32,7 +32,7 @@ namespace Andastra.Parsing
             {
                 source.CopyTo(ms);
                 Data = ms.ToArray();
-                Reader = Andastra.Parsing.Common.BinaryReader.FromBytes(Data, 0, null);
+                Reader = Andastra.Parsing.Common.RawBinaryReader.FromBytes(Data, 0, null);
             }
         }
     }
