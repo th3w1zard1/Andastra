@@ -697,14 +697,14 @@ shader TemporalAAEffect : ShaderBase
                     try
                     {
                         // Try to get EffectCompiler from Game.Services
-                        var effectCompiler = (_gameServices as IServiceProvider)?.GetService(typeof(Stride.Shaders.Compiler.EffectCompiler)) as Stride.Shaders.Compiler.EffectCompiler;
+                        var effectCompiler = (_gameServices as IServiceProvider)?.GetService(typeof(EffectCompiler)) as EffectCompiler;
                         if (effectCompiler != null)
                         {
                             return CompileShaderWithCompiler(effectCompiler, shaderSource, shaderName);
                         }
 
                         // Try to get EffectSystem from Game.Services (EffectCompiler may be accessed through it)
-                        var effectSystem = (_gameServices as IServiceProvider)?.GetService(typeof(Stride.Shaders.Compiler.EffectCompiler)) as Stride.Shaders.Compiler.EffectCompiler;
+                        var effectSystem = ((dynamic)_gameServices).GetService<EffectCompiler>();
                         if (effectSystem != null)
                         {
                             return CompileShaderWithEffectSystem(effectSystem, shaderSource, shaderName);
@@ -978,7 +978,7 @@ shader TemporalAAEffect : ShaderBase
                         else
                         {
                             // Try alternative approach: Get EffectSystem from Game.Services and compile through it
-                            var effectSystem = (_gameServices as IServiceProvider)?.GetService(typeof(EffectCompiler)) as EffectCompiler;
+                            var effectSystem = ((dynamic)_gameServices).GetService<EffectCompiler>();
                             if (effectSystem != null)
                             {
                                 return CompileShaderWithEffectSystemFromFile(effectSystem, tempFilePath, shaderName);
