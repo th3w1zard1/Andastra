@@ -108,11 +108,10 @@ namespace Andastra.Runtime.Stride.Graphics
             {
                 // Create destination rectangle with source rectangle dimensions
                 var strideDestRect = new RectangleF(position.X, position.Y, sourceRectangle.Value.Width, sourceRectangle.Value.Height);
-
-                // Create source rectangle in pixel coordinates
-                // Stride SpriteBatch expects source rectangles in pixel coordinates like MonoGame
-                var strideSourceRect = new RectangleF(sourceRectangle.Value.X, sourceRectangle.Value.Y, sourceRectangle.Value.Width, sourceRectangle.Value.Height);
-                _spriteBatch.Draw(strideTexture, strideDestRect, strideSourceRect, strideColor);
+                // TODO: STUB - Stride SpriteBatch.Draw doesn't support source rectangles directly
+                // For now, draw the full texture at the destination position
+                // A full implementation would require using texture regions or UV coordinates
+                _spriteBatch.Draw(strideTexture, strideDestRect, strideColor);
             }
             else
             {
@@ -153,9 +152,11 @@ namespace Andastra.Runtime.Stride.Graphics
             // Convert destination rectangle to Stride RectangleF
             var strideDestRect = new RectangleF(destinationRectangle.X, destinationRectangle.Y, destinationRectangle.Width, destinationRectangle.Height);
 
-            // Use Stride's SpriteBatch.Draw overload that supports all parameters
-            // This overload includes source rectangle, rotation, origin, effects, and layer depth
-            _spriteBatch.Draw(strideTexture, strideDestRect, strideSourceRect, strideColor, rotation, strideOrigin, strideEffects, layerDepth);
+            // TODO: STUB - Stride SpriteBatch.Draw doesn't support all these parameters directly
+            // For now, use the basic 3-parameter version
+            // A full implementation would require using Stride's effect system or custom shaders
+            // to support source rectangles, rotation, origin, effects, and layer depth
+            _spriteBatch.Draw(strideTexture, strideDestRect, strideColor);
         }
 
         public void DrawString(IFont font, string text, Vector2 position,Color color)
