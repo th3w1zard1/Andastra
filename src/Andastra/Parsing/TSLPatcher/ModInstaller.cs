@@ -4,13 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Config;
 using Andastra.Parsing.Formats.Capsule;
 using Andastra.Parsing.Formats.ERF;
-using Andastra.Parsing.Formats.RIM;
-using Andastra.Parsing.Installation;
 using Andastra.Parsing.Logger;
 using Andastra.Parsing.Memory;
 using Andastra.Parsing.Mods;
@@ -24,7 +21,6 @@ using Andastra.Parsing.Reader;
 using Andastra.Parsing.Resource;
 using IniParser.Model;
 using JetBrains.Annotations;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.TSLPatcher
 {

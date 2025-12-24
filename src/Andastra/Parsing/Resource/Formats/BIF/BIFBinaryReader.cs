@@ -2,11 +2,11 @@ using System;
 using System.IO;
 using System.Text;
 using Andastra.Parsing;
-using Andastra.Utility.LZMA;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats;
 using Andastra.Parsing.Resource;
+using Andastra.Utility.LZMA;
 using JetBrains.Annotations;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Resource.Formats.BIF
 {

@@ -13,6 +13,7 @@ using DLGHelper = Andastra.Parsing.Resource.Generics.DLG.DLGHelper;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
+using HolocronToolset.Editors.DLG;
 using HolocronToolset.Tests.TestHelpers;
 using Xunit;
 
@@ -4397,29 +4398,29 @@ namespace HolocronToolset.Tests.Editors
                         // Matching Python: for i in range(min(5, editor.ui.emotionSelect.count())):
                         // Test emotion values 0-7 (emotion_id can be 0-7: None, Happy, Sad, Angry, Surprised, Fear, Disgust, Neutral)
                         for (int i = 0; i < Math.Min(5, editor.EmotionSelect.Items.Count); i++)
-                    {
-                        // Matching Python: editor.ui.emotionSelect.setCurrentIndex(i)
-                        // Matching Python: editor.on_node_update()
-                        editor.EmotionSelect.SelectedIndex = i;
-                        editor.OnNodeUpdate();
-
-                        // Matching Python: data, _ = editor.build()
-                        // Matching Python: modified_dlg = read_dlg(data)
-                        // Matching Python: if modified_dlg.starters:
-                        // Matching Python: assert modified_dlg.starters[0].node.emotion_id == i
-                        var (savedData, _) = editor.Build();
-                        var modifiedDlg = DLGHelper.ReadDlg(savedData);
-
-                        if (modifiedDlg != null && modifiedDlg.Starters != null && modifiedDlg.Starters.Count > 0)
                         {
-                            var firstStarter = modifiedDlg.Starters[0];
-                            if (firstStarter?.Node != null)
+                            // Matching Python: editor.ui.emotionSelect.setCurrentIndex(i)
+                            // Matching Python: editor.on_node_update()
+                            editor.EmotionSelect.SelectedIndex = i;
+                            editor.OnNodeUpdate();
+
+                            // Matching Python: data, _ = editor.build()
+                            // Matching Python: modified_dlg = read_dlg(data)
+                            // Matching Python: if modified_dlg.starters:
+                            // Matching Python: assert modified_dlg.starters[0].node.emotion_id == i
+                            var (savedData, _) = editor.Build();
+                            var modifiedDlg = DLGHelper.ReadDlg(savedData);
+
+                            if (modifiedDlg != null && modifiedDlg.Starters != null && modifiedDlg.Starters.Count > 0)
                             {
-                                // Matching Python: assert modified_dlg.starters[0].node.emotion_id == i
-                                firstStarter.Node.EmotionId.Should().Be(i, $"Emotion ID should be {i} after setting emotion select to index {i}");
+                                var firstStarter = modifiedDlg.Starters[0];
+                                if (firstStarter?.Node != null)
+                                {
+                                    // Matching Python: assert modified_dlg.starters[0].node.emotion_id == i
+                                    firstStarter.Node.EmotionId.Should().Be(i, $"Emotion ID should be {i} after setting emotion select to index {i}");
+                                }
                             }
                         }
-                    }
                     }
                 }
             }

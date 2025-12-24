@@ -16,7 +16,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Stack
         // Original: protected Type type; protected int size;
         protected UtilsType type;
         protected int size;
-        
+
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/StackEntry.java:17-19
         // Original: public Type type() { return this.type; }
         public virtual UtilsType Type()
@@ -34,15 +34,15 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Stack
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/StackEntry.java:25
         // Original: public abstract void removedFromStack(LocalStack<?> var1);
         public abstract void RemovedFromStack(LocalStack p0);
-        
+
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/StackEntry.java:27
         // Original: public abstract void addedToStack(LocalStack<?> var1);
         public abstract void AddedToStack(LocalStack p0);
-        
+
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/StackEntry.java:30
         // Original: @Override public abstract String toString();
         public abstract override string ToString();
-        
+
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/StackEntry.java:32
         // Original: public abstract StackEntry getElement(int var1);
         public abstract StackEntry GetElement(int p0);

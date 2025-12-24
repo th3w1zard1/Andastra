@@ -8,8 +8,8 @@ using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Mods;
 using Andastra.Parsing.Resource;
-using Andastra.Parsing.TSLPatcher;
 using Andastra.Parsing.Tools;
+using Andastra.Parsing.TSLPatcher;
 using JetBrains.Annotations;
 
 namespace Andastra.Parsing.Diff

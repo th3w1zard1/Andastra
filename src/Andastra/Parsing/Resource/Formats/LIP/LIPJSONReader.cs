@@ -51,7 +51,7 @@ namespace Andastra.Parsing.Formats.LIP
 
                 // Read all bytes from the reader
                 byte[] jsonBytes = _reader.ReadBytes(_reader.Size);
-                
+
                 // Decode bytes to string with fallback encodings (matching PyKotor's decode_bytes_with_fallbacks)
                 string jsonString = DecodeBytesWithFallbacks(jsonBytes);
 

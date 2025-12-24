@@ -1,5 +1,5 @@
-using Microsoft.Xna.Framework.Input;
 using Andastra.Runtime.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 namespace Andastra.Runtime.MonoGame.Graphics
 {

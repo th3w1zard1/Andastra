@@ -17,7 +17,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
     /// </remarks>
     public class Nwn2ResourceProvider : AuroraResourceProvider
     {
-        public Nwn2ResourceProvider(string installationPath) 
+        public Nwn2ResourceProvider(string installationPath)
             : base(installationPath, GameType.NWN2)
         {
         }

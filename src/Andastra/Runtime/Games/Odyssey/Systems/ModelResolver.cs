@@ -1,14 +1,14 @@
 using System;
-using JetBrains.Annotations;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Engines.Odyssey.Data;
 using Andastra.Runtime.Engines.Odyssey.Components;
+using Andastra.Runtime.Engines.Odyssey.Data;
 using Andastra.Runtime.Games.Odyssey.Components;
+using JetBrains.Annotations;
 using AppearanceData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.AppearanceData;
-using PlaceableData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.PlaceableData;
 using DoorData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.DoorData;
+using PlaceableData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.PlaceableData;
 
 namespace Andastra.Runtime.Engines.Odyssey.Systems
 {

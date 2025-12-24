@@ -1,12 +1,12 @@
 using System;
 using Andastra.Runtime.Graphics;
 using Microsoft.Xna.Framework;
-using XnaVector2 = Microsoft.Xna.Framework.Vector2;
-using XnaRectangle = Microsoft.Xna.Framework.Rectangle;
-using XnaColor = Microsoft.Xna.Framework.Color;
-using GraphicsVector2 = Andastra.Runtime.Graphics.Vector2;
-using GraphicsRectangle = Andastra.Runtime.Graphics.Rectangle;
 using GraphicsColor = Andastra.Runtime.Graphics.Color;
+using GraphicsRectangle = Andastra.Runtime.Graphics.Rectangle;
+using GraphicsVector2 = Andastra.Runtime.Graphics.Vector2;
+using XnaColor = Microsoft.Xna.Framework.Color;
+using XnaRectangle = Microsoft.Xna.Framework.Rectangle;
+using XnaVector2 = Microsoft.Xna.Framework.Vector2;
 
 namespace Andastra.Runtime.Game.GUI
 {
@@ -349,8 +349,8 @@ namespace Andastra.Runtime.Game.GUI
                 new GraphicsColor(_backgroundColor.R, _backgroundColor.G, _backgroundColor.B, _backgroundColor.A));
 
             // Draw main panel background
-            _spriteBatch.Draw(_whiteTexture, 
-                new GraphicsRectangle(_mainPanelRect.X, _mainPanelRect.Y, _mainPanelRect.Width, _mainPanelRect.Height), 
+            _spriteBatch.Draw(_whiteTexture,
+                new GraphicsRectangle(_mainPanelRect.X, _mainPanelRect.Y, _mainPanelRect.Width, _mainPanelRect.Height),
                 new GraphicsColor(_panelBackgroundColor.R, _panelBackgroundColor.G, _panelBackgroundColor.B, _panelBackgroundColor.A));
 
             // Draw panel border
@@ -358,8 +358,8 @@ namespace Andastra.Runtime.Game.GUI
             DrawBorder(_spriteBatch, _mainPanelRect, borderThickness, _borderColor);
 
             // Draw header (golden bar)
-            _spriteBatch.Draw(_whiteTexture, 
-                new GraphicsRectangle(_headerRect.X, _headerRect.Y, _headerRect.Width, _headerRect.Height), 
+            _spriteBatch.Draw(_whiteTexture,
+                new GraphicsRectangle(_headerRect.X, _headerRect.Y, _headerRect.Width, _headerRect.Height),
                 new GraphicsColor(_headerColor.R, _headerColor.G, _headerColor.B, _headerColor.A));
             DrawBorder(_spriteBatch, _headerRect, 4, _borderColor);
 
@@ -370,8 +370,8 @@ namespace Andastra.Runtime.Game.GUI
                 XnaColor color = (i == _selectedIndex) ? button.SelectedColor : button.NormalColor;
 
                 // Button background
-                _spriteBatch.Draw(_whiteTexture, 
-                    new GraphicsRectangle(button.Rect.X, button.Rect.Y, button.Rect.Width, button.Rect.Height), 
+                _spriteBatch.Draw(_whiteTexture,
+                    new GraphicsRectangle(button.Rect.X, button.Rect.Y, button.Rect.Width, button.Rect.Height),
                     new GraphicsColor(color.R, color.G, color.B, color.A));
 
                 // Button border (thicker when selected)

@@ -2,8 +2,8 @@ using System;
 using System.Linq;
 using System.Text;
 using Andastra.Parsing;
-using JetBrains.Annotations;
 using Andastra.Parsing.Common;
+using JetBrains.Annotations;
 
 namespace Andastra.Parsing.Tools
 {

@@ -103,8 +103,8 @@ namespace Andastra.Parsing.Diff
             var lines = new List<string>();
 
             // Generate [2DAList] section
-            bool hasModifications = result.AddedColumns.Count > 0 || 
-                                   result.ChangedRows.Count > 0 || 
+            bool hasModifications = result.AddedColumns.Count > 0 ||
+                                   result.ChangedRows.Count > 0 ||
                                    result.AddedRows.Count > 0;
 
             if (!hasModifications)
@@ -135,7 +135,7 @@ namespace Andastra.Parsing.Diff
                 // Only include if there are changes to existing columns (not just new column values)
                 var changes = result.ChangedRows[rowIndex];
                 bool hasExistingColumnChanges = changes.Any(kvp => !result.AddedColumns.Contains(kvp.Key));
-                
+
                 if (hasExistingColumnChanges)
                 {
                     string sectionName = $"{filename}_changerow_{modifierIndex}";
@@ -256,7 +256,7 @@ namespace Andastra.Parsing.Diff
             foreach (int rowIndex in result.ChangedRows.Keys.OrderBy(x => x))
             {
                 var changes = result.ChangedRows[rowIndex];
-                
+
                 // Only create ChangeRow for changes to existing columns
                 var existingColumnChanges = changes.Where(kvp => !result.AddedColumns.Contains(kvp.Key))
                                                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);

@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Resource.Generics
 {
@@ -22,7 +22,7 @@ namespace Andastra.Parsing.Resource.Generics
             // Engine checks if list exists (swkotor2.exe:0x004e3650 line 78, swkotor.exe:0x00508400 line 78)
             // If missing, engine skips connection processing
             var connectionsList = root.Acquire<GFFList>("Path_Conections", new GFFList());
-            
+
             // Engine default: Empty list if Path_Points missing
             // Engine checks if list exists (swkotor2.exe:0x004e3650 line 44, swkotor.exe:0x00508400 line 44)
             // If missing, engine skips point processing
@@ -32,13 +32,13 @@ namespace Andastra.Parsing.Resource.Generics
             {
                 // Engine default: 0 (swkotor2.exe:0x004e3650 line 66, swkotor.exe:0x00508400 line 66)
                 int connections = pointStruct.Acquire<int>("Conections", 0);
-                
+
                 // Engine default: 0 (swkotor2.exe:0x004e3650 line 69, swkotor.exe:0x00508400 line 69)
                 int firstConnection = pointStruct.Acquire<int>("First_Conection", 0);
-                
+
                 // Engine default: 0.0 (swkotor2.exe:0x004e3650 line 60, swkotor.exe:0x00508400 line 60)
                 float x = pointStruct.Acquire<float>("X", 0.0f);
-                
+
                 // Engine default: 0.0 (swkotor2.exe:0x004e3650 line 63, swkotor.exe:0x00508400 line 63)
                 float y = pointStruct.Acquire<float>("Y", 0.0f);
 

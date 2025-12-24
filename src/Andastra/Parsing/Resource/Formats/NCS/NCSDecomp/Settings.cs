@@ -4,8 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using JavaSystem = Andastra.Parsing.Formats.NCS.NCSDecomp.JavaSystem;
 using Andastra.Parsing.Common;
+using JavaSystem = Andastra.Parsing.Formats.NCS.NCSDecomp.JavaSystem;
 
 namespace Andastra.Parsing.Formats.NCS.NCSDecomp
 {

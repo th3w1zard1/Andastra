@@ -1,16 +1,16 @@
 using System;
-using JetBrains.Annotations;
+using Andastra.Parsing.Installation;
+using Andastra.Parsing.Resource;
 using Andastra.Runtime.Core.Dialogue;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Scripting.VM;
-using Andastra.Runtime.Scripting.Interfaces;
-using VM = Andastra.Runtime.Scripting.VM;
-using EngineApi = Andastra.Runtime.Engines.Odyssey.EngineApi;
-using Andastra.Runtime.Scripting.EngineApi;
 using Andastra.Runtime.Games.Common;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
+using Andastra.Runtime.Scripting.EngineApi;
+using Andastra.Runtime.Scripting.Interfaces;
+using Andastra.Runtime.Scripting.VM;
+using JetBrains.Annotations;
+using EngineApi = Andastra.Runtime.Engines.Odyssey.EngineApi;
+using VM = Andastra.Runtime.Scripting.VM;
 
 namespace Andastra.Runtime.Games.Odyssey
 {
@@ -154,19 +154,19 @@ namespace Andastra.Runtime.Games.Odyssey
         protected override IExecutionContext CreateExecutionContext(IEntity caller, IEntity triggerer)
         {
             var context = base.CreateExecutionContext(caller, triggerer);
-            
+
             // Set resource provider to Installation for script resource loading
             if (context is VM.ExecutionContext vmContext)
             {
                 vmContext.ResourceProvider = _installation;
-                
+
                 // Set additional context to game services context for engine API access
                 // Engine API functions (Kotor1, TheSithLords) check for AdditionalContext
                 // and cast to IGameServicesContext to access game services like PartyManager,
                 // CombatManager, DialogueManager, etc.
                 vmContext.AdditionalContext = _servicesContext;
             }
-            
+
             return context;
         }
 

@@ -14,14 +14,17 @@ namespace Andastra.Parsing.Common
         K2 = 2,
         K1_XBOX = 3,
         K2_XBOX = 4,
+        TSL_XBOX = K2_XBOX,
         K1_IOS = 5,
         K2_IOS = 6,
+        TSL_IOS = K2_IOS,
         K1_ANDROID = 7,
         K2_ANDROID = 8,
-        TSL = K2,
+        TSL_ANDROID = K2_ANDROID,
 
         // Eclipse Engine
         DA = 10,
+        DAO = DA,
         DA_ORIGINS = DA,
         DA2 = 11,
         DRAGON_AGE_2 = DA2,

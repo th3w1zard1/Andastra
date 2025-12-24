@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats;
 using JetBrains.Annotations;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Formats.GFF
 {
@@ -260,13 +260,13 @@ namespace Andastra.Parsing.Formats.GFF
         private void LoadStruct(GFFStruct gffStruct, int structIndex)
         {
             int structPosition = _structOffset + structIndex * 12;
-            
+
             // Validate struct position is within bounds
             if (structPosition + 12 > Reader.Size)
             {
                 throw new InvalidDataException($"GFF struct at index {structIndex} would exceed file boundaries (position {structPosition}, file size {Reader.Size})");
             }
-            
+
             Reader.Seek(structPosition);
 
             int structId = Reader.ReadInt32();
@@ -296,13 +296,13 @@ namespace Andastra.Parsing.Formats.GFF
             else if (fieldCount > 1)
             {
                 int indicesPosition = _fieldIndicesOffset + (int)data;
-                
+
                 // Validate indices position is within bounds
                 if (indicesPosition + (fieldCount * 4) > Reader.Size)
                 {
                     throw new InvalidDataException($"GFF field indices would exceed file boundaries (position {indicesPosition}, count {fieldCount}, file size {Reader.Size})");
                 }
-                
+
                 Reader.Seek(indicesPosition);
                 var indices = new List<int>();
                 for (int i = 0; i < fieldCount; i++)
@@ -325,12 +325,12 @@ namespace Andastra.Parsing.Formats.GFF
             {
                 throw new InvalidDataException($"GFF field at index {fieldIndex} would exceed file boundaries (position {fieldPosition}, file size {Reader.Size})");
             }
-            
+
             Reader.Seek(fieldPosition);
 
             uint fieldTypeId = Reader.ReadUInt32();
             uint labelId = Reader.ReadUInt32();
-            
+
             // Validate labelId is within bounds
             if (labelId >= _labels.Count)
             {

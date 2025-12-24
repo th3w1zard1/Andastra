@@ -1,8 +1,8 @@
 using System;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource.Generics.ARE;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Resource
 {

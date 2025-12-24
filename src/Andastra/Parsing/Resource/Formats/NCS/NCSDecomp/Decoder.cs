@@ -1,11 +1,10 @@
-﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/Decoder.java:20-496
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/Decoder.java:20-496
 // Original: public class Decoder
 using System;
-using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
 using System.IO;
 using System.Numerics;
 using System.Text;
-
+using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
 using NumBigInteger = System.Numerics.BigInteger;
 namespace Andastra.Parsing.Formats.NCS.NCSDecomp
 {

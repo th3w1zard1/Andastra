@@ -1,13 +1,13 @@
 using System;
 using System.Numerics;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+using Andastra.Parsing.Installation;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.MonoGame.Converters;
 using Andastra.Runtime.MonoGame.Rendering;
-using Andastra.Parsing.Installation;
 using JetBrains.Annotations;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Andastra.Runtime.MonoGame.Graphics
 {
@@ -30,7 +30,7 @@ namespace Andastra.Runtime.MonoGame.Graphics
             }
 
             _graphicsDevice = device;
-            
+
             // Create the underlying MonoGame renderer if dependencies are provided
             // EntityModelRenderer requires both GameDataManager and Installation for model loading
             // GameDataManager provides access to 2DA tables (appearance.2da, placeables.2da, etc.) for model resolution
@@ -40,7 +40,7 @@ namespace Andastra.Runtime.MonoGame.Graphics
             if (gameDataManager != null && installation != null)
             {
                 Installation inst = installation as Installation;
-                
+
                 if (inst != null)
                 {
                     _renderer = new EntityModelRenderer(device, gameDataManager, inst);

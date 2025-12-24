@@ -180,8 +180,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
 
                 // Don't add semicolon to lines that start with { or control flow keywords
                 if (trimmedLine.StartsWith("{") || trimmedLine.StartsWith("}") ||
-                    trimmedLine.StartsWith("if") || trimmedLine.StartsWith("while") || 
-                    trimmedLine.StartsWith("for") || trimmedLine.StartsWith("switch") || 
+                    trimmedLine.StartsWith("if") || trimmedLine.StartsWith("while") ||
+                    trimmedLine.StartsWith("for") || trimmedLine.StartsWith("switch") ||
                     trimmedLine.StartsWith("return") || trimmedLine.StartsWith("else"))
                 {
                     continue;

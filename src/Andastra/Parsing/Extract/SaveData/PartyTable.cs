@@ -1,11 +1,11 @@
 using System;
-using System.Numerics;
 using System.Collections.Generic;
 using System.IO;
+using System.Numerics;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Extract.SaveData
 {
@@ -403,131 +403,131 @@ namespace Andastra.Parsing.Extract.SaveData
                 GFF gff = GFF.FromBytes(data);
                 GFFStruct root = gff.Root;
 
-            var processed = new HashSet<string>();
+                var processed = new HashSet<string>();
 
-            T Acquire<T>(string label, T def)
-            {
-                if (root.Exists(label)) processed.Add(label);
-                return root.Acquire(label, def);
-            }
-
-            // Party composition
-            int _ = Acquire("PT_NUM_MEMBERS", 0); // ignored; derived from list
-            ControlledNpc = Acquire("PT_CONTROLLED_NPC", -1);
-            AiState = Acquire("PT_AISTATE", 0);
-            FollowState = Acquire("PT_FOLLOWSTATE", 0);
-            SoloMode = Acquire("PT_SOLOMODE", 0) != 0;
-
-            Members.Clear();
-            if (root.Exists("PT_MEMBERS"))
-            {
-                processed.Add("PT_MEMBERS");
-                var list = root.GetList("PT_MEMBERS");
-                if (list != null)
+                T Acquire<T>(string label, T def)
                 {
-                    foreach (var s in list)
+                    if (root.Exists(label)) processed.Add(label);
+                    return root.Acquire(label, def);
+                }
+
+                // Party composition
+                int _ = Acquire("PT_NUM_MEMBERS", 0); // ignored; derived from list
+                ControlledNpc = Acquire("PT_CONTROLLED_NPC", -1);
+                AiState = Acquire("PT_AISTATE", 0);
+                FollowState = Acquire("PT_FOLLOWSTATE", 0);
+                SoloMode = Acquire("PT_SOLOMODE", 0) != 0;
+
+                Members.Clear();
+                if (root.Exists("PT_MEMBERS"))
+                {
+                    processed.Add("PT_MEMBERS");
+                    var list = root.GetList("PT_MEMBERS");
+                    if (list != null)
                     {
-                        var entry = new PartyMemberEntry
+                        foreach (var s in list)
                         {
-                            IsLeader = s.Acquire("PT_IS_LEADER", 0) != 0,
-                            Index = s.Acquire("PT_MEMBER_ID", -1)
-                        };
-                        Members.Add(entry);
+                            var entry = new PartyMemberEntry
+                            {
+                                IsLeader = s.Acquire("PT_IS_LEADER", 0) != 0,
+                                Index = s.Acquire("PT_MEMBER_ID", -1)
+                            };
+                            Members.Add(entry);
+                        }
                     }
                 }
-            }
 
-            AvailableNpcs.Clear();
-            if (root.Exists("PT_AVAIL_NPCS"))
-            {
-                processed.Add("PT_AVAIL_NPCS");
-                var list = root.GetList("PT_AVAIL_NPCS");
-                if (list != null)
+                AvailableNpcs.Clear();
+                if (root.Exists("PT_AVAIL_NPCS"))
                 {
-                    foreach (var s in list)
+                    processed.Add("PT_AVAIL_NPCS");
+                    var list = root.GetList("PT_AVAIL_NPCS");
+                    if (list != null)
                     {
-                        var entry = new AvailableNPCEntry
+                        foreach (var s in list)
                         {
-                            NpcAvailable = s.Acquire("PT_NPC_AVAIL", 0) != 0,
-                            NpcSelected = s.Acquire("PT_NPC_SELECT", 0) != 0
-                        };
-                        AvailableNpcs.Add(entry);
+                            var entry = new AvailableNPCEntry
+                            {
+                                NpcAvailable = s.Acquire("PT_NPC_AVAIL", 0) != 0,
+                                NpcSelected = s.Acquire("PT_NPC_SELECT", 0) != 0
+                            };
+                            AvailableNpcs.Add(entry);
+                        }
                     }
                 }
-            }
 
-            // Resources
-            Gold = Acquire("PT_GOLD", 0);
-            XpPool = Acquire("PT_XP_POOL", 0);
-            TimePlayed = Acquire("PT_PLAYEDSECONDS", -1);
+                // Resources
+                Gold = Acquire("PT_GOLD", 0);
+                XpPool = Acquire("PT_XP_POOL", 0);
+                TimePlayed = Acquire("PT_PLAYEDSECONDS", -1);
 
-            // Journal
-            JournalEntries.Clear();
-            if (root.Exists("JNL_Entries"))
-            {
-                processed.Add("JNL_Entries");
-                var list = root.GetList("JNL_Entries");
-                if (list != null)
+                // Journal
+                JournalEntries.Clear();
+                if (root.Exists("JNL_Entries"))
                 {
-                    foreach (var s in list)
+                    processed.Add("JNL_Entries");
+                    var list = root.GetList("JNL_Entries");
+                    if (list != null)
                     {
-                        var entry = new JournalEntry
+                        foreach (var s in list)
                         {
-                            PlotId = s.Acquire("JNL_PlotID", string.Empty),
-                            State = s.Acquire("JNL_State", -1),
-                            Date = s.Acquire("JNL_Date", -1),
-                            Time = s.Acquire("JNL_Time", -1)
-                        };
-                        JournalEntries.Add(entry);
+                            var entry = new JournalEntry
+                            {
+                                PlotId = s.Acquire("JNL_PlotID", string.Empty),
+                                State = s.Acquire("JNL_State", -1),
+                                Date = s.Acquire("JNL_Date", -1),
+                                Time = s.Acquire("JNL_Time", -1)
+                            };
+                            JournalEntries.Add(entry);
+                        }
                     }
                 }
-            }
-            JournalSortOrder = Acquire("JNL_SORT_ORDER", 0);
+                JournalSortOrder = Acquire("JNL_SORT_ORDER", 0);
 
-            // Pazaak
-            PazaakCards = Acquire("PT_PAZAAKCARDS", new GFFList());
-            PazaakDecks = Acquire("PT_PAZAAKDECKS", new GFFList());
+                // Pazaak
+                PazaakCards = Acquire("PT_PAZAAKCARDS", new GFFList());
+                PazaakDecks = Acquire("PT_PAZAAKDECKS", new GFFList());
 
-            // UI / messages
-            LastGuiPanel = Acquire("PT_LAST_GUI_PNL", 0);
-            FeedbackMessages = Acquire("PT_FB_MSG_LIST", new GFFList());
-            DialogMessages = Acquire("PT_DLG_MSG_LIST", new GFFList());
-            TutorialWindowsShown = Acquire("PT_TUT_WND_SHOWN", Array.Empty<byte>());
+                // UI / messages
+                LastGuiPanel = Acquire("PT_LAST_GUI_PNL", 0);
+                FeedbackMessages = Acquire("PT_FB_MSG_LIST", new GFFList());
+                DialogMessages = Acquire("PT_DLG_MSG_LIST", new GFFList());
+                TutorialWindowsShown = Acquire("PT_TUT_WND_SHOWN", Array.Empty<byte>());
 
-            // Cheats
-            CheatUsed = Acquire("PT_CHEAT_USED", 0) != 0;
+                // Cheats
+                CheatUsed = Acquire("PT_CHEAT_USED", 0) != 0;
 
-            // Economy
-            CostMultiplierList = Acquire("PT_COST_MULT_LIS", new GFFList());
+                // Economy
+                CostMultiplierList = Acquire("PT_COST_MULT_LIS", new GFFList());
 
-            // K2 fields
-            ItemComponents = Acquire("PT_ITEM_COMPONEN", 0);
-            ItemChemicals = Acquire("PT_ITEM_CHEMICAL", 0);
-            PcName = Acquire("PT_PCNAME", string.Empty);
+                // K2 fields
+                ItemComponents = Acquire("PT_ITEM_COMPONEN", 0);
+                ItemChemicals = Acquire("PT_ITEM_CHEMICAL", 0);
+                PcName = Acquire("PT_PCNAME", string.Empty);
 
-            Influence.Clear();
-            if (root.Exists("PT_INFLUENCE"))
-            {
-                processed.Add("PT_INFLUENCE");
-                var list = root.GetList("PT_INFLUENCE");
-                if (list != null)
+                Influence.Clear();
+                if (root.Exists("PT_INFLUENCE"))
                 {
-                    foreach (var s in list)
+                    processed.Add("PT_INFLUENCE");
+                    var list = root.GetList("PT_INFLUENCE");
+                    if (list != null)
                     {
-                        Influence.Add(s.Acquire("PT_NPC_INFLUENCE", 0));
+                        foreach (var s in list)
+                        {
+                            Influence.Add(s.Acquire("PT_NPC_INFLUENCE", 0));
+                        }
                     }
                 }
-            }
 
-            // Additional fields
-            AdditionalFields = new Dictionary<string, Tuple<GFFFieldType, object>>();
-            foreach (var (label, fieldType, value) in root)
-            {
-                if (!processed.Contains(label))
+                // Additional fields
+                AdditionalFields = new Dictionary<string, Tuple<GFFFieldType, object>>();
+                foreach (var (label, fieldType, value) in root)
                 {
-                    AdditionalFields[label] = Tuple.Create(fieldType, value);
+                    if (!processed.Contains(label))
+                    {
+                        AdditionalFields[label] = Tuple.Create(fieldType, value);
+                    }
                 }
-            }
             }
             catch (Exception)
             {

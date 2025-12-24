@@ -1,11 +1,11 @@
 using System;
+using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Games.Aurora.Components;
 using Andastra.Runtime.Games.Aurora.Data;
 using Andastra.Runtime.Games.Common.Combat;
-using Andastra.Parsing.Formats.TwoDA;
 
 namespace Andastra.Runtime.Games.Aurora.Combat
 {
@@ -275,7 +275,7 @@ namespace Andastra.Runtime.Games.Aurora.Combat
                     // - ExecuteCommandGetCreatureSize @ 0x1405213f0 shows: iVar3 = *(int *)(pCVar2 + 0x718);
                     // - Original implementation: Size is cached in creature object, originally loaded from appearance.2da
                     int creatureSize = GetCreatureSize(attacker);
-                    
+
                     // If creature size is <= minimum required size, weapon is finesse-eligible
                     // Based on nwmain.exe: Comparison is creatureSize <= minCreatureSize (line 21 of GetWeaponFinesse)
                     if (creatureSize <= minCreatureSize.Value)

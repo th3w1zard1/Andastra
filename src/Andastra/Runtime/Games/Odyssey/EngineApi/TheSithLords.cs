@@ -6,8 +6,8 @@ using Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Engines.Odyssey.Game;
-using Andastra.Runtime.Engines.Odyssey.Systems;
 using Andastra.Runtime.Engines.Odyssey.Loading;
+using Andastra.Runtime.Engines.Odyssey.Systems;
 using Andastra.Runtime.Scripting.EngineApi;
 using Andastra.Runtime.Scripting.Interfaces;
 using Andastra.Runtime.Scripting.VM;
@@ -279,7 +279,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
             }
 
             // Add NPC to available party members
-                if (ctx is Andastra.Runtime.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager && services.ModuleLoader is Andastra.Runtime.Engines.Odyssey.Game.ModuleLoader moduleLoader)
+            if (ctx is Andastra.Runtime.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager && services.ModuleLoader is Andastra.Runtime.Engines.Odyssey.Game.ModuleLoader moduleLoader)
             {
                 // Try to find existing entity by template tag first
                 IEntity existingEntity = ctx.World.GetEntityByTag(template, 0);

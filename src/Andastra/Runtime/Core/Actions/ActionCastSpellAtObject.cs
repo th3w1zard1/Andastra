@@ -1,9 +1,9 @@
 using System;
 using System.Numerics;
+using Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Core.Combat;
 
 namespace Andastra.Runtime.Core.Actions
 {
@@ -640,34 +640,34 @@ namespace Andastra.Runtime.Core.Actions
                 // Try to access animation system through World interface first
                 // Animation system supports string-based animation names
                 if (caster.World != null)
+                {
+                    System.Type worldType = caster.World.GetType();
+
+                    // Try property access first
+                    System.Reflection.PropertyInfo animationSystemProperty = worldType.GetProperty("AnimationSystem");
+                    if (animationSystemProperty != null)
                     {
-                        System.Type worldType = caster.World.GetType();
-
-                        // Try property access first
-                        System.Reflection.PropertyInfo animationSystemProperty = worldType.GetProperty("AnimationSystem");
-                        if (animationSystemProperty != null)
+                        object animationSystem = animationSystemProperty.GetValue(caster.World);
+                        if (animationSystem != null)
                         {
-                            object animationSystem = animationSystemProperty.GetValue(caster.World);
-                            if (animationSystem != null)
+                            // Play animation using animation system
+                            // Animation system interface: PlayAnimation(IEntity entity, string animationName, float blendTime = 0.2f)
+                            System.Reflection.MethodInfo playMethod = animationSystem.GetType().GetMethod("PlayAnimation", new System.Type[] { typeof(IEntity), typeof(string), typeof(float) });
+                            if (playMethod != null)
                             {
-                                // Play animation using animation system
-                                // Animation system interface: PlayAnimation(IEntity entity, string animationName, float blendTime = 0.2f)
-                                System.Reflection.MethodInfo playMethod = animationSystem.GetType().GetMethod("PlayAnimation", new System.Type[] { typeof(IEntity), typeof(string), typeof(float) });
-                                if (playMethod != null)
-                                {
-                                    playMethod.Invoke(animationSystem, new object[] { caster, animationName, 0.2f });
-                                    return;
-                                }
+                                playMethod.Invoke(animationSystem, new object[] { caster, animationName, 0.2f });
+                                return;
+                            }
 
-                                // Try simpler signature: PlayAnimation(IEntity entity, string animationName)
-                                playMethod = animationSystem.GetType().GetMethod("PlayAnimation", new System.Type[] { typeof(IEntity), typeof(string) });
-                                if (playMethod != null)
-                                {
-                                    playMethod.Invoke(animationSystem, new object[] { caster, animationName });
-                                }
+                            // Try simpler signature: PlayAnimation(IEntity entity, string animationName)
+                            playMethod = animationSystem.GetType().GetMethod("PlayAnimation", new System.Type[] { typeof(IEntity), typeof(string) });
+                            if (playMethod != null)
+                            {
+                                playMethod.Invoke(animationSystem, new object[] { caster, animationName });
                             }
                         }
                     }
+                }
             }
             catch
             {

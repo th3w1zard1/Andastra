@@ -4,11 +4,9 @@
     {
       "label": "cleanup",
       "type": "shell",
-      "command": "dotnet",
+      "command": "cleanup",
       "args": [
-        "tool",
-        "run",
-        "cleanup"
+        "-y",
       ],
       "problemMatcher": [],
       "group": "build",
@@ -25,7 +23,7 @@
       "command": "dotnet",
       "args": [
         "restore",
-        "${workspaceFolder}/HoloPatcher.sln"
+        "${workspaceFolder}/Andastra.sln"
       ],
       "problemMatcher": "$msCompile",
       "group": {
@@ -46,7 +44,7 @@
       "command": "dotnet",
       "args": [
         "build",
-        "${workspaceFolder}/HoloPatcher.sln",
+        "${workspaceFolder}/Andastra.sln",
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary"
       ],
@@ -111,7 +109,7 @@
       "command": "dotnet",
       "args": [
         "build",
-        "${workspaceFolder}/src/HoloPatcher/HoloPatcher.csproj",
+        "${workspaceFolder}/src/Andastra/Andastra.csproj",
         "/property:Configuration=Debug",
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary"
@@ -174,7 +172,7 @@
       "command": "dotnet",
       "args": [
         "clean",
-        "${workspaceFolder}/HoloPatcher.sln",
+        "${workspaceFolder}/Andastra.sln",
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary"
       ],
@@ -194,7 +192,7 @@
       "command": "dotnet",
       "args": [
         "build",
-        "${workspaceFolder}/HoloPatcher.sln",
+        "${workspaceFolder}/Andastra.sln",
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary",
         "/t:Rebuild"
@@ -210,12 +208,12 @@
       "dependsOn": "clean"
     },
     {
-      "label": "publish-odyssey",
+      "label": "publish-andastra",
       "type": "shell",
       "command": "dotnet",
       "args": [
         "publish",
-        "${workspaceFolder}/src/OdysseyRuntime/Odyssey.Game/Odyssey.Game.csproj",
+        "${workspaceFolder}/src/Andastra/Andastra.csproj",
         "/property:Configuration=Release",
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary",
@@ -237,7 +235,7 @@
       "command": "dotnet",
       "args": [
         "test",
-        "${workspaceFolder}/HoloPatcher.sln",
+        "${workspaceFolder}/Andastra.sln",
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary",
         "--verbosity",

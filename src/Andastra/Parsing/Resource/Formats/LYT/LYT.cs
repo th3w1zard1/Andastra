@@ -2,12 +2,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
 using JetBrains.Annotations;
-using Vector3 = System.Numerics.Vector3;
 using Quaternion = Andastra.Utility.Geometry.Quaternion;
-using Andastra.Parsing.Common;
+using Vector3 = System.Numerics.Vector3;
 
 namespace Andastra.Parsing.Resource.Formats.LYT
 {

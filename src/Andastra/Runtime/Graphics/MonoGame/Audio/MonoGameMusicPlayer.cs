@@ -1,11 +1,11 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.Xna.Framework.Audio;
+using Andastra.Parsing.Formats.WAV;
+using Andastra.Parsing.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Audio;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Formats.WAV;
+using Microsoft.Xna.Framework.Audio;
 
 namespace Andastra.Runtime.MonoGame.Audio
 {
@@ -55,7 +55,7 @@ namespace Andastra.Runtime.MonoGame.Audio
         {
             get
             {
-                return _currentMusicInstance != null && 
+                return _currentMusicInstance != null &&
                        _currentMusicInstance.State == SoundState.Playing;
             }
         }
@@ -97,7 +97,7 @@ namespace Andastra.Runtime.MonoGame.Audio
             }
 
             // If same music is already playing, just adjust volume
-            if (_currentMusicResRef == musicResRef && _currentMusicInstance != null && 
+            if (_currentMusicResRef == musicResRef && _currentMusicInstance != null &&
                 _currentMusicInstance.State == SoundState.Playing)
             {
                 Volume = volume;
@@ -166,7 +166,7 @@ namespace Andastra.Runtime.MonoGame.Audio
             {
                 Console.WriteLine($"[MonoGameMusicPlayer] Exception playing music: {ex.Message}");
                 Console.WriteLine($"[MonoGameMusicPlayer] Stack trace: {ex.StackTrace}");
-                
+
                 // Clean up on error
                 if (_currentMusicInstance != null)
                 {

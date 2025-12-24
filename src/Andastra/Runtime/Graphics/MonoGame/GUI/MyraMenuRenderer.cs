@@ -1,10 +1,10 @@
 using System;
+using Andastra.Parsing.Common;
+using Andastra.Runtime.Graphics.Common.GUI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Myra;
 using Myra.Graphics2D.UI;
-using Andastra.Runtime.Graphics.Common.GUI;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Runtime.MonoGame.GUI
 {

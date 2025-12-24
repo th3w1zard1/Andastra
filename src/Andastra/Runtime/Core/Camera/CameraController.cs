@@ -1,10 +1,10 @@
 using System;
 using System.Numerics;
-using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Core.MDL;
-using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Parsing.Resource;
 using Andastra.Parsing.Formats.MDL;
+using Andastra.Parsing.Resource;
+using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Core.Interfaces.Components;
+using Andastra.Runtime.Core.MDL;
 
 namespace Andastra.Runtime.Core.Camera
 {
@@ -775,7 +775,7 @@ namespace Andastra.Runtime.Core.Camera
                     // Dummy nodes are non-rendering nodes used for positioning and hierarchy
                     // NodeType value 1 = NODE_HAS_HEADER flag (0x001) = dummy node
                     ushort nodeTypeValue = hookNode.NodeType;
-                    bool isDummyNode = (nodeTypeValue == (ushort)MDLNodeType.DUMMY) || 
+                    bool isDummyNode = (nodeTypeValue == (ushort)MDLNodeType.DUMMY) ||
                                        (nodeTypeValue == 0x0001); // NODE_HAS_HEADER flag only (0x001 = 1)
 
                     if (!isDummyNode)

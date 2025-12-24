@@ -138,11 +138,11 @@ namespace Andastra.Runtime.Core.GameLoop
                 {
                     // Update action queue (may trigger script execution)
                     actionQueue.Update(entity, dt);
-                    
+
                     // Accumulate instruction count from script executions during this update
                     int entityInstructions = actionQueue.GetLastInstructionCount();
                     instructionsUsed += entityInstructions;
-                    
+
                     // Check budget again after accumulating (may have exceeded during update)
                     if (instructionsUsed >= MaxScriptBudget)
                     {

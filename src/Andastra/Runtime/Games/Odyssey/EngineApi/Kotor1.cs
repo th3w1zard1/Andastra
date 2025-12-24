@@ -6,22 +6,21 @@ using System.Threading;
 using Andastra.Parsing;
 using Andastra.Parsing.Common.Script;
 using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Formats.TwoDA;
+using Andastra.Parsing.Installation;
+using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource.Generics.UTI;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Actions;
 using Andastra.Runtime.Core.Audio;
 using Andastra.Runtime.Core.Combat;
-using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Entities;
+using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Module;
 using Andastra.Runtime.Engines.Odyssey.Combat;
-using CoreCombat = Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Engines.Odyssey.Components;
 using Andastra.Runtime.Engines.Odyssey.Dialogue;
 using Andastra.Runtime.Engines.Odyssey.Game;
@@ -31,6 +30,7 @@ using Andastra.Runtime.Scripting.EngineApi;
 using Andastra.Runtime.Scripting.Interfaces;
 using Andastra.Runtime.Scripting.Types;
 using Andastra.Runtime.Scripting.VM;
+using CoreCombat = Andastra.Runtime.Core.Combat;
 using VMExecutionContext = Andastra.Runtime.Scripting.VM.ExecutionContext;
 
 namespace Andastra.Runtime.Engines.Odyssey.EngineApi
@@ -859,7 +859,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
             }
             else
             {
-            return Variable.FromObject(ObjectInvalid);
+                return Variable.FromObject(ObjectInvalid);
             }
 
             // Get all creatures in radius
@@ -2180,9 +2180,9 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
             IEntity item = ResolveObject(itemId, ctx);
 
             if (item == null || item.ObjectType != Core.Enums.ObjectType.Item)
-        {
-            return Variable.FromObject(ObjectInvalid);
-        }
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
 
             // Search for item in inventories
             foreach (IEntity entity in ctx.World.GetAllEntities())
@@ -2461,9 +2461,9 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
             object locationObj = args.Count > 1 ? args[1].ComplexValue : null;
 
             if (ctx.Caller == null)
-        {
-            return Variable.Void();
-        }
+            {
+                return Variable.Void();
+            }
 
             // Extract position from location object
             Vector3 dropLocation = Vector3.Zero;
@@ -4217,9 +4217,9 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
 
             if (ctx.Caller == null || ctx.World == null || ctx.World.EffectSystem == null)
-        {
-            return Variable.FromEffect(null);
-        }
+            {
+                return Variable.FromEffect(null);
+            }
 
             IEntity entity = ResolveObject(objectId, ctx);
             if (entity == null)
@@ -4258,9 +4258,9 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
 
             if (ctx.Caller == null)
-        {
-            return Variable.FromEffect(null);
-        }
+            {
+                return Variable.FromEffect(null);
+            }
 
             // Get iteration state
             if (!_effectIterations.TryGetValue(ctx.Caller.ObjectId, out EffectIteration iteration))
@@ -4291,9 +4291,9 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
             uint objectId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
 
             if (effectObj == null || ctx.World == null || ctx.World.EffectSystem == null)
-        {
-            return Variable.Void();
-        }
+            {
+                return Variable.Void();
+            }
 
             IEntity entity = ResolveObject(objectId, ctx);
             if (entity == null)
@@ -4331,9 +4331,9 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
             object effectObj = args.Count > 0 ? args[0].ComplexValue : null;
 
             if (effectObj == null)
-        {
-            return Variable.FromInt(0);
-        }
+            {
+                return Variable.FromInt(0);
+            }
 
             // Check if effect is a valid Effect object (using comprehensive extraction)
             CoreCombat.Effect effect = ExtractEffect(effectObj);
@@ -4412,9 +4412,9 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
             uint objectId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
 
             if (effectObj == null || ctx.World == null || ctx.World.EffectSystem == null)
-        {
-            return Variable.FromObject(ObjectInvalid);
-        }
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
 
             IEntity entity = ResolveObject(objectId, ctx);
             if (entity == null)
@@ -4460,9 +4460,9 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
             int objectType = args.Count > 1 ? args[1].AsInt() : -1; // OBJECT_TYPE_ALL = -1
 
             if (ctx.Caller == null || ctx.World == null)
-        {
-            return Variable.FromObject(ObjectInvalid);
-        }
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
 
             // Get area
             IArea area = null;
@@ -4605,9 +4605,9 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
             int objectType = args.Count > 1 ? args[1].AsInt() : -1;
 
             if (ctx.Caller == null)
-        {
-            return Variable.FromObject(ObjectInvalid);
-        }
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
 
             // Get iteration state
             if (!_areaObjectIterations.TryGetValue(ctx.Caller.ObjectId, out AreaObjectIteration iteration))

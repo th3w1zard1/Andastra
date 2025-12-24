@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+using Andastra.Parsing.Formats.MDLData;
+using Andastra.Parsing.Installation;
+using Andastra.Parsing.Resource;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.MonoGame.Converters;
-using Andastra.Parsing.Formats.MDLData;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Installation;
 using JetBrains.Annotations;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Andastra.Runtime.MonoGame.Rendering
 {
@@ -229,7 +229,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
                 effect.VertexColorEnabled = false;
                 effect.TextureEnabled = true;
                 effect.LightingEnabled = true;
-                
+
                 // Apply opacity from renderable component for fade-in/fade-out effects
                 // Based on swkotor2.exe: FadeTime @ 0x007c60ec (fade duration), alpha blending for entity rendering
                 // Opacity is updated by AppearAnimationFadeSystem for appear animations

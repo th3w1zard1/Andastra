@@ -1,7 +1,8 @@
 using System;
-using System.Numerics;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
+using JetBrains.Annotations;
 
 namespace Andastra.Parsing.Common
 {
@@ -13,7 +14,10 @@ namespace Andastra.Parsing.Common
         public Vector3 Position { get; set; }
         public List<int> AdjacentIndices { get; set; }
 
-        public PathfindingVertex(int index, Vector3 position, List<int> adjacentIndices)
+        public PathfindingVertex(
+            int index,
+            Vector3 position,
+            [CanBeNull] List<int> adjacentIndices = null)
         {
             Index = index;
             Position = position;

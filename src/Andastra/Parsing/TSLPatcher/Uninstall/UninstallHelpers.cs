@@ -4,11 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.Win32;
 using Andastra.Parsing;
-using Andastra.Parsing.Formats.TLK;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Formats.TLK;
 using Andastra.Parsing.Installation;
+using Microsoft.Win32;
 
 namespace Andastra.Parsing.Uninstall
 {
@@ -134,7 +134,7 @@ namespace Andastra.Parsing.Uninstall
             {
                 // Try to find K1 installation paths
                 List<string> installationPaths = FindK1InstallationPaths();
-                
+
                 foreach (string installPath in installationPaths)
                 {
                     if (string.IsNullOrEmpty(installPath) || !Directory.Exists(installPath))
@@ -213,7 +213,7 @@ namespace Andastra.Parsing.Uninstall
             {
                 // Try to find TSL installation paths
                 List<string> installationPaths = FindTslInstallationPaths();
-                
+
                 foreach (string installPath in installationPaths)
                 {
                     if (string.IsNullOrEmpty(installPath) || !Directory.Exists(installPath))
@@ -562,7 +562,7 @@ namespace Andastra.Parsing.Uninstall
         private static bool IsVanillaInstallation(string installPath, BioWareGame game)
         {
             string overridePath = Installation.Installation.GetOverridePath(installPath);
-            
+
             if (!Directory.Exists(overridePath))
             {
                 // No override folder - definitely vanilla
@@ -624,7 +624,7 @@ namespace Andastra.Parsing.Uninstall
                 {
                     TLK tlk = new TLKBinaryReader(File.ReadAllBytes(tlkFilePath)).Load();
                     int expectedEntryCount = game == BioWareGame.K1 ? 49265 : 136329;
-                    
+
                     if (tlk.Entries.Count != expectedEntryCount)
                     {
                         throw new ArgumentException(
@@ -824,7 +824,7 @@ namespace Andastra.Parsing.Uninstall
             {
                 // Calculate SHA1 hash of current dialog.tlk
                 string currentHash = CalculateFileSha1(dialogTlkPath);
-                
+
                 // Get expected vanilla hash for this game
                 string expectedVanillaHash = VanillaTlkHashes.TryGetValue(game, out string hash) ? hash : null;
 
@@ -854,7 +854,7 @@ namespace Andastra.Parsing.Uninstall
                 // Log error but don't fail uninstall - TLK restoration is best-effort
                 Console.WriteLine($"[UninstallHelpers] Error restoring vanilla TLK: {ex.Message}");
                 Console.WriteLine($"[UninstallHelpers] Stack trace: {ex.StackTrace}");
-                
+
                 // Fall back to old entry count trim method
                 RestoreTlkByEntryCount(dialogTlkPath, game);
             }
@@ -881,9 +881,9 @@ namespace Andastra.Parsing.Uninstall
                 {
                     string backupHash = CalculateFileSha1(backupPath);
                     string expectedVanillaHash = VanillaTlkHashes.TryGetValue(game, out string hash) ? hash : null;
-                    
+
                     // If backup hash matches vanilla, restore from backup
-                    if (!string.IsNullOrEmpty(expectedVanillaHash) && 
+                    if (!string.IsNullOrEmpty(expectedVanillaHash) &&
                         string.Equals(backupHash, expectedVanillaHash, StringComparison.OrdinalIgnoreCase))
                     {
                         File.Copy(backupPath, dialogTlkPath, overwrite: true);
@@ -906,7 +906,7 @@ namespace Andastra.Parsing.Uninstall
             {
                 string restoredHash = CalculateFileSha1(dialogTlkPath);
                 string expectedVanillaHash = VanillaTlkHashes.TryGetValue(game, out string hash) ? hash : null;
-                
+
                 if (!string.IsNullOrEmpty(expectedVanillaHash))
                 {
                     if (string.Equals(restoredHash, expectedVanillaHash, StringComparison.OrdinalIgnoreCase))
@@ -949,7 +949,7 @@ namespace Andastra.Parsing.Uninstall
 
                 var writer = new TLKBinaryWriter(dialogTlk);
                 File.WriteAllBytes(dialogTlkPath, writer.Write());
-                
+
                 Console.WriteLine($"[UninstallHelpers] Trimmed dialog.tlk to {maxEntries} entries (vanilla count for {game})");
             }
             catch (Exception ex)

@@ -159,7 +159,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
                 {
                     // Create raytracing system instance
                     _raytracing = new NativeRaytracingSystem(_backend);
-                    
+
                     // Create raytracing settings from render settings
                     RaytracingSettings rtSettings = new RaytracingSettings
                     {
@@ -172,7 +172,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
                         EnableDenoiser = settings.RaytracingDenoiser,
                         Denoiser = settings.RaytracingDenoiser ? DenoiserType.Temporal : DenoiserType.None
                     };
-                    
+
                     // Initialize the raytracing system
                     if (_raytracing.Initialize(rtSettings))
                     {
@@ -422,7 +422,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
             }
 
             // Check if backend preference changed - if so, we need to reinitialize
-            if (settings.PreferredBackend != _settings.PreferredBackend && 
+            if (settings.PreferredBackend != _settings.PreferredBackend &&
                 settings.PreferredBackend != GraphicsBackend.Auto)
             {
                 Console.WriteLine("[OdysseyRenderer] Backend preference changed, reinitializing...");

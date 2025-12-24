@@ -18,7 +18,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
     /// </remarks>
     public class NwnEEResourceProvider : AuroraResourceProvider
     {
-        public NwnEEResourceProvider(string installationPath) 
+        public NwnEEResourceProvider(string installationPath)
             : base(installationPath, GameType.NWNEE)
         {
         }

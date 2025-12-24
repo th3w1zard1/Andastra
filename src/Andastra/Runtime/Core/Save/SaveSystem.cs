@@ -44,13 +44,13 @@ namespace Andastra.Runtime.Core.Save
     /// - [module]_s.rim - Per-module state (positions, etc.)
     /// - NFO.res - Save metadata (name, time, screenshot)
     ///
-        /// Based on swkotor2.exe save system implementation:
-        /// - Main save function: SerializeSaveNfo @ 0x004eb750 (located via "savenfo" @ 0x007be1f0)
-        /// - Save global variables: SaveGlobalVariables @ 0x005ac670 (located via "GLOBALVARS" @ 0x007c27bc)
-        /// - Save party table: SavePartyTable @ 0x0057bd70 (located via "PARTYTABLE" @ 0x007c1910)
-        /// - Load save function: FUN_00708990 @ 0x00708990 (located via "LoadSavegame" @ 0x007bdc90)
-        /// - Auto-save function: FUN_004f0c50 @ 0x004f0c50
-        /// - Load save metadata: FUN_00707290 @ 0x00707290
+    /// Based on swkotor2.exe save system implementation:
+    /// - Main save function: SerializeSaveNfo @ 0x004eb750 (located via "savenfo" @ 0x007be1f0)
+    /// - Save global variables: SaveGlobalVariables @ 0x005ac670 (located via "GLOBALVARS" @ 0x007c27bc)
+    /// - Save party table: SavePartyTable @ 0x0057bd70 (located via "PARTYTABLE" @ 0x007c1910)
+    /// - Load save function: FUN_00708990 @ 0x00708990 (located via "LoadSavegame" @ 0x007bdc90)
+    /// - Auto-save function: FUN_004f0c50 @ 0x004f0c50
+    /// - Load save metadata: FUN_00707290 @ 0x00707290
     /// </remarks>
     public class SaveSystem
     {
@@ -419,7 +419,7 @@ namespace Andastra.Runtime.Core.Save
             // Use reflection to access FactionManager's internal faction reputation dictionary
             // FactionManager has _factionReputation field: Dictionary&lt;int, Dictionary&lt;int, int&gt;&gt;
             var factionManagerType = _factionManager.GetType();
-            var factionReputationField = factionManagerType.GetField("_factionReputation", 
+            var factionReputationField = factionManagerType.GetField("_factionReputation",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
             if (factionReputationField == null)
@@ -498,7 +498,7 @@ namespace Andastra.Runtime.Core.Save
                     // Use the AreaList property which contains all area ResRefs from Mod_Area_list
                     foreach (string areaResRef in runtimeModule.AreaList)
                     {
-                        if (!string.IsNullOrEmpty(areaResRef) && 
+                        if (!string.IsNullOrEmpty(areaResRef) &&
                             !saveData.ModuleAreaMappings[module.ResRef].Contains(areaResRef))
                         {
                             saveData.ModuleAreaMappings[module.ResRef].Add(areaResRef);
@@ -1471,7 +1471,7 @@ namespace Andastra.Runtime.Core.Save
 
             // Get CreateItemFromTemplate method from EntityFactory
             var entityFactoryType = entityFactory.GetType();
-            var createItemMethod = entityFactoryType.GetMethod("CreateItemFromTemplate", 
+            var createItemMethod = entityFactoryType.GetMethod("CreateItemFromTemplate",
                 System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
             if (createItemMethod == null)
             {
@@ -1547,16 +1547,16 @@ namespace Andastra.Runtime.Core.Save
                             // Based on Interfaces.Components.ItemUpgrade structure
                             var upgradeType = typeof(Interfaces.Components.ItemUpgrade);
                             object upgrade = System.Activator.CreateInstance(upgradeType);
-                            
+
                             // Set upgrade properties using reflection
                             var upgradeTypeProperty = upgradeType.GetProperty("UpgradeType");
                             var indexProperty = upgradeType.GetProperty("Index");
-                            
+
                             if (upgradeTypeProperty != null && upgradeTypeProperty.CanWrite)
                             {
                                 upgradeTypeProperty.SetValue(upgrade, savedUpgrade.UpgradeSlot);
                             }
-                            
+
                             if (indexProperty != null && indexProperty.CanWrite)
                             {
                                 // UpgradeResRef is stored as string, convert to int if needed
@@ -1591,9 +1591,9 @@ namespace Andastra.Runtime.Core.Save
             // EntityFactory is typically available through ModuleLoader or GameSession
             // Check if world has EntityFactory property or method
             var worldType = _world.GetType();
-            
+
             // Try EntityFactory property
-            var entityFactoryProperty = worldType.GetProperty("EntityFactory", 
+            var entityFactoryProperty = worldType.GetProperty("EntityFactory",
                 System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
             if (entityFactoryProperty != null)
             {
@@ -1601,7 +1601,7 @@ namespace Andastra.Runtime.Core.Save
             }
 
             // Try GetEntityFactory method
-            var getEntityFactoryMethod = worldType.GetMethod("GetEntityFactory", 
+            var getEntityFactoryMethod = worldType.GetMethod("GetEntityFactory",
                 System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
             if (getEntityFactoryMethod != null)
             {
@@ -1612,7 +1612,7 @@ namespace Andastra.Runtime.Core.Save
             if (_world.CurrentModule != null)
             {
                 var moduleType = _world.CurrentModule.GetType();
-                var moduleEntityFactoryProperty = moduleType.GetProperty("EntityFactory", 
+                var moduleEntityFactoryProperty = moduleType.GetProperty("EntityFactory",
                     System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
                 if (moduleEntityFactoryProperty != null)
                 {
@@ -1662,7 +1662,7 @@ namespace Andastra.Runtime.Core.Save
             // Try to get parsing Module from IModule using reflection
             // Some IModule implementations may have a ParsingModule property
             var moduleType = module.GetType();
-            var parsingModuleProperty = moduleType.GetProperty("ParsingModule", 
+            var parsingModuleProperty = moduleType.GetProperty("ParsingModule",
                 System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
             if (parsingModuleProperty != null)
             {
@@ -1670,7 +1670,7 @@ namespace Andastra.Runtime.Core.Save
             }
 
             // Try to get Module property (some implementations expose it directly)
-            var moduleProperty = moduleType.GetProperty("Module", 
+            var moduleProperty = moduleType.GetProperty("Module",
                 System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
             if (moduleProperty != null)
             {
@@ -1683,11 +1683,11 @@ namespace Andastra.Runtime.Core.Save
 
             // For RuntimeModule, try to get ParsingModule field
             // Based on Core.Module.RuntimeModule which may have a ParsingModule field
-            var parsingModuleField = moduleType.GetField("_parsingModule", 
+            var parsingModuleField = moduleType.GetField("_parsingModule",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             if (parsingModuleField == null)
             {
-                parsingModuleField = moduleType.GetField("ParsingModule", 
+                parsingModuleField = moduleType.GetField("ParsingModule",
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             }
             if (parsingModuleField != null)
@@ -1727,7 +1727,7 @@ namespace Andastra.Runtime.Core.Save
             foreach (var kvp in saveData.PlotStates)
             {
                 PlotState plotState = kvp.Value;
-                
+
                 // Register the plot
                 _plotSystem.RegisterPlot(plotState.PlotIndex, plotState.Label);
 
@@ -1948,7 +1948,7 @@ namespace Andastra.Runtime.Core.Save
             IModule module = null;
 
             // First, check if the current module matches
-            if (_world.CurrentModule != null && 
+            if (_world.CurrentModule != null &&
                 string.Equals(_world.CurrentModule.ResRef, moduleResRef, StringComparison.OrdinalIgnoreCase))
             {
                 module = _world.CurrentModule;
@@ -1976,7 +1976,7 @@ namespace Andastra.Runtime.Core.Save
                         }
                     }
                 }
-                
+
                 // Module is not loaded and we don't have a saved mapping for it
                 // This can happen if the save was created before the mapping was implemented,
                 // or if the module was never visited during the save session
@@ -2014,7 +2014,7 @@ namespace Andastra.Runtime.Core.Save
             if (CurrentSave != null && CurrentSave.AreaStates != null && _world.CurrentArea != null)
             {
                 string currentAreaResRef = _world.CurrentArea.ResRef;
-                
+
                 // Verify that the current area belongs to the requested module
                 if (!DoesAreaBelongToModule(currentAreaResRef, moduleResRef))
                 {
@@ -2027,11 +2027,11 @@ namespace Andastra.Runtime.Core.Save
                             return CreateModuleStateFromAreaState(kvp.Value);
                         }
                     }
-                    
+
                     // No area states found that belong to this module
                     return null;
                 }
-                
+
                 // Current area belongs to the module, return its state
                 AreaState areaState;
                 if (CurrentSave.AreaStates.TryGetValue(currentAreaResRef, out areaState))

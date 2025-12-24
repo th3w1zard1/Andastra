@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Eclipse.Components
 {
@@ -132,7 +132,7 @@ namespace Andastra.Runtime.Games.Eclipse.Components
             {
                 // Remove item from any previous slot
                 RemoveItem(item);
-                
+
                 // Place item in new slot
                 _slots[slot] = item;
             }
@@ -499,7 +499,7 @@ namespace Andastra.Runtime.Games.Eclipse.Components
                         foreach (object itemObj in enumerable)
                         {
                             IEntity item = null;
-                            
+
                             // Handle items stored as ObjectId (uint)
                             if (itemObj is uint objectId)
                             {
@@ -518,7 +518,7 @@ namespace Andastra.Runtime.Games.Eclipse.Components
                             {
                                 item = entityItem;
                             }
-                            
+
                             // Add item to slot if valid
                             if (item != null && item.IsValid)
                             {

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Runtime.Games.Common.Journal;
 using Andastra.Runtime.Core.Journal;
+using Andastra.Runtime.Games.Common.Journal;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Odyssey.Journal

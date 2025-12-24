@@ -17,10 +17,10 @@ namespace Andastra.Parsing.Resource.Generics
 
             // Engine default: "" (swkotor2.exe:0x00707290 line 153, swkotor.exe:0x006c8e50 line 137)
             nfo.AreaName = root.Acquire("AREANAME", string.Empty);
-            
+
             // Engine default: "" (swkotor2.exe:0x00707290 line 162, swkotor.exe:0x006c8e50 line 146)
             nfo.LastModule = root.Acquire("LASTMODULE", string.Empty);
-            
+
             // Engine default: "", but if field not found, defaults to "Old Save Game"
             // (swkotor2.exe:0x00707290 lines 173, 181, swkotor.exe:0x006c8e50 lines 157, 165)
             bool savegameNameExists = root.Exists("SAVEGAMENAME");
@@ -29,7 +29,7 @@ namespace Andastra.Parsing.Resource.Generics
             {
                 nfo.SavegameName = "Old Save Game";
             }
-            
+
             // Engine default: 0 (swkotor2.exe:0x00707290 line 169, swkotor.exe:0x006c8e50 line 153)
             nfo.TimePlayedSeconds = root.Acquire("TIMEPLAYED", 0);
 
@@ -51,7 +51,7 @@ namespace Andastra.Parsing.Resource.Generics
 
             // Engine default: 0 (swkotor2.exe:0x00707290 line 187, swkotor.exe:0x006c8e50 line 171)
             nfo.CheatUsed = root.Acquire("CHEATUSED", (byte)0) != 0;
-            
+
             // Engine default: Uses existing value in object if field missing, otherwise 0
             // For new objects, default is 0 (swkotor2.exe:0x00707290 line 219, swkotor.exe:0x006c8e50 line 190)
             nfo.GameplayHint = root.Acquire("GAMEPLAYHINT", (byte)0);
@@ -60,7 +60,7 @@ namespace Andastra.Parsing.Resource.Generics
             // - Legacy single byte (K1 only, K2 uses indexed STORYHINT0-9)
             // Engine default: 0 (swkotor.exe:0x006c8e50 line 194)
             nfo.StoryHintLegacy = root.Acquire("STORYHINT", (byte)0);
-            
+
             // - Per-index flags 0..9 (K2 only)
             // Engine default: Uses existing value in object if field missing, otherwise 0
             // For new objects, default is 0 for each index (swkotor2.exe:0x00707290 lines 223-252)

@@ -1,7 +1,6 @@
-﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:22-480
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:22-480
 // Original: public class SubroutineState
 using System;
-using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -9,7 +8,7 @@ using System.Text;
 using Andastra.Parsing.Formats.NCS.NCSDecomp;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.Stack;
-
+using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
 using UtilsType = Andastra.Parsing.Formats.NCS.NCSDecomp.Utils.Type;
 
 namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils

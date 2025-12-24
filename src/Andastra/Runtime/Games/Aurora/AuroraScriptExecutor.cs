@@ -1,5 +1,4 @@
 using System;
-using JetBrains.Annotations;
 using Andastra.Parsing;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
@@ -8,6 +7,7 @@ using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Scripting.Interfaces;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Aurora
 {
@@ -50,7 +50,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// <param name="globals">Global variable storage.</param>
         /// <param name="resourceProvider">Resource provider for NCS loading.</param>
         /// <param name="enableProfiling">Whether to enable script profiling.</param>
-        public AuroraScriptExecutor(IWorld world, IEngineApi engineApi, IScriptGlobals globals, 
+        public AuroraScriptExecutor(IWorld world, IEngineApi engineApi, IScriptGlobals globals,
                                     object resourceProvider, bool enableProfiling = false)
             : base(world, engineApi, globals)
         {
@@ -143,13 +143,13 @@ namespace Andastra.Runtime.Games.Aurora
         protected override IExecutionContext CreateExecutionContext(IEntity caller, IEntity triggerer)
         {
             var context = base.CreateExecutionContext(caller, triggerer);
-            
+
             // Set resource provider - cast to concrete type since interface property is readonly
             if (context is Andastra.Runtime.Scripting.VM.ExecutionContext vmContext)
             {
                 vmContext.ResourceProvider = _resourceProvider;
             }
-            
+
             return context;
         }
 
@@ -224,7 +224,7 @@ namespace Andastra.Runtime.Games.Aurora
             // Script ResRefs are loaded from Module.ifo GFF structure during module loading
             // Scripts can also be retrieved from module entity's IScriptHooksComponent
             string scriptResRef = module.GetScript(scriptEvent);
-            
+
             // If not found in module, try module entity's script hooks component
             // Based on nwmain.exe: Module scripts may be stored in entity component for runtime modification
             if (string.IsNullOrEmpty(scriptResRef))

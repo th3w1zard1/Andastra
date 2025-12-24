@@ -4,18 +4,18 @@ using System.Numerics;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Resource;
 using Andastra.Parsing.Formats.TLK;
-using JetBrains.Annotations;
+using Andastra.Parsing.Resource;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Games.Eclipse;
 using Andastra.Runtime.Games.Eclipse.Components;
+using JetBrains.Annotations;
+using Gender = Andastra.Parsing.Common.Gender;
+using Language = Andastra.Parsing.Common.Language;
 using ObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 using ScriptEvent = Andastra.Runtime.Core.Enums.ScriptEvent;
-using Language = Andastra.Parsing.Common.Language;
-using Gender = Andastra.Parsing.Common.Gender;
 
 namespace Andastra.Runtime.Games.Eclipse.Loading
 {
@@ -181,7 +181,7 @@ namespace Andastra.Runtime.Games.Eclipse.Loading
             }
 
             var entity = new EclipseEntity(GetNextObjectId(), ObjectType.Creature, null);
-            
+
             // Set position and facing
             var transformComponent = entity.GetComponent<ITransformComponent>();
             if (transformComponent != null)
@@ -256,7 +256,7 @@ namespace Andastra.Runtime.Games.Eclipse.Loading
             entity.SetData("RaceId", GetIntField(root, "Race", 0)); // Race field in UTC
             entity.SetData("Appearance_Type", GetIntField(root, "Appearance_Type", 0));
             entity.SetData("FactionID", GetIntField(root, "FactionID", 0));
-            
+
             // HP (maps to Health in EclipseStatsComponent)
             int currentHP = GetIntField(root, "CurrentHitPoints", 1);
             int maxHP = GetIntField(root, "MaxHitPoints", 1);

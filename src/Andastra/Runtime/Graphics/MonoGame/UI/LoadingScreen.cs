@@ -64,7 +64,7 @@ namespace Andastra.Runtime.MonoGame.UI
             // Draw semi-transparent black background overlay
             Texture2D pixel = new Texture2D(_spriteBatch.GraphicsDevice, 1, 1);
             pixel.SetData(new[] { Color.Black });
-            _spriteBatch.Draw(pixel, new Rectangle(0, 0, viewportWidth, viewportHeight), 
+            _spriteBatch.Draw(pixel, new Rectangle(0, 0, viewportWidth, viewportHeight),
                 new Color(0, 0, 0, 200)); // Semi-transparent black
 
             // Draw loading text centered

@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.KEY;
 using Andastra.Parsing.Resource;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Extract
 {

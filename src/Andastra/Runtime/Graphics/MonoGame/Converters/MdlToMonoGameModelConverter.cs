@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Andastra.Parsing.Formats.MDLData;
 using JetBrains.Annotations;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Andastra.Runtime.MonoGame.Converters
 {
@@ -188,7 +188,7 @@ namespace Andastra.Runtime.MonoGame.Converters
                 ConvertNodeHierarchy(mdl.Root, Matrix.Identity, result.Meshes);
             }
 
-            Console.WriteLine("[MdlToMonoGameModelConverter] Converted model: " + result.Name + 
+            Console.WriteLine("[MdlToMonoGameModelConverter] Converted model: " + result.Name +
                 " with " + result.Meshes.Count + " mesh parts");
 
             return result;
@@ -332,7 +332,7 @@ namespace Andastra.Runtime.MonoGame.Converters
 
             // Get texture name
             string textureName = null;
-            if (!string.IsNullOrEmpty(mesh.Texture1) && 
+            if (!string.IsNullOrEmpty(mesh.Texture1) &&
                 mesh.Texture1.ToLowerInvariant() != "null" &&
                 mesh.Texture1.ToLowerInvariant() != "none")
             {

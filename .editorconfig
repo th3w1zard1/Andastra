@@ -640,6 +640,9 @@ dotnet_diagnostic.IDE0025.severity = none
 # IDE0008: Use explicit type
 dotnet_diagnostic.IDE0008.severity = none
 
+# CS0618: Type or member is obsolete
+dotnet_diagnostic.CS0618.severity = none
+
 [KOTORModSync.GUI/**/*.cs]
 dotnet_diagnostic.S1481.severity = none
 dotnet_diagnostic.S4144.severity = none

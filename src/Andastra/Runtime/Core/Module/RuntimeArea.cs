@@ -59,7 +59,7 @@ namespace Andastra.Runtime.Core.Module
         private readonly List<IEntity> _encounters;
         private readonly Dictionary<string, List<IEntity>> _entitiesByTag;
         private readonly Dictionary<ScriptEvent, string> _scripts;
-        
+
         // Camera states storage (cameras are not runtime entities, stored separately for save system)
         // Based on swkotor2.exe: Cameras are stored in GIT CameraList but not as runtime entities
         // Camera states are stored here when area is loaded from GIT for save system compatibility

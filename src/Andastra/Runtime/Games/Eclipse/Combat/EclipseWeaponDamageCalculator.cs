@@ -1,9 +1,9 @@
 using System;
+using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Games.Common.Combat;
 using Andastra.Runtime.Games.Eclipse.Data;
-using Andastra.Parsing.Formats.TwoDA;
 
 namespace Andastra.Runtime.Games.Eclipse.Combat
 {

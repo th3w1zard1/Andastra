@@ -7,16 +7,14 @@ using Andastra.Parsing.Extract.Capsule;
 using Andastra.Parsing.Formats.Capsule;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.MDLData;
-using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Logger;
+using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource.Generics.ARE;
 using Andastra.Parsing.Resource.Generics.DLG;
-using Andastra.Parsing.Resource;
 using Andastra.Parsing.Tools;
 using JetBrains.Annotations;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Common
 {
@@ -24,7 +22,11 @@ namespace Andastra.Parsing.Common
     // Original: SEARCH_ORDER: list[SearchLocation] = [SearchLocation.OVERRIDE, SearchLocation.CUSTOM_MODULES, SearchLocation.CHITIN]
     public static class ModuleSearchOrder
     {
-        public static readonly SearchLocation[] Order = { SearchLocation.OVERRIDE, SearchLocation.CUSTOM_MODULES, SearchLocation.CHITIN };
+        public static readonly SearchLocation[] Order = {
+            SearchLocation.OVERRIDE,
+            SearchLocation.CUSTOM_MODULES,
+            SearchLocation.CHITIN,
+        };
     }
 
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:78-184

@@ -157,7 +157,7 @@ namespace Andastra.Utility.LZMA
                     // Try with containerized LZMA format (LZMADecompressor handles container format)
                     // Note: SharpCompress doesn't have a direct equivalent to Python's LZMADecompressor
                     // So we try with properties and various payload cleaning strategies
-                    
+
                     // Try with known properties and cleaned payload
                     byte[] result = TryDecompressWithCleanedPayload(cleanedPayload, uncompressedSize);
                     if (result != null && result.Length == uncompressedSize)
@@ -321,10 +321,10 @@ namespace Andastra.Utility.LZMA
                     inputStream.CopyTo(lzmaStream);
                     lzmaStream.Flush();
                 }
-                
+
                 // Get compressed data (properties + compressed data for raw LZMA1 format)
                 byte[] compressedData = outputStream.ToArray();
-                
+
                 // For raw LZMA1 format matching PyKotor, we need: properties (5 bytes) + compressed data
                 // SharpCompress should write: properties (5 bytes) + compressed data
                 // Verify the output starts with our known properties
@@ -332,7 +332,7 @@ namespace Andastra.Utility.LZMA
                 {
                     throw new InvalidOperationException("Compressed data is too short to contain properties");
                 }
-                
+
                 // Verify properties match our expected properties (first 5 bytes)
                 for (int i = 0; i < LzmaProperties.Length; i++)
                 {
@@ -347,7 +347,7 @@ namespace Andastra.Utility.LZMA
                         break;
                     }
                 }
-                
+
                 return compressedData;
             }
         }

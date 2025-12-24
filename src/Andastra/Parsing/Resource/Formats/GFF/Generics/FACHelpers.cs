@@ -1,7 +1,7 @@
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Resource.Generics
 {
@@ -23,16 +23,16 @@ namespace Andastra.Parsing.Resource.Generics
                 foreach (var factionStruct in factionList)
                 {
                     var faction = new FACFaction();
-                    
+
                     // Engine default: "" (swkotor2.exe:0x005acf30 line 38, swkotor.exe:0x0052b5c0 line 38)
                     faction.Name = factionStruct.Acquire<string>("FactionName", string.Empty);
-                    
+
                     // Engine default: 0 (swkotor2.exe:0x005acf30 line 47, swkotor.exe:0x0052b5c0 line 47)
                     // Standard factions use 0xFFFFFFFF (-1) for no parent
                     int parentIdVal = factionStruct.Acquire<int>("FactionParentID", -1);
                     // Handle both signed and unsigned representations of 0xFFFFFFFF
                     faction.ParentId = (parentIdVal == -1 || parentIdVal == 0xFFFFFFFF) ? unchecked((int)0xFFFFFFFF) : parentIdVal;
-                    
+
                     // Engine default: 0, but if field missing defaults to 1 (swkotor2.exe:0x005acf30 lines 48-52, swkotor.exe:0x0052b5c0 lines 48-52)
                     ushort globalValue = factionStruct.Acquire<ushort>("FactionGlobal", 0);
                     // Engine behavior: If field is missing (local_4c == 0), default to 1
@@ -41,7 +41,7 @@ namespace Andastra.Parsing.Resource.Generics
                         globalValue = 1;
                     }
                     faction.IsGlobal = globalValue != 0;
-                    
+
                     fac.Factions.Add(faction);
                 }
             }
@@ -54,17 +54,17 @@ namespace Andastra.Parsing.Resource.Generics
                 foreach (var repStruct in repList)
                 {
                     var rep = new FACReputation();
-                    
+
                     // Engine reference: swkotor2.exe:0x005ad1a0 line 23, swkotor.exe:0x0052b830 line 23
                     rep.FactionId1 = repStruct.Acquire<int>("FactionID1", 0);
-                    
+
                     // Engine reference: swkotor2.exe:0x005ad1a0 line 24, swkotor.exe:0x0052b830 line 24
                     rep.FactionId2 = repStruct.Acquire<int>("FactionID2", 0);
-                    
+
                     // Engine default: 100 (swkotor2.exe:0x005ad1a0 line 21, swkotor.exe:0x0052b830 line 20)
                     // Note: Engine only writes if != 100, so default is 100
                     rep.Reputation = repStruct.Acquire<int>("FactionRep", 100);
-                    
+
                     fac.Reputations.Add(rep);
                 }
             }

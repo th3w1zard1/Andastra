@@ -1,13 +1,13 @@
 using System;
-using System.Numerics;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
-using JetBrains.Annotations;
-using Andastra.Parsing.Common;
 using Andastra.Parsing.Resource.Generics.DLG;
+using JetBrains.Annotations;
 
 namespace Andastra.Parsing.Resource.Generics.CNV
 {
@@ -528,7 +528,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
             {
                 gffStruct.SetString("LinkComment", link.Comment);
             }
-            
+
             // Eclipse-specific link fields (always write for Eclipse games)
             gffStruct.SetResRef("Active2", link.Active2);
             gffStruct.SetInt32("Logic", link.Logic ? 1 : 0);

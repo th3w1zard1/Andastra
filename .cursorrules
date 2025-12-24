@@ -96,32 +96,7 @@ else if (GameType == GameType.K1) { /* K1 behavior */ }
 
 **Existing code**: Leave inheritance alone. Never refactor it.
 **Why**: LLMs get confused by "sometimes use inheritance, sometimes not". Clear rule: new = conditionals, old = keep as-is.
-
-## 7. Resolving Name Conflicts in C# Projects
-
-When encountering compilation errors due to ambiguous type references (e.g., multiple classes with the same name like `Game` in different namespaces), **always prioritize renaming one of the conflicting classes** to eliminate the ambiguity at the source.
-
-- **Never use fully qualified names** (e.g., `Andastra.Parsing.Common.Game`) as a workaround in code or usings.
-- **Never use alias directives** (e.g., `using Game = Andastra.Parsing.Common.Game;`) to resolve conflicts.
-- Do not suggest or apply these temporary fixes.
-
-#### Choosing Which Class to Rename
-
-- Analyze the entire solution to determine how many references exist for each conflicting class.
-- Count the occurrences of each class name in `using` statements, type declarations, instantiations, and other usages across all files.
-- **Rename the class that appears in fewer places** — this will require the fewest code changes and minimize the risk of introducing new errors.
-- If the counts are similar, prefer renaming the class from an external or less central namespace/library over one in your core project code.
-
-#### Renaming Process
-
-- Choose a clear, descriptive new name that avoids future conflicts (e.g., `AndastraGame` or `ParsingGame` based on context).
-- Use the IDE's safe rename refactoring tool when possible to update all references automatically.
-- After renaming, rebuild the solution and fix any remaining issues systematically.
-- Batch related changes together for efficiency, and aim for a complete build success in each iteration.
-
-Always plan changes carefully before applying them, considering the impact on the overall project structure and build.
-
-## 8. Reverse Engineering Workflow (Mandatory)
+## 7. Reverse Engineering Workflow (Mandatory)
 
 1. Analyze in Ghidra first
 2. Document in Ghidra: rename functions/vars, add comments, prototype
@@ -132,21 +107,21 @@ Always plan changes carefully before applying them, considering the impact on th
    if (GameType == GameType.K2) { ... }
    ```
 
-4. Use ghidra mcp to ensure 1:1 parity. Setup using mcp server tool 'open-project' on project path "C:\Users\boden\Andastra Ghidra Project.gpr"
+4. Use reva mcp to ensure 1:1 parity. Setup using mcp server tool 'open-project' on project path "C:\Users\boden\Andastra Ghidra Project.gpr"
 
 **CRUCIALLY IMPORTANT**: If reva was requested/required for the task ensure it works before proceeding with the task. If it fails or a tool call doesn't work due to a connection error or setup error or not available or something, STOP **IMMEDIATELY** and INFORM the user.
 
-## 9. NSS/NCS Operations
+## 8. NSS/NCS Operations
 
 Use `scripts/NcsTool.ps1` for everything (compile, decompile, compare, roundtrip, generate-defs)
 
-## 10. Documentation
+## 9. Documentation
 
 - Only public-facing .md → `docs/`
 - Progress reports must be standard roadmaps that are kept in .cursor/roadmaps/*.md
 - Literally all documentation should be roadmaps in ./.cursor/roadmaps or public facing in ./docs
 
-## 11. Definition of Done (Simple Checklist)
+## 10. Definition of Done (Simple Checklist)
 
 - Code compiles (no warnings)
 - Uses C# 7.3

@@ -5,10 +5,10 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.NCS;
 using Andastra.Parsing.Logger;
 using JetBrains.Annotations;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Formats.NCS.Compiler
 {

@@ -59,13 +59,13 @@ namespace Andastra.Runtime.Engines.Common
             _tableConfig = CreateTableConfig();
             _supportedFeatures = new HashSet<string>();
             InitializeSupportedFeatures();
-            
+
             // Common validation: Ensure resource and table configs are not null
             if (_resourceConfig == null)
             {
                 throw new InvalidOperationException("CreateResourceConfig() must not return null");
             }
-            
+
             if (_tableConfig == null)
             {
                 throw new InvalidOperationException("CreateTableConfig() must not return null");

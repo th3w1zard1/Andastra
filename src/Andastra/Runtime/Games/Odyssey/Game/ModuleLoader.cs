@@ -1,6 +1,21 @@
 using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
+using Andastra.Parsing;
+using Andastra.Parsing.Common;
+using Andastra.Parsing.Formats.BWM;
+using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Formats.MDL;
+using Andastra.Parsing.Formats.TPC;
+using Andastra.Parsing.Formats.VIS;
+using Andastra.Parsing.Installation;
+using Andastra.Parsing.Resource;
+using Andastra.Parsing.Resource.Formats.LYT;
+using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Resource.Generics.ARE;
+using Andastra.Parsing.Resource.Generics.DLG;
+using Andastra.Parsing.Resource.Generics.UTC;
+using Andastra.Parsing.Resource.Generics.UTM;
 using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
@@ -8,39 +23,23 @@ using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Module;
 using Andastra.Runtime.Core.Navigation;
 using Andastra.Runtime.Core.Save;
-using Andastra.Parsing;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Resource.Formats.LYT;
-using Andastra.Parsing.Formats.VIS;
-using Andastra.Parsing.Formats.BWM;
-using Andastra.Parsing.Formats.MDL;
-using Andastra.Parsing.Formats.TPC;
-using MDLData = Andastra.Parsing.Formats.MDLData;
-using Andastra.Parsing.Resource.Generics;
-using Andastra.Parsing.Resource.Generics.ARE;
-using Andastra.Parsing.Resource.Generics.DLG;
-using Andastra.Parsing.Common;
-using ResRef = Andastra.Parsing.Common.ResRef;
-using JetBrains.Annotations;
-
-// Explicit type aliases to resolve ambiguity
-using SysVector3 = System.Numerics.Vector3;
-using KotorVector3 = System.Numerics.Vector3;
-using RuntimeObjectType = Andastra.Runtime.Core.Enums.ObjectType;
-using OdyObjectType = Andastra.Runtime.Core.Enums.ObjectType;
-using InstResourceResult = Andastra.Parsing.Installation.ResourceResult;
 using Andastra.Runtime.Engines.Odyssey.Components;
 using Andastra.Runtime.Engines.Odyssey.Loading;
-using Systems = Andastra.Runtime.Games.Odyssey.Systems;
-using OdysseyNavigationMeshFactory = Andastra.Runtime.Engines.Odyssey.Loading.NavigationMeshFactory;
-using SoundComponent = Andastra.Runtime.Games.Odyssey.Components.SoundComponent;
+using JetBrains.Annotations;
+using InstResourceResult = Andastra.Parsing.Installation.ResourceResult;
+using KotorVector3 = System.Numerics.Vector3;
+using MDLData = Andastra.Parsing.Formats.MDLData;
+using OdyObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 using OdysseyDoorComponent = Andastra.Runtime.Games.Odyssey.Components.OdysseyDoorComponent;
+using OdysseyNavigationMeshFactory = Andastra.Runtime.Engines.Odyssey.Loading.NavigationMeshFactory;
 using OdysseyWaypointComponent = Andastra.Runtime.Games.Odyssey.Components.OdysseyWaypointComponent;
 using PlaceableComponent = Andastra.Runtime.Games.Odyssey.Components.PlaceableComponent;
-using Andastra.Parsing.Resource.Generics.UTM;
-using Andastra.Parsing.Resource.Generics.UTC;
+using ResRef = Andastra.Parsing.Common.ResRef;
+using RuntimeObjectType = Andastra.Runtime.Core.Enums.ObjectType;
+using SoundComponent = Andastra.Runtime.Games.Odyssey.Components.SoundComponent;
+using Systems = Andastra.Runtime.Games.Odyssey.Systems;
+// Explicit type aliases to resolve ambiguity
+using SysVector3 = System.Numerics.Vector3;
 
 namespace Andastra.Runtime.Engines.Odyssey.Game
 {

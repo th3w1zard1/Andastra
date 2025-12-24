@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Resource;
 using JetBrains.Annotations;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Resource.Generics
 {
@@ -211,13 +211,13 @@ namespace Andastra.Parsing.Resource.Generics
         /// This is the X component of the direction vector that determines which way the player faces.
         /// </summary>
         public float EntryDirectionX { get; set; }
-        
+
         /// <summary>
         /// Entry direction Y component (facing direction).
         /// This is the Y component of the direction vector that determines which way the player faces.
         /// </summary>
         public float EntryDirectionY { get; set; }
-        
+
         /// <summary>
         /// Entry direction Z component (facing direction).
         /// This is the Z component of the direction vector that determines which way the player faces.

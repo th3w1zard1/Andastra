@@ -4,13 +4,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Extract;
 using Andastra.Parsing.Formats.Capsule;
 using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Formats.RIM;
 using Andastra.Parsing.Resource;
 using JetBrains.Annotations;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Extract.Capsule
 {

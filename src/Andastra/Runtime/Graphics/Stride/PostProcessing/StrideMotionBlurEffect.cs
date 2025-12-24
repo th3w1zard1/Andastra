@@ -1,17 +1,17 @@
 using System;
 using System.IO;
-using StrideGraphics = Stride.Graphics;
-using Stride.Rendering;
-using Stride.Core.Mathematics;
-using Stride.Engine;
-using Stride.Shaders;
-using Stride.Shaders.Compiler;
-using Stride.Core.Serialization.Contents;
-using Stride.Core;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.PostProcessing;
 using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Stride.Graphics;
+using Stride.Core;
+using Stride.Core.Mathematics;
+using Stride.Core.Serialization.Contents;
+using Stride.Engine;
+using Stride.Rendering;
+using Stride.Shaders;
+using Stride.Shaders.Compiler;
+using StrideGraphics = Stride.Graphics;
 
 namespace Andastra.Runtime.Stride.PostProcessing
 {
@@ -649,16 +649,42 @@ shader MotionBlurEffect : ShaderBase
     }
 };";
 
-                // Create shader source object for EffectSystem
+                // EffectSystem.Compile() doesn't exist, need to get EffectCompiler from EffectSystem
+                // Try to get EffectCompiler from EffectSystem using reflection
+                EffectCompiler compiler = null;
+                try
+                {
+                    var compilerProperty = effectSystem.GetType().GetProperty("Compiler");
+                    if (compilerProperty != null)
+                    {
+                        compiler = compilerProperty.GetValue(effectSystem) as EffectCompiler;
+                    }
+                }
+                catch
+                {
+                    // Compiler property not available
+                }
+
+                // If we couldn't get EffectCompiler from EffectSystem, we can't compile
+                if (compiler == null)
+                {
+                    System.Console.WriteLine("[StrideMotionBlurEffect] Cannot get EffectCompiler from EffectSystem, compilation failed");
+                    return null;
+                }
+
+                // Create shader source object for EffectCompiler
                 var shaderSourceObj = new ShaderSourceClass
                 {
                     Name = "MotionBlurEffect",
                     SourceCode = shaderSource
                 };
 
-                // Compile using EffectSystem
-                // EffectSystem provides the proper compilation context and bytecode generation
-                var compilationResult = effectSystem.Compile(shaderSourceObj);
+                // Compile using EffectCompiler
+                // EffectCompiler provides the proper compilation context and bytecode generation
+                dynamic compilationResult = compiler.Compile(shaderSourceObj, new CompilerParameters
+                {
+                    EffectParameters = new EffectCompilerParameters()
+                });
 
                 // Handle TaskOrResult unwrapping
                 dynamic compilerResult = compilationResult.Result;
@@ -805,7 +831,7 @@ shader MotionBlurEffect : ShaderBase
         /// <param name="shaderSource">Shader source code.</param>
         /// <param name="shaderName">Shader name for identification.</param>
         /// <returns>Compiled Effect, or null if compilation fails.</returns>
-        private StrideGraphics.Effect CompileShaderWithEffectSystem(global::Stride.Shaders.Compiler.EffectCompiler effectSystem, string shaderSource, string shaderName)
+        private StrideGraphics.Effect CompileShaderWithEffectSystem(EffectSystem effectSystem, string shaderSource, string shaderName)
         {
             try
             {

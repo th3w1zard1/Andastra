@@ -1,6 +1,6 @@
-using StrideGraphics = Stride.Graphics;
 using Andastra.Runtime.Graphics;
 using RectangleF = Stride.Core.Mathematics.RectangleF;
+using StrideGraphics = Stride.Graphics;
 
 namespace Andastra.Runtime.Stride.Graphics
 {
@@ -79,7 +79,7 @@ namespace Andastra.Runtime.Stride.Graphics
             _isBegun = false;
         }
 
-        public void Draw(ITexture2D texture, Vector2 position,Color color)
+        public void Draw(ITexture2D texture, Vector2 position, Color color)
         {
             EnsureBegun();
             var strideTexture = GetStrideTexture(texture);
@@ -88,7 +88,7 @@ namespace Andastra.Runtime.Stride.Graphics
             _spriteBatch.Draw(strideTexture, strideRect, strideColor);
         }
 
-        public void Draw(ITexture2D texture, Rectangle destinationRectangle,Color color)
+        public void Draw(ITexture2D texture, Rectangle destinationRectangle, Color color)
         {
             EnsureBegun();
             var strideTexture = GetStrideTexture(texture);
@@ -97,7 +97,7 @@ namespace Andastra.Runtime.Stride.Graphics
             _spriteBatch.Draw(strideTexture, strideRect, strideColor);
         }
 
-        public void Draw(ITexture2D texture, Vector2 position, Rectangle? sourceRectangle,Color color)
+        public void Draw(ITexture2D texture, Vector2 position, Rectangle? sourceRectangle, Color color)
         {
             EnsureBegun();
             var strideTexture = GetStrideTexture(texture);
@@ -159,7 +159,7 @@ namespace Andastra.Runtime.Stride.Graphics
             _spriteBatch.Draw(strideTexture, strideDestRect, strideColor);
         }
 
-        public void DrawString(IFont font, string text, Vector2 position,Color color)
+        public void DrawString(IFont font, string text, Vector2 position, Color color)
         {
             EnsureBegun();
             var strideFont = GetStrideFont(font);

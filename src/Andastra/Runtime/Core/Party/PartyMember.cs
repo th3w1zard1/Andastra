@@ -110,7 +110,7 @@ namespace Andastra.Runtime.Core.Party
         {
             Entity = entity ?? throw new ArgumentNullException("entity");
             _isPlayerCharacter = isPlayerCharacter;
-            
+
             NPCSlot = -1;
             IsAvailable = false;
             IsSelectable = false;

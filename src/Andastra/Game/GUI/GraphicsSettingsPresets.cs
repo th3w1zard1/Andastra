@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Andastra.Runtime.Graphics;
+using Andastra.Runtime.Graphics.Common;
 
 namespace Andastra.Game.GUI
 {

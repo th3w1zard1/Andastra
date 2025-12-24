@@ -1,11 +1,11 @@
-﻿using System;
-using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using JetBrains.Annotations;
-using Scriptutils = Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
+using JetBrains.Annotations;
+using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
+using Scriptutils = Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils;
 
 
 namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils

@@ -21,7 +21,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Profiles
     public static class GameProfileFactory
     {
         private static readonly Dictionary<GameType, Func<Andastra.Runtime.Engines.Common.IEngineProfile>> _profileFactories;
-        
+
         static GameProfileFactory()
         {
             _profileFactories = new Dictionary<GameType, Func<Andastra.Runtime.Engines.Common.IEngineProfile>>
@@ -30,7 +30,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Profiles
                 { GameType.K2, () => new OdysseyTheSithLordsGameProfile() }
             };
         }
-        
+
         /// <summary>
         /// Creates a game profile for the specified game type.
         /// </summary>
@@ -45,7 +45,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Profiles
             }
             throw new NotSupportedException("Game type not supported: " + gameType);
         }
-        
+
         /// <summary>
         /// Gets all available game profiles.
         /// </summary>
@@ -56,7 +56,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Profiles
                 yield return factory();
             }
         }
-        
+
         /// <summary>
         /// Checks if a game type is supported.
         /// </summary>

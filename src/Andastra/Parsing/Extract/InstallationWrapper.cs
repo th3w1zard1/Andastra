@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using Andastra.Parsing.Installation;
-using ResourceType = Andastra.Parsing.Resource.ResourceType;
-using LocationResult = Andastra.Parsing.Extract.LocationResult;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Installation;
+using LocationResult = Andastra.Parsing.Extract.LocationResult;
+using ResourceType = Andastra.Parsing.Resource.ResourceType;
 
 namespace Andastra.Parsing.Extract
 {

@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Andastra.Parsing;
-using Andastra.Parsing.Resource.Generics.DLG;
 using Andastra.Parsing.Resource;
-using Andastra.Runtime.Core.Dialogue;
+using Andastra.Parsing.Resource.Generics.DLG;
 using Andastra.Runtime.Content.Interfaces;
+using Andastra.Runtime.Core.Dialogue;
 
 namespace Andastra.Runtime.Engines.Odyssey.Dialogue
 {

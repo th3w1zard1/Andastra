@@ -2,8 +2,8 @@ using System;
 using System.IO;
 using System.Text;
 using Andastra.Parsing;
-using Andastra.Parsing.Resource;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Resource;
 
 namespace Andastra.Parsing.Formats.TPC
 {
@@ -79,7 +79,7 @@ namespace Andastra.Parsing.Formats.TPC
                     var txi = _tpc.TxiObject;
                     int numx = Math.Max(1, txi?.Features?.Numx ?? 0);
                     int numy = Math.Max(1, txi?.Features?.Numy ?? 0);
-                    
+
                     if (numx * numy != layerCount && layerCount > 0)
                     {
                         numx = layerCount;
@@ -89,12 +89,12 @@ namespace Andastra.Parsing.Formats.TPC
                     {
                         layerCount = Math.Max(1, numx * numy);
                     }
-                    
+
                     width = frameWidth * Math.Max(1, numx);
                     height = frameHeight * Math.Max(1, numy);
                     layerWidth = frameWidth;
                     layerHeight = frameHeight;
-                    
+
                     if (layerWidth <= 0 || layerHeight <= 0)
                     {
                         throw new ArgumentException($"Invalid layer dimensions ({layerWidth}x{layerHeight}) for animated texture");
@@ -110,8 +110,8 @@ namespace Andastra.Parsing.Formats.TPC
                 }
 
                 // Calculate data size for compressed formats
-                int baseLevelSize = _tpc.Layers.Count > 0 && _tpc.Layers[0].Mipmaps.Count > 0 
-                    ? _tpc.Layers[0].Mipmaps[0].Data.Length 
+                int baseLevelSize = _tpc.Layers.Count > 0 && _tpc.Layers[0].Mipmaps.Count > 0
+                    ? _tpc.Layers[0].Mipmaps[0].Data.Length
                     : 0;
                 int dataSize = 0;
                 if (format.IsDxt())
@@ -154,7 +154,7 @@ namespace Andastra.Parsing.Formats.TPC
                         }
 
                         byte[] mipmapData = mipmap.Data;
-                        
+
                         // Apply BGRA swizzling for power-of-two textures
                         if (format == TPCTextureFormat.BGRA && IsPowerOfTwo(currentWidth))
                         {
@@ -183,7 +183,7 @@ namespace Andastra.Parsing.Formats.TPC
                 {
                     normalized += "\r\n";
                 }
-                
+
                 byte[] txiBytes = Encoding.ASCII.GetBytes(normalized);
                 _writer.WriteBytes(txiBytes);
                 _writer.WriteUInt8(0); // Null terminator
@@ -245,14 +245,14 @@ namespace Andastra.Parsing.Formats.TPC
             }
 
             byte[] swizzled = new byte[width * height * bytesPerPixel];
-            
+
             for (int y = 0; y < height; y++)
             {
                 for (int x = 0; x < width; x++)
                 {
                     int srcOffset = (y * width + x) * bytesPerPixel;
                     int dstOffset = SwizzleOffset(x, y, width, height) * bytesPerPixel;
-                    
+
                     for (int i = 0; i < bytesPerPixel; i++)
                     {
                         if (srcOffset + i < data.Length && dstOffset + i < swizzled.Length)
@@ -262,7 +262,7 @@ namespace Andastra.Parsing.Formats.TPC
                     }
                 }
             }
-            
+
             return swizzled;
         }
 
@@ -274,7 +274,7 @@ namespace Andastra.Parsing.Formats.TPC
             int shift = 0;
             int tempX = x;
             int tempY = y;
-            
+
             while (log2W > 0 || log2H > 0)
             {
                 if (log2W > 0)
@@ -292,7 +292,7 @@ namespace Andastra.Parsing.Formats.TPC
                     log2H--;
                 }
             }
-            
+
             return offset;
         }
 

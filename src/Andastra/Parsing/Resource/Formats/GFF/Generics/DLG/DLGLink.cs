@@ -2,8 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Andastra.Parsing;
-using JetBrains.Annotations;
 using Andastra.Parsing.Common;
+using JetBrains.Annotations;
 
 namespace Andastra.Parsing.Resource.Generics.DLG
 {

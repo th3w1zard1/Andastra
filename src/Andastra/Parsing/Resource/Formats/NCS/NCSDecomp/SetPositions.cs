@@ -1,10 +1,10 @@
-﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetPositions.java:14-39
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetPositions.java:14-39
 // Original: public class SetPositions extends PrunedReversedDepthFirstAdapter
 using System;
-using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
 using Andastra.Parsing.Formats.NCS.NCSDecomp;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
+using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
 
 namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
 {

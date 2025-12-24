@@ -125,13 +125,13 @@ namespace Andastra.Runtime.Core.AI
             {
                 return false;
             }
-            
+
             // Check if entity has IsPC flag set
             if (entity is Core.Entities.Entity concreteEntity && concreteEntity.GetData<bool>("IsPC", false))
             {
                 return true;
             }
-            
+
             // Check if entity tag indicates player character
             string tag = entity.Tag ?? string.Empty;
             if (tag.Equals("Player", StringComparison.OrdinalIgnoreCase) ||
@@ -139,7 +139,7 @@ namespace Andastra.Runtime.Core.AI
             {
                 return true;
             }
-            
+
             // Check if entity is in party and is player-controlled
             // Party members can be player-controlled if they're the active party leader
             return false;
@@ -157,13 +157,13 @@ namespace Andastra.Runtime.Core.AI
             {
                 return false;
             }
-            
+
             // Check if entity has dialogue active flag
             if (entity is Core.Entities.Entity concreteEntity && concreteEntity.GetData<bool>("InConversation", false))
             {
                 return true;
             }
-            
+
             // Check if entity has active dialogue component or dialogue state
             // Dialogue system would set this flag when conversation starts
             return false;
@@ -209,7 +209,7 @@ namespace Andastra.Runtime.Core.AI
             // Get all creatures in perception range
             IPerceptionComponent perception = creature.GetComponent<IPerceptionComponent>();
             float range = perception != null ? perception.SightRange : 20.0f;
-            
+
             ITransformComponent creatureTransform = creature.GetComponent<ITransformComponent>();
             if (creatureTransform == null)
             {

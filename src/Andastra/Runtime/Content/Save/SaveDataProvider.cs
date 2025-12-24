@@ -86,7 +86,7 @@ namespace Andastra.Runtime.Content.Save
             string safeName = SanitizeSaveName(saveName);
             return Path.Combine(_savesDirectory, safeName);
         }
-        
+
         /// <summary>
         /// Formats save name in original engine format: "%06d - %s"
         /// </summary>

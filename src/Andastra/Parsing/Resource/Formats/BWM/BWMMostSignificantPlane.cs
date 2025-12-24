@@ -61,32 +61,32 @@ namespace Andastra.Parsing.Formats.BWM
         /// Split along negative Z axis (downward direction).
         /// </summary>
         NegativeZ = -3,
-        
+
         /// <summary>
         /// Split along negative Y axis (backward direction).
         /// </summary>
         NegativeY = -2,
-        
+
         /// <summary>
         /// Split along negative X axis (leftward direction).
         /// </summary>
         NegativeX = -1,
-        
+
         /// <summary>
         /// No split axis (used for leaf nodes containing only one triangle).
         /// </summary>
         None = 0,
-        
+
         /// <summary>
         /// Split along positive X axis (rightward direction).
         /// </summary>
         PositiveX = 1,
-        
+
         /// <summary>
         /// Split along positive Y axis (forward direction).
         /// </summary>
         PositiveY = 2,
-        
+
         /// <summary>
         /// Split along positive Z axis (upward direction).
         /// </summary>

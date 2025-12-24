@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Common.Script;
 using Andastra.Parsing.Formats.NCS;
 using Andastra.Parsing.Formats.NCS.Compiler.NSS;
 using Andastra.Parsing.Formats.NCS.Optimizers;
 using JetBrains.Annotations;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Formats.NCS.Compiler
 {
@@ -90,11 +90,11 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
         private static SymbolUsage AnalyzeSymbolUsage(string source)
         {
             var usage = new SymbolUsage();
-            
+
             // Use NssLexer for proper tokenization (matches nwnnsscomp.exe tokenization)
             var lexer = new NssLexer();
             int lexResult = lexer.Analyse(source);
-            
+
             if (lexResult != 0 || lexer.Tokens == null)
             {
                 // Lexer failed - fall back to line-based analysis for includes only
@@ -119,7 +119,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
             bool inStructDeclaration = false;
             int braceDepth = 0;
             int parenDepth = 0;
-            
+
             // Known NSS keywords that should not be treated as symbols
             var keywords = new HashSet<string>
             {
@@ -133,7 +133,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
             for (int i = 0; i < lexer.Tokens.Count; i++)
             {
                 var token = lexer.Tokens[i];
-                
+
                 // Skip comments and string literals (they don't contain symbols)
                 if (token is NssComment || (token is NssLiteral literal && literal.LiteralType == NssLiteralType.String))
                 {
@@ -201,26 +201,26 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
                         {
                             int nextIdx = i + 1;
                             // Skip whitespace/separators
-                            while (nextIdx < lexer.Tokens.Count && 
-                                   (lexer.Tokens[nextIdx] is NssSeparator sep && 
+                            while (nextIdx < lexer.Tokens.Count &&
+                                   (lexer.Tokens[nextIdx] is NssSeparator sep &&
                                     (sep.Separator == NssSeparators.Space || sep.Separator == NssSeparators.Tab || sep.Separator == NssSeparators.NewLine)))
                             {
                                 nextIdx++;
                             }
-                            
+
                             if (nextIdx < lexer.Tokens.Count && lexer.Tokens[nextIdx] is NssIdentifier)
                             {
                                 // Check if followed by open paren (function declaration)
                                 int parenIdx = nextIdx + 1;
-                                while (parenIdx < lexer.Tokens.Count && 
-                                       (lexer.Tokens[parenIdx] is NssSeparator sep2 && 
+                                while (parenIdx < lexer.Tokens.Count &&
+                                       (lexer.Tokens[parenIdx] is NssSeparator sep2 &&
                                         (sep2.Separator == NssSeparators.Space || sep2.Separator == NssSeparators.Tab || sep2.Separator == NssSeparators.NewLine)))
                                 {
                                     parenIdx++;
                                 }
-                                
-                                if (parenIdx < lexer.Tokens.Count && 
-                                    lexer.Tokens[parenIdx] is NssSeparator sep3 && 
+
+                                if (parenIdx < lexer.Tokens.Count &&
+                                    lexer.Tokens[parenIdx] is NssSeparator sep3 &&
                                     sep3.Separator == NssSeparators.OpenParen)
                                 {
                                     inFunctionDeclaration = true;
@@ -235,7 +235,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
                 if (token is NssIdentifier identifier)
                 {
                     string identName = identifier.Identifier;
-                    
+
                     if (string.IsNullOrEmpty(identName) || keywords.Contains(identName))
                     {
                         continue;
@@ -247,15 +247,15 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
                     {
                         // Look ahead for open paren (skip whitespace)
                         int nextIdx = i + 1;
-                        while (nextIdx < lexer.Tokens.Count && 
-                               (lexer.Tokens[nextIdx] is NssSeparator sep && 
+                        while (nextIdx < lexer.Tokens.Count &&
+                               (lexer.Tokens[nextIdx] is NssSeparator sep &&
                                 (sep.Separator == NssSeparators.Space || sep.Separator == NssSeparators.Tab || sep.Separator == NssSeparators.NewLine)))
                         {
                             nextIdx++;
                         }
-                        
-                        if (nextIdx < lexer.Tokens.Count && 
-                            lexer.Tokens[nextIdx] is NssSeparator sep2 && 
+
+                        if (nextIdx < lexer.Tokens.Count &&
+                            lexer.Tokens[nextIdx] is NssSeparator sep2 &&
                             sep2.Separator == NssSeparators.OpenParen)
                         {
                             // This is a function call
@@ -273,15 +273,15 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
                     // 2. TRUE/FALSE (handled as keywords, but check anyway)
                     // 3. Named constants from script definitions
                     bool isConstant = false;
-                    
+
                     // Pattern: All uppercase letters, digits, and underscores
-                    if (identName.Length > 0 && 
+                    if (identName.Length > 0 &&
                         identName.All(c => char.IsUpper(c) || char.IsDigit(c) || c == '_') &&
                         identName.Any(c => char.IsUpper(c)))
                     {
                         isConstant = true;
                     }
-                    
+
                     // Additional check: If it's used in a context that suggests a constant
                     // (e.g., after comparison operators, in switch cases, etc.)
                     if (!isConstant && i > 0)
@@ -292,7 +292,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
                         {
                             // Constants often appear after comparison operators
                             // Check for comparison operators: ==, !=, <, >, <=, >=
-                            if (op.Operator == NssOperators.Equals || 
+                            if (op.Operator == NssOperators.Equals ||
                                 op.Operator == NssOperators.NotEqual ||
                                 op.Operator == NssOperators.LessThan ||
                                 op.Operator == NssOperators.GreaterThan ||
@@ -302,7 +302,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
                                 isConstant = true;
                             }
                         }
-                        else if (prevToken is NssKeyword kw && 
+                        else if (prevToken is NssKeyword kw &&
                                  (kw.Keyword == NssKeywords.Case || kw.Keyword == NssKeywords.Switch))
                         {
                             // Constants in switch cases

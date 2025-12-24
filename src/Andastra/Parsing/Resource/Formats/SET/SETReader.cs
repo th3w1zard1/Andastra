@@ -54,7 +54,7 @@ namespace Andastra.Parsing.Formats.SET
                 if (line.StartsWith("[") && line.EndsWith("]"))
                 {
                     currentSection = line.Substring(1, line.Length - 2).Trim();
-                    
+
                     // Parse tile index from section name (e.g., "TILE0" -> 0)
                     if (currentSection.StartsWith("TILE", StringComparison.OrdinalIgnoreCase))
                     {

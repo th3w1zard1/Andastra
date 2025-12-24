@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using Andastra.Runtime.Games.Common.Components;
+using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Games.Aurora.Data;
-using Andastra.Parsing.Formats.TwoDA;
+using Andastra.Runtime.Games.Common.Components;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Aurora.Components

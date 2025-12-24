@@ -82,11 +82,11 @@ namespace Andastra.Parsing.Installation
             // swkotor.exe: FUN_004094a0 line 61: Checks for ARE type 0xbba in _a.rim
             string areaRimPath = TryGetFilePathByName(fileNameToPath, moduleRoot + "_a.rim");
             string areaExtendedRimPath = TryGetFilePathByName(fileNameToPath, moduleRoot + "_adx.rim");
-            
+
             // Auto-detect complex mode: if _a.rim or _adx.rim exists, use complex mode
             // Otherwise, check if .rim exists for simple mode
             bool complexMode = useComplexMode ?? (areaRimPath != null || areaExtendedRimPath != null);
-            
+
             // Simple Mode (swkotor.exe: FUN_004094a0 line 32-42)
             // Just load .rim file directly, return immediately
             if (!complexMode)
@@ -113,14 +113,14 @@ namespace Andastra.Parsing.Installation
 
             // Complex Mode (swkotor.exe: FUN_004094a0 line 49-216)
             // Exact sequence from Ghidra decompilation:
-            
+
             // Step 1: Check for _a.rim (line 61)
             // If found, load it (line 159) - REPLACES .rim
             // If not found, continue to _adx.rim
-            
+
             // Step 2: Check for _adx.rim (line 74)
             // If found, load it (line 85) - REPLACES .rim (only if _a.rim not found)
-            
+
             // Step 3: Check for .mod (line 95)
             // If found, load it (line 136) - REPLACES all other files, SKIPS _s.rim
             string modPath = TryGetFilePathByName(fileNameToPath, moduleRoot + ".mod");
@@ -145,7 +145,7 @@ namespace Andastra.Parsing.Installation
             // Step 4: Check for _s.rim (line 107) - only if .mod NOT found
             // If found, load it (line 118) - ADDS to base
             string dataRimPath = TryGetFilePathByName(fileNameToPath, moduleRoot + "_s.rim");
-            
+
             // Step 5: Check for _dlg.erf (K2 only, line 128) - only if .mod NOT found
             // If found, load it (line 147) - ADDS to base
             string dlgErfPath = null;
@@ -165,7 +165,7 @@ namespace Andastra.Parsing.Installation
                 {
                     return null;
                 }
-                
+
                 return new ModuleFileGroup
                 {
                     ModuleRoot = moduleRoot,
@@ -286,25 +286,25 @@ namespace Andastra.Parsing.Installation
                 // Complex mode: Load in exact order from Ghidra decompilation
                 // Order: _a.rim -> _adx.rim -> _s.rim -> _dlg.erf
                 // Note: .rim is NOT loaded in complex mode
-                
+
                 // Step 1: _a.rim (swkotor.exe: FUN_004094a0 line 159)
                 if (group.AreaRimFile != null)
                 {
                     paths.Add(group.AreaRimFile);
                 }
-                
+
                 // Step 2: _adx.rim (swkotor.exe: FUN_004094a0 line 85) - only if _a.rim not found
                 if (group.AreaRimFile == null && group.AreaExtendedRimFile != null)
                 {
                     paths.Add(group.AreaExtendedRimFile);
                 }
-                
+
                 // Step 3: _s.rim (swkotor.exe: FUN_004094a0 line 118) - only if .mod not found
                 if (group.DataRimFile != null)
                 {
                     paths.Add(group.DataRimFile);
                 }
-                
+
                 // Step 4: _dlg.erf (swkotor2.exe: FUN_004096b0 line 147) - only if .mod not found (K2 only)
                 if (group.DlgErfFile != null)
                 {
@@ -347,7 +347,7 @@ namespace Andastra.Parsing.Installation
         public List<string> GetAllFiles()
         {
             var files = new List<string>();
-            
+
             if (UsesModOverride)
             {
                 // .mod overrides all
@@ -366,7 +366,7 @@ namespace Andastra.Parsing.Installation
                 // Simple mode: just .rim
                 if (MainRimFile != null) files.Add(MainRimFile);
             }
-            
+
             return files;
         }
 
@@ -375,7 +375,7 @@ namespace Andastra.Parsing.Installation
         /// </summary>
         public bool HasFiles()
         {
-            return ModFile != null || MainRimFile != null || AreaRimFile != null || 
+            return ModFile != null || MainRimFile != null || AreaRimFile != null ||
                    AreaExtendedRimFile != null || DataRimFile != null || DlgErfFile != null;
         }
     }

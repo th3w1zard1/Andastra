@@ -1,7 +1,7 @@
 using System;
 using System.Numerics;
-using JetBrains.Annotations;
 using Andastra.Runtime.Games.Eclipse;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Eclipse.Environmental
 {

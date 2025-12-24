@@ -1,8 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Collections.Generic;
 
 namespace Andastra.Runtime.Content.MDL
 {
@@ -907,7 +907,7 @@ namespace Andastra.Runtime.Content.MDL
             // Pre-allocate arrays for all possible vertex attributes
             mesh.Positions = new Vector3Data[mesh.VertexCount];
             mesh.Normals = new Vector3Data[mesh.VertexCount];
-            
+
             // Allocate texture coordinate arrays only if needed
             uint flags = mesh.MDXDataFlags;
             if ((flags & MDLConstants.MDX_TEX0_VERTICES) != 0)
@@ -1050,7 +1050,7 @@ namespace Andastra.Runtime.Content.MDL
 
                     // Tangent space (9 floats = 36 bytes: tangent XYZ, bitangent XYZ, normal XYZ)
                     // We only read tangent and bitangent since we already have normals separately
-                    if ((flags & MDLConstants.MDX_TANGENT_SPACE) != 0 && offsets.Tangent >= 0 && 
+                    if ((flags & MDLConstants.MDX_TANGENT_SPACE) != 0 && offsets.Tangent >= 0 &&
                         mesh.Tangents != null && mesh.Bitangents != null)
                     {
                         int tangentOffset = vertexBase + offsets.Tangent;
@@ -1092,7 +1092,7 @@ namespace Andastra.Runtime.Content.MDL
             }
 
             int vertexCount = mesh.VertexCount;
-            
+
             // Check for potential integer overflow in array size calculations
             long boneWeightsCountLong = (long)vertexCount * 4;
             long boneIndicesCountLong = (long)vertexCount * 4;
@@ -1102,7 +1102,7 @@ namespace Andastra.Runtime.Content.MDL
                     $"Skin bone arrays size calculation overflow: vertexCount={vertexCount}"
                 );
             }
-            
+
             mesh.Skin.BoneWeights = new float[(int)boneWeightsCountLong];
             mesh.Skin.BoneIndices = new int[(int)boneIndicesCountLong];
 
@@ -1359,10 +1359,10 @@ namespace Andastra.Runtime.Content.MDL
                     {
                         int vertBase = vertexIdx * 3;
                         int texBase = vertexIdx * 2;
-                        
+
                         // Additional bounds check for source arrays
-                        if (vertBase + 2 < saberVerts.Length && 
-                            vertBase + 2 < saberNormals.Length && 
+                        if (vertBase + 2 < saberVerts.Length &&
+                            vertBase + 2 < saberNormals.Length &&
                             texBase + 1 < saberTexCoords.Length)
                         {
                             mesh.Positions[i] = new Vector3Data(
@@ -1942,10 +1942,10 @@ namespace Andastra.Runtime.Content.MDL
             }
 
             string[] result = new string[count];
-            
+
             // First read the array of offsets (int32 array)
             int[] offsets = ReadInt32Array(ptr, offsetArrayOffset, count);
-            
+
             // Then read each string at its offset
             for (int i = 0; i < count; i++)
             {
@@ -1970,7 +1970,7 @@ namespace Andastra.Runtime.Content.MDL
                     result[i] = string.Empty;
                 }
             }
-            
+
             return result;
         }
 

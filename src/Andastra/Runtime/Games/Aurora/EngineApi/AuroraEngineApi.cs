@@ -50,7 +50,7 @@ namespace Andastra.Runtime.Engines.Aurora.EngineApi
         {
             // Register function names based on reverse-engineered dispatch table from nwmain.exe
             // Function dispatch table: CNWSVirtualMachineCommands::InitializeCommands @ 0x14054de30 (nwmain.exe)
-            
+
             // Basic I/O functions (routine IDs 0-5)
             RegisterFunctionName(0, "Random");
             RegisterFunctionName(1, "PrintString");

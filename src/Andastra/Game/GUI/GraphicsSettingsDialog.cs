@@ -4,10 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Xml.Serialization;
-using Eto.Forms;
-using Eto.Drawing;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common.Enums;
+using Eto.Drawing;
+using Eto.Forms;
 
 namespace Andastra.Game.GUI
 {

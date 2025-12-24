@@ -59,7 +59,7 @@ namespace Andastra.Parsing.Formats.BWM
         /// The adjacent (neighbor) face that shares an edge with the current face.
         /// </summary>
         public BWMFace Face { get; set; }
-        
+
         /// <summary>
         /// The edge index (0, 1, or 2) of the neighbor face that connects to the current face.
         /// </summary>

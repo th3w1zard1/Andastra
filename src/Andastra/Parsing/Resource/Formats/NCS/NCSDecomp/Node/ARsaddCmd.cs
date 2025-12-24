@@ -1,4 +1,4 @@
-﻿using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
+using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
 
 namespace Andastra.Parsing.Formats.NCS.NCSDecomp.AST
 {

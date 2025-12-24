@@ -1,11 +1,12 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Reflection;
+using System.Threading.Tasks;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Extract;
 using Andastra.Parsing.Extract.Capsule;
 using Andastra.Parsing.Formats.Capsule;
@@ -14,14 +15,13 @@ using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.RIM;
 using Andastra.Parsing.Formats.TLK;
 using Andastra.Parsing.Formats.TPC;
+using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource.Generics.ARE;
 using Andastra.Parsing.Resource.Generics.DLG;
 using Andastra.Parsing.Resource.Generics.UTC;
 using Andastra.Parsing.Resource.Generics.UTI;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Tools
 {
@@ -393,7 +393,7 @@ namespace Andastra.Parsing.Tools
             // - ToLang: Language property
             object translator = config.Translator;
             Type translatorType = translator.GetType();
-            
+
             // Get ToLang property
             PropertyInfo toLangProperty = translatorType.GetProperty("ToLang");
             if (toLangProperty == null)
@@ -402,7 +402,7 @@ namespace Andastra.Parsing.Tools
                 return;
             }
             Language toLang = (Language)toLangProperty.GetValue(translator);
-            
+
             // Get Translate method
             MethodInfo translateMethod = translatorType.GetMethod("Translate", new[] { typeof(string), typeof(Language) });
             if (translateMethod == null)
@@ -416,19 +416,19 @@ namespace Andastra.Parsing.Tools
             Tuple<string, string> TranslateEntry(TLKEntry entry, Language sourceLang)
             {
                 string text = entry.Text;
-                
+
                 // Skip empty or whitespace-only text
                 if (string.IsNullOrWhiteSpace(text))
                 {
                     return Tuple.Create(text, "");
                 }
-                
+
                 // Skip numeric-only text (likely placeholder or ID)
                 if (text.Trim().All(char.IsDigit))
                 {
                     return Tuple.Create(text, "");
                 }
-                
+
                 // Skip special "do not translate" markers
                 if (text.Contains("Do not translate this text", StringComparison.OrdinalIgnoreCase))
                 {
@@ -438,7 +438,7 @@ namespace Andastra.Parsing.Tools
                 {
                     return Tuple.Create(text, text);
                 }
-                
+
                 // Translate the text
                 try
                 {
@@ -454,11 +454,11 @@ namespace Andastra.Parsing.Tools
 
             // Get encoding for target language
             string targetEncoding = toLang.GetEncoding();
-            
+
             // Process translations using parallel processing
             // Based on PyKotor: ThreadPoolExecutor with max_workers=config.max_threads
             int maxThreads = config.MaxThreads > 0 ? config.MaxThreads : 2;
-            
+
             // Collect all entries that need translation
             var entriesToTranslate = new List<Tuple<int, TLKEntry>>();
             foreach (var entryTuple in tlk)
@@ -467,23 +467,23 @@ namespace Andastra.Parsing.Tools
                 TLKEntry entry = entryTuple.entry;
                 entriesToTranslate.Add(Tuple.Create(stringref, entry));
             }
-            
+
             // Use Parallel.ForEach for thread-safe parallel processing
             // Based on PyKotor: ThreadPoolExecutor pattern with max_workers
             var parallelOptions = new ParallelOptions
             {
                 MaxDegreeOfParallelism = maxThreads
             };
-            
+
             // Dictionary to store translation results (thread-safe for parallel writes)
             var translationResults = new ConcurrentDictionary<int, Tuple<string, string>>();
-            
+
             // Process translations in parallel
             Parallel.ForEach(entriesToTranslate, parallelOptions, entryInfo =>
             {
                 int stringref = entryInfo.Item1;
                 TLKEntry entry = entryInfo.Item2;
-                
+
                 try
                 {
                     var result = TranslateEntry(entry, fromLang);
@@ -494,7 +494,7 @@ namespace Andastra.Parsing.Tools
                     LogMessage(config, $"TLK strref {stringref} generated an exception: {ex.Message}");
                 }
             });
-            
+
             // Apply translations to TLK (single-threaded for thread safety)
             // Based on PyKotor: concurrent.futures.as_completed pattern
             foreach (var kvp in translationResults)
@@ -502,17 +502,17 @@ namespace Andastra.Parsing.Tools
                 int stringref = kvp.Key;
                 string originalText = kvp.Value.Item1;
                 string translatedText = kvp.Value.Item2;
-                
+
                 if (!string.IsNullOrWhiteSpace(translatedText))
                 {
                     // Fix encoding for translated text
                     // Based on PyKotor: fix_encoding(translated_text, config.translator.to_lang.get_encoding())
                     string fixedText = FixEncoding(translatedText, targetEncoding);
-                    
+
                     // Replace entry in TLK
                     // Based on PyKotor: tlk.replace(strref, translated_text)
                     tlk.Replace(stringref, fixedText);
-                    
+
                     // Log translation
                     LogMessage(config, $"#{stringref} Translated {originalText} --> {fixedText}");
                 }

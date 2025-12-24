@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
+using Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Core.Combat;
 
 namespace Andastra.Runtime.Engines.Odyssey.Components
 {
@@ -65,20 +65,20 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
             _abilities = new Dictionary<Ability, int>();
             _skills = new Dictionary<int, int>();
             _knownSpells = new HashSet<int>();
-            
+
             // Default ability scores (10 = average human)
             foreach (Ability ability in Enum.GetValues(typeof(Ability)))
             {
                 _abilities[ability] = 10;
             }
-            
+
             // Initialize all skills to 0 (untrained)
             // KOTOR has 8 skills: COMPUTER_USE, DEMOLITIONS, STEALTH, AWARENESS, PERSUADE, REPAIR, SECURITY, TREAT_INJURY
             for (int i = 0; i < 8; i++)
             {
                 _skills[i] = 0;
             }
-            
+
             _currentHP = 10;
             _maxHP = 10;
             _currentFP = 0;
@@ -93,7 +93,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
             _deflectionBonus = 0;
             _effectACBonus = 0;
             _effectAttackBonus = 0;
-            
+
             // Default movement speeds (from appearance.2da averages)
             _baseWalkSpeed = 1.75f;
             _baseRunSpeed = 4.0f;
@@ -177,7 +177,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
             {
                 // Defense = 10 + DEX mod + Armor + Natural + Deflection + Effect bonuses
                 // Effect bonuses are tracked via AddEffectACBonus/RemoveEffectACBonus called by EffectSystem
-                return 10 
+                return 10
                     + GetAbilityModifier(Ability.Dexterity)
                     + _armorBonus
                     + _naturalArmor
@@ -235,13 +235,13 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
             {
                 return -1; // Invalid skill ID
             }
-            
+
             int rank;
             if (_skills.TryGetValue(skill, out rank))
             {
                 return rank;
             }
-            
+
             return 0; // Untrained (default)
         }
 

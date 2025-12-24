@@ -312,7 +312,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             // On Linux, we would use GLX to create a context
             // This requires X11 libraries and is more complex
             // For detection purposes, we can try to load libGL.so
-            
+
             try
             {
                 // Try to load libGL.so.1 (most common OpenGL library on Linux)
@@ -364,7 +364,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         {
             // On macOS, we use CGL (Core OpenGL) to create a context
             // This requires the OpenGL framework
-            
+
             try
             {
                 // Try to load OpenGL framework

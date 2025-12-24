@@ -66,11 +66,11 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             // Dragon Age 2 specific present parameters
             // Matches DragonAge2.exe present parameters exactly
             var presentParams = base.CreatePresentParameters(displayMode);
-            
+
             // Dragon Age 2 specific settings
             presentParams.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
             presentParams.SwapEffect = D3DSWAPEFFECT_DISCARD;
-            
+
             return presentParams;
         }
 

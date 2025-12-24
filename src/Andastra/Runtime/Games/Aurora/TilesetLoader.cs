@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using Andastra.Parsing;
-using Andastra.Parsing.Formats.SET;
-using Andastra.Parsing.Formats.BWM;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Formats.BWM;
+using Andastra.Parsing.Formats.SET;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Aurora
 {
@@ -375,18 +375,18 @@ namespace Andastra.Runtime.Games.Aurora
                     // Check if point is within face bounds (simple bounding box check first)
                     float minX = float.MaxValue, maxX = float.MinValue;
                     float minZ = float.MaxValue, maxZ = float.MinValue;
-                    
+
                     // Check all three vertices
                     if (v0.X < minX) minX = v0.X;
                     if (v0.X > maxX) maxX = v0.X;
                     if (v0.Z < minZ) minZ = v0.Z;
                     if (v0.Z > maxZ) maxZ = v0.Z;
-                    
+
                     if (v1.X < minX) minX = v1.X;
                     if (v1.X > maxX) maxX = v1.X;
                     if (v1.Z < minZ) minZ = v1.Z;
                     if (v1.Z > maxZ) maxZ = v1.Z;
-                    
+
                     if (v2.X < minX) minX = v2.X;
                     if (v2.X > maxX) maxX = v2.X;
                     if (v2.Z < minZ) minZ = v2.Z;

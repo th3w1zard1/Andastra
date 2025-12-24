@@ -1,8 +1,8 @@
 using System;
 using System.Numerics;
+using Andastra.Runtime.Graphics.Common.Culling;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Andastra.Runtime.Graphics.Common.Culling;
 
 namespace Andastra.Runtime.MonoGame.Culling
 {

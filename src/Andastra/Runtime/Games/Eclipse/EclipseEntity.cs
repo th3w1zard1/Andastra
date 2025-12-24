@@ -4,13 +4,13 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using JetBrains.Annotations;
+using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Core.Enums;
-using Andastra.Runtime.Games.Eclipse.Components;
 using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Games.Common.Components;
+using Andastra.Runtime.Games.Eclipse.Components;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Eclipse
 {
@@ -497,7 +497,7 @@ namespace Andastra.Runtime.Games.Eclipse
             {
                 var soundComponent = new Components.EclipseSoundComponent();
                 soundComponent.Owner = this;
-                
+
                 // Initialize sound component properties from entity data if available (loaded from SAV area files)
                 // Based on Eclipse area loading: Sound properties are stored in entity data when loaded from SAV SoundList
                 // Sound properties match UTS file format structure (same as Odyssey/Aurora)
@@ -569,7 +569,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 {
                     soundComponent.TemplateResRef = templateResRef;
                 }
-                
+
                 AddComponent<ISoundComponent>(soundComponent);
             }
         }
@@ -634,9 +634,9 @@ namespace Andastra.Runtime.Games.Eclipse
             foreach (var component in GetAllComponents())
             {
                 // Skip already-updated components
-                if (component == transformComponent || 
-                    component == actionQueueComponent || 
-                    component == statsComponent || 
+                if (component == transformComponent ||
+                    component == actionQueueComponent ||
+                    component == statsComponent ||
                     component == perceptionComponent)
                 {
                     continue;
@@ -1268,7 +1268,7 @@ namespace Andastra.Runtime.Games.Eclipse
                         transformComponent.Position = new System.Numerics.Vector3(x, y, z);
                         transformComponent.Facing = facing;
                         transformComponent.Scale = new System.Numerics.Vector3(scaleX, scaleY, scaleZ);
-                        
+
                         // Restore parent reference by looking up entity by ObjectId
                         // Based on daorigins.exe and DragonAge2.exe: Parent references are restored during entity deserialization
                         // Parent entity lookup: Uses World.GetEntity to find parent entity by ObjectId
@@ -1368,7 +1368,7 @@ namespace Andastra.Runtime.Games.Eclipse
                             eclipseStats.WalkSpeed = walkSpeed;
                             eclipseStats.RunSpeed = runSpeed;
                             eclipseStats.Level = level;
-                            
+
                             // Restore known spells/talents/abilities
                             // Based on daorigins.exe and DragonAge2.exe: Known spells are restored from save data
                             // Eclipse uses talents/abilities system instead of spells, but spell IDs map to talent/ability IDs

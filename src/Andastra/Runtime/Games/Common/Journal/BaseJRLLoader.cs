@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using Andastra.Parsing.Installation;
+using JetBrains.Annotations;
 using JRL = Andastra.Parsing.Resource.Generics.JRL;
 
 namespace Andastra.Runtime.Games.Common.Journal

@@ -1,7 +1,7 @@
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Games.Common.Components;
 using Andastra.Runtime.Games.Aurora.Systems;
+using Andastra.Runtime.Games.Common.Components;
 
 namespace Andastra.Runtime.Games.Aurora.Components
 {
@@ -110,7 +110,7 @@ namespace Andastra.Runtime.Games.Aurora.Components
                 // 2. Personal reputation overrides (stored in creature's personal reputation list)
                 // 3. Faction reputation fallback (from CFactionManager::GetNPCFactionReputation)
                 int reputation = _factionManager.GetReputation(Owner, other);
-                
+
                 // Return true if reputation <= 10 (hostile)
                 // Based on nwmain.exe: GetStandardFactionReputation returns true if reputation <= 10
                 return reputation <= AuroraFactionManager.HostileThreshold;
@@ -176,7 +176,7 @@ namespace Andastra.Runtime.Games.Aurora.Components
                 // 2. Personal reputation overrides (stored in creature's personal reputation list)
                 // 3. Faction reputation fallback (from CFactionManager::GetNPCFactionReputation)
                 int reputation = _factionManager.GetReputation(Owner, other);
-                
+
                 // Return true if reputation >= 90 (friendly)
                 // Based on nwmain.exe: GetStandardFactionReputation returns true if reputation >= 90
                 return reputation >= AuroraFactionManager.FriendlyThreshold;

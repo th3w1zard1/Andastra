@@ -3,18 +3,18 @@ using System.Collections.Generic;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.TLK;
+using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Resource.Generics.DLG;
-using ResRef = Andastra.Parsing.Common.ResRef;
-using JetBrains.Annotations;
-using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Dialogue;
-using Andastra.Runtime.Scripting.Interfaces;
-using Andastra.Runtime.Games.Common.Dialogue;
+using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Journal;
-using Andastra.Runtime.Engines.Odyssey.Data;
 using Andastra.Runtime.Core.Party;
 using Andastra.Runtime.Core.Plot;
-using Andastra.Parsing.Formats.TwoDA;
+using Andastra.Runtime.Engines.Odyssey.Data;
+using Andastra.Runtime.Games.Common.Dialogue;
+using Andastra.Runtime.Scripting.Interfaces;
+using JetBrains.Annotations;
+using ResRef = Andastra.Parsing.Common.ResRef;
 
 namespace Andastra.Runtime.Engines.Odyssey.Dialogue
 {

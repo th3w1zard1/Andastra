@@ -131,7 +131,7 @@ namespace Andastra.Parsing.Formats.DDS
         {
             int startPos = _reader.Position;
             uint magic = _reader.ReadUInt32(bigEndian: true);
-            
+
             if (magic == MAGIC)
             {
                 return ParseStandardHeader();

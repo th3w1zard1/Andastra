@@ -309,7 +309,7 @@ namespace Andastra.Game.GUI
             if (SelectedGame == BioWareGame.K1 || SelectedGame == BioWareGame.K2)
             {
                 KotorGame kotorGame = SelectedGame == BioWareGame.K1 ? KotorGame.K1 : KotorGame.K2;
-                
+
                 // Use PathTools to find paths
                 Dictionary<BioWareGame, List<CaseAwarePath>> foundPaths = PathTools.FindKotorPathsFromDefault();
                 if (foundPaths.TryGetValue(SelectedGame, out List<CaseAwarePath> gamePaths))
@@ -334,7 +334,7 @@ namespace Andastra.Game.GUI
                     }
                 }
             }
-            else if (SelectedGame == BioWareGame.NWN || SelectedGame == BioWareGame.NWN2 || 
+            else if (SelectedGame == BioWareGame.NWN || SelectedGame == BioWareGame.NWN2 ||
                      SelectedGame == BioWareGame.DA || SelectedGame == BioWareGame.DA2)
             {
                 // Use GamePathDetector to find paths for NWN, DA games
@@ -449,35 +449,35 @@ namespace Andastra.Game.GUI
                            File.Exists(Path.Combine(path, "swkotor2.exe"));
 
                 case BioWareGame.NWN:
-                {
-                    // Validate Neverwinter Nights installation
-                    // Based on xoreos/src/engines/nwn/nwn.cpp:213-268
-                    // Required files:
-                    // - chitin.key: Main KEY file containing resource mappings (mandatory)
-                    // - nwmain.exe: Game executable (mandatory)
-                    // - gui_32bit.erf: GUI texture archive (mandatory)
-                    // - data directory: Contains game data files (mandatory)
-                    // Optional but commonly present:
-                    // - modules directory: User-created modules
-                    // - hak directory: Hakpak files
-                    // - override directory: Override files
-                    // - nwm directory: Neverwinter Nights module files
-                    // - texturepacks directory: Texture pack files
-                    string nwnChitinKey = Path.Combine(path, "chitin.key");
-                    string nwnExe = Path.Combine(path, "nwmain.exe");
-                    string nwnExeUpper = Path.Combine(path, "NWMAIN.EXE");
-                    string nwnGuiErf = Path.Combine(path, "gui_32bit.erf");
-                    string nwnDataDir = Path.Combine(path, "data");
-                    
-                    // All mandatory files/directories must exist
-                    bool hasChitinKey = File.Exists(nwnChitinKey);
-                    bool hasExe = File.Exists(nwnExe) || File.Exists(nwnExeUpper);
-                    bool hasGuiErf = File.Exists(nwnGuiErf);
-                    bool hasDataDir = Directory.Exists(nwnDataDir);
-                    
-                    return hasChitinKey && hasExe && hasGuiErf && hasDataDir;
-                }
-                    
+                    {
+                        // Validate Neverwinter Nights installation
+                        // Based on xoreos/src/engines/nwn/nwn.cpp:213-268
+                        // Required files:
+                        // - chitin.key: Main KEY file containing resource mappings (mandatory)
+                        // - nwmain.exe: Game executable (mandatory)
+                        // - gui_32bit.erf: GUI texture archive (mandatory)
+                        // - data directory: Contains game data files (mandatory)
+                        // Optional but commonly present:
+                        // - modules directory: User-created modules
+                        // - hak directory: Hakpak files
+                        // - override directory: Override files
+                        // - nwm directory: Neverwinter Nights module files
+                        // - texturepacks directory: Texture pack files
+                        string nwnChitinKey = Path.Combine(path, "chitin.key");
+                        string nwnExe = Path.Combine(path, "nwmain.exe");
+                        string nwnExeUpper = Path.Combine(path, "NWMAIN.EXE");
+                        string nwnGuiErf = Path.Combine(path, "gui_32bit.erf");
+                        string nwnDataDir = Path.Combine(path, "data");
+
+                        // All mandatory files/directories must exist
+                        bool hasChitinKey = File.Exists(nwnChitinKey);
+                        bool hasExe = File.Exists(nwnExe) || File.Exists(nwnExeUpper);
+                        bool hasGuiErf = File.Exists(nwnGuiErf);
+                        bool hasDataDir = Directory.Exists(nwnDataDir);
+
+                        return hasChitinKey && hasExe && hasGuiErf && hasDataDir;
+                    }
+
                 case BioWareGame.NWN2:
                     // Validate Neverwinter Nights 2 installation
                     // Based on xoreos/src/engines/nwn2/nwn2.cpp:214-300
@@ -500,7 +500,7 @@ namespace Andastra.Game.GUI
                     string nwn2ActorsZip = Path.Combine(path, "actors.zip");
                     string nwn2ModelsZip = Path.Combine(path, "nwn2_models.zip");
                     string nwn2ScriptsZip = Path.Combine(path, "scripts.zip");
-                    
+
                     // All mandatory files/directories must exist
                     bool hasNwn2Exe = File.Exists(nwn2Exe) || File.Exists(nwn2ExeUpper);
                     bool hasNwn2DataDir = Directory.Exists(nwn2DataDir);
@@ -508,43 +508,43 @@ namespace Andastra.Game.GUI
                     bool hasNwn2ActorsZip = File.Exists(nwn2ActorsZip);
                     bool hasNwn2ModelsZip = File.Exists(nwn2ModelsZip);
                     bool hasNwn2ScriptsZip = File.Exists(nwn2ScriptsZip);
-                    
-                    return hasNwn2Exe && hasNwn2DataDir && hasNwn2TwoDaZip && 
+
+                    return hasNwn2Exe && hasNwn2DataDir && hasNwn2TwoDaZip &&
                            hasNwn2ActorsZip && hasNwn2ModelsZip && hasNwn2ScriptsZip;
 
                 case BioWareGame.DA:
-                {
-                    // Validate Dragon Age: Origins installation
-                    // Based on xoreos/src/engines/dragonage/probes.cpp:69-75
-                    // Required files:
-                    // - daoriginslauncher.exe: Launcher executable (Windows retail, mandatory)
-                    // - daorigins.exe: Main game executable (mandatory)
-                    // - packages directory: Eclipse Engine package structure (mandatory)
-                    // - data directory: Contains game data files (mandatory)
-                    // - data/global.rim: Global resource archive (mandatory, DA:O specific)
-                    // Optional but commonly present:
-                    // - modules directory: Contains game modules
-                    // - addins directory: DLC and addon content
-                    string daLauncherExe = Path.Combine(path, "daoriginslauncher.exe");
-                    string daLauncherExeUpper = Path.Combine(path, "DAORIGINSLAUNCHER.EXE");
-                    string daOriginsExe = Path.Combine(path, "daorigins.exe");
-                    string daOriginsExeUpper = Path.Combine(path, "DAORIGINS.EXE");
-                    string daPackagesDir = Path.Combine(path, "packages");
-                    string daDataDir = Path.Combine(path, "data");
-                    string daGlobalRim = Path.Combine(daDataDir, "global.rim");
-                    
-                    // Check for launcher (Windows retail) OR main executable
-                    bool hasLauncher = File.Exists(daLauncherExe) || File.Exists(daLauncherExeUpper);
-                    bool hasExe = File.Exists(daOriginsExe) || File.Exists(daOriginsExeUpper);
-                    bool hasPackagesDir = Directory.Exists(daPackagesDir);
-                    bool hasDataDir = Directory.Exists(daDataDir);
-                    bool hasGlobalRim = File.Exists(daGlobalRim);
-                    
-                    // All mandatory files/directories must exist
-                    // Either launcher OR main executable is acceptable (different distribution methods)
-                    return (hasLauncher || hasExe) && hasPackagesDir && hasDataDir && hasGlobalRim;
-                }
-                    
+                    {
+                        // Validate Dragon Age: Origins installation
+                        // Based on xoreos/src/engines/dragonage/probes.cpp:69-75
+                        // Required files:
+                        // - daoriginslauncher.exe: Launcher executable (Windows retail, mandatory)
+                        // - daorigins.exe: Main game executable (mandatory)
+                        // - packages directory: Eclipse Engine package structure (mandatory)
+                        // - data directory: Contains game data files (mandatory)
+                        // - data/global.rim: Global resource archive (mandatory, DA:O specific)
+                        // Optional but commonly present:
+                        // - modules directory: Contains game modules
+                        // - addins directory: DLC and addon content
+                        string daLauncherExe = Path.Combine(path, "daoriginslauncher.exe");
+                        string daLauncherExeUpper = Path.Combine(path, "DAORIGINSLAUNCHER.EXE");
+                        string daOriginsExe = Path.Combine(path, "daorigins.exe");
+                        string daOriginsExeUpper = Path.Combine(path, "DAORIGINS.EXE");
+                        string daPackagesDir = Path.Combine(path, "packages");
+                        string daDataDir = Path.Combine(path, "data");
+                        string daGlobalRim = Path.Combine(daDataDir, "global.rim");
+
+                        // Check for launcher (Windows retail) OR main executable
+                        bool hasLauncher = File.Exists(daLauncherExe) || File.Exists(daLauncherExeUpper);
+                        bool hasExe = File.Exists(daOriginsExe) || File.Exists(daOriginsExeUpper);
+                        bool hasPackagesDir = Directory.Exists(daPackagesDir);
+                        bool hasDataDir = Directory.Exists(daDataDir);
+                        bool hasGlobalRim = File.Exists(daGlobalRim);
+
+                        // All mandatory files/directories must exist
+                        // Either launcher OR main executable is acceptable (different distribution methods)
+                        return (hasLauncher || hasExe) && hasPackagesDir && hasDataDir && hasGlobalRim;
+                    }
+
                 case BioWareGame.DA2:
                     // Validate Dragon Age II installation
                     // Based on xoreos/src/engines/dragonage2/probes.cpp:72-89
@@ -564,13 +564,13 @@ namespace Andastra.Game.GUI
                     string da2BinShipExe = Path.Combine(path, "bin_ship", "dragonage2.exe");
                     string da2BinShipExeUpper = Path.Combine(path, "bin_ship", "DRAGONAGE2.EXE");
                     string da2CampaignBaseCif = Path.Combine(path, "modules", "campaign_base", "campaign_base.cif");
-                    
+
                     // Check for launcher (Windows retail) OR main executable (various locations)
                     bool hasDa2Launcher = File.Exists(da2LauncherExe) || File.Exists(da2LauncherExeUpper);
                     bool hasDa2Exe = File.Exists(da2Exe) || File.Exists(da2ExeUpper) || File.Exists(da2ExeLower);
                     bool hasDa2BinShipExe = File.Exists(da2BinShipExe) || File.Exists(da2BinShipExeUpper);
                     bool hasCampaignBaseCif = File.Exists(da2CampaignBaseCif);
-                    
+
                     // All mandatory files must exist
                     // Either launcher OR main executable is acceptable (different distribution methods)
                     return (hasDa2Launcher || hasDa2Exe || hasDa2BinShipExe) && hasCampaignBaseCif;
@@ -590,7 +590,7 @@ namespace Andastra.Game.GUI
                 case BioWareGame.K2: return "Knights of the Old Republic II";
                 case BioWareGame.NWN: return "Neverwinter Nights";
                 case BioWareGame.NWN2: return "Neverwinter Nights 2";
-                case BioWareGame.DA: return "Dragon Age: Origins";
+                case BioWareGame.DAO: return "Dragon Age: Origins";
                 case BioWareGame.DA2: return "Dragon Age II";
                 default: return "Game";
             }

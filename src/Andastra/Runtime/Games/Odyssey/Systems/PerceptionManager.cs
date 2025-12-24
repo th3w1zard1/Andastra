@@ -175,7 +175,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
         public float UpdateInterval { get; set; } = 0.5f;
 
         private float _timeSinceUpdate;
-        
+
         // Total elapsed time accumulator for activation timestamp tracking
         private float _totalElapsedTime;
 
@@ -734,7 +734,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
             // Stealth mode creatures make less sound (reduced detection range)
             // Completely silent creatures (no movement, no combat) are not audible
             bool targetIsInvisible = _effectSystem.HasEffect(target, EffectType.Invisibility);
-            
+
             // Get target position for movement and line of sight checks
             ITransformComponent targetTransform = target.GetComponent<ITransformComponent>();
             if (targetTransform == null)
@@ -878,7 +878,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
                 // Located via string references: "placeableobjsnds" @ 0x007c4bf0 (placeable object sounds directory)
                 // Door sounds: "i_opendoor" @ 0x007c86d4 (open door animation), door opening/closing sounds
                 // Placeable sounds: Opening/closing container sounds, activation sounds for non-container placeables
-                
+
                 // Check if placeable/door was recently activated
                 // Activation is detected by state changes (IsOpen changing)
                 // Sound is audible for a short time window after activation
@@ -890,11 +890,11 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
                     // Located via string references: "placeableobjsnds" @ 0x007c4bf0 (placeable object sounds directory)
                     // Door sounds: "i_opendoor" @ 0x007c86d4 (open door animation), door opening/closing sounds
                     const float activationSoundDuration = 2.0f; // Sound duration in seconds
-                    
+
                     // Check if activation was recent (within sound duration)
                     // Use total elapsed time to calculate time since activation
                     float timeSinceActivation = _totalElapsedTime - activationTime;
-                    
+
                     // If activation was recent (within sound duration), placeable/door is making sound
                     if (timeSinceActivation >= 0.0f && timeSinceActivation <= activationSoundDuration)
                     {

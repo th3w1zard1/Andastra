@@ -1,18 +1,18 @@
-﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/MainPass.java:50-635
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/MainPass.java:50-635
 // Original: public class MainPass extends PrunedDepthFirstAdapter
 using System;
-using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using Andastra.Parsing.Formats.NCS.NCSDecomp;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis;
+using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.Stack;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.Utils;
+using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
 using UtilsType = Andastra.Parsing.Formats.NCS.NCSDecomp.Utils.Type;
 
 namespace Andastra.Parsing.Formats.NCS.NCSDecomp
@@ -279,56 +279,56 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 {
                     this.WithRecovery(node, () =>
                     {
-                    int remove = NodeUtils.ActionRemoveElementCount(node, this.actions);
-                    int stackSize = this.stack.Size();
+                        int remove = NodeUtils.ActionRemoveElementCount(node, this.actions);
+                        int stackSize = this.stack.Size();
 
-                    // Safety check: don't remove more than we have
-                    if (remove > stackSize)
-                    {
-                        Debug("[MainPass] WARNING: ACTION trying to remove " + remove + " but stack only has " + stackSize + " elements. Action: " + (this.actions != null ? this.actions.GetName(NodeUtils.GetActionId(node)) : "unknown"));
-                        remove = stackSize; // Remove what we can
-                    }
-
-                    int i = 0;
-
-                    while (i < remove)
-                    {
-                        StackEntry entry = this.RemoveFromStack();
-                        i += entry.Size();
-                    }
-
-                    UtilsType type;
-                    try
-                    {
-                        type = NodeUtils.GetReturnType(node, this.actions);
-                    }
-                    catch (Exception)
-                    {
-                        // Action metadata missing or invalid - assume void return
-                        type = new UtilsType((byte)0);
-                    }
-                    if (!type.Equals(unchecked((byte)(-16))))
-                    {
-                        if (!type.Equals((byte)0))
+                        // Safety check: don't remove more than we have
+                        if (remove > stackSize)
                         {
-                            Variable var = new Variable(type);
-                            this.stack.Push(var);
-                        }
-                    }
-                    else
-                    {
-                        for (int ix = 0; ix < 3; ix++)
-                        {
-                            Variable var = new Variable((byte)4);
-                            this.stack.Push(var);
+                            Debug("[MainPass] WARNING: ACTION trying to remove " + remove + " but stack only has " + stackSize + " elements. Action: " + (this.actions != null ? this.actions.GetName(NodeUtils.GetActionId(node)) : "unknown"));
+                            remove = stackSize; // Remove what we can
                         }
 
-                        this.stack.Structify(1, 3, this.subdata);
-                    }
+                        int i = 0;
 
-                    Console.Error.WriteLine("DEBUG MainPass.OutAActionCommand: about to call TransformAction, actionId=" + NodeUtils.GetActionId(node));
-                    Debug("DEBUG MainPass.OutAActionCommand: about to call TransformAction, actionId=" + NodeUtils.GetActionId(node));
-                    this.state.TransformAction(node);
+                        while (i < remove)
+                        {
+                            StackEntry entry = this.RemoveFromStack();
+                            i += entry.Size();
+                        }
+
+                        UtilsType type;
+                        try
+                        {
+                            type = NodeUtils.GetReturnType(node, this.actions);
+                        }
+                        catch (Exception)
+                        {
+                            // Action metadata missing or invalid - assume void return
+                            type = new UtilsType((byte)0);
+                        }
+                        if (!type.Equals(unchecked((byte)(-16))))
+                        {
+                            if (!type.Equals((byte)0))
+                            {
+                                Variable var = new Variable(type);
+                                this.stack.Push(var);
+                            }
+                        }
+                        else
+                        {
+                            for (int ix = 0; ix < 3; ix++)
+                            {
+                                Variable var = new Variable((byte)4);
+                                this.stack.Push(var);
+                            }
+
+                            this.stack.Structify(1, 3, this.subdata);
+                        }
+
+                        Console.Error.WriteLine("DEBUG MainPass.OutAActionCommand: about to call TransformAction, actionId=" + NodeUtils.GetActionId(node));
+                        Debug("DEBUG MainPass.OutAActionCommand: about to call TransformAction, actionId=" + NodeUtils.GetActionId(node));
+                        this.state.TransformAction(node);
                         Console.Error.WriteLine("DEBUG MainPass.OutAActionCommand: TransformAction completed");
                         Debug("DEBUG MainPass.OutAActionCommand: TransformAction completed");
                     });

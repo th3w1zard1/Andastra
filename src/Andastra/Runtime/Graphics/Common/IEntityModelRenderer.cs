@@ -1,6 +1,6 @@
 using System.Numerics;
-using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Graphics
 {

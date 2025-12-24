@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Parsing;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource.Generics;
+using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Core.Interfaces.Components;
 using UTI = Andastra.Parsing.Resource.Generics.UTI.UTI;
 
 namespace Andastra.Runtime.Engines.Odyssey.UI
@@ -141,14 +141,14 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
                     // - Random chance roll to determine if upgrade succeeds
                     // Higher skills improve success rate, very low skills may cause failure
                     double successRate = CalculateUpgradeSuccessRate(upgradeUTITemplate, item, upgradeSlot);
-                    
+
                     // Roll for success based on calculated success rate
                     // Based on swkotor2.exe: Random number generation for skill checks (similar to combat rolls)
                     // Uses d100 roll (0-99) compared against success rate percentage
                     System.Random random = new System.Random();
                     int roll = random.Next(0, 100); // Roll 0-99 (100 possible values)
                     double successThreshold = successRate * 100.0; // Convert percentage to 0-100 scale
-                    
+
                     if (roll >= successThreshold)
                     {
                         // Upgrade failed due to insufficient skills
@@ -157,7 +157,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
                         // The upgrade item is still consumed from inventory (realistic failure scenario)
                         return false;
                     }
-                    
+
                     // Success rate check passed - upgrade can proceed
                     // Higher success rates mean more reliable upgrades
                 }

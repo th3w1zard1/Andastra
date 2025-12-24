@@ -90,7 +90,7 @@ namespace Andastra.Runtime.Games.Eclipse.Environmental
             foreach (var emitter in _emitters.Where(e => e.IsActive))
             {
                 emitter.Update(deltaTime);
-                
+
                 // Apply wind effects to Eclipse particle emitters
                 // Based on daorigins.exe, DragonAge2.exe: Wind affects particle movement
                 if (emitter is EclipseParticleEmitter eclipseEmitter)
@@ -170,7 +170,7 @@ namespace Andastra.Runtime.Games.Eclipse.Environmental
         private readonly List<Particle> _particles;
         private readonly Random _random;
         private float _emissionAccumulator; // Accumulated time for particle emission
-        
+
         // Particle system parameters based on emitter type
         private float _emissionRate; // Particles per second
         private float _particleLifetime; // Particle lifetime in seconds
@@ -320,7 +320,7 @@ namespace Andastra.Runtime.Games.Eclipse.Environmental
         public List<(Vector3 Position, float Size, float Alpha)> GetParticlesForRendering()
         {
             var result = new List<(Vector3 Position, float Size, float Alpha)>();
-            
+
             for (int i = 0; i < _particles.Count; i++)
             {
                 Particle particle = _particles[i];
@@ -331,7 +331,7 @@ namespace Andastra.Runtime.Games.Eclipse.Environmental
                     result.Add((particle.Position, particle.Size, alpha));
                 }
             }
-            
+
             return result;
         }
 
@@ -457,7 +457,7 @@ namespace Andastra.Runtime.Games.Eclipse.Environmental
             // Apply wind to active particles
             // Based on daorigins.exe, DragonAge2.exe: Wind influence on particles
             Vector3 windForce = windDirection * windSpeed;
-            
+
             for (int i = 0; i < _particles.Count; i++)
             {
                 Particle particle = _particles[i];

@@ -195,7 +195,7 @@ namespace Andastra.Runtime.MonoGame.UI
             int viewportHeight = _spriteBatch.GraphicsDevice.Viewport.Height;
 
             _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
-            _spriteBatch.Draw(_fadeTexture, new Rectangle(0, 0, viewportWidth, viewportHeight), 
+            _spriteBatch.Draw(_fadeTexture, new Rectangle(0, 0, viewportWidth, viewportHeight),
                 Color.White * _fadeAlpha);
             _spriteBatch.End();
         }

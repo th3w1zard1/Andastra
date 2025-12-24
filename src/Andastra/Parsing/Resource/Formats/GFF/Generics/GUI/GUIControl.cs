@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Numerics;
 using Andastra.Parsing;
-using JetBrains.Annotations;
 using Andastra.Parsing.Common;
+using JetBrains.Annotations;
 
 namespace Andastra.Parsing.Resource.Generics.GUI
 {

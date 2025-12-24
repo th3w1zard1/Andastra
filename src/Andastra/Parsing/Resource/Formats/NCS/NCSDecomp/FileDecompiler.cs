@@ -1,23 +1,22 @@
 //
 using System;
-using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.Lexer;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.Stack;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.Utils;
+using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
 using InputStream = System.IO.Stream;
-
 using Process = System.Diagnostics.Process;
 using Thread = System.Threading.Thread;
 using Throwable = System.Exception;
-using Andastra.Parsing.Common;
 using UtilsType = Andastra.Parsing.Formats.NCS.NCSDecomp.Utils.Type;
 
 namespace Andastra.Parsing.Formats.NCS.NCSDecomp
@@ -675,7 +674,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             // nwnnsscomp is optional - decompilation should work without it
             try
             {
-            return this.CompileAndCompare(file, data.GetCode(), data);
+                return this.CompileAndCompare(file, data.GetCode(), data);
             }
             catch (Exception e)
             {
@@ -5025,27 +5024,27 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     return null;
                 }
 
-            Debug("TRACE DecompileNcsObject: Converting NCS to AST, instruction count=" + ncs.Instructions.Count);
-            Console.Error.WriteLine($"TRACE DecompileNcsObject: Converting NCS to AST, instruction count={ncs.Instructions.Count}");
-            // CRITICAL DEBUG: Log instruction offsets to verify we have all instructions
-            if (ncs.Instructions.Count > 0)
-            {
-                int minOffset = ncs.Instructions[0].Offset;
-                int maxOffset = ncs.Instructions[ncs.Instructions.Count - 1].Offset;
-                Debug($"TRACE DecompileNcsObject: Instruction offset range: {minOffset} to {maxOffset}");
-                Console.Error.WriteLine($"TRACE DecompileNcsObject: Instruction offset range: {minOffset} to {maxOffset}, total instructions={ncs.Instructions.Count}");
-                // Check for missing instructions - log if there are gaps
-                for (int i = 0; i < Math.Min(10, ncs.Instructions.Count); i++)
+                Debug("TRACE DecompileNcsObject: Converting NCS to AST, instruction count=" + ncs.Instructions.Count);
+                Console.Error.WriteLine($"TRACE DecompileNcsObject: Converting NCS to AST, instruction count={ncs.Instructions.Count}");
+                // CRITICAL DEBUG: Log instruction offsets to verify we have all instructions
+                if (ncs.Instructions.Count > 0)
                 {
-                    Debug($"TRACE DecompileNcsObject: Instruction[{i}]: offset={ncs.Instructions[i].Offset}, type={ncs.Instructions[i].InsType}");
+                    int minOffset = ncs.Instructions[0].Offset;
+                    int maxOffset = ncs.Instructions[ncs.Instructions.Count - 1].Offset;
+                    Debug($"TRACE DecompileNcsObject: Instruction offset range: {minOffset} to {maxOffset}");
+                    Console.Error.WriteLine($"TRACE DecompileNcsObject: Instruction offset range: {minOffset} to {maxOffset}, total instructions={ncs.Instructions.Count}");
+                    // Check for missing instructions - log if there are gaps
+                    for (int i = 0; i < Math.Min(10, ncs.Instructions.Count); i++)
+                    {
+                        Debug($"TRACE DecompileNcsObject: Instruction[{i}]: offset={ncs.Instructions[i].Offset}, type={ncs.Instructions[i].InsType}");
+                    }
+                    if (ncs.Instructions.Count > 10)
+                    {
+                        Debug($"TRACE DecompileNcsObject: ... (showing first 10 of {ncs.Instructions.Count} instructions)");
+                    }
                 }
-                if (ncs.Instructions.Count > 10)
-                {
-                    Debug($"TRACE DecompileNcsObject: ... (showing first 10 of {ncs.Instructions.Count} instructions)");
-                }
-            }
-            ast = NcsToAstConverter.ConvertNcsToAst(ncs);
-            Debug("TRACE DecompileNcsObject: AST conversion complete, ast=" + (ast != null ? ast.GetType().Name : "null"));
+                ast = NcsToAstConverter.ConvertNcsToAst(ncs);
+                Debug("TRACE DecompileNcsObject: AST conversion complete, ast=" + (ast != null ? ast.GetType().Name : "null"));
                 nodedata = new NodeAnalysisData();
                 subdata = new SubroutineAnalysisData(nodedata);
 
@@ -5342,12 +5341,12 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     {
                         mainpass = new MainPass(subdata.GetState(iterSub), nodedata, subdata, this.actions);
                         iterSub.Apply(mainpass);
-                    cleanpass = new CleanupPass(mainpass.GetScriptRoot(), nodedata, subdata, mainpass.GetState());
-                    cleanpass.Apply();
-                    data.AddSub(mainpass.GetState());
+                        cleanpass = new CleanupPass(mainpass.GetScriptRoot(), nodedata, subdata, mainpass.GetState());
+                        cleanpass.Apply();
+                        data.AddSub(mainpass.GetState());
                         Debug("DEBUG decompileNcs: successfully added subroutine " + subCount);
-                    mainpass.Done();
-                    cleanpass.Done();
+                        mainpass.Done();
+                        cleanpass.Done();
                     }
                     catch (Exception e)
                     {
@@ -6116,8 +6115,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 if (this.globals != null)
                 {
                     try
-                {
-                    globs = "// Globals" + newline + this.globals.ToStringGlobals() + newline;
+                    {
+                        globs = "// Globals" + newline + this.globals.ToStringGlobals() + newline;
                     }
                     catch (Exception e)
                     {

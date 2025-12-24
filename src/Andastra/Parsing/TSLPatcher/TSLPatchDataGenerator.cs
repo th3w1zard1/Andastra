@@ -1,31 +1,31 @@
 // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:68-129
 // Original: class TSLPatchDataGenerator: ...
 using System;
-using System.Numerics;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
+using Andastra.Parsing;
+using Andastra.Parsing.Common;
+using Andastra.Parsing.Formats.Capsule;
+using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Formats.LIP;
+using Andastra.Parsing.Formats.SSF;
+using Andastra.Parsing.Formats.TLK;
+using Andastra.Parsing.Formats.TwoDA;
+using Andastra.Parsing.Memory;
 using Andastra.Parsing.Mods;
 using Andastra.Parsing.Mods.GFF;
 using Andastra.Parsing.Mods.SSF;
 using Andastra.Parsing.Mods.TLK;
 using Andastra.Parsing.Mods.TwoDA;
-using Andastra.Parsing.Memory;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Formats.TLK;
-using Andastra.Parsing.Formats.SSF;
 using Andastra.Parsing.Resource;
-using Andastra.Parsing;
-using Andastra.Parsing.Formats.LIP;
-using Andastra.Parsing.Formats.Capsule;
+using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
 using GFFContent = Andastra.Parsing.Formats.GFF.GFFContent;
+using LIPAuto = Andastra.Parsing.Formats.LIP.LIPAuto;
+using SSFAuto = Andastra.Parsing.Formats.SSF.SSFAuto;
 using TLKAuto = Andastra.Parsing.Formats.TLK.TLKAuto;
 using TwoDAAuto = Andastra.Parsing.Formats.TwoDA.TwoDAAuto;
-using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
-using SSFAuto = Andastra.Parsing.Formats.SSF.SSFAuto;
-using LIPAuto = Andastra.Parsing.Formats.LIP.LIPAuto;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.TSLPatcher
 {

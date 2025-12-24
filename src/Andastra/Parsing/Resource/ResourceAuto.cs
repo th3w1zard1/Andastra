@@ -1,12 +1,11 @@
 using System;
 using System.IO;
-using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.BWM;
 using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.LIP;
 using Andastra.Parsing.Formats.LTR;
-using Andastra.Parsing.Resource.Formats.LYT;
 using Andastra.Parsing.Formats.MDL;
 using Andastra.Parsing.Formats.MDLData;
 using Andastra.Parsing.Formats.NCS;
@@ -17,17 +16,16 @@ using Andastra.Parsing.Formats.TLK;
 using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Formats.VIS;
+using Andastra.Parsing.Resource.Formats.LYT;
 using Andastra.Parsing.Resource.Generics;
-using Andastra.Parsing.Resource.Generics.DLG;
-using Andastra.Parsing.Resource.Generics.CNV;
 using Andastra.Parsing.Resource.Generics.ARE;
+using Andastra.Parsing.Resource.Generics.CNV;
+using Andastra.Parsing.Resource.Generics.DLG;
+using Andastra.Parsing.Resource.Generics.UTC;
 using Andastra.Parsing.Resource.Generics.UTI;
 using Andastra.Parsing.Resource.Generics.UTM;
-using Andastra.Parsing.Resource.Generics.UTC;
-using AREHelpers = Andastra.Parsing.Resource.Generics.ARE.AREHelpers;
-using Andastra.Parsing.Resource.Generics;
-using Andastra.Parsing.Common;
 using JetBrains.Annotations;
+using AREHelpers = Andastra.Parsing.Resource.Generics.ARE.AREHelpers;
 
 namespace Andastra.Parsing.Resource
 {

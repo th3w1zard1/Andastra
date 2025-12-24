@@ -176,7 +176,7 @@ namespace Andastra.Runtime.Games.Odyssey.Save
                 // Try formatted name first (original engine format)
                 string saveDir = Path.Combine(_savesDirectory, saveName);
                 string saveFilePath = Path.Combine(saveDir, "savegame.sav");
-                
+
                 // If formatted name doesn't exist, try to find it by parsing existing directories
                 // This handles backward compatibility with saves created before this fix
                 if (!File.Exists(saveFilePath))
@@ -292,7 +292,7 @@ namespace Andastra.Runtime.Games.Odyssey.Save
                     if (nfoData != null)
                     {
                         GFF nfoGff = DeserializeGFF(nfoData);
-                        
+
                         // Parse save number and name from directory name using common logic
                         // Based on swkotor2.exe: Format "%06d - %s" (6-digit number - name)
                         // Uses common parsing methods from BaseSaveGameManager (shared with Aurora)
@@ -303,7 +303,7 @@ namespace Andastra.Runtime.Games.Odyssey.Save
                             // Fallback: use directory name if parsing fails (backward compatibility)
                             displayName = saveName;
                         }
-                        
+
                         info = new SaveGameInfo
                         {
                             Name = displayName,
@@ -322,11 +322,11 @@ namespace Andastra.Runtime.Games.Odyssey.Save
                             {
                                 info.Name = saveGameName;
                             }
-                            
+
                             info.PlayerName = GetStringField(root, "PCNAME", "");
                             info.ModuleName = GetStringField(root, "AREANAME", ""); // AREANAME is actually the module name
                             info.PlayTime = TimeSpan.FromSeconds(GetFloatField(root, "TIMEPLAYED", 0f));
-                            
+
                             // Get save number from GFF if available (more reliable than parsing directory name)
                             int gffSaveNumber = GetIntField(root, "SAVENUMBER", 0);
                             if (gffSaveNumber > 0)
@@ -373,20 +373,20 @@ namespace Andastra.Runtime.Games.Odyssey.Save
             // 10. STORYHINT0-9 (bytes): Story hint flags (10 boolean flags)
             // 11. LIVECONTENT (byte): Bitmask for live content (1 << (i-1) for each enabled entry)
             // 12. LIVE1-9 (strings): Live content entry strings (up to 9 entries)
-            
+
             // Field order must match FUN_004eb750 exactly
             SetStringField(root, "AREANAME", saveData.CurrentAreaName ?? "");
             SetStringField(root, "LASTMODULE", saveData.CurrentModule ?? "");
             SetIntField(root, "TIMEPLAYED", (int)saveData.PlayTime.TotalSeconds);
             SetIntField(root, "CHEATUSED", saveData.CheatUsed ? 1 : 0);
             SetStringField(root, "SAVEGAMENAME", saveData.Name ?? "");
-            
+
             // TIMESTAMP - FileTime (64-bit integer: dwLowDateTime, dwHighDateTime)
             // Original uses GetLocalTime + SystemTimeToFileTime to create FILETIME
             DateTime saveTime = saveData.SaveTime != default(DateTime) ? saveData.SaveTime : DateTime.Now;
             long fileTime = saveTime.ToFileTime();
             SetInt64Field(root, "TIMESTAMP", fileTime);
-            
+
             // PCNAME - Player character name
             string playerName = "";
             if (saveData.PartyState != null && saveData.PartyState.PlayerCharacter != null)
@@ -394,10 +394,10 @@ namespace Andastra.Runtime.Games.Odyssey.Save
                 playerName = saveData.PartyState.PlayerCharacter.Tag ?? "";
             }
             SetStringField(root, "PCNAME", playerName);
-            
+
             SetIntField(root, "SAVENUMBER", saveData.SaveNumber);
             SetIntField(root, "GAMEPLAYHINT", saveData.GameplayHint ? 1 : 0);
-            
+
             // STORYHINT0-9 - Story hint flags (bytes)
             for (int i = 0; i < 10; i++)
             {
@@ -405,7 +405,7 @@ namespace Andastra.Runtime.Games.Odyssey.Save
                 bool hintValue = saveData.StoryHints != null && i < saveData.StoryHints.Count && saveData.StoryHints[i];
                 SetIntField(root, hintField, hintValue ? 1 : 0);
             }
-            
+
             // LIVECONTENT - Bitmask for live content flags (byte)
             // Original uses bitmask: 1 << (i-1) for each enabled live content
             byte liveContent = 0;
@@ -420,7 +420,7 @@ namespace Andastra.Runtime.Games.Odyssey.Save
                 }
             }
             SetIntField(root, "LIVECONTENT", liveContent);
-            
+
             // LIVE1-9 - Live content entry strings (up to 9 entries)
             // Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750
             // Original implementation stores LIVE1-9 as string fields in NFO GFF
@@ -454,7 +454,7 @@ namespace Andastra.Runtime.Games.Odyssey.Save
             // GLOB GFF structure: VariableList array with VariableName, VariableType, VariableValue
             var varList = new GFFList();
             root.SetList("VariableList", varList);
-            
+
             if (globalVars != null)
             {
                 // Save boolean globals
@@ -468,7 +468,7 @@ namespace Andastra.Runtime.Games.Odyssey.Save
                         SetIntField(varStruct, "VariableValue", kvp.Value ? 1 : 0);
                     }
                 }
-                
+
                 // Save numeric globals
                 if (globalVars.Numbers != null)
                 {
@@ -480,7 +480,7 @@ namespace Andastra.Runtime.Games.Odyssey.Save
                         SetIntField(varStruct, "VariableValue", kvp.Value);
                     }
                 }
-                
+
                 // Save string globals
                 if (globalVars.Strings != null)
                 {
@@ -506,7 +506,7 @@ namespace Andastra.Runtime.Games.Odyssey.Save
             // PT GFF structure: PartyList array with party member data
             var partyList = new GFFList();
             root.SetList("PartyList", partyList);
-            
+
             if (partyState != null && partyState.AvailableMembers != null)
             {
                 foreach (KeyValuePair<string, PartyMemberState> kvp in partyState.AvailableMembers)
@@ -561,7 +561,7 @@ namespace Andastra.Runtime.Games.Odyssey.Save
             if (areaState != null)
             {
                 SetStringField(root, "AreaResRef", areaState.AreaResRef ?? "");
-                
+
                 // Save creature states
                 if (areaState.CreatureStates != null && areaState.CreatureStates.Count > 0)
                 {
@@ -740,7 +740,7 @@ namespace Andastra.Runtime.Games.Odyssey.Save
             saveData.SaveNumber = GetIntField(root, "SAVENUMBER", 0);
             saveData.CheatUsed = GetIntField(root, "CHEATUSED", 0) != 0;
             saveData.GameplayHint = GetIntField(root, "GAMEPLAYHINT", 0) != 0;
-            
+
             // Load STORYHINT0-9
             if (saveData.StoryHints == null)
             {
@@ -759,7 +759,7 @@ namespace Andastra.Runtime.Games.Odyssey.Save
                     saveData.StoryHints.Add(hintValue);
                 }
             }
-            
+
             // Load LIVECONTENT bitmask
             byte liveContentBitmask = (byte)GetIntField(root, "LIVECONTENT", 0);
             if (saveData.LiveContent == null)
@@ -779,7 +779,7 @@ namespace Andastra.Runtime.Games.Odyssey.Save
                     saveData.LiveContent.Add(isSet);
                 }
             }
-            
+
             // Load LIVE1-9 strings
             // Based on swkotor2.exe: FUN_00707290 @ 0x00707290 loads LIVE1-9 from NFO GFF
             if (saveData.LiveContentStrings == null)
@@ -799,7 +799,7 @@ namespace Andastra.Runtime.Games.Odyssey.Save
                     saveData.LiveContentStrings.Add(liveValue);
                 }
             }
-            
+
             // Load TIMESTAMP (FileTime)
             long timestamp = GetInt64Field(root, "TIMESTAMP", 0);
             if (timestamp != 0)
@@ -813,7 +813,7 @@ namespace Andastra.Runtime.Games.Odyssey.Save
                     saveData.SaveTime = DateTime.Now;
                 }
             }
-            
+
             // Load PCNAME
             saveData.PlayerName = GetStringField(root, "PCNAME", "");
         }
@@ -834,12 +834,12 @@ namespace Andastra.Runtime.Games.Odyssey.Save
                 {
                     string varName = GetStringField(varStruct, "VariableName", "");
                     int varType = GetIntField(varStruct, "VariableType", 0);
-                    
+
                     if (string.IsNullOrEmpty(varName))
                     {
                         continue;
                     }
-                    
+
                     switch (varType)
                     {
                         case 0: // BOOLEAN
@@ -890,15 +890,15 @@ namespace Andastra.Runtime.Games.Odyssey.Save
                     {
                         continue;
                     }
-                    
+
                     var memberState = new PartyMemberState
                     {
                         TemplateResRef = templateResRef
                     };
                     bool isInParty = GetIntField(memberStruct, "IsInParty", 0) != 0;
-                    
+
                     state.AvailableMembers[templateResRef] = memberState;
-                    
+
                     if (isInParty)
                     {
                         state.SelectedParty.Add(templateResRef);
@@ -916,7 +916,7 @@ namespace Andastra.Runtime.Games.Odyssey.Save
             // Located via string references: Module state loading in save system
             // Original implementation: Iterates through ARE resources in module RIM, loads each area state
             // Each ARE resource contains GFF data with entity positions, door/placeable states, etc.
-            
+
             if (erf == null || saveData == null)
             {
                 return;
@@ -959,8 +959,8 @@ namespace Andastra.Runtime.Games.Odyssey.Save
                     if (areaState != null && !string.IsNullOrEmpty(areaState.AreaResRef))
                     {
                         // Use AreaResRef from GFF if available, otherwise use resource ResRef
-                        string areaKey = !string.IsNullOrEmpty(areaState.AreaResRef) 
-                            ? areaState.AreaResRef 
+                        string areaKey = !string.IsNullOrEmpty(areaState.AreaResRef)
+                            ? areaState.AreaResRef
                             : resource.ResRef.ToString();
                         saveData.AreaStates[areaKey] = areaState;
                     }

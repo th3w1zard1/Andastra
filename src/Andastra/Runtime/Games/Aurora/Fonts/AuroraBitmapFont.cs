@@ -1,17 +1,17 @@
 using System;
 using System.Collections.Generic;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Andastra.Parsing;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
 using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Formats.TXI;
+using Andastra.Parsing.Installation;
+using Andastra.Parsing.Resource;
 using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Graphics.MonoGame.Graphics;
 using Andastra.Runtime.MonoGame.Converters;
 using Andastra.Runtime.MonoGame.Graphics;
 using JetBrains.Annotations;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Andastra.Runtime.Games.Aurora.Fonts
 {

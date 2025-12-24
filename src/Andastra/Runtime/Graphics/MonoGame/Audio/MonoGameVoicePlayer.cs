@@ -1,13 +1,13 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.Xna.Framework.Audio;
+using Andastra.Parsing.Formats.WAV;
+using Andastra.Parsing.Resource;
+using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Dialogue;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Content.Interfaces;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Formats.WAV;
+using Microsoft.Xna.Framework.Audio;
 
 namespace Andastra.Runtime.MonoGame.Audio
 {
@@ -167,77 +167,77 @@ namespace Andastra.Runtime.MonoGame.Audio
                         return;
                     }
 
-                        // Parse WAV file
-                        WAV wav = WAVAuto.ReadWav(wavData);
-                        if (wav == null || wav.Data == null || wav.Data.Length == 0)
+                    // Parse WAV file
+                    WAV wav = WAVAuto.ReadWav(wavData);
+                    if (wav == null || wav.Data == null || wav.Data.Length == 0)
+                    {
+                        Console.WriteLine($"[MonoGameVoicePlayer] Failed to parse WAV data: {voResRef}");
+                        _onCompleteCallback?.Invoke();
+                        return;
+                    }
+
+                    // Create WAV stream for MonoGame
+                    // MonoGame expects standard RIFF/WAVE format
+                    byte[] monoGameWavData = CreateMonoGameWavStream(wav);
+                    if (monoGameWavData == null)
+                    {
+                        Console.WriteLine($"[MonoGameVoicePlayer] Failed to create MonoGame WAV stream: {voResRef}");
+                        _onCompleteCallback?.Invoke();
+                        return;
+                    }
+
+                    // Load SoundEffect from stream
+                    using (MemoryStream stream = new MemoryStream(monoGameWavData))
+                    {
+                        _currentSoundEffect = SoundEffect.FromStream(stream);
+                        if (_currentSoundEffect == null)
                         {
-                            Console.WriteLine($"[MonoGameVoicePlayer] Failed to parse WAV data: {voResRef}");
+                            Console.WriteLine($"[MonoGameVoicePlayer] Failed to load SoundEffect: {voResRef}");
                             _onCompleteCallback?.Invoke();
                             return;
                         }
 
-                        // Create WAV stream for MonoGame
-                        // MonoGame expects standard RIFF/WAVE format
-                        byte[] monoGameWavData = CreateMonoGameWavStream(wav);
-                        if (monoGameWavData == null)
+                        // Create instance for playback control
+                        _currentInstance = _currentSoundEffect.CreateInstance();
+                        if (_currentInstance == null)
                         {
-                            Console.WriteLine($"[MonoGameVoicePlayer] Failed to create MonoGame WAV stream: {voResRef}");
+                            Console.WriteLine($"[MonoGameVoicePlayer] Failed to create SoundEffectInstance: {voResRef}");
+                            _currentSoundEffect.Dispose();
+                            _currentSoundEffect = null;
                             _onCompleteCallback?.Invoke();
                             return;
                         }
 
-                        // Load SoundEffect from stream
-                        using (MemoryStream stream = new MemoryStream(monoGameWavData))
+                        // Configure playback
+                        // Apply voice volume setting (0.0 to 1.0)
+                        _currentInstance.Volume = _volume;
+                        _currentInstance.IsLooped = false;
+
+                        // Register with spatial audio if available
+                        if (_spatialAudio != null && speaker != null)
                         {
-                            _currentSoundEffect = SoundEffect.FromStream(stream);
-                            if (_currentSoundEffect == null)
+                            ITransformComponent transform = speaker.GetComponent<ITransformComponent>();
+                            if (transform != null)
                             {
-                                Console.WriteLine($"[MonoGameVoicePlayer] Failed to load SoundEffect: {voResRef}");
-                                _onCompleteCallback?.Invoke();
-                                return;
+                                _currentEmitterId++;
+                                _spatialAudio.UpdateEmitter(
+                                    _currentEmitterId,
+                                    new Microsoft.Xna.Framework.Vector3(transform.Position.X, transform.Position.Y, transform.Position.Z),
+                                    Microsoft.Xna.Framework.Vector3.Zero,
+                                    1.0f,
+                                    5.0f, // min distance
+                                    50.0f // max distance
+                                );
                             }
-
-                            // Create instance for playback control
-                            _currentInstance = _currentSoundEffect.CreateInstance();
-                            if (_currentInstance == null)
-                            {
-                                Console.WriteLine($"[MonoGameVoicePlayer] Failed to create SoundEffectInstance: {voResRef}");
-                                _currentSoundEffect.Dispose();
-                                _currentSoundEffect = null;
-                                _onCompleteCallback?.Invoke();
-                                return;
-                            }
-
-                            // Configure playback
-                            // Apply voice volume setting (0.0 to 1.0)
-                            _currentInstance.Volume = _volume;
-                            _currentInstance.IsLooped = false;
-
-                            // Register with spatial audio if available
-                            if (_spatialAudio != null && speaker != null)
-                            {
-                                ITransformComponent transform = speaker.GetComponent<ITransformComponent>();
-                                if (transform != null)
-                                {
-                                    _currentEmitterId++;
-                                    _spatialAudio.UpdateEmitter(
-                                        _currentEmitterId,
-                                        new Microsoft.Xna.Framework.Vector3(transform.Position.X, transform.Position.Y, transform.Position.Z),
-                                        Microsoft.Xna.Framework.Vector3.Zero,
-                                        1.0f,
-                                        5.0f, // min distance
-                                        50.0f // max distance
-                                    );
-                                }
-                            }
-
-                            // Start playback
-                            _currentInstance.Play();
-                            _isPlaying = true;
-
-                            // Monitor playback completion
-                            MonitorPlayback();
                         }
+
+                        // Start playback
+                        _currentInstance.Play();
+                        _isPlaying = true;
+
+                        // Monitor playback completion
+                        MonitorPlayback();
+                    }
                 }
                 catch (Exception ex)
                 {

@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using JetBrains.Annotations;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Extract;
 using Andastra.Utility.LZMA;
-using Andastra.Parsing.Common;
+using JetBrains.Annotations;
 
 namespace Andastra.Parsing.Extract
 {

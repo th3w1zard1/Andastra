@@ -3,8 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using Andastra.Parsing;
-using JetBrains.Annotations;
 using Andastra.Parsing.Common;
+using JetBrains.Annotations;
 
 namespace Andastra.Parsing.Formats.TLK
 {

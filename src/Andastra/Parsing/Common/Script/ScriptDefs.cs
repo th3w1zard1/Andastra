@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Numerics;
 using Andastra.Parsing;
-using Andastra.Parsing.Common.Script;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Common.Script;
 
 namespace Andastra.Parsing.Common.Script
 {

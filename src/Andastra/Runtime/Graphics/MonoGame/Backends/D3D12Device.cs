@@ -595,9 +595,9 @@ namespace Andastra.Runtime.MonoGame.Backends
             {
                 // On non-Windows platforms, return a buffer with zero handle
                 // The application should use VulkanDevice for cross-platform support
-            IntPtr handle = new IntPtr(_nextResourceHandle++);
-            var buffer = new D3D12Buffer(handle, desc, IntPtr.Zero, _device, this);
-            _resources[handle] = buffer;
+                IntPtr handle = new IntPtr(_nextResourceHandle++);
+                var buffer = new D3D12Buffer(handle, desc, IntPtr.Zero, _device, this);
+                _resources[handle] = buffer;
                 return buffer;
             }
 
@@ -690,7 +690,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 var buffer = new D3D12Buffer(handle, desc, d3d12Resource, _device, this);
                 _resources[handle] = buffer;
 
-            return buffer;
+                return buffer;
             }
             finally
             {
@@ -907,11 +907,11 @@ namespace Andastra.Runtime.MonoGame.Backends
                     Marshal.FreeHGlobal(pipelineStatePtr);
                 }
 
-            IntPtr handle = new IntPtr(_nextResourceHandle++);
+                IntPtr handle = new IntPtr(_nextResourceHandle++);
                 var pipeline = new D3D12GraphicsPipeline(handle, desc, pipelineState, rootSignature, _device, this);
-            _resources[handle] = pipeline;
+                _resources[handle] = pipeline;
 
-            return pipeline;
+                return pipeline;
             }
             catch (Exception ex)
             {
@@ -1604,11 +1604,11 @@ namespace Andastra.Runtime.MonoGame.Backends
                     }
 
                     // Wrap in D3D12CommandList and return
-            IntPtr handle = new IntPtr(_nextResourceHandle++);
+                    IntPtr handle = new IntPtr(_nextResourceHandle++);
                     var cmdList = new D3D12CommandList(handle, type, this, commandList, commandAllocator, _device);
-            _resources[handle] = cmdList;
+                    _resources[handle] = cmdList;
 
-            return cmdList;
+                    return cmdList;
                 }
                 finally
                 {
@@ -2568,7 +2568,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                 finally
                 {
                     // Always clear the handle even if Release() failed
-            _samplerDescriptorHeap = IntPtr.Zero;
+                    _samplerDescriptorHeap = IntPtr.Zero;
                 }
             }
 

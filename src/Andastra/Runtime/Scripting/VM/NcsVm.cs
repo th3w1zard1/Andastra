@@ -126,7 +126,7 @@ namespace Andastra.Runtime.Scripting.VM
             _running = true;
             _aborted = false;
             _context = ctx;
-            
+
             // Set current execution context for async execution flow tracking
             // Based on swkotor2.exe: Execution context stack tracking for delayed script execution
             // Original implementation: Sets current execution context so delayed actions can access caller/triggerer
@@ -548,7 +548,7 @@ namespace Andastra.Runtime.Scripting.VM
                 // Kotor1 uses ScriptDefs.KOTOR_FUNCTIONS, TheSithLords uses ScriptDefs.TSL_FUNCTIONS
                 // Original engine: Each game version has its own function table
                 bool isK1 = _context.EngineApi.GetType().Name.Contains("Kotor1");
-                
+
                 if (isK1)
                 {
                     // Kotor1: Use KOTOR_FUNCTIONS list

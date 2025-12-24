@@ -2178,7 +2178,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             catch (Exception)
             {
                 // If loading fails for any reason, extension functions will remain null
-            // This allows graceful degradation when the extension is not available
+                // This allows graceful degradation when the extension is not available
                 // The calling code should check for null before using these functions
             }
         }
@@ -2256,7 +2256,7 @@ namespace Andastra.Runtime.MonoGame.Backends
             catch (Exception)
             {
                 // If loading fails for any reason, extension functions will remain null
-            // This allows graceful degradation when the extension is not available
+                // This allows graceful degradation when the extension is not available
                 // The calling code should check for null before using these functions
             }
         }
@@ -11980,141 +11980,141 @@ namespace Andastra.Runtime.MonoGame.Backends
                         {
                             GeometryTriangles triangles = geom.Triangles;
 
-                        // Get device addresses for buffers
-                        ulong vertexBufferAddress = 0UL;
-                        ulong indexBufferAddress = 0UL;
-                        ulong transformBufferAddress = 0UL;
+                            // Get device addresses for buffers
+                            ulong vertexBufferAddress = 0UL;
+                            ulong indexBufferAddress = 0UL;
+                            ulong transformBufferAddress = 0UL;
 
-                        if (triangles.VertexBuffer != null)
-                        {
-                            VulkanBuffer vulkanVertexBuffer = triangles.VertexBuffer as VulkanBuffer;
-                            if (vulkanVertexBuffer != null)
+                            if (triangles.VertexBuffer != null)
                             {
-                                IntPtr vkBuffer = vulkanVertexBuffer.VkBuffer;
-                                if (vkBuffer != IntPtr.Zero)
+                                VulkanBuffer vulkanVertexBuffer = triangles.VertexBuffer as VulkanBuffer;
+                                if (vulkanVertexBuffer != null)
                                 {
-                                    VkBufferDeviceAddressInfo bufferInfo = new VkBufferDeviceAddressInfo
+                                    IntPtr vkBuffer = vulkanVertexBuffer.VkBuffer;
+                                    if (vkBuffer != IntPtr.Zero)
                                     {
-                                        sType = VkStructureType.VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
-                                        pNext = IntPtr.Zero,
-                                        buffer = vkBuffer
-                                    };
-                                    vertexBufferAddress = vkGetBufferDeviceAddressKHR(_vkDevice, ref bufferInfo);
-                                    if (triangles.VertexOffset > 0)
-                                    {
-                                        vertexBufferAddress += (ulong)triangles.VertexOffset;
+                                        VkBufferDeviceAddressInfo bufferInfo = new VkBufferDeviceAddressInfo
+                                        {
+                                            sType = VkStructureType.VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
+                                            pNext = IntPtr.Zero,
+                                            buffer = vkBuffer
+                                        };
+                                        vertexBufferAddress = vkGetBufferDeviceAddressKHR(_vkDevice, ref bufferInfo);
+                                        if (triangles.VertexOffset > 0)
+                                        {
+                                            vertexBufferAddress += (ulong)triangles.VertexOffset;
+                                        }
                                     }
                                 }
                             }
-                        }
 
-                        if (triangles.IndexBuffer != null)
-                        {
-                            VulkanBuffer vulkanIndexBuffer = triangles.IndexBuffer as VulkanBuffer;
-                            if (vulkanIndexBuffer != null)
+                            if (triangles.IndexBuffer != null)
                             {
-                                IntPtr vkBuffer = vulkanIndexBuffer.VkBuffer;
-                                if (vkBuffer != IntPtr.Zero)
+                                VulkanBuffer vulkanIndexBuffer = triangles.IndexBuffer as VulkanBuffer;
+                                if (vulkanIndexBuffer != null)
                                 {
-                                    VkBufferDeviceAddressInfo bufferInfo = new VkBufferDeviceAddressInfo
+                                    IntPtr vkBuffer = vulkanIndexBuffer.VkBuffer;
+                                    if (vkBuffer != IntPtr.Zero)
                                     {
-                                        sType = VkStructureType.VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
-                                        pNext = IntPtr.Zero,
-                                        buffer = vkBuffer
-                                    };
-                                    indexBufferAddress = vkGetBufferDeviceAddressKHR(_vkDevice, ref bufferInfo);
-                                    if (triangles.IndexOffset > 0)
-                                    {
-                                        indexBufferAddress += (ulong)triangles.IndexOffset;
+                                        VkBufferDeviceAddressInfo bufferInfo = new VkBufferDeviceAddressInfo
+                                        {
+                                            sType = VkStructureType.VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
+                                            pNext = IntPtr.Zero,
+                                            buffer = vkBuffer
+                                        };
+                                        indexBufferAddress = vkGetBufferDeviceAddressKHR(_vkDevice, ref bufferInfo);
+                                        if (triangles.IndexOffset > 0)
+                                        {
+                                            indexBufferAddress += (ulong)triangles.IndexOffset;
+                                        }
                                     }
                                 }
                             }
-                        }
 
-                        if (triangles.TransformBuffer != null)
-                        {
-                            VulkanBuffer vulkanTransformBuffer = triangles.TransformBuffer as VulkanBuffer;
-                            if (vulkanTransformBuffer != null)
+                            if (triangles.TransformBuffer != null)
                             {
-                                IntPtr vkBuffer = vulkanTransformBuffer.VkBuffer;
-                                if (vkBuffer != IntPtr.Zero)
+                                VulkanBuffer vulkanTransformBuffer = triangles.TransformBuffer as VulkanBuffer;
+                                if (vulkanTransformBuffer != null)
                                 {
-                                    VkBufferDeviceAddressInfo bufferInfo = new VkBufferDeviceAddressInfo
+                                    IntPtr vkBuffer = vulkanTransformBuffer.VkBuffer;
+                                    if (vkBuffer != IntPtr.Zero)
                                     {
-                                        sType = VkStructureType.VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
-                                        pNext = IntPtr.Zero,
-                                        buffer = vkBuffer
-                                    };
-                                    transformBufferAddress = vkGetBufferDeviceAddressKHR(_vkDevice, ref bufferInfo);
-                                    if (triangles.TransformOffset > 0)
-                                    {
-                                        transformBufferAddress += (ulong)triangles.TransformOffset;
+                                        VkBufferDeviceAddressInfo bufferInfo = new VkBufferDeviceAddressInfo
+                                        {
+                                            sType = VkStructureType.VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
+                                            pNext = IntPtr.Zero,
+                                            buffer = vkBuffer
+                                        };
+                                        transformBufferAddress = vkGetBufferDeviceAddressKHR(_vkDevice, ref bufferInfo);
+                                        if (triangles.TransformOffset > 0)
+                                        {
+                                            transformBufferAddress += (ulong)triangles.TransformOffset;
+                                        }
                                     }
                                 }
                             }
-                        }
 
-                        // Convert vertex format to VkFormat
-                        VkFormat vertexFormat = _device.ConvertToVkFormat(triangles.VertexFormat);
-                        if (vertexFormat == VkFormat.VK_FORMAT_UNDEFINED)
-                        {
-                            // Fallback: assume float3 format (R32G32B32_SFLOAT = 106)
-                            vertexFormat = (VkFormat)106; // VK_FORMAT_R32G32B32_SFLOAT
-                        }
+                            // Convert vertex format to VkFormat
+                            VkFormat vertexFormat = _device.ConvertToVkFormat(triangles.VertexFormat);
+                            if (vertexFormat == VkFormat.VK_FORMAT_UNDEFINED)
+                            {
+                                // Fallback: assume float3 format (R32G32B32_SFLOAT = 106)
+                                vertexFormat = (VkFormat)106; // VK_FORMAT_R32G32B32_SFLOAT
+                            }
 
-                        // Convert index format
-                        VkIndexType indexType = VkIndexType.VK_INDEX_TYPE_UINT32;
-                        if (triangles.IndexFormat == TextureFormat.R16_UInt)
-                        {
-                            indexType = VkIndexType.VK_INDEX_TYPE_UINT16;
-                        }
+                            // Convert index format
+                            VkIndexType indexType = VkIndexType.VK_INDEX_TYPE_UINT32;
+                            if (triangles.IndexFormat == TextureFormat.R16_UInt)
+                            {
+                                indexType = VkIndexType.VK_INDEX_TYPE_UINT16;
+                            }
 
-                        // Create triangles data structure
-                        VkAccelerationStructureGeometryTrianglesDataKHR trianglesData = new VkAccelerationStructureGeometryTrianglesDataKHR
-                        {
-                            sType = VkStructureType.VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR,
-                            pNext = IntPtr.Zero,
-                            vertexFormat = vertexFormat,
-                            vertexDataDeviceAddress = vertexBufferAddress,
-                            vertexStride = (ulong)triangles.VertexStride,
-                            maxVertex = (uint)(triangles.VertexCount > 0 ? triangles.VertexCount - 1 : 0),
-                            indexType = indexType,
-                            indexDataDeviceAddress = indexBufferAddress,
-                            transformDataDeviceAddress = transformBufferAddress
-                        };
+                            // Create triangles data structure
+                            VkAccelerationStructureGeometryTrianglesDataKHR trianglesData = new VkAccelerationStructureGeometryTrianglesDataKHR
+                            {
+                                sType = VkStructureType.VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR,
+                                pNext = IntPtr.Zero,
+                                vertexFormat = vertexFormat,
+                                vertexDataDeviceAddress = vertexBufferAddress,
+                                vertexStride = (ulong)triangles.VertexStride,
+                                maxVertex = (uint)(triangles.VertexCount > 0 ? triangles.VertexCount - 1 : 0),
+                                indexType = indexType,
+                                indexDataDeviceAddress = indexBufferAddress,
+                                transformDataDeviceAddress = transformBufferAddress
+                            };
 
-                        // Create geometry structure
-                        VkGeometryFlagsKHR geometryFlags = VkGeometryFlagsKHR.VK_GEOMETRY_OPAQUE_BIT_KHR;
-                        if ((geom.Flags & GeometryFlags.NoDuplicateAnyHit) != 0)
-                        {
-                            geometryFlags |= VkGeometryFlagsKHR.VK_GEOMETRY_NO_DUPLICATE_ANY_HIT_INVOCATION_BIT_KHR;
-                        }
+                            // Create geometry structure
+                            VkGeometryFlagsKHR geometryFlags = VkGeometryFlagsKHR.VK_GEOMETRY_OPAQUE_BIT_KHR;
+                            if ((geom.Flags & GeometryFlags.NoDuplicateAnyHit) != 0)
+                            {
+                                geometryFlags |= VkGeometryFlagsKHR.VK_GEOMETRY_NO_DUPLICATE_ANY_HIT_INVOCATION_BIT_KHR;
+                            }
 
-                        // Create geometry structure with triangles data in union
-                        // The union structure allows direct field access via FieldOffset
-                        VkAccelerationStructureGeometryDataKHR geometryData = new VkAccelerationStructureGeometryDataKHR();
-                        geometryData.triangles = trianglesData; // Direct assignment works because of FieldOffset(0)
+                            // Create geometry structure with triangles data in union
+                            // The union structure allows direct field access via FieldOffset
+                            VkAccelerationStructureGeometryDataKHR geometryData = new VkAccelerationStructureGeometryDataKHR();
+                            geometryData.triangles = trianglesData; // Direct assignment works because of FieldOffset(0)
 
-                        VkAccelerationStructureGeometryKHR vkGeometry = new VkAccelerationStructureGeometryKHR
-                        {
-                            sType = VkStructureType.VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR,
-                            pNext = IntPtr.Zero,
-                            geometryType = VkGeometryTypeKHR.VK_GEOMETRY_TYPE_TRIANGLES_KHR,
-                            geometry = geometryData,
-                            flags = geometryFlags
-                        };
+                            VkAccelerationStructureGeometryKHR vkGeometry = new VkAccelerationStructureGeometryKHR
+                            {
+                                sType = VkStructureType.VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR,
+                                pNext = IntPtr.Zero,
+                                geometryType = VkGeometryTypeKHR.VK_GEOMETRY_TYPE_TRIANGLES_KHR,
+                                geometry = geometryData,
+                                flags = geometryFlags
+                            };
 
-                        vkGeometries.Add(vkGeometry);
+                            vkGeometries.Add(vkGeometry);
 
-                        // Create build range info
-                        VkAccelerationStructureBuildRangeInfoKHR buildRange = new VkAccelerationStructureBuildRangeInfoKHR
-                        {
-                            primitiveCount = (uint)(triangles.IndexCount > 0 ? triangles.IndexCount / 3 : triangles.VertexCount / 3),
-                            primitiveOffset = 0,
-                            firstVertex = 0,
-                            transformOffset = 0
-                        };
-                        buildRanges.Add(buildRange);
+                            // Create build range info
+                            VkAccelerationStructureBuildRangeInfoKHR buildRange = new VkAccelerationStructureBuildRangeInfoKHR
+                            {
+                                primitiveCount = (uint)(triangles.IndexCount > 0 ? triangles.IndexCount / 3 : triangles.VertexCount / 3),
+                                primitiveOffset = 0,
+                                firstVertex = 0,
+                                transformOffset = 0
+                            };
+                            buildRanges.Add(buildRange);
                         }
                         else if (geom.Type == GeometryType.AABBs)
                         {

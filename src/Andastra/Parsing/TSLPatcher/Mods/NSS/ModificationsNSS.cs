@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.NCS;
 using Andastra.Parsing.Formats.NCS.Compiler;
 using Andastra.Parsing.Logger;
 using Andastra.Parsing.Memory;
 using JetBrains.Annotations;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Mods.NSS
 {

@@ -110,7 +110,7 @@ namespace Andastra.Runtime.MonoGame.PostProcessing
             // Create or resize render targets if needed
             int width = hdrInput.Width;
             int height = hdrInput.Height;
-            
+
             if (_brightPassTarget == null || _brightPassTarget.Width != width || _brightPassTarget.Height != height)
             {
                 _brightPassTarget?.Dispose();
@@ -401,7 +401,7 @@ namespace Andastra.Runtime.MonoGame.PostProcessing
 
             _brightPassTarget?.Dispose();
             _brightPassTarget = null;
-            
+
             if (_blurTargets != null)
             {
                 foreach (RenderTarget2D rt in _blurTargets)

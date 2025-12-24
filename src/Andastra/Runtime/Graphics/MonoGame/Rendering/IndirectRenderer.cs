@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using Microsoft.Xna.Framework;
-using Andastra.Runtime.MonoGame.Interfaces;
 using Andastra.Runtime.MonoGame.Enums;
+using Andastra.Runtime.MonoGame.Interfaces;
+using Microsoft.Xna.Framework;
+using Rectangle = Microsoft.Xna.Framework.Rectangle;
 using Vector3 = System.Numerics.Vector3;
 using Vector4 = System.Numerics.Vector4;
-using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace Andastra.Runtime.MonoGame.Rendering
 {

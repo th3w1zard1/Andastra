@@ -1,8 +1,8 @@
 using System;
+using Andastra.Runtime.Content.MDL;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Games.Common.Components;
-using Andastra.Runtime.Content.MDL;
 
 namespace Andastra.Runtime.Engines.Odyssey.Components
 {

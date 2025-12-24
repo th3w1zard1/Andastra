@@ -3,8 +3,8 @@ using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using Andastra.Parsing;
-using Andastra.Parsing.Resource;
 using Andastra.Parsing.Formats.MDLData;
+using Andastra.Parsing.Resource;
 
 namespace Andastra.Parsing.Formats.MDL
 {

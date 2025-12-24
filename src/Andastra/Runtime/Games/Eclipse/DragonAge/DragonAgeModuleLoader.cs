@@ -1,10 +1,10 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
-using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Content.Interfaces;
 using Andastra.Parsing.Installation;
+using Andastra.Runtime.Content.Interfaces;
+using Andastra.Runtime.Core.Interfaces;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Engines.Eclipse.DragonAge
 {
@@ -98,9 +98,9 @@ namespace Andastra.Runtime.Engines.Eclipse.DragonAge
             // Load Dragon Age module resources
             // Based on Eclipse engine: Module loading system
             // Module structure: MODULES\{moduleName}\module.rim, area files, etc.
-            
+
             progressCallback?.Invoke(0.4f);
-            
+
             // Load module.rim file if it exists
             // Based on Eclipse Engine: Module RIM files contain module-specific resources
             // daorigins.exe: Module loading system loads module.rim files from MODULES directory
@@ -114,14 +114,14 @@ namespace Andastra.Runtime.Engines.Eclipse.DragonAge
                     // Parse the RIM file to validate it's a valid RIM archive
                     // This ensures the file is properly formatted before adding to resource provider
                     var rim = Andastra.Parsing.Formats.RIM.RIMAuto.ReadRim(moduleRimPath);
-                    
+
                     // Add the module RIM file to the resource provider
                     // This makes all resources in the RIM file available for lookup
                     // Resources in module.rim will be searched after override but before global RIM files
                     // (RIM files are searched in reverse order, so module.rim gets higher priority than global RIMs)
                     _eclipseResourceProvider.AddRimFile(moduleRimPath);
                     _loadedModuleRimPath = moduleRimPath;
-                    
+
                     // The RIM file is now loaded and resources are accessible via the resource provider
                 }
                 catch (System.IO.InvalidDataException ex)
@@ -153,12 +153,12 @@ namespace Andastra.Runtime.Engines.Eclipse.DragonAge
                     {
                         // Parse the extension RIM file to validate it's a valid RIM archive
                         var extensionRim = Andastra.Parsing.Formats.RIM.RIMAuto.ReadRim(extensionRimPath);
-                        
+
                         // Add the extension RIM file to the resource provider
                         // Extension RIMs are added after base RIM, so they override base RIM resources
                         // (RIM files are searched in reverse order, so extension RIM gets highest priority)
                         _eclipseResourceProvider.AddRimFile(extensionRimPath);
-                        
+
                         // Track all extension RIM paths for cleanup
                         _loadedModuleExtensionRimPaths.Add(extensionRimPath);
                     }
@@ -179,13 +179,13 @@ namespace Andastra.Runtime.Engines.Eclipse.DragonAge
             {
                 // Module directory doesn't exist (shouldn't happen, but handle gracefully)
             }
-            
+
             progressCallback?.Invoke(0.6f);
-            
+
             // Load area files from module directory
             // Areas are typically in subdirectories or as separate files
             // This will be implemented when area loading system is complete
-            
+
             await Task.CompletedTask;
         }
     }

@@ -5,10 +5,10 @@ using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
-using JetBrains.Annotations;
 using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Engines.Odyssey.Components;
+using JetBrains.Annotations;
 using ObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 using ScriptEvent = Andastra.Runtime.Core.Enums.ScriptEvent;
 
@@ -564,7 +564,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
             }
 
             entity.SetData("TemplateResRef", templateResRef);
-            
+
             // Create ItemComponent from UTI template data
             // Based on swkotor2.exe: Item component creation from UTI template
             // Located via string references: "ItemComponent" @ 0x007c41e4, "BaseItem" @ 0x007c0a78
@@ -604,7 +604,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
                         int costValue = GetIntField(propStruct, "CostValue", 0);
                         int param1 = GetIntField(propStruct, "Param1", 0);
                         int param1Value = GetIntField(propStruct, "Param1Value", 0);
-                        
+
                         var property = new Andastra.Runtime.Core.Interfaces.Components.ItemProperty
                         {
                             PropertyType = propertyName,

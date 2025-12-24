@@ -1,24 +1,24 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Core.Enums;
 using Andastra.Parsing;
-using Andastra.Parsing.Installation;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Formats.TwoDA;
+using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
-using static Andastra.Parsing.Common.GameExtensions;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource.Generics.GUI;
-using ParsingGUI = Andastra.Parsing.Resource.Generics.GUI.GUI;
-using UTI = Andastra.Parsing.Resource.Generics.UTI.UTI;
+using Andastra.Parsing.Resource.Generics.UTI;
+using Andastra.Runtime.Core.Enums;
+using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Games.Eclipse.GUI;
 using Andastra.Runtime.Graphics;
-using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Resource.Generics.UTI;
+using static Andastra.Parsing.Common.GameExtensions;
+using ParsingGUI = Andastra.Parsing.Resource.Generics.GUI.GUI;
+using UTI = Andastra.Parsing.Resource.Generics.UTI.UTI;
 
 namespace Andastra.Runtime.Games.Eclipse
 {

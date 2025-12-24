@@ -1,10 +1,10 @@
-﻿using System;
-using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
 
 namespace Andastra.Parsing.Formats.NCS.NCSDecomp
 {

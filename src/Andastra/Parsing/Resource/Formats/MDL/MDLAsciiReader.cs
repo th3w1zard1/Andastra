@@ -6,9 +6,9 @@ using System.Numerics;
 using System.Text;
 using System.Text.RegularExpressions;
 using Andastra.Parsing;
-using Andastra.Parsing.Formats.MDLData;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.MDL;
+using Andastra.Parsing.Formats.MDLData;
 
 namespace Andastra.Parsing.Formats.MDL
 {
@@ -415,7 +415,7 @@ namespace Andastra.Parsing.Formats.MDL
 
                 // Build node hierarchy for geometry nodes
                 BuildNodeHierarchy();
-                
+
                 // Animation node hierarchies are built immediately after each "doneanim" directive
                 // so they're already built at this point
 
@@ -1078,7 +1078,7 @@ namespace Andastra.Parsing.Formats.MDL
             {
                 return false;
             }
-            
+
             // Create Skin object if it doesn't exist (when we encounter bones/weights)
             if (_currentNode.Mesh.Skin == null)
             {
@@ -1759,13 +1759,13 @@ namespace Andastra.Parsing.Formats.MDL
             for (int i = 0; i < _animNodes.Count; i++)
             {
                 var node = _animNodes[i];
-                
+
                 // Skip if this is the root node itself
                 if (node == anim.Root)
                 {
                     continue;
                 }
-                
+
                 if (node.ParentId == -1)
                 {
                     // Check if this node has a model node parent

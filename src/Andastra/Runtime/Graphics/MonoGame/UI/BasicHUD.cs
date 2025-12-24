@@ -1,8 +1,8 @@
 using System;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Andastra.Runtime.MonoGame.UI
 {
@@ -61,7 +61,7 @@ namespace Andastra.Runtime.MonoGame.UI
         {
             _spriteBatch = new SpriteBatch(device);
             _font = font ?? throw new ArgumentNullException("font");
-            
+
             // Create a simple 1x1 texture for drawing bars
             _barTexture = new Texture2D(device, 1, 1);
             _barTexture.SetData(new[] { Color.White });
@@ -107,7 +107,7 @@ namespace Andastra.Runtime.MonoGame.UI
                     int barHeight = 20;
 
                     // Health bar
-                    DrawHealthBar(_spriteBatch, barX, barY, barWidth, barHeight, 
+                    DrawHealthBar(_spriteBatch, barX, barY, barWidth, barHeight,
                         stats.CurrentHP, stats.MaxHP, Color.Red, Color.DarkRed);
 
                     // Force bar (below health)
@@ -132,7 +132,7 @@ namespace Andastra.Runtime.MonoGame.UI
             _spriteBatch.End();
         }
 
-        private void DrawHealthBar(SpriteBatch spriteBatch, int x, int y, int width, int height, 
+        private void DrawHealthBar(SpriteBatch spriteBatch, int x, int y, int width, int height,
             int current, int max, Color fillColor, Color bgColor)
         {
             // Background
@@ -180,15 +180,15 @@ namespace Andastra.Runtime.MonoGame.UI
                 ITransformComponent transform = _playerEntity.GetComponent<ITransformComponent>();
                 if (transform != null)
                 {
-                    spriteBatch.DrawString(_font, 
-                        string.Format("Pos: ({0:F1}, {1:F1}, {2:F1})", 
-                            transform.Position.X, transform.Position.Y, transform.Position.Z), 
+                    spriteBatch.DrawString(_font,
+                        string.Format("Pos: ({0:F1}, {1:F1}, {2:F1})",
+                            transform.Position.X, transform.Position.Y, transform.Position.Z),
                         new Vector2(10, y), debugColor);
                     y += _font.LineSpacing + 5;
                 }
             }
 
-            spriteBatch.DrawString(_font, "Press F1 to toggle debug", 
+            spriteBatch.DrawString(_font, "Press F1 to toggle debug",
                 new Vector2(10, viewportHeight - 30), Color.Gray);
         }
 

@@ -173,7 +173,7 @@ namespace Andastra.Runtime.Core.Entities
         /// Located via string reference: "AreaId" @ 0x007bef48
         /// </summary>
         public uint AreaId { get; set; }
-        
+
         /// <summary>
         /// The resource reference of the template this entity was spawned from.
         /// </summary>

@@ -143,7 +143,7 @@ namespace Andastra.Runtime.Graphics.Adapters
             ITexture2D graphicsTexture = GetGraphicsTexture(texture);
             Rectangle graphicsRect = new Rectangle(destinationRectangle.X, destinationRectangle.Y, destinationRectangle.Width, destinationRectangle.Height);
             Color graphicsColor = new Color(color.R, color.G, color.B, color.A);
-            
+
             _spriteBatch.Draw(graphicsTexture, graphicsRect, graphicsColor);
         }
 
@@ -165,7 +165,7 @@ namespace Andastra.Runtime.Graphics.Adapters
             {
                 return adapter.Texture;
             }
-            
+
             // If not an adapter, we can't convert it
             throw new ArgumentException("Texture must be created by MovieGraphicsDeviceAdapter", "texture");
         }

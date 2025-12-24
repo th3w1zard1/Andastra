@@ -101,7 +101,7 @@ namespace Andastra.Runtime.Stride.Graphics
             // Note: Stride's AudioListener doesn't expose Position/Forward/Up directly in all versions,
             // but we store them for our calculations. The actual listener is managed by Stride's audio system.
             // When SoundInstance.Apply3D() is called with an emitter, Stride uses the listener's current state.
-            
+
             // Convert System.Numerics.Vector3 to Stride.Core.Mathematics.Vector3 for Stride API
             // The listener state is maintained internally by Stride when sounds are played with Apply3D()
         }
@@ -116,7 +116,7 @@ namespace Andastra.Runtime.Stride.Graphics
         {
             uint emitterId = (uint)(_emitters.Count + 1);
             var emitter = new AudioEmitter();
-            
+
             // Set emitter position (converting from System.Numerics.Vector3 to Stride.Core.Mathematics.Vector3)
             emitter.Position = new Vector3Stride(position.X, position.Y, position.Z);
 
@@ -129,7 +129,7 @@ namespace Andastra.Runtime.Stride.Graphics
                 MinDistance = Math.Max(0.0f, minDistance),
                 MaxDistance = Math.Max(minDistance, maxDistance)
             };
-            
+
             _emitters[emitterId] = emitterData;
             return emitterId;
         }
@@ -156,7 +156,7 @@ namespace Andastra.Runtime.Stride.Graphics
 
             // Update Stride AudioEmitter position
             emitterData.Emitter.Position = new Vector3Stride(position.X, position.Y, position.Z);
-            
+
             // Update stored parameters
             emitterData.Velocity = velocity;
             emitterData.Volume = Math.Max(0.0f, Math.Min(1.0f, volume));
@@ -286,7 +286,7 @@ namespace Andastra.Runtime.Stride.Graphics
         {
             // Calculate relative velocity
             Vector3 relativeVelocity = emitterVelocity - listenerVelocity;
-            
+
             // Calculate distance for normalization
             float distance = toEmitter.Length();
             if (distance < 0.0001f)
@@ -294,17 +294,17 @@ namespace Andastra.Runtime.Stride.Graphics
                 // Emitter and listener are at same position, no Doppler shift
                 return 1.0f;
             }
-            
+
             // Normalize the direction vector from listener to emitter
             Vector3 direction = Vector3.Normalize(toEmitter);
-            
+
             // Calculate the component of relative velocity along the direction vector
             // Positive when moving toward listener, negative when moving away
             float relativeSpeed = Vector3.Dot(relativeVelocity, direction);
-            
+
             // Calculate Doppler shift: 1.0 means no shift, >1.0 means higher frequency, <1.0 means lower frequency
             float dopplerShift = 1.0f + (relativeSpeed / _speedOfSound) * _dopplerFactor;
-            
+
             // Clamp to reasonable range (avoid negative frequencies or extreme shifts)
             return Math.Max(0.1f, Math.Min(10.0f, dopplerShift));
         }

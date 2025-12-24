@@ -102,7 +102,7 @@ namespace Andastra.Runtime.MonoGame.Shaders
                     // Release lock before awaiting
                 }
             }
-            
+
             // Await outside of lock
             if (compilingTask != null)
             {

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Resource;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Extract
 {

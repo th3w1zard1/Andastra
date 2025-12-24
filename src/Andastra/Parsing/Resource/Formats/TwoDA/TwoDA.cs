@@ -30,7 +30,7 @@ namespace Andastra.Parsing.Formats.TwoDA
 
         public List<string> GetHeaders() => new List<string>(_headers);
         public List<string> GetLabels() => new List<string>(_labels);
-        
+
         // Properties for compatibility with Utilities.cs
         public List<string> Headers => GetHeaders();
         public List<TwoDARow> Rows

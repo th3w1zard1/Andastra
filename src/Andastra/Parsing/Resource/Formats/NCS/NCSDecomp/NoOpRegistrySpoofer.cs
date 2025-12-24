@@ -1,4 +1,4 @@
-﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/NoOpRegistrySpoofer.java:1-40
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/NoOpRegistrySpoofer.java:1-40
 // Copyright 2021-2025 NCSDecomp
 // Licensed under the Business Source License 1.1 (BSL 1.1).
 // See LICENSE.txt file in the project root for full license information.

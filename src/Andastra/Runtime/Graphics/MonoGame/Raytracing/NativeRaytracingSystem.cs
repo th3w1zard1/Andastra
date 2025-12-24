@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Numerics;
+using System.Runtime.InteropServices;
+using System.Text;
 using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Text;
-using System.Diagnostics;
 
 namespace Andastra.Runtime.MonoGame.Raytracing
 {

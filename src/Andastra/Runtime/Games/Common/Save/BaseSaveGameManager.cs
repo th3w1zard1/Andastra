@@ -42,7 +42,7 @@ namespace Andastra.Runtime.Games.Common.Save
         protected BaseSaveGameManager(string savesDirectory)
         {
             _savesDirectory = savesDirectory ?? throw new ArgumentNullException("savesDirectory");
-            
+
             // Ensure saves directory exists
             if (!Directory.Exists(_savesDirectory))
             {

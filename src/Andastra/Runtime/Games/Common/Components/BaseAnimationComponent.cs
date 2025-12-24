@@ -1,6 +1,6 @@
-using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Common.Components
 {

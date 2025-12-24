@@ -1956,8 +1956,8 @@ namespace Andastra.Runtime.Core.Navigation
                     bool isBlocked = false;
                     if (obstacles != null)
                     {
-                            Vector3 neighborCenter = GetFaceCenter(neighbor);
-                            foreach (Interfaces.ObstacleInfo obstacle in obstacles)
+                        Vector3 neighborCenter = GetFaceCenter(neighbor);
+                        foreach (Interfaces.ObstacleInfo obstacle in obstacles)
                         {
                             float distToObstacle = Vector3.Distance(neighborCenter, obstacle.Position);
                             if (distToObstacle < obstacle.Radius)
@@ -2204,7 +2204,7 @@ namespace Andastra.Runtime.Core.Navigation
         /// 3. 2D POINT-IN-TRIANGLE TEST:
         ///    - Uses the "same-side test" to check if point is inside triangle
         ///    - For each edge of the triangle, checks which side of the edge the point is on
-    ///    - If point is on the same side of all three edges, it's inside the triangle
+        ///    - If point is on the same side of all three edges, it's inside the triangle
         ///    - Uses cross products to determine which side of each edge the point is on
         ///    - Based on swkotor2.exe: FUN_0055b300 @ 0x0055b300 tests triangle intersection
         /// 

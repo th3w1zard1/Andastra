@@ -2,8 +2,8 @@ using System;
 using System.IO;
 using System.Text;
 using Andastra.Parsing;
-using Andastra.Parsing.Formats.LYT;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Formats.LYT;
 
 namespace Andastra.Parsing.Resource.Formats.LYT
 {

@@ -1,13 +1,13 @@
-﻿// Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/PrototypeEngine.java:1-156
+// Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/PrototypeEngine.java:1-156
 // Copyright 2021-2025 NCSDecomp
 // Licensed under the Business Source License 1.1 (BSL 1.1).
 // See LICENSE.txt file in the project root for full license information.
 
 using System;
-using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
 using System.Collections.Generic;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.Utils;
+using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
 
 namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis
 {

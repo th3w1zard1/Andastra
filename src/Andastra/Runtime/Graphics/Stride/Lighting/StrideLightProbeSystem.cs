@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Andastra.Runtime.Stride.Spatial;
 using Andastra.Runtime.Graphics.Common.Lighting;
+using Andastra.Runtime.Stride.Spatial;
 using BaseLightProbeSystem = Andastra.Runtime.Graphics.Common.Lighting.BaseLightProbeSystem;
 
 namespace Andastra.Runtime.Stride.Lighting

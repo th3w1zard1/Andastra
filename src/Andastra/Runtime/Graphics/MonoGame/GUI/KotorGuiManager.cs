@@ -1,29 +1,29 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
-using XnaVector2 = Microsoft.Xna.Framework.Vector2;
-using XnaColor = Microsoft.Xna.Framework.Color;
-using XnaRectangle = Microsoft.Xna.Framework.Rectangle;
-using XnaSpriteEffects = Microsoft.Xna.Framework.Graphics.SpriteEffects;
-using ParsingColor = Andastra.Parsing.Common.ParsingColor;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
+using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics.GUI;
-using GuiResource = Andastra.Parsing.Resource.Generics.GUI.GUI;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.TPC;
 using Andastra.Runtime.Core.Audio;
 using Andastra.Runtime.Games.Common;
+using Andastra.Runtime.Graphics;
+using Andastra.Runtime.Graphics.MonoGame.Graphics;
 using Andastra.Runtime.MonoGame.Converters;
 using Andastra.Runtime.MonoGame.Graphics;
-using Andastra.Runtime.Graphics;
-using GraphicsVector2 = Andastra.Runtime.Graphics.Vector2;
-using Andastra.Runtime.Graphics.MonoGame.Graphics;
 using JetBrains.Annotations;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+using GraphicsVector2 = Andastra.Runtime.Graphics.Vector2;
+using GuiResource = Andastra.Parsing.Resource.Generics.GUI.GUI;
+using ParsingColor = Andastra.Parsing.Common.ParsingColor;
+using XnaColor = Microsoft.Xna.Framework.Color;
+using XnaRectangle = Microsoft.Xna.Framework.Rectangle;
+using XnaSpriteEffects = Microsoft.Xna.Framework.Graphics.SpriteEffects;
+using XnaVector2 = Microsoft.Xna.Framework.Vector2;
 
 namespace Andastra.Runtime.MonoGame.GUI
 {
@@ -217,7 +217,7 @@ namespace Andastra.Runtime.MonoGame.GUI
                 // Store loaded GUI
                 _loadedGuis[guiName] = loadedGui;
                 _currentGui = loadedGui;
-                
+
                 // Rebuild button list for keyboard navigation
                 _buttonList = null;
 
@@ -460,10 +460,10 @@ namespace Andastra.Runtime.MonoGame.GUI
                     {
                         var button = _buttonList[_selectedButtonIndex];
                         FireButtonClicked(button.Tag, button.Id ?? -1);
-                        
+
                         // Play click sound for keyboard-activated button
                         PlayButtonClickSound();
-                        
+
                         Console.WriteLine($"[KotorGuiManager] Button activated via keyboard: {button.Tag} (ID: {button.Id})");
                     }
                 }
@@ -1775,11 +1775,11 @@ namespace Andastra.Runtime.MonoGame.GUI
                 // Use actual texture width if reasonable, otherwise use proportional sizing
                 float thumbWidth = thumbTexture.Width > 0 && thumbTexture.Width <= size.X ? thumbTexture.Width : Math.Min(size.X * 0.1f, 20.0f);
                 float thumbHeight = thumbTexture.Height > 0 && thumbTexture.Height <= size.Y ? thumbTexture.Height : Math.Min(size.Y * 0.8f, size.Y);
-                
+
                 // Calculate track length: available space for thumb movement
                 // The thumb's left edge can move from position.X to position.X + trackLength
                 float trackLength = size.X - thumbWidth;
-                
+
                 // Calculate base thumb X position (left edge position)
                 // normalizedPosition (0.0 to 1.0) represents position along track
                 float thumbX = position.X + (normalizedPosition * trackLength);
@@ -1795,11 +1795,11 @@ namespace Andastra.Runtime.MonoGame.GUI
                 // Use actual texture dimensions if reasonable, otherwise use proportional sizing
                 float thumbWidth = thumbTexture.Width > 0 && thumbTexture.Width <= size.X ? thumbTexture.Width : Math.Min(size.X * 0.8f, size.X);
                 float thumbHeight = thumbTexture.Height > 0 && thumbTexture.Height <= size.Y ? thumbTexture.Height : Math.Min(size.Y * 0.1f, 20.0f);
-                
+
                 // Calculate track length: available space for thumb movement
                 // The thumb's top edge can move from position.Y to position.Y + trackLength
                 float trackLength = size.Y - thumbHeight;
-                
+
                 // Calculate base thumb Y position (top edge position)
                 // normalizedPosition (0.0 to 1.0) represents position along track
                 float thumbX = position.X + (size.X - thumbWidth) / 2.0f; // Default: center horizontally (will be adjusted by alignment)

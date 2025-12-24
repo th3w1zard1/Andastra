@@ -4,15 +4,15 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
-using Andastra.Runtime.Content.Interfaces;
-using Andastra.Runtime.Graphics;
-using Andastra.Runtime.Graphics.Common.Scene;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.VIS;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource.Generics.ARE;
+using Andastra.Runtime.Content.Interfaces;
+using Andastra.Runtime.Graphics;
+using Andastra.Runtime.Graphics.Common.Scene;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Eclipse.Scene

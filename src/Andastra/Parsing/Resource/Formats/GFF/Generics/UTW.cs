@@ -1,7 +1,7 @@
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Resource;
 using JetBrains.Annotations;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Resource.Generics
 {
@@ -30,7 +30,7 @@ namespace Andastra.Parsing.Resource.Generics
         public int AppearanceId { get; set; }
         public int PaletteId { get; set; }
         public string Comment { get; set; } = string.Empty;
-        
+
         // Deprecated fields
         public string LinkedTo { get; set; } = string.Empty;
         public LocalizedString Description { get; set; } = LocalizedString.FromInvalid();

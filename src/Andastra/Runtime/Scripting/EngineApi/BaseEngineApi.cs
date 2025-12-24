@@ -799,7 +799,7 @@ namespace Andastra.Runtime.Scripting.EngineApi
             // Original implementation: Stub function that calls FUN_140c10370 (memory free function)
             // This implementation provides full script execution (not just a stub)
             // Script execution is synchronous and blocks until script completes
-            
+
             if (args.Count < 1)
             {
                 return Variable.Void();
@@ -850,7 +850,7 @@ namespace Andastra.Runtime.Scripting.EngineApi
                     // Script return value is typically used for conditional checks (0 = FALSE, non-zero = TRUE)
                     // In original engines, script return values are used by ACTION opcode for flow control
                     int scriptReturnValue = scriptExecutor.ExecuteScript(scriptResRef, entity, ctx.Triggerer);
-                    
+
                     // Script execution completed successfully
                     // Note: scriptReturnValue is captured for potential future use but not returned
                     // since ExecuteScript function signature returns void (NWScript specification)
@@ -1048,7 +1048,7 @@ namespace Andastra.Runtime.Scripting.EngineApi
             }
 
             // Alternative: Check if world has ExecuteScript method directly
-            System.Reflection.MethodInfo executeMethod = ctx.World.GetType().GetMethod("ExecuteScript", 
+            System.Reflection.MethodInfo executeMethod = ctx.World.GetType().GetMethod("ExecuteScript",
                 new System.Type[] { typeof(string), typeof(Core.Interfaces.IEntity), typeof(Core.Interfaces.IEntity) });
             if (executeMethod != null)
             {
@@ -1139,7 +1139,7 @@ namespace Andastra.Runtime.Scripting.EngineApi
                     return scriptExecutorProp.GetValue(ctx.World) as IScriptExecutor;
                 }
 
-                System.Reflection.MethodInfo executeMethod = ctx.World.GetType().GetMethod("ExecuteScript", 
+                System.Reflection.MethodInfo executeMethod = ctx.World.GetType().GetMethod("ExecuteScript",
                     new System.Type[] { typeof(string), typeof(IEntity), typeof(IEntity) });
                 if (executeMethod != null)
                 {

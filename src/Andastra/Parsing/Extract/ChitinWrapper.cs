@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Extract.Chitin;
 using Andastra.Parsing.Resource;
 using ChitinClass = Andastra.Parsing.Extract.Chitin.Chitin;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Extract
 {

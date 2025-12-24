@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Extract;
 using Andastra.Parsing.Extract.Capsule;
 using Andastra.Parsing.Formats.Capsule;
@@ -13,7 +14,6 @@ using Andastra.Parsing.Installation;
 using Andastra.Parsing.Logger;
 using Andastra.Parsing.Resource;
 using JetBrains.Annotations;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Tools
 {
@@ -210,8 +210,8 @@ namespace Andastra.Parsing.Tools
         // Original: def _scan_ssf(self, identifier: ResourceIdentifier, data: bytes) -> None:
         private void ScanSSF(ResourceIdentifier identifier, byte[] data)
         {
-                        var reader = new SSFBinaryReader(data);
-                        var ssfObj = reader.Load();
+            var reader = new SSFBinaryReader(data);
+            var ssfObj = reader.Load();
             string filename = $"{identifier.ResName}.{identifier.ResType.Extension}";
 
             foreach (SSFSound sound in Enum.GetValues(typeof(SSFSound)))

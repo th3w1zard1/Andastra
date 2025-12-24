@@ -1,13 +1,14 @@
 using System;
-using System.Numerics;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Text.RegularExpressions;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.Drawing.Drawing2D;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Extract;
 using Andastra.Parsing.Formats.BWM;
 using Andastra.Parsing.Formats.ERF;
@@ -16,12 +17,11 @@ using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Logger;
-using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Formats.LYT;
+using Andastra.Parsing.Resource.Generics;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Andastra.Parsing.Common;
 using Vector2 = System.Numerics.Vector2;
 
 namespace Andastra.Parsing.Tools
@@ -1829,9 +1829,9 @@ namespace Andastra.Parsing.Tools
                 {
                     // Determine if face is walkable based on material (matching Python hardcoded list)
                     int materialValue = (int)face.Material;
-                    bool isWalkable = materialValue == 1 || materialValue == 3 || materialValue == 4 || materialValue == 5 || 
-                                     materialValue == 6 || materialValue == 9 || materialValue == 10 || materialValue == 11 || 
-                                     materialValue == 12 || materialValue == 13 || materialValue == 14 || materialValue == 16 || 
+                    bool isWalkable = materialValue == 1 || materialValue == 3 || materialValue == 4 || materialValue == 5 ||
+                                     materialValue == 6 || materialValue == 9 || materialValue == 10 || materialValue == 11 ||
+                                     materialValue == 12 || materialValue == 13 || materialValue == 14 || materialValue == 16 ||
                                      materialValue == 18 || materialValue == 20 || materialValue == 21 || materialValue == 22;
                     ParsingColor parsingColor = isWalkable ? ParsingColor.WHITE : new ParsingColor(0.5f, 0.5f, 0.5f);
                     System.Drawing.Color color = isWalkable ? System.Drawing.Color.White : System.Drawing.Color.Gray;

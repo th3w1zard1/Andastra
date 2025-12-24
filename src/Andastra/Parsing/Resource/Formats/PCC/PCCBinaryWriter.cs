@@ -43,7 +43,7 @@ namespace Andastra.Parsing.Formats.PCC
             using (var writer = new System.IO.BinaryWriter(stream, Encoding.ASCII, true))
             {
                 var resources = _pcc.GetResources();
-                
+
                 // Write package signature
                 uint signature = _pcc.PackageType == PCCType.UPK ? 0x9E2A83C4 : 0x9E2A83C1;
                 writer.Write(signature);
@@ -108,7 +108,7 @@ namespace Andastra.Parsing.Formats.PCC
                 foreach (var resource in resources)
                 {
                     int nameIndex = nameMap[resource.ResRef.ToString()];
-                    
+
                     // Write export entry
                     writer.Write(0); // ClassIndex (simplified)
                     writer.Write(0); // SuperIndex

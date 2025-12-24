@@ -231,7 +231,7 @@ namespace Andastra.Runtime.Games.Odyssey.Dialogue
             // Based on swkotor.exe and swkotor2.exe: Player entity lookup for camera reset
             // Original implementation: Retrieves player entity and sets camera to chase mode
             IEntity playerEntity = CameraController.GetPlayerEntity();
-            
+
             if (playerEntity != null)
             {
                 // Reset to chase mode following player

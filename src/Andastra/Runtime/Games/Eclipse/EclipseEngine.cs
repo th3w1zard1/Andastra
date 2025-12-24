@@ -1,9 +1,9 @@
 using System;
+using Andastra.Parsing.Common;
+using Andastra.Parsing.Installation;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Content.ResourceProviders;
 using Andastra.Runtime.Engines.Common;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Installation;
 
 namespace Andastra.Runtime.Engines.Eclipse
 {
@@ -194,7 +194,7 @@ namespace Andastra.Runtime.Engines.Eclipse
                         return GameType.DA_ORIGINS;
                     }
                 }
-                
+
                 // If we can't determine, default to DA_ORIGINS for packages directory structure
                 // (most Eclipse Engine installations are DA:O)
                 return GameType.DA_ORIGINS;

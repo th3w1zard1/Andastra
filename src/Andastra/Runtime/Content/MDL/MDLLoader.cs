@@ -3,36 +3,36 @@ using System.IO;
 using Andastra.Parsing.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.MDL;
-using CoreMDLModel = Andastra.Runtime.Core.MDL.MDLModel;
-using ContentMDLModel = Andastra.Runtime.Content.MDL.MDLModel;
-using CoreVector3Data = Andastra.Runtime.Core.MDL.Vector3Data;
-using ContentVector3Data = Andastra.Runtime.Content.MDL.Vector3Data;
-using CoreVector2Data = Andastra.Runtime.Core.MDL.Vector2Data;
-using ContentVector2Data = Andastra.Runtime.Content.MDL.Vector2Data;
-using CoreVector4Data = Andastra.Runtime.Core.MDL.Vector4Data;
-using ContentVector4Data = Andastra.Runtime.Content.MDL.Vector4Data;
-using CoreMDLNodeData = Andastra.Runtime.Core.MDL.MDLNodeData;
-using ContentMDLNodeData = Andastra.Runtime.Content.MDL.MDLNodeData;
-using CoreMDLAnimationData = Andastra.Runtime.Core.MDL.MDLAnimationData;
 using ContentMDLAnimationData = Andastra.Runtime.Content.MDL.MDLAnimationData;
-using CoreMDLControllerData = Andastra.Runtime.Core.MDL.MDLControllerData;
 using ContentMDLControllerData = Andastra.Runtime.Content.MDL.MDLControllerData;
-using CoreMDLMeshData = Andastra.Runtime.Core.MDL.MDLMeshData;
-using ContentMDLMeshData = Andastra.Runtime.Content.MDL.MDLMeshData;
-using CoreMDLLightData = Andastra.Runtime.Core.MDL.MDLLightData;
-using ContentMDLLightData = Andastra.Runtime.Content.MDL.MDLLightData;
-using CoreMDLEmitterData = Andastra.Runtime.Core.MDL.MDLEmitterData;
-using ContentMDLEmitterData = Andastra.Runtime.Content.MDL.MDLEmitterData;
-using CoreMDLReferenceData = Andastra.Runtime.Core.MDL.MDLReferenceData;
-using ContentMDLReferenceData = Andastra.Runtime.Content.MDL.MDLReferenceData;
-using CoreMDLDanglymeshData = Andastra.Runtime.Core.MDL.MDLDanglymeshData;
 using ContentMDLDanglymeshData = Andastra.Runtime.Content.MDL.MDLDanglymeshData;
-using CoreMDLSkinData = Andastra.Runtime.Core.MDL.MDLSkinData;
-using ContentMDLSkinData = Andastra.Runtime.Content.MDL.MDLSkinData;
-using CoreMDLEventData = Andastra.Runtime.Core.MDL.MDLEventData;
+using ContentMDLEmitterData = Andastra.Runtime.Content.MDL.MDLEmitterData;
 using ContentMDLEventData = Andastra.Runtime.Content.MDL.MDLEventData;
-using CoreMDLFaceData = Andastra.Runtime.Core.MDL.MDLFaceData;
 using ContentMDLFaceData = Andastra.Runtime.Content.MDL.MDLFaceData;
+using ContentMDLLightData = Andastra.Runtime.Content.MDL.MDLLightData;
+using ContentMDLMeshData = Andastra.Runtime.Content.MDL.MDLMeshData;
+using ContentMDLModel = Andastra.Runtime.Content.MDL.MDLModel;
+using ContentMDLNodeData = Andastra.Runtime.Content.MDL.MDLNodeData;
+using ContentMDLReferenceData = Andastra.Runtime.Content.MDL.MDLReferenceData;
+using ContentMDLSkinData = Andastra.Runtime.Content.MDL.MDLSkinData;
+using ContentVector2Data = Andastra.Runtime.Content.MDL.Vector2Data;
+using ContentVector3Data = Andastra.Runtime.Content.MDL.Vector3Data;
+using ContentVector4Data = Andastra.Runtime.Content.MDL.Vector4Data;
+using CoreMDLAnimationData = Andastra.Runtime.Core.MDL.MDLAnimationData;
+using CoreMDLControllerData = Andastra.Runtime.Core.MDL.MDLControllerData;
+using CoreMDLDanglymeshData = Andastra.Runtime.Core.MDL.MDLDanglymeshData;
+using CoreMDLEmitterData = Andastra.Runtime.Core.MDL.MDLEmitterData;
+using CoreMDLEventData = Andastra.Runtime.Core.MDL.MDLEventData;
+using CoreMDLFaceData = Andastra.Runtime.Core.MDL.MDLFaceData;
+using CoreMDLLightData = Andastra.Runtime.Core.MDL.MDLLightData;
+using CoreMDLMeshData = Andastra.Runtime.Core.MDL.MDLMeshData;
+using CoreMDLModel = Andastra.Runtime.Core.MDL.MDLModel;
+using CoreMDLNodeData = Andastra.Runtime.Core.MDL.MDLNodeData;
+using CoreMDLReferenceData = Andastra.Runtime.Core.MDL.MDLReferenceData;
+using CoreMDLSkinData = Andastra.Runtime.Core.MDL.MDLSkinData;
+using CoreVector2Data = Andastra.Runtime.Core.MDL.Vector2Data;
+using CoreVector3Data = Andastra.Runtime.Core.MDL.Vector3Data;
+using CoreVector4Data = Andastra.Runtime.Core.MDL.Vector4Data;
 
 namespace Andastra.Runtime.Content.MDL
 {
@@ -143,7 +143,7 @@ namespace Andastra.Runtime.Content.MDL
 
             string normalizedRef = resRef.ToLowerInvariant();
 
-                // Check cache first
+            // Check cache first
             if (_useCache)
             {
                 ContentMDLModel cached;

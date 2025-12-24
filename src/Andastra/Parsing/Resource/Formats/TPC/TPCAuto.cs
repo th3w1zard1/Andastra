@@ -2,8 +2,8 @@ using System;
 using System.IO;
 using System.Text;
 using Andastra.Parsing;
-using Andastra.Parsing.Resource;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Resource;
 
 namespace Andastra.Parsing.Formats.TPC
 {

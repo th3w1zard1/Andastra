@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Logger;
-using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource;
+using Andastra.Parsing.Resource.Generics;
 using JetBrains.Annotations;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Tools
 {
@@ -115,7 +115,7 @@ namespace Andastra.Parsing.Tools
                 modelName.ToUpperInvariant(),  // Uppercase
                 modelName.ToLowerInvariant().Replace(".mdl", "").Replace(".mdx", "")  // Normalized lowercase
             };
-            
+
             // Remove duplicates while preserving order
             var seen = new HashSet<string>();
             var result = new List<string>();
@@ -141,9 +141,9 @@ namespace Andastra.Parsing.Tools
             {
                 logger = new RobustLogger();
             }
-            
+
             var modelVariations = GetModelVariations(modelName);
-            
+
             // Try locations() first (more reliable, searches multiple locations)
             foreach (string modelVar in modelVariations)
             {
@@ -181,7 +181,7 @@ namespace Andastra.Parsing.Tools
                     continue;
                 }
             }
-            
+
             // Fallback to resource() if locations() didn't work
             foreach (string modelVar in modelVariations)
             {
@@ -200,7 +200,7 @@ namespace Andastra.Parsing.Tools
                     continue;
                 }
             }
-            
+
             return (null, null);
         }
 
@@ -216,15 +216,15 @@ namespace Andastra.Parsing.Tools
             {
                 logger = new RobustLogger();
             }
-            
+
             if (mdl == null || mdl.Root == null)
             {
                 return null;
             }
-            
+
             var bbMin = new System.Numerics.Vector3(1000000, 1000000, 1000000);
             var bbMax = new System.Numerics.Vector3(-1000000, -1000000, -1000000);
-            
+
             // Iterate through all nodes and their meshes
             var nodesToCheck = new List<Formats.MDLData.MDLNode> { mdl.Root };
             int meshCount = 0;
@@ -259,14 +259,14 @@ namespace Andastra.Parsing.Tools
                         }
                     }
                 }
-                
+
                 // Check child nodes
                 if (node.Children != null)
                 {
                     nodesToCheck.AddRange(node.Children);
                 }
             }
-            
+
             // Calculate dimensions from bounding box
             // Width is typically the Y dimension (horizontal when door is closed)
             // Height is typically the Z dimension (vertical)
@@ -274,7 +274,7 @@ namespace Andastra.Parsing.Tools
             {
                 float width = Math.Abs(bbMax.Y - bbMin.Y);
                 float height = Math.Abs(bbMax.Z - bbMin.Z);
-                
+
                 // Only use calculated values if they're reasonable (not zero or extremely large)
                 if (0.1f < width && width < 50.0f && 0.1f < height && height < 50.0f)
                 {
@@ -299,7 +299,7 @@ namespace Andastra.Parsing.Tools
                     $"Could not calculate bounding box for door {doorNameStr} " +
                     $"(processed {meshCount} meshes), using defaults");
             }
-            
+
             return null;
         }
 
@@ -315,11 +315,11 @@ namespace Andastra.Parsing.Tools
             {
                 logger = new RobustLogger();
             }
-            
+
             // Get textures from the model
             var textureNames = new List<string>();
             var modelVariations = GetModelVariations(modelName);
-            
+
             foreach (string modelVar in modelVariations)
             {
                 try
@@ -336,12 +336,12 @@ namespace Andastra.Parsing.Tools
                     continue;
                 }
             }
-            
+
             if (textureNames.Count == 0)
             {
                 return null;
             }
-            
+
             // Try to load the first texture
             string textureName = textureNames[0];
             var textureResult = installation.Resources.LookupResource(textureName, ResourceType.TPC);
@@ -350,16 +350,16 @@ namespace Andastra.Parsing.Tools
                 // Try TGA as fallback
                 textureResult = installation.Resources.LookupResource(textureName, ResourceType.TGA);
             }
-            
+
             if (textureResult == null || textureResult.Data == null)
             {
                 return null;
             }
-            
+
             // Read texture to get dimensions
             int texWidth = 0;
             int texHeight = 0;
-            
+
             if (textureResult.ResType == ResourceType.TPC)
             {
                 var reader = new Formats.TPC.TPCBinaryReader(textureResult.Data);
@@ -377,12 +377,12 @@ namespace Andastra.Parsing.Tools
                     texHeight = BitConverter.ToInt16(textureResult.Data, 14);
                 }
             }
-            
+
             if (texWidth <= 0 || texHeight <= 0)
             {
                 return null;
             }
-            
+
             // Convert texture pixels to world units
             // Use aspect ratio to determine which dimension is width vs height
             // Doors are typically taller than wide, so height > width
@@ -406,11 +406,11 @@ namespace Andastra.Parsing.Tools
                 // Width is typically 0.6-0.8x height for doors
                 doorWidth = doorHeight * 0.7f;
             }
-            
+
             // Clamp to reasonable values
             doorWidth = Math.Max(1.0f, Math.Min(doorWidth, 10.0f));
             doorHeight = Math.Max(1.5f, Math.Min(doorHeight, 10.0f));
-            
+
             return (doorWidth, doorHeight);
         }
 
@@ -486,7 +486,7 @@ namespace Andastra.Parsing.Tools
                         $"for door {doorNameStr} " +
                         $"(appearance_id={utd.AppearanceId}), trying texture fallback");
                 }
-                
+
                 // Fallback: Get dimensions from door texture if model-based extraction failed
                 // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/door.py:567-576
                 // Original: dimensions = _get_door_dimensions_from_texture(model_name, installation, door_name, logger)

@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
+using Andastra.Runtime.MonoGame.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Andastra.Runtime.MonoGame.Graphics;
 
 namespace Andastra.Runtime.MonoGame.Lighting
 {

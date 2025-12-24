@@ -4,8 +4,8 @@ using System.Numerics;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Engines.Odyssey.Components;
 using Andastra.Runtime.Engines.Odyssey.Combat;
+using Andastra.Runtime.Engines.Odyssey.Components;
 
 namespace Andastra.Runtime.Engines.Odyssey.Systems
 {

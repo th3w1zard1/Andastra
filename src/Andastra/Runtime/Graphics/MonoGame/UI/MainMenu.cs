@@ -55,7 +55,7 @@ namespace Andastra.Runtime.MonoGame.UI
         {
             _spriteBatch = new SpriteBatch(device);
             _font = font ?? throw new System.ArgumentNullException("font");
-            
+
             // Create a simple 1x1 texture for drawing rectangles
             _pixelTexture = new Texture2D(device, 1, 1);
             _pixelTexture.SetData(new[] { Color.White });
@@ -74,7 +74,7 @@ namespace Andastra.Runtime.MonoGame.UI
             _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
 
             // Draw semi-transparent background overlay
-            _spriteBatch.Draw(_pixelTexture, new Rectangle(0, 0, viewportWidth, viewportHeight), 
+            _spriteBatch.Draw(_pixelTexture, new Rectangle(0, 0, viewportWidth, viewportHeight),
                 new Color(0, 0, 0, 220)); // Dark semi-transparent background
 
             // Draw game title (centered at top)

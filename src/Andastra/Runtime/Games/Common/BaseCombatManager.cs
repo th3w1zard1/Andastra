@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
-using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Enums;
+using Andastra.Runtime.Core.Interfaces;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Common
 {

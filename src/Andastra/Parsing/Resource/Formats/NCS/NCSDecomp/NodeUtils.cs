@@ -1,13 +1,13 @@
-﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeUtils.java:16-952
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeUtils.java:16-952
 // Original: public final class NodeUtils
 using System;
-using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using Andastra.Parsing.Formats.NCS.NCSDecomp;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
+using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
 
 
 namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils

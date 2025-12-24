@@ -1,10 +1,10 @@
 using System;
-using System.Numerics;
 using System.Collections.Generic;
+using System.Numerics;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using JetBrains.Annotations;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Resource.Generics.GUI
 {
@@ -322,7 +322,7 @@ namespace Andastra.Parsing.Resource.Generics.GUI
         /// </summary>
         private void WriteMoveTo(GFFStruct gffStruct, GUIMoveTo moveto)
         {
-            var movetoStruct = gffStruct.Acquire<GFFStruct>("MOVETO", new GFFStruct(0));movetoStruct.SetInt32("UP", moveto.Up);
+            var movetoStruct = gffStruct.Acquire<GFFStruct>("MOVETO", new GFFStruct(0)); movetoStruct.SetInt32("UP", moveto.Up);
             movetoStruct.SetInt32("DOWN", moveto.Down);
             movetoStruct.SetInt32("LEFT", moveto.Left);
             movetoStruct.SetInt32("RIGHT", moveto.Right);
@@ -625,11 +625,11 @@ namespace Andastra.Parsing.Resource.Generics.GUI
             {
                 gffStruct.SetUInt8("STARTFROMLEFT", (byte)progressBar.StartFromLeft);
             }
-            
+
             // Write MAXVALUE and CURVALUE for progress bar
             gffStruct.SetInt32("MAXVALUE", (int)progressBar.MaxValue);
             gffStruct.SetInt32("CURVALUE", progressBar.CurrentValue);
-            
+
             // Write PROGRESS struct - note that GUIProgressBar.Progress is float? but we need GUIProgress struct
             // Check if there's a Progress struct in the base class Progress property
             var baseControl = (GUIControl)progressBar;
@@ -670,7 +670,7 @@ namespace Andastra.Parsing.Resource.Generics.GUI
             // Write MAXVALUE and CURVALUE for slider (stored as int in GFF)
             gffStruct.SetInt32("MAXVALUE", (int)slider.MaxValue);
             gffStruct.SetInt32("CURVALUE", (int)slider.Value);
-            
+
             var baseControl = (GUIControl)slider;
             if (baseControl.Thumb != null)
             {

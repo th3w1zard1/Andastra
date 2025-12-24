@@ -4,10 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Andastra.Parsing.Resource;
 using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.KEY;
+using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Formats.BIF;
 using Andastra.Runtime.Content.Interfaces;
 

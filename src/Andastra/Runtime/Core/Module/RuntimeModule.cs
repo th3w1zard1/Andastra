@@ -333,28 +333,28 @@ namespace Andastra.Runtime.Core.Module
         public void AdvanceTime(int minutes)
         {
             MinutesPastMidnight += minutes;
-            
+
             // Handle day overflow (1440 minutes = 24 hours)
             while (MinutesPastMidnight >= 1440)
             {
                 MinutesPastMidnight -= 1440;
                 Day++;
-                
+
                 // Get days in current month
                 int daysInCurrentMonth = GetDaysInMonth(Month, Year);
-                
+
                 // Handle day overflow into next month
                 if (Day > daysInCurrentMonth)
                 {
                     Day = 1;
                     Month++;
-                    
+
                     // Handle month overflow into next year
                     if (Month > 12)
                     {
                         Month = 1;
                         Year++;
-                        
+
                         // Year overflow protection (prevent integer overflow)
                         // Game calendar uses years like 3951, so this should never happen in practice
                         // but we add protection for safety

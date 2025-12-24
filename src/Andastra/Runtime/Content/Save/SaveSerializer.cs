@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Text;
-using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Extract.SaveData;
 using Andastra.Parsing.Formats.ERF;
@@ -12,7 +11,6 @@ using Andastra.Parsing.Formats.RIM;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource.Generics.UTC;
-using Andastra.Parsing.Common;
 using Andastra.Runtime.Core.Save;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
 

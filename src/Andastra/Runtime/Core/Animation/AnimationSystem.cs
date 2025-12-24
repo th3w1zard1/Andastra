@@ -74,7 +74,7 @@ namespace Andastra.Runtime.Core.Animation
                 // Based on swkotor2.exe: Animation duration stored in MDX animation data
                 // BaseAnimationComponent.AnimationDuration is set by engine-specific implementations
                 float animationDuration = GetAnimationDuration(animation);
-                
+
                 // Track previous completion state to detect when animation just completed
                 bool wasComplete = animation.AnimationComplete;
 
@@ -89,7 +89,7 @@ namespace Andastra.Runtime.Core.Animation
                     {
                         animation.AnimationTime = animationDuration;
                         // AnimationComplete is computed property, will be true now
-                        
+
                         // Fire completion event if animation just completed (wasn't complete last frame)
                         // Based on swkotor2.exe: Animation completion triggers script events and action completion
                         // Located via string references: "EVENT_PLAY_ANIMATION" @ 0x007bcd74, animation completion handling

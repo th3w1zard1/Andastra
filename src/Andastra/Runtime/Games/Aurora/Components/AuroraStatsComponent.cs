@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
+using Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Core.Combat;
 
 namespace Andastra.Runtime.Games.Aurora.Components
 {
@@ -60,20 +60,20 @@ namespace Andastra.Runtime.Games.Aurora.Components
             _abilities = new Dictionary<Ability, int>();
             _skills = new Dictionary<int, int>();
             _knownSpells = new HashSet<int>();
-            
+
             // Default ability scores (10 = average human, D&D standard)
             foreach (Ability ability in Enum.GetValues(typeof(Ability)))
             {
                 _abilities[ability] = 10;
             }
-            
+
             // Initialize all NWN skills to 0 (untrained)
             // NWN has 27 skills (IDs 0-26 typically, but we support up to skill ID 255 for extensibility)
             for (int i = 0; i < 27; i++)
             {
                 _skills[i] = 0;
             }
-            
+
             _currentHP = 10;
             _maxHP = 10;
             _baseLevel = 1;
@@ -88,7 +88,7 @@ namespace Andastra.Runtime.Games.Aurora.Components
             _effectAttackBonus = 0;
             _shieldBonus = 0;
             _sizeModifier = 0;
-            
+
             // Default movement speeds (from appearance.2da averages for NWN)
             _baseWalkSpeed = 2.0f; // Slightly faster than KOTOR default
             _baseRunSpeed = 4.5f;
@@ -199,7 +199,7 @@ namespace Andastra.Runtime.Games.Aurora.Components
                 // AC = 10 + DEX mod + Armor + Natural + Deflection + Shield + Size mod + Effect bonuses
                 // Based on nwmain.exe: AC calculation includes size modifiers
                 // Effect bonuses are tracked via AddEffectACBonus/RemoveEffectACBonus called by EffectSystem
-                return 10 
+                return 10
                     + GetAbilityModifier(Ability.Dexterity)
                     + _armorBonus
                     + _naturalArmor
@@ -260,13 +260,13 @@ namespace Andastra.Runtime.Games.Aurora.Components
             {
                 return -1; // Invalid skill ID
             }
-            
+
             int rank;
             if (_skills.TryGetValue(skill, out rank))
             {
                 return rank;
             }
-            
+
             return 0; // Untrained (default)
         }
 

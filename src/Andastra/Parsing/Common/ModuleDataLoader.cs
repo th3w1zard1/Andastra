@@ -1,17 +1,20 @@
 using System.Collections.Generic;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource;
+using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Tools;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Common
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module_loader.py (backend-agnostic loader)
     public static class ModuleDataSearch
     {
-        public static readonly SearchLocation[] SearchOrder2DA = { SearchLocation.OVERRIDE, SearchLocation.CHITIN };
+        public static readonly SearchLocation[] SearchOrder2DA = {
+            SearchLocation.OVERRIDE,
+            SearchLocation.CHITIN,
+        };
     }
 
     /// <summary>

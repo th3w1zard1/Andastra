@@ -1,11 +1,11 @@
 using System;
-using System.Numerics;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using Andastra.Parsing;
-using Andastra.Parsing.Formats.BWM;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Formats.BWM;
 
 namespace Andastra.Parsing.Formats.BWM
 {

@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Aurora.Components
 {
@@ -84,7 +84,7 @@ namespace Andastra.Runtime.Games.Aurora.Components
             {
                 // Remove item from any previous slot
                 RemoveItem(item);
-                
+
                 // Place item in new slot
                 _slots[slot] = item;
             }

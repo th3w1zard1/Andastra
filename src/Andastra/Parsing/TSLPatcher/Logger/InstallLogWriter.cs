@@ -2,8 +2,8 @@ using System;
 using System.IO;
 using System.Text;
 using Andastra.Parsing;
-using JetBrains.Annotations;
 using Andastra.Parsing.Common;
+using JetBrains.Annotations;
 
 namespace Andastra.Parsing.Logger
 {

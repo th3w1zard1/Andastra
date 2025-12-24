@@ -494,9 +494,18 @@ namespace Andastra.Runtime.MonoGame.Interfaces
             {
                 return new Matrix3x4
                 {
-                    M11 = 1, M12 = 0, M13 = 0, M14 = 0,
-                    M21 = 0, M22 = 1, M23 = 0, M24 = 0,
-                    M31 = 0, M32 = 0, M33 = 1, M34 = 0
+                    M11 = 1,
+                    M12 = 0,
+                    M13 = 0,
+                    M14 = 0,
+                    M21 = 0,
+                    M22 = 1,
+                    M23 = 0,
+                    M24 = 0,
+                    M31 = 0,
+                    M32 = 0,
+                    M33 = 1,
+                    M34 = 0
                 };
             }
         }
@@ -505,9 +514,18 @@ namespace Andastra.Runtime.MonoGame.Interfaces
         {
             return new Matrix3x4
             {
-                M11 = m.M11, M12 = m.M12, M13 = m.M13, M14 = m.M14,
-                M21 = m.M21, M22 = m.M22, M23 = m.M23, M24 = m.M24,
-                M31 = m.M31, M32 = m.M32, M33 = m.M33, M34 = m.M34
+                M11 = m.M11,
+                M12 = m.M12,
+                M13 = m.M13,
+                M14 = m.M14,
+                M21 = m.M21,
+                M22 = m.M22,
+                M23 = m.M23,
+                M24 = m.M24,
+                M31 = m.M31,
+                M32 = m.M32,
+                M33 = m.M33,
+                M34 = m.M34
             };
         }
     }

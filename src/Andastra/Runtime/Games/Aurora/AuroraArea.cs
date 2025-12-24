@@ -1,26 +1,26 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Numerics;
 using System.Linq;
+using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
+using Andastra.Parsing;
+using Andastra.Parsing.Common;
+using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Formats.MDL;
+using Andastra.Parsing.Formats.MDLData;
+using Andastra.Parsing.Formats.TwoDA;
+using Andastra.Parsing.Resource;
+using Andastra.Runtime.Content.Interfaces;
+using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Core.Enums;
+using Andastra.Runtime.Games.Aurora.Scene;
 using Andastra.Runtime.Games.Common;
-using Andastra.Parsing;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common;
-using Andastra.Runtime.Games.Aurora.Scene;
-using Andastra.Runtime.Content.Interfaces;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Formats.MDLData;
-using Andastra.Parsing.Formats.MDL;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Aurora
 {
@@ -2789,25 +2789,25 @@ namespace Andastra.Runtime.Games.Aurora
             {
                 _areaHeartbeatTimer -= AreaHeartbeatInterval;
 
-                    // Fire area heartbeat script
-                    // Area scripts need World/EventBus access to execute
-                    // We get World reference from any entity in the area (if available)
-                    // If no entities available, we skip script execution this frame
-                    IWorld world = GetWorldFromAreaEntities();
-                    if (world != null && world.EventBus != null)
+                // Fire area heartbeat script
+                // Area scripts need World/EventBus access to execute
+                // We get World reference from any entity in the area (if available)
+                // If no entities available, we skip script execution this frame
+                IWorld world = GetWorldFromAreaEntities();
+                if (world != null && world.EventBus != null)
+                {
+                    // Get or create area entity for script execution context
+                    // Based on nwmain.exe: Area heartbeat scripts use area ResRef as entity context
+                    // Located via string references: "OnHeartbeat" @ 0x140ddb2b8 (nwmain.exe)
+                    // Area scripts don't require a physical entity in the world - they use area ResRef as script context
+                    IEntity areaEntity = GetOrCreateAreaEntityForScripts(world);
+                    if (areaEntity != null)
                     {
-                        // Get or create area entity for script execution context
-                        // Based on nwmain.exe: Area heartbeat scripts use area ResRef as entity context
-                        // Located via string references: "OnHeartbeat" @ 0x140ddb2b8 (nwmain.exe)
-                        // Area scripts don't require a physical entity in the world - they use area ResRef as script context
-                        IEntity areaEntity = GetOrCreateAreaEntityForScripts(world);
-                        if (areaEntity != null)
-                        {
-                            // Fire OnHeartbeat script event
-                            // Based on nwmain.exe: Area heartbeat script execution
-                            world.EventBus.FireScriptEvent(areaEntity, ScriptEvent.OnHeartbeat, null);
-                        }
+                        // Fire OnHeartbeat script event
+                        // Based on nwmain.exe: Area heartbeat script execution
+                        world.EventBus.FireScriptEvent(areaEntity, ScriptEvent.OnHeartbeat, null);
                     }
+                }
             }
         }
 

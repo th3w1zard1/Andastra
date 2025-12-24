@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Extract;
 using Andastra.Parsing.Formats.Capsule;
 using Andastra.Parsing.Formats.GFF;
@@ -14,20 +15,19 @@ using Andastra.Parsing.Formats.LIP;
 using Andastra.Parsing.Formats.SSF;
 using Andastra.Parsing.Formats.TLK;
 using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Resource;
+using Andastra.Parsing.Memory;
 using Andastra.Parsing.Mods;
 using Andastra.Parsing.Mods.GFF;
 using Andastra.Parsing.Mods.NCS;
 using Andastra.Parsing.Mods.SSF;
 using Andastra.Parsing.Mods.TLK;
 using Andastra.Parsing.Mods.TwoDA;
-using Andastra.Parsing.Memory;
+using Andastra.Parsing.Resource;
 using Andastra.Parsing.Tools;
 using Andastra.Utility;
-using SystemTextEncoding = System.Text.Encoding;
 using JetBrains.Annotations;
 using InstallationClass = Andastra.Parsing.Installation.Installation;
-using Andastra.Parsing.Common;
+using SystemTextEncoding = System.Text.Encoding;
 namespace Andastra.Parsing.TSLPatcher
 {
     // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:1166-1212
@@ -2053,9 +2053,9 @@ namespace Andastra.Parsing.TSLPatcher
                 // Check Int32 fields that might be StrRefs (StrRef fields are typically named with "StrRef" in them)
                 if (fieldType == Andastra.Parsing.Formats.GFF.GFFFieldType.Int32)
                 {
-                    if (label.Contains("StrRef", StringComparison.OrdinalIgnoreCase) || 
+                    if (label.Contains("StrRef", StringComparison.OrdinalIgnoreCase) ||
                         label.Contains("strref", StringComparison.OrdinalIgnoreCase) ||
-                        fieldPath.Contains("StrRef", StringComparison.OrdinalIgnoreCase) || 
+                        fieldPath.Contains("StrRef", StringComparison.OrdinalIgnoreCase) ||
                         fieldPath.Contains("strref", StringComparison.OrdinalIgnoreCase))
                     {
                         int strrefValue = gffStruct.GetInt32(label);

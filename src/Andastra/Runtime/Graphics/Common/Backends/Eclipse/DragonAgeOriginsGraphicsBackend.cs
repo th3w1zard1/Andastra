@@ -24,8 +24,8 @@ using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Graphics.Common.Structs;
-using ResourceType = Andastra.Parsing.Resource.ResourceType;
 using ParsingResourceType = Andastra.Parsing.Resource.ResourceType;
+using ResourceType = Andastra.Parsing.Resource.ResourceType;
 
 namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
 {

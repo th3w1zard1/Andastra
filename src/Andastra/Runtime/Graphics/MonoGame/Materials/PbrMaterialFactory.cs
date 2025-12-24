@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Formats.TPC;
+using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using Andastra.Runtime.MonoGame.Converters;
 using Andastra.Runtime.MonoGame.Enums;
@@ -474,7 +474,7 @@ namespace Andastra.Runtime.MonoGame.Materials
                             matInfo.SpecularPower = 32.0f;
 
                             // Create unique key for material deduplication
-                            string materialKey = (matInfo.DiffuseMap ?? "") + "|" + 
+                            string materialKey = (matInfo.DiffuseMap ?? "") + "|" +
                                                 (matInfo.LightmapMap ?? "") + "|" +
                                                 matInfo.DiffuseColor.ToString();
 

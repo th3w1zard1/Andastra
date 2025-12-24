@@ -155,31 +155,31 @@ namespace Andastra.Parsing.Formats.BWM
         /// This is the "bottom-left-front" corner of the box that contains this node's triangles.
         /// </summary>
         public Vector3 BbMin { get; set; }
-        
+
         /// <summary>
         /// The maximum corner of the bounding box (largest x, y, z values).
         /// This is the "top-right-back" corner of the box that contains this node's triangles.
         /// </summary>
         public Vector3 BbMax { get; set; }
-        
+
         /// <summary>
         /// The triangle (BWMFace) stored at this node, if this is a leaf node.
         /// If this is an internal node, Face = null (it only contains child nodes).
         /// </summary>
         public BWMFace Face { get; set; }
-        
+
         /// <summary>
         /// The "most significant plane" used to split this node.
         /// Indicates which axis (X=0, Y=1, Z=2) was used to divide triangles into left and right.
         /// </summary>
         public BWMMostSignificantPlane Sigplane { get; set; }
-        
+
         /// <summary>
         /// The left child node (triangles on one side of the split).
         /// If this is a leaf node, Left = null.
         /// </summary>
         public BWMNodeAABB Left { get; set; }
-        
+
         /// <summary>
         /// The right child node (triangles on the other side of the split).
         /// If this is a leaf node, Right = null.

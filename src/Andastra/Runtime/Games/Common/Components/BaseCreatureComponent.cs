@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using Andastra.Runtime.Core.Interfaces;
 using Andastra.Parsing.Formats.TwoDA;
+using Andastra.Runtime.Core.Interfaces;
 
 namespace Andastra.Runtime.Games.Common.Components
 {
@@ -314,7 +314,7 @@ namespace Andastra.Runtime.Games.Common.Components
                             foreach (var kvp in allData)
                             {
                                 string colName = kvp.Key;
-                                if (colName != "Label" && colName != "Name" && colName != "level" && 
+                                if (colName != "Label" && colName != "Name" && colName != "level" &&
                                     colName != "Level" && !string.IsNullOrWhiteSpace(kvp.Value) && kvp.Value != "****")
                                 {
                                     babValue = babRow.GetInteger(colName);
@@ -511,7 +511,7 @@ namespace Andastra.Runtime.Games.Common.Components
         {
             // Special feats with UsesPerDay = -1 typically have uses based on class levels
             // Check if we have remaining uses for this special feat
-            
+
             // Get the class ID associated with this feat (if any)
             int classId = GetFeatClassId(featId, gameDataProvider);
             int maxUses = 0;

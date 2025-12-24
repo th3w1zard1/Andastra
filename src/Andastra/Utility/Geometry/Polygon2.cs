@@ -1,8 +1,8 @@
 using System;
-using System.Numerics;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using JetBrains.Annotations;
 
 namespace Andastra.Utility.Geometry

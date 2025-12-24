@@ -6,8 +6,8 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Utils;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
+using Andastra.Parsing.Formats.NCS.NCSDecomp.Utils;
 using UtilsType = Andastra.Parsing.Formats.NCS.NCSDecomp.Utils.Type;
 namespace Andastra.Parsing.Formats.NCS.NCSDecomp
 {

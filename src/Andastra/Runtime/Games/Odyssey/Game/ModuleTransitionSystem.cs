@@ -1,8 +1,8 @@
 using System;
 using System.Threading.Tasks;
+using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Core.Enums;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Engines.Odyssey.Game

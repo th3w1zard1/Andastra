@@ -36,7 +36,7 @@ namespace Andastra.Runtime.Core.Actions
         private BaseCreatureCollisionDetector _collisionDetector;
 
         // Bump counter tracking (matches offset 0x268 in swkotor2.exe entity structure)
-                // Based on swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 tracks bump count at param_1[0xe0] + 0x268
+        // Based on swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 tracks bump count at param_1[0xe0] + 0x268
         // Located via string reference: "aborted walking, Maximum number of bumps happened" @ 0x007c0458
         // Maximum bumps: 5 (aborts movement if exceeded)
         private const string BumpCounterKey = "ActionMoveToLocation_BumpCounter";

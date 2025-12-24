@@ -1,10 +1,10 @@
 using System;
-using Eto.Forms;
 using Andastra.Parsing.Common;
+using Andastra.Runtime.Core;
 using Andastra.Runtime.Game.Core;
 using Andastra.Runtime.Graphics;
-using Andastra.Runtime.Core;
 using Andastra.Runtime.Graphics.Common.Enums;
+using Eto.Forms;
 using Core = Andastra.Runtime.Game.Core;
 
 namespace Andastra.Runtime.Game
@@ -31,181 +31,181 @@ namespace Andastra.Runtime.Game
     /// </remarks>
     public static class Program
     {
-    [STAThread]
-    public static int Main(string[] args)
-    {
-        try
+        [STAThread]
+        public static int Main(string[] args)
         {
-            // Check for --no-launcher flag to skip launcher UI
-            bool skipLauncher = false;
-            for (int i = 0; i < args.Length; i++)
-            {
-                if (args[i] == "--no-launcher" || args[i] == "-n")
-                {
-                    skipLauncher = true;
-                    break;
-                }
-            }
-
-            GameSettings settings = null;
-            string gamePath = null;
-            BioWareGame selectedGame = BioWareGame.K1;
-
-            if (!skipLauncher)
-            {
-                // Initialize Eto.Forms application (cross-platform)
-                var app = new Application(Eto.Platform.Detect);
-
-                // Show launcher UI
-                using (var launcher = new Andastra.Game.GUI.GameLauncher())
-                {
-                    launcher.ShowModal();
-                    if (!launcher.StartClicked)
-                    {
-                        app.Dispose();
-                        return 0; // User cancelled
-                    }
-
-                    selectedGame = launcher.SelectedGame;
-                    gamePath = launcher.SelectedPath;
-                }
-
-                app.Dispose();
-
-                // Check if this is a KOTOR game or another BioWare game
-                if (selectedGame.IsOdyssey())
-                {
-                    // Convert BioWareGame to KotorGame for Odyssey/KOTOR games
-                    KotorGame kotorGame = KotorGame.K1;
-                    if (selectedGame.IsK2())
-                    {
-                        kotorGame = KotorGame.K2;
-                    }
-
-                    settings = new GameSettings
-                    {
-                        Game = kotorGame,
-                        GamePath = gamePath
-                    };
-                }
-                else
-                {
-                    // For non-KOTOR games, use unified launcher
-                    // GameSettings is only for KOTOR games, so we'll handle non-KOTOR games separately
-                    settings = null;
-                }
-            }
-            else
-            {
-                // Parse command line arguments (legacy mode)
-                // Note: Command-line mode currently only supports KOTOR games
-                settings = GameSettingsExtensions.FromCommandLine(args);
-
-                // Detect KOTOR installation if not specified
-                if (string.IsNullOrEmpty(settings.GamePath))
-                {
-                    settings.GamePath = GamePathDetector.DetectKotorPath(settings.Game);
-                    if (string.IsNullOrEmpty(settings.GamePath))
-                    {
-                        Console.Error.WriteLine("ERROR: Could not detect KOTOR installation.");
-                        Console.Error.WriteLine("Please specify the game path with --path <path>");
-                        return 1;
-                    }
-                }
-
-                // Set selectedGame based on KotorGame for command-line mode
-                selectedGame = settings.Game == KotorGame.K2 ? BioWareGame.K2 : BioWareGame.K1;
-                gamePath = settings.GamePath;
-            }
-
-            // Determine graphics backend (default to MonoGame, can be overridden via command line)
-            GraphicsBackendType backendType = GraphicsBackendType.MonoGame;
-            for (int i = 0; i < args.Length; i++)
-            {
-                if (args[i] == "--backend" && i + 1 < args.Length)
-                {
-                    if (args[i + 1].Equals("stride", StringComparison.OrdinalIgnoreCase))
-                    {
-                        backendType = GraphicsBackendType.Stride;
-                    }
-                    else if (args[i + 1].Equals("monogame", StringComparison.OrdinalIgnoreCase))
-                    {
-                        backendType = GraphicsBackendType.MonoGame;
-                    }
-                    break;
-                }
-            }
-
-            // Launch the game
             try
             {
-                // Create graphics backend
-                IGraphicsBackend graphicsBackend = Core.GraphicsBackendFactory.CreateBackend(backendType);
-
-                // Check if this is a KOTOR game (uses OdysseyGame) or another BioWare game (uses UnifiedGameLauncher)
-                // For command-line mode, settings will always be set and will be for KOTOR games
-                // For launcher UI mode, check if it's an Odyssey game
-                if ((selectedGame.IsOdyssey() || settings != null) && settings != null)
+                // Check for --no-launcher flag to skip launcher UI
+                bool skipLauncher = false;
+                for (int i = 0; i < args.Length; i++)
                 {
-                    // Use OdysseyGame for KOTOR games
-                    using (var game = new OdysseyGame(settings, graphicsBackend))
+                    if (args[i] == "--no-launcher" || args[i] == "-n")
                     {
-                        game.Run();
+                        skipLauncher = true;
+                        break;
+                    }
+                }
+
+                GameSettings settings = null;
+                string gamePath = null;
+                BioWareGame selectedGame = BioWareGame.K1;
+
+                if (!skipLauncher)
+                {
+                    // Initialize Eto.Forms application (cross-platform)
+                    var app = new Application(Eto.Platform.Detect);
+
+                    // Show launcher UI
+                    using (var launcher = new Andastra.Game.GUI.GameLauncher())
+                    {
+                        launcher.ShowModal();
+                        if (!launcher.StartClicked)
+                        {
+                            app.Dispose();
+                            return 0; // User cancelled
+                        }
+
+                        selectedGame = launcher.SelectedGame;
+                        gamePath = launcher.SelectedPath;
+                    }
+
+                    app.Dispose();
+
+                    // Check if this is a KOTOR game or another BioWare game
+                    if (selectedGame.IsOdyssey())
+                    {
+                        // Convert BioWareGame to KotorGame for Odyssey/KOTOR games
+                        KotorGame kotorGame = KotorGame.K1;
+                        if (selectedGame.IsK2())
+                        {
+                            kotorGame = KotorGame.K2;
+                        }
+
+                        settings = new GameSettings
+                        {
+                            Game = kotorGame,
+                            GamePath = gamePath
+                        };
+                    }
+                    else
+                    {
+                        // For non-KOTOR games, use unified launcher
+                        // GameSettings is only for KOTOR games, so we'll handle non-KOTOR games separately
+                        settings = null;
                     }
                 }
                 else
                 {
-                    // Use UnifiedGameLauncher for other BioWare games (Aurora, Eclipse, Infinity)
-                    // Get game path from settings or use the path from launcher
-                    string gamePathForLauncher = settings != null ? settings.GamePath : gamePath;
+                    // Parse command line arguments (legacy mode)
+                    // Note: Command-line mode currently only supports KOTOR games
+                    settings = GameSettingsExtensions.FromCommandLine(args);
 
-                    if (string.IsNullOrEmpty(gamePathForLauncher))
+                    // Detect KOTOR installation if not specified
+                    if (string.IsNullOrEmpty(settings.GamePath))
                     {
-                        throw new InvalidOperationException($"Game path is required for {selectedGame}");
+                        settings.GamePath = GamePathDetector.DetectKotorPath(settings.Game);
+                        if (string.IsNullOrEmpty(settings.GamePath))
+                        {
+                            Console.Error.WriteLine("ERROR: Could not detect KOTOR installation.");
+                            Console.Error.WriteLine("Please specify the game path with --path <path>");
+                            return 1;
+                        }
                     }
 
-                    using (var launcher = new UnifiedGameLauncher(selectedGame, gamePathForLauncher, graphicsBackend, settings))
+                    // Set selectedGame based on KotorGame for command-line mode
+                    selectedGame = settings.Game == KotorGame.K2 ? BioWareGame.K2 : BioWareGame.K1;
+                    gamePath = settings.GamePath;
+                }
+
+                // Determine graphics backend (default to MonoGame, can be overridden via command line)
+                GraphicsBackendType backendType = GraphicsBackendType.MonoGame;
+                for (int i = 0; i < args.Length; i++)
+                {
+                    if (args[i] == "--backend" && i + 1 < args.Length)
                     {
-                        launcher.Initialize();
-                        launcher.Run();
+                        if (args[i + 1].Equals("stride", StringComparison.OrdinalIgnoreCase))
+                        {
+                            backendType = GraphicsBackendType.Stride;
+                        }
+                        else if (args[i + 1].Equals("monogame", StringComparison.OrdinalIgnoreCase))
+                        {
+                            backendType = GraphicsBackendType.MonoGame;
+                        }
+                        break;
                     }
                 }
 
-                return 0;
+                // Launch the game
+                try
+                {
+                    // Create graphics backend
+                    IGraphicsBackend graphicsBackend = Core.GraphicsBackendFactory.CreateBackend(backendType);
+
+                    // Check if this is a KOTOR game (uses OdysseyGame) or another BioWare game (uses UnifiedGameLauncher)
+                    // For command-line mode, settings will always be set and will be for KOTOR games
+                    // For launcher UI mode, check if it's an Odyssey game
+                    if ((selectedGame.IsOdyssey() || settings != null) && settings != null)
+                    {
+                        // Use OdysseyGame for KOTOR games
+                        using (var game = new OdysseyGame(settings, graphicsBackend))
+                        {
+                            game.Run();
+                        }
+                    }
+                    else
+                    {
+                        // Use UnifiedGameLauncher for other BioWare games (Aurora, Eclipse, Infinity)
+                        // Get game path from settings or use the path from launcher
+                        string gamePathForLauncher = settings != null ? settings.GamePath : gamePath;
+
+                        if (string.IsNullOrEmpty(gamePathForLauncher))
+                        {
+                            throw new InvalidOperationException($"Game path is required for {selectedGame}");
+                        }
+
+                        using (var launcher = new UnifiedGameLauncher(selectedGame, gamePathForLauncher, graphicsBackend, settings))
+                        {
+                            launcher.Initialize();
+                            launcher.Run();
+                        }
+                    }
+
+                    return 0;
+                }
+                catch (Exception ex)
+                {
+                    // Show error dialog (cross-platform)
+                    string errorMessage = $"Failed to start the game:\n\n{ex.Message}";
+                    if (ex.InnerException != null)
+                    {
+                        errorMessage += $"\n\nInner Exception: {ex.InnerException.Message}";
+                    }
+                    errorMessage += $"\n\nStack Trace:\n{ex.StackTrace}";
+
+                    // Use Eto.Forms for cross-platform message box
+                    var app = new Application(Eto.Platform.Detect);
+                    MessageBox.Show(
+                        errorMessage,
+                        "Game Launch Error",
+                        MessageBoxType.Error);
+                    app.Dispose();
+
+                    return 1;
+                }
             }
             catch (Exception ex)
             {
-                // Show error dialog (cross-platform)
-                string errorMessage = $"Failed to start the game:\n\n{ex.Message}";
-                if (ex.InnerException != null)
-                {
-                    errorMessage += $"\n\nInner Exception: {ex.InnerException.Message}";
-                }
-                errorMessage += $"\n\nStack Trace:\n{ex.StackTrace}";
-
-                // Use Eto.Forms for cross-platform message box
+                // Fatal error in launcher itself
                 var app = new Application(Eto.Platform.Detect);
                 MessageBox.Show(
-                    errorMessage,
-                    "Game Launch Error",
+                    $"Fatal error in launcher:\n\n{ex.Message}\n\n{ex.StackTrace}",
+                    "Launcher Error",
                     MessageBoxType.Error);
                 app.Dispose();
-
                 return 1;
             }
         }
-        catch (Exception ex)
-        {
-            // Fatal error in launcher itself
-            var app = new Application(Eto.Platform.Detect);
-            MessageBox.Show(
-                $"Fatal error in launcher:\n\n{ex.Message}\n\n{ex.StackTrace}",
-                "Launcher Error",
-                MessageBoxType.Error);
-            app.Dispose();
-            return 1;
-        }
-    }
     }
 }
 

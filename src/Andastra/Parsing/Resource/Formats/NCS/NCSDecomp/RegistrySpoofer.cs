@@ -1,18 +1,17 @@
-﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/RegistrySpoofer.java:1-781
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/RegistrySpoofer.java:1-781
 // Copyright 2021-2025 NCSDecomp
 // Licensed under the Business Source License 1.1 (BSL 1.1).
 // See LICENSE.txt file in the project root for full license information.
 
 using System;
-using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
 using System.Text.RegularExpressions;
-
 using Andastra.Parsing.Common;
+using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
 
 namespace Andastra.Parsing.Formats.NCS.NCSDecomp
 {

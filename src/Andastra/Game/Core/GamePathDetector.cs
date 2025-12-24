@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using Microsoft.Win32;
 using Andastra.Parsing.Common;
 using Andastra.Runtime.Core;
+using Microsoft.Win32;
 using GameType = Andastra.Parsing.Common.BioWareGame;
 
 namespace Andastra.Runtime.Game.Core
@@ -380,6 +380,7 @@ namespace Andastra.Runtime.Game.Core
         {
             string steamApps = null;
 
+#pragma warning disable CA1416 // Validate platform compatibility
             // Try to find Steam installation
             try
             {
@@ -398,6 +399,7 @@ namespace Andastra.Runtime.Game.Core
                         steamApps = Path.Combine(key.GetValue("InstallPath") as string ?? "", "steamapps", "common");
                     }
                 }
+#pragma warning restore CA1416 // Validate platform compatibility
             }
             catch { }
 
@@ -956,12 +958,12 @@ namespace Andastra.Runtime.Game.Core
                     string nwnExeUpper = Path.Combine(path, "NWMAIN.EXE");
                     string nwnGuiErf = Path.Combine(path, "gui_32bit.erf");
                     string nwnDataDir = Path.Combine(path, "data");
-                    
+
                     return File.Exists(nwnChitinKey) &&
                            (File.Exists(nwnExe) || File.Exists(nwnExeUpper)) &&
                            File.Exists(nwnGuiErf) &&
                            Directory.Exists(nwnDataDir);
-                    
+
                 case BioWareGame.NWN2:
                     // Validate Neverwinter Nights 2 installation
                     string nwn2Exe = Path.Combine(path, "nwn2main.exe");
@@ -971,7 +973,7 @@ namespace Andastra.Runtime.Game.Core
                     string nwn2ActorsZip = Path.Combine(path, "actors.zip");
                     string nwn2ModelsZip = Path.Combine(path, "nwn2_models.zip");
                     string nwn2ScriptsZip = Path.Combine(path, "scripts.zip");
-                    
+
                     return (File.Exists(nwn2Exe) || File.Exists(nwn2ExeUpper)) &&
                            Directory.Exists(nwn2DataDir) &&
                            File.Exists(nwn2TwoDaZip) &&
@@ -995,14 +997,14 @@ namespace Andastra.Runtime.Game.Core
                     string daPackagesDir = Path.Combine(path, "packages");
                     string daDataDir = Path.Combine(path, "data");
                     string daGlobalRim = Path.Combine(daDataDir, "global.rim");
-                    
+
                     // Check for launcher (Windows retail) OR main executable
                     bool hasLauncher = File.Exists(daLauncherExe) || File.Exists(daLauncherExeUpper);
                     bool hasExe = File.Exists(daOriginsExe) || File.Exists(daOriginsExeUpper);
                     bool hasPackagesDir = Directory.Exists(daPackagesDir);
                     bool hasDataDir = Directory.Exists(daDataDir);
                     bool hasGlobalRim = File.Exists(daGlobalRim);
-                    
+
                     // All mandatory files/directories must exist
                     // Either launcher OR main executable is acceptable (different distribution methods)
                     return (hasLauncher || hasExe) && hasPackagesDir && hasDataDir && hasGlobalRim;
@@ -1023,13 +1025,13 @@ namespace Andastra.Runtime.Game.Core
                     string da2BinShipExe = Path.Combine(path, "bin_ship", "dragonage2.exe");
                     string da2BinShipExeUpper = Path.Combine(path, "bin_ship", "DRAGONAGE2.EXE");
                     string da2CampaignBaseCif = Path.Combine(path, "modules", "campaign_base", "campaign_base.cif");
-                    
+
                     // Check for launcher (Windows retail) OR main executable (various locations)
                     bool hasDa2Launcher = File.Exists(da2LauncherExe) || File.Exists(da2LauncherExeUpper);
                     bool hasDa2Exe = File.Exists(da2Exe) || File.Exists(da2ExeUpper) || File.Exists(da2ExeLower);
                     bool hasDa2BinShipExe = File.Exists(da2BinShipExe) || File.Exists(da2BinShipExeUpper);
                     bool hasCampaignBaseCif = File.Exists(da2CampaignBaseCif);
-                    
+
                     // All mandatory files must exist
                     // Either launcher OR main executable is acceptable (different distribution methods)
                     return (hasDa2Launcher || hasDa2Exe || hasDa2BinShipExe) && hasCampaignBaseCif;

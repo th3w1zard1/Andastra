@@ -1,7 +1,7 @@
 using System;
-using StrideGraphics = Stride.Graphics;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Stride.Graphics;
+using StrideGraphics = Stride.Graphics;
 
 namespace Andastra.Runtime.Stride.Graphics
 {

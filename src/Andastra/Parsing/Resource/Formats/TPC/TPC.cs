@@ -1581,9 +1581,9 @@ namespace Andastra.Parsing.Formats.TPC
                 byte[] rgbData = Dxt1ToRgb(data, width, height);
                 if (targetFormat == TPCTextureFormat.RGB)
                 {
-                            mipmap.Data = rgbData;
-                            mipmap.TpcFormat = TPCTextureFormat.RGB;
-                        }
+                    mipmap.Data = rgbData;
+                    mipmap.TpcFormat = TPCTextureFormat.RGB;
+                }
                 else if (targetFormat == TPCTextureFormat.RGBA)
                 {
                     mipmap.Data = RgbToRgba(rgbData, width, height);

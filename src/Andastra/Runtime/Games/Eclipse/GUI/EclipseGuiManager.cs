@@ -1,21 +1,21 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Xna.Framework.Input;
-using NumericsVector2 = System.Numerics.Vector2;
+using Andastra.Parsing.Formats.DDS;
+using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Generics.GUI;
-using ParsingGUI = Andastra.Parsing.Resource.Generics.GUI.GUI;
-using ParsingColor = Andastra.Parsing.Common.Color;
-using Andastra.Parsing.Formats.DDS;
 using Andastra.Parsing.Resource.Formats.TEX;
-using Andastra.Parsing.Formats.TPC;
+using Andastra.Parsing.Resource.Generics.GUI;
 using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Games.Eclipse.Fonts;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.MonoGame.Graphics;
 using JetBrains.Annotations;
+using Microsoft.Xna.Framework.Input;
+using NumericsVector2 = System.Numerics.Vector2;
+using ParsingColor = Andastra.Parsing.Common.Color;
+using ParsingGUI = Andastra.Parsing.Resource.Generics.GUI.GUI;
 
 namespace Andastra.Runtime.Games.Eclipse.GUI
 {
@@ -763,10 +763,15 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
         {
             return new GUIBorder
             {
-                Corner = selected.Corner, Edge = selected.Edge, Fill = selected.Fill,
-                FillStyle = selected.FillStyle, Dimension = selected.Dimension,
-                InnerOffset = selected.InnerOffset, InnerOffsetY = selected.InnerOffsetY,
-                Color = selected.Color != null ? new ParsingColor(selected.Color) : null, Pulsing = selected.Pulsing
+                Corner = selected.Corner,
+                Edge = selected.Edge,
+                Fill = selected.Fill,
+                FillStyle = selected.FillStyle,
+                Dimension = selected.Dimension,
+                InnerOffset = selected.InnerOffset,
+                InnerOffsetY = selected.InnerOffsetY,
+                Color = selected.Color != null ? new ParsingColor(selected.Color) : null,
+                Pulsing = selected.Pulsing
             };
         }
 
@@ -774,10 +779,15 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
         {
             return new GUIBorder
             {
-                Corner = hilightSelected.Corner, Edge = hilightSelected.Edge, Fill = hilightSelected.Fill,
-                FillStyle = hilightSelected.FillStyle, Dimension = hilightSelected.Dimension,
-                InnerOffset = hilightSelected.InnerOffset, InnerOffsetY = hilightSelected.InnerOffsetY,
-                Color = hilightSelected.Color != null ? new ParsingColor(hilightSelected.Color) : null, Pulsing = hilightSelected.Pulsing
+                Corner = hilightSelected.Corner,
+                Edge = hilightSelected.Edge,
+                Fill = hilightSelected.Fill,
+                FillStyle = hilightSelected.FillStyle,
+                Dimension = hilightSelected.Dimension,
+                InnerOffset = hilightSelected.InnerOffset,
+                InnerOffsetY = hilightSelected.InnerOffsetY,
+                Color = hilightSelected.Color != null ? new ParsingColor(hilightSelected.Color) : null,
+                Pulsing = hilightSelected.Pulsing
             };
         }
 

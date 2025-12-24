@@ -2,20 +2,20 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
-using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Core.Enums;
-using Andastra.Runtime.Games.Common;
-using Andastra.Runtime.Games.Common.Components;
-using Andastra.Runtime.Content.Interfaces;
-using Andastra.Parsing.Resource;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.TLK;
-using Andastra.Runtime.Games.Aurora.Components;
+using Andastra.Parsing.Resource;
+using Andastra.Runtime.Content.Interfaces;
+using Andastra.Runtime.Core.Enums;
+using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using ScriptEvent = Andastra.Runtime.Core.Enums.ScriptEvent;
+using Andastra.Runtime.Games.Aurora.Components;
+using Andastra.Runtime.Games.Common;
+using Andastra.Runtime.Games.Common.Components;
+using JetBrains.Annotations;
 using ResRef = Andastra.Parsing.Common.ResRef;
+using ScriptEvent = Andastra.Runtime.Core.Enums.ScriptEvent;
 
 namespace Andastra.Runtime.Games.Aurora
 {
@@ -95,7 +95,7 @@ namespace Andastra.Runtime.Games.Aurora
             // AuroraResourceProvider.LookupResource follows precedence: Override → Module → HAK → Base Game → Hardcoded
             var resourceId = new ResourceIdentifier(templateResRef, ResourceType.UTC);
             byte[] templateData = _resourceProvider.GetResourceBytesAsync(resourceId, default).GetAwaiter().GetResult();
-            
+
             if (templateData == null || templateData.Length == 0)
             {
                 // Template not found - matches nwmain.exe error handling: "Creature template %s doesn't exist.\n" @ 0x140dddad0
@@ -236,7 +236,7 @@ namespace Andastra.Runtime.Games.Aurora
             {
                 creatureComponent.TemplateResRef = templateResRef;
                 creatureComponent.Tag = entity.Tag;
-                
+
                 // Set appearance
                 if (entity.GetData("Appearance_Type") is int appearanceType)
                 {

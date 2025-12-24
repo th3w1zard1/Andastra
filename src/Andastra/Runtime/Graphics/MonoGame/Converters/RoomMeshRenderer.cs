@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Andastra.Parsing.Formats.MDL;
 using Andastra.Parsing.Formats.MDLData;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using JetBrains.Annotations;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Andastra.Runtime.MonoGame.Converters
 {
@@ -410,8 +410,8 @@ namespace Andastra.Runtime.MonoGame.Converters
                     int normalIndex = -1;
                     for (int i = 0; i < walkmesh.Vertices.Count; i++)
                     {
-                        if (walkmesh.Vertices[i].X == vertex.X && 
-                            walkmesh.Vertices[i].Y == vertex.Y && 
+                        if (walkmesh.Vertices[i].X == vertex.X &&
+                            walkmesh.Vertices[i].Y == vertex.Y &&
                             walkmesh.Vertices[i].Z == vertex.Z)
                         {
                             normalIndex = i;

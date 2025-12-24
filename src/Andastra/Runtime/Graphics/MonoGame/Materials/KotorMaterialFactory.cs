@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Andastra.Parsing.Formats.TPC;
 using Andastra.Runtime.MonoGame.Converters;
 using Andastra.Runtime.MonoGame.Enums;
 using JetBrains.Annotations;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Andastra.Runtime.MonoGame.Materials
 {

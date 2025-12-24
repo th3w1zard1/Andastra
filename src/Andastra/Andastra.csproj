@@ -15,12 +15,9 @@
   <!-- Debug Configuration: Optimized for faster development builds -->
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
     <!-- Build only latest .NET (net8.0) for Debug to speed up development builds (unless TargetFramework is explicitly set) -->
-    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT'">net9.0-windows</TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT'">net9.0</TargetFrameworks>
     <OutputType Condition="'$(OS)' == 'Windows_NT'">WinExe</OutputType>
     <OutputType Condition="'$(OS)' != 'Windows_NT'">Exe</OutputType>
-    <TargetFrameworks Condition="('$(OS)' == 'Windows_NT') AND $(TargetFramework.StartsWith('net4'))">net48</TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('Linux'))">net9.0-linux</TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('OSX'))">net9.0-macosx</TargetFrameworks>
     <!-- Disable analyzers in Debug builds for faster compilation -->
     <EnableNETAnalyzers>false</EnableNETAnalyzers>
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
@@ -76,10 +73,9 @@
     <TargetFrameworks Condition="'$(OS)' == 'Windows_NT' AND Exists('$(MSBuildProgramFiles32)\..\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2')">
       $(TargetFrameworks);net462
     </TargetFrameworks>
-    <BuildInParallel>true</BuildInParallel>
+    <RuntimeIdentifiers>win-x86;win-x64;win-arm64;linux-x64;linux-arm64;osx-x64;osx-arm64</RuntimeIdentifiers>
     <BuildInParallel>true</BuildInParallel>
     <DebugSymbols>false</DebugSymbols>
-    <DebugType>portable</DebugType>
     <DebugType>portable</DebugType>
     <Deterministic>true</Deterministic>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
@@ -96,42 +92,19 @@
     <WarningLevel>0</WarningLevel>
   </PropertyGroup>
 
-  <!-- RuntimeIdentifiers: Forward-compatible dynamic assignment based on .NET version -->
-  <!-- .NET Framework: Legacy Windows RIDs + cross-platform -->
-  <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
-    <RuntimeIdentifiers>win7-x86;win7-x64;win10-x86;win10-x64</RuntimeIdentifiers>
-  </PropertyGroup>
-  <!-- .NET 8+: Modern Windows RIDs + cross-platform (forward-compatible with net10.0, net11.0, etc.) -->
-  <PropertyGroup Condition="!$(TargetFramework.StartsWith('net4'))">
-    <RuntimeIdentifiers>win-x86;win-x64;win-arm64;linux-x64;linux-arm64;osx-x64;osx-arm64</RuntimeIdentifiers>
-  </PropertyGroup>
-
   <PropertyGroup>
     <StartupObject>Andastra.Runtime.Game.Program</StartupObject>
-  </PropertyGroup>
-
-  <!-- Default to Library - this allows the project to be referenced by GUI -->
-  <PropertyGroup>
-    <OutputType>Library</OutputType>
-  </PropertyGroup>
-
-  <!-- Only use Exe when building Core project standalone via dotnet run (not when referenced) -->
-  <!-- This allows 'dotnet run' with the Core project for CLI usage -->
-  <!-- We detect standalone by checking if we're not publishing and RuntimeIdentifier is empty (typical for dotnet run) -->
-  <PropertyGroup Condition="'$(IsPublishing)' != 'true' AND '$(RuntimeIdentifier)' == '' AND '$(PublishProfile)' == ''">
-    <OutputType>Exe</OutputType>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Eto.Forms" Version="2.10.2" />
     <PackageReference Include="Eto.Platform.Gtk" Version="2.10.2" Condition="$([MSBuild]::IsOSPlatform('Linux'))" />
     <PackageReference Include="Eto.Platform.Mac" Version="2.10.2" Condition="$([MSBuild]::IsOSPlatform('OSX'))" />
-    <PackageReference Include="Eto.Platform.Wpf" Version="2.10.2" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
     <PackageReference Include="Myra" Version="1.5.10" />
     <PackageReference Include="ini-parser-netstandard" Version="2.5.3" />
     <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
-    <PackageReference Include="LZMA-SDK" Version="19.0.0" />
-    <PackageReference Include="SharpCompress" Version="0.38.0" />
+    <PackageReference Include="LZMA-SDK" Version="22.1.1" />
+    <PackageReference Include="SharpCompress" Version="0.42.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="sly" Version="3.7.7" />
@@ -147,12 +120,6 @@
     <PackageReference Include="System.Text.Encoding.CodePages" Version="10.0.1" />
     <PackageReference Include="System.Text.Json" Version="10.0.1" />
   </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="Parsing\Andastra.Parsing.csproj" />
-    <ProjectReference Include="Runtime\Andastra.Runtime.csproj" />
-    <ProjectReference Include="Utility\Andastra.Utility.csproj" />
-  </ItemGroup>
   <ItemGroup>
     <Content Include="Content\**\*.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -160,19 +127,5 @@
   </ItemGroup>
   <ItemGroup Condition="'$(SkipMonoGameContentPipeline)' != 'true'">
     <MonoGameContentReference Include="Game\Content.mgcb" />
-  </ItemGroup>
-
-  <!-- Exclude files that are now in separate modular projects -->
-  <ItemGroup>
-    <Compile Remove="Parsing\**" />
-    <Compile Remove="Runtime\**" />
-    <Compile Remove="Utility\**" />
-  </ItemGroup>
-
-  <!-- Exclude the new project files from compilation -->
-  <ItemGroup>
-    <None Include="Parsing\Andastra.Parsing.csproj" />
-    <None Include="Runtime\Andastra.Runtime.csproj" />
-    <None Include="Utility\Andastra.Utility.csproj" />
   </ItemGroup>
 </Project>

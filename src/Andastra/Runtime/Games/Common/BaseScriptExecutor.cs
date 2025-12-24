@@ -1,10 +1,10 @@
 using System;
-using JetBrains.Annotations;
 using Andastra.Runtime.Core.Actions;
 using Andastra.Runtime.Core.Dialogue;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Scripting.Interfaces;
 using Andastra.Runtime.Scripting.VM;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Common
 {
@@ -238,7 +238,7 @@ namespace Andastra.Runtime.Games.Common
             // This allows the delayed script to execute with the same context as when it was queued
             IEntity capturedCaller = entity;
             IEntity capturedTriggerer = null;
-            
+
             // Get triggerer from current execution context if available
             // Based on swkotor2.exe: Execution context stack tracking for delayed script execution
             // Located via string references: Execution context maintained for each script execution
@@ -254,7 +254,7 @@ namespace Andastra.Runtime.Games.Common
                 // execution context from the script that queued them
                 capturedTriggerer = currentContext.Triggerer;
             }
-            
+
             // Create ActionDoCommand that executes the script
             // Common across all engines: DelayCommand creates action that executes script with captured context
             // ActionDoCommand wraps the script execution in an action that can be scheduled

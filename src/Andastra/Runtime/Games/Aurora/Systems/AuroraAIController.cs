@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using JetBrains.Annotations;
 using Andastra.Runtime.Core.Actions;
 using Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Games.Common;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Engines.Aurora.Systems
 {
@@ -201,7 +201,7 @@ namespace Andastra.Runtime.Engines.Aurora.Systems
             // Based on nwmain.exe: DoStealthDetection @ 0x14038bfa0 (nwmain.exe)
             // Original implementation: Checks if target is invisible/stealthed and if perceiver can detect stealth
             // DoStealthDetection calls DoListenDetection and DoSpotDetection for hearing/sight-based detection
-            
+
             // Check if target is invisible (has Invisibility effect)
             bool targetIsInvisible = _world.EffectSystem.HasEffect(target, EffectType.Invisibility);
             if (targetIsInvisible)
@@ -214,12 +214,12 @@ namespace Andastra.Runtime.Engines.Aurora.Systems
                     return false;
                 }
             }
-            
+
             // Perform stealth detection checks (hearing and sight)
             // Based on nwmain.exe: DoStealthDetection @ 0x14038bfa0 calls DoListenDetection and DoSpotDetection
             bool heardTarget = DoListenDetection(subject, target, targetIsInvisible ? 1 : 0);
             bool spottedTarget = DoSpotDetection(subject, target, targetIsInvisible ? 1 : 0);
-            
+
             // Target is detected if either heard or spotted
             return heardTarget || spottedTarget;
         }
@@ -328,7 +328,7 @@ namespace Andastra.Runtime.Engines.Aurora.Systems
             }
 
             int subjectListen = subjectStats.GetSkillRank(SKILL_LISTEN);
-            
+
             // Roll Listen check (d20 + Listen skill rank)
             // Based on nwmain.exe: DoListenDetection rolls d20 for skill check
             int listenRoll = _random.Next(1, 21); // d20 roll
@@ -424,7 +424,7 @@ namespace Andastra.Runtime.Engines.Aurora.Systems
             }
 
             int subjectSpot = subjectStats.GetSkillRank(SKILL_SPOT);
-            
+
             // Roll Spot check (d20 + Spot skill rank)
             // Based on nwmain.exe: DoSpotDetection rolls d20 for skill check
             int spotRoll = _random.Next(1, 21); // d20 roll

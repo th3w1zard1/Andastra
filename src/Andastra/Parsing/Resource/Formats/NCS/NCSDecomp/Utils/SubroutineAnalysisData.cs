@@ -1,15 +1,15 @@
-﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineAnalysisData.java:23-569
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineAnalysisData.java:23-569
 // Original: public class SubroutineAnalysisData
 using System;
-using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
 using System.Collections;
 using System.Collections.Generic;
 using Andastra.Parsing.Formats.NCS.NCSDecomp;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.Stack;
-using IEnumerator = Andastra.Parsing.Formats.NCS.NCSDecomp.IEnumerator<object>;
+using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
 using IAnalysis = Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis.IAnalysis;
+using IEnumerator = Andastra.Parsing.Formats.NCS.NCSDecomp.IEnumerator<object>;
 
 namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
 {
@@ -564,7 +564,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 this.AddGlobals(node);
                 node = (ASubroutine)subroutines.RemoveFirst();
             }
-            
+
             // Use return type stored in ASubroutine if available (type 3 = int = StartingConditional)
             // This is more reliable than IsConditionalProgram which analyzes bytecode structure
             byte returnType = node.GetReturnType();
@@ -577,7 +577,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             {
                 Debug($"DEBUG SplitOffSubroutines: Main subroutine has return type {returnType} - using IsConditionalProgram result: {conditional}");
             }
-            
+
             // Always add the first (or second if globals was first) subroutine as main
             this.AddMain(node, conditional);
             byte id = 1;

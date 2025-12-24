@@ -93,9 +93,9 @@ namespace Andastra.Game.GUI
             }
 
             // Validate color values
-            ValidateColorComponent(result, "BasicEffectAmbientLightColor", 
-                settings.BasicEffectAmbientLightColorX, 
-                settings.BasicEffectAmbientLightColorY, 
+            ValidateColorComponent(result, "BasicEffectAmbientLightColor",
+                settings.BasicEffectAmbientLightColorX,
+                settings.BasicEffectAmbientLightColorY,
                 settings.BasicEffectAmbientLightColorZ);
 
             ValidateColorComponent(result, "BasicEffectDiffuseColor",

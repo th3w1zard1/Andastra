@@ -144,7 +144,7 @@ namespace Andastra.Runtime.Core.Perception
             {
                 return false;
             }
-            
+
             float dist = Vector3.Distance(subjectTransform.Position, targetTransform.Position);
             if (dist > range)
             {
@@ -209,7 +209,7 @@ namespace Andastra.Runtime.Core.Perception
             {
                 return false;
             }
-            
+
             float dist = Vector3.Distance(subjectTransform.Position, targetTransform.Position);
             if (dist > range)
             {
@@ -227,7 +227,7 @@ namespace Andastra.Runtime.Core.Perception
                 Vector3 targetPos = targetTransform.Position;
                 Vector3 direction = targetPos - subjectPos;
                 float distance = direction.Length();
-                
+
                 if (distance > 0.1f)
                 {
                     direction = Vector3.Normalize(direction);
@@ -243,7 +243,7 @@ namespace Andastra.Runtime.Core.Perception
                         // Check for door entities near the hit point
                         const float doorCheckRadius = 2.0f; // Check for doors within 2 units of hit point
                         IEnumerable<IEntity> nearbyDoors = _world.GetEntitiesInRadius(hitPoint, doorCheckRadius, ObjectType.Door);
-                        
+
                         bool foundDoor = false;
                         foreach (IEntity doorEntity in nearbyDoors)
                         {
@@ -251,10 +251,10 @@ namespace Andastra.Runtime.Core.Perception
                             {
                                 continue;
                             }
-                            
+
                             // Found a door entity near the hit point
                             foundDoor = true;
-                            
+
                             // Check if door is open
                             IDoorComponent doorComponent = doorEntity.GetComponent<IDoorComponent>();
                             if (doorComponent != null && doorComponent.IsOpen)
@@ -268,7 +268,7 @@ namespace Andastra.Runtime.Core.Perception
                                 return false;
                             }
                         }
-                        
+
                         // No door found at hit point - it's a wall, fully block sound
                         if (!foundDoor)
                         {
@@ -277,7 +277,7 @@ namespace Andastra.Runtime.Core.Perception
                     }
                 }
             }
-            
+
             return true;
         }
 
@@ -371,7 +371,7 @@ namespace Andastra.Runtime.Core.Perception
         public IEntity Subject { get; set; }
         public IEntity Target { get; set; }
         public PerceptionType Type { get; set; }
-        
+
         /// <summary>
         /// The entity this event relates to (the subject).
         /// </summary>

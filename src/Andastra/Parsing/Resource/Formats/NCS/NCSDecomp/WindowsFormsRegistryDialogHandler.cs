@@ -133,7 +133,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 object buttonPanelControls = GetProperty(buttonPanel, "Controls");
                 object contentPanelControls = GetProperty(contentPanel, "Controls");
                 object dialogControls = GetProperty(dialog, "Controls");
-                
+
                 InvokeMethod(buttonPanelControls, "Add", okButton);
                 InvokeMethod(contentPanelControls, "Add", messageLabel);
                 InvokeMethod(contentPanelControls, "Add", dontShowCheckBox);
@@ -363,7 +363,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 object buttonPanelControls = GetProperty(buttonPanel, "Controls");
                 object contentPanelControls = GetProperty(contentPanel, "Controls");
                 object dialogControls = GetProperty(dialog, "Controls");
-                
+
                 // Add buttons in order: Yes first, then No (will appear as No, Yes if FlowLayoutPanel is RightToLeft)
                 InvokeMethod(buttonPanelControls, "Add", yesButton);
                 InvokeMethod(buttonPanelControls, "Add", noButton);

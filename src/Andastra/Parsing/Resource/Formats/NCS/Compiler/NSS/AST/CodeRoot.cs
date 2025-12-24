@@ -765,11 +765,11 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
             {
                 System.Console.WriteLine($"CompileFunctionWithPrototype for {name}: stubIndex={stubIndex} countBefore={ncs.Instructions.Count} tempInstructions={temp.Instructions.Count}");
             }
-            
+
             // Validate stub index - if forward declaration exists, stub should be in the instruction list
             NCSInstruction removedStub = stubInstruction;
             NCSInstruction newStart;
-            
+
             if (stubIndex < 0)
             {
                 // Stub not found in instruction list - this shouldn't happen for valid forward declarations
@@ -786,7 +786,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
             {
                 // Store reference to stub before removal - needed for jump redirection
                 // All jumps (JSR/JMP/JZ/JNZ) that target the stub must be redirected to the new function start
-                
+
                 // Replace stub with compiled function body
                 // The stub (NOP) is removed and replaced with the actual function instructions
                 // This ensures the function starts at the correct position and maintains instruction order
@@ -815,7 +815,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
                     }
                 }
             }
-            
+
             // Also check instructions in the newly inserted function body for any jumps that might
             // have been compiled with references to the stub (shouldn't happen, but be safe)
             foreach (NCSInstruction inst in temp.Instructions)

@@ -3,8 +3,8 @@
 using System;
 using System.IO;
 using System.Text;
-using IOException = Andastra.Parsing.Formats.NCS.NCSDecomp.IOException;
 using Andastra.Parsing.Common;
+using IOException = Andastra.Parsing.Formats.NCS.NCSDecomp.IOException;
 
 namespace Andastra.Parsing.Formats.NCS.NCSDecomp
 {
@@ -162,7 +162,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     System.Console.Error.WriteLine("[RoundTripUtil] Decompiling " + ncsFile.GetAbsolutePath() + " to " + nssOutputFile.FullName);
                     decompiler.DecompileToFile(ncsFile, nssOutputFile, charset, true);
                     System.Console.Error.WriteLine("[RoundTripUtil] DecompileToFile completed, file exists: " + nssOutputFile.Exists());
-                    
+
                     // Double-check: if file doesn't exist, try to create an empty file as last resort
                     if (!nssOutputFile.Exists())
                     {
@@ -190,7 +190,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                         System.Console.Error.WriteLine("[RoundTripUtil] Inner exception: " + e.InnerException.GetType().Name + " - " + e.InnerException.Message);
                     }
                     e.PrintStackTrace(JavaSystem.@err);
-                    
+
                     // Try to create a fallback file even if decompilation failed
                     bool fallbackCreated = false;
                     try
@@ -220,7 +220,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                             System.Console.Error.WriteLine("[RoundTripUtil] Fallback creation inner exception: " + createEx.InnerException.GetType().Name + " - " + createEx.InnerException.Message);
                         }
                     }
-                    
+
                     // Only throw if we couldn't create a fallback file
                     if (!fallbackCreated)
                     {
@@ -234,7 +234,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     System.Console.Error.WriteLine("[RoundTripUtil] File does not exist after DecompileToFile: " + nssOutputFile.FullName);
                     System.Console.Error.WriteLine("[RoundTripUtil] Directory exists: " + (nssOutputFile.Directory != null ? nssOutputFile.Directory.Exists.ToString() : "null"));
                     System.Console.Error.WriteLine("[RoundTripUtil] Full path: " + System.IO.Path.GetFullPath(nssOutputFile.FullName));
-                    
+
                     // Last resort: try to create an empty file
                     try
                     {

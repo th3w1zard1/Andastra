@@ -256,10 +256,10 @@ namespace Andastra.Runtime.Core.Save
         {
             get
             {
-                return Ints.Count == 0 
-                    && Floats.Count == 0 
-                    && Strings.Count == 0 
-                    && Objects.Count == 0 
+                return Ints.Count == 0
+                    && Floats.Count == 0
+                    && Strings.Count == 0
+                    && Objects.Count == 0
                     && Locations.Count == 0;
             }
         }

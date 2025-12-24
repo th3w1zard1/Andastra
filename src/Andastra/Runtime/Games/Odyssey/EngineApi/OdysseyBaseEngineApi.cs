@@ -216,13 +216,13 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
                 {
                     _runScriptVar = Variable.FromInt(scriptVar);
                 }
-                
+
                 // Execute script and track instruction count
                 // Based on swkotor2.exe: Script execution with instruction budget tracking
                 // Located via string references: Script execution budget limits per frame
                 // Original implementation: Tracks instruction count per entity for budget enforcement
                 int result = _vm.ExecuteScript(scriptName, scriptCtx);
-                
+
                 // Accumulate instruction count to target entity's action queue component
                 // This allows the game loop to enforce per-frame script budget limits
                 int instructionsExecuted = _vm.InstructionsExecuted;
@@ -234,7 +234,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
                         actionQueue.AddInstructionCount(instructionsExecuted);
                     }
                 }
-                
+
                 return Variable.FromInt(result);
             }
             catch (Exception ex)

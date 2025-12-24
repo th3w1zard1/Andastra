@@ -371,7 +371,7 @@ namespace Andastra.Runtime.Core.Combat
                     }
                     break;
 
-                // Other instant effects...
+                    // Other instant effects...
             }
         }
 

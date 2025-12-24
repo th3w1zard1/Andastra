@@ -21,7 +21,7 @@ namespace Andastra.Runtime.Engines.Eclipse.Profiles
     public static class EclipseProfileFactory
     {
         private static readonly Dictionary<GameType, Func<IEngineProfile>> _profileFactories;
-        
+
         static EclipseProfileFactory()
         {
             _profileFactories = new Dictionary<GameType, Func<IEngineProfile>>
@@ -30,7 +30,7 @@ namespace Andastra.Runtime.Engines.Eclipse.Profiles
                 { GameType.DA2, () => new DragonAge2GameProfile() }
             };
         }
-        
+
         /// <summary>
         /// Creates a game profile for the specified game type.
         /// </summary>
@@ -45,7 +45,7 @@ namespace Andastra.Runtime.Engines.Eclipse.Profiles
             }
             throw new NotSupportedException("Eclipse Engine game type not supported: " + gameType);
         }
-        
+
         /// <summary>
         /// Gets all available Eclipse Engine game profiles.
         /// </summary>
@@ -56,7 +56,7 @@ namespace Andastra.Runtime.Engines.Eclipse.Profiles
                 yield return factory();
             }
         }
-        
+
         /// <summary>
         /// Checks if a game type is supported.
         /// </summary>

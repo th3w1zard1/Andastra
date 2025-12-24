@@ -1,7 +1,7 @@
 using System;
-using JetBrains.Annotations;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.MDLData;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Graphics
 {

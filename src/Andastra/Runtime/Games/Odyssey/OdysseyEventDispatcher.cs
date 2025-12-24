@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Module;
 using Andastra.Runtime.Games.Common;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Odyssey
 {
@@ -1785,10 +1785,10 @@ namespace Andastra.Runtime.Games.Odyssey
                 case 0x0: return Core.Enums.ScriptEvent.OnHeartbeat; // CSWSSCRIPTEVENT_EVENTTYPE_ON_HEARTBEAT
                 case 0x1: return Core.Enums.ScriptEvent.OnPerception; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PERCEPTION
                 case 0x2: return Core.Enums.ScriptEvent.OnSpellCastAt; // CSWSSCRIPTEVENT_EVENTTYPE_ON_SPELLCASTAT
-                    // case 0x3?? (not used)
+                                                                       // case 0x3?? (not used)
                 case 0x4: return Core.Enums.ScriptEvent.OnDamaged; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED
                 case 0x5: return Core.Enums.ScriptEvent.OnDisturbed; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DISTURBED
-                    // case 0x6?? (not used)
+                                                                     // case 0x6?? (not used)
                 case 0x7: return Core.Enums.ScriptEvent.OnConversation; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE
                 case 0x8: return Core.Enums.ScriptEvent.OnSpawn; // CSWSSCRIPTEVENT_EVENTTYPE_ON_SPAWN_IN
                 case 0x9: return Core.Enums.ScriptEvent.OnRested; // CSWSSCRIPTEVENT_EVENTTYPE_ON_RESTED
@@ -1909,10 +1909,10 @@ namespace Andastra.Runtime.Games.Odyssey
                 case 0x0: return Core.Enums.ScriptEvent.OnHeartbeat; // CSWSSCRIPTEVENT_EVENTTYPE_ON_HEARTBEAT
                 case 0x1: return Core.Enums.ScriptEvent.OnPerception; // CSWSSCRIPTEVENT_EVENTTYPE_ON_PERCEPTION
                 case 0x2: return Core.Enums.ScriptEvent.OnSpellCastAt; // CSWSSCRIPTEVENT_EVENTTYPE_ON_SPELLCASTAT
-                    // case 0x3?? (not used)
+                                                                       // case 0x3?? (not used)
                 case 0x4: return Core.Enums.ScriptEvent.OnDamaged; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED
                 case 0x5: return Core.Enums.ScriptEvent.OnDisturbed; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DISTURBED
-                    // case 0x6?? (not used)
+                                                                     // case 0x6?? (not used)
                 case 0x7: return Core.Enums.ScriptEvent.OnConversation; // CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE
                 case 0x8: return Core.Enums.ScriptEvent.OnSpawn; // CSWSSCRIPTEVENT_EVENTTYPE_ON_SPAWN_IN
                 case 0x9: return Core.Enums.ScriptEvent.OnRested; // CSWSSCRIPTEVENT_EVENTTYPE_ON_RESTED

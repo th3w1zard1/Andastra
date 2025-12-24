@@ -1,14 +1,14 @@
 using System;
-using System.Numerics;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Logger;
 using Andastra.Parsing.Memory;
 using JetBrains.Annotations;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Mods.GFF
 {

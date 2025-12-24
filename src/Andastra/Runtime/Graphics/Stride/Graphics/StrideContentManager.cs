@@ -1,6 +1,6 @@
 using System;
-using StrideGraphics = global::Stride.Graphics;
 using Andastra.Runtime.Graphics;
+using StrideGraphics = global::Stride.Graphics;
 
 namespace Andastra.Runtime.Stride.Graphics
 {

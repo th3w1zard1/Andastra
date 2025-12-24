@@ -1,7 +1,7 @@
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Resource.Generics
 {
@@ -157,36 +157,36 @@ namespace Andastra.Parsing.Resource.Generics
             // Extract basic fields (matching Python field names)
             // Engine default: 16-byte array (swkotor2.exe:0x00501fa0 line 119, swkotor.exe:0x004c9050 line 110)
             ifo.ModId = root.Acquire<byte[]>("Mod_ID", new byte[16]);
-            
+
             // Engine default: LocalizedString (swkotor2.exe:0x00501fa0 line 129, swkotor.exe:0x004c9050 line 120)
             ifo.ModName = root.Acquire<LocalizedString>("Mod_Name", LocalizedString.FromInvalid());
             ifo.Name = ifo.ModName; // Alias
-            
+
             // Engine default: "" (swkotor2.exe:0x00501fa0 line 152, swkotor.exe:0x004c9050 line 143)
             ifo.Tag = root.Acquire<string>("Mod_Tag", "");
-            
+
             // Engine default: "" (swkotor2.exe:0x00500290 line 57, swkotor.exe:0x004c7050 line 57)
             // Note: Mod_VO_ID is written but not read in loading function - optional field
             ifo.VoId = root.Acquire<string>("Mod_VO_ID", "");
-            
+
             // Engine default: "" (swkotor2.exe:0x00501fa0 line 160, swkotor.exe:0x004c9050 line 151)
             ifo.ResRef = root.Acquire<ResRef>("Mod_Entry_Area", ResRef.FromBlank());
             ifo.EntryArea = ifo.ResRef; // Alias
-            
+
             // Engine default: 0.0 (swkotor2.exe:0x00501fa0 line 163, swkotor.exe:0x004c9050 line 154)
             ifo.EntryX = root.Acquire<float>("Mod_Entry_X", 0.0f);
             // Engine default: 0.0 (swkotor2.exe:0x00501fa0 line 165, swkotor.exe:0x004c9050 line 156)
             ifo.EntryY = root.Acquire<float>("Mod_Entry_Y", 0.0f);
             // Engine default: 0.0 (swkotor2.exe:0x00501fa0 line 167, swkotor.exe:0x004c9050 line 158)
             ifo.EntryZ = root.Acquire<float>("Mod_Entry_Z", 0.0f);
-            
+
             // Engine default: 0.0, but if field not found, defaults to 1.0 (swkotor2.exe:0x00501fa0 lines 169, 174, swkotor.exe:0x004c9050 lines 160, 165)
             float dirX = root.Acquire<float>("Mod_Entry_Dir_X", 0.0f);
             // Engine default: 0.0, but if field not found, defaults to 0.0 (swkotor2.exe:0x00501fa0 lines 171, 175, swkotor.exe:0x004c9050 lines 162, 166)
             // Engine behavior: After reading Mod_Entry_Dir_Y, if local_bc==0 (field not found), engine sets both dirX=1.0, dirY=0.0
             // This means if Mod_Entry_Dir_Y is missing, both get set to defaults
             float dirY = root.Acquire<float>("Mod_Entry_Dir_Y", 0.0f);
-            
+
             // Engine behavior: If Mod_Entry_Dir_Y field is missing, engine sets dirX=1.0, dirY=0.0
             // The engine checks local_bc after reading Mod_Entry_Dir_Y - if 0, both are set to defaults
             if (!root.Exists("Mod_Entry_Dir_Y"))
@@ -194,7 +194,7 @@ namespace Andastra.Parsing.Resource.Generics
                 dirX = 1.0f;
                 dirY = 0.0f;
             }
-            
+
             // Store direction components (Python calculates angle, but we store X/Y/Z separately)
             ifo.EntryDirectionX = dirX;
             ifo.EntryDirectionY = dirY;
@@ -248,31 +248,31 @@ namespace Andastra.Parsing.Resource.Generics
             // Engine default: 0 (swkotor2.exe:0x00501fa0 line 276, swkotor.exe:0x004c9050 line 267)
             // Note: Expansion_Pack is read from Mod_Expan_List, not directly - optional field
             ifo.ExpansionPack = root.Acquire<int>("Expansion_Pack", 0);
-            
+
             // Engine default: LocalizedString (swkotor2.exe:0x00501fa0 line 138, swkotor.exe:0x004c9050 line 129)
             ifo.Description = root.Acquire<LocalizedString>("Mod_Description", LocalizedString.FromInvalid());
-            
+
             // Engine default: 0 (swkotor2.exe:0x00501fa0 line 123, swkotor.exe:0x004c9050 line 114)
             ifo.ModVersion = root.Acquire<int>("Mod_Version", 0);
-            
+
             // Engine default: "" (swkotor2.exe:0x00500290 line 57, swkotor.exe:0x004c7050 line 57)
             // Note: Mod_Hak is written but not read in loading function - optional field
             ifo.Hak = root.Acquire<string>("Mod_Hak", "");
-            
+
             // Engine default: 0 (swkotor2.exe:0x00501fa0 line 179, swkotor.exe:0x004c9050 line 170)
             ifo.DawnHour = root.Acquire<int>("Mod_DawnHour", 0);
             // Engine default: 0 (swkotor2.exe:0x00501fa0 line 181, swkotor.exe:0x004c9050 line 172)
             ifo.DuskHour = root.Acquire<int>("Mod_DuskHour", 0);
             // Engine default: 0 (swkotor2.exe:0x00501fa0 line 177, swkotor.exe:0x004c9050 line 168)
             ifo.TimeScale = root.Acquire<int>("Mod_MinPerHour", 0);
-            
+
             // Engine default: Uses DAT_* constants if param_2 != 0, otherwise 0 (swkotor2.exe:0x00501fa0 lines 192-202, swkotor.exe:0x004c9050 lines 183-193)
             // For normal module loading (param_2 == 0), engine uses current time - we default to 0
             ifo.StartMonth = root.Acquire<int>("Mod_StartMonth", 0);
             ifo.StartDay = root.Acquire<int>("Mod_StartDay", 0);
             ifo.StartHour = root.Acquire<int>("Mod_StartHour", 0);
             ifo.StartYear = root.Acquire<int>("Mod_StartYear", 0);
-            
+
             // Game time fields (current game time components)
             // Based on swkotor2.exe: FUN_00501fa0 @ 0x00501fa0 (IFO loading function)
             // These fields are read from IFO when loading module (if present)
@@ -282,10 +282,10 @@ namespace Andastra.Parsing.Resource.Generics
             ifo.StartMiliSec = root.Acquire<int>("Mod_StartMiliSec", 0);
             ifo.PauseDay = root.Acquire<uint>("Mod_PauseDay", 0);
             ifo.PauseTime = root.Acquire<uint>("Mod_PauseTime", 0);
-            
+
             // Engine default: 10 (swkotor2.exe:0x00501fa0 line 274, swkotor.exe:0x004c9050 line 265)
             ifo.XpScale = root.Acquire<int>("Mod_XPScale", 10);
-            
+
             // VaultId may not exist in Python version - optional field, not found in engine loading
 
             return ifo;

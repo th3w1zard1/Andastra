@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
+using Andastra.Runtime.Content.MDL;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Andastra.Runtime.Content.MDL;
 
 namespace Andastra.Runtime.MonoGame.Models
 {

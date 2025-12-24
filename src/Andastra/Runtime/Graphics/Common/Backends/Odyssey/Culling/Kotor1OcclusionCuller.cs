@@ -1,6 +1,6 @@
 using System;
-using System.Runtime.InteropServices;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using Andastra.Runtime.Graphics.Common.Culling;
 
 namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey.Culling

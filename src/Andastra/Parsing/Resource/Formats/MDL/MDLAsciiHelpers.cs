@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.MDLData;
 using Andastra.Parsing.Formats.MDL;
+using Andastra.Parsing.Formats.MDLData;
 
 namespace Andastra.Parsing.Formats.MDL
 {

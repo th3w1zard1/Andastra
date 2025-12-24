@@ -1,7 +1,7 @@
 using System;
-using JetBrains.Annotations;
-using Andastra.Runtime.Games.Common;
 using Andastra.Parsing.Installation;
+using Andastra.Runtime.Games.Common;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Eclipse.Data
 {

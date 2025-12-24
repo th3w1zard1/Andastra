@@ -111,7 +111,7 @@ namespace Andastra.Runtime.Core.Actions
                 {
                     // Construct full type name
                     string fullTypeName = detectorNamespace + "." + detectorTypeName;
-                    
+
                     // Search all loaded assemblies for the detector type
                     // The detector may be in a different assembly than the world type
                     Type detectorType = null;
@@ -164,7 +164,7 @@ namespace Andastra.Runtime.Core.Actions
                         // Note: We intentionally don't catch general Exception to allow unexpected critical errors to propagate
                         // This ensures we don't silently ignore serious problems while continuing to search
                     }
-                    
+
                     if (detectorType != null)
                     {
                         // Create instance using parameterless constructor

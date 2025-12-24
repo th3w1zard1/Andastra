@@ -1,11 +1,11 @@
-﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ASub.java:15-194
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ASub.java:15-194
 // Original: public class ASub extends ScriptRootNode
 using System.Collections.Generic;
-using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
 using System.Text;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.Stack;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.Utils;
+using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
 
 namespace Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode
 {

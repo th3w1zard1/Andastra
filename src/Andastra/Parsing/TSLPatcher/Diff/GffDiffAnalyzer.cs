@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Mods.GFF;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Diff
 {

@@ -3,12 +3,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Mods;
 using Andastra.Parsing.Mods.GFF;
 using Andastra.Parsing.Mods.SSF;
 using Andastra.Parsing.Mods.TLK;
 using Andastra.Parsing.Mods.TwoDA;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.TSLPatcher
 {
@@ -141,11 +141,11 @@ namespace Andastra.Parsing.TSLPatcher
 
             foreach (var installFile in existingInstall)
             {
-                string folder = !string.IsNullOrEmpty(installFile.Destination) && installFile.Destination != "." 
-                    ? installFile.Destination 
+                string folder = !string.IsNullOrEmpty(installFile.Destination) && installFile.Destination != "."
+                    ? installFile.Destination
                     : "Override";
-                string filename = !string.IsNullOrEmpty(installFile.SaveAs) 
-                    ? installFile.SaveAs 
+                string filename = !string.IsNullOrEmpty(installFile.SaveAs)
+                    ? installFile.SaveAs
                     : installFile.SourceFile;
                 AddFileToFolder(installFolders, folder, filename);
             }

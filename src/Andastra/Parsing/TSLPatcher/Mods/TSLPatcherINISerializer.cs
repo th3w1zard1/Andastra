@@ -1,11 +1,12 @@
 // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:157-243
 // Original: class TSLPatcherINISerializer: ...
 using System;
-using System.Numerics;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Text;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Mods.GFF;
 using Andastra.Parsing.Mods.NCS;
@@ -13,7 +14,6 @@ using Andastra.Parsing.Mods.SSF;
 using Andastra.Parsing.Mods.TLK;
 using Andastra.Parsing.Mods.TwoDA;
 using TargetType = Andastra.Parsing.Mods.TwoDA.TargetType;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Mods
 {

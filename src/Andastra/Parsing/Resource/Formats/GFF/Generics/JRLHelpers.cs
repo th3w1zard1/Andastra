@@ -1,7 +1,7 @@
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Resource.Generics
 {
@@ -20,24 +20,24 @@ namespace Andastra.Parsing.Resource.Generics
             {
                 var quest = new JRLQuest();
                 jrl.Quests.Add(quest);
-                
+
                 // Engine default: "" (swkotor2.exe:0x00600dd0 line 138, swkotor.exe:0x005c5a40 line 138)
                 // Note: Comment field is written but not read in engine loading function - optional field
                 quest.Comment = categoryStruct.Acquire("Comment", string.Empty);
-                
+
                 // Engine default: LocalizedString (swkotor2.exe:0x00600dd0 line 151, swkotor.exe:0x005c5a40 line 151)
                 quest.Name = categoryStruct.Acquire("Name", LocalizedString.FromInvalid());
-                
+
                 // Engine default: 0 (swkotor2.exe:0x00600dd0 line 186, swkotor.exe:0x005c5a40 line 186)
                 quest.PlanetId = categoryStruct.Acquire("PlanetID", 0);
-                
+
                 // Engine default: 0 (swkotor2.exe:0x00600dd0 line 180, swkotor.exe:0x005c5a40 line 180)
                 quest.PlotIndex = categoryStruct.Acquire("PlotIndex", 0);
-                
+
                 // Engine default: 0 (swkotor2.exe:0x00600dd0 line 165, swkotor.exe:0x005c5a40 line 165)
                 int priorityValue = categoryStruct.Acquire("Priority", 0);
                 quest.Priority = (JRLQuestPriority)priorityValue;
-                
+
                 // Engine default: "" (swkotor2.exe:0x00600dd0 line 138, swkotor.exe:0x005c5a40 line 138)
                 quest.Tag = categoryStruct.Acquire("Tag", string.Empty);
 
@@ -47,16 +47,16 @@ namespace Andastra.Parsing.Resource.Generics
                 {
                     var entry = new JRLQuestEntry();
                     quest.Entries.Add(entry);
-                    
+
                     // Engine default: 0 (swkotor2.exe:0x00600dd0 line 237, swkotor.exe:0x005c5a40 line 237)
                     entry.End = entryStruct.Acquire("End", (ushort)0) != 0;
-                    
+
                     // Engine default: 0 (swkotor2.exe:0x00600dd0 line 205, swkotor.exe:0x005c5a40 line 205)
                     entry.EntryId = (int)entryStruct.Acquire("ID", (uint)0);
-                    
+
                     // Engine default: LocalizedString (swkotor2.exe:0x00600dd0 line 209, swkotor.exe:0x005c5a40 line 209)
                     entry.Text = entryStruct.Acquire("Text", LocalizedString.FromInvalid());
-                    
+
                     // Engine default: 0.0 (swkotor2.exe:0x00600dd0 line 222, swkotor.exe:0x005c5a40 line 222)
                     entry.XpPercentage = entryStruct.Acquire("XP_Percentage", 0.0f);
                 }

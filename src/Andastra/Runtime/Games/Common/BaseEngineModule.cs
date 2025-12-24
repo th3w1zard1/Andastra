@@ -1,9 +1,9 @@
 using System;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
+using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Navigation;
-using Andastra.Runtime.Content.Interfaces;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Engines.Common
 {
@@ -189,7 +189,7 @@ namespace Andastra.Runtime.Engines.Common
             {
                 // Engine-specific cleanup (entities, areas, resources)
                 OnUnloadModule();
-                
+
                 // Common state reset (all engines)
                 _currentModuleName = null;
                 _currentArea = null;

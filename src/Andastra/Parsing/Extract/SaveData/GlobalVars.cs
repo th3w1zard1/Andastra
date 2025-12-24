@@ -1,7 +1,7 @@
 using System;
-using System.Numerics;
 using System.Collections.Generic;
 using System.IO;
+using System.Numerics;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;

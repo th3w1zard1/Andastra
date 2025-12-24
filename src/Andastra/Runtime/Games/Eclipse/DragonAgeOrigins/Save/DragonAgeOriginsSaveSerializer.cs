@@ -49,14 +49,14 @@ namespace Andastra.Runtime.Engines.Eclipse.DragonAgeOrigins.Save
                 // Based on daorigins.exe: SaveGameMessage @ 0x00ae6276, COMMAND_SAVEGAME @ 0x00af15d4
                 // Player character name
                 WriteString(writer, saveData.PlayerName ?? "");
-                
+
                 // Current area name
                 WriteString(writer, saveData.CurrentAreaName ?? "");
-                
+
                 // Party member count (from PartyState)
                 int partyMemberCount = saveData.PartyState?.SelectedParty?.Count ?? 0;
                 writer.Write(partyMemberCount);
-                
+
                 // Player level (from PartyState.PlayerCharacter)
                 int playerLevel = saveData.PartyState?.PlayerCharacter?.Level ?? 0;
                 writer.Write(playerLevel);
@@ -95,13 +95,13 @@ namespace Andastra.Runtime.Engines.Eclipse.DragonAgeOrigins.Save
                 saveData.CurrentAreaName = ReadString(reader);
                 int partyMemberCount = reader.ReadInt32();
                 int playerLevel = reader.ReadInt32();
-                
+
                 // Initialize PartyState if needed
                 if (saveData.PartyState == null)
                 {
                     saveData.PartyState = new Core.Save.PartyState();
                 }
-                
+
                 // Set player level if PlayerCharacter exists
                 if (saveData.PartyState.PlayerCharacter == null)
                 {
@@ -145,16 +145,16 @@ namespace Andastra.Runtime.Engines.Eclipse.DragonAgeOrigins.Save
 
                 // Serialize full game state
                 // Based on daorigins.exe: SaveGameMessage @ 0x00ae6276 serialization
-                
+
                 // Party state: Serialize party member data (using base class method)
                 SerializeSelectedParty(writer, saveData.PartyState);
-                
+
                 // Inventory state: Serialize inventory data from PlayerCharacter (using base class method)
                 SerializeBasicInventory(writer, saveData.PartyState?.PlayerCharacter?.Inventory);
-                
+
                 // Quest state: Serialize journal entries (using base class method)
                 SerializeJournalEntries(writer, saveData.JournalEntries);
-                
+
                 // World state: Serialize global variables (using base class method)
                 SerializeGlobalVariables(writer, saveData.GlobalVariables);
 
@@ -194,7 +194,7 @@ namespace Andastra.Runtime.Engines.Eclipse.DragonAgeOrigins.Save
                 saveData.CurrentAreaName = ReadString(reader);
                 int partyMemberCount = reader.ReadInt32();
                 int playerLevel = reader.ReadInt32();
-                
+
                 // Initialize PartyState if needed
                 if (saveData.PartyState == null)
                 {
@@ -208,24 +208,24 @@ namespace Andastra.Runtime.Engines.Eclipse.DragonAgeOrigins.Save
 
                 // Deserialize full game state
                 // Based on daorigins.exe: SaveGameMessage deserialization
-                
+
                 // Party state: Deserialize party member data (using base class method)
                 if (saveData.PartyState == null)
                 {
                     saveData.PartyState = new Core.Save.PartyState();
                 }
                 DeserializeSelectedParty(reader, saveData.PartyState);
-                
+
                 // Inventory state: Deserialize inventory data (using base class method)
                 if (saveData.PartyState.PlayerCharacter == null)
                 {
                     saveData.PartyState.PlayerCharacter = new Core.Save.CreatureState();
                 }
                 saveData.PartyState.PlayerCharacter.Inventory = DeserializeBasicInventory(reader);
-                
+
                 // Quest state: Deserialize journal entries (using base class method)
                 saveData.JournalEntries = DeserializeJournalEntries(reader);
-                
+
                 // World state: Deserialize global variables (using base class method)
                 saveData.GlobalVariables = DeserializeGlobalVariables(reader);
             }

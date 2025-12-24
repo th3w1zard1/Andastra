@@ -1,8 +1,8 @@
 using System;
-using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Scripting.Interfaces;
 using Andastra.Runtime.Scripting.VM;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Common.Dialogue
 {

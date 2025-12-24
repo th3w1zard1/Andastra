@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
-using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Enums;
+using Andastra.Runtime.Core.Interfaces;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Common
 {
@@ -15,22 +15,22 @@ namespace Andastra.Runtime.Games.Common
     /// - Handles perception, decision making, action execution
     /// - Provides foundation for engine-specific AI behaviors
     ///
-        /// Based on reverse engineering of:
-        /// - swkotor.exe: Basic AI with perception and combat
-        /// - swkotor2.exe: Advanced AI with influence, factions, complex behaviors
-        /// - nwmain.exe: D20-based AI with tactical positioning
-        /// - daorigins.exe: Complex tactical AI with positioning and abilities
-        /// - DragonAge2.exe: Enhanced Eclipse engine AI with improved combat behavior and party tactics
-        ///   - Located via string references: "PackageAI" @ 0x00bf468c, "SetBehaviourMessage" @ 0x00bfc8b4
-        ///   - Combat system: "CombatTarget" @ 0x00bf4dc0, "InCombat" @ 0x00bf4c10, "Combatant" @ 0x00bf4664
-        ///   - Game mode: "GameModeCombat" @ 0x00beaf3c, "BInCombatMode" @ 0x00beeed2
-        ///   - Behavior system: "SetBehaviourMessage" @ 0x00bfc8b4 (UnrealScript message passing)
-        ///   - Enhanced from daorigins.exe: Improved party coordination, better ability selection, refined positioning
-        ///   - Uses same Eclipse engine architecture as daorigins.exe: UnrealScript event system, navigation mesh pathfinding
-        ///   - AI update loop: Integrated with Unreal Engine 3 frame update system
-        ///   - Perception system: Enhanced detection with improved line-of-sight calculations
-        ///   - Combat AI: More sophisticated tactical decision-making with party role awareness
-        /// - Common AI concepts: Perception, decision trees, action queues, behavior states
+    /// Based on reverse engineering of:
+    /// - swkotor.exe: Basic AI with perception and combat
+    /// - swkotor2.exe: Advanced AI with influence, factions, complex behaviors
+    /// - nwmain.exe: D20-based AI with tactical positioning
+    /// - daorigins.exe: Complex tactical AI with positioning and abilities
+    /// - DragonAge2.exe: Enhanced Eclipse engine AI with improved combat behavior and party tactics
+    ///   - Located via string references: "PackageAI" @ 0x00bf468c, "SetBehaviourMessage" @ 0x00bfc8b4
+    ///   - Combat system: "CombatTarget" @ 0x00bf4dc0, "InCombat" @ 0x00bf4c10, "Combatant" @ 0x00bf4664
+    ///   - Game mode: "GameModeCombat" @ 0x00beaf3c, "BInCombatMode" @ 0x00beeed2
+    ///   - Behavior system: "SetBehaviourMessage" @ 0x00bfc8b4 (UnrealScript message passing)
+    ///   - Enhanced from daorigins.exe: Improved party coordination, better ability selection, refined positioning
+    ///   - Uses same Eclipse engine architecture as daorigins.exe: UnrealScript event system, navigation mesh pathfinding
+    ///   - AI update loop: Integrated with Unreal Engine 3 frame update system
+    ///   - Perception system: Enhanced detection with improved line-of-sight calculations
+    ///   - Combat AI: More sophisticated tactical decision-making with party role awareness
+    /// - Common AI concepts: Perception, decision trees, action queues, behavior states
     ///
     /// Common functionality across engines:
     /// - Perception system (sight, hearing, detection)

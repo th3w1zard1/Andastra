@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using JetBrains.Annotations;
 using Andastra.Parsing.Formats.GFF;
+using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Games.Aurora.Components;
 using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Games.Common.Components;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Aurora
 {

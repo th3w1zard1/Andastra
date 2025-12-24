@@ -384,7 +384,7 @@ namespace Andastra.Runtime.Stride.Upscaling
             {
                 Type deviceType = device.GetType();
                 string deviceTypeName = deviceType.FullName ?? deviceType.Name;
-                
+
                 // Strategy 1: Check for backend-specific device properties via reflection
                 // DirectX 12 devices expose a "D3D12Device" property
                 PropertyInfo d3d12DeviceProperty = deviceType.GetProperty("D3D12Device", BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic);

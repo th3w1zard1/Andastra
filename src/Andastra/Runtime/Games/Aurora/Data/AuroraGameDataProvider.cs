@@ -1,8 +1,8 @@
 using System;
-using JetBrains.Annotations;
-using Andastra.Runtime.Games.Common;
-using Andastra.Parsing.Installation;
 using Andastra.Parsing.Formats.TwoDA;
+using Andastra.Parsing.Installation;
+using Andastra.Runtime.Games.Common;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Aurora.Data
 {
@@ -242,7 +242,7 @@ namespace Andastra.Runtime.Games.Aurora.Data
             string description = SafeGetString(row, "description");
             int? descriptionStrRef = SafeGetInteger(row, "description");
             string icon = SafeGetString(row, "icon");
-            
+
             return new AuroraFeatData
             {
                 RowIndex = featId,
@@ -311,7 +311,7 @@ namespace Andastra.Runtime.Games.Aurora.Data
             string description = SafeGetString(row, "description");
             int? descriptionStrRef = SafeGetInteger(row, "description");
             string icon = SafeGetString(row, "icon");
-            
+
             return new AuroraFeatData
             {
                 RowIndex = rowIndex.Value,

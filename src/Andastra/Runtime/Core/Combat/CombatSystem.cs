@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
+using Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Core.Combat;
 
 namespace Andastra.Runtime.Core.Combat
 {

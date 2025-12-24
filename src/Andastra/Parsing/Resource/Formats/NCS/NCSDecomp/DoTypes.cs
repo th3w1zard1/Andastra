@@ -1,7 +1,6 @@
-﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoTypes.java:40-786
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoTypes.java:40-786
 // Original: public class DoTypes extends PrunedDepthFirstAdapter
 using System;
-using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -11,7 +10,7 @@ using Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.Stack;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.Utils;
-
+using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
 using UtilsType = Andastra.Parsing.Formats.NCS.NCSDecomp.Utils.Type;
 
 namespace Andastra.Parsing.Formats.NCS.NCSDecomp

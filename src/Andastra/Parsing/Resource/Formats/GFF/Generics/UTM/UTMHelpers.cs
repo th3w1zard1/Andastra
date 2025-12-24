@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
 using static Andastra.Parsing.Common.GameExtensions;
-using Andastra.Parsing.Common;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
 
 namespace Andastra.Parsing.Resource.Generics.UTM

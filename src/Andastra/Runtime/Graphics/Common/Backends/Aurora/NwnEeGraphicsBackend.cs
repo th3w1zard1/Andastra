@@ -7,12 +7,12 @@ using Andastra.Parsing;
 using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Formats.TXI;
 using Andastra.Parsing.Resource;
-using ParsingResourceType = Andastra.Parsing.Resource.ResourceType;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Graphics.Common.Structs;
+using ParsingResourceType = Andastra.Parsing.Resource.ResourceType;
 
 namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
 {

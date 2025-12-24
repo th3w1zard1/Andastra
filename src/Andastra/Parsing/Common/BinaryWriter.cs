@@ -1,9 +1,9 @@
 using System;
-using System.Numerics;
 using System.IO;
+using System.Numerics;
 using System.Text;
-using JetBrains.Annotations;
 using Andastra.Parsing.Common;
+using JetBrains.Annotations;
 
 namespace Andastra.Parsing.Common
 {
@@ -426,7 +426,7 @@ namespace Andastra.Parsing.Common
                         tempWriter.WriteBytes(textBytes);
                     }
                 }
-                
+
                 // Get the data after the writer is disposed to ensure all writes are flushed
                 byte[] locstringData = ms.ToArray();
                 WriteUInt32((uint)locstringData.Length);

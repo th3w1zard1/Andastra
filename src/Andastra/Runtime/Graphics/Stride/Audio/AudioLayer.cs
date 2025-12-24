@@ -16,7 +16,7 @@ namespace Andastra.Runtime.Stride.Audio
             /// Normal buffer data (continues playback).
             /// </summary>
             Normal,
-            
+
             /// <summary>
             /// End of stream marker (stops playback after buffer).
             /// </summary>

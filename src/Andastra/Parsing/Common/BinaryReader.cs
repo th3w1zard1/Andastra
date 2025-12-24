@@ -2,8 +2,8 @@ using System;
 using System.IO;
 using System.Numerics;
 using System.Text;
-using JetBrains.Annotations;
 using Andastra.Parsing.Common;
+using JetBrains.Annotations;
 
 namespace Andastra.Parsing.Common
 {
@@ -812,21 +812,6 @@ namespace Andastra.Parsing.Common
                 locString.SetData(language, gender, text);
             }
             return locString;
-        }
-
-        public static BinaryReader FromFile(string path, int offset = 0, int? size = null)
-        {
-            return new BinaryReaderFile(path, offset, size);
-        }
-
-        public static BinaryReader FromBytes(byte[] data, int offset = 0, int? size = null)
-        {
-            return new BinaryReaderMemory(data, offset, size);
-        }
-
-        public static BinaryReader FromStream(Stream stream, int offset = 0, int? size = null)
-        {
-            return new BinaryReaderStream(stream, offset, size);
         }
     }
 

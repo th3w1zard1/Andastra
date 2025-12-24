@@ -1,7 +1,7 @@
 using System.Collections.Generic;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.TLK;
 using JetBrains.Annotations;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Diff
 {

@@ -1,10 +1,10 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
-using Stride.Graphics;
-using Stride.Engine;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Remix;
+using Stride.Engine;
+using Stride.Graphics;
 
 namespace Andastra.Runtime.Stride.Remix
 {
@@ -664,10 +664,22 @@ namespace Andastra.Runtime.Stride.Remix
         {
             return new D3DMATRIX
             {
-                _11 = matrix.M11, _12 = matrix.M12, _13 = matrix.M13, _14 = matrix.M14,
-                _21 = matrix.M21, _22 = matrix.M22, _23 = matrix.M23, _24 = matrix.M24,
-                _31 = matrix.M31, _32 = matrix.M32, _33 = matrix.M33, _34 = matrix.M34,
-                _41 = matrix.M41, _42 = matrix.M42, _43 = matrix.M43, _44 = matrix.M44
+                _11 = matrix.M11,
+                _12 = matrix.M12,
+                _13 = matrix.M13,
+                _14 = matrix.M14,
+                _21 = matrix.M21,
+                _22 = matrix.M22,
+                _23 = matrix.M23,
+                _24 = matrix.M24,
+                _31 = matrix.M31,
+                _32 = matrix.M32,
+                _33 = matrix.M33,
+                _34 = matrix.M34,
+                _41 = matrix.M41,
+                _42 = matrix.M42,
+                _43 = matrix.M43,
+                _44 = matrix.M44
             };
         }
 

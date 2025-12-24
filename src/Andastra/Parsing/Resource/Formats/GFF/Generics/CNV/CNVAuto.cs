@@ -1,9 +1,9 @@
 using System;
 using System.IO;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
-using Andastra.Parsing.Common;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
 
 namespace Andastra.Parsing.Resource.Generics.CNV

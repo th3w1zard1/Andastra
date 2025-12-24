@@ -10,8 +10,8 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Module;
 using Andastra.Runtime.Core.Perception;
 using Andastra.Runtime.Core.Save;
-using Andastra.Runtime.Core.Triggers;
 using Andastra.Runtime.Core.Templates;
+using Andastra.Runtime.Core.Triggers;
 
 namespace Andastra.Runtime.Core.Entities
 {
@@ -53,13 +53,13 @@ namespace Andastra.Runtime.Core.Entities
         private readonly Dictionary<uint, IArea> _areasById;
         private readonly Dictionary<string, List<IEntity>> _entitiesByTag;
         private readonly Dictionary<ObjectType, List<IEntity>> _entitiesByType;
-        
+
         // Based on swkotor2.exe: Tag lookup is case-insensitive
         // Located via string references: "GetObjectByTag" function uses case-insensitive tag comparison
         // Original implementation: Tag matching ignores case differences
         private static readonly StringComparer TagComparer = StringComparer.OrdinalIgnoreCase;
         private readonly List<IEntity> _allEntities;
-        
+
         // Area ID assignment: Areas get sequential IDs starting from 0x7F000010
         // Based on swkotor2.exe: AreaId @ 0x007bef48, areas are objects with ObjectIds
         // Located via string references: "AreaId" @ 0x007bef48 (entity area association)
@@ -114,7 +114,7 @@ namespace Andastra.Runtime.Core.Entities
                 RegisterArea(area);
             }
         }
-        
+
         /// <summary>
         /// Registers an area with the world and assigns it an AreaId.
         /// </summary>
@@ -131,19 +131,19 @@ namespace Andastra.Runtime.Core.Entities
             {
                 throw new ArgumentNullException("area");
             }
-            
+
             // If area is already registered, don't re-register
             if (_areaIds.ContainsKey(area))
             {
                 return;
             }
-            
+
             // Assign AreaId to area
             uint areaId = _nextAreaId++;
             _areaIds[area] = areaId;
             _areasById[areaId] = area;
         }
-        
+
         /// <summary>
         /// Unregisters an area from the world.
         /// </summary>
@@ -157,14 +157,14 @@ namespace Andastra.Runtime.Core.Entities
             {
                 return;
             }
-            
+
             if (_areaIds.TryGetValue(area, out uint areaId))
             {
                 _areaIds.Remove(area);
                 _areasById.Remove(areaId);
             }
         }
-        
+
         /// <summary>
         /// Gets an area by its AreaId.
         /// </summary>
@@ -183,7 +183,7 @@ namespace Andastra.Runtime.Core.Entities
             }
             return null;
         }
-        
+
         /// <summary>
         /// Gets the AreaId for an area.
         /// </summary>
@@ -197,7 +197,7 @@ namespace Andastra.Runtime.Core.Entities
             {
                 return 0;
             }
-            
+
             if (_areaIds.TryGetValue(area, out uint areaId))
             {
                 return areaId;
@@ -459,7 +459,7 @@ namespace Andastra.Runtime.Core.Entities
                 _entitiesByType[entity.ObjectType] = typeList;
             }
             typeList.Add(entity);
-            
+
             // Set entity's AreaId based on current area
             // Based on swkotor2.exe: Entity AreaId assignment
             // Located via string references: "AreaId" @ 0x007bef48
@@ -552,7 +552,7 @@ namespace Andastra.Runtime.Core.Entities
 
             // Update animation system
             AnimationSystem.Update(deltaTime);
-            
+
             // Update appear animation fade system
             AppearAnimationFadeSystem.Update(deltaTime);
 

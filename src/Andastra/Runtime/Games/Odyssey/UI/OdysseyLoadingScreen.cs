@@ -1,7 +1,7 @@
 using System;
+using Andastra.Parsing.Resource.Generics.GUI;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Games.Common;
-using Andastra.Parsing.Resource.Generics.GUI;
 using Andastra.Runtime.MonoGame.GUI;
 
 namespace Andastra.Runtime.Games.Odyssey.UI
@@ -90,7 +90,7 @@ namespace Andastra.Runtime.Games.Odyssey.UI
             // Original implementation: FUN_006cff90 @ 0x006cff90 loads "loadscreen_p" GUI
             int screenWidth = 800; // Default resolution
             int screenHeight = 600;
-            
+
             // Get screen dimensions from graphics device
             // GraphicsDevice is protected, so we use default resolution
             // Screen dimensions will be set when LoadGui is called

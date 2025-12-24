@@ -95,7 +95,7 @@ namespace Andastra.Runtime.MonoGame.LOD
         public LODSystem()
         {
             _meshConfigs = new Dictionary<string, LODConfig>();
-            
+
             // Default configuration
             _defaultConfig = new LODConfig
             {
@@ -165,10 +165,10 @@ namespace Andastra.Runtime.MonoGame.LOD
         {
             // Transform position to view space
             Microsoft.Xna.Framework.Vector4 viewPos = Microsoft.Xna.Framework.Vector4.Transform(new Microsoft.Xna.Framework.Vector4(worldPosition, 1.0f), viewMatrix);
-            
+
             // Project to clip space
             Microsoft.Xna.Framework.Vector4 clipPos = Microsoft.Xna.Framework.Vector4.Transform(viewPos, projectionMatrix);
-            
+
             // Perspective divide
             if (Math.Abs(clipPos.W) > 1e-6f)
             {

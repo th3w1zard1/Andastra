@@ -4,8 +4,8 @@ using System.IO;
 using System.Numerics;
 using Andastra.Parsing.Installation;
 using Andastra.Runtime.Graphics;
-using GraphicsVector2 = Andastra.Runtime.Graphics.Vector2;
 using JetBrains.Annotations;
+using GraphicsVector2 = Andastra.Runtime.Graphics.Vector2;
 
 namespace Andastra.Runtime.MonoGame.Graphics.Cursor
 {
@@ -183,13 +183,13 @@ namespace Andastra.Runtime.MonoGame.Graphics.Cursor
             // Based on swkotor2.exe: FUN_00633270 loads cursor groups from EXE PE resources
             // Cursor groups are stored as Windows PE resources (type 0xC = kPEGroupCursor)
             // Cursor resources are stored as Windows PE resources (type 0x1 = kPECursor)
-            
+
             // Note: Full implementation would require:
             // 1. PE resource reading from EXE file (swkotor.exe or swkotor2.exe)
             // 2. Parsing cursor group structure to get cursor resource IDs
             // 3. Loading cursor resources (CUR format) and extracting bitmap/hotspot data
             // 4. Converting CUR bitmap data to texture format
-            
+
             // For now, we check if cursor resources might be available in the installation
             // In the future, when PE resource reading is implemented, this method will:
             // - Read cursor group from EXE PE resources using group ID
@@ -198,7 +198,7 @@ namespace Andastra.Runtime.MonoGame.Graphics.Cursor
             // - Parse CUR format to extract bitmap data and hotspot
             // - Convert bitmap data to ITexture2D
             // - Create MonoGameCursor with textures and hotspot
-            
+
             // Since PE resource reading is not yet implemented, we return null to fall back to programmatic creation
             // This ensures the cursor manager is ready for future PE resource support
             return null;
@@ -226,7 +226,7 @@ namespace Andastra.Runtime.MonoGame.Graphics.Cursor
         private List<int> ParseCursorGroup(byte[] groupData)
         {
             List<int> cursorIds = new List<int>();
-            
+
             if (groupData == null || groupData.Length < 6)
             {
                 return cursorIds;
@@ -438,7 +438,7 @@ namespace Andastra.Runtime.MonoGame.Graphics.Cursor
                                 }
                             }
                         }
-                        if (hasOutline && (x == 0 || y == 0 || x == width - 1 || y == height - 1 || 
+                        if (hasOutline && (x == 0 || y == 0 || x == width - 1 || y == height - 1 ||
                             (x > 0 && pixels[((y * width + (x - 1)) * 4) + 3] == 0) ||
                             (y > 0 && pixels[(((y - 1) * width + x) * 4) + 3] == 0)))
                         {

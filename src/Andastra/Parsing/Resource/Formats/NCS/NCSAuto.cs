@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Common.Script;
 using Andastra.Parsing.Formats.NCS.Compiler;
 using Andastra.Parsing.Formats.NCS.NCSDecomp;
@@ -13,7 +14,6 @@ using Andastra.Parsing.Formats.NCS.Optimizers;
 using Andastra.Parsing.Resource;
 using JetBrains.Annotations;
 using FileScriptData = Andastra.Parsing.Formats.NCS.NCSDecomp.Utils.FileScriptData;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Formats.NCS
 {
@@ -76,27 +76,27 @@ namespace Andastra.Parsing.Formats.NCS
         {
             var usage = new SymbolUsageInfo();
             var lines = source.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-            
+
             foreach (var line in lines)
             {
                 var trimmed = line.Trim();
-                
+
                 // Skip #include directives (they're handled separately)
                 if (trimmed.StartsWith("#include"))
                 {
                     continue;
                 }
-                
+
                 // Skip comments
                 if (trimmed.StartsWith("//") || trimmed.StartsWith("/*"))
                 {
                     continue;
                 }
-                
+
                 // Extract symbol usage from the line
                 ExtractSymbolUsageFromLine(trimmed, usage);
             }
-            
+
             return usage;
         }
 
@@ -109,7 +109,7 @@ namespace Andastra.Parsing.Formats.NCS
             // Use regex to find identifiers that could be function calls or constants
             // Function calls: identifier followed by '(' (possibly with whitespace)
             // Constants: all uppercase identifiers (possibly with underscores and digits)
-            
+
             // First, handle function calls - look for identifier( pattern
             var functionCallPattern = new Regex(@"\b([a-zA-Z_][a-zA-Z0-9_]*)\s*\(");
             var functionMatches = functionCallPattern.Matches(line);
@@ -121,7 +121,7 @@ namespace Andastra.Parsing.Formats.NCS
                     usage.usedFunctions.Add(functionName);
                 }
             }
-            
+
             // Then, handle constants - all uppercase identifiers that aren't function calls
             // Look for identifiers that are all uppercase and not followed by '('
             var constantPattern = new Regex(@"\b([A-Z][A-Z0-9_]*)\b(?!\s*\()");
@@ -130,7 +130,7 @@ namespace Andastra.Parsing.Formats.NCS
             {
                 string constantName = match.Groups[1].Value;
                 // Filter out keywords and already-identified function names
-                if (!IsKeyword(constantName) && 
+                if (!IsKeyword(constantName) &&
                     !usage.usedFunctions.Contains(constantName) &&
                     !usage.usedConstants.Contains(constantName))
                 {
@@ -167,7 +167,7 @@ namespace Andastra.Parsing.Formats.NCS
                 // Write content to temporary file and use NwscriptParser
                 string tempFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".nss");
                 File.WriteAllText(tempFile, includeFileSource, Encoding.UTF8);
-                
+
                 try
                 {
                     var parsed = NwscriptParser.ParseNwscriptFile(tempFile, game);
@@ -206,10 +206,10 @@ namespace Andastra.Parsing.Formats.NCS
                 "main", "StartingConditional", "GetLastPerceived", "GetEnteringObject",
                 "GetExitingObject", "GetIsDead", "GetHitDice", "GetTag", "GetName"
             };
-            
+
             var filtered = new List<ScriptFunction>();
             var usedSet = new HashSet<string>(usedNames, StringComparer.OrdinalIgnoreCase);
-            
+
             foreach (var func in allFunctions)
             {
                 if (essentialFunctions.Contains(func.Name) || usedSet.Contains(func.Name))
@@ -217,7 +217,7 @@ namespace Andastra.Parsing.Formats.NCS
                     filtered.Add(func);
                 }
             }
-            
+
             return filtered;
         }
 
@@ -232,10 +232,10 @@ namespace Andastra.Parsing.Formats.NCS
             {
                 "TRUE", "FALSE", "OBJECT_INVALID", "OBJECT_SELF"
             };
-            
+
             var filtered = new List<ScriptConstant>();
             var usedSet = new HashSet<string>(usedNames, StringComparer.OrdinalIgnoreCase);
-            
+
             foreach (var constant in allConstants)
             {
                 if (essentialConstants.Contains(constant.Name) || usedSet.Contains(constant.Name))
@@ -243,7 +243,7 @@ namespace Andastra.Parsing.Formats.NCS
                     filtered.Add(constant);
                 }
             }
-            
+
             return filtered;
         }
 
@@ -255,21 +255,21 @@ namespace Andastra.Parsing.Formats.NCS
             List<ScriptFunction> functions, List<ScriptConstant> constants)
         {
             var lines = new List<string>();
-            
+
             // Add constants first
             foreach (var constant in constants)
             {
                 string valueStr = FormatConstantValue(constant.Value, constant.DataType);
                 lines.Add($"{constant.DataType.ToScriptString()} {constant.Name} = {valueStr};");
             }
-            
+
             // Add functions
             foreach (var function in functions)
             {
                 string paramStr = string.Join(", ", function.Params.Select(p => p.ToString()));
                 lines.Add($"{function.ReturnType.ToScriptString()} {function.Name}({paramStr});");
             }
-            
+
             return string.Join("\n", lines);
         }
 
@@ -282,7 +282,7 @@ namespace Andastra.Parsing.Formats.NCS
             {
                 return "0";
             }
-            
+
             switch (dataType)
             {
                 case DataType.Int:
@@ -493,14 +493,14 @@ namespace Andastra.Parsing.Formats.NCS
                         byte[] includeFileContent = baseLibrary[includeFile];
                         string includeFileSource = Encoding.UTF8.GetString(includeFileContent);
                         var includeSymbols = ParseIncludeFileSymbols(includeFileSource, game);
-                        
+
                         // If parsing succeeded and we have symbols, filter them
                         if (includeSymbols.functions.Count > 0 || includeSymbols.constants.Count > 0)
                         {
                             // Filter to only include symbols that are actually used in the source code
                             var filteredFunctions = FilterSymbols(includeSymbols.functions, symbolUsage.usedFunctions);
                             var filteredConstants = FilterSymbols(includeSymbols.constants, symbolUsage.usedConstants);
-                            
+
                             // Generate filtered NSS source code with only the used symbols
                             string filteredSource = GenerateFilteredNssSource(filteredFunctions, filteredConstants);
                             selectiveLibrary[includeFile] = Encoding.UTF8.GetBytes(filteredSource);

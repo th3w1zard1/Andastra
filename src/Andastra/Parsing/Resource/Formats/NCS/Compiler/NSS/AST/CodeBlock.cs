@@ -73,7 +73,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
                 // ReturnStatement.Compile handles all the return logic (CPDOWNSP, MOVSP, JMP) internally
                 // Just call Compile for all statements - ReturnStatement will generate the correct code
                 statement.Compile(ncs, root, this, returnInstruction, breakInstruction, continueInstruction);
-                
+
                 // If this was a return statement, exit early - the rest of the block is unreachable
                 if (statement is ReturnStatement)
                 {

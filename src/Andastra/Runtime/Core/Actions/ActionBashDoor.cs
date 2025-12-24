@@ -196,7 +196,7 @@ namespace Andastra.Runtime.Core.Actions
                 if (doorComponent.IsBashed)
                 {
                     Console.WriteLine("[ActionBashDoor] Door bashed open!");
-                    
+
                     // Fire OnDeath script event (door destruction)
                     // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_DEATH fires when entity dies/is destroyed
                     // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_DEATH" @ 0x007bcaf0 (0x3)

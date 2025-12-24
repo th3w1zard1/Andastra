@@ -395,7 +395,7 @@ namespace Andastra.Parsing.Resource
         public static readonly ResourceType ERF = new ResourceType(9997, "erf", "Modules", "binary", name: "ERF");
         public static readonly ResourceType BIF = new ResourceType(9998, "bif", "Archives", "binary", name: "BIF");
         public static readonly ResourceType KEY = new ResourceType(9999, "key", "Chitin", "binary", name: "KEY");
-        
+
         // Unreal Engine 3 Package formats (Eclipse Engine - Dragon Age, )
         public static readonly ResourceType PCC = new ResourceType(10000, "pcc", "Packages", "binary", name: "PCC");
         public static readonly ResourceType UPK = new ResourceType(10001, "upk", "Packages", "binary", name: "UPK");

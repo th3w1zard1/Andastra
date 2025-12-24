@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Resource.Generics.ARE
 {

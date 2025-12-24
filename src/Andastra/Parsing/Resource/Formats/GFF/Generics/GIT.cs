@@ -118,7 +118,7 @@ namespace Andastra.Parsing.Resource.Generics
         /// 
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/git.py:72-77
         /// </remarks>
-        
+
         /// <summary>
         /// The ID of the ambient sound that plays in the area.
         /// This is an index into the ambient sound list (usually defined in a 2DA file).
@@ -185,7 +185,7 @@ namespace Andastra.Parsing.Resource.Generics
         /// 
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/git.py:85-93
         /// </remarks>
-        
+
         /// <summary>
         /// List of cameras (cutscene cameras) placed in the area.
         /// Cameras are used for cutscenes and scripted camera movements.

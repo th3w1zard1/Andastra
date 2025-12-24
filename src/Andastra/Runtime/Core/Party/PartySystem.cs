@@ -844,7 +844,7 @@ namespace Andastra.Runtime.Core.Party
             // Original implementation: Creates creature entity from UTC template stored in party member data
             // Party members use their TemplateResRef to spawn entities
             IEntity entity = null;
-            
+
             // Try to create from template if available
             if (!string.IsNullOrEmpty(member.TemplateResRef) && _templateFactory != null)
             {
@@ -858,12 +858,12 @@ namespace Andastra.Runtime.Core.Party
                 // The template (UTC file) contains the Tag field which is applied during entity creation
                 entity = _templateFactory.CreateCreatureFromTemplate(member.TemplateResRef, spawnPosition, spawnFacing);
             }
-            
+
             // Fallback: Create basic creature entity if template factory not available or template not found
             if (entity == null)
             {
                 entity = _world.CreateEntity(Enums.ObjectType.Creature, spawnPosition, spawnFacing);
-                
+
                 // If we have a template ResRef but no factory, log a warning
                 if (!string.IsNullOrEmpty(member.TemplateResRef) && _templateFactory == null)
                 {
@@ -871,7 +871,7 @@ namespace Andastra.Runtime.Core.Party
                     // This is expected when PartySystem is created without template factory (backward compatibility)
                 }
             }
-            
+
             if (entity != null)
             {
                 member.UpdateEntity(entity);
@@ -888,15 +888,15 @@ namespace Andastra.Runtime.Core.Party
             // Preserve member state before removing entity
             // State is already stored in PartyMember properties, so we just need to remove the entity
             // The entity's components and data are preserved in the member's state
-            
+
             // Preserve member state before removing entity
             // State is already stored in PartyMember properties, so we just need to remove the entity
             // The entity's components and data are preserved in the member's state
-            
+
             // Remove entity from world
             uint entityId = member.Entity.ObjectId;
             _world.DestroyEntity(entityId);
-            
+
             // Note: Entity reference remains in PartyMember but the entity is destroyed
             // When respawning, UpdateEntity will be called with a new entity
             // This preserves the member's state while removing the entity from the world

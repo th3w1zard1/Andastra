@@ -100,7 +100,7 @@ namespace Andastra.Runtime.Games.Eclipse.Components
             // Eclipse uses MDL format similar to Odyssey/Aurora for model and animation data
             // MDLAnimationData.Length field contains animation duration in seconds
             // Models are cached in MDLCache for performance (shared across all components)
-            
+
             // Try to get model from MDL cache
             Runtime.Content.MDL.MDLModel model;
             if (!Runtime.Content.MDL.MDLCache.Instance.TryGet(renderable.ModelResRef, out model))

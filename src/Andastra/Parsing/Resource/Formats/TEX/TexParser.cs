@@ -134,7 +134,7 @@ namespace Andastra.Parsing.Resource.Formats.TEX
         public TexParseResult Parse()
         {
             int startPos = _reader.Position;
-            
+
             // Check if it's a DDS file (TEX may be DDS-compatible)
             if (_reader.Remaining >= 4)
             {
@@ -252,7 +252,7 @@ namespace Andastra.Parsing.Resource.Formats.TEX
         {
             // BioWare DDS variant requires at least 20 bytes (width + height + bpp + dataSize + float)
             const int BIOWARE_DDS_HEADER_SIZE = 20;
-            
+
             if (_reader.Remaining < BIOWARE_DDS_HEADER_SIZE)
             {
                 throw new ArgumentException("TEX file too small to contain valid BioWare DDS header");
@@ -261,12 +261,12 @@ namespace Andastra.Parsing.Resource.Formats.TEX
             // Read width and height
             int width = (int)_reader.ReadUInt32();
             int height = (int)_reader.ReadUInt32();
-            
+
             if (width >= MAX_DIMENSION || height >= MAX_DIMENSION)
             {
                 throw new ArgumentException($"Unsupported TEX image dimensions ({width}x{height})");
             }
-            
+
             if (width == 0 || height == 0)
             {
                 throw new ArgumentException("TEX file has invalid dimensions (width or height is 0)");
@@ -286,7 +286,7 @@ namespace Andastra.Parsing.Resource.Formats.TEX
             int bpp = (int)_reader.ReadUInt32();
             TPCTextureFormat tpcFormat;
             TEXDataLayout dataLayout = TEXDataLayout.Direct;
-            
+
             if (bpp == 3)
             {
                 tpcFormat = TPCTextureFormat.DXT1;
@@ -306,7 +306,7 @@ namespace Andastra.Parsing.Resource.Formats.TEX
             // - DXT1 (bpp=3): (width * height) / 2
             // - DXT5 (bpp=4): width * height
             int expectedDataSize = (bpp == 3) ? (width * height) / 2 : width * height;
-            
+
             if (dataSize != expectedDataSize)
             {
                 throw new ArgumentException($"BioWare DDS data size mismatch: {dataSize} != {expectedDataSize} (width={width}, height={height}, bpp={bpp})");

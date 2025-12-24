@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Extract;
 using Andastra.Parsing.Extract.Capsule;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using JetBrains.Annotations;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Diff
 {
@@ -135,7 +135,7 @@ namespace Andastra.Parsing.Diff
             // CoreResources() includes ChitinResources() and patch.erf for K1
             allResources.AddRange(installation.CoreResources());
             allResources.AddRange(installation.OverrideResources());
-            
+
             // Get module resources from all module files
             List<string> moduleRoots = installation.GetModuleRoots();
             foreach (string moduleRoot in moduleRoots)
@@ -155,7 +155,7 @@ namespace Andastra.Parsing.Diff
                     }
                 }
             }
-            
+
             return allResources;
         }
 

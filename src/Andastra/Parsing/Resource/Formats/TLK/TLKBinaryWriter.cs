@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Andastra.Parsing;
-using BinaryWriter = System.IO.BinaryWriter;
 using Andastra.Parsing.Common;
+using BinaryWriter = System.IO.BinaryWriter;
 
 namespace Andastra.Parsing.Formats.TLK
 {

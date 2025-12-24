@@ -1,20 +1,20 @@
 using System;
 using System.Collections.Generic;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Andastra.Parsing;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
+using Andastra.Parsing.Formats.DDS;
 using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Formats.TXI;
+using Andastra.Parsing.Installation;
+using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Formats.TEX;
-using Andastra.Parsing.Formats.DDS;
 using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Graphics;
-using Andastra.Runtime.MonoGame.Converters;
 using Andastra.Runtime.Graphics.MonoGame.Graphics;
-using MonoGameTexture2D = Andastra.Runtime.Graphics.MonoGame.Graphics.MonoGameTexture2D;
+using Andastra.Runtime.MonoGame.Converters;
 using JetBrains.Annotations;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using MonoGameTexture2D = Andastra.Runtime.Graphics.MonoGame.Graphics.MonoGameTexture2D;
 
 namespace Andastra.Runtime.Games.Eclipse.Fonts
 {
@@ -142,10 +142,10 @@ namespace Andastra.Runtime.Games.Eclipse.Fonts
                 // daorigins.exe: Uses DDS format for fonts (e.g., "screen.dds", "Arial12.dds")
                 // DragonAge2.exe: Uses DDS format for fonts (e.g., "screen.dds", "savegame_screenshot.dds")
                 // Font loading priority: TEX -> DDS -> TGA -> TPC (fallback for compatibility)
-                
+
                 Texture2D texture = null;
                 TXI txi = null;
-                
+
                 // Get MonoGame GraphicsDevice
                 GraphicsDevice mgDevice = graphicsDevice as GraphicsDevice;
                 if (mgDevice == null && graphicsDevice is MonoGameGraphicsDevice mgGfxDevice)
@@ -167,10 +167,10 @@ namespace Andastra.Runtime.Games.Eclipse.Fonts
                         using (TexParser texParser = new TexParser(texResult.Data))
                         {
                             TexParser.TexParseResult parseResult = texParser.Parse();
-                            
+
                             // Create Texture2D from RGBA data
                             texture = new Texture2D(mgDevice, parseResult.Width, parseResult.Height, false, SurfaceFormat.Color);
-                            
+
                             // Convert RGBA byte array to Color array
                             Microsoft.Xna.Framework.Color[] colorData = new Microsoft.Xna.Framework.Color[parseResult.Width * parseResult.Height];
                             for (int i = 0; i < colorData.Length; i++)
@@ -178,11 +178,11 @@ namespace Andastra.Runtime.Games.Eclipse.Fonts
                                 int offset = i * 4;
                                 if (offset + 3 < parseResult.RgbaData.Length)
                                 {
-                                    colorData[i] = new Microsoft.Xna.Framework.Color(parseResult.RgbaData[offset], parseResult.RgbaData[offset + 1], 
+                                    colorData[i] = new Microsoft.Xna.Framework.Color(parseResult.RgbaData[offset], parseResult.RgbaData[offset + 1],
                                                              parseResult.RgbaData[offset + 2], parseResult.RgbaData[offset + 3]);
                                 }
                             }
-                            
+
                             texture.SetData(colorData);
                             Console.WriteLine($"[EclipseBitmapFont] Loaded font texture from TEX format: {fontResRef} ({parseResult.Width}x{parseResult.Height})");
                         }
@@ -205,10 +205,10 @@ namespace Andastra.Runtime.Games.Eclipse.Fonts
                             using (DdsParser ddsParser = new DdsParser(ddsResult.Data))
                             {
                                 DdsParser.DdsParseResult parseResult = ddsParser.Parse();
-                                
+
                                 // Create Texture2D from RGBA data
                                 texture = new Texture2D(mgDevice, parseResult.Width, parseResult.Height, false, SurfaceFormat.Color);
-                                
+
                                 // Convert RGBA byte array to Color array
                                 Microsoft.Xna.Framework.Color[] colorData = new Microsoft.Xna.Framework.Color[parseResult.Width * parseResult.Height];
                                 for (int i = 0; i < colorData.Length; i++)
@@ -216,11 +216,11 @@ namespace Andastra.Runtime.Games.Eclipse.Fonts
                                     int offset = i * 4;
                                     if (offset + 3 < parseResult.RgbaData.Length)
                                     {
-                                        colorData[i] = new Microsoft.Xna.Framework.Color(parseResult.RgbaData[offset], parseResult.RgbaData[offset + 1], 
+                                        colorData[i] = new Microsoft.Xna.Framework.Color(parseResult.RgbaData[offset], parseResult.RgbaData[offset + 1],
                                                                  parseResult.RgbaData[offset + 2], parseResult.RgbaData[offset + 3]);
                                     }
                                 }
-                                
+
                                 texture.SetData(colorData);
                                 Console.WriteLine($"[EclipseBitmapFont] Loaded font texture from DDS format: {fontResRef} ({parseResult.Width}x{parseResult.Height})");
                             }

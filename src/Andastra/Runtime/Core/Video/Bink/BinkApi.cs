@@ -63,72 +63,72 @@ namespace Andastra.Runtime.Core.Video.Bink
             public uint Frames;                   // [2] - Total number of frames
             public uint FrameNum;                 // [3] - Current frame number
             public uint LastFrameNum;             // [4] - Last frame number
-            
+
             // Offset 0x14: Frame rate information
             public uint FrameRate;                // [5] - Frame rate numerator
             public uint FrameRateDiv;             // [6] - Frame rate denominator
-            
+
             // Offset 0x18-0x3C: Reserved/unknown fields (padding)
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 13)]
             public uint[] Reserved1;               // [7-0x13] - Reserved fields
-            
+
             // Offset 0x40: Frame size information
             public uint NormalFrameSize;          // [0x10] - Normal frame size
             public uint NormalCompressedFrameSize; // [0x11] - Normal compressed frame size
-            
+
             // Offset 0x48-0x4C: Reserved
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 11)]
             public uint[] Reserved2;               // [0x12-0x1c] - Reserved fields
-            
+
             // Offset 0x50: Frame data pointer
             public IntPtr FrameData;              // [0x1d] - Pointer to frame data
-            
+
             // Offset 0x54-0x9C: Reserved/unknown fields
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 19)]
             public uint[] Reserved3;               // [0x1e-0x30] - Reserved fields
-            
+
             // Offset 0xA0: File frame rate
             public uint FileFrameRate;            // [0x28] - File frame rate numerator
             public uint FileFrameRateDiv;         // [0x29] - File frame rate denominator
-            
+
             // Offset 0xA8: Source frame sizes
             public uint SourceFrameSize;          // [0x2a] - Source frame size
             public uint SourceCompressedFrameSize; // [0x2b] - Source compressed frame size
             public uint LargestFrameSize;         // [0x2c] - Largest frame size
             public uint LargestCompressedFrameSize; // [0x2d] - Largest compressed frame size
             public uint TotalTime;                // [0x2e] - Total playback time
-            
+
             // Offset 0xBC-0x94: Reserved
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 22)]
             public uint[] Reserved4;               // [0x2f-0x44] - Reserved fields
-            
+
             // Offset 0x250: Unknown field
             public uint UnknownField94;           // [0x94] - Unknown field
-            
+
             // Offset 0x254-0x26C: Reserved
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 7)]
             public uint[] Reserved5;               // [0x95-0x9b] - Reserved fields
-            
+
             // Offset 0x270: File frame rate (duplicate?)
             public uint FileFrameRate2;           // [0x9c] - File frame rate (duplicate field)
             public uint TotalOpenTime;            // [0x9d] - Total time to open file
             public uint Reserved6;                // [0x9e] - Reserved
             public uint TimerField;                // [0x9f] - Timer field for timing calculations
-            
+
             // Offset 0x280-0x290: Reserved
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
             public uint[] Reserved7;               // [0xa0-0xa3] - Reserved fields
-            
+
             // Offset 0x290: Frame size statistics (must be before timing stats)
             public uint KeyFrameSize;             // [0xa4] - Key frame size
             public uint KeyCompressedFrameSize;   // [0xa5] - Key compressed frame size
             public uint InterFrameSize;           // [0xa6] - Inter frame size
             public uint InterCompressedFrameSize; // [0xa7] - Inter compressed frame size
-            
+
             // Offset 0x2A0-0x2A8: Reserved
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
             public uint[] Reserved8;               // [0xa8-0xa9] - Reserved fields
-            
+
             // Offset 0x2A8: Timing statistics
             public uint TotalFrameDecompTime;     // [0xaa] - Total frame decompression time
             public uint TotalReadTime;            // [0xab] - Total read time
@@ -137,21 +137,21 @@ namespace Andastra.Runtime.Core.Video.Bink
             public uint FrameType;                // [0xae] - Current frame type
             public uint FrameSize;                // [0xaf] - Current frame size
             public uint CompressedFrameSize;      // [0xb0] - Current compressed frame size
-            
+
             // Offset 0x2C4-0x2FC: Reserved
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 14)]
             public uint[] Reserved9;               // [0xb1-0xbe] - Reserved fields
-            
+
             // Offset 0x2FC: Alpha channel
             public uint Alpha;                    // [0xbf] - Alpha channel flag
-            
+
             // Offset 0x300-0x30C: Reserved
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
             public uint[] Reserved10;              // [0xc0-0xc2] - Reserved fields
-            
+
             // Offset 0x30C: Frames to play
             public uint FramesToPlay;             // [0xc3] - Number of frames to play
-            
+
             // Remaining fields to reach structure size (~0x2b0 bytes total)
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 100)]
             public uint[] Reserved11;              // [0xc4-0x127] - Remaining reserved/internal fields
@@ -174,32 +174,32 @@ namespace Andastra.Runtime.Core.Video.Bink
             // Offset 0x00: Buffer dimensions
             public uint BufferWidth;              // Buffer width in pixels
             public uint BufferHeight;             // Buffer height in pixels (offset +0x04 in swkotor.exe)
-            
+
             // Offset 0x08-0x0C: Reserved fields
             public uint Reserved1;                // Reserved field
             public uint Reserved2;                // Reserved field
-            
+
             // Offset 0x10: Blit flags (or rects pointer - union field)
             // Note: This field is used as both BlitFlags (uint) and Rects pointer (IntPtr) depending on context.
             // In swkotor.exe: BinkCopyToBuffer uses as flags, BinkGetRects uses as pointer.
             // Rects pointer is at the same offset but accessed differently - using explicit layout would require FieldOffset.
             public uint BlitFlags;                // Blit operation flags (offset +0x10 in swkotor.exe line 22)
-            
+
             // Offset 0x14: Buffer pointer
             public IntPtr Buffer;                 // Pointer to buffer memory (offset +0x14 in swkotor.exe)
-            
+
             // Offset 0x18: Buffer pitch
             public uint BufferPitch;              // Buffer pitch in bytes (offset +0x18 in swkotor.exe)
-            
+
             // Offset 0x1C: Destination coordinates
             public int DestX;                     // Destination X coordinate
             public int DestY;                     // Destination Y coordinate
             public uint DestWidth;                // Destination width
             public uint DestHeight;               // Destination height
-            
+
             // Offset 0x2C: Window handle
             public IntPtr Window;                 // Window handle for rendering
-            
+
             // Offset 0x30+: Remaining fields (structure may be larger)
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 10)]
             public uint[] Reserved3;               // Reserved/internal fields
@@ -251,7 +251,7 @@ namespace Andastra.Runtime.Core.Video.Bink
             public int Width;                        // [0] - Video width in pixels
             public int Height;                       // [1] - Video height in pixels
             public int TotalOpenTime;                // [2] - Total time to open file (calculated)
-            
+
             // Offset 0x0C: Frame information
             public int FrameSize;                    // [3] - Current frame size
             public int CompressedFrameSize;          // [4] - Current compressed frame size
@@ -260,14 +260,14 @@ namespace Andastra.Runtime.Core.Video.Bink
             public int FrameType;                    // [7] - Current frame type
             public int TotalFrames;                  // [8] - Total number of frames
             public int FileFrameRate;                // [9] - File frame rate numerator
-            
+
             // Offset 0x28: Reserved/Unknown field
             public int Reserved1;                    // [0xa] - Reserved field (not set by BinkGetSummary)
-            
+
             // Offset 0x2C: Playback information
             public int FramesToPlay;                 // [0xb] - Number of frames to play
             public int Alpha;                        // [0xc] - Alpha channel flag
-            
+
             // Offset 0x34: Timing statistics
             public int TotalAudioDecompTime;         // [0xd] - Total audio decompression time
             public int SourceFrameSize;              // [0xe] - Source frame size
@@ -276,24 +276,24 @@ namespace Andastra.Runtime.Core.Video.Bink
             public int SourceCompressedFrameSize;    // [0x11] - Source compressed frame size
             public int LargestFrameSize;             // [0x12] - Largest frame size
             public int FileFrameRateDiv;             // [0x13] - File frame rate denominator (calculated)
-            
+
             // Offset 0x50: Frame size statistics
             public int KeyFrameSize;                 // [0x14] - Key frame size
             public int InterFrameSize;                // [0x15] - Inter frame size
             public int KeyCompressedFrameSize;       // [0x16] - Key compressed frame size
             public int InterCompressedFrameSize;      // [0x17] - Inter compressed frame size
-            
+
             // Offset 0x60: Calculated fields
             public int CalculatedField1;             // [0x18] - Calculated field (complex calculation)
             public int CalculatedField2;             // [0x19] - Calculated field (uVar3 / param_1[2])
             public int AccumulatedField;             // [0x1a] - Accumulated field (incremented)
-            
+
             // Offset 0x6C: Additional statistics
             public int LargestCompressedFrameSize;   // [0x1b] - Largest compressed frame size
             public int TotalTime;                    // [0x1c] - Total playback time
             public int NormalFrameSize;              // [0x1d] - Normal frame size
             public int NormalCompressedFrameSize;    // [0x1e] - Normal compressed frame size (param_1[0x3e] + 1)
-            
+
             // Note: Fields that are in the original structure but not set by BinkGetSummary:
             // TotalFrameDecompTime, TotalIdleReadTime, TotalBackReadTime, TotalIdleDecompTime,
             // TotalBackDecompTime, TotalIdleBlitTime, TotalBackBlitTime, TotalPlayTime, TotalBuffedTime,

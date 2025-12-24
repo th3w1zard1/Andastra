@@ -26,13 +26,13 @@ namespace Andastra.Runtime.MonoGame.Rendering
         private bool _enabled;
         private int _lastWidth;
         private int _lastHeight;
-        
+
         // Full-screen quad vertices for rendering
         private static VertexPositionTexture[] _fullScreenQuadVertices;
         private static short[] _fullScreenQuadIndices;
         // Shared black texture for when normal buffer is not provided
         private static Texture2D _blackTexture;
-        
+
         // Static constructor to initialize full-screen quad geometry
         static ContactShadows()
         {
@@ -43,7 +43,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
             _fullScreenQuadVertices[1] = new VertexPositionTexture(new Vector3(1.0f, -1.0f, 0.0f), new Vector2(1.0f, 1.0f));  // Bottom-right
             _fullScreenQuadVertices[2] = new VertexPositionTexture(new Vector3(-1.0f, 1.0f, 0.0f), new Vector2(0.0f, 0.0f));  // Top-left
             _fullScreenQuadVertices[3] = new VertexPositionTexture(new Vector3(1.0f, 1.0f, 0.0f), new Vector2(1.0f, 0.0f));   // Top-right
-            
+
             // Initialize indices for two triangles forming the quad
             _fullScreenQuadIndices = new short[6];
             _fullScreenQuadIndices[0] = 0; // Bottom-left
@@ -122,7 +122,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
             _enabled = true;
             _lastWidth = 0;
             _lastHeight = 0;
-            
+
             // Initialize shared black texture for fallback normal buffer
             InitializeBlackTexture();
         }
@@ -171,8 +171,8 @@ namespace Andastra.Runtime.MonoGame.Rendering
             }
 
             // Set render target
-            RenderTarget2D previousTarget = _graphicsDevice.GetRenderTargets().Length > 0 
-                ? _graphicsDevice.GetRenderTargets()[0].RenderTarget as RenderTarget2D 
+            RenderTarget2D previousTarget = _graphicsDevice.GetRenderTargets().Length > 0
+                ? _graphicsDevice.GetRenderTargets()[0].RenderTarget as RenderTarget2D
                 : null;
 
             try
@@ -255,11 +255,11 @@ namespace Andastra.Runtime.MonoGame.Rendering
                 foreach (EffectPass pass in effect.CurrentTechnique.Passes)
                 {
                     pass.Apply();
-                    
+
                     // Disable depth testing and writing for full-screen post-processing
                     DepthStencilState previousDepthState = _graphicsDevice.DepthStencilState;
                     _graphicsDevice.DepthStencilState = DepthStencilState.None;
-                    
+
                     // Disable culling for full-screen quad
                     RasterizerState previousRasterizerState = _graphicsDevice.RasterizerState;
                     _graphicsDevice.RasterizerState = RasterizerState.CullNone;
@@ -311,7 +311,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
         {
             _contactShadowTarget?.Dispose();
             _contactShadowTarget = null;
-            
+
             // Note: _blackTexture is static and shared, so we don't dispose it here
             // It will be disposed when the graphics device is disposed
         }

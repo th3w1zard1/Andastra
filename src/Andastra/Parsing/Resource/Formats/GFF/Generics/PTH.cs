@@ -122,7 +122,7 @@ namespace Andastra.Parsing.Resource.Generics
             {
                 ErrorHandling.UniversalSimplifyException(e);
             }
-                return default(Vector2);
+            return default(Vector2);
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/pth.py:87-91

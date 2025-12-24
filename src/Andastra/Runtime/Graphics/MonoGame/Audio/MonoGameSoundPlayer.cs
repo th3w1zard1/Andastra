@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Xna.Framework.Audio;
+using Andastra.Parsing.Formats.WAV;
+using Andastra.Parsing.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Audio;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Formats.WAV;
+using Microsoft.Xna.Framework.Audio;
 
 namespace Andastra.Runtime.MonoGame.Audio
 {

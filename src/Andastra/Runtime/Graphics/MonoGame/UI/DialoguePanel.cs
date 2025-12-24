@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
+using Andastra.Runtime.Core.Dialogue;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Andastra.Runtime.Core.Dialogue;
 
 namespace Andastra.Runtime.MonoGame.UI
 {
@@ -66,7 +66,7 @@ namespace Andastra.Runtime.MonoGame.UI
         {
             _spriteBatch = new SpriteBatch(device);
             _font = font ?? throw new ArgumentNullException("font");
-            
+
             // Create a simple 1x1 texture for drawing rectangles
             _panelTexture = new Texture2D(device, 1, 1);
             _panelTexture.SetData(new[] { Color.White });
@@ -117,8 +117,8 @@ namespace Andastra.Runtime.MonoGame.UI
             _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
 
             // Draw semi-transparent background panel
-            _spriteBatch.Draw(_panelTexture, 
-                new Rectangle(0, panelY, viewportWidth, panelHeight), 
+            _spriteBatch.Draw(_panelTexture,
+                new Rectangle(0, panelY, viewportWidth, panelHeight),
                 _panelColor);
 
             // Draw speaker name
@@ -145,7 +145,7 @@ namespace Andastra.Runtime.MonoGame.UI
 
                 Color replyColor = (i == _selectedReplyIndex) ? _selectedColor : _normalColor;
                 string replyText = string.Format("{0}. {1}", i + 1, _availableReplies[i].Text ?? string.Empty);
-                
+
                 Vector2 replyPos = new Vector2(textStartX, textStartY + (i * lineHeight));
                 _spriteBatch.DrawString(_font, replyText, replyPos, replyColor);
             }

@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
-using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Enums;
+using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Common
 {
@@ -294,7 +294,7 @@ namespace Andastra.Runtime.Games.Common
         protected virtual void ValidateComponentDependencies(System.Type componentType)
         {
             // PerceptionComponent requires TransformComponent
-            if (componentType == typeof(IPerceptionComponent) || 
+            if (componentType == typeof(IPerceptionComponent) ||
                 typeof(IPerceptionComponent).IsAssignableFrom(componentType))
             {
                 if (!HasComponent<ITransformComponent>())
@@ -305,7 +305,7 @@ namespace Andastra.Runtime.Games.Common
             }
 
             // RenderableComponent requires TransformComponent
-            if (componentType == typeof(IRenderableComponent) || 
+            if (componentType == typeof(IRenderableComponent) ||
                 typeof(IRenderableComponent).IsAssignableFrom(componentType))
             {
                 if (!HasComponent<ITransformComponent>())

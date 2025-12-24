@@ -1,8 +1,8 @@
 using System;
+using Andastra.Runtime.MonoGame.Graphics;
+using Andastra.Runtime.MonoGame.Rendering;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Andastra.Runtime.MonoGame.Rendering;
-using Andastra.Runtime.MonoGame.Graphics;
 
 namespace Andastra.Runtime.MonoGame.Particles
 {

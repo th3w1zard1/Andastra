@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
+using Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Core.Combat;
 
 namespace Andastra.Runtime.Games.Eclipse.Components
 {
@@ -69,14 +69,14 @@ namespace Andastra.Runtime.Games.Eclipse.Components
             _skills = new Dictionary<int, int>();
             _knownSpells = new HashSet<int>();
             _spellLevels = new Dictionary<int, int>();
-            
+
             // Default attribute scores (10 = average human, D&D standard)
             // Eclipse uses "Attributes" terminology but same D20 system
             foreach (Ability ability in Enum.GetValues(typeof(Ability)))
             {
                 _attributes[ability] = 10;
             }
-            
+
             // Initialize Dragon Age skills to 0 (untrained)
             // Dragon Age Origins: Different skill set than KOTOR/NWN
             // Skills vary by game, but we support up to 255 for extensibility
@@ -85,7 +85,7 @@ namespace Andastra.Runtime.Games.Eclipse.Components
             {
                 _skills[i] = 0;
             }
-            
+
             _currentHealth = 10;
             _maxHealth = 10;
             _currentStamina = 0;
@@ -101,7 +101,7 @@ namespace Andastra.Runtime.Games.Eclipse.Components
             _effectACBonus = 0;
             _effectAttackBonus = 0;
             _defense = 10; // Default defense (Eclipse uses Defense instead of AC)
-            
+
             // Default movement speeds (from Dragon Age appearance data averages)
             _baseWalkSpeed = 2.0f;
             _baseRunSpeed = 4.5f;
@@ -265,15 +265,15 @@ namespace Andastra.Runtime.Games.Eclipse.Components
                 // Defense = base + DEX mod + Armor + Natural + Deflection + Effect bonuses
                 // Eclipse uses Defense instead of AC, but calculation is similar
                 // Effect bonuses are tracked via AddEffectACBonus/RemoveEffectACBonus called by EffectSystem
-                
+
                 // Use Defense if set, otherwise calculate from components
                 if (_defense > 10)
                 {
                     return _defense + _effectACBonus;
                 }
-                
+
                 // Calculate Defense similar to AC
-                return 10 
+                return 10
                     + GetAbilityModifier(Ability.Dexterity)
                     + _armorBonus
                     + _naturalArmor
@@ -354,13 +354,13 @@ namespace Andastra.Runtime.Games.Eclipse.Components
             {
                 return -1; // Invalid skill ID
             }
-            
+
             int rank;
             if (_skills.TryGetValue(skill, out rank))
             {
                 return rank;
             }
-            
+
             return 0; // Untrained (default)
         }
 

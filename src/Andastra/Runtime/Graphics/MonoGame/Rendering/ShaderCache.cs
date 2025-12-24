@@ -137,7 +137,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
 
                     // Create Effect from compiled bytecode
                     Effect effect = new Effect(_graphicsDevice, bytecode);
-                    
+
                     entry.CompiledEffect = effect;
                     entry.CompiledBytecode = bytecode;
                     entry.LastModified = DateTime.UtcNow;
@@ -208,12 +208,12 @@ namespace Andastra.Runtime.MonoGame.Rendering
                     {
                         string shaderName = Path.GetFileNameWithoutExtension(cacheFile);
                         byte[] bytecode = File.ReadAllBytes(cacheFile);
-                        
+
                         if (bytecode != null && bytecode.Length > 0)
                         {
                             // Try to create Effect from cached bytecode
                             Effect effect = new Effect(_graphicsDevice, bytecode);
-                            
+
                             // Create cache entry
                             ShaderEntry entry = new ShaderEntry
                             {
@@ -224,7 +224,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
                                 LastModified = File.GetLastWriteTimeUtc(cacheFile),
                                 UseCount = 0
                             };
-                            
+
                             _cache[shaderName] = entry;
                         }
                     }
@@ -342,12 +342,12 @@ namespace Andastra.Runtime.MonoGame.Rendering
             {
                 // Determine shader type from source (look for technique/pass keywords)
                 bool isEffectFile = shaderSource.Contains("technique") || shaderSource.Contains("pass");
-                
+
                 // For effect files, compile as effect
                 // For individual shaders, determine type from entry point
                 string entryPoint = "Main";
                 string target = "fx_5_0"; // Effect file target
-                
+
                 if (!isEffectFile)
                 {
                     // Try to detect shader type from source
@@ -368,13 +368,13 @@ namespace Andastra.Runtime.MonoGame.Rendering
 
                 IntPtr compiledCode = IntPtr.Zero;
                 IntPtr errorMessages = IntPtr.Zero;
-                
+
                 try
                 {
                     // Compile shader using D3DCompile
                     uint flags = 0; // D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_OPTIMIZATION_LEVEL3
                     uint flags2 = 0;
-                    
+
                     int result = D3DCompile(
                         shaderSource,
                         (uint)shaderSource.Length,
@@ -404,7 +404,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
                     // Extract bytecode from compiled shader (ID3DBlob interface)
                     IntPtr bufferPtr = D3DGetBufferPointer(compiledCode);
                     uint bufferSize = D3DGetBufferSize(compiledCode);
-                    
+
                     if (bufferPtr == IntPtr.Zero || bufferSize == 0)
                     {
                         D3DFree(compiledCode);
@@ -735,7 +735,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
             // ID3DBlob vtable: GetBufferPointer is at offset 3 (after IUnknown methods)
             IntPtr vtable = Marshal.ReadIntPtr(blob);
             IntPtr getBufferPointerFunc = Marshal.ReadIntPtr(vtable, IntPtr.Size * 3);
-            
+
             // Call GetBufferPointer method
             GetBufferPointerDelegate del = Marshal.GetDelegateForFunctionPointer<GetBufferPointerDelegate>(getBufferPointerFunc);
             return del(blob);
@@ -756,7 +756,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
             // ID3DBlob vtable: GetBufferSize is at offset 4 (after IUnknown methods and GetBufferPointer)
             IntPtr vtable = Marshal.ReadIntPtr(blob);
             IntPtr getBufferSizeFunc = Marshal.ReadIntPtr(vtable, IntPtr.Size * 4);
-            
+
             // Call GetBufferSize method
             GetBufferSizeDelegate del = Marshal.GetDelegateForFunctionPointer<GetBufferSizeDelegate>(getBufferSizeFunc);
             return del(blob);
@@ -776,7 +776,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
             // ID3DBlob vtable: Release is at offset 2 (IUnknown::Release)
             IntPtr vtable = Marshal.ReadIntPtr(blob);
             IntPtr releaseFunc = Marshal.ReadIntPtr(vtable, IntPtr.Size * 2);
-            
+
             // Call Release method
             ReleaseDelegate del = Marshal.GetDelegateForFunctionPointer<ReleaseDelegate>(releaseFunc);
             del(blob);

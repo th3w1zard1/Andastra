@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Numerics;
 using System.Reflection;
-using Stride.Graphics;
+using System.Runtime.InteropServices;
 using Andastra.Runtime.Graphics.Common.Backends;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Structs;
+using Stride.Graphics;
 using StrideGraphics = Stride.Graphics;
 
 namespace Andastra.Runtime.Stride.Backends
@@ -1863,85 +1863,67 @@ namespace Andastra.Runtime.Stride.Backends
             // Data layout: Row-major order of feedback tiles
 
             // Access Stride's native DirectX 12 device and command list
-                // _device is IntPtr to ID3D12Device (set in CreateDeviceResources)
-                // _commandList is IntPtr to ID3D12GraphicsCommandList (set in CreateSwapChainResources)
-                // resourceInfo.NativeHandle is IntPtr to ID3D12Resource (the sampler feedback texture)
+            // _device is IntPtr to ID3D12Device (set in CreateDeviceResources)
+            // _commandList is IntPtr to ID3D12GraphicsCommandList (set in CreateSwapChainResources)
+            // resourceInfo.NativeHandle is IntPtr to ID3D12Resource (the sampler feedback texture)
 
-                if (_device == IntPtr.Zero)
+            if (_device == IntPtr.Zero)
+            {
+                Console.WriteLine("[StrideDX12] OnReadSamplerFeedback: DirectX 12 device not available");
+                return;
+            }
+
+            IntPtr nativeCommandList = GetNativeCommandList();
+            if (nativeCommandList == IntPtr.Zero)
+            {
+                Console.WriteLine("[StrideDX12] OnReadSamplerFeedback: Command list not available");
+                return;
+            }
+
+            // Step 1: Get texture resource description using ID3D12Resource::GetDesc
+            // This gives us the exact dimensions, format, and layout of the texture
+            IntPtr sourceResourceDescPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(D3D12_RESOURCE_DESC)));
+            D3D12_RESOURCE_DESC sourceResourceDesc;
+            try
+            {
+                GetResourceDesc(resourceInfo.NativeHandle, sourceResourceDescPtr);
+                sourceResourceDesc = (D3D12_RESOURCE_DESC)Marshal.PtrToStructure(sourceResourceDescPtr, typeof(D3D12_RESOURCE_DESC));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StrideDX12] OnReadSamplerFeedback: Failed to get resource description: {ex.Message}");
+                Marshal.FreeHGlobal(sourceResourceDescPtr);
+                return;
+            }
+
+            // Step 2: Get copyable footprint for the source texture using ID3D12Device::GetCopyableFootprints
+            // This tells us the exact layout, row pitch, and total size needed for copying
+            IntPtr layoutsPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT)));
+            IntPtr numRowsPtr = Marshal.AllocHGlobal(sizeof(uint));
+            IntPtr rowSizeInBytesPtr = Marshal.AllocHGlobal(sizeof(ulong));
+            IntPtr totalBytesPtr = Marshal.AllocHGlobal(sizeof(ulong));
+
+            D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint;
+            uint numRows;
+            ulong rowSizeInBytes;
+            ulong totalBytes;
+
+            try
+            {
+                int footprintsHr = GetCopyableFootprints(
+                    _device,
+                    sourceResourceDescPtr,
+                    0, // firstSubresource
+                    1, // numSubresources (only need the first mip)
+                    0, // baseOffset
+                    layoutsPtr,
+                    numRowsPtr,
+                    rowSizeInBytesPtr,
+                    totalBytesPtr);
+
+                if (footprintsHr < 0)
                 {
-                    Console.WriteLine("[StrideDX12] OnReadSamplerFeedback: DirectX 12 device not available");
-                    return;
-                }
-
-                IntPtr nativeCommandList = GetNativeCommandList();
-                if (nativeCommandList == IntPtr.Zero)
-                {
-                    Console.WriteLine("[StrideDX12] OnReadSamplerFeedback: Command list not available");
-                    return;
-                }
-
-                // Step 1: Get texture resource description using ID3D12Resource::GetDesc
-                // This gives us the exact dimensions, format, and layout of the texture
-                IntPtr sourceResourceDescPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(D3D12_RESOURCE_DESC)));
-                D3D12_RESOURCE_DESC sourceResourceDesc;
-                try
-                {
-                    GetResourceDesc(resourceInfo.NativeHandle, sourceResourceDescPtr);
-                    sourceResourceDesc = (D3D12_RESOURCE_DESC)Marshal.PtrToStructure(sourceResourceDescPtr, typeof(D3D12_RESOURCE_DESC));
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[StrideDX12] OnReadSamplerFeedback: Failed to get resource description: {ex.Message}");
-                    Marshal.FreeHGlobal(sourceResourceDescPtr);
-                    return;
-                }
-
-                // Step 2: Get copyable footprint for the source texture using ID3D12Device::GetCopyableFootprints
-                // This tells us the exact layout, row pitch, and total size needed for copying
-                IntPtr layoutsPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT)));
-                IntPtr numRowsPtr = Marshal.AllocHGlobal(sizeof(uint));
-                IntPtr rowSizeInBytesPtr = Marshal.AllocHGlobal(sizeof(ulong));
-                IntPtr totalBytesPtr = Marshal.AllocHGlobal(sizeof(ulong));
-
-                D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint;
-                uint numRows;
-                ulong rowSizeInBytes;
-                ulong totalBytes;
-
-                try
-                {
-                    int footprintsHr = GetCopyableFootprints(
-                        _device,
-                        sourceResourceDescPtr,
-                        0, // firstSubresource
-                        1, // numSubresources (only need the first mip)
-                        0, // baseOffset
-                        layoutsPtr,
-                        numRowsPtr,
-                        rowSizeInBytesPtr,
-                        totalBytesPtr);
-
-                    if (footprintsHr < 0)
-                    {
-                        Console.WriteLine($"[StrideDX12] OnReadSamplerFeedback: GetCopyableFootprints failed, HRESULT 0x{footprintsHr:X8}");
-                        Marshal.FreeHGlobal(sourceResourceDescPtr);
-                        Marshal.FreeHGlobal(layoutsPtr);
-                        Marshal.FreeHGlobal(numRowsPtr);
-                        Marshal.FreeHGlobal(rowSizeInBytesPtr);
-                        Marshal.FreeHGlobal(totalBytesPtr);
-                        return;
-                    }
-
-                    footprint = (D3D12_PLACED_SUBRESOURCE_FOOTPRINT)Marshal.PtrToStructure(layoutsPtr, typeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT));
-                    numRows = (uint)Marshal.ReadInt32(numRowsPtr);
-                    rowSizeInBytes = (ulong)Marshal.ReadInt64(rowSizeInBytesPtr);
-                    totalBytes = (ulong)Marshal.ReadInt64(totalBytesPtr);
-
-                    Console.WriteLine($"[StrideDX12] OnReadSamplerFeedback: Footprint - Width={footprint.Footprint.Width}, Height={footprint.Footprint.Height}, RowPitch={footprint.Footprint.RowPitch}, TotalBytes={totalBytes}");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[StrideDX12] OnReadSamplerFeedback: Failed to get copyable footprint: {ex.Message}");
+                    Console.WriteLine($"[StrideDX12] OnReadSamplerFeedback: GetCopyableFootprints failed, HRESULT 0x{footprintsHr:X8}");
                     Marshal.FreeHGlobal(sourceResourceDescPtr);
                     Marshal.FreeHGlobal(layoutsPtr);
                     Marshal.FreeHGlobal(numRowsPtr);
@@ -1950,316 +1932,334 @@ namespace Andastra.Runtime.Stride.Backends
                     return;
                 }
 
-                // Step 3: Create readback buffer using ID3D12Device::CreateCommittedResource
-                // Use the totalBytes from GetCopyableFootprints to size the buffer correctly
-                // Heap type: D3D12_HEAP_TYPE_READBACK for CPU-accessible memory
-                // Resource desc: Buffer with size matching dataSize
-                // Initial state: D3D12_RESOURCE_STATE_COPY_DEST
+                footprint = (D3D12_PLACED_SUBRESOURCE_FOOTPRINT)Marshal.PtrToStructure(layoutsPtr, typeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT));
+                numRows = (uint)Marshal.ReadInt32(numRowsPtr);
+                rowSizeInBytes = (ulong)Marshal.ReadInt64(rowSizeInBytesPtr);
+                totalBytes = (ulong)Marshal.ReadInt64(totalBytesPtr);
 
-                var readbackHeapProps = new D3D12_HEAP_PROPERTIES
+                Console.WriteLine($"[StrideDX12] OnReadSamplerFeedback: Footprint - Width={footprint.Footprint.Width}, Height={footprint.Footprint.Height}, RowPitch={footprint.Footprint.RowPitch}, TotalBytes={totalBytes}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StrideDX12] OnReadSamplerFeedback: Failed to get copyable footprint: {ex.Message}");
+                Marshal.FreeHGlobal(sourceResourceDescPtr);
+                Marshal.FreeHGlobal(layoutsPtr);
+                Marshal.FreeHGlobal(numRowsPtr);
+                Marshal.FreeHGlobal(rowSizeInBytesPtr);
+                Marshal.FreeHGlobal(totalBytesPtr);
+                return;
+            }
+
+            // Step 3: Create readback buffer using ID3D12Device::CreateCommittedResource
+            // Use the totalBytes from GetCopyableFootprints to size the buffer correctly
+            // Heap type: D3D12_HEAP_TYPE_READBACK for CPU-accessible memory
+            // Resource desc: Buffer with size matching dataSize
+            // Initial state: D3D12_RESOURCE_STATE_COPY_DEST
+
+            var readbackHeapProps = new D3D12_HEAP_PROPERTIES
+            {
+                Type = D3D12_HEAP_TYPE_READBACK,
+                CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK,
+                MemoryPoolPreference = D3D12_MEMORY_POOL_L0,
+                CreationNodeMask = 0,
+                VisibleNodeMask = 0
+            };
+
+            // Use totalBytes from GetCopyableFootprints for accurate buffer size
+            // This ensures the readback buffer can hold all the texture data
+            ulong readbackBufferSize = totalBytes;
+
+            var readbackResourceDesc = new D3D12_RESOURCE_DESC
+            {
+                Dimension = D3D12_RESOURCE_DIMENSION_BUFFER,
+                Alignment = 0,
+                Width = readbackBufferSize,
+                Height = 1,
+                DepthOrArraySize = 1,
+                MipLevels = 1,
+                Format = D3D12_DXGI_FORMAT_UNKNOWN,
+                SampleDesc = new D3D12_SAMPLE_DESC { Count = 1, Quality = 0 },
+                Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
+                Flags = D3D12_RESOURCE_FLAG_NONE
+            };
+
+            IntPtr readbackHeapPropsPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(D3D12_HEAP_PROPERTIES)));
+            IntPtr readbackResourceDescPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(D3D12_RESOURCE_DESC)));
+            IntPtr readbackResourcePtr = Marshal.AllocHGlobal(IntPtr.Size);
+            IntPtr readbackResource = IntPtr.Zero;
+
+            try
+            {
+                Marshal.StructureToPtr(readbackHeapProps, readbackHeapPropsPtr, false);
+                Marshal.StructureToPtr(readbackResourceDesc, readbackResourceDescPtr, false);
+
+                Guid iidResource = new Guid("696442be-a72e-4059-bc79-5b5c98040fad"); // IID_ID3D12Resource
+
+                int hr = CreateCommittedResource(
+                    _device,
+                    readbackHeapPropsPtr,
+                    D3D12_HEAP_FLAG_NONE,
+                    readbackResourceDescPtr,
+                    D3D12_RESOURCE_STATE_COPY_DEST,
+                    IntPtr.Zero, // No clear value for buffers
+                    ref iidResource,
+                    readbackResourcePtr);
+
+                if (hr < 0)
                 {
-                    Type = D3D12_HEAP_TYPE_READBACK,
-                    CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK,
-                    MemoryPoolPreference = D3D12_MEMORY_POOL_L0,
-                    CreationNodeMask = 0,
-                    VisibleNodeMask = 0
+                    Console.WriteLine($"[StrideDX12] OnReadSamplerFeedback: Failed to create readback buffer, HRESULT 0x{hr:X8}");
+                    return;
+                }
+
+                readbackResource = Marshal.ReadIntPtr(readbackResourcePtr);
+                if (readbackResource == IntPtr.Zero)
+                {
+                    Console.WriteLine("[StrideDX12] OnReadSamplerFeedback: Readback buffer creation returned null");
+                    return;
+                }
+
+                // Step 4: Transition feedback texture to COPY_SOURCE state using ResourceBarrier
+                var barrier = new D3D12_RESOURCE_BARRIER
+                {
+                    Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION,
+                    Flags = 0,
+                    Transition = new D3D12_RESOURCE_TRANSITION_BARRIER
+                    {
+                        pResource = resourceInfo.NativeHandle,
+                        Subresource = 0,
+                        StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS, // Sampler feedback textures are typically in UAV state
+                        StateAfter = D3D12_RESOURCE_STATE_COPY_SOURCE
+                    }
                 };
 
-                // Use totalBytes from GetCopyableFootprints for accurate buffer size
-                // This ensures the readback buffer can hold all the texture data
-                ulong readbackBufferSize = totalBytes;
-
-                var readbackResourceDesc = new D3D12_RESOURCE_DESC
-                {
-                    Dimension = D3D12_RESOURCE_DIMENSION_BUFFER,
-                    Alignment = 0,
-                    Width = readbackBufferSize,
-                    Height = 1,
-                    DepthOrArraySize = 1,
-                    MipLevels = 1,
-                    Format = D3D12_DXGI_FORMAT_UNKNOWN,
-                    SampleDesc = new D3D12_SAMPLE_DESC { Count = 1, Quality = 0 },
-                    Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
-                    Flags = D3D12_RESOURCE_FLAG_NONE
-                };
-
-                IntPtr readbackHeapPropsPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(D3D12_HEAP_PROPERTIES)));
-                IntPtr readbackResourceDescPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(D3D12_RESOURCE_DESC)));
-                IntPtr readbackResourcePtr = Marshal.AllocHGlobal(IntPtr.Size);
-                IntPtr readbackResource = IntPtr.Zero;
-
+                IntPtr barrierPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(D3D12_RESOURCE_BARRIER)));
                 try
                 {
-                    Marshal.StructureToPtr(readbackHeapProps, readbackHeapPropsPtr, false);
-                    Marshal.StructureToPtr(readbackResourceDesc, readbackResourceDescPtr, false);
+                    Marshal.StructureToPtr(barrier, barrierPtr, false);
+                    ResourceBarrier(nativeCommandList, barrierPtr, 1);
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(barrierPtr);
+                }
 
-                    Guid iidResource = new Guid("696442be-a72e-4059-bc79-5b5c98040fad"); // IID_ID3D12Resource
+                // Step 5: Copy texture to readback buffer using CopyTextureRegion
+                var srcLocation = new D3D12_TEXTURE_COPY_LOCATION
+                {
+                    pResource = resourceInfo.NativeHandle,
+                    Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
+                    PlacedFootprint = new D3D12_PLACED_SUBRESOURCE_FOOTPRINT()
+                };
 
-                    int hr = CreateCommittedResource(
-                        _device,
-                        readbackHeapPropsPtr,
-                        D3D12_HEAP_FLAG_NONE,
-                        readbackResourceDescPtr,
-                        D3D12_RESOURCE_STATE_COPY_DEST,
-                        IntPtr.Zero, // No clear value for buffers
-                        ref iidResource,
-                        readbackResourcePtr);
+                var dstLocation = new D3D12_TEXTURE_COPY_LOCATION
+                {
+                    pResource = readbackResource,
+                    Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT,
+                    PlacedFootprint = footprint
+                };
 
-                    if (hr < 0)
+                IntPtr srcLocationPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(D3D12_TEXTURE_COPY_LOCATION)));
+                IntPtr dstLocationPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(D3D12_TEXTURE_COPY_LOCATION)));
+                try
+                {
+                    Marshal.StructureToPtr(srcLocation, srcLocationPtr, false);
+                    Marshal.StructureToPtr(dstLocation, dstLocationPtr, false);
+
+                    // CopyTextureRegion signature: void CopyTextureRegion(
+                    //   const D3D12_TEXTURE_COPY_LOCATION *pDst,
+                    //   UINT DstX, UINT DstY, UINT DstZ,
+                    //   const D3D12_TEXTURE_COPY_LOCATION *pSrc,
+                    //   const D3D12_BOX *pSrcBox)
+                    CopyTextureRegion(nativeCommandList, dstLocationPtr, 0, 0, 0, srcLocationPtr, IntPtr.Zero);
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(srcLocationPtr);
+                    Marshal.FreeHGlobal(dstLocationPtr);
+                }
+
+                // Step 6: Transition texture back to original state
+                var barrierBack = new D3D12_RESOURCE_BARRIER
+                {
+                    Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION,
+                    Flags = 0,
+                    Transition = new D3D12_RESOURCE_TRANSITION_BARRIER
                     {
-                        Console.WriteLine($"[StrideDX12] OnReadSamplerFeedback: Failed to create readback buffer, HRESULT 0x{hr:X8}");
-                        return;
+                        pResource = resourceInfo.NativeHandle,
+                        Subresource = 0,
+                        StateBefore = D3D12_RESOURCE_STATE_COPY_SOURCE,
+                        StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS
                     }
+                };
 
-                    readbackResource = Marshal.ReadIntPtr(readbackResourcePtr);
-                    if (readbackResource == IntPtr.Zero)
+                IntPtr barrierBackPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(D3D12_RESOURCE_BARRIER)));
+                try
+                {
+                    Marshal.StructureToPtr(barrierBack, barrierBackPtr, false);
+                    ResourceBarrier(nativeCommandList, barrierBackPtr, 1);
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(barrierBackPtr);
+                }
+
+                // Step 7: Close command list and execute
+                CloseCommandList(nativeCommandList);
+
+                // Step 8: Execute command list and wait for GPU completion
+                // Full implementation with direct queue access and fence synchronization
+                // Based on DirectX 12 Command Queue execution pattern:
+                // https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12commandqueue-executecommandlists
+                // https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12commandqueue-signal
+                // https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12fence-getcompletedvalue
+
+                IntPtr commandQueue = GetNativeCommandQueue();
+                IntPtr fence = IntPtr.Zero;
+                IntPtr fencePtr = IntPtr.Zero;
+
+                if (commandQueue != IntPtr.Zero)
+                {
+                    // Create fence for GPU synchronization
+                    // Initial value: 0, flags: 0 (no special flags)
+                    fencePtr = Marshal.AllocHGlobal(IntPtr.Size);
+                    try
                     {
-                        Console.WriteLine("[StrideDX12] OnReadSamplerFeedback: Readback buffer creation returned null");
-                        return;
-                    }
-
-                    // Step 4: Transition feedback texture to COPY_SOURCE state using ResourceBarrier
-                        var barrier = new D3D12_RESOURCE_BARRIER
+                        // Cannot pass static readonly field as ref - create local copy
+                        Guid iidFence = IID_ID3D12Fence;
+                        int fenceHr = CreateFence(_device, 0, 0, ref iidFence, fencePtr);
+                        if (fenceHr >= 0)
                         {
-                            Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION,
-                            Flags = 0,
-                            Transition = new D3D12_RESOURCE_TRANSITION_BARRIER
+                            fence = Marshal.ReadIntPtr(fencePtr);
+                            if (fence != IntPtr.Zero)
                             {
-                                pResource = resourceInfo.NativeHandle,
-                                Subresource = 0,
-                                StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS, // Sampler feedback textures are typically in UAV state
-                                StateAfter = D3D12_RESOURCE_STATE_COPY_SOURCE
-                            }
-                        };
+                                // Execute command list on the queue
+                                IntPtr[] commandLists = new IntPtr[] { nativeCommandList };
+                                ExecuteCommandLists(commandQueue, commandLists, 1);
 
-                        IntPtr barrierPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(D3D12_RESOURCE_BARRIER)));
-                        try
-                        {
-                            Marshal.StructureToPtr(barrier, barrierPtr, false);
-                            ResourceBarrier(nativeCommandList, barrierPtr, 1);
-                        }
-                        finally
-                        {
-                            Marshal.FreeHGlobal(barrierPtr);
-                        }
+                                // Signal fence with value 1 to track completion
+                                // The fence will be signaled by the GPU when the command list execution completes
+                                ulong fenceValue = 1;
+                                ulong signaledValue = SignalFence(commandQueue, fence, fenceValue);
 
-                        // Step 5: Copy texture to readback buffer using CopyTextureRegion
-                        var srcLocation = new D3D12_TEXTURE_COPY_LOCATION
-                        {
-                            pResource = resourceInfo.NativeHandle,
-                            Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
-                            PlacedFootprint = new D3D12_PLACED_SUBRESOURCE_FOOTPRINT()
-                        };
-
-                        var dstLocation = new D3D12_TEXTURE_COPY_LOCATION
-                        {
-                            pResource = readbackResource,
-                            Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT,
-                            PlacedFootprint = footprint
-                        };
-
-                        IntPtr srcLocationPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(D3D12_TEXTURE_COPY_LOCATION)));
-                        IntPtr dstLocationPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(D3D12_TEXTURE_COPY_LOCATION)));
-                        try
-                        {
-                            Marshal.StructureToPtr(srcLocation, srcLocationPtr, false);
-                            Marshal.StructureToPtr(dstLocation, dstLocationPtr, false);
-
-                            // CopyTextureRegion signature: void CopyTextureRegion(
-                            //   const D3D12_TEXTURE_COPY_LOCATION *pDst,
-                            //   UINT DstX, UINT DstY, UINT DstZ,
-                            //   const D3D12_TEXTURE_COPY_LOCATION *pSrc,
-                            //   const D3D12_BOX *pSrcBox)
-                            CopyTextureRegion(nativeCommandList, dstLocationPtr, 0, 0, 0, srcLocationPtr, IntPtr.Zero);
-                        }
-                        finally
-                        {
-                            Marshal.FreeHGlobal(srcLocationPtr);
-                            Marshal.FreeHGlobal(dstLocationPtr);
-                        }
-
-                        // Step 6: Transition texture back to original state
-                        var barrierBack = new D3D12_RESOURCE_BARRIER
-                        {
-                            Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION,
-                            Flags = 0,
-                            Transition = new D3D12_RESOURCE_TRANSITION_BARRIER
-                            {
-                                pResource = resourceInfo.NativeHandle,
-                                Subresource = 0,
-                                StateBefore = D3D12_RESOURCE_STATE_COPY_SOURCE,
-                                StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS
-                            }
-                        };
-
-                        IntPtr barrierBackPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(D3D12_RESOURCE_BARRIER)));
-                        try
-                        {
-                            Marshal.StructureToPtr(barrierBack, barrierBackPtr, false);
-                            ResourceBarrier(nativeCommandList, barrierBackPtr, 1);
-                        }
-                        finally
-                        {
-                            Marshal.FreeHGlobal(barrierBackPtr);
-                        }
-
-                        // Step 7: Close command list and execute
-                        CloseCommandList(nativeCommandList);
-
-                        // Step 8: Execute command list and wait for GPU completion
-                        // Full implementation with direct queue access and fence synchronization
-                        // Based on DirectX 12 Command Queue execution pattern:
-                        // https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12commandqueue-executecommandlists
-                        // https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12commandqueue-signal
-                        // https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12fence-getcompletedvalue
-
-                        IntPtr commandQueue = GetNativeCommandQueue();
-                        IntPtr fence = IntPtr.Zero;
-                        IntPtr fencePtr = IntPtr.Zero;
-
-                        if (commandQueue != IntPtr.Zero)
-                        {
-                            // Create fence for GPU synchronization
-                            // Initial value: 0, flags: 0 (no special flags)
-                            fencePtr = Marshal.AllocHGlobal(IntPtr.Size);
-                            try
-                            {
-                                // Cannot pass static readonly field as ref - create local copy
-                                Guid iidFence = IID_ID3D12Fence;
-                                int fenceHr = CreateFence(_device, 0, 0, ref iidFence, fencePtr);
-                                if (fenceHr >= 0)
+                                if (signaledValue > 0)
                                 {
-                                    fence = Marshal.ReadIntPtr(fencePtr);
-                                    if (fence != IntPtr.Zero)
+                                    // Wait for fence completion using polling
+                                    // Poll GetFenceCompletedValue until it reaches the signaled value
+                                    // This ensures the GPU has finished executing the command list
+                                    const int maxWaitIterations = 1000000; // Prevent infinite loop
+                                    const int sleepMs = 1; // Sleep 1ms between polls to avoid CPU spinning
+                                    int iteration = 0;
+
+                                    while (iteration < maxWaitIterations)
                                     {
-                                        // Execute command list on the queue
-                                        IntPtr[] commandLists = new IntPtr[] { nativeCommandList };
-                                        ExecuteCommandLists(commandQueue, commandLists, 1);
-
-                                        // Signal fence with value 1 to track completion
-                                        // The fence will be signaled by the GPU when the command list execution completes
-                                        ulong fenceValue = 1;
-                                        ulong signaledValue = SignalFence(commandQueue, fence, fenceValue);
-
-                                        if (signaledValue > 0)
+                                        ulong completedValue = GetFenceCompletedValue(fence);
+                                        if (completedValue >= fenceValue)
                                         {
-                                            // Wait for fence completion using polling
-                                            // Poll GetFenceCompletedValue until it reaches the signaled value
-                                            // This ensures the GPU has finished executing the command list
-                                            const int maxWaitIterations = 1000000; // Prevent infinite loop
-                                            const int sleepMs = 1; // Sleep 1ms between polls to avoid CPU spinning
-                                            int iteration = 0;
-
-                                            while (iteration < maxWaitIterations)
-                                            {
-                                                ulong completedValue = GetFenceCompletedValue(fence);
-                                                if (completedValue >= fenceValue)
-                                                {
-                                                    // Fence has reached the target value - GPU work is complete
-                                                    break;
-                                                }
-
-                                                // Sleep briefly to avoid excessive CPU usage
-                                                System.Threading.Thread.Sleep(sleepMs);
-                                                iteration++;
-                                            }
-
-                                            if (iteration >= maxWaitIterations)
-                                            {
-                                                Console.WriteLine("[StrideDX12] OnReadSamplerFeedback: Fence wait timeout - falling back to WaitIdle");
-                                                OnWaitForGpu();
-                                            }
+                                            // Fence has reached the target value - GPU work is complete
+                                            break;
                                         }
-                                        else
-                                        {
-                                            Console.WriteLine("[StrideDX12] OnReadSamplerFeedback: Failed to signal fence - falling back to WaitIdle");
-                                            OnWaitForGpu();
-                                        }
+
+                                        // Sleep briefly to avoid excessive CPU usage
+                                        System.Threading.Thread.Sleep(sleepMs);
+                                        iteration++;
                                     }
-                                    else
+
+                                    if (iteration >= maxWaitIterations)
                                     {
-                                        Console.WriteLine("[StrideDX12] OnReadSamplerFeedback: Fence creation returned null - falling back to WaitIdle");
+                                        Console.WriteLine("[StrideDX12] OnReadSamplerFeedback: Fence wait timeout - falling back to WaitIdle");
                                         OnWaitForGpu();
                                     }
                                 }
                                 else
                                 {
-                                    Console.WriteLine($"[StrideDX12] OnReadSamplerFeedback: Failed to create fence, HRESULT 0x{fenceHr:X8} - falling back to WaitIdle");
+                                    Console.WriteLine("[StrideDX12] OnReadSamplerFeedback: Failed to signal fence - falling back to WaitIdle");
                                     OnWaitForGpu();
                                 }
                             }
-                            finally
+                            else
                             {
-                                // Clean up fence COM object
-                                if (fence != IntPtr.Zero)
-                                {
-                                    IntPtr vtable = Marshal.ReadIntPtr(fence);
-                                    if (vtable != IntPtr.Zero)
-                                    {
-                                        IntPtr releasePtr = Marshal.ReadIntPtr(vtable, 2 * IntPtr.Size); // IUnknown::Release at index 2
-                                        if (releasePtr != IntPtr.Zero)
-                                        {
-                                            var releaseDelegate = (ReleaseDelegate)Marshal.GetDelegateForFunctionPointer(
-                                                releasePtr, typeof(ReleaseDelegate));
-                                            releaseDelegate(fence);
-                                        }
-                                    }
-                                }
-                                Marshal.FreeHGlobal(fencePtr);
+                                Console.WriteLine("[StrideDX12] OnReadSamplerFeedback: Fence creation returned null - falling back to WaitIdle");
+                                OnWaitForGpu();
                             }
                         }
                         else
                         {
-                            // Command queue not available - use Stride's synchronization mechanism as fallback
-                            // This is acceptable when direct queue access is not possible through Stride's API
+                            Console.WriteLine($"[StrideDX12] OnReadSamplerFeedback: Failed to create fence, HRESULT 0x{fenceHr:X8} - falling back to WaitIdle");
                             OnWaitForGpu();
                         }
-
-                        // Step 9: Map readback buffer using ID3D12Resource::Map
-                        IntPtr mappedDataPtr = Marshal.AllocHGlobal(IntPtr.Size);
-                        try
-                        {
-                            int mapHr = MapResource(readbackResource, 0, IntPtr.Zero, mappedDataPtr);
-                            if (mapHr < 0)
-                            {
-                                Console.WriteLine($"[StrideDX12] OnReadSamplerFeedback: Failed to map readback buffer, HRESULT 0x{mapHr:X8}");
-                                return;
-                            }
-
-                            IntPtr mappedData = Marshal.ReadIntPtr(mappedDataPtr);
-                            if (mappedData != IntPtr.Zero)
-                            {
-                                // Step 10: Copy mapped data to output byte array
-                                Marshal.Copy(mappedData, data, 0, Math.Min(dataSize, data.Length));
-
-                                // Step 11: Unmap readback buffer
-                                UnmapResource(readbackResource, 0);
-                            }
-                        }
-                        finally
-                        {
-                            Marshal.FreeHGlobal(mappedDataPtr);
-                        }
-
-                    // Clean up readback resource
-                    // Release the COM object (call Release on the resource)
-                    if (readbackResource != IntPtr.Zero)
+                    }
+                    finally
                     {
-                        IntPtr vtable = Marshal.ReadIntPtr(readbackResource);
-                        if (vtable != IntPtr.Zero)
+                        // Clean up fence COM object
+                        if (fence != IntPtr.Zero)
                         {
-                            IntPtr releasePtr = Marshal.ReadIntPtr(vtable, 2 * IntPtr.Size); // IUnknown::Release at index 2
-                            if (releasePtr != IntPtr.Zero)
+                            IntPtr vtable = Marshal.ReadIntPtr(fence);
+                            if (vtable != IntPtr.Zero)
                             {
-                                var releaseDelegate = (ReleaseDelegate)Marshal.GetDelegateForFunctionPointer(
-                                    releasePtr, typeof(ReleaseDelegate));
-                                releaseDelegate(readbackResource);
+                                IntPtr releasePtr = Marshal.ReadIntPtr(vtable, 2 * IntPtr.Size); // IUnknown::Release at index 2
+                                if (releasePtr != IntPtr.Zero)
+                                {
+                                    var releaseDelegate = (ReleaseDelegate)Marshal.GetDelegateForFunctionPointer(
+                                        releasePtr, typeof(ReleaseDelegate));
+                                    releaseDelegate(fence);
+                                }
                             }
                         }
+                        Marshal.FreeHGlobal(fencePtr);
+                    }
+                }
+                else
+                {
+                    // Command queue not available - use Stride's synchronization mechanism as fallback
+                    // This is acceptable when direct queue access is not possible through Stride's API
+                    OnWaitForGpu();
+                }
+
+                // Step 9: Map readback buffer using ID3D12Resource::Map
+                IntPtr mappedDataPtr = Marshal.AllocHGlobal(IntPtr.Size);
+                try
+                {
+                    int mapHr = MapResource(readbackResource, 0, IntPtr.Zero, mappedDataPtr);
+                    if (mapHr < 0)
+                    {
+                        Console.WriteLine($"[StrideDX12] OnReadSamplerFeedback: Failed to map readback buffer, HRESULT 0x{mapHr:X8}");
+                        return;
                     }
 
-                    Console.WriteLine($"[StrideDX12] OnReadSamplerFeedback: Successfully read {dataSize} bytes from sampler feedback texture {resourceInfo.NativeHandle}");
+                    IntPtr mappedData = Marshal.ReadIntPtr(mappedDataPtr);
+                    if (mappedData != IntPtr.Zero)
+                    {
+                        // Step 10: Copy mapped data to output byte array
+                        Marshal.Copy(mappedData, data, 0, Math.Min(dataSize, data.Length));
+
+                        // Step 11: Unmap readback buffer
+                        UnmapResource(readbackResource, 0);
+                    }
                 }
+                finally
+                {
+                    Marshal.FreeHGlobal(mappedDataPtr);
+                }
+
+                // Clean up readback resource
+                // Release the COM object (call Release on the resource)
+                if (readbackResource != IntPtr.Zero)
+                {
+                    IntPtr vtable = Marshal.ReadIntPtr(readbackResource);
+                    if (vtable != IntPtr.Zero)
+                    {
+                        IntPtr releasePtr = Marshal.ReadIntPtr(vtable, 2 * IntPtr.Size); // IUnknown::Release at index 2
+                        if (releasePtr != IntPtr.Zero)
+                        {
+                            var releaseDelegate = (ReleaseDelegate)Marshal.GetDelegateForFunctionPointer(
+                                releasePtr, typeof(ReleaseDelegate));
+                            releaseDelegate(readbackResource);
+                        }
+                    }
+                }
+
+                Console.WriteLine($"[StrideDX12] OnReadSamplerFeedback: Successfully read {dataSize} bytes from sampler feedback texture {resourceInfo.NativeHandle}");
+            }
             catch (Exception ex)
             {
                 Console.WriteLine($"[StrideDX12] OnReadSamplerFeedback: Error reading sampler feedback data: {ex.Message}");

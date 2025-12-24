@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Stride.Graphics;
-using Stride.Core.Mathematics;
 using Andastra.Parsing.Formats.MDLData;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
@@ -12,6 +10,8 @@ using Andastra.Runtime.Engines.Odyssey.Systems;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Stride.Converters;
 using JetBrains.Annotations;
+using Stride.Core.Mathematics;
+using Stride.Graphics;
 
 namespace Andastra.Runtime.Stride.Graphics
 {

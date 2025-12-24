@@ -50,7 +50,7 @@ namespace Andastra.Runtime.Core.Actions
             if (!_started)
             {
                 _started = true;
-                
+
                 // Get animation component and play animation
                 var animationComponent = actor.GetComponent<Interfaces.Components.IAnimationComponent>();
                 if (animationComponent != null)

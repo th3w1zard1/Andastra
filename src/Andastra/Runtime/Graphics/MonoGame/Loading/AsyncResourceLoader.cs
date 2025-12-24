@@ -3,9 +3,9 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
-using Andastra.Runtime.Content.Interfaces;
 using Andastra.Parsing.Resource;
+using Andastra.Runtime.Content.Interfaces;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.MonoGame.Loading
 {
@@ -128,7 +128,7 @@ namespace Andastra.Runtime.MonoGame.Loading
 
                     // Load resource bytes asynchronously (IO operation off main thread)
                     byte[] fileData = await _resourceProvider.GetResourceBytesAsync(resourceId, _cancellationTokenSource.Token);
-                    
+
                     if (fileData == null || fileData.Length == 0)
                     {
                         return new TextureLoadResult

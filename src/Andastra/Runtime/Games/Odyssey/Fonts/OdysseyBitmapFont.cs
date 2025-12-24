@@ -1,16 +1,16 @@
 using System;
 using System.Collections.Generic;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Andastra.Parsing;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
 using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Formats.TXI;
+using Andastra.Parsing.Installation;
+using Andastra.Parsing.Resource;
 using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.MonoGame.Graphics;
 using JetBrains.Annotations;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using XnaRectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace Andastra.Runtime.Games.Odyssey.Fonts

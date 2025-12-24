@@ -264,7 +264,7 @@ namespace Andastra.Parsing.TSLPatcher
                     int eqIndex = trimmed.IndexOf('=');
                     string key = trimmed.Substring(0, eqIndex).Trim();
                     string value = trimmed.Substring(eqIndex + 1).Trim();
-                    
+
                     // Remove quotes if present
                     if (value.Length >= 2 && value.StartsWith("\"") && value.EndsWith("\""))
                     {
@@ -274,7 +274,7 @@ namespace Andastra.Parsing.TSLPatcher
                     {
                         value = value.Substring(1, value.Length - 2);
                     }
-                    
+
                     // ConfigObj handles lists automatically - duplicate keys become lists
                     // Matching PyKotor implementation: ConfigObj automatically converts duplicate keys to lists
                     Dictionary<string, object> section = config[currentSection];

@@ -3,8 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Andastra.Parsing;
-using Andastra.Parsing.Resource;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Resource;
 using JetBrains.Annotations;
 
 namespace Andastra.Parsing.Formats.PCC
@@ -164,7 +164,7 @@ namespace Andastra.Parsing.Formats.PCC
         {
             ResRef = resref;
             ResType = restype;
-            Data = data is byte[] ? data : data.ToArray();
+            Data = data is byte[]? data : data.ToArray();
         }
 
         public ResourceIdentifier Identifier() => new ResourceIdentifier(ResRef.ToString(), ResType);

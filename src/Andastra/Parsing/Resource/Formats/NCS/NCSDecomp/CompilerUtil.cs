@@ -1,11 +1,11 @@
-﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/CompilerUtil.java
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/CompilerUtil.java
 // Copyright 2021-2025 NCSDecomp
 // Licensed under the Business Source License 1.1 (BSL 1.1).
 // See LICENSE.txt file in the project root for full license information.
 
 using System;
-using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
 using System.IO;
+using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
 
 
 namespace Andastra.Parsing.Formats.NCS.NCSDecomp
@@ -43,10 +43,10 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
 
             // Normalize folder path (ensure it's a directory path, not a file path)
             NcsFile folder = new NcsFile(folderPath);
-                if (folder.IsFile())
-                {
-                    // If it's a file, use its parent directory
-                    NcsFile parent = folder.GetParentFile();
+            if (folder.IsFile())
+            {
+                // If it's a file, use its parent directory
+                NcsFile parent = folder.GetParentFile();
                 if (parent != null)
                 {
                     folder = parent;
@@ -129,7 +129,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             string toolsDir = Path.Combine(JavaSystem.GetProperty("user.dir"), "tools");
             foreach (string name in COMPILER_NAMES)
             {
-                    NcsFile candidate = new NcsFile(Path.Combine(toolsDir, name));
+                NcsFile candidate = new NcsFile(Path.Combine(toolsDir, name));
                 if (candidate.Exists() && candidate.IsFile())
                 {
                     Error("DEBUG CompilerUtil.resolveCompilerPathWithFallbacks: Found in tools/: " + candidate.GetAbsolutePath());

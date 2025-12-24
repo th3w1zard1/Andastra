@@ -210,7 +210,7 @@ namespace Andastra.Parsing.Merge
                 // Check if the resource exists in the module
                 // Module.Resource() returns the ModuleResource if it exists in the module, null otherwise
                 ModuleResource moduleResource = module.Resource(query.ResName, query.ResType);
-                
+
                 // Only add the resource if it exists and has locations (is available)
                 // A resource is considered found if it has locations or is active
                 // This matches the PyKotor behavior where resources are only added if they have locations

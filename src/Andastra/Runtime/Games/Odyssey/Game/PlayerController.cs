@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Andastra.Runtime.Core.Actions;
+using Andastra.Runtime.Core.Entities;
+using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Core.Actions;
-using Andastra.Runtime.Core.Enums;
-using Andastra.Runtime.Core.Entities;
-using Andastra.Runtime.Engines.Odyssey.Systems;
-using Andastra.Runtime.Engines.Odyssey.Dialogue;
 using Andastra.Runtime.Engines.Odyssey.Components;
+using Andastra.Runtime.Engines.Odyssey.Dialogue;
+using Andastra.Runtime.Engines.Odyssey.Systems;
 
 namespace Andastra.Runtime.Engines.Odyssey.Game
 {
@@ -248,7 +248,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                         conversation = entity.GetData<string>("ScriptDialogue", string.Empty);
                     }
                 }
-                
+
                 if (!string.IsNullOrEmpty(conversation))
                 {
                     if (_dialogueManager != null)
@@ -300,7 +300,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                         Console.WriteLine("[PlayerController] Door is locked and cannot be unlocked");
                         return;
                     }
-                    
+
                     // If door is still locked after TryUnlockDoor (bashing is in progress), don't try to open it yet
                     // The bashing action will open it when the door is destroyed
                     if (doorComponent.IsLocked)
@@ -563,7 +563,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                     return;
                 }
             }
-            
+
             // Update facing direction to match movement direction
             if (movement.LengthSquared() > 0.001f) // Only update if moving
             {
@@ -597,7 +597,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                     conversation = entity.GetData<string>("ScriptDialogue", string.Empty);
                 }
             }
-            
+
             if (string.IsNullOrEmpty(conversation))
             {
                 Console.WriteLine("[PlayerController] NPC has no dialogue: " + npc.Tag);

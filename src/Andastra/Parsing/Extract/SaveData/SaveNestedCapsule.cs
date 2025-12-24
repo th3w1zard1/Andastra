@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.RIM;
 using Andastra.Parsing.Resource;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Extract.SaveData
 {

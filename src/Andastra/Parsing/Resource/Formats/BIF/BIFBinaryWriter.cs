@@ -2,9 +2,9 @@ using System;
 using System.IO;
 using System.Text;
 using Andastra.Parsing;
-using Andastra.Utility.LZMA;
-using Andastra.Parsing.Resource;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Resource;
+using Andastra.Utility.LZMA;
 
 namespace Andastra.Parsing.Resource.Formats.BIF
 {

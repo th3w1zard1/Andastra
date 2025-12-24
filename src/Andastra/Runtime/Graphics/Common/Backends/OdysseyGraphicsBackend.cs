@@ -482,28 +482,28 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         {
             // Common OpenGL context creation for both KOTOR1 and KOTOR2
             // This matches the pattern from both swkotor.exe and swkotor2.exe
-            
+
             // 1. Window setup (common to both)
             // ShowWindow(windowHandle, 0) - hide window during setup
             // SetWindowPos(...) - position window
             // AdjustWindowRect(...) - adjust window size
-            
+
             // 2. Display mode enumeration (common to both)
             // EnumDisplaySettingsA(...) - enumerate display modes
             // ChangeDisplaySettingsA(...) - change display mode if fullscreen
-            
+
             // 3. Pixel format selection (common to both)
             // ChoosePixelFormat(...) - choose pixel format
             // SetPixelFormat(...) - set pixel format
-            
+
             // 4. OpenGL context creation (common to both)
             // GetDC(windowHandle) - get device context
             // wglCreateContext(hdc) - create OpenGL context
             // wglMakeCurrent(hdc, context) - make context current
-            
+
             // 5. Context sharing setup (common to both)
             // wglShareLists(primaryContext, secondaryContext) - share contexts for multi-threading
-            
+
             // Game-specific differences are handled in derived classes
             return CreateOpenGLDevice();
         }
@@ -523,13 +523,13 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         {
             // Common texture initialization for both KOTOR1 and KOTOR2
             // This matches the pattern from both swkotor.exe and swkotor2.exe
-            
+
             // Pattern (both games):
             // 1. Generate texture names: glGenTextures(1, &textureId)
             // 2. Bind texture: glBindTexture(GL_TEXTURE_2D, textureId)
             // 3. Set texture parameters: glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
             // 4. Load texture data: glTexImage2D(...) or glCopyTexImage2D(...)
-            
+
             // Game-specific texture setup is handled in derived classes
         }
 

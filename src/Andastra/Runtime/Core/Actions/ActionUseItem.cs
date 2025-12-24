@@ -217,11 +217,11 @@ namespace Andastra.Runtime.Core.Actions
                                 // Get item class from baseitems.2da
                                 // Based on swkotor2.exe: Item class determines item category and behavior
                                 int? itemClass = baseItemRow.GetInteger("itemclass", null);
-                                
+
                                 // Get chargesstarting to confirm it's a consumable
                                 // Based on swkotor2.exe: Items with chargesstarting > 0 are consumables
                                 int? chargesStarting = baseItemRow.GetInteger("chargesstarting", null);
-                                
+
                                 // Apply effects based on item class for consumable items
                                 // Based on swkotor2.exe: Different item classes have different effects when used
                                 if (chargesStarting.HasValue && chargesStarting.Value > 0)
@@ -285,7 +285,7 @@ namespace Andastra.Runtime.Core.Actions
             // Get additional information from baseitems.2da that might affect effects
             string label = baseItemRow.GetString("label", "");
             int? chargesStarting = baseItemRow.GetInteger("chargesstarting", null);
-            
+
             // Determine effect based on item class and label
             // Based on swkotor2.exe: Item class determines what effects are applied when item is used
             // Common patterns:
@@ -293,14 +293,14 @@ namespace Andastra.Runtime.Core.Actions
             // - Stimulants (stims): Apply ability/attack bonuses
             // - Grenades: Apply damage effects
             // - Other consumables: Apply effects based on item class value ranges
-            
+
             if (itemClass.HasValue)
             {
                 int itemClassValue = itemClass.Value;
-                
+
                 // Check label for common consumable types (case-insensitive)
                 string labelLower = label.ToLowerInvariant();
-                
+
                 // Medical consumables (medpacs, medkits, etc.)
                 // Based on swkotor2.exe: Medical consumables typically have specific itemclass values or labels
                 if (labelLower.Contains("medpac") || labelLower.Contains("medkit") || labelLower.Contains("heal"))
@@ -312,7 +312,7 @@ namespace Andastra.Runtime.Core.Actions
                     effectSystem.ApplyEffect(target, healEffect, caster);
                     return;
                 }
-                
+
                 // Stimulants (stims, stimulants, etc.)
                 // Based on swkotor2.exe: Stims apply temporary ability/attack bonuses
                 if (labelLower.Contains("stim") || labelLower.Contains("adrenal"))
@@ -320,29 +320,29 @@ namespace Andastra.Runtime.Core.Actions
                     // Apply ability bonuses and attack bonuses
                     // Typical stim effects: +2 to +4 ability bonuses, +1 to +3 attack bonus
                     int bonusAmount = CalculateStimBonusAmount(itemComponent, chargesStarting);
-                    
+
                     // Apply strength bonus (common stim effect)
                     Effect strBonus = Combat.Effect.AbilityModifier(Enums.Ability.Strength, bonusAmount, 0);
                     strBonus.DurationType = EffectDurationType.Temporary;
                     strBonus.DurationRounds = 30; // Stims typically last 30 rounds
                     effectSystem.ApplyEffect(target, strBonus, caster);
-                    
+
                     // Apply dexterity bonus (common stim effect)
                     Effect dexBonus = Combat.Effect.AbilityModifier(Enums.Ability.Dexterity, bonusAmount, 0);
                     dexBonus.DurationType = EffectDurationType.Temporary;
                     dexBonus.DurationRounds = 30;
                     effectSystem.ApplyEffect(target, dexBonus, caster);
-                    
+
                     // Apply attack bonus (common stim effect)
                     Effect attackBonus = new Effect(EffectType.AttackIncrease);
                     attackBonus.Amount = bonusAmount;
                     attackBonus.DurationType = EffectDurationType.Temporary;
                     attackBonus.DurationRounds = 30;
                     effectSystem.ApplyEffect(target, attackBonus, caster);
-                    
+
                     return;
                 }
-                
+
                 // Grenades (grenades, mines, etc.)
                 // Based on swkotor2.exe: Grenades are typically thrown in combat, not consumed from inventory
                 // Note: In actual gameplay, grenades are thrown as weapons, not consumed from inventory like medpacs
@@ -355,7 +355,7 @@ namespace Andastra.Runtime.Core.Actions
                     // The combat system handles grenade damage when thrown
                     return;
                 }
-                
+
                 // Item class-based effect determination
                 // Based on swkotor2.exe: Item class values determine item category and effects
                 // Common item class ranges:
@@ -364,7 +364,7 @@ namespace Andastra.Runtime.Core.Actions
                 // - 31-50: Quest items, grenades, medical supplies (consumables)
                 // - 51-70: Upgrades, armbands, belts (not consumables)
                 // - 71-90: Droid equipment, special items (may be consumables)
-                
+
                 if (itemClassValue >= 31 && itemClassValue <= 50)
                 {
                     // Quest items, grenades, medical supplies range
@@ -375,7 +375,7 @@ namespace Andastra.Runtime.Core.Actions
                     effectSystem.ApplyEffect(target, healEffect, caster);
                     return;
                 }
-                
+
                 if (itemClassValue >= 71 && itemClassValue <= 90)
                 {
                     // Droid equipment, special items range
@@ -387,7 +387,7 @@ namespace Andastra.Runtime.Core.Actions
                     return;
                 }
             }
-            
+
             // Fallback: Apply default consumable effect if item class doesn't match known patterns
             ApplyDefaultConsumableEffect(effectSystem, target, caster, itemComponent);
         }
@@ -428,13 +428,13 @@ namespace Andastra.Runtime.Core.Actions
         private int CalculateHealingAmount(IItemComponent itemComponent, int? chargesStarting)
         {
             int baseHealing = 10; // Base healing amount
-            
+
             // Scale healing with charges if available
             if (itemComponent.Charges > 0 && itemComponent.Charges < 100)
             {
                 baseHealing = itemComponent.Charges * 5;
             }
-            
+
             // Scale with chargesstarting if available (higher starting charges = more powerful item)
             if (chargesStarting.HasValue && chargesStarting.Value > 0)
             {
@@ -442,7 +442,7 @@ namespace Andastra.Runtime.Core.Actions
                 // Scale healing proportionally
                 baseHealing = (baseHealing * chargesStarting.Value) / Math.Max(1, itemComponent.Charges);
             }
-            
+
             return Math.Max(1, baseHealing); // Ensure at least 1 HP healing
         }
 
@@ -455,7 +455,7 @@ namespace Andastra.Runtime.Core.Actions
         private int CalculateStimBonusAmount(IItemComponent itemComponent, int? chargesStarting)
         {
             int baseBonus = 2; // Base bonus amount (+2)
-            
+
             // Scale bonus with chargesstarting if available (higher starting charges = more powerful stim)
             if (chargesStarting.HasValue && chargesStarting.Value > 0)
             {
@@ -470,7 +470,7 @@ namespace Andastra.Runtime.Core.Actions
                     baseBonus = 3;
                 }
             }
-            
+
             return baseBonus;
         }
 

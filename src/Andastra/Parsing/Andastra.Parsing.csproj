@@ -11,10 +11,9 @@
 
   <!-- Debug Configuration -->
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT'">net9.0-windows</TargetFrameworks>
-    <TargetFrameworks Condition="('$(OS)' == 'Windows_NT') AND $(TargetFramework.StartsWith('net4'))">net48</TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('Linux'))">net9.0-linux</TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('OSX'))">net9.0-macosx</TargetFrameworks>
+    <TargetFrameworks>net9.0</TargetFrameworks>
+    <OutputType Condition="'$(OS)' == 'Windows_NT'">WinExe</OutputType>
+    <OutputType Condition="'$(OS)' != 'Windows_NT'">Exe</OutputType>
     <EnableNETAnalyzers>false</EnableNETAnalyzers>
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
     <Nullable>disable</Nullable>

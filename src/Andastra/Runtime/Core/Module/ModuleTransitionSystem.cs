@@ -85,12 +85,12 @@ namespace Andastra.Runtime.Core.Module
             _saveSystem = saveSystem ?? throw new ArgumentNullException("saveSystem");
             _moduleLoader = moduleLoader ?? throw new ArgumentNullException("moduleLoader");
             _loadingScreen = loadingScreen ?? new NullLoadingScreen();
-            
+
             // Create movie player if resource provider and graphics device are available
             // Adapt from Content/Graphics layers if needed
             IMovieResourceProvider movieResourceProvider = null;
             IMovieGraphicsDevice movieGraphicsDevice = null;
-            
+
             if (resourceProvider != null)
             {
                 // Try to use as IMovieResourceProvider directly, or adapt from IGameResourceProvider
@@ -112,7 +112,7 @@ namespace Andastra.Runtime.Core.Module
                     }
                 }
             }
-            
+
             if (graphicsDevice != null)
             {
                 // Try to use as IMovieGraphicsDevice directly, or adapt from IGraphicsDevice
@@ -134,7 +134,7 @@ namespace Andastra.Runtime.Core.Module
                     }
                 }
             }
-            
+
             if (movieResourceProvider != null && movieGraphicsDevice != null)
             {
                 _moviePlayer = new MoviePlayer(world, movieResourceProvider, movieGraphicsDevice);
@@ -143,7 +143,7 @@ namespace Andastra.Runtime.Core.Module
             {
                 _moviePlayer = null;
             }
-            
+
             _isTransitioning = false;
         }
 
@@ -343,13 +343,13 @@ namespace Andastra.Runtime.Core.Module
                     {
                         enterScript = runtimeArea.GetScript(ScriptEvent.OnEnter);
                     }
-                    
+
                     if (!string.IsNullOrEmpty(enterScript))
                     {
                         // Execute script for each party member
                         // Get party members from world (party system would provide this)
                         IEnumerable<IEntity> partyMembers = _world.GetEntitiesOfType(ObjectType.Creature)
-                            .Where(e => 
+                            .Where(e =>
                             {
                                 if (e is Entities.Entity entity)
                                 {
@@ -357,7 +357,7 @@ namespace Andastra.Runtime.Core.Module
                                 }
                                 return false;
                             });
-                        
+
                         IEntity areaEntity = _world.GetEntityByTag(_world.CurrentArea.ResRef, 0);
                         if (areaEntity == null)
                         {
@@ -365,7 +365,7 @@ namespace Andastra.Runtime.Core.Module
                             // Area scripts don't require a physical entity, just a tag reference
                             areaEntity = _world.GetEntityByTag(_world.CurrentArea.Tag, 0);
                         }
-                        
+
                         foreach (IEntity member in partyMembers)
                         {
                             _world.EventBus.FireScriptEvent(areaEntity, ScriptEvent.OnEnter, member);
@@ -580,7 +580,7 @@ namespace Andastra.Runtime.Core.Module
         {
             // Get all party members
             IEnumerable<IEntity> partyMembers = _world.GetEntitiesOfType(ObjectType.Creature)
-                .Where(e => 
+                .Where(e =>
                 {
                     if (e is Entities.Entity entity)
                     {
@@ -588,10 +588,10 @@ namespace Andastra.Runtime.Core.Module
                     }
                     return false;
                 });
-            
+
             int memberIndex = 0;
             const float spacing = 1.0f; // 1 unit spacing between party members
-            
+
             foreach (IEntity member in partyMembers)
             {
                 Interfaces.Components.ITransformComponent transform = member.GetComponent<Interfaces.Components.ITransformComponent>();
@@ -601,7 +601,7 @@ namespace Andastra.Runtime.Core.Module
                     float offsetX = (float)Math.Sin(facing) * spacing * memberIndex;
                     float offsetZ = (float)Math.Cos(facing) * spacing * memberIndex;
                     Vector3 memberPosition = position + new Vector3(offsetX, 0, offsetZ);
-                    
+
                     transform.Position = memberPosition;
                     if (member is Entities.Entity memberEntity)
                     {
@@ -614,7 +614,7 @@ namespace Andastra.Runtime.Core.Module
                     memberIndex++;
                 }
             }
-            
+
             // Fallback: If no party members found, just position player
             if (memberIndex == 0)
             {
@@ -654,13 +654,13 @@ namespace Andastra.Runtime.Core.Module
                 {
                     loadscreen = runtimeModule.LoadScreenResRef;
                 }
-                
+
                 if (!string.IsNullOrEmpty(loadscreen))
                 {
                     return loadscreen;
                 }
             }
-            
+
             // Fallback to default loadscreen
             return "load_default";
         }
@@ -726,13 +726,13 @@ namespace Andastra.Runtime.Core.Module
             // Original implementation: Movies play sequentially, blocking (waits for each to finish before playing next)
             // If movie playback fails, continues with module transition (graceful error handling)
             CancellationToken cancellationToken = CancellationToken.None;
-            
+
             for (int i = 0; i < movies.Length; i++)
             {
                 if (!string.IsNullOrEmpty(movies[i]))
                 {
                     System.Console.WriteLine("[ModuleTransitionSystem] Playing movie '{0}' ({1}/{2})", movies[i], i + 1, movies.Length);
-                    
+
                     // Play movie (blocking until completion)
                     // If playback fails, log error and continue with next movie
                     bool success = await _moviePlayer.PlayMovie(movies[i], cancellationToken);

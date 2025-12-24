@@ -1,7 +1,7 @@
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Resource;
 using JetBrains.Annotations;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Resource.Generics
 {
@@ -45,7 +45,7 @@ namespace Andastra.Parsing.Resource.Generics
         public ResRef OnExitScript { get; set; } = ResRef.FromBlank();
         public ResRef OnUserDefinedScript { get; set; } = ResRef.FromBlank();
         public string Comment { get; set; } = string.Empty;
-        
+
         // Deprecated fields
         public int PortraitId { get; set; }
         public int LoadscreenId { get; set; }

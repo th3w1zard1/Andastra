@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using Andastra.Parsing.Resource.Generics.DLG;
-using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Games.Common.Dialogue;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Engines.Odyssey.Dialogue
 {

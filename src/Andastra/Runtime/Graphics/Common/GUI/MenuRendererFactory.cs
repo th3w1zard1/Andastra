@@ -83,7 +83,7 @@ namespace Andastra.Runtime.Graphics.Common.GUI
             {
                 // Get the type of the graphics device wrapper
                 Type graphicsDeviceType = graphicsDevice.GetType();
-                
+
                 // Check if it's a MonoGameGraphicsDevice (using string comparison to avoid compile-time dependency)
                 if (graphicsDeviceType.FullName != "Andastra.Runtime.MonoGame.Graphics.MonoGameGraphicsDevice")
                 {
@@ -93,7 +93,7 @@ namespace Andastra.Runtime.Graphics.Common.GUI
 
                 // Extract the underlying MonoGame GraphicsDevice using reflection
                 object mgGraphicsDevice = ExtractMonoGameGraphicsDevice(graphicsDevice);
-                
+
                 if (mgGraphicsDevice == null)
                 {
                     Console.WriteLine("[MenuRendererFactory] ERROR: Failed to extract MonoGame GraphicsDevice from wrapper");
@@ -103,7 +103,7 @@ namespace Andastra.Runtime.Graphics.Common.GUI
                 // Load the MyraMenuRenderer type using reflection
                 Assembly monoGameAssembly = graphicsDeviceType.Assembly;
                 Type myraMenuRendererType = monoGameAssembly.GetType("Andastra.Runtime.MonoGame.GUI.MyraMenuRenderer");
-                
+
                 if (myraMenuRendererType == null)
                 {
                     Console.WriteLine("[MenuRendererFactory] ERROR: Could not find MyraMenuRenderer type in MonoGame assembly");
@@ -112,7 +112,7 @@ namespace Andastra.Runtime.Graphics.Common.GUI
 
                 // Create MyraMenuRenderer instance with the extracted GraphicsDevice
                 object renderer = Activator.CreateInstance(myraMenuRendererType, new[] { mgGraphicsDevice });
-                
+
                 if (renderer == null)
                 {
                     Console.WriteLine("[MenuRendererFactory] ERROR: Failed to create MyraMenuRenderer instance");
@@ -151,7 +151,7 @@ namespace Andastra.Runtime.Graphics.Common.GUI
                 {
                     Console.WriteLine($"[MenuRendererFactory] Successfully created MonoGame menu renderer (MyraMenuRenderer)");
                 }
-                
+
                 return baseRenderer;
             }
             catch (Exception ex)
@@ -159,13 +159,13 @@ namespace Andastra.Runtime.Graphics.Common.GUI
                 Console.WriteLine($"[MenuRendererFactory] ERROR: Exception while creating MonoGame menu renderer: {ex.Message}");
                 Console.WriteLine($"[MenuRendererFactory] Exception type: {ex.GetType().Name}");
                 Console.WriteLine($"[MenuRendererFactory] Stack trace: {ex.StackTrace}");
-                
+
                 // Re-throw if it's a critical exception that should propagate
                 if (ex is OutOfMemoryException || ex is StackOverflowException)
                 {
                     throw;
                 }
-                
+
                 return null;
             }
         }
@@ -198,7 +198,7 @@ namespace Andastra.Runtime.Graphics.Common.GUI
             {
                 // Get the type of the graphics device wrapper
                 Type graphicsDeviceType = graphicsDevice.GetType();
-                
+
                 // Check if it's a StrideGraphicsDevice (using string comparison to avoid compile-time dependency)
                 if (graphicsDeviceType.FullName != "Andastra.Runtime.Stride.Graphics.StrideGraphicsDevice")
                 {
@@ -208,7 +208,7 @@ namespace Andastra.Runtime.Graphics.Common.GUI
 
                 // Extract the underlying Stride GraphicsDevice using reflection
                 object strideGraphicsDevice = ExtractStrideGraphicsDevice(graphicsDevice);
-                
+
                 if (strideGraphicsDevice == null)
                 {
                     Console.WriteLine("[MenuRendererFactory] ERROR: Failed to extract Stride GraphicsDevice from wrapper");
@@ -218,7 +218,7 @@ namespace Andastra.Runtime.Graphics.Common.GUI
                 // Load the StrideMenuRenderer type using reflection
                 Assembly strideAssembly = graphicsDeviceType.Assembly;
                 Type strideMenuRendererType = strideAssembly.GetType("Andastra.Runtime.Stride.GUI.StrideMenuRenderer");
-                
+
                 if (strideMenuRendererType == null)
                 {
                     Console.WriteLine("[MenuRendererFactory] ERROR: Could not find StrideMenuRenderer type in Stride assembly");
@@ -229,7 +229,7 @@ namespace Andastra.Runtime.Graphics.Common.GUI
                 // StrideMenuRenderer constructor takes (GraphicsDevice graphicsDevice, SpriteFont font = null)
                 // We'll pass null for font since it's optional
                 object renderer = Activator.CreateInstance(strideMenuRendererType, new[] { strideGraphicsDevice, null });
-                
+
                 if (renderer == null)
                 {
                     Console.WriteLine("[MenuRendererFactory] ERROR: Failed to create StrideMenuRenderer instance");
@@ -268,7 +268,7 @@ namespace Andastra.Runtime.Graphics.Common.GUI
                 {
                     Console.WriteLine($"[MenuRendererFactory] Successfully created Stride menu renderer (StrideMenuRenderer)");
                 }
-                
+
                 return baseRenderer;
             }
             catch (Exception ex)
@@ -276,13 +276,13 @@ namespace Andastra.Runtime.Graphics.Common.GUI
                 Console.WriteLine($"[MenuRendererFactory] ERROR: Exception while creating Stride menu renderer: {ex.Message}");
                 Console.WriteLine($"[MenuRendererFactory] Exception type: {ex.GetType().Name}");
                 Console.WriteLine($"[MenuRendererFactory] Stack trace: {ex.StackTrace}");
-                
+
                 // Re-throw if it's a critical exception that should propagate
                 if (ex is OutOfMemoryException || ex is StackOverflowException)
                 {
                     throw;
                 }
-                
+
                 return null;
             }
         }
@@ -311,11 +311,11 @@ namespace Andastra.Runtime.Graphics.Common.GUI
             {
                 // Get the type of MonoGameGraphicsDevice
                 Type wrapperType = wrapper.GetType();
-                
+
                 // Get the private _device field using reflection
                 // BindingFlags.NonPublic | BindingFlags.Instance to access private instance field
                 FieldInfo deviceField = wrapperType.GetField("_device", BindingFlags.NonPublic | BindingFlags.Instance);
-                
+
                 if (deviceField == null)
                 {
                     Console.WriteLine("[MenuRendererFactory] ERROR: Could not find _device field in MonoGameGraphicsDevice");
@@ -327,7 +327,7 @@ namespace Andastra.Runtime.Graphics.Common.GUI
 
                 // Get the value of the _device field from the wrapper instance
                 object deviceValue = deviceField.GetValue(wrapper);
-                
+
                 if (deviceValue == null)
                 {
                     Console.WriteLine("[MenuRendererFactory] ERROR: _device field is null in MonoGameGraphicsDevice wrapper");
@@ -373,11 +373,11 @@ namespace Andastra.Runtime.Graphics.Common.GUI
             {
                 // Get the type of StrideGraphicsDevice
                 Type wrapperType = wrapper.GetType();
-                
+
                 // Get the private _device field using reflection
                 // BindingFlags.NonPublic | BindingFlags.Instance to access private instance field
                 FieldInfo deviceField = wrapperType.GetField("_device", BindingFlags.NonPublic | BindingFlags.Instance);
-                
+
                 if (deviceField == null)
                 {
                     Console.WriteLine("[MenuRendererFactory] ERROR: Could not find _device field in StrideGraphicsDevice");
@@ -389,7 +389,7 @@ namespace Andastra.Runtime.Graphics.Common.GUI
 
                 // Get the value of the _device field from the wrapper instance
                 object deviceValue = deviceField.GetValue(wrapper);
-                
+
                 if (deviceValue == null)
                 {
                     Console.WriteLine("[MenuRendererFactory] ERROR: _device field is null in StrideGraphicsDevice wrapper");

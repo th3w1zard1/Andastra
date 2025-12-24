@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Games.Eclipse.Physics;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Eclipse
 {
@@ -92,8 +92,8 @@ namespace Andastra.Runtime.Games.Eclipse
                 Gravity = _gravity,
                 // Enable all standard PhysX scene features
                 // Based on daorigins.exe/DragonAge2.exe: Standard PhysX scene flags
-                Flags = PhysXSceneFlags.EnableActiveActors | 
-                        PhysXSceneFlags.EnableCCD | 
+                Flags = PhysXSceneFlags.EnableActiveActors |
+                        PhysXSceneFlags.EnableCCD |
                         PhysXSceneFlags.EnableStabilization,
                 // Broad phase type: Multi box pruning (standard for games)
                 // Based on daorigins.exe/DragonAge2.exe: Uses multi box pruning for broad phase collision detection
@@ -159,7 +159,7 @@ namespace Andastra.Runtime.Games.Eclipse
             // 2. Collision response (impulse application)
             // 3. Constraint solving
             // 4. Integration (position/rotation updates)
-            
+
             // Step PhysX scene simulation
             // Based on daorigins.exe/DragonAge2.exe: PhysX scene simulation step
             // Original implementation: scene->simulate(deltaTime); scene->fetchResults(true);
@@ -1374,7 +1374,7 @@ namespace Andastra.Runtime.Games.Eclipse
             // where (x,y,z) is the normalized rotation axis and θ is the angle
             float w = Math.Max(-1.0f, Math.Min(1.0f, rotationError.W));
             float angle = 2.0f * (float)Math.Acos(Math.Abs(w));
-            
+
             // If angle is very small, return 0 (no rotation)
             if (angle < 0.0001f)
             {

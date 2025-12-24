@@ -1,9 +1,9 @@
 using System.Numerics;
-using JetBrains.Annotations;
+using Andastra.Parsing.Common;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Games.Common;
-using Andastra.Parsing.Common;
 using Andastra.Runtime.Games.Eclipse.Loading;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Eclipse
 {

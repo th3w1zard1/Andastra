@@ -1729,34 +1729,34 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             // x87 FPU FISTP uses round-to-nearest-even (banker's rounding) by default
             // Math.Round() in .NET also uses round-to-nearest-even by default
             // However, we need to ensure exact matching, especially for edge cases
-            
+
             // Handle special cases first (NaN, Infinity)
             if (double.IsNaN(value))
             {
                 return 0; // x87 FPU FISTP on NaN typically produces 0 or undefined behavior
             }
-            
+
             if (double.IsPositiveInfinity(value))
             {
                 return long.MaxValue; // Clamp to maximum int64
             }
-            
+
             if (double.IsNegativeInfinity(value))
             {
                 return long.MinValue; // Clamp to minimum int64
             }
-            
+
             // Clamp to int64 range to prevent overflow
             if (value > (double)long.MaxValue)
             {
                 return long.MaxValue;
             }
-            
+
             if (value < (double)long.MinValue)
             {
                 return long.MinValue;
             }
-            
+
             // Use Math.Round with MidpointRounding.ToEven to explicitly match x87 FPU round-to-nearest-even
             // This ensures exact matching of the x87 FPU FISTP rounding behavior
             // Based on x87 FPU specification: Round-to-nearest-even is the default rounding mode

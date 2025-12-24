@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using JetBrains.Annotations;
+using Andastra.Parsing.Common;
+using Andastra.Parsing.Formats.BWM;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Games.Common;
-using Andastra.Parsing.Formats.BWM;
-using Andastra.Parsing.Common;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Aurora
 {

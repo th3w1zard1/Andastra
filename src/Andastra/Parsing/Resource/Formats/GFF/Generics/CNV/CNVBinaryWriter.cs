@@ -1,9 +1,9 @@
 using System;
 using System.IO;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Resource.Generics.CNV
 {
@@ -37,7 +37,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
             _cnv = cnv ?? throw new ArgumentNullException(nameof(cnv));
             _filepath = filepath ?? throw new ArgumentNullException(nameof(filepath));
             _game = game;
-            
+
             // Validate game type - CNV format is only used by Eclipse Engine
             if (!game.IsEclipse())
             {
@@ -59,7 +59,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
             _cnv = cnv ?? throw new ArgumentNullException(nameof(cnv));
             _stream = target ?? throw new ArgumentNullException(nameof(target));
             _game = game;
-            
+
             // Validate game type - CNV format is only used by Eclipse Engine
             if (!game.IsEclipse())
             {
@@ -79,7 +79,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
         {
             _cnv = cnv ?? throw new ArgumentNullException(nameof(cnv));
             _game = game;
-            
+
             // Validate game type - CNV format is only used by Eclipse Engine
             if (!game.IsEclipse())
             {

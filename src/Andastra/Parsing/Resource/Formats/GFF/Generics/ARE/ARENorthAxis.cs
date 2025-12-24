@@ -73,19 +73,19 @@ namespace Andastra.Parsing.Resource.Generics.ARE
         /// Moving in the +Y direction is moving north. This is the most common orientation.
         /// </summary>
         PositiveY = 0,
-        
+
         /// <summary>
         /// Negative Y axis points north (1).
         /// Moving in the -Y direction is moving north. Used when the area is rotated 180 degrees.
         /// </summary>
         NegativeY = 1,
-        
+
         /// <summary>
         /// Positive X axis points north (2).
         /// Moving in the +X direction is moving north. Used when the area is rotated 90 degrees clockwise.
         /// </summary>
         PositiveX = 2,
-        
+
         /// <summary>
         /// Negative X axis points north (3).
         /// Moving in the -X direction is moving north. Used when the area is rotated 90 degrees counter-clockwise.

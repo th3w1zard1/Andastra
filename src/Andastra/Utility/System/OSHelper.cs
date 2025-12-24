@@ -215,7 +215,7 @@ namespace Andastra.Utility.System
 
             bool isDirectory = Directory.Exists(path);
             string pathStr = path;
-            
+
             // Quote the path if it contains spaces
             if (pathStr.Contains(" "))
             {

@@ -28,17 +28,17 @@ namespace Andastra.Runtime.Content.Interfaces
         /// Priority of this provider (higher = checked first).
         /// </summary>
         int Priority { get; }
-        
+
         /// <summary>
         /// Tries to open a resource stream.
         /// </summary>
         bool TryOpen(ResourceIdentifier id, out Stream stream);
-        
+
         /// <summary>
         /// Checks if a resource exists.
         /// </summary>
         bool Exists(ResourceIdentifier id);
-        
+
         /// <summary>
         /// The search location this provider represents.
         /// </summary>

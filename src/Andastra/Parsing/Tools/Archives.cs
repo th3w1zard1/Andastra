@@ -4,13 +4,13 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Formats.KEY;
 using Andastra.Parsing.Formats.RIM;
-using Andastra.Parsing.Resource.Formats.BIF;
 using Andastra.Parsing.Resource;
+using Andastra.Parsing.Resource.Formats.BIF;
 using JetBrains.Annotations;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Tools
 {

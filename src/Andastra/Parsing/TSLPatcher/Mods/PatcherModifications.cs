@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Logger;
 using Andastra.Parsing.Memory;
 using JetBrains.Annotations;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Mods
 {

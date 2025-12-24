@@ -163,7 +163,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
         {
             // Pack sort key: [MaterialID:32][ShaderID:16][Distance:16]
             ulong key = ((ulong)materialId << 32) | ((ulong)shaderId << 16);
-            
+
             // Encode distance in lower 16 bits (normalized to 0-65535)
             ushort distanceEncoded = (ushort)Math.Min(65535, (int)(distance * 100.0f));
             key |= distanceEncoded;

@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Navigation;
 using Andastra.Runtime.Games.Common;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Odyssey
 {
@@ -275,7 +275,7 @@ namespace Andastra.Runtime.Games.Odyssey
             }
             return null;
         }
-        
+
         /// Uses same projection logic as ProjectToWalkmesh but only returns height.
         /// </remarks>
         public bool GetHeightAtPoint(Vector3 point, out float height)
@@ -340,7 +340,7 @@ namespace Andastra.Runtime.Games.Odyssey
             {
                 return true; // Hit a walkable face, line of sight is clear
             }
-            
+
             // Hit a non-walkable face that blocks line of sight
             return false;
         }
@@ -733,7 +733,7 @@ namespace Andastra.Runtime.Games.Odyssey
         {
             // Base cost is distance between face centers
             float dist = Vector3.Distance(GetFaceCenter(from), GetFaceCenter(to));
-            
+
             // Apply surface material cost modifier
             float surfaceMod = GetSurfaceCost(to);
             return dist * surfaceMod;

@@ -5,9 +5,9 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using Andastra.Parsing;
-using Andastra.Parsing.Formats.MDLData;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.MDL;
+using Andastra.Parsing.Formats.MDLData;
 
 namespace Andastra.Parsing.Formats.MDL
 {

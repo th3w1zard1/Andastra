@@ -1,6 +1,5 @@
 using System;
 using System.Numerics;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Common
 {
@@ -33,7 +32,7 @@ namespace Andastra.Parsing.Common
                 (u.Z * v.X) - (u.X * v.Z),
                 (u.X * v.Y) - (u.Y * v.X)
             );
-            normal = System.Numerics.Vector3.Normalize(normal);
+            normal = Vector3.Normalize(normal);
 
             return normal;
         }

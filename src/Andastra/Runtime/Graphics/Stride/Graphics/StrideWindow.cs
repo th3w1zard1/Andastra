@@ -1,8 +1,8 @@
 using System;
 using System.Reflection;
-using Stride.Games;
-using Stride.Core.Mathematics;
 using Andastra.Runtime.Graphics;
+using Stride.Core.Mathematics;
+using Stride.Games;
 
 namespace Andastra.Runtime.Stride.Graphics
 {
@@ -20,10 +20,10 @@ namespace Andastra.Runtime.Stride.Graphics
         public StrideWindow(GameWindow window)
         {
             _window = window ?? throw new ArgumentNullException(nameof(window));
-            
+
             // Use reflection to access ClientSize property (may not be directly accessible in all Stride versions)
             _clientSizeProperty = _window.GetType().GetProperty("ClientSize");
-            
+
             // Use reflection to access Close method (may not be directly accessible in all Stride versions)
             _closeMethod = _window.GetType().GetMethod("Close");
         }

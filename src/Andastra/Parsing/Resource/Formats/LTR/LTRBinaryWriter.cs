@@ -1,8 +1,8 @@
 using System;
 using System.IO;
 using Andastra.Parsing;
-using Andastra.Parsing.Formats.LTR;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Formats.LTR;
 
 namespace Andastra.Parsing.Formats.LTR
 {

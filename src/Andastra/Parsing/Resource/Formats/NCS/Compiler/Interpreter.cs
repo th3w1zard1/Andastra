@@ -1,11 +1,11 @@
 using System;
-using System.Numerics;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Common.Script;
 using JetBrains.Annotations;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Formats.NCS.Compiler
 {

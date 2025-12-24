@@ -4,9 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.NCS.Compiler;
 using Andastra.Parsing.Formats.NCS.Compiler.NSS;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Common.Script
 {
@@ -89,7 +89,7 @@ namespace Andastra.Parsing.Common.Script
             foreach (string line in lines)
             {
                 string processedLine = line;
-                
+
                 // Handle block comments
                 if (inBlockComment)
                 {
@@ -420,11 +420,11 @@ namespace Andastra.Parsing.Common.Script
                     string name = paramName.Identifier;
                     string defaultValue = null;
 
-                if (cleanGroup.Count > 3 && cleanGroup[2] is NssOperator assignOp && assignOp.Operator == NssOperators.Assignment)
-                {
-                    var defaultTokens = cleanGroup.Skip(3).ToList();
-                    defaultValue = string.Join("", defaultTokens.Select(t => t.ToString()));
-                }
+                    if (cleanGroup.Count > 3 && cleanGroup[2] is NssOperator assignOp && assignOp.Operator == NssOperators.Assignment)
+                    {
+                        var defaultTokens = cleanGroup.Skip(3).ToList();
+                        defaultValue = string.Join("", defaultTokens.Select(t => t.ToString()));
+                    }
 
                     @params.Add(new ParamInfo
                     {

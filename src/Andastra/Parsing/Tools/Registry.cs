@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using Microsoft.Win32;
 using Andastra.Parsing;
-using Andastra.Parsing.Logger;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Logger;
+using Microsoft.Win32;
 
 namespace Andastra.Parsing.Tools
 {

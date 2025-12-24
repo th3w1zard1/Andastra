@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Engines.Odyssey.Components
 {
@@ -80,7 +80,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
             {
                 // Remove item from any previous slot
                 RemoveItem(item);
-                
+
                 // Place item in new slot
                 _slots[slot] = item;
             }

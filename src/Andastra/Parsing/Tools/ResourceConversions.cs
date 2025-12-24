@@ -1,11 +1,11 @@
 using System;
 using System.IO;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.MDL;
 using Andastra.Parsing.Formats.MDLData;
 using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Formats.WAV;
 using Andastra.Parsing.Resource;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Tools
 {

@@ -1,18 +1,17 @@
-﻿// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:86-1759
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:86-1759
 // Original: public class SubScriptState
 using System;
-using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using Andastra.Parsing.Formats.NCS.NCSDecomp;
+using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.Stack;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.Utils;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
+using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
 using AVarRef = Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode.AVarRef;
-
 using UtilsType = Andastra.Parsing.Formats.NCS.NCSDecomp.Utils.Type;
 
 namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
@@ -629,7 +628,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
 
                     if (canCreateSwitch)
                     {
-                                ScriptNode.ASwitch aswitch = null;
+                        ScriptNode.ASwitch aswitch = null;
                         Node dest = this.nodedata.GetDestination(node);
                         ScriptNode.ASwitchCase acase = new ScriptNode.ASwitchCase(this.SafeGetPos(dest), (ScriptNode.AConst)(object)(ScriptNode.AConst)cond.GetRight());
                         if (this.current.HasChildren())
@@ -741,13 +740,13 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                         }
                     }
                 }
-                
+
                 // If we didn't find a conditional expression by searching, try RemoveLastExp as fallback
                 if (!(condExp is AConditionalExp))
                 {
                     condExp = this.RemoveLastExp(true);
                 }
-                
+
                 // If still no conditional expression found, use what we have (might be a placeholder)
                 AIf aif = new AIf(this.SafeGetPos(node), this.SafeGetPos(dest) - 6, condExp);
                 this.current.AddChild(aif);
@@ -833,7 +832,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                         if (isRet)
                         {
                             Error("DEBUG transformJump: treating as RETURN, adding AReturnStatement to " + this.current.GetType().Name);
-                            
+
                             // CRITICAL FOR ROUNDTRIP FIDELITY: Check if there's cleanup code after this return JMP
                             // The external compiler adds cleanup code (MOVSP+RETN) after return JMPs
                             // We need to preserve this cleanup code even though it's unreachable
@@ -844,14 +843,14 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                                 int jmpPos = this.nodedata.TryGetPos(node);
                                 int nextPos = this.nodedata.TryGetPos(nextAfterJmp);
                                 int destPos = this.nodedata.TryGetPos(dest);
-                                
+
                                 // Check if there are instructions between the JMP and its destination
                                 // These are unreachable cleanup code that we need to preserve
                                 if (nextPos > jmpPos && nextPos < destPos)
                                 {
                                     hasCleanupCode = true;
                                     Error($"DEBUG transformJump: Found cleanup code after return JMP - JMP at {jmpPos}, next at {nextPos}, dest at {destPos}");
-                                    
+
                                     // Check if it's a MOVSP+RETN pattern (common cleanup code)
                                     Node afterNext = NodeUtils.GetNextCommand(nextAfterJmp, this.nodedata);
                                     if (afterNext != null && typeof(AMoveSpCommand).IsInstanceOfType(nextAfterJmp))
@@ -864,7 +863,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                                     }
                                 }
                             }
-                            
+
                             AReturnStatement areturn;
                             if (!this.root.GetType().Equals((byte)0))
                             {
@@ -909,7 +908,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                             }
 
                             targetNode.AddChild(areturn);
-                            
+
                             // CRITICAL: For roundtrip fidelity, we must NOT skip cleanup code after return JMPs
                             // The cleanup code will be processed by subsequent visitor calls, but we need to ensure
                             // it's not marked as dead code. The issue is that SetDeadCode marks it as dead, and

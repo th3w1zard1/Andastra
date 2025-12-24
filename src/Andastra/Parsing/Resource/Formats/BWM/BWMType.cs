@@ -88,7 +88,7 @@ namespace Andastra.Parsing.Formats.BWM
         /// Collision-only, no AABB tree, no pathfinding support.
         /// </summary>
         PlaceableOrDoor = 0,
-        
+
         /// <summary>
         /// Area model walkmesh (WOK files).
         /// Used for entire game areas/modules.

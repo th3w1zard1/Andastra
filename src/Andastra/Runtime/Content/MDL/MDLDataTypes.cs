@@ -26,7 +26,7 @@ namespace Andastra.Runtime.Content.MDL
         /// X component of the vector.
         /// </summary>
         public float X;
-        
+
         /// <summary>
         /// Y component of the vector.
         /// </summary>
@@ -54,12 +54,12 @@ namespace Andastra.Runtime.Content.MDL
         /// X component of the vector.
         /// </summary>
         public float X;
-        
+
         /// <summary>
         /// Y component of the vector.
         /// </summary>
         public float Y;
-        
+
         /// <summary>
         /// Z component of the vector.
         /// </summary>
@@ -89,17 +89,17 @@ namespace Andastra.Runtime.Content.MDL
         /// X component of the vector.
         /// </summary>
         public float X;
-        
+
         /// <summary>
         /// Y component of the vector.
         /// </summary>
         public float Y;
-        
+
         /// <summary>
         /// Z component of the vector.
         /// </summary>
         public float Z;
-        
+
         /// <summary>
         /// W component of the vector.
         /// </summary>

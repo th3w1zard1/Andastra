@@ -57,7 +57,7 @@ namespace Andastra.Parsing.Formats.PCC
                 // - Big-endian variants: 0xC1832A9E (cooked), 0xC4832A9E (uncooked)
                 // Based on Unreal Engine 3 package format specification
                 uint signature = Reader.ReadUInt32();
-                
+
                 // Validate signature and determine package type
                 PCCType packageType;
                 bool isValidSignature = ValidateSignature(signature, out packageType);
@@ -66,7 +66,7 @@ namespace Andastra.Parsing.Formats.PCC
                 {
                     // Perform additional validation checks to provide better diagnostics
                     string diagnosticInfo = GenerateSignatureDiagnostics(signature);
-                    
+
                     throw new InvalidDataException(
                         $"Invalid PCC/UPK package signature. Expected one of: 0x9E2A83C1 (PCC cooked), " +
                         $"0x9E2A83C4 (UPK uncooked), 0xC1832A9E (PCC big-endian), or 0xC4832A9E (UPK big-endian). " +
@@ -94,7 +94,7 @@ namespace Andastra.Parsing.Formats.PCC
                 int importOffset = Reader.ReadInt32();
                 int dependsOffset = Reader.ReadInt32();
                 int dependsCount = Reader.ReadInt32();
-                
+
                 // Validate offsets are reasonable
                 if (nameOffset < 0 || exportOffset < 0 || importOffset < 0 ||
                     nameOffset >= Data.Length || exportOffset >= Data.Length || importOffset >= Data.Length)
@@ -170,7 +170,7 @@ namespace Andastra.Parsing.Formats.PCC
                     ResourceType resType = DetermineResourceType(objectName, export.ClassIndex, names);
 
                     // Read export data
-                    if (export.SerialOffset > 0 && export.SerialSize > 0 && 
+                    if (export.SerialOffset > 0 && export.SerialSize > 0 &&
                         export.SerialOffset + export.SerialSize <= Data.Length)
                     {
                         Reader.Seek(export.SerialOffset);
@@ -195,7 +195,7 @@ namespace Andastra.Parsing.Formats.PCC
         {
             // Try to determine resource type from object name extension
             string lowerName = objectName.ToLowerInvariant();
-            
+
             // Check common extensions
             if (lowerName.EndsWith(".texture2d") || lowerName.EndsWith(".texture"))
             {
@@ -310,7 +310,7 @@ namespace Andastra.Parsing.Formats.PCC
                           ((signature & 0x0000FF00) << 8) |
                           ((signature & 0x00FF0000) >> 8) |
                           ((signature & 0xFF000000) >> 24);
-            
+
             if (swapped == 0x9E2A83C1 || swapped == 0x9E2A83C4 ||
                 swapped == 0xC1832A9E || swapped == 0xC4832A9E)
             {

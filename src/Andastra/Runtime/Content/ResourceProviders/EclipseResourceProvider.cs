@@ -4,9 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Andastra.Parsing.Resource;
 using Andastra.Parsing.Formats.PCC;
 using Andastra.Parsing.Formats.RIM;
+using Andastra.Parsing.Resource;
 using Andastra.Runtime.Content.Interfaces;
 
 namespace Andastra.Runtime.Content.ResourceProviders

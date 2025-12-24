@@ -6,8 +6,8 @@ using Andastra.Parsing.Formats.NCS;
 using Andastra.Parsing.Formats.NCS.NCSDecomp;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
-using AST = Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
 using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
+using AST = Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
 
 namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
 {
@@ -1470,7 +1470,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                     bool mainCodeInGlobalsInner = false;
                     bool entryJsrTargetIsLastRetnCheckInner = (entryJsrTarget >= 0 && entryJsrTarget == instructions.Count - 1);
                     Debug($"DEBUG NcsToAstConverter: Checking if main code is in globals - entryJsrTarget={entryJsrTarget}, instructions.Count-1={instructions.Count - 1}, entryJsrTargetIsLastRetnCheck={entryJsrTargetIsLastRetnCheckInner}, mainStart={mainStart}, entryStubEnd={entryStubEnd}, globalsEndForMain={globalsEndForMain}, savebpIndex={savebpIndex}, mainStartBeforeAdjustment={mainStartBeforeAdjustment}");
-                    
+
                     // CRITICAL: Check whenever mainStart >= entryStubEnd (not just when entryJsrTargetIsLastRetnCheckInner)
                     // This handles the general case where mainStart is at or after entry stub end
                     if (mainStart >= entryStubEnd && savebpIndex >= 0 && entryStubEnd > savebpIndex + 1)
@@ -1482,18 +1482,18 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                         int meaningfulCodeCount = 0;
                         int checkStart = entryStubEnd; // Start checking from right after entry stub
                         int checkEnd = instructions.Count - 1; // End at last RETN (exclusive)
-                        
+
                         Debug($"DEBUG NcsToAstConverter: Checking for meaningful code between entryStubEnd ({entryStubEnd}) and last RETN ({checkEnd})");
-                        
+
                         for (int i = checkStart; i < checkEnd; i++)
                         {
                             if (i >= instructions.Count)
                             {
                                 break;
                             }
-                            
+
                             NCSInstructionType insType = instructions[i].InsType;
-                            
+
                             // Count meaningful instructions that indicate real main code (not just entry stub or cleanup)
                             // ACTION: Function calls (definitely meaningful)
                             if (insType == NCSInstructionType.ACTION)
@@ -1553,18 +1553,18 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                             // Note: We exclude stack management only instructions like MOVSP, RSADD*, CPDOWNSP, etc.
                             // as they might be part of cleanup patterns or variable initialization
                         }
-                        
+
                         // Also check if code after entry stub is just cleanup code
                         bool isJustCleanupCode = IsCodeAfterEntryStubCleanup(instructions, entryStubEnd);
-                        
+
                         Debug($"DEBUG NcsToAstConverter: Meaningful code count between entryStubEnd ({entryStubEnd}) and last RETN ({checkEnd}): {meaningfulCodeCount}, isJustCleanupCode={isJustCleanupCode}");
-                        
+
                         // If there's no meaningful code between entryStubEnd and last RETN (or it's just cleanup),
                         // the main code must be in the globals range (0 to SAVEBP) - need to split
                         if (meaningfulCodeCount == 0 || isJustCleanupCode)
                         {
                             Debug($"DEBUG NcsToAstConverter: No meaningful code found between entryStubEnd ({entryStubEnd}) and last RETN ({checkEnd}), checking if main code is in globals range");
-                            
+
                             // Find where the main code actually starts by looking for the first ACTION instruction in the 0 to SAVEBP range
                             int mainCodeStartInGlobals = -1;
                             for (int i = 0; i <= savebpIndex; i++)
@@ -1576,7 +1576,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                                     break;
                                 }
                             }
-                            
+
                             if (mainCodeStartInGlobals >= 0)
                             {
                                 mainCodeInGlobalsInner = true;
@@ -2252,7 +2252,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                     // Log CONSTI near NEGI to understand the pattern
                     if (i < limit - 1 && instructions[i + 1]?.InsType == NCSInstructionType.NEGI)
                     {
-                        Debug($"DEBUG ConvertInstructionRangeToSubroutine: Found CONSTI at index {i} followed by NEGI at {i+1}");
+                        Debug($"DEBUG ConvertInstructionRangeToSubroutine: Found CONSTI at index {i} followed by NEGI at {i + 1}");
                     }
                 }
 

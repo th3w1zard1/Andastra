@@ -1,12 +1,12 @@
 using System;
 using System.IO;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.SSF;
 using Andastra.Parsing.Formats.TLK;
 using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Resource;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Tools
 {

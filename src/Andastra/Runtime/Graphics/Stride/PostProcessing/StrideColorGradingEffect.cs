@@ -1,13 +1,13 @@
 using System;
 using System.IO;
-using StrideGraphics = Stride.Graphics;
-using Stride.Rendering;
-using Stride.Core.Mathematics;
-using Stride.Shaders;
-using Stride.Shaders.Compiler;
-using Stride.Core.IO;
 using Andastra.Runtime.Graphics.Common.PostProcessing;
 using Andastra.Runtime.Stride.Graphics;
+using Stride.Core.IO;
+using Stride.Core.Mathematics;
+using Stride.Rendering;
+using Stride.Shaders;
+using Stride.Shaders.Compiler;
+using StrideGraphics = Stride.Graphics;
 using Vector2 = Stride.Core.Mathematics.Vector2;
 using Vector3 = Stride.Core.Mathematics.Vector3;
 using Vector4 = Stride.Core.Mathematics.Vector4;
@@ -316,8 +316,12 @@ namespace Andastra.Runtime.Stride.PostProcessing
                         {
                             try
                             {
-                                parameters.Set(new ObjectParameterKey<StrideGraphics.Texture>("LutTexture"), _lutTexture);
-                                parameters.Set(new ValueParameterKey<int>("LutSize"), _lutSize);
+                                var lutTexture = _lutTexture as StrideGraphics.Texture;
+                                if (lutTexture != null)
+                                {
+                                    parameters.Set(new ObjectParameterKey<StrideGraphics.Texture>("LutTexture"), lutTexture);
+                                    parameters.Set(new ValueParameterKey<int>("LutSize"), _lutSize);
+                                }
                             }
                             catch (Exception)
                             {
@@ -940,7 +944,11 @@ shader ColorGradingEffect : ShaderBase
                 Vector4[] lutData = null;
                 if (_lutTexture != null && _lutSize > 0)
                 {
-                    lutData = ReadTextureData(_lutTexture);
+                    var lutTexture = _lutTexture as StrideGraphics.Texture;
+                    if (lutTexture != null)
+                    {
+                        lutData = ReadTextureData(lutTexture);
+                    }
                     if (lutData == null)
                     {
                         Console.WriteLine("[StrideColorGrading] Failed to read LUT StrideGraphics.Texture data");
@@ -990,11 +998,15 @@ shader ColorGradingEffect : ShaderBase
                         Vector3 finalColor = color;
                         if (lutData != null && _lutSize > 0 && _strength > 0.0f)
                         {
-                            Vector3 lutColor = SampleLut3D(color, lutData, _lutSize, _lutTexture.Width, _lutTexture.Height);
+                            var lutTexture = _lutTexture as StrideGraphics.Texture;
+                            if (lutTexture != null)
+                            {
+                                Vector3 lutColor = SampleLut3D(color, lutData, _lutSize, lutTexture.Width, lutTexture.Height);
 
-                            // Step 4: Blend LUT result with adjusted color based on strength
-                            // Formula: lerp(adjustedColor, lutColor, strength)
-                            finalColor = Vector3.Lerp(color, lutColor, _strength);
+                                // Step 4: Blend LUT result with adjusted color based on strength
+                                // Formula: lerp(adjustedColor, lutColor, strength)
+                                finalColor = Vector3.Lerp(color, lutColor, _strength);
+                            }
                         }
 
                         // Step 5: Clamp to valid color range and preserve alpha

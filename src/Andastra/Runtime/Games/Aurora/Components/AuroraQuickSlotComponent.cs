@@ -1,7 +1,7 @@
 using System;
-using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Games.Common.Components;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Aurora.Components
 {

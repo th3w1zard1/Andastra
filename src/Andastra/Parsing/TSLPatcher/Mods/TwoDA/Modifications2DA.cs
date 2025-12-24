@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Logger;
 using Andastra.Parsing.Memory;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Mods.TwoDA
 {

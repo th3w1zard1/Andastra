@@ -2,18 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Resource.Formats.LYT;
 using Andastra.Parsing.Formats.RIM;
 using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Formats.VIS;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Logger;
+using Andastra.Parsing.Resource;
+using Andastra.Parsing.Resource.Formats.LYT;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource.Generics.ARE;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Tools
 {

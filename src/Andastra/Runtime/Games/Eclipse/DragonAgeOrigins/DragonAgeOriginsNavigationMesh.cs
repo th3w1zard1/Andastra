@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Games.Eclipse;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Eclipse.DragonAgeOrigins
 {

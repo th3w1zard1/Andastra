@@ -1,7 +1,7 @@
 using System;
-using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Games.Common.Dialogue;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Engines.Odyssey.Dialogue
 {

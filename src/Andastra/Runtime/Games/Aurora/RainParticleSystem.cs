@@ -87,12 +87,12 @@ namespace Andastra.Runtime.Games.Aurora
             }
 
             _random = new Random();
-            
+
             // Calculate particle count based on area size
             // Approximately 100 particles per 10x10 tile area
             int baseParticleCount = (areaWidth * areaHeight * 100) / 100;
             _particleCount = (int)(baseParticleCount * particleDensity);
-            
+
             // Ensure minimum particle count for small areas
             if (_particleCount < 50)
             {
@@ -172,7 +172,7 @@ namespace Andastra.Runtime.Games.Aurora
             for (int i = 0; i < _particles.Count; i++)
             {
                 RainParticle particle = _particles[i];
-                
+
                 if (!particle.IsActive)
                 {
                     continue;
@@ -180,7 +180,7 @@ namespace Andastra.Runtime.Games.Aurora
 
                 // Calculate fall velocity (downward + wind influence)
                 Vector3 velocity = new Vector3(0.0f, -particle.Speed, 0.0f);
-                
+
                 // Apply wind influence (wind affects horizontal movement)
                 // Wind power affects how much wind influences rain direction
                 if (_windPower > 0.0f && _windDirection.LengthSquared() > 0.0f)
@@ -206,7 +206,7 @@ namespace Andastra.Runtime.Games.Aurora
                     particle.Position.X = (float)(_random.NextDouble() * worldWidth);
                     particle.Position.Z = (float)(_random.NextDouble() * worldHeight);
                     particle.Position.Y = RainSpawnHeightMin + (float)(_random.NextDouble() * (RainSpawnHeightMax - RainSpawnHeightMin));
-                    
+
                     // Randomize speed again for variation
                     particle.Speed = RainFallSpeedBase + (float)((_random.NextDouble() * 2.0 - 1.0) * RainFallSpeedVariation);
                     particle.Lifetime = (float)(_random.NextDouble() * 2.0);

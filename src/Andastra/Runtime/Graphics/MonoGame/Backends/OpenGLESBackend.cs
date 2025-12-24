@@ -728,64 +728,64 @@ namespace Andastra.Runtime.MonoGame.Backends
                     {
                         IntPtr dataPtr = pinnedData.AddrOfPinnedObject();
 
-                    if (isCompressed)
-                    {
-                        // Upload compressed texture data
-                        int expectedSize = CalculateCompressedTextureSize(data.Format, mipmap.Width, mipmap.Height);
-                        if (uploadData.Length < expectedSize)
+                        if (isCompressed)
                         {
-                            Console.WriteLine($"[OpenGLESBackend] UploadTextureData: Compressed mipmap {i} data size mismatch. Expected {expectedSize} bytes, got {uploadData.Length}");
-                            if (_glBindTexture != null)
+                            // Upload compressed texture data
+                            int expectedSize = CalculateCompressedTextureSize(data.Format, mipmap.Width, mipmap.Height);
+                            if (uploadData.Length < expectedSize)
                             {
-                                _glBindTexture(GL_TEXTURE_2D, 0);
+                                Console.WriteLine($"[OpenGLESBackend] UploadTextureData: Compressed mipmap {i} data size mismatch. Expected {expectedSize} bytes, got {uploadData.Length}");
+                                if (_glBindTexture != null)
+                                {
+                                    _glBindTexture(GL_TEXTURE_2D, 0);
+                                }
+                                return false;
                             }
-                            return false;
-                        }
 
-                        if (_glCompressedTexImage2D != null)
-                        {
-                            _glCompressedTexImage2D(GL_TEXTURE_2D, mipmap.Level, internalFormat, mipmap.Width, mipmap.Height, 0, expectedSize, dataPtr);
+                            if (_glCompressedTexImage2D != null)
+                            {
+                                _glCompressedTexImage2D(GL_TEXTURE_2D, mipmap.Level, internalFormat, mipmap.Width, mipmap.Height, 0, expectedSize, dataPtr);
+                            }
+                            else
+                            {
+                                Console.WriteLine("[OpenGLESBackend] UploadTextureData: glCompressedTexImage2D not loaded");
+                                if (_glBindTexture != null)
+                                {
+                                    _glBindTexture(GL_TEXTURE_2D, 0);
+                                }
+                                return false;
+                            }
                         }
                         else
                         {
-                            Console.WriteLine("[OpenGLESBackend] UploadTextureData: glCompressedTexImage2D not loaded");
-                            if (_glBindTexture != null)
+                            // Upload uncompressed texture data
+                            if (_glTexImage2D != null)
                             {
-                                _glBindTexture(GL_TEXTURE_2D, 0);
+                                _glTexImage2D(GL_TEXTURE_2D, mipmap.Level, (int)internalFormat, mipmap.Width, mipmap.Height, 0, uploadFormat, dataType, dataPtr);
                             }
-                            return false;
-                        }
-                    }
-                    else
-                    {
-                        // Upload uncompressed texture data
-                        if (_glTexImage2D != null)
-                        {
-                            _glTexImage2D(GL_TEXTURE_2D, mipmap.Level, (int)internalFormat, mipmap.Width, mipmap.Height, 0, uploadFormat, dataType, dataPtr);
-                        }
-                        else
-                        {
-                            Console.WriteLine("[OpenGLESBackend] UploadTextureData: glTexImage2D not loaded");
-                            if (_glBindTexture != null)
+                            else
                             {
-                                _glBindTexture(GL_TEXTURE_2D, 0);
+                                Console.WriteLine("[OpenGLESBackend] UploadTextureData: glTexImage2D not loaded");
+                                if (_glBindTexture != null)
+                                {
+                                    _glBindTexture(GL_TEXTURE_2D, 0);
+                                }
+                                return false;
                             }
-                            return false;
                         }
-                    }
 
-                    // Check for OpenGL ES errors
-                    uint error = (_glGetError != null) ? _glGetError() : GL_NO_ERROR;
-                    if (error != GL_NO_ERROR)
-                    {
-                        string errorName = GetGLESErrorName(error);
-                        Console.WriteLine($"[OpenGLESBackend] UploadTextureData: OpenGL ES error {errorName} (0x{error:X}) uploading mipmap {i} for texture {info.DebugName}");
-                        if (_glBindTexture != null)
+                        // Check for OpenGL ES errors
+                        uint error = (_glGetError != null) ? _glGetError() : GL_NO_ERROR;
+                        if (error != GL_NO_ERROR)
                         {
-                            _glBindTexture(GL_TEXTURE_2D, 0);
+                            string errorName = GetGLESErrorName(error);
+                            Console.WriteLine($"[OpenGLESBackend] UploadTextureData: OpenGL ES error {errorName} (0x{error:X}) uploading mipmap {i} for texture {info.DebugName}");
+                            if (_glBindTexture != null)
+                            {
+                                _glBindTexture(GL_TEXTURE_2D, 0);
+                            }
+                            return false;
                         }
-                        return false;
-                    }
                     }
                     finally
                     {

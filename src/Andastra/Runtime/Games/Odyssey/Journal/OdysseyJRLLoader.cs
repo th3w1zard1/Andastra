@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
+using Andastra.Parsing.Formats.TLK;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.TLK;
 using Andastra.Runtime.Games.Common.Journal;
 using JetBrains.Annotations;
 using JRL = Andastra.Parsing.Resource.Generics.JRL;

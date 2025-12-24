@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
-using Andastra.Parsing.Common;
 using static Andastra.Parsing.Common.GameExtensions;
 
 namespace Andastra.Parsing.Resource.Generics

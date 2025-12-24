@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Numerics;
 using System.Linq;
+using System.Numerics;
 using Andastra.Parsing;
-using Andastra.Parsing.Formats.MDLData;
-using Andastra.Parsing.Formats.MDL;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Formats.MDL;
+using Andastra.Parsing.Formats.MDLData;
 
 namespace Andastra.Parsing.Formats.MDL
 {
@@ -790,18 +790,18 @@ namespace Andastra.Parsing.Formats.MDL
             uint fp0, fp1;
             if (_game.IsK1())
             {
-            if (mdlNode.Skin != null)
-            {
+                if (mdlNode.Skin != null)
+                {
                     fp0 = TrimeshHeader.K1_SKIN_FUNCTION_POINTER0;
                     fp1 = TrimeshHeader.K1_SKIN_FUNCTION_POINTER1;
-            }
-            else if (mdlNode.Dangly != null)
-            {
+                }
+                else if (mdlNode.Dangly != null)
+                {
                     fp0 = TrimeshHeader.K1_DANGLY_FUNCTION_POINTER0;
                     fp1 = TrimeshHeader.K1_DANGLY_FUNCTION_POINTER1;
-            }
-            else
-            {
+                }
+                else
+                {
                     fp0 = TrimeshHeader.K1_FUNCTION_POINTER0;
                     fp1 = TrimeshHeader.K1_FUNCTION_POINTER1;
                 }

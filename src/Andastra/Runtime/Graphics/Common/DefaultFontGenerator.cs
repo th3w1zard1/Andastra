@@ -245,7 +245,7 @@ namespace Andastra.Runtime.Graphics
                 // Create SpriteFont using reflection
                 // SpriteFont constructor requires font texture and character mapping
                 Type spriteFontType = typeof(Microsoft.Xna.Framework.Graphics.SpriteFont);
-                
+
                 // Create character mapping for ASCII 32-126
                 List<Microsoft.Xna.Framework.Rectangle> glyphBounds = new List<Microsoft.Xna.Framework.Rectangle>();
                 List<Microsoft.Xna.Framework.Rectangle> cropping = new List<Microsoft.Xna.Framework.Rectangle>();
@@ -257,10 +257,10 @@ namespace Andastra.Runtime.Graphics
                     char c = (char)i;
                     int row = (i - 32) / charsPerRow;
                     int col = (i - 32) % charsPerRow;
-                    
+
                     int x = col * charWidth;
                     int y = row * charHeight;
-                    
+
                     glyphBounds.Add(new Microsoft.Xna.Framework.Rectangle(x, y, charWidth, charHeight));
                     cropping.Add(new Microsoft.Xna.Framework.Rectangle(0, 0, charWidth, charHeight));
                     characterMap.Add(c);
@@ -272,7 +272,7 @@ namespace Andastra.Runtime.Graphics
                 ConstructorInfo constructor = spriteFontType.GetConstructor(
                     BindingFlags.NonPublic | BindingFlags.Instance,
                     null,
-                    new[] { 
+                    new[] {
                         typeof(Microsoft.Xna.Framework.Graphics.Texture2D),
                         typeof(List<Microsoft.Xna.Framework.Rectangle>),
                         typeof(List<Microsoft.Xna.Framework.Rectangle>),
@@ -371,7 +371,7 @@ namespace Andastra.Runtime.Graphics
                 // Stride uses Color format (RGBA float values 0.0-1.0)
                 // Use Array.CreateInstance to create array of Stride Color type
                 Array textureData = Array.CreateInstance(strideColorType, textureWidth * textureHeight);
-                
+
                 // Get Color constructor
                 ConstructorInfo colorConstructor = strideColorType.GetConstructor(new[] { typeof(float), typeof(float), typeof(float), typeof(float) });
                 if (colorConstructor == null)

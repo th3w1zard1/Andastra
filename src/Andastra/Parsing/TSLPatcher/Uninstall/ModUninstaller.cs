@@ -4,11 +4,11 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.TLK;
 using Andastra.Parsing.Logger;
 using Andastra.Utility.System;
 using JetBrains.Annotations;
-using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Uninstall
 {

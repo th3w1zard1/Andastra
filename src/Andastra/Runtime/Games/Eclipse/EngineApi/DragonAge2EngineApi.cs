@@ -26,7 +26,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         {
             // Register all common Eclipse functions from base class
             base.RegisterFunctions();
-            
+
             // Register DA2-specific function names if any differ from common Eclipse
             // Most functions are common, so this is typically empty unless DA2 has unique functions
         }
@@ -45,14 +45,14 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             //
             // If future analysis reveals DA2-specific differences, add them here as case statements
             // before the default case that delegates to base.
-            
+
             switch (routineId)
             {
                 // DA2-specific function overrides would go here if any differences are discovered
                 // Example format:
                 // case <routineId>:
                 //     return <DA2SpecificImplementation>(args, ctx);
-                
+
                 default:
                     // Delegate to base class for common Eclipse functions
                     // All functions are verified to be identical between DAO and DA2

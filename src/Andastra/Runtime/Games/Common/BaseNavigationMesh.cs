@@ -63,18 +63,18 @@ namespace Andastra.Runtime.Games.Common
             if (Raycast(start, normalizedDir, distance, out hitPoint, out hitFace))
             {
                 // A hit was found - check if it blocks line of sight
-                
+
                 // Calculate distances
                 float distToHit = Vector3.Distance(start, hitPoint);
                 float distToDest = distance;
-                
+
                 // If hit is very close to destination (within tolerance), consider line of sight clear
                 // This handles cases where the raycast hits the destination geometry itself
                 if (distToDest - distToHit < LineOfSightTolerance)
                 {
                     return true; // Hit is at or very close to destination, line of sight is clear
                 }
-                
+
                 // Engine-specific check: does this hit block line of sight?
                 return CheckHitBlocksLineOfSight(hitPoint, hitFace, start, end);
             }
@@ -281,7 +281,7 @@ namespace Andastra.Runtime.Games.Common
         public abstract bool TestLineOfSight(Vector3 from, Vector3 to);
         public abstract bool ProjectToSurface(Vector3 point, out Vector3 result, out float height);
         public abstract IList<Vector3> FindPathAroundObstacles(Vector3 start, Vector3 goal, IList<ObstacleInfo> obstacles);
-        
+
         // Additional INavigationMesh interface methods
         public abstract bool IsPointWalkable(Vector3 point);
         public abstract bool ProjectToWalkmesh(Vector3 point, out Vector3 result, out float height);
