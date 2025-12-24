@@ -3543,14 +3543,155 @@ namespace HolocronToolset.Tests.Editors
             }
         }
 
-        // TODO: STUB - Implement test_are_editor_minimum_values (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1327-1364)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1327-1364
         // Original: def test_are_editor_minimum_values(qtbot: QtBot, installation: HTInstallation, test_files_dir: Path): Test setting all fields to minimum values.
         [Fact]
         public void TestAreEditorMinimumValues()
         {
-            // TODO: STUB - Implement minimum values edge case test (all fields set to minimums)
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1327-1364
-            throw new NotImplementedException("TestAreEditorMinimumValues: Minimum values edge case test not yet implemented");
+            // Get test files directory (matching Python: test_files_dir: Path)
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            // Try to find tat001.are (matching Python: are_file = test_files_dir / "tat001.are")
+            string areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            if (!System.IO.File.Exists(areFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            }
+
+            if (!System.IO.File.Exists(areFile))
+            {
+                return; // Skip if test file not available (matching Python: pytest.skip("tat001.are not found"))
+            }
+
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            // Matching Python: editor = AREEditor(None, installation)
+            var editor = new AREEditor(null, installation);
+
+            // Matching Python: original_data = are_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(areFile);
+
+            // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, original_data)
+            editor.Load(areFile, "tat001", ResourceType.ARE, originalData);
+
+            // Matching Python: Set all to minimums
+            // Matching Python: editor.ui.tagEdit.setText("")
+            if (editor.TagEdit != null)
+            {
+                editor.TagEdit.Text = "";
+            }
+
+            // Matching Python: editor.ui.alphaTestSpin.setValue(0)
+            if (editor.AlphaTestSpin != null)
+            {
+                editor.AlphaTestSpin.Value = 0;
+            }
+
+            // Matching Python: editor.ui.stealthMaxSpin.setValue(0)
+            if (editor.StealthMaxSpin != null)
+            {
+                editor.StealthMaxSpin.Value = 0;
+            }
+
+            // Matching Python: editor.ui.stealthLossSpin.setValue(0)
+            if (editor.StealthLossSpin != null)
+            {
+                editor.StealthLossSpin.Value = 0;
+            }
+
+            // Matching Python: editor.ui.mapZoomSpin.setValue(0)
+            if (editor.MapZoomSpin != null)
+            {
+                editor.MapZoomSpin.Value = 0;
+            }
+
+            // Matching Python: editor.ui.mapResXSpin.setValue(0)
+            if (editor.MapResXSpin != null)
+            {
+                editor.MapResXSpin.Value = 0;
+            }
+
+            // Matching Python: editor.ui.fogNearSpin.setValue(0.0)
+            if (editor.FogNearSpin != null)
+            {
+                editor.FogNearSpin.Value = 0.0M;
+            }
+
+            // Matching Python: editor.ui.fogFarSpin.setValue(0.0)
+            if (editor.FogFarSpin != null)
+            {
+                editor.FogFarSpin.Value = 0.0M;
+            }
+
+            // Matching Python: editor.ui.shadowsSpin.setValue(0)
+            if (editor.ShadowsSpin != null)
+            {
+                editor.ShadowsSpin.Value = 0;
+            }
+
+            // Matching Python: editor.ui.grassDensitySpin.setValue(0.0)
+            if (editor.GrassDensitySpin != null)
+            {
+                editor.GrassDensitySpin.Value = 0.0M;
+            }
+
+            // Matching Python: editor.ui.grassSizeSpin.setValue(0.0)
+            if (editor.GrassSizeSpin != null)
+            {
+                editor.GrassSizeSpin.Value = 0.0M;
+            }
+
+            // Matching Python: Save and verify
+            // Matching Python: data, _ = editor.build()
+            var (data, _) = editor.Build();
+
+            // Matching Python: modified_are = read_are(data)
+            var modifiedAre = AREHelpers.ReadAre(data);
+
+            // Matching Python: assert modified_are.tag == ""
+            modifiedAre.Tag.Should().Be("");
+
+            // Matching Python: assert modified_are.alpha_test == 0
+            modifiedAre.AlphaTest.Should().BeApproximately(0.0f, 0.001f);
+
+            // Matching Python: assert modified_are.stealth_xp_max == 0
+            modifiedAre.StealthXpMax.Should().Be(0);
+
+            // Matching Python: assert modified_are.stealth_xp_loss == 0
+            modifiedAre.StealthXpLoss.Should().Be(0);
+
+            // Matching Python: assert modified_are.map_zoom == 0.0
+            // Note: In C# ARE class, MapZoom is int, not float, so we check for 0
+            modifiedAre.MapZoom.Should().Be(0);
+
+            // Matching Python: assert modified_are.map_res_x == 0
+            modifiedAre.MapResX.Should().Be(0);
+
+            // Matching Python: assert modified_are.fog_near == 0.0
+            modifiedAre.FogNear.Should().BeApproximately(0.0f, 0.001f);
+
+            // Matching Python: assert modified_are.fog_far == 0.0
+            modifiedAre.FogFar.Should().BeApproximately(0.0f, 0.001f);
+
+            // Matching Python: assert modified_are.shadow_opacity == 0
+            modifiedAre.ShadowOpacity.Should().Be((byte)0);
         }
 
         // TODO: STUB - Implement test_are_editor_maximum_values (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1366-1397)
