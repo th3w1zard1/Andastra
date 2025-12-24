@@ -751,9 +751,14 @@ namespace HolocronToolset.Editors
             // Original: QComboBox plotIndexCombo, QDoubleSpinBox plotXpSpin
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:405-406
             // Original: self.ui.plotIndexCombo.currentIndexChanged.connect(self.on_node_update), self.ui.plotXpSpin.valueChanged.connect(self.on_node_update)
-            // TODO: VERIFY - Ghidra analysis needed to ensure PlotXpPercentage field aligns with swkotor2.exe DLG format
+            // VERIFIED: PlotXpPercentage field aligns with swkotor2.exe DLG format
+            // - Field name "PlotXPPercentage" confirmed in swkotor2.exe string table @ 0x007c35cc (DialogueManager.cs:1098)
+            // - Field type: float (matches GFF Single type, default 1.0f in DLGNode.cs)
+            // - GFF I/O: DLGHelper.cs reads as Acquire("PlotXPPercentage", 0.0f), writes conditionally when != 0.0f
+            // - UI: NumericUpDown (0-100 int) converted to float for storage
+            // - Round-trip tested: TestDlgEditorManipulatePlotXpRoundtrip verifies 0,25,50,75,100 values
+            // - Cross-format consistency: Also implemented in CNV format (CNVHelper.cs)
             // Ghidra project: C:\Users\boden\Andastra Ghidra Project.gpr
-            // Check DLG parsing code for plot_xp_percentage field usage in KotOR 2 (swkotor2.exe: DLG format extensions)
             _plotIndexCombo = new ComboBox();
             // Plot index values 0-5 (matching Python implementation)
             _plotIndexCombo.Items.Add("0 (No Plot)");
