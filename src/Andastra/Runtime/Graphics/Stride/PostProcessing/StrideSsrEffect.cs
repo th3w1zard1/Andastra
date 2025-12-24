@@ -767,12 +767,12 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 StrideGraphics.PixelFormat format = texture.Format;
 
                 // For color textures (RGBA formats), use Color array
-                if (format == PixelFormat.R8G8B8A8_UNorm ||
-                    format == PixelFormat.R8G8B8A8_UNorm_SRgb ||
-                    format == PixelFormat.R32G32B32A32_Float ||
-                    format == PixelFormat.R16G16B16A16_Float ||
-                    format == PixelFormat.B8G8R8A8_UNorm ||
-                    format == PixelFormat.B8G8R8A8_UNorm_SRgb)
+                if (format == StrideGraphics.PixelFormat.R8G8B8A8_UNorm ||
+                    format == StrideGraphics.PixelFormat.R8G8B8A8_UNorm_SRgb ||
+                    format == StrideGraphics.PixelFormat.R32G32B32A32_Float ||
+                    format == StrideGraphics.PixelFormat.R16G16B16A16_Float ||
+                    format == StrideGraphics.PixelFormat.B8G8R8A8_UNorm ||
+                    format == StrideGraphics.PixelFormat.B8G8R8A8_UNorm_SRgb)
                 {
                     // Read as Color array (Stride's standard format)
                     var colorData = new Stride.Core.Mathematics.Color[size];
@@ -786,10 +786,10 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     }
                 }
                 // For depth textures, read as float array
-                else if (format == PixelFormat.D32_Float ||
-                         format == PixelFormat.D24_UNorm_S8_UInt ||
-                         format == PixelFormat.D16_UNorm ||
-                         format == PixelFormat.R32_Float)
+                else if (format == StrideGraphics.PixelFormat.D32_Float ||
+                         format == StrideGraphics.PixelFormat.D24_UNorm_S8_UInt ||
+                         format == StrideGraphics.PixelFormat.D16_UNorm ||
+                         format == StrideGraphics.PixelFormat.R32_Float)
                 {
                     // For depth textures, read as float array
                     var floatData = new float[size];
@@ -802,7 +802,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     }
                 }
                 // For single-channel formats, read as byte array and convert
-                else if (format == PixelFormat.R8_UNorm || format == PixelFormat.A8_UNorm)
+                else if (format == StrideGraphics.PixelFormat.R8_UNorm || format == StrideGraphics.PixelFormat.A8_UNorm)
                 {
                     var byteData = new byte[size];
                     texture.GetData(commandList, byteData);
@@ -815,7 +815,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     }
                 }
                 // For HDR formats (R32G32B32A32_Float), read directly as Vector4
-                else if (format == PixelFormat.R32G32B32A32_Float)
+                else if (format == StrideGraphics.PixelFormat.R32G32B32A32_Float)
                 {
                     // Try to read as Vector4 array directly
                     var vectorData = new Stride.Core.Mathematics.Vector4[size];
@@ -900,10 +900,10 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 StrideGraphics.PixelFormat format = texture.Format;
 
                 // For color textures (RGBA formats), convert Vector4[] to Color[]
-                if (format == PixelFormat.R8G8B8A8_UNorm ||
-                    format == PixelFormat.R8G8B8A8_UNorm_SRgb ||
-                    format == PixelFormat.B8G8R8A8_UNorm ||
-                    format == PixelFormat.B8G8R8A8_UNorm_SRgb)
+                if (format == StrideGraphics.PixelFormat.R8G8B8A8_UNorm ||
+                    format == StrideGraphics.PixelFormat.R8G8B8A8_UNorm_SRgb ||
+                    format == StrideGraphics.PixelFormat.B8G8R8A8_UNorm ||
+                    format == StrideGraphics.PixelFormat.B8G8R8A8_UNorm_SRgb)
                 {
                     var colorData = new Stride.Core.Mathematics.Color[size];
 
@@ -927,8 +927,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     texture.SetData(commandList, colorData);
                 }
                 // For HDR formats (R32G32B32A32_Float), write directly as Vector4
-                else if (format == PixelFormat.R32G32B32A32_Float ||
-                         format == PixelFormat.R16G16B16A16_Float)
+                else if (format == StrideGraphics.PixelFormat.R32G32B32A32_Float ||
+                         format == StrideGraphics.PixelFormat.R16G16B16A16_Float)
                 {
                     var vectorData = new Stride.Core.Mathematics.Vector4[size];
 
@@ -942,8 +942,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     texture.SetData(commandList, vectorData);
                 }
                 // For depth textures, extract depth channel
-                else if (format == PixelFormat.D32_Float ||
-                         format == PixelFormat.R32_Float)
+                else if (format == StrideGraphics.PixelFormat.D32_Float ||
+                         format == StrideGraphics.PixelFormat.R32_Float)
                 {
                     var floatData = new float[size];
 
@@ -956,7 +956,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     texture.SetData(commandList, floatData);
                 }
                 // For single-channel formats, extract single channel
-                else if (format == PixelFormat.R8_UNorm || format == PixelFormat.A8_UNorm)
+                else if (format == StrideGraphics.PixelFormat.R8_UNorm || format == StrideGraphics.PixelFormat.A8_UNorm)
                 {
                     var byteData = new byte[size];
 
