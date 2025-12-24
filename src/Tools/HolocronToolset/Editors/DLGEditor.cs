@@ -91,7 +91,7 @@ namespace HolocronToolset.Editors
         private Button _removeAnimButton;
         private Button _editAnimButton;
         private ListBox _stuntList;
-        
+
         // Public property for testing
         public ListBox StuntList => _stuntList;
         private TextBox _commentsEdit;
@@ -3044,6 +3044,72 @@ namespace HolocronToolset.Editors
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:436-467
         // Original: def setup_extra_widgets(self):
+        /// <summary>
+        /// Sets up the menu bar with File and Tools menus.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/uic/qtpy/editors/dlg.py
+        /// </summary>
+        private void SetupMenuBar(DockPanel dockPanel)
+        {
+            var menuBar = new Menu();
+            dockPanel.Children.Add(menuBar);
+            DockPanel.SetDock(menuBar, Dock.Top);
+
+            // File menu
+            var fileMenu = new MenuItem { Header = "_File" };
+            menuBar.Items.Add(fileMenu);
+
+            // File menu actions
+            _actionNew = new MenuItem { Header = "_New" };
+            _actionOpen = new MenuItem { Header = "_Open" };
+            _actionSave = new MenuItem { Header = "_Save" };
+            _actionSaveAs = new MenuItem { Header = "Save _As" };
+            _actionRevert = new MenuItem { Header = "_Revert" };
+            _actionExit = new MenuItem { Header = "E_xit" };
+
+            fileMenu.Items.Add(_actionNew);
+            fileMenu.Items.Add(_actionOpen);
+            fileMenu.Items.Add(_actionSave);
+            fileMenu.Items.Add(_actionSaveAs);
+            fileMenu.Items.Add(new Separator());
+            fileMenu.Items.Add(_actionRevert);
+            fileMenu.Items.Add(new Separator());
+            fileMenu.Items.Add(_actionExit);
+
+            // Tools menu
+            var toolsMenu = new MenuItem { Header = "_Tools" };
+            menuBar.Items.Add(toolsMenu);
+
+            // Tools menu actions
+            _actionReloadTree = new MenuItem { Header = "_Reload Tree" };
+            _actionUnfocus = new MenuItem { Header = "_Unfocus Tree" };
+            _actionUnfocus.IsEnabled = false;
+
+            toolsMenu.Items.Add(_actionReloadTree);
+            toolsMenu.Items.Add(_actionUnfocus);
+
+            // Connect action events
+            SetupMenuActionHandlers();
+        }
+
+        /// <summary>
+        /// Sets up event handlers for menu actions.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:304-306
+        /// </summary>
+        private void SetupMenuActionHandlers()
+        {
+            // File menu actions
+            _actionNew.Click += (s, e) => New();
+            _actionOpen.Click += (s, e) => Open();
+            _actionSave.Click += (s, e) => Save();
+            _actionSaveAs.Click += (s, e) => SaveAs();
+            _actionRevert.Click += (s, e) => Revert();
+            _actionExit.Click += (s, e) => Close();
+
+            // Tools menu actions
+            _actionReloadTree.Click += (s, e) => ReloadTree();
+            _actionUnfocus.Click += (s, e) => UnfocusTree();
+        }
+
         /// <summary>
         /// Sets up the find bar UI controls.
         /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:451-467
