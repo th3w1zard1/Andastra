@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Avalonia.Controls;
+using Avalonia.Input;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
@@ -150,10 +152,16 @@ namespace HolocronToolset.Tests.Dialogs
             // Call AddHelpAction
             editor.AddHelpAction();
 
-            // Check that Help menu exists
-            // TODO: STUB - Note: Menu finding is complex in Avalonia, so we'll verify the method doesn't crash
-            // TODO: STUB - The actual menu verification would require more complex UI traversal
-            editor.Should().NotBeNull();
+            // Check that Help menu exists and contains Documentation action
+            var helpMenuItem = FindMenuItemByHeader(editor, "Help");
+            helpMenuItem.Should().NotBeNull("Help menu should be created by AddHelpAction");
+
+            var documentationAction = FindMenuItemByHeader(helpMenuItem, "Documentation");
+            documentationAction.Should().NotBeNull("Documentation action should be added to Help menu");
+
+            // Verify the Documentation action has F1 hotkey
+            documentationAction.HotKey.Should().NotBeNull("Documentation action should have F1 hotkey");
+            documentationAction.HotKey.Key.Should().Be(Key.F1, "Documentation action should have F1 hotkey");
 
             editor.Close();
         }
@@ -714,6 +722,70 @@ namespace HolocronToolset.Tests.Dialogs
             editor.Should().NotBeNull();
 
             editor.Close();
+        }
+
+        // Helper method to find a MenuItem by header text in the editor's visual tree
+        private static MenuItem FindMenuItemByHeader(Control parent, string header)
+        {
+            // First find all Menu controls in the visual tree
+            var menus = FindControls<Menu>(parent);
+            foreach (var menu in menus)
+            {
+                // Check top-level menu items
+                foreach (var item in menu.Items)
+                {
+                    if (item is MenuItem menuItem && menuItem.Header?.ToString() == header)
+                    {
+                        return menuItem;
+                    }
+                }
+            }
+            return null;
+        }
+
+        // Helper method to find a MenuItem by header text within a parent MenuItem's items
+        private static MenuItem FindMenuItemByHeader(MenuItem parentMenuItem, string header)
+        {
+            if (parentMenuItem == null)
+            {
+                return null;
+            }
+
+            foreach (var item in parentMenuItem.Items)
+            {
+                if (item is MenuItem menuItem && menuItem.Header?.ToString() == header)
+                {
+                    return menuItem;
+                }
+            }
+            return null;
+        }
+
+        // Helper method to find all controls of a specific type in the visual tree
+        private static IEnumerable<T> FindControls<T>(Control parent) where T : Control
+        {
+            var results = new List<T>();
+            if (parent is T match)
+            {
+                results.Add(match);
+            }
+
+            if (parent is Panel panel)
+            {
+                foreach (var child in panel.Children)
+                {
+                    if (child is Control control)
+                    {
+                        results.AddRange(FindControls<T>(control));
+                    }
+                }
+            }
+            else if (parent is ContentControl contentControl && contentControl.Content is Control content)
+            {
+                results.AddRange(FindControls<T>(content));
+            }
+
+            return results;
         }
     }
 }
