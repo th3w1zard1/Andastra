@@ -3072,7 +3072,7 @@ namespace Andastra.Runtime.Games.Aurora
                             TileAnimationState animState = new TileAnimationState
                             {
                                 AnimationName = animLoopName,
-                                AnimationLength = animDef.Length,
+                                AnimationLength = animDef.AnimLength,
                                 AnimationTime = 0.0f,
                                 FrameIndex = 0,
                                 IsLooping = true, // AnimLoop animations are typically looping

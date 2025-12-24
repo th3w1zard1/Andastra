@@ -1685,7 +1685,7 @@ namespace Andastra.Runtime.Games.Aurora
                                             break;
                                     }
 
-                                    data[key] = value;
+                                    entityData[key] = value;
                                 }
                             }
                         }

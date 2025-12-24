@@ -138,7 +138,7 @@ namespace Andastra.Runtime.Games.Aurora.Data
                     {
                         // Parse ResRef from string
                         ResRef modelResRef = ResRef.FromString(modelResRefStr);
-                        if (modelResRef != null && !modelResRef.IsBlank)
+                        if (modelResRef != null && !modelResRef.IsBlank())
                         {
                             _tileModelCache[i] = modelResRef;
                         }
