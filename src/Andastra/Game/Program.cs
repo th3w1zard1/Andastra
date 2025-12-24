@@ -184,12 +184,32 @@ namespace Andastra.Runtime.Game
                     errorMessage += $"\n\nStack Trace:\n{ex.StackTrace}";
 
                     // Use Eto.Forms for cross-platform message box
-                    var app = new Application(Eto.Platform.Detect);
-                    MessageBox.Show(
-                        errorMessage,
-                        "Game Launch Error",
-                        MessageBoxType.Error);
-                    app.Dispose();
+                    Application app = null;
+                    try
+                    {
+                        // Check if application already exists (for dotnet watch scenarios)
+                        if (Application.Instance == null)
+                        {
+                            app = new Application(Eto.Platform.Detect);
+                        }
+                        else
+                        {
+                            app = Application.Instance;
+                        }
+
+                        MessageBox.Show(
+                            errorMessage,
+                            "Game Launch Error",
+                            MessageBoxType.Error);
+                    }
+                    finally
+                    {
+                        // Only dispose if we created it
+                        if (app != null && app != Application.Instance)
+                        {
+                            app.Dispose();
+                        }
+                    }
 
                     return 1;
                 }
@@ -197,12 +217,32 @@ namespace Andastra.Runtime.Game
             catch (Exception ex)
             {
                 // Fatal error in launcher itself
-                var app = new Application(Eto.Platform.Detect);
-                MessageBox.Show(
-                    $"Fatal error in launcher:\n\n{ex.Message}\n\n{ex.StackTrace}",
-                    "Launcher Error",
-                    MessageBoxType.Error);
-                app.Dispose();
+                Application app = null;
+                try
+                {
+                    // Check if application already exists (for dotnet watch scenarios)
+                    if (Application.Instance == null)
+                    {
+                        app = new Application(Eto.Platform.Detect);
+                    }
+                    else
+                    {
+                        app = Application.Instance;
+                    }
+
+                    MessageBox.Show(
+                        $"Fatal error in launcher:\n\n{ex.Message}\n\n{ex.StackTrace}",
+                        "Launcher Error",
+                        MessageBoxType.Error);
+                }
+                finally
+                {
+                    // Only dispose if we created it
+                    if (app != null && app != Application.Instance)
+                    {
+                        app.Dispose();
+                    }
+                }
                 return 1;
             }
         }
