@@ -334,8 +334,8 @@ shader BlurEffect : ShaderBase
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine($"[StrideBloomEffect] Failed to create blur effect: {ex.Message}");
-                System.Console.WriteLine($"[StrideBloomEffect] Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"[StrideBloomEffect] Failed to create blur effect: {ex.Message}");
+                Console.WriteLine($"[StrideBloomEffect] Stack trace: {ex.StackTrace}");
                 return null;
             }
         }
@@ -499,7 +499,7 @@ shader BlurEffect : ShaderBase
 
             // Clear render target to black using CommandList
             // Note: In Stride, clearing is done through CommandList after setting render target
-            commandList.Clear(destination, global::Stride.Core.Mathematics.Color4.Black);
+            commandList.Clear(destination, Color4.Black);
 
             // Get viewport dimensions
             int width = destination.Width;
@@ -611,8 +611,8 @@ shader BlurEffect : ShaderBase
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine($"[StrideBloomEffect] Failed to compile shader '{shaderName}': {ex.Message}");
-                System.Console.WriteLine($"[StrideBloomEffect] Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"[StrideBloomEffect] Failed to compile shader '{shaderName}': {ex.Message}");
+                Console.WriteLine($"[StrideBloomEffect] Stack trace: {ex.StackTrace}");
                 return null;
             }
         }

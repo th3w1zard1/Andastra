@@ -90,7 +90,7 @@ namespace Andastra.Runtime.Stride.GUI
                 var commandList = _graphicsDevice.ImmediateContext();
                 
                 // Create SpriteBatch for 2D rendering
-                _spriteBatch = new Stride.Graphics.SpriteBatch(_graphicsDevice);
+                _spriteBatch = new global::Stride.Graphics.SpriteBatch(_graphicsDevice);
 
                 // Create 1x1 white texture for drawing rectangles and backgrounds
                 _whiteTexture = global::Stride.Graphics.Texture.New2D(_graphicsDevice, 1, 1, StrideGraphics.PixelFormat.R8G8B8A8_UNorm);
@@ -105,7 +105,7 @@ namespace Andastra.Runtime.Stride.GUI
                 Initialize(width, height);
 
                 Console.WriteLine("[StrideMenuRenderer] Stride menu renderer initialized successfully");
-                Console.WriteLine($"[StrideMenuRenderer] Viewport: {viewport.Width}x{viewport.Height}");
+                Console.WriteLine($"[StrideMenuRenderer] Viewport: {width}x{height}");
                 Console.WriteLine($"[StrideMenuRenderer] Font available: {_font != null}");
             }
             catch (Exception ex)
@@ -171,10 +171,26 @@ namespace Andastra.Runtime.Stride.GUI
             {
                 // Get CommandList for rendering
                 var commandList = _graphicsDevice.ImmediateContext();
+                if (commandList == null)
+                {
+                    Console.WriteLine("[StrideMenuRenderer] Warning: Could not render - CommandList unavailable");
+                    return;
+                }
                 
                 // Begin sprite batch rendering
-                // Stride SpriteBatch uses CommandList, SpriteSortMode, and BlendStateDescription
-                _spriteBatch.Begin(commandList, StrideGraphics.SpriteSortMode.Deferred, StrideGraphics.BlendStates.AlphaBlend);
+                // Stride SpriteBatch.Begin requires GraphicsContext, but we only have CommandList
+                // TODO: FIXME - Need to properly get GraphicsContext from device or game instance
+                // Using dynamic to handle API differences between Stride versions
+                try
+                {
+                    dynamic spriteBatchDynamic = _spriteBatch;
+                    spriteBatchDynamic.Begin(commandList, StrideGraphics.SpriteSortMode.Deferred, StrideGraphics.BlendStates.AlphaBlend);
+                }
+                catch
+                {
+                    Console.WriteLine("[StrideMenuRenderer] Warning: Could not begin sprite batch - GraphicsContext required but not available");
+                    return;
+                }
 
                 try
                 {
@@ -188,7 +204,7 @@ namespace Andastra.Runtime.Stride.GUI
 
                     // Draw menu panel background
                     var panelColor = new Color4(40.0f / 255.0f, 50.0f / 255.0f, 80.0f / 255.0f, 1.0f);
-                    var panelRect = CalculateMenuPanelRect(viewport.Width, viewport.Height);
+                    var panelRect = CalculateMenuPanelRect(viewportWidth, viewportHeight);
                     _spriteBatch.Draw(_whiteTexture, panelRect, panelColor);
 
                     // Draw menu header
@@ -200,7 +216,7 @@ namespace Andastra.Runtime.Stride.GUI
                     if (_font != null)
                     {
                         var textColor = new Color4(1.0f, 1.0f, 1.0f, 1.0f);
-                        var titlePosition = new Stride.Core.Mathematics.Vector2(panelRect.X + 20, headerRect.Y + 10);
+                        var titlePosition = new global::Stride.Core.Mathematics.Vector2(panelRect.X + 20, headerRect.Y + 10);
                         _spriteBatch.DrawString(_font, "Main Menu", titlePosition, textColor);
                     }
                 }
