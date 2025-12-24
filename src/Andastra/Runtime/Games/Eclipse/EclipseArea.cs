@@ -4064,7 +4064,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <remarks>
         /// Eclipse-specific: Also removes entity from physics system.
         /// </remarks>
-        protected override void RemoveEntityFromArea(IEntity entity)
+        internal override void RemoveEntityFromArea(IEntity entity)
         {
             if (entity == null)
             {

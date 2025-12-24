@@ -2304,7 +2304,7 @@ namespace Andastra.Runtime.Games.Aurora
         /// Aurora-specific: Basic entity removal without physics system.
         /// Based on nwmain.exe entity management.
         /// </remarks>
-        protected override void RemoveEntityFromArea(IEntity entity)
+        internal override void RemoveEntityFromArea(IEntity entity)
         {
             if (entity == null)
             {
@@ -3559,7 +3559,7 @@ namespace Andastra.Runtime.Games.Aurora
 
                 // Apply effect and draw
                 basicEffect.Apply();
-                graphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, meshData.VertexCount, 0, meshData.IndexCount / 3);
+                graphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, meshData.VertexBuffer.VertexCount, 0, meshData.IndexCount / 3);
             }
         }
 
@@ -3595,7 +3595,11 @@ namespace Andastra.Runtime.Games.Aurora
             // Based on nwmain.exe: CNWSArea::RenderWeather renders snow particles
             if (_isSnowing && _snowParticleSystem != null)
             {
-                _snowParticleSystem.Render(graphicsDevice, basicEffect, viewMatrix, projectionMatrix);
+                // Extract camera position from view matrix (inverse of view matrix translation)
+                // View matrix transforms world to view space, so camera position in world space is the inverse translation
+                System.Numerics.Vector3 cameraPosition = new System.Numerics.Vector3(
+                    -viewMatrix.M41, -viewMatrix.M42, -viewMatrix.M43);
+                _snowParticleSystem.Render(graphicsDevice, basicEffect, viewMatrix, projectionMatrix, cameraPosition);
             }
 
             // Render lightning flash if active

@@ -543,8 +543,9 @@ namespace Andastra.Runtime.Games.Common
         /// </summary>
         /// <remarks>
         /// Engine-specific implementation: Each engine manages its own entity collections.
+        /// Made internal to allow access from save serializers and event dispatchers.
         /// </remarks>
-        protected abstract void RemoveEntityFromArea(IEntity entity);
+        internal abstract void RemoveEntityFromArea(IEntity entity);
 
         /// <summary>
         /// Adds an entity to this area's collections.

@@ -1495,7 +1495,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Odyssey-specific: Basic entity removal without physics system.
         /// Based on swkotor.exe/swkotor2.exe entity management.
         /// </remarks>
-        protected override void RemoveEntityFromArea(IEntity entity)
+        internal override void RemoveEntityFromArea(IEntity entity)
         {
             if (entity == null)
             {
