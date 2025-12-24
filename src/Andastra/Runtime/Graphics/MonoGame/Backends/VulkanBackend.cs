@@ -32,6 +32,18 @@ namespace Andastra.Runtime.MonoGame.Backends
         private double _gpuTimestampPeriod;
         private bool _gpuTimestampsSupported;
 
+        // Command buffer management - per-frame command list for rendering
+        private ICommandList _currentFrameCommandList;
+
+        // GPU timestamp query pool and state
+        // Based on Vulkan API: vkCreateQueryPool with VK_QUERY_TYPE_TIMESTAMP
+        // https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateQueryPool.html
+        private IntPtr _timestampQueryPool; // VkQueryPool handle
+        private const uint TIMESTAMP_QUERY_COUNT = 2; // Start and end timestamps per frame
+        private uint _timestampQueryIndex; // Current query index (alternates between 0 and 1 for double buffering)
+        private ulong[] _timestampQueryResults; // Results buffer for resolving queries
+        private bool _timestampQueriesInitialized;
+
         // Resource tracking - maps IntPtr handles to actual Vulkan resources
         private Dictionary<IntPtr, IDisposable> _resources;
         private long _nextResourceHandle;
@@ -156,6 +168,25 @@ namespace Andastra.Runtime.MonoGame.Backends
             _gpuTimestampPeriod = 1.0; // Default to 1 ns per tick (will be queried from device properties if available)
             _gpuTimestampsSupported = true; // Assume supported unless device properties indicate otherwise
 
+            // Initialize command list management
+            _currentFrameCommandList = null;
+
+            // Initialize GPU timestamp query pool
+            // Based on Vulkan API: vkCreateQueryPool with VK_QUERY_TYPE_TIMESTAMP
+            // https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateQueryPool.html
+            // We create a query pool with 2 queries per frame (start and end timestamps)
+            // Using double buffering: we alternate between query indices 0 and 1
+            _timestampQueryPool = IntPtr.Zero;
+            _timestampQueryIndex = 0;
+            _timestampQueryResults = new ulong[TIMESTAMP_QUERY_COUNT];
+            _timestampQueriesInitialized = false;
+
+            // Create timestamp query pool if GPU timestamps are supported
+            if (_gpuTimestampsSupported && _device != null)
+            {
+                CreateTimestampQueryPool();
+            }
+
             _initialized = true;
             return true;
         }
@@ -200,6 +231,16 @@ namespace Andastra.Runtime.MonoGame.Backends
                 _resources.Clear();
             }
 
+            // Dispose current frame command list if it exists
+            if (_currentFrameCommandList != null)
+            {
+                _currentFrameCommandList.Dispose();
+                _currentFrameCommandList = null;
+            }
+
+            // Destroy timestamp query pool
+            DestroyTimestampQueryPool();
+
             _initialized = false;
         }
 
@@ -226,8 +267,30 @@ namespace Andastra.Runtime.MonoGame.Backends
             // Begin frame rendering
             // Note: Swap chain management would be handled by the windowing system (MonoGame/GLFW)
             // This backend focuses on resource creation and management
-            // TODO: Simplified Placeholder - Command buffer recording and submission would be handled by ICommandList from VulkanDevice
-            // GPU timestamp queries would be implemented using vkCmdWriteTimestamp when command lists are used
+
+            // Create and open command list for this frame
+            // Based on Vulkan API: Command buffers are allocated from command pools and recorded with rendering commands
+            // https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkAllocateCommandBuffers.html
+            // https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkBeginCommandBuffer.html
+            _currentFrameCommandList = _device.CreateCommandList(CommandListType.Graphics);
+            if (_currentFrameCommandList == null)
+            {
+                Console.WriteLine("[VulkanBackend] BeginFrame: Failed to create command list");
+                return;
+            }
+
+            // Open command list for recording
+            _currentFrameCommandList.Open();
+
+            // Record GPU timestamp at frame start if timestamps are supported
+            // Based on Vulkan API: vkCmdWriteTimestamp records a timestamp when a specific pipeline stage completes
+            // https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdWriteTimestamp.html
+            // We record at VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT (0x00000001) to mark the start of the frame
+            if (_gpuTimestampsSupported && _timestampQueriesInitialized && _timestampQueryPool != IntPtr.Zero)
+            {
+                const uint VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT = 0x00000001;
+                WriteGpuTimestamp(_currentFrameCommandList, _timestampQueryIndex, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
+            }
         }
 
         public void EndFrame()
@@ -267,9 +330,49 @@ namespace Andastra.Runtime.MonoGame.Backends
             }
 
             // End frame and present
-            // Note: Command buffer submission and swap chain presentation would be handled by the windowing system
-            // GPU timestamp resolution would happen here when timestamp queries are implemented
-            // For now, GPU time is estimated as frame time minus CPU time
+            // Note: Swap chain presentation would be handled by the windowing system
+            // Command buffer submission is handled here using ICommandList from VulkanDevice
+
+            // Record GPU timestamp at frame end if timestamps are supported
+            // Based on Vulkan API: vkCmdWriteTimestamp records a timestamp when a specific pipeline stage completes
+            // https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdWriteTimestamp.html
+            // We record at VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT (0x00002000) to mark the end of the frame
+            if (_currentFrameCommandList != null && _gpuTimestampsSupported && _timestampQueriesInitialized && _timestampQueryPool != IntPtr.Zero)
+            {
+                const uint VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT = 0x00002000;
+                WriteGpuTimestamp(_currentFrameCommandList, _timestampQueryIndex + 1, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
+            }
+
+            // Close command list to finish recording
+            // Based on Vulkan API: vkEndCommandBuffer finishes recording commands
+            // https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkEndCommandBuffer.html
+            if (_currentFrameCommandList != null)
+            {
+                _currentFrameCommandList.Close();
+
+                // Submit command list to graphics queue for execution
+                // Based on Vulkan API: vkQueueSubmit submits command buffers to a queue
+                // https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkQueueSubmit.html
+                _device.ExecuteCommandList(_currentFrameCommandList);
+
+                // Resolve GPU timestamp queries after submission
+                // Based on Vulkan API: vkGetQueryPoolResults retrieves query results
+                // https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetQueryPoolResults.html
+                // We wait for the queries to be available, then calculate GPU time
+                if (_gpuTimestampsSupported && _timestampQueriesInitialized && _timestampQueryPool != IntPtr.Zero)
+                {
+                    ResolveGpuTimestampQueries();
+                }
+
+                // Dispose command list (it will be recreated next frame)
+                // Note: In a production implementation, command lists would be recycled from a pool
+                // for better performance, but for now we create/destroy per frame
+                _currentFrameCommandList.Dispose();
+                _currentFrameCommandList = null;
+
+                // Advance timestamp query index for next frame (double buffering)
+                _timestampQueryIndex = (_timestampQueryIndex + 2) % (TIMESTAMP_QUERY_COUNT * 2);
+            }
         }
 
         public void Resize(int width, int height)
@@ -1199,6 +1302,291 @@ namespace Andastra.Runtime.MonoGame.Backends
         private CompareFunc ConvertCompareFunc(CompareFunc func)
         {
             return (CompareFunc)(int)func;
+        }
+
+        #endregion
+
+        #region GPU Timestamp Query Management
+
+        /// <summary>
+        /// Creates a Vulkan timestamp query pool for GPU timing measurements.
+        /// Based on Vulkan API: vkCreateQueryPool with VK_QUERY_TYPE_TIMESTAMP
+        /// https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateQueryPool.html
+        /// </summary>
+        private void CreateTimestampQueryPool()
+        {
+            if (_device == null || _timestampQueryPool != IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                // Use reflection to access VulkanDevice's internal methods and fields
+                // We need to call vkCreateQueryPool which is a private method in VulkanDevice
+                // For a complete implementation, these methods should be public in VulkanDevice
+                System.Reflection.MethodInfo createQueryPoolMethod = typeof(VulkanDevice).GetMethod(
+                    "CreateTimestampQueryPool",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+
+                if (createQueryPoolMethod != null)
+                {
+                    object result = createQueryPoolMethod.Invoke(_device, new object[] { TIMESTAMP_QUERY_COUNT * 2 });
+                    if (result is IntPtr queryPool && queryPool != IntPtr.Zero)
+                    {
+                        _timestampQueryPool = queryPool;
+                        _timestampQueriesInitialized = true;
+                        Console.WriteLine("[VulkanBackend] Created timestamp query pool");
+                    }
+                }
+                else
+                {
+                    // If the method doesn't exist, we'll create the query pool directly using Vulkan API
+                    // This requires accessing VulkanDevice's internal Vulkan function pointers
+                    // For now, we'll mark timestamps as not supported if we can't create the pool
+                    Console.WriteLine("[VulkanBackend] CreateTimestampQueryPool: Method not found, GPU timestamps disabled");
+                    _gpuTimestampsSupported = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[VulkanBackend] CreateTimestampQueryPool: Exception: {ex.Message}");
+                _gpuTimestampsSupported = false;
+            }
+        }
+
+        /// <summary>
+        /// Destroys the Vulkan timestamp query pool.
+        /// Based on Vulkan API: vkDestroyQueryPool
+        /// https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkDestroyQueryPool.html
+        /// </summary>
+        private void DestroyTimestampQueryPool()
+        {
+            if (_timestampQueryPool == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                // Use reflection to access VulkanDevice's internal methods
+                System.Reflection.MethodInfo destroyQueryPoolMethod = typeof(VulkanDevice).GetMethod(
+                    "DestroyTimestampQueryPool",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+
+                if (destroyQueryPoolMethod != null)
+                {
+                    destroyQueryPoolMethod.Invoke(_device, new object[] { _timestampQueryPool });
+                }
+
+                _timestampQueryPool = IntPtr.Zero;
+                _timestampQueriesInitialized = false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[VulkanBackend] DestroyTimestampQueryPool: Exception: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Writes a GPU timestamp to the command buffer.
+        /// Based on Vulkan API: vkCmdWriteTimestamp
+        /// https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdWriteTimestamp.html
+        /// </summary>
+        /// <param name="commandList">Command list to record the timestamp into.</param>
+        /// <param name="queryIndex">Index into the query pool for this timestamp.</param>
+        /// <param name="pipelineStage">Pipeline stage at which to record the timestamp.</param>
+        private void WriteGpuTimestamp(ICommandList commandList, uint queryIndex, uint pipelineStage)
+        {
+            if (commandList == null || _timestampQueryPool == IntPtr.Zero || !_timestampQueriesInitialized)
+            {
+                return;
+            }
+
+            try
+            {
+                // Use reflection to access VulkanCommandList's internal command buffer
+                // We need the VkCommandBuffer handle to call vkCmdWriteTimestamp
+                System.Reflection.FieldInfo vkCommandBufferField = commandList.GetType().GetField(
+                    "_vkCommandBuffer",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+                if (vkCommandBufferField == null)
+                {
+                    Console.WriteLine("[VulkanBackend] WriteGpuTimestamp: Could not access command buffer field");
+                    return;
+                }
+
+                IntPtr vkCommandBuffer = (IntPtr)vkCommandBufferField.GetValue(commandList);
+                if (vkCommandBuffer == IntPtr.Zero)
+                {
+                    Console.WriteLine("[VulkanBackend] WriteGpuTimestamp: Invalid command buffer handle");
+                    return;
+                }
+
+                // Use reflection to access VulkanDevice's vkCmdWriteTimestamp function pointer
+                System.Reflection.FieldInfo vkCmdWriteTimestampField = typeof(VulkanDevice).GetField(
+                    "vkCmdWriteTimestamp",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+
+                if (vkCmdWriteTimestampField == null)
+                {
+                    Console.WriteLine("[VulkanBackend] WriteGpuTimestamp: vkCmdWriteTimestamp function not found");
+                    return;
+                }
+
+                object vkCmdWriteTimestampDelegate = vkCmdWriteTimestampField.GetValue(null);
+                if (vkCmdWriteTimestampDelegate == null)
+                {
+                    Console.WriteLine("[VulkanBackend] WriteGpuTimestamp: vkCmdWriteTimestamp delegate is null");
+                    return;
+                }
+
+                // Call vkCmdWriteTimestamp using reflection
+                // Signature: void vkCmdWriteTimestamp(VkCommandBuffer commandBuffer, VkPipelineStageFlagBits pipelineStage, VkQueryPool queryPool, uint query);
+                System.Reflection.MethodInfo invokeMethod = vkCmdWriteTimestampDelegate.GetType().GetMethod("Invoke");
+                if (invokeMethod != null)
+                {
+                    invokeMethod.Invoke(vkCmdWriteTimestampDelegate, new object[] { vkCommandBuffer, pipelineStage, _timestampQueryPool, queryIndex });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[VulkanBackend] WriteGpuTimestamp: Exception: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Resolves GPU timestamp queries and updates frame statistics.
+        /// Based on Vulkan API: vkGetQueryPoolResults
+        /// https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetQueryPoolResults.html
+        /// </summary>
+        private void ResolveGpuTimestampQueries()
+        {
+            if (_timestampQueryPool == IntPtr.Zero || !_timestampQueriesInitialized)
+            {
+                return;
+            }
+
+            try
+            {
+                // Wait for device to be idle to ensure queries are available
+                // In a production implementation, we would use fences/semaphores for proper synchronization
+                // For now, we wait for device idle which ensures all submitted commands have completed
+                _device.WaitIdle();
+
+                // Use reflection to access VulkanDevice's vkGetQueryPoolResults function pointer
+                System.Reflection.FieldInfo vkGetQueryPoolResultsField = typeof(VulkanDevice).GetField(
+                    "vkGetQueryPoolResults",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+
+                if (vkGetQueryPoolResultsField == null)
+                {
+                    Console.WriteLine("[VulkanBackend] ResolveGpuTimestampQueries: vkGetQueryPoolResults function not found");
+                    return;
+                }
+
+                object vkGetQueryPoolResultsDelegate = vkGetQueryPoolResultsField.GetValue(null);
+                if (vkGetQueryPoolResultsDelegate == null)
+                {
+                    Console.WriteLine("[VulkanBackend] ResolveGpuTimestampQueries: vkGetQueryPoolResults delegate is null");
+                    return;
+                }
+
+                // Get device handle
+                System.Reflection.FieldInfo deviceField = typeof(VulkanDevice).GetField(
+                    "_device",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+                if (deviceField == null)
+                {
+                    Console.WriteLine("[VulkanBackend] ResolveGpuTimestampQueries: Could not access device field");
+                    return;
+                }
+
+                IntPtr vkDevice = (IntPtr)deviceField.GetValue(_device);
+                if (vkDevice == IntPtr.Zero)
+                {
+                    Console.WriteLine("[VulkanBackend] ResolveGpuTimestampQueries: Invalid device handle");
+                    return;
+                }
+
+                // Allocate unmanaged memory for query results
+                // Each timestamp is a uint64 (8 bytes)
+                int resultSize = (int)(TIMESTAMP_QUERY_COUNT * sizeof(ulong));
+                IntPtr resultsPtr = System.Runtime.InteropServices.Marshal.AllocHGlobal(resultSize);
+                try
+                {
+                    // Call vkGetQueryPoolResults
+                    // Signature: VkResult vkGetQueryPoolResults(VkDevice device, VkQueryPool queryPool, uint firstQuery, uint queryCount, IntPtr dataSize, IntPtr pData, ulong stride, VkQueryResultFlags flags);
+                    // VK_QUERY_RESULT_64_BIT = 0x00000002 (return 64-bit values)
+                    // VK_QUERY_RESULT_WAIT_BIT = 0x00000001 (wait for results to be available)
+                    const uint VK_QUERY_RESULT_64_BIT = 0x00000002;
+                    const uint VK_QUERY_RESULT_WAIT_BIT = 0x00000001;
+                    uint flags = VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_WAIT_BIT;
+
+                    System.Reflection.MethodInfo invokeMethod = vkGetQueryPoolResultsDelegate.GetType().GetMethod("Invoke");
+                    if (invokeMethod != null)
+                    {
+                        // VkResult result = vkGetQueryPoolResults(vkDevice, _timestampQueryPool, _timestampQueryIndex, TIMESTAMP_QUERY_COUNT, (IntPtr)resultSize, resultsPtr, sizeof(ulong), flags);
+                        object result = invokeMethod.Invoke(vkGetQueryPoolResultsDelegate, new object[]
+                        {
+                            vkDevice,
+                            _timestampQueryPool,
+                            _timestampQueryIndex,
+                            TIMESTAMP_QUERY_COUNT,
+                            (IntPtr)resultSize,
+                            resultsPtr,
+                            (ulong)sizeof(ulong),
+                            flags
+                        });
+
+                        // Check if result is VK_SUCCESS (0)
+                        int resultCode = (int)result;
+                        if (resultCode == 0) // VK_SUCCESS
+                        {
+                            // Read timestamp values from unmanaged memory
+                            for (uint i = 0; i < TIMESTAMP_QUERY_COUNT; i++)
+                            {
+                                IntPtr timestampPtr = IntPtr.Add(resultsPtr, (int)(i * sizeof(ulong)));
+                                _timestampQueryResults[i] = (ulong)System.Runtime.InteropServices.Marshal.ReadInt64(timestampPtr);
+                            }
+
+                            // Calculate GPU time from timestamps
+                            // startTimestamp is at index 0, endTimestamp is at index 1
+                            ulong startTimestamp = _timestampQueryResults[0];
+                            ulong endTimestamp = _timestampQueryResults[1];
+
+                            if (startTimestamp > 0 && endTimestamp > 0 && endTimestamp > startTimestamp)
+                            {
+                                // Calculate GPU time: (endTimestamp - startTimestamp) * timestampPeriod (nanoseconds) / 1,000,000 (convert to milliseconds)
+                                ulong deltaTicks = endTimestamp - startTimestamp;
+                                double gpuTimeNs = deltaTicks * _gpuTimestampPeriod;
+                                _lastFrameStats.GpuTimeMs = gpuTimeNs / 1000000.0; // Convert nanoseconds to milliseconds
+                            }
+                            else if (startTimestamp > 0 && endTimestamp > 0 && endTimestamp < startTimestamp)
+                            {
+                                // Handle timestamp wrap-around (64-bit timestamps wrap after ~584 years at 1ns resolution)
+                                ulong deltaTicks = (ulong.MaxValue - startTimestamp) + endTimestamp;
+                                double gpuTimeNs = deltaTicks * _gpuTimestampPeriod;
+                                _lastFrameStats.GpuTimeMs = gpuTimeNs / 1000000.0;
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[VulkanBackend] ResolveGpuTimestampQueries: vkGetQueryPoolResults failed with result {resultCode}");
+                        }
+                    }
+                }
+                finally
+                {
+                    System.Runtime.InteropServices.Marshal.FreeHGlobal(resultsPtr);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[VulkanBackend] ResolveGpuTimestampQueries: Exception: {ex.Message}");
+            }
         }
 
         #endregion
