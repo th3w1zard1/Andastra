@@ -40,7 +40,7 @@ namespace Andastra.Runtime.Games.Common.Journal
         protected BaseJRLLoader(Installation installation)
         {
             _installation = installation ?? throw new ArgumentNullException("installation");
-            _jrlCache = new Dictionary<string, JRL>(StringComparer.OrdinalIgnoreCase);
+            _jrlCache = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>
