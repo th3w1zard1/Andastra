@@ -66,9 +66,7 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningLevel>0</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject>Andastra.Runtime.Game.Program</StartupObject>
-  </PropertyGroup>
+  <!-- StartupObject removed because Game folder is excluded from build -->
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.2.2" />
     <PackageReference Include="Avalonia.Desktop" Version="11.2.2" />
@@ -118,5 +116,11 @@
     <Content Remove="**\Tests\**" />
     <EmbeddedResource Remove="**\Tests\**" />
     <None Remove="**\Tests\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Game\**" />
+    <Content Remove="Game\**" />
+    <EmbeddedResource Remove="Game\**" />
+    <None Remove="Game\**" />
   </ItemGroup>
 </Project>
