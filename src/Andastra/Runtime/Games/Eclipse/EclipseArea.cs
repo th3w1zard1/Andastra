@@ -9964,6 +9964,86 @@ namespace Andastra.Runtime.Games.Eclipse
         }
 
         /// <summary>
+        /// Attempts to get cached vertex positions for a mesh.
+        /// </summary>
+        /// <param name="meshId">Mesh identifier.</param>
+        /// <param name="vertices">Output parameter for vertex positions list.</param>
+        /// <returns>True if cached vertices were found, false otherwise.</returns>
+        public bool TryGetCachedMeshGeometryVertices(string meshId, out List<Vector3> vertices)
+        {
+            vertices = null;
+
+            if (string.IsNullOrEmpty(meshId))
+            {
+                return false;
+            }
+
+            if (_cachedMeshGeometry.TryGetValue(meshId, out CachedMeshGeometry cachedGeometry))
+            {
+                if (cachedGeometry.Vertices != null && cachedGeometry.Vertices.Count > 0)
+                {
+                    // Return a copy to prevent external modifications from affecting the cache
+                    vertices = new List<Vector3>(cachedGeometry.Vertices);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Attempts to get cached triangle indices for a mesh.
+        /// </summary>
+        /// <param name="meshId">Mesh identifier.</param>
+        /// <param name="indices">Output parameter for triangle indices list.</param>
+        /// <returns>True if cached indices were found, false otherwise.</returns>
+        public bool TryGetCachedMeshGeometryIndices(string meshId, out List<int> indices)
+        {
+            indices = null;
+
+            if (string.IsNullOrEmpty(meshId))
+            {
+                return false;
+            }
+
+            if (_cachedMeshGeometry.TryGetValue(meshId, out CachedMeshGeometry cachedGeometry))
+            {
+                if (cachedGeometry.Indices != null && cachedGeometry.Indices.Count > 0)
+                {
+                    // Return a copy to prevent external modifications from affecting the cache
+                    indices = new List<int>(cachedGeometry.Indices);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Caches mesh geometry data (vertex positions and triangle indices).
+        /// </summary>
+        /// <param name="meshId">Mesh identifier (model name/resref).</param>
+        /// <param name="vertices">Vertex positions list.</param>
+        /// <param name="indices">Triangle indices list.</param>
+        public void CacheMeshGeometry(string meshId, List<Vector3> vertices, List<int> indices)
+        {
+            if (string.IsNullOrEmpty(meshId) || vertices == null || indices == null)
+            {
+                return;
+            }
+
+            // Create cached geometry object
+            CachedMeshGeometry cachedGeometry = new CachedMeshGeometry
+            {
+                MeshId = meshId,
+                Vertices = new List<Vector3>(vertices),
+                Indices = new List<int>(indices)
+            };
+
+            _cachedMeshGeometry[meshId] = cachedGeometry;
+        }
+
+        /// <summary>
         /// Recursively extracts vertex positions and indices from an MDL node.
         /// </summary>
         /// <param name="node">MDL node to extract geometry from.</param>
@@ -14284,6 +14364,30 @@ technique ColorGrading
             LifeTime = 0.0f;
             RemainingLifeTime = 0.0f;
         }
+
+        /// <summary>
+        /// Attempts to get cached vertex positions for a mesh.
+        /// </summary>
+        public bool TryGetCachedMeshGeometryVertices(string meshId, out List<Vector3> vertices)
+        {
+            return _geometryModificationTracker.TryGetCachedMeshGeometryVertices(meshId, out vertices);
+        }
+
+        /// <summary>
+        /// Attempts to get cached triangle indices for a mesh.
+        /// </summary>
+        public bool TryGetCachedMeshGeometryIndices(string meshId, out List<int> indices)
+        {
+            return _geometryModificationTracker.TryGetCachedMeshGeometryIndices(meshId, out indices);
+        }
+
+        /// <summary>
+        /// Caches mesh geometry data (vertex positions and triangle indices) from MDL model.
+        /// </summary>
+        public void CacheMeshGeometry(string meshId, List<Vector3> vertices, List<int> indices)
+        {
+            _geometryModificationTracker.CacheMeshGeometry(meshId, vertices, indices);
+        }
     }
 
     /// <summary>
@@ -14555,7 +14659,7 @@ technique ColorGrading
             }
 
             // Create cached geometry object
-            CachedMeshGeometry cachedGeometry = new CachedMeshGeometry
+            EclipseArea.CachedMeshGeometry cachedGeometry = new EclipseArea.CachedMeshGeometry
             {
                 MeshId = meshId,
                 Vertices = new List<Vector3>(vertices), // Store copies to prevent external modifications
