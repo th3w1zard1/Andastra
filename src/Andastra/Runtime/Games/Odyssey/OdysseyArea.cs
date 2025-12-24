@@ -2673,7 +2673,7 @@ namespace Andastra.Runtime.Games.Odyssey
                     // Apply room rotation if specified
                     if (Math.Abs(room.Rotation) > 0.001f)
                     {
-                        Matrix4x4 rotation = MatrixHelper.CreateRotationY(MathHelper.ToRadians(room.Rotation));
+                        Matrix4x4 rotation = MatrixHelper.CreateRotationY((float)(room.Rotation * Math.PI / 180.0));
                         roomWorld = Matrix4x4.Multiply(rotation, roomWorld);
                     }
 
@@ -2791,7 +2791,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 // Based on swkotor2.exe: Resources can be in override directory or chitin.key
                 if ((mdlData == null || mdlData.Length == 0) && _module != null && _module.Installation != null)
                 {
-                    Installation.Installation installation = _module.Installation;
+                    Installation installation = _module.Installation;
                     SearchLocation[] searchOrder = { SearchLocation.OVERRIDE, SearchLocation.CHITIN };
 
                     ResourceResult mdlResult = installation.Resource(modelResRef, ResourceType.MDL, searchOrder);
@@ -3038,7 +3038,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 // If not found in Module, try Installation (chitin/override)
                 if ((mdlData == null || mdlData.Length == 0) && _module != null && _module.Installation != null)
                 {
-                    Installation.Installation installation = _module.Installation;
+                    Installation installation = _module.Installation;
                     SearchLocation[] searchOrder = { SearchLocation.OVERRIDE, SearchLocation.CHITIN };
 
                     ResourceResult mdlResult = installation.Resource(modelResRef, ResourceType.MDL, searchOrder);

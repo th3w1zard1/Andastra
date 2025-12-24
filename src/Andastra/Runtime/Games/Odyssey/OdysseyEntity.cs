@@ -1673,7 +1673,7 @@ namespace Andastra.Runtime.Games.Odyssey
                                             break;
                                     }
 
-                                    data[key] = value;
+                                    fieldData[key] = value;
                                 }
                             }
                         }
