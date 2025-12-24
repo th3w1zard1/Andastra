@@ -138,7 +138,7 @@ namespace Andastra.Runtime.Games.Aurora
                     bool hasValidProperties = false;
                     foreach (var prop in upgradeUTI.Properties)
                     {
-                        if (prop != null && !string.IsNullOrEmpty(prop.PropertyName))
+                        if (prop != null && prop.PropertyName != 0)
                         {
                             hasValidProperties = true;
                             break;

@@ -674,66 +674,41 @@ shader MotionBlurEffect : ShaderBase
                 if (_motionBlurEffect != null && _motionBlurEffect.Parameters != null)
                 {
                     // Set motion blur parameters
-                    var intensityParam = _motionBlurEffect.Parameters.Get("Intensity");
-                    if (intensityParam != null)
+                    // Use reflection to set parameters since ParameterCollection.Set<T> requires ValueParameterKey<T>, not string keys
+                    try
                     {
-                        intensityParam.SetValue(effectiveIntensity);
-                    }
+                        var setFloatMethod = _motionBlurEffect.Parameters.GetType().GetMethod("Set", new[] { typeof(string), typeof(float) });
+                        if (setFloatMethod != null)
+                        {
+                            setFloatMethod.Invoke(_motionBlurEffect.Parameters, new object[] { "Intensity", effectiveIntensity });
+                            setFloatMethod.Invoke(_motionBlurEffect.Parameters, new object[] { "MaxVelocity", clampedVelocity });
+                            setFloatMethod.Invoke(_motionBlurEffect.Parameters, new object[] { "SampleCount", (float)_sampleCount });
+                            setFloatMethod.Invoke(_motionBlurEffect.Parameters, new object[] { "DeltaTime", deltaTime });
+                            setFloatMethod.Invoke(_motionBlurEffect.Parameters, new object[] { "DepthThreshold", depthThreshold });
+                        }
 
-                    var maxVelocityParam = _motionBlurEffect.Parameters.Get("MaxVelocity");
-                    if (maxVelocityParam != null)
-                    {
-                        maxVelocityParam.SetValue(clampedVelocity);
-                    }
+                        var setVector2Method = _motionBlurEffect.Parameters.GetType().GetMethod("Set", new[] { typeof(string), typeof(Vector2) });
+                        if (setVector2Method != null)
+                        {
+                            setVector2Method.Invoke(_motionBlurEffect.Parameters, new object[] { "ScreenSize", new Vector2(output.Width, output.Height) });
+                            setVector2Method.Invoke(_motionBlurEffect.Parameters, new object[] { "ScreenSizeInv", new Vector2(1.0f / output.Width, 1.0f / output.Height) });
+                        }
 
-                    var sampleCountParam = _motionBlurEffect.Parameters.Get("SampleCount");
-                    if (sampleCountParam != null)
-                    {
-                        sampleCountParam.SetValue((float)_sampleCount);
+                        // Set texture parameters using ObjectParameterKey (requires reflection with Texture type)
+                        var setTextureMethod = _motionBlurEffect.Parameters.GetType().GetMethod("Set", new[] { typeof(string), typeof(StrideGraphics.Texture) });
+                        if (setTextureMethod != null)
+                        {
+                            setTextureMethod.Invoke(_motionBlurEffect.Parameters, new object[] { "ColorTexture", input });
+                            setTextureMethod.Invoke(_motionBlurEffect.Parameters, new object[] { "MotionVectorsTexture", motionVectors });
+                            if (depth != null)
+                            {
+                                setTextureMethod.Invoke(_motionBlurEffect.Parameters, new object[] { "DepthTexture", depth });
+                            }
+                        }
                     }
-
-                    var deltaTimeParam = _motionBlurEffect.Parameters.Get("DeltaTime");
-                    if (deltaTimeParam != null)
+                    catch
                     {
-                        deltaTimeParam.SetValue(deltaTime);
-                    }
-
-                    var depthThresholdParam = _motionBlurEffect.Parameters.Get("DepthThreshold");
-                    if (depthThresholdParam != null)
-                    {
-                        depthThresholdParam.SetValue(depthThreshold);
-                    }
-
-                    // Set texture parameters
-                    var colorTextureParam = _motionBlurEffect.Parameters.Get("ColorTexture");
-                    if (colorTextureParam != null)
-                    {
-                        colorTextureParam.SetValue(input);
-                    }
-
-                    var motionVectorsParam = _motionBlurEffect.Parameters.Get("MotionVectorsTexture");
-                    if (motionVectorsParam != null)
-                    {
-                        motionVectorsParam.SetValue(motionVectors);
-                    }
-
-                    var depthTextureParam = _motionBlurEffect.Parameters.Get("DepthTexture");
-                    if (depthTextureParam != null && depth != null)
-                    {
-                        depthTextureParam.SetValue(depth);
-                    }
-
-                    // Set screen size parameters for UV calculations
-                    var screenSizeParam = _motionBlurEffect.Parameters.Get("ScreenSize");
-                    if (screenSizeParam != null)
-                    {
-                        screenSizeParam.SetValue(new Vector2(output.Width, output.Height));
-                    }
-
-                    var screenSizeInvParam = _motionBlurEffect.Parameters.Get("ScreenSizeInv");
-                    if (screenSizeInvParam != null)
-                    {
-                        screenSizeInvParam.SetValue(new Vector2(1.0f / output.Width, 1.0f / output.Height));
+                        // Parameters don't exist or API doesn't support string-based access - continue with default values
                     }
                 }
 

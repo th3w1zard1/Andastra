@@ -103,15 +103,15 @@ namespace Andastra.Tests.Runtime.Parsing.MDL
             // Add a row
             var row = new MDLControllerRow();
             row.Time = 0.0f;
-            if (controllerType == MDLControllerType.Position)
+            if (controllerType == MDLControllerType.POSITION)
             {
                 row.Data = new List<float> { 1.0f, 2.0f, 3.0f };
             }
-            else if (controllerType == MDLControllerType.Orientation)
+            else if (controllerType == MDLControllerType.ORIENTATION)
             {
                 row.Data = new List<float> { 0.0f, 0.0f, 0.0f, 1.0f }; // quaternion
             }
-            else if (controllerType == MDLControllerType.Scale)
+            else if (controllerType == MDLControllerType.SCALE)
             {
                 row.Data = new List<float> { 1.0f };
             }
@@ -151,7 +151,7 @@ namespace Andastra.Tests.Runtime.Parsing.MDL
 
             // Add a test node to animation
             var animNode = CreateTestNode("anim_node", MDLNodeType.DUMMY);
-            animNode.Controllers.Add(CreateTestController(MDLControllerType.Position));
+            animNode.Controllers.Add(CreateTestController(MDLControllerType.POSITION));
             anim.Root = animNode;
 
             return anim;
@@ -1081,10 +1081,10 @@ donemodel test
             // Add all header controllers
             var controllers = new[]
             {
-                MDLAsciiTestHelpers.CreateTestController(MDLControllerType.Position),
-                MDLAsciiTestHelpers.CreateTestController(MDLControllerType.Orientation),
-                MDLAsciiTestHelpers.CreateTestController(MDLControllerType.Scale),
-                MDLAsciiTestHelpers.CreateTestController(MDLControllerType.Alpha),
+                MDLAsciiTestHelpers.CreateTestController(MDLControllerType.POSITION),
+                MDLAsciiTestHelpers.CreateTestController(MDLControllerType.ORIENTATION),
+                MDLAsciiTestHelpers.CreateTestController(MDLControllerType.SCALE),
+                MDLAsciiTestHelpers.CreateTestController(MDLControllerType.ALPHA),
             };
             node.Controllers.AddRange(controllers);
 
@@ -1164,22 +1164,22 @@ donemodel test
             if (!File.Exists(testMdlPath))
             {
                 // Skip test if file doesn't exist - create a synthetic test instead
-                var mdl1 = MDLAsciiTestHelpers.CreateTestMDL("test_model");
+                var syntheticMdl = MDLAsciiTestHelpers.CreateTestMDL("test_model");
                 var node = MDLAsciiTestHelpers.CreateTestNode("test_node");
                 node.Mesh = MDLAsciiTestHelpers.CreateTestMesh();
-                mdl1.Root.Children.Add(node);
+                syntheticMdl.Root.Children.Add(node);
 
                 // Convert to binary
-                byte[] binaryBytes1 = MDLAuto.BytesMdl(mdl1, ResourceType.MDL);
+                byte[] binaryBytes1 = MDLAuto.BytesMdl(syntheticMdl, ResourceType.MDL);
 
                 // Convert to ASCII
-                byte[] asciiBytes = MDLAuto.BytesMdl(mdl1, ResourceType.MDL_ASCII);
+                byte[] syntheticAsciiBytes = MDLAuto.BytesMdl(syntheticMdl, ResourceType.MDL_ASCII);
 
                 // Read ASCII
-                MDL mdl2 = MDLAuto.ReadMdl(asciiBytes, fileFormat: ResourceType.MDL_ASCII);
+                MDLModel syntheticMdl2 = MDLAuto.ReadMdl(syntheticAsciiBytes, fileFormat: ResourceType.MDL_ASCII);
 
                 // Convert back to binary
-                byte[] binaryBytes2 = MDLAuto.BytesMdl(mdl2, ResourceType.MDL);
+                byte[] binaryBytes2 = MDLAuto.BytesMdl(syntheticMdl2, ResourceType.MDL);
 
                 // Verify binary structure
                 binaryBytes2.Length.Should().BeGreaterThan(0);
@@ -1188,13 +1188,13 @@ donemodel test
             }
 
             // Read binary
-            MDL mdl1 = MDLAuto.ReadMdl(testMdlPath, sourceExt: testMdxPath, fileFormat: ResourceType.MDL);
+            MDLModel mdl1 = MDLAuto.ReadMdl(testMdlPath, sourceExt: testMdxPath, fileFormat: ResourceType.MDL);
 
             // Convert to ASCII
             byte[] asciiBytes = MDLAuto.BytesMdl(mdl1, ResourceType.MDL_ASCII);
 
             // Read ASCII
-            MDL mdl2 = MDLAuto.ReadMdl(asciiBytes, fileFormat: ResourceType.MDL_ASCII);
+            MDLModel mdl2 = MDLAuto.ReadMdl(asciiBytes, fileFormat: ResourceType.MDL_ASCII);
 
             // Convert back to binary
             byte[] binaryBytes = MDLAuto.BytesMdl(mdl2, ResourceType.MDL);
@@ -1225,7 +1225,7 @@ donemodel test
             byte[] binaryBytes = MDLAuto.BytesMdl(mdl1, ResourceType.MDL);
 
             // Read binary
-            MDL mdl2 = MDLAuto.ReadMdl(binaryBytes, fileFormat: ResourceType.MDL);
+            MDLModel mdl2 = MDLAuto.ReadMdl(binaryBytes, fileFormat: ResourceType.MDL);
 
             // Convert back to ASCII
             byte[] asciiBytes = MDLAuto.BytesMdl(mdl2, ResourceType.MDL_ASCII);
@@ -1246,7 +1246,7 @@ donemodel test
 
             // Add multiple node types with controllers
             var dummy = MDLAsciiTestHelpers.CreateTestNode("dummy", MDLNodeType.DUMMY);
-            dummy.Controllers.Add(MDLAsciiTestHelpers.CreateTestController(MDLControllerType.Position));
+            dummy.Controllers.Add(MDLAsciiTestHelpers.CreateTestController(MDLControllerType.POSITION));
 
             var trimesh = MDLAsciiTestHelpers.CreateTestNode("trimesh", MDLNodeType.TRIMESH);
             trimesh.Mesh = MDLAsciiTestHelpers.CreateTestMesh();
@@ -1277,7 +1277,7 @@ donemodel test
             }
 
             // Verify all features
-            mdl2.GetAllNodes().Count.Should().BeGreaterOrEqualTo(4); // root + 3 children (may include animation nodes)
+            mdl2.GetAllNodes().Count.Should().BeGreaterThanOrEqualTo(4); // root + 3 children (may include animation nodes)
             mdl2.Anims.Count.Should().Be(2);
             mdl2.Get("dummy").Should().NotBeNull();
             mdl2.Get("trimesh").Should().NotBeNull();

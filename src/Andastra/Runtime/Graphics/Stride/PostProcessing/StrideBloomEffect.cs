@@ -3,11 +3,9 @@ using System.IO;
 using StrideGraphics = Stride.Graphics;
 using Stride.Rendering;
 using Stride.Core.Mathematics;
-using Stride.Engine;
 using Stride.Shaders;
 using Stride.Shaders.Compiler;
 using Andastra.Runtime.Graphics.Common.PostProcessing;
-using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Stride.Graphics;
 using Stride.Core.Serialization.Contents;
 
@@ -520,7 +518,7 @@ shader BlurEffect : ShaderBase
             var graphicsContext = _graphicsDevice.GraphicsContext();
             if (graphicsContext == null)
             {
-                System.Console.WriteLine("[StrideBloomEffect] Warning: Could not begin sprite batch - GraphicsContext unavailable");
+                Console.WriteLine("[StrideBloomEffect] Warning: Could not begin sprite batch - GraphicsContext unavailable");
                 return;
             }
 
@@ -565,13 +563,13 @@ shader BlurEffect : ShaderBase
         {
             if (string.IsNullOrEmpty(shaderSource))
             {
-                System.Console.WriteLine($"[StrideBloomEffect] Cannot compile shader '{shaderName}': shader source is null or empty");
+                Console.WriteLine($"[StrideBloomEffect] Cannot compile shader '{shaderName}': shader source is null or empty");
                 return null;
             }
 
             if (_graphicsDevice == null)
             {
-                System.Console.WriteLine($"[StrideBloomEffect] Cannot compile shader '{shaderName}': GraphicsDevice is null");
+                Console.WriteLine($"[StrideBloomEffect] Cannot compile shader '{shaderName}': GraphicsDevice is null");
                 return null;
             }
 
@@ -597,7 +595,7 @@ shader BlurEffect : ShaderBase
                     // Try to get EffectSystem from services (EffectCompiler may be accessed through it)
                     // Based on Stride architecture: EffectSystem manages effect compilation
                     // Use global:: to avoid namespace resolution conflicts
-                    var effectSystem = ((dynamic)services).GetService<global::Stride.Shaders.Compiler.EffectCompiler>();
+                    var effectSystem = ((dynamic)services).GetService<EffectCompiler>();
                     if (effectSystem != null)
                     {
                         // EffectSystem may provide access to EffectCompiler
@@ -655,24 +653,24 @@ shader BlurEffect : ShaderBase
                     // Create Effect from compiled bytecode
                     // Based on Stride API: Effect constructor accepts compiled bytecode
                     // Use global:: to avoid namespace resolution conflicts
-                    var effect = new StrideGraphics.Effect(_graphicsDevice, (global::Stride.Shaders.EffectBytecode)compilerResult.Bytecode);
-                    System.Console.WriteLine($"[StrideBloomEffect] Successfully compiled shader '{shaderName}' using EffectCompiler");
+                    var effect = new StrideGraphics.Effect(_graphicsDevice, (EffectBytecode)compilerResult.Bytecode);
+                    Console.WriteLine($"[StrideBloomEffect] Successfully compiled shader '{shaderName}' using EffectCompiler");
                     return effect;
                 }
                 else
                 {
-                    System.Console.WriteLine($"[StrideBloomEffect] EffectCompiler compilation failed for shader '{shaderName}': No bytecode generated");
+                    Console.WriteLine($"[StrideBloomEffect] EffectCompiler compilation failed for shader '{shaderName}': No bytecode generated");
                     if (compilerResult != null && compilerResult.HasErrors)
                     {
                         // CompilerResults may not have ErrorText, use ToString() or check for specific error properties
-                        System.Console.WriteLine($"[StrideBloomEffect] Compilation errors occurred");
+                        Console.WriteLine($"[StrideBloomEffect] Compilation errors occurred");
                     }
                     return null;
                 }
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine($"[StrideBloomEffect] Exception while compiling shader '{shaderName}' with EffectCompiler: {ex.Message}");
+                Console.WriteLine($"[StrideBloomEffect] Exception while compiling shader '{shaderName}' with EffectCompiler: {ex.Message}");
                 return null;
             }
         }
@@ -753,7 +751,7 @@ shader BlurEffect : ShaderBase
                         // Platform ensures shader is compiled for the correct graphics API (DirectX, Vulkan, etc.)
                         // TODO: FIXME - Compilation API has type incompatibilities in this Stride version
                         // For now, skip file-based compilation
-                        System.Console.WriteLine($"[StrideBloomEffect] File-based shader compilation not available in this Stride version for '{shaderName}'");
+                        Console.WriteLine($"[StrideBloomEffect] File-based shader compilation not available in this Stride version for '{shaderName}'");
                         return null;
                     }
                 }

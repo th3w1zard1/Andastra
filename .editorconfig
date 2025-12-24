@@ -130,9 +130,9 @@ dotnet_style_prefer_conditional_expression_over_return = true:silent
 #### C# Coding Conventions ####
 
 # var preferences
-csharp_style_var_for_built_in_types = false:warning
-csharp_style_var_when_type_is_apparent = true:suggestion
-csharp_style_var_elsewhere = false:suggestion
+csharp_style_var_for_built_in_types = false:none
+csharp_style_var_when_type_is_apparent = true:none
+csharp_style_var_elsewhere = false:none
 
 # Expression-bodied members
 csharp_style_expression_bodied_methods = false:silent
@@ -636,6 +636,9 @@ dotnet_diagnostic.IDE0011.severity = none
 
 # IDE0025: Use expression body for property
 dotnet_diagnostic.IDE0025.severity = none
+
+# IDE0008: Use explicit type
+dotnet_diagnostic.IDE0008.severity = none
 
 [KOTORModSync.GUI/**/*.cs]
 dotnet_diagnostic.S1481.severity = none

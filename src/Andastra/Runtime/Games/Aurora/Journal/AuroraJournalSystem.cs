@@ -106,19 +106,13 @@ namespace Andastra.Runtime.Games.Aurora.Journal
             // Process quest state change (engine-specific implementation)
             ProcessQuestStateChangeForCreature(creatureId, questTag, state, oldState);
 
-            if (OnQuestStateChanged != null)
-            {
-                OnQuestStateChanged(questTag, oldState, state);
-            }
+            InvokeOnQuestStateChanged(questTag, oldState, state);
 
             // Check for completion
             BaseQuestData quest = GetQuest(questTag);
             if (quest != null && state == quest.CompletionState)
             {
-                if (OnQuestCompleted != null)
-                {
-                    OnQuestCompleted(questTag);
-                }
+                InvokeOnQuestCompleted(questTag);
             }
         }
 
@@ -241,7 +235,7 @@ namespace Andastra.Runtime.Games.Aurora.Journal
         /// <remarks>
         /// Based on nwmain.exe: CNWSCreature::ReloadJournalEntries @ 0x14039ddb0
         /// Original implementation: Reloads journal entries from JRL files for a specific creature
-        /// 
+        ///
         /// Implementation details (nwmain.exe: 0x14039ddb0):
         /// - Scans creature's local script variables for variables matching "NW_JOURNAL_ENTRY%s" pattern
         /// - For each matching variable, extracts quest tag from variable name and state from variable value
@@ -272,7 +266,7 @@ namespace Andastra.Runtime.Games.Aurora.Journal
             // Clear existing journal entries for this creature
             // Based on nwmain.exe: CNWSCreature::ReloadJournalEntries clears existing entries before reloading
             RemoveEntriesForCreature(creatureId);
-            
+
             // Clear quest states for this creature (will be rebuilt from script variables)
             if (_creatureQuestStates.ContainsKey(creatureId))
             {
@@ -283,7 +277,7 @@ namespace Andastra.Runtime.Games.Aurora.Journal
             // Pattern: "NW_JOURNAL_ENTRY<questTag>" = <entryId/state>
             // Based on nwmain.exe: ReloadJournalEntries scans all local variables matching this pattern
             const string journalEntryPrefix = "NW_JOURNAL_ENTRY";
-            
+
             foreach (string varName in _scriptGlobals.EnumerateLocalInts(creature))
             {
                 // Check if variable matches journal entry pattern
@@ -341,7 +335,7 @@ namespace Andastra.Runtime.Games.Aurora.Journal
                         DateAdded = DateTime.Now,
                         CreatureId = creatureId
                     };
-                    
+
                     // Add to entries list (base class stores entries globally, but we track creatureId)
                     _entries.Add(entry);
 
@@ -355,10 +349,7 @@ namespace Andastra.Runtime.Games.Aurora.Journal
                     creatureStates[questTag] = entryId;
 
                     // Fire entry added event
-                    if (OnEntryAdded != null)
-                    {
-                        OnEntryAdded(entry);
-                    }
+                    InvokeOnEntryAdded(entry);
                 }
             }
         }

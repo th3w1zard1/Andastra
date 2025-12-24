@@ -1395,7 +1395,7 @@ public class {testClassName}
                     if (stream == null) {{ try {{ stream = new KaitaiStream(data); }} catch {{ }} }}
                 }}
             }}
-            
+
             // Parse UTE file - try different constructor patterns
             {(string.IsNullOrEmpty(parserNamespace) ? parserClassName : $"{parserNamespace}.{parserClassName}")} ute = null;
             try
@@ -1409,7 +1409,7 @@ public class {testClassName}
                 // Try with KaitaiStream parameter name
                 if (ute == null) {{ try {{ ute = new {(string.IsNullOrEmpty(parserNamespace) ? parserClassName : $"{parserNamespace}.{parserClassName}")}((KaitaiStruct.Runtime.KaitaiStream)stream); }} catch {{ }} }}
             }}
-            
+
             if (ute == null)
             {{
                 throw new Exception(""Failed to create UTE parser instance"");
@@ -1417,7 +1417,7 @@ public class {testClassName}
 
             // Build output dictionary
             var output = new Dictionary<string, object>();
-            
+
             // Extract basic fields
             try {{ output[""FileType""] = ute.FileType ?? """"; }} catch {{ output[""FileType""] = """"; }}
             try {{ output[""FileVersion""] = ute.FileVersion ?? """"; }} catch {{ output[""FileVersion""] = """"; }}
@@ -1541,7 +1541,7 @@ public class {testClassName}
 
                 // Determine compilation method based on available compiler
                 bool useDotnet = cscPath.Contains("dotnet") || cscPath == "dotnet";
-                
+
                 if (useDotnet)
                 {
                     // Use dotnet CLI to compile
@@ -1577,7 +1577,7 @@ public class {testClassName}
                             File.WriteAllText(csprojFile, csprojContent);
                             buildResult = RunCommand("dotnet", $"build \"{csprojFile}\" -o \"{compileDir}\" --no-restore");
                         }
-                        
+
                         if (buildResult.ExitCode != 0)
                         {
                             return new ParserExecutionResult
@@ -1659,7 +1659,7 @@ public class {testClassName}
                     {
                         references.Add($"-reference:\"{kaitaiRuntimeDll}\"");
                     }
-                    
+
                     // Add standard library references
                     string frameworkPath = Path.Combine(
                         Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
@@ -1692,7 +1692,7 @@ public class {testClassName}
                             refsArg = string.Join(" ", references);
                             compileResult = RunCommand(cscPath, $"-out:\"{Path.Combine(compileDir, testClassName + ".exe")}\" {refsArg} {allFilesArg}");
                         }
-                        
+
                         if (compileResult.ExitCode != 0)
                         {
                             return new ParserExecutionResult

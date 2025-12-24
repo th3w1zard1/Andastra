@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Formats.TXI;
 using Andastra.Parsing.Installation;
@@ -28,8 +29,17 @@ namespace Andastra.Tests.Runtime.Games.Aurora
             _graphicsDevice = GraphicsTestHelper.CreateTestIGraphicsDevice();
             _mockResourceLookup = new Mock<IResourceLookup>(MockBehavior.Strict);
 
+            var mockResourceManager = new Mock<InstallationResourceManager>(MockBehavior.Strict, "C:\\Test", BioWareGame.K1);
+            mockResourceManager.Setup(r => r.LookupResource(
+                It.IsAny<string>(),
+                It.IsAny<ResourceType>(),
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
+                .Returns<string, ResourceType, SearchLocation[], string>((resname, restype, searchOrder, moduleRoot) =>
+                    _mockResourceLookup.Object.LookupResource(resname, restype, searchOrder, moduleRoot));
+
             var mockInstallation = new Mock<Installation>(MockBehavior.Strict);
-            mockInstallation.Setup(i => i.Resources).Returns(_mockResourceLookup.Object);
+            mockInstallation.Setup(i => i.Resources).Returns(mockResourceManager.Object);
             _installation = mockInstallation.Object;
         }
 
@@ -52,15 +62,15 @@ namespace Andastra.Tests.Runtime.Games.Aurora
             _mockResourceLookup.Setup(r => r.LookupResource(
                 fontResRef,
                 ResourceType.TPC,
-                It.IsAny<string[]>(),
-                It.IsAny<string[]>()))
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
                 .Returns(new ResourceResult(fontResRef, ResourceType.TPC, "test.tpc", tpcData));
 
             _mockResourceLookup.Setup(r => r.LookupResource(
                 fontResRef,
                 ResourceType.TXI,
-                It.IsAny<string[]>(),
-                It.IsAny<string[]>()))
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
                 .Returns(new ResourceResult(fontResRef, ResourceType.TXI, "test.txi", txiData));
 
             // Act
@@ -90,15 +100,15 @@ namespace Andastra.Tests.Runtime.Games.Aurora
             _mockResourceLookup.Setup(r => r.LookupResource(
                 fontResRef,
                 ResourceType.TGA,
-                It.IsAny<string[]>(),
-                It.IsAny<string[]>()))
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
                 .Returns(new ResourceResult(fontResRef, ResourceType.TGA, "test.tga", tgaData));
 
             _mockResourceLookup.Setup(r => r.LookupResource(
                 fontResRef,
                 ResourceType.TXI,
-                It.IsAny<string[]>(),
-                It.IsAny<string[]>()))
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
                 .Returns(new ResourceResult(fontResRef, ResourceType.TXI, "test.txi", txiData));
 
             // Act
@@ -118,15 +128,15 @@ namespace Andastra.Tests.Runtime.Games.Aurora
             _mockResourceLookup.Setup(r => r.LookupResource(
                 fontResRef,
                 ResourceType.TPC,
-                It.IsAny<string[]>(),
-                It.IsAny<string[]>()))
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
                 .Returns((ResourceResult)null);
 
             _mockResourceLookup.Setup(r => r.LookupResource(
                 fontResRef,
                 ResourceType.TGA,
-                It.IsAny<string[]>(),
-                It.IsAny<string[]>()))
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
                 .Returns((ResourceResult)null);
 
             // Act
@@ -147,15 +157,15 @@ namespace Andastra.Tests.Runtime.Games.Aurora
             _mockResourceLookup.Setup(r => r.LookupResource(
                 fontResRef,
                 ResourceType.TPC,
-                It.IsAny<string[]>(),
-                It.IsAny<string[]>()))
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
                 .Returns(new ResourceResult(fontResRef, ResourceType.TPC, "test.tpc", tpcData));
 
             _mockResourceLookup.Setup(r => r.LookupResource(
                 fontResRef,
                 ResourceType.TXI,
-                It.IsAny<string[]>(),
-                It.IsAny<string[]>()))
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
                 .Returns((ResourceResult)null);
 
             // Act
@@ -179,9 +189,9 @@ namespace Andastra.Tests.Runtime.Games.Aurora
             _mockResourceLookup.Setup(r => r.LookupResource(
                 It.IsAny<string>(),
                 It.IsAny<ResourceType>(),
-                It.IsAny<string[]>(),
-                It.IsAny<string[]>()))
-                .Returns<string, ResourceType, string[], string[]>((resRef, resType, _, __) =>
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
+                .Returns<string, ResourceType, SearchLocation[], string>((resRef, resType, _, __) =>
                 {
                     if (resType == ResourceType.TPC)
                         return new ResourceResult(resRef, ResourceType.TPC, "test.tpc", tpcData);
@@ -217,9 +227,9 @@ namespace Andastra.Tests.Runtime.Games.Aurora
             _mockResourceLookup.Setup(r => r.LookupResource(
                 It.IsAny<string>(),
                 It.IsAny<ResourceType>(),
-                It.IsAny<string[]>(),
-                It.IsAny<string[]>()))
-                .Returns<string, ResourceType, string[], string[]>((resRef, resType, _, __) =>
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
+                .Returns<string, ResourceType, SearchLocation[], string>((resRef, resType, _, __) =>
                 {
                     if (resType == ResourceType.TPC)
                         return new ResourceResult(resRef, ResourceType.TPC, "test.tpc", tpcData);
@@ -255,9 +265,9 @@ namespace Andastra.Tests.Runtime.Games.Aurora
             _mockResourceLookup.Setup(r => r.LookupResource(
                 It.IsAny<string>(),
                 It.IsAny<ResourceType>(),
-                It.IsAny<string[]>(),
-                It.IsAny<string[]>()))
-                .Returns<string, ResourceType, string[], string[]>((resRef, resType, _, __) =>
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
+                .Returns<string, ResourceType, SearchLocation[], string>((resRef, resType, _, __) =>
                 {
                     if (resType == ResourceType.TPC)
                         return new ResourceResult(resRef, ResourceType.TPC, "test.tpc", tpcData);
@@ -294,9 +304,9 @@ namespace Andastra.Tests.Runtime.Games.Aurora
             _mockResourceLookup.Setup(r => r.LookupResource(
                 It.IsAny<string>(),
                 It.IsAny<ResourceType>(),
-                It.IsAny<string[]>(),
-                It.IsAny<string[]>()))
-                .Returns<string, ResourceType, string[], string[]>((resRef, resType, _, __) =>
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
+                .Returns<string, ResourceType, SearchLocation[], string>((resRef, resType, _, __) =>
                 {
                     if (resType == ResourceType.TPC)
                         return new ResourceResult(resRef, ResourceType.TPC, "test.tpc", tpcData);
@@ -312,7 +322,7 @@ namespace Andastra.Tests.Runtime.Games.Aurora
             var glyph = font.GetCharacter((int)'A');
 
             // Assert
-            glyph.Should().HaveValue();
+            glyph.Should().NotBeNull();
             glyph.Value.SourceWidth.Should().BeGreaterThan(0);
             glyph.Value.SourceHeight.Should().BeGreaterThan(0);
             glyph.Value.Width.Should().BeGreaterThan(0);
@@ -333,9 +343,9 @@ namespace Andastra.Tests.Runtime.Games.Aurora
             _mockResourceLookup.Setup(r => r.LookupResource(
                 It.IsAny<string>(),
                 It.IsAny<ResourceType>(),
-                It.IsAny<string[]>(),
-                It.IsAny<string[]>()))
-                .Returns<string, ResourceType, string[], string[]>((resRef, resType, _, __) =>
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
+                .Returns<string, ResourceType, SearchLocation[], string>((resRef, resType, _, __) =>
                 {
                     if (resType == ResourceType.TPC)
                         return new ResourceResult(resRef, ResourceType.TPC, "test.tpc", tpcData);
@@ -351,7 +361,7 @@ namespace Andastra.Tests.Runtime.Games.Aurora
             var glyph = font.GetCharacter(99999); // Invalid char code
 
             // Assert
-            glyph.Should().NotHaveValue();
+            glyph.Should().BeNull();
         }
 
         [Fact]
@@ -368,9 +378,9 @@ namespace Andastra.Tests.Runtime.Games.Aurora
             _mockResourceLookup.Setup(r => r.LookupResource(
                 It.IsAny<string>(),
                 It.IsAny<ResourceType>(),
-                It.IsAny<string[]>(),
-                It.IsAny<string[]>()))
-                .Returns<string, ResourceType, string[], string[]>((resRef, resType, _, __) =>
+                It.IsAny<SearchLocation[]>(),
+                It.IsAny<string>()))
+                .Returns<string, ResourceType, SearchLocation[], string>((resRef, resType, _, __) =>
                 {
                     if (resType == ResourceType.TPC)
                         return new ResourceResult(resRef, ResourceType.TPC, "test.tpc", tpcData);

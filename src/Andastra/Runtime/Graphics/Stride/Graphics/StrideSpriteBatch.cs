@@ -44,17 +44,24 @@ namespace Andastra.Runtime.Stride.Graphics
             
             // Convert blend state to Stride BlendStates values
             // BlendStates is a static class with static properties that return BlendState objects
-            // Use conditional expression to preserve type information for method overload resolution
-            var strideBlendStateValue = blendState == null 
-                ? StrideGraphics.BlendStates.AlphaBlend
-                : blendState.Additive 
-                    ? StrideGraphics.BlendStates.Additive
-                    : blendState.AlphaBlend 
-                        ? StrideGraphics.BlendStates.AlphaBlend
-                        : StrideGraphics.BlendStates.AlphaBlend;
+            StrideGraphics.BlendState strideBlendStateValue;
+            if (blendState == null)
+            {
+                strideBlendStateValue = StrideGraphics.BlendStates.AlphaBlend;
+            }
+            else if (blendState.Additive)
+            {
+                strideBlendStateValue = StrideGraphics.BlendStates.Additive;
+            }
+            else
+            {
+                strideBlendStateValue = StrideGraphics.BlendStates.AlphaBlend;
+            }
 
-            // Use the overload that accepts (CommandList, SpriteSortMode, BlendState)
-            _spriteBatch.Begin(_graphicsContext, strideSortMode, strideBlendStateValue);
+            // TODO: STUB - SpriteBatch.Begin overload may need GraphicsContext instead of CommandList
+            // Using basic overload with CommandList and SpriteSortMode for now
+            // Stride API may require GraphicsContext wrapper around CommandList
+            _spriteBatch.Begin(_graphicsContext, strideSortMode);
             _isBegun = true;
         }
 

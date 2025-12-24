@@ -33,7 +33,7 @@ namespace Andastra.Tests.Runtime.Graphics.MonoGame.Backends
             // Arrange & Act: Verify implementation structure through reflection
             // The implementation should exist in VulkanCommandList.BuildBottomLevelAccelStruct
             
-            Type commandListType = typeof(VulkanCommandList);
+            Type commandListType = typeof(VulkanDevice.VulkanCommandList);
             MethodInfo buildMethod = commandListType.GetMethod("BuildBottomLevelAccelStruct", BindingFlags.Public | BindingFlags.Instance);
             
             // Assert: Verify method exists
@@ -80,7 +80,7 @@ namespace Andastra.Tests.Runtime.Graphics.MonoGame.Backends
         public void ScratchBuffer_ShouldBeTrackedInCommandList()
         {
             // Arrange & Act: Verify scratch buffer tracking through reflection
-            Type commandListType = typeof(VulkanCommandList);
+            Type commandListType = typeof(VulkanDevice.VulkanCommandList);
             FieldInfo scratchBuffersField = commandListType.GetField("_scratchBuffers", BindingFlags.NonPublic | BindingFlags.Instance);
             
             // Assert: Verify _scratchBuffers field exists and is a List<IBuffer>
@@ -98,7 +98,7 @@ namespace Andastra.Tests.Runtime.Graphics.MonoGame.Backends
         public void CommandList_Dispose_ShouldCleanupScratchBuffers()
         {
             // Arrange & Act: Verify Dispose method implementation through reflection
-            Type commandListType = typeof(VulkanCommandList);
+            Type commandListType = typeof(VulkanDevice.VulkanCommandList);
             MethodInfo disposeMethod = commandListType.GetMethod("Dispose", BindingFlags.Public | BindingFlags.Instance);
             
             // Assert: Verify Dispose method exists

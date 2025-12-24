@@ -12,6 +12,7 @@ using Andastra.Parsing.Formats.WAV;
 using Stride.Audio;
 using Stride.Media;
 using SoundPlayState = Stride.Media.PlayState;
+using StrideAudioLayer = Stride.Audio.AudioLayer;
 
 namespace Andastra.Runtime.Stride.Audio
 {
@@ -697,7 +698,7 @@ namespace Andastra.Runtime.Stride.Audio
                     try
                     {
                         IntPtr bufferPtr = silenceHandle.AddrOfPinnedObject();
-                        FillBuffer(bufferPtr, bufferSizeBytes, (Stride.Audio.AudioLayer.BufferType)(int)AudioLayer.BufferType.EndOfStream);
+                        FillBuffer(bufferPtr, bufferSizeBytes, StrideAudioLayer.BufferType.EndOfStream);
                     }
                     finally
                     {
@@ -717,14 +718,14 @@ namespace Andastra.Runtime.Stride.Audio
             _position += bytesToCopy;
 
             // Determine buffer type
-            AudioLayer.BufferType bufferType;
+            StrideAudioLayer.BufferType bufferType;
             if (_position >= _pcmData.Length && !_isLooped)
             {
-                bufferType = AudioLayer.BufferType.EndOfStream;
+                bufferType = StrideAudioLayer.BufferType.EndOfStream;
             }
             else
             {
-                bufferType = AudioLayer.BufferType.Normal;
+                bufferType = StrideAudioLayer.BufferType.Normal;
             }
 
             // Fill the buffer - pin the array and get pointer
@@ -732,7 +733,7 @@ namespace Andastra.Runtime.Stride.Audio
             try
             {
                 IntPtr bufferPtr = bufferHandle.AddrOfPinnedObject();
-                FillBuffer(bufferPtr, bytesToCopy, (Stride.Audio.AudioLayer.BufferType)(int)bufferType);
+                FillBuffer(bufferPtr, bytesToCopy, bufferType);
             }
             finally
             {

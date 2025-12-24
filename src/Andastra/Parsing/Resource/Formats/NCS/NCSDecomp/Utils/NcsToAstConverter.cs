@@ -774,28 +774,70 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                             globalsAndStubEnd = CalculateEntryStubEnd(instructions, globalsAndStubEnd, ncs);
                         }
 
-                        // TODO:  Only add if jumpIdx is after globals/entry stub and not the entry JSR target
-                        // CRITICAL: Also ensure jumpIdx is within valid instruction range (0 to instructions.Count-1)
-                        // A subroutine start at instructions.Count would be out of bounds
-                        if (jumpIdx > globalsAndStubEnd && jumpIdx != entryJsrTarget && jumpIdx < instructions.Count)
+                        // Comprehensive validation: Only add jumpIdx to subroutineStarts if it meets ALL criteria:
+                        // 1. jumpIdx is strictly after globals/entry stub range (globalsAndStubEnd is exclusive end index)
+                        //    - Instructions 0 to globalsAndStubEnd-1 are in globals/stub range
+                        //    - Instruction globalsAndStubEnd is the first instruction AFTER the range
+                        //    - Subroutines must start AFTER this boundary
+                        // 2. jumpIdx is not the entry JSR target (main function entry point)
+                        //    - The entry JSR target is the main() function, not a subroutine
+                        //    - entryJsrTarget may be -1 if no entry stub was detected (include files, edge cases)
+                        // 3. jumpIdx is within valid instruction range (0 to instructions.Count-1)
+                        //    - Prevents out-of-bounds access
+                        //    - A subroutine start at instructions.Count would be invalid
+                        // swkotor2.exe: 0x004eb750 - Subroutine detection verified in original engine bytecode
+                        // Based on original engine: Subroutines are identified by JSR targets that are:
+                        // - After globals initialization (savebpIndex+1 or 0 if no SAVEBP)
+                        // - After entry stub (JSR+RETN pattern) if present
+                        // - Not the main function entry point (entryJsrTarget)
+                        // - Within valid instruction bounds
+                        bool isValidSubroutineStart = false;
+                        string skipReason = null;
+
+                        // Check 1: Validate jumpIdx is within bounds
+                        if (jumpIdx < 0 || jumpIdx >= instructions.Count)
                         {
-                            subroutineStarts.Add(jumpIdx);
-                            Debug($"DEBUG NcsToAstConverter: Found subroutine start at {jumpIdx} (JSR at {i} targets {jumpIdx})");
+                            skipReason = $"out of bounds (jumpIdx={jumpIdx}, instructions.Count={instructions.Count})";
                         }
-                        else if (jumpIdx >= instructions.Count)
+                        // Check 2: Validate jumpIdx is after globals/entry stub range
+                        // globalsAndStubEnd is exclusive, so jumpIdx must be >= globalsAndStubEnd
+                        // However, if jumpIdx == globalsAndStubEnd, it's the first instruction after the range
+                        // which could be main() or a subroutine. We need to check if it's the entry target.
+                        else if (jumpIdx < globalsAndStubEnd)
                         {
-                            Debug($"DEBUG NcsToAstConverter: Skipping JSR at {i} targeting {jumpIdx} (out of bounds, instructions.Count={instructions.Count})");
+                            skipReason = $"in globals/stub range (jumpIdx={jumpIdx}, globalsAndStubEnd={globalsAndStubEnd})";
+                        }
+                        // Check 3: Validate jumpIdx is not the entry JSR target (main function)
+                        // entryJsrTarget is -1 if no entry stub was detected (include files, edge cases)
+                        // In that case, entryJsrTarget != jumpIdx is always true for valid indices
+                        // CRITICAL: Only check if entryJsrTarget is valid (>= 0), otherwise skip this check
+                        else if (entryJsrTarget >= 0 && jumpIdx == entryJsrTarget)
+                        {
+                            skipReason = $"is entry JSR target (main function at {entryJsrTarget})";
+                        }
+                        // All checks passed - this is a valid subroutine start
+                        // jumpIdx is: within bounds, after globals/stub range, and not the entry JSR target
+                        else
+                        {
+                            isValidSubroutineStart = true;
+                        }
+
+                        if (isValidSubroutineStart)
+                        {
+                            // Only add if not already in the set (HashSet prevents duplicates, but being explicit)
+                            if (!subroutineStarts.Contains(jumpIdx))
+                            {
+                                subroutineStarts.Add(jumpIdx);
+                                Debug($"DEBUG NcsToAstConverter: Found subroutine start at {jumpIdx} (JSR at {i} targets {jumpIdx}, globalsAndStubEnd={globalsAndStubEnd}, entryJsrTarget={entryJsrTarget})");
+                            }
+                            else
+                            {
+                                Debug($"DEBUG NcsToAstConverter: Subroutine start at {jumpIdx} already in set (JSR at {i} targets {jumpIdx})");
+                            }
                         }
                         else
                         {
-                            if (jumpIdx <= globalsAndStubEnd)
-                            {
-                                Debug($"DEBUG NcsToAstConverter: Skipping JSR at {i} targeting {jumpIdx} (in globals/stub range, ends at {globalsAndStubEnd})");
-                            }
-                            else if (jumpIdx == entryJsrTarget)
-                            {
-                                Debug($"DEBUG NcsToAstConverter: Skipping JSR at {i} targeting {jumpIdx} (is entry JSR target)");
-                            }
+                            Debug($"DEBUG NcsToAstConverter: Skipping JSR at {i} targeting {jumpIdx} ({skipReason})");
                         }
                     }
                     catch (Exception)

@@ -7,6 +7,7 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Games.Aurora;
 using Andastra.Runtime.Games.Aurora.Components;
+using Andastra.Runtime.Games.Common.Components;
 using Andastra.Tests.Runtime.TestHelpers;
 using FluentAssertions;
 using Xunit;

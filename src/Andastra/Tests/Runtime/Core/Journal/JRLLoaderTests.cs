@@ -232,7 +232,7 @@ namespace Andastra.Tests.Runtime.Core.Journal
             // Assert
             // Next load should call LookupResource again
             _jrlLoader.LoadJRL(jrlResRef);
-            _mockResourceManager.Verify(m => m.LookupResource(jrlResRef, ResourceType.JRL), Times.Exactly(2));
+            _mockResourceManager.Verify(m => m.LookupResource(jrlResRef, ResourceType.JRL, null, null), Times.Exactly(2));
         }
 
         /// <summary>

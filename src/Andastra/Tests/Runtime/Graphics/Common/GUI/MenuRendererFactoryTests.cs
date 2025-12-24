@@ -100,7 +100,7 @@ namespace Andastra.Tests.Runtime.Graphics.Common.GUI
             // Assert
             // If Stride device is available, renderer should be created successfully
             renderer.Should().NotBeNull();
-            renderer.Should().BeOfType<Stride.GUI.StrideMenuRenderer>();
+            renderer.Should().BeOfType<Andastra.Runtime.Stride.GUI.StrideMenuRenderer>();
             renderer.IsInitialized.Should().BeTrue();
         }
 

@@ -1512,7 +1512,7 @@ namespace Andastra.Runtime.MonoGame.Backends
         /// <param name="lpWindowName">The window name. If this parameter is NULL, all window names match.</param>
         /// <returns>A handle to the window if found, or NULL if no window matches the criteria.</returns>
         [DllImport(USER32_DLL, CharSet = CharSet.Ansi, SetLastError = true)]
-        public static extern IntPtr FindWindow([CanBeNull] string lpClassName, [CanBeNull] string lpWindowName);
+        public static extern IntPtr FindWindow([JetBrains.Annotations.CanBeNull] string lpClassName, [JetBrains.Annotations.CanBeNull] string lpWindowName);
 
         /// <summary>
         /// Determines whether the specified window handle identifies an existing window.

@@ -1,0 +1,16 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Unhandled exception. System.IO.IOException: The process cannot access the file 'G:\GitHub\Andastra\src\Andastra\Game\obj\DesktopGL\net9.0\Content\.mgcontent' because it is being used by another process.
+     at System.IO.FileSystem.DeleteFile(String fullPath)
+     at MonoGame.Framework.Content.Pipeline.Builder.FileHelper.DeleteIfExists(String path) in /home/runner/work/MonoGame/MonoGame/MonoGame.Framework.Content.Pipeline/Builder/FileHelper.cs:line 17
+     at MonoGame.Content.Builder.BuildContent.Build(Int32& successCount, Int32& errorCount) in /home/runner/work/MonoGame/MonoGame/Tools/MonoGame.Content.Builder/BuildContent.cs:line 430
+     at MonoGame.Content.Builder.Program.Main(String[] args) in /home/runner/work/MonoGame/MonoGame/Tools/MonoGame.Content.Builder/Program.cs:line 98
+C:\Users\boden\.nuget\packages\monogame.content.builder.task\3.8.4.1\build\MonoGame.Content.Builder.Task.targets(172,5): error MSB3073: The command ""dotnet" "mgcb" /quiet /@:"G:\GitHub\Andastra\src\Andastra\Game\Content.mgcb" /platform:DesktopGL /outputDir:"G:/GitHub/Andastra/src/Andastra/Game/bin/DesktopGL/Content" /intermediateDir:"G:/GitHub/Andastra/src/Andastra/Game/obj/DesktopGL/net9.0/Content" /workingDir:"G:/GitHub/Andastra/src/Andastra/Game/"" exited with code -532462766. [G:\GitHub\Andastra\src\Andastra\Andastra.csproj::TargetFramework=net9.0]
+
+Build FAILED.
+
+C:\Users\boden\.nuget\packages\monogame.content.builder.task\3.8.4.1\build\MonoGame.Content.Builder.Task.targets(172,5): error MSB3073: The command ""dotnet" "mgcb" /quiet /@:"G:\GitHub\Andastra\src\Andastra\Game\Content.mgcb" /platform:DesktopGL /outputDir:"G:/GitHub/Andastra/src/Andastra/Game/bin/DesktopGL/Content" /intermediateDir:"G:/GitHub/Andastra/src/Andastra/Game/obj/DesktopGL/net9.0/Content" /workingDir:"G:/GitHub/Andastra/src/Andastra/Game/"" exited with code -532462766. [G:\GitHub\Andastra\src\Andastra\Andastra.csproj::TargetFramework=net9.0]
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:15.71

@@ -256,8 +256,8 @@ namespace Andastra.Tests.Runtime.Games.Aurora
                     {
                         Tag = "BTN_TEST",
                         Id = 1,
-                        Position = new GraphicsVector2(100, 100),
-                        Size = new GraphicsVector2(200, 50),
+                        Position = new System.Numerics.Vector2(100, 100),
+                        Size = new System.Numerics.Vector2(200, 50),
                         GuiText = new GUIText
                         {
                             Text = "Test Button",

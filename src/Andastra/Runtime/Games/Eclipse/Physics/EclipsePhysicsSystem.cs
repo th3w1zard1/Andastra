@@ -123,6 +123,15 @@ namespace Andastra.Runtime.Games.Eclipse
         }
 
         /// <summary>
+        /// Updates the physics system (implements IPhysicsSystem.Update).
+        /// </summary>
+        /// <param name="deltaTime">Time step in seconds.</param>
+        public void Update(float deltaTime)
+        {
+            StepSimulation(deltaTime);
+        }
+
+        /// <summary>
         /// Steps the physics simulation.
         /// </summary>
         /// <param name="deltaTime">Time step in seconds.</param>

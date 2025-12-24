@@ -441,14 +441,14 @@ namespace Andastra.Runtime.Stride.PostProcessing
             commandList.SetRenderTarget(null, output);
 
             // Clear render target
-            commandList.Clear(output, Stride.Core.Mathematics.Color.Transparent);
+            commandList.Clear(output, global::Stride.Core.Mathematics.Color.Transparent);
 
             // Begin sprite batch rendering with custom effect
             _spriteBatch.Begin(commandList, SpriteSortMode.Immediate, _ssrEffect);
 
             // Draw fullscreen quad
             var destinationRect = new RectangleF(0, 0, output.Width, output.Height);
-            _spriteBatch.Draw(input, destinationRect, Stride.Core.Mathematics.Color.White);
+            _spriteBatch.Draw(input, destinationRect, global::Stride.Core.Mathematics.Color.White);
 
             // End sprite batch rendering
             _spriteBatch.End();
@@ -775,7 +775,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     format == StrideGraphics.PixelFormat.B8G8R8A8_UNorm_SRgb)
                 {
                     // Read as Color array (Stride's standard format)
-                    var colorData = new Stride.Core.Mathematics.Color[size];
+                    var colorData = new global::Stride.Core.Mathematics.Color[size];
                     texture.GetData(commandList, colorData);
 
                     // Convert Color[] to Vector4[]
@@ -818,7 +818,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 else if (format == StrideGraphics.PixelFormat.R32G32B32A32_Float)
                 {
                     // Try to read as Vector4 array directly
-                    var vectorData = new Stride.Core.Mathematics.Vector4[size];
+                    var vectorData = new global::Stride.Core.Mathematics.Vector4[size];
                     texture.GetData(commandList, vectorData);
 
                     // Convert Stride Vector4 to System.Numerics Vector4
@@ -834,7 +834,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     Console.WriteLine($"[StrideSSR] ReadTextureData: Unsupported format {format}, attempting Color readback");
                     try
                     {
-                        var colorData = new Stride.Core.Mathematics.Color[size];
+                        var colorData = new global::Stride.Core.Mathematics.Color[size];
                         texture.GetData(commandList, colorData);
 
                         for (int i = 0; i < size; i++)
@@ -905,7 +905,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     format == StrideGraphics.PixelFormat.B8G8R8A8_UNorm ||
                     format == StrideGraphics.PixelFormat.B8G8R8A8_UNorm_SRgb)
                 {
-                    var colorData = new Stride.Core.Mathematics.Color[size];
+                    var colorData = new global::Stride.Core.Mathematics.Color[size];
 
                     // Convert Vector4[] to Color[] (clamp to [0,1] and convert to [0,255])
                     for (int i = 0; i < size; i++)
@@ -917,7 +917,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                         float b = Math.Max(0.0f, Math.Min(1.0f, v.Z));
                         float a = Math.Max(0.0f, Math.Min(1.0f, v.W));
 
-                        colorData[i] = new Stride.Core.Mathematics.Color(
+                        colorData[i] = new global::Stride.Core.Mathematics.Color(
                             (byte)(r * 255.0f),
                             (byte)(g * 255.0f),
                             (byte)(b * 255.0f),
@@ -930,13 +930,13 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 else if (format == StrideGraphics.PixelFormat.R32G32B32A32_Float ||
                          format == StrideGraphics.PixelFormat.R16G16B16A16_Float)
                 {
-                    var vectorData = new Stride.Core.Mathematics.Vector4[size];
+                    var vectorData = new global::Stride.Core.Mathematics.Vector4[size];
 
                     // Convert System.Numerics.Vector4[] to Stride.Core.Mathematics.Vector4[]
                     for (int i = 0; i < size; i++)
                     {
                         var v = data[i];
-                        vectorData[i] = new Stride.Core.Mathematics.Vector4(v.X, v.Y, v.Z, v.W);
+                        vectorData[i] = new global::Stride.Core.Mathematics.Vector4(v.X, v.Y, v.Z, v.W);
                     }
 
                     texture.SetData(commandList, vectorData);
@@ -975,7 +975,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     Console.WriteLine($"[StrideSSR] WriteTextureData: Unsupported format {format}, attempting Color upload");
                     try
                     {
-                        var colorData = new Stride.Core.Mathematics.Color[size];
+                        var colorData = new global::Stride.Core.Mathematics.Color[size];
 
                         for (int i = 0; i < size; i++)
                         {
@@ -985,7 +985,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                             float b = Math.Max(0.0f, Math.Min(1.0f, v.Z));
                             float a = Math.Max(0.0f, Math.Min(1.0f, v.W));
 
-                            colorData[i] = new Stride.Core.Mathematics.Color(
+                            colorData[i] = new global::Stride.Core.Mathematics.Color(
                                 (byte)(r * 255.0f),
                                 (byte)(g * 255.0f),
                                 (byte)(b * 255.0f),

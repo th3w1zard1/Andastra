@@ -895,7 +895,7 @@ namespace Andastra.Runtime.Games.Aurora.Save
             }
             saveData.GameTime.Hour = gam.GameTimeHour;
             saveData.GameTime.Minute = gam.GameTimeMinute;
-            saveData.GameTime.Second = gam.GameTimeSecond;
+            // Note: GameTime class doesn't have Second property - only Year, Month, Day, Hour, Minute
 
             // Set time played
             saveData.PlayTime = TimeSpan.FromSeconds(gam.TimePlayed);

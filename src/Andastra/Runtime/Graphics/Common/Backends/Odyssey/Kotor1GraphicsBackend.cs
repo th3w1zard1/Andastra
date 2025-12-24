@@ -1830,7 +1830,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 // Calculate format size based on texture format (matching swkotor.exe line 20)
                 // param3 values match TPCTextureFormat enum:
                 // 0 = Greyscale, 1 = DXT1, 2 = DXT3, 3 = DXT5, 4 = RGB, 5 = RGBA, 6 = BGRA, 7 = BGR
-                // 
+                //
                 // Note: widthRounded and heightRounded represent the number of 4-pixel blocks
                 // For DXT formats: formatSize = bytes per block (8 for DXT1, 16 for DXT3/DXT5)
                 // For uncompressed formats: formatSize = bytes per pixel * 16 (since each "block" is 4x4 = 16 pixels)
@@ -1875,7 +1875,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                     // Default/unknown format: assume RGBA (4 bytes per pixel * 16 = 64)
                     formatSize = 64;
                 }
-                
+
                 // Calculate size: rounded dimensions (in 4-pixel blocks) * format size + 8 (matching swkotor.exe exactly)
                 // The +8 appears to be a minimum size requirement or padding per mip level
                 // swkotor.exe: FUN_0045e270 @ 0x0045e270 - line 20 adds 8 to the calculated size

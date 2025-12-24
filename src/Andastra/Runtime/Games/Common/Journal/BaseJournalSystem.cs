@@ -12,9 +12,9 @@ namespace Andastra.Runtime.Games.Common.Journal
     /// - Common quest/journal functionality across all engines
     /// - Base classes MUST only contain functionality that is identical across ALL engines
     /// - Engine-specific details MUST be in subclasses (OdysseyJournalSystem, AuroraJournalSystem, EclipseJournalSystem)
-    /// 
+    ///
     /// Based on reverse engineering of journal/quest systems across multiple BioWare engines.
-    /// 
+    ///
     /// Common functionality across engines:
     /// - Quest registration and lookup by tag
     /// - Quest state management (not started, in progress, completed)
@@ -22,7 +22,7 @@ namespace Andastra.Runtime.Games.Common.Journal
     /// - Quest completion tracking
     /// - Event notifications for quest state changes
     /// - Journal entry addition and updates
-    /// 
+    ///
     /// Engine-specific differences:
     /// - Odyssey (swkotor.exe, swkotor2.exe): JRL files (GFF with "JRL " signature), quest states in global variables
     /// - Aurora (nwmain.exe): JRL files (different format), CNWSJournal class, per-creature journal storage
@@ -48,6 +48,39 @@ namespace Andastra.Runtime.Games.Common.Journal
         /// Event fired when quest completed.
         /// </summary>
         public event Action<string> OnQuestCompleted;
+
+        /// <summary>
+        /// Invokes the OnQuestStateChanged event (for use by derived classes).
+        /// </summary>
+        protected void InvokeOnQuestStateChanged(string questTag, int oldState, int newState)
+        {
+            if (OnQuestStateChanged != null)
+            {
+                OnQuestStateChanged(questTag, oldState, newState);
+            }
+        }
+
+        /// <summary>
+        /// Invokes the OnQuestCompleted event (for use by derived classes).
+        /// </summary>
+        protected void InvokeOnQuestCompleted(string questTag)
+        {
+            if (OnQuestCompleted != null)
+            {
+                OnQuestCompleted(questTag);
+            }
+        }
+
+        /// <summary>
+        /// Invokes the OnEntryAdded event (for use by derived classes).
+        /// </summary>
+        protected void InvokeOnEntryAdded(BaseJournalEntry entry)
+        {
+            if (OnEntryAdded != null)
+            {
+                OnEntryAdded(entry);
+            }
+        }
 
         protected BaseJournalSystem()
         {

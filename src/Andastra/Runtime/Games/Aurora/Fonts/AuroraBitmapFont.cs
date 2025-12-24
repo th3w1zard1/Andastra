@@ -8,6 +8,7 @@ using Andastra.Parsing.Resource;
 using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Formats.TXI;
 using Andastra.Runtime.Games.Common;
+using Andastra.Runtime.Graphics.MonoGame.Graphics;
 using Andastra.Runtime.MonoGame.Converters;
 using Andastra.Runtime.MonoGame.Graphics;
 using JetBrains.Annotations;
@@ -26,12 +27,12 @@ namespace Andastra.Runtime.Games.Aurora.Fonts
     /// - Text alignment: Supports Aurora alignment modes
     /// - Font loading: Loads font texture and metrics from game installation
     /// - Character mapping: Maps ASCII characters to texture coordinates using grid-based or TXI coordinate mapping
-    /// 
+    ///
     /// Ghidra Reverse Engineering Analysis:
     /// - nwmain.exe: Font loading functions (address verification pending Ghidra analysis)
     /// - nwmain.exe: Font rendering functions (address verification pending Ghidra analysis)
     /// - Font format: TGA format with optional TXI metrics (similar to Odyssey but without TPC wrapper)
-    /// 
+    ///
     /// Original implementation: Uses DirectX sprite rendering for text
     /// </remarks>
     public class AuroraBitmapFont : BaseBitmapFont

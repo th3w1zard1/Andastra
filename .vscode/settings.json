@@ -1,4 +1,4 @@
 {
-  "dotnet.defaultSolution": "HoloPatcher.sln",
-  "avalonia.dotnetSdkVersion": "8.0"
+  "avalonia.dotnetSdkVersion": "8.0",
+  "dotnet.defaultSolution": "Andastra.sln"
 }

@@ -165,7 +165,7 @@ namespace Andastra.Runtime.Stride.Audio
                 if (useSpatialAudio && position.HasValue)
                 {
                     var emitter = new AudioEmitter();
-                    emitter.Position = new Stride.Core.Mathematics.Vector3(position.Value.X, position.Value.Y, position.Value.Z);
+                    emitter.Position = new global::Stride.Core.Mathematics.Vector3(position.Value.X, position.Value.Y, position.Value.Z);
                     soundInstance.Apply3D(emitter);
                 }
                 else if (!useSpatialAudio)
@@ -187,7 +187,7 @@ namespace Andastra.Runtime.Stride.Audio
                         // Using a small distance (0.1 units) ensures the sound is close enough to avoid
                         // significant distance attenuation while still providing left/right panning
                         float panDistance = 0.1f; // Small distance to avoid attenuation
-                        panEmitter.Position = new Stride.Core.Mathematics.Vector3(clampedPan * panDistance, 0.0f, 0.0f);
+                        panEmitter.Position = new global::Stride.Core.Mathematics.Vector3(clampedPan * panDistance, 0.0f, 0.0f);
                         soundInstance.Apply3D(panEmitter);
                     }
                 }

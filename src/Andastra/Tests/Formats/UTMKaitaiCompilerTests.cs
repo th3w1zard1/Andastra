@@ -1223,7 +1223,7 @@ except Exception as e:
                 // The version might be returned as bytes, so we check if it contains version info
                 if (!string.IsNullOrEmpty(fileVersion))
                 {
-                    fileVersion.Should().MatchRegex("V3\\.2|V3\\.3|V4\\.0|V4\\.1|3\\.2|3\\.3|4\\.0|4\\.1", 
+                    fileVersion.Should().MatchRegex("V3\\.2|V3\\.3|V4\\.0|V4\\.1|3\\.2|3\\.3|4\\.0|4\\.1",
                         $"File version should be valid GFF version, got: {fileVersion}");
                 }
             }
@@ -1232,7 +1232,7 @@ except Exception as e:
             // Either has_root or has_structs should be true
             bool hasRoot = parsedData.ContainsKey("has_root") && Convert.ToBoolean(parsedData["has_root"]);
             bool hasStructs = parsedData.ContainsKey("has_structs") && Convert.ToBoolean(parsedData["has_structs"]);
-            
+
             (hasRoot || hasStructs).Should().BeTrue("Parsed UTM should have root struct or struct array");
 
             // Validate struct and field counts are reasonable (non-negative)
@@ -1264,7 +1264,7 @@ except Exception as e:
                 int headerStructCount = Convert.ToInt32(parsedData["struct_count"]);
                 int parsedStructCount = Convert.ToInt32(parsedData["parsed_struct_count"]);
                 // The parsed count should match or be close to header count
-                parsedStructCount.Should().BeLessThanOrEqualTo(headerStructCount + 1, 
+                parsedStructCount.Should().BeLessThanOrEqualTo(headerStructCount + 1,
                     "Parsed struct count should not exceed header struct count significantly");
             }
 
@@ -1283,7 +1283,7 @@ except Exception as e:
             // Additional validation: The C# implementation should have successfully parsed the file
             utm.Should().NotBeNull("C# UTM parser should successfully parse the file");
             utm.ResRef.Should().NotBeNull("UTM should have ResRef");
-            
+
             // Validate that the C# parsed data is consistent
             // The test UTM file should have the values we set in CreateTestUtmFile
             utm.ResRef.ToString().Should().Be("test_merchant", "ResRef should match test data");
