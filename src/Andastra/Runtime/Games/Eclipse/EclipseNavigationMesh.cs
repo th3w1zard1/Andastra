@@ -2452,9 +2452,10 @@ namespace Andastra.Runtime.Games.Eclipse
                 priority += hpRatio * 0.2f; // Up to +20% for full HP entities
 
                 // Level-based priority (higher level = more threatening)
-                // Assuming stats has Level property (adjust if different)
-                // For now, use HP as proxy for level/strength
-                // TODO: Add level-based priority if IStatsComponent exposes Level property
+                // Higher level entities are more dangerous and should be prioritized for threat assessment
+                // Level bonus scales from 0% (level 1) to +30% (level 20+) priority
+                float levelBonus = Math.Min(stats.Level / 20.0f, 1.0f) * 0.3f;
+                priority += levelBonus;
             }
 
             // Clamp priority to reasonable range
