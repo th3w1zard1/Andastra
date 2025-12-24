@@ -110,6 +110,18 @@
     <StartupObject>Andastra.Runtime.Game.Program</StartupObject>
   </PropertyGroup>
 
+  <!-- Default to Library - this allows the project to be referenced by GUI -->
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+  </PropertyGroup>
+
+  <!-- Only use Exe when building Core project standalone via dotnet run (not when referenced) -->
+  <!-- This allows 'dotnet run' with the Core project for CLI usage -->
+  <!-- We detect standalone by checking if we're not publishing and RuntimeIdentifier is empty (typical for dotnet run) -->
+  <PropertyGroup Condition="'$(IsPublishing)' != 'true' AND '$(RuntimeIdentifier)' == '' AND '$(PublishProfile)' == ''">
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Eto.Forms" Version="2.10.2" />
     <PackageReference Include="Eto.Platform.Gtk" Version="2.10.2" Condition="$([MSBuild]::IsOSPlatform('Linux'))" />
