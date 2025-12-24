@@ -3862,7 +3862,54 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                     return true;
                 }
 
-                // TODO:  Check by tag (if itemIdOrTag is a tag index, would need lookup - for now skip)
+                // Check by tag (if itemIdOrTag is a negative tag index, resolve it to a tag string)
+                // Based on Eclipse engine: Tag indices use negative values (-1 = first tag, -2 = second tag, etc.)
+                // Build sorted list of unique item tags from world and use index to resolve tag string
+                if (itemIdOrTag < 0 && ctx != null && ctx.World != null)
+                {
+                    // Get all unique item tags from world entities (sorted for stable indexing)
+                    var allItemTags = new List<string>();
+                    var tagSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                    // Collect all unique tags from items in world entities
+                    foreach (var worldEntity in ctx.World.GetAllEntities())
+                    {
+                        if (worldEntity != null && worldEntity.IsValid)
+                        {
+                            IInventoryComponent worldInventory = worldEntity.GetComponent<IInventoryComponent>();
+                            if (worldInventory != null)
+                            {
+                                foreach (var worldItem in worldInventory.GetAllItems())
+                                {
+                                    if (worldItem != null && worldItem.IsValid && !string.IsNullOrEmpty(worldItem.Tag))
+                                    {
+                                        if (!tagSet.Contains(worldItem.Tag))
+                                        {
+                                            tagSet.Add(worldItem.Tag);
+                                            allItemTags.Add(worldItem.Tag);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Sort tags for stable indexing (case-insensitive sort for consistency)
+                    allItemTags.Sort(StringComparer.OrdinalIgnoreCase);
+
+                    // Use absolute value of itemIdOrTag as 1-based index into sorted tag list
+                    // itemIdOrTag -1 = first tag, itemIdOrTag -2 = second tag, etc.
+                    int tagIndex = Math.Abs(itemIdOrTag) - 1; // Convert to 0-based index
+                    if (tagIndex >= 0 && tagIndex < allItemTags.Count)
+                    {
+                        string targetTag = allItemTags[tagIndex];
+                        // Compare item tag with target tag (case-insensitive match)
+                        if (string.Equals(item.Tag, targetTag, StringComparison.OrdinalIgnoreCase))
+                        {
+                            return true;
+                        }
+                    }
+                }
             }
 
             return false;
