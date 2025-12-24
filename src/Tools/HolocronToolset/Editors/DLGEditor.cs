@@ -2057,7 +2057,7 @@ namespace HolocronToolset.Editors
 
             if (_plotXpSpin != null && node != null)
             {
-                _plotXpSpin.Value = node.PlotXpPercentage ?? 0;
+                _plotXpSpin.Value = (decimal)node.PlotXpPercentage;
             }
 
             // Load script1 and script2 ResRefs
