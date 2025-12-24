@@ -26,7 +26,15 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public int VertexStride => _vertexStride;
 
-        public IntPtr NativeHandle => _buffer.NativeBuffer;
+        public IntPtr NativeHandle
+        {
+            get
+            {
+                // Stride Buffer doesn't expose NativeBuffer directly
+                // Return IntPtr.Zero as Stride manages native resources internally
+                return IntPtr.Zero;
+            }
+        }
 
         public void SetData<T>(T[] data) where T : struct
         {
@@ -35,7 +43,13 @@ namespace Andastra.Runtime.Stride.Graphics
                 throw new ArgumentNullException(nameof(data));
             }
 
-            _buffer.SetData(_buffer.GraphicsDevice.ImmediateContext, data);
+            var commandList = _buffer.GraphicsDevice.ImmediateContext();
+            if (commandList == null)
+            {
+                throw new InvalidOperationException("CommandList is not available. Ensure GraphicsDeviceExtensions.RegisterCommandList() has been called.");
+            }
+
+            _buffer.SetData(commandList, data);
         }
 
         public void GetData<T>(T[] data) where T : struct
@@ -50,7 +64,13 @@ namespace Andastra.Runtime.Stride.Graphics
                 throw new ArgumentException("Data array length exceeds vertex count.", nameof(data));
             }
 
-            _buffer.GetData(_buffer.GraphicsDevice.ImmediateContext, data);
+            var commandList = _buffer.GraphicsDevice.ImmediateContext();
+            if (commandList == null)
+            {
+                throw new InvalidOperationException("CommandList is not available. Ensure GraphicsDeviceExtensions.RegisterCommandList() has been called.");
+            }
+
+            _buffer.GetData(commandList, data);
         }
 
         public void Dispose()
