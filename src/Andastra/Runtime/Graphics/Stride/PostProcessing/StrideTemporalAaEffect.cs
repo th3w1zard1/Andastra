@@ -3,13 +3,10 @@ using System.IO;
 using System.Numerics;
 using StrideGraphics = Stride.Graphics;
 using Stride.Rendering;
-using Stride.Core.Mathematics;
-using Stride.Engine;
 using Stride.Shaders;
 using Stride.Shaders.Compiler;
 using Stride.Core.Serialization.Contents;
 using Andastra.Runtime.Graphics.Common.PostProcessing;
-using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Stride.Graphics;
 using RectangleF = Stride.Core.Mathematics.RectangleF;
 using Color = Stride.Core.Mathematics.Color;
@@ -31,6 +28,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
     public class StrideTemporalAaEffect : BaseTemporalAaEffect
     {
         private StrideGraphics.GraphicsDevice _graphicsDevice;
+        private global::Stride.Engine.Game _game;
+        private object _gameServices; // Use object instead of IServiceProvider since Stride.Core.ServiceRegistry doesn't implement IServiceProvider
         private StrideGraphics.Texture _historyBuffer;
         private StrideGraphics.Texture _outputBuffer;
         private int _frameIndex;
@@ -47,8 +46,119 @@ namespace Andastra.Runtime.Stride.PostProcessing
         {
             _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException(nameof(graphicsDevice));
             _effectInitialized = false;
+
+            // Initialize Game and Game.Services access
+            InitializeGameServices();
+
             InitializeJitterSequence();
             InitializeRenderingResources();
+        }
+
+        /// <summary>
+        /// Initializes Game instance and Game.Services access.
+        /// This is required for proper service access in Stride applications.
+        /// </summary>
+        private void InitializeGameServices()
+        {
+            try
+            {
+                // Strategy 1: Try to get Game from GraphicsDevice.Game property (if available)
+                // This is the most direct approach in Stride 4.x+
+                var gameProperty = _graphicsDevice.GetType().GetProperty("Game");
+                if (gameProperty != null)
+                {
+                    _game = gameProperty.GetValue(_graphicsDevice) as global::Stride.Engine.Game;
+                    if (_game != null)
+                    {
+                        _gameServices = _game.Services;
+                        Console.WriteLine("[StrideTemporalAaEffect] Successfully accessed Game.Services from GraphicsDevice.Game");
+                        return;
+                    }
+                }
+
+                // Strategy 2: Try to get Game from GraphicsDevice.Services
+                // Some Stride versions expose Game through the services
+                dynamic graphicsDeviceServices = _graphicsDevice.Services();
+                if (graphicsDeviceServices != null)
+                {
+                    _game = graphicsDeviceServices.GetService<global::Stride.Engine.Game>();
+                    if (_game != null)
+                    {
+                        _gameServices = _game.Services;
+                        Console.WriteLine("[StrideTemporalAaEffect] Successfully accessed Game.Services from GraphicsDevice.Services");
+                        return;
+                    }
+                }
+
+                // Strategy 3: Try to access Game through IServiceProvider pattern
+                // This works in dependency injection scenarios
+                if (graphicsDeviceServices != null)
+                {
+                    _gameServices = graphicsDeviceServices;
+                    _game = graphicsDeviceServices.GetService<global::Stride.Engine.Game>();
+                    if (_game != null)
+                    {
+                        Console.WriteLine("[StrideTemporalAaEffect] Successfully accessed Game through IServiceProvider pattern");
+                        return;
+                    }
+                }
+
+                // Strategy 4: Try to find Game instance through reflection on common Stride objects
+                // This is a fallback for complex application architectures
+                try
+                {
+                    // Try to get Game from GraphicsDevice's parent or container
+                    var parentProperty = _graphicsDevice.GetType().GetProperty("Parent") ??
+                                        _graphicsDevice.GetType().GetProperty("Container") ??
+                                        _graphicsDevice.GetType().GetProperty("Owner");
+
+                    if (parentProperty != null)
+                    {
+                        var parent = parentProperty.GetValue(_graphicsDevice);
+                        if (parent != null)
+                        {
+                            // Try to get Game from parent
+                            var parentGameProperty = parent.GetType().GetProperty("Game");
+                            if (parentGameProperty != null)
+                            {
+                                _game = parentGameProperty.GetValue(parent) as global::Stride.Engine.Game;
+                                if (_game != null)
+                                {
+                                    _gameServices = _game.Services;
+                                    Console.WriteLine("[StrideTemporalAaEffect] Successfully accessed Game.Services from GraphicsDevice parent");
+                                    return;
+                                }
+                            }
+
+                            // Try to get IServiceProvider from parent
+                            if (parent is IServiceProvider parentServices)
+                            {
+                                _gameServices = parentServices;
+                                _game = (_gameServices as IServiceProvider)?.GetService(typeof(Game)) as Game;
+                                if (_game != null)
+                                {
+                                    Console.WriteLine("[StrideTemporalAaEffect] Successfully accessed Game through parent IServiceProvider");
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception reflectionEx)
+                {
+                    Console.WriteLine($"[StrideTemporalAaEffect] Reflection-based Game access failed: {reflectionEx.Message}");
+                }
+
+                Console.WriteLine("[StrideTemporalAaEffect] Warning: Could not access Game.Services. Some features may not work correctly.");
+                _gameServices = null;
+                _game = null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StrideTemporalAaEffect] Exception while initializing Game.Services access: {ex.Message}");
+                _gameServices = null;
+                _game = null;
+            }
         }
 
         /// <summary>
@@ -135,14 +245,14 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 // This loads pre-compiled .sdeffect files from the content pipeline
                 try
                 {
-                    // Get services from GraphicsDevice to access ContentManager
-                    // Services() provides access to engine services including ContentManager
-                    object services = _graphicsDevice.Services();
-                    if (services != null)
+                    // Get services from Game.Services to access ContentManager
+                    // Game.Services provides access to engine services including ContentManager
+                    // This is the proper way to access services in Stride applications
+                    if (_gameServices != null)
                     {
-                        // Get ContentManager service using dynamic dispatch
+                        // Get ContentManager service using proper Game.Services access
                         // ContentManager handles loading of compiled assets including effects
-                        var contentManager = ((dynamic)services).GetService<ContentManager>();
+                        var contentManager = (_gameServices as global::Stride.Core.ServiceRegistry)?.GetService<ContentManager>();
                         if (contentManager != null)
                         {
                             // Attempt to load TemporalAA effect from content
@@ -155,23 +265,23 @@ namespace Andastra.Runtime.Stride.PostProcessing
                                 // EffectInstance provides parameter binding and shader execution
                                 _taaEffect = new EffectInstance(_taaEffectBase);
                                 _effectInitialized = true;
-                                Console.WriteLine("[StrideTemporalAaEffect] Loaded TemporalAA effect from ContentManager");
+                                Console.WriteLine("[StrideTemporalAaEffect] Loaded TemporalAA effect from Game.Services.ContentManager");
                                 return;
                             }
                         }
                         else
                         {
-                            Console.WriteLine("[StrideTemporalAaEffect] ContentManager service not available from GraphicsDevice");
+                            Console.WriteLine("[StrideTemporalAaEffect] ContentManager service not available from Game.Services");
                         }
                     }
                     else
                     {
-                        Console.WriteLine("[StrideTemporalAaEffect] Services not available from GraphicsDevice");
+                        Console.WriteLine("[StrideTemporalAaEffect] Game.Services not available - could not initialize Game.Services access");
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"[StrideTemporalAaEffect] Failed to load TemporalAA from ContentManager: {ex.Message}");
+                    Console.WriteLine($"[StrideTemporalAaEffect] Failed to load TemporalAA from Game.Services.ContentManager: {ex.Message}");
                 }
 
                 // Strategy 2: Alternative ContentManager access pattern
@@ -181,18 +291,16 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     try
                     {
                         // Alternative service access pattern for ContentManager
-                        // Try dynamic dispatch for service access
-                        object services = _graphicsDevice.Services();
-                        if (services != null)
+                        // Try Game.Services for service access - this is the primary method
+                        if (_gameServices != null)
                         {
-                            // Attempt GetService call using dynamic dispatch
-                            // This pattern works in some Stride configurations
-                            var contentManager = ((dynamic)services).GetService<ContentManager>();
+                            // Attempt GetService call using Game.Services
+                            var contentManager = (_gameServices as global::Stride.Core.ServiceRegistry)?.GetService<ContentManager>();
                             if (contentManager != null)
                             {
                                 try
                                 {
-                                    // Load TemporalAA effect using alternative content path
+                                    // Load TemporalAA effect using Game.Services content path
                                     // Try different effect names in case the primary one isn't found
                                     string[] effectNames = { "TemporalAA", "TemporalAntiAliasing", "TAA", "PostProcessing/TemporalAA" };
 
@@ -205,7 +313,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                                             {
                                                 _taaEffect = new EffectInstance(_taaEffectBase);
                                                 _effectInitialized = true;
-                                                Console.WriteLine($"[StrideTemporalAaEffect] Loaded TemporalAA effect from ContentManager using name '{effectName}'");
+                                                Console.WriteLine($"[StrideTemporalAaEffect] Loaded TemporalAA effect from Game.Services.ContentManager using name '{effectName}'");
                                                 return;
                                             }
                                         }
@@ -216,51 +324,44 @@ namespace Andastra.Runtime.Stride.PostProcessing
                                         }
                                     }
 
-                                    Console.WriteLine("[StrideTemporalAaEffect] None of the expected effect names found in ContentManager");
+                                    Console.WriteLine("[StrideTemporalAaEffect] None of the expected effect names found in Game.Services.ContentManager");
                                 }
                                 catch (Exception loadEx)
                                 {
-                                    Console.WriteLine($"[StrideTemporalAaEffect] Failed to load TemporalAA from ContentManager: {loadEx.Message}");
+                                    Console.WriteLine($"[StrideTemporalAaEffect] Failed to load TemporalAA from Game.Services.ContentManager: {loadEx.Message}");
                                 }
                             }
                             else
                             {
-                                Console.WriteLine("[StrideTemporalAaEffect] ContentManager not available through direct service access");
+                                Console.WriteLine("[StrideTemporalAaEffect] ContentManager not available through Game.Services");
                             }
                         }
 
-                        // Additional fallback: Try to get ContentManager from Game.Services if available
-                        // In some Stride architectures, ContentManager is accessed through the Game object
-                        // This requires the Game instance to be accessible, which may not always be available
-                        // from the GraphicsDevice context
+                        // Additional fallback: Try to get ContentManager from GraphicsDevice.Services if Game.Services fails
+                        // This is kept for backward compatibility but Game.Services is preferred
                         try
                         {
-                            // Attempt to access Game.Services through reflection or service locator pattern
-                            // This is a more advanced integration that requires proper Game context
-                            var gameProperty = _graphicsDevice.GetType().GetProperty("Game");
-                            if (gameProperty != null)
+                            // Attempt to access services through GraphicsDevice.Services as fallback
+                            object services = _graphicsDevice.Services();
+                            if (services != null)
                             {
-                                var game = gameProperty.GetValue(_graphicsDevice) as dynamic;
-                                if (game != null && game.Services != null)
+                                var graphicsDeviceContentManager = ((dynamic)services).GetService<ContentManager>();
+                                if (graphicsDeviceContentManager != null)
                                 {
-                                    var gameContentManager = game.Services.GetService<ContentManager>();
-                                    if (gameContentManager != null)
+                                    _taaEffectBase = graphicsDeviceContentManager.Load<StrideGraphics.Effect>("TemporalAA");
+                                    if (_taaEffectBase != null)
                                     {
-                                        _taaEffectBase = gameContentManager.Load<StrideGraphics.Effect>("TemporalAA");
-                                        if (_taaEffectBase != null)
-                                        {
-                                            _taaEffect = new EffectInstance(_taaEffectBase);
-                                            _effectInitialized = true;
-                                            Console.WriteLine("[StrideTemporalAaEffect] Loaded TemporalAA effect from Game.Services.ContentManager");
-                                            return;
-                                        }
+                                        _taaEffect = new EffectInstance(_taaEffectBase);
+                                        _effectInitialized = true;
+                                        Console.WriteLine("[StrideTemporalAaEffect] Loaded TemporalAA effect from GraphicsDevice.Services.ContentManager (fallback)");
+                                        return;
                                     }
                                 }
                             }
                         }
-                        catch (Exception gameEx)
+                        catch (Exception graphicsDeviceEx)
                         {
-                            Console.WriteLine($"[StrideTemporalAaEffect] Failed to access ContentManager through Game.Services: {gameEx.Message}");
+                            Console.WriteLine($"[StrideTemporalAaEffect] Failed to access ContentManager through GraphicsDevice.Services fallback: {graphicsDeviceEx.Message}");
                         }
                     }
                     catch (Exception ex)
@@ -588,34 +689,57 @@ shader TemporalAAEffect : ShaderBase
 
             try
             {
-                // Strategy 1: Try to get EffectCompiler from GraphicsDevice services
-                // Note: Services() extension method always returns null in newer Stride versions
-                // TODO: PLACEHOLDER - Services should be obtained from Game.Services, not GraphicsDevice.Services()
-                // This code path will not execute since Services() returns null, but is kept for API compatibility
-                dynamic services = _graphicsDevice.Services();
-                if (services != null)
+                // Strategy 1: Try to get EffectCompiler from Game.Services
+                // This is the proper way to access services in Stride applications
+                // Game.Services provides access to EffectCompiler and other engine services
+                if (_gameServices != null)
                 {
-                    // Try to get EffectCompiler from services
-                    // Note: This will never execute since Services() returns null, but compiles for API compatibility
                     try
                     {
-                        var effectCompiler = services.GetService<EffectCompiler>();
+                        // Try to get EffectCompiler from Game.Services
+                        var effectCompiler = (_gameServices as global::Stride.Core.ServiceRegistry)?.GetService<global::Stride.Shaders.Compiler.EffectCompiler>();
                         if (effectCompiler != null)
                         {
                             return CompileShaderWithCompiler(effectCompiler, shaderSource, shaderName);
                         }
 
-                        // Try to get EffectSystem from services (EffectCompiler may be accessed through it)
-                        var effectSystem = services.GetService<global::Stride.Shaders.Compiler.EffectCompiler>();
+                        // Try to get EffectSystem from Game.Services (EffectCompiler may be accessed through it)
+                        var effectSystem = _gameServices.GetService<global::Stride.Shaders.Compiler.EffectCompiler>();
                         if (effectSystem != null)
                         {
                             return CompileShaderWithEffectSystem(effectSystem, shaderSource, shaderName);
                         }
                     }
-                    catch
+                    catch (Exception gameServicesEx)
                     {
-                        // Services() returns null, so this code path is unreachable
+                        Console.WriteLine($"[StrideTemporalAaEffect] Failed to access EffectCompiler from Game.Services: {gameServicesEx.Message}");
                     }
+                }
+
+                // Strategy 1b: Fallback to GraphicsDevice.Services if Game.Services is not available
+                // This maintains backward compatibility for older Stride versions or edge cases
+                try
+                {
+                    dynamic graphicsDeviceServices = _graphicsDevice.Services();
+                    if (graphicsDeviceServices != null)
+                    {
+                        var effectCompiler = graphicsDeviceServices.GetService<EffectCompiler>();
+                        if (effectCompiler != null)
+                        {
+                            return CompileShaderWithCompiler(effectCompiler, shaderSource, shaderName);
+                        }
+
+                        // Try to get EffectSystem from GraphicsDevice services (EffectCompiler may be accessed through it)
+                        var effectSystem = graphicsDeviceServices.GetService<global::Stride.Shaders.Compiler.EffectCompiler>();
+                        if (effectSystem != null)
+                        {
+                            return CompileShaderWithEffectSystem(effectSystem, shaderSource, shaderName);
+                        }
+                    }
+                }
+                catch (Exception graphicsDeviceEx)
+                {
+                    Console.WriteLine($"[StrideTemporalAaEffect] Failed to access EffectCompiler from GraphicsDevice.Services fallback: {graphicsDeviceEx.Message}");
                 }
 
                 // Strategy 2: Create temporary shader file and compile it (fallback)
@@ -758,7 +882,7 @@ shader TemporalAAEffect : ShaderBase
                     if (compiler != null)
                     {
                         // Read shader source from file and create ShaderSourceClass
-                        string fileShaderSource = System.IO.File.ReadAllText(filePath);
+                        string fileShaderSource = File.ReadAllText(filePath);
                         var fileSource = new ShaderSourceClass
                         {
                             Name = shaderName,
@@ -810,24 +934,21 @@ shader TemporalAAEffect : ShaderBase
             {
                 // Create temporary file for shader source
                 tempFilePath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"{shaderName}_{System.Guid.NewGuid()}.sdsl");
-                System.IO.File.WriteAllText(tempFilePath, shaderSource);
+                File.WriteAllText(tempFilePath, shaderSource);
 
                 // Try to compile shader from file
-                // Note: Services() extension method always returns null in newer Stride versions
-                // TODO: PLACEHOLDER - Services should be obtained from Game.Services, not GraphicsDevice.Services()
-                // This code path will not execute since Services() returns null, but is kept for API compatibility
-                dynamic services = _graphicsDevice.Services();
-                if (services != null)
+                // Use Game.Services for proper service access in Stride applications
+                if (_gameServices != null)
                 {
                     try
                     {
-                        // Attempt to get EffectCompiler from services for file-based compilation
-                        var effectCompiler = services.GetService<EffectCompiler>();
+                        // Attempt to get EffectCompiler from Game.Services for file-based compilation
+                        var effectCompiler = (_gameServices as global::Stride.Core.ServiceRegistry)?.GetService<global::Stride.Shaders.Compiler.EffectCompiler>();
                         if (effectCompiler != null)
                         {
                             // Read shader source from file and create ShaderSourceClass
                             // Stride EffectCompiler works with ShaderSource objects, not direct file paths
-                            string fileShaderSource = System.IO.File.ReadAllText(tempFilePath);
+                            string fileShaderSource = File.ReadAllText(tempFilePath);
                             var fileSource = new ShaderSourceClass
                             {
                                 Name = shaderName,
@@ -846,7 +967,7 @@ shader TemporalAAEffect : ShaderBase
                             {
                                 // Create Effect from compiled bytecode
                                 var effect = new StrideGraphics.Effect(_graphicsDevice, (EffectBytecode)compilerResult.Bytecode);
-                                Console.WriteLine($"[StrideTemporalAaEffect] Successfully compiled shader '{shaderName}' from file using EffectCompiler");
+                                Console.WriteLine($"[StrideTemporalAaEffect] Successfully compiled shader '{shaderName}' from file using Game.Services.EffectCompiler");
                                 return effect;
                             }
                             else
@@ -856,18 +977,72 @@ shader TemporalAAEffect : ShaderBase
                         }
                         else
                         {
-                            // Try alternative approach: Get EffectSystem and compile through it
-                            var effectSystem = services.GetService<global::Stride.Shaders.Compiler.EffectCompiler>();
+                            // Try alternative approach: Get EffectSystem from Game.Services and compile through it
+                            var effectSystem = _gameServices.GetService<global::Stride.Shaders.Compiler.EffectCompiler>();
                             if (effectSystem != null)
                             {
                                 return CompileShaderWithEffectSystemFromFile(effectSystem, tempFilePath, shaderName);
                             }
                         }
                     }
-                    catch (Exception compileEx)
+                    catch (Exception gameServicesCompileEx)
                     {
-                        Console.WriteLine($"[StrideTemporalAaEffect] Exception during file-based shader compilation for '{shaderName}': {compileEx.Message}");
+                        Console.WriteLine($"[StrideTemporalAaEffect] Exception during file-based shader compilation for '{shaderName}' using Game.Services: {gameServicesCompileEx.Message}");
                     }
+                }
+
+                // Fallback: Try GraphicsDevice.Services if Game.Services is not available
+                // This maintains backward compatibility but Game.Services is preferred
+                try
+                {
+                    dynamic graphicsDeviceServices = _graphicsDevice.Services();
+                    if (graphicsDeviceServices != null)
+                    {
+                        var effectCompiler = graphicsDeviceServices.GetService<EffectCompiler>();
+                        if (effectCompiler != null)
+                        {
+                            // Read shader source from file and create ShaderSourceClass
+                            string fileShaderSource = File.ReadAllText(tempFilePath);
+                            var fileSource = new ShaderSourceClass
+                            {
+                                Name = shaderName,
+                                SourceCode = fileShaderSource
+                            };
+
+                            // Compile shader from file content using EffectCompiler
+                            dynamic compilationResult = effectCompiler.Compile(fileSource, new CompilerParameters
+                            {
+                                EffectParameters = new EffectCompilerParameters()
+                            });
+
+                            // Unwrap TaskOrResult to get compilation result
+                            dynamic compilerResult = compilationResult.Result;
+                            if (compilerResult != null && compilerResult.Bytecode != null && compilerResult.Bytecode.Length > 0)
+                            {
+                                // Create Effect from compiled bytecode
+                                var effect = new StrideGraphics.Effect(_graphicsDevice, (EffectBytecode)compilerResult.Bytecode);
+                                Console.WriteLine($"[StrideTemporalAaEffect] Successfully compiled shader '{shaderName}' from file using GraphicsDevice.Services.EffectCompiler (fallback)");
+                                return effect;
+                            }
+                            else
+                            {
+                                Console.WriteLine($"[StrideTemporalAaEffect] File-based compilation failed for shader '{shaderName}': No bytecode generated");
+                            }
+                        }
+                        else
+                        {
+                            // Try alternative approach: Get EffectSystem from GraphicsDevice services and compile through it
+                            var effectSystem = graphicsDeviceServices.GetService<global::Stride.Shaders.Compiler.EffectCompiler>();
+                            if (effectSystem != null)
+                            {
+                                return CompileShaderWithEffectSystemFromFile(effectSystem, tempFilePath, shaderName);
+                            }
+                        }
+                    }
+                }
+                catch (Exception graphicsDeviceCompileEx)
+                {
+                    Console.WriteLine($"[StrideTemporalAaEffect] Exception during file-based shader compilation for '{shaderName}' using GraphicsDevice.Services fallback: {graphicsDeviceCompileEx.Message}");
                 }
 
                 Console.WriteLine($"[StrideTemporalAaEffect] Could not compile shader '{shaderName}' from file");
@@ -881,11 +1056,11 @@ shader TemporalAAEffect : ShaderBase
             finally
             {
                 // Clean up temporary file
-                if (tempFilePath != null && System.IO.File.Exists(tempFilePath))
+                if (tempFilePath != null && File.Exists(tempFilePath))
                 {
                     try
                     {
-                        System.IO.File.Delete(tempFilePath);
+                        File.Delete(tempFilePath);
                     }
                     catch
                     {
