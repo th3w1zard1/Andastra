@@ -4392,9 +4392,11 @@ namespace HolocronToolset.Tests.Editors
                     editor.Model.SelectedIndex = 0;
 
                     // Matching Python: if editor.ui.emotionSelect.count() > 0:
-                    // Matching Python: for i in range(min(5, editor.ui.emotionSelect.count())):
-                    // Test emotion values 0-7 (emotion_id can be 0-7: None, Happy, Sad, Angry, Surprised, Fear, Disgust, Neutral)
-                    for (int i = 0; i < Math.Min(5, editor.EmotionSelect.Items.Count); i++)
+                    if (editor.EmotionSelect.Items.Count > 0)
+                    {
+                        // Matching Python: for i in range(min(5, editor.ui.emotionSelect.count())):
+                        // Test emotion values 0-7 (emotion_id can be 0-7: None, Happy, Sad, Angry, Surprised, Fear, Disgust, Neutral)
+                        for (int i = 0; i < Math.Min(5, editor.EmotionSelect.Items.Count); i++)
                     {
                         // Matching Python: editor.ui.emotionSelect.setCurrentIndex(i)
                         // Matching Python: editor.on_node_update()
@@ -4417,6 +4419,7 @@ namespace HolocronToolset.Tests.Editors
                                 firstStarter.Node.EmotionId.Should().Be(i, $"Emotion ID should be {i} after setting emotion select to index {i}");
                             }
                         }
+                    }
                     }
                 }
             }
