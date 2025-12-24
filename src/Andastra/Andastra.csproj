@@ -8,7 +8,13 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateGlobalUsings>false</GenerateGlobalUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <OutputType>Library</OutputType>
+  </PropertyGroup>
+  <!-- OutputType: WinExe for Windows (no console), Exe for Linux/macOS (GUI with optional console) -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)'=='' OR $(RuntimeIdentifier.StartsWith('win'))">
+    <OutputType>WinExe</OutputType>
+  </PropertyGroup>
+  <PropertyGroup Condition="!$(RuntimeIdentifier.StartsWith('win')) AND '$(RuntimeIdentifier)'!=''">
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Eto.Forms" Version="2.10.2" />
@@ -69,7 +75,6 @@
     <None Remove="Demo\**" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Remove="Game\Program.cs" />
     <Compile Remove="Tests\**" />
     <Content Remove="Tests\**" />
     <EmbeddedResource Remove="Tests\**" />
