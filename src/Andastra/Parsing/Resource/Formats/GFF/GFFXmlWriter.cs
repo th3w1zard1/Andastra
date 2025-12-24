@@ -47,11 +47,8 @@ namespace Andastra.Parsing.Formats.GFF
             var structElement = new XElement("struct");
             structElement.SetAttributeValue("id", gffStruct.StructId);
 
-            foreach (var fieldName in gffStruct.FieldNames())
+            foreach ((string fieldName, GFFFieldType fieldType, object fieldValue) in gffStruct)
             {
-                var fieldType = gffStruct.GetFieldType(fieldName);
-                var fieldValue = gffStruct.Get(fieldName, fieldType);
-
                 var fieldElement = CreateFieldElement(fieldName, fieldType, fieldValue);
                 structElement.Add(fieldElement);
             }
@@ -86,7 +83,7 @@ namespace Andastra.Parsing.Formats.GFF
                     element.Value = ((float)value).ToString(CultureInfo.InvariantCulture);
                     break;
                 case GFFFieldType.String:
-                    element.Value = (string)value;
+                    element.Value = value?.ToString() ?? string.Empty;
                     break;
                 case GFFFieldType.ResRef:
                     element.Value = ((ResRef)value).ToString();
@@ -110,9 +107,9 @@ namespace Andastra.Parsing.Formats.GFF
 
         private void CreateLocStringElement(XElement parentElement, LocalizedString locString)
         {
-            if (locString.StringRef.HasValue)
+            if (locString != null && locString.StringRef >= 0)
             {
-                parentElement.SetAttributeValue("strref", locString.StringRef.Value.ToString());
+                parentElement.SetAttributeValue("strref", locString.StringRef.ToString());
             }
 
             // Add string elements for each language/gender combination
