@@ -3168,12 +3168,144 @@ namespace HolocronToolset.Tests.Editors
             var featList = GetFeatList(editor);
             featList.Should().NotBeNull("Feat list should exist");
 
-            // Check specific feats if available
+            // Check specific feats and powers, test combinations
             if (featList.Items != null && featList.Items.Count > 0)
             {
-                // TODO: STUB - Note: Full implementation would require checking/unchecking items
-                // TODO: STUB - This is a simplified test that verifies the list exists and can be accessed
-                featList.Items.Count.Should().BeGreaterThan(0, "Feat list should have items");
+                var powerList = GetPowerList(editor);
+                powerList.Should().NotBeNull("Power list should exist");
+
+                // Test feat checking/unchecking
+                var originalCheckedFeats = new List<int>();
+                var featsToCheck = new List<CheckableListItem>();
+                var featsToUncheck = new List<CheckableListItem>();
+
+                // Find currently checked feats
+                foreach (var item in featList.Items)
+                {
+                    if (item is CheckableListItem checkableItem && checkableItem.IsChecked)
+                    {
+                        originalCheckedFeats.Add(checkableItem.Id);
+                    }
+                }
+
+                // Select some feats to check and uncheck for testing
+                int checkCount = Math.Min(3, featList.Items.Count);
+                for (int i = 0; i < checkCount && i < featList.Items.Count; i++)
+                {
+                    var item = featList.Items[i] as CheckableListItem;
+                    if (item != null)
+                    {
+                        if (!item.IsChecked)
+                        {
+                            featsToCheck.Add(item);
+                        }
+                        else if (originalCheckedFeats.Count > 1) // Keep at least one checked
+                        {
+                            featsToUncheck.Add(item);
+                        }
+                    }
+                }
+
+                // Perform checking/unchecking operations
+                foreach (var item in featsToCheck)
+                {
+                    item.IsChecked = true;
+                }
+                foreach (var item in featsToUncheck)
+                {
+                    item.IsChecked = false;
+                }
+
+                // Test power checking if powers are available
+                var powersToCheck = new List<CheckableListItem>();
+                if (powerList.Items != null && powerList.Items.Count > 0)
+                {
+                    int powerCheckCount = Math.Min(2, powerList.Items.Count);
+                    for (int i = 0; i < powerCheckCount && i < powerList.Items.Count; i++)
+                    {
+                        var item = powerList.Items[i] as CheckableListItem;
+                        if (item != null && !item.IsChecked)
+                        {
+                            powersToCheck.Add(item);
+                            item.IsChecked = true;
+                        }
+                    }
+                }
+
+                // Save the changes
+                var (savedData, _) = editor.Build();
+                savedData.Should().NotBeNull("Editor should build successfully with feat/power changes");
+
+                // Reload and verify
+                var reloadedEditor = CreateEditorWithInstallation();
+                reloadedEditor.Load(utcFile, "p_hk47", ResourceType.UTC, savedData);
+                var reloadedFeatList = GetFeatList(reloadedEditor);
+                var reloadedPowerList = GetPowerList(reloadedEditor);
+
+                reloadedFeatList.Should().NotBeNull("Reloaded feat list should exist");
+                reloadedPowerList.Should().NotBeNull("Reloaded power list should exist");
+
+                // Verify checked feats are saved
+                foreach (var item in featsToCheck)
+                {
+                    var reloadedItem = GetFeatItem(reloadedEditor, item.Id);
+                    reloadedItem.Should().NotBeNull($"Feat {item.Id} should exist in reloaded editor");
+                    reloadedItem.IsChecked.Should().BeTrue($"Feat {item.Id} should be checked in reloaded editor");
+                }
+
+                // Verify unchecked feats are saved
+                foreach (var item in featsToUncheck)
+                {
+                    var reloadedItem = GetFeatItem(reloadedEditor, item.Id);
+                    reloadedItem.Should().NotBeNull($"Feat {item.Id} should exist in reloaded editor");
+                    reloadedItem.IsChecked.Should().BeFalse($"Feat {item.Id} should be unchecked in reloaded editor");
+                }
+
+                // Verify originally checked feats are still checked (except those we unchecked)
+                foreach (var featId in originalCheckedFeats)
+                {
+                    if (!featsToUncheck.Any(item => item.Id == featId))
+                    {
+                        var reloadedItem = GetFeatItem(reloadedEditor, featId);
+                        reloadedItem.Should().NotBeNull($"Originally checked feat {featId} should exist in reloaded editor");
+                        reloadedItem.IsChecked.Should().BeTrue($"Originally checked feat {featId} should still be checked");
+                    }
+                }
+
+                // Verify checked powers are saved
+                foreach (var item in powersToCheck)
+                {
+                    var reloadedItem = GetPowerItem(reloadedEditor, item.Id);
+                    reloadedItem.Should().NotBeNull($"Power {item.Id} should exist in reloaded editor");
+                    reloadedItem.IsChecked.Should().BeTrue($"Power {item.Id} should be checked in reloaded editor");
+                }
+
+                // Test feat-power combinations by checking if they coexist properly
+                var finalCheckedFeats = new List<int>();
+                var finalCheckedPowers = new List<int>();
+
+                foreach (var item in reloadedFeatList.Items)
+                {
+                    if (item is CheckableListItem checkableItem && checkableItem.IsChecked)
+                    {
+                        finalCheckedFeats.Add(checkableItem.Id);
+                    }
+                }
+
+                foreach (var item in reloadedPowerList.Items)
+                {
+                    if (item is CheckableListItem checkableItem && checkableItem.IsChecked)
+                    {
+                        finalCheckedPowers.Add(checkableItem.Id);
+                    }
+                }
+
+                // Verify combinations are preserved
+                finalCheckedFeats.Count.Should().BeGreaterThan(0, "Should have checked feats after reload");
+                if (powersToCheck.Count > 0)
+                {
+                    finalCheckedPowers.Count.Should().BeGreaterThan(0, "Should have checked powers after reload");
+                }
             }
         }
 
@@ -5149,6 +5281,48 @@ namespace HolocronToolset.Tests.Editors
                 throw new InvalidOperationException("_lastNameRandomBtn field not found in UTCEditor");
             }
             return field.GetValue(editor) as Button;
+        }
+
+        /// <summary>
+        /// Helper method to get a feat item by ID from the feat list.
+        /// </summary>
+        private static CheckableListItem GetFeatItem(UTCEditor editor, int featId)
+        {
+            var featList = GetFeatList(editor);
+            if (featList == null || featList.Items == null)
+            {
+                return null;
+            }
+
+            foreach (var item in featList.Items)
+            {
+                if (item is CheckableListItem checkableItem && checkableItem.Id == featId)
+                {
+                    return checkableItem;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Helper method to get a power item by ID from the power list.
+        /// </summary>
+        private static CheckableListItem GetPowerItem(UTCEditor editor, int powerId)
+        {
+            var powerList = GetPowerList(editor);
+            if (powerList == null || powerList.Items == null)
+            {
+                return null;
+            }
+
+            foreach (var item in powerList.Items)
+            {
+                if (item is CheckableListItem checkableItem && checkableItem.Id == powerId)
+                {
+                    return checkableItem;
+                }
+            }
+            return null;
         }
     }
 }
