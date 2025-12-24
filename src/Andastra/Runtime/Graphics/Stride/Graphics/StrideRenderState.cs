@@ -738,23 +738,31 @@ namespace Andastra.Runtime.Stride.Graphics
 
         internal SamplerStateDescription Description => _description;
 
-        private static StrideGraphics.TextureAddressMode ConvertTextureAddressMode(Andastra.Runtime.Graphics.TextureAddressMode mode)
+        // Conversion from Andastra.Runtime.Graphics to Andastra.Runtime.Stride.Graphics (for SamplerStateDescription)
+        private static TextureAddressMode ConvertTextureAddressMode(Andastra.Runtime.Graphics.TextureAddressMode mode)
         {
-            return (StrideGraphics.TextureAddressMode)(int)mode;
+            // Both Andastra enums have identical values, so we can cast directly
+            return (TextureAddressMode)(int)mode;
         }
 
-        private static Andastra.Runtime.Graphics.TextureAddressMode ConvertTextureAddressMode(StrideGraphics.TextureAddressMode mode)
+        // Conversion from Andastra.Runtime.Stride.Graphics to Andastra.Runtime.Graphics (for public interface)
+        private static Andastra.Runtime.Graphics.TextureAddressMode ConvertTextureAddressMode(TextureAddressMode mode)
         {
+            // Both Andastra enums have identical values, so we can cast directly
             return (Andastra.Runtime.Graphics.TextureAddressMode)(int)mode;
         }
 
-        private static StrideGraphics.TextureFilter ConvertTextureFilter(Andastra.Runtime.Graphics.TextureFilter filter)
+        // Conversion from Andastra.Runtime.Graphics to Andastra.Runtime.Stride.Graphics (for SamplerStateDescription)
+        private static TextureFilter ConvertTextureFilter(Andastra.Runtime.Graphics.TextureFilter filter)
         {
-            return (StrideGraphics.TextureFilter)(int)filter;
+            // Both Andastra enums have identical values, so we can cast directly
+            return (TextureFilter)(int)filter;
         }
 
-        private static Andastra.Runtime.Graphics.TextureFilter ConvertTextureFilter(StrideGraphics.TextureFilter filter)
+        // Conversion from Andastra.Runtime.Stride.Graphics to Andastra.Runtime.Graphics (for public interface)
+        private static Andastra.Runtime.Graphics.TextureFilter ConvertTextureFilter(TextureFilter filter)
         {
+            // Both Andastra enums have identical values, so we can cast directly
             return (Andastra.Runtime.Graphics.TextureFilter)(int)filter;
         }
     }

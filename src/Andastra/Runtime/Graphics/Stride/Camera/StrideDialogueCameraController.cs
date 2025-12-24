@@ -4,6 +4,7 @@ using System.Numerics;
 using Andastra.Runtime.Core.Camera;
 using Andastra.Runtime.Core.Dialogue;
 using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Core.Interfaces.Components;
 using DialogueCameraAngle = Andastra.Runtime.Core.Camera.DialogueCameraAngle;
 
 namespace Andastra.Runtime.Stride.Camera
@@ -285,7 +286,7 @@ namespace Andastra.Runtime.Stride.Camera
                 return Vector3.Zero;
             }
 
-            Interfaces.Components.ITransformComponent transform = entity.GetComponent<Interfaces.Components.ITransformComponent>();
+            ITransformComponent transform = entity.GetComponent<ITransformComponent>();
             if (transform == null)
             {
                 return Vector3.Zero;

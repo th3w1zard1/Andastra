@@ -16,10 +16,10 @@ namespace Andastra.Runtime.Stride.Audio
 {
     /// <summary>
     /// Stride implementation of ISoundPlayer for playing sound effects.
-    /// 
+    ///
     /// Loads WAV files from KOTOR installation and plays them using Stride's Audio API.
     /// Supports positional audio for 3D sound effects.
-    /// 
+    ///
     /// Based on Stride API: https://doc.stride3d.net/latest/en/manual/audio/index.html
     /// SoundInstance API: https://doc.stride3d.net/latest/en/api/Stride.Audio.SoundInstance.html
     /// </summary>
@@ -32,7 +32,7 @@ namespace Andastra.Runtime.Stride.Audio
     /// - Positional audio: Sounds can be played at entity positions (3D spatial audio)
     /// - Playback control: Play, Stop, volume, pan, pitch
     /// - This Stride implementation uses Stride's AudioEngine and SoundInstance API
-    /// 
+    ///
     /// Implementation Notes:
     /// - Uses SoundInstance.PlayState to check if sound is playing (Playing, Stopped, Paused)
     /// - Uses SoundInstance.Stop() to stop playback
@@ -63,7 +63,7 @@ namespace Andastra.Runtime.Stride.Audio
         {
             _resourceProvider = resourceProvider ?? throw new ArgumentNullException(nameof(resourceProvider));
             _spatialAudio = spatialAudio;
-            
+
             // Initialize AudioEngine if not provided
             // Based on Stride API: AudioEngine is required for audio playback
             // https://doc.stride3d.net/latest/en/api/Stride.Audio.AudioEngine.html
@@ -88,7 +88,7 @@ namespace Andastra.Runtime.Stride.Audio
             // Based on Stride API: AudioListener is required for 3D spatial audio
             // https://doc.stride3d.net/latest/en/api/Stride.Audio.AudioListener.html
             _audioListener = audioListener ?? new AudioListener();
-            
+
             _playingSounds = new Dictionary<uint, SoundInstance>();
             _instanceOriginalVolumes = new Dictionary<uint, float>();
             _instancePans = new Dictionary<uint, float>();
@@ -360,7 +360,7 @@ namespace Andastra.Runtime.Stride.Audio
         /// This method creates a SoundInstance directly from WAV PCM data using DynamicSoundSource.
         /// Based on Stride API: SoundInstance constructor with DynamicSoundSource
         /// https://doc.stride3d.net/latest/en/api/Stride.Audio.SoundInstance.html#Stride_Audio_SoundInstance__ctor_Stride_Audio_AudioEngine_Stride_Audio_AudioListener_Stride_Audio_DynamicSoundSource_System_Int32_System_Boolean_System_Boolean_System_Boolean_System_Single_Stride_Audio_HrtfEnvironment_
-        /// 
+        ///
         /// Note: DynamicSoundSource requires a SoundInstance in its constructor, creating a circular dependency.
         /// This implementation uses a two-phase initialization to work around this limitation (same pattern as StrideVoicePlayer).
         /// </remarks>
@@ -398,7 +398,7 @@ namespace Andastra.Runtime.Stride.Audio
 
                 // Create the actual DynamicSoundSource with the temporary SoundInstance
                 var dynamicSource = new SoundWavDynamicSoundSource(_audioEngine, pcmData, wavFile.SampleRate, wavFile.Channels == 1, tempSoundInstance);
-                
+
                 // Create the actual SoundInstance with the DynamicSoundSource
                 var soundInstance = new SoundInstance(
                     _audioEngine,
@@ -411,17 +411,17 @@ namespace Andastra.Runtime.Stride.Audio
                     0.0f, // directionalFactor
                     HrtfEnvironment.Small // environment
                 );
-                
+
                 // Update the DynamicSoundSource with the actual SoundInstance
                 dynamicSource.SetSoundInstance(soundInstance);
-                
+
                 // Dispose the temporary SoundInstance
                 try
                 {
                     tempSoundInstance.Dispose();
                 }
                 catch { }
-                
+
                 return soundInstance;
             }
             catch (Exception ex)
@@ -437,14 +437,14 @@ namespace Andastra.Runtime.Stride.Audio
         /// Uses a two-phase initialization pattern to break the circular dependency:
         /// 1. First, create a cached dummy SoundInstance using MinimalDummySource that doesn't recurse
         /// 2. Then reuse that cached instance for all DummyDynamicSoundSourceForInit instances
-        /// 
+        ///
         /// This workaround is necessary because Stride's DynamicSoundSource constructor requires
         /// a SoundInstance parameter, but to create a SoundInstance, you need a DynamicSoundSource,
         /// creating a circular dependency. The MinimalDummySource breaks this cycle by accepting
         /// null in its constructor (which the base class handles during initialization), allowing
         /// the first SoundInstance to be created. This cached instance is then reused for all
         /// subsequent DummyDynamicSoundSourceForInit instances.
-        /// 
+        ///
         /// Based on Stride API: DynamicSoundSource base class
         /// https://doc.stride3d.net/latest/en/api/Stride.Audio.DynamicSoundSource.html
         /// </summary>
@@ -524,13 +524,13 @@ namespace Andastra.Runtime.Stride.Audio
             /// <summary>
             /// Minimal dummy source that accepts null in base constructor to break recursion.
             /// Used only during the initial cached instance creation.
-            /// 
+            ///
             /// This is a workaround for the circular dependency: DynamicSoundSource requires
             /// a SoundInstance, but we need a DynamicSoundSource to create a SoundInstance.
             /// By passing null here (which the base class handles gracefully during initialization),
             /// we break the cycle. The base DynamicSoundSource constructor accepts null for
             /// the SoundInstance parameter during initialization, allowing this two-phase init pattern.
-            /// 
+            ///
             /// Based on Stride API: DynamicSoundSource base class constructor
             /// https://doc.stride3d.net/latest/en/api/Stride.Audio.DynamicSoundSource.html
             /// </summary>
@@ -646,7 +646,7 @@ namespace Andastra.Runtime.Stride.Audio
     /// Based on Stride API: DynamicSoundSource abstract class
     /// https://doc.stride3d.net/latest/en/api/Stride.Audio.DynamicSoundSource.html
     /// This implementation provides a simple way to play WAV files from memory.
-    /// 
+    ///
     /// Note: DynamicSoundSource requires a SoundInstance in its constructor, creating a circular dependency.
     /// This implementation uses a two-phase initialization pattern to work around this limitation.
     /// </remarks>
@@ -772,7 +772,7 @@ namespace Andastra.Runtime.Stride.Audio
             try
             {
                 IntPtr bufferPtr = bufferHandle.AddrOfPinnedObject();
-                FillBuffer(bufferPtr, bytesToCopy, (Stride.Audio.AudioLayer.BufferType)(int)bufferType);
+                FillBuffer(bufferPtr, bytesToCopy, bufferType);
             }
             finally
             {

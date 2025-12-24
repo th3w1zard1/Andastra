@@ -207,7 +207,10 @@ namespace Andastra.Runtime.Stride.Backends
 
         protected override void OnDispatch(int x, int y, int z)
         {
-            _commandList?.Dispatch(x, y, z);
+            if (_strideCommandList != null)
+            {
+                _strideCommandList.Dispatch(x, y, z);
+            }
         }
 
         protected override void OnDispatchRays(DispatchRaysDesc desc)
