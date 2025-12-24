@@ -12,6 +12,7 @@ namespace Andastra.Parsing.Common
         // Odyssey Engine
         K1 = 1,
         K2 = 2,
+        TSL = K2,
         K1_XBOX = 3,
         K2_XBOX = 4,
         TSL_XBOX = K2_XBOX,
