@@ -5,6 +5,7 @@ using System.Numerics;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.MDL;
 using Andastra.Parsing.Common;
+using Andastra.Runtime.Graphics.Common;
 
 namespace Andastra.Parsing.Formats.MDLData
 {
@@ -541,7 +542,7 @@ namespace Andastra.Parsing.Formats.MDLData
             FlareColorShifts = new List<float>();
             FlareTextures = new List<string>();
             LightFlags = 0;
-            Color = new Color(ParsingColor.WHITE);
+            Color = new Color(ParsingColor.WHITE.R, ParsingColor.WHITE.G, ParsingColor.WHITE.B, ParsingColor.WHITE.A);
             ShadowTexture = string.Empty;
         }
 
