@@ -6,6 +6,7 @@ using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.TLK;
+using Andastra.Parsing.Formats.GFF.Generics.JRL;
 using Andastra.Runtime.Games.Common.Journal;
 using JetBrains.Annotations;
 
@@ -30,7 +31,6 @@ namespace Andastra.Runtime.Games.Odyssey.Journal
     {
         private TLK _baseTlk;
         private TLK _customTlk;
-        private readonly Dictionary<string, JRL> _jrlCache;
 
         public OdysseyJRLLoader(Installation installation)
             : base(installation)
