@@ -8,7 +8,6 @@ using Andastra.Runtime.Graphics;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Formats.WAV;
 using Stride.Audio;
-using SoundPlayState = Stride.Audio.SoundPlayState;
 
 namespace Andastra.Runtime.Stride.Audio
 {
