@@ -86,17 +86,23 @@ namespace Andastra.Runtime.Stride.GUI
         {
             try
             {
+                // Get CommandList for SpriteBatch operations
+                var commandList = _graphicsDevice.ImmediateContext();
+                
                 // Create SpriteBatch for 2D rendering
                 _spriteBatch = new Stride.Graphics.SpriteBatch(_graphicsDevice);
 
                 // Create 1x1 white texture for drawing rectangles and backgrounds
                 _whiteTexture = global::Stride.Graphics.Texture.New2D(_graphicsDevice, 1, 1, StrideGraphics.PixelFormat.R8G8B8A8_UNorm);
                 var whitePixel = new Color4(1.0f, 1.0f, 1.0f, 1.0f);
-                _whiteTexture.SetData(_graphicsDevice.ImmediateContext, new[] { whitePixel });
+                _whiteTexture.SetData(commandList, new[] { whitePixel });
 
                 // Initialize base class with viewport dimensions
-                var viewport = _graphicsDevice.Viewport;
-                Initialize(viewport.Width, viewport.Height);
+                // Get viewport from presentation parameters
+                var presentParams = _graphicsDevice.Presenter?.Description;
+                int width = presentParams?.BackBufferWidth ?? 1920;
+                int height = presentParams?.BackBufferHeight ?? 1080;
+                Initialize(width, height);
 
                 Console.WriteLine("[StrideMenuRenderer] Stride menu renderer initialized successfully");
                 Console.WriteLine($"[StrideMenuRenderer] Viewport: {viewport.Width}x{viewport.Height}");
@@ -163,16 +169,22 @@ namespace Andastra.Runtime.Stride.GUI
 
             try
             {
+                // Get CommandList for rendering
+                var commandList = _graphicsDevice.ImmediateContext();
+                
                 // Begin sprite batch rendering
-                // Stride SpriteBatch uses ImmediateContext from GraphicsDevice
-                _spriteBatch.Begin(_graphicsDevice.ImmediateContext, SpriteSortMode.Deferred, BlendStates.AlphaBlend);
+                // Stride SpriteBatch uses CommandList, SpriteSortMode, and BlendStateDescription
+                _spriteBatch.Begin(commandList, StrideGraphics.SpriteSortMode.Deferred, StrideGraphics.BlendStates.AlphaBlend);
 
                 try
                 {
                     // Draw menu background (full screen dark blue)
                     var backgroundColor = new Color4(20.0f / 255.0f, 30.0f / 255.0f, 60.0f / 255.0f, 1.0f);
-                    var viewport = _graphicsDevice.Viewport;
-                    _spriteBatch.Draw(_whiteTexture, new RectangleF(0, 0, viewport.Width, viewport.Height), backgroundColor);
+                    // Get viewport dimensions from presentation parameters
+                    var presentParams = _graphicsDevice.Presenter?.Description;
+                    int viewportWidth = presentParams?.BackBufferWidth ?? 1920;
+                    int viewportHeight = presentParams?.BackBufferHeight ?? 1080;
+                    _spriteBatch.Draw(_whiteTexture, new RectangleF(0, 0, viewportWidth, viewportHeight), backgroundColor);
 
                     // Draw menu panel background
                     var panelColor = new Color4(40.0f / 255.0f, 50.0f / 255.0f, 80.0f / 255.0f, 1.0f);
@@ -188,7 +200,7 @@ namespace Andastra.Runtime.Stride.GUI
                     if (_font != null)
                     {
                         var textColor = new Color4(1.0f, 1.0f, 1.0f, 1.0f);
-                        var titlePosition = new Vector2(panelRect.X + 20, headerRect.Y + 10);
+                        var titlePosition = new Stride.Core.Mathematics.Vector2(panelRect.X + 20, headerRect.Y + 10);
                         _spriteBatch.DrawString(_font, "Main Menu", titlePosition, textColor);
                     }
                 }

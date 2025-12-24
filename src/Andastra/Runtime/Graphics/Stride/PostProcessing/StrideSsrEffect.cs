@@ -144,7 +144,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     //     var contentManager = services.GetService<ContentManager>();
                     // ContentManager is in Stride.Engine namespace, not Stride.Engine.Content
                     // For now, skip ContentManager approach as it requires proper service setup
-                    Stride.Engine.ContentManager contentManager = null;
+                    ContentManager contentManager = null;
                     if (contentManager != null)
                     {
                         try
@@ -442,26 +442,24 @@ namespace Andastra.Runtime.Stride.PostProcessing
             commandList.Clear(output, global::Stride.Core.Mathematics.Color.Transparent);
 
             // Begin sprite batch rendering with custom effect
-            // Stride SpriteBatch.Begin may accept CommandList directly in some versions
-            // Try CommandList first, fallback to GraphicsContext if needed
+            // Stride SpriteBatch.Begin requires GraphicsContext, not CommandList
+            // Get GraphicsContext from the device's GraphicsContext property if available
+            // Note: In Stride, GraphicsContext is typically obtained from Game.GraphicsContext
+            // For now, use CommandList directly if Begin accepts it, otherwise we need GraphicsContext
+            // TODO: FIXME - Need to properly get GraphicsContext from device or game instance
+            // Using dynamic to handle API differences between Stride versions
             try
             {
-                _spriteBatch.Begin(commandList, StrideGraphics.SpriteSortMode.Immediate, _ssrEffect);
+                // Try with CommandList first (some Stride versions may accept it)
+                dynamic spriteBatchDynamic = _spriteBatch;
+                spriteBatchDynamic.Begin(commandList, StrideGraphics.SpriteSortMode.Immediate, _ssrEffect);
             }
-            catch (System.ArgumentException)
+            catch
             {
-                // If CommandList doesn't work, try GraphicsContext
-                // CommandList may need to be converted to GraphicsContext
-                var graphicsContext = commandList as StrideGraphics.GraphicsContext;
-                if (graphicsContext != null)
-                {
-                    _spriteBatch.Begin(graphicsContext, StrideGraphics.SpriteSortMode.Immediate, _ssrEffect);
-                }
-                else
-                {
-                    System.Console.WriteLine("[StrideSSR] Warning: Could not begin sprite batch - invalid context");
-                    return;
-                }
+                // If that fails, SpriteBatch.Begin requires GraphicsContext which we don't have direct access to
+                // This is a limitation - we need GraphicsContext from Game instance
+                System.Console.WriteLine("[StrideSSR] Warning: Could not begin sprite batch - GraphicsContext required but not available");
+                return;
             }
 
             // Draw fullscreen quad
@@ -1510,14 +1508,17 @@ shader SSREffect : ShaderBase
                             SourceCode = shaderSource
                         };
 
-                        var compilationResult = effectCompiler.Compile(compilerSource, new CompilerParameters
+                        // Note: Compile() returns TaskOrResult<EffectBytecodeCompilerResult>, use dynamic to handle unwrapping
+                        dynamic compilationResult = effectCompiler.Compile(compilerSource, new CompilerParameters
                         {
                             EffectParameters = new EffectCompilerParameters()
                         });
 
-                        if (compilationResult != null && compilationResult.Bytecode != null && compilationResult.Bytecode.Length > 0)
+                        // Unwrap TaskOrResult to get the actual result
+                        dynamic compilerResult = compilationResult.Result;
+                        if (compilerResult != null && compilerResult.Bytecode != null && compilerResult.Bytecode.Length > 0)
                         {
-                            var effect = new Stride.Rendering.Effect(_graphicsDevice, compilationResult.Bytecode);
+                            var effect = new Stride.Rendering.Effect(_graphicsDevice, (EffectBytecode)compilerResult.Bytecode);
                             System.Console.WriteLine($"[StrideSSR] Successfully compiled shader '{shaderName}' from file");
                             return effect;
                         }

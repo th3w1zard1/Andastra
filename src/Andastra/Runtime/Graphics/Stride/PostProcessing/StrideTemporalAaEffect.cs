@@ -500,7 +500,7 @@ shader TemporalAAEffect : ShaderBase
                         }
 
                         // Try to get EffectSystem from services (EffectCompiler may be accessed through it)
-                        var effectSystem = servicesDynamic.GetService<global::Stride.Shaders.Compiler.EffectCompiler>();
+                        var effectSystem = services.GetService<global::Stride.Shaders.Compiler.EffectCompiler>();
                         if (effectSystem != null)
                         {
                             return CompileShaderWithEffectSystem(effectSystem, shaderSource, shaderName);
