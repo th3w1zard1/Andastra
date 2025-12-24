@@ -51,15 +51,15 @@ namespace Andastra.Runtime.Stride.PostProcessing
         private void InitializeRenderingResources()
         {
             // Create sprite batch for fullscreen quad rendering
-            _spriteBatch = new SpriteBatch(_graphicsDevice);
+            _spriteBatch = new StrideGraphics.SpriteBatch(_graphicsDevice);
 
             // Create linear sampler for texture sampling
-            _linearSampler = SamplerState.New(_graphicsDevice, new SamplerStateDescription
+            _linearSampler = StrideGraphics.SamplerState.New(_graphicsDevice, new StrideGraphics.SamplerStateDescription
             {
-                Filter = TextureFilter.Linear,
-                AddressU = TextureAddressMode.Clamp,
-                AddressV = TextureAddressMode.Clamp,
-                AddressW = TextureAddressMode.Clamp
+                Filter = StrideGraphics.TextureFilter.Linear,
+                AddressU = StrideGraphics.TextureAddressMode.Clamp,
+                AddressV = StrideGraphics.TextureAddressMode.Clamp,
+                AddressW = StrideGraphics.TextureAddressMode.Clamp
             });
 
             // Load motion blur effect shader
@@ -375,8 +375,7 @@ shader MotionBlurEffect : ShaderBase
                 // Based on Stride API: EffectCompiler.Compile() compiles shader source
                 var compilationResult = compiler.Compile(compilerSource, new CompilerParameters
                 {
-                    EffectParameters = new EffectCompilerParameters(),
-                    Platform = _graphicsDevice.Features.Profile
+                    EffectParameters = new EffectCompilerParameters()
                 });
 
                 if (compilationResult != null && compilationResult.Bytecode != null && compilationResult.Bytecode.Length > 0)
@@ -474,8 +473,7 @@ shader MotionBlurEffect : ShaderBase
 
                         var compilationResult = effectCompiler.Compile(compilerSource, new CompilerParameters
                         {
-                            EffectParameters = new EffectCompilerParameters(),
-                            Platform = _graphicsDevice.Features.Profile
+                            EffectParameters = new EffectCompilerParameters()
                         });
 
                         if (compilationResult != null && compilationResult.Bytecode != null && compilationResult.Bytecode.Length > 0)
@@ -669,8 +667,8 @@ shader MotionBlurEffect : ShaderBase
                 System.Console.WriteLine($"[StrideMotionBlur] Applying blur: {_sampleCount} samples, intensity {effectiveIntensity:F2}, max velocity {clampedVelocity:F2}");
 
                 // Begin sprite batch rendering with motion blur effect
-                _spriteBatch.Begin(commandList, SpriteSortMode.Immediate, BlendStates.Opaque,
-                    _linearSampler, DepthStencilStates.None, RasterizerStates.CullNone, _motionBlurEffect);
+                _spriteBatch.Begin(commandList, StrideGraphics.SpriteSortMode.Immediate, StrideGraphics.BlendStates.Opaque,
+                    _linearSampler, StrideGraphics.DepthStencilStates.None, StrideGraphics.RasterizerStates.CullNone, _motionBlurEffect);
 
                 // Set shader parameters if effect is available
                 if (_motionBlurEffect != null && _motionBlurEffect.Parameters != null)

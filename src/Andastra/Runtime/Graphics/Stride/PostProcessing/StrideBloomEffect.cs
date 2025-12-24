@@ -9,7 +9,6 @@ using Stride.Shaders.Compiler;
 using Andastra.Runtime.Graphics.Common.PostProcessing;
 using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Stride.Graphics;
-using Andastra.Runtime.Stride.Shaders;
 using Stride.Core.Serialization.Contents;
 
 namespace Andastra.Runtime.Stride.PostProcessing
@@ -749,6 +748,7 @@ shader BlurEffect : ShaderBase
                         // TODO: FIXME - Compilation API has type incompatibilities in this Stride version
                         // For now, skip file-based compilation
                         System.Console.WriteLine($"[StrideBloomEffect] File-based shader compilation not available in this Stride version for '{shaderName}'");
+                        return null;
                     }
                 }
 
@@ -756,6 +756,7 @@ shader BlurEffect : ShaderBase
                 // Effect.Load() doesn't support file paths directly, continue to return null
 
                 System.Console.WriteLine($"[StrideBloomEffect] Could not compile shader '{shaderName}' from file");
+                return null;
             }
             catch (Exception ex)
             {
@@ -840,9 +841,10 @@ shader BlurEffect : ShaderBase
             _brightPassEffectBase = null;
 
             _blurEffectBase?.Dispose();
-            _blurEffectBase = null;            _spriteBatch?.Dispose();
+            _blurEffectBase = null;
+
+            _spriteBatch?.Dispose();
             _spriteBatch = null;
         }
     }
-
-
+}

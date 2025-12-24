@@ -1391,8 +1391,7 @@ shader SSREffect : ShaderBase
                 // Based on Stride API: EffectCompiler.Compile() compiles shader source
                 var compilationResult = compiler.Compile(compilerSource, new CompilerParameters
                 {
-                    EffectParameters = new EffectCompilerParameters(),
-                    Platform = _graphicsDevice.Features.Profile
+                    EffectParameters = new EffectCompilerParameters()
                 });
 
                 if (compilationResult != null && compilationResult.Bytecode != null && compilationResult.Bytecode.Length > 0)
@@ -1490,8 +1489,7 @@ shader SSREffect : ShaderBase
 
                         var compilationResult = effectCompiler.Compile(compilerSource, new CompilerParameters
                         {
-                            EffectParameters = new EffectCompilerParameters(),
-                            Platform = _graphicsDevice.Features.Profile
+                            EffectParameters = new EffectCompilerParameters()
                         });
 
                         if (compilationResult != null && compilationResult.Bytecode != null && compilationResult.Bytecode.Length > 0)

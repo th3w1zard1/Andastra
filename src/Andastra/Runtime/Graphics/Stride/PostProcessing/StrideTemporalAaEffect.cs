@@ -550,14 +550,13 @@ shader TemporalAAEffect : ShaderBase
                 // Compile shader source to bytecode
                 var compilationResult = compiler.Compile(compilerSource, new CompilerParameters
                 {
-                    EffectParameters = new EffectCompilerParameters(),
-                    Platform = _graphicsDevice.Features.Profile
+                    EffectParameters = new EffectCompilerParameters()
                 });
 
                 if (compilationResult != null && compilationResult.Bytecode != null && compilationResult.Bytecode.Length > 0)
                 {
                     // Create Effect from compiled bytecode
-                    var effect = new Effect(_graphicsDevice, compilationResult.Bytecode);
+                    var effect = new StEffect(_graphicsDevice, compilationResult.Bytecode);
                     System.Console.WriteLine($"[StrideTemporalAaEffect] Successfully compiled shader '{shaderName}' using EffectCompiler");
                     return effect;
                 }
@@ -640,8 +639,7 @@ shader TemporalAAEffect : ShaderBase
 
                         var compilationResult = effectCompiler.Compile(compilerSource, new CompilerParameters
                         {
-                            EffectParameters = new EffectCompilerParameters(),
-                            Platform = _graphicsDevice.Features.Profile
+                            EffectParameters = new EffectCompilerParameters()
                         });
 
                         if (compilationResult != null && compilationResult.Bytecode != null && compilationResult.Bytecode.Length > 0)
