@@ -34,11 +34,11 @@ namespace Andastra.Runtime.Stride.Graphics
                 throw new ArgumentNullException(nameof(data));
             }
 
-            var colorData = new Stride.Core.Mathematics.Color[data.Length / 4];
+            var colorData = new global::Stride.Core.Mathematics.Color[data.Length / 4];
             for (int i = 0; i < colorData.Length; i++)
             {
                 int offset = i * 4;
-                colorData[i] = new Stride.Core.Mathematics.Color(data[offset], data[offset + 1], data[offset + 2], data[offset + 3]);
+                colorData[i] = new global::Stride.Core.Mathematics.Color(data[offset], data[offset + 1], data[offset + 2], data[offset + 3]);
             }
 
             if (_graphicsContext == null)
@@ -50,7 +50,7 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public byte[] GetData()
         {
-            var colorData = new Stride.Core.Mathematics.Color[_texture.Width * _texture.Height];
+            var colorData = new global::Stride.Core.Mathematics.Color[_texture.Width * _texture.Height];
             if (_graphicsContext == null)
             {
                 throw new InvalidOperationException("CommandList is required for Texture.GetData() but is not available. StrideTexture2D must be created with a valid CommandList.");
