@@ -5797,12 +5797,48 @@ namespace HolocronToolset.Tests.Windows
                     var moduleImage = moduleComponent.Image;
                     var moduleBwm = moduleComponent.Bwm;
 
-                    // Note: Full image generation validation requires real_kit_component fixture and detailed image/BWM access
-                    // This will be fully implemented when ModuleKit._load_module_components is complete
-                    // TODO: STUB - For now, verify both exist
-                    moduleImage.Should().NotBeNull("Module component image should not be null");
-                    moduleBwm.Should().NotBeNull("Module component BWM should not be null");
-                    return; // Found a component with image and BWM, test passes
+                    // Validate that walkmesh transformation is correct (re-centered around origin)
+                    var vertices = moduleBwm.Vertices();
+                    vertices.Should().NotBeEmpty("BWM should have vertices for transformation validation");
+
+                    // Calculate the actual center of the walkmesh
+                    float minX = vertices.Min(v => v.X);
+                    float minY = vertices.Min(v => v.Y);
+                    float maxX = vertices.Max(v => v.X);
+                    float maxY = vertices.Max(v => v.Y);
+
+                    float centerX = (minX + maxX) / 2.0f;
+                    float centerY = (minY + maxY) / 2.0f;
+
+                    // The walkmesh should be re-centered around (0, 0) as done in _RecenterBwm
+                    // Allow small tolerance for floating point precision
+                    const float TOLERANCE = 0.1f;
+                    centerX.Should().BeApproximately(0.0f, TOLERANCE, "Walkmesh should be centered at X=0 after transformation");
+                    centerY.Should().BeApproximately(0.0f, TOLERANCE, "Walkmesh should be centered at Y=0 after transformation");
+
+                    // Validate that image dimensions correspond to the transformed walkmesh
+                    var writeableBitmap = moduleImage as WriteableBitmap;
+                    writeableBitmap.Should().NotBeNull("Module component image should be a WriteableBitmap");
+
+                    // Recalculate expected dimensions using the same logic as _CreatePreviewImageFromBwm
+                    const float PADDING = 5.0f;
+                    minX -= PADDING;
+                    minY -= PADDING;
+                    maxX += PADDING;
+                    maxY += PADDING;
+
+                    const int PIXELS_PER_UNIT = 10;
+                    int expectedWidth = (int)((maxX - minX) * PIXELS_PER_UNIT);
+                    int expectedHeight = (int)((maxY - minY) * PIXELS_PER_UNIT);
+
+                    const int MIN_SIZE = 256;
+                    expectedWidth = Math.Max(expectedWidth, MIN_SIZE);
+                    expectedHeight = Math.Max(expectedHeight, MIN_SIZE);
+
+                    writeableBitmap.PixelSize.Width.Should().Be(expectedWidth, "Image width should match transformed walkmesh dimensions");
+                    writeableBitmap.PixelSize.Height.Should().Be(expectedHeight, "Image height should match transformed walkmesh dimensions");
+
+                    return; // Found a component with correctly transformed walkmesh and matching image, test passes
                 }
             }
 

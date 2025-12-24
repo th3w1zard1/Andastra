@@ -441,24 +441,18 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
             // Begin sprite batch rendering with custom effect
             // Stride SpriteBatch.Begin requires GraphicsContext, not CommandList
-            // Get GraphicsContext from the device's GraphicsContext property if available
-            // Note: In Stride, GraphicsContext is typically obtained from Game.GraphicsContext
-            // For now, use CommandList directly if Begin accepts it, otherwise we need GraphicsContext
-            // TODO: FIXME - Need to properly get GraphicsContext from device or game instance
-            // Using dynamic to handle API differences between Stride versions
-            try
+            // Get GraphicsContext from GraphicsDevice using extension method
+            // Based on Stride Graphics API: GraphicsContext is obtained from Game.GraphicsContext via extension method
+            var graphicsContext = _graphicsDevice.GraphicsContext();
+            if (graphicsContext == null)
             {
-                // Try with CommandList first (some Stride versions may accept it)
-                dynamic spriteBatchDynamic = _spriteBatch;
-                spriteBatchDynamic.Begin(commandList, StrideGraphics.SpriteSortMode.Immediate, _ssrEffect);
-            }
-            catch
-            {
-                // If that fails, SpriteBatch.Begin requires GraphicsContext which we don't have direct access to
-                // This is a limitation - we need GraphicsContext from Game instance
-                Console.WriteLine("[StrideSSR] Warning: Could not begin sprite batch - GraphicsContext required but not available");
+                // GraphicsContext is not available - Game instance must be registered with GraphicsDeviceExtensions.RegisterGame()
+                Console.WriteLine("[StrideSSR] Warning: Could not begin sprite batch - GraphicsContext required but not available. Ensure Game instance is registered with GraphicsDeviceExtensions.RegisterGame()");
                 return;
             }
+
+            // Stride SpriteBatch.Begin accepts GraphicsContext, SpriteSortMode, and EffectInstance
+            _spriteBatch.Begin(graphicsContext, StrideGraphics.SpriteSortMode.Immediate, _ssrEffect);
 
             // Draw fullscreen quad
             var destinationRect = new RectangleF(0, 0, output.Width, output.Height);

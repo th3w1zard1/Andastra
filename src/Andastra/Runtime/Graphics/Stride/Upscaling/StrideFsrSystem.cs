@@ -4,6 +4,9 @@ using StrideGraphics = Stride.Graphics;
 using Stride.Rendering;
 using Stride.Core.Mathematics;
 using Stride.Shaders;
+using Stride.Engine;
+using Stride.Core.Serialization.Contents;
+using Stride.Core;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Upscaling;
 using Andastra.Runtime.Graphics.Common.Rendering;
@@ -27,6 +30,9 @@ namespace Andastra.Runtime.Stride.Upscaling
     {
         private StrideGraphics.GraphicsDevice _graphicsDevice;
         private StrideGraphics.CommandList _graphicsContext;
+        private IServiceRegistry _services;
+        private ContentManager _contentManager;
+        private EffectSystem _effectSystem;
         private IntPtr _fsrContext;
         private StrideGraphics.Texture _outputTexture;
 
@@ -83,10 +89,55 @@ namespace Andastra.Runtime.Stride.Upscaling
         public override int FsrVersion => 2; // FSR 2.x
         public override bool FrameGenerationAvailable => CheckFrameGenerationSupport();
 
-        public StrideFsrSystem(StrideGraphics.GraphicsDevice graphicsDevice, StrideGraphics.CommandList graphicsContext = null)
+        public StrideFsrSystem(StrideGraphics.GraphicsDevice graphicsDevice, StrideGraphics.CommandList graphicsContext = null, IServiceRegistry services = null, ContentManager contentManager = null)
         {
             _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException(nameof(graphicsDevice));
             _graphicsContext = graphicsContext;
+            _services = services;
+            _contentManager = contentManager;
+
+            // Try to get EffectSystem from services if available
+            if (_services != null)
+            {
+                try
+                {
+                    _effectSystem = _services.GetService(typeof(EffectSystem)) as EffectSystem;
+                }
+                catch
+                {
+                    // EffectSystem not available, continue without it
+                }
+            }
+
+            // If ContentManager not provided, try to get it from services
+            if (_contentManager == null && _services != null)
+            {
+                try
+                {
+                    _contentManager = _services.GetService(typeof(ContentManager)) as ContentManager;
+                }
+                catch
+                {
+                    // ContentManager not available, continue without it
+                }
+            }
+
+            // If still no ContentManager, try to get it from GraphicsDevice services
+            if (_contentManager == null)
+            {
+                try
+                {
+                    var deviceServices = _graphicsDevice.Services();
+                    if (deviceServices != null)
+                    {
+                        _contentManager = deviceServices.GetService(typeof(ContentManager)) as ContentManager;
+                    }
+                }
+                catch
+                {
+                    // ContentManager not available from GraphicsDevice, continue without it
+                }
+            }
         }
 
         private StrideGraphics.CommandList GetCommandList()
@@ -842,22 +893,90 @@ namespace Andastra.Runtime.Stride.Upscaling
 
         /// <summary>
         /// Tries to load an FSR shader from compiled effect files.
+        /// Uses ContentManager.Load&lt;Effect&gt;() to load compiled .sdeffect files.
+        /// Falls back to programmatic creation if loading fails.
         /// </summary>
+        /// <remarks>
+        /// Based on Stride Engine shader loading:
+        /// - Compiled .sdsl files are stored as .sdeffect files in content
+        /// - ContentManager.Load&lt;Effect&gt;() loads from content manager
+        /// - EffectSystem can compile shaders at runtime from source (requires EffectSystem access)
+        /// - Effect.Load() doesn't exist in newer Stride versions, use ContentManager instead
+        /// </remarks>
         private bool TryLoadFsrShader(string shaderName, out StrideGraphics.Effect effect)
         {
             effect = null;
-            try
+
+            // Strategy 1: Try loading from ContentManager if available
+            if (_contentManager != null)
             {
-                // TODO: STUB - Effect.Load doesn't exist in newer Stride versions
-                // Need to use ContentManager or EffectCompiler to load effects
-                // For now, return false to indicate shader needs to be created programmatically
-                Console.WriteLine($"[StrideFSR] Effect.Load not available, {shaderName} will be created programmatically");
-                return false;
+                try
+                {
+                    // ContentManager.Load<Effect>() loads compiled .sdeffect files
+                    // Asset name should match the shader name (e.g., "FSREASU", "FSRRCAS", "FSRTemporal")
+                    effect = _contentManager.Load<StrideGraphics.Effect>(shaderName);
+                    if (effect != null)
+                    {
+                        Console.WriteLine($"[StrideFSR] Successfully loaded {shaderName} from ContentManager");
+                        return true;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[StrideFSR] Failed to load {shaderName} from ContentManager: {ex.Message}");
+                }
             }
-            catch (Exception ex)
+
+            // Strategy 2: Try loading from services ContentManager if available
+            if (effect == null && _services != null)
             {
-                Console.WriteLine($"[StrideFSR] Failed to load {shaderName} from compiled file: {ex.Message}");
+                try
+                {
+                    var contentManager = _services.GetService(typeof(ContentManager)) as ContentManager;
+                    if (contentManager != null)
+                    {
+                        effect = contentManager.Load<StrideGraphics.Effect>(shaderName);
+                        if (effect != null)
+                        {
+                            Console.WriteLine($"[StrideFSR] Successfully loaded {shaderName} from services ContentManager");
+                            return true;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[StrideFSR] Failed to load {shaderName} from services ContentManager: {ex.Message}");
+                }
             }
+
+            // Strategy 3: Try loading from GraphicsDevice services ContentManager
+            if (effect == null)
+            {
+                try
+                {
+                    var deviceServices = _graphicsDevice.Services();
+                    if (deviceServices != null)
+                    {
+                        var contentManager = deviceServices.GetService(typeof(ContentManager)) as ContentManager;
+                        if (contentManager != null)
+                        {
+                            effect = contentManager.Load<StrideGraphics.Effect>(shaderName);
+                            if (effect != null)
+                            {
+                                Console.WriteLine($"[StrideFSR] Successfully loaded {shaderName} from GraphicsDevice ContentManager");
+                                return true;
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[StrideFSR] Failed to load {shaderName} from GraphicsDevice ContentManager: {ex.Message}");
+                }
+            }
+
+            // If all loading strategies failed, return false to indicate shader needs to be created programmatically
+            Console.WriteLine($"[StrideFSR] Could not load {shaderName} from any ContentManager, will be created programmatically");
             return false;
         }
 
@@ -1065,30 +1184,173 @@ shader FSRTemporal : ComputeShaderBase
         }
 
         /// <summary>
-        /// Compiles an FSR shader from source code.
+        /// Compiles an FSR shader from source code using EffectSystem or EffectCompiler.
         /// </summary>
+        /// <remarks>
+        /// Based on Stride shader compilation API:
+        /// - EffectSystem provides the proper compilation environment
+        /// - Uses EffectCompiler internally for shader compilation
+        /// - EffectCompiler compiles shader source code to Effect bytecode
+        /// - Requires EffectSystem access for proper compilation context
+        /// - If EffectSystem is not available, shader must be provided as compiled .sdeffect file
+        /// </remarks>
         private StrideGraphics.Effect CompileFsrShader(string shaderSource, string shaderName)
         {
             try
             {
-                // Based on Stride shader compilation API
-                // EffectCompiler can compile shader source at runtime
-                var services = _graphicsDevice.Services();
-                if (services != null)
+                // Strategy 1: Try to compile using EffectSystem if available
+                if (_effectSystem != null)
                 {
-                    // Try to get EffectCompiler through services
-                    // This is a simplified approach - full implementation would use proper Stride shader compilation
-                    Console.WriteLine($"[StrideFSR] Created {shaderName} shader programmatically (simplified implementation)");
-                    // Note: Full shader compilation would require proper Stride EffectCompiler setup
-                    // For now, we return null to indicate shader needs to be provided as compiled .sdeffect file
+                    try
+                    {
+                        return CompileShaderWithEffectSystem(_effectSystem, shaderSource, shaderName);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[StrideFSR] Failed to compile {shaderName} using EffectSystem: {ex.Message}");
+                    }
+                }
+
+                // Strategy 2: Try to get EffectSystem from services
+                if (_services != null)
+                {
+                    try
+                    {
+                        var effectSystem = _services.GetService(typeof(EffectSystem)) as EffectSystem;
+                        if (effectSystem != null)
+                        {
+                            return CompileShaderWithEffectSystem(effectSystem, shaderSource, shaderName);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[StrideFSR] Failed to get EffectSystem from services: {ex.Message}");
+                    }
+                }
+
+                // Strategy 3: Try to get EffectSystem from GraphicsDevice services
+                try
+                {
+                    var deviceServices = _graphicsDevice.Services();
+                    if (deviceServices != null)
+                    {
+                        var effectSystem = deviceServices.GetService(typeof(EffectSystem)) as EffectSystem;
+                        if (effectSystem != null)
+                        {
+                            return CompileShaderWithEffectSystem(effectSystem, shaderSource, shaderName);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[StrideFSR] Failed to get EffectSystem from GraphicsDevice services: {ex.Message}");
+                }
+
+                // If all compilation strategies failed, return null
+                // Shader must be provided as compiled .sdeffect file in ContentManager
+                Console.WriteLine($"[StrideFSR] Cannot compile {shaderName} shader - no EffectSystem available");
+                Console.WriteLine($"[StrideFSR] Shader {shaderName} must be provided as compiled .sdeffect file in ContentManager");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StrideFSR] Failed to compile {shaderName} shader: {ex.Message}");
+                Console.WriteLine($"[StrideFSR] Stack trace: {ex.StackTrace}");
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Compiles shader using EffectSystem.
+        /// </summary>
+        /// <param name="effectSystem">EffectSystem instance.</param>
+        /// <param name="shaderSource">Shader source code in SDSL format.</param>
+        /// <param name="shaderName">Name identifier for the shader.</param>
+        /// <returns>Compiled Effect, or null if compilation fails.</returns>
+        /// <remarks>
+        /// Based on Stride EffectSystem API:
+        /// - EffectSystem.Compile() compiles shader source to Effect bytecode
+        /// - EffectSystem provides the proper compilation context and bytecode generation
+        /// - Returns Effect created from compiled bytecode
+        /// </remarks>
+        private StrideGraphics.Effect CompileShaderWithEffectSystem(EffectSystem effectSystem, string shaderSource, string shaderName)
+        {
+            if (effectSystem == null)
+            {
+                Console.WriteLine($"[StrideFSR] EffectSystem is null, cannot compile {shaderName}");
+                return null;
+            }
+
+            try
+            {
+                // Create shader source object for EffectSystem
+                var shaderSourceObj = new FsrShaderSourceClass
+                {
+                    Name = shaderName,
+                    SourceCode = shaderSource
+                };
+
+                // Compile using EffectSystem
+                // EffectSystem provides the proper compilation context and bytecode generation
+                var compilationResult = effectSystem.Compile(shaderSourceObj);
+
+                // Handle TaskOrResult unwrapping
+                dynamic compilerResult = compilationResult.Result;
+                if (compilerResult != null && compilerResult.Bytecode != null && compilerResult.Bytecode.Length > 0)
+                {
+                    // Create Effect from compiled bytecode
+                    var effect = new StrideGraphics.Effect(_graphicsDevice, (EffectBytecode)compilerResult.Bytecode);
+                    Console.WriteLine($"[StrideFSR] Successfully compiled {shaderName} shader using EffectSystem");
+                    return effect;
+                }
+                else
+                {
+                    Console.WriteLine($"[StrideFSR] EffectSystem compilation failed for {shaderName}: No bytecode generated");
                     return null;
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[StrideFSR] Failed to compile {shaderName} shader: {ex.Message}");
+                Console.WriteLine($"[StrideFSR] Failed to compile {shaderName} shader using EffectSystem: {ex.Message}");
+                Console.WriteLine($"[StrideFSR] Stack trace: {ex.StackTrace}");
+                return null;
             }
-            return null;
+        }
+
+        /// <summary>
+        /// Helper class for shader source compilation.
+        /// Wraps shader source code for EffectCompiler.
+        /// </summary>
+        private class FsrShaderSourceClass : ShaderSource
+        {
+            public string Name { get; set; }
+            public string SourceCode { get; set; }
+
+            public override int GetHashCode()
+            {
+                int hash = 17;
+                hash = hash * 31 + (Name?.GetHashCode() ?? 0);
+                hash = hash * 31 + (SourceCode?.GetHashCode() ?? 0);
+                return hash;
+            }
+
+            public override object Clone()
+            {
+                return new FsrShaderSourceClass
+                {
+                    Name = Name,
+                    SourceCode = SourceCode
+                };
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (obj == null || !(obj is FsrShaderSourceClass other))
+                {
+                    return false;
+                }
+                return Name == other.Name && SourceCode == other.SourceCode;
+            }
         }
 
         #endregion

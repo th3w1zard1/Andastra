@@ -1460,6 +1460,24 @@ namespace HolocronToolset.Tests.Formats
 
         // Matching PyKotor test_k1_serialization
         [Fact]
+        public void TestXmlGffParsing()
+        {
+            // Simple test to verify XML GFF parsing works
+            string xmlContent = @"<gff3>
+  <struct id=""-1"">
+    <uint32 label=""NumWords"">100</uint32>
+    <exostring label=""VO_ID"">test</exostring>
+  </struct>
+</gff3>";
+
+            GFF gff = GFFAuto.ReadGff(xmlContent, fileFormat: ResourceType.GFF_XML);
+
+            // Verify basic parsing
+            gff.Root.GetUInt32("NumWords").Should().Be(100u);
+            gff.Root.GetString("VO_ID").Should().Be("test");
+        }
+
+        [Fact]
         public void TestK1Serialization()
         {
             // Read TEST_DLG_XML using XML GFF parsing

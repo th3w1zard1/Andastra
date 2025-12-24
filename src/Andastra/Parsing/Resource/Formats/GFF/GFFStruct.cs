@@ -155,6 +155,37 @@ namespace Andastra.Parsing.Formats.GFF
             _fields[label] = new GFFField(fieldType, value);
         }
 
+        /// <summary>
+        /// Sets a field with the specified label, field type, and value.
+        /// Alias for SetField for compatibility with XML/JSON readers.
+        /// </summary>
+        public void Set(string label, GFFFieldType fieldType, object value)
+        {
+            SetField(label, fieldType, value);
+        }
+
+        /// <summary>
+        /// Gets a field value by label and field type.
+        /// Returns the value if the field exists and matches the type, otherwise returns null.
+        /// </summary>
+        [CanBeNull]
+        public object Get(string label, GFFFieldType fieldType)
+        {
+            if (_fields.TryGetValue(label, out GFFField field) && field.FieldType == fieldType)
+            {
+                return field.Value;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Returns an enumerable of all field names in this struct.
+        /// </summary>
+        public IEnumerable<string> FieldNames()
+        {
+            return _fields.Keys;
+        }
+
         public IEnumerator<(string label, GFFFieldType fieldType, object value)> GetEnumerator()
         {
             foreach ((string label, GFFField field) in _fields)

@@ -275,20 +275,49 @@ namespace NSSComp
                     {
                         result.InputFiles.Add(arg);
                     }
-                    else
-                    {
-                        // Mode not determined yet - check if it's a directory or file
-                        if (Directory.Exists(arg))
-                        {
-                            result.IncludeDirs.Add(arg);
-                        }
                         else
                         {
-                            // Could be a file - defer decision until we know the mode
-                            // TODO: STUB - For now, add to both and resolve later
-                            result.InputFiles.Add(arg);
+                            // Mode not determined yet - check if it's a directory or file
+                            if (Directory.Exists(arg))
+                            {
+                                result.IncludeDirs.Add(arg);
+                            }
+                            else if (File.Exists(arg))
+                            {
+                                // Try to infer mode from file extension
+                                string ext = Path.GetExtension(arg)?.ToLowerInvariant();
+                                if (ext == ".nss")
+                                {
+                                    // .nss file suggests compile mode - treat as source file
+                                    if (result.SourceFile == null)
+                                    {
+                                        result.SourceFile = arg;
+                                        result.Compile = true;
+                                    }
+                                    else
+                                    {
+                                        Console.Error.WriteLine($"ERROR: Multiple source files specified. Already have: {result.SourceFile}");
+                                        return null;
+                                    }
+                                }
+                                else if (ext == ".ncs")
+                                {
+                                    // .ncs file suggests decompile mode - treat as input file
+                                    result.InputFiles.Add(arg);
+                                    result.Decompile = true;
+                                }
+                                else
+                                {
+                                    // Unknown extension - could be either, defer decision
+                                    result.InputFiles.Add(arg);
+                                }
+                            }
+                            else
+                            {
+                                Console.Error.WriteLine($"ERROR: Path not found: {arg}");
+                                return null;
+                            }
                         }
-                    }
                     expectingInclude = false;
                     continue;
                 }

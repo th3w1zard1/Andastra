@@ -304,5 +304,320 @@ int GetValue()
             result.Should().Be(expectedCode);
             config.RepairsApplied.Should().BeTrue();
         }
+
+        [Fact]
+        public void RepairOutput_WithFunctionSignatureRepair_FixesInvalidReturnTypes()
+        {
+            // Arrange
+            var config = OutputRepairProcessor.CreateDefaultConfig();
+            config.EnableFunctionSignatureRepair = true;
+            config.EnableSyntaxRepair = false;
+
+            string malformedCode = @"
+integer GetValue(int param)
+{
+    return 42;
+}
+
+str GetName()
+{
+    return ""test"";
+}";
+
+            string expectedCode = @"
+int GetValue(int param)
+{
+    return 42;
+}
+
+string GetName()
+{
+    return ""test"";
+}";
+
+            // Act
+            string result = OutputRepairProcessor.RepairOutput(malformedCode, config);
+
+            // Assert
+            result.Should().Be(expectedCode);
+            config.RepairsApplied.Should().BeTrue();
+        }
+
+        [Fact]
+        public void RepairOutput_WithFunctionSignatureRepair_FixesInvalidParameterTypes()
+        {
+            // Arrange
+            var config = OutputRepairProcessor.CreateDefaultConfig();
+            config.EnableFunctionSignatureRepair = true;
+            config.EnableSyntaxRepair = false;
+
+            string malformedCode = @"
+void ProcessData(integer value, str name, obj target)
+{
+    // function body
+}
+
+int Calculate(number x, number y)
+{
+    return x + y;
+}";
+
+            string expectedCode = @"
+void ProcessData(int value, string name, object target)
+{
+    // function body
+}
+
+int Calculate(int x, int y)
+{
+    return x + y;
+}";
+
+            // Act
+            string result = OutputRepairProcessor.RepairOutput(malformedCode, config);
+
+            // Assert
+            result.Should().Be(expectedCode);
+            config.RepairsApplied.Should().BeTrue();
+        }
+
+        [Fact]
+        public void RepairOutput_WithFunctionSignatureRepair_FixesMalformedParameters()
+        {
+            // Arrange
+            var config = OutputRepairProcessor.CreateDefaultConfig();
+            config.EnableFunctionSignatureRepair = true;
+            config.EnableSyntaxRepair = false;
+
+            string malformedCode = @"
+void ProcessData(int, string name, object)
+{
+    // function body
+}
+
+int Calculate(int x, unknown y)
+{
+    return x + y;
+}";
+
+            string expectedCode = @"
+void ProcessData(int value, string name, object target)
+{
+    // function body
+}
+
+int Calculate(int x, int y)
+{
+    return x + y;
+}";
+
+            // Act
+            string result = OutputRepairProcessor.RepairOutput(malformedCode, config);
+
+            // Assert
+            result.Should().Be(expectedCode);
+            config.RepairsApplied.Should().BeTrue();
+        }
+
+        [Fact]
+        public void RepairOutput_WithFunctionSignatureRepair_FixesKeywordParameterNames()
+        {
+            // Arrange
+            var config = OutputRepairProcessor.CreateDefaultConfig();
+            config.EnableFunctionSignatureRepair = true;
+            config.EnableSyntaxRepair = false;
+
+            string malformedCode = @"
+void ProcessData(int if, string while, object return)
+{
+    // function body
+}
+
+int Calculate(int int, float float)
+{
+    return int + (int)float;
+}";
+
+            string expectedCode = @"
+void ProcessData(int value, string text, object target)
+{
+    // function body
+}
+
+int Calculate(int value, float amount)
+{
+    return value + (int)amount;
+}";
+
+            // Act
+            string result = OutputRepairProcessor.RepairOutput(malformedCode, config);
+
+            // Assert
+            result.Should().Be(expectedCode);
+            config.RepairsApplied.Should().BeTrue();
+        }
+
+        [Fact]
+        public void RepairOutput_WithFunctionSignatureRepair_HandlesComplexSignatures()
+        {
+            // Arrange
+            var config = OutputRepairProcessor.CreateDefaultConfig();
+            config.EnableFunctionSignatureRepair = true;
+            config.EnableSyntaxRepair = false;
+
+            string malformedCode = @"
+talent CreateTalent(integer id, str name, obj creator)
+{
+    talent t = TalentSpell(id);
+    return t;
+}
+
+effect ApplyEffect(eff sourceEffect, obj target, float duration = 0.0)
+{
+    return sourceEffect;
+}
+
+void ComplexFunction(vec position, loc location, evt event, itemprop property, act action)
+{
+    // complex function body
+}";
+
+            string expectedCode = @"
+talent CreateTalent(int id, string name, object creator)
+{
+    talent t = TalentSpell(id);
+    return t;
+}
+
+effect ApplyEffect(effect sourceEffect, object target, float duration = 0.0)
+{
+    return sourceEffect;
+}
+
+void ComplexFunction(vector position, location location, event event, itemproperty property, action action)
+{
+    // complex function body
+}";
+
+            // Act
+            string result = OutputRepairProcessor.RepairOutput(malformedCode, config);
+
+            // Assert
+            result.Should().Be(expectedCode);
+            config.RepairsApplied.Should().BeTrue();
+        }
+
+        [Fact]
+        public void RepairOutput_WithFunctionSignatureRepair_PreservesValidSignatures()
+        {
+            // Arrange
+            var config = OutputRepairProcessor.CreateDefaultConfig();
+            config.EnableFunctionSignatureRepair = true;
+
+            string validCode = @"
+void main()
+{
+    int x = 5;
+}
+
+int CalculateSum(int a, int b)
+{
+    return a + b;
+}
+
+string GetName(object target)
+{
+    return GetName(target);
+}
+
+effect CreateEffect(int effectType, float duration)
+{
+    return EffectVisualEffect(effectType);
+}";
+
+            // Act
+            string result = OutputRepairProcessor.RepairOutput(validCode, config);
+
+            // Assert
+            result.Should().Be(validCode);
+            config.RepairsApplied.Should().BeFalse();
+        }
+
+        [Fact]
+        public void RepairOutput_WithFunctionSignatureRepair_HandlesEmptyParameters()
+        {
+            // Arrange
+            var config = OutputRepairProcessor.CreateDefaultConfig();
+            config.EnableFunctionSignatureRepair = true;
+            config.EnableSyntaxRepair = false;
+
+            string malformedCode = @"
+void DoNothing()
+{
+    // empty function
+}
+
+int GetDefaultValue(,)
+{
+    return 0;
+}";
+
+            string expectedCode = @"
+void DoNothing()
+{
+    // empty function
+}
+
+int GetDefaultValue(int value, int param)
+{
+    return 0;
+}";
+
+            // Act
+            string result = OutputRepairProcessor.RepairOutput(malformedCode, config);
+
+            // Assert
+            result.Should().Be(expectedCode);
+            config.RepairsApplied.Should().BeTrue();
+        }
+
+        [Fact]
+        public void RepairOutput_WithFunctionSignatureRepair_FixesMissingParameterTypes()
+        {
+            // Arrange
+            var config = OutputRepairProcessor.CreateDefaultConfig();
+            config.EnableFunctionSignatureRepair = true;
+            config.EnableSyntaxRepair = false;
+
+            string malformedCode = @"
+void ProcessData(value, name, target)
+{
+    // function body
+}
+
+int Calculate(x, y)
+{
+    return x + y;
+}";
+
+            string expectedCode = @"
+void ProcessData(int value, int name, int target)
+{
+    // function body
+}
+
+int Calculate(int x, int y)
+{
+    return x + y;
+}";
+
+            // Act
+            string result = OutputRepairProcessor.RepairOutput(malformedCode, config);
+
+            // Assert
+            result.Should().Be(expectedCode);
+            config.RepairsApplied.Should().BeTrue();
+        }
     }
 }
+

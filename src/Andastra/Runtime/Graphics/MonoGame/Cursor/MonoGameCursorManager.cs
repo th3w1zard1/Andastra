@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Numerics;
+using Andastra.Parsing.Installation;
 using Andastra.Runtime.Graphics;
 using GraphicsVector2 = Andastra.Runtime.Graphics.Vector2;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.MonoGame.Graphics.Cursor
 {
@@ -16,19 +19,51 @@ namespace Andastra.Runtime.MonoGame.Graphics.Cursor
     /// - Cursor caching: Caches loaded cursors to avoid reloading
     /// - Cursor state: Tracks current cursor type and pressed state
     /// - Cursor position: Tracks mouse position for rendering
+    /// - Cursor resources: Cursors are stored as Windows PE resources in EXE file (cursor groups 1, 2, 11, 12, etc.)
+    /// - Based on swkotor2.exe: Cursor groups are loaded from EXE PE resources, cursor resources are CUR format
+    /// - Original implementation: FUN_00633270 @ 0x00633270 sets up resource directories, cursor resources loaded from EXE
+    /// - Cursor group format: 4 bytes reserved, 2 bytes resCount, then for each cursor: 12 bytes (width, height, planes, bitCount, bytesInRes), 2 bytes cursorId
+    /// - Cursor resource format: CUR file format with hotspot information and bitmap data
     /// </remarks>
     public class MonoGameCursorManager : ICursorManager
     {
         private readonly IGraphicsDevice _graphicsDevice;
         private readonly Dictionary<CursorType, ICursor> _cursorCache;
+        [CanBeNull]
+        private readonly Installation _installation;
         private CursorType _currentCursorType;
         private bool _isPressed;
         private GraphicsVector2 _position;
         private bool _disposed;
 
-        public MonoGameCursorManager(IGraphicsDevice graphicsDevice)
+        /// <summary>
+        /// Cursor group ID mappings for each cursor type.
+        /// Maps CursorType to (upGroupId, downGroupId) pairs.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor.exe, swkotor2.exe: Cursor group IDs stored in EXE PE resources
+        /// Based on reone/xoreos implementations: Cursor group ID mappings
+        /// - Default: Groups 1, 2 (normal cursor)
+        /// - Talk: Groups 11, 12 (when hovering over NPCs)
+        /// - Door: Groups 23, 24 (when hovering over doors)
+        /// - Pickup: Groups 25, 26 (when hovering over items)
+        /// - Attack: Groups 51, 52 (when hovering over enemies)
+        /// - DisableMine: Groups 33, 34 (when hovering over mines to disable)
+        /// - RecoverMine: Groups 37, 38 (when hovering over mines to recover)
+        /// </remarks>
+        private static readonly Dictionary<CursorType, (int UpGroupId, int DownGroupId)> CursorGroupIds = new Dictionary<CursorType, (int, int)>
+        {
+            { CursorType.Default, (1, 2) },
+            { CursorType.Talk, (11, 12) },
+            { CursorType.Door, (23, 24) },
+            { CursorType.Pickup, (25, 26) },
+            { CursorType.Attack, (51, 52) }
+        };
+
+        public MonoGameCursorManager(IGraphicsDevice graphicsDevice, [CanBeNull] Installation installation = null)
         {
             _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException("graphicsDevice");
+            _installation = installation;
             _cursorCache = new Dictionary<CursorType, ICursor>();
             _currentCursorType = CursorType.Default;
             _position = new GraphicsVector2(0, 0);
@@ -78,8 +113,18 @@ namespace Andastra.Runtime.MonoGame.Graphics.Cursor
 
         private ICursor CreateCursor(CursorType type)
         {
-            // Create programmatic cursor textures as fallback
-            // TODO:  In a full implementation, these would be loaded from game resources
+            // Try to load cursor from game resources first
+            // Based on swkotor2.exe: Cursors are loaded from EXE PE resources (cursor groups)
+            // If Installation is provided and has cursor resources available, load from resources
+            // Otherwise, fall back to programmatic creation
+            ICursor cursor = TryLoadCursorFromResources(type);
+            if (cursor != null)
+            {
+                return cursor;
+            }
+
+            // Fall back to programmatic cursor textures
+            // Based on swkotor2.exe: If cursor resources not available, use fallback cursors
             ITexture2D textureUp = CreateCursorTexture(type, false);
             ITexture2D textureDown = CreateCursorTexture(type, true);
 
@@ -101,6 +146,221 @@ namespace Andastra.Runtime.MonoGame.Graphics.Cursor
             }
 
             return new MonoGameCursor(textureUp, textureDown, hotspotX, hotspotY);
+        }
+
+        /// <summary>
+        /// Attempts to load a cursor from game resources.
+        /// </summary>
+        /// <param name="type">The cursor type to load.</param>
+        /// <returns>Loaded cursor if successful, null otherwise.</returns>
+        /// <remarks>
+        /// Based on swkotor2.exe: Cursor loading from EXE PE resources
+        /// - Cursors are stored as Windows PE resources in the EXE file
+        /// - Cursor groups contain references to cursor resources (CUR format)
+        /// - Each cursor type has two cursor groups (up and down states)
+        /// - Cursor group format: 4 bytes reserved, 2 bytes resCount, then cursor entries
+        /// - Cursor resource format: CUR file with hotspot and bitmap data
+        /// - Note: Full implementation requires PE resource reading from EXE file
+        /// - For now, this method provides the structure for future PE resource support
+        /// </remarks>
+        [CanBeNull]
+        private ICursor TryLoadCursorFromResources(CursorType type)
+        {
+            if (_installation == null)
+            {
+                // No installation provided - cannot load from resources
+                return null;
+            }
+
+            // Get cursor group IDs for this cursor type
+            if (!CursorGroupIds.TryGetValue(type, out (int UpGroupId, int DownGroupId) groupIds))
+            {
+                // Unknown cursor type - cannot load from resources
+                return null;
+            }
+
+            // Try to load cursor group and extract cursor resources
+            // Based on swkotor2.exe: FUN_00633270 loads cursor groups from EXE PE resources
+            // Cursor groups are stored as Windows PE resources (type 0xC = kPEGroupCursor)
+            // Cursor resources are stored as Windows PE resources (type 0x1 = kPECursor)
+            
+            // Note: Full implementation would require:
+            // 1. PE resource reading from EXE file (swkotor.exe or swkotor2.exe)
+            // 2. Parsing cursor group structure to get cursor resource IDs
+            // 3. Loading cursor resources (CUR format) and extracting bitmap/hotspot data
+            // 4. Converting CUR bitmap data to texture format
+            
+            // For now, we check if cursor resources might be available in the installation
+            // In the future, when PE resource reading is implemented, this method will:
+            // - Read cursor group from EXE PE resources using group ID
+            // - Parse cursor group to get cursor resource IDs
+            // - Load cursor resources (CUR format) from EXE PE resources
+            // - Parse CUR format to extract bitmap data and hotspot
+            // - Convert bitmap data to ITexture2D
+            // - Create MonoGameCursor with textures and hotspot
+            
+            // Since PE resource reading is not yet implemented, we return null to fall back to programmatic creation
+            // This ensures the cursor manager is ready for future PE resource support
+            return null;
+        }
+
+        /// <summary>
+        /// Parses a cursor group structure to extract cursor resource IDs.
+        /// </summary>
+        /// <param name="groupData">The cursor group data bytes.</param>
+        /// <returns>List of cursor resource IDs, or empty list if parsing fails.</returns>
+        /// <remarks>
+        /// Based on swkotor2.exe: Cursor group format
+        /// - Bytes 0-3: Reserved (4 bytes)
+        /// - Bytes 4-5: Resource count (uint16, little-endian)
+        /// - For each cursor entry (16 bytes):
+        ///   - Bytes 0-1: Width (uint16)
+        ///   - Bytes 2-3: Height (uint16, actual height = value / 2)
+        ///   - Bytes 4-5: Planes (uint16)
+        ///   - Bytes 6-7: BitCount (uint16)
+        ///   - Bytes 8-11: BytesInRes (uint32)
+        ///   - Bytes 12-13: Cursor ID (uint16) - this is the cursor resource ID
+        ///   - Bytes 14-15: Reserved (2 bytes)
+        /// Based on xoreos pefile.cpp: Cursor group parsing implementation
+        /// </remarks>
+        private List<int> ParseCursorGroup(byte[] groupData)
+        {
+            List<int> cursorIds = new List<int>();
+            
+            if (groupData == null || groupData.Length < 6)
+            {
+                return cursorIds;
+            }
+
+            try
+            {
+                using (MemoryStream stream = new MemoryStream(groupData))
+                using (BinaryReader reader = new BinaryReader(stream))
+                {
+                    // Skip reserved bytes (4 bytes)
+                    reader.ReadUInt32();
+
+                    // Read resource count
+                    ushort resCount = reader.ReadUInt16();
+                    if (resCount == 0 || resCount > 100) // Sanity check
+                    {
+                        return cursorIds;
+                    }
+
+                    // Read each cursor entry
+                    for (int i = 0; i < resCount; i++)
+                    {
+                        if (stream.Position + 16 > stream.Length)
+                        {
+                            break; // Not enough data
+                        }
+
+                        // Read cursor entry (16 bytes)
+                        ushort width = reader.ReadUInt16();
+                        ushort height = reader.ReadUInt16(); // Actual height = height / 2
+                        ushort planes = reader.ReadUInt16();
+                        ushort bitCount = reader.ReadUInt16();
+                        uint bytesInRes = reader.ReadUInt32();
+                        ushort cursorId = reader.ReadUInt16();
+                        reader.ReadUInt16(); // Reserved (2 bytes)
+
+                        // Add cursor ID to list
+                        cursorIds.Add(cursorId);
+                    }
+                }
+            }
+            catch
+            {
+                // Parsing failed - return empty list
+                return new List<int>();
+            }
+
+            return cursorIds;
+        }
+
+        /// <summary>
+        /// Parses a CUR (cursor) file to extract texture data and hotspot.
+        /// </summary>
+        /// <param name="curData">The CUR file data bytes.</param>
+        /// <param name="width">Output: Cursor width.</param>
+        /// <param name="height">Output: Cursor height.</param>
+        /// <param name="hotspotX">Output: Hotspot X coordinate.</param>
+        /// <param name="hotspotY">Output: Hotspot Y coordinate.</param>
+        /// <param name="pixels">Output: RGBA pixel data.</param>
+        /// <returns>True if parsing succeeded, false otherwise.</returns>
+        /// <remarks>
+        /// Based on swkotor2.exe: CUR file format parsing
+        /// - CUR format is similar to ICO format but includes hotspot information
+        /// - Header: 6 bytes (reserved, type, count)
+        /// - Directory entry: 16 bytes (width, height, colorCount, reserved, planes, bitCount, size, offset)
+        /// - Hotspot: 4 bytes (hotspotX, hotspotY) at offset + size - 4
+        /// - Bitmap data: DIB (Device Independent Bitmap) format
+        /// - Based on xoreos WinIconImage: CUR file parsing implementation
+        /// - Note: Full implementation would require DIB bitmap parsing and conversion to RGBA
+        /// </remarks>
+        private bool ParseCursorFile(byte[] curData, out int width, out int height, out int hotspotX, out int hotspotY, out byte[] pixels)
+        {
+            width = 0;
+            height = 0;
+            hotspotX = 0;
+            hotspotY = 0;
+            pixels = null;
+
+            if (curData == null || curData.Length < 22)
+            {
+                return false;
+            }
+
+            try
+            {
+                using (MemoryStream stream = new MemoryStream(curData))
+                using (BinaryReader reader = new BinaryReader(stream))
+                {
+                    // Read CUR header (6 bytes)
+                    ushort reserved = reader.ReadUInt16(); // Should be 0
+                    ushort type = reader.ReadUInt16(); // Should be 2 for CUR
+                    ushort count = reader.ReadUInt16(); // Number of images (usually 1)
+
+                    if (type != 2 || count == 0 || count > 10)
+                    {
+                        return false;
+                    }
+
+                    // Read directory entry (16 bytes)
+                    byte entryWidth = reader.ReadByte(); // 0 = 256
+                    byte entryHeight = reader.ReadByte(); // 0 = 256
+                    byte colorCount = reader.ReadByte();
+                    byte reserved2 = reader.ReadByte();
+                    ushort planes = reader.ReadUInt16();
+                    ushort bitCount = reader.ReadUInt16();
+                    uint size = reader.ReadUInt32();
+                    uint offset = reader.ReadUInt32();
+
+                    width = entryWidth == 0 ? 256 : entryWidth;
+                    height = entryHeight == 0 ? 256 : entryHeight;
+
+                    if (offset + size > curData.Length)
+                    {
+                        return false;
+                    }
+
+                    // Read hotspot (last 4 bytes of bitmap data)
+                    // Hotspot is stored at offset + size - 4
+                    stream.Position = offset + size - 4;
+                    hotspotX = reader.ReadUInt16();
+                    hotspotY = reader.ReadUInt16();
+
+                    // Read bitmap data (DIB format)
+                    // Note: Full implementation would parse DIB and convert to RGBA
+                    // For now, we return false to indicate parsing is not fully implemented
+                    // This allows the structure to be in place for future DIB parsing support
+                    return false;
+                }
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private ITexture2D CreateCursorTexture(CursorType type, bool pressed)

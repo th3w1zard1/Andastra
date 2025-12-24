@@ -771,7 +771,7 @@ shader ColorGradingEffect : ShaderBase
                 // Based on Stride API: EffectCompiler can compile from file paths
                 // Note: EffectCompiler may not be directly accessible, so we try to create one
                 EffectCompiler effectCompiler = null;
-                
+
                 // Attempt to create EffectCompiler instance
                 // Based on Stride architecture: EffectCompiler can be instantiated directly
                 try

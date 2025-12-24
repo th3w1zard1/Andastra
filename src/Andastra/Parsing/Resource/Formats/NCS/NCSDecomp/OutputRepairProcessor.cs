@@ -60,6 +60,12 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
         private static readonly Regex MalformedReturnRegex = new Regex(@"return\s+([^;]+)\s*$", RegexOptions.Multiline);
         private static readonly Regex InvalidOperatorPrecedenceRegex = new Regex(@"(\w+)\s*([+\-*/])\s*(\w+)\s*([+\-*/])\s*(\w+)");
 
+        // Function signature repair regex patterns
+        private static readonly Regex FunctionSignatureRegex = new Regex(@"^\s*(\w+)\s+(\w+)\s*\(([^)]*)\)\s*\{?", RegexOptions.Multiline);
+        private static readonly Regex ParameterDeclarationRegex = new Regex(@"(\w+)\s+(\w+)(\s*=\s*[^,]*)?,?");
+        private static readonly Regex MalformedParameterRegex = new Regex(@"[,]\s*([^,]+?)\s*[,]");
+        private static readonly Regex InvalidParameterTypeRegex = new Regex(@"\b(unknown|invalid|missing)\b", RegexOptions.IgnoreCase);
+
         /// <summary>
         /// Applies comprehensive repairs to decompiled NSS code
         /// </summary>
@@ -316,9 +322,21 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
         /// </summary>
         private static string ApplyFunctionSignatureRepairs(string nssCode, OutputRepairConfig config)
         {
-            // TODO: Implement function signature repairs (parameter types, return types, etc.)
-            // This would require more complex parsing and analysis
-            return nssCode;
+            string repairedCode = nssCode;
+
+            // Fix malformed function signatures
+            repairedCode = FixMalformedFunctionSignatures(repairedCode, config);
+
+            // Fix invalid return types
+            repairedCode = FixInvalidReturnTypes(repairedCode, config);
+
+            // Fix invalid parameter types
+            repairedCode = FixInvalidParameterTypes(repairedCode, config);
+
+            // Fix malformed parameter declarations
+            repairedCode = FixMalformedParameters(repairedCode, config);
+
+            return repairedCode;
         }
 
         /// <summary>
@@ -372,6 +390,358 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
         }
 
         /// <summary>
+        /// Fixes malformed function signatures (missing parentheses, incorrect formatting)
+        /// </summary>
+        private static string FixMalformedFunctionSignatures(string nssCode, OutputRepairConfig config)
+        {
+            return FunctionSignatureRegex.Replace(nssCode, match =>
+            {
+                string returnType = match.Groups[1].Value;
+                string functionName = match.Groups[2].Value;
+                string parameters = match.Groups[3].Value;
+                string originalMatch = match.Value;
+
+                // Validate return type
+                if (!IsValidNWScriptType(returnType))
+                {
+                    string correctedReturnType = GetCorrectedNWScriptType(returnType);
+                    if (correctedReturnType != returnType)
+                    {
+                        string fixedSignature = $"{correctedReturnType} {functionName}({parameters})";
+                        if (config.VerboseLogging)
+                        {
+                            config.AppliedRepairs.Add($"Fixed malformed function signature return type: {originalMatch.Trim()} -> {fixedSignature}");
+                        }
+                        return fixedSignature;
+                    }
+                }
+
+                // Check for malformed parameters
+                if (!string.IsNullOrWhiteSpace(parameters))
+                {
+                    string fixedParameters = FixParameterDeclarations(parameters, config);
+                    if (fixedParameters != parameters)
+                    {
+                        string fixedSignature = $"{returnType} {functionName}({fixedParameters})";
+                        if (config.VerboseLogging)
+                        {
+                            config.AppliedRepairs.Add($"Fixed malformed function signature parameters: {originalMatch.Trim()} -> {fixedSignature}");
+                        }
+                        return fixedSignature;
+                    }
+                }
+
+                return originalMatch;
+            });
+        }
+
+        /// <summary>
+        /// Fixes invalid return types in function signatures
+        /// </summary>
+        private static string FixInvalidReturnTypes(string nssCode, OutputRepairConfig config)
+        {
+            // Look for function signatures with invalid return types
+            Regex invalidReturnTypeRegex = new Regex(@"^\s*(\w+)\s+(\w+)\s*\(", RegexOptions.Multiline);
+            return invalidReturnTypeRegex.Replace(nssCode, match =>
+            {
+                string returnType = match.Groups[1].Value;
+                string functionName = match.Groups[2].Value;
+
+                if (!IsValidNWScriptType(returnType))
+                {
+                    string correctedType = GetCorrectedNWScriptType(returnType);
+                    if (correctedType != returnType)
+                    {
+                        if (config.VerboseLogging)
+                        {
+                            config.AppliedRepairs.Add($"Fixed invalid return type: {returnType} -> {correctedType} in function {functionName}");
+                        }
+                        return $"{correctedType} {functionName}(";
+                    }
+                }
+
+                return match.Value;
+            });
+        }
+
+        /// <summary>
+        /// Fixes invalid parameter types in function signatures
+        /// </summary>
+        private static string FixInvalidParameterTypes(string nssCode, OutputRepairConfig config)
+        {
+            return FunctionSignatureRegex.Replace(nssCode, match =>
+            {
+                string returnType = match.Groups[1].Value;
+                string functionName = match.Groups[2].Value;
+                string parameters = match.Groups[3].Value;
+                string originalMatch = match.Value;
+
+                if (!string.IsNullOrWhiteSpace(parameters))
+                {
+                    string[] paramParts = parameters.Split(',');
+                    List<string> fixedParams = new List<string>();
+
+                    bool paramsChanged = false;
+                    foreach (string param in paramParts)
+                    {
+                        string trimmedParam = param.Trim();
+                        if (!string.IsNullOrWhiteSpace(trimmedParam))
+                        {
+                            string fixedParam = FixSingleParameterType(trimmedParam, config);
+                            fixedParams.Add(fixedParam);
+                            if (fixedParam != trimmedParam)
+                            {
+                                paramsChanged = true;
+                            }
+                        }
+                    }
+
+                    if (paramsChanged)
+                    {
+                        string fixedParameters = string.Join(", ", fixedParams);
+                        string fixedSignature = $"{returnType} {functionName}({fixedParameters})";
+                        if (config.VerboseLogging)
+                        {
+                            config.AppliedRepairs.Add($"Fixed invalid parameter types in function {functionName}: {parameters} -> {fixedParameters}");
+                        }
+                        return fixedSignature;
+                    }
+                }
+
+                return originalMatch;
+            });
+        }
+
+        /// <summary>
+        /// Fixes malformed parameter declarations
+        /// </summary>
+        private static string FixMalformedParameters(string nssCode, OutputRepairConfig config)
+        {
+            return MalformedParameterRegex.Replace(nssCode, match =>
+            {
+                string malformedParam = match.Groups[1].Value.Trim();
+                string fixedParam = FixParameterDeclaration(malformedParam, config);
+
+                if (fixedParam != malformedParam)
+                {
+                    if (config.VerboseLogging)
+                    {
+                        config.AppliedRepairs.Add($"Fixed malformed parameter: {malformedParam} -> {fixedParam}");
+                    }
+                    return $", {fixedParam}, ";
+                }
+
+                return match.Value;
+            });
+        }
+
+        /// <summary>
+        /// Fixes parameter declarations within function signatures
+        /// </summary>
+        private static string FixParameterDeclarations(string parameters, OutputRepairConfig config)
+        {
+            if (string.IsNullOrWhiteSpace(parameters))
+            {
+                return parameters;
+            }
+
+            string[] paramParts = parameters.Split(',');
+            List<string> fixedParams = new List<string>();
+
+            foreach (string param in paramParts)
+            {
+                string trimmedParam = param.Trim();
+                if (!string.IsNullOrWhiteSpace(trimmedParam))
+                {
+                    string fixedParam = FixParameterDeclaration(trimmedParam, config);
+                    fixedParams.Add(fixedParam);
+                }
+            }
+
+            return string.Join(", ", fixedParams);
+        }
+
+        /// <summary>
+        /// Fixes a single parameter declaration
+        /// </summary>
+        private static string FixParameterDeclaration(string parameter, OutputRepairConfig config)
+        {
+            // Handle cases like "int param", "int param = default", "unknown param", etc.
+            Match match = ParameterDeclarationRegex.Match(parameter);
+            if (match.Success)
+            {
+                string paramType = match.Groups[1].Value;
+                string paramName = match.Groups[2].Value;
+                string defaultValue = match.Groups[3].Value;
+
+                // Fix invalid parameter types
+                if (!IsValidNWScriptType(paramType))
+                {
+                    string correctedType = GetCorrectedNWScriptType(paramType);
+                    if (correctedType != paramType)
+                    {
+                        return $"{correctedType} {paramName}{defaultValue}";
+                    }
+                }
+
+                // Ensure parameter name is valid (not empty, not a keyword, etc.)
+                if (string.IsNullOrWhiteSpace(paramName) || IsNWScriptKeyword(paramName))
+                {
+                    string fixedName = GenerateValidParameterName(paramType);
+                    return $"{paramType} {fixedName}{defaultValue}";
+                }
+
+                return parameter;
+            }
+
+            // Handle malformed parameters that don't match the expected pattern
+            if (InvalidParameterTypeRegex.IsMatch(parameter))
+            {
+                // Replace invalid types with int as default
+                return InvalidParameterTypeRegex.Replace(parameter, "int");
+            }
+
+            // If parameter is just a type without name, add a default name
+            if (IsValidNWScriptType(parameter))
+            {
+                string paramName = GenerateValidParameterName(parameter);
+                return $"{parameter} {paramName}";
+            }
+
+            // If parameter is just a name without type, add int as default type
+            if (!string.IsNullOrWhiteSpace(parameter) && !parameter.Contains(" "))
+            {
+                return $"int {parameter}";
+            }
+
+            return parameter;
+        }
+
+        /// <summary>
+        /// Fixes a single parameter's type
+        /// </summary>
+        private static string FixSingleParameterType(string parameter, OutputRepairConfig config)
+        {
+            Match match = ParameterDeclarationRegex.Match(parameter);
+            if (match.Success)
+            {
+                string paramType = match.Groups[1].Value;
+                string paramName = match.Groups[2].Value;
+                string defaultValue = match.Groups[3].Value;
+
+                if (!IsValidNWScriptType(paramType))
+                {
+                    string correctedType = GetCorrectedNWScriptType(paramType);
+                    if (correctedType != paramType)
+                    {
+                        string fixedParam = $"{correctedType} {paramName}{defaultValue}";
+                        if (config.VerboseLogging)
+                        {
+                            config.AppliedRepairs.Add($"Fixed parameter type: {paramType} -> {correctedType} in parameter '{paramName}'");
+                        }
+                        return fixedParam;
+                    }
+                }
+            }
+
+            return parameter;
+        }
+
+        /// <summary>
+        /// Gets a corrected NWScript type for common misspellings or invalid types
+        /// </summary>
+        private static string GetCorrectedNWScriptType(string invalidType)
+        {
+            if (string.IsNullOrWhiteSpace(invalidType))
+            {
+                return "int"; // Default to int for empty types
+            }
+
+            string lowerType = invalidType.ToLower();
+
+            // Common corrections for misspelled or invalid types
+            switch (lowerType)
+            {
+                case "integer":
+                case "number":
+                case "num":
+                    return "int";
+                case "str":
+                case "text":
+                    return "string";
+                case "obj":
+                case "gameobject":
+                    return "object";
+                case "void*":
+                case "null":
+                case "none":
+                    return "void";
+                case "float32":
+                case "double":
+                case "real":
+                    return "float";
+                case "vec":
+                case "vec3":
+                    return "vector";
+                case "loc":
+                    return "location";
+                case "tal":
+                    return "talent";
+                case "eff":
+                    return "effect";
+                case "evt":
+                    return "event";
+                case "itemprop":
+                case "item_property":
+                    return "itemproperty";
+                case "act":
+                    return "action";
+                default:
+                    // If we can't correct it, default to int
+                    return "int";
+            }
+        }
+
+        /// <summary>
+        /// Checks if a string is an NWScript keyword that shouldn't be used as a parameter name
+        /// </summary>
+        private static bool IsNWScriptKeyword(string name)
+        {
+            string[] keywords = {
+                "if", "else", "while", "for", "switch", "case", "default", "break", "continue",
+                "return", "void", "int", "float", "string", "object", "location", "vector",
+                "talent", "effect", "event", "itemproperty", "action", "true", "false",
+                "const", "static", "struct", "enum"
+            };
+
+            return keywords.Contains(name.ToLower());
+        }
+
+        /// <summary>
+        /// Generates a valid parameter name for a given type
+        /// </summary>
+        private static string GenerateValidParameterName(string type)
+        {
+            string lowerType = type.ToLower();
+
+            switch (lowerType)
+            {
+                case "int": return "value";
+                case "float": return "amount";
+                case "string": return "text";
+                case "object": return "target";
+                case "location": return "loc";
+                case "vector": return "pos";
+                case "talent": return "tal";
+                case "effect": return "eff";
+                case "event": return "evt";
+                case "itemproperty": return "ip";
+                case "action": return "act";
+                default: return "param";
+            }
+        }
+
+        /// <summary>
         /// Creates a default repair configuration
         /// </summary>
         public static OutputRepairConfig CreateDefaultConfig()
@@ -410,3 +780,4 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
         }
     }
 }
+

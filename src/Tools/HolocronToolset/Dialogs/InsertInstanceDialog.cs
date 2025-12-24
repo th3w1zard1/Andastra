@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -37,6 +38,8 @@ namespace HolocronToolset.Dialogs
         private string _filepath;
         private GlobalSettings _globalSettings;
         private Widgets.ModelRenderer _previewRenderer;
+        private ObservableCollection<FileResource> _sourceResources;
+        private CollectionViewSource _filteredResources;
 
         // Public parameterless constructor for XAML
         public InsertInstanceDialog() : this(null, null, null, ResourceType.UTC)
@@ -55,6 +58,8 @@ namespace HolocronToolset.Dialogs
             _data = new byte[0];
             _filepath = null;
             _globalSettings = new GlobalSettings();
+            _sourceResources = new ObservableCollection<FileResource>();
+            _filteredResources = new CollectionViewSource { Source = _sourceResources };
             SetupUI();
             SetupLocationSelect();
             SetupResourceList();
@@ -188,6 +193,7 @@ namespace HolocronToolset.Dialogs
             }
             if (_resourceList != null)
             {
+                _resourceList.ItemsSource = _filteredResources.View;
                 _resourceList.SelectionChanged += (s, e) => OnResourceSelected();
             }
             if (_okButton != null)
@@ -268,13 +274,16 @@ namespace HolocronToolset.Dialogs
                 return;
             }
 
+            // Clear existing resources
+            _sourceResources.Clear();
+
             // Add core resources
             var coreResources = _installation.CoreResources();
             foreach (var resource in coreResources)
             {
                 if (resource.ResType == _restype)
                 {
-                    _resourceList.Items.Add(resource);
+                    _sourceResources.Add(resource);
                 }
             }
 
@@ -313,11 +322,14 @@ namespace HolocronToolset.Dialogs
                                 capsuleResource.Offset,
                                 capsuleResource.FilePath
                             );
-                            _resourceList.Items.Add(fileResource);
+                            _sourceResources.Add(fileResource);
                         }
                     }
                 }
             }
+
+            // Refresh the filtered view
+            _filteredResources.View.Refresh();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:117-181
@@ -860,17 +872,22 @@ namespace HolocronToolset.Dialogs
         {
             string filterText = _resourceFilter?.Text?.ToLowerInvariant() ?? "";
 
-            if (_resourceList != null)
+            // Set filter on the CollectionViewSource
+            // Filter resources based on whether their ResName contains the filter text (case-insensitive)
+            // Matching PyKotor: Filter is applied to resource names for user-friendly searching
+            _filteredResources.View.Filter = item =>
             {
-                foreach (var item in _resourceList.Items)
+                if (item is FileResource resource)
                 {
-                    if (item is FileResource resource)
-                    {
-                        // Filter logic would be implemented here
-                        // TODO: STUB - For now, just show all items
-                    }
+                    // Show all items if filter is empty, otherwise check if resource name contains filter text
+                    return string.IsNullOrEmpty(filterText) ||
+                           resource.ResName.ToLowerInvariant().Contains(filterText);
                 }
-            }
+                return false;
+            };
+
+            // Refresh the view to apply the filter
+            _filteredResources.View.Refresh();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:308-312

@@ -4,28 +4,20 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using Avalonia.Platform.Storage;
 using Avalonia.Media.Imaging;
-using Avalonia.Platform;
-using Avalonia;
-using Andastra.Parsing;
+using Avalonia.Platform.Storage;
 using Andastra.Parsing.Resource;
-using Andastra.Parsing.Tools;
 using HolocronToolset.Data;
 using Andastra.Parsing.Resource.Formats.LYT;
-using Andastra.Parsing.Formats.MDLData;
 using MDLAuto = Andastra.Parsing.Formats.MDL.MDLAuto;
 using ResRef = Andastra.Parsing.Common.ResRef;
 using Quaternion = Andastra.Utility.Geometry.Quaternion;
 using TPCAuto = Andastra.Parsing.Formats.TPC.TPCAuto;
 using TPC = Andastra.Parsing.Formats.TPC.TPC;
-using TPCMipmap = Andastra.Parsing.Formats.TPC.TPCMipmap;
-using TPCBinaryWriter = Andastra.Parsing.Formats.TPC.TPCBinaryWriter;
-using TPCLayer = Andastra.Parsing.Formats.TPC.TPCLayer;
 using TPCTextureFormat = Andastra.Parsing.Formats.TPC.TPCTextureFormat;
-using Vector = Avalonia.Vector;
 using HolocronToolset.Widgets;
 
 namespace HolocronToolset.Editors
@@ -39,6 +31,7 @@ namespace HolocronToolset.Editors
         private Dictionary<string, string> _importedTextures = new Dictionary<string, string>(); // Maps texture name to file path
         private Dictionary<string, string> _importedModels = new Dictionary<string, string>(); // Maps model name (ResRef) to MDL file path
         private ModelBrowser _modelBrowser; // Model browser widget for displaying imported models
+        private TextureBrowser _textureBrowser; // Texture browser widget for displaying imported textures
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:32-73
         // Original: def __init__(self, parent, installation):
@@ -86,6 +79,8 @@ namespace HolocronToolset.Editors
             // UI setup - will be implemented when XAML is available
             // Initialize model browser widget
             InitializeModelBrowser();
+            // Initialize texture browser widget
+            InitializeTextureBrowser();
         }
 
         /// <summary>
@@ -119,6 +114,36 @@ namespace HolocronToolset.Editors
         }
 
         /// <summary>
+        /// Initializes the texture browser widget.
+        /// </summary>
+        private void InitializeTextureBrowser()
+        {
+            try
+            {
+                // Try to find texture browser from XAML if available
+                _textureBrowser = this.FindControl<TextureBrowser>("textureBrowser");
+            }
+            catch
+            {
+                // Texture browser not found in XAML - will create programmatically if needed
+            }
+
+            // Create texture browser if not found from XAML
+            if (_textureBrowser == null)
+            {
+                _textureBrowser = new TextureBrowser();
+                _textureBrowser.TextureSelected += OnTextureSelected;
+                _textureBrowser.TextureChanged += OnTextureChanged;
+            }
+
+            // Initialize with current imported textures
+            if (_textureBrowser != null && _importedTextures != null)
+            {
+                _textureBrowser.UpdateTextures(_importedTextures);
+            }
+        }
+
+        /// <summary>
         /// Handles model selection in the browser.
         /// </summary>
         private void OnModelSelected(object sender, string modelName)
@@ -141,6 +166,32 @@ namespace HolocronToolset.Editors
             if (!string.IsNullOrEmpty(modelName))
             {
                 System.Console.WriteLine($"Model changed in browser: {modelName}");
+            }
+        }
+
+        /// <summary>
+        /// Handles texture selection in the browser.
+        /// </summary>
+        private void OnTextureSelected(object sender, string textureName)
+        {
+            if (string.IsNullOrEmpty(textureName))
+            {
+                return;
+            }
+
+            // Texture selected - could trigger preview or usage
+            System.Console.WriteLine($"Texture selected in browser: {textureName}");
+        }
+
+        /// <summary>
+        /// Handles texture change in the browser.
+        /// </summary>
+        private void OnTextureChanged(object sender, string textureName)
+        {
+            // Texture changed - update any dependent UI
+            if (!string.IsNullOrEmpty(textureName))
+            {
+                System.Console.WriteLine($"Texture changed in browser: {textureName}");
             }
         }
 
@@ -652,7 +703,7 @@ namespace HolocronToolset.Editors
         private Quaternion NormalizeQuaternion(Quaternion q)
         {
             float lengthSquared = q.X * q.X + q.Y * q.Y + q.Z * q.Z + q.W * q.W;
-            
+
             // Check for zero or near-zero length
             if (lengthSquared < float.Epsilon)
             {
@@ -668,7 +719,7 @@ namespace HolocronToolset.Editors
             }
 
             float length = (float)Math.Sqrt(lengthSquared);
-            
+
             // Normalize if not already normalized (allow small tolerance)
             if (Math.Abs(length - 1.0f) > 0.0001f)
             {
@@ -1390,7 +1441,7 @@ namespace HolocronToolset.Editors
 
                         // Store the imported model reference
                         _importedModels[targetResref] = outputMdlPath;
-                        
+
                         // Update model browser immediately after import
                         UpdateModelBrowser();
                     }
@@ -1521,18 +1572,55 @@ namespace HolocronToolset.Editors
             get { return _modelBrowser; }
         }
 
+        /// <summary>
+        /// Gets the texture browser widget (for UI integration and testing).
+        /// </summary>
+        public TextureBrowser TextureBrowser
+        {
+            get { return _textureBrowser; }
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:243-245
         // Original: def update_texture_browser(self):
         public void UpdateTextureBrowser()
         {
-            // Update texture browser UI with imported textures
-            // This method should refresh any texture browser widget in the UI
-            // TODO: STUB - For now, we'll ensure the imported textures list is maintained
-            
-            // If there's a texture browser widget, it should be updated here
-            // The actual UI update will depend on the specific texture browser implementation
-            // TODO: STUB - This is a placeholder for the UI update logic
-            
+            // Ensure imported textures list is maintained and valid
+            if (_importedTextures == null)
+            {
+                _importedTextures = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            }
+
+            // Remove invalid entries (textures that no longer exist on disk)
+            var validTextures = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var kvp in _importedTextures)
+            {
+                if (string.IsNullOrEmpty(kvp.Value) || File.Exists(kvp.Value))
+                {
+                    validTextures[kvp.Key] = kvp.Value;
+                }
+                else
+                {
+                    System.Console.WriteLine($"Warning: Imported texture file no longer exists: {kvp.Value}, removing from list.");
+                }
+            }
+            _importedTextures = validTextures;
+
+            // Update texture browser widget if available
+            if (_textureBrowser != null)
+            {
+                _textureBrowser.UpdateTextures(_importedTextures);
+            }
+            else
+            {
+                // Initialize texture browser if not already initialized
+                InitializeTextureBrowser();
+                if (_textureBrowser != null)
+                {
+                    _textureBrowser.UpdateTextures(_importedTextures);
+                }
+            }
+
+            // Log current state for debugging
             System.Console.WriteLine($"Texture browser updated. {_importedTextures.Count} texture(s) available.");
             foreach (var kvp in _importedTextures)
             {

@@ -127,7 +127,7 @@ namespace Andastra.Parsing.Formats.GFF
                 case "exostring":
                     return element.Value;
                 case "resref":
-                    return new ResRef(element.Value);
+                    return new ResRef(element.Value ?? string.Empty);
                 case "locstring":
                     return ParseLocString(element);
                 case "list":
@@ -152,7 +152,8 @@ namespace Andastra.Parsing.Formats.GFF
                 }
             }
 
-            var locString = new LocalizedString(strref);
+            var substrings = new Dictionary<int, string>();
+            var locString = new LocalizedString(strref, substrings);
 
             // Parse string elements
             foreach (var stringElement in locStringElement.Elements("string"))

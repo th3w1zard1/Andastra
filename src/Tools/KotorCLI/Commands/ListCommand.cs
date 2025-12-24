@@ -23,13 +23,13 @@ namespace KotorCLI.Commands
             listCommand.Options.Add(quietOption);
             var verboseOption = new Option<bool>("--verbose", "List source files as well");
             listCommand.Options.Add(verboseOption);
-            
+
             listCommand.SetAction(parseResult =>
             {
                 var targets = parseResult.GetValue(targetsArgument) ?? Array.Empty<string>();
                 var quiet = parseResult.GetValue(quietOption);
                 var verbose = parseResult.GetValue(verboseOption);
-                
+
                 var logger = new StandardLogger();
                 var exitCode = Execute(targets, quiet, verbose, logger);
                 Environment.Exit(exitCode);

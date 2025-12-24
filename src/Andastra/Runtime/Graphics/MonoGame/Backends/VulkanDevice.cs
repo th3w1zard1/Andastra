@@ -11547,63 +11547,58 @@ namespace Andastra.Runtime.MonoGame.Backends
                 vkCmdBindPipeline(_vkCommandBuffer, VkPipelineBindPoint.VK_PIPELINE_BIND_POINT_COMPUTE, vkPipelineHandle);
 
                 // Step 2: Bind descriptor sets if provided
-                if (state.BindingSets != null && state.BindingSets.Length > 0)
+                if (state.BindingSets != null && state.BindingSets.Length > 0 && vkCmdBindDescriptorSets != null)
                 {
-                    // Extract VkPipelineLayout from the compute pipeline's descriptor
-                    // The pipeline layout is created during pipeline creation and stored with the pipeline
-                    // We need access to it to bind descriptor sets correctly
-                    //
-                    // For descriptor sets, we need to:
-                    // 1. Extract VkDescriptorSet handles from IBindingSet[] (cast to VulkanBindingSet)
-                    // 2. Extract VkPipelineLayout from the compute pipeline
-                    // 3. Call vkCmdBindDescriptorSets
-                    //
-                    // In Vulkan:
-                    // void vkCmdBindDescriptorSets(
-                    //     VkCommandBuffer commandBuffer,
-                    //     VkPipelineBindPoint pipelineBindPoint,
-                    //     VkPipelineLayout layout,
-                    //     uint firstSet,
-                    //     uint descriptorSetCount,
-                    //     const VkDescriptorSet* pDescriptorSets,
-                    //     uint dynamicOffsetCount,
-                    //     const uint32_t* pDynamicOffsets);
-
-                    // Build arrays of descriptor set handles and dynamic offsets
-                    // Note: Dynamic offsets would come from the binding set if it has dynamic uniform buffers
-                    int descriptorSetCount = state.BindingSets.Length;
-
-                    for (int i = 0; i < descriptorSetCount; i++)
+                    // Get pipeline layout from compute pipeline
+                    IntPtr vkPipelineLayout = vulkanPipeline.VkPipelineLayout;
+                    if (vkPipelineLayout == IntPtr.Zero)
                     {
-                        VulkanBindingSet vulkanBindingSet = state.BindingSets[i] as VulkanBindingSet;
-                        if (vulkanBindingSet == null)
-                        {
-                            throw new ArgumentException($"Binding set at index {i} must be a VulkanBindingSet", nameof(state));
-                        }
-
-                        // Extract VkDescriptorSet handle from VulkanBindingSet
-                        // The _handle field in VulkanBindingSet is the VkDescriptorSet handle
-                        // vulkanBindingSet.GetNativeHandle() would return the VkDescriptorSet handle
+                        throw new InvalidOperationException("Compute pipeline does not have a valid VkPipelineLayout handle.");
                     }
 
-                    // Bind all descriptor sets in a single call for efficiency
-                    // vkCmdBindDescriptorSets(
-                    //     _handle,
-                    //     VK_PIPELINE_BIND_POINT_COMPUTE,
-                    //     pipelineLayout,  // From compute pipeline
-                    //     0,  // firstSet - starting set index
-                    //     (uint)descriptorSetCount,
-                    //     descriptorSetHandles,  // Array of VkDescriptorSet handles
-                    //     0,  // dynamicOffsetCount
-                    //     null  // pDynamicOffsets - would be populated if dynamic buffers present
-                    // );
-                }
+                    // Build array of descriptor set handles
+                    int descriptorSetCount = state.BindingSets.Length;
+                    IntPtr descriptorSetHandlesPtr = Marshal.AllocHGlobal(descriptorSetCount * IntPtr.Size);
+                    try
+                    {
+                        for (int i = 0; i < descriptorSetCount; i++)
+                        {
+                            VulkanBindingSet vulkanBindingSet = state.BindingSets[i] as VulkanBindingSet;
+                            if (vulkanBindingSet == null)
+                            {
+                                Marshal.FreeHGlobal(descriptorSetHandlesPtr);
+                                throw new ArgumentException($"Binding set at index {i} must be a VulkanBindingSet", nameof(state));
+                            }
 
-                // TODO:  Note: In a full implementation with Vulkan interop, this method would:
-                // 1. Call native vkCmdBindPipeline to bind the compute pipeline
-                // 2. If binding sets are provided, call native vkCmdBindDescriptorSets to bind them
-                // 3. The native handles would be extracted via P/Invoke or similar interop mechanism
-                // 4. All validation would be done before making native calls to avoid crashes
+                            IntPtr vkDescriptorSet = vulkanBindingSet.VkDescriptorSet;
+                            if (vkDescriptorSet == IntPtr.Zero)
+                            {
+                                Marshal.FreeHGlobal(descriptorSetHandlesPtr);
+                                throw new InvalidOperationException($"Binding set at index {i} does not have a valid VkDescriptorSet handle.");
+                            }
+
+                            Marshal.WriteIntPtr(descriptorSetHandlesPtr, i * IntPtr.Size, vkDescriptorSet);
+                        }
+
+                        // Bind all descriptor sets in a single call
+                        // Based on Vulkan API: vkCmdBindDescriptorSets
+                        // Located via Vulkan specification: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdBindDescriptorSets.html
+                        vkCmdBindDescriptorSets(
+                            _vkCommandBuffer,
+                            VkPipelineBindPoint.VK_PIPELINE_BIND_POINT_COMPUTE,
+                            vkPipelineLayout,
+                            0, // firstSet - starting set index
+                            (uint)descriptorSetCount,
+                            descriptorSetHandlesPtr,
+                            0, // dynamicOffsetCount
+                            IntPtr.Zero // pDynamicOffsets - would be populated if dynamic buffers present
+                        );
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(descriptorSetHandlesPtr);
+                    }
+                }
             }
             public void Dispatch(int groupCountX, int groupCountY = 1, int groupCountZ = 1)
             {
