@@ -527,29 +527,74 @@ namespace Andastra.Parsing.Tests.Formats
         [Fact(Timeout = 120000)]
         public void TestUteInvalidVersion()
         {
-            // Create file with invalid version
+            // Create file with invalid version by manually constructing GFF binary data
             string tempFile = Path.GetTempFileName();
             try
             {
-                // Create a minimal GFF with invalid version
-                var gff = new GFF(GFFContent.UTE);
-                var root = gff.Root;
-                root.SetString("Tag", "test");
+                // Manually construct a minimal valid GFF binary with invalid version
+                // This provides comprehensive testing of version validation rather than
+                // creating a valid GFF and corrupting it post-write
 
-                // TODO:  Manually write invalid version (this is a simplified test)
-                // In practice, GFFBinaryWriter would handle this
-                var writer = new GFFBinaryWriter(gff);
-                byte[] data = writer.Write();
-                // Modify version bytes
-                if (data.Length >= 8)
+                using (var fs = File.Create(tempFile))
+                using (var writer = new Andastra.Parsing.Common.RawBinaryWriterFile(fs))
                 {
-                    System.Text.Encoding.ASCII.GetBytes("V9.9").CopyTo(data, 4);
-                    File.WriteAllBytes(tempFile, data);
+                    // GFF Header (56 bytes total)
+                    // Content type: "UTE " (4 bytes)
+                    writer.WriteBytes(System.Text.Encoding.ASCII.GetBytes("UTE "));
+
+                    // Version: "V9.9" (invalid version - should cause validation failure)
+                    writer.WriteBytes(System.Text.Encoding.ASCII.GetBytes("V9.9"));
+
+                    // Struct section: offset=56, count=1 (root struct)
+                    writer.WriteUInt32(56u);
+
+                    // Field section: offset=68, count=1 (single "Tag" field)
+                    writer.WriteUInt32(68u);
+
+                    // Label section: offset=84, count=1 (single "Tag" label)
+                    writer.WriteUInt32(84u);
+
+                    // Field data section: offset=100, count=4 (4 bytes for "test" string)
+                    writer.WriteUInt32(100u);
+
+                    // Field indices section: offset=104, count=4 (4 bytes for field index)
+                    writer.WriteUInt32(104u);
+
+                    // List indices section: offset=108, count=0 (no lists)
+                    writer.WriteUInt32(108u);
+
+                    // Struct Data Section (12 bytes for root struct)
+                    // Struct entry: fieldCount=1, fieldIndex=0, type=GFFStructType.Normal (0)
+                    writer.WriteUInt32(1u);  // fieldCount
+                    writer.WriteUInt32(0u);  // fieldIndex
+                    writer.WriteUInt32(0u);  // structType
+
+                    // Field Data Section (16 bytes for single field)
+                    // Field entry: type=GFFFieldType.String (10), labelIndex=0, dataOrDataOffset=0
+                    writer.WriteUInt32((uint)GFFFieldType.String);  // fieldType
+                    writer.WriteUInt32(0u);  // labelIndex
+                    writer.WriteUInt32(0u);  // dataOrDataOffset
+
+                    // Label Data Section (16 bytes for "Tag" label, null-padded)
+                    writer.WriteBytes(System.Text.Encoding.ASCII.GetBytes("Tag"));  // 3 bytes
+                    writer.WriteBytes(new byte[13]);  // 13 null bytes for padding
+
+                    // Field Data Content Section (4 bytes + string data)
+                    // String length (4 bytes) + "test" (4 bytes)
+                    writer.WriteUInt32(4u);  // string length
+                    writer.WriteBytes(System.Text.Encoding.ASCII.GetBytes("test"));  // string data
+
+                    // Field Indices Section (4 bytes for single field index)
+                    writer.WriteUInt32(0u);  // field index 0
+
+                    // List Indices Section (empty - 0 bytes)
+                    // No list data needed
                 }
 
-                // This should fail when reading
+                // This should fail when reading due to invalid version "V9.9"
                 Action act = () => GFFAuto.ReadGff(tempFile, 0, null);
-                act.Should().Throw<ArgumentException>();
+                act.Should().Throw<InvalidDataException>("Reading GFF with invalid version should throw InvalidDataException")
+                   .WithMessage("The GFF version of the file is unsupported.");
             }
             finally
             {
