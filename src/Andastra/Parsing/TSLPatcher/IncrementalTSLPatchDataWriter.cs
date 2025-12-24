@@ -144,6 +144,10 @@ namespace Andastra.Parsing.TSLPatcher
         // Key: gff_filename (lowercase) -> list of Pending2DARowReference
         private readonly Dictionary<string, List<Pending2DARowReference>> _pending2DARowReferences = new Dictionary<string, List<Pending2DARowReference>>();
 
+        // Metadata storage for TLK modifications (strref_mappings, source_installations)
+        // Key: ModificationsTLK object ID, Value: dict with strref_mappings and source_installations
+        private readonly Dictionary<int, Dictionary<string, object>> _tlkMetadata = new Dictionary<int, Dictionary<string, object>>();
+
         /// <summary>
         /// Initialize incremental writer.
         /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:1217-1317
@@ -325,6 +329,29 @@ namespace Andastra.Parsing.TSLPatcher
         }
 
         /// <summary>
+        /// Set metadata for a TLK modification (strref_mappings, source_installations, etc.).
+        /// </summary>
+        public void SetTlkMetadata(ModificationsTLK tlkMod, string key, object value)
+        {
+            int tlkId = tlkMod.GetHashCode();
+            if (!_tlkMetadata.ContainsKey(tlkId))
+            {
+                _tlkMetadata[tlkId] = new Dictionary<string, object>();
+            }
+            _tlkMetadata[tlkId][key] = value;
+        }
+
+        /// <summary>
+        /// Get metadata for a TLK modification.
+        /// </summary>
+        [CanBeNull]
+        public Dictionary<string, object> GetTlkMetadata(ModificationsTLK tlkMod)
+        {
+            int tlkId = tlkMod.GetHashCode();
+            return _tlkMetadata.TryGetValue(tlkId, out var metadata) ? metadata : null;
+        }
+
+        /// <summary>
         /// Write 2DA resource file and INI section.
         /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:1507-1587
         /// </summary>
@@ -396,6 +423,7 @@ namespace Andastra.Parsing.TSLPatcher
 
         /// <summary>
         /// Write TLK modification and create linking patches.
+        /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:2075-2200
         /// </summary>
         private void WriteTlkModification(ModificationsTLK modTlk)
         {
@@ -404,6 +432,54 @@ namespace Andastra.Parsing.TSLPatcher
             // Skip if already written
             if (_writtenSections.Contains(filename))
             {
+                return;
+            }
+
+            // Find StrRef references and create linking patches using BATCH PROCESSING
+            // Get strref_mappings and source installations from the metadata dict
+            var tlkMetadata = GetTlkMetadata(modTlk);
+            Dictionary<int, int> strrefMappings = new Dictionary<int, int>();
+            List<object> sourceInstallations = new List<object>();
+
+            if (tlkMetadata != null)
+            {
+                if (tlkMetadata.TryGetValue("strref_mappings", out var mappingsObj) && mappingsObj is Dictionary<int, int> mappings)
+                {
+                    strrefMappings = mappings;
+                }
+                if (tlkMetadata.TryGetValue("source_installations", out var sourcesObj) && sourcesObj is List<object> sources)
+                {
+                    sourceInstallations = sources;
+                }
+            }
+
+            if (strrefMappings.Count > 0)
+            {
+                // If no installations from metadata, try fallback
+                if (sourceInstallations.Count == 0 && !string.IsNullOrEmpty(_baseDataPath))
+                {
+                    sourceInstallations.Add(_baseDataPath);
+                }
+
+                // For diff entries, search BOTH installations for references
+                // References to the old StrRef might exist in either installation
+                if (sourceInstallations.Count > 0)
+                {
+                    _logFunc?.Invoke($"\n=== Creating Linking Patches from Cache ({strrefMappings.Count} StrRefs) ===");
+                    CreateStrRefLinkingPatches(modTlk, strrefMappings, sourceInstallations);
+                }
+            }
+            else
+            {
+                // Write INI section
+                WriteToIni(new List<ModificationsTLK> { modTlk }, "tlk");
+                _writtenSections.Add(filename);
+
+                // Track in all_modifications (only if not already added)
+                if (!AllModifications.Tlk.Contains(modTlk))
+                {
+                    AllModifications.Tlk.Add(modTlk);
+                }
                 return;
             }
 
@@ -1753,6 +1829,303 @@ namespace Andastra.Parsing.TSLPatcher
             {
                 FlushPendingWrites();
             }
+        }
+
+        /// <summary>
+        /// Create linking patches for StrRef references found in source installations.
+        /// Searches through GFF, 2DA, and other files for references to old StrRef IDs and replaces them with new token IDs.
+        /// </summary>
+        private void CreateStrRefLinkingPatches(ModificationsTLK modTlk, Dictionary<int, int> strrefMappings, List<object> sourceInstallations)
+        {
+            int totalPatchesCreated = 0;
+
+            // Process each StrRef mapping
+            foreach (var kvp in strrefMappings)
+            {
+                int oldStrref = kvp.Key;
+                int newTokenId = kvp.Value;
+
+                _logFunc?.Invoke($"  Processing StrRef {oldStrref} -> Token {newTokenId}");
+
+                // Search each source installation for references to this StrRef
+                foreach (var source in sourceInstallations)
+                {
+                    int patchesForThisStrref = SearchAndPatchStrRefReferences(source, oldStrref, newTokenId);
+                    totalPatchesCreated += patchesForThisStrref;
+                }
+            }
+
+            if (totalPatchesCreated > 0)
+            {
+                _logFunc?.Invoke($"  Created {totalPatchesCreated} linking patches for StrRef references");
+            }
+            else
+            {
+                _logFunc?.Invoke("  No StrRef references found to patch");
+            }
+        }
+
+        /// <summary>
+        /// Search for references to a specific StrRef in a source installation and create linking patches.
+        /// </summary>
+        private int SearchAndPatchStrRefReferences(object source, int oldStrref, int newTokenId)
+        {
+            int patchesCreated = 0;
+
+            try
+            {
+                string sourcePath;
+                if (source is string strSource)
+                {
+                    sourcePath = strSource;
+                }
+                else if (source is InstallationClass installation)
+                {
+                    sourcePath = installation.Path;
+                }
+                else
+                {
+                    _logFunc?.Invoke($"    [Warning] Unsupported source type: {source.GetType().Name}");
+                    return 0;
+                }
+
+                if (!Directory.Exists(sourcePath))
+                {
+                    _logFunc?.Invoke($"    [Warning] Source path does not exist: {sourcePath}");
+                    return 0;
+                }
+
+                // Search for GFF files that might contain StrRef references
+                patchesCreated += SearchGffFilesForStrRef(sourcePath, oldStrref, newTokenId);
+
+                // Search for 2DA files that might contain StrRef references
+                patchesCreated += SearchTwoDaFilesForStrRef(sourcePath, oldStrref, newTokenId);
+
+                // Could be extended to search other file types (NSS scripts, etc.)
+            }
+            catch (Exception e)
+            {
+                _logFunc?.Invoke($"    [Error] Failed to search for StrRef references: {e.GetType().Name}: {e.Message}");
+            }
+
+            return patchesCreated;
+        }
+
+        /// <summary>
+        /// Search GFF files for StrRef references and create linking patches.
+        /// </summary>
+        private int SearchGffFilesForStrRef(string sourcePath, int oldStrref, int newTokenId)
+        {
+            int patchesCreated = 0;
+
+            try
+            {
+                // Find all GFF files in the source
+                var gffFiles = Directory.GetFiles(sourcePath, "*.gff", SearchOption.AllDirectories);
+
+                foreach (string gffFile in gffFiles)
+                {
+                    try
+                    {
+                        // Load the GFF file
+                        byte[] gffData = File.ReadAllBytes(gffFile);
+                        var gff = Andastra.Parsing.Formats.GFF.GFFAuto.LoadGff(gffData);
+
+                        // Search for StrRef fields in the GFF structure
+                        var strrefFields = FindStrRefFieldsRecursive(gff.Root, oldStrref);
+
+                        if (strrefFields.Count > 0)
+                        {
+                            // Create GFF modifications to replace StrRef with TLKMEMORY token
+                            var modifications = new Andastra.Parsing.Mods.GFF.ModificationsGFF(gffFile);
+
+                            foreach (var fieldPath in strrefFields)
+                            {
+                                // Create a TLKMEMORY modifier that replaces the StrRef field
+                                var modifier = new Andastra.Parsing.Mods.GFF.ModifyGFF
+                                {
+                                    FieldPath = fieldPath,
+                                    Type = Andastra.Parsing.Mods.GFF.ModifyGFFType.TLKMemory,
+                                    TLKMemoryToken = newTokenId
+                                };
+                                modifications.Modifiers.Add(modifier);
+                            }
+
+                            // Add to modifications and write immediately
+                            AllModifications.Gff.Add(modifications);
+                            WriteGffModification(modifications, gffData);
+
+                            patchesCreated += strrefFields.Count;
+                            _logFunc?.Invoke($"      Created {strrefFields.Count} GFF patches in {Path.GetFileName(gffFile)}");
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        _logFunc?.Invoke($"      [Warning] Failed to process GFF file {gffFile}: {e.GetType().Name}: {e.Message}");
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                _logFunc?.Invoke($"    [Error] Failed to search GFF files: {e.GetType().Name}: {e.Message}");
+            }
+
+            return patchesCreated;
+        }
+
+        /// <summary>
+        /// Search 2DA files for StrRef references and create linking patches.
+        /// </summary>
+        private int SearchTwoDaFilesForStrRef(string sourcePath, int oldStrref, int newTokenId)
+        {
+            int patchesCreated = 0;
+
+            try
+            {
+                // Find all 2DA files in the source
+                var twodaFiles = Directory.GetFiles(sourcePath, "*.2da", SearchOption.AllDirectories);
+
+                foreach (string twodaFile in twodaFiles)
+                {
+                    try
+                    {
+                        // Load the 2DA file
+                        byte[] twodaData = File.ReadAllBytes(twodaFile);
+                        var twoda = Andastra.Parsing.Formats.TwoDA.TwoDAAuto.Load2DA(twodaData);
+
+                        // Search for cells containing the StrRef value
+                        var strrefCells = FindStrRefCellsInTwoDa(twoda, oldStrref);
+
+                        if (strrefCells.Count > 0)
+                        {
+                            // Create 2DA modifications to replace StrRef with TLKMEMORY token
+                            var modifications = new Andastra.Parsing.Mods.TwoDA.Modifications2DA(twodaFile);
+
+                            foreach (var cellRef in strrefCells)
+                            {
+                                // Create a TLKMEMORY modifier that replaces the cell value
+                                var modifier = new Andastra.Parsing.Mods.TwoDA.Modify2DA
+                                {
+                                    RowIndex = cellRef.RowIndex,
+                                    ColumnName = cellRef.ColumnName,
+                                    Type = Andastra.Parsing.Mods.TwoDA.Modify2DAType.TLKMemory,
+                                    TLKMemoryToken = newTokenId
+                                };
+                                modifications.Modifiers.Add(modifier);
+                            }
+
+                            // Add to modifications and write immediately
+                            AllModifications.Twoda.Add(modifications);
+                            Write2DAModification(modifications, twodaData, null, null);
+
+                            patchesCreated += strrefCells.Count;
+                            _logFunc?.Invoke($"      Created {strrefCells.Count} 2DA patches in {Path.GetFileName(twodaFile)}");
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        _logFunc?.Invoke($"      [Warning] Failed to process 2DA file {twodaFile}: {e.GetType().Name}: {e.Message}");
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                _logFunc?.Invoke($"    [Error] Failed to search 2DA files: {e.GetType().Name}: {e.Message}");
+            }
+
+            return patchesCreated;
+        }
+
+        /// <summary>
+        /// Recursively search GFF structure for fields containing a specific StrRef value.
+        /// </summary>
+        private List<string> FindStrRefFieldsRecursive(Andastra.Parsing.Formats.GFF.GFFField field, int targetStrref, string currentPath = "")
+        {
+            var foundPaths = new List<string>();
+
+            if (field.Type == Andastra.Parsing.Formats.GFF.GFFDataType.Int32)
+            {
+                // Check if this is a StrRef field (StrRef fields are typically named with "StrRef" in them)
+                if (currentPath.Contains("StrRef") || currentPath.Contains("strref"))
+                {
+                    int strrefValue = field.Int32Value;
+                    if (strrefValue == targetStrref)
+                    {
+                        foundPaths.Add(currentPath);
+                    }
+                }
+            }
+            else if (field.Type == Andastra.Parsing.Formats.GFF.GFFDataType.Struct)
+            {
+                // Recursively search struct fields
+                var structData = field.StructValue;
+                foreach (var childField in structData.Fields)
+                {
+                    string childPath = string.IsNullOrEmpty(currentPath) ?
+                        childField.Label : $"{currentPath}.{childField.Label}";
+                    foundPaths.AddRange(FindStrRefFieldsRecursive(childField, targetStrref, childPath));
+                }
+            }
+            else if (field.Type == Andastra.Parsing.Formats.GFF.GFFDataType.List)
+            {
+                // Recursively search list elements
+                var listData = field.ListValue;
+                for (int i = 0; i < listData.Structs.Count; i++)
+                {
+                    var structData = listData.Structs[i];
+                    foreach (var childField in structData.Fields)
+                    {
+                        string childPath = string.IsNullOrEmpty(currentPath) ?
+                            $"{childField.Label}[{i}]" : $"{currentPath}.{childField.Label}[{i}]";
+                        foundPaths.AddRange(FindStrRefFieldsRecursive(childField, targetStrref, childPath));
+                    }
+                }
+            }
+
+            return foundPaths;
+        }
+
+        /// <summary>
+        /// Search 2DA file for cells containing a specific StrRef value.
+        /// </summary>
+        private List<TwoDaCellReference> FindStrRefCellsInTwoDa(Andastra.Parsing.Formats.TwoDA.TwoDA twoda, int targetStrref)
+        {
+            var foundCells = new List<TwoDaCellReference>();
+
+            // Check if this 2DA has columns that might contain StrRefs
+            // StrRef columns are often named with "strref", "stringref", etc.
+            var strrefColumns = twoda.ColumnHeaders.Where(h =>
+                h.Contains("strref", StringComparison.OrdinalIgnoreCase) ||
+                h.Contains("stringref", StringComparison.OrdinalIgnoreCase)).ToList();
+
+            foreach (string columnName in strrefColumns)
+            {
+                for (int rowIndex = 0; rowIndex < twoda.RowCount; rowIndex++)
+                {
+                    string cellValue = twoda.GetCell(columnName, rowIndex);
+                    if (int.TryParse(cellValue, out int strrefValue) && strrefValue == targetStrref)
+                    {
+                        foundCells.Add(new TwoDaCellReference
+                        {
+                            RowIndex = rowIndex,
+                            ColumnName = columnName,
+                            Value = cellValue
+                        });
+                    }
+                }
+            }
+
+            return foundCells;
+        }
+
+        /// <summary>
+        /// Helper class to reference a 2DA cell.
+        /// </summary>
+        private class TwoDaCellReference
+        {
+            public int RowIndex { get; set; }
+            public string ColumnName { get; set; }
+            public string Value { get; set; }
         }
 
         // Expose install folders for summary

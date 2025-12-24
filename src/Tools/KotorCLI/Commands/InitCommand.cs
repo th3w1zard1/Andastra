@@ -143,8 +143,27 @@ description = ""Default target""
 
             if (!string.IsNullOrEmpty(initFile))
             {
-                // TODO: Call unpack command to unpack initial file
-                logger.Info($"TODO: STUB - Note: Unpacking initial file not yet implemented. File: {initFile}");
+                // Unpack the initial file into the default target
+                logger.Info($"Unpacking initial file: {initFile}");
+
+                // Temporarily change to the target directory so ConfigFileFinder can locate kotorcli.cfg
+                var originalDirectory = Directory.GetCurrentDirectory();
+                try
+                {
+                    Directory.SetCurrentDirectory(targetDir);
+                    var unpackExitCode = UnpackCommand.Execute("default", initFile, false, logger);
+                    if (unpackExitCode != 0)
+                    {
+                        logger.Error($"Failed to unpack initial file: {initFile}");
+                        return unpackExitCode;
+                    }
+
+                    logger.Info($"Successfully unpacked initial file into package");
+                }
+                finally
+                {
+                    Directory.SetCurrentDirectory(originalDirectory);
+                }
             }
 
             logger.Info($"\nPackage initialized successfully in {targetDir}");

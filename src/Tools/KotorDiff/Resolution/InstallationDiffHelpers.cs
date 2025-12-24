@@ -247,10 +247,18 @@ namespace KotorDiff.Resolution
                 }
 
                 PatcherModifications modifications;
+                Dictionary<int, int> strrefMappings = null;
                 if (result is ValueTuple<PatcherModifications, Dictionary<int, int>> tuple)
                 {
                     modifications = tuple.Item1;
-                    // TODO:  Ignore strref_mappings for now
+                    strrefMappings = tuple.Item2;
+
+                    // Store strref_mappings in writer metadata for linking patches
+                    if (incrementalWriter != null && strrefMappings != null && strrefMappings.Count > 0)
+                    {
+                        incrementalWriter.SetTlkMetadata((Andastra.Parsing.Mods.TLK.ModificationsTLK)modifications, "strref_mappings", strrefMappings);
+                        logFunc($"  |-- StrRef mappings: {strrefMappings.Count} mappings stored for linking patches");
+                    }
                 }
                 else if (result is PatcherModifications mods)
                 {
