@@ -132,7 +132,9 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 // Strategy 1: Try loading TAA effect from compiled content files
                 try
                 {
-                    _taaEffectBase = StrideGraphics.Effect.Load(_graphicsDevice, "TemporalAA");
+                    // TODO: STUB - Effect.Load() doesn't exist in Stride API
+                    // Effects should be loaded through ContentManager or created programmatically
+                    _taaEffectBase = null;
                     if (_taaEffectBase != null)
                     {
                         _taaEffect = new EffectInstance(_taaEffectBase);
@@ -498,7 +500,7 @@ shader TemporalAAEffect : ShaderBase
                         }
 
                         // Try to get EffectSystem from services (EffectCompiler may be accessed through it)
-                        var effectSystem = services.GetService<Stride.Shaders.Compiler.EffectCompiler>();
+                        var effectSystem = servicesDynamic.GetService<global::Stride.Shaders.Compiler.EffectCompiler>();
                         if (effectSystem != null)
                         {
                             return CompileShaderWithEffectSystem(effectSystem, shaderSource, shaderName);
@@ -530,43 +532,12 @@ shader TemporalAAEffect : ShaderBase
         /// <returns>Compiled Effect, or null if compilation fails.</returns>
         private StrideGraphics.Effect CompileShaderWithCompiler(EffectCompiler compiler, string shaderSource, string shaderName)
         {
-            try
-            {
-                // Create compilation context for shader compilation
-                var compilerSource = new ShaderSourceClass
-                {
-                    Name = shaderName,
-                    SourceCode = shaderSource
-                };
-
-                // Compile shader source to bytecode
-                var compilationResult = compiler.Compile(compilerSource, new CompilerParameters
-                {
-                    EffectParameters = new EffectCompilerParameters()
-                });
-
-                if (compilationResult != null && compilationResult.Bytecode != null && compilationResult.Bytecode.Length > 0)
-                {
-                    // Create Effect from compiled bytecode
-                    var effect = new StEffect(_graphicsDevice, compilationResult.Bytecode);
-                    System.Console.WriteLine($"[StrideTemporalAaEffect] Successfully compiled shader '{shaderName}' using EffectCompiler");
-                    return effect;
-                }
-                else
-                {
-                    System.Console.WriteLine($"[StrideTemporalAaEffect] EffectCompiler compilation failed for shader '{shaderName}': No bytecode generated");
-                    if (compilationResult != null && compilationResult.HasErrors)
-                    {
-                        System.Console.WriteLine($"[StrideTemporalAaEffect] Compilation errors: {compilationResult.ErrorText}");
-                    }
-                    return null;
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Console.WriteLine($"[StrideTemporalAaEffect] Exception while compiling shader '{shaderName}' with EffectCompiler: {ex.Message}");
-                return null;
-            }
+            // TODO: STUB - Shader compilation needs proper Stride API implementation
+            // ShaderSource is abstract and requires concrete implementation (ShaderClassSource, etc.)
+            // EffectCompiler API may differ from what's used here
+            // Runtime shader compilation requires proper Stride shader compilation pipeline
+            System.Console.WriteLine($"[StrideTemporalAaEffect] Shader compilation not yet implemented for '{shaderName}'");
+            return null;
         }
 
         /// <summary>
@@ -754,10 +725,13 @@ shader TemporalAAEffect : ShaderBase
             // If TAA effect is initialized, use it for proper temporal accumulation
             if (_effectInitialized && _taaEffect != null)
             {
-                // TODO: STUB - GraphicsContext is required for SpriteBatch.Begin with EffectInstance
-                // GraphicsDevice doesn't provide GraphicsContext directly - would need to get it from Game
-                // For now, use CommandList as fallback
-                StrideGraphics.CommandList graphicsContext = commandList;
+                // Get GraphicsContext from GraphicsDevice (required for SpriteBatch.Begin with EffectInstance)
+                var graphicsContext = _graphicsDevice.GraphicsContext();
+                if (graphicsContext == null)
+                {
+                    // Fallback if GraphicsContext is not available
+                    return;
+                }
                 // Begin sprite batch rendering with TAA effect
                 _spriteBatch.Begin(graphicsContext, StrideGraphics.SpriteSortMode.Immediate, StrideGraphics.BlendStates.Opaque,
                     _linearSampler, StrideGraphics.DepthStencilStates.None, StrideGraphics.RasterizerStates.CullNone, _taaEffect);
@@ -876,10 +850,13 @@ shader TemporalAAEffect : ShaderBase
                 // This fallback is used when shader compilation fails or effect is not initialized
                 // It provides basic functionality by copying current frame without temporal accumulation
                 // For production use, ensure TAA shader is properly compiled and initialized
-                // TODO: STUB - GraphicsContext is required for SpriteBatch.Begin with many parameters
-                // GraphicsDevice doesn't provide GraphicsContext directly - would need to get it from Game
-                // For now, use CommandList as fallback
-                StrideGraphics.CommandList graphicsContext = commandList;
+                // Get GraphicsContext for SpriteBatch.Begin
+                var graphicsContext = _graphicsDevice.GraphicsContext();
+                if (graphicsContext == null)
+                {
+                    // Fallback if GraphicsContext is not available
+                    return;
+                }
                 _spriteBatch.Begin(graphicsContext, StrideGraphics.SpriteSortMode.Immediate, StrideGraphics.BlendStates.Opaque,
                     _linearSampler, StrideGraphics.DepthStencilStates.None, StrideGraphics.RasterizerStates.CullNone);
                 _spriteBatch.Draw(currentFrame, new RectangleF(0, 0, width, height), Color.White);
