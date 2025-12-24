@@ -764,15 +764,224 @@ namespace HolocronToolset.Tests.Editors
             modifiedDlg10.OldHitCheck.Should().BeFalse("OldHitCheck should be false when checkbox is unchecked");
         }
 
-        // TODO: STUB - Implement test_dlg_editor_all_node_widgets_interactions (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:736-936)
-        // Original: def test_dlg_editor_all_node_widgets_interactions(qtbot, installation: HTInstallation): Test all node widget interactions
+        // Matching PyKotor implementation at vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:736-936
+        // Original: def test_dlg_editor_all_node_widgets_interactions(qtbot, installation: HTInstallation): Test ALL node editor widgets with exhaustive interactions.
         [Fact]
         public void TestDlgEditorAllNodeWidgetsInteractions()
         {
-            // TODO: STUB - Implement all node widgets interactions test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:736-936
-            throw new NotImplementedException("TestDlgEditorAllNodeWidgetsInteractions: All node widgets interactions test not yet implemented");
+            // Create editor
+            var editor = new DLGEditor(null, null);
+            editor.New();
+
+            // Create a node to edit
+            editor.Model.AddRootNode();
+            var rootItem = editor.Model.Item(0, 0);
+            rootItem.Should().NotBeNull();
+            rootItem.Link.Should().NotBeNull();
+
+            // Select it
+            editor.DialogTree.SetCurrentIndex(rootItem.Index());
+
+            // Test speakerEdit - TextBox (only for Entry nodes)
+            if (rootItem.Link.Node is DLGEntry)
+            {
+                editor.SpeakerEdit.Text = "TestSpeaker";
+                editor.OnNodeUpdate();
+                rootItem.Link.Node.Speaker.Should().Be("TestSpeaker");
+            }
+
+            // Test listenerEdit - TextBox
+            editor.ListenerEdit.Text = "PLAYER";
+            editor.OnNodeUpdate();
+            rootItem.Link.Node.Listener.Should().Be("PLAYER");
+
+            // Test script1ResrefEdit - ComboBox
+            editor.Script1ResrefEdit.Text = "test_script1";
+            editor.OnNodeUpdate();
+            rootItem.Link.Node.Script1.ToString().Should().Be("test_script1");
+
+            // Test script1Param1 spin (only this one is exposed as public property)
+            editor.Script1Param1Spin.Value = 10;
+            editor.OnNodeUpdate();
+            rootItem.Link.Node.Script1Param1.Should().Be(10);
+
+            // TODO: Test script1Param2-5 spins (not exposed as public properties)
+            // TODO: Test script1Param6Edit - TextBox (not implemented in C# version)
+
+            // Test script2ResrefEdit - ComboBox
+            editor.Script2ResrefEdit.Text = "test_script2";
+            editor.OnNodeUpdate();
+            rootItem.Link.Node.Script2.ToString().Should().Be("test_script2");
+
+            // TODO: Test script2Param spins (not exposed as public properties)
+
+            // Test condition1ResrefEdit - ComboBox
+            editor.Condition1ResrefEdit.Text = "test_cond1";
+            editor.OnNodeUpdate();
+            rootItem.Link.Active1.ToString().Should().Be("test_cond1");
+
+            // Test condition1Param spins
+            editor.Condition1Param1Spin.Value = 2;
+            editor.OnNodeUpdate();
+            rootItem.Link.Active1Param1.Should().Be(2);
+
+            editor.Condition1Param2Spin.Value = 4;
+            editor.OnNodeUpdate();
+            rootItem.Link.Active1Param2.Should().Be(4);
+
+            editor.Condition1Param3Spin.Value = 6;
+            editor.OnNodeUpdate();
+            rootItem.Link.Active1Param3.Should().Be(6);
+
+            editor.Condition1Param4Spin.Value = 8;
+            editor.OnNodeUpdate();
+            rootItem.Link.Active1Param4.Should().Be(8);
+
+            editor.Condition1Param5Spin.Value = 10;
+            editor.OnNodeUpdate();
+            rootItem.Link.Active1Param5.Should().Be(10);
+
+            // Test condition1NotCheckbox
+            editor.Condition1NotCheckbox.IsChecked = true;
+            editor.OnNodeUpdate();
+            rootItem.Link.Active1Not.Should().BeTrue();
+
+            // Test condition2ResrefEdit - ComboBox
+            editor.Condition2ResrefEdit.Text = "test_cond2";
+            editor.OnNodeUpdate();
+            rootItem.Link.Active2.ToString().Should().Be("test_cond2");
+
+            // Test condition2NotCheckbox
+            editor.Condition2NotCheckbox.IsChecked = true;
+            editor.OnNodeUpdate();
+            rootItem.Link.Active2Not.Should().BeTrue();
+
+            // Test emotionSelect - ComboBox
+            if (editor.EmotionSelect.Items.Count > 0)
+            {
+                editor.EmotionSelect.SelectedIndex = 1;
+                editor.OnNodeUpdate();
+                rootItem.Link.Node.EmotionId.Should().Be(1);
+            }
+
+            // Test expressionSelect - ComboBox
+            if (editor.ExpressionSelect.Items.Count > 0)
+            {
+                editor.ExpressionSelect.SelectedIndex = 1;
+                editor.OnNodeUpdate();
+                rootItem.Link.Node.FacialId.Should().Be(1);
+            }
+
+            // Test soundComboBox - ComboBox
+            editor.SoundComboBox.Text = "test_sound";
+            editor.OnNodeUpdate();
+            rootItem.Link.Node.Sound.ToString().Should().Be("test_sound");
+
+            // Test soundCheckbox
+            editor.SoundCheckbox.IsChecked = true;
+            editor.OnNodeUpdate();
+            rootItem.Link.Node.SoundExists.Should().Be(1);
+
+            // Test voiceComboBox - ComboBox
+            editor.VoiceComboBox.Text = "test_vo";
+            editor.OnNodeUpdate();
+            rootItem.Link.Node.VoResRef.ToString().Should().Be("test_vo");
+
+            // Test plotIndexCombo - ComboBox
+            if (editor.PlotIndexCombo.Items.Count > 0)
+            {
+                editor.PlotIndexCombo.SelectedIndex = 5;
+                editor.OnNodeUpdate();
+                rootItem.Link.Node.PlotIndex.Should().Be(5);
+            }
+
+            // Test plotXpSpin - NumericUpDown
+            editor.PlotXpSpin.Value = 50;
+            editor.OnNodeUpdate();
+            rootItem.Link.Node.PlotXpPercentage.Should().Be(50);
+
+            // Test questEdit - TextBox
+            editor.QuestEdit.Text = "test_quest";
+            editor.OnNodeUpdate();
+            rootItem.Link.Node.Quest.Should().Be("test_quest");
+
+            // Test questEntrySpin - NumericUpDown
+            editor.QuestEntrySpin.Value = 10;
+            editor.OnNodeUpdate();
+            rootItem.Link.Node.QuestEntry.Should().Be(10);
+
+            // Test cameraIdSpin - NumericUpDown
+            editor.CameraIdSpin.Value = 1;
+            editor.OnNodeUpdate();
+            rootItem.Link.Node.CameraId.Should().Be(1);
+
+            // Test cameraAnimSpin - NumericUpDown
+            editor.CameraAnimSpin.Value = 1200;
+            editor.OnNodeUpdate();
+            rootItem.Link.Node.CameraAnim.Should().Be(1200);
+
+            // Test cameraAngleSelect - ComboBox
+            if (editor.CameraAngleSelect.Items.Count > 0)
+            {
+                editor.CameraAngleSelect.SelectedIndex = 1;
+                editor.OnNodeUpdate();
+                rootItem.Link.Node.CameraAngle.Should().Be(1);
+            }
+
+            // Test cameraEffectSelect - ComboBox
+            if (editor.CameraEffectSelect.Items.Count > 0)
+            {
+                editor.CameraEffectSelect.SelectedIndex = 1;
+                editor.OnNodeUpdate();
+                rootItem.Link.Node.CameraEffect.Should().Be(1);
+            }
+
+            // Test nodeUnskippableCheckbox
+            editor.NodeUnskippableCheckbox.IsChecked = true;
+            editor.OnNodeUpdate();
+            rootItem.Link.Node.Unskippable.Should().BeTrue();
+
+            // Test nodeIdSpin - NumericUpDown
+            editor.NodeIdSpin.Value = 5;
+            editor.OnNodeUpdate();
+            rootItem.Link.Node.NodeId.Should().Be(5);
+
+            // Test alienRaceNodeSpin - NumericUpDown
+            editor.AlienRaceNodeSpin.Value = 2;
+            editor.OnNodeUpdate();
+            rootItem.Link.Node.AlienRaceNode.Should().Be(2);
+
+            // Test postProcSpin - NumericUpDown
+            editor.PostProcSpin.Value = 3;
+            editor.OnNodeUpdate();
+            rootItem.Link.Node.PostProcNode.Should().Be(3);
+
+            // Test delaySpin - NumericUpDown
+            editor.DelaySpin.Value = 100;
+            editor.OnNodeUpdate();
+            rootItem.Link.Node.Delay.Should().Be(100);
+
+            // Test waitFlagSpin - NumericUpDown
+            editor.WaitFlagSpin.Value = 1;
+            editor.OnNodeUpdate();
+            rootItem.Link.Node.WaitFlags.Should().Be(1);
+
+            // Test fadeTypeSpin - NumericUpDown
+            editor.FadeTypeSpin.Value = 2;
+            editor.OnNodeUpdate();
+            rootItem.Link.Node.FadeType.Should().Be(2);
+
+            // Test logicSpin - NumericUpDown
+            editor.LogicSpin.Value = 1;
+            editor.OnNodeUpdate();
+            rootItem.Link.Logic.Should().BeTrue();
+
+            // Test commentsEdit - TextBox
+            editor.CommentsEdit.Text = "Test comment\nLine 2";
+            editor.OnNodeUpdate();
+            rootItem.Link.Node.Comment.Should().Be("Test comment\nLine 2");
         }
+
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:938-972
         // Original: def test_dlg_editor_link_widgets_interactions(qtbot, installation: HTInstallation): Test link widget interactions
@@ -3505,12 +3714,34 @@ namespace HolocronToolset.Tests.Editors
 
         // Matching PyKotor implementation at vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2344-2363
         // Original: def test_dlg_editor_negative_values(qtbot, installation: HTInstallation): Test handling negative values where allowed
-        [Fact(Skip = "Requires widget access - cameraIdSpin not accessible")]
+        [Fact]
         public void TestDlgEditorNegativeValues()
         {
-            // TODO: Requires widget access (cameraIdSpin)
-            // Python test sets editor.ui.cameraIdSpin.setValue(-1) and verifies via build
-            // C# widgets are private, would need public properties or test helpers
+            // Create DLG editor and initialize
+            var editor = new DLGEditor(null, null);
+            editor.New();
+
+            // Add root node (matching Python: editor.model.add_root_node())
+            var rootItem = editor.Model.AddRootNode();
+            rootItem.Should().NotBeNull("Root item should be created");
+
+            // Select the root item in the tree (matching Python: editor.ui.dialogTree.setCurrentIndex(root_item.index()))
+            // The tree selection triggers loading the node into the UI controls
+            var treeItem = new TreeViewItem { Tag = rootItem };
+            editor.DialogTree.SelectedItem = treeItem;
+
+            // Set to -1 (common "unset" value) via public CameraIdSpin property
+            // Matching Python: editor.ui.cameraIdSpin.setValue(-1)
+            editor.CameraIdSpin.Value = -1;
+
+            // Update node from UI controls (matching Python: editor.on_node_update())
+            editor.OnNodeUpdate();
+
+            // Build and verify (matching Python: data, _ = editor.build(), dlg = read_dlg(data), assert dlg.starters[0].node.camera_id == -1)
+            var (data, _) = editor.Build();
+            DLG dlg = DLGHelper.ReadDlg(data);
+            dlg.Starters.Should().NotBeEmpty("DLG should have at least one starter");
+            dlg.Starters[0].Node.CameraId.Should().Be(-1, "Camera ID should be set to -1");
         }
 
         // Matching PyKotor implementation at vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2368-2404
@@ -4789,10 +5020,7 @@ namespace HolocronToolset.Tests.Editors
                     foreach (int val in testValues)
                     {
                         // Matching PyKotor: editor.ui.cameraIdSpin.setValue(val)
-                        if (editor.CameraIdSpin != null)
-                        {
-                            editor.CameraIdSpin.Value = val;
-                        }
+                        editor.CameraIdSpin.Value = val;
 
                         // Matching PyKotor: editor.on_node_update()
                         editor.OnNodeUpdate();
@@ -4820,11 +5048,8 @@ namespace HolocronToolset.Tests.Editors
                                 editor.DialogTree.SelectedItem = treeItem;
 
                                 // Matching PyKotor: assert editor.ui.cameraIdSpin.value() == val
-                                if (editor.CameraIdSpin != null)
-                                {
-                                    editor.CameraIdSpin.Value.Should().Be(val,
-                                        $"CameraIdSpin should be {val} after loading back the saved data");
-                                }
+                                editor.CameraIdSpin.Value.Should().Be(val,
+                                    $"CameraIdSpin should be {val} after loading back the saved data");
                             }
                         }
                     }

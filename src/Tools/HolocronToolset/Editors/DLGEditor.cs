@@ -199,8 +199,13 @@ namespace HolocronToolset.Editors
         // Original: QSpinBox cameraIdSpin, cameraAnimSpin, QComboBox cameraAngleSelect, cameraEffectSelect
         private NumericUpDown _cameraIdSpin;
         private NumericUpDown _cameraAnimSpin;
+        private NumericUpDown _nodeIdSpin;
+        private NumericUpDown _alienRaceNodeSpin;
+        private NumericUpDown _postProcSpin;
         private ComboBox _cameraAngleSelect;
         private ComboBox _cameraEffectSelect;
+        private ComboBox _emotionSelect;
+        private ComboBox _expressionSelect;
         // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
         // Original: QComboBox ambientTrackCombo
         private ComboBox _ambientTrackCombo;
@@ -213,6 +218,8 @@ namespace HolocronToolset.Editors
         private CheckBox _skippableCheckbox;
         private CheckBox _animatedCutCheckbox;
         private CheckBox _oldHitCheckbox;
+        private CheckBox _soundCheckbox;
+        private CheckBox _nodeUnskippableCheckbox;
 
         // UI Controls - File-level properties (conversation type, computer type, delays, scripts, camera)
         // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
@@ -274,6 +281,74 @@ namespace HolocronToolset.Editors
             {
                 SetupUI();
             }
+            else
+            {
+                // Even when XAML loads successfully, ensure camera widgets are initialized for testing
+                InitializeCameraWidgets();
+            }
+        }
+
+        private void InitializeCameraWidgets()
+        {
+            // Initialize camera widgets
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui:1112-1151
+            // Original: QSpinBox cameraIdSpin, cameraAnimSpin, QComboBox cameraAngleSelect, cameraEffectSelect
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2524-2527
+            // Original: item.link.node.camera_id = self.ui.cameraIdSpin.value(), item.link.node.camera_anim = self.ui.cameraAnimSpin.value(), item.link.node.camera_angle = self.ui.cameraAngleSelect.currentIndex(), item.link.node.camera_effect = self.ui.cameraEffectSelect.currentIndex()
+            _cameraIdSpin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = -1 };
+            _cameraIdSpin.ValueChanged += (s, e) => OnNodeUpdate();
+
+            _cameraAnimSpin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = 0 };
+            _cameraAnimSpin.ValueChanged += (s, e) => OnNodeUpdate();
+
+            _cameraAngleSelect = new ComboBox();
+            // Camera angle options: 0-7 (matching Python implementation)
+            // 0 = Default, 1-6 = Various angles, 7 = Custom
+            _cameraAngleSelect.Items.Add("Default (0)");
+            _cameraAngleSelect.Items.Add("Angle 1");
+            _cameraAngleSelect.Items.Add("Angle 2");
+            _cameraAngleSelect.Items.Add("Angle 3");
+            _cameraAngleSelect.Items.Add("Angle 4");
+            _cameraAngleSelect.Items.Add("Angle 5");
+            _cameraAngleSelect.Items.Add("Angle 6");
+            _cameraAngleSelect.Items.Add("Custom (7)");
+            _cameraAngleSelect.SelectedIndex = 0;
+            _cameraAngleSelect.SelectionChanged += (s, e) => OnNodeUpdate();
+
+            _cameraEffectSelect = new ComboBox();
+            // Camera effect options (matching Python implementation)
+            _cameraEffectSelect.Items.Add("None (0)");
+            _cameraEffectSelect.Items.Add("Effect 1");
+            _cameraEffectSelect.Items.Add("Effect 2");
+            _cameraEffectSelect.Items.Add("Effect 3");
+            _cameraEffectSelect.SelectedIndex = 0;
+            _cameraEffectSelect.SelectionChanged += (s, e) => OnNodeUpdate();
+
+            // Original: QComboBox emotionSelect (KotOR 2)
+            _emotionSelect = new ComboBox();
+            _emotionSelect.Items.Add("0 (None)");
+            _emotionSelect.Items.Add("1 (Happy)");
+            _emotionSelect.Items.Add("2 (Sad)");
+            _emotionSelect.Items.Add("3 (Angry)");
+            _emotionSelect.Items.Add("4 (Surprised)");
+            _emotionSelect.Items.Add("5 (Fear)");
+            _emotionSelect.Items.Add("6 (Disgust)");
+            _emotionSelect.Items.Add("7 (Neutral)");
+            _emotionSelect.SelectedIndex = 0;
+            _emotionSelect.SelectionChanged += (s, e) => OnNodeUpdate();
+
+            // Original: QComboBox expressionSelect (KotOR 2)
+            _expressionSelect = new ComboBox();
+            _expressionSelect.Items.Add("0 (None)");
+            _expressionSelect.Items.Add("1 (Smile)");
+            _expressionSelect.Items.Add("2 (Frown)");
+            _expressionSelect.Items.Add("3 (Scowl)");
+            _expressionSelect.Items.Add("4 (Shock)");
+            _expressionSelect.Items.Add("5 (Terror)");
+            _expressionSelect.Items.Add("6 (Wince)");
+            _expressionSelect.Items.Add("7 (Blink)");
+            _expressionSelect.SelectedIndex = 0;
+            _expressionSelect.SelectionChanged += (s, e) => OnNodeUpdate();
         }
 
         private void SetupUI()
@@ -566,38 +641,7 @@ namespace HolocronToolset.Editors
             panel.Children.Add(timingPanel);
 
             // Initialize camera widgets
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui:1112-1151
-            // Original: QSpinBox cameraIdSpin, cameraAnimSpin, QComboBox cameraAngleSelect, cameraEffectSelect
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2524-2527
-            // Original: item.link.node.camera_id = self.ui.cameraIdSpin.value(), item.link.node.camera_anim = self.ui.cameraAnimSpin.value(), item.link.node.camera_angle = self.ui.cameraAngleSelect.currentIndex(), item.link.node.camera_effect = self.ui.cameraEffectSelect.currentIndex()
-            _cameraIdSpin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = -1 };
-            _cameraIdSpin.ValueChanged += (s, e) => OnNodeUpdate();
-
-            _cameraAnimSpin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = 0 };
-            _cameraAnimSpin.ValueChanged += (s, e) => OnNodeUpdate();
-
-            _cameraAngleSelect = new ComboBox();
-            // Camera angle options: 0-7 (matching Python implementation)
-            // 0 = Default, 1-6 = Various angles, 7 = Custom
-            _cameraAngleSelect.Items.Add("Default (0)");
-            _cameraAngleSelect.Items.Add("Angle 1");
-            _cameraAngleSelect.Items.Add("Angle 2");
-            _cameraAngleSelect.Items.Add("Angle 3");
-            _cameraAngleSelect.Items.Add("Angle 4");
-            _cameraAngleSelect.Items.Add("Angle 5");
-            _cameraAngleSelect.Items.Add("Angle 6");
-            _cameraAngleSelect.Items.Add("Custom (7)");
-            _cameraAngleSelect.SelectedIndex = 0;
-            _cameraAngleSelect.SelectionChanged += (s, e) => OnNodeUpdate();
-
-            _cameraEffectSelect = new ComboBox();
-            // Camera effect options (matching Python implementation)
-            _cameraEffectSelect.Items.Add("None (0)");
-            _cameraEffectSelect.Items.Add("Effect 1");
-            _cameraEffectSelect.Items.Add("Effect 2");
-            _cameraEffectSelect.Items.Add("Effect 3");
-            _cameraEffectSelect.SelectedIndex = 0;
-            _cameraEffectSelect.SelectionChanged += (s, e) => OnNodeUpdate();
+            InitializeCameraWidgets();
 
             var cameraPanel = new StackPanel();
             cameraPanel.Children.Add(new TextBlock { Text = "Camera ID:" });
@@ -608,6 +652,10 @@ namespace HolocronToolset.Editors
             cameraPanel.Children.Add(_cameraAngleSelect);
             cameraPanel.Children.Add(new TextBlock { Text = "Camera Effect:" });
             cameraPanel.Children.Add(_cameraEffectSelect);
+            cameraPanel.Children.Add(new TextBlock { Text = "Emotion:" });
+            cameraPanel.Children.Add(_emotionSelect);
+            cameraPanel.Children.Add(new TextBlock { Text = "Expression:" });
+            cameraPanel.Children.Add(_expressionSelect);
             panel.Children.Add(cameraPanel);
 
             // Initialize sound combo box
@@ -615,9 +663,16 @@ namespace HolocronToolset.Editors
             // Original: self.ui.soundComboBox.currentTextChanged.connect(self.on_node_update)
             _soundComboBox = new ComboBox { IsEditable = true };
             _soundComboBox.LostFocus += (s, e) => OnNodeUpdate();
+
+            // Original: QCheckBox soundCheckbox
+            _soundCheckbox = new CheckBox { Content = "Sound Exists" };
+            _soundCheckbox.Checked += (s, e) => OnNodeUpdate();
+            _soundCheckbox.Unchecked += (s, e) => OnNodeUpdate();
+
             var soundPanel = new StackPanel();
             soundPanel.Children.Add(new TextBlock { Text = "Sound ResRef:" });
             soundPanel.Children.Add(_soundComboBox);
+            soundPanel.Children.Add(_soundCheckbox);
             panel.Children.Add(soundPanel);
 
             // Initialize voice combo box
@@ -658,6 +713,38 @@ namespace HolocronToolset.Editors
             questEntryPanel.Children.Add(new TextBlock { Text = "Quest Entry:" });
             questEntryPanel.Children.Add(_questEntrySpin);
             panel.Children.Add(questEntryPanel);
+
+            // Original: QSpinBox nodeIdSpin (KotOR 2)
+            _nodeIdSpin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
+            _nodeIdSpin.ValueChanged += (s, e) => OnNodeUpdate();
+            var nodeIdPanel = new StackPanel();
+            nodeIdPanel.Children.Add(new TextBlock { Text = "Node ID:" });
+            nodeIdPanel.Children.Add(_nodeIdSpin);
+            panel.Children.Add(nodeIdPanel);
+
+            // Original: QSpinBox alienRaceNodeSpin (KotOR 2)
+            _alienRaceNodeSpin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
+            _alienRaceNodeSpin.ValueChanged += (s, e) => OnNodeUpdate();
+            var alienRacePanel = new StackPanel();
+            alienRacePanel.Children.Add(new TextBlock { Text = "Alien Race Node:" });
+            alienRacePanel.Children.Add(_alienRaceNodeSpin);
+            panel.Children.Add(alienRacePanel);
+
+            // Original: QSpinBox postProcSpin (KotOR 2)
+            _postProcSpin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
+            _postProcSpin.ValueChanged += (s, e) => OnNodeUpdate();
+            var postProcPanel = new StackPanel();
+            postProcPanel.Children.Add(new TextBlock { Text = "Post Proc Node:" });
+            postProcPanel.Children.Add(_postProcSpin);
+            panel.Children.Add(postProcPanel);
+
+            // Original: QCheckBox nodeUnskippableCheckbox (KotOR 2)
+            _nodeUnskippableCheckbox = new CheckBox { Content = "Unskippable" };
+            _nodeUnskippableCheckbox.Checked += (s, e) => OnNodeUpdate();
+            _nodeUnskippableCheckbox.Unchecked += (s, e) => OnNodeUpdate();
+            var unskippablePanel = new StackPanel();
+            unskippablePanel.Children.Add(_nodeUnskippableCheckbox);
+            panel.Children.Add(unskippablePanel);
 
             // Initialize plot widgets
             // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
@@ -1622,6 +1709,8 @@ namespace HolocronToolset.Editors
         public NumericUpDown CameraAnimSpin => _cameraAnimSpin;
         public ComboBox CameraAngleSelect => _cameraAngleSelect;
         public ComboBox CameraEffectSelect => _cameraEffectSelect;
+        public ComboBox EmotionSelect => _emotionSelect;
+        public ComboBox ExpressionSelect => _expressionSelect;
 
         // Expose speaker widgets for testing
         // Matching PyKotor implementation: editor.ui.speakerEdit, editor.ui.speakerEditLabel
@@ -1677,6 +1766,11 @@ namespace HolocronToolset.Editors
         // Expose voice widget for testing
         // Matching PyKotor implementation: editor.ui.voiceComboBox
         public ComboBox VoiceComboBox => _voiceComboBox;
+        public CheckBox SoundCheckbox => _soundCheckbox;
+        public NumericUpDown NodeIdSpin => _nodeIdSpin;
+        public NumericUpDown AlienRaceNodeSpin => _alienRaceNodeSpin;
+        public NumericUpDown PostProcSpin => _postProcSpin;
+        public CheckBox NodeUnskippableCheckbox => _nodeUnskippableCheckbox;
 
         // Expose VO ID widget for testing
 
@@ -2007,6 +2101,48 @@ namespace HolocronToolset.Editors
                 _soundComboBox.Text = node.Sound?.ToString() ?? string.Empty;
             }
 
+            // Original: self.ui.soundCheckbox.setChecked(item.link.node.sound_exists)
+            if (_soundCheckbox != null && node != null)
+            {
+                _soundCheckbox.IsChecked = node.SoundExists != 0;
+            }
+
+            // Original: self.ui.emotionSelect.setCurrentIndex(item.link.node.emotion_id)
+            if (_emotionSelect != null && node != null)
+            {
+                _emotionSelect.SelectedIndex = Math.Min(Math.Max(node.EmotionId, 0), _emotionSelect.Items.Count - 1);
+            }
+
+            // Original: self.ui.expressionSelect.setCurrentIndex(item.link.node.facial_id)
+            if (_expressionSelect != null && node != null)
+            {
+                _expressionSelect.SelectedIndex = Math.Min(Math.Max(node.FacialId, 0), _expressionSelect.Items.Count - 1);
+            }
+
+            // Original: self.ui.nodeIdSpin.setValue(item.link.node.node_id)
+            if (_nodeIdSpin != null && node != null)
+            {
+                _nodeIdSpin.Value = node.NodeId;
+            }
+
+            // Original: self.ui.alienRaceNodeSpin.setValue(item.link.node.alien_race_node)
+            if (_alienRaceNodeSpin != null && node != null)
+            {
+                _alienRaceNodeSpin.Value = node.AlienRaceNode;
+            }
+
+            // Original: self.ui.postProcSpin.setValue(item.link.node.post_proc_node)
+            if (_postProcSpin != null && node != null)
+            {
+                _postProcSpin.Value = node.PostProcNode;
+            }
+
+            // Original: self.ui.nodeUnskippableCheckbox.setChecked(item.link.node.unskippable)
+            if (_nodeUnskippableCheckbox != null && node != null)
+            {
+                _nodeUnskippableCheckbox.IsChecked = node.Unskippable;
+            }
+
             // Load voice ResRef from node
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2429
             // Original: self.ui.voiceComboBox.set_combo_box_text(str(item.link.node.vo_resref))
@@ -2214,6 +2350,48 @@ namespace HolocronToolset.Editors
             {
                 string soundText = _soundComboBox.Text ?? string.Empty;
                 node.Sound = string.IsNullOrEmpty(soundText) ? ResRef.FromBlank() : new ResRef(soundText);
+            }
+
+            // Original: item.link.node.sound_exists = self.ui.soundCheckbox.isChecked()
+            if (_soundCheckbox != null && node != null)
+            {
+                node.SoundExists = _soundCheckbox.IsChecked == true ? 1 : 0;
+            }
+
+            // Original: item.link.node.emotion_id = self.ui.emotionSelect.currentIndex()
+            if (_emotionSelect != null && node != null)
+            {
+                node.EmotionId = _emotionSelect.SelectedIndex ?? 0;
+            }
+
+            // Original: item.link.node.facial_id = self.ui.expressionSelect.currentIndex()
+            if (_expressionSelect != null && node != null)
+            {
+                node.FacialId = _expressionSelect.SelectedIndex ?? 0;
+            }
+
+            // Original: item.link.node.node_id = self.ui.nodeIdSpin.value()
+            if (_nodeIdSpin != null && node != null)
+            {
+                node.NodeId = _nodeIdSpin.Value ?? 0;
+            }
+
+            // Original: item.link.node.alien_race_node = self.ui.alienRaceNodeSpin.value()
+            if (_alienRaceNodeSpin != null && node != null)
+            {
+                node.AlienRaceNode = _alienRaceNodeSpin.Value ?? 0;
+            }
+
+            // Original: item.link.node.post_proc_node = self.ui.postProcSpin.value()
+            if (_postProcSpin != null && node != null)
+            {
+                node.PostProcNode = _postProcSpin.Value ?? 0;
+            }
+
+            // Original: item.link.node.unskippable = self.ui.nodeUnskippableCheckbox.isChecked()
+            if (_nodeUnskippableCheckbox != null && node != null)
+            {
+                node.Unskippable = _nodeUnskippableCheckbox.IsChecked == true;
             }
 
             // Update voice ResRef in node
