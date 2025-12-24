@@ -7,24 +7,23 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Parsing.Formats.MDL;
 using Andastra.Parsing.Formats.MDLData;
 using Andastra.Parsing.Formats.TPC;
+using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Content.MDL;
-using Andastra.Runtime.Core.MDL;
+using Andastra.Runtime.Core;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Parsing.Formats.TwoDA;
+using Andastra.Runtime.Core.Interfaces.Components;
+using Andastra.Runtime.Core.MDL;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Graphics.Common.Structs;
-using Andastra.Runtime.Core;
 using ResourceType = Andastra.Parsing.Resource.ResourceType;
 using ParsingResourceType = Andastra.Parsing.Resource.ResourceType;
 
@@ -2132,10 +2131,26 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 // Step 2: Parse MDL/MDX files using MDLLoader
                 // Based on daorigins.exe: MDL parser extracts geometry data from binary format
                 // daorigins.exe: MDL parser reads vertex positions, normals, texture coordinates, and indices
-                // Use MDLLoader to get Core.MDL.MDLModel (MDLLoader handles Content->Core conversion internally)
-                Andastra.Runtime.Core.MDL.MDLModel mdlModel;
-                var mdlLoader = new Andastra.Runtime.Content.MDL.MDLLoader(_resourceProvider);
-                mdlModel = mdlLoader.Load(modelResRef);
+                // Use MDLOptimizedReader directly since MDLLoader requires IResourceProvider (not IGameResourceProvider)
+                // Then manually convert Content.MDL.MDLModel to Core.MDL.MDLModel using MDLLoader's conversion logic
+                Andastra.Runtime.Core.MDL.MDLModel mdlModel = null;
+                Andastra.Runtime.Content.MDL.ContentMDLModel contentMdlModel;
+                using (var reader = new Andastra.Runtime.Content.MDL.MDLOptimizedReader(mdlData, mdxData))
+                {
+                    contentMdlModel = reader.Load();
+                }
+
+                // Convert Content.MDL.MDLModel to Core.MDL.MDLModel
+                // TODO: REFACTOR - Extract ConvertToCoreModel to a public static helper method in MDLLoader
+                // For now, create a temporary MDLLoader with a dummy IResourceProvider adapter to access conversion
+                // Actually, the conversion is complex - let's use MDLLoader by creating an adapter
+                if (contentMdlModel != null)
+                {
+                    // Create a simple adapter that wraps IGameResourceProvider as IResourceProvider
+                    var adapter = new ResourceProviderAdapter(_resourceProvider);
+                    var mdlLoader = new Andastra.Runtime.Content.MDL.MDLLoader(adapter);
+                    mdlModel = mdlLoader.Load(modelResRef);
+                }
 
                 if (mdlModel == null || mdlModel.RootNode == null)
                 {
@@ -10398,6 +10413,53 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
         [DllImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool FreeLibrary(IntPtr hModule);
+
+        #endregion
+
+        #region ResourceProviderAdapter
+
+        /// <summary>
+        /// Adapter that wraps IGameResourceProvider to implement IResourceProvider interface.
+        /// This allows MDLLoader (which requires IResourceProvider) to work with IGameResourceProvider.
+        /// </summary>
+        private class ResourceProviderAdapter : IResourceProvider
+        {
+            private readonly IGameResourceProvider _gameResourceProvider;
+
+            public ResourceProviderAdapter(IGameResourceProvider gameResourceProvider)
+            {
+                _gameResourceProvider = gameResourceProvider ?? throw new ArgumentNullException(nameof(gameResourceProvider));
+            }
+
+            public int Priority => 0; // Default priority
+
+            public SearchLocation Location => SearchLocation.Module; // Default location
+
+            public bool TryOpen(ResourceIdentifier id, out Stream stream)
+            {
+                stream = null;
+                try
+                {
+                    // Use synchronous GetResourceBytes method from IGameResourceProvider
+                    byte[] data = _gameResourceProvider.GetResourceBytes(id);
+                    if (data != null && data.Length > 0)
+                    {
+                        stream = new MemoryStream(data, false);
+                        return true;
+                    }
+                }
+                catch
+                {
+                    // Return false if resource not found or error occurred
+                }
+                return false;
+            }
+
+            public bool Exists(ResourceIdentifier id)
+            {
+                return _gameResourceProvider.Exists(id);
+            }
+        }
 
         #endregion
 

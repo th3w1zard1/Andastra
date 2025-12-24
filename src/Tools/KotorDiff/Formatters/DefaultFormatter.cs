@@ -59,7 +59,7 @@ namespace KotorDiff.Formatters
             return $"'{diffResult.LeftIdentifier}' differs from '{diffResult.RightIdentifier}'";
         }
 
-        private string FormatResourceDiff(ResourceDiffResult diffResult)
+        private static string FormatResourceDiff(ResourceDiffResult diffResult)
         {
             string sizeInfo = "";
             if (diffResult.LeftSize.HasValue && diffResult.RightSize.HasValue)
@@ -72,7 +72,7 @@ namespace KotorDiff.Formatters
             return $"'{diffResult.LeftIdentifier}'{resourceType} differs from '{diffResult.RightIdentifier}'{sizeInfo}";
         }
 
-        private string FormatGffDiff(GFFDiffResult diffResult)
+        private static string FormatGffDiff(GFFDiffResult diffResult)
         {
             string baseMsg = $"GFF '{diffResult.LeftIdentifier}' differs from '{diffResult.RightIdentifier}'";
 
@@ -85,7 +85,7 @@ namespace KotorDiff.Formatters
             return baseMsg;
         }
 
-        private string Format2DADiff(TwoDADiffResult diffResult)
+        private static string Format2DADiff(TwoDADiffResult diffResult)
         {
             string baseMsg = $"2DA '{diffResult.LeftIdentifier}' differs from '{diffResult.RightIdentifier}'";
 
@@ -111,7 +111,7 @@ namespace KotorDiff.Formatters
             return baseMsg;
         }
 
-        private string FormatTlkDiff(TLKDiffResult diffResult)
+        private static string FormatTlkDiff(TLKDiffResult diffResult)
         {
             string baseMsg = $"TLK '{diffResult.LeftIdentifier}' differs from '{diffResult.RightIdentifier}'";
 

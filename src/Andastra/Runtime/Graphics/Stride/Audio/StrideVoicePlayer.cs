@@ -4,6 +4,7 @@ using System.IO;
 using System.Numerics;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Audio;
+using Andastra.Runtime.Graphics;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Formats.WAV;
 using Stride.Audio;
@@ -34,7 +35,7 @@ namespace Andastra.Runtime.Stride.Audio
     public class StrideVoicePlayer : IVoicePlayer
     {
         private readonly IGameResourceProvider _resourceProvider;
-        private readonly Andastra.Runtime.Core.Audio.ISpatialAudio _spatialAudio;
+        private readonly ISpatialAudio _spatialAudio;
         private readonly AudioEngine _audioEngine;
         private readonly AudioListener _audioListener;
         private readonly Dictionary<uint, VoiceInstance> _voiceInstances;
@@ -44,7 +45,7 @@ namespace Andastra.Runtime.Stride.Audio
         private class VoiceInstance
         {
             public SoundInstance SoundInstance;
-            public Andastra.Runtime.Core.Audio.SoundSource SoundSource;
+            public DynamicSoundSource DynamicSoundSource;
             public uint EmitterId;
             public Vector3? Position;
             public float Volume;
@@ -119,13 +120,8 @@ namespace Andastra.Runtime.Stride.Audio
                 }
 
                 // Parse WAV file to get format information
-                WAVFile wavFile;
-                using (var stream = new MemoryStream(wavData))
-                {
-                    wavFile = WAVFile.Read(stream);
-                }
-
-                if (wavFile == null)
+                WAV wavFile = WAVAuto.ReadWav(wavData);
+                if (wavFile == null || wavFile.Data == null || wavFile.Data.Length == 0)
                 {
                     Console.WriteLine($"[StrideVoicePlayer] Failed to parse WAV file: {voiceResRef}");
                     return 0;
@@ -134,20 +130,12 @@ namespace Andastra.Runtime.Stride.Audio
                 // Calculate sound duration
                 float duration = (float)wavFile.Data.Length / (wavFile.SampleRate * wavFile.Channels * (wavFile.BitsPerSample / 8));
 
-                // Create SoundSource from WAV data
-                var soundSource = SoundSource.New(_audioEngine, wavData, 1, wavFile.SampleRate, wavFile.Channels);
-                if (soundSource == null)
-                {
-                    Console.WriteLine($"[StrideVoicePlayer] Failed to create SoundSource: {voiceResRef}");
-                    return 0;
-                }
-
-                // Create SoundInstance for playback
-                var soundInstance = soundSource.CreateInstance(_audioListener, true, StrideAudioLayer.Music);
+                // Create SoundInstance using the same pattern as StrideSoundPlayer
+                bool useSpatialAudio = _spatialAudio != null && position.HasValue;
+                SoundInstance soundInstance = CreateSoundInstanceFromWavData(wavFile, wavData, useSpatialAudio);
                 if (soundInstance == null)
                 {
-                    Console.WriteLine($"[StrideVoicePlayer] Failed to create SoundInstance: {voiceResRef}");
-                    soundSource.Dispose();
+                    Console.WriteLine($"[StrideVoicePlayer] Failed to create SoundInstance from WAV data: {voiceResRef}");
                     return 0;
                 }
 
@@ -156,11 +144,10 @@ namespace Andastra.Runtime.Stride.Audio
                 var voiceInstance = new VoiceInstance
                 {
                     SoundInstance = soundInstance,
-                    SoundSource = soundSource,
                     Position = position,
-                    Volume = volume,
-                    Pitch = pitch,
-                    Pan = pan,
+                    Volume = Math.Max(0.0f, Math.Min(1.0f, volume)),
+                    Pitch = Math.Max(-1.0f, Math.Min(1.0f, pitch)),
+                    Pan = Math.Max(-1.0f, Math.Min(1.0f, pan)),
                     PlaybackStartTime = DateTime.UtcNow,
                     Duration = duration
                 };
@@ -174,9 +161,9 @@ namespace Andastra.Runtime.Stride.Audio
                 else
                 {
                     // No spatial audio - apply volume and pan directly
-                    soundInstance.Volume = volume * _masterVolume;
-                    soundInstance.Pan = pan;
-                    // Note: Stride SoundInstance doesn't directly support pitch adjustment
+                    soundInstance.Volume = voiceInstance.Volume * _masterVolume;
+                    soundInstance.Pan = voiceInstance.Pan;
+                    soundInstance.Pitch = voiceInstance.Pitch;
                 }
 
                 // Start playback
@@ -190,6 +177,72 @@ namespace Andastra.Runtime.Stride.Audio
             {
                 Console.WriteLine($"[StrideVoicePlayer] Error playing voice-over {voiceResRef}: {ex.Message}");
                 return 0;
+            }
+        }
+
+        /// <summary>
+        /// Creates a Stride SoundInstance from WAV file data using DynamicSoundSource.
+        /// Reuses the same pattern as StrideSoundPlayer for consistency.
+        /// </summary>
+        private SoundInstance CreateSoundInstanceFromWavData(WAV wavFile, byte[] wavData, bool useSpatialAudio)
+        {
+            // Use the helper class from StrideSoundPlayer (SoundWavDynamicSoundSource is internal)
+            // Reuse the same implementation pattern
+            try
+            {
+                byte[] pcmData = wavFile.Data;
+                if (pcmData == null || pcmData.Length == 0)
+                {
+                    Console.WriteLine("[StrideVoicePlayer] No PCM data in WAV file");
+                    return null;
+                }
+
+                // Create temporary SoundInstance for DynamicSoundSource constructor (circular dependency workaround)
+                var tempDummySource = DummyDynamicSoundSourceForInit.Create(_audioEngine, _audioListener);
+                var tempSoundInstance = new SoundInstance(
+                    _audioEngine,
+                    _audioListener,
+                    tempDummySource,
+                    wavFile.SampleRate,
+                    wavFile.Channels == 1,
+                    useSpatialAudio,
+                    false,
+                    0.0f,
+                    HrtfEnvironment.Small
+                );
+
+                // Create the actual DynamicSoundSource with the temporary SoundInstance
+                var dynamicSource = new SoundWavDynamicSoundSource(_audioEngine, pcmData, wavFile.SampleRate, wavFile.Channels == 1, tempSoundInstance);
+
+                // Create the actual SoundInstance with the DynamicSoundSource
+                var soundInstance = new SoundInstance(
+                    _audioEngine,
+                    _audioListener,
+                    dynamicSource,
+                    wavFile.SampleRate,
+                    wavFile.Channels == 1,
+                    useSpatialAudio,
+                    false,
+                    0.0f,
+                    HrtfEnvironment.Small
+                );
+
+                // Update the DynamicSoundSource with the actual SoundInstance
+                dynamicSource.SetSoundInstance(soundInstance);
+
+                // Dispose the temporary SoundInstance
+                try
+                {
+                    tempSoundInstance.Dispose();
+                }
+                catch { }
+
+                return soundInstance;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StrideVoicePlayer] Error creating SoundInstance from WAV data: {ex.Message}");
+                return null;
             }
         }
 
@@ -211,9 +264,9 @@ namespace Andastra.Runtime.Stride.Audio
                     voiceInstance.SoundInstance.Stop();
                     voiceInstance.SoundInstance.Dispose();
                 }
-                if (voiceInstance.SoundSource != null)
+                if (voiceInstance.DynamicSoundSource != null)
                 {
-                    voiceInstance.SoundSource.Dispose();
+                    voiceInstance.DynamicSoundSource.Dispose();
                 }
             }
             catch (Exception ex)
@@ -309,14 +362,15 @@ namespace Andastra.Runtime.Stride.Audio
 
                 // Apply voice volume setting multiplied by spatial audio volume and master volume
                 voiceInstance.SoundInstance.Volume = audioParams.Volume * voiceInstance.Volume * _masterVolume;
-                voiceInstance.SoundInstance.Pan = audioParams.Pan + voiceInstance.Pan;
-                // Note: Stride SoundInstance doesn't directly support pitch/doppler adjustment
+                voiceInstance.SoundInstance.Pan = Math.Max(-1.0f, Math.Min(1.0f, audioParams.Pan + voiceInstance.Pan));
+                voiceInstance.SoundInstance.Pitch = Math.Max(-1.0f, Math.Min(1.0f, voiceInstance.Pitch + (audioParams.DopplerShift - 1.0f)));
             }
             else
             {
                 // No spatial audio - apply volume and pan directly
                 voiceInstance.SoundInstance.Volume = voiceInstance.Volume * _masterVolume;
                 voiceInstance.SoundInstance.Pan = voiceInstance.Pan;
+                voiceInstance.SoundInstance.Pitch = voiceInstance.Pitch;
             }
         }
 
@@ -329,3 +383,4 @@ namespace Andastra.Runtime.Stride.Audio
         }
     }
 }
+

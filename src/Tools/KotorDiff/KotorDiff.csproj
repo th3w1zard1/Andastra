@@ -2,9 +2,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net9.0</TargetFrameworks>
+    <OutputType>Exe</OutputType>
     <LangVersion>7.3</LangVersion>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <StartupObject>KotorDiff.Differ.KotorDiffer</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Andastra\Andastra.csproj" />

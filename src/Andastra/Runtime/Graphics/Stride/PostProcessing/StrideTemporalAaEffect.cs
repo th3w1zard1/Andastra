@@ -33,7 +33,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
         private StrideGraphics.Texture _historyBuffer;
         private StrideGraphics.Texture _outputBuffer;
         private int _frameIndex;
-        private global::Stride.Core.Mathematics.Vector2[] _jitterSequence;
+        private Vector2[] _jitterSequence;
         private Matrix4x4 _previousViewProjection;
         private StrideGraphics.SpriteBatch _spriteBatch;
         private EffectInstance _taaEffect;
@@ -134,7 +134,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                             if (parent is IServiceProvider parentServices)
                             {
                                 _gameServices = parentServices;
-                                _game = (_gameServices as IServiceProvider)?.GetService(typeof(Game)) as Game;
+                                _game = (_gameServices as IServiceProvider)?.GetService(typeof(global::Stride.Engine.Game)) as global::Stride.Engine.Game;
                                 if (_game != null)
                                 {
                                     Console.WriteLine("[StrideTemporalAaEffect] Successfully accessed Game through parent IServiceProvider");
@@ -697,14 +697,14 @@ shader TemporalAAEffect : ShaderBase
                     try
                     {
                         // Try to get EffectCompiler from Game.Services
-                        var effectCompiler = (_gameServices as global::Stride.Core.ServiceRegistry)?.GetService<global::Stride.Shaders.Compiler.EffectCompiler>();
+                        var effectCompiler = (_gameServices as IServiceProvider)?.GetService(typeof(Stride.Shaders.Compiler.EffectCompiler)) as Stride.Shaders.Compiler.EffectCompiler;
                         if (effectCompiler != null)
                         {
                             return CompileShaderWithCompiler(effectCompiler, shaderSource, shaderName);
                         }
 
                         // Try to get EffectSystem from Game.Services (EffectCompiler may be accessed through it)
-                        var effectSystem = _gameServices.GetService<global::Stride.Shaders.Compiler.EffectCompiler>();
+                        var effectSystem = (_gameServices as IServiceProvider)?.GetService(typeof(Stride.Shaders.Compiler.EffectCompiler)) as Stride.Shaders.Compiler.EffectCompiler;
                         if (effectSystem != null)
                         {
                             return CompileShaderWithEffectSystem(effectSystem, shaderSource, shaderName);
@@ -730,7 +730,7 @@ shader TemporalAAEffect : ShaderBase
                         }
 
                         // Try to get EffectSystem from GraphicsDevice services (EffectCompiler may be accessed through it)
-                        var effectSystem = graphicsDeviceServices.GetService<global::Stride.Shaders.Compiler.EffectCompiler>();
+                        var effectSystem = graphicsDeviceServices.GetService<EffectCompiler>();
                         if (effectSystem != null)
                         {
                             return CompileShaderWithEffectSystem(effectSystem, shaderSource, shaderName);
@@ -978,7 +978,7 @@ shader TemporalAAEffect : ShaderBase
                         else
                         {
                             // Try alternative approach: Get EffectSystem from Game.Services and compile through it
-                            var effectSystem = _gameServices.GetService<global::Stride.Shaders.Compiler.EffectCompiler>();
+                            var effectSystem = (_gameServices as IServiceProvider)?.GetService(typeof(EffectCompiler)) as EffectCompiler;
                             if (effectSystem != null)
                             {
                                 return CompileShaderWithEffectSystemFromFile(effectSystem, tempFilePath, shaderName);
@@ -998,7 +998,7 @@ shader TemporalAAEffect : ShaderBase
                     dynamic graphicsDeviceServices = _graphicsDevice.Services();
                     if (graphicsDeviceServices != null)
                     {
-                        var effectCompiler = graphicsDeviceServices.GetService<EffectCompiler>();
+                        var effectCompiler = (graphicsDeviceServices as global::Stride.Core.ServiceRegistry)?.GetService<EffectCompiler>();
                         if (effectCompiler != null)
                         {
                             // Read shader source from file and create ShaderSourceClass
@@ -1032,7 +1032,7 @@ shader TemporalAAEffect : ShaderBase
                         else
                         {
                             // Try alternative approach: Get EffectSystem from GraphicsDevice services and compile through it
-                            var effectSystem = graphicsDeviceServices.GetService<global::Stride.Shaders.Compiler.EffectCompiler>();
+                            var effectSystem = (graphicsDeviceServices as global::Stride.Core.ServiceRegistry)?.GetService<EffectCompiler>();
                             if (effectSystem != null)
                             {
                                 return CompileShaderWithEffectSystemFromFile(effectSystem, tempFilePath, shaderName);

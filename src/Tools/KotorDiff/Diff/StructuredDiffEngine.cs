@@ -78,7 +78,7 @@ namespace KotorDiff.Diff
         /// Compare 2DA headers.
         /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/structured.py:89-127
         /// </summary>
-        private List<HeaderDiff> Compare2DAHeaders(TwoDA left2da, TwoDA right2da)
+        private static List<HeaderDiff> Compare2DAHeaders(TwoDA left2da, TwoDA right2da)
         {
             var headerDiffs = new List<HeaderDiff>();
             var leftHeaders = left2da.GetHeaders();
@@ -124,7 +124,7 @@ namespace KotorDiff.Diff
         /// Compare 2DA columns.
         /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/structured.py:129-168
         /// </summary>
-            private List<ColumnDiff> Compare2DAColumns(TwoDA left2da, TwoDA right2da)
+            private static List<ColumnDiff> Compare2DAColumns(TwoDA left2da, TwoDA right2da)
         {
             var columnDiffs = new List<ColumnDiff>();
             var leftHeaders = new HashSet<string>(left2da.GetHeaders());
@@ -163,7 +163,7 @@ namespace KotorDiff.Diff
         /// Compare 2DA rows.
         /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/structured.py:170-253
         /// </summary>
-        private List<RowDiff> Compare2DARows(TwoDA left2da, TwoDA right2da)
+        private static List<RowDiff> Compare2DARows(TwoDA left2da, TwoDA right2da)
         {
             var rowDiffs = new List<RowDiff>();
             int leftHeight = left2da.GetHeight();
@@ -526,7 +526,7 @@ namespace KotorDiff.Diff
         /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/structured.py:472-501
         /// </summary>
         [CanBeNull]
-        private object GetGffFieldValue(GFFStruct structObj, string fieldLabel, GFFFieldType fieldType)
+        private static object GetGffFieldValue(GFFStruct structObj, string fieldLabel, GFFFieldType fieldType)
         {
             try
             {
@@ -561,7 +561,7 @@ namespace KotorDiff.Diff
         /// Check if two GFF values are equal.
         /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/structured.py:503-507
         /// </summary>
-        private bool GffValuesEqual(object left, object right)
+        private static bool GffValuesEqual(object left, object right)
         {
             if (left is float leftFloat && right is float rightFloat)
             {
@@ -574,7 +574,7 @@ namespace KotorDiff.Diff
         /// Compare two TLK files and return structured diff.
         /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/structured.py:509-606
         /// </summary>
-        public TLKDiffResult CompareTlk(
+        public static TLKDiffResult CompareTlk(
             byte[] leftData,
             byte[] rightData,
             string leftId,

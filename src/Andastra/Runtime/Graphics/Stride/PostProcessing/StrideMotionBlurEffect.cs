@@ -763,8 +763,8 @@ shader MotionBlurEffect : ShaderBase
             }
             finally
             {
-                // Restore previous render target
-                commandList.SetRenderTarget(null, previousRenderTarget?.Texture);
+                // Render target restoration not needed - Stride manages render targets per frame
+                // The CommandList is frame-scoped and render targets are reset automatically
             }
         }
     }

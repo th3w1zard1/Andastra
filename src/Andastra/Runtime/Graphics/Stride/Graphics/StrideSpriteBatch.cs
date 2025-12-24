@@ -79,7 +79,7 @@ namespace Andastra.Runtime.Stride.Graphics
             _isBegun = false;
         }
 
-        public void Draw(ITexture2D texture, Andastra.Runtime.Graphics.Vector2 position, Andastra.Runtime.Graphics.Color color)
+        public void Draw(ITexture2D texture, Vector2 position,Color color)
         {
             EnsureBegun();
             var strideTexture = GetStrideTexture(texture);
@@ -88,7 +88,7 @@ namespace Andastra.Runtime.Stride.Graphics
             _spriteBatch.Draw(strideTexture, strideRect, strideColor);
         }
 
-        public void Draw(ITexture2D texture, Andastra.Runtime.Graphics.Rectangle destinationRectangle, Andastra.Runtime.Graphics.Color color)
+        public void Draw(ITexture2D texture, Rectangle destinationRectangle,Color color)
         {
             EnsureBegun();
             var strideTexture = GetStrideTexture(texture);
@@ -97,7 +97,7 @@ namespace Andastra.Runtime.Stride.Graphics
             _spriteBatch.Draw(strideTexture, strideRect, strideColor);
         }
 
-        public void Draw(ITexture2D texture, Andastra.Runtime.Graphics.Vector2 position, Andastra.Runtime.Graphics.Rectangle? sourceRectangle, Andastra.Runtime.Graphics.Color color)
+        public void Draw(ITexture2D texture, Vector2 position, Rectangle? sourceRectangle,Color color)
         {
             EnsureBegun();
             var strideTexture = GetStrideTexture(texture);
@@ -120,7 +120,15 @@ namespace Andastra.Runtime.Stride.Graphics
             _spriteBatch.Draw(strideTexture, strideDestRect, strideColor);
         }
 
-        public void Draw(ITexture2D texture, Andastra.Runtime.Graphics.Rectangle destinationRectangle, Andastra.Runtime.Graphics.Rectangle? sourceRectangle, Andastra.Runtime.Graphics.Color color, float rotation, Andastra.Runtime.Graphics.Vector2 origin, Andastra.Runtime.Graphics.SpriteEffects effects, float layerDepth)
+        public void Draw(
+            ITexture2D texture,
+            Rectangle destinationRectangle,
+            Rectangle? sourceRectangle,
+            Color color,
+            float rotation,
+            Vector2 origin,
+            SpriteEffects effects,
+            float layerDepth)
         {
             EnsureBegun();
             var strideTexture = GetStrideTexture(texture);
@@ -193,7 +201,7 @@ namespace Andastra.Runtime.Stride.Graphics
             _spriteBatch.Draw(strideTexture, strideDestRect, strideColor);
         }
 
-        public void DrawString(IFont font, string text, Andastra.Runtime.Graphics.Vector2 position, Andastra.Runtime.Graphics.Color color)
+        public void DrawString(IFont font, string text, Vector2 position,Color color)
         {
             EnsureBegun();
             var strideFont = GetStrideFont(font);
@@ -227,21 +235,21 @@ namespace Andastra.Runtime.Stride.Graphics
             throw new System.ArgumentException("Font must be a StrideFont", nameof(font));
         }
 
-        private StrideGraphics.SpriteSortMode ConvertSortMode(Andastra.Runtime.Graphics.SpriteSortMode sortMode)
+        private StrideGraphics.SpriteSortMode ConvertSortMode(SpriteSortMode sortMode)
         {
             // Stride uses the same enum values, so we can cast directly
             return (StrideGraphics.SpriteSortMode)sortMode;
         }
 
 
-        private StrideGraphics.SpriteEffects ConvertSpriteEffects(Andastra.Runtime.Graphics.SpriteEffects effects)
+        private StrideGraphics.SpriteEffects ConvertSpriteEffects(SpriteEffects effects)
         {
             StrideGraphics.SpriteEffects result = StrideGraphics.SpriteEffects.None;
-            if ((effects & Andastra.Runtime.Graphics.SpriteEffects.FlipHorizontally) != 0)
+            if ((effects & SpriteEffects.FlipHorizontally) != 0)
             {
                 result |= StrideGraphics.SpriteEffects.FlipHorizontally;
             }
-            if ((effects & Andastra.Runtime.Graphics.SpriteEffects.FlipVertically) != 0)
+            if ((effects & SpriteEffects.FlipVertically) != 0)
             {
                 result |= StrideGraphics.SpriteEffects.FlipVertically;
             }

@@ -43,7 +43,7 @@ namespace KotorDiff.Formatters
             string header = $"--- {diffResult.LeftIdentifier}\n+++ {diffResult.RightIdentifier}";
 
             // Handle text-like content
-            if (diffResult is ResourceDiffResult resourceDiff && 
+            if (diffResult is ResourceDiffResult resourceDiff &&
                 (resourceDiff.ResourceType == "txt" || resourceDiff.ResourceType == "nss"))
             {
                 try
@@ -52,14 +52,14 @@ namespace KotorDiff.Formatters
                     {
                         string leftText = Encoding.UTF8.GetString(resourceDiff.LeftValue);
                         string rightText = Encoding.UTF8.GetString(resourceDiff.RightValue);
-                        
+
                         var leftLines = leftText.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
                         var rightLines = rightText.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
 
                         // Simple unified diff implementation
-                        var diffLines = GenerateUnifiedDiff(leftLines, rightLines, 
+                        var diffLines = GenerateUnifiedDiff(leftLines, rightLines,
                             resourceDiff.LeftIdentifier, resourceDiff.RightIdentifier);
-                        
+
                         return string.Join("\n", diffLines);
                     }
                 }
@@ -73,20 +73,20 @@ namespace KotorDiff.Formatters
             return header + "\nBinary files differ";
         }
 
-        private string[] GenerateUnifiedDiff(string[] leftLines, string[] rightLines, string leftFile, string rightFile)
+        private static string[] GenerateUnifiedDiff(string[] leftLines, string[] rightLines, string leftFile, string rightFile)
         {
             // TODO:  Simplified unified diff - in a full implementation, would use a proper diff algorithm
             var result = new System.Collections.Generic.List<string>();
             result.Add($"--- {leftFile}");
             result.Add($"+++ {rightFile}");
-            
+
             // Simple line-by-line comparison
             int maxLines = Math.Max(leftLines.Length, rightLines.Length);
             for (int i = 0; i < maxLines; i++)
             {
                 string leftLine = i < leftLines.Length ? leftLines[i] : "";
                 string rightLine = i < rightLines.Length ? rightLines[i] : "";
-                
+
                 if (leftLine != rightLine)
                 {
                     if (i < leftLines.Length)
@@ -103,7 +103,7 @@ namespace KotorDiff.Formatters
                     result.Add($" {leftLine}");
                 }
             }
-            
+
             return result.ToArray();
         }
     }

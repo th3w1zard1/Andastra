@@ -6,15 +6,12 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using Andastra.Parsing;
-using Andastra.Parsing.Extract;
 using Andastra.Parsing.Formats.Capsule;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.LIP;
 using Andastra.Parsing.Formats.SSF;
 using Andastra.Parsing.Formats.TLK;
 using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Tools;
 using KotorDiff.Diff;
 using JetBrains.Annotations;
 
@@ -27,14 +24,29 @@ namespace KotorDiff.Differ
     public class KotorDiffer
     {
         private readonly HashSet<string> _gffTypes;
+        private static readonly string[] gffExtCollection = new [] {
+                "are",
+                "dlg",
+                "fac",
+                "git",
+                "gff",
+                "gui",
+                "ifo",
+                "jrl",
+                "utc",
+                "utd",
+                "ute",
+                "uti",
+                "utm",
+                "utp",
+                "utw",
+            };
 
         public KotorDiffer()
         {
             // GFF types: all GFF-based file formats
-            _gffTypes = new HashSet<string>(new[]
-            {
-                "utc", "uti", "utp", "ute", "utm", "utd", "utw", "dlg", "are", "git", "ifo", "gui", "jrl", "fac", "gff"
-            }, StringComparer.OrdinalIgnoreCase);
+            _gffTypes = new HashSet<string>(
+            gffExtCollection, StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -78,7 +90,7 @@ namespace KotorDiff.Differ
             return result;
         }
 
-        private bool IsKotorInstall(string path)
+        private static bool IsKotorInstall(string path)
         {
             return Directory.Exists(path) && File.Exists(Path.Combine(path, "chitin.key"));
         }
@@ -427,12 +439,12 @@ namespace KotorDiff.Differ
             }
         }
 
-        private bool CompareResourceData(CapsuleResource res1, CapsuleResource res2)
+        private static bool CompareResourceData(CapsuleResource res1, CapsuleResource res2)
         {
             return res1.Data.SequenceEqual(res2.Data);
         }
 
-        private string GetResourceType(string filePath)
+        private static string GetResourceType(string filePath)
         {
             string ext = Path.GetExtension(filePath).ToLowerInvariant().TrimStart('.');
             return ext;
@@ -448,7 +460,7 @@ namespace KotorDiff.Differ
             return sb.ToString();
         }
 
-        private void SerializeGffStruct(GFFStruct gffStruct, StringBuilder sb, int indent)
+        private static void SerializeGffStruct(GFFStruct gffStruct, StringBuilder sb, int indent)
         {
             string indentStr = new string(' ', indent * 2);
             foreach (var (label, fieldType, value) in gffStruct)
@@ -458,7 +470,7 @@ namespace KotorDiff.Differ
                 sb.Append(" (");
                 sb.Append(fieldType);
                 sb.Append("): ");
-                
+
                 if (value == null)
                 {
                     sb.AppendLine("null");
@@ -472,9 +484,8 @@ namespace KotorDiff.Differ
                 }
                 else if (fieldType == GFFFieldType.List)
                 {
-                    var list = value as GFFList;
                     sb.AppendLine("[");
-                    if (list != null)
+                    if (value is GFFList list)
                     {
                         for (int i = 0; i < list.Count; i++)
                         {
@@ -493,7 +504,7 @@ namespace KotorDiff.Differ
             }
         }
 
-        private string TwoDaToText(TwoDA twoda)
+        private static string TwoDaToText(TwoDA twoda)
         {
             var sb = new StringBuilder();
             // Write headers
@@ -514,7 +525,7 @@ namespace KotorDiff.Differ
             return sb.ToString();
         }
 
-        private string TlkToText(TLK tlk)
+        private static string TlkToText(TLK tlk)
         {
             var sb = new StringBuilder();
             for (int i = 0; i < tlk.Count; i++)
@@ -527,37 +538,360 @@ namespace KotorDiff.Differ
 
         private List<string> GenerateUnifiedDiffLines(string text1, string text2, string fromFile, string toFile)
         {
+            var leftLines = SplitLines(text1);
+            var rightLines = SplitLines(text2);
+
+            // Use Myers diff algorithm to find differences
+            var diff = MyersDiff(leftLines, rightLines);
+
+            // Format as unified diff
+            return FormatUnifiedDiff(diff, leftLines, rightLines, fromFile, toFile);
+        }
+
+        /// <summary>
+        /// Splits text into lines, preserving line endings like Python's splitlines(keepends=True)
+        /// </summary>
+        private static List<string> SplitLines(string text)
+        {
             var lines = new List<string>();
-            var leftLines = text1.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-            var rightLines = text2.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-
-            // TODO:  Simple unified diff - in a full implementation, would use a proper diff algorithm
-            lines.Add($"--- {fromFile}");
-            lines.Add($"+++ {toFile}");
-
-            int maxLines = Math.Max(leftLines.Length, rightLines.Length);
-            for (int i = 0; i < maxLines; i++)
+            if (string.IsNullOrEmpty(text))
             {
-                string leftLine = i < leftLines.Length ? leftLines[i] : "";
-                string rightLine = i < rightLines.Length ? rightLines[i] : "";
+                return lines;
+            }
 
-                if (leftLine != rightLine)
+            int start = 0;
+            int i = 0;
+
+            while (i < text.Length)
+            {
+                if (text[i] == '\r')
                 {
-                    if (i < leftLines.Length)
+                    if (i + 1 < text.Length && text[i + 1] == '\n')
                     {
-                        lines.Add($"-{leftLine}");
+                        // CRLF
+                        lines.Add(text.Substring(start, i - start + 2));
+                        i += 2;
                     }
-                    if (i < rightLines.Length)
+                    else
                     {
-                        lines.Add($"+{rightLine}");
+                        // CR only
+                        lines.Add(text.Substring(start, i - start + 1));
+                        i++;
                     }
+                    start = i;
+                }
+                else if (text[i] == '\n')
+                {
+                    // LF only
+                    lines.Add(text.Substring(start, i - start + 1));
+                    i++;
+                    start = i;
+                }
+                else
+                {
+                    i++;
+                }
+            }
+
+            // Add remaining text if any
+            if (start < text.Length)
+            {
+                lines.Add(text.Substring(start));
+            }
+
+            return lines;
+        }
+
+        /// <summary>
+        /// Represents a single diff operation
+        /// </summary>
+        private class DiffOperation
+        {
+            public enum OperationType { Equal, Insert, Delete }
+
+            public OperationType Type { get; }
+            public int OldIndex { get; }
+            public int NewIndex { get; }
+            public string Line { get; }
+
+            public DiffOperation(OperationType type, int oldIndex, int newIndex, string line)
+            {
+                Type = type;
+                OldIndex = oldIndex;
+                NewIndex = newIndex;
+                Line = line;
+            }
+        }
+
+        /// <summary>
+        /// Myers diff algorithm implementation
+        /// </summary>
+        private List<DiffOperation> MyersDiff(List<string> oldLines, List<string> newLines)
+        {
+            int n = oldLines.Count;
+            int m = newLines.Count;
+            int max = n + m;
+
+            var trace = new List<int[]>();
+            var operations = new List<DiffOperation>();
+
+            // Initialize the trace for backtracking
+            for (int d = 0; d <= max; d++)
+            {
+                trace.Add(new int[2 * d + 1]);
+                for (int k = -d; k <= d; k += 2)
+                {
+                    int x;
+                    if (d == 0)
+                    {
+                        x = 0;
+                    }
+                    else if (k == -d || (k != d && trace[d - 1][k - 1 + d - 1] < trace[d - 1][k + 1 + d - 1]))
+                    {
+                        x = trace[d - 1][k + 1 + d - 1];
+                    }
+                    else
+                    {
+                        x = trace[d - 1][k - 1 + d - 1] + 1;
+                    }
+
+                    int y = x - k;
+
+                    // Move diagonally as far as possible
+                    while (x < n && y < m && oldLines[x] == newLines[y])
+                    {
+                        x++;
+                        y++;
+                    }
+
+                    trace[d][k + d] = x;
+
+                    if (x >= n && y >= m)
+                    {
+                        // Found the end, reconstruct the path
+                        return ReconstructPath(trace, d, k, oldLines, newLines);
+                    }
+                }
+            }
+
+            // This should never happen for valid inputs
+            throw new InvalidOperationException("Diff algorithm failed to find a path");
+        }
+
+        /// <summary>
+        /// Reconstruct the diff operations from the Myers algorithm trace
+        /// </summary>
+        private static List<DiffOperation> ReconstructPath(List<int[]> trace, int d, int k, List<string> oldLines, List<string> newLines)
+        {
+            var operations = new List<DiffOperation>();
+            int x = oldLines.Count;
+            int y = newLines.Count;
+
+            for (int currentD = d; currentD > 0; currentD--)
+            {
+                int prevK = k;
+                int prevX = trace[currentD - 1][k + currentD - 1];
+
+                if (k == -currentD || (k != currentD && trace[currentD - 1][k - 1 + currentD - 1] < trace[currentD - 1][k + 1 + currentD - 1]))
+                {
+                    prevK = k + 1;
+                }
+                else
+                {
+                    prevK = k - 1;
+                }
+
+                int prevY = prevX - prevK;
+
+                // Add operations for the diagonal move
+                while (x > prevX && y > prevY)
+                {
+                    x--;
+                    y--;
+                    operations.Insert(0, new DiffOperation(DiffOperation.OperationType.Equal, x, y, oldLines[x]));
+                }
+
+                if (currentD > 0)
+                {
+                    if (x > prevX)
+                    {
+                        // Delete operation
+                        x--;
+                        operations.Insert(0, new DiffOperation(DiffOperation.OperationType.Delete, x, y, oldLines[x]));
+                    }
+                    else if (y > prevY)
+                    {
+                        // Insert operation
+                        y--;
+                        operations.Insert(0, new DiffOperation(DiffOperation.OperationType.Insert, x, y, newLines[y]));
+                    }
+                }
+
+                k = prevK;
+            }
+
+            // Add remaining equal operations at the beginning
+            while (x > 0 && y > 0 && oldLines[x - 1] == newLines[y - 1])
+            {
+                x--;
+                y--;
+                operations.Insert(0, new DiffOperation(DiffOperation.OperationType.Equal, x, y, oldLines[x]));
+            }
+
+            return operations;
+        }
+
+        /// <summary>
+        /// Format diff operations as unified diff output
+        /// </summary>
+        private List<string> FormatUnifiedDiff(List<DiffOperation> operations, List<string> oldLines, List<string> newLines, string fromFile, string toFile)
+        {
+            var result = new List<string>();
+
+            if (operations.Count == 0)
+            {
+                return result;
+            }
+
+            // Find hunks (groups of changes with context)
+            var hunks = FindHunks(operations, oldLines.Count, newLines.Count);
+
+            if (hunks.Count == 0)
+            {
+                return result;
+            }
+
+            // Add diff headers
+            result.Add($"--- {fromFile}");
+            result.Add($"+++ {toFile}");
+
+            foreach (var hunk in hunks)
+            {
+                result.AddRange(FormatHunk(hunk, operations, oldLines, newLines));
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Represents a hunk of changes in the diff
+        /// </summary>
+        private class Hunk
+        {
+            public int OldStart { get; set; }
+            public int OldCount { get; set; }
+            public int NewStart { get; set; }
+            public int NewCount { get; set; }
+            public int StartOpIndex { get; set; }
+            public int EndOpIndex { get; set; }
+        }
+
+        /// <summary>
+        /// Find hunks of changes with context lines
+        /// </summary>
+        private static List<Hunk> FindHunks(List<DiffOperation> operations, int oldCount, int newCount)
+        {
+            var hunks = new List<Hunk>();
+            const int CONTEXT_LINES = 3;
+
+            int i = 0;
+            while (i < operations.Count)
+            {
+                // Skip equal operations until we find a change
+                while (i < operations.Count && operations[i].Type == DiffOperation.OperationType.Equal)
+                {
+                    i++;
+                }
+
+                if (i >= operations.Count)
+                {
+                    break;
+                }
+
+                // Found the start of a change hunk
+                var hunk = new Hunk();
+                hunk.StartOpIndex = Math.Max(0, i - CONTEXT_LINES);
+
+                // Find the end of this change hunk
+                int changeStart = i;
+                while (i < operations.Count && operations[i].Type != DiffOperation.OperationType.Equal)
+                {
+                    i++;
+                }
+                int changeEnd = i - 1;
+
+                hunk.EndOpIndex = Math.Min(operations.Count - 1, changeEnd + CONTEXT_LINES);
+
+                // Calculate line numbers
+                hunk.OldStart = 1;
+                hunk.NewStart = 1;
+
+                for (int j = 0; j < hunk.StartOpIndex; j++)
+                {
+                    if (operations[j].Type == DiffOperation.OperationType.Equal || operations[j].Type == DiffOperation.OperationType.Delete)
+                    {
+                        hunk.OldStart++;
+                    }
+                    if (operations[j].Type == DiffOperation.OperationType.Equal || operations[j].Type == DiffOperation.OperationType.Insert)
+                    {
+                        hunk.NewStart++;
+                    }
+                }
+
+                // Count lines in hunk
+                hunk.OldCount = 0;
+                hunk.NewCount = 0;
+
+                for (int j = hunk.StartOpIndex; j <= hunk.EndOpIndex; j++)
+                {
+                    if (operations[j].Type == DiffOperation.OperationType.Equal || operations[j].Type == DiffOperation.OperationType.Delete)
+                    {
+                        hunk.OldCount++;
+                    }
+                    if (operations[j].Type == DiffOperation.OperationType.Equal || operations[j].Type == DiffOperation.OperationType.Insert)
+                    {
+                        hunk.NewCount++;
+                    }
+                }
+
+                hunks.Add(hunk);
+            }
+
+            return hunks;
+        }
+
+        /// <summary>
+        /// Format a single hunk as unified diff lines
+        /// </summary>
+        private static List<string> FormatHunk(Hunk hunk, List<DiffOperation> operations, List<string> oldLines, List<string> newLines)
+        {
+            var lines = new List<string>();
+
+            // Add hunk header
+            lines.Add($"@@ -{hunk.OldStart},{hunk.OldCount} +{hunk.NewStart},{hunk.NewCount} @@");
+
+            // Add the lines in the hunk
+            for (int i = hunk.StartOpIndex; i <= hunk.EndOpIndex; i++)
+            {
+                var op = operations[i];
+                switch (op.Type)
+                {
+                    case DiffOperation.OperationType.Equal:
+                        lines.Add($" {op.Line.TrimEnd('\r', '\n')}");
+                        break;
+                    case DiffOperation.OperationType.Delete:
+                        lines.Add($"-{op.Line.TrimEnd('\r', '\n')}");
+                        break;
+                    case DiffOperation.OperationType.Insert:
+                        lines.Add($"+{op.Line.TrimEnd('\r', '\n')}");
+                        break;
                 }
             }
 
             return lines;
         }
 
-        private byte[] CalculateSha256(string filePath)
+        private static byte[] CalculateSha256(string filePath)
         {
             using (var sha256 = SHA256.Create())
             using (var stream = File.OpenRead(filePath))
@@ -565,6 +899,58 @@ namespace KotorDiff.Differ
                 return sha256.ComputeHash(stream);
             }
         }
+
+        /// <summary>
+        /// Test method to verify the diff algorithm works correctly
+        /// </summary>
+        public static void TestDiffAlgorithm()
+        {
+            var differ = new KotorDiffer();
+
+            // Test case 1: Simple addition
+            string text1 = "line1\nline2\nline3";
+            string text2 = "line1\nline2\nline3\nline4";
+            var result1 = differ.GenerateUnifiedDiffLines(text1, text2, "original", "modified");
+            Console.WriteLine("Test 1 - Simple addition:");
+            foreach (var line in result1)
+            {
+                Console.WriteLine(line);
+            }
+            Console.WriteLine();
+
+            // Test case 2: Simple deletion
+            string text3 = "line1\nline2\nline3\nline4";
+            string text4 = "line1\nline2\nline3";
+            var result2 = differ.GenerateUnifiedDiffLines(text3, text4, "original", "modified");
+            Console.WriteLine("Test 2 - Simple deletion:");
+            foreach (var line in result2)
+            {
+                Console.WriteLine(line);
+            }
+            Console.WriteLine();
+
+            // Test case 3: Modification
+            string text5 = "line1\nline2\nline3";
+            string text6 = "line1\nmodified_line2\nline3";
+            var result3 = differ.GenerateUnifiedDiffLines(text5, text6, "original", "modified");
+            Console.WriteLine("Test 3 - Modification:");
+            foreach (var line in result3)
+            {
+                Console.WriteLine(line);
+            }
+            Console.WriteLine();
+
+            // Test case 4: Complex changes with context
+            string text7 = "common1\ncommon2\nold_line1\nold_line2\ncommon3\ncommon4";
+            string text8 = "common1\ncommon2\nnew_line1\nnew_line2\ncommon3\ncommon4";
+            var result4 = differ.GenerateUnifiedDiffLines(text7, text8, "original", "modified");
+            Console.WriteLine("Test 4 - Complex changes:");
+            foreach (var line in result4)
+            {
+                Console.WriteLine(line);
+            }
+        }
+
     }
 }
 

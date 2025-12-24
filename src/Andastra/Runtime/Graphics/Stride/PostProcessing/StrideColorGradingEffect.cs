@@ -28,7 +28,6 @@ namespace Andastra.Runtime.Stride.PostProcessing
     {
         private StrideGraphics.GraphicsDevice _graphicsDevice;
         private EffectInstance _colorGradingEffect;
-        private StrideGraphics.Texture _lutTexture;
         private StrideGraphics.Texture _temporaryTexture;
         private int _lutSize; // Size of the 3D LUT (16 or 32)
         private bool _effectInitialized;
@@ -408,7 +407,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                         effectBase = (StrideGraphics.Effect)loadMethod.Invoke(null, new object[] { _graphicsDevice, "ColorGradingEffect" });
                         if (effectBase != null)
                         {
-                            _colorGradingEffect = new StrideGraphics.EffectInstance(effectBase);
+                            _colorGradingEffect = new EffectInstance(effectBase);
                             Console.WriteLine("[StrideColorGrading] Loaded ColorGradingEffect from compiled file");
                             _effectInitialized = true;
                             return;
@@ -454,7 +453,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                                                 effectBase = (StrideGraphics.Effect)loadGenericMethod.Invoke(contentManager, new object[] { "ColorGradingEffect" });
                                                 if (effectBase != null)
                                                 {
-                                                    _colorGradingEffect = new StrideGraphics.EffectInstance(effectBase);
+                                                    _colorGradingEffect = new EffectInstance(effectBase);
                                                     Console.WriteLine("[StrideColorGrading] Loaded ColorGradingEffect from ContentManager");
                                                     _effectInitialized = true;
                                                     return;
@@ -483,7 +482,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     effectBase = CreateColorGradingEffect();
                     if (effectBase != null)
                     {
-                        _colorGradingEffect = new StrideGraphics.EffectInstance(effectBase);
+                        _colorGradingEffect = new EffectInstance(effectBase);
                         Console.WriteLine("[StrideColorGrading] Created ColorGradingEffect programmatically");
                         _effectInitialized = true;
                         return;
@@ -502,6 +501,119 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 Console.WriteLine($"[StrideColorGrading] Failed to initialize effect: {ex.Message}");
                 _colorGradingEffect = null;
                 _effectInitialized = true; // Mark as initialized to avoid retrying
+            }
+        }
+
+        /// <summary>
+        /// Creates a ColorGrading Effect programmatically by compiling shader source.
+        /// This is a fallback when pre-compiled shader files are not available.
+        /// </summary>
+        /// <returns>Compiled Effect for color grading, or null if compilation fails.</returns>
+        private StrideGraphics.Effect CreateColorGradingEffect()
+        {
+            if (_graphicsDevice == null)
+            {
+                Console.WriteLine("[StrideColorGrading] Cannot create ColorGradingEffect: GraphicsDevice is null");
+                return null;
+            }
+
+            try
+            {
+                // Create a simple color grading shader source
+                // Based on Stride SDSL syntax and color grading algorithms
+                string shaderSource = @"
+shader ColorGradingEffect : ShaderBase
+{
+    // Input texture
+    Texture2D InputTexture : register(t0);
+    SamplerState LinearSampler : register(s0);
+
+    // LUT texture for color grading
+    Texture2D LUTTexture : register(t1);
+    SamplerState LUTSampler : register(s1);
+
+    // Color grading parameters
+    float Contrast : register(c0);
+    float Saturation : register(c1);
+    float Brightness : register(c2);
+    float Strength : register(c3);
+    int LUTSize : register(c4);
+
+    // Screen size for UV calculation
+    float2 ScreenSize : register(c5);
+
+    float4 MainPS(float4 position : SV_Position, float2 texCoord : TEXCOORD0) : SV_Target0
+    {
+        // Sample input texture
+        float4 inputColor = InputTexture.Sample(LinearSampler, texCoord);
+        float3 color = inputColor.rgb;
+
+        // Apply contrast
+        color = (color - 0.5) * (1.0 + Contrast) + 0.5;
+
+        // Apply saturation
+        float luminance = dot(color, float3(0.299, 0.587, 0.114));
+        color = lerp(float3(luminance, luminance, luminance), color, Saturation);
+
+        // Apply brightness
+        color += Brightness;
+
+        // Sample LUT if available
+        if (LUTSize > 0 && Strength > 0.0)
+        {
+            // Simple 2D LUT sampling (for 3D LUT, would need proper UV calculation)
+            float3 lutColor = LUTTexture.Sample(LUTSampler, texCoord).rgb;
+            color = lerp(color, lutColor, Strength);
+        }
+
+        // Clamp and return
+        color = saturate(color);
+        return float4(color, inputColor.a);
+    }
+
+    technique ColorGrading
+    {
+        pass Pass0
+        {
+            VertexShader = compile vs_5_0 MainVS();
+            PixelShader = compile ps_5_0 MainPS();
+        }
+    }
+
+    // Simple vertex shader for fullscreen quad
+    float4 MainVS(uint vertexId : SV_VertexID) : SV_Position
+    {
+        float2 positions[4] =
+        {
+            float2(-1.0, -1.0),
+            float2(1.0, -1.0),
+            float2(-1.0, 1.0),
+            float2(1.0, 1.0)
+        };
+        float2 texCoords[4] =
+        {
+            float2(0.0, 1.0),
+            float2(1.0, 1.0),
+            float2(0.0, 0.0),
+            float2(1.0, 0.0)
+        };
+
+        uint index = vertexId % 4;
+        return float4(positions[index], 0.0, 1.0);
+    }
+};";
+
+                // Compile shader using the same pattern as StrideSsrEffect
+                // Use CompileShaderFromSource helper if available, otherwise return null
+                // TODO: IMPLEMENT - Full shader compilation requires EffectCompiler setup
+                // For now, return null to use CPU fallback
+                Console.WriteLine("[StrideColorGrading] CreateColorGradingEffect: Shader compilation not yet fully implemented, using CPU fallback");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StrideColorGrading] Failed to create ColorGradingEffect: {ex.Message}");
+                return null;
             }
         }
 

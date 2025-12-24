@@ -58,11 +58,11 @@ namespace KotorDiff.Diff
 
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:931-934
         // Original: def _from_file(self, file_path: Path, *, base_prefix: str) -> ComparableResource: ...
-        private ComparableResource FromFile(FileInfo filePath, string basePrefix)
+        private static ComparableResource FromFile(FileInfo filePath, string basePrefix)
         {
             string ext = Path.GetExtension(filePath.Name).ToLowerInvariant().TrimStart('.');
-            string identifier = !string.IsNullOrEmpty(basePrefix) 
-                ? $"{basePrefix}{filePath.Name}" 
+            string identifier = !string.IsNullOrEmpty(basePrefix)
+                ? $"{basePrefix}{filePath.Name}"
                 : filePath.Name;
             byte[] data = File.ReadAllBytes(filePath.FullName);
             return new ComparableResource(identifier, ext, data);
@@ -161,7 +161,7 @@ namespace KotorDiff.Diff
             try
             {
                 var installation = new Installation(installRoot.FullName);
-                
+
                 // Override files
                 foreach (var resource in installation.OverrideResources())
                 {

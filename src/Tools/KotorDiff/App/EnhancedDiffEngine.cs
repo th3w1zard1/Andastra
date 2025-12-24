@@ -85,7 +85,7 @@ namespace KotorDiff.Diff
             return DiffResourceType.Bytes;
         }
 
-        private bool IsGffExtension(string ext)
+        private static bool IsGffExtension(string ext)
         {
             string extLower = ext.ToLowerInvariant();
             return extLower == "utc" || extLower == "uti" || extLower == "utp" ||

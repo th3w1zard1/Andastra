@@ -47,7 +47,7 @@ namespace KotorDiff.Formatters
             string header = $"< {diffResult.LeftIdentifier} | > {diffResult.RightIdentifier}";
 
             // Handle text-like content
-            if (diffResult is ResourceDiffResult resourceDiff && 
+            if (diffResult is ResourceDiffResult resourceDiff &&
                 (resourceDiff.ResourceType == "txt" || resourceDiff.ResourceType == "nss"))
             {
                 try
@@ -56,12 +56,12 @@ namespace KotorDiff.Formatters
                     {
                         string leftText = Encoding.UTF8.GetString(resourceDiff.LeftValue);
                         string rightText = Encoding.UTF8.GetString(resourceDiff.RightValue);
-                        
+
                         var leftLines = leftText.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
                         var rightLines = rightText.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
 
                         var diffLines = GenerateSideBySideDiff(leftLines, rightLines);
-                        
+
                         return header + "\n" + string.Join("\n", diffLines);
                     }
                 }
@@ -78,13 +78,13 @@ namespace KotorDiff.Formatters
         {
             var result = new List<string>();
             int columnWidth = (_width - 3) / 2; // Subtract 3 for separator " | "
-            
+
             int maxLines = Math.Max(leftLines.Length, rightLines.Length);
             for (int i = 0; i < maxLines; i++)
             {
                 string leftLine = i < leftLines.Length ? TruncateLine(leftLines[i], columnWidth) : "";
                 string rightLine = i < rightLines.Length ? TruncateLine(rightLines[i], columnWidth) : "";
-                
+
                 string marker = "";
                 if (i >= leftLines.Length)
                 {
@@ -98,14 +98,14 @@ namespace KotorDiff.Formatters
                 {
                     marker = "*";
                 }
-                
+
                 result.Add($"{leftLine.PadRight(columnWidth)} | {marker} {rightLine.PadRight(columnWidth)}");
             }
-            
+
             return result.ToArray();
         }
 
-        private string TruncateLine(string line, int maxLength)
+        private static string TruncateLine(string line, int maxLength)
         {
             if (line.Length > maxLength)
             {
