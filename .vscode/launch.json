@@ -59,22 +59,20 @@
       "request": "attach"
     },
     {
-      "name": "Launch Odyssey Game (Debug)",
+      "name": "Launch Andastra Game Launcher (Debug)",
       "type": "coreclr",
       "request": "launch",
-      "preLaunchTask": "build-odyssey-debug",
-      "program": "${workspaceFolder}/src/OdysseyRuntime/Odyssey.Game/bin/Debug/net9.0/Odyssey.Game.dll",
+      "preLaunchTask": "build-andastra-debug",
+      "program": "${workspaceFolder}/src/Andastra/bin/Debug/net9.0/Andastra.dll",
       "args": [],
-      "cwd": "${workspaceFolder}/src/OdysseyRuntime/Odyssey.Game",
+      "cwd": "${workspaceFolder}/src/Andastra",
       "stopAtEntry": false,
-      "console": "internalConsole",
-      "internalConsoleOptions": "openOnSessionStart",
+      "console": "integratedTerminal",
       "justMyCode": false,
       "enableStepFiltering": false,
       "symbolOptions": {
         "searchPaths": [
-          "${workspaceFolder}/src/OdysseyRuntime/**/bin/Debug/net9.0",
-          "${workspaceFolder}/src/CSharpKOTOR/bin/Debug/net9.0.0"
+          "${workspaceFolder}/src/Andastra/bin/Debug/net9.0"
         ],
         "searchMicrosoftSymbolServer": true,
         "searchNuGetOrgSymbolServer": true
@@ -84,22 +82,20 @@
       }
     },
     {
-      "name": "Launch Odyssey Game (Release)",
+      "name": "Launch Andastra Game Launcher (Release)",
       "type": "coreclr",
       "request": "launch",
-      "preLaunchTask": "build-odyssey-release",
-      "program": "${workspaceFolder}/src/OdysseyRuntime/Odyssey.Game/bin/Release/net9.0/Odyssey.Game.dll",
+      "preLaunchTask": "build-andastra-release",
+      "program": "${workspaceFolder}/src/Andastra/bin/Release/net9.0/Andastra.dll",
       "args": [],
-      "cwd": "${workspaceFolder}/src/OdysseyRuntime/Odyssey.Game",
+      "cwd": "${workspaceFolder}/src/Andastra",
       "stopAtEntry": false,
-      "console": "internalConsole",
-      "internalConsoleOptions": "openOnSessionStart",
+      "console": "integratedTerminal",
       "justMyCode": false,
       "enableStepFiltering": false,
       "symbolOptions": {
         "searchPaths": [
-          "${workspaceFolder}/src/OdysseyRuntime/**/bin/Release/net9.0",
-          "${workspaceFolder}/src/CSharpKOTOR/bin/Release/net9.0.0"
+          "${workspaceFolder}/src/Andastra/bin/Release/net9.0"
         ],
         "searchMicrosoftSymbolServer": true,
         "searchNuGetOrgSymbolServer": true
