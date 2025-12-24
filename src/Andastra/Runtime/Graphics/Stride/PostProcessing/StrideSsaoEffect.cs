@@ -223,7 +223,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                         var deviceServices = _graphicsDevice as IServiceProvider;
                         if (deviceServices != null)
                         {
-                            var contentManager = deviceServices.GetService(typeof(ContentManager)) as ContentManager;
+                            var contentManager = GetServiceHelper<ContentManager>(deviceServices);
                             if (contentManager != null)
                             {
                                 if (_gtaoEffectBase == null)
@@ -589,6 +589,46 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
             _bilateralBlurEffect?.Dispose();
             _bilateralBlurEffect = null;
+        }
+
+        /// <summary>
+        /// Helper method to call GetService&lt;T&gt;() using reflection (C# 7.3 compatible).
+        /// </summary>
+        private static T GetServiceHelper<T>(object services) where T : class
+        {
+            if (services == null)
+            {
+                return null;
+            }
+            try
+            {
+                // Try to cast to IServiceRegistry first
+                var serviceRegistry = services as IServiceRegistry;
+                if (serviceRegistry != null)
+                {
+                    var getServiceMethod = serviceRegistry.GetType().GetMethod("GetService", new Type[0]);
+                    if (getServiceMethod != null)
+                    {
+                        var genericMethod = getServiceMethod.MakeGenericMethod(typeof(T));
+                        return genericMethod.Invoke(serviceRegistry, null) as T;
+                    }
+                }
+                else
+                {
+                    // If not IServiceRegistry, try to get GetService method from the object's type
+                    var getServiceMethod = services.GetType().GetMethod("GetService", new Type[0]);
+                    if (getServiceMethod != null)
+                    {
+                        var genericMethod = getServiceMethod.MakeGenericMethod(typeof(T));
+                        return genericMethod.Invoke(services, null) as T;
+                    }
+                }
+            }
+            catch
+            {
+                // Service not available
+            }
+            return null;
         }
     }
 }
