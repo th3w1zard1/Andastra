@@ -40,8 +40,10 @@ namespace Andastra.Parsing.Formats.GFF
         /// </summary>
         public GFF Load(byte[] xmlBytes)
         {
-            using var ms = new MemoryStream(xmlBytes);
-            return Load(ms);
+            using (var ms = new MemoryStream(xmlBytes))
+            {
+                return Load(ms);
+            }
         }
 
         private GFF LoadFromXmlDocument(XDocument doc)
@@ -96,7 +98,7 @@ namespace Andastra.Parsing.Formats.GFF
                 object value = ParseFieldValue(element, fieldType);
                 GFFFieldType gffFieldType = GetGFFFieldType(fieldType);
 
-                gffStruct.Set(fieldName, gffFieldType, value);
+                gffStruct.SetField(fieldName, gffFieldType, value);
             }
 
             return gffStruct;
@@ -104,40 +106,53 @@ namespace Andastra.Parsing.Formats.GFF
 
         private object ParseFieldValue(XElement element, string fieldType)
         {
-            return fieldType switch
+            switch (fieldType)
             {
-                "uint8" => byte.Parse(element.Value),
-                "byte" => byte.Parse(element.Value),
-                "sint32" => int.Parse(element.Value),
-                "int32" => int.Parse(element.Value),
-                "uint32" => uint.Parse(element.Value),
-                "sint16" => short.Parse(element.Value),
-                "int16" => short.Parse(element.Value),
-                "uint16" => ushort.Parse(element.Value),
-                "float" => float.Parse(element.Value, CultureInfo.InvariantCulture),
-                "single" => float.Parse(element.Value, CultureInfo.InvariantCulture),
-                "exostring" => element.Value,
-                "resref" => new ResRef(element.Value),
-                "locstring" => ParseLocString(element),
-                "list" => ParseList(element),
-                "struct" => ParseStruct(element, int.Parse(element.Attribute("id")?.Value ?? "0")),
-                _ => throw new XmlException($"Unknown field type: {fieldType}")
-            };
+                case "uint8":
+                case "byte":
+                    return byte.Parse(element.Value);
+                case "sint32":
+                case "int32":
+                    return int.Parse(element.Value);
+                case "uint32":
+                    return uint.Parse(element.Value);
+                case "sint16":
+                case "int16":
+                    return short.Parse(element.Value);
+                case "uint16":
+                    return ushort.Parse(element.Value);
+                case "float":
+                case "single":
+                    return float.Parse(element.Value, CultureInfo.InvariantCulture);
+                case "exostring":
+                    return element.Value;
+                case "resref":
+                    return new ResRef(element.Value);
+                case "locstring":
+                    return ParseLocString(element);
+                case "list":
+                    return ParseList(element);
+                case "struct":
+                    return ParseStruct(element, int.Parse(element.Attribute("id")?.Value ?? "0"));
+                default:
+                    throw new XmlException($"Unknown field type: {fieldType}");
+            }
         }
 
         private LocalizedString ParseLocString(XElement locStringElement)
         {
-            var locString = new LocalizedString();
-
             // Check if there's a strref attribute
+            int strref = -1;
             var strrefAttr = locStringElement.Attribute("strref");
             if (strrefAttr != null)
             {
-                if (int.TryParse(strrefAttr.Value, out int strref))
+                if (!int.TryParse(strrefAttr.Value, out strref))
                 {
-                    locString.StringRef = strref;
+                    strref = -1;
                 }
             }
+
+            var locString = new LocalizedString(strref);
 
             // Parse string elements
             foreach (var stringElement in locStringElement.Elements("string"))
@@ -174,21 +189,37 @@ namespace Andastra.Parsing.Formats.GFF
 
         private GFFFieldType GetGFFFieldType(string xmlType)
         {
-            return xmlType switch
+            switch (xmlType)
             {
-                "uint8" or "byte" => GFFFieldType.UInt8,
-                "sint32" or "int32" => GFFFieldType.Int32,
-                "uint32" => GFFFieldType.UInt32,
-                "sint16" or "int16" => GFFFieldType.Int16,
-                "uint16" => GFFFieldType.UInt16,
-                "float" or "single" => GFFFieldType.Single,
-                "exostring" => GFFFieldType.ExoString,
-                "resref" => GFFFieldType.ResRef,
-                "locstring" => GFFFieldType.LocString,
-                "list" => GFFFieldType.List,
-                "struct" => GFFFieldType.Struct,
-                _ => throw new XmlException($"Unknown XML field type: {xmlType}")
-            };
+                case "uint8":
+                case "byte":
+                    return GFFFieldType.UInt8;
+                case "sint32":
+                case "int32":
+                    return GFFFieldType.Int32;
+                case "uint32":
+                    return GFFFieldType.UInt32;
+                case "sint16":
+                case "int16":
+                    return GFFFieldType.Int16;
+                case "uint16":
+                    return GFFFieldType.UInt16;
+                case "float":
+                case "single":
+                    return GFFFieldType.Single;
+                case "exostring":
+                    return GFFFieldType.String;
+                case "resref":
+                    return GFFFieldType.ResRef;
+                case "locstring":
+                    return GFFFieldType.LocalizedString;
+                case "list":
+                    return GFFFieldType.List;
+                case "struct":
+                    return GFFFieldType.Struct;
+                default:
+                    throw new XmlException($"Unknown XML field type: {xmlType}");
+            }
         }
     }
 }
