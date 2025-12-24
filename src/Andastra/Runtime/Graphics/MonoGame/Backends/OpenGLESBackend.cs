@@ -1387,13 +1387,13 @@ namespace Andastra.Runtime.MonoGame.Backends
             if (_glGetIntegerv == null || _glGetString == null)
             {
                 Console.WriteLine("[OpenGLESBackend] QueryCapabilities: Functions not loaded, using defaults");
-                bool supportsCompute = _majorVersion > 3 || (_majorVersion == 3 && _minorVersion >= 1);
+                bool defaultSupportsCompute = _majorVersion > 3 || (_majorVersion == 3 && _minorVersion >= 1);
                 _capabilities = new GraphicsCapabilities
                 {
                     MaxTextureSize = 4096,
                     MaxRenderTargets = 4,
                     MaxAnisotropy = 16,
-                    SupportsComputeShaders = supportsCompute,
+                    SupportsComputeShaders = defaultSupportsCompute,
                     SupportsGeometryShaders = false,
                     SupportsTessellation = false,
                     SupportsRaytracing = false,
@@ -1408,7 +1408,7 @@ namespace Andastra.Runtime.MonoGame.Backends
                     ShaderModelVersion = 3.2f,
                     RemixAvailable = false,
                     DlssAvailable = false,
-                    FsrAvailable = supportsCompute
+                    FsrAvailable = defaultSupportsCompute
                 };
                 return;
             }
