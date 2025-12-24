@@ -10,7 +10,7 @@
       "request": "launch",
       "preLaunchTask": "build-gui",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/src/HoloPatcher/bin/Debug/net9.0.0/HoloPatcher.dll",
+      "program": "${workspaceFolder}/src/HoloPatcher/bin/Debug/net8.0.0/HoloPatcher.dll",
       "cwd": "${workspaceFolder}/src/HoloPatcher",
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
@@ -27,7 +27,7 @@
       "request": "launch",
       "preLaunchTask": "build-kncsdecomp",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/src/KNCSDecomp/bin/Debug/net9.0.0/KNCSDecomp.dll",
+      "program": "${workspaceFolder}/src/KNCSDecomp/bin/Debug/net8.0.0/KNCSDecomp.dll",
       "cwd": "${workspaceFolder}/src/KNCSDecomp",
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
@@ -59,49 +59,71 @@
       "request": "attach"
     },
     {
-      "name": "Launch Andastra Game Launcher (Debug)",
+      "name": "Launch Andastra Game Launcher (Debug) - Watch Mode",
       "type": "coreclr",
       "request": "launch",
-      "preLaunchTask": "build-andastra-debug",
-      "program": "${workspaceFolder}/src/Andastra/bin/Debug/net9.0/Andastra.exe",
-      "args": [],
-      "cwd": "${workspaceFolder}/src/Andastra",
-      "stopAtEntry": false,
-      "console": "internalConsole",
-      "justMyCode": false,
-      "enableStepFiltering": false,
-      "symbolOptions": {
-        "searchPaths": [
-          "${workspaceFolder}/src/Andastra/bin/Debug/net9.0"
-        ],
-        "searchMicrosoftSymbolServer": true,
-        "searchNuGetOrgSymbolServer": true
-      },
-      "env": {
-        "DOTNET_ENVIRONMENT": "Development"
-      }
-    },
-    {
-      "name": "Launch Andastra Game Launcher (Release)",
-      "type": "coreclr",
-      "request": "launch",
-      "preLaunchTask": "build-andastra-release",
-      "program": "${workspaceFolder}/src/Andastra/bin/Release/net9.0/Andastra.exe",
-      "args": [],
-      "cwd": "${workspaceFolder}/src/Andastra",
+      "program": "dotnet",
+      "args": [
+        "watch",
+        "run",
+        "--project",
+        "${workspaceFolder}/src/Andastra/Andastra.csproj",
+        "--configuration",
+        "Debug"
+      ],
+      "cwd": "${workspaceFolder}",
       "stopAtEntry": false,
       "console": "integratedTerminal",
       "justMyCode": false,
       "enableStepFiltering": false,
       "symbolOptions": {
         "searchPaths": [
-          "${workspaceFolder}/src/Andastra/bin/Release/net9.0"
+          "${workspaceFolder}/src/Andastra/bin/Debug/net8.0"
         ],
         "searchMicrosoftSymbolServer": true,
         "searchNuGetOrgSymbolServer": true
       },
       "env": {
-        "DOTNET_ENVIRONMENT": "Production"
+        "DOTNET_ENVIRONMENT": "Development",
+        "DOTNET_LOGGING_DEBUG": "Microsoft.Extensions.Hosting,Microsoft.AspNetCore.Hosting,Microsoft.AspNetCore.Server.Kestrel",
+        "Logging__LogLevel__Default": "Trace",
+        "Logging__LogLevel__Microsoft": "Trace",
+        "Logging__LogLevel__Microsoft.Hosting.Lifetime": "Trace",
+        "Logging__LogLevel__System": "Trace"
+      }
+    },
+    {
+      "name": "Launch Andastra Game Launcher (Release) - Watch Mode",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "dotnet",
+      "args": [
+        "watch",
+        "run",
+        " --project",
+        "${workspaceFolder}/src/Andastra/Andastra.csproj",
+        "--configuration",
+        "Release"
+      ],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "enableStepFiltering": false,
+      "symbolOptions": {
+        "searchPaths": [
+          "${workspaceFolder}/src/Andastra/bin/Release/net8.0"
+        ],
+        "searchMicrosoftSymbolServer": true,
+        "searchNuGetOrgSymbolServer": true
+      },
+      "env": {
+        "DOTNET_ENVIRONMENT": "Production",
+        "DOTNET_LOGGING_DEBUG": "Microsoft.Extensions.Hosting,Microsoft.AspNetCore.Hosting,Microsoft.AspNetCore.Server.Kestrel",
+        "Logging__LogLevel__Default": "Trace",
+        "Logging__LogLevel__Microsoft": "Trace",
+        "Logging__LogLevel__Microsoft.Hosting.Lifetime": "Trace",
+        "Logging__LogLevel__System": "Trace"
       }
     },
     {

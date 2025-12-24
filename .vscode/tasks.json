@@ -35,8 +35,7 @@
         "panel": "shared",
         "focus": false,
         "clear": false
-      },
-      "dependsOn": "cleanup"
+      }
     },
     {
       "label": "build",
@@ -250,6 +249,56 @@
         "clear": false
       },
       "dependsOn": "build"
+    },
+    {
+      "label": "watch-andastra-debug",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "watch",
+        "run",
+        "--project",
+        "${workspaceFolder}/src/Andastra/Andastra.csproj",
+        "--configuration",
+        "Debug",
+        "--verbosity",
+        "diagnostic"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": true,
+        "clear": false
+      },
+      "isBackground": true,
+      "dependsOn": "restore"
+    },
+    {
+      "label": "watch-andastra-release",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "watch",
+        "run",
+        "--project",
+        "${workspaceFolder}/src/Andastra/Andastra.csproj",
+        "--configuration",
+        "Release",
+        "--verbosity",
+        "diagnostic"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": true,
+        "clear": false
+      },
+      "isBackground": true,
+      "dependsOn": "restore"
     }
   ]
 }
