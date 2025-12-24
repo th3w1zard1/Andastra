@@ -13,7 +13,7 @@ namespace Andastra.Runtime.Stride.Graphics
     /// This implementation provides a compatibility layer:
     /// - ImmediateContext: Uses a static registry to map GraphicsDevice to CommandList from Game.GraphicsContext
     /// - Services: Should be obtained from Game.Services or ServiceRegistry, not from GraphicsDevice
-    /// 
+    ///
     /// Based on Stride Graphics API: https://doc.stride3d.net/latest/en/manual/graphics/
     /// In newer Stride versions, CommandList is obtained from Game.GraphicsContext.CommandList.
     /// The registry allows code that has access to Game to register the CommandList for use by extension methods.
@@ -24,12 +24,12 @@ namespace Andastra.Runtime.Stride.Graphics
         // This allows code with access to Game.GraphicsContext.CommandList to register it
         // for use by extension methods that only have access to GraphicsDevice
         private static readonly Dictionary<StrideGraphics.GraphicsDevice, StrideGraphics.CommandList> _commandListRegistry;
-        
+
         // Static registry to map GraphicsDevice to its associated Game instance
         // This allows fallback access to Game.GraphicsContext.CommandList when CommandList is not directly registered
         // Based on Stride 4.2: Game instance is required to access GraphicsContext.CommandList
         private static readonly Dictionary<StrideGraphics.GraphicsDevice, StrideEngine.Game> _gameRegistry;
-        
+
         private static readonly object _registryLock;
 
         static GraphicsDeviceExtensions()
@@ -49,7 +49,7 @@ namespace Andastra.Runtime.Stride.Graphics
         /// Registration: Code that has access to Game instance should call this method to register
         /// the CommandList from Game.GraphicsContext.CommandList. This allows the ImmediateContext()
         /// extension method to retrieve the correct CommandList for immediate rendering operations.
-        /// 
+        ///
         /// Example usage:
         /// GraphicsDeviceExtensions.RegisterCommandList(game.GraphicsDevice, game.GraphicsContext.CommandList);
         /// </remarks>
@@ -76,10 +76,10 @@ namespace Andastra.Runtime.Stride.Graphics
         /// Game Registration: Code that has access to Game instance should call this method to register
         /// the Game instance. This allows the ImmediateContext() extension method to retrieve the CommandList
         /// from Game.GraphicsContext.CommandList as a fallback when the CommandList is not directly registered.
-        /// 
+        ///
         /// Based on Stride 4.2: Game instance is required to access GraphicsContext.CommandList
         /// In Stride 4.2, GraphicsDevice doesn't have ResourceFactory, so CommandList must be obtained from Game.GraphicsContext.CommandList
-        /// 
+        ///
         /// Example usage:
         /// GraphicsDeviceExtensions.RegisterGame(game.GraphicsDevice, game);
         /// </remarks>
@@ -98,7 +98,7 @@ namespace Andastra.Runtime.Stride.Graphics
             lock (_registryLock)
             {
                 _gameRegistry[device] = game;
-                
+
                 // Also register the CommandList if available from GraphicsContext
                 // This ensures both registries are kept in sync
                 if (game.GraphicsContext != null && game.GraphicsContext.CommandList != null)
@@ -156,11 +156,11 @@ namespace Andastra.Runtime.Stride.Graphics
         /// - First attempts to retrieve from the static registry (registered via RegisterCommandList)
         /// - If not found in registry, attempts to create a new CommandList using ResourceFactory
         /// - Returns null if both methods fail
-        /// 
+        ///
         /// Based on Stride Graphics API: https://doc.stride3d.net/latest/en/manual/graphics/
         /// In newer Stride versions, the immediate CommandList is obtained from Game.GraphicsContext.CommandList.
         /// This extension method provides compatibility for code that only has access to GraphicsDevice.
-        /// 
+        ///
         /// swkotor2.exe: Graphics device command list management @ 0x004eb750 (original engine behavior)
         /// </remarks>
         [JetBrains.Annotations.CanBeNull]
@@ -191,11 +191,11 @@ namespace Andastra.Runtime.Stride.Graphics
                     if (registeredGame != null && registeredGame.GraphicsContext != null && registeredGame.GraphicsContext.CommandList != null)
                     {
                         StrideGraphics.CommandList commandListFromGame = registeredGame.GraphicsContext.CommandList;
-                        
+
                         // Cache it in the CommandList registry for future use
                         // This improves performance by avoiding repeated Game.GraphicsContext access
                         _commandListRegistry[device] = commandListFromGame;
-                        
+
                         return commandListFromGame;
                     }
                 }
@@ -205,18 +205,63 @@ namespace Andastra.Runtime.Stride.Graphics
             // Based on Stride 4.2: GraphicsDevice doesn't have ResourceFactory or CreateCommandList method
             // CommandList must be obtained from Game.GraphicsContext.CommandList
             // The CommandList should be registered via RegisterCommandList() or RegisterGame() from code that has access to Game instance
-            // 
+            //
             // Implementation note: In Stride 4.2, you cannot create a CommandList directly from GraphicsDevice
             // The CommandList is managed by Game.GraphicsContext and is created per frame for thread safety
             // This is by design - Stride manages command list lifecycle to ensure proper resource management
-            // 
+            //
             // If you need a CommandList and only have access to GraphicsDevice:
             // 1. Register the Game instance: GraphicsDeviceExtensions.RegisterGame(device, game);
             // 2. Or register the CommandList directly: GraphicsDeviceExtensions.RegisterCommandList(device, game.GraphicsContext.CommandList);
-            // 
+            //
             // Based on Stride Graphics API: https://doc.stride3d.net/latest/en/manual/graphics/
             // CommandList is obtained from Game.GraphicsContext.CommandList, not created from GraphicsDevice
             // swkotor2.exe: Graphics device command list management @ 0x004eb750 (original engine behavior)
+            return null;
+        }
+
+        /// <summary>
+        /// Gets the GraphicsContext for the graphics device.
+        /// </summary>
+        /// <param name="device">The GraphicsDevice to get the GraphicsContext for.</param>
+        /// <returns>The GraphicsContext for the device, or null if not available.</returns>
+        /// <remarks>
+        /// GraphicsContext Retrieval:
+        /// - Attempts to retrieve from the registered Game instance's GraphicsContext
+        /// - Returns null if no Game instance is registered or GraphicsContext is not available
+        ///
+        /// Based on Stride Graphics API: GraphicsContext is obtained from Game.GraphicsContext
+        /// This extension method provides compatibility for code that only has access to GraphicsDevice.
+        ///
+        /// swkotor2.exe: Graphics context management @ 0x004eb750 (original engine behavior)
+        /// </remarks>
+        [JetBrains.Annotations.CanBeNull]
+        public static StrideGraphics.GraphicsContext GraphicsContext(this StrideGraphics.GraphicsDevice device)
+        {
+            if (device == null)
+            {
+                return null;
+            }
+
+            // Try to get GraphicsContext from registered Game instance
+            // Based on Stride API: Game.GraphicsContext provides the graphics context for rendering
+            lock (_registryLock)
+            {
+                StrideEngine.Game registeredGame;
+                if (_gameRegistry.TryGetValue(device, out registeredGame))
+                {
+                    // Get GraphicsContext from Game.GraphicsContext if available
+                    // Based on Stride API: Game.GraphicsContext provides the rendering context
+                    if (registeredGame != null && registeredGame.GraphicsContext != null)
+                    {
+                        return registeredGame.GraphicsContext;
+                    }
+                }
+            }
+
+            // GraphicsContext is not available
+            // The Game instance should be registered via RegisterGame() from code that has access to Game instance
+            // Based on Stride Graphics API: GraphicsContext is obtained from Game.GraphicsContext
             return null;
         }
 
@@ -229,7 +274,7 @@ namespace Andastra.Runtime.Stride.Graphics
         /// GraphicsDevice.Services was removed in newer Stride versions.
         /// Services should be obtained from Game.Services or passed as a parameter.
         /// This method exists for API compatibility but always returns null.
-        /// 
+        ///
         /// Based on Stride Engine API: Services are accessed through Game.Services, not GraphicsDevice.Services
         /// </remarks>
         [JetBrains.Annotations.CanBeNull]

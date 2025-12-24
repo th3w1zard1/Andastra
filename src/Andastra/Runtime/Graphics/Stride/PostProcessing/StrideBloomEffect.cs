@@ -98,7 +98,9 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 {
                     // Try to get ContentManager from GraphicsDevice services
                     // Stride GraphicsDevice may have Services property that provides ContentManager
-                    var services = _graphicsDevice.Services;
+                    // Use explicit type to avoid C# 7.3 inferred delegate type limitation
+                    // Note: Services() extension method returns null in this Stride version, but code handles null gracefully
+                    object services = _graphicsDevice.Services();
                     if (services != null)
                     {
                         var contentManager = ((dynamic)services).GetService<ContentManager>();
@@ -744,8 +746,7 @@ shader BlurEffect : ShaderBase
                 object services = _graphicsDevice.Services();
                 if (services != null)
                 {
-                    dynamic servicesDynamic = services;
-                    var effectCompiler = servicesDynamic.GetService<EffectCompiler>();
+                    var effectCompiler = services.GetService<EffectCompiler>();
                     if (effectCompiler != null)
                     {
                         // Create compilation source from file
