@@ -25,7 +25,15 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public int Height => _texture.Height;
 
-        public IntPtr NativeHandle => _texture.NativeDeviceTexture;
+        public IntPtr NativeHandle
+        {
+            get
+            {
+                // Stride Texture doesn't expose NativeDeviceTexture directly
+                // Return IntPtr.Zero as Stride manages native resources internally
+                return IntPtr.Zero;
+            }
+        }
 
         public void SetData(byte[] data)
         {
