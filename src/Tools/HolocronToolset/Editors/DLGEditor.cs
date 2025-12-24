@@ -1452,7 +1452,7 @@ namespace HolocronToolset.Editors
             if (_restype == ResourceType.CNV)
             {
                 // CNV format is only used by Eclipse Engine games
-                BioWareGame gameToUse = _installation?.game ?? BioWareGame.DA;
+                BioWareGame gameToUse = _installation?.Game ?? BioWareGame.DA;
                 if (!gameToUse.IsEclipse())
                 {
                     // Default to DA if not Eclipse game
@@ -1469,7 +1469,7 @@ namespace HolocronToolset.Editors
             // - K1, NWN, Eclipse (DA/DA2/ME): Base DLG format (no K2-specific fields)
             //   Eclipse games use K1-style DLG format (no K2 extensions)
             //   Note: Eclipse games may also use .cnv format, but DLG files follow K1 format
-            BioWareGame gameToUseDlg = _installation?.BioWareGame ?? BioWareGame.K2;
+            BioWareGame gameToUseDlg = _installation?.Game ?? BioWareGame.K2;
 
             // For Eclipse games, use K1 format (no K2-specific fields)
             // Matching PyKotor: Eclipse games don't have K2 extensions
@@ -1494,7 +1494,7 @@ namespace HolocronToolset.Editors
         /// </summary>
         private void UpdateUIForGame()
         {
-            BioWareGame currentGame = _installation?.BioWareGame ?? BioWareGame.K2;
+            BioWareGame currentGame = _installation?.Game ?? BioWareGame.K2;
             bool isK2 = currentGame.IsK2();
 
             // Show/hide K2-specific controls
@@ -1523,6 +1523,93 @@ namespace HolocronToolset.Editors
         public override void SaveAs()
         {
             Save();
+        }
+
+        /// <summary>
+        /// Opens a file dialog to select and load a DLG file.
+        /// </summary>
+        private async void OpenFile()
+        {
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel == null)
+            {
+                return;
+            }
+
+            var options = new FilePickerOpenOptions
+            {
+                Title = "Open DLG File",
+                AllowMultiple = false,
+                FileTypeFilter = new List<FilePickerFileType>
+                {
+                    new FilePickerFileType("DLG Files")
+                    {
+                        Patterns = new List<string> { "*.dlg" },
+                        MimeTypes = new List<string> { "application/octet-stream" }
+                    },
+                    new FilePickerFileType("All Files")
+                    {
+                        Patterns = new List<string> { "*" },
+                        MimeTypes = new List<string> { "application/octet-stream" }
+                    }
+                }
+            };
+
+            var files = await topLevel.StorageProvider.OpenFilePickerAsync(options);
+            if (files == null || files.Count == 0)
+            {
+                return;
+            }
+
+            var filePath = files[0].Path.LocalPath;
+            if (!File.Exists(filePath))
+            {
+                return;
+            }
+
+            try
+            {
+                var data = File.ReadAllBytes(filePath);
+                var fileName = Path.GetFileNameWithoutExtension(filePath);
+                Load(filePath, fileName, ResourceType.DLG, data);
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Failed to open DLG file: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Reverts changes by reloading the current DLG from its original source.
+        /// </summary>
+        private void RevertChanges()
+        {
+            if (string.IsNullOrEmpty(_filepath))
+            {
+                // No file to revert to, create new instead
+                New();
+                return;
+            }
+
+            try
+            {
+                if (File.Exists(_filepath))
+                {
+                    var data = File.ReadAllBytes(_filepath);
+                    var fileName = Path.GetFileNameWithoutExtension(_filepath);
+                    Load(_filepath, fileName, ResourceType.DLG, data);
+                }
+                else
+                {
+                    // File no longer exists, create new
+                    New();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Failed to revert DLG file: {ex.Message}");
+                New();
+            }
         }
 
         /// <summary>
@@ -2052,7 +2139,7 @@ namespace HolocronToolset.Editors
             // Original: self.ui.plotIndexCombo.setCurrentIndex(item.link.node.plot_index), self.ui.plotXpSpin.setValue(item.link.node.plot_xp_percentage)
             if (_plotIndexCombo != null && node != null)
             {
-                _plotIndexCombo.SelectedIndex = node.PlotIndex ?? 0;
+                _plotIndexCombo.SelectedIndex = node.PlotIndex;
             }
 
             if (_plotXpSpin != null && node != null)
@@ -2314,7 +2401,7 @@ namespace HolocronToolset.Editors
             // Original: item.link.node.plot_index = self.ui.plotIndexCombo.currentIndex(), item.link.node.plot_xp_percentage = self.ui.plotXpSpin.value()
             if (_plotIndexCombo != null && node != null)
             {
-                node.PlotIndex = _plotIndexCombo.SelectedIndex ?? 0;
+                node.PlotIndex = _plotIndexCombo.SelectedIndex;
             }
 
             if (_plotXpSpin != null && node != null)
@@ -2366,31 +2453,31 @@ namespace HolocronToolset.Editors
             // Original: item.link.node.emotion_id = self.ui.emotionSelect.currentIndex()
             if (_emotionSelect != null && node != null)
             {
-                node.EmotionId = _emotionSelect.SelectedIndex ?? 0;
+                node.EmotionId = _emotionSelect?.SelectedIndex ?? 0;
             }
 
             // Original: item.link.node.facial_id = self.ui.expressionSelect.currentIndex()
             if (_expressionSelect != null && node != null)
             {
-                node.FacialId = _expressionSelect.SelectedIndex ?? 0;
+                node.FacialId = _expressionSelect?.SelectedIndex ?? 0;
             }
 
             // Original: item.link.node.node_id = self.ui.nodeIdSpin.value()
             if (_nodeIdSpin != null && node != null)
             {
-                node.NodeId = _nodeIdSpin.Value ?? 0;
+                node.NodeId = (int)(_nodeIdSpin.Value ?? 0);
             }
 
             // Original: item.link.node.alien_race_node = self.ui.alienRaceNodeSpin.value()
             if (_alienRaceNodeSpin != null && node != null)
             {
-                node.AlienRaceNode = _alienRaceNodeSpin.Value ?? 0;
+                node.AlienRaceNode = (int)(_alienRaceNodeSpin.Value ?? 0);
             }
 
             // Original: item.link.node.post_proc_node = self.ui.postProcSpin.value()
             if (_postProcSpin != null && node != null)
             {
-                node.PostProcNode = _postProcSpin.Value ?? 0;
+                node.PostProcNode = (int)(_postProcSpin.Value ?? 0);
             }
 
             // Original: item.link.node.unskippable = self.ui.nodeUnskippableCheckbox.isChecked()
@@ -3393,10 +3480,10 @@ namespace HolocronToolset.Editors
         {
             // File menu actions
             _actionNew.Click += (s, e) => New();
-            _actionOpen.Click += (s, e) => Open();
+            _actionOpen.Click += (s, e) => OpenFile();
             _actionSave.Click += (s, e) => Save();
             _actionSaveAs.Click += (s, e) => SaveAs();
-            _actionRevert.Click += (s, e) => Revert();
+            _actionRevert.Click += (s, e) => RevertChanges();
             _actionExit.Click += (s, e) => Close();
 
             // Tools menu actions
