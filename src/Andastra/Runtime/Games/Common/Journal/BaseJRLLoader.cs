@@ -31,6 +31,7 @@ namespace Andastra.Runtime.Games.Common.Journal
     public abstract class BaseJRLLoader
     {
         protected readonly Installation _installation;
+        protected Dictionary<string, JRL> _jrlCache;
 
         /// <summary>
         /// Creates a new JRL loader.
