@@ -143,15 +143,10 @@ namespace KotorCLI.Commands
                                 }
                             }
 
-                            // TODO: STUB - Note: JSON GFF reading not yet implemented in Andastra.Parsing
-                            // TODO: STUB - For now, we'll log a warning and skip
-                            logger.Warning($"TODO: STUB - JSON GFF reading not yet implemented. Skipping {Path.GetFileName(jsonFile)}");
-                            logger.Warning("TODO: STUB - Convert command requires JSON GFF support to be implemented in Andastra.Parsing");
-
-                            // TODO: When JSON GFF reading is available:
-                            // var gff = GFFAuto.ReadGff(jsonFile, fileFormat: ResourceType.GFF_JSON);
-                            // GFFAuto.WriteGff(gff, outputFile, ResourceType.GFF);
-                            // convertedCount++;
+                            // Read JSON GFF and convert to binary GFF
+                            var gff = GFFAuto.ReadGff(jsonFile, fileFormat: ResourceType.GFF_JSON);
+                            GFFAuto.WriteGff(gff, outputFile, ResourceType.GFF);
+                            convertedCount++;
                         }
                         catch (Exception ex)
                         {

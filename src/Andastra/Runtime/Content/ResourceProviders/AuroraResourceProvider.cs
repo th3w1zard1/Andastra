@@ -29,7 +29,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
     /// - Async loading: Provides async resource access for streaming and background loading
     /// - Resource enumeration: Can enumerate resources by type from HAK files, module directories, and override directory
     /// - Based on Aurora Engine's CExoResMan resource management system
-    /// 
+    ///
     /// Cross-Engine Resource Loading Patterns (from Ghidra analysis):
     /// - Aurora Engine (nwmain.exe): Similar to Odyssey but with HAK file support
     ///   - OVERRIDE directory: "override" (highest priority, allows modding)
@@ -44,16 +44,16 @@ namespace Andastra.Runtime.Content.ResourceProviders
     ///   - HAK files are loaded in order specified in Module.ifo
     ///   - Resources in later HAK files override resources in earlier HAK files
     ///   - Module overrides take precedence over HAK files
-    /// 
+    ///
     /// Reverse Engineered Function Addresses (from Ghidra MCP analysis of nwmain.exe):
-    /// 
+    ///
     /// CExoResMan Resource Manager:
     /// - CExoResMan::CExoResMan (constructor) @ 0x14018d6f0
     ///   - Initializes resource manager with memory management
     ///   - Sets up key table storage and resource tracking structures
     ///   - Configures memory limits based on system physical memory
     ///   - Initializes NWSync subsystem for resource synchronization
-    /// 
+    ///
     /// Resource Loading Functions:
     /// - CExoResMan::Demand @ 0x14018ef90
     ///   - Main resource loading function that services resource requests
@@ -66,7 +66,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
     /// - CRes::Demand @ 0x14018f300
     ///   - Wrapper function that calls CExoResMan::Demand via global g_pExoResMan
     ///   - Validates global resource manager is initialized
-    /// 
+    ///
     /// Resource Service Functions:
     /// - CExoResMan::ServiceFromDirectory @ 0x140191e80
     ///   - Loads resources from directory-based sources (override/modules)
@@ -76,7 +76,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
     ///   - Handles encapsulated resource file format parsing
     /// - CExoResMan::ServiceFromResFile @ 0x140193b80
     ///   - Loads resources from RES format files (legacy resource format)
-    /// 
+    ///
     /// Key Table Management (HAK File Registration):
     /// - CExoResMan::AddKeyTable @ 0x14018e330
     ///   - Registers a key table (resource index) with the resource manager
@@ -87,7 +87,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
     ///   - Checks for duplicate registrations and rebuilds table if re-added
     /// - CExoResMan::AddKeyTableContents @ 0x140189280
     ///   - Adds resource entries from a key table file to an existing key table
-    /// 
+    ///
     /// Module.ifo HAK File Parsing:
     /// - Module.ifo parsing functions reference Mod_HakList and Mod_Hak strings:
     ///   - "Mod_HakList" string @ 0x140def690 (preferred method, GFF List field)
@@ -95,20 +95,20 @@ namespace Andastra.Runtime.Content.ResourceProviders
     ///   - Functions at 0x14047f60e, 0x1404862d9, 0x140486325 reference these strings
     ///   - Module loading code extracts HAK file list from Module.ifo GFF structure
     ///   - HAK files are registered via AddKeyTable in the order specified in Module.ifo
-    /// 
+    ///
     /// Directory Configuration:
     /// - "MODULES=" configuration string @ 0x140d80d20
     ///   - Referenced by function @ 0x14003f569 for module directory path construction
     /// - "OVERRIDE=" configuration string @ 0x140d80d50
     /// - Directory name strings: "modules" @ 0x140d80f38, "override" @ 0x140d80f40
-    /// 
+    ///
     /// Resource Lookup Precedence (as implemented in CExoResMan::Demand):
     /// 1. Override directory (ServiceFromDirectory, type 3)
     /// 2. Module-specific resources (ServiceFromDirectory, type 3)
     /// 3. HAK files in load order (ServiceFromEncapsulated, type 2, registered via AddKeyTable)
     /// 4. Base game resources (ServiceFromResFile/ServiceFromEncapsulated)
     /// 5. Hardcoded resources (engine-specific fallbacks)
-    /// 
+    ///
     /// Note: Neverwinter Nights 2 (nwn2main.exe) uses similar architecture but function addresses differ.
     /// Additional reverse engineering required for nwn2main.exe specific addresses.
     /// </remarks>
@@ -119,7 +119,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
         private string _currentModule;
         private readonly Dictionary<string, byte[]> _overrideCache = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
         private readonly List<string> _hakFiles = new List<string>();
-        
+
         // Base game resource caches (KEY/BIF files, ERF archives)
         private readonly Dictionary<string, KEY> _keyFileCache = new Dictionary<string, KEY>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, BIF> _bifFileCache = new Dictionary<string, BIF>(StringComparer.OrdinalIgnoreCase);
@@ -615,7 +615,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
                     // Resolve BIF file path (BIF files are relative to installation path)
                     // Based on vendor/xoreos/src/engines/nwn/nwn.cpp: BIF paths are resolved from installation root
                     string bifFilePath = Path.Combine(_installationPath, bifFileName.Replace('/', Path.DirectorySeparatorChar));
-                    
+
                     // Try case-insensitive search if exact path doesn't exist
                     if (!File.Exists(bifFilePath))
                     {
@@ -652,11 +652,11 @@ namespace Andastra.Runtime.Content.ResourceProviders
                             {
                                 var bifReader = new BIFBinaryReader(bifFilePath);
                                 bifFile = bifReader.Load();
-                                
+
                                 // Merge KEY data to populate ResRef names in BIF resources
                                 // This matches PyKotor behavior where KEY data is merged into BIF for name resolution
                                 MergeKeyDataIntoBif(bifFile, keyFilePath, bifFilePath);
-                                
+
                                 if (bifFile != null)
                                 {
                                     bifFile.BuildLookupTables();
@@ -688,7 +688,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
                     if (resIndex >= 0 && resIndex < bifFile.Resources.Count)
                     {
                         BIFResource resourceByIndex = bifFile.Resources[resIndex];
-                        if (resourceByIndex != null && resourceByIndex.ResType == id.ResType && 
+                        if (resourceByIndex != null && resourceByIndex.ResType == id.ResType &&
                             resourceByIndex.Data != null && resourceByIndex.Data.Length > 0)
                         {
                             return resourceByIndex.Data;
@@ -902,7 +902,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
                 // Search for resource file (case-insensitive)
                 string resourceFileName = id.ResName + "." + extension;
                 string resourceFilePath = Path.Combine(baseDirPath, resourceFileName);
-                
+
                 if (File.Exists(resourceFilePath))
                 {
                     try
@@ -978,7 +978,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
 
             // DefaultIcon (TGA/DDS): Fallback icon when icon resource cannot be found
             // Based on nwmain.exe: DefaultIcon string @ 0x140dc3a78
-            if ((id.ResType == ResourceType.TGA || id.ResType == ResourceType.DDS) && 
+            if ((id.ResType == ResourceType.TGA || id.ResType == ResourceType.DDS) &&
                 string.Equals(id.ResName, "DefaultIcon", StringComparison.OrdinalIgnoreCase))
             {
                 return GetHardcodedDefaultIcon(id.ResType);
@@ -986,7 +986,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
 
             // DefaultACSounds (2DA): Default action/combat sounds table
             // Based on nwmain.exe: DefaultACSounds string @ 0x140dc6db8, referenced in Load2DArrays function
-            if (id.ResType == ResourceType.TwoDA && 
+            if (id.ResType == ResourceType.TwoDA &&
                 string.Equals(id.ResName, "DefaultACSounds", StringComparison.OrdinalIgnoreCase))
             {
                 return GetHardcodedDefaultACSounds();
@@ -994,7 +994,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
 
             // fnt_default (FNT): Default font when font resource cannot be found
             // Based on nwmain.exe: "fnt_default" string references in font loading code
-            if (id.ResType == ResourceType.FNT && 
+            if (id.ResType == ResourceType.FNT &&
                 (string.Equals(id.ResName, "fnt_default", StringComparison.OrdinalIgnoreCase) ||
                  string.Equals(id.ResName, "fnt_default_hr", StringComparison.OrdinalIgnoreCase)))
             {
@@ -1108,7 +1108,7 @@ endmodel
                 // DDS header: 128 bytes (DDS_MAGIC + DDS_HEADER)
                 // Image data: DXT1 compressed (16x16 = 128 bytes compressed)
                 byte[] ddsMagic = new byte[] { 0x44, 0x44, 0x53, 0x20 }; // "DDS "
-                
+
                 // DDS_HEADER structure (124 bytes)
                 byte[] ddsHeader = new byte[124];
                 ddsHeader[0] = 0x7C; // dwSize = 124
@@ -1196,7 +1196,7 @@ endmodel
         /// - FNT format: Binary format with font metadata, metrics, and texture reference
         /// - Based on Aurora engine font system: Fonts are texture-based (TGA files) with metadata in FNT
         /// - Game-specific implementations can override this to provide game-specific default fonts
-        /// 
+        ///
         /// FNT File Format Structure (Aurora Engine):
         /// - Header (4 bytes): Magic "FNT " (0x46 0x4E 0x54 0x20)
         /// - Version (4 bytes): Format version (1 = V1.0)
@@ -1214,7 +1214,7 @@ endmodel
         /// - Characters Per Column (4 bytes, uint32): Characters per column in texture grid
         /// - Reserved (128 bytes): Reserved for future use
         /// Total size: 224 bytes minimum
-        /// 
+        ///
         /// Based on vendor/xoreos/src/graphics/aurora/texturefont.cpp: TextureFont loads fonts from textures
         /// Based on vendor/reone/src/libs/resource/provider/fonts.cpp: Fonts loaded by ResRef, actual resource is texture
         /// </remarks>
@@ -1230,10 +1230,10 @@ endmodel
                 writer.Write((byte)0x4E); // 'N'
                 writer.Write((byte)0x54); // 'T'
                 writer.Write((byte)0x20); // ' ' (space)
-                
+
                 // Version: 1 (V1.0)
                 writer.Write((uint)1);
-                
+
                 // Font Name: ResRef (16 bytes, null-terminated, padded with zeros)
                 // Default fonts: "fnt_default" or "fnt_default_hr"
                 string fontResRef = fontName.Length > 15 ? fontName.Substring(0, 15) : fontName;
@@ -1243,7 +1243,7 @@ endmodel
                 {
                     writer.Write(new byte[16 - fontNameBytes.Length]); // Pad with zeros
                 }
-                
+
                 // Texture ResRef: Font texture (TGA file) - same as font name for default fonts
                 // Aurora fonts use TGA textures, so texture ResRef matches font ResRef
                 byte[] textureNameBytes = System.Text.Encoding.ASCII.GetBytes(fontResRef);
@@ -1252,7 +1252,7 @@ endmodel
                 {
                     writer.Write(new byte[16 - textureNameBytes.Length]); // Pad with zeros
                 }
-                
+
                 // Font metrics (floats, 4 bytes each)
                 // Default values for standard 16x16 font
                 float fontHeight = 16.0f;
@@ -1260,7 +1260,7 @@ endmodel
                 float baselineHeight = 14.0f; // Baseline slightly below top
                 float spacingR = 0.0f; // No extra horizontal spacing
                 float spacingB = 0.0f; // No extra vertical spacing
-                
+
                 // Adjust for high-resolution font if requested
                 if (fontName.EndsWith("_hr", System.StringComparison.OrdinalIgnoreCase))
                 {
@@ -1268,16 +1268,16 @@ endmodel
                     fontWidth = 32.0f;
                     baselineHeight = 28.0f;
                 }
-                
+
                 writer.Write(fontHeight);
                 writer.Write(fontWidth);
                 writer.Write(baselineHeight);
                 writer.Write(spacingR);
                 writer.Write(spacingB);
-                
+
                 // Character Count: 256 (standard ASCII font)
                 writer.Write((uint)256);
-                
+
                 // Texture dimensions (uint32, 4 bytes each)
                 // Default font texture: 256x256 for 16x16 grid (16 chars per row/column)
                 // High-res font texture: 512x512 for 32x32 grid (16 chars per row/column)
@@ -1285,15 +1285,15 @@ endmodel
                 uint textureHeight = textureWidth;
                 uint charsPerRow = 16;
                 uint charsPerCol = 16;
-                
+
                 writer.Write(textureWidth);
                 writer.Write(textureHeight);
                 writer.Write(charsPerRow);
                 writer.Write(charsPerCol);
-                
+
                 // Reserved: 128 bytes for future use
                 writer.Write(new byte[128]);
-                
+
                 return stream.ToArray();
             }
         }
@@ -1402,7 +1402,7 @@ endmodel
         /// - Resources in earlier HAK files override resources in later HAK files
         /// - HAK files are located in the "hak" directory under installation path
         /// - HAK filenames in Module.ifo do not include the .hak extension
-        /// 
+        ///
         /// Based on nwmain.exe reverse engineering (Ghidra MCP analysis):
         /// - Module.ifo parsing functions reference Mod_HakList/Mod_Hak strings:
         ///   - "Mod_HakList" string @ 0x140def690, referenced by functions @ 0x14047f60e, 0x1404862d9
@@ -1413,7 +1413,7 @@ endmodel
         ///   - Earlier HAK files in the list have higher priority (checked first during resource lookup)
         /// - HAK file paths resolved from "hak" directory + filename + ".hak" extension
         /// - Resource lookup uses CExoResMan::ServiceFromEncapsulated @ 0x140192cf0 for HAK files
-        /// 
+        ///
         /// Official BioWare Documentation:
         /// - vendor/PyKotor/wiki/Bioware-Aurora-IFO.md: Mod_HakList structure (StructID 8)
         /// - vendor/PyKotor/wiki/Bioware-Aurora-IFO.md: Mod_Hak field (obsolete, semicolon-separated)
@@ -1436,7 +1436,7 @@ endmodel
                 // Load Module.ifo from module directory
                 string modulePath = ModulePath();
                 string moduleIfoPath = Path.Combine(modulePath, _currentModule, "Module.ifo");
-                
+
                 if (!File.Exists(moduleIfoPath))
                 {
                     // Module.ifo not found - HAK files list remains empty
@@ -1515,7 +1515,7 @@ endmodel
                         // Based on nwmain.exe: HAK file path resolution pattern
                         // nwmain.exe: HAK files registered via CExoResMan::AddKeyTable @ 0x14018e330
                         string hakFilePath = Path.Combine(hakPath, hakFileName + ".hak");
-                        
+
                         // Only add HAK file if it exists
                         // Based on nwmain.exe: Missing HAK files are skipped (not an error)
                         // nwmain.exe: AddKeyTable @ 0x14018e330 handles missing file gracefully
@@ -1542,6 +1542,28 @@ endmodel
         public byte[] GetResourceBytes(ResourceIdentifier id)
         {
             return GetResourceBytesAsync(id, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Loads a resource by ResRef and ResourceType synchronously.
+        /// </summary>
+        /// <param name="resRef">Resource reference.</param>
+        /// <param name="resourceType">Resource type.</param>
+        /// <returns>Resource data or null if not found.</returns>
+        /// <remarks>
+        /// This method provides synchronous resource loading by ResRef and ResourceType parameters.
+        /// Creates a ResourceIdentifier internally and delegates to GetResourceBytes(ResourceIdentifier).
+        /// Based on Aurora Engine resource loading system (KEY/BIF files, ERF archives, HAK files, Override directory).
+        /// </remarks>
+        public byte[] LoadResource(Andastra.Parsing.Common.ResRef resRef, ResourceType resourceType)
+        {
+            if (resRef == null || resRef.IsBlank() || resourceType == null || resourceType.IsInvalid)
+            {
+                return null;
+            }
+
+            var identifier = new ResourceIdentifier(resRef.ToString(), resourceType);
+            return GetResourceBytes(identifier);
         }
 
         #endregion

@@ -4037,8 +4037,9 @@ namespace Andastra.Runtime.Games.Aurora
         /// <param name="resourceType">Resource type.</param>
         /// <returns>Resource data or null if not found.</returns>
         /// <remarks>
-        /// This method is expected by AuroraTileset but not part of IGameResourceProvider interface.
-        // TODO: / This is a workaround until the interface is extended.
+        /// This method is expected by AuroraTileset and is part of IGameResourceProvider interface.
+        /// Provides synchronous resource loading by ResRef and ResourceType parameters.
+        /// Based on nwmain.exe: Resource filenames are ResRef + extension.
         /// </remarks>
         public byte[] LoadResource(ResRef resRef, ResourceType resourceType)
         {

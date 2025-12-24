@@ -3,8 +3,6 @@ meta:
   file-extension: tpc
   endian: le
   license: MIT
-  imports:
-    - txi
 
 seq:
   - id: data_size
@@ -34,19 +32,13 @@ seq:
   - id: texture_data
     type: texture_data_block
     doc: "Texture data (per layer, per mipmap)"
-  - id: txi_footer
-    type: str
-    encoding: ASCII
-    size-eos: true
-    if: _root.texture_data.has_remaining_data
-    doc: "Optional ASCII TXI footer"
 
 types:
   texture_data_block:
     doc: "Texture data structure (simplified - actual parsing depends on format and mipmap count)"
     seq:
       - id: raw_data
-        size-eos: true
         type: u1
         doc: "Raw texture data bytes (exact size depends on format, dimensions, mipmaps, and layers)"
+        repeat: eos
 

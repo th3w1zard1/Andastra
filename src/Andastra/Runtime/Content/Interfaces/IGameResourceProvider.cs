@@ -61,6 +61,19 @@ namespace Andastra.Runtime.Content.Interfaces
         byte[] GetResourceBytes(ResourceIdentifier id);
 
         /// <summary>
+        /// Loads a resource by ResRef and ResourceType synchronously.
+        /// </summary>
+        /// <param name="resRef">Resource reference.</param>
+        /// <param name="resourceType">Resource type.</param>
+        /// <returns>Resource data or null if not found.</returns>
+        /// <remarks>
+        /// This method provides synchronous resource loading by ResRef and ResourceType,
+        /// complementing the ResourceIdentifier-based methods for cases where separate
+        /// ResRef and ResourceType parameters are more convenient.
+        /// </remarks>
+        byte[] LoadResource(Andastra.Parsing.Common.ResRef resRef, ResourceType resourceType);
+
+        /// <summary>
         /// The game type (K1, K2, BaldursGate, , , etc.).
         /// </summary>
         GameType GameType { get; }

@@ -384,7 +384,14 @@ namespace Andastra.Runtime.Content.MDL
             MDLCache.Instance.MaxEntries = maxEntries;
         }
 
-        private CoreMDLModel ConvertToCoreModel(ContentMDLModel contentModel)
+        /// <summary>
+        /// Converts a Content.MDL.MDLModel to Core.MDL.MDLModel.
+        /// This is a public static helper method that can be used to convert Content MDL models to Core MDL models
+        /// without requiring an MDLLoader instance.
+        /// </summary>
+        /// <param name="contentModel">The Content.MDL.MDLModel to convert</param>
+        /// <returns>The converted Core.MDL.MDLModel, or null if contentModel is null</returns>
+        public static CoreMDLModel ConvertToCoreModel(ContentMDLModel contentModel)
         {
             if (contentModel == null)
             {
@@ -416,7 +423,7 @@ namespace Andastra.Runtime.Content.MDL
         /// <summary>
         /// Converts a Content.MDL.MDLNodeData to Core.MDL.MDLNodeData recursively.
         /// </summary>
-        private CoreMDLNodeData ConvertNode(ContentMDLNodeData contentNode)
+        private static CoreMDLNodeData ConvertNode(ContentMDLNodeData contentNode)
         {
             if (contentNode == null)
             {
@@ -454,7 +461,7 @@ namespace Andastra.Runtime.Content.MDL
         /// <summary>
         /// Converts Content.MDL.MDLAnimationData array to Core.MDL.MDLAnimationData array.
         /// </summary>
-        private CoreMDLAnimationData[] ConvertAnimations(ContentMDLAnimationData[] contentAnimations)
+        private static CoreMDLAnimationData[] ConvertAnimations(ContentMDLAnimationData[] contentAnimations)
         {
             if (contentAnimations == null || contentAnimations.Length == 0)
             {
@@ -484,7 +491,7 @@ namespace Andastra.Runtime.Content.MDL
         /// <summary>
         /// Converts Content.MDL.MDLEventData array to Core.MDL.MDLEventData array.
         /// </summary>
-        private CoreMDLEventData[] ConvertEvents(ContentMDLEventData[] contentEvents)
+        private static CoreMDLEventData[] ConvertEvents(ContentMDLEventData[] contentEvents)
         {
             if (contentEvents == null || contentEvents.Length == 0)
             {
@@ -507,7 +514,7 @@ namespace Andastra.Runtime.Content.MDL
         /// <summary>
         /// Converts Content.MDL.MDLControllerData array to Core.MDL.MDLControllerData array.
         /// </summary>
-        private CoreMDLControllerData[] ConvertControllers(ContentMDLControllerData[] contentControllers)
+        private static CoreMDLControllerData[] ConvertControllers(ContentMDLControllerData[] contentControllers)
         {
             if (contentControllers == null || contentControllers.Length == 0)
             {
@@ -539,7 +546,7 @@ namespace Andastra.Runtime.Content.MDL
         /// <summary>
         /// Converts Content.MDL.MDLMeshData to Core.MDL.MDLMeshData.
         /// </summary>
-        private CoreMDLMeshData ConvertMesh(ContentMDLMeshData contentMesh)
+        private static CoreMDLMeshData ConvertMesh(ContentMDLMeshData contentMesh)
         {
             if (contentMesh == null)
             {
@@ -607,7 +614,7 @@ namespace Andastra.Runtime.Content.MDL
         /// <summary>
         /// Converts Content.MDL.MDLFaceData array to Core.MDL.MDLFaceData array.
         /// </summary>
-        private CoreMDLFaceData[] ConvertFaces(ContentMDLFaceData[] contentFaces)
+        private static CoreMDLFaceData[] ConvertFaces(ContentMDLFaceData[] contentFaces)
         {
             if (contentFaces == null || contentFaces.Length == 0)
             {
@@ -637,7 +644,7 @@ namespace Andastra.Runtime.Content.MDL
         /// <summary>
         /// Converts Content.MDL.MDLSkinData to Core.MDL.MDLSkinData.
         /// </summary>
-        private CoreMDLSkinData ConvertSkin(ContentMDLSkinData contentSkin)
+        private static CoreMDLSkinData ConvertSkin(ContentMDLSkinData contentSkin)
         {
             if (contentSkin == null)
             {
@@ -659,7 +666,7 @@ namespace Andastra.Runtime.Content.MDL
         /// <summary>
         /// Converts Content.MDL.MDLDanglymeshData to Core.MDL.MDLDanglymeshData.
         /// </summary>
-        private CoreMDLDanglymeshData ConvertDanglymesh(ContentMDLDanglymeshData contentDanglymesh)
+        private static CoreMDLDanglymeshData ConvertDanglymesh(ContentMDLDanglymeshData contentDanglymesh)
         {
             if (contentDanglymesh == null)
             {

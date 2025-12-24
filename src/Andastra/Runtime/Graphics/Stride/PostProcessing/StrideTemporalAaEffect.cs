@@ -29,7 +29,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
     {
         private StrideGraphics.GraphicsDevice _graphicsDevice;
         private global::Stride.Engine.Game _game;
-        private object _gameServices; // Use object instead of IServiceProvider since Stride.Core.ServiceRegistry doesn't implement IServiceProvider
+        private dynamic _gameServices; // Use dynamic to allow GetService<T>() calls on Stride.Core.ServiceRegistry
         private StrideGraphics.Texture _historyBuffer;
         private StrideGraphics.Texture _outputBuffer;
         private int _frameIndex;
@@ -1185,7 +1185,7 @@ shader TemporalAAEffect : ShaderBase
                     // and we don't have the key objects available
                     try
                     {
-                        var setFloatMethod = typeof(global::Stride.Rendering.ParameterCollection).GetMethod("Set", new[] { typeof(string), typeof(float) });
+                        var setFloatMethod = typeof(ParameterCollection).GetMethod("Set", new[] { typeof(string), typeof(float) });
                         if (setFloatMethod != null)
                         {
                             setFloatMethod.Invoke(_taaEffect.Parameters, new object[] { "BlendFactor", _blendFactor });
@@ -1195,7 +1195,7 @@ shader TemporalAAEffect : ShaderBase
 
                     try
                     {
-                        var setVector2Method = typeof(global::Stride.Rendering.ParameterCollection).GetMethod("Set", new[] { typeof(string), typeof(Vector2) });
+                        var setVector2Method = typeof(ParameterCollection).GetMethod("Set", new[] { typeof(string), typeof(Vector2) });
                         if (setVector2Method != null)
                         {
                             setVector2Method.Invoke(_taaEffect.Parameters, new object[] { "JitterOffset", jitterOffset });
@@ -1207,7 +1207,7 @@ shader TemporalAAEffect : ShaderBase
 
                     try
                     {
-                        var setTextureMethod = typeof(global::Stride.Rendering.ParameterCollection).GetMethod("Set", new[] { typeof(string), typeof(StrideGraphics.Texture) });
+                        var setTextureMethod = typeof(ParameterCollection).GetMethod("Set", new[] { typeof(string), typeof(StrideGraphics.Texture) });
                         if (setTextureMethod != null)
                         {
                             if (currentFrame != null) setTextureMethod.Invoke(_taaEffect.Parameters, new object[] { "CurrentFrame", currentFrame });
@@ -1222,7 +1222,7 @@ shader TemporalAAEffect : ShaderBase
                     // This is used to reproject history buffer samples to current frame space
                     try
                     {
-                        var setMatrixMethod = typeof(global::Stride.Rendering.ParameterCollection).GetMethod("Set", new[] { typeof(string), typeof(Matrix) });
+                        var setMatrixMethod = typeof(ParameterCollection).GetMethod("Set", new[] { typeof(string), typeof(Matrix) });
                         if (setMatrixMethod != null)
                         {
                             var strideMatrix = ConvertToStrideMatrix(_previousViewProjection);
@@ -1236,7 +1236,7 @@ shader TemporalAAEffect : ShaderBase
                     {
                         try
                         {
-                            var setMatrixMethod = typeof(global::Stride.Rendering.ParameterCollection).GetMethod("Set", new[] { typeof(string), typeof(Matrix) });
+                            var setMatrixMethod = typeof(ParameterCollection).GetMethod("Set", new[] { typeof(string), typeof(Matrix) });
                             if (setMatrixMethod != null)
                             {
                                 setMatrixMethod.Invoke(_taaEffect.Parameters, new object[] { "ViewProjection", context.RenderView.ViewProjection });
@@ -1253,7 +1253,7 @@ shader TemporalAAEffect : ShaderBase
                     // Higher values = more aggressive clamping (less ghosting, potentially less AA quality)
                     try
                     {
-                        var setFloatMethod = typeof(global::Stride.Rendering.ParameterCollection).GetMethod("Set", new[] { typeof(string), typeof(float) });
+                        var setFloatMethod = typeof(ParameterCollection).GetMethod("Set", new[] { typeof(string), typeof(float) });
                         if (setFloatMethod != null)
                         {
                             setFloatMethod.Invoke(_taaEffect.Parameters, new object[] { "ClampFactor", 0.5f });
@@ -1269,7 +1269,7 @@ shader TemporalAAEffect : ShaderBase
                     try
                     {
                         bool isFirstFrame = (_frameIndex == 0 || historyBuffer == null);
-                        var setFloatMethod = typeof(global::Stride.Rendering.ParameterCollection).GetMethod("Set", new[] { typeof(string), typeof(float) });
+                        var setFloatMethod = typeof(ParameterCollection).GetMethod("Set", new[] { typeof(string), typeof(float) });
                         if (setFloatMethod != null)
                         {
                             setFloatMethod.Invoke(_taaEffect.Parameters, new object[] { "IsFirstFrame", isFirstFrame ? 1.0f : 0.0f });

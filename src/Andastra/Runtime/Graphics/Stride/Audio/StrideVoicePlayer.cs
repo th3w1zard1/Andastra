@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Audio;
 using Andastra.Runtime.Graphics;
@@ -112,7 +113,7 @@ namespace Andastra.Runtime.Stride.Audio
             try
             {
                 // Load WAV file from resource provider
-                byte[] wavData = _resourceProvider.GetResourceData(ResourceType.WAV, voiceResRef);
+                byte[] wavData = _resourceProvider.GetResourceBytes(new ResourceIdentifier(voiceResRef, ResourceType.WAV));
                 if (wavData == null || wavData.Length == 0)
                 {
                     Console.WriteLine($"[StrideVoicePlayer] Voice-over not found: {voiceResRef}");
@@ -155,7 +156,7 @@ namespace Andastra.Runtime.Stride.Audio
                 // Set up spatial audio emitter if position is provided
                 if (_spatialAudio != null && position.HasValue)
                 {
-                    voiceInstance.EmitterId = _spatialAudio.CreateEmitter(position.Value);
+                    voiceInstance.EmitterId = _spatialAudio.CreateEmitter(position.Value, Vector3.Zero, 1.0f, 1.0f, 100.0f);
                     UpdateVoiceInstance(voiceInstance);
                 }
                 else
@@ -278,7 +279,7 @@ namespace Andastra.Runtime.Stride.Audio
                 // Clean up spatial audio emitter
                 if (_spatialAudio != null && voiceInstance.EmitterId != 0)
                 {
-                    _spatialAudio.DestroyEmitter(voiceInstance.EmitterId);
+                    _spatialAudio.RemoveEmitter(voiceInstance.EmitterId);
                 }
 
                 _voiceInstances.Remove(voiceInstanceId);
@@ -380,6 +381,208 @@ namespace Andastra.Runtime.Stride.Audio
         public void Dispose()
         {
             StopAllVoices();
+        }
+
+        /// <summary>
+        /// Dummy DynamicSoundSource used only for initializing temporary SoundInstances.
+        /// Uses a two-phase initialization pattern to break the circular dependency:
+        /// 1. First, create a cached dummy SoundInstance using MinimalDummySource that doesn't recurse
+        /// 2. Then reuse that cached instance for all DummyDynamicSoundSourceForInit instances
+        ///
+        /// This workaround is necessary because Stride's DynamicSoundSource constructor requires
+        /// a SoundInstance parameter, but to create a SoundInstance, you need a DynamicSoundSource,
+        /// creating a circular dependency. The MinimalDummySource breaks this cycle by accepting
+        /// null in its constructor (which the base class handles during initialization), allowing
+        /// the first SoundInstance to be created. This cached instance is then reused for all
+        /// subsequent DummyDynamicSoundSourceForInit instances.
+        ///
+        /// Based on Stride API: DynamicSoundSource base class
+        /// https://doc.stride3d.net/latest/en/api/Stride.Audio.DynamicSoundSource.html
+        /// </summary>
+        private class DummyDynamicSoundSourceForInit : DynamicSoundSource
+        {
+            /// <summary>
+            /// Static cached dummy SoundInstance to break circular dependency.
+            /// This is created once per AudioEngine/Listener pair and reused for all
+            /// DummyDynamicSoundSourceForInit instances.
+            /// </summary>
+            private static SoundInstance _cachedDummySoundInstance;
+            private static AudioEngine _cachedAudioEngine;
+            private static AudioListener _cachedListener;
+            private static readonly object _lockObject = new object();
+
+            private DummyDynamicSoundSourceForInit(SoundInstance dummySoundInstance)
+                : base(dummySoundInstance, 1, 1024)
+            {
+            }
+
+            /// <summary>
+            /// Factory method to create a DummyDynamicSoundSourceForInit instance.
+            /// Uses cached dummy SoundInstance to break circular dependency.
+            /// </summary>
+            /// <param name="audioEngine">Stride AudioEngine instance.</param>
+            /// <param name="listener">AudioListener instance.</param>
+            /// <returns>New DummyDynamicSoundSourceForInit instance.</returns>
+            public static DummyDynamicSoundSourceForInit Create(AudioEngine audioEngine, AudioListener listener)
+            {
+                SoundInstance cachedInstance = GetOrCreateCachedDummySoundInstance(audioEngine, listener);
+                return new DummyDynamicSoundSourceForInit(cachedInstance);
+            }
+
+            /// <summary>
+            /// Gets or creates a cached dummy SoundInstance for initialization.
+            /// This breaks the circular dependency by creating it once using MinimalDummySource
+            /// that doesn't have the recursion problem, then reusing it for all subsequent
+            /// DummyDynamicSoundSourceForInit instances.
+            /// </summary>
+            /// <param name="audioEngine">Stride AudioEngine instance.</param>
+            /// <param name="listener">AudioListener instance.</param>
+            /// <returns>Cached dummy SoundInstance for initialization.</returns>
+            private static SoundInstance GetOrCreateCachedDummySoundInstance(AudioEngine audioEngine, AudioListener listener)
+            {
+                lock (_lockObject)
+                {
+                    // If we already have a cached instance with the same AudioEngine, reuse it
+                    if (_cachedDummySoundInstance != null && _cachedAudioEngine == audioEngine && _cachedListener == listener)
+                    {
+                        return _cachedDummySoundInstance;
+                    }
+
+                    // Create the cached instance using MinimalDummySource that doesn't recurse
+                    // MinimalDummySource accepts null in its constructor, breaking the cycle
+                    var minimalDummySource = new MinimalDummySource();
+                    var tempSoundInstance = new SoundInstance(
+                        audioEngine,
+                        listener,
+                        minimalDummySource,
+                        44100, // Standard sample rate
+                        true,  // mono
+                        false, // not spatialized
+                        false, // no HRTF
+                        0.0f,  // no directional factor
+                        HrtfEnvironment.Small
+                    );
+
+                    // Store the cached instance for reuse
+                    _cachedDummySoundInstance = tempSoundInstance;
+                    _cachedAudioEngine = audioEngine;
+                    _cachedListener = listener;
+
+                    return tempSoundInstance;
+                }
+            }
+
+            public override int MaxNumberOfBuffers => 1;
+
+            public override void SetLooped(bool looped)
+            {
+                // Dummy source doesn't loop
+            }
+
+            /// <summary>
+            /// Extracts and fills audio data into buffers with silence (zero bytes).
+            /// This is called by Stride's audio system to fill audio buffers.
+            /// Since this is a dummy source used only for initialization, we provide silence.
+            /// </summary>
+            /// <remarks>
+            /// Based on Stride API: DynamicSoundSource.ExtractAndFillData() abstract method
+            /// https://doc.stride3d.net/latest/en/api/Stride.Audio.DynamicSoundSource.html#Stride_Audio_DynamicSoundSource_ExtractAndFillData
+            /// </remarks>
+            protected override void ExtractAndFillData()
+            {
+                if (!CanFill)
+                {
+                    return;
+                }
+
+                // Calculate buffer size for mono 16-bit audio at 44100 Hz
+                // Standard buffer size: 4096 samples * 2 bytes per sample * 1 channel (mono)
+                int bytesPerSample = 2; // 16-bit audio = 2 bytes per sample
+                int samplesPerChannel = 4096; // Standard buffer size in samples
+                int bufferSizeBytes = samplesPerChannel * bytesPerSample * 1; // 1 channel (mono)
+
+                // Fill buffer with silence (zero bytes) and mark as end of stream
+                // This is a dummy source, so we always provide silence
+                byte[] silenceBuffer = new byte[bufferSizeBytes];
+                GCHandle silenceHandle = GCHandle.Alloc(silenceBuffer, GCHandleType.Pinned);
+                try
+                {
+                    IntPtr bufferPtr = silenceHandle.AddrOfPinnedObject();
+                    FillBuffer(bufferPtr, bufferSizeBytes, StrideAudioLayer.BufferType.EndOfStream);
+                }
+                finally
+                {
+                    silenceHandle.Free();
+                }
+            }
+
+            /// <summary>
+            /// Minimal dummy source that accepts null in base constructor to break recursion.
+            /// Used only during the initial cached instance creation.
+            ///
+            /// This is a workaround for the circular dependency: DynamicSoundSource requires
+            /// a SoundInstance, but we need a DynamicSoundSource to create a SoundInstance.
+            /// By passing null here (which the base class handles gracefully during initialization),
+            /// we break the cycle. The base DynamicSoundSource constructor accepts null for
+            /// the SoundInstance parameter during initialization, allowing this two-phase init pattern.
+            ///
+            /// Based on Stride API: DynamicSoundSource base class constructor
+            /// https://doc.stride3d.net/latest/en/api/Stride.Audio.DynamicSoundSource.html
+            /// </summary>
+            private class MinimalDummySource : DynamicSoundSource
+            {
+                public MinimalDummySource()
+                    : base(null, 1, 1024) // Pass null to break circular dependency - base class handles this during init
+                {
+                    // This constructor is only called during cached instance creation.
+                    // The base DynamicSoundSource class handles null SoundInstance during
+                    // initialization, allowing this two-phase init pattern to work.
+                }
+
+                public override int MaxNumberOfBuffers => 1;
+
+                public override void SetLooped(bool looped)
+                {
+                    // Dummy source doesn't loop
+                }
+
+                /// <summary>
+                /// Extracts and fills audio data into buffers with silence (zero bytes).
+                /// This is called by Stride's audio system to fill audio buffers.
+                /// Since this is a dummy source used only for initialization, we provide silence.
+                /// </summary>
+                /// <remarks>
+                /// Based on Stride API: DynamicSoundSource.ExtractAndFillData() abstract method
+                /// https://doc.stride3d.net/latest/en/api/Stride.Audio.DynamicSoundSource.html#Stride_Audio_DynamicSoundSource_ExtractAndFillData
+                /// </remarks>
+                protected override void ExtractAndFillData()
+                {
+                    if (!CanFill)
+                    {
+                        return;
+                    }
+
+                    // Calculate buffer size for mono 16-bit audio at 44100 Hz
+                    // Standard buffer size: 4096 samples * 2 bytes per sample * 1 channel (mono)
+                    int bytesPerSample = 2; // 16-bit audio = 2 bytes per sample
+                    int samplesPerChannel = 4096; // Standard buffer size in samples
+                    int bufferSizeBytes = samplesPerChannel * bytesPerSample * 1; // 1 channel (mono)
+
+                    // Fill buffer with silence (zero bytes) and mark as end of stream
+                    // This is a dummy source, so we always provide silence
+                    byte[] silenceBuffer = new byte[bufferSizeBytes];
+                    GCHandle silenceHandle = GCHandle.Alloc(silenceBuffer, GCHandleType.Pinned);
+                    try
+                    {
+                        IntPtr bufferPtr = silenceHandle.AddrOfPinnedObject();
+                        FillBuffer(bufferPtr, bufferSizeBytes, StrideAudioLayer.BufferType.EndOfStream);
+                    }
+                    finally
+                    {
+                        silenceHandle.Free();
+                    }
+                }
+            }
         }
     }
 }

@@ -5,6 +5,7 @@ using Stride.Core.Mathematics;
 using Stride.Engine;
 using Stride.Core.Serialization.Contents;
 using Stride.Shaders;
+using Stride.Core;
 using Andastra.Runtime.Graphics.Common.PostProcessing;
 using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Stride.Graphics;
@@ -31,6 +32,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
     {
         private StrideGraphics.GraphicsDevice _graphicsDevice;
         private global::Stride.Graphics.GraphicsContext _graphicsContext;
+        private IServiceRegistry _services;
+        private ContentManager _contentManager;
         private StrideGraphics.Texture _aoTarget;
         private StrideGraphics.Texture _blurTarget;
         private StrideGraphics.Texture _noiseTexture;
@@ -43,10 +46,12 @@ namespace Andastra.Runtime.Stride.PostProcessing
         private StrideGraphics.Effect _bilateralBlurEffectBase;
         private StrideGraphics.Texture _tempBlurTarget;
 
-        public StrideSsaoEffect(StrideGraphics.GraphicsDevice graphicsDevice, global::Stride.Graphics.GraphicsContext graphicsContext = null)
+        public StrideSsaoEffect(StrideGraphics.GraphicsDevice graphicsDevice, global::Stride.Graphics.GraphicsContext graphicsContext = null, IServiceRegistry services = null, ContentManager contentManager = null)
         {
             _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException(nameof(graphicsDevice));
             _graphicsContext = graphicsContext;
+            _services = services;
+            _contentManager = contentManager;
             InitializeRenderingResources();
         }
 
@@ -111,8 +116,158 @@ namespace Andastra.Runtime.Stride.PostProcessing
             // Effect.Load() doesn't exist in this Stride version, skip to ContentManager loading
 
             // Strategy 2: Try loading from ContentManager if available
-            // Check if GraphicsDevice has access to ContentManager through services
-            // TODO: STUB - ContentManager loading not implemented, effects need to be provided via other means
+            // Check if ContentManager is provided directly or accessible through services
+            if (_gtaoEffectBase == null || _bilateralBlurEffectBase == null)
+            {
+                // First try using provided ContentManager
+                if (_contentManager != null)
+                {
+                    try
+                    {
+                        if (_gtaoEffectBase == null)
+                        {
+                            try
+                            {
+                                _gtaoEffectBase = _contentManager.Load<StrideGraphics.Effect>("SsaoGtao");
+                                if (_gtaoEffectBase != null)
+                                {
+                                    _gtaoEffect = new EffectInstance(_gtaoEffectBase);
+                                    System.Console.WriteLine("[StrideSsaoEffect] Loaded SsaoGtao from provided ContentManager");
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Console.WriteLine($"[StrideSsaoEffect] Failed to load SsaoGtao from provided ContentManager: {ex.Message}");
+                            }
+                        }
+
+                        if (_bilateralBlurEffectBase == null)
+                        {
+                            try
+                            {
+                                _bilateralBlurEffectBase = _contentManager.Load<StrideGraphics.Effect>("SsaoBilateralBlur");
+                                if (_bilateralBlurEffectBase != null)
+                                {
+                                    _bilateralBlurEffect = new EffectInstance(_bilateralBlurEffectBase);
+                                    System.Console.WriteLine("[StrideSsaoEffect] Loaded SsaoBilateralBlur from provided ContentManager");
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Console.WriteLine($"[StrideSsaoEffect] Failed to load SsaoBilateralBlur from provided ContentManager: {ex.Message}");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Console.WriteLine($"[StrideSsaoEffect] Failed to access provided ContentManager: {ex.Message}");
+                    }
+                }
+
+                // If ContentManager not provided or loading failed, try accessing through services
+                if ((_gtaoEffectBase == null || _bilateralBlurEffectBase == null) && _services != null)
+                {
+                    try
+                    {
+                        var contentManager = _services.GetService(typeof(ContentManager)) as ContentManager;
+                        if (contentManager != null)
+                        {
+                            if (_gtaoEffectBase == null)
+                            {
+                                try
+                                {
+                                    _gtaoEffectBase = contentManager.Load<StrideGraphics.Effect>("SsaoGtao");
+                                    if (_gtaoEffectBase != null)
+                                    {
+                                        _gtaoEffect = new EffectInstance(_gtaoEffectBase);
+                                        System.Console.WriteLine("[StrideSsaoEffect] Loaded SsaoGtao from services ContentManager");
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    System.Console.WriteLine($"[StrideSsaoEffect] Failed to load SsaoGtao from services ContentManager: {ex.Message}");
+                                }
+                            }
+
+                            if (_bilateralBlurEffectBase == null)
+                            {
+                                try
+                                {
+                                    _bilateralBlurEffectBase = contentManager.Load<StrideGraphics.Effect>("SsaoBilateralBlur");
+                                    if (_bilateralBlurEffectBase != null)
+                                    {
+                                        _bilateralBlurEffect = new EffectInstance(_bilateralBlurEffectBase);
+                                        System.Console.WriteLine("[StrideSsaoEffect] Loaded SsaoBilateralBlur from services ContentManager");
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    System.Console.WriteLine($"[StrideSsaoEffect] Failed to load SsaoBilateralBlur from services ContentManager: {ex.Message}");
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Console.WriteLine($"[StrideSsaoEffect] Failed to access services ContentManager: {ex.Message}");
+                    }
+                }
+
+                // Try accessing ContentManager through GraphicsDevice services as fallback
+                if ((_gtaoEffectBase == null || _bilateralBlurEffectBase == null) && _graphicsDevice != null)
+                {
+                    try
+                    {
+                        // Try to access IServiceRegistry through GraphicsDevice
+                        // In Stride, GraphicsDevice may expose services through a Services property
+                        var deviceServices = _graphicsDevice as IServiceProvider;
+                        if (deviceServices != null)
+                        {
+                            var contentManager = deviceServices.GetService(typeof(ContentManager)) as ContentManager;
+                            if (contentManager != null)
+                            {
+                                if (_gtaoEffectBase == null)
+                                {
+                                    try
+                                    {
+                                        _gtaoEffectBase = contentManager.Load<StrideGraphics.Effect>("SsaoGtao");
+                                        if (_gtaoEffectBase != null)
+                                        {
+                                            _gtaoEffect = new EffectInstance(_gtaoEffectBase);
+                                            System.Console.WriteLine("[StrideSsaoEffect] Loaded SsaoGtao from GraphicsDevice ContentManager");
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        System.Console.WriteLine($"[StrideSsaoEffect] Failed to load SsaoGtao from GraphicsDevice ContentManager: {ex.Message}");
+                                    }
+                                }
+
+                                if (_bilateralBlurEffectBase == null)
+                                {
+                                    try
+                                    {
+                                        _bilateralBlurEffectBase = contentManager.Load<StrideGraphics.Effect>("SsaoBilateralBlur");
+                                        if (_bilateralBlurEffectBase != null)
+                                        {
+                                            _bilateralBlurEffect = new EffectInstance(_bilateralBlurEffectBase);
+                                            System.Console.WriteLine("[StrideSsaoEffect] Loaded SsaoBilateralBlur from GraphicsDevice ContentManager");
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        System.Console.WriteLine($"[StrideSsaoEffect] Failed to load SsaoBilateralBlur from GraphicsDevice ContentManager: {ex.Message}");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Console.WriteLine($"[StrideSsaoEffect] Failed to access GraphicsDevice ContentManager: {ex.Message}");
+                    }
+                }
+            }
 
             // Final fallback: If all loading methods failed, effects remain null
             // The rendering code will use SpriteBatch's default rendering (no custom shaders)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using Avalonia.Media.Imaging;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Tests.TestHelpers;
@@ -1682,12 +1683,24 @@ namespace HolocronToolset.Tests.Windows
         {
             // Create a minimal image for the component (matching Python lines 72-74)
             // In Python: image = QImage(128, 128, QImage.Format.Format_RGB32); image.fill(0x808080)
-            // In C# Avalonia: Use WriteableBitmap or similar
-            // TODO: STUB - Replace with Avalonia image implementation
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/windows/test_indoor_builder.py
-            // Original: image = QImage(128, 128, QImage.Format.Format_RGB32)
-            // TODO: PLACEHOLDER - Placeholder until Avalonia image implementation
-            object image = new { Width = 128, Height = 128 };
+            // In C# Avalonia: Create WriteableBitmap with Bgra8888 pixel format (Avalonia's equivalent to RGB32)
+            var image = new WriteableBitmap(new PixelSize(128, 128), new Vector(96, 96), PixelFormat.Bgra8888, AlphaFormat.Unpremul);
+
+            // Fill with gray color 0x808080 (matching Python image.fill(0x808080))
+            // Convert RGB 0x808080 to BGRA format for Avalonia
+            var grayColor = (uint)0xFF808080; // BGRA: Blue=0x80, Green=0x80, Red=0x80, Alpha=0xFF
+
+            using (var bitmapLock = image.Lock())
+            {
+                unsafe
+                {
+                    uint* pixelPtr = (uint*)bitmapLock.Address;
+                    for (int i = 0; i < 128 * 128; i++)
+                    {
+                        pixelPtr[i] = grayColor;
+                    }
+                }
+            }
 
             // Create minimal BWM with multiple faces (matching Python lines 76-94)
             var bwm = new BWM();

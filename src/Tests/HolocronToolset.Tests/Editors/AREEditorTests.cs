@@ -3286,14 +3286,102 @@ namespace HolocronToolset.Tests.Editors
             modifiedAre.WorldPoint2.Y.Should().BeApproximately(10.0f, 0.001f, "WorldPoint2.Y should be 10.0");
         }
 
-        // TODO: STUB - Implement test_are_editor_save_load_roundtrip_identity (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1210-1242)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1210-1242
         // Original: def test_are_editor_save_load_roundtrip_identity(qtbot: QtBot, installation: HTInstallation, test_files_dir: Path): Test that save/load roundtrip preserves all data exactly.
         [Fact]
         public void TestAreEditorSaveLoadRoundtripIdentity()
         {
-            // TODO: STUB - Implement save/load roundtrip identity test (preserves all data exactly without modifications)
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1210-1242
-            throw new NotImplementedException("TestAreEditorSaveLoadRoundtripIdentity: Save/load roundtrip identity test not yet implemented");
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            if (!System.IO.File.Exists(areFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            }
+
+            if (!System.IO.File.Exists(areFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            // Matching Python: editor = AREEditor(None, installation)
+            var editor = new AREEditor(null, installation);
+
+            // Matching Python: are_file = test_files_dir / "tat001.are"
+            // Matching Python: original_data = are_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(areFile);
+
+            // Matching Python: original_are = read_are(original_data)
+            var originalAre = AREHelpers.ReadAre(originalData);
+
+            // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, original_data)
+            editor.Load(areFile, "tat001", ResourceType.ARE, originalData);
+
+            // Matching Python: Save without modifications
+            // Matching Python: data, _ = editor.build()
+            var (data, _) = editor.Build();
+
+            // Matching Python: saved_are = read_are(data)
+            var savedAre = AREHelpers.ReadAre(data);
+
+            // Matching Python: Verify key fields match
+            // Matching Python: assert saved_are.tag == original_are.tag
+            savedAre.Tag.Should().Be(originalAre.Tag);
+            // Matching Python: assert saved_are.camera_style == original_are.camera_style
+            savedAre.CameraStyle.Should().Be(originalAre.CameraStyle);
+            // Matching Python: assert str(saved_are.default_envmap) == str(original_are.default_envmap)
+            savedAre.DefaultEnvMap.Should().Be(originalAre.DefaultEnvMap);
+            // Matching Python: assert saved_are.disable_transit == original_are.disable_transit
+            savedAre.DisableTransit.Should().Be(originalAre.DisableTransit);
+            // Matching Python: assert saved_are.unescapable == original_are.unescapable
+            savedAre.Unescapable.Should().Be(originalAre.Unescapable);
+            // Matching Python: assert saved_are.alpha_test == original_are.alpha_test
+            savedAre.AlphaTest.Should().BeApproximately(originalAre.AlphaTest, 0.001f);
+
+            // Matching Python: Load saved data back
+            // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, data)
+            editor.Load(areFile, "tat001", ResourceType.ARE, data);
+
+            // Matching Python: Verify UI matches
+            // Matching Python: assert editor.ui.tagEdit.text() == original_are.tag
+            if (editor.TagEdit != null)
+            {
+                editor.TagEdit.Text.Should().Be(originalAre.Tag ?? "");
+            }
+            // Matching Python: assert editor.ui.cameraStyleSelect.currentIndex() == original_are.camera_style
+            if (editor.CameraStyleSelect != null)
+            {
+                editor.CameraStyleSelect.SelectedIndex.Should().Be(originalAre.CameraStyle);
+            }
+            // Matching Python: assert editor.ui.envmapEdit.text() == str(original_are.default_envmap)
+            if (editor.EnvmapEdit != null)
+            {
+                editor.EnvmapEdit.Text.Should().Be(originalAre.DefaultEnvMap.ToString());
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1244-1288

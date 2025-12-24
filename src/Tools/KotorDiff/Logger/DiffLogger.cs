@@ -121,6 +121,64 @@ namespace KotorDiff.Logger
             }
         }
 
+        // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/logger.py:146-162
+        // Original: class ColoredFormatter - Color mapping for log levels
+        // DEBUG: Fore.CYAN, INFO: Fore.GREEN, WARNING: Fore.YELLOW, ERROR: Fore.RED, CRITICAL: Fore.MAGENTA + Style.BRIGHT
+        private static ConsoleColor GetColorForLevel(LogLevel level)
+        {
+            switch (level)
+            {
+                case LogLevel.DEBUG:
+                    return ConsoleColor.Cyan;
+                case LogLevel.INFO:
+                    return ConsoleColor.Green;
+                case LogLevel.WARNING:
+                    return ConsoleColor.Yellow;
+                case LogLevel.ERROR:
+                    return ConsoleColor.Red;
+                case LogLevel.CRITICAL:
+                    return ConsoleColor.Magenta;
+                default:
+                    return ConsoleColor.Gray;
+            }
+        }
+
+        // Check if console supports color output
+        // Colors should only be used when:
+        // 1. Colors are enabled via _useColors flag
+        // 2. Console output is not redirected
+        // 3. Console.Out is available and not null
+        private bool ShouldUseColors()
+        {
+            if (!_useColors)
+            {
+                return false;
+            }
+
+            // Check if output is redirected (pipes, files, etc.)
+            if (Console.IsOutputRedirected)
+            {
+                return false;
+            }
+
+            // Check if console is available
+            try
+            {
+                // Try to access Console.Out to verify it's available
+                TextWriter test = Console.Out;
+                if (test == null)
+                {
+                    return false;
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         private void Log(LogLevel level, string message, object[] args)
         {
             if (level < _level)
@@ -132,13 +190,28 @@ namespace KotorDiff.Logger
             string prefix = level.ToString().ToUpper();
             string output = $"{prefix}: {formatted}";
 
-            if (_useColors)
+            // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/logger.py:157-162
+            // Original: ColoredFormatter.format() - Apply colors to both levelname and message
+            bool useColors = ShouldUseColors();
+            ConsoleColor originalColor = Console.ForegroundColor;
+
+            if (useColors)
             {
-                // Color support can be added using System.Console.ForegroundColor if needed
-                // TODO: STUB - For now, output is plain text for maximum compatibility
+                ConsoleColor levelColor = GetColorForLevel(level);
+                Console.ForegroundColor = levelColor;
             }
 
+            // Write to console with color (if enabled)
             Console.WriteLine(output);
+
+            // Restore original color if we changed it
+            if (useColors)
+            {
+                Console.ForegroundColor = originalColor;
+            }
+
+            // Write to file without color codes (plain text only)
+            // Matching PyKotor implementation: file output uses plain formatter without colors
             if (_outputFile != null)
             {
                 _outputFile.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {output}");

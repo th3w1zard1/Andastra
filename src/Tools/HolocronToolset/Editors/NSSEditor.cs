@@ -23,6 +23,7 @@ using HolocronToolset.Utils;
 using System.Text.Json;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
+using Andastra.Parsing.Extract;
 
 namespace HolocronToolset.Editors
 {
@@ -5440,10 +5441,71 @@ namespace HolocronToolset.Editors
                 return;
             }
 
-            // Get file path from selected item
-            // TODO:  Note: In a full implementation, we would extract the path from the TreeViewItem
-            // and open it in the editor or a new editor instance
-            System.Console.WriteLine("File opened from explorer (implementation in progress)");
+            // Get file path from selected item - TreeViewItem.Tag contains the full path as string
+            string fullPath = (selectedItem as TreeViewItem)?.Tag as string;
+            if (string.IsNullOrEmpty(fullPath))
+            {
+                return;
+            }
+
+            // Check if it's a directory
+            if (Directory.Exists(fullPath))
+            {
+                // TODO: Navigate to the directory (change current directory in file explorer)
+                // For now, just update the root path to navigate to the selected directory
+                _fileSystemModel.SetRootPath(fullPath);
+                _fileExplorerAddressBar.Text = fullPath;
+                UpdateFileExplorerTreeView();
+                return;
+            }
+
+            // It's a file - determine resource type from extension
+            string extension = Path.GetExtension(fullPath).TrimStart('.').ToLowerInvariant();
+            ResourceType resourceType = ResourceType.FromExtension(extension);
+
+            if (resourceType == null || resourceType.IsInvalid)
+            {
+                var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Error",
+                    $"Unknown or unsupported file extension: .{extension}",
+                    ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Error);
+                errorBox.ShowAsync();
+                return;
+            }
+
+            // Check if this is a script file (NSS/NCS) that this editor can handle
+            bool isScriptFile = resourceType == ResourceType.NSS || resourceType == ResourceType.NCS;
+
+            if (isScriptFile)
+            {
+                // Load the script file into this editor instance
+                try
+                {
+                    byte[] fileData = File.ReadAllBytes(fullPath);
+                    string fileName = Path.GetFileNameWithoutExtension(fullPath);
+                    Load(fullPath, fileName, resourceType, fileData);
+                }
+                catch (Exception ex)
+                {
+                    var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                        "Error",
+                        $"Failed to load file:\n{ex.Message}",
+                        ButtonEnum.Ok,
+                        MsBox.Avalonia.Enums.Icon.Error);
+                    errorBox.ShowAsync();
+                }
+            }
+            else
+            {
+                // For other file types, delegate to the main window to open appropriate editor
+                // Create a FileResource for the file
+                var fileResource = new FileResource(fullPath, Path.GetFileNameWithoutExtension(fullPath), resourceType);
+
+                // Use WindowUtils to open the appropriate editor
+                // Pass this window as the parent
+                WindowUtils.OpenResourceEditor(fileResource, _installation, this);
+            }
         }
 
         // Public properties for testing

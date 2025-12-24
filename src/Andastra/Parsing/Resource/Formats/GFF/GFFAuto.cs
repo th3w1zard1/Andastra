@@ -20,15 +20,35 @@ namespace Andastra.Parsing.Formats.GFF
         }
 
         /// <summary>
-        /// Reads the GFF data from the source location with the specified format (GFF or GFF_XML).
+        /// Reads the GFF data from the source location with the specified format (GFF, GFF_XML, or GFF_JSON).
         /// 1:1 port of Python read_gff function.
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/gff/gff_auto.py:66-107
         /// </summary>
         public static GFF ReadGff(object source, int offset = 0, int? size = null, ResourceType fileFormat = null)
         {
             ResourceType format = fileFormat ?? ResourceType.GFF;
-            
-            if (format.IsGff())
+
+            if (format == ResourceType.GFF_JSON)
+            {
+                var reader = new GFFJsonReader();
+                if (source is string filePath)
+                {
+                    return reader.Load(File.ReadAllText(filePath));
+                }
+                else if (source is byte[] bytes)
+                {
+                    return reader.Load(bytes);
+                }
+                else if (source is Stream stream)
+                {
+                    return reader.Load(stream);
+                }
+                else
+                {
+                    throw new ArgumentException("Source must be a file path, byte array, or stream.", nameof(source));
+                }
+            }
+            else if (format.IsGff())
             {
                 byte[] data;
                 if (source is string filePath)
@@ -51,7 +71,7 @@ namespace Andastra.Parsing.Formats.GFF
                 {
                     throw new ArgumentException("Source must be a file path, byte array, or stream.", nameof(source));
                 }
-                
+
                 var reader = new GFFBinaryReader(data, offset, size ?? 0);
                 return reader.Load();
             }
@@ -63,15 +83,34 @@ namespace Andastra.Parsing.Formats.GFF
 
 
         /// <summary>
-        /// Writes the GFF data to the target location with the specified format (GFF or GFF_XML).
+        /// Writes the GFF data to the target location with the specified format (GFF, GFF_XML, or GFF_JSON).
         /// 1:1 port of Python write_gff function.
         /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/gff/gff_auto.py:109-143
         /// </summary>
         public static void WriteGff(GFF gff, object target, ResourceType fileFormat = null)
         {
             ResourceType format = fileFormat ?? ResourceType.GFF;
-            
-            if (format.IsGff())
+
+            if (format == ResourceType.GFF_JSON)
+            {
+                var writer = new GFFJsonWriter();
+                string jsonText = writer.Write(gff);
+
+                if (target is string filePath)
+                {
+                    File.WriteAllText(filePath, jsonText);
+                }
+                else if (target is Stream stream)
+                {
+                    byte[] data = System.Text.Encoding.UTF8.GetBytes(jsonText);
+                    stream.Write(data, 0, data.Length);
+                }
+                else
+                {
+                    throw new ArgumentException("Target must be a file path or stream.", nameof(target));
+                }
+            }
+            else if (format.IsGff())
             {
                 // Set content type from filename if not already set
                 if (gff.Content == GFFContent.GFF && target is string targetPath && !string.IsNullOrEmpty(targetPath))
@@ -81,7 +120,7 @@ namespace Andastra.Parsing.Formats.GFF
 
                 var writer = new GFFBinaryWriter(gff);
                 byte[] data = writer.Write();
-                
+
                 if (target is string filePath)
                 {
                     File.WriteAllBytes(filePath, data);
@@ -109,8 +148,18 @@ namespace Andastra.Parsing.Formats.GFF
         public static byte[] BytesGff(GFF gff, ResourceType fileFormat = null)
         {
             ResourceType format = fileFormat ?? ResourceType.GFF;
-            var writer = new GFFBinaryWriter(gff);
-            return writer.Write();
+
+            if (format == ResourceType.GFF_JSON)
+            {
+                var writer = new GFFJsonWriter();
+                string jsonText = writer.Write(gff);
+                return System.Text.Encoding.UTF8.GetBytes(jsonText);
+            }
+            else
+            {
+                var writer = new GFFBinaryWriter(gff);
+                return writer.Write();
+            }
         }
     }
 }

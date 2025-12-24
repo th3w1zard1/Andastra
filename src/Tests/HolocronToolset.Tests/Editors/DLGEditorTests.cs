@@ -4427,14 +4427,100 @@ namespace HolocronToolset.Tests.Editors
             }
         }
 
-        // TODO: STUB - Implement test_dlg_editor_manipulate_plot_xp_roundtrip (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2760-2792)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2760-2792
         // Original: def test_dlg_editor_manipulate_plot_xp_roundtrip(qtbot, installation: HTInstallation, test_files_dir: Path): Test plot XP roundtrip
         [Fact]
         public void TestDlgEditorManipulatePlotXpRoundtrip()
         {
-            // TODO: STUB - Implement plot XP roundtrip test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2760-2792
-            throw new NotImplementedException("TestDlgEditorManipulatePlotXpRoundtrip: Plot XP roundtrip test not yet implemented");
+            // Get test files directory (matching Python: test_files_dir: Path)
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            // Try to find ORIHA.dlg (matching Python: dlg_file = test_files_dir / "ORIHA.dlg")
+            string dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            }
+
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Skip if test file not found (matching Python: pytest.skip("ORIHA.dlg not found"))
+                Assert.True(false, "ORIHA.dlg not found - skipping test");
+                return;
+            }
+
+            // Get K1 installation path (matching Python: installation: HTInstallation)
+            HTInstallation installation = CreateTestInstallation();
+            if (installation == null)
+            {
+                // Skip if no installation available (matching Python behavior when installation is None)
+                Assert.True(false, "No K1 installation available - skipping test");
+                return;
+            }
+
+            // Create editor (matching Python: editor = DLGEditor(None, installation))
+            var editor = new DLGEditor(null, installation);
+
+            // Load DLG file (matching Python: editor.load(dlg_file, "ORIHA", ResourceType.DLG, original_data))
+            byte[] originalData = System.IO.File.ReadAllBytes(dlgFile);
+            editor.Load(dlgFile, "ORIHA", ResourceType.DLG, originalData);
+
+            // Check if dialog has starters (matching Python: if editor.model.rowCount() > 0)
+            if (editor.Model.RowCount <= 0)
+            {
+                // Skip if no dialog content (matching Python behavior)
+                Assert.True(false, "No dialog content available - skipping test");
+                return;
+            }
+
+            // Select first item (matching Python: first_item = editor.model.item(0, 0), editor.ui.dialogTree.setCurrentIndex(first_item.index()))
+            var firstItem = editor.Model.Item(0, 0);
+            if (!(firstItem is DLGStandardItem dlgItem))
+            {
+                Assert.True(false, "First item is not a DLGStandardItem - skipping test");
+                return;
+            }
+            editor.DialogTree.SelectedItem = dlgItem;
+
+            // Test various XP percentages (matching Python: test_values = [0, 25, 50, 75, 100])
+            int[] testValues = { 0, 25, 50, 75, 100 };
+            foreach (int val in testValues)
+            {
+                // Set plot XP spin value (matching Python: editor.ui.plotXpSpin.setValue(val))
+                editor.PlotXpSpin.Value = val;
+
+                // Call on_node_update (matching Python: editor.on_node_update())
+                editor.OnNodeUpdate();
+
+                // Save and verify (matching Python: data, _ = editor.build(), modified_dlg = read_dlg(data))
+                var buildResult = editor.Build();
+                byte[] data = buildResult.Item1;
+                DLGType modifiedDlg = DLGType.Read(data);
+
+                // Verify saved data (matching Python: assert modified_dlg.starters[0].node.plot_xp_percentage == val)
+                if (modifiedDlg.Starters != null && modifiedDlg.Starters.Count > 0)
+                {
+                    Assert.Equal(val, modifiedDlg.Starters[0].Node.PlotXpPercentage);
+                }
+                else
+                {
+                    Assert.True(false, $"No starters found after setting plot XP to {val}");
+                    return;
+                }
+
+                // Load back and verify (matching Python: editor.load(dlg_file, "ORIHA", ResourceType.DLG, data))
+                editor.Load(dlgFile, "ORIHA", ResourceType.DLG, data);
+                editor.DialogTree.SelectedItem = dlgItem;
+
+                // Verify UI shows correct value (matching Python: assert editor.ui.plotXpSpin.value() == val)
+                Assert.Equal(val, editor.PlotXpSpin.Value);
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2794-2832

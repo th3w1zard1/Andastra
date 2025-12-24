@@ -453,6 +453,28 @@ namespace Andastra.Runtime.Content.ResourceProviders
             return GetResourceBytesAsync(id, CancellationToken.None).GetAwaiter().GetResult();
         }
 
+        /// <summary>
+        /// Loads a resource by ResRef and ResourceType synchronously.
+        /// </summary>
+        /// <param name="resRef">Resource reference.</param>
+        /// <param name="resourceType">Resource type.</param>
+        /// <returns>Resource data or null if not found.</returns>
+        /// <remarks>
+        /// This method provides synchronous resource loading by ResRef and ResourceType parameters.
+        /// Creates a ResourceIdentifier internally and delegates to GetResourceBytes(ResourceIdentifier).
+        /// Based on swkotor2.exe: Resource lookup uses CExoKeyTable for resource resolution.
+        /// </remarks>
+        public byte[] LoadResource(Andastra.Parsing.Common.ResRef resRef, ResourceType resourceType)
+        {
+            if (resRef == null || resRef.IsBlank() || resourceType == null || resourceType.IsInvalid)
+            {
+                return null;
+            }
+
+            var identifier = new ResourceIdentifier(resRef.ToString(), resourceType);
+            return GetResourceBytes(identifier);
+        }
+
         #region Type Conversion
 
         private static KotorSearchLocation? ConvertSearchLocation(OdysseySearchLocation location)

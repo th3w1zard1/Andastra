@@ -27,7 +27,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
     /// - Async loading: Provides async resource access for streaming and background loading
     /// - Resource enumeration: Can enumerate resources by type from packages and override directory
     /// - Based on Eclipse Engine's Unreal Engine ResourceManager system
-    /// 
+    ///
     /// Cross-Engine Resource Loading Patterns (from Ghidra analysis):
     /// - Eclipse Engine (daorigins.exe): Uses packages/core structure with RIM files and streaming
     ///   - PACKAGES directory: "packages\\" (package-based resource system)
@@ -44,16 +44,16 @@ namespace Andastra.Runtime.Content.ResourceProviders
     ///   - Streaming allows loading resources on-demand as levels are entered
     ///   - Streaming implementation: Checks current package, then packages/core/env/ subdirectories, then streaming subdirectory
     ///   - RIM files provide resource indexing for faster lookups
-    /// 
+    ///
     /// Streaming Resource Implementation (from Ghidra analysis):
     /// - LookupStreaming: Implements level-specific resource loading
     ///   - First checks current package (if set) in packages/core/env/ and packages/core/
     ///   - Then searches all PCC/UPK files in packages/core/env/ subdirectories
     ///   - Finally checks packages/core/streaming/ directory (if exists)
     ///   - Based on "DragonAge::Streaming" string and "packages\\core\\env\\" path found in daorigins.exe
-    /// 
+    ///
     /// Reverse Engineered Function Addresses (from Ghidra MCP analysis):
-    /// 
+    ///
     /// Dragon Age: Origins (daorigins.exe):
     /// - Resource Manager Initialization/Shutdown Strings:
     ///   * "Initialize - Resource Manager" @ 0x00ad947c (Unicode string, no direct cross-references found)
@@ -61,12 +61,12 @@ namespace Andastra.Runtime.Content.ResourceProviders
     ///   * "Failed to initialize ResourceManager" @ 0x00ad9430 (Unicode string, no direct cross-references found)
     ///   * "Shutdown of resource manager failed" @ 0x00ad8790 (Unicode string, no direct cross-references found)
     ///   * Note: These are likely logging/error messages. Actual ResourceManager functions are in Unreal Engine 3 core libraries.
-    /// 
+    ///
     /// - Module RIM Manager:
     ///   * "Initialize - Module RIM Manager" @ 0x00ae6be0 (Unicode string, no direct cross-references found)
     ///   * "Module Resources Refreshed" @ 0x00ae9f64 (Unicode string, no direct cross-references found)
     ///   * "RefreshModuleResources" @ 0x00aea0e0 (Unicode string, no direct cross-references found)
-    /// 
+    ///
     /// - Package Path Strings:
     ///   * "packages\\" @ 0x00ad989c (Unicode string, base packages directory)
     ///   * "packages\\core\\" @ 0x00ad98f4 (Unicode string, core packages directory)
@@ -82,15 +82,15 @@ namespace Andastra.Runtime.Content.ResourceProviders
     ///   * "packages\\core\\toolset\\" @ 0x00ad9820 (Unicode string, toolset packages)
     ///   * "packages\\core\\patch\\" @ 0x00ad997c (Unicode string, patch packages)
     ///   * "packages\\core\\data\\talktables" @ 0x00ad9e04 (Unicode string, talk table resources)
-    /// 
+    ///
     /// - Streaming System:
     ///   * "DragonAge::Streaming" @ 0x00ad7a34 (Unicode string, namespace identifier for streaming system)
     ///   * Note: Eclipse Engine uses Unreal Engine 3's streaming system for on-demand resource loading.
-    /// 
+    ///
     /// - Package-Related Commands (string references found in command tables):
     ///   * "COMMAND_ISPACKAGELOADED" @ 0x00aefb1c (string, command to check if package is loaded)
     ///   * "COMMAND_GETPACKAGEAI" @ 0x00af2690 (string, command to get package AI)
-    /// 
+    ///
     /// - Architecture Notes:
     ///   * Eclipse Engine is built on Unreal Engine 3, which uses a package-based resource system (PCC/UPK files).
     ///   * Resource loading is abstracted through Unreal Engine 3's UObject/UClass system and UPackage system.
@@ -99,7 +99,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
     ///     is handled by Unreal Engine 3's runtime libraries (Core, Engine, GFx).
     ///   * Package loading uses Unreal Engine 3's package system: LoadPackage, FindObject, LoadObject, etc.
     ///   * RIM (Resource Index Manifest) files are Dragon Age-specific additions to the Unreal Engine 3 package system.
-    /// 
+    ///
     /// Dragon Age 2 (DragonAge2.exe):
     /// - Resource Manager Initialization/Shutdown Strings:
     ///   * "Initialize - Resource Manager" @ 0x00c13f3c (Unicode string, no direct cross-references found)
@@ -107,11 +107,11 @@ namespace Andastra.Runtime.Content.ResourceProviders
     ///   * "Failed to initialize ResourceManager" @ 0x00c13ef0 (Unicode string, no direct cross-references found)
     ///   * "Shutdown of resource manager failed" @ 0x00c14098 (Unicode string, no direct cross-references found)
     ///   * Note: These are likely logging/error messages. Actual ResourceManager functions are in Unreal Engine 3 core libraries.
-    /// 
+    ///
     /// - Module RIM Manager:
     ///   * "Initialize - Module RIM Manager" @ 0x00bf8158 (Unicode string, no direct cross-references found)
     ///   * Additional manager: "Initialize - Award Manager" @ 0x00c13ad0, "Shutdown - Award Manager" @ 0x00c14118
-    /// 
+    ///
     /// - Package Path Strings:
     ///   * "packages\\" @ 0x00c14644 (Unicode string, base packages directory)
     ///   * "packages\\core\\" (implied from other paths, similar to DA:O)
@@ -126,32 +126,32 @@ namespace Andastra.Runtime.Content.ResourceProviders
     ///   * "packages\\core\\toolset\\" @ 0x00c145e8 (Unicode string, toolset packages)
     ///   * "packages\\core\\patch\\" @ 0x00c14724 (Unicode string, patch packages)
     ///   * "packages\\core\\data\\talktables" @ 0x00c14a24 (Unicode string, talk table resources)
-    /// 
+    ///
     /// - Streaming System:
     ///   * "DragonAge::Streaming" @ 0x00c1337c (Unicode string, namespace identifier for streaming system)
     ///   * "EnableStreaming" @ 0x00c04564 (Unicode string, streaming enable flag)
     ///   * Note: Eclipse Engine uses Unreal Engine 3's streaming system for on-demand resource loading.
-    /// 
+    ///
     /// - RIM File References:
     ///   * "designerresources.rim" @ 0x00c12c60 (Unicode string, additional RIM file in DA2)
     ///   * "ResourceName" @ 0x00c04588 (Unicode string, resource name property)
-    /// 
+    ///
     /// - Package-Related Commands:
     ///   * "PackageAI" @ 0x00bf468c (string, package AI reference)
     ///   * "PACKAGES:" @ 0x00bf5d54 (Unicode string, package prefix identifier)
     ///   * "PACKAGES" @ 0x00c14658 (Unicode string, package identifier)
-    /// 
+    ///
     /// - Additional Resource References:
     ///   * "OnStartCastingResources" @ 0x00bf1134 (Unicode string, casting resource event)
     ///   * "OnAvailableResources" @ 0x00bf1164 (Unicode string, available resource event)
     ///   * Content Manager: "ContentManager" @ 0x00beeb24, "PRCContentManager" @ 0x00beeb44 (Unicode strings)
-    /// 
+    ///
     /// - Architecture Notes:
     ///   * Dragon Age 2 uses the same Unreal Engine 3 architecture as Dragon Age: Origins.
     ///   * Similar package structure and resource management patterns.
     ///   * String addresses differ but functionality is consistent.
     ///   * Additional features in DA2: Award Manager system, enhanced content management.
-    /// 
+    ///
     /// Hardcoded Resources:
     /// - No hardcoded resource data structures found in initial analysis.
     /// - Eclipse Engine likely relies entirely on package-based resources (no hardcoded fallbacks).
@@ -612,7 +612,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
         {
             // Streaming resources are loaded on-demand as levels are entered
             // Eclipse Engine uses streaming for level-specific resources
-            // 
+            //
             // Ghidra Reverse Engineering Analysis (daorigins.exe):
             //   - "DragonAge::Streaming" namespace string found at 0x00ad7a34 (Unicode)
             //     * This is a namespace identifier for the streaming system
@@ -640,14 +640,14 @@ namespace Andastra.Runtime.Content.ResourceProviders
             //   3. Check for loose files in packages/core/env/ subdirectories
             //   4. Fallback to packages/core/streaming/ directory if it exists
             //   This matches the "packages\\core\\env\\" path pattern found in the executable
-            
+
             // First, check if we have a current package set (level-specific package)
             if (!string.IsNullOrEmpty(_currentPackage))
             {
                 // Try loading from the current package's PCC/UPK file
                 string[] packageExtensions = new[] { "pcc", "upk" };
                 string corePath = CorePackagePath();
-                
+
                 foreach (string pkgExt in packageExtensions)
                 {
                     // Check in packages/core/env/ for level-specific packages
@@ -672,7 +672,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
                             }
                         }
                     }
-                    
+
                     // Also check in packages/core/ directly for the current package
                     string packageFile2 = Path.Combine(corePath, _currentPackage + "." + pkgExt);
                     if (File.Exists(packageFile2))
@@ -693,7 +693,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
                     }
                 }
             }
-            
+
             // Second, check for streaming resources in packages/core/env/ subdirectories
             // These are level-specific resources that are streamed in as levels load
             string envPath2 = Path.Combine(CorePackagePath(), "env");
@@ -722,21 +722,21 @@ namespace Andastra.Runtime.Content.ResourceProviders
                         }
                     }
                 }
-                
+
                 // Also check for loose files in env subdirectories
                 string extension = id.ResType?.Extension ?? "";
                 if (extension.StartsWith("."))
                 {
                     extension = extension.Substring(1);
                 }
-                
+
                 string[] looseFiles = Directory.GetFiles(envPath2, id.ResName + "." + extension, SearchOption.AllDirectories);
                 if (looseFiles.Length > 0)
                 {
                     return File.ReadAllBytes(looseFiles[0]);
                 }
             }
-            
+
             // Third, check for a dedicated "streaming" subdirectory (if it exists)
             string streamingPath = Path.Combine(CorePackagePath(), "streaming");
             if (Directory.Exists(streamingPath))
@@ -746,14 +746,14 @@ namespace Andastra.Runtime.Content.ResourceProviders
                 {
                     extension2 = extension2.Substring(1);
                 }
-                
+
                 // Check for loose files
                 string resourcePath = Path.Combine(streamingPath, id.ResName + "." + extension2);
                 if (File.Exists(resourcePath))
                 {
                     return File.ReadAllBytes(resourcePath);
                 }
-                
+
                 // Check for package files
                 string[] packageExtensions3 = new[] { "pcc", "upk" };
                 foreach (string pkgExt in packageExtensions3)
@@ -778,7 +778,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
                     }
                 }
             }
-            
+
             return null;
         }
 
@@ -788,7 +788,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
             // Eclipse Engine uses known fallback resource names that are loaded from packages when
             // the original resource cannot be found. These are not embedded in the executable, but
             // rather are resource names that the engine knows to use as fallbacks.
-            // 
+            //
             // Ghidra Reverse Engineering Analysis (daorigins.exe and DragonAge2.exe):
             //   - Default resource name strings found in executables:
             //     * daorigins.exe: "default_missing" @ 0x00ae4a70 (Unicode string)
@@ -817,7 +817,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
             //     fallback resource from packages using these known resource names.
             //   - Implementation: Map resource types to their default fallback resource names, then
             //     attempt to load the fallback resource from the normal resource lookup path.
-            
+
             // Get the default fallback resource name for this resource type
             // For FXO shaders, we need to check the original resource name to determine shader type
             string fallbackResName = GetHardcodedFallbackResourceName(id.ResType, _gameType, id.ResName);
@@ -825,10 +825,10 @@ namespace Andastra.Runtime.Content.ResourceProviders
             {
                 return null;
             }
-            
+
             // Create a resource identifier for the fallback resource
             ResourceIdentifier fallbackId = new ResourceIdentifier(fallbackResName, id.ResType);
-            
+
             // Attempt to load the fallback resource using the normal lookup path
             // This will search packages, RIM files, etc., but skip hardcoded lookup to avoid infinite recursion
             byte[] fallbackData = LookupInOverride(fallbackId);
@@ -836,29 +836,29 @@ namespace Andastra.Runtime.Content.ResourceProviders
             {
                 return fallbackData;
             }
-            
+
             fallbackData = LookupInPackage(fallbackId);
             if (fallbackData != null)
             {
                 return fallbackData;
             }
-            
+
             fallbackData = LookupInRim(fallbackId);
             if (fallbackData != null)
             {
                 return fallbackData;
             }
-            
+
             fallbackData = LookupStreaming(fallbackId);
             if (fallbackData != null)
             {
                 return fallbackData;
             }
-            
+
             // Fallback resource not found in any location
             return null;
         }
-        
+
         /// <summary>
         /// Gets the hardcoded fallback resource name for a given resource type.
         /// Based on reverse engineering analysis of daorigins.exe and DragonAge2.exe.
@@ -880,11 +880,11 @@ namespace Andastra.Runtime.Content.ResourceProviders
             {
                 return null;
             }
-            
+
             // Map resource types to their default fallback resource names
             // Based on Ghidra reverse engineering of daorigins.exe and DragonAge2.exe
             string extension = resType.Extension?.ToLowerInvariant() ?? "";
-            
+
             // Material resources (MAT)
             if (extension == "mat")
             {
@@ -893,7 +893,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
                 // Use "Default_Missing" as the primary fallback
                 return "Default_Missing";
             }
-            
+
             // Material Object resources (MAO)
             if (extension == "mao")
             {
@@ -904,7 +904,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
                 // Use "default_alpha" as the primary fallback (more generic than Miss01)
                 return "default_alpha";
             }
-            
+
             // Shader resources (FXO)
             if (extension == "fxo")
             {
@@ -928,11 +928,11 @@ namespace Andastra.Runtime.Content.ResourceProviders
                         return "DefaultVertexShader";
                     }
                 }
-                
+
                 // If we can't determine shader type, default to vertex shader (more common)
                 return "DefaultVertexShader";
             }
-            
+
             // Render State resources (STA)
             if (extension == "sta")
             {
@@ -940,7 +940,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
                 // DragonAge2.exe: "DefaultState.sta" @ 0x00c169d4
                 return "DefaultState";
             }
-            
+
             // Texture resources (DDS, TGA, TPC)
             if (extension == "dds" || extension == "tga" || extension == "tpc")
             {
@@ -965,7 +965,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
                     return "default_missing";
                 }
             }
-            
+
             // Model resources (MDL, MDB)
             if (extension == "mdl" || extension == "mdb")
             {
@@ -974,7 +974,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
                 // Use "default_player" as the fallback for models
                 return "default_player";
             }
-            
+
             // No fallback resource name found for this resource type
             return null;
         }
@@ -1122,6 +1122,28 @@ namespace Andastra.Runtime.Content.ResourceProviders
         public byte[] GetResourceBytes(ResourceIdentifier id)
         {
             return GetResourceBytesAsync(id, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Loads a resource by ResRef and ResourceType synchronously.
+        /// </summary>
+        /// <param name="resRef">Resource reference.</param>
+        /// <param name="resourceType">Resource type.</param>
+        /// <returns>Resource data or null if not found.</returns>
+        /// <remarks>
+        /// This method provides synchronous resource loading by ResRef and ResourceType parameters.
+        /// Creates a ResourceIdentifier internally and delegates to GetResourceBytes(ResourceIdentifier).
+        /// Based on Eclipse Engine resource loading system (Dragon Age: Origins/2).
+        /// </remarks>
+        public byte[] LoadResource(Andastra.Parsing.Common.ResRef resRef, ResourceType resourceType)
+        {
+            if (resRef == null || resRef.IsBlank() || resourceType == null || resourceType.IsInvalid)
+            {
+                return null;
+            }
+
+            var identifier = new ResourceIdentifier(resRef.ToString(), resourceType);
+            return GetResourceBytes(identifier);
         }
 
         #endregion

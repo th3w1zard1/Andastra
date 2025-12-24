@@ -7,6 +7,7 @@ using Andastra.Runtime.Scripting.Interfaces;
 using Andastra.Runtime.Scripting.EngineApi;
 using Andastra.Runtime.Scripting.Types;
 using Andastra.Runtime.Scripting.VM;
+using Andastra.Parsing.Formats.TwoDA;
 using Perception = Andastra.Runtime.Core.Perception;
 using Combat = Andastra.Runtime.Core.Combat;
 using Triggers = Andastra.Runtime.Core.Triggers;
@@ -123,6 +124,27 @@ namespace Andastra.Runtime.Tooling
         {
             _entities = new Dictionary<uint, IEntity>();
             _areas = new Dictionary<uint, IArea>();
+
+            // Initialize mock systems
+            TimeManager = new MockTimeManager();
+            EventBus = new MockEventBus();
+            DelayScheduler = new MockDelayScheduler();
+            GameDataProvider = new MockGameDataProvider();
+
+            // Initialize concrete systems (they require IWorld reference)
+            EffectSystem = new Combat.EffectSystem(this);
+            PerceptionSystem = new Perception.PerceptionSystem(this);
+            CombatSystem = new Combat.CombatSystem(this);
+            TriggerSystem = new Triggers.TriggerSystem(this);
+            AIController = new AI.AIController(this, CombatSystem);
+            AnimationSystem = new Animation.AnimationSystem(this);
+
+            // Initialize current area and module
+            var mockArea = new MockArea();
+            var mockModule = new MockModule();
+            RegisterArea(mockArea);
+            CurrentArea = mockArea;
+            CurrentModule = mockModule;
         }
 
         public IEntity GetEntity(uint objectId)
@@ -188,14 +210,20 @@ namespace Andastra.Runtime.Tooling
 
         public IEntity CreateEntity(Andastra.Runtime.Core.Templates.IEntityTemplate template, Vector3 position, float facing)
         {
-            // TODO:  Not implemented for CLI tooling
-            return null;
+            var entity = new MockEntity(template?.Tag ?? "CREATED_ENTITY");
+            entity.ObjectType = template?.ObjectType ?? ObjectType.Creature;
+            entity.AreaId = CurrentArea != null ? GetAreaId(CurrentArea) : 1;
+            RegisterEntity(entity);
+            return entity;
         }
 
         public IEntity CreateEntity(ObjectType objectType, Vector3 position, float facing)
         {
-            // TODO:  Not implemented for CLI tooling
-            return null;
+            var entity = new MockEntity("CREATED_ENTITY");
+            entity.ObjectType = objectType;
+            entity.AreaId = CurrentArea != null ? GetAreaId(CurrentArea) : 1;
+            RegisterEntity(entity);
+            return entity;
         }
 
         public void DestroyEntity(uint objectId)
@@ -303,8 +331,326 @@ namespace Andastra.Runtime.Tooling
 
         public void Update(float deltaTime)
         {
-            // TODO:  Not implemented for CLI tooling
+            // Update time manager
+            TimeManager?.Update(deltaTime);
+
+            // Update delay scheduler
+            DelayScheduler?.Update(deltaTime);
+
+            // Update other systems
+            AnimationSystem?.Update(deltaTime);
         }
+    }
+
+    /// <summary>
+    /// Mock delay scheduler for CLI script execution. Provides basic delayed action scheduling for testing scripts.
+    /// </summary>
+    public class MockDelayScheduler : IDelayScheduler
+    {
+        public void ScheduleDelay(float delaySeconds, IAction action, IEntity target)
+        {
+            // No-op for CLI tooling - delayed actions not executed
+        }
+
+        public void Update(float deltaTime)
+        {
+            // No-op for CLI tooling - time not advanced
+        }
+
+        public void ClearForEntity(IEntity entity)
+        {
+            // No-op for CLI tooling - no actions to clear
+        }
+
+        public void ClearAll()
+        {
+            // No-op for CLI tooling - no actions to clear
+        }
+
+        public int PendingCount => 0;
+    }
+
+    /// <summary>
+    /// Mock event bus for CLI script execution. Provides basic event handling for testing scripts.
+    /// </summary>
+    public class MockEventBus : IEventBus
+    {
+        public void Subscribe<T>(Action<T> handler) where T : IGameEvent
+        {
+            // No-op for CLI tooling - events not processed
+        }
+
+        public void Unsubscribe<T>(Action<T> handler) where T : IGameEvent
+        {
+            // No-op for CLI tooling - events not processed
+        }
+
+        public void Publish<T>(T gameEvent) where T : IGameEvent
+        {
+            // No-op for CLI tooling - events not processed
+        }
+
+        public void QueueEvent<T>(T gameEvent) where T : IGameEvent
+        {
+            // No-op for CLI tooling - events not processed
+        }
+
+        public void DispatchQueuedEvents()
+        {
+            // No-op for CLI tooling - events not processed
+        }
+
+        public void FireScriptEvent(IEntity entity, ScriptEvent eventType, IEntity triggerer = null)
+        {
+            // No-op for CLI tooling - script events not processed
+        }
+    }
+
+    /// <summary>
+    /// Mock time manager for CLI script execution. Provides basic time management for testing scripts.
+    /// </summary>
+    public class MockTimeManager : ITimeManager
+    {
+        private float _simulationTime;
+        private float _realTime;
+        private float _timeScale = 1.0f;
+        private bool _isPaused;
+        private float _deltaTime;
+        private int _gameTimeHour;
+        private int _gameTimeMinute;
+        private int _gameTimeSecond;
+        private int _gameTimeMillisecond;
+
+        public MockTimeManager()
+        {
+            FixedTimestep = 1.0f / 60.0f; // 60 FPS
+            _simulationTime = 0.0f;
+            _realTime = 0.0f;
+            _deltaTime = FixedTimestep;
+            SetGameTime(12, 0, 0, 0); // Start at noon
+        }
+
+        public float FixedTimestep { get; }
+
+        public float SimulationTime => _simulationTime;
+
+        public float RealTime => _realTime;
+
+        public float TimeScale
+        {
+            get => _timeScale;
+            set => _timeScale = Math.Max(0.0f, value);
+        }
+
+        public bool IsPaused
+        {
+            get => _isPaused;
+            set => _isPaused = value;
+        }
+
+        public float DeltaTime => _deltaTime;
+
+        public float InterpolationAlpha => 0.0f; // Not used in CLI tooling
+
+        public void Tick()
+        {
+            if (!_isPaused)
+            {
+                _simulationTime += FixedTimestep * _timeScale;
+                _deltaTime = FixedTimestep * _timeScale;
+            }
+        }
+
+        public void Update(float realDeltaTime)
+        {
+            _realTime += realDeltaTime;
+            if (!_isPaused)
+            {
+                _deltaTime = realDeltaTime * _timeScale;
+            }
+        }
+
+        public bool HasPendingTicks()
+        {
+            return !_isPaused;
+        }
+
+        public int GameTimeHour => _gameTimeHour;
+
+        public int GameTimeMinute => _gameTimeMinute;
+
+        public int GameTimeSecond => _gameTimeSecond;
+
+        public int GameTimeMillisecond => _gameTimeMillisecond;
+
+        public void SetGameTime(int hour, int minute, int second, int millisecond)
+        {
+            _gameTimeHour = Math.Max(0, Math.Min(23, hour));
+            _gameTimeMinute = Math.Max(0, Math.Min(59, minute));
+            _gameTimeSecond = Math.Max(0, Math.Min(59, second));
+            _gameTimeMillisecond = Math.Max(0, Math.Min(999, millisecond));
+        }
+    }
+
+    /// <summary>
+    /// Mock game data provider for CLI script execution. Provides basic game data access for testing scripts.
+    /// </summary>
+    public class MockGameDataProvider : IGameDataProvider
+    {
+        public TwoDA GetTable(string tableName)
+        {
+            // Return null for CLI tooling - no game data tables loaded
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Mock navigation mesh for CLI script execution. Provides basic navigation functionality for testing scripts.
+    /// </summary>
+    public class MockNavigationMesh : INavigationMesh
+    {
+        public bool IsPointWalkable(Vector3 point)
+        {
+            // All points are walkable in CLI tooling
+            return true;
+        }
+
+        public bool ProjectToWalkmesh(Vector3 point, out Vector3 result, out float height)
+        {
+            // Return the same point for CLI tooling
+            result = point;
+            height = point.Y;
+            return true;
+        }
+
+        public bool FindPath(Vector3 start, Vector3 end, out Vector3[] path)
+        {
+            // Direct path for CLI tooling
+            path = new[] { start, end };
+            return true;
+        }
+
+        public float GetHeightAtPoint(Vector3 point)
+        {
+            return point.Y;
+        }
+    }
+
+    /// <summary>
+    /// Mock area for CLI script execution. Provides basic area functionality for testing scripts.
+    /// </summary>
+    public class MockArea : IArea
+    {
+        private readonly List<IEntity> _creatures = new List<IEntity>();
+        private readonly List<IEntity> _placeables = new List<IEntity>();
+        private readonly List<IEntity> _doors = new List<IEntity>();
+        private readonly List<IEntity> _triggers = new List<IEntity>();
+        private readonly List<IEntity> _waypoints = new List<IEntity>();
+        private readonly List<IEntity> _sounds = new List<IEntity>();
+
+        public MockArea(string resRef = "MOCK_AREA", string tag = "MOCK_AREA")
+        {
+            ResRef = resRef;
+            Tag = tag;
+            DisplayName = resRef;
+            NavigationMesh = new MockNavigationMesh();
+        }
+
+        public string ResRef { get; }
+        public string DisplayName { get; }
+        public string Tag { get; }
+
+        public IEnumerable<IEntity> Creatures => _creatures;
+        public IEnumerable<IEntity> Placeables => _placeables;
+        public IEnumerable<IEntity> Doors => _doors;
+        public IEnumerable<IEntity> Triggers => _triggers;
+        public IEnumerable<IEntity> Waypoints => _waypoints;
+        public IEnumerable<IEntity> Sounds => _sounds;
+
+        public IEntity GetObjectByTag(string tag, int nth = 0)
+        {
+            // Search through all entity lists for the tag
+            var allEntities = new[] { _creatures, _placeables, _doors, _triggers, _waypoints, _sounds };
+            int count = 0;
+            foreach (var entityList in allEntities)
+            {
+                foreach (var entity in entityList)
+                {
+                    if (string.Equals(entity.Tag, tag, StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (count == nth)
+                            return entity;
+                        count++;
+                    }
+                }
+            }
+            return null;
+        }
+
+        public INavigationMesh NavigationMesh { get; }
+
+        public bool IsPointWalkable(Vector3 point)
+        {
+            return NavigationMesh.IsPointWalkable(point);
+        }
+
+        public bool ProjectToWalkmesh(Vector3 point, out Vector3 result, out float height)
+        {
+            return NavigationMesh.ProjectToWalkmesh(point, out result, out height);
+        }
+
+        public bool IsUnescapable { get; set; }
+        public bool StealthXPEnabled { get; set; }
+
+        public void Update(float deltaTime)
+        {
+            // No-op for CLI tooling
+        }
+    }
+
+    /// <summary>
+    /// Mock module for CLI script execution. Provides basic module functionality for testing scripts.
+    /// </summary>
+    public class MockModule : IModule
+    {
+        private readonly List<IArea> _areas = new List<IArea>();
+
+        public MockModule(string resRef = "MOCK_MODULE")
+        {
+            ResRef = resRef;
+            DisplayName = resRef;
+            EntryArea = "mockarea";
+            DawnHour = 6;
+            DuskHour = 18;
+            MinutesPastMidnight = 12 * 60; // Noon
+            Day = 1;
+            Month = 1;
+            Year = 1372; // Default NWN year
+        }
+
+        public string ResRef { get; }
+        public string DisplayName { get; }
+        public string EntryArea { get; }
+
+        public IEnumerable<IArea> Areas => _areas;
+
+        public IArea GetArea(string resRef)
+        {
+            return _areas.Find(a => string.Equals(a.ResRef, resRef, StringComparison.OrdinalIgnoreCase));
+        }
+
+        public string GetScript(Enums.ScriptEvent eventType)
+        {
+            // Return null for CLI tooling - no scripts
+            return null;
+        }
+
+        public int DawnHour { get; }
+        public int DuskHour { get; }
+        public int MinutesPastMidnight { get; set; }
+        public int Day { get; set; }
+        public int Month { get; set; }
+        public int Year { get; set; }
     }
 
     /// <summary>
