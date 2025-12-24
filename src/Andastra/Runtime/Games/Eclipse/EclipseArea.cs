@@ -13374,7 +13374,7 @@ technique ColorGrading
             }
 
             // Get cached geometry data
-            if (_cachedMeshGeometry.TryGetValue(meshId, out CachedMeshGeometry cachedGeometry))
+            if (this._cachedMeshGeometry.TryGetValue(meshId, out EclipseArea.CachedMeshGeometry cachedGeometry))
             {
                 if (cachedGeometry.Vertices != null)
                 {
@@ -13445,7 +13445,7 @@ technique ColorGrading
             }
 
             // Get cached geometry data
-            if (_cachedMeshGeometry.TryGetValue(meshId, out CachedMeshGeometry cachedGeometry))
+            if (this._cachedMeshGeometry.TryGetValue(meshId, out EclipseArea.CachedMeshGeometry cachedGeometry))
             {
                 if (cachedGeometry.Indices != null)
                 {
@@ -13475,7 +13475,7 @@ technique ColorGrading
             }
 
             // Check if already cached
-            if (_cachedMeshGeometry.ContainsKey(meshId))
+            if (this._cachedMeshGeometry.ContainsKey(meshId))
             {
                 return;
             }
@@ -13489,14 +13489,14 @@ technique ColorGrading
             // Only cache if we extracted valid geometry
             if (vertices.Count > 0 && indices.Count > 0)
             {
-                CachedMeshGeometry cachedGeometry = new CachedMeshGeometry
+                EclipseArea.CachedMeshGeometry cachedGeometry = new EclipseArea.CachedMeshGeometry
                 {
                     MeshId = meshId,
                     Vertices = vertices,
                     Indices = indices
                 };
 
-                _cachedMeshGeometry[meshId] = cachedGeometry;
+                this._cachedMeshGeometry[meshId] = cachedGeometry;
             }
         }
 
