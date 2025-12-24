@@ -8,7 +8,7 @@ namespace Andastra.Runtime.Stride.Graphics
     /// Wrapper structs for Stride render state descriptions.
     /// These provide a compatible interface for the abstraction layer.
     /// </summary>
-    
+
     /// <summary>
     /// Rasterizer state description for Stride.
     /// </summary>
@@ -467,6 +467,33 @@ namespace Andastra.Runtime.Stride.Graphics
         ReverseSubtract,
         Min,
         Max
+    }
+
+    /// <summary>
+    /// Texture address mode enum for Stride compatibility.
+    /// </summary>
+    public enum TextureAddressMode
+    {
+        Wrap,
+        Clamp,
+        Mirror,
+        Border
+    }
+
+    /// <summary>
+    /// Texture filter enum for Stride compatibility.
+    /// </summary>
+    public enum TextureFilter
+    {
+        Linear,
+        Point,
+        Anisotropic,
+        LinearMipPoint,
+        PointMipLinear,
+        MinLinearMagPointMipLinear,
+        MinLinearMagPointMipPoint,
+        MinPointMagLinearMipLinear,
+        MinPointMagLinearMipPoint
     }
 }
 
