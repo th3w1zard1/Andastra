@@ -148,7 +148,6 @@ namespace Andastra.Parsing.Formats.GFF
         private LocalizedString ParseLocalizedString(JsonElement element)
         {
             int stringRef = element.GetProperty("string_ref").GetInt32();
-            string value = element.GetProperty("value").GetString();
 
             var substrings = new Dictionary<int, string>();
             if (element.TryGetProperty("substrings", out JsonElement substringsElement))
@@ -160,7 +159,7 @@ namespace Andastra.Parsing.Formats.GFF
                 }
             }
 
-            return new LocalizedString(stringRef, value, substrings);
+            return new LocalizedString(stringRef, substrings);
         }
 
         private byte[] ParseBinary(JsonElement element)

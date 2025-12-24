@@ -147,13 +147,13 @@ namespace Andastra.Parsing.Formats.GFF
         {
             writer.WriteStartObject();
             writer.WriteNumber("string_ref", locString.StringRef);
-            writer.WriteString("value", locString.Value);
 
-            if (locString.Substrings.Count > 0)
+            var dict = locString.ToDictionary();
+            if (dict.ContainsKey("substrings") && dict["substrings"] is Dictionary<int, string> substrings && substrings.Count > 0)
             {
                 writer.WritePropertyName("substrings");
                 writer.WriteStartObject();
-                foreach (var kvp in locString.Substrings)
+                foreach (var kvp in substrings)
                 {
                     writer.WriteString(kvp.Key.ToString(), kvp.Value);
                 }
