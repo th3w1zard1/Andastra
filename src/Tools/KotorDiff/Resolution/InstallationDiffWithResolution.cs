@@ -108,9 +108,17 @@ namespace KotorDiff.Resolution
                 }
             }
 
-            // TODO: STUB - For now, delegate to the 2-way function if exactly 2 installations
-            // This is a compatibility shim while we complete the full n-way implementation
-            if (convertedPaths.Count == 2)
+            // Implement true N-way resource resolution comparison
+            // For each resource, find the winning version across all installations
+            // according to KOTOR resource resolution order, then compare against baseline
+            return DiffInstallationsWithResolutionNWayImpl(
+                convertedPaths,
+                filters,
+                logFunc,
+                compareHashes,
+                modificationsByType,
+                incrementalWriter,
+                diffDataFunc);
             {
                 object install1Candidate = convertedPaths[0];
                 object install2Candidate = convertedPaths[1];
@@ -132,34 +140,6 @@ namespace KotorDiff.Resolution
                         incrementalWriter: incrementalWriter,
                         additionalInstalls: null,
                         diffDataFunc: diffDataFunc);
-            }
-
-            // For 3+ installations, delegate with additional_installs
-            object install1Candidate2 = convertedPaths[0];
-            object install2Candidate2 = convertedPaths[1];
-            var additionalCandidates = convertedPaths.Skip(2).ToList();
-
-            if (!(install1Candidate2 is Installation) || !(install2Candidate2 is Installation))
-            {
-                // Should not happen after conversion, but handle gracefully
-                logFunc?.Invoke("Warning: Could not convert all paths to Installations, falling back to regular comparison");
-                return null;
-            }
-
-            var additionalInstallations = additionalCandidates
-                .OfType<Installation>()
-                .ToList();
-
-            return DiffInstallationsWithResolutionImpl(
-                install1: (Installation)install1Candidate2,
-                install2: (Installation)install2Candidate2,
-                filters: filters,
-                logFunc: logFunc,
-                compareHashes: compareHashes,
-                modificationsByType: modificationsByType,
-                incrementalWriter: incrementalWriter,
-                additionalInstalls: additionalInstallations.Count > 0 ? additionalInstallations : null,
-                diffDataFunc: diffDataFunc);
         }
 
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/resolution.py:618-1226
@@ -830,6 +810,657 @@ namespace KotorDiff.Resolution
             logFunc("=".PadRight(80, '='));
 
             return isSameResult;
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/resolution.py:539-1226 (N-way version)
+        // Original: def _diff_installations_with_resolution_nway_impl(...) -> bool | None: ...
+        /// <summary>
+        /// Compare N installations using proper resource resolution order (true N-way implementation).
+        /// This function respects the game's actual file priority:
+        /// - Override (highest)
+        /// - Modules (.mod)
+        /// - Modules (.rim/_s.rim/_dlg.erf)
+        /// - Chitin/BIFs (lowest)
+        /// </summary>
+        public static bool? DiffInstallationsWithResolutionNWayImpl(
+            List<object> installations,
+            List<string> filters = null,
+            Action<string> logFunc = null,
+            bool compareHashes = true,
+            ModificationsByType modificationsByType = null,
+            IncrementalTSLPatchDataWriter incrementalWriter = null,
+            Func<byte[], byte[], DiffContext, bool, ModificationsByType, Action<string>, IncrementalTSLPatchDataWriter, bool?> diffDataFunc = null)
+        {
+            if (logFunc == null)
+            {
+                logFunc = Console.WriteLine;
+            }
+
+            if (diffDataFunc == null)
+            {
+                throw new ArgumentNullException(nameof(diffDataFunc), "diffDataFunc parameter is required");
+            }
+
+            // Convert all paths to installations
+            var allInstallations = new List<Installation>();
+            foreach (var path in installations)
+            {
+                if (path is Installation installation)
+                {
+                    allInstallations.Add(installation);
+                }
+                else
+                {
+                    // Try to convert Path to Installation if it's a KOTOR installation
+                    string pathStr = null;
+                    if (path is string str)
+                    {
+                        pathStr = str;
+                    }
+                    else if (path is DirectoryInfo dirInfo)
+                    {
+                        pathStr = dirInfo.FullName;
+                    }
+                    else if (path is FileInfo fileInfo)
+                    {
+                        pathStr = fileInfo.DirectoryName;
+                    }
+
+                    if (pathStr != null && ResolutionUtils.IsKotorInstallDir(pathStr))
+                    {
+                        try
+                        {
+                            var newInstallation = new Installation(pathStr);
+                            allInstallations.Add(newInstallation);
+                            logFunc?.Invoke($"Converted path to Installation: {pathStr}");
+                        }
+                        catch (Exception e)
+                        {
+                            logFunc?.Invoke($"Warning: Could not convert path to Installation: {pathStr} - {e.Message}");
+                            return null;
+                        }
+                    }
+                    else
+                    {
+                        logFunc?.Invoke($"Path is not a KOTOR installation: {pathStr ?? path.ToString()}");
+                        return null;
+                    }
+                }
+            }
+
+            int installCount = allInstallations.Count;
+
+            // Get display names for logging
+            var installNames = new List<string>();
+            for (int idx = 0; idx < allInstallations.Count; idx++)
+            {
+                installNames.Add(Path.GetFileName(allInstallations[idx].Path));
+            }
+
+            logFunc("");
+            logFunc("=".PadRight(80, '='));
+            logFunc("N-WAY RESOURCE-AWARE INSTALLATION COMPARISON");
+            logFunc("=".PadRight(80, '='));
+            for (int idx = 0; idx < allInstallations.Count; idx++)
+            {
+                string label = idx == 0 ? "Base installation (index 0):" :
+                               idx == 1 ? "Target installation (index 1):" :
+                               $"Additional installation (index {idx}):";
+                logFunc($"{label} {allInstallations[idx].Path}");
+            }
+            logFunc($"Total installations: {installCount}");
+            logFunc("");
+            logFunc("Using KOTOR resource resolution order (highest to lowest priority):");
+            logFunc("  1. Override");
+            logFunc("  2. Modules (.mod)");
+            logFunc("  3. Modules (.rim/_s.rim/_dlg.erf)");
+            logFunc("  4. Chitin (BIFs)");
+            logFunc("=".PadRight(80, '='));
+            logFunc("");
+
+            // Build resource indices for O(1) lookups (massive performance improvement)
+            logFunc("Building resource indices for fast lookups...");
+
+            // Build indices for all installations
+            var installIndices = new Dictionary<int, Dictionary<ResourceIdentifier, List<Andastra.Parsing.Extract.FileResource>>>();
+            var allIdentifiersSet = new HashSet<ResourceIdentifier>();
+
+            for (int idx = 0; idx < allInstallations.Count; idx++)
+            {
+                Installation installation = allInstallations[idx];
+                installIndices[idx] = ResourceResolver.BuildResourceIndex(installation);
+                foreach (var identifier in installIndices[idx].Keys)
+                {
+                    allIdentifiersSet.Add(identifier);
+                }
+                logFunc($"  Installation {idx}: {installIndices[idx].Count} unique resources indexed");
+            }
+
+            var allIdentifiers = allIdentifiersSet.ToList();
+            logFunc($"  Total unique resources across all installations: {allIdentifiers.Count}");
+            logFunc("  Index build complete - ready for O(1) lookups");
+            logFunc("");
+
+            // Early exit optimization: if no resources found, installations are identical
+            if (allIdentifiers.Count == 0)
+            {
+                logFunc("No resources found in any installation - installations are identical");
+                return true;
+            }
+
+            // PROCESS TLK FILES FIRST AND IMMEDIATELY (before StrRef cache building)
+            // TLKList must come immediately after [Settings] per TSLPatcher design
+            logFunc("Processing TLK files first for immediate TLKList generation...");
+            logFunc("");
+
+            var tlkIdentifiers = allIdentifiers.Where(ident => ident.ResType.Extension.Equals("tlk", StringComparison.OrdinalIgnoreCase)).ToList();
+            var filteredTlkIdentifiers = new List<ResourceIdentifier>();
+            if (tlkIdentifiers.Count > 0)
+            {
+                logFunc($"Found {tlkIdentifiers.Count} TLK file(s) to process first");
+
+                // Apply filtering for irrelevant TLK files
+                foreach (var identifier in tlkIdentifiers)
+                {
+                    // Resolve in first installation to check filepath for filtering
+                    var resolvedInFirst = ResourceResolver.ResolveResourceInInstallation(allInstallations[0], identifier, logFunc: logFunc, verbose: false, resourceIndex: installIndices[0]);
+
+                    if (ResourceResolver.ShouldProcessTlkFile(resolvedInFirst))
+                    {
+                        filteredTlkIdentifiers.Add(identifier);
+                        logFunc($"  Processing TLK: {identifier.ResName}.{identifier.ResType.Extension}");
+                    }
+                    else
+                    {
+                        logFunc($"  Skipping irrelevant TLK: {identifier.ResName}.{identifier.ResType.Extension} (not dialog.tlk/dialog_f.tlk in root)");
+                    }
+                }
+            }
+
+            // Process filtered TLK files - compare all installations for each TLK
+            if (filteredTlkIdentifiers.Count > 0)
+            {
+                logFunc($"Processing {filteredTlkIdentifiers.Count} TLK files...");
+                logFunc("");
+                for (int idx = 0; idx < filteredTlkIdentifiers.Count; idx++)
+                {
+                    var identifier = filteredTlkIdentifiers[idx];
+                    logFunc($"Processing TLK {idx + 1}/{filteredTlkIdentifiers.Count}: {identifier.ResName}.{identifier.ResType.Extension}");
+
+                    // Resolve in ALL installations
+                    var resolvedInAll = new List<ResolvedResource>();
+                    for (int installIdx = 0; installIdx < allInstallations.Count; installIdx++)
+                    {
+                        var resolved = ResourceResolver.ResolveResourceInInstallation(allInstallations[installIdx], identifier, logFunc: logFunc, verbose: false, resourceIndex: installIndices[installIdx]);
+                        resolvedInAll.Add(resolved);
+                    }
+
+                    // Find the winning TLK according to resolution order
+                    var winningTlk = FindWinningResource(resolvedInAll, allInstallations, logFunc);
+
+                    // For TLK files, compare the winning version against the base (index 0)
+                    var baseResolved = resolvedInAll[0];
+
+                    if (winningTlk.Data == null && baseResolved.Data == null)
+                    {
+                        logFunc($"    TLK {identifier.ResName} missing in both winning and base installations, skipping");
+                        continue;
+                    }
+
+                    if (winningTlk.Data == null)
+                    {
+                        // Only in base installation - no action needed for TLK
+                        logFunc($"    TLK {identifier.ResName} only in base installation - no action needed");
+                        continue;
+                    }
+
+                    if (baseResolved.Data == null)
+                    {
+                        // TLK exists in winning installation but not in base - add to InstallList
+                        logFunc($"    TLK {identifier.ResName} missing in base installation - adding to InstallList");
+                        string destination = ResourceResolver.DetermineTslpatcherDestination(null, winningTlk.LocationType, winningTlk.Filepath);
+                        string filename = $"{identifier.ResName}.{identifier.ResType.Extension}";
+                        if (modificationsByType != null)
+                        {
+                            string file1Rel = Path.Combine("base", filename); // Base (missing)
+                            string file2Rel = Path.Combine("target", filename); // Target (exists)
+                            var context = new DiffContext(file1Rel, file2Rel, identifier.ResType.Extension.ToLowerInvariant());
+                            InstallationDiffHelpers.AddToInstallFolder(
+                                modificationsByType,
+                                destination,
+                                filename,
+                                logFunc: logFunc,
+                                moddedData: winningTlk.Data,
+                                moddedPath: winningTlk.Filepath,
+                                context: context,
+                                incrementalWriter: incrementalWriter);
+                        }
+                        if (incrementalWriter != null)
+                        {
+                            incrementalWriter.AddInstallFile(destination, filename, winningTlk.Filepath);
+                        }
+                        continue;
+                    }
+
+                    // Both exist - compare them
+                    logFunc($"    Comparing TLK {identifier.ResName} between winning and base installations");
+                    string file1RelTlk = baseResolved.Filepath != null
+                        ? Path.Combine(installNames[0], Path.GetFileName(baseResolved.Filepath))
+                        : Path.Combine(installNames[0], "unknown");
+                    string file2RelTlk = winningTlk.Filepath != null
+                        ? Path.Combine("winning", Path.GetFileName(winningTlk.Filepath))
+                        : Path.Combine("winning", "unknown");
+
+                    var ctx = new DiffContext(
+                        file1RelTlk,
+                        file2RelTlk,
+                        identifier.ResType.Extension.ToLowerInvariant(),
+                        resRef: null);
+                    ctx.File1LocationType = baseResolved.LocationType;
+                    ctx.File2LocationType = winningTlk.LocationType;
+                    ctx.File1Filepath = baseResolved.Filepath;
+                    ctx.File2Filepath = winningTlk.Filepath;
+
+                    var tlkDiffOutputLines = new List<string>();
+                    Action<string> tlkBufferedLogFunc = msg => tlkDiffOutputLines.Add(msg);
+
+                    bool? result = diffDataFunc(
+                        baseResolved.Data,
+                        winningTlk.Data,
+                        ctx,
+                        compareHashes,
+                        modificationsByType,
+                        tlkBufferedLogFunc,
+                        incrementalWriter);
+
+                    foreach (string line in tlkDiffOutputLines)
+                    {
+                        logFunc(line);
+                    }
+                }
+            }
+
+            // Remove TLK identifiers from the main list
+            allIdentifiers = allIdentifiers.Where(ident => !ident.ResType.Extension.Equals("tlk", StringComparison.OrdinalIgnoreCase)).ToList();
+            logFunc("TLK processing complete.");
+            logFunc("");
+
+            // Ensure complete [TLKList] section is written before StrRef cache building
+            if (incrementalWriter != null)
+            {
+                incrementalWriter.WritePendingTlkModifications();
+                logFunc("");
+            }
+
+            // Sort remaining identifiers for processing
+            int GetProcessingPriority(ResourceIdentifier identifier)
+            {
+                string ext = identifier.ResType.Extension.ToLowerInvariant();
+                if (ext == "2da" || ext == "twoda")
+                {
+                    return 0;
+                }
+                var gffExtensions = GetGffExtensions();
+                if (gffExtensions.Contains(ext))
+                {
+                    return 1;
+                }
+                if (ext == "ncs")
+                {
+                    return 2;
+                }
+                if (ext == "ssf")
+                {
+                    return 3;
+                }
+                return 4;
+            }
+
+            allIdentifiers = allIdentifiers.OrderBy(x => (GetProcessingPriority(x), x.ToString())).ToList();
+
+            // Assert that modifications exist
+            if (modificationsByType == null)
+            {
+                throw new InvalidOperationException("modifications_by_type must not be None");
+            }
+            int totalMods = modificationsByType.Gff.Count + modificationsByType.Twoda.Count + modificationsByType.Ssf.Count +
+                           modificationsByType.Ncs.Count + modificationsByType.Tlk.Count;
+            if (totalMods == 0)
+            {
+                throw new InvalidOperationException(
+                    $"No modifications found in modifications_by_type before resource processing! " +
+                    $"TLK: {modificationsByType.Tlk.Count}, " +
+                    $"GFF: {modificationsByType.Gff.Count}, " +
+                    $"2DA: {modificationsByType.Twoda.Count}, " +
+                    $"SSF: {modificationsByType.Ssf.Count}, " +
+                    $"NCS: {modificationsByType.Ncs.Count}");
+            }
+            logFunc($"Found {totalMods} total modifications to process");
+
+            // Apply filters if provided
+            if (filters != null && filters.Count > 0)
+            {
+                var filteredIdentifiersSet = new HashSet<ResourceIdentifier>();
+                foreach (var ident in allIdentifiers)
+                {
+                    string resourceName = $"{ident.ResName}.{ident.ResType.Extension}".ToLowerInvariant();
+                    foreach (string filterPattern in filters)
+                    {
+                        if (resourceName.Contains(filterPattern.ToLowerInvariant()))
+                        {
+                            filteredIdentifiersSet.Add(ident);
+                            break;
+                        }
+                    }
+                }
+                logFunc($"Applied filters: {string.Join(", ", filters)}");
+                logFunc($"  Filtered to {filteredIdentifiersSet.Count} resources");
+                allIdentifiers = filteredIdentifiersSet.ToList();
+                logFunc("");
+            }
+
+            // Cache for resolved resources
+            var resolutionCache = new Dictionary<(int, ResourceIdentifier), ResolvedResource>();
+
+            // Compare each resource using N-way resolution
+            bool? isSameResult = true;
+            int processedCount = 0;
+            int diffCount = 0;
+            int errorCount = 0;
+            int identicalCount = 0;
+
+            logFunc($"Comparing {allIdentifiers.Count} resources using N-way resolution order...");
+            logFunc("");
+
+            foreach (var identifier in allIdentifiers)
+            {
+                processedCount++;
+
+                if (processedCount % 100 == 0)
+                {
+                    logFunc($"Progress: {processedCount}/{allIdentifiers.Count} resources processed...");
+                }
+
+                // Resolve in ALL installations
+                var resolvedInAll = new List<ResolvedResource>();
+                for (int installIdx = 0; installIdx < allInstallations.Count; installIdx++)
+                {
+                    var cacheKey = (installIdx, identifier);
+                    if (!resolutionCache.ContainsKey(cacheKey))
+                    {
+                        resolutionCache[cacheKey] = ResourceResolver.ResolveResourceInInstallation(
+                            allInstallations[installIdx], identifier, logFunc: logFunc, verbose: false, resourceIndex: installIndices[installIdx]);
+                    }
+                    resolvedInAll.Add(resolutionCache[cacheKey]);
+                }
+
+                // Find the winning resource according to KOTOR resolution order
+                var winningResource = FindWinningResource(resolvedInAll, allInstallations, logFunc);
+                var baseResource = resolvedInAll[0]; // Base installation (index 0)
+
+                // Log which installation won
+                int winningIndex = FindWinningIndex(resolvedInAll, allInstallations);
+                if (winningIndex >= 0)
+                {
+                    logFunc($"\nProcessing resource: {identifier.ResName}.{identifier.ResType.Extension}");
+                    logFunc($"  Winning installation: {installNames[winningIndex]} (index {winningIndex}) - {winningResource.SourceLocation}");
+                }
+
+                // Check if resource exists in winning vs base
+                if (winningResource.Data == null && baseResource.Data == null)
+                {
+                    continue;
+                }
+
+                if (winningResource.Data == null)
+                {
+                    // Exists in base but not in winning - no action needed (resource would be removed)
+                    logFunc($"  [RESOURCE IN BASE ONLY] {identifier}");
+                    logFunc($"    Source (base - {installNames[0]}): {baseResource.SourceLocation}");
+                    logFunc("    → No action needed (resource removal not supported)");
+                    identicalCount++;
+                    continue;
+                }
+
+                if (baseResource.Data == null)
+                {
+                    // Exists in winning but not in base - add to InstallList
+                    logFunc($"  [NEW RESOURCE] {identifier}");
+                    logFunc($"    Source (winning - {installNames[winningIndex]}): {winningResource.SourceLocation}");
+                    logFunc($"    Missing from base ({installNames[0]})");
+
+                    if (modificationsByType != null)
+                    {
+                        string destination = ResourceResolver.DetermineTslpatcherDestination(null, winningResource.LocationType, winningResource.Filepath);
+                        string filename = $"{identifier.ResName}.{identifier.ResType.Extension}";
+
+                        string file1Rel = Path.Combine("base", filename);
+                        string file2Rel = Path.Combine("winning", filename);
+                        var context = new DiffContext(file1Rel, file2Rel, identifier.ResType.Extension.ToLowerInvariant());
+
+                        InstallationDiffHelpers.AddToInstallFolder(
+                            modificationsByType,
+                            destination,
+                            filename,
+                            logFunc: logFunc,
+                            moddedData: winningResource.Data,
+                            moddedPath: winningResource.Filepath,
+                            context: context,
+                            incrementalWriter: incrementalWriter);
+                        logFunc($"    → [InstallList] destination: {destination}");
+
+                        if (incrementalWriter != null)
+                        {
+                            incrementalWriter.AddInstallFile(destination, filename, winningResource.Filepath);
+                        }
+                    }
+
+                    diffCount++;
+                    isSameResult = false;
+                    continue;
+                }
+
+                // Both exist - check if both are from BIFs
+                bool bothFromBif = baseResource.LocationType == "Chitin BIFs" && winningResource.LocationType == "Chitin BIFs";
+                if (bothFromBif)
+                {
+                    identicalCount++;
+                    continue;
+                }
+
+                // Compare winning resource against base resource
+                string file1Path = baseResource.Filepath != null
+                    ? Path.Combine(installNames[0], Path.GetFileName(baseResource.Filepath))
+                    : Path.Combine(installNames[0], "unknown");
+
+                string file2Path = winningResource.Filepath != null
+                    ? Path.Combine("winning", Path.GetFileName(winningResource.Filepath))
+                    : Path.Combine("winning", "unknown");
+
+                bool isInContainer = winningResource.LocationType == "Chitin BIFs" ||
+                                   (!string.IsNullOrEmpty(winningResource.Filepath) &&
+                                    new[] { ".bif", ".rim", ".erf", ".mod", ".sav" }.Contains(Path.GetExtension(winningResource.Filepath).ToLowerInvariant()));
+                string resnameForContext = isInContainer ? identifier.ResName : null;
+
+                var ctx = new DiffContext(
+                    file1Path,
+                    file2Path,
+                    identifier.ResType.Extension.ToLowerInvariant(),
+                    resRef: resnameForContext);
+                ctx.File1LocationType = baseResource.LocationType;
+                ctx.File2LocationType = winningResource.LocationType;
+                ctx.File2Filepath = winningResource.Filepath;
+
+                int originalModCount = modificationsByType.Gff.Count + modificationsByType.Twoda.Count +
+                                     modificationsByType.Ssf.Count + modificationsByType.Tlk.Count +
+                                     modificationsByType.Ncs.Count;
+
+                var diffOutputLines = new List<string>();
+                Action<string> bufferedLogFunc = msg => diffOutputLines.Add(msg);
+
+                bool? result = diffDataFunc(
+                    baseResource.Data,
+                    winningResource.Data,
+                    ctx,
+                    compareHashes,
+                    modificationsByType,
+                    bufferedLogFunc,
+                    incrementalWriter);
+
+                if (result == false)
+                {
+                    // Resources differ
+                    foreach (string line in diffOutputLines)
+                    {
+                        logFunc(line);
+                    }
+
+                    logFunc($"\n  [MODIFIED] {identifier}");
+                    logFunc($"    Base source ({installNames[0]}): {baseResource.SourceLocation}");
+                    logFunc($"    Winning source ({installNames[winningIndex]}): {winningResource.SourceLocation}");
+
+                    // Log priority change if applicable
+                    if (baseResource.LocationType != winningResource.LocationType)
+                    {
+                        string priority1 = ResourceResolver.GetLocationDisplayName(baseResource.LocationType);
+                        string priority2 = ResourceResolver.GetLocationDisplayName(winningResource.LocationType);
+                        logFunc($"    Priority changed: {priority1} → {priority2}");
+
+                        if (winningResource.LocationType == "Override folder")
+                        {
+                            logFunc("    → Resource moved to Override (will override base)");
+                        }
+                        else if (baseResource.LocationType == "Chitin BIFs" && winningResource.LocationType.Contains("Modules"))
+                        {
+                            logFunc("    → Resource moved from BIF to Modules (now modifiable)");
+                        }
+                    }
+
+                    // Validate destination and add InstallList entry
+                    if (modificationsByType != null)
+                    {
+                        int newModCount = modificationsByType.Gff.Count + modificationsByType.Twoda.Count +
+                                         modificationsByType.Ssf.Count + modificationsByType.Tlk.Count +
+                                         modificationsByType.Ncs.Count;
+
+                        if (newModCount > originalModCount)
+                        {
+                            string expectedDestination = ResourceResolver.DetermineTslpatcherDestination(
+                                baseResource.LocationType,
+                                winningResource.LocationType,
+                                winningResource.Filepath);
+
+                            CheckAndCorrectDestination(modificationsByType.Gff, expectedDestination, logFunc);
+                            CheckAndCorrectDestination(modificationsByType.Twoda, expectedDestination, logFunc);
+                            CheckAndCorrectDestination(modificationsByType.Ssf, expectedDestination, logFunc);
+                            CheckAndCorrectDestination(modificationsByType.Ncs, expectedDestination, logFunc);
+                        }
+
+                        // Always add InstallList entry
+                        try
+                        {
+                            string destinationForInstall = ResourceResolver.DetermineTslpatcherDestination(
+                                baseResource.LocationType,
+                                winningResource.LocationType,
+                                winningResource.Filepath);
+                            string filenameForInstall = $"{identifier.ResName}.{identifier.ResType.Extension}";
+
+                            InstallationDiffHelpers.AddToInstallFolder(
+                                modificationsByType,
+                                destinationForInstall,
+                                filenameForInstall,
+                                logFunc: logFunc,
+                                moddedData: winningResource.Data,
+                                moddedPath: winningResource.Filepath,
+                                context: ctx,
+                                incrementalWriter: incrementalWriter);
+                        }
+                        catch (Exception e)
+                        {
+                            logFunc($"Error adding install entry for {identifier.ResName}.{identifier.ResType.Extension}: {e.GetType().Name}: {e.Message}");
+                        }
+                    }
+
+                    diffCount++;
+                    isSameResult = false;
+                }
+                else if (result == null)
+                {
+                    errorCount++;
+                    logFunc($"\n  [ERROR] {identifier}");
+                    isSameResult = null;
+                }
+                else
+                {
+                    identicalCount++;
+                }
+            }
+
+            // Summary
+            logFunc("");
+            logFunc("=".PadRight(80, '='));
+            logFunc("N-WAY COMPARISON SUMMARY");
+            logFunc("=".PadRight(80, '='));
+            logFunc($"Total resources processed: {processedCount}");
+            logFunc($"  Identical: {identicalCount}");
+            logFunc($"  Modified: {diffCount}");
+            logFunc($"  Errors: {errorCount}");
+            logFunc("=".PadRight(80, '='));
+
+            return isSameResult;
+        }
+
+        // Helper method to find the winning resource according to KOTOR resolution order
+        private static ResolvedResource FindWinningResource(List<ResolvedResource> resolvedResources, List<Installation> installations, Action<string> logFunc)
+        {
+            // KOTOR resource resolution priority (highest to lowest):
+            // 1. Override folder
+            // 2. Modules (.mod)
+            // 3. Modules (.rim/_s.rim/_dlg.erf)
+            // 4. Chitin BIFs
+
+            int GetPriority(string locationType)
+            {
+                if (locationType == null) return 999;
+                if (locationType.Contains("Override")) return 0;
+                if (locationType.Contains("Modules") && locationType.Contains(".mod")) return 1;
+                if (locationType.Contains("Modules")) return 2;
+                if (locationType.Contains("Chitin BIFs")) return 3;
+                return 999;
+            }
+
+            ResolvedResource winning = null;
+            int bestPriority = int.MaxValue;
+
+            for (int i = 0; i < resolvedResources.Count; i++)
+            {
+                var resolved = resolvedResources[i];
+                if (resolved.Data != null)
+                {
+                    int priority = GetPriority(resolved.LocationType);
+                    if (priority < bestPriority)
+                    {
+                        bestPriority = priority;
+                        winning = resolved;
+                    }
+                }
+            }
+
+            return winning ?? new ResolvedResource(); // Return empty if none found
+        }
+
+        // Helper method to find which installation index has the winning resource
+        private static int FindWinningIndex(List<ResolvedResource> resolvedResources, List<Installation> installations)
+        {
+            var winning = FindWinningResource(resolvedResources, installations, null);
+            for (int i = 0; i < resolvedResources.Count; i++)
+            {
+                if (resolvedResources[i].Data == winning.Data)
+                {
+                    return i;
+                }
+            }
+            return -1;
         }
 
         // Helper method to get GFF extensions
