@@ -3896,24 +3896,6 @@ namespace HolocronToolset.Editors
             }
         }
 
-        // Helper method to recursively expand items
-        private void ExpandItemRecursive(DLGStandardItem item)
-        {
-            if (item == null)
-            {
-                return;
-            }
-
-            // In Avalonia, TreeViewItem expansion is handled differently
-            // TODO: STUB - For now, we'll ensure the item is visible by expanding its parent chain
-            // TODO:  This is a simplified implementation - a full version would use TreeView's expansion API
-
-            // Expand all children recursively
-            foreach (var child in item.Children)
-            {
-                ExpandItemRecursive(child);
-            }
-        }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:678-679
         // Original: def update_results_label(self):
