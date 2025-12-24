@@ -54,7 +54,9 @@ namespace Andastra.Parsing.Formats.GFF
                 if (source is string str)
                 {
                     // Check if the string is XML content (starts with '<') or a file path
-                    if (str.TrimStart().StartsWith("<"))
+                    // GFFXmlReader.Load(string) expects XML content directly, not a file path
+                    // Tests pass raw XML text (e.g., "<gff3>...</gff3>"), so we detect XML by checking for '<'
+                    if (!string.IsNullOrWhiteSpace(str) && str.TrimStart().StartsWith("<"))
                     {
                         // Raw XML content - pass directly to reader
                         return reader.Load(str);
