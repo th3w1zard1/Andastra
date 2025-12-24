@@ -14364,30 +14364,6 @@ technique ColorGrading
             LifeTime = 0.0f;
             RemainingLifeTime = 0.0f;
         }
-
-        /// <summary>
-        /// Attempts to get cached vertex positions for a mesh.
-        /// </summary>
-        public bool TryGetCachedMeshGeometryVertices(string meshId, out List<Vector3> vertices)
-        {
-            return _geometryModificationTracker.TryGetCachedMeshGeometryVertices(meshId, out vertices);
-        }
-
-        /// <summary>
-        /// Attempts to get cached triangle indices for a mesh.
-        /// </summary>
-        public bool TryGetCachedMeshGeometryIndices(string meshId, out List<int> indices)
-        {
-            return _geometryModificationTracker.TryGetCachedMeshGeometryIndices(meshId, out indices);
-        }
-
-        /// <summary>
-        /// Caches mesh geometry data (vertex positions and triangle indices) from MDL model.
-        /// </summary>
-        public void CacheMeshGeometry(string meshId, List<Vector3> vertices, List<int> indices)
-        {
-            _geometryModificationTracker.CacheMeshGeometry(meshId, vertices, indices);
-        }
     }
 
     /// <summary>
