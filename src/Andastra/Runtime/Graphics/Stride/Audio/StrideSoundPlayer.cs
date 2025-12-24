@@ -766,7 +766,7 @@ namespace Andastra.Runtime.Stride.Audio
             try
             {
                 IntPtr bufferPtr = bufferHandle.AddrOfPinnedObject();
-                FillBuffer(bufferPtr, bytesToCopy, (StrideAudioLayer.BufferType)(int)bufferType);
+                FillBuffer(bufferPtr, bytesToCopy, bufferType);
             }
             finally
             {
