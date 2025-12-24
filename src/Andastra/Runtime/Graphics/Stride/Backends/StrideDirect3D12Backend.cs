@@ -35,6 +35,9 @@ namespace Andastra.Runtime.Stride.Backends
     /// </summary>
     public class StrideDirect3D12Backend : BaseDirect3D12Backend
     {
+        // DirectX 12 Interface ID for ID3D12DescriptorHeap
+        private static readonly Guid IID_ID3D12DescriptorHeap = new Guid(0x8efb471d, 0x616c, 0x4f49, 0x90, 0xf7, 0x12, 0x7b, 0xb7, 0x63, 0xfa, 0x51);
+
         private global::Stride.Engine.Game _game;
         private GraphicsDevice _strideDevice;
 
@@ -940,8 +943,8 @@ namespace Andastra.Runtime.Stride.Backends
                     object target = gcHandle.Target;
                     if (target != null)
                     {
-                        // Check if it's a StrideSamplerState
-                        if (target is StrideGraphics.StrideSamplerState strideSampler)
+                        // Check if it's a SamplerState
+                        if (target is StrideGraphics.SamplerState strideSampler)
                         {
                             description = strideSampler.Description;
                             // Cache it for future use
@@ -1005,7 +1008,7 @@ namespace Andastra.Runtime.Stride.Backends
         /// Converts a Stride TextureFilter to a D3D12_FILTER value.
         /// Based on DirectX 12 Filter Types: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ne-d3d12-d3d12_filter
         /// </summary>
-        private uint ConvertTextureFilterToD3D12(Andastra.Runtime.Graphics.TextureFilter filter, bool anisotropic)
+        private uint ConvertTextureFilterToD3D12(StrideGraphics.TextureFilter filter, bool anisotropic)
         {
             if (anisotropic)
             {
@@ -1016,11 +1019,11 @@ namespace Andastra.Runtime.Stride.Backends
             // Stride uses enum values that may not match D3D12 exactly, so we check the actual enum values
             switch (filter)
             {
-                case Andastra.Runtime.Graphics.TextureFilter.Point:
+                case StrideGraphics.TextureFilter.Point:
                     return D3D12_FILTER_MIN_MAG_MIP_POINT;
-                case Andastra.Runtime.Graphics.TextureFilter.Linear:
+                case StrideGraphics.TextureFilter.Linear:
                     return D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-                case Andastra.Runtime.Graphics.TextureFilter.Anisotropic:
+                case StrideGraphics.TextureFilter.Anisotropic:
                     return D3D12_FILTER_ANISOTROPIC;
                 default:
                     // Default to linear if unknown
@@ -1032,21 +1035,21 @@ namespace Andastra.Runtime.Stride.Backends
         /// Converts a Stride TextureAddressMode to a D3D12_TEXTURE_ADDRESS_MODE value.
         /// Based on DirectX 12 Texture Address Modes: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ne-d3d12-d3d12_texture_address_mode
         /// </summary>
-        private uint ConvertTextureAddressModeToD3D12(Andastra.Runtime.Graphics.TextureAddressMode mode)
+        private uint ConvertTextureAddressModeToD3D12(StrideGraphics.TextureAddressMode mode)
         {
             // Stride and D3D12 use the same enum values for address modes
             // Wrap = 1, Mirror = 2, Clamp = 3, Border = 4, MirrorOnce = 5
             switch (mode)
             {
-                case Stride.Graphics.TextureAddressMode.Wrap:
+                case StrideGraphics.TextureAddressMode.Wrap:
                     return D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-                case Stride.Graphics.TextureAddressMode.Mirror:
+                case StrideGraphics.TextureAddressMode.Mirror:
                     return D3D12_TEXTURE_ADDRESS_MODE_MIRROR;
-                case Stride.Graphics.TextureAddressMode.Clamp:
+                case StrideGraphics.TextureAddressMode.Clamp:
                     return D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-                case Stride.Graphics.TextureAddressMode.Border:
+                case StrideGraphics.TextureAddressMode.Border:
                     return D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-                case Stride.Graphics.TextureAddressMode.MirrorOnce:
+                case StrideGraphics.TextureAddressMode.MirrorOnce:
                     return D3D12_TEXTURE_ADDRESS_MODE_MIRROR_ONCE;
                 default:
                     // Default to wrap if unknown

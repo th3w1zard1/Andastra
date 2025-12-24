@@ -2114,8 +2114,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 // Step 1: Load MDL file from modelResRef using _resourceProvider
                 // Based on daorigins.exe: Model loading reads MDL and MDX files from game resources
                 // daorigins.exe: Model loading uses Eclipse engine resource manager to access MDL/MDX files
-                ResourceIdentifier mdlId = new ResourceIdentifier(modelResRef, ResourceType.MDL);
-                ResourceIdentifier mdxId = new ResourceIdentifier(modelResRef, ResourceType.MDX);
+                ResourceIdentifier mdlId = new ResourceIdentifier(modelResRef, ParsingResourceType.MDL);
+                ResourceIdentifier mdxId = new ResourceIdentifier(modelResRef, ParsingResourceType.MDX);
 
                 byte[] mdlData = _resourceProvider.GetResourceBytes(mdlId);
                 if (mdlData == null || mdlData.Length == 0)

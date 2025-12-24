@@ -320,7 +320,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends
             Pipeline,
             RenderTarget,
             DepthStencil,
-            AccelerationStructure
+            AccelerationStructure,
+            Heap
         }
 
         #endregion
