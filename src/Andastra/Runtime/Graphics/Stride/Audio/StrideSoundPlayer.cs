@@ -764,7 +764,7 @@ namespace Andastra.Runtime.Stride.Audio
             }
             else
             {
-                bufferType = StrideAudioLayer.BufferType.Data;
+                bufferType = StrideAudioLayer.BufferType.Normal;
             }
 
             // Fill the buffer - pin the array and get pointer
