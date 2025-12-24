@@ -189,8 +189,15 @@ namespace HolocronToolset.Editors
             {
                 // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/mdl.py:98
                 // Original: self.ui.modelRenderer.set_model(mdl_data, mdx_data)
-                // TODO:  Note: Python passes data[12:] to skip header, but we'll pass full data for now
-                _modelRenderer.SetModel(mdlData, mdxData);
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/renderer/model.py:200
+                // Original: self._model_to_load = (data[12:], data_ext) - Python skips 12-byte header
+                byte[] mdlDataWithoutHeader = null;
+                if (mdlData != null && mdlData.Length >= 12)
+                {
+                    mdlDataWithoutHeader = new byte[mdlData.Length - 12];
+                    Array.Copy(mdlData, 12, mdlDataWithoutHeader, 0, mdlDataWithoutHeader.Length);
+                }
+                _modelRenderer.SetModel(mdlDataWithoutHeader, mdxData);
             }
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/mdl.py:99
