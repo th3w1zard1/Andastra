@@ -171,7 +171,8 @@ namespace Andastra.Runtime.Stride.Backends
             {
                 Type = ResourceType.Texture,
                 Handle = handle,
-                NativeHandle = texture?.NativeDeviceTexture ?? IntPtr.Zero,
+                // Stride Texture doesn't expose NativeDeviceTexture - return IntPtr.Zero
+                NativeHandle = IntPtr.Zero,
                 DebugName = desc.DebugName,
                 SizeInBytes = desc.Width * desc.Height * GetFormatSize(desc.Format)
             };
@@ -191,7 +192,8 @@ namespace Andastra.Runtime.Stride.Backends
             {
                 Type = ResourceType.Buffer,
                 Handle = handle,
-                NativeHandle = buffer?.NativeBuffer ?? IntPtr.Zero,
+                // Stride Buffer doesn't expose NativeBuffer - return IntPtr.Zero
+                NativeHandle = IntPtr.Zero,
                 DebugName = desc.DebugName,
                 SizeInBytes = desc.SizeInBytes
             };
@@ -310,7 +312,8 @@ namespace Andastra.Runtime.Stride.Backends
             {
                 Type = ResourceType.Buffer,
                 Handle = handle,
-                NativeHandle = buffer?.NativeBuffer ?? IntPtr.Zero,
+                // Stride Buffer doesn't expose NativeBuffer - return IntPtr.Zero
+                NativeHandle = IntPtr.Zero,
                 DebugName = "StructuredBuffer",
                 SizeInBytes = elementCount * elementStride
             };
@@ -393,17 +396,41 @@ namespace Andastra.Runtime.Stride.Backends
 
         protected override long QueryVideoMemory()
         {
-            return _strideDevice?.Adapter?.Description?.DedicatedVideoMemory ?? 4L * 1024 * 1024 * 1024;
+            // Stride doesn't expose DedicatedVideoMemory via Adapter.Description
+            // Return default fallback value
+            return 4L * 1024 * 1024 * 1024;
         }
 
         protected override string QueryVendorName()
         {
-            return _strideDevice?.Adapter?.Description?.VendorId.ToString() ?? "Unknown";
+            // Stride Adapter.Description is a string, not an object with VendorId
+            // Try to get vendor ID directly from Adapter if available
+            if (_strideDevice?.Adapter != null)
+            {
+                try
+                {
+                    var vendorIdProp = _strideDevice.Adapter.GetType().GetProperty("VendorId");
+                    if (vendorIdProp != null)
+                    {
+                        var vendorId = vendorIdProp.GetValue(_strideDevice.Adapter);
+                        if (vendorId != null)
+                        {
+                            return vendorId.ToString();
+                        }
+                    }
+                }
+                catch
+                {
+                    // If reflection fails, fall back to default
+                }
+            }
+            return "Unknown";
         }
 
         protected override string QueryDeviceName()
         {
-            return _strideDevice?.Adapter?.Description?.Description ?? "Stride DirectX 11 Device";
+            // Stride Adapter.Description is a string
+            return _strideDevice?.Adapter?.Description ?? "Stride DirectX 11 Device";
         }
 
         #region BaseDirect3D11Backend Abstract Method Implementations

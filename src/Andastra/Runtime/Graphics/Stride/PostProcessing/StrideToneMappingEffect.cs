@@ -415,32 +415,15 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
             try
             {
-                // Strategy 1: Try loading from compiled effect files using Effect.Load()
+                // Try loading from ContentManager if available
                 StrideGraphics.Effect effectBase = null;
-                try
-                {
-                    effectBase = StrideGraphics.Effect.Load(_graphicsDevice, "ToneMappingEffect");
-                    if (effectBase != null)
-                    {
-                        _effectBase = effectBase;
-                        _toneMappingEffect = new EffectInstance(effectBase);
-                        Console.WriteLine("[StrideToneMapping] Loaded ToneMappingEffect from compiled file");
-                        _effectInitialized = true;
-                        return;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[StrideToneMapping] Failed to load ToneMappingEffect from compiled file: {ex.Message}");
-                }
-
-                // Strategy 2: Try loading from ContentManager if available
                 try
                 {
                     object services = _graphicsDevice.Services();
                     if (services != null)
                     {
-                        var contentManager = services.GetService<Stride.Engine.ContentManager>();
+                        // Use fully qualified name to avoid namespace resolution issues
+                        var contentManager = services.GetService<global::Stride.Engine.ContentManager>();
                         if (contentManager != null)
                         {
                             try

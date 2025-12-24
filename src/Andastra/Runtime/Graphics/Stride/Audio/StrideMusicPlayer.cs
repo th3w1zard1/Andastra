@@ -6,6 +6,7 @@ using Andastra.Parsing.Resource;
 using Andastra.Parsing.Formats.WAV;
 using Stride.Audio;
 using SoundPlayState = Stride.Media.PlayState;
+using StrideAudioLayer = Stride.Audio.AudioLayer;
 
 namespace Andastra.Runtime.Stride.Audio
 {
@@ -370,7 +371,7 @@ namespace Andastra.Runtime.Stride.Audio
                 try
                 {
                     IntPtr bufferPtr = silenceHandle.AddrOfPinnedObject();
-                    FillBuffer(bufferPtr, bufferSizeBytes, (Stride.Audio.AudioLayer.BufferType)(int)AudioLayer.BufferType.EndOfStream);
+                    FillBuffer(bufferPtr, bufferSizeBytes, StrideAudioLayer.BufferType.EndOfStream);
                 }
                 finally
                 {
@@ -484,7 +485,7 @@ namespace Andastra.Runtime.Stride.Audio
                     try
                     {
                         IntPtr bufferPtr = silenceHandle4.AddrOfPinnedObject();
-                        FillBuffer(bufferPtr, bufferSizeBytes, (Stride.Audio.AudioLayer.BufferType)(int)AudioLayer.BufferType.EndOfStream);
+                        FillBuffer(bufferPtr, bufferSizeBytes, StrideAudioLayer.BufferType.EndOfStream);
                     }
                     finally
                     {
@@ -592,14 +593,14 @@ namespace Andastra.Runtime.Stride.Audio
             _position += bytesToCopy;
 
             // Music always loops, so buffer type is always Normal
-            AudioLayer.BufferType bufferType = AudioLayer.BufferType.Normal;
+            StrideAudioLayer.BufferType bufferType = StrideAudioLayer.BufferType.Normal;
 
             // Fill the buffer - pin the array and get pointer
             GCHandle bufferHandle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
             try
             {
                 IntPtr bufferPtr = bufferHandle.AddrOfPinnedObject();
-                FillBuffer(bufferPtr, bytesToCopy, (Stride.Audio.AudioLayer.BufferType)(int)bufferType);
+                FillBuffer(bufferPtr, bytesToCopy, bufferType);
             }
             finally
             {

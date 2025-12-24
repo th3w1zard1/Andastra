@@ -104,44 +104,27 @@ namespace Andastra.Runtime.Stride.Culling
             }
 
             // Copy level 0 (full resolution) from depth buffer to Hi-Z buffer
-            // Store current render target to restore later
-            StrideGraphics.Texture[] previousTargets = _graphicsDevice.CurrentRenderTargets;
-            global::Stride.Graphics.Texture previousTarget = previousTargets != null && previousTargets.Length > 0
-                ? previousTargets[0] as global::Stride.Graphics.Texture : null;
-
-            try
+            // In Stride, render targets are managed via CommandList, not GraphicsDevice
+            // Get CommandList for operations
+            var commandList = _graphicsDevice.ImmediateContext();
+            if (commandList == null)
             {
-                // Set Hi-Z buffer as render target
-                _graphicsDevice.SetRenderTargets(_hiZBuffer);
-
-                // Copy depth buffer to Hi-Z buffer mip level 0
-                // Stride supports copying textures via CommandList
-                var commandList = _graphicsDevice.ImmediateContext();
-                if (commandList != null)
-                {
-                    commandList.CopyRegion(depthBuffer, 0, null, _hiZBuffer, 0);
-                }
-
-                // Generate mipmap levels by downsampling with max depth operation
-                // Each mip level stores the maximum depth from 2x2 region of previous level
-                // Uses CPU-side max depth calculation for accurate Hi-Z generation
-                // Note: Stride supports compute shaders, but we use CPU-side calculation for compatibility
-                // Future enhancement: Use compute shader for GPU-accelerated mipmap generation
-                int maxMipLevels = _hiZBuffer.MipLevels;
-                GenerateMipLevelsWithMaxDepth(maxMipLevels);
+                // Cannot proceed without CommandList
+                return;
             }
-            finally
-            {
-                // Always restore previous render target, even if an exception occurs
-                if (previousTarget != null)
-                {
-                    _graphicsDevice.SetRenderTargets(previousTarget);
-                }
-                else
-                {
-                    _graphicsDevice.SetRenderTargets(null);
-                }
-            }
+
+            // Copy depth buffer to Hi-Z buffer mip level 0
+            // Stride supports copying textures via CommandList - no need to change render target
+            // CommandList.CopyRegion performs GPU-side texture copy without requiring render target change
+            commandList.CopyRegion(depthBuffer, 0, null, _hiZBuffer, 0);
+
+            // Generate mipmap levels by downsampling with max depth operation
+            // Each mip level stores the maximum depth from 2x2 region of previous level
+            // Uses CPU-side max depth calculation for accurate Hi-Z generation
+            // Note: Stride supports compute shaders, but we use CPU-side calculation for compatibility
+            // Future enhancement: Use compute shader for GPU-accelerated mipmap generation
+            int maxMipLevels = _hiZBuffer.MipLevels;
+            GenerateMipLevelsWithMaxDepth(maxMipLevels);
         }
 
         /// <summary>

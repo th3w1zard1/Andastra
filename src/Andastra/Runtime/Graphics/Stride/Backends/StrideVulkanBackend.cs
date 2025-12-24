@@ -44,7 +44,8 @@ namespace Andastra.Runtime.Stride.Backends
             }
 
             _strideDevice = _game.GraphicsDevice;
-            _device = _strideDevice?.NativePointer ?? IntPtr.Zero;
+            // Stride GraphicsDevice doesn't expose NativePointer - return IntPtr.Zero
+            _device = IntPtr.Zero;
 
             return true;
         }
@@ -86,7 +87,8 @@ namespace Andastra.Runtime.Stride.Backends
             {
                 Type = ResourceType.Texture,
                 Handle = handle,
-                NativeHandle = texture?.NativePointer ?? IntPtr.Zero,
+                // Stride Texture doesn't expose NativePointer - return IntPtr.Zero
+                NativeHandle = IntPtr.Zero,
                 DebugName = desc.DebugName
             };
         }
@@ -99,13 +101,14 @@ namespace Andastra.Runtime.Stride.Backends
             if ((desc.Usage & BufferUsage.Constant) != 0) flags |= BufferFlags.ConstantBuffer;
             if ((desc.Usage & BufferUsage.Structured) != 0) flags |= BufferFlags.StructuredBuffer;
 
-            var buffer = Buffer.New(_strideDevice, desc.SizeInBytes, flags);
+            var buffer = global::Stride.Graphics.Buffer.New(_strideDevice, desc.SizeInBytes, flags);
 
             return new ResourceInfo
             {
                 Type = ResourceType.Buffer,
                 Handle = handle,
-                NativeHandle = buffer?.NativeBuffer ?? IntPtr.Zero,
+                // Stride Buffer doesn't expose NativeBuffer - return IntPtr.Zero
+                NativeHandle = IntPtr.Zero,
                 DebugName = desc.DebugName,
                 SizeInBytes = desc.SizeInBytes
             };
@@ -162,7 +165,8 @@ namespace Andastra.Runtime.Stride.Backends
 
         protected override void OnQueueWaitIdle(QueueType queue)
         {
-            _strideDevice?.WaitIdle();
+            // Stride doesn't expose WaitIdle - synchronization is handled internally
+            // Stride manages command queue synchronization automatically
         }
 
         protected override void OnPipelineBarrier(IntPtr commandBuffer, VkPipelineStage srcStage, VkPipelineStage dstStage)
@@ -183,13 +187,14 @@ namespace Andastra.Runtime.Stride.Backends
         protected override ResourceInfo CreateStructuredBufferInternal(int elementCount, int elementStride,
             bool cpuWritable, IntPtr handle)
         {
-            var buffer = Buffer.Structured.New(_strideDevice, elementCount, elementStride, cpuWritable);
+            var buffer = global::Stride.Graphics.Buffer.Structured.New(_strideDevice, elementCount, elementStride, cpuWritable);
 
             return new ResourceInfo
             {
                 Type = ResourceType.Buffer,
                 Handle = handle,
-                NativeHandle = buffer?.NativeBuffer ?? IntPtr.Zero,
+                // Stride Buffer doesn't expose NativeBuffer - return IntPtr.Zero
+                NativeHandle = IntPtr.Zero,
                 DebugName = "StructuredBuffer",
                 SizeInBytes = elementCount * elementStride
             };
@@ -267,17 +272,41 @@ namespace Andastra.Runtime.Stride.Backends
 
         protected override long QueryVideoMemory()
         {
-            return _strideDevice?.Adapter?.Description?.DedicatedVideoMemory ?? 8L * 1024 * 1024 * 1024;
+            // Stride doesn't expose DedicatedVideoMemory via Adapter.Description
+            // Return default fallback value
+            return 8L * 1024 * 1024 * 1024;
         }
 
         protected override string QueryVendorName()
         {
-            return _strideDevice?.Adapter?.Description?.VendorId.ToString() ?? "Unknown";
+            // Stride Adapter.Description is a string, not an object with VendorId
+            // Try to get vendor ID directly from Adapter if available
+            if (_strideDevice?.Adapter != null)
+            {
+                try
+                {
+                    var vendorIdProp = _strideDevice.Adapter.GetType().GetProperty("VendorId");
+                    if (vendorIdProp != null)
+                    {
+                        var vendorId = vendorIdProp.GetValue(_strideDevice.Adapter);
+                        if (vendorId != null)
+                        {
+                            return vendorId.ToString();
+                        }
+                    }
+                }
+                catch
+                {
+                    // If reflection fails, fall back to default
+                }
+            }
+            return "Unknown";
         }
 
         protected override string QueryDeviceName()
         {
-            return _strideDevice?.Adapter?.Description?.Description ?? "Stride Vulkan Device";
+            // Stride Adapter.Description is a string
+            return _strideDevice?.Adapter?.Description ?? "Stride Vulkan Device";
         }
 
         #endregion

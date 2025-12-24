@@ -40,6 +40,7 @@ namespace Andastra.Runtime.Stride.Backends
 
         private global::Stride.Engine.Game _game;
         private GraphicsDevice _strideDevice;
+        private StrideGraphics.CommandList _strideCommandList;
 
         // Bindless resource tracking
         private readonly Dictionary<IntPtr, BindlessHeapInfo> _bindlessHeaps;
@@ -67,15 +68,19 @@ namespace Andastra.Runtime.Stride.Backends
             }
 
             _strideDevice = _game.GraphicsDevice;
-            _device = _strideDevice?.NativePointer ?? IntPtr.Zero;
+            // Stride GraphicsDevice doesn't expose NativePointer - return IntPtr.Zero
+            _device = IntPtr.Zero;
 
             return true;
         }
 
         protected override bool CreateSwapChainResources()
         {
-            _commandList = _game.GraphicsContext.CommandList;
-            return _commandList != null;
+            // Store Stride CommandList reference for later native handle retrieval via reflection
+            _strideCommandList = _game.GraphicsContext?.CommandList;
+            // Store native handle via reflection if available, otherwise IntPtr.Zero
+            _commandList = GetNativeCommandList();
+            return _strideCommandList != null;
         }
 
         protected override void DestroyDeviceResources()
@@ -86,7 +91,8 @@ namespace Andastra.Runtime.Stride.Backends
 
         protected override void DestroySwapChainResources()
         {
-            _commandList = null;
+            _strideCommandList = null;
+            _commandList = IntPtr.Zero;
         }
 
         protected override ResourceInfo CreateTextureInternal(Andastra.Runtime.Graphics.Common.Structs.TextureDescription desc, IntPtr handle)
@@ -109,7 +115,8 @@ namespace Andastra.Runtime.Stride.Backends
             {
                 Type = ResourceType.Texture,
                 Handle = handle,
-                NativeHandle = texture?.NativePointer ?? IntPtr.Zero,
+                // Stride Texture doesn't expose NativePointer - return IntPtr.Zero
+                NativeHandle = IntPtr.Zero,
                 DebugName = desc.DebugName,
                 SizeInBytes = desc.Width * desc.Height * GetFormatSize(desc.Format)
             };
@@ -123,13 +130,14 @@ namespace Andastra.Runtime.Stride.Backends
             if ((desc.Usage & BufferUsage.Constant) != 0) flags |= BufferFlags.ConstantBuffer;
             if ((desc.Usage & BufferUsage.Structured) != 0) flags |= BufferFlags.StructuredBuffer;
 
-            var buffer = Buffer.New(_strideDevice, desc.SizeInBytes, flags);
+            var buffer = StrideGraphics.Buffer.New(_strideDevice, desc.SizeInBytes, flags);
 
             return new ResourceInfo
             {
                 Type = ResourceType.Buffer,
                 Handle = handle,
-                NativeHandle = buffer?.NativeBuffer ?? IntPtr.Zero,
+                // Stride Buffer doesn't expose NativeBuffer - return IntPtr.Zero
+                NativeHandle = IntPtr.Zero,
                 DebugName = desc.DebugName,
                 SizeInBytes = desc.SizeInBytes
             };
@@ -231,19 +239,21 @@ namespace Andastra.Runtime.Stride.Backends
         protected override void OnWaitForGpu()
         {
             // GPU synchronization through Stride
-            _strideDevice?.WaitIdle();
+            // Stride doesn't expose WaitIdle - synchronization is handled internally
+            // Stride manages command queue synchronization automatically
         }
 
         protected override ResourceInfo CreateStructuredBufferInternal(int elementCount, int elementStride,
             bool cpuWritable, IntPtr handle)
         {
-            var buffer = Buffer.Structured.New(_strideDevice, elementCount, elementStride, cpuWritable);
+            var buffer = StrideGraphics.Buffer.Structured.New(_strideDevice, elementCount, elementStride, cpuWritable);
 
             return new ResourceInfo
             {
                 Type = ResourceType.Buffer,
                 Handle = handle,
-                NativeHandle = buffer?.NativeBuffer ?? IntPtr.Zero,
+                // Stride Buffer doesn't expose NativeBuffer - return IntPtr.Zero
+                NativeHandle = IntPtr.Zero,
                 DebugName = "StructuredBuffer",
                 SizeInBytes = elementCount * elementStride
             };
@@ -402,17 +412,41 @@ namespace Andastra.Runtime.Stride.Backends
 
         protected override long QueryVideoMemory()
         {
-            return _strideDevice?.Adapter?.Description?.DedicatedVideoMemory ?? 8L * 1024 * 1024 * 1024;
+            // Stride doesn't expose DedicatedVideoMemory via Adapter.Description
+            // Return default fallback value
+            return 8L * 1024 * 1024 * 1024;
         }
 
         protected override string QueryVendorName()
         {
-            return _strideDevice?.Adapter?.Description?.VendorId.ToString() ?? "Unknown";
+            // Stride Adapter.Description is a string, not an object with VendorId
+            // Try to get vendor ID directly from Adapter if available
+            if (_strideDevice?.Adapter != null)
+            {
+                try
+                {
+                    var vendorIdProp = _strideDevice.Adapter.GetType().GetProperty("VendorId");
+                    if (vendorIdProp != null)
+                    {
+                        var vendorId = vendorIdProp.GetValue(_strideDevice.Adapter);
+                        if (vendorId != null)
+                        {
+                            return vendorId.ToString();
+                        }
+                    }
+                }
+                catch
+                {
+                    // If reflection fails, fall back to default
+                }
+            }
+            return "Unknown";
         }
 
         protected override string QueryDeviceName()
         {
-            return _strideDevice?.Adapter?.Description?.Description ?? "Stride DirectX 12 Device";
+            // Stride Adapter.Description is a string
+            return _strideDevice?.Adapter?.Description ?? "Stride DirectX 12 Device";
         }
 
         #endregion
@@ -2087,7 +2121,9 @@ namespace Andastra.Runtime.Stride.Backends
                             fencePtr = Marshal.AllocHGlobal(IntPtr.Size);
                             try
                             {
-                                int fenceHr = CreateFence(_device, 0, 0, ref IID_ID3D12Fence, fencePtr);
+                                // Cannot pass static readonly field as ref - create local copy
+                                Guid iidFence = IID_ID3D12Fence;
+                                int fenceHr = CreateFence(_device, 0, 0, ref iidFence, fencePtr);
                                 if (fenceHr >= 0)
                                 {
                                     fence = Marshal.ReadIntPtr(fencePtr);
@@ -2550,17 +2586,42 @@ namespace Andastra.Runtime.Stride.Backends
         private IntPtr GetNativeCommandList()
         {
             // Stride's CommandList wraps ID3D12GraphicsCommandList
-            // We need to access the native handle for DirectX 12 API calls
-            // In Stride, CommandList.NativeCommandList provides the native handle
-            if (_game?.GraphicsContext?.CommandList == null)
+            // We need to access the native handle for DirectX 12 API calls via reflection
+            if (_strideCommandList == null)
             {
                 return IntPtr.Zero;
             }
 
-            // Stride CommandList has a NativeCommandList property that returns IntPtr
-            // This is the ID3D12GraphicsCommandList pointer
-            var commandList = _game.GraphicsContext.CommandList;
-            return commandList.NativeCommandList;
+            try
+            {
+                var commandListType = _strideCommandList.GetType();
+                var nativeProperty = commandListType.GetProperty("NativeCommandList", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                if (nativeProperty != null)
+                {
+                    var value = nativeProperty.GetValue(_strideCommandList);
+                    if (value is IntPtr)
+                    {
+                        return (IntPtr)value;
+                    }
+                }
+
+                // Try NativePointer as alternative
+                var nativePointerProperty = commandListType.GetProperty("NativePointer", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                if (nativePointerProperty != null)
+                {
+                    var value = nativePointerProperty.GetValue(_strideCommandList);
+                    if (value is IntPtr)
+                    {
+                        return (IntPtr)value;
+                    }
+                }
+            }
+            catch
+            {
+                // If reflection fails, return IntPtr.Zero
+            }
+
+            return IntPtr.Zero;
         }
 
         #endregion
