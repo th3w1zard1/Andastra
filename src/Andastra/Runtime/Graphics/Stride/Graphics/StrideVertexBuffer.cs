@@ -36,7 +36,7 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        public void SetData<T>(T[] data) where T : struct
+        public void SetData<T>(T[] data) where T : unmanaged
         {
             if (data == null)
             {
@@ -52,7 +52,7 @@ namespace Andastra.Runtime.Stride.Graphics
             _buffer.SetData(commandList, data);
         }
 
-        public void GetData<T>(T[] data) where T : struct
+        public void GetData<T>(T[] data) where T : unmanaged
         {
             if (data == null)
             {
