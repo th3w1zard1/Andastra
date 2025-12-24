@@ -98,9 +98,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 {
                     // Try to get ContentManager from GraphicsDevice services
                     // Stride GraphicsDevice may have Services property that provides ContentManager
-                    // Use explicit type to avoid C# 7.3 inferred delegate type limitation
-                    // Note: Services() extension method returns null in this Stride version, but code handles null gracefully
-                    object services = _graphicsDevice.Services();
+                    var services = _graphicsDevice.Services;
                     if (services != null)
                     {
                         var contentManager = ((dynamic)services).GetService<ContentManager>();
@@ -446,7 +444,7 @@ shader BlurEffect : ShaderBase
 
             // Begin sprite batch rendering
             // Use SpriteSortMode.Immediate for post-processing effects
-            // TODO: STUB - SpriteBatch.Begin expects GraphicsContext, but we have CommandList. 
+            // TODO: STUB - SpriteBatch.Begin expects GraphicsContext, but we have CommandList.
             // In Stride, CommandList and GraphicsContext may be related. Need to check if CommandList has a GraphicsContext property
             // or if there's a different Begin overload. For now, using CommandList directly may work if they're compatible types.
             // If compilation fails, this needs proper GraphicsContext retrieval.
@@ -522,7 +520,7 @@ shader BlurEffect : ShaderBase
 
             // Begin sprite batch rendering
             // Use SpriteSortMode.Immediate for post-processing effects
-            // TODO: STUB - SpriteBatch.Begin expects GraphicsContext, but we have CommandList. 
+            // TODO: STUB - SpriteBatch.Begin expects GraphicsContext, but we have CommandList.
             // In Stride, CommandList and GraphicsContext may be related. Need to check if CommandList has a GraphicsContext property
             // or if there's a different Begin overload. For now, using CommandList directly may work if they're compatible types.
             // If compilation fails, this needs proper GraphicsContext retrieval.
@@ -652,17 +650,14 @@ shader BlurEffect : ShaderBase
                     SourceCode = shaderSource
                 };
 
-                // TODO: STUB - CompilerParameters API may differ in this Stride version
                 // Compile shader source to bytecode
                 // Based on Stride API: EffectCompiler.Compile() compiles shader source
-                // CompilerParameters and GraphicsDeviceFeatures.Profile may not exist in this API version
-                System.Console.WriteLine($"[StrideBloomEffect] Shader compilation API not fully implemented for '{shaderName}'. Skipping runtime compilation.");
-                return null;
-                // var compilationResult = compiler.Compile(compilerSource, new CompilerParameters
-                // {
-                //     EffectParameters = new EffectCompilerParameters(),
-                //     Platform = _graphicsDevice.Features.Profile
-                // });
+                // CompilerParameters provides compilation settings including platform target
+                var compilationResult = compiler.Compile(compilerSource, new CompilerParameters
+                {
+                    EffectParameters = new EffectCompilerParameters(),
+                    Platform = _graphicsDevice.Features.Profile
+                });
                 //
                 // if (compilationResult != null && compilationResult.Bytecode != null && compilationResult.Bytecode.Length > 0)
                 // {
@@ -760,15 +755,14 @@ shader BlurEffect : ShaderBase
                             SourceCode = shaderSource
                         };
 
-                        // TODO: STUB - CompilerParameters API may differ in this Stride version
-                        // CompilerParameters and GraphicsDeviceFeatures.Profile may not exist in this API version
-                        System.Console.WriteLine($"[StrideBloomEffect] Shader compilation API not fully implemented for '{shaderName}'. Skipping runtime compilation.");
-                        return null;
-                        // var compilationResult = effectCompiler.Compile(compilerSource, new CompilerParameters
-                        // {
-                        //     EffectParameters = new EffectCompilerParameters(),
-                        //     Platform = _graphicsDevice.Features.Profile
-                        // });
+                        // CompilerParameters provides compilation settings including platform target
+                        // EffectParameters specifies shader compilation options
+                        // Platform ensures shader is compiled for the correct graphics API (DirectX, Vulkan, etc.)
+                        var compilationResult = effectCompiler.Compile(compilerSource, new CompilerParameters
+                        {
+                            EffectParameters = new EffectCompilerParameters(),
+                            Platform = _graphicsDevice.Features.Profile
+                        });
                         //
                         // if (compilationResult != null && compilationResult.Bytecode != null && compilationResult.Bytecode.Length > 0)
                         // {

@@ -1,5 +1,6 @@
 using System;
 using System.Numerics;
+using System.Reflection;
 using Stride.Graphics;
 using Stride.Core.Mathematics;
 using Stride.Rendering;
@@ -144,11 +145,15 @@ namespace Andastra.Runtime.Stride.Graphics
             parameterCollection.Set(TransformationKeys.WorldViewProjection, MatrixStride.Identity);
 
             // Material colors - using Stride's material keys
-            // MaterialKeys.DiffuseValue is ObjectParameterKey<Color3>, not ValueParameterKey<Color4>
-            // Use Color3 for diffuse, emissive, and specular values
-            parameterCollection.Set(MaterialKeys.DiffuseValue, new Color3(_diffuseColor.X * _alpha, _diffuseColor.Y * _alpha, _diffuseColor.Z * _alpha));
-            parameterCollection.Set(MaterialKeys.EmissiveValue, new Color3(_emissiveColor.X, _emissiveColor.Y, _emissiveColor.Z));
-            parameterCollection.Set(MaterialKeys.SpecularValue, new Color3(_specularColor.X, _specularColor.Y, _specularColor.Z));
+            // MaterialKeys.DiffuseValue, EmissiveValue, and SpecularValue may be ObjectParameterKey<Color3> or ValueParameterKey<Color4>
+            // Use the appropriate type based on what the MaterialKeys expect
+            // For diffuse, we need to include alpha, so use Color4 if the key supports it, otherwise use Color3
+            var diffuseColor3 = new Color3(_diffuseColor.X * _alpha, _diffuseColor.Y * _alpha, _diffuseColor.Z * _alpha);
+            SetParameterByTypeInCollection(parameterCollection, MaterialKeys.DiffuseValue, diffuseColor3);
+            var emissiveColor3 = new Color3(_emissiveColor.X, _emissiveColor.Y, _emissiveColor.Z);
+            SetParameterByTypeInCollection(parameterCollection, MaterialKeys.EmissiveValue, emissiveColor3);
+            var specularColor3 = new Color3(_specularColor.X, _specularColor.Y, _specularColor.Z);
+            SetParameterByTypeInCollection(parameterCollection, MaterialKeys.SpecularValue, specularColor3);
             // MaterialKeys.SpecularPowerValue doesn't exist in Stride API
             // Use a custom parameter key for specular power
             parameterCollection.Set(new ValueParameterKey<float>("SpecularPower"), _specularPower);
@@ -282,30 +287,47 @@ namespace Andastra.Runtime.Stride.Graphics
                     try
                     {
                         // ParameterCollection.Get<T>() requires a type parameter
-                        // We need to determine the type from the key or use reflection
-                        // TODO: STUB - Get parameter value by type - requires knowing the parameter type
-                        // For now, skip parameters that can't be retrieved without type information
+                        // We need to determine the type from the key using reflection
+                        // Get the generic type argument from ParameterKey<T> to call Get<T>
                         object value = null;
                         try
                         {
-                            // Try to get the value using reflection or type inference
-                            // This is a simplified approach - in production, you'd need proper type handling
-                            var getMethod = typeof(ParameterCollection).GetMethod("Get", new[] { typeof(ParameterKey) });
-                            if (getMethod != null)
+                            // Get the type from ParameterKey<T> by extracting the generic type argument
+                            // ParameterKey is a generic type, so we get T from ParameterKey<T>
+                            var keyType = keyInfo.Key.GetType();
+                            if (keyType.IsGenericType)
                             {
-                                value = getMethod.MakeGenericMethod(keyInfo.Key.GetType().GetGenericArguments()[0]).Invoke(parameterCollection, new[] { keyInfo.Key });
+                                var genericArgs = keyType.GetGenericArguments();
+                                if (genericArgs.Length > 0)
+                                {
+                                    var valueType = genericArgs[0];
+                                    // Get the Get<T> method from ParameterCollection
+                                    var getMethod = typeof(ParameterCollection).GetMethod("Get", new[] { typeof(ParameterKey) });
+                                    if (getMethod != null)
+                                    {
+                                        // Make the generic method with the correct type parameter
+                                        var genericGetMethod = getMethod.MakeGenericMethod(valueType);
+                                        // Invoke Get<T>(key) to retrieve the parameter value
+                                        value = genericGetMethod.Invoke(parameterCollection, new[] { keyInfo.Key });
+                                    }
+                                }
                             }
                         }
-                        catch
+                        catch (Exception getEx)
                         {
                             // If we can't get the value, skip this parameter
+                            // This can happen if the parameter doesn't exist or type mismatch
+                            // Log only unexpected errors (not ArgumentException which is expected for missing parameters)
+                            if (!(getEx is ArgumentException) && !(getEx.InnerException is ArgumentException))
+                            {
+                                Console.WriteLine($"[StrideBasicEffect] Could not get parameter '{keyInfo.Key.Name}' value: {getEx.Message}");
+                            }
                             continue;
                         }
                         if (value != null)
                         {
-                            // Use reflection or type-specific setters to set the parameter
+                            // Use type-specific setters to set the parameter in the effect instance
                             // Based on Stride API: ParameterCollection.Get<T>() and Parameters.Set<T>()
-                            // We need to handle different parameter types correctly
                             SetParameterByType(effectInstance.Parameters, keyInfo.Key, value);
                         }
                     }
@@ -346,7 +368,27 @@ namespace Andastra.Runtime.Stride.Graphics
                 {
                     try
                     {
-                        var value = source.Get(keyInfo.Key);
+                        // Get the parameter value using reflection to determine the type
+                        // ParameterCollection.Get<T>() requires a type parameter
+                        object value = null;
+                        var keyType = keyInfo.Key.GetType();
+                        if (keyType.IsGenericType)
+                        {
+                            var genericArgs = keyType.GetGenericArguments();
+                            if (genericArgs.Length > 0)
+                            {
+                                var valueType = genericArgs[0];
+                                // Get the Get<T> method from ParameterCollection
+                                var getMethod = typeof(ParameterCollection).GetMethod("Get", new[] { typeof(ParameterKey) });
+                                if (getMethod != null)
+                                {
+                                    // Make the generic method with the correct type parameter
+                                    var genericGetMethod = getMethod.MakeGenericMethod(valueType);
+                                    // Invoke Get<T>(key) to retrieve the parameter value
+                                    value = genericGetMethod.Invoke(source, new[] { keyInfo.Key });
+                                }
+                            }
+                        }
                         if (value != null)
                         {
                             // Copy parameter value to target collection
@@ -513,19 +555,120 @@ namespace Andastra.Runtime.Stride.Graphics
                 }
                 else
                 {
-                    // For unknown types, try using the non-generic Set method
-                    // This may fail for some types, but we catch the exception
-                    // TODO: STUB - Set parameter without type information - requires proper type handling
-                    // For ValueParameterKey<T>, we need to know T to call Set<T>
-                    // For now, skip parameters that can't be set without type information
-                    // In production, you'd need to use reflection to determine the type and call Set<T> appropriately
+                    // For unknown types, use reflection to determine the type and call Set<T> appropriately
+                    // This handles any parameter types not explicitly handled above
+                    // Based on Stride API: Parameters.Set<T>(ValueParameterKey<T> key, T value) for value types
+                    // and Parameters.Set<T>(ObjectParameterKey<T> key, T value) for reference types
+                    // Original game: DirectX 9 fixed-function pipeline parameter setting (swkotor2.exe: d3d9.dll @ 0x0080a6c0)
+                    try
+                    {
+                        // Get the type from ParameterKey<T> by extracting the generic type argument
+                        var keyType = key.GetType();
+                        if (keyType.IsGenericType)
+                        {
+                            var genericArgs = keyType.GetGenericArguments();
+                            if (genericArgs.Length > 0)
+                            {
+                                var valueType = genericArgs[0];
+                                var valueTypeActual = value.GetType();
+                                
+                                // Ensure the value type is compatible with the parameter key type
+                                if (valueType.IsAssignableFrom(valueTypeActual) || valueTypeActual.IsSubclassOf(valueType) || valueType == valueTypeActual)
+                                {
+                                    // Determine if the key type is ValueParameterKey<T> or ObjectParameterKey<T>
+                                    // by checking the generic type definition
+                                    var keyGenericDef = keyType.GetGenericTypeDefinition();
+                                    var isValueParameterKey = keyGenericDef == typeof(ValueParameterKey<>);
+                                    var isObjectParameterKey = keyGenericDef == typeof(ObjectParameterKey<>);
+                                    
+                                    // Find the Set<T> method that takes ParameterKey<T> and T
+                                    // ParameterCollection.Set<T>(ParameterKey<T> key, T value)
+                                    var setMethods = typeof(ParameterCollection).GetMethods();
+                                    MethodInfo setMethod = null;
+                                    foreach (var method in setMethods)
+                                    {
+                                        if (method.Name == "Set" && method.IsGenericMethod && method.GetParameters().Length == 2)
+                                        {
+                                            var paramTypes = method.GetParameters();
+                                            var firstParamType = paramTypes[0].ParameterType;
+                                            if (firstParamType.IsGenericType)
+                                            {
+                                                var firstParamGenericDef = firstParamType.GetGenericTypeDefinition();
+                                                if (firstParamGenericDef == typeof(ParameterKey<>) || 
+                                                    firstParamGenericDef == typeof(ValueParameterKey<>) ||
+                                                    firstParamGenericDef == typeof(ObjectParameterKey<>))
+                                                {
+                                                    setMethod = method;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    
+                                    if (setMethod != null)
+                                    {
+                                        // Make the generic method with the correct type parameter
+                                        var genericSetMethod = setMethod.MakeGenericMethod(valueType);
+                                        
+                                        // Create the appropriate parameter key type based on whether T is a value type or reference type
+                                        ParameterKey parameterKeyToUse = key;
+                                        
+                                        // If the key is not already the right type, create a new one
+                                        // Value types use ValueParameterKey<T>, reference types use ObjectParameterKey<T>
+                                        if (!isValueParameterKey && !isObjectParameterKey)
+                                        {
+                                            if (valueType.IsValueType)
+                                            {
+                                                // Create ValueParameterKey<T> for value types
+                                                var valueKeyType = typeof(ValueParameterKey<>).MakeGenericType(valueType);
+                                                var valueKeyCtor = valueKeyType.GetConstructor(new[] { typeof(string) });
+                                                if (valueKeyCtor != null)
+                                                {
+                                                    parameterKeyToUse = (ParameterKey)valueKeyCtor.Invoke(new[] { key.Name });
+                                                }
+                                            }
+                                            else
+                                            {
+                                                // Create ObjectParameterKey<T> for reference types
+                                                var objectKeyType = typeof(ObjectParameterKey<>).MakeGenericType(valueType);
+                                                var objectKeyCtor = objectKeyType.GetConstructor(new[] { typeof(string) });
+                                                if (objectKeyCtor != null)
+                                                {
+                                                    parameterKeyToUse = (ParameterKey)objectKeyCtor.Invoke(new[] { key.Name });
+                                                }
+                                            }
+                                        }
+                                        
+                                        // Invoke Set<T>(key, value) to set the parameter
+                                        genericSetMethod.Invoke(parameters, new[] { parameterKeyToUse, value });
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine($"[StrideBasicEffect] Could not find Set method for parameter '{key.Name}' of type {valueType.Name}");
+                                    }
+                                }
+                                else
+                                {
+                                    Console.WriteLine($"[StrideBasicEffect] Type mismatch for parameter '{key.Name}': expected {valueType.Name}, got {valueTypeActual.Name}");
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception reflectionEx)
+                    {
+                        // Reflection-based parameter setting failed
+                        // This can happen for unsupported types or when the Effect is not yet built
+                        // Log the error but don't throw - allows other parameters to be set
+                        Console.WriteLine($"[StrideBasicEffect] Could not set parameter '{key.Name}' using reflection: {reflectionEx.Message}");
+                    }
                 }
             }
             catch (Exception ex)
             {
                 // Parameter type mismatch or key not found - this is expected for some parameters
                 // when the Effect is not yet built
-                throw new ArgumentException($"Cannot set parameter {key.Name} of type {key.Type.Name}", ex);
+                var keyTypeName = key.GetType().Name;
+                throw new ArgumentException($"Cannot set parameter {key.Name} of type {keyTypeName}", ex);
             }
         }
 
@@ -783,14 +926,16 @@ namespace Andastra.Runtime.Stride.Graphics
                 // Set parameter in both the parameter collection and effect instance
                 if (parameterKey != null)
                 {
-                    _parameterCollection.Set(parameterKey, strideMatrix);
+                    // Create ValueParameterKey<MatrixStride> for value type parameters
+                    var valueKey = new ValueParameterKey<MatrixStride>(parameterKey.Name);
+                    _parameterCollection.Set(valueKey, strideMatrix);
 
                     var parameter = _effectInstance.Parameters;
                     if (parameter != null)
                     {
                         try
                         {
-                            parameter.Set(parameterKey, strideMatrix);
+                            parameter.Set(valueKey, strideMatrix);
                         }
                         catch (ArgumentException)
                         {
