@@ -3,6 +3,7 @@ using Stride.Core.Mathematics;
 using Stride.Engine;
 using Andastra.Runtime.Graphics;
 using System.Numerics;
+using RectangleF = Stride.Core.Mathematics.RectangleF;
 
 namespace Andastra.Runtime.Stride.Graphics
 {
@@ -32,17 +33,28 @@ namespace Andastra.Runtime.Stride.Graphics
                 throw new System.InvalidOperationException("SpriteBatch.Begin() called while already begun. Call End() first.");
             }
 
-            // Get GraphicsContext for Begin() call
-            // In newer Stride versions, SpriteBatch.Begin() expects GraphicsContext instead of CommandList
+            // Get CommandList for Begin() call
+            // Stride SpriteBatch.Begin() accepts CommandList as the first parameter
             if (_graphicsContext == null)
             {
-                throw new System.InvalidOperationException("GraphicsContext is required for SpriteBatch.Begin(). StrideSpriteBatch must be created with a valid GraphicsContext.");
+                throw new System.InvalidOperationException("CommandList is required for SpriteBatch.Begin(). StrideSpriteBatch must be created with a valid CommandList.");
             }
 
             var strideSortMode = ConvertSortMode(sortMode);
-            var strideBlendState = ConvertBlendState(blendState);
+            
+            // Convert blend state to Stride BlendStates values
+            // BlendStates is a static class with static properties that return BlendState objects
+            // Use conditional expression to preserve type information for method overload resolution
+            var strideBlendStateValue = blendState == null 
+                ? StrideGraphics.BlendStates.AlphaBlend
+                : blendState.Additive 
+                    ? StrideGraphics.BlendStates.Additive
+                    : blendState.AlphaBlend 
+                        ? StrideGraphics.BlendStates.AlphaBlend
+                        : StrideGraphics.BlendStates.AlphaBlend;
 
-            _spriteBatch.Begin(_graphicsContext, strideSortMode, strideBlendState);
+            // Use the overload that accepts (CommandList, SpriteSortMode, BlendState)
+            _spriteBatch.Begin(_graphicsContext, strideSortMode, strideBlendStateValue);
             _isBegun = true;
         }
 
@@ -145,25 +157,6 @@ namespace Andastra.Runtime.Stride.Graphics
             return (StrideGraphics.SpriteSortMode)sortMode;
         }
 
-        private BlendStateDescription ConvertBlendState(Andastra.Runtime.Graphics.BlendState blendState)
-        {
-            if (blendState == null)
-            {
-                return BlendStateDescription.Default();
-            }
-
-            if (blendState.Additive)
-            {
-                return BlendStateDescription.Additive();
-            }
-
-            if (blendState.AlphaBlend)
-            {
-                return BlendStateDescription.AlphaBlend();
-            }
-
-            return BlendStateDescription.Default();
-        }
 
         private StrideGraphics.SpriteEffects ConvertSpriteEffects(Andastra.Runtime.Graphics.SpriteEffects effects)
         {
