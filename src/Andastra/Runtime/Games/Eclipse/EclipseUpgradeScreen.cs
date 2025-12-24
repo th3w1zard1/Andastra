@@ -2155,9 +2155,16 @@ namespace Andastra.Runtime.Games.Eclipse
             }
             else if (propertyControl is GUIListBox propertyListBox)
             {
-                // For list boxes, we'd typically populate with items
-                // TODO:  For now, store descriptions for rendering system to use
-                // The actual GUI rendering would use this data to populate list items
+                // Store property descriptions in the list box for rendering system to use
+                // Based on swkotor2.exe: GUI list boxes display item properties as selectable list items
+                // The rendering system (KotorGuiManager.RenderListBox) retrieves items from Properties["Items"]
+                // Each property description becomes a separate list item that can be selected and scrolled
+                propertyListBox.Properties["Items"] = propertyDescriptions;
+
+                // Clear any existing selection since we're repopulating the list
+                // Based on Eclipse upgrade system: List selection is reset when contents change
+                propertyListBox.Properties.Remove("SelectedIndex");
+                propertyListBox.Properties.Remove("CurrentValue");
             }
         }
 
