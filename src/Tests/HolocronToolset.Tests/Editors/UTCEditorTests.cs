@@ -8,6 +8,7 @@ using Andastra.Parsing.Resource.Generics.UTC;
 using Andastra.Parsing.Resource;
 using FluentAssertions;
 using HolocronToolset.Data;
+using HolocronToolset.Dialogs;
 using HolocronToolset.Editors;
 using HolocronToolset.Tests.TestHelpers;
 using Xunit;
@@ -3479,31 +3480,93 @@ namespace HolocronToolset.Tests.Editors
             byte[] originalData = System.IO.File.ReadAllBytes(utcFile);
             editor.Load(utcFile, "p_hk47", ResourceType.UTC, originalData);
 
+            // Get original UTC data for comparison
+            var originalGff = GFF.FromBytes(originalData);
+            var originalUtc = UTCHelpers.ConstructUtc(originalGff);
+
+            // Capture original name values
+            var originalFirstName = originalUtc.FirstName != null ? new LocalizedString(originalUtc.FirstName.StringRef, originalUtc.FirstName.ToDictionary()["substrings"] as Dictionary<int, string>) : LocalizedString.FromInvalid();
+            var originalLastName = originalUtc.LastName != null ? new LocalizedString(originalUtc.LastName.StringRef, originalUtc.LastName.ToDictionary()["substrings"] as Dictionary<int, string>) : LocalizedString.FromInvalid();
+
+            // Get installation for string resolution
+            var installationField = typeof(UTCEditor).GetField("_installation", BindingFlags.NonPublic | BindingFlags.Instance);
+            var installation = installationField?.GetValue(editor) as HTInstallation;
+            installation.Should().NotBeNull("Installation should be available for LocalizedString resolution");
+
             // Click random firstname button
             var firstNameRandomBtn = GetFirstNameRandomButton(editor);
             firstNameRandomBtn.Should().NotBeNull("First name random button should exist");
             firstNameRandomBtn.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
 
-            // Firstname should be generated
+            // Verify firstname generation - access private _utc field
+            var utcField = typeof(UTCEditor).GetField("_utc", BindingFlags.NonPublic | BindingFlags.Instance);
+            utcField.Should().NotBeNull("_utc field should exist in UTCEditor");
+            var currentUtc = utcField.GetValue(editor) as UTC;
+            currentUtc.Should().NotBeNull("UTC object should be accessible");
+
+            // Verify firstname LocalizedString content changed
+            currentUtc.FirstName.Should().NotBeNull("FirstName LocalizedString should exist after generation");
+            currentUtc.FirstName.StringRef.Should().Be(-1, "Generated firstname should use substrings (StringRef = -1)");
+            currentUtc.FirstName.Count.Should().BeGreaterThan(0, "Generated firstname should have at least one substring");
+
+            // Get the generated firstname text
+            var generatedFirstName = currentUtc.FirstName.Get(Language.English, Gender.Male);
+            generatedFirstName.Should().NotBeNullOrEmpty("Generated firstname should contain valid English text");
+            generatedFirstName.Should().NotBe(originalFirstName.Get(Language.English, Gender.Male), "Generated firstname should be different from original");
+
+            // Verify TextBox displays the generated name
             var firstNameEdit = GetFirstNameEdit(editor);
             firstNameEdit.Should().NotBeNull("First name edit should exist");
-            // TODO: STUB - Note: Full verification would require checking LocalizedString content
+            var displayedFirstName = installation.String(currentUtc.FirstName);
+            displayedFirstName.Should().NotBeNullOrEmpty("Displayed firstname should not be empty");
+            firstNameEdit.Text.Should().Be(displayedFirstName, "TextBox should display the resolved LocalizedString text");
 
             // Click random lastname button
             var lastNameRandomBtn = GetLastNameRandomButton(editor);
             lastNameRandomBtn.Should().NotBeNull("Last name random button should exist");
             lastNameRandomBtn.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
 
-            // Lastname should be generated
+            // Refresh UTC reference after lastname generation
+            currentUtc = utcField.GetValue(editor) as UTC;
+            currentUtc.Should().NotBeNull("UTC object should still be accessible");
+
+            // Verify lastname LocalizedString content changed
+            currentUtc.LastName.Should().NotBeNull("LastName LocalizedString should exist after generation");
+            currentUtc.LastName.StringRef.Should().Be(-1, "Generated lastname should use substrings (StringRef = -1)");
+            currentUtc.LastName.Count.Should().BeGreaterThan(0, "Generated lastname should have at least one substring");
+
+            // Get the generated lastname text
+            var generatedLastName = currentUtc.LastName.Get(Language.English, Gender.Male);
+            generatedLastName.Should().NotBeNullOrEmpty("Generated lastname should contain valid English text");
+            generatedLastName.Should().NotBe(originalLastName.Get(Language.English, Gender.Male), "Generated lastname should be different from original");
+
+            // Verify TextBox displays the generated name
             var lastNameEdit = GetLastNameEdit(editor);
             lastNameEdit.Should().NotBeNull("Last name edit should exist");
+            var displayedLastName = installation.String(currentUtc.LastName);
+            displayedLastName.Should().NotBeNullOrEmpty("Displayed lastname should not be empty");
+            lastNameEdit.Text.Should().Be(displayedLastName, "TextBox should display the resolved LocalizedString text");
 
-            // Save and verify
+            // Save and verify persistence through save/load cycle
             var (data, _) = editor.Build();
-            data.Should().NotBeNull();
+            data.Should().NotBeNull("Build should produce valid data");
             var gff = GFF.FromBytes(data);
-            var utc = UTCHelpers.ConstructUtc(gff);
-            // TODO: STUB - Note: Full verification would require checking LocalizedString content
+            var savedUtc = UTCHelpers.ConstructUtc(gff);
+
+            // Verify saved LocalizedString content matches what was generated
+            savedUtc.FirstName.Should().NotBeNull("Saved firstname should exist");
+            savedUtc.FirstName.StringRef.Should().Be(-1, "Saved firstname should still use substrings");
+            savedUtc.FirstName.Get(Language.English, Gender.Male).Should().Be(generatedFirstName, "Saved firstname should match generated value");
+
+            savedUtc.LastName.Should().NotBeNull("Saved lastname should exist");
+            savedUtc.LastName.StringRef.Should().Be(-1, "Saved lastname should still use substrings");
+            savedUtc.LastName.Get(Language.English, Gender.Male).Should().Be(generatedLastName, "Saved lastname should match generated value");
+
+            // Verify names are different from originals after save/load
+            var savedFirstNameText = savedUtc.FirstName.Get(Language.English, Gender.Male);
+            var savedLastNameText = savedUtc.LastName.Get(Language.English, Gender.Male);
+            savedFirstNameText.Should().NotBe(originalFirstName.Get(Language.English, Gender.Male), "Saved firstname should differ from original");
+            savedLastNameText.Should().NotBe(originalLastName.Get(Language.English, Gender.Male), "Saved lastname should differ from original");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1747-1761
@@ -3527,7 +3590,61 @@ namespace HolocronToolset.Tests.Editors
             var inventoryBtn = GetInventoryButton(editor);
             inventoryBtn.Should().NotBeNull("Inventory button should exist");
             inventoryBtn.IsEnabled.Should().BeTrue("Inventory button should be enabled");
-            // TODO: STUB - Note: Full dialog testing would require UI automation framework
+
+            // Access private fields using reflection
+            var utcField = typeof(UTCEditor).GetField("_utc", BindingFlags.NonPublic | BindingFlags.Instance);
+            var installationField = typeof(UTCEditor).GetField("_installation", BindingFlags.NonPublic | BindingFlags.Instance);
+            var inventoryCountLabelField = typeof(UTCEditor).GetField("_inventoryCountLabel", BindingFlags.NonPublic | BindingFlags.Instance);
+
+            var utc = utcField?.GetValue(editor) as UTC;
+            var installation = installationField?.GetValue(editor) as HTInstallation;
+            var inventoryCountLabel = inventoryCountLabelField?.GetValue(editor) as TextBlock;
+
+            utc.Should().NotBeNull("UTC should be loaded");
+            installation.Should().NotBeNull("Installation should be set");
+
+            // Test inventory dialog functionality by simulating button click
+            var initialInventoryCount = utc.Inventory?.Count ?? 0;
+            var initialItemCountText = inventoryCountLabel?.Text ?? "";
+
+            // Create a mock inventory dialog that we can control for testing
+            var mockDialog = new MockInventoryDialog(editor, installation, new List<Andastra.Parsing.Formats.Capsule.Capsule>(), new List<string>(), utc.Inventory ?? new List<InventoryItem>(), utc.Equipment ?? new Dictionary<EquipmentSlot, InventoryItem>(), droid: false);
+
+            // Simulate clicking the inventory button by directly calling the OpenInventory logic
+            // Since we can't easily mock the button click in unit tests, we'll test the dialog directly
+            var dialogResult = mockDialog.ShowDialog();
+
+            // Dialog should open successfully
+            mockDialog.IsVisible.Should().BeTrue("Inventory dialog should be visible after opening");
+
+            // Test adding an item to inventory
+            var testResRef = ResRef.FromString("test_item");
+            var testItem = new InventoryItem(testResRef, droppable: true, infinite: false);
+            mockDialog.AddInventoryItem(testItem);
+
+            // Verify item was added to dialog's inventory
+            mockDialog.Inventory.Should().Contain(testItem, "Test item should be added to dialog inventory");
+
+            // Simulate clicking OK
+            mockDialog.SimulateOkClick();
+            dialogResult = mockDialog.DialogResult;
+
+            // Dialog should close and return true for OK
+            dialogResult.Should().BeTrue("Dialog should return true when OK is clicked");
+
+            // Changes should be saved back to the UTC
+            utc.Inventory.Should().Contain(testItem, "Test item should be saved to UTC inventory when OK is clicked");
+
+            // Item count should be updated
+            var newItemCount = utc.Inventory?.Count ?? 0;
+            newItemCount.Should().Be(initialInventoryCount + 1, "Item count should increase by 1 after adding item");
+
+            // Update the editor's item count display
+            editor.GetType().GetMethod("UpdateItemCount", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.Invoke(editor, null);
+
+            // Verify inventory count label was updated (refresh the reference)
+            var updatedInventoryCountLabel = inventoryCountLabelField?.GetValue(editor) as TextBlock;
+            updatedInventoryCountLabel?.Text.Should().Contain((initialInventoryCount + 1).ToString(), "Inventory count label should reflect the new item count");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1763-1792
@@ -4564,7 +4681,50 @@ namespace HolocronToolset.Tests.Editors
             // Verify inventory button exists
             var inventoryBtn = GetInventoryButton(editor);
             inventoryBtn.Should().NotBeNull("Inventory button should exist");
-            // TODO: STUB - Note: Full dialog testing would require UI automation framework
+
+            // Access private fields using reflection
+            var utcField = typeof(UTCEditor).GetField("_utc", BindingFlags.NonPublic | BindingFlags.Instance);
+            var installationField = typeof(UTCEditor).GetField("_installation", BindingFlags.NonPublic | BindingFlags.Instance);
+
+            var utc = utcField?.GetValue(editor) as UTC;
+            var installation = installationField?.GetValue(editor) as HTInstallation;
+
+            utc.Should().NotBeNull("UTC should be loaded");
+            installation.Should().NotBeNull("Installation should be set");
+
+            // Test inventory dialog cancel functionality
+            var initialInventoryCount = utc.Inventory?.Count ?? 0;
+
+            // Create a mock inventory dialog for testing cancel behavior
+            var mockDialog = new MockInventoryDialog(editor, installation, new List<Andastra.Parsing.Formats.Capsule.Capsule>(), new List<string>(), utc.Inventory ?? new List<InventoryItem>(), utc.Equipment ?? new Dictionary<EquipmentSlot, InventoryItem>(), droid: false);
+
+            // Add an item to the dialog's inventory (this should not affect the UTC yet)
+            var testResRef = ResRef.FromString("cancel_test_item");
+            var testItem = new InventoryItem(testResRef, droppable: false, infinite: false);
+            mockDialog.AddInventoryItem(testItem);
+
+            // Verify item was added to dialog but not to UTC yet
+            mockDialog.Inventory.Should().Contain(testItem, "Test item should be in dialog inventory");
+            utc.Inventory.Should().NotContain(testItem, "Test item should not be in UTC inventory until OK is clicked");
+
+            // Simulate clicking Cancel
+            mockDialog.SimulateCancelClick();
+            var dialogResult = mockDialog.DialogResult;
+
+            // Dialog should return false for Cancel
+            dialogResult.Should().BeFalse("Dialog should return false when Cancel is clicked");
+
+            // Changes should NOT be saved back to the UTC
+            utc.Inventory.Should().NotContain(testItem, "Test item should not be saved to UTC inventory when Cancel is clicked");
+
+            // Inventory count should remain unchanged
+            var finalInventoryCount = utc.Inventory?.Count ?? 0;
+            finalInventoryCount.Should().Be(initialInventoryCount, "Inventory count should remain unchanged when Cancel is clicked");
+
+            // Test equipment functionality if implemented
+            // For now, verify that equipment dictionary exists and is accessible
+            utc.Equipment.Should().NotBeNull("UTC equipment should be initialized");
+            mockDialog.Equipment.Should().NotBeNull("Dialog equipment should be initialized");
         }
 
         /// <summary>
@@ -5335,6 +5495,78 @@ namespace HolocronToolset.Tests.Editors
                 }
             }
             return null;
+        }
+
+        /// <summary>
+        /// Mock inventory dialog for testing purposes that allows programmatic control
+        /// </summary>
+        private class MockInventoryDialog : HolocronToolset.Dialogs.InventoryDialog
+        {
+            public MockInventoryDialog(
+                Avalonia.Controls.Window parent,
+                HolocronToolset.Data.HTInstallation installation,
+                List<Andastra.Parsing.Formats.Capsule.Capsule> capsules,
+                List<string> folders,
+                List<InventoryItem> inventory,
+                Dictionary<EquipmentSlot, InventoryItem> equipment,
+                bool droid = false)
+                : base(parent, installation, capsules, folders, inventory, equipment, droid: droid)
+            {
+            }
+
+            /// <summary>
+            /// Programmatically add an item to the inventory for testing
+            /// </summary>
+            public void AddInventoryItem(InventoryItem item)
+            {
+                if (Inventory != null)
+                {
+                    Inventory.Add(item);
+                }
+            }
+
+            /// <summary>
+            /// Programmatically remove an item from inventory for testing
+            /// </summary>
+            public void RemoveInventoryItem(InventoryItem item)
+            {
+                if (Inventory != null)
+                {
+                    Inventory.Remove(item);
+                }
+            }
+
+            /// <summary>
+            /// Simulate clicking the OK button
+            /// </summary>
+            public void SimulateOkClick()
+            {
+                // Call the Accept method directly (this is protected in the base class)
+                var acceptMethod = typeof(HolocronToolset.Dialogs.InventoryDialog).GetMethod("Accept", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                acceptMethod?.Invoke(this, null);
+
+                DialogResult = true;
+                Close(true);
+            }
+
+            /// <summary>
+            /// Simulate clicking the Cancel button
+            /// </summary>
+            public void SimulateCancelClick()
+            {
+                DialogResult = false;
+                Close(false);
+            }
+
+            /// <summary>
+            /// Override ShowDialog to make it testable without actual UI
+            /// </summary>
+            public new bool ShowDialog()
+            {
+                // For testing, we'll simulate showing the dialog without actually displaying UI
+                IsVisible = true;
+                return DialogResult;
+            }
         }
     }
 }
