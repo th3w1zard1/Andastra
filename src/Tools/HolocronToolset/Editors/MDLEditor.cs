@@ -11,6 +11,8 @@ using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using HolocronToolset.Data;
 using HolocronToolset.Widgets;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 
 namespace HolocronToolset.Editors
 {
@@ -172,8 +174,14 @@ namespace HolocronToolset.Editors
 
             if (mdlData == null || mdxData == null)
             {
-                // Matching PyKotor implementation: QMessageBox.critical(...)
-                // TODO: STUB - For now, we'll just return - in full implementation would show error dialog
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/mdl.py:95
+                // Original: QMessageBox(QMessageBox.Icon.Critical, f"Could not find the '{p_filepath.stem}' MDL/MDX", "").exec()
+                var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                    $"Could not find the '{resref}' MDL/MDX",
+                    "",
+                    ButtonEnum.Ok,
+                    Icon.Error);
+                errorBox.ShowAsync();
                 return;
             }
 
