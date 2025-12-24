@@ -2,10 +2,7 @@ using System;
 using StrideGraphics = Stride.Graphics;
 using Stride.Rendering;
 using Stride.Core.Mathematics;
-using Stride.Engine;
-using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.PostProcessing;
-using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Stride.Graphics;
 using Vector2 = Stride.Core.Mathematics.Vector2;
 using Vector3 = Stride.Core.Mathematics.Vector3;
@@ -269,7 +266,8 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 commandList.SetViewport(new StrideGraphics.Viewport(0, 0, output.Width, output.Height));
 
                 // Clear render target (optional, but ensures clean output)
-                _graphicsDevice.Clear(output, Color.Transparent);
+                // In Stride, clearing is done through CommandList after setting render target
+                commandList.Clear(output, Color.Transparent);
 
                 // Get viewport dimensions
                 int width = output.Width;
@@ -283,108 +281,72 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 _spriteBatch.Begin(commandList, StrideGraphics.SpriteSortMode.Immediate, StrideGraphics.BlendStates.Opaque, _linearSampler,
                     StrideGraphics.DepthStencilStates.None, StrideGraphics.RasterizerStates.CullNone, _colorGradingEffect);
 
-                // Set shader parameters
+                // Set shader parameters using ParameterCollection.Set with parameter keys
                 var parameters = _colorGradingEffect.Parameters;
                 if (parameters != null)
                 {
-                    // Set input StrideGraphics.Texture
                     try
                     {
-                        var inputTextureParam = parameters.Get<StrideGraphics.Texture>("InputTexture");
-                        if (inputTextureParam != null)
+                        // Set input texture - try InputTexture first, then SourceTexture as fallback
+                        try
                         {
-                            ((dynamic)inputTextureParam).SetValue(input);
+                            parameters.Set(new ObjectParameterKey<StrideGraphics.Texture>("InputTexture"), input);
                         }
-                        else
+                        catch (Exception)
                         {
-                            // Try alternative parameter names
-                            var sourceTextureParam = parameters.Get<StrideGraphics.Texture>("SourceTexture");
-                            if (sourceTextureParam != null)
+                            // Try alternative parameter name
+                            try
                             {
-                                ((dynamic)sourceTextureParam).SetValue(input);
+                                parameters.Set(new ObjectParameterKey<StrideGraphics.Texture>("SourceTexture"), input);
                             }
-                            else
+                            catch (Exception)
                             {
-                                // If we can't set the input StrideGraphics.Texture, the shader won't work
+                                // If we can't set the input texture, the shader won't work
                                 _spriteBatch.End();
                                 return false;
                             }
                         }
-                    }
-                    catch (Exception)
-                    {
-                        // Parameter doesn't exist or can't be set - shader not properly loaded
-                        _spriteBatch.End();
-                        return false;
-                    }
 
-                    // Set LUT StrideGraphics.Texture if available
-                    if (_lutTexture != null)
-                    {
+                        // Set LUT texture if available
+                        if (_lutTexture != null)
+                        {
+                            try
+                            {
+                                parameters.Set(new ObjectParameterKey<StrideGraphics.Texture>("LutTexture"), _lutTexture);
+                                parameters.Set(new ValueParameterKey<int>("LutSize"), _lutSize);
+                            }
+                            catch (Exception)
+                            {
+                                // LUT parameters don't exist - continue without LUT
+                            }
+                        }
+
+                        // Set color grading parameters (value types use ValueParameterKey)
                         try
                         {
-                            var lutTextureParam = parameters.Get<StrideGraphics.Texture>("LutTexture");
-                            if (lutTextureParam != null)
-                            {
-                                ((dynamic)lutTextureParam).SetValue(_lutTexture);
-                            }
-
-                            var lutSizeParam = parameters.Get<int>("LutSize");
-                            if (lutSizeParam != null)
-                            {
-                                ((dynamic)lutSizeParam).SetValue((float)_lutSize);
-                            }
+                            parameters.Set(new ValueParameterKey<float>("Contrast"), _contrast);
+                            parameters.Set(new ValueParameterKey<float>("Saturation"), _saturation);
+                            parameters.Set(new ValueParameterKey<float>("Strength"), _strength);
                         }
                         catch (Exception)
                         {
-                            // LUT parameters don't exist - continue without LUT
-                        }
-                    }
-
-                    // Set color grading parameters
-                    try
-                    {
-                        var contrastParam = parameters.Get<float>("Contrast");
-                        if (contrastParam != null)
-                        {
-                            ((dynamic)contrastParam).SetValue(_contrast);
+                            // Parameters don't exist - continue with default values
                         }
 
-                        var saturationParam = parameters.Get<float>("Saturation");
-                        if (saturationParam != null)
+                        // Set screen size parameters (useful for UV calculations)
+                        try
                         {
-                            ((dynamic)saturationParam).SetValue(_saturation);
+                            parameters.Set(new ValueParameterKey<Vector2>("ScreenSize"), new Vector2(width, height));
+                            parameters.Set(new ValueParameterKey<Vector2>("ScreenSizeInv"), new Vector2(1.0f / width, 1.0f / height));
                         }
-
-                        var strengthParam = parameters.Get<float>("Strength");
-                        if (strengthParam != null)
+                        catch (Exception)
                         {
-                            ((dynamic)strengthParam).SetValue(_strength);
+                            // Screen size parameters don't exist - continue with default values
                         }
                     }
                     catch (Exception)
                     {
-                        // Parameters don't exist - continue with default values
-                    }
-
-                    // Set screen size parameters (useful for UV calculations)
-                    try
-                    {
-                        var screenSizeParam = parameters.Get<Vector2>("ScreenSize");
-                        if (screenSizeParam != null)
-                        {
-                            ((dynamic)screenSizeParam).SetValue(new Vector2(width, height));
-                        }
-
-                        var screenSizeInvParam = parameters.Get<Vector2>("ScreenSizeInv");
-                        if (screenSizeInvParam != null)
-                        {
-                            ((dynamic)screenSizeInvParam).SetValue(new Vector2(1.0f / width, 1.0f / height));
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        // Screen size parameters don't exist - continue
+                        // Parameter setting failed - continue without custom parameters
                     }
                 }
 
@@ -430,11 +392,15 @@ namespace Andastra.Runtime.Stride.PostProcessing
 
             try
             {
-                // Strategy 1: Try loading from compiled effect files using Effect.Load()
-                // Effect.Load() searches in standard content paths for compiled .sdeffect files
+                // Strategy 1: Try loading from compiled effect files
+                // TODO: STUB - Effect.Load() doesn't exist in Stride API
+                // Effect loading would require ContentManager or programmatic shader compilation
+                // Skip direct Effect.Load() approach and use ContentManager or programmatic creation
                 StrideGraphics.Effect effectBase = null;
+                /*
                 try
                 {
+                    // Effect.Load() doesn't exist - would need ContentManager.Load<Effect>() instead
                     effectBase = StrideGraphics.Effect.Load(_graphicsDevice, "ColorGradingEffect");
                     if (effectBase != null)
                     {
@@ -448,9 +414,14 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 {
                     Console.WriteLine($"[StrideColorGrading] Failed to load ColorGradingEffect from compiled file: {ex.Message}");
                 }
+                */
 
                 // Strategy 2: Try loading from ContentManager if available
+                // TODO: STUB - Services() doesn't exist on Stride GraphicsDevice
+                // ContentManager access would require proper service setup
                 // Check if GraphicsDevice has access to ContentManager through services
+                // Note: Services() method doesn't exist - commented out for now
+                /*
                 try
                 {
                     var services = _graphicsDevice.Services();
@@ -481,6 +452,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                 {
                     Console.WriteLine($"[StrideColorGrading] Failed to access ContentManager: {ex.Message}");
                 }
+                */
 
                 // Strategy 3: Create effect programmatically if loading failed
                 // For now, we'll use SpriteBatch's default rendering (no custom shaders)
@@ -869,7 +841,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     }
                     texture.SetData(StrideGraphics.CommandList, colorData);
                 }
-                else if (format == PixelFormat.R32G32B32A32_Float)
+                else if (format == StrideGraphics.PixelFormat.R32G32B32A32_Float)
                 {
                     var colorData = new Color[size];
                     for (int i = 0; i < size; i++)
@@ -879,7 +851,7 @@ namespace Andastra.Runtime.Stride.PostProcessing
                     }
                     texture.SetData(StrideGraphics.CommandList, colorData);
                 }
-                else if (format == PixelFormat.R16G16B16A16_Float)
+                else if (format == StrideGraphics.PixelFormat.R16G16B16A16_Float)
                 {
                     var colorData = new Color[size];
                     for (int i = 0; i < size; i++)
