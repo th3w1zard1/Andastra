@@ -2306,6 +2306,27 @@ namespace HolocronToolset.Editors
         }
 
         /// <summary>
+        /// Selects the specified DLGStandardItem in the tree view.
+        /// </summary>
+        /// <param name="item">The DLGStandardItem to select.</param>
+        public void SelectTreeItem(DLGStandardItem item)
+        {
+            if (_dialogTree == null || _dialogTree.ItemsSource == null || item == null)
+            {
+                return;
+            }
+
+            // Recursively search for the tree view item matching the DLGStandardItem
+            TreeViewItem foundItem = FindTreeViewItem(_dialogTree.ItemsSource as System.Collections.IEnumerable, item);
+            if (foundItem != null)
+            {
+                _dialogTree.SelectedItem = foundItem;
+                // Expand parent items to ensure the selected item is visible
+                ExpandParentItems(foundItem);
+            }
+        }
+
+        /// <summary>
         /// Creates a TreeViewItem from a DLGStandardItem, recursively creating children.
         /// </summary>
         private TreeViewItem CreateTreeViewItem(DLGStandardItem item)
