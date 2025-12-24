@@ -118,10 +118,4 @@
     <EmbeddedResource Remove="**\Tests\**" />
     <None Remove="**\Tests\**" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="Game\**" />
-    <Content Remove="Game\**" />
-    <EmbeddedResource Remove="Game\**" />
-    <None Remove="Game\**" />
-  </ItemGroup>
 </Project>
