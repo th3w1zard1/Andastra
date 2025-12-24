@@ -14,8 +14,7 @@
 
   <!-- Debug Configuration: Optimized for faster development builds -->
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <!-- Build only latest .NET (net8.0) for Debug to speed up development builds (unless TargetFramework is explicitly set) -->
-    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT'">net9.0</TargetFrameworks>
+    <TargetFramework>net9.0</TargetFramework>
     <OutputType Condition="'$(OS)' == 'Windows_NT'">WinExe</OutputType>
     <OutputType Condition="'$(OS)' != 'Windows_NT'">Exe</OutputType>
     <!-- Disable analyzers in Debug builds for faster compilation -->
@@ -44,35 +43,9 @@
 
   <!-- Release Configuration: Optimized, cross-platform, takes longer to build -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-    <TargetFrameworks></TargetFrameworks>
-    <!-- Helper to append without duplicate semicolons -->
-    <TargetFrameworks Condition="'$(TargetFrameworks)' != ''">
-      $([System.String]::Copy('$(TargetFrameworks)').TrimEnd(';').TrimStart(';'))
-    </TargetFrameworks>
-    <!-- Add each TFM conditionally -->
-    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '10.0.0'))">
-      $(TargetFrameworks);net10.0
-    </TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '9.0.0'))">
-      $(TargetFrameworks);net9.0
-    </TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '8.0.0'))">
-      $(TargetFrameworks);net8.0
-    </TargetFrameworks>
-    <!-- === .NET 7 SDK: include net7.0 + net6.0 (legacy support) === -->
-    <TargetFrameworks Condition="$([System.String]::new('$(NETCoreSdkVersion)').StartsWith('7.'))">
-      $(TargetFrameworks);net7.0;net6.0
-    </TargetFrameworks>
-    <!-- === .NET 6 SDK: include (legacy support) === -->
-    <TargetFrameworks Condition="$([System.String]::new('$(NETCoreSdkVersion)').StartsWith('6.'))">
-      $(TargetFrameworks);net6.0
-    </TargetFrameworks>
-    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT' AND Exists('$(MSBuildProgramFiles32)\..\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8')">
-      $(TargetFrameworks);net48
-    </TargetFrameworks>
-    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT' AND Exists('$(MSBuildProgramFiles32)\..\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2')">
-      $(TargetFrameworks);net462
-    </TargetFrameworks>
+    <TargetFrameworks>net9.0</TargetFrameworks>
+    <OutputType Condition="'$(OS)' == 'Windows_NT'">WinExe</OutputType>
+    <OutputType Condition="'$(OS)' != 'Windows_NT'">Exe</OutputType>
     <RuntimeIdentifiers>win-x86;win-x64;win-arm64;linux-x64;linux-arm64;osx-x64;osx-arm64</RuntimeIdentifiers>
     <BuildInParallel>true</BuildInParallel>
     <DebugSymbols>false</DebugSymbols>
@@ -116,7 +89,7 @@
     <PackageReference Include="Stride.Input" Version="4.2.1.2487" />
     <PackageReference Include="System.Collections.Immutable" Version="10.0.1" />
     <PackageReference Include="System.Diagnostics.EventLog" Version="10.0.1" />
-    <PackageReference Include="System.Drawing.Common" Version="10.0.1" Condition="!$(TargetFramework.StartsWith('net4'))" />
+    <PackageReference Include="System.Drawing.Common" Version="10.0.1" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="10.0.1" />
     <PackageReference Include="System.Text.Json" Version="10.0.1" />
   </ItemGroup>
