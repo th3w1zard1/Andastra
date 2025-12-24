@@ -1,9 +1,11 @@
 using System;
+using System.Runtime.InteropServices;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Audio;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Formats.WAV;
 using Stride.Audio;
+using SoundPlayState = Stride.Media.PlayState;
 
 namespace Andastra.Runtime.Stride.Audio
 {
@@ -79,7 +81,7 @@ namespace Andastra.Runtime.Stride.Audio
             get
             {
                 return _currentMusicInstance != null && 
-                       _currentMusicInstance.PlayState == PlayState.Playing;
+                       _currentMusicInstance.PlayState == SoundPlayState.Playing;
             }
         }
 
@@ -121,7 +123,7 @@ namespace Andastra.Runtime.Stride.Audio
 
             // If same music is already playing, just adjust volume
             if (_currentMusicResRef == musicResRef && _currentMusicInstance != null && 
-                _currentMusicInstance.PlayState == PlayState.Playing)
+                _currentMusicInstance.PlayState == SoundPlayState.Playing)
             {
                 Volume = volume;
                 return true;
@@ -281,7 +283,7 @@ namespace Andastra.Runtime.Stride.Audio
         /// </summary>
         public void Pause()
         {
-            if (_currentMusicInstance != null && _currentMusicInstance.PlayState == PlayState.Playing)
+            if (_currentMusicInstance != null && _currentMusicInstance.PlayState == SoundPlayState.Playing)
             {
                 _currentMusicInstance.Pause();
                 _isPaused = true;
@@ -364,7 +366,16 @@ namespace Andastra.Runtime.Stride.Audio
                 // Fill buffer with silence (zero bytes) and mark as end of stream
                 // This is a dummy source, so we always provide silence
                 byte[] silenceBuffer = new byte[bufferSizeBytes];
-                FillBuffer(silenceBuffer, bufferSizeBytes, AudioLayer.BufferType.EndOfStream);
+                GCHandle silenceHandle = GCHandle.Alloc(silenceBuffer, GCHandleType.Pinned);
+                try
+                {
+                    IntPtr bufferPtr = silenceHandle.AddrOfPinnedObject();
+                    FillBuffer(bufferPtr, bufferSizeBytes, (Stride.Audio.AudioLayer.BufferType)AudioLayer.BufferType.EndOfStream);
+                }
+                finally
+                {
+                    silenceHandle.Free();
+                }
             }
 
             /// <summary>
@@ -469,7 +480,16 @@ namespace Andastra.Runtime.Stride.Audio
                     // Fill buffer with silence (zero bytes) and mark as end of stream
                     // This is a dummy source, so we always provide silence
                     byte[] silenceBuffer = new byte[bufferSizeBytes];
-                    FillBuffer(silenceBuffer, bufferSizeBytes, AudioLayer.BufferType.EndOfStream);
+                    GCHandle silenceHandle4 = GCHandle.Alloc(silenceBuffer, GCHandleType.Pinned);
+                    try
+                    {
+                        IntPtr bufferPtr = silenceHandle4.AddrOfPinnedObject();
+                        FillBuffer(bufferPtr, bufferSizeBytes, (Stride.Audio.AudioLayer.BufferType)AudioLayer.BufferType.EndOfStream);
+                    }
+                    finally
+                    {
+                        silenceHandle4.Free();
+                    }
                 }
             }
         }
@@ -574,8 +594,17 @@ namespace Andastra.Runtime.Stride.Audio
             // Music always loops, so buffer type is always Normal
             AudioLayer.BufferType bufferType = AudioLayer.BufferType.Normal;
 
-            // Fill the buffer
-            FillBuffer(buffer, bytesToCopy, bufferType);
+            // Fill the buffer - pin the array and get pointer
+            GCHandle bufferHandle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+            try
+            {
+                IntPtr bufferPtr = bufferHandle.AddrOfPinnedObject();
+                FillBuffer(bufferPtr, bytesToCopy, (Stride.Audio.AudioLayer.BufferType)bufferType);
+            }
+            finally
+            {
+                bufferHandle.Free();
+            }
         }
     }
 }

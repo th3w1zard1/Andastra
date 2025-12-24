@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Dialogue;
 using Andastra.Runtime.Core.Interfaces;
@@ -10,15 +11,16 @@ using Andastra.Parsing.Resource;
 using Andastra.Parsing.Formats.WAV;
 using Stride.Audio;
 using Stride.Media;
+using SoundPlayState = Stride.Media.PlayState;
 
 namespace Andastra.Runtime.Stride.Audio
 {
     /// <summary>
     /// Stride implementation of IVoicePlayer for playing voice-over dialogue.
-    /// 
+    ///
     /// Loads WAV files from KOTOR installation and plays them using Stride's Audio API.
     /// Supports positional audio for 3D voice-over positioning.
-    /// 
+    ///
     /// Based on Stride API: https://doc.stride3d.net/latest/en/manual/audio/index.html
     /// SoundInstance API: https://doc.stride3d.net/latest/en/api/Stride.Audio.SoundInstance.html
     /// SoundBase API: https://doc.stride3d.net/latest/en/api/Stride.Audio.SoundBase.html
@@ -32,7 +34,7 @@ namespace Andastra.Runtime.Stride.Audio
     /// - Positional audio: Voice-over plays at speaker entity position (if SpatialAudio provided)
     /// - Playback control: Play, Stop, volume, pan, pitch
     /// - This Stride implementation uses Stride's AudioEngine and SoundInstance API
-    /// 
+    ///
     /// Implementation Notes:
     /// - Uses SoundInstance.Position (TimeSpan) to get playback position in seconds
     /// - Uses SoundInstance.PlayState to check if sound is playing
@@ -62,7 +64,7 @@ namespace Andastra.Runtime.Stride.Audio
         {
             _resourceProvider = resourceProvider ?? throw new ArgumentNullException(nameof(resourceProvider));
             _spatialAudio = spatialAudio;
-            
+
             // Initialize AudioEngine if not provided
             // Based on Stride API: AudioEngine is required for audio playback
             // https://doc.stride3d.net/latest/en/api/Stride.Audio.AudioEngine.html
@@ -87,7 +89,7 @@ namespace Andastra.Runtime.Stride.Audio
             // Based on Stride API: AudioListener is required for 3D spatial audio
             // https://doc.stride3d.net/latest/en/api/Stride.Audio.AudioListener.html
             _audioListener = audioListener ?? new AudioListener();
-            
+
             _isPlaying = false;
         }
 
@@ -174,7 +176,7 @@ namespace Andastra.Runtime.Stride.Audio
             {
                 Console.WriteLine($"[StrideVoicePlayer] Error playing voice {voResRef}: {ex.Message}");
                 Console.WriteLine($"[StrideVoicePlayer] Stack trace: {ex.StackTrace}");
-                
+
                 // Clean up on error
                 if (_currentVoiceInstance != null)
                 {
@@ -186,7 +188,7 @@ namespace Andastra.Runtime.Stride.Audio
                     catch { }
                     _currentVoiceInstance = null;
                 }
-                
+
                 _isPlaying = false;
                 onComplete?.Invoke();
             }
@@ -203,7 +205,7 @@ namespace Andastra.Runtime.Stride.Audio
         /// This method creates a SoundInstance directly from WAV PCM data using DynamicSoundSource.
         /// Based on Stride API: SoundInstance constructor with DynamicSoundSource
         /// https://doc.stride3d.net/latest/en/api/Stride.Audio.SoundInstance.html#Stride_Audio_SoundInstance__ctor_Stride_Audio_AudioEngine_Stride_Audio_AudioListener_Stride_Audio_DynamicSoundSource_System_Int32_System_Boolean_System_Boolean_System_Boolean_System_Single_Stride_Audio_HrtfEnvironment_
-        /// 
+        ///
         /// Note: DynamicSoundSource requires a SoundInstance in its constructor, creating a circular dependency.
         /// This implementation uses a two-phase initialization to work around this limitation.
         /// </remarks>
@@ -240,7 +242,7 @@ namespace Andastra.Runtime.Stride.Audio
 
                 // Create the actual DynamicSoundSource with the temporary SoundInstance
                 var dynamicSource = new VoiceWavDynamicSoundSource(_audioEngine, pcmData, wavFile.SampleRate, wavFile.Channels == 1, tempSoundInstance);
-                
+
                 // Create the actual SoundInstance with the DynamicSoundSource
                 var soundInstance = new SoundInstance(
                     _audioEngine,
@@ -253,17 +255,17 @@ namespace Andastra.Runtime.Stride.Audio
                     0.0f, // directionalFactor
                     HrtfEnvironment.Small // environment
                 );
-                
+
                 // Update the DynamicSoundSource with the actual SoundInstance
                 dynamicSource.SetSoundInstance(soundInstance);
-                
+
                 // Dispose the temporary SoundInstance
                 try
                 {
                     tempSoundInstance.Dispose();
                 }
                 catch { }
-                
+
                 return soundInstance;
             }
             catch (Exception ex)
@@ -547,14 +549,14 @@ namespace Andastra.Runtime.Stride.Audio
             {
                 // Check if playback has completed
                 // Based on Stride API: PlayState.Stopped indicates playback has finished
-                if (_currentVoiceInstance.PlayState == SoundPlayState.Stopped && _isPlaying)
+                if (_currentVoiceInstance.PlayState == PlayState.Stopped && _isPlaying)
                 {
                     _isPlaying = false;
-                    
+
                     // Invoke completion callback
                     var callback = _onCompleteCallback;
                     _onCompleteCallback = null;
-                    
+
                     // Invoke callback asynchronously to avoid blocking
                     System.Threading.Tasks.Task.Run(() =>
                     {
@@ -581,7 +583,7 @@ namespace Andastra.Runtime.Stride.Audio
         public void Dispose()
         {
             Stop();
-            
+
             if (_audioEngine != null)
             {
                 try
@@ -604,7 +606,7 @@ namespace Andastra.Runtime.Stride.Audio
     /// Based on Stride API: DynamicSoundSource abstract class
     /// https://doc.stride3d.net/latest/en/api/Stride.Audio.DynamicSoundSource.html
     /// This implementation provides a simple way to play WAV files from memory.
-    /// 
+    ///
     /// Note: DynamicSoundSource requires a SoundInstance in its constructor, creating a circular dependency.
     /// This implementation uses a two-phase initialization pattern to work around this limitation.
     /// </remarks>
@@ -690,7 +692,17 @@ namespace Andastra.Runtime.Stride.Audio
                 else
                 {
                     // End of data - fill with silence or mark as ended
-                    FillBuffer(new byte[bufferSizeBytes], bufferSizeBytes, AudioLayer.BufferType.EndOfStream);
+                    byte[] silenceBuffer = new byte[bufferSizeBytes];
+                    GCHandle silenceHandle = GCHandle.Alloc(silenceBuffer, GCHandleType.Pinned);
+                    try
+                    {
+                        IntPtr bufferPtr = silenceHandle.AddrOfPinnedObject();
+                        FillBuffer(bufferPtr, bufferSizeBytes, (Stride.Audio.AudioLayer.BufferType)AudioLayer.BufferType.EndOfStream);
+                    }
+                    finally
+                    {
+                        silenceHandle.Free();
+                    }
                     return;
                 }
             }
@@ -715,8 +727,17 @@ namespace Andastra.Runtime.Stride.Audio
                 bufferType = AudioLayer.BufferType.Normal;
             }
 
-            // Fill the buffer
-            FillBuffer(buffer, bytesToCopy, bufferType);
+            // Fill the buffer - pin the array and get pointer
+            GCHandle bufferHandle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+            try
+            {
+                IntPtr bufferPtr = bufferHandle.AddrOfPinnedObject();
+                FillBuffer(bufferPtr, bytesToCopy, (Stride.Audio.AudioLayer.BufferType)bufferType);
+            }
+            finally
+            {
+                bufferHandle.Free();
+            }
         }
     }
 }

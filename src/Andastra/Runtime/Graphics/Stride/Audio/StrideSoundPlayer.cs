@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Audio;
 using Andastra.Runtime.Graphics;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Formats.WAV;
 using Stride.Audio;
+using Stride.Media;
 
 namespace Andastra.Runtime.Stride.Audio
 {
@@ -310,7 +312,7 @@ namespace Andastra.Runtime.Stride.Audio
                 {
                     // Check if playback has completed
                     // Based on Stride API: PlayState.Stopped indicates playback has finished
-                    if (kvp.Value.PlayState == SoundPlayState.Stopped)
+                    if (kvp.Value.PlayState == PlayState.Stopped)
                     {
                         finishedSounds.Add(kvp.Key);
                     }
@@ -573,7 +575,16 @@ namespace Andastra.Runtime.Stride.Audio
                     // Fill buffer with silence (zero bytes) and mark as end of stream
                     // This is a dummy source, so we always provide silence
                     byte[] silenceBuffer = new byte[bufferSizeBytes];
-                    FillBuffer(silenceBuffer, bufferSizeBytes, AudioLayer.BufferType.EndOfStream);
+                    GCHandle silenceHandle1 = GCHandle.Alloc(silenceBuffer, GCHandleType.Pinned);
+                    try
+                    {
+                        IntPtr bufferPtr = silenceHandle1.AddrOfPinnedObject();
+                        FillBuffer(bufferPtr, bufferSizeBytes, (Stride.Audio.AudioLayer.BufferType)AudioLayer.BufferType.EndOfStream);
+                    }
+                    finally
+                    {
+                        silenceHandle1.Free();
+                    }
                 }
             }
 
@@ -612,7 +623,16 @@ namespace Andastra.Runtime.Stride.Audio
                 // Fill buffer with silence (zero bytes) and mark as end of stream
                 // This is a dummy source, so we always provide silence
                 byte[] silenceBuffer = new byte[bufferSizeBytes];
-                FillBuffer(silenceBuffer, bufferSizeBytes, AudioLayer.BufferType.EndOfStream);
+                GCHandle silenceHandle2 = GCHandle.Alloc(silenceBuffer, GCHandleType.Pinned);
+                try
+                {
+                    IntPtr bufferPtr = silenceHandle2.AddrOfPinnedObject();
+                    FillBuffer(bufferPtr, bufferSizeBytes, (Stride.Audio.AudioLayer.BufferType)AudioLayer.BufferType.EndOfStream);
+                }
+                finally
+                {
+                    silenceHandle2.Free();
+                }
             }
         }
     }
@@ -711,7 +731,17 @@ namespace Andastra.Runtime.Stride.Audio
                 else
                 {
                     // End of data - fill with silence or mark as ended
-                    FillBuffer(new byte[bufferSizeBytes], bufferSizeBytes, AudioLayer.BufferType.EndOfStream);
+                    byte[] silenceBuffer = new byte[bufferSizeBytes];
+                    GCHandle silenceHandle3 = GCHandle.Alloc(silenceBuffer, GCHandleType.Pinned);
+                    try
+                    {
+                        IntPtr bufferPtr = silenceHandle3.AddrOfPinnedObject();
+                        FillBuffer(bufferPtr, bufferSizeBytes, (Stride.Audio.AudioLayer.BufferType)AudioLayer.BufferType.EndOfStream);
+                    }
+                    finally
+                    {
+                        silenceHandle3.Free();
+                    }
                     return;
                 }
             }
@@ -736,8 +766,17 @@ namespace Andastra.Runtime.Stride.Audio
                 bufferType = AudioLayer.BufferType.Normal;
             }
 
-            // Fill the buffer
-            FillBuffer(buffer, bytesToCopy, bufferType);
+            // Fill the buffer - pin the array and get pointer
+            GCHandle bufferHandle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+            try
+            {
+                IntPtr bufferPtr = bufferHandle.AddrOfPinnedObject();
+                FillBuffer(bufferPtr, bytesToCopy, (Stride.Audio.AudioLayer.BufferType)bufferType);
+            }
+            finally
+            {
+                bufferHandle.Free();
+            }
         }
     }
 }

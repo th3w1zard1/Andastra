@@ -198,7 +198,7 @@ namespace Andastra.Runtime.Stride.Graphics
             set
             {
                 var desc = _description;
-                desc.DepthBufferFunction = ConvertCompareFunction(value);
+                desc.DepthBufferFunction = (StrideGraphics.CompareFunction)ConvertCompareFunction(value);
                 _description = desc;
             }
         }
@@ -232,7 +232,7 @@ namespace Andastra.Runtime.Stride.Graphics
             {
                 var desc = _description;
                 var frontFace = desc.FrontFace;
-                frontFace.StencilFail = ConvertStencilOperation(value);
+                frontFace.StencilFail = (StrideGraphics.StencilOperation)ConvertStencilOperation(value);
                 desc.FrontFace = frontFace;
                 _description = desc;
             }
@@ -258,7 +258,7 @@ namespace Andastra.Runtime.Stride.Graphics
             {
                 var desc = _description;
                 var frontFace = desc.FrontFace;
-                frontFace.StencilPass = ConvertStencilOperation(value);
+                frontFace.StencilPass = (StrideGraphics.StencilOperation)ConvertStencilOperation(value);
                 desc.FrontFace = frontFace;
                 _description = desc;
             }
@@ -271,7 +271,7 @@ namespace Andastra.Runtime.Stride.Graphics
             {
                 var desc = _description;
                 var frontFace = desc.FrontFace;
-                frontFace.StencilFunction = ConvertCompareFunction(value);
+                frontFace.StencilFunction = (StrideGraphics.CompareFunction)ConvertCompareFunction(value);
                 desc.FrontFace = frontFace;
                 _description = desc;
             }
@@ -294,7 +294,7 @@ namespace Andastra.Runtime.Stride.Graphics
             set
             {
                 var desc = _description;
-                desc.StencilMask = (uint)value;
+                desc.StencilMask = unchecked((uint)value);
                 _description = desc;
             }
         }
