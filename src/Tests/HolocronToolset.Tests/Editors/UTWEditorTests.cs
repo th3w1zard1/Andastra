@@ -444,23 +444,13 @@ namespace HolocronToolset.Tests.Editors
             editor.IsNoteCheckbox.IsChecked = true;
             editor.IsNoteCheckbox.SetCurrentValue(CheckBox.IsCheckedProperty, true);
 
-            // TODO:  Workaround for Avalonia headless testing limitation:
-            // In headless mode, checkbox property changes don't propagate to Build() correctly.
-            // We set the checkbox (verifying the UI works), then directly set the UTW value
-            // to test that Build() correctly serializes it. In real UI usage, the checkbox works.
+            // Checkbox binding now properly updates UTW properties automatically
+            // Verify that setting the checkbox updates the underlying UTW object
             var utwField = typeof(UTWEditor).GetField("_utw", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             UTW utw = null;
             if (utwField != null)
             {
                 utw = utwField.GetValue(editor) as UTW;
-                if (utw != null)
-                {
-                    // Set to true to simulate checkbox being checked
-                    // This works around headless testing limitation where checkbox property changes don't propagate
-                    utw.HasMapNote = true;
-                    // Verify it was set
-                    utw.HasMapNote.Should().BeTrue("UTW.HasMapNote should be true after direct setting");
-                }
             }
 
             var (data1, _) = editor.Build();
@@ -480,11 +470,7 @@ namespace HolocronToolset.Tests.Editors
             editor.IsNoteCheckbox.IsChecked = false;
             editor.IsNoteCheckbox.SetCurrentValue(CheckBox.IsCheckedProperty, false);
 
-            // TODO:  Workaround for headless limitation - directly set UTW value
-            if (utwField != null && utw != null)
-            {
-                utw.HasMapNote = false; // Simulate checkbox being set to false
-            }
+            // Checkbox binding automatically updates UTW.HasMapNote when checkbox changes
 
             var (data2, _) = editor.Build();
             var modifiedUtw2 = UTWAuto.ReadUtw(data2);
@@ -746,8 +732,8 @@ namespace HolocronToolset.Tests.Editors
                 editor.NoteEnabledCheckbox.IsChecked = true;
                 editor.NoteEnabledCheckbox.SetCurrentValue(CheckBox.IsCheckedProperty, true);
             }
-            // TODO:  Workaround for headless limitation - directly set UTW values for checkboxes AFTER setting checkboxes
-            // This ensures the UTW value is set after the checkboxes, so Build() can detect the manual setting
+            // Checkbox binding automatically updates UTW properties when checkboxes change
+            // Verify that the binding worked correctly
             var utwField = typeof(UTWEditor).GetField("_utw", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             UTW utw = null;
             if (utwField != null)
@@ -755,12 +741,9 @@ namespace HolocronToolset.Tests.Editors
                 utw = utwField.GetValue(editor) as UTW;
                 if (utw != null)
                 {
-                    // TODO:  Set to true to simulate checkbox being checked (workaround for headless limitation)
-                    utw.HasMapNote = true;
-                    utw.MapNoteEnabled = true;
-                    // Verify they were set
-                    utw.HasMapNote.Should().BeTrue("UTW.HasMapNote should be true after direct setting");
-                    utw.MapNoteEnabled.Should().BeTrue("UTW.MapNoteEnabled should be true after direct setting");
+                    // Verify checkboxes properly updated UTW properties through binding
+                    utw.HasMapNote.Should().BeTrue("UTW.HasMapNote should be true after checkbox binding");
+                    utw.MapNoteEnabled.Should().BeTrue("UTW.MapNoteEnabled should be true after checkbox binding");
                 }
             }
             if (editor.CommentsEdit != null)
@@ -857,10 +840,10 @@ namespace HolocronToolset.Tests.Editors
             // Original:     editor.ui.noteEdit.setText("Modified Map Note")
             // Original: else:
             // Original:     editor.change_note()
-            // In C#, noteEdit is a TextBox, so we use Text property
+            // In C#, noteEdit is a LocalizedStringEdit, so we use SetLocString
             if (editor.NoteEdit != null)
             {
-                editor.NoteEdit.Text = "Modified Map Note";
+                editor.NoteEdit.SetLocString(LocalizedString.FromEnglish("Modified Map Note"));
             }
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:176-180
@@ -929,18 +912,7 @@ namespace HolocronToolset.Tests.Editors
             {
                 editor.TagEdit.Text = "modified_roundtrip";
             }
-            // TODO:  Workaround for headless limitation - directly set UTW values for checkboxes
-            var utwField = typeof(UTWEditor).GetField("_utw", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            UTW utw = null;
-            if (utwField != null)
-            {
-                utw = utwField.GetValue(editor) as UTW;
-                if (utw != null)
-                {
-                    utw.HasMapNote = true;
-                    utw.MapNoteEnabled = true;
-                }
-            }
+            // Checkbox binding automatically updates UTW properties when checkboxes are set below
             // Also set checkboxes (for UI consistency, even if headless doesn't propagate)
             if (editor.IsNoteCheckbox != null)
             {
@@ -1506,17 +1478,7 @@ namespace HolocronToolset.Tests.Editors
             {
                 editor.TagEdit.Text = "modified_gff_test";
             }
-            // TODO:  Workaround for headless limitation - directly set UTW value for checkbox
-            var utwField = typeof(UTWEditor).GetField("_utw", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            UTW utw = null;
-            if (utwField != null)
-            {
-                utw = utwField.GetValue(editor) as UTW;
-                if (utw != null)
-                {
-                    utw.HasMapNote = true;
-                }
-            }
+            // Checkbox binding automatically updates UTW.HasMapNote when checkbox is set below
             // Also set checkbox (for UI consistency, even if headless doesn't propagate)
             if (editor.IsNoteCheckbox != null)
             {
@@ -1720,46 +1682,6 @@ namespace HolocronToolset.Tests.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:613-622
-        // Original: def test_utw_editor_note_change_button(qtbot, installation: HTInstallation, test_files_dir: Path):
-        [Fact]
-        public void TestUtwEditorNoteChangeButton()
-        {
-            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
-            if (string.IsNullOrEmpty(k2Path))
-            {
-                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
-            }
-
-            HTInstallation installation = null;
-            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
-            {
-                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
-            }
-
-            if (installation == null)
-            {
-                return; // Skip if no installation available
-            }
-
-            var editor = new UTWEditor(null, installation);
-
-            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:619
-            // Original: assert hasattr(editor.ui, 'noteChangeButton')
-            editor.NoteChangeButton.Should().NotBeNull("NoteChangeButton should exist");
-
-            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:622
-            // Original: assert editor.ui.noteChangeButton.receivers(editor.ui.noteChangeButton.clicked) > 0
-            // In C#, we check if the Click event has handlers by checking if it's not null
-            // The button should have a Click handler attached (set up in SetupSignals or InitializeComponent)
-            if (editor.NoteChangeButton != null)
-            {
-                // Verify the button has a Click event handler attached
-                // In Avalonia, we can't directly check event handlers, but we can verify the button exists
-                // The actual connection is verified by the button being non-null and the editor working
-                editor.NoteChangeButton.Should().NotBeNull("NoteChangeButton should have Click handler connected");
-            }
-        }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:629-655
         // Original: def test_utweditor_editor_help_dialog_opens_correct_file(qtbot, installation: HTInstallation):
@@ -1788,21 +1710,55 @@ namespace HolocronToolset.Tests.Editors
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:637
             // Original: editor._show_help_dialog("GFF-UTW.md")
             // In C#, the method is ShowHelpDialog (public, not private)
-            try
-            {
-                editor.ShowHelpDialog("GFF-UTW.md");
+            // Show the editor to ensure the application is properly initialized
+            editor.Show();
+            System.Threading.Thread.Sleep(100); // Allow UI to initialize
 
-                // In headless mode, we can't easily verify the dialog was opened and contains content
-                // The Python test checks for "Help File Not Found" in the HTML content
-                // TODO: STUB - For now, we just verify the method doesn't throw an exception
-                // TODO: STUB - A more complete test would require UI automation which is complex in headless mode
-            }
-            catch (Exception ex)
+            // Trigger help dialog with the correct file for UTWEditor
+            // Matching Python: editor._show_help_dialog("GFF-UTW.md")
+            editor.ShowHelpDialog("GFF-UTW.md");
+
+            // Find the help dialog from Application.Current.Windows
+            // Matching Python: dialogs = [child for child in editor.findChildren(EditorHelpDialog)]
+            HolocronToolset.Dialogs.EditorHelpDialog dialog = null;
+            if (Avalonia.Application.Current != null)
             {
-                // If the help file doesn't exist, that's okay - the test verifies the method works
-                // In a real scenario with the help files present, the dialog should open correctly
-                // TODO: STUB - For now, we just ensure the method doesn't crash
+                // Wait longer for the dialog to be created and added to windows (non-blocking Show() is async)
+                System.Threading.Thread.Sleep(500);
+
+                // Find EditorHelpDialog in open windows
+                var lifetime = Avalonia.Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime;
+                if (lifetime != null)
+                {
+                    foreach (var window in lifetime.Windows)
+                    {
+                        if (window is HolocronToolset.Dialogs.EditorHelpDialog helpDialog)
+                        {
+                            dialog = helpDialog;
+                            break;
+                        }
+                    }
+                }
             }
+
+            // Matching Python: assert len(dialogs) > 0, "Help dialog should be opened"
+            dialog.Should().NotBeNull("Help dialog should be opened");
+
+            // Get the HTML content
+            // Matching Python: html = dialog.text_browser.toHtml()
+            string html = dialog.HtmlContent;
+
+            // Assert that "Help File Not Found" error is NOT shown
+            // Matching Python: assert "Help File Not Found" not in html
+            html.Should().NotContain("Help File Not Found",
+                $"Help file 'GFF-UTW.md' should be found, but error was shown. HTML: {(html.Length > 500 ? html.Substring(0, 500) : html)}");
+
+            // Assert that some content is present (file was loaded successfully)
+            // Matching Python: assert len(html) > 100, "Help dialog should contain content"
+            html.Length.Should().BeGreaterThan(100, "Help dialog should contain content");
+
+            // Clean up - close the dialog
+            dialog.Close();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:657-686
@@ -1875,18 +1831,7 @@ namespace HolocronToolset.Tests.Editors
                 bool hasNote = combination.Item1;
                 bool enabled = combination.Item2;
 
-                // TODO:  Workaround for headless limitation - directly set UTW values for checkboxes
-                var utwField = typeof(UTWEditor).GetField("_utw", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                UTW utw = null;
-                if (utwField != null)
-                {
-                    utw = utwField.GetValue(editor) as UTW;
-                    if (utw != null)
-                    {
-                        utw.HasMapNote = hasNote;
-                        utw.MapNoteEnabled = enabled;
-                    }
-                }
+                // Checkbox binding automatically updates UTW properties when checkboxes are set below
                 // Also set checkboxes (for UI consistency, even if headless doesn't propagate)
                 if (editor.IsNoteCheckbox != null)
                 {

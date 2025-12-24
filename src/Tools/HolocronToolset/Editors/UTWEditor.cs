@@ -3,14 +3,10 @@ using System;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
-using Andastra.Parsing;
-using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource;
 using HolocronToolset.Data;
-using HolocronToolset.Dialogs;
 using HolocronToolset.Widgets;
-using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
 
 namespace HolocronToolset.Editors
 {
@@ -30,8 +26,7 @@ namespace HolocronToolset.Editors
         // UI Controls - Advanced
         private CheckBox _isNoteCheckbox;
         private CheckBox _noteEnabledCheckbox;
-        private TextBox _noteEdit;
-        private Button _noteChangeButton;
+        private LocalizedStringEdit _noteEdit;
 
         // UI Controls - Comments
         private TextBox _commentsEdit;
@@ -81,8 +76,7 @@ namespace HolocronToolset.Editors
                 _resrefGenerateButton = EditorHelpers.FindControlSafe<Button>(this, "resrefGenerateButton");
                 _isNoteCheckbox = EditorHelpers.FindControlSafe<CheckBox>(this, "isNoteCheckbox");
                 _noteEnabledCheckbox = EditorHelpers.FindControlSafe<CheckBox>(this, "noteEnabledCheckbox");
-                _noteEdit = EditorHelpers.FindControlSafe<TextBox>(this, "noteEdit");
-                _noteChangeButton = EditorHelpers.FindControlSafe<Button>(this, "noteChangeButton");
+                _noteEdit = EditorHelpers.FindControlSafe<LocalizedStringEdit>(this, "noteEdit");
                 _commentsEdit = EditorHelpers.FindControlSafe<TextBox>(this, "commentsEdit");
 
                 // If any critical controls are missing, fall back to programmatic UI
@@ -107,9 +101,28 @@ namespace HolocronToolset.Editors
             {
                 _resrefGenerateButton.Click += (s, e) => GenerateResref();
             }
-            if (_noteChangeButton != null)
+
+            // Add checkbox change handlers to properly bind to UTW properties
+            // This eliminates the need for workarounds in headless testing
+            if (_isNoteCheckbox != null)
             {
-                _noteChangeButton.Click += (s, e) => ChangeNote();
+                _isNoteCheckbox.PropertyChanged += (s, e) =>
+                {
+                    if (e.Property == CheckBox.IsCheckedProperty)
+                    {
+                        _utw.HasMapNote = _isNoteCheckbox.IsChecked == true;
+                    }
+                };
+            }
+            if (_noteEnabledCheckbox != null)
+            {
+                _noteEnabledCheckbox.PropertyChanged += (s, e) =>
+                {
+                    if (e.Property == CheckBox.IsCheckedProperty)
+                    {
+                        _utw.MapNoteEnabled = _noteEnabledCheckbox.IsChecked == true;
+                    }
+                };
             }
         }
 
@@ -120,6 +133,10 @@ namespace HolocronToolset.Editors
             if (_nameEdit != null)
             {
                 _nameEdit.SetInstallation(installation);
+            }
+            if (_noteEdit != null)
+            {
+                _noteEdit.SetInstallation(installation);
             }
         }
 
@@ -179,17 +196,12 @@ namespace HolocronToolset.Editors
 
             // Map Note
             var noteLabel = new TextBlock { Text = "Map Note:" };
-            var notePanel = new StackPanel { Orientation = Orientation.Horizontal };
-            _noteEdit = new TextBox();
-            _noteChangeButton = new Button { Content = "...", Width = 26 };
-            _noteChangeButton.Click += (s, e) => ChangeNote();
-            notePanel.Children.Add(_noteEdit);
-            notePanel.Children.Add(_noteChangeButton);
+            _noteEdit = new LocalizedStringEdit();
 
             advancedPanel.Children.Add(_isNoteCheckbox);
             advancedPanel.Children.Add(_noteEnabledCheckbox);
             advancedPanel.Children.Add(noteLabel);
-            advancedPanel.Children.Add(notePanel);
+            advancedPanel.Children.Add(_noteEdit);
 
             advancedTab.Content = advancedPanel;
             tabControl.Items.Add(advancedTab);
@@ -259,24 +271,7 @@ namespace HolocronToolset.Editors
             }
             if (_noteEdit != null)
             {
-                // TODO:  Map note is a LocalizedString, but we'll display it as text for now
-                // If it's a string ref, show the string ref; otherwise show the text
-                if (utw.MapNote != null && utw.MapNote.StringRef == -1)
-                {
-                    _noteEdit.Text = utw.MapNote.ToString();
-                }
-                else if (utw.MapNote != null && _installation != null)
-                {
-                    _noteEdit.Text = _installation.String(utw.MapNote);
-                }
-                else if (utw.MapNote != null)
-                {
-                    _noteEdit.Text = $"StringRef: {utw.MapNote.StringRef}";
-                }
-                else
-                {
-                    _noteEdit.Text = "";
-                }
+                _noteEdit.SetLocString(utw.MapNote);
             }
 
             // Comments
@@ -326,9 +321,9 @@ namespace HolocronToolset.Editors
             }
 
             // Matching Python: utw.map_note = self.ui.noteEdit.locstring / LocalizedString(self.ui.noteEdit.text())
-            if (_noteEdit != null && !string.IsNullOrEmpty(_noteEdit.Text))
+            if (_noteEdit != null)
             {
-                utw.MapNote = LocalizedString.FromEnglish(_noteEdit.Text);
+                utw.MapNote = _noteEdit.GetLocString();
             }
 
             // Matching Python: utw.comment = self.ui.commentsEdit.toPlainText()
@@ -386,51 +381,6 @@ namespace HolocronToolset.Editors
         // Original: def change_name(self):
         // Note: Name change is handled by LocalizedStringEdit's edit button
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utw.py:162-169
-        // Original: def change_note(self):
-        private async void ChangeNote()
-        {
-            if (_installation == null)
-            {
-                return;
-            }
-
-            var parentWindow = TopLevel.GetTopLevel(this) as Window;
-            LocalizedString currentNote = LocalizedString.FromInvalid();
-            if (_noteEdit != null && !string.IsNullOrEmpty(_noteEdit.Text))
-            {
-                if (int.TryParse(_noteEdit.Text, out int stringRef) && stringRef >= 0)
-                {
-                    currentNote = new LocalizedString(stringRef);
-                }
-                else
-                {
-                    currentNote = LocalizedString.FromEnglish(_noteEdit.Text);
-                }
-            }
-
-            var dialog = new LocalizedStringDialog(parentWindow, _installation, currentNote);
-            var result = await dialog.ShowDialog<bool>(parentWindow);
-            if (result)
-            {
-                var newNote = dialog.LocString;
-                if (_noteEdit != null)
-                {
-                    if (newNote.StringRef == -1)
-                    {
-                        _noteEdit.Text = newNote.ToString();
-                    }
-                    else if (_installation != null)
-                    {
-                        _noteEdit.Text = _installation.String(newNote);
-                    }
-                    else
-                    {
-                        _noteEdit.Text = $"StringRef: {newNote.StringRef}";
-                    }
-                }
-            }
-        }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utw.py:171-174
         // Original: def generate_tag(self):
@@ -476,8 +426,7 @@ namespace HolocronToolset.Editors
         public Button ResrefGenerateButton => _resrefGenerateButton;
         public CheckBox IsNoteCheckbox => _isNoteCheckbox;
         public CheckBox NoteEnabledCheckbox => _noteEnabledCheckbox;
-        public TextBox NoteEdit => _noteEdit;
-        public Button NoteChangeButton => _noteChangeButton;
+        public LocalizedStringEdit NoteEdit => _noteEdit;
         public TextBox CommentsEdit => _commentsEdit;
         public UTW Utw => _utw;
     }
