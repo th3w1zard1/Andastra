@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Parsing;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.TLK;
 using Andastra.Runtime.Games.Common.Journal;
-using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Aurora.Journal
 {
@@ -30,7 +28,6 @@ namespace Andastra.Runtime.Games.Aurora.Journal
     {
         private TLK _baseTlk;
         private TLK _customTlk;
-        private readonly Dictionary<string, JRL> _jrlCache;
 
         public AuroraJRLLoader(Installation installation)
             : base(installation)
@@ -82,7 +79,6 @@ namespace Andastra.Runtime.Games.Aurora.Journal
                 {
                     // Cache the loaded JRL
                     _jrlCache[jrlResRef] = jrl;
-                    base._jrlCache[jrlResRef] = jrl; // Also cache in base class (as object)
                 }
 
                 return jrl;

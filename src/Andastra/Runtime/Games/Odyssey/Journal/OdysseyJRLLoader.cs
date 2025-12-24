@@ -8,6 +8,7 @@ using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.TLK;
 using Andastra.Runtime.Games.Common.Journal;
 using JetBrains.Annotations;
+using JRL = Andastra.Parsing.Resource.Generics.JRL;
 
 namespace Andastra.Runtime.Games.Odyssey.Journal
 {
@@ -81,7 +82,6 @@ namespace Andastra.Runtime.Games.Odyssey.Journal
                 {
                     // Cache the loaded JRL
                     _jrlCache[jrlResRef] = jrl;
-                    base._jrlCache[jrlResRef] = jrl; // Also cache in base class
                 }
 
                 return jrl;

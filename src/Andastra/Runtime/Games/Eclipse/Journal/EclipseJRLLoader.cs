@@ -85,7 +85,6 @@ namespace Andastra.Runtime.Games.Eclipse.Journal
                 {
                     // Cache the loaded JRL
                     _jrlCache[jrlResRef] = jrl;
-                    base._jrlCache[jrlResRef] = jrl; // Also cache in base class (as object)
                 }
 
                 return jrl;
