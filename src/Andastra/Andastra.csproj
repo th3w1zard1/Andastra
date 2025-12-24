@@ -21,6 +21,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Eto.Forms" Version="2.10.2" />
+    <PackageReference Include="Eto.Platform.Wpf" Version="2.7.4" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
     <PackageReference Include="Eto.Platform.Gtk" Version="2.7.4" Condition="$([MSBuild]::IsOSPlatform('Linux'))" />
     <PackageReference Include="Eto.Platform.Mac" Version="2.7.4" Condition="$([MSBuild]::IsOSPlatform('OSX'))" />
     <PackageReference Include="Castle.Core" Version="5.2.1" />
