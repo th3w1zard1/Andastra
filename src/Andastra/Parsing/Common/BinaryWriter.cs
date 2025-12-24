@@ -425,7 +425,7 @@ namespace Andastra.Parsing.Common
                     tempWriter.WriteBytes(textBytes);
                 }
 
-                byte[] locstringData = ms.ToArray();
+                byte[] locstringData = tempWriter.Data();
                 WriteUInt32((uint)locstringData.Length);
                 WriteBytes(locstringData);
             }
