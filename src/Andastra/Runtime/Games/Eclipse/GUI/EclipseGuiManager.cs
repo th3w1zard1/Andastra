@@ -771,7 +771,7 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
                 Corner = selected.Corner, Edge = selected.Edge, Fill = selected.Fill,
                 FillStyle = selected.FillStyle, Dimension = selected.Dimension,
                 InnerOffset = selected.InnerOffset, InnerOffsetY = selected.InnerOffsetY,
-                Color = selected.Color, Pulsing = selected.Pulsing
+                Color = selected.Color != null ? new Color(selected.Color) : null, Pulsing = selected.Pulsing
             };
         }
 
@@ -782,7 +782,7 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
                 Corner = hilightSelected.Corner, Edge = hilightSelected.Edge, Fill = hilightSelected.Fill,
                 FillStyle = hilightSelected.FillStyle, Dimension = hilightSelected.Dimension,
                 InnerOffset = hilightSelected.InnerOffset, InnerOffsetY = hilightSelected.InnerOffsetY,
-                Color = hilightSelected.Color, Pulsing = hilightSelected.Pulsing
+                Color = hilightSelected.Color != null ? new Color(hilightSelected.Color) : null, Pulsing = hilightSelected.Pulsing
             };
         }
 

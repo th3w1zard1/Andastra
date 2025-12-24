@@ -10267,8 +10267,8 @@ namespace Andastra.Runtime.Games.Eclipse
                         if (spriteBatch is Andastra.Runtime.MonoGame.Graphics.MonoGameSpriteBatch mgSpriteBatch)
                         {
                             // Get MonoGame textures
-                            if (hdrScene.ColorTexture is Andastra.Runtime.MonoGame.Graphics.MonoGameTexture2D mgSceneTexture &&
-                                bloom.ColorTexture is Andastra.Runtime.MonoGame.Graphics.MonoGameTexture2D mgBloomTexture)
+                            if (hdrScene.ColorTexture is MonoGameTexture2D mgSceneTexture &&
+                                bloom.ColorTexture is MonoGameTexture2D mgBloomTexture)
                             {
                                 // Set shader parameter for bloom intensity
                                 EffectParameter bloomIntensityParam = bloomCompositingEffect.Parameters["BloomIntensity"];
@@ -11147,7 +11147,7 @@ technique ColorGrading
                         if (spriteBatch is Andastra.Runtime.MonoGame.Graphics.MonoGameSpriteBatch mgSpriteBatch)
                         {
                             // Get MonoGame texture
-                            if (input.ColorTexture is Andastra.Runtime.MonoGame.Graphics.MonoGameTexture2D mgInputTexture)
+                            if (input.ColorTexture is MonoGameTexture2D mgInputTexture)
                             {
                                 // Set shader parameters for color grading
                                 EffectParameter contrastParam = colorGradingEffect.Parameters["Contrast"];
