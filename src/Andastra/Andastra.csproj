@@ -1,29 +1,28 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <!-- Multi-targeting: Support both Windows (with WPF) and cross-platform builds -->
+    <!-- Builds for BOTH net9.0 (for other projects) and net9.0-windows (for Windows WPF support) -->
+    <TargetFrameworks>net9.0;net9.0-windows</TargetFrameworks>
     <LangVersion>7.3</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateGlobalUsings>false</GenerateGlobalUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-  <!-- OutputType: WinExe for Windows (no console), Exe for Linux/macOS (GUI with optional console) -->
-  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
-    <OutputType>WinExe</OutputType>
-  </PropertyGroup>
-  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux')) OR $([MSBuild]::IsOSPlatform('OSX'))">
-    <OutputType>Exe</OutputType>
+    <!-- OutputType for net9.0 (cross-platform): Exe -->
+    <OutputType Condition="'$(TargetFramework)' == 'net9.0'">Exe</OutputType>
+    <!-- OutputType for net9.0-windows: WinExe (no console window for GUI apps) -->
+    <OutputType Condition="'$(TargetFramework)' == 'net9.0-windows'">WinExe</OutputType>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>Andastra.Runtime.Game.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Eto.Forms" Version="2.10.2" />
-    <PackageReference Include="Eto.Platform.Wpf" Version="2.10.2" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
-    <PackageReference Include="Eto.Platform.Gtk" Version="2.10.2" Condition="$([MSBuild]::IsOSPlatform('Linux'))" />
-    <PackageReference Include="Eto.Platform.Mac" Version="2.10.2" Condition="$([MSBuild]::IsOSPlatform('OSX'))" />
+    <PackageReference Include="Eto.Platform.Wpf" Version="2.10.2" Condition="'$(TargetFramework)' == 'net9.0-windows'" />
+    <PackageReference Include="Eto.Platform.Gtk" Version="2.10.2" Condition="'$(TargetFramework)' == 'net9.0' AND $([MSBuild]::IsOSPlatform('Linux'))" />
+    <PackageReference Include="Eto.Platform.Mac" Version="2.10.2" Condition="'$(TargetFramework)' == 'net9.0' AND $([MSBuild]::IsOSPlatform('OSX'))" />
     <PackageReference Include="Castle.Core" Version="5.2.1" />
     <PackageReference Include="FluentAssertions" Version="8.8.0" />
     <PackageReference Include="ini-parser-netstandard" Version="2.5.3" />
