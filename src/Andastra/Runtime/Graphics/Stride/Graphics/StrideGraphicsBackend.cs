@@ -161,10 +161,7 @@ namespace Andastra.Runtime.Stride.Graphics
         {
             // InputManager is initialized in the UpdateFrame event handler
             // Check for null to handle edge case where UpdateFrame hasn't fired yet
-            if (_inputManager != null)
-            {
-                _inputManager.Update();
-            }
+            _inputManager?.Update();
 
             // Update the CommandList registry with the current frame's CommandList
             // Stride creates a new CommandList per frame for thread safety and proper resource management
