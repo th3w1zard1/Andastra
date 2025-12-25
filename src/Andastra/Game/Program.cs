@@ -33,7 +33,7 @@ namespace Andastra.Runtime.Game
     /// </remarks>
     public static class Program
     {
-        private static Andastra.Game.GUI.GameLauncher _staticLauncher;
+        public static Andastra.Game.GUI.GameLauncher _staticLauncher;
         
         [STAThread]
         public static int Main(string[] args)

@@ -326,9 +326,9 @@ namespace Andastra.Game.GUI
             // Depth Bias
             var depthBiasNumeric = new NumericUpDown
             {
-                Value = _settings.RasterizerDepthBias ?? 0.0,
+                Value = (decimal)(_settings.RasterizerDepthBias ?? 0.0),
                 FormatString = "F6",
-                Increment = 0.000001
+                Increment = 0.000001M
             };
             _controlMap["RasterizerDepthBias"] = depthBiasNumeric;
             stackPanel.Children.Add(CreateLabeledControl("Depth Bias:", depthBiasNumeric));
@@ -336,9 +336,9 @@ namespace Andastra.Game.GUI
             // Slope Scale Depth Bias
             var slopeScaleDepthBiasNumeric = new NumericUpDown
             {
-                Value = _settings.RasterizerSlopeScaleDepthBias ?? 0.0,
+                Value = (decimal)(_settings.RasterizerSlopeScaleDepthBias ?? 0.0),
                 FormatString = "F6",
-                Increment = 0.000001
+                Increment = 0.000001M
             };
             _controlMap["RasterizerSlopeScaleDepthBias"] = slopeScaleDepthBiasNumeric;
             stackPanel.Children.Add(CreateLabeledControl("Slope Scale Depth Bias:", slopeScaleDepthBiasNumeric));
@@ -675,9 +675,9 @@ namespace Andastra.Game.GUI
             // Mip Map Level of Detail Bias
             var mipMapLodBiasNumeric = new NumericUpDown
             {
-                Value = _settings.SamplerMipMapLevelOfDetailBias ?? 0.0,
+                Value = (decimal)(_settings.SamplerMipMapLevelOfDetailBias ?? 0.0),
                 FormatString = "F3",
-                Increment = 0.001
+                Increment = 0.001M
             };
             _controlMap["SamplerMipMapLevelOfDetailBias"] = mipMapLodBiasNumeric;
             stackPanel.Children.Add(CreateLabeledControl("Mip Map LOD Bias:", mipMapLodBiasNumeric));
@@ -743,9 +743,9 @@ namespace Andastra.Game.GUI
             // Specular Power
             var specularPowerNumeric = new NumericUpDown
             {
-                Value = _settings.BasicEffectSpecularPower ?? 0.0f,
-                Minimum = 0.0,
-                Maximum = 1000.0,
+                Value = (decimal)(_settings.BasicEffectSpecularPower ?? 0.0f),
+                Minimum = 0.0M,
+                Maximum = 1000.0M,
                 FormatString = "F2"
             };
             _controlMap["BasicEffectSpecularPower"] = specularPowerNumeric;
@@ -754,11 +754,11 @@ namespace Andastra.Game.GUI
             // Alpha
             var alphaNumeric = new NumericUpDown
             {
-                Value = _settings.BasicEffectAlpha ?? 1.0f,
-                Minimum = 0.0,
-                Maximum = 1.0,
+                Value = (decimal)(_settings.BasicEffectAlpha ?? 1.0f),
+                Minimum = 0.0M,
+                Maximum = 1.0M,
                 FormatString = "F3",
-                Increment = 0.001
+                Increment = 0.001M
             };
             _controlMap["BasicEffectAlpha"] = alphaNumeric;
             stackPanel.Children.Add(CreateLabeledControl("Alpha:", alphaNumeric));
@@ -808,11 +808,11 @@ namespace Andastra.Game.GUI
             // Doppler Factor
             var dopplerFactorNumeric = new NumericUpDown
             {
-                Value = _settings.SpatialAudioDopplerFactor ?? 1.0f,
-                Minimum = 0.0,
-                Maximum = 10.0,
+                Value = (decimal)(_settings.SpatialAudioDopplerFactor ?? 1.0f),
+                Minimum = 0.0M,
+                Maximum = 10.0M,
                 FormatString = "F3",
-                Increment = 0.001
+                Increment = 0.001M
             };
             _controlMap["SpatialAudioDopplerFactor"] = dopplerFactorNumeric;
             stackPanel.Children.Add(CreateLabeledControl("Doppler Factor:", dopplerFactorNumeric, "SpatialAudioDopplerFactor"));
@@ -820,9 +820,9 @@ namespace Andastra.Game.GUI
             // Speed of Sound
             var speedOfSoundNumeric = new NumericUpDown
             {
-                Value = _settings.SpatialAudioSpeedOfSound ?? 343.0f,
-                Minimum = 1.0,
-                Maximum = 10000.0,
+                Value = (decimal)(_settings.SpatialAudioSpeedOfSound ?? 343.0f),
+                Minimum = 1.0M,
+                Maximum = 10000.0M,
                 FormatString = "F2"
             };
             _controlMap["SpatialAudioSpeedOfSound"] = speedOfSoundNumeric;
@@ -1010,11 +1010,11 @@ namespace Andastra.Game.GUI
         private Panel CreateColorVector3Layout(float x, float y, float z, string baseKey)
         {
             var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,5,*,5,Auto,5,*,5,Auto,5,*") };
-            var xNumeric = new NumericUpDown { Value = x, Minimum = 0.0, Maximum = 1.0, FormatString = "F3", Increment = 0.001 };
+            var xNumeric = new NumericUpDown { Value = (decimal)x, Minimum = 0.0M, Maximum = 1.0M, FormatString = "F3", Increment = 0.001M };
             _controlMap[$"{baseKey}X"] = xNumeric;
-            var yNumeric = new NumericUpDown { Value = y, Minimum = 0.0, Maximum = 1.0, FormatString = "F3", Increment = 0.001 };
+            var yNumeric = new NumericUpDown { Value = (decimal)y, Minimum = 0.0M, Maximum = 1.0M, FormatString = "F3", Increment = 0.001M };
             _controlMap[$"{baseKey}Y"] = yNumeric;
-            var zNumeric = new NumericUpDown { Value = z, Minimum = 0.0, Maximum = 1.0, FormatString = "F3", Increment = 0.001 };
+            var zNumeric = new NumericUpDown { Value = (decimal)z, Minimum = 0.0M, Maximum = 1.0M, FormatString = "F3", Increment = 0.001M };
             _controlMap[$"{baseKey}Z"] = zNumeric;
             
             Grid.SetColumn(new TextBlock { Text = "R:" }, 0);
@@ -1058,7 +1058,7 @@ namespace Andastra.Game.GUI
                     }
                     else if (control is NumericUpDown numericUpDown)
                     {
-                        SaveNumericSetting(key, numericUpDown.Value ?? 0);
+                        SaveNumericSetting(key, (double)(numericUpDown.Value ?? 0));
                     }
                     else if (control is CheckBox checkBox)
                     {
