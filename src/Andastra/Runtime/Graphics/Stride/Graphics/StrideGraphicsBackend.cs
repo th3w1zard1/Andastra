@@ -23,6 +23,12 @@ namespace Andastra.Runtime.Stride.Graphics
         private bool _isInitialized;
         private bool? _desiredVSyncState;
 
+        // Store settings for deferred initialization (applied when game is initialized)
+        private int _pendingWidth;
+        private int _pendingHeight;
+        private string _pendingTitle;
+        private bool _pendingFullscreen;
+
         public GraphicsBackendType BackendType => GraphicsBackendType.Stride;
 
         public IGraphicsDevice GraphicsDevice => _graphicsDevice;
@@ -53,26 +59,13 @@ namespace Andastra.Runtime.Stride.Graphics
                 return;
             }
 
-            // Stride initialization happens in the game constructor
-            // We'll set up the window properties before running
-            // Note: ClientSize may not be available in all Stride versions, will be set when window is created
-            try
-            {
-                var clientSizeProperty = _game.Window.GetType().GetProperty("ClientSize");
-                if (clientSizeProperty != null && clientSizeProperty.CanWrite)
-                {
-                    clientSizeProperty.SetValue(_game.Window, new Int2(width, height));
-                }
-            }
-            catch
-            {
-                // ClientSize property not available or not settable in this Stride version
-                Console.WriteLine("[Stride] WARNING: Could not set ClientSize, window size may not be applied correctly");
-            }
-
-            _game.Window.Title = title;
-            _game.Window.IsFullscreen = fullscreen;
-            _game.Window.IsMouseVisible = true;
+            // Store settings for deferred initialization
+            // Based on Stride API: Window is not available until Game.Run() is called
+            // Settings will be applied in the Initialized event handler
+            _pendingWidth = width;
+            _pendingHeight = height;
+            _pendingTitle = title;
+            _pendingFullscreen = fullscreen;
 
             // Initialize graphics device, content manager, window, and input after game starts
             // These will be set up in the Run method when the game is actually running
@@ -86,31 +79,58 @@ namespace Andastra.Runtime.Stride.Graphics
                 throw new InvalidOperationException("Backend must be initialized before running.");
             }
 
-            // Initialize graphics components when game starts
-            if (_graphicsDevice == null)
+            // Hook into Initialized event to create wrapper objects and apply settings after GraphicsDevice is available
+            // Based on Stride API: Game.Initialize() is called internally after Run() starts
+            _game.Initialized += (sender, e) =>
             {
-                // In Stride, CommandList is obtained from Game.GraphicsContext.CommandList per-frame
-                // Pass null initially - CommandList will be registered per-frame in BeginFrame()
-                // Based on Stride Graphics API: https://doc.stride3d.net/latest/en/manual/graphics/
-                // CommandList from Game.GraphicsContext.CommandList is used for immediate rendering operations
-                StrideGraphics.CommandList commandList = null;
-
-                _graphicsDevice = new StrideGraphicsDevice(_game.GraphicsDevice, commandList);
-                _contentManager = new StrideContentManager(_game.Content, commandList);
-                _window = new StrideWindow(_game.Window);
-                _inputManager = new StrideInputManager(_game.Input);
-
-                // CommandList registration is now handled per-frame in BeginFrame()
-                // This ensures thread safety and proper resource management in Stride 4.x
-
-                // Apply VSync state if it was set before graphics device was initialized
-                // Based on swkotor2.exe: VSync controlled via DirectX Present parameters (PresentationInterval)
-                // Stride equivalent: GraphicsDevice.Presenter.VSyncMode
-                if (_desiredVSyncState.HasValue)
+                // Apply deferred window settings now that Window is available
+                if (_game.Window != null)
                 {
-                    ApplyVSyncState(_desiredVSyncState.Value);
+                    try
+                    {
+                        var clientSizeProperty = _game.Window.GetType().GetProperty("ClientSize");
+                        if (clientSizeProperty != null && clientSizeProperty.CanWrite)
+                        {
+                            clientSizeProperty.SetValue(_game.Window, new Int2(_pendingWidth, _pendingHeight));
+                        }
+                    }
+                    catch
+                    {
+                        // ClientSize property not available or not settable in this Stride version
+                        Console.WriteLine("[Stride] WARNING: Could not set ClientSize, window size may not be applied correctly");
+                    }
+
+                    _game.Window.Title = _pendingTitle;
+                    _game.Window.IsFullscreen = _pendingFullscreen;
+                    _game.Window.IsMouseVisible = true;
                 }
-            }
+
+                // Initialize graphics components now that GraphicsDevice, Content, and Window are available
+                if (_graphicsDevice == null)
+                {
+                    // In Stride, CommandList is obtained from Game.GraphicsContext.CommandList per-frame
+                    // Pass null initially - CommandList will be registered per-frame in BeginFrame()
+                    // Based on Stride Graphics API: https://doc.stride3d.net/latest/en/manual/graphics/
+                    // CommandList from Game.GraphicsContext.CommandList is used for immediate rendering operations
+                    StrideGraphics.CommandList commandList = null;
+
+                    _graphicsDevice = new StrideGraphicsDevice(_game.GraphicsDevice, commandList);
+                    _contentManager = new StrideContentManager(_game.Content, commandList);
+                    _window = new StrideWindow(_game.Window);
+                    _inputManager = new StrideInputManager(_game.Input);
+
+                    // CommandList registration is now handled per-frame in BeginFrame()
+                    // This ensures thread safety and proper resource management in Stride 4.x
+
+                    // Apply VSync state if it was set before graphics device was initialized
+                    // Based on swkotor2.exe: VSync controlled via DirectX Present parameters (PresentationInterval)
+                    // Stride equivalent: GraphicsDevice.Presenter.VSyncMode
+                    if (_desiredVSyncState.HasValue)
+                    {
+                        ApplyVSyncState(_desiredVSyncState.Value);
+                    }
+                }
+            };
 
             // Stride uses a different game loop pattern
             // We'll need to hook into the game's update and draw callbacks
