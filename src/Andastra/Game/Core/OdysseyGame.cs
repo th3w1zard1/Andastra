@@ -92,6 +92,12 @@ namespace Andastra.Runtime.Game.Core
                 ? "Star Wars: Knights of the Old Republic"
                 : "Star Wars: Knights of the Old Republic II - The Sith Lords";
 
+            // Set game path before initialization so content manager can use it
+            if (_graphicsBackend is Andastra.Runtime.Graphics.Common.Backends.OdysseyGraphicsBackend odysseyBackend)
+            {
+                odysseyBackend.SetGamePath(_settings.GamePath);
+            }
+
             _graphicsBackend.Initialize(
                 _settings.Width,
                 _settings.Height,

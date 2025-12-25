@@ -63,6 +63,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         protected int _width;
         protected int _height;
         protected string _title;
+        protected string _gamePath; // Game installation directory path
         protected bool _isFullscreen;
         protected bool _isExiting;
         protected bool _isRunning;
@@ -658,6 +659,22 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         public bool SupportsVSync => true;
         
         /// <summary>
+        /// Sets the game installation directory path for content loading.
+        /// Should be called before or after Initialize().
+        /// </summary>
+        /// <param name="gamePath">Path to the game installation directory.</param>
+        public void SetGamePath(string gamePath)
+        {
+            _gamePath = gamePath ?? string.Empty;
+            
+            // Update content manager if already initialized
+            if (_odysseyContentManager != null)
+            {
+                _odysseyContentManager.RootDirectory = _gamePath;
+            }
+        }
+        
+        /// <summary>
         /// Initializes the graphics backend.
         /// Based on swkotor.exe: FUN_0044dab0 @ 0x0044dab0
         /// Based on swkotor2.exe: FUN_00461c50 @ 0x00461c50
@@ -689,7 +706,9 @@ namespace Andastra.Runtime.Graphics.Common.Backends
             
             // Create wrapper objects
             _odysseyGraphicsDevice = new OdysseyGraphicsDevice(this, _glContext, _glDevice, _windowHandle, _width, _height);
-            _odysseyContentManager = new OdysseyContentManager(_title);
+            // Initialize content manager with game path (if available) or empty string
+            // The content manager can work without a root directory if a resource provider is set later
+            _odysseyContentManager = new OdysseyContentManager(_gamePath ?? string.Empty);
             _odysseyWindow = new OdysseyWindow(_windowHandle, _title, _width, _height, _isFullscreen);
             _odysseyInputManager = new OdysseyInputManager();
             
