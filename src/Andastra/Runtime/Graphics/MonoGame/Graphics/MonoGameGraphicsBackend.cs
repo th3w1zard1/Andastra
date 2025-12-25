@@ -61,12 +61,8 @@ namespace Andastra.Runtime.MonoGame.Graphics
             _game.IsMouseVisible = true;
 
             // Note: Game.Initialize() is protected, it is called internally when Game.Run() is invoked
-            // We just need to ensure the graphics device manager is properly configured
-
-            _graphicsDevice = new MonoGameGraphicsDevice(_game.GraphicsDevice);
-            _contentManager = new MonoGameContentManager(_game.Content);
-            _window = new MonoGameWindow(_game.Window);
-            _inputManager = new MonoGameInputManager();
+            // GraphicsDevice, Content, and Window are not available until Game.Run() is called
+            // We'll create wrapper objects in the Run() method after the game is initialized
 
             _isInitialized = true;
         }
@@ -78,38 +74,49 @@ namespace Andastra.Runtime.MonoGame.Graphics
                 throw new InvalidOperationException("Backend must be initialized before running.");
             }
 
-            var gameTime = new GameTime();
-            var totalTime = TimeSpan.Zero;
-            var lastTime = DateTime.Now;
+            // Store callbacks for use in event handlers
+            Action<float> storedUpdateAction = updateAction;
+            Action storedDrawAction = drawAction;
 
-            // Note: Game.IsExiting is not a public property in standard MonoGame
-            // We track exit state via a flag set when Exit() is called
-            while (!_isExiting)
+            // Hook into MonoGame's Update event
+            // Based on MonoGame API: Game.Update event is called every frame before Draw
+            _game.Update += (sender, e) =>
             {
-                var currentTime = DateTime.Now;
-                var deltaTime = (float)(currentTime - lastTime).TotalSeconds;
-                lastTime = currentTime;
-
-                totalTime = totalTime.Add(TimeSpan.FromSeconds(deltaTime));
-                gameTime.ElapsedGameTime = TimeSpan.FromSeconds(deltaTime);
-                gameTime.TotalGameTime = totalTime;
-
-                _game.Tick();
+                // Initialize wrapper objects on first Update (after Game.Initialize() has been called)
+                if (_graphicsDevice == null && _game.GraphicsDevice != null)
+                {
+                    _graphicsDevice = new MonoGameGraphicsDevice(_game.GraphicsDevice);
+                    _contentManager = new MonoGameContentManager(_game.Content);
+                    _window = new MonoGameWindow(_game.Window);
+                    _inputManager = new MonoGameInputManager();
+                }
 
                 BeginFrame();
 
-                if (updateAction != null)
+                if (storedUpdateAction != null)
                 {
-                    updateAction(deltaTime);
+                    // Use GameTime from MonoGame's Update event for accurate delta time
+                    float deltaTime = (float)e.ElapsedGameTime.TotalSeconds;
+                    storedUpdateAction(deltaTime);
                 }
+            };
 
-                if (drawAction != null)
+            // Hook into MonoGame's Draw event
+            // Based on MonoGame API: Game.Draw event is called every frame after Update
+            _game.Draw += (sender, e) =>
+            {
+                if (storedDrawAction != null)
                 {
-                    drawAction();
+                    storedDrawAction();
                 }
 
                 EndFrame();
-            }
+            };
+
+            // Run the game - this creates the window, shows it, and starts the game loop
+            // Based on MonoGame API: Game.Run() blocks until the game exits
+            // This is what actually creates and displays the game window
+            _game.Run();
         }
 
         public void Exit()
