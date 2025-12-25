@@ -69,8 +69,11 @@ namespace Andastra.Runtime.Game.Core
                 return;
             }
 
-            // Create world instance
-            _world = new World();
+            // Create engine-specific time manager
+            var timeManager = new OdysseyTimeManager();
+
+            // Create world instance with engine-specific time manager
+            _world = new World(timeManager);
 
             // Create NCS VM for script execution
             _vm = new NcsVm();
