@@ -172,9 +172,15 @@ namespace Andastra.Runtime.Stride.Graphics
             var commandList = ImmediateContext;
             if (commandList != null)
             {
-                var targetTexture = _currentRenderTarget?.RenderTarget;
-                var strideColor = new Color4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
-                commandList.Clear(targetTexture, strideColor);
+                // Get the target texture - use current render target if set, otherwise use backbuffer
+                // Stride's CommandList.Clear() requires a non-null renderTarget parameter
+                // Based on Stride Graphics API: Presenter.BackBuffer provides the backbuffer texture
+                var targetTexture = (_currentRenderTarget?.RenderTarget) ?? (_device.Presenter?.BackBuffer);
+                if (targetTexture != null)
+                {
+                    var strideColor = new Color4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
+                    commandList.Clear(targetTexture, strideColor);
+                }
             }
         }
 
@@ -186,34 +192,45 @@ namespace Andastra.Runtime.Stride.Graphics
             var commandList = ImmediateContext;
             if (commandList != null)
             {
+                // Get the target texture - use current render target if set, otherwise use backbuffer
+                // Stride's CommandList.Clear() requires a non-null renderTarget parameter
                 var targetTexture = _currentRenderTarget?.RenderTarget;
-                var depthStencil = _currentRenderTarget?.DepthStencilBuffer;
-                // Use reflection to call Clear with depth parameter since the exact signature may vary
-                var clearMethod = typeof(StrideGraphics.CommandList).GetMethod("Clear",
-                    BindingFlags.Public | BindingFlags.Instance,
-                    null,
-                    new[] { typeof(StrideGraphics.Texture), typeof(Color4?), typeof(StrideGraphics.DepthStencilClearOptions?), typeof(float), typeof(byte) },
-                    null);
-                if (clearMethod != null)
+                if (targetTexture == null)
                 {
-                    // Get the enum value using reflection since the exact name may vary
-                    var enumValues = Enum.GetValues(typeof(StrideGraphics.DepthStencilClearOptions));
-                    StrideGraphics.DepthStencilClearOptions? depthOption = null;
-                    foreach (var val in enumValues)
+                    // No render target set, use the backbuffer
+                    targetTexture = _device.Presenter?.BackBuffer;
+                }
+
+                if (targetTexture != null)
+                {
+                    var depthStencil = _currentRenderTarget?.DepthStencilBuffer;
+                    // Use reflection to call Clear with depth parameter since the exact signature may vary
+                    var clearMethod = typeof(StrideGraphics.CommandList).GetMethod("Clear",
+                        BindingFlags.Public | BindingFlags.Instance,
+                        null,
+                        new[] { typeof(StrideGraphics.Texture), typeof(Color4?), typeof(StrideGraphics.DepthStencilClearOptions?), typeof(float), typeof(byte) },
+                        null);
+                    if (clearMethod != null)
                     {
-                        var str = val.ToString();
-                        if (str.Contains("Depth") && !str.Contains("Stencil"))
+                        // Get the enum value using reflection since the exact name may vary
+                        var enumValues = Enum.GetValues(typeof(StrideGraphics.DepthStencilClearOptions));
+                        StrideGraphics.DepthStencilClearOptions? depthOption = null;
+                        foreach (var val in enumValues)
                         {
-                            depthOption = (StrideGraphics.DepthStencilClearOptions)val;
-                            break;
+                            var str = val.ToString();
+                            if (str.Contains("Depth") && !str.Contains("Stencil"))
+                            {
+                                depthOption = (StrideGraphics.DepthStencilClearOptions)val;
+                                break;
+                            }
                         }
+                        if (!depthOption.HasValue)
+                        {
+                            // Fallback: use first enum value or cast 1
+                            depthOption = (StrideGraphics.DepthStencilClearOptions)1; // Common value for depth-only clear
+                        }
+                        clearMethod.Invoke(commandList, new object[] { targetTexture, null, depthOption, depth, (byte)0 });
                     }
-                    if (!depthOption.HasValue)
-                    {
-                        // Fallback: use first enum value or cast 1
-                        depthOption = (StrideGraphics.DepthStencilClearOptions)1; // Common value for depth-only clear
-                    }
-                    clearMethod.Invoke(commandList, new object[] { targetTexture, null, depthOption, depth, (byte)0 });
                 }
             }
         }
@@ -226,34 +243,45 @@ namespace Andastra.Runtime.Stride.Graphics
             var commandList = ImmediateContext;
             if (commandList != null)
             {
+                // Get the target texture - use current render target if set, otherwise use backbuffer
+                // Stride's CommandList.Clear() requires a non-null renderTarget parameter
                 var targetTexture = _currentRenderTarget?.RenderTarget;
-                var depthStencil = _currentRenderTarget?.DepthStencilBuffer;
-                // Use reflection to call Clear with stencil parameter since the exact signature may vary
-                var clearMethod = typeof(StrideGraphics.CommandList).GetMethod("Clear",
-                    BindingFlags.Public | BindingFlags.Instance,
-                    null,
-                    new[] { typeof(StrideGraphics.Texture), typeof(Color4?), typeof(StrideGraphics.DepthStencilClearOptions?), typeof(float), typeof(byte) },
-                    null);
-                if (clearMethod != null)
+                if (targetTexture == null)
                 {
-                    // Get the enum value using reflection since the exact name may vary
-                    var enumValues = Enum.GetValues(typeof(StrideGraphics.DepthStencilClearOptions));
-                    StrideGraphics.DepthStencilClearOptions? stencilOption = null;
-                    foreach (var val in enumValues)
+                    // No render target set, use the backbuffer
+                    targetTexture = _device.Presenter?.BackBuffer;
+                }
+
+                if (targetTexture != null)
+                {
+                    var depthStencil = _currentRenderTarget?.DepthStencilBuffer;
+                    // Use reflection to call Clear with stencil parameter since the exact signature may vary
+                    var clearMethod = typeof(StrideGraphics.CommandList).GetMethod("Clear",
+                        BindingFlags.Public | BindingFlags.Instance,
+                        null,
+                        new[] { typeof(StrideGraphics.Texture), typeof(Color4?), typeof(StrideGraphics.DepthStencilClearOptions?), typeof(float), typeof(byte) },
+                        null);
+                    if (clearMethod != null)
                     {
-                        var str = val.ToString();
-                        if (str.Contains("Stencil") && !str.Contains("Depth"))
+                        // Get the enum value using reflection since the exact name may vary
+                        var enumValues = Enum.GetValues(typeof(StrideGraphics.DepthStencilClearOptions));
+                        StrideGraphics.DepthStencilClearOptions? stencilOption = null;
+                        foreach (var val in enumValues)
                         {
-                            stencilOption = (StrideGraphics.DepthStencilClearOptions)val;
-                            break;
+                            var str = val.ToString();
+                            if (str.Contains("Stencil") && !str.Contains("Depth"))
+                            {
+                                stencilOption = (StrideGraphics.DepthStencilClearOptions)val;
+                                break;
+                            }
                         }
+                        if (!stencilOption.HasValue)
+                        {
+                            // Fallback: use first enum value or cast 2
+                            stencilOption = (StrideGraphics.DepthStencilClearOptions)2; // Common value for stencil-only clear
+                        }
+                        clearMethod.Invoke(commandList, new object[] { targetTexture, null, stencilOption, 1.0f, (byte)stencil });
                     }
-                    if (!stencilOption.HasValue)
-                    {
-                        // Fallback: use first enum value or cast 2
-                        stencilOption = (StrideGraphics.DepthStencilClearOptions)2; // Common value for stencil-only clear
-                    }
-                    clearMethod.Invoke(commandList, new object[] { targetTexture, null, stencilOption, 1.0f, (byte)stencil });
                 }
             }
         }
