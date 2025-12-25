@@ -108,7 +108,18 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public void Dispose()
         {
-            _contentManager?.Dispose();
+            // Stride ContentManager doesn't implement IDisposable - it's managed by the Game instance
+            // Call Unload() to unload all assets, which is the appropriate cleanup method
+            // Based on Stride Engine API: ContentManager is managed by Game and doesn't need explicit disposal
+            // Unload() releases all loaded assets and is the standard cleanup method
+            try
+            {
+                Unload();
+            }
+            catch
+            {
+                // Ignore exceptions during disposal - ContentManager may already be disposed by Game
+            }
         }
     }
 }
