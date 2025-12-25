@@ -72,10 +72,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Eto.Forms" Version="2.10.2" />
-    <PackageReference Include="Eto.Platform.Windows" Version="2.10.2" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
-    <PackageReference Include="Eto.Platform.Gtk" Version="2.10.2" Condition="$([MSBuild]::IsOSPlatform('Linux'))" />
-    <PackageReference Include="Eto.Platform.Mac" Version="2.10.2" Condition="$([MSBuild]::IsOSPlatform('OSX'))" />
+    <PackageReference Include="Avalonia" Version="11.2.2" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.2.2" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.2" />
+    <PackageReference Include="Avalonia.Diagnostics" Version="11.2.2" />
     <PackageReference Include="Myra" Version="1.5.10" />
     <PackageReference Include="ini-parser-netstandard" Version="2.5.3" />
     <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
