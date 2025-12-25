@@ -77,15 +77,20 @@ namespace Andastra.Runtime.Core.Entities
         public const uint ModuleObjectId = 0x7F000002;
         private IModule _registeredModule;
 
-        public World()
+        public World(ITimeManager timeManager)
         {
+            if (timeManager == null)
+            {
+                throw new ArgumentNullException("timeManager");
+            }
+
             _entitiesById = new Dictionary<uint, IEntity>();
             _areasById = new Dictionary<uint, IArea>();
             _entitiesByTag = new Dictionary<string, List<IEntity>>(TagComparer);
             _entitiesByType = new Dictionary<ObjectType, List<IEntity>>();
             _allEntities = new List<IEntity>();
             _areaIds = new Dictionary<IArea, uint>();
-            TimeManager = new TimeManager();
+            TimeManager = timeManager;
             EventBus = new EventBus();
             DelayScheduler = new DelayScheduler();
             CombatSystem = new CombatSystem(this);
