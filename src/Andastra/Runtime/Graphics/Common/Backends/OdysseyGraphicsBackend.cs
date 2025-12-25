@@ -1,5 +1,9 @@
 using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Threading;
+using Andastra.Runtime.Graphics;
+using Andastra.Runtime.Graphics.Common.Backends.Odyssey;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Rendering;
@@ -44,8 +48,64 @@ namespace Andastra.Runtime.Graphics.Common.Backends
     ///     - Kotor1GraphicsBackend (swkotor.exe: 0x0044dab0, 0x00427c90, 0x00426cc0) - KOTOR1-specific
     ///     - Kotor2GraphicsBackend (swkotor2.exe: 0x00461c50, 0x0042a100, 0x00462560) - KOTOR2-specific
     /// </remarks>
-    public abstract class OdysseyGraphicsBackend : BaseOriginalEngineGraphicsBackend
+    public abstract class OdysseyGraphicsBackend : BaseOriginalEngineGraphicsBackend, IGraphicsBackend
     {
+        #region IGraphicsBackend Implementation Fields
+        
+        // IGraphicsBackend implementation objects
+        protected OdysseyGraphicsDevice _odysseyGraphicsDevice;
+        protected OdysseyContentManager _odysseyContentManager;
+        protected OdysseyWindow _odysseyWindow;
+        protected OdysseyInputManager _odysseyInputManager;
+        
+        // Window and rendering state
+        protected IntPtr _windowHandle;
+        protected int _width;
+        protected int _height;
+        protected string _title;
+        protected bool _isFullscreen;
+        protected bool _isExiting;
+        protected bool _isRunning;
+        protected bool _vsyncEnabled = true;
+        
+        // Game loop timing
+        protected Stopwatch _gameTimer;
+        protected long _previousTicks;
+        protected float _targetFrameTime = 1.0f / 60.0f; // 60 FPS target
+        
+        // Windows message loop
+        [DllImport("user32.dll")]
+        private static extern bool PeekMessageA(out MSG lpMsg, IntPtr hWnd, uint wMsgFilterMin, uint wMsgFilterMax, uint wRemoveMsg);
+        
+        [DllImport("user32.dll")]
+        private static extern bool TranslateMessage(ref MSG lpMsg);
+        
+        [DllImport("user32.dll")]
+        private static extern IntPtr DispatchMessageA(ref MSG lpMsg);
+        
+        [DllImport("user32.dll")]
+        private static extern void PostQuitMessage(int nExitCode);
+        
+        [DllImport("gdi32.dll")]
+        private static extern bool SwapBuffers(IntPtr hdc);
+        
+        [StructLayout(LayoutKind.Sequential)]
+        private struct MSG
+        {
+            public IntPtr hwnd;
+            public uint message;
+            public IntPtr wParam;
+            public IntPtr lParam;
+            public uint time;
+            public int pt_x;
+            public int pt_y;
+        }
+        
+        private const uint PM_REMOVE = 0x0001;
+        private const uint WM_QUIT = 0x0012;
+        
+        #endregion
+        
         protected override string GetEngineName() => "Odyssey";
 
         protected override bool DetermineGraphicsApi()
@@ -558,6 +618,341 @@ namespace Andastra.Runtime.Graphics.Common.Backends
             return IntPtr.Zero;
         }
 
+        #endregion
+
+        #region IGraphicsBackend Implementation
+        
+        /// <summary>
+        /// Gets the backend type.
+        /// </summary>
+        public new GraphicsBackendType BackendType => GraphicsBackendType.OdysseyEngine;
+        
+        /// <summary>
+        /// Gets whether the graphics backend has been initialized.
+        /// </summary>
+        public new bool IsInitialized => _initialized;
+        
+        /// <summary>
+        /// Gets the graphics device.
+        /// </summary>
+        public IGraphicsDevice GraphicsDevice => _odysseyGraphicsDevice;
+        
+        /// <summary>
+        /// Gets the content manager for loading assets.
+        /// </summary>
+        public IContentManager ContentManager => _odysseyContentManager;
+        
+        /// <summary>
+        /// Gets the window manager.
+        /// </summary>
+        public IWindow Window => _odysseyWindow;
+        
+        /// <summary>
+        /// Gets the input manager.
+        /// </summary>
+        public IInputManager InputManager => _odysseyInputManager;
+        
+        /// <summary>
+        /// Gets whether the graphics backend supports VSync.
+        /// </summary>
+        public bool SupportsVSync => true;
+        
+        /// <summary>
+        /// Initializes the graphics backend.
+        /// Based on swkotor.exe: FUN_0044dab0 @ 0x0044dab0
+        /// Based on swkotor2.exe: FUN_00461c50 @ 0x00461c50
+        /// </summary>
+        /// <param name="width">Initial window width.</param>
+        /// <param name="height">Initial window height.</param>
+        /// <param name="title">Window title.</param>
+        /// <param name="fullscreen">Whether to start in fullscreen mode.</param>
+        public void Initialize(int width, int height, string title, bool fullscreen = false)
+        {
+            if (_initialized)
+            {
+                return;
+            }
+            
+            _width = width;
+            _height = height;
+            _title = title ?? "KOTOR";
+            _isFullscreen = fullscreen;
+            
+            Console.WriteLine($"[OdysseyGraphicsBackend] Initializing: {_width}x{_height}, fullscreen={_isFullscreen}");
+            
+            // Create the window and OpenGL context
+            // This is implemented by derived classes (Kotor1/Kotor2GraphicsBackend)
+            if (!CreateOdysseyWindowAndContext())
+            {
+                throw new InvalidOperationException("Failed to create Odyssey window and OpenGL context");
+            }
+            
+            // Create wrapper objects
+            _odysseyGraphicsDevice = new OdysseyGraphicsDevice(this, _glContext, _glDevice, _windowHandle, _width, _height);
+            _odysseyContentManager = new OdysseyContentManager(_title);
+            _odysseyWindow = new OdysseyWindow(_windowHandle, _title, _width, _height, _isFullscreen);
+            _odysseyInputManager = new OdysseyInputManager();
+            
+            _initialized = true;
+            
+            Console.WriteLine($"[OdysseyGraphicsBackend] Initialized successfully");
+        }
+        
+        /// <summary>
+        /// Creates the Odyssey window and OpenGL context.
+        /// Override in derived classes for game-specific initialization.
+        /// </summary>
+        protected virtual bool CreateOdysseyWindowAndContext()
+        {
+            // Default implementation - derived classes override this
+            return CreateOdysseyOpenGLContext(_windowHandle, _width, _height, _isFullscreen, _refreshRate);
+        }
+        
+        /// <summary>
+        /// Runs the game loop (blocks until exit).
+        /// Based on swkotor.exe/swkotor2.exe: Main game loop with PeekMessageA/GetMessageA
+        /// </summary>
+        /// <param name="updateAction">Action called each frame for game logic update.</param>
+        /// <param name="drawAction">Action called each frame for rendering.</param>
+        public void Run(Action<float> updateAction, Action drawAction)
+        {
+            if (!_initialized)
+            {
+                throw new InvalidOperationException("Backend must be initialized before running.");
+            }
+            
+            _isRunning = true;
+            _isExiting = false;
+            _gameTimer = new Stopwatch();
+            _gameTimer.Start();
+            _previousTicks = _gameTimer.ElapsedTicks;
+            
+            Console.WriteLine("[OdysseyGraphicsBackend] Starting game loop");
+            
+            // Main game loop - matches swkotor.exe/swkotor2.exe message loop pattern
+            MSG msg = new MSG();
+            while (!_isExiting)
+            {
+                // Process Windows messages
+                while (PeekMessageA(out msg, IntPtr.Zero, 0, 0, PM_REMOVE))
+                {
+                    if (msg.message == WM_QUIT)
+                    {
+                        _isExiting = true;
+                        break;
+                    }
+                    
+                    TranslateMessage(ref msg);
+                    DispatchMessageA(ref msg);
+                }
+                
+                if (_isExiting)
+                {
+                    break;
+                }
+                
+                // Calculate delta time
+                long currentTicks = _gameTimer.ElapsedTicks;
+                float deltaTime = (float)(currentTicks - _previousTicks) / Stopwatch.Frequency;
+                _previousTicks = currentTicks;
+                
+                // Begin frame
+                BeginFrame();
+                
+                // Update game logic
+                if (updateAction != null)
+                {
+                    try
+                    {
+                        updateAction(deltaTime);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[OdysseyGraphicsBackend] Update error: {ex.Message}");
+                    }
+                }
+                
+                // Draw
+                if (drawAction != null)
+                {
+                    try
+                    {
+                        drawAction();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[OdysseyGraphicsBackend] Draw error: {ex.Message}");
+                    }
+                }
+                
+                // End frame and present
+                EndFrame();
+                
+                // Frame rate limiting
+                if (_vsyncEnabled)
+                {
+                    // VSync handles frame timing
+                }
+                else
+                {
+                    // Manual frame limiting
+                    float frameTime = (float)(_gameTimer.ElapsedTicks - currentTicks) / Stopwatch.Frequency;
+                    if (frameTime < _targetFrameTime)
+                    {
+                        int sleepMs = (int)((_targetFrameTime - frameTime) * 1000);
+                        if (sleepMs > 0)
+                        {
+                            Thread.Sleep(sleepMs);
+                        }
+                    }
+                }
+            }
+            
+            _isRunning = false;
+            Console.WriteLine("[OdysseyGraphicsBackend] Game loop ended");
+        }
+        
+        /// <summary>
+        /// Exits the game loop.
+        /// </summary>
+        public void Exit()
+        {
+            Console.WriteLine("[OdysseyGraphicsBackend] Exit requested");
+            _isExiting = true;
+            
+            if (_windowHandle != IntPtr.Zero)
+            {
+                PostQuitMessage(0);
+            }
+        }
+        
+        /// <summary>
+        /// Begins a new frame.
+        /// </summary>
+        public new void BeginFrame()
+        {
+            base.BeginFrame();
+            
+            // Update input
+            if (_odysseyInputManager != null)
+            {
+                _odysseyInputManager.Update();
+            }
+        }
+        
+        /// <summary>
+        /// Ends the current frame and presents to screen.
+        /// Based on swkotor.exe/swkotor2.exe: SwapBuffers(hdc)
+        /// </summary>
+        public new void EndFrame()
+        {
+            base.EndFrame();
+            
+            // Swap buffers to present the frame
+            if (_glDevice != IntPtr.Zero)
+            {
+                SwapBuffers(_glDevice);
+            }
+        }
+        
+        /// <summary>
+        /// Creates a room mesh renderer.
+        /// </summary>
+        public IRoomMeshRenderer CreateRoomMeshRenderer()
+        {
+            if (!_initialized)
+            {
+                throw new InvalidOperationException("Backend must be initialized before creating renderers.");
+            }
+            
+            return new OdysseyRoomMeshRenderer(_odysseyGraphicsDevice);
+        }
+        
+        /// <summary>
+        /// Creates an entity model renderer.
+        /// </summary>
+        public IEntityModelRenderer CreateEntityModelRenderer(object gameDataManager = null, object installation = null)
+        {
+            if (!_initialized)
+            {
+                throw new InvalidOperationException("Backend must be initialized before creating renderers.");
+            }
+            
+            return new OdysseyEntityModelRenderer(_odysseyGraphicsDevice, gameDataManager, installation);
+        }
+        
+        /// <summary>
+        /// Creates a spatial audio system.
+        /// </summary>
+        public ISpatialAudio CreateSpatialAudio()
+        {
+            return new OdysseySpatialAudio();
+        }
+        
+        /// <summary>
+        /// Creates a dialogue camera controller.
+        /// </summary>
+        public object CreateDialogueCameraController(object cameraController)
+        {
+            // TODO: STUB - Implement Odyssey dialogue camera controller
+            return cameraController;
+        }
+        
+        /// <summary>
+        /// Creates a sound player.
+        /// </summary>
+        public object CreateSoundPlayer(object resourceProvider)
+        {
+            // TODO: STUB - Implement Odyssey sound player
+            return new OdysseySoundPlayer(resourceProvider);
+        }
+        
+        /// <summary>
+        /// Creates a music player.
+        /// </summary>
+        public object CreateMusicPlayer(object resourceProvider)
+        {
+            // TODO: STUB - Implement Odyssey music player
+            return new OdysseyMusicPlayer(resourceProvider);
+        }
+        
+        /// <summary>
+        /// Creates a voice player.
+        /// </summary>
+        public object CreateVoicePlayer(object resourceProvider)
+        {
+            // TODO: STUB - Implement Odyssey voice player
+            return new OdysseyVoicePlayer(resourceProvider);
+        }
+        
+        /// <summary>
+        /// Sets VSync state.
+        /// Based on swkotor.exe/swkotor2.exe: wglSwapIntervalEXT
+        /// </summary>
+        public void SetVSync(bool enabled)
+        {
+            _vsyncEnabled = enabled;
+            
+            // Try to use wglSwapIntervalEXT if available
+            try
+            {
+                IntPtr wglSwapIntervalEXT = wglGetProcAddress("wglSwapIntervalEXT");
+                if (wglSwapIntervalEXT != IntPtr.Zero)
+                {
+                    var swapInterval = Marshal.GetDelegateForFunctionPointer<WglSwapIntervalExtDelegate>(wglSwapIntervalEXT);
+                    swapInterval(enabled ? 1 : 0);
+                    Console.WriteLine($"[OdysseyGraphicsBackend] VSync {(enabled ? "enabled" : "disabled")}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[OdysseyGraphicsBackend] Failed to set VSync: {ex.Message}");
+            }
+        }
+        
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate bool WglSwapIntervalExtDelegate(int interval);
+        
         #endregion
     }
 }
