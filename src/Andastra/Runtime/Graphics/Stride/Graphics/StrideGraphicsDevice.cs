@@ -72,10 +72,25 @@ namespace Andastra.Runtime.Stride.Graphics
         /// Gets the CommandList for immediate rendering operations.
         /// Replaces the deprecated ImmediateContext property that returned CommandList.
         /// </summary>
+        /// <remarks>
+        /// This property first checks the static registry (populated per-frame by BeginFrame()),
+        /// then falls back to the local _graphicsContext field.
+        /// Based on Stride Graphics API: CommandList is registered per-frame from Game.GraphicsContext.CommandList
+        /// swkotor2.exe: Graphics device command list management @ 0x004eb750 (original engine behavior)
+        /// </remarks>
         public StrideGraphics.CommandList ImmediateContext
         {
             get
             {
+                // First, try to get the current frame's CommandList from the static registry
+                // This is populated per-frame by BeginFrame() in StrideGraphicsBackend
+                var registryCommandList = _device.ImmediateContext();
+                if (registryCommandList != null)
+                {
+                    return registryCommandList;
+                }
+
+                // Fallback to the local _graphicsContext field (may be null)
                 return _graphicsContext;
             }
         }
@@ -120,18 +135,20 @@ namespace Andastra.Runtime.Stride.Graphics
             }
             set
             {
-                if (_graphicsContext == null)
+                // Use ImmediateContext property which retrieves from the per-frame registry
+                var commandList = ImmediateContext;
+                if (commandList == null)
                 {
                     throw new InvalidOperationException("CommandList is required for SetRenderTarget");
                 }
                 if (value == null)
                 {
-                    _graphicsContext.SetRenderTarget(null, (StrideGraphics.Texture)null);
+                    commandList.SetRenderTarget(null, (StrideGraphics.Texture)null);
                     _currentRenderTarget = null;
                 }
                 else if (value is StrideRenderTarget strideRt)
                 {
-                    _graphicsContext.SetRenderTarget(null, strideRt.RenderTarget);
+                    commandList.SetRenderTarget(null, strideRt.RenderTarget);
                     _currentRenderTarget = strideRt;
                 }
                 else
@@ -142,27 +159,22 @@ namespace Andastra.Runtime.Stride.Graphics
         }
 
         public IDepthStencilBuffer DepthStencilBuffer
-        {
-            get
-            {
-                // Stride depth buffer is part of render target
-                return null;
-            }
-            set
-            {
-                // Stride doesn't support separate depth buffer setting
-            }
+        {           
+            get => null;  // Stride depth buffer is part of render target
+            set => _ = value;  // Stride doesn't support separate depth buffer setting
         }
 
         public void Clear(Runtime.Graphics.Color color)
         {
             // In Stride, Clear is done through CommandList, not GraphicsDevice
             // Clear the current render target or backbuffer
-            if (_graphicsContext != null)
+            // Use ImmediateContext property which retrieves from the per-frame registry
+            var commandList = ImmediateContext;
+            if (commandList != null)
             {
                 var targetTexture = _currentRenderTarget?.RenderTarget;
                 var strideColor = new Color4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
-                _graphicsContext.Clear(targetTexture, strideColor);
+                commandList.Clear(targetTexture, strideColor);
             }
         }
 
@@ -170,7 +182,9 @@ namespace Andastra.Runtime.Stride.Graphics
         {
             // In Stride, depth clearing is done through CommandList.Clear
             // Clear method signature: Clear(Texture renderTarget, Color4? color, DepthStencilClearOptions? depthStencilClearOptions, float depth, byte stencil)
-            if (_graphicsContext != null)
+            // Use ImmediateContext property which retrieves from the per-frame registry
+            var commandList = ImmediateContext;
+            if (commandList != null)
             {
                 var targetTexture = _currentRenderTarget?.RenderTarget;
                 var depthStencil = _currentRenderTarget?.DepthStencilBuffer;
@@ -199,7 +213,7 @@ namespace Andastra.Runtime.Stride.Graphics
                         // Fallback: use first enum value or cast 1
                         depthOption = (StrideGraphics.DepthStencilClearOptions)1; // Common value for depth-only clear
                     }
-                    clearMethod.Invoke(_graphicsContext, new object[] { targetTexture, null, depthOption, depth, (byte)0 });
+                    clearMethod.Invoke(commandList, new object[] { targetTexture, null, depthOption, depth, (byte)0 });
                 }
             }
         }
@@ -208,7 +222,9 @@ namespace Andastra.Runtime.Stride.Graphics
         {
             // In Stride, stencil clearing is done through CommandList.Clear
             // Clear method signature: Clear(Texture renderTarget, Color4? color, DepthStencilClearOptions? depthStencilClearOptions, float depth, byte stencil)
-            if (_graphicsContext != null)
+            // Use ImmediateContext property which retrieves from the per-frame registry
+            var commandList = ImmediateContext;
+            if (commandList != null)
             {
                 var targetTexture = _currentRenderTarget?.RenderTarget;
                 var depthStencil = _currentRenderTarget?.DepthStencilBuffer;
@@ -237,7 +253,7 @@ namespace Andastra.Runtime.Stride.Graphics
                         // Fallback: use first enum value or cast 2
                         stencilOption = (StrideGraphics.DepthStencilClearOptions)2; // Common value for stencil-only clear
                     }
-                    clearMethod.Invoke(_graphicsContext, new object[] { targetTexture, null, stencilOption, 1.0f, (byte)stencil });
+                    clearMethod.Invoke(commandList, new object[] { targetTexture, null, stencilOption, 1.0f, (byte)stencil });
                 }
             }
         }
@@ -359,18 +375,20 @@ namespace Andastra.Runtime.Stride.Graphics
         // 3D Rendering Methods
         public void SetVertexBuffer(IVertexBuffer vertexBuffer)
         {
-            if (_graphicsContext == null)
+            // Use ImmediateContext property which retrieves from the per-frame registry
+            var commandList = ImmediateContext;
+            if (commandList == null)
             {
                 throw new InvalidOperationException("CommandList is required for SetVertexBuffer");
             }
 
             if (vertexBuffer == null)
             {
-                _graphicsContext.SetVertexBuffer(0, null, 0, 0);
+                commandList.SetVertexBuffer(0, null, 0, 0);
             }
             else if (vertexBuffer is StrideVertexBuffer strideVb)
             {
-                _graphicsContext.SetVertexBuffer(0, strideVb.Buffer, 0, strideVb.VertexStride);
+                commandList.SetVertexBuffer(0, strideVb.Buffer, 0, strideVb.VertexStride);
             }
             else
             {
@@ -380,18 +398,20 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public void SetIndexBuffer(IIndexBuffer indexBuffer)
         {
-            if (_graphicsContext == null)
+            // Use ImmediateContext property which retrieves from the per-frame registry
+            var commandList = ImmediateContext;
+            if (commandList == null)
             {
                 throw new InvalidOperationException("CommandList is required for SetIndexBuffer");
             }
 
             if (indexBuffer == null)
             {
-                _graphicsContext.SetIndexBuffer(null, 0, false);
+                commandList.SetIndexBuffer(null, 0, false);
             }
             else if (indexBuffer is StrideIndexBuffer strideIb)
             {
-                _graphicsContext.SetIndexBuffer(strideIb.Buffer, 0, strideIb.IsShort);
+                commandList.SetIndexBuffer(strideIb.Buffer, 0, strideIb.IsShort);
             }
             else
             {
@@ -408,10 +428,8 @@ namespace Andastra.Runtime.Stride.Graphics
             int primitiveCount
         )
         {
-            if (_graphicsContext == null)
-            {
-                throw new InvalidOperationException("CommandList is required for DrawIndexedPrimitives");
-            }
+            // Use ImmediateContext property which retrieves from the per-frame registry
+            var commandList = ImmediateContext ?? throw new InvalidOperationException("CommandList is required for DrawIndexedPrimitives");
 
             // Apply render state before drawing
             // Based on swkotor2.exe: DirectX 9 state management (d3d9.dll @ 0x0080a6c0)
@@ -426,7 +444,7 @@ namespace Andastra.Runtime.Stride.Graphics
             int verticesPerPrimitive = GetVerticesPerPrimitive(primitiveType);
             int indexCount = primitiveCount * verticesPerPrimitive;
 
-            _graphicsContext.DrawIndexed(
+            commandList.DrawIndexed(
                 indexCount,
                 startIndex,
                 baseVertex
@@ -435,10 +453,8 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public void DrawPrimitives(PrimitiveType primitiveType, int vertexOffset, int primitiveCount)
         {
-            if (_graphicsContext == null)
-            {
-                throw new InvalidOperationException("CommandList is required for DrawPrimitives");
-            }
+            // Use ImmediateContext property which retrieves from the per-frame registry
+            var commandList = ImmediateContext ?? throw new InvalidOperationException("CommandList is required for DrawPrimitives");
 
             // Apply render state before drawing
             // Based on swkotor2.exe: DirectX 9 state management (d3d9.dll @ 0x0080a6c0)
@@ -453,7 +469,7 @@ namespace Andastra.Runtime.Stride.Graphics
             int verticesPerPrimitive = GetVerticesPerPrimitive(primitiveType);
             int vertexCount = primitiveCount * verticesPerPrimitive;
 
-            _graphicsContext.Draw(
+            commandList.Draw(
                 vertexCount,
                 vertexOffset
             );
@@ -569,7 +585,9 @@ namespace Andastra.Runtime.Stride.Graphics
         /// </summary>
         private void ApplyRenderState()
         {
-            if (_graphicsContext == null)
+            // Use ImmediateContext property which retrieves from the per-frame registry
+            var commandList = ImmediateContext;
+            if (commandList == null)
             {
                 return;
             }
@@ -593,13 +611,13 @@ namespace Andastra.Runtime.Stride.Graphics
             try
             {
                 // Apply rasterizer state
-                ApplyRasterizerState();
+                ApplyRasterizerState(commandList);
 
                 // Apply depth-stencil state
-                ApplyDepthStencilState();
+                ApplyDepthStencilState(commandList);
 
                 // Apply blend state
-                ApplyBlendState();
+                ApplyBlendState(commandList);
             }
             catch (Exception ex)
             {
@@ -612,9 +630,10 @@ namespace Andastra.Runtime.Stride.Graphics
         /// Applies the current rasterizer state to the CommandList.
         /// Uses Stride's native state setting methods or creates a PipelineState.
         /// </summary>
-        private void ApplyRasterizerState()
+        /// <param name="commandList">The CommandList to apply the state to.</param>
+        private void ApplyRasterizerState(StrideGraphics.CommandList commandList)
         {
-            if (_graphicsContext == null)
+            if (commandList == null)
             {
                 return;
             }
@@ -638,7 +657,7 @@ namespace Andastra.Runtime.Stride.Graphics
 
                 if (setRasterizerStateMethod != null)
                 {
-                    setRasterizerStateMethod.Invoke(_graphicsContext, new object[] { strideRasterizerState });
+                    setRasterizerStateMethod.Invoke(commandList, new object[] { strideRasterizerState });
                 }
                 else
                 {
@@ -657,9 +676,10 @@ namespace Andastra.Runtime.Stride.Graphics
         /// Applies the current depth-stencil state to the CommandList.
         /// Uses Stride's native state setting methods or creates a PipelineState.
         /// </summary>
-        private void ApplyDepthStencilState()
+        /// <param name="commandList">The CommandList to apply the state to.</param>
+        private void ApplyDepthStencilState(StrideGraphics.CommandList commandList)
         {
-            if (_graphicsContext == null)
+            if (commandList == null)
             {
                 return;
             }
@@ -716,7 +736,7 @@ namespace Andastra.Runtime.Stride.Graphics
 
                 if (setDepthStencilStateMethod != null)
                 {
-                    setDepthStencilStateMethod.Invoke(_graphicsContext, new object[] { strideDepthStencilState });
+                    setDepthStencilStateMethod.Invoke(commandList, new object[] { strideDepthStencilState });
                 }
                 else
                 {
@@ -733,9 +753,10 @@ namespace Andastra.Runtime.Stride.Graphics
         /// Applies the current blend state to the CommandList.
         /// Uses Stride's native state setting methods or creates a PipelineState.
         /// </summary>
-        private void ApplyBlendState()
+        /// <param name="commandList">The CommandList to apply the state to.</param>
+        private void ApplyBlendState(StrideGraphics.CommandList commandList)
         {
-            if (_graphicsContext == null)
+            if (commandList == null)
             {
                 return;
             }
@@ -780,7 +801,7 @@ namespace Andastra.Runtime.Stride.Graphics
 
                 if (setBlendStateMethod != null)
                 {
-                    setBlendStateMethod.Invoke(_graphicsContext, new object[] { strideBlendState });
+                    setBlendStateMethod.Invoke(commandList, new object[] { strideBlendState });
                 }
                 else
                 {
@@ -800,7 +821,9 @@ namespace Andastra.Runtime.Stride.Graphics
         /// </summary>
         private void ApplySamplerState(int index)
         {
-            if (_graphicsContext == null || index < 0 || index >= _currentSamplerStates.Length)
+            // Use ImmediateContext property which retrieves from the per-frame registry
+            var commandList = ImmediateContext;
+            if (commandList == null || index < 0 || index >= _currentSamplerStates.Length)
             {
                 return;
             }
