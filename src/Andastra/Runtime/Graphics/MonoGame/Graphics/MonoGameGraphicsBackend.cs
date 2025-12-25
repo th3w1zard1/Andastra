@@ -119,10 +119,7 @@ namespace Andastra.Runtime.MonoGame.Graphics
             // Based on MonoGame API: Draw is called every frame after Update
             _game.DrawFrame += (sender, e) =>
             {
-                if (storedDrawAction != null)
-                {
-                    storedDrawAction();
-                }
+                storedDrawAction?.Invoke();
 
                 EndFrame();
             };
@@ -143,10 +140,7 @@ namespace Andastra.Runtime.MonoGame.Graphics
         {
             // InputManager is initialized in the Initialized event handler
             // Check for null to handle edge case where Initialized hasn't fired yet
-            if (_inputManager != null)
-            {
-                _inputManager.Update();
-            }
+            _inputManager?.Update();
         }
 
         public void EndFrame()
@@ -179,42 +173,42 @@ namespace Andastra.Runtime.MonoGame.Graphics
 
         public object CreateDialogueCameraController(object cameraController)
         {
-            if (cameraController is Andastra.Runtime.Core.Camera.CameraController coreCameraController)
+            if (cameraController is Core.Camera.CameraController coreCameraController)
             {
-                return new Andastra.Runtime.MonoGame.Camera.MonoGameDialogueCameraController(coreCameraController);
+                return new Camera.MonoGameDialogueCameraController(coreCameraController);
             }
             throw new ArgumentException("Camera controller must be a CameraController instance", nameof(cameraController));
         }
 
         public object CreateSoundPlayer(object resourceProvider)
         {
-            if (resourceProvider is Andastra.Runtime.Content.Interfaces.IGameResourceProvider provider)
+            if (resourceProvider is Content.Interfaces.IGameResourceProvider provider)
             {
                 var spatialAudio = CreateSpatialAudio();
                 var monoGameSpatialAudio = spatialAudio as MonoGameSpatialAudio;
                 var underlyingSpatialAudio = monoGameSpatialAudio?.UnderlyingSpatialAudio;
-                return new Andastra.Runtime.MonoGame.Audio.MonoGameSoundPlayer(provider, underlyingSpatialAudio);
+                return new Audio.MonoGameSoundPlayer(provider, underlyingSpatialAudio);
             }
             throw new ArgumentException("Resource provider must be an IGameResourceProvider instance", nameof(resourceProvider));
         }
 
         public object CreateMusicPlayer(object resourceProvider)
         {
-            if (resourceProvider is Andastra.Runtime.Content.Interfaces.IGameResourceProvider provider)
+            if (resourceProvider is Content.Interfaces.IGameResourceProvider provider)
             {
-                return new Andastra.Runtime.MonoGame.Audio.MonoGameMusicPlayer(provider);
+                return new Audio.MonoGameMusicPlayer(provider);
             }
             throw new ArgumentException("Resource provider must be an IGameResourceProvider instance", nameof(resourceProvider));
         }
 
         public object CreateVoicePlayer(object resourceProvider)
         {
-            if (resourceProvider is Andastra.Runtime.Content.Interfaces.IGameResourceProvider provider)
+            if (resourceProvider is Content.Interfaces.IGameResourceProvider provider)
             {
                 var spatialAudio = CreateSpatialAudio();
                 var monoGameSpatialAudio = spatialAudio as MonoGameSpatialAudio;
                 var underlyingSpatialAudio = monoGameSpatialAudio?.UnderlyingSpatialAudio;
-                return new Andastra.Runtime.MonoGame.Audio.MonoGameVoicePlayer(provider, underlyingSpatialAudio);
+                return new Audio.MonoGameVoicePlayer(provider, underlyingSpatialAudio);
             }
             throw new ArgumentException("Resource provider must be an IGameResourceProvider instance", nameof(resourceProvider));
         }
