@@ -1251,11 +1251,11 @@ namespace HolocronToolset.Data
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1845-1888
         // Original: def textures(self, resnames: Iterable[str], order: Sequence[SearchLocation] | None = None, ...) -> CaseInsensitiveDict[TPC | None]:
-        public Andastra.Utility.CaseInsensitiveDict<Andastra.Parsing.Formats.TPC.TPC> Textures(
+        public Dictionary<string, Andastra.Parsing.Formats.TPC.TPC>(StringComparer.OrdinalIgnoreCase) Textures(
             List<string> resnames,
             SearchLocation[] searchOrder = null)
         {
-            var textures = new Andastra.Utility.CaseInsensitiveDict<Andastra.Parsing.Formats.TPC.TPC>();
+            var textures = new Dictionary<string, Andastra.Parsing.Formats.TPC.TPC>(StringComparer.OrdinalIgnoreCase);
             if (resnames == null)
             {
                 return textures;
@@ -1284,11 +1284,11 @@ namespace HolocronToolset.Data
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1918-2042
         // Original: def sounds(self, resnames: Iterable[str], order: Sequence[SearchLocation] | None = None, ...) -> CaseInsensitiveDict[bytes | None]:
-        public Andastra.Utility.CaseInsensitiveDict<byte[]> Sounds(
+        public Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase) Sounds(
             List<string> resnames,
             SearchLocation[] searchOrder = null)
         {
-            var sounds = new Andastra.Utility.CaseInsensitiveDict<byte[]>();
+            var sounds = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
             if (resnames == null)
             {
                 return sounds;

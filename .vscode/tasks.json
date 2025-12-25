@@ -251,7 +251,57 @@
       "dependsOn": "build"
     },
     {
-      "label": "watch-andastra-debug",
+      "label": "watch-build-andastra-debug",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "watch",
+        "build",
+        "--project",
+        "${workspaceFolder}/src/Andastra/Andastra.csproj",
+        "--configuration",
+        "Debug",
+        "--verbosity",
+        "normal"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": false,
+        "clear": false
+      },
+      "isBackground": true,
+      "dependsOn": "restore"
+    },
+    {
+      "label": "watch-build-andastra-release",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "watch",
+        "build",
+        "--project",
+        "${workspaceFolder}/src/Andastra/Andastra.csproj",
+        "--configuration",
+        "Release",
+        "--verbosity",
+        "normal"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": false,
+        "clear": false
+      },
+      "isBackground": true,
+      "dependsOn": "restore"
+    },
+    {
+      "label": "watch-run-andastra-debug",
       "type": "shell",
       "command": "dotnet",
       "args": [
@@ -290,7 +340,7 @@
       }
     },
     {
-      "label": "watch-andastra-release",
+      "label": "watch-run-andastra-release",
       "type": "shell",
       "command": "dotnet",
       "args": [

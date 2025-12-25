@@ -10,7 +10,7 @@
       "request": "launch",
       "preLaunchTask": "build-gui",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/src/HoloPatcher/bin/Debug/net8.0.0/HoloPatcher.dll",
+      "program": "${workspaceFolder}/src/HoloPatcher/bin/Debug/net9.0.0/HoloPatcher.dll",
       "cwd": "${workspaceFolder}/src/HoloPatcher",
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
@@ -27,7 +27,7 @@
       "request": "launch",
       "preLaunchTask": "build-kncsdecomp",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/src/KNCSDecomp/bin/Debug/net8.0.0/KNCSDecomp.dll",
+      "program": "${workspaceFolder}/src/KNCSDecomp/bin/Debug/net9.0.0/KNCSDecomp.dll",
       "cwd": "${workspaceFolder}/src/KNCSDecomp",
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
@@ -80,7 +80,7 @@
       "enableStepFiltering": false,
       "symbolOptions": {
         "searchPaths": [
-          "${workspaceFolder}/src/Andastra/bin/Debug/net8.0"
+          "${workspaceFolder}/src/Andastra/bin/Debug/net9.0"
         ],
         "searchMicrosoftSymbolServer": true,
         "searchNuGetOrgSymbolServer": true
@@ -120,7 +120,7 @@
       "enableStepFiltering": false,
       "symbolOptions": {
         "searchPaths": [
-          "${workspaceFolder}/src/Andastra/bin/Release/net8.0"
+          "${workspaceFolder}/src/Andastra/bin/Release/net9.0"
         ],
         "searchMicrosoftSymbolServer": true,
         "searchNuGetOrgSymbolServer": true

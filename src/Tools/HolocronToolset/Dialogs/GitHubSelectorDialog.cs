@@ -35,25 +35,25 @@ namespace HolocronToolset.Dialogs
         private Button _cloneButton;
         private Button _okButton;
         private Button _cancelButton;
-        
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:120
         // Original: self.repo_data: CompleteRepoData | None = None
         private Utils.CompleteRepoData _repoData;
-        
+
         // Dictionary to map file paths to TreeViewItems for efficient lookup during filtering
         private Dictionary<string, TreeViewItem> _pathToItemMap;
-        
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:121-122
         // Original: self.rate_limit_reset: int | None = None, self.rate_limit_remaining: int | None = None
         private int? _rateLimitReset;
         private int? _rateLimitRemaining;
-        
+
         // HTTP client for GitHub API requests
         private static readonly HttpClient HttpClient = new HttpClient
         {
             Timeout = TimeSpan.FromSeconds(15)
         };
-        
+
         // Rate limit timer (matching PyKotor's QTimer)
         private DispatcherTimer _rateLimitTimer;
 
@@ -74,7 +74,7 @@ namespace HolocronToolset.Dialogs
             _pathToItemMap = new Dictionary<string, TreeViewItem>();
             SetupUI();
             InitializeRepoData();
-            
+
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/github_selector.py:180-183
             // Original: if self.selected_files and self.repo_data is not None: self.filter_edit.setText(";".join(self.selected_files)); self.search_files()
             if (selectedFiles != null && selectedFiles.Count > 0 && _repoData != null && _filterEdit != null)
@@ -239,7 +239,7 @@ namespace HolocronToolset.Dialogs
                     string forksUrl = $"https://api.github.com/repos/{_owner}/{_repo}/forks";
                     string forksJson = await HttpClient.GetStringAsync(forksUrl);
                     List<Utils.ForkContentsData> forks = JsonConvert.DeserializeObject<List<Utils.ForkContentsData>>(forksJson);
-                    
+
                     if (forks != null && forks.Count > 0)
                     {
                         string firstFork = forks[0].FullName;
@@ -344,7 +344,7 @@ namespace HolocronToolset.Dialogs
 
             string treeUrl = $"{baseUrl}/git/trees/{defaultBranch}?recursive=1";
             System.Console.WriteLine($"Fetching tree from {treeUrl}...");
-            
+
             try
             {
                 string treeResponseJson = await HttpClient.GetStringAsync(treeUrl);
@@ -552,7 +552,7 @@ namespace HolocronToolset.Dialogs
 
             // Format the contents_url with the proper path and add the recursive parameter
             string treeUrl = $"https://api.github.com/repos/{fullName}/git/trees/master?recursive=1";
-            
+
             try
             {
                 Dictionary<string, object> contentsDict = await ApiGetAsync(treeUrl);
@@ -727,7 +727,7 @@ namespace HolocronToolset.Dialogs
             }
 
             string filterText = _filterEdit.Text ?? "";
-            
+
             if (!string.IsNullOrWhiteSpace(filterText))
             {
                 // Split by semicolon to support multiple file names (matching PyKotor behavior)
@@ -993,7 +993,7 @@ namespace HolocronToolset.Dialogs
 
                 // Get the last part of the path (filename or folder name)
                 string lastPart = Path.GetFileName(item.Path).ToLowerInvariant();
-                
+
                 // Check if any of the search terms match
                 foreach (string searchTerm in partialFileOrFolderNames)
                 {
@@ -1223,7 +1223,7 @@ namespace HolocronToolset.Dialogs
             }
 
             Stack<TreeViewItem> stack = new Stack<TreeViewItem>();
-            
+
             // Add all top-level items to stack
             foreach (TreeViewItem item in _repoTreeWidget.ItemsSource)
             {
@@ -1256,7 +1256,7 @@ namespace HolocronToolset.Dialogs
             }
 
             Stack<TreeViewItem> stack = new Stack<TreeViewItem>();
-            
+
             // Add all top-level items to stack
             foreach (TreeViewItem item in _repoTreeWidget.ItemsSource)
             {

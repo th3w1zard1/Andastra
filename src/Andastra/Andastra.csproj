@@ -1,8 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework Condition="'$(OS)' == 'Windows_NT'">net9.0-windows</TargetFramework>
-    <TargetFramework Condition="'$(OS)' != 'Windows_NT'">net9.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <AssemblyName>Andastra</AssemblyName>
     <LangVersion>7.3</LangVersion>
     <Nullable>disable</Nullable>
@@ -69,6 +68,12 @@
 
   <PropertyGroup>
     <StartupObject>Andastra.Runtime.Game.Program</StartupObject>
+    <!-- Explicitly disable any post-build execution -->
+    <RunPostBuildEvent>Never</RunPostBuildEvent>
+    <PreBuildEvent></PreBuildEvent>
+    <PostBuildEvent></PostBuildEvent>
+    <!-- Ensure Run target is never invoked automatically -->
+    <SkipCopyBuildProduct>false</SkipCopyBuildProduct>
   </PropertyGroup>
 
   <ItemGroup>
@@ -104,4 +109,10 @@
   <ItemGroup Condition="'$(SkipMonoGameContentPipeline)' != 'true'">
     <MonoGameContentReference Include="Game\Content.mgcb" />
   </ItemGroup>
+
+  <!-- Explicitly override Run target to prevent auto-execution during build -->
+  <!-- This ensures that dotnet build NEVER runs the application -->
+  <Target Name="Run" Condition="'$(MSBuildTargets)' == 'Build' OR '$(MSBuildTargets)' == ''">
+    <Message Text="Run target disabled during Build. Use 'dotnet run' explicitly to execute the application." Importance="high" />
+  </Target>
 </Project>

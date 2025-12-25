@@ -40,7 +40,7 @@
       $(TargetFrameworks);net9.0
     </TargetFrameworks>
     <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '8.0.0'))">
-      $(TargetFrameworks);net8.0
+      $(TargetFrameworks);net9.0
     </TargetFrameworks>
     <TargetFrameworks Condition="$([System.String]::new('$(NETCoreSdkVersion)').StartsWith('7.'))">
       $(TargetFrameworks);net7.0;net6.0

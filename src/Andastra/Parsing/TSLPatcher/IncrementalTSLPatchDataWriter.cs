@@ -106,12 +106,12 @@ namespace Andastra.Parsing.TSLPatcher
         // Track insertion positions for each section (for real-time appending)
         private readonly Dictionary<string, string> _sectionMarkers = new Dictionary<string, string>
         {
-            { "tlk", "[TLKList]" },
-            { "install", "[InstallList]" },
             { "2da", "[2DAList]" },
             { "gff", "[GFFList]" },
+            { "install", "[InstallList]" },
             { "ncs", "[CompileList]" },
-            { "ssf", "[SSFList]" }
+            { "ssf", "[SSFList]" },
+            { "tlk", "[TLKList]" },
         };
 
         // Track folder numbers for InstallList
@@ -129,8 +129,16 @@ namespace Andastra.Parsing.TSLPatcher
 
         // StrRef and 2DA memory reference caches for linking patches
         [CanBeNull] private readonly StrRefReferenceCache _strrefCache;
-        [CanBeNull] private readonly Dictionary<int, CaseInsensitiveDict<TwoDAMemoryReferenceCache>> _twodaCaches;
+        // TODO: STUB - Ensure inner dictionaries use StringComparer.OrdinalIgnoreCase for case-insensitive filename lookups
+        // When creating inner Dictionary<string, TwoDAMemoryReferenceCache> instances, use:
+        // new Dictionary<string, TwoDAMemoryReferenceCache>(StringComparer.OrdinalIgnoreCase)
+        [CanBeNull] private readonly Dictionary<int, Dictionary<string, TwoDAMemoryReferenceCache>> _twodaCaches;
 
+        // Helper method to create case-insensitive inner dictionaries
+        private static Dictionary<string, TwoDAMemoryReferenceCache> CreateCaseInsensitiveTwoDACache()
+        {
+            return new Dictionary<string, TwoDAMemoryReferenceCache>(StringComparer.OrdinalIgnoreCase);
+        }
         // Track TLK modifications with their source paths for intelligent cache building
         // Key: source_index (0=first/vanilla, 1=second/modded, 2=third, etc.)
         // Value: list of TLKModificationWithSource objects from that source
@@ -158,7 +166,7 @@ namespace Andastra.Parsing.TSLPatcher
             [CanBeNull] string baseDataPath = null,
             [CanBeNull] string moddedDataPath = null,
             [CanBeNull] StrRefReferenceCache strrefCache = null,
-            [CanBeNull] Dictionary<int, CaseInsensitiveDict<TwoDAMemoryReferenceCache>> twodaCaches = null,
+            [CanBeNull] Dictionary<int, Dictionary<string, TwoDAMemoryReferenceCache>> twodaCaches = null,
             [CanBeNull] Action<string> logFunc = null)
         {
             _tslpatchdataPath = tslpatchdataPath;
@@ -166,7 +174,7 @@ namespace Andastra.Parsing.TSLPatcher
             _baseDataPath = baseDataPath;
             _moddedDataPath = moddedDataPath;
             _strrefCache = strrefCache;
-            _twodaCaches = twodaCaches ?? new Dictionary<int, CaseInsensitiveDict<TwoDAMemoryReferenceCache>>();
+            _twodaCaches = twodaCaches ?? new Dictionary<int, Dictionary<string, TwoDAMemoryReferenceCache>>();
             _logFunc = logFunc ?? Console.WriteLine;
 
             // Create tslpatchdata directory
@@ -1294,10 +1302,10 @@ namespace Andastra.Parsing.TSLPatcher
                 // Check if it's a GFF extension
                 var gffExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
                 {
-                    "GFF", "BIC", "BTC", "BTD", "BTE", "BTI", "BTP", "BTM", "BTT",
-                    "UTC", "UTD", "UTE", "UTI", "UTP", "UTS", "UTM", "UTT", "UTW",
-                    "ARE", "DLG", "FAC", "GIT", "GUI", "IFO", "ITP", "JRL",
-                    "PTH", "NFO", "PT", "GVT", "INV"
+                    "ARE", "BIC", "BTC", "BTD", "BTE", "BTI", "BTM", "BTP", "BTT",
+                    "DLG", "FAC", "GFF", "GIT", "GUI", "GVT", "IFO", "INV", "ITP",
+                    "JRL", "NFO", "PTH", "PT", "UTC", "UTD", "UTE", "UTI", "UTM",
+                    "UTP", "UTS", "UTT", "UTW"
                 };
 
                 if (gffExtensions.Contains(extUpper))
@@ -1835,7 +1843,10 @@ namespace Andastra.Parsing.TSLPatcher
         /// Create linking patches for StrRef references found in source installations.
         /// Searches through GFF, 2DA, and other files for references to old StrRef IDs and replaces them with new token IDs.
         /// </summary>
-        private void CreateStrRefLinkingPatches(ModificationsTLK modTlk, Dictionary<int, int> strrefMappings, List<object> sourceInstallations)
+        private void CreateStrRefLinkingPatches(
+            ModificationsTLK modTlk,
+        Dictionary<int, int> strrefMappings,
+        List<object> sourceInstallations)
         {
             int totalPatchesCreated = 0;
 
@@ -2041,7 +2052,7 @@ namespace Andastra.Parsing.TSLPatcher
         /// <summary>
         /// Recursively search GFF structure for fields containing a specific StrRef value.
         /// </summary>
-        private List<string> FindStrRefFieldsRecursive(Andastra.Parsing.Formats.GFF.GFFStruct gffStruct, int targetStrref, string currentPath = "")
+        public List<string> FindStrRefFieldsRecursive(Andastra.Parsing.Formats.GFF.GFFStruct gffStruct, int targetStrref, string currentPath = "")
         {
             var foundPaths = new List<string>();
 
