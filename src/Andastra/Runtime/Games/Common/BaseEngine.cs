@@ -57,10 +57,10 @@ namespace Andastra.Runtime.Engines.Common
     ///      * Aurora: Creates AuroraResourceProvider with game type detection
     ///      * Eclipse: Creates EclipseResourceProvider with game type detection
     /// 
-    /// 5. Virtual Methods (Can Be Overridden If Needed):
-    ///    - CreateWorld(): Default implementation returns new World()
-    ///      * All engines use default implementation (no overrides needed)
-    ///      * Future: Could be overridden if engine-specific World subclass needed
+    /// 5. Abstract Methods (Engine-Specific Implementations Required):
+    ///    - CreateWorld(): Must be implemented by each engine
+    ///      * Each engine must create engine-specific time manager (OdysseyTimeManager, AuroraTimeManager, etc.)
+    ///      * Returns World instance with engine-specific time manager
     /// 
     /// Base classes MUST only contain functionality that is identical across ALL engines.
     /// Engine-specific details MUST be in subclasses (OdysseyEngine, AuroraEngine, EclipseEngine).
@@ -158,10 +158,7 @@ namespace Andastra.Runtime.Engines.Common
 
         protected abstract IGameResourceProvider CreateResourceProvider(string installationPath);
 
-        protected virtual World CreateWorld()
-        {
-            return new World();
-        }
+        protected abstract World CreateWorld();
     }
 }
 
