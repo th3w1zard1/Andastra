@@ -1394,8 +1394,12 @@ namespace Andastra.Game.GUI
 
         private async void ValidateButton_Click(object sender, RoutedEventArgs e)
         {
-            SaveSettings();
-            var validationResult = GraphicsSettingsSerializer.Validate(_settings);
+            // Create temporary settings object for validation
+            // Do NOT modify _settings - validation should be read-only
+            var tempSettings = new GraphicsSettingsData();
+            SaveSettingsToObject(tempSettings);
+            
+            var validationResult = GraphicsSettingsSerializer.Validate(tempSettings);
             if (validationResult.IsValid)
             {
                 ShowInfoDialog("Validation Success", "All settings are valid!");
