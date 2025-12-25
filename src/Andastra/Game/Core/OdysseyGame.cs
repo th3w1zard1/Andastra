@@ -121,6 +121,16 @@ namespace Andastra.Runtime.Game.Core
             // Set up draw callback for rendering
             Action drawAction = () =>
             {
+                // Clear the screen with a dark blue color (similar to KOTOR's main menu background)
+                // Based on swkotor2.exe: Main menu uses dark background color
+                // TODO: STUB - Replace with actual main menu rendering once menu system is implemented
+                if (_graphicsBackend != null && _graphicsBackend.GraphicsDevice != null)
+                {
+                    // Use dark blue color similar to KOTOR's main menu background
+                    var clearColor = new Graphics.Color(0, 0, 32, 255); // Dark blue
+                    _graphicsBackend.GraphicsDevice.Clear(clearColor);
+                }
+                
                 // Rendering is handled by the graphics backend and renderer
                 // The game session's Update method triggers rendering through the world/renderer systems
                 // Additional render calls can be added here if needed
