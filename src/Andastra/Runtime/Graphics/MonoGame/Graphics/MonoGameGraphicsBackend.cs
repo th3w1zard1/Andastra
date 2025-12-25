@@ -12,7 +12,7 @@ namespace Andastra.Runtime.MonoGame.Graphics
     /// </summary>
     public class MonoGameGraphicsBackend : IGraphicsBackend
     {
-        private Microsoft.Xna.Framework.Game _game;
+        private MonoGameWrapper _game;
         private GraphicsDeviceManager _graphicsDeviceManager;
         private MonoGameGraphicsDevice _graphicsDevice;
         private MonoGameContentManager _contentManager;
@@ -20,6 +20,12 @@ namespace Andastra.Runtime.MonoGame.Graphics
         private MonoGameInputManager _inputManager;
         private bool _isInitialized;
         private bool _isExiting;
+
+        // Store settings for deferred initialization (applied when game is initialized)
+        private int _pendingWidth;
+        private int _pendingHeight;
+        private string _pendingTitle;
+        private bool _pendingFullscreen;
 
         public GraphicsBackendType BackendType => GraphicsBackendType.MonoGame;
 
@@ -41,7 +47,7 @@ namespace Andastra.Runtime.MonoGame.Graphics
 
         public MonoGameGraphicsBackend()
         {
-            _game = new Microsoft.Xna.Framework.Game();
+            _game = new MonoGameWrapper();
             _graphicsDeviceManager = new GraphicsDeviceManager(_game);
         }
 
@@ -52,17 +58,18 @@ namespace Andastra.Runtime.MonoGame.Graphics
                 return;
             }
 
+            // Store settings for deferred initialization
+            // Based on MonoGame API: GraphicsDevice and Window are not available until Game.Run() is called
+            // Settings will be applied in the Initialized event handler
+            _pendingWidth = width;
+            _pendingHeight = height;
+            _pendingTitle = title;
+            _pendingFullscreen = fullscreen;
+
+            // Configure graphics device manager before Run() is called
             _graphicsDeviceManager.PreferredBackBufferWidth = width;
             _graphicsDeviceManager.PreferredBackBufferHeight = height;
             _graphicsDeviceManager.IsFullScreen = fullscreen;
-            _graphicsDeviceManager.ApplyChanges();
-
-            _game.Window.Title = title;
-            _game.IsMouseVisible = true;
-
-            // Note: Game.Initialize() is protected, it is called internally when Game.Run() is invoked
-            // GraphicsDevice, Content, and Window are not available until Game.Run() is called
-            // We'll create wrapper objects in the Run() method after the game is initialized
 
             _isInitialized = true;
         }
@@ -78,32 +85,39 @@ namespace Andastra.Runtime.MonoGame.Graphics
             Action<float> storedUpdateAction = updateAction;
             Action storedDrawAction = drawAction;
 
-            // Hook into MonoGame's Update event
-            // Based on MonoGame API: Game.Update event is called every frame before Draw
-            _game.Update += (sender, e) =>
+            // Hook into Initialized event to create wrapper objects after GraphicsDevice is available
+            // Based on MonoGame API: Game.Initialize() is called internally after Run() starts
+            _game.Initialized += (sender, e) =>
             {
-                // Initialize wrapper objects on first Update (after Game.Initialize() has been called)
-                if (_graphicsDevice == null && _game.GraphicsDevice != null)
-                {
-                    _graphicsDevice = new MonoGameGraphicsDevice(_game.GraphicsDevice);
-                    _contentManager = new MonoGameContentManager(_game.Content);
-                    _window = new MonoGameWindow(_game.Window);
-                    _inputManager = new MonoGameInputManager();
-                }
+                // Apply deferred settings now that Window is available
+                _game.Window.Title = _pendingTitle;
+                _game.IsMouseVisible = true;
+                _graphicsDeviceManager.ApplyChanges();
 
+                // Create wrapper objects now that GraphicsDevice, Content, and Window are available
+                _graphicsDevice = new MonoGameGraphicsDevice(_game.GraphicsDevice);
+                _contentManager = new MonoGameContentManager(_game.Content);
+                _window = new MonoGameWindow(_game.Window);
+                _inputManager = new MonoGameInputManager();
+            };
+
+            // Hook into MonoGameWrapper's UpdateFrame event
+            // Based on MonoGame API: Update is called every frame before Draw
+            _game.UpdateFrame += (sender, e) =>
+            {
                 BeginFrame();
 
                 if (storedUpdateAction != null)
                 {
                     // Use GameTime from MonoGame's Update event for accurate delta time
-                    float deltaTime = (float)e.ElapsedGameTime.TotalSeconds;
+                    float deltaTime = (float)e.Elapsed.TotalSeconds;
                     storedUpdateAction(deltaTime);
                 }
             };
 
-            // Hook into MonoGame's Draw event
-            // Based on MonoGame API: Game.Draw event is called every frame after Update
-            _game.Draw += (sender, e) =>
+            // Hook into MonoGameWrapper's DrawFrame event
+            // Based on MonoGame API: Draw is called every frame after Update
+            _game.DrawFrame += (sender, e) =>
             {
                 if (storedDrawAction != null)
                 {
@@ -127,8 +141,8 @@ namespace Andastra.Runtime.MonoGame.Graphics
 
         public void BeginFrame()
         {
-            // InputManager is initialized in the Update event handler when GraphicsDevice becomes available
-            // Check for null to handle edge case where GraphicsDevice might not be ready on first Update
+            // InputManager is initialized in the Initialized event handler
+            // Check for null to handle edge case where Initialized hasn't fired yet
             if (_inputManager != null)
             {
                 _inputManager.Update();
