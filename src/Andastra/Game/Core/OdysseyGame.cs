@@ -112,6 +112,17 @@ namespace Andastra.Runtime.Game.Core
             // Set up update callback for game logic
             Action<float> updateAction = (deltaTime) =>
             {
+                // Clear the screen BEFORE any rendering happens
+                // Based on swkotor2.exe: glClear() happens before rendering (line 530 in World.cs comments)
+                // Clear must happen before Update if rendering occurs during Update
+                // This ensures the screen is cleared before any rendering operations
+                if (_graphicsBackend != null && _graphicsBackend.GraphicsDevice != null)
+                {
+                    // Use dark blue color similar to KOTOR's main menu background
+                    var clearColor = new Graphics.Color(0, 0, 32, 255); // Dark blue
+                    _graphicsBackend.GraphicsDevice.Clear(clearColor);
+                }
+
                 if (_gameSession != null)
                 {
                     _gameSession.Update(deltaTime);
@@ -121,18 +132,9 @@ namespace Andastra.Runtime.Game.Core
             // Set up draw callback for rendering
             Action drawAction = () =>
             {
-                // Clear the screen with a dark blue color (similar to KOTOR's main menu background)
-                // Based on swkotor2.exe: Main menu uses dark background color
-                // TODO: STUB - Replace with actual main menu rendering once menu system is implemented
-                if (_graphicsBackend != null && _graphicsBackend.GraphicsDevice != null)
-                {
-                    // Use dark blue color similar to KOTOR's main menu background
-                    var clearColor = new Graphics.Color(0, 0, 32, 255); // Dark blue
-                    _graphicsBackend.GraphicsDevice.Clear(clearColor);
-                }
-                
                 // Rendering is handled by the graphics backend and renderer
                 // The game session's Update method triggers rendering through the world/renderer systems
+                // Screen clearing happens in updateAction before rendering begins
                 // Additional render calls can be added here if needed
             };
 
