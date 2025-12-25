@@ -365,10 +365,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 float x = *(float*)&xRaw;
                 float y = *(float*)&yRaw;
                 // Call the actual OpenGL function with z=0.0f, w=0.0f (implicit in original calls)
-                if (_kotor1GlProgramEnvParameter4fArb != null)
-                {
-                    _kotor1GlProgramEnvParameter4fArb(target, index, x, y, 0.0f, 0.0f);
-                }
+                _kotor1GlProgramEnvParameter4fArb?.Invoke(target, index, x, y, 0.0f, 0.0f);
             }
         }
 
@@ -377,10 +374,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         private static void Kotor1ProgramEnvParameter4fWrapperFunction(uint target, uint index, float x, float y, float z, float w)
         {
             // Forward the call directly to the OpenGL function
-            if (_kotor1GlProgramEnvParameter4fArb != null)
-            {
-                _kotor1GlProgramEnvParameter4fArb(target, index, x, y, z, w);
-            }
+            _kotor1GlProgramEnvParameter4fArb?.Invoke(target, index, x, y, z, w);
         }
 
         // DAT_007bb834 - function pointer for glBindProgramARB (matching swkotor.exe: FUN_004a2400)
@@ -479,7 +473,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
 
         #endregion
 
-        public override GraphicsBackendType BackendType => GraphicsBackendType.OdysseyEngine;
+        // BackendType is inherited from OdysseyGraphicsBackend and returns GraphicsBackendType.OdysseyEngine
 
         /// <summary>
         /// Sets the resource provider for loading texture data.
@@ -702,9 +696,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                         0
                     };
 
-                    int formats;
-                    uint numFormats;
-                    if (_kotor1WglChoosePixelFormatArb(hdc, attribIList, null, 1, out formats, out numFormats) && numFormats > 0)
+                    if (_kotor1WglChoosePixelFormatArb(hdc, attribIList, null, 1, out global::System.Int32 formats, out global::System.UInt32 numFormats) && numFormats > 0)
                     {
                         PIXELFORMATDESCRIPTOR pfd = new PIXELFORMATDESCRIPTOR();
                         if (SetPixelFormat(hdc, formats, ref pfd))
@@ -779,10 +771,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 }
 
                 // Stencil test setup (matching swkotor.exe line 372)
-                if (_kotor1GlEnableDisable != null)
-                {
-                    _kotor1GlEnableDisable(_kotor1StencilTestFlag != 0);
-                }
+                _kotor1GlEnableDisable?.Invoke(_kotor1StencilTestFlag != 0);
 
                 return true;
             }
@@ -1056,10 +1045,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             // Call function pointer at DAT_007bb788 (matching swkotor.exe line 15)
             // (*DAT_007bb788)(0x8620, 0);
             // This is glBindProgramARB(GL_VERTEX_PROGRAM_ARB, 0)
-            if (_kotor1GlBindProgramArb != null)
-            {
-                _kotor1GlBindProgramArb(GL_VERTEX_PROGRAM_ARB, 0);
-            }
+            _kotor1GlBindProgramArb?.Invoke(GL_VERTEX_PROGRAM_ARB, 0);
         }
 
         /// <summary>
@@ -2476,16 +2462,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                                         // The exact implementation depends on the vertex program being used
 
                                         // Disable vertex array object (matching swkotor.exe line 106)
-                                        if (_kotor1GlBindVertexArray != null)
-                                        {
-                                            _kotor1GlBindVertexArray(0);
-                                        }
+                                        _kotor1GlBindVertexArray?.Invoke(0);
 
                                         // Delete vertex array object (matching swkotor.exe line 106)
-                                        if (_kotor1GlDeleteVertexArrays != null)
-                                        {
-                                            _kotor1GlDeleteVertexArrays(1, ref vao);
-                                        }
+                                        _kotor1GlDeleteVertexArrays?.Invoke(1, ref vao);
                                     }
                                 }
 
