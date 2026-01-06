@@ -1593,11 +1593,17 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             // CRITICAL: For conditional operations (EQUALII, etc.), we MUST extract the right operand first
             // before it gets wrapped by MOVSP or other instructions
             // For conditional operations, search all children for AUnaryExp (result of NEGI) as it might not be last
-            // FIRST: Check if the last child is an AExpressionStatement containing AUnaryExp - if so, extract it immediately
+            // FIRST: Check if the last child is a plain AUnaryExp - if so, extract it immediately
             if (NodeUtils.IsConditionalOp(node) && this.current.HasChildren())
             {
                 ScriptNode.ScriptNode lastChild = this.current.GetLastChild();
-                if (typeof(ScriptNode.AExpressionStatement).IsInstanceOfType(lastChild))
+                if (typeof(AUnaryExp).IsInstanceOfType(lastChild))
+                {
+                    Error($"DEBUG TransformBinary: Found AUnaryExp as last child, extracting immediately for conditional op");
+                    right = (AExpression)this.current.RemoveLastChild();
+                    right.Parent(null);
+                }
+                else if (typeof(ScriptNode.AExpressionStatement).IsInstanceOfType(lastChild))
                 {
                     ScriptNode.AExpressionStatement expStmt = (ScriptNode.AExpressionStatement)lastChild;
                     ScriptNode.AExpression innerExp = expStmt.GetExp();
