@@ -74,9 +74,10 @@
   </PropertyGroup>
 
   <!-- SDK automatically includes all .cs files in this directory and subdirectories -->
-  <!-- Also include Common folder from parent directory (contains TestFileHelper) -->
+  <!-- Also include Common and Performance folders from parent directory -->
   <ItemGroup>
     <Compile Include="..\Common\*.cs" />
+    <Compile Include="..\Performance\*.cs" />
   </ItemGroup>
   
   <!-- Copy xunit.runner.json from parent directory -->
