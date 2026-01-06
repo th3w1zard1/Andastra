@@ -1103,7 +1103,7 @@ namespace KotorDiff.Resolution
                 throw new InvalidOperationException("modifications_by_type must not be None");
             }
             int totalMods = modificationsByType.Gff.Count + modificationsByType.Twoda.Count + modificationsByType.Ssf.Count +
-                           modificationsByType.Ncs.Count + modificationsByType.Tlk.Count;
+                           modificationsByType.Ncs.Count + modificationsByType.Tlk.Count + modificationsByType.Install.Count;
             if (totalMods == 0)
             {
                 throw new InvalidOperationException(
@@ -1112,9 +1112,10 @@ namespace KotorDiff.Resolution
                     $"GFF: {modificationsByType.Gff.Count}, " +
                     $"2DA: {modificationsByType.Twoda.Count}, " +
                     $"SSF: {modificationsByType.Ssf.Count}, " +
-                    $"NCS: {modificationsByType.Ncs.Count}");
+                    $"NCS: {modificationsByType.Ncs.Count}, " +
+                    $"Install: {modificationsByType.Install.Count}");
             }
-            logFunc($"Found {totalMods} total modifications to process");
+            logFunc($"Found {totalMods} total modifications to process ({modificationsByType.Install.Count} install entries, {modificationsByType.Tlk.Count + modificationsByType.Gff.Count + modificationsByType.Twoda.Count + modificationsByType.Ssf.Count + modificationsByType.Ncs.Count} patch entries)");
 
             // Apply filters if provided
             if (filters != null && filters.Count > 0)
