@@ -7,6 +7,7 @@ using Avalonia;
 using HolocronToolset.Data;
 using UTC = Andastra.Parsing.Resource.Generics.UTC.UTC;
 using Andastra.Parsing.Formats.MDLData;
+using Andastra.Parsing.Resource;
 using Andastra.Runtime.Stride.Converters;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Stride.Graphics;
@@ -149,8 +150,8 @@ namespace HolocronToolset.Widgets
         public void SetCreature(UTC utc)
         {
             // Store UTC for creature rendering
-            // TODO:  In full implementation, this would load the creature model into the OpenGL scene
             // Matching PyKotor: self._creature_to_load = utc
+            // The actual model loading happens in Render() method (matching PyKotor's paintGL() pattern)
             _creatureToLoad = utc;
         }
 
@@ -207,9 +208,71 @@ namespace HolocronToolset.Widgets
         }
 
         // Override Avalonia rendering to draw 3D model
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/renderer/model.py:103-141
+        // Original: def paintGL(self):
         public override void Render(DrawingContext context)
         {
             base.Render(context);
+
+            // Matching PyKotor lines 114-121: Load model if pending
+            if (_mdlData != null && _mdxData != null && _convertedModel == null && _graphicsDevice != null)
+            {
+                // Model data is already set, just needs parsing (handled in SetModel)
+                // This case is for when SetModel was called but graphics device wasn't ready
+            }
+
+            // Matching PyKotor lines 123-132: Load creature if pending
+            if (_creatureToLoad != null && _installation != null)
+            {
+                try
+                {
+                    // Matching PyKotor: Use sync=True to force synchronous model loading for the preview renderer
+                    // This ensures hooks (headhook, rhand, lhand, gogglehook) are found correctly
+                    // Matching PyKotor: self.scene.objects["model"] = self.scene.get_creature_render_object(None, self._creature_to_load, sync=True)
+                    
+                    // Get body model name from UTC using appearance.2da
+                    // Matching PyKotor: Uses get_body_model() function to resolve model from UTC
+                    var (bodyModel, bodyTexture) = Andastra.Parsing.Tools.Creature.GetBodyModel(
+                        _creatureToLoad,
+                        _installation.Installation);
+
+                    if (!string.IsNullOrWhiteSpace(bodyModel))
+                    {
+                        // Load MDL data from installation
+                        // Matching PyKotor: Model loading happens via installation.resource() calls
+                        var mdlResult = _installation.Resource(bodyModel, ResourceType.MDL, null);
+                        var mdxResult = _installation.Resource(bodyModel, ResourceType.MDX, null);
+
+                        if (mdlResult != null && mdlResult.Data != null && mdxResult != null && mdxResult.Data != null)
+                        {
+                            // Load the model data
+                            // Matching PyKotor: self.scene.models["model"] = gl_load_mdl(self.scene, *self._model_to_load)
+                            SetModel(mdlResult.Data, mdxResult.Data);
+
+                            // Matching PyKotor line 132: self.reset_camera()
+                            ResetCamera();
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[ModelRenderer] Failed to load creature model '{bodyModel}' - MDL or MDX not found");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("[ModelRenderer] Failed to resolve body model from UTC appearance");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Log error but don't crash - creature might have invalid appearance data
+                    Console.WriteLine($"[ModelRenderer] Failed to load creature model: {ex.Message}");
+                }
+                finally
+                {
+                    // Matching PyKotor line 130: self._creature_to_load = None
+                    _creatureToLoad = null;
+                }
+            }
 
             // If we have a converted model and graphics device, render it
             if (_convertedModel != null && _graphicsDevice != null)
@@ -221,6 +284,18 @@ namespace HolocronToolset.Widgets
                 // Draw placeholder text if no model is loaded
                 DrawPlaceholderText(context);
             }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/renderer/model.py:144-150
+        // Original: def reset_camera(self):
+        private void ResetCamera()
+        {
+            // Reset camera to default position (matching PyKotor default view)
+            _cameraPosition = new global::Stride.Core.Mathematics.Vector3(0, 0, 10);
+            _cameraTarget = new global::Stride.Core.Mathematics.Vector3(0, 0, 0);
+            _cameraUp = new global::Stride.Core.Mathematics.Vector3(0, 1, 0);
+            UpdateViewMatrix();
+            InvalidateVisual();
         }
 
         private void DrawPlaceholderText(Avalonia.Media.DrawingContext context)
