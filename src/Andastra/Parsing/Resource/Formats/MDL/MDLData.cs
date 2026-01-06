@@ -5,7 +5,6 @@ using System.Numerics;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.MDL;
-using Andastra.Runtime.Graphics.Common;
 
 namespace Andastra.Parsing.Formats.MDLData
 {
