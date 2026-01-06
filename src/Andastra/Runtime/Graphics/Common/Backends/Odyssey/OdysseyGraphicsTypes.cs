@@ -464,29 +464,233 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
     /// <summary>
     /// Odyssey index buffer implementation.
     /// Uses OpenGL index buffer objects (IBO/EBO).
+    /// Based on xoreos IndexBuffer implementation.
     /// </summary>
+    /// <remarks>
+    /// OpenGL IBO Implementation:
+    /// - Based on reverse engineering of swkotor.exe and swkotor2.exe
+    /// - Original game: Uses DirectX index buffers, but OpenGL backend uses IBOs
+    /// - xoreos: Uses glGenBuffers, glBufferData, glBindBuffer for IBO management
+    /// - Matching xoreos indexbuffer.cpp: initGL(), updateGL(), destroyGL()
+    /// - Index type: GL_UNSIGNED_SHORT (16-bit) if IsShort=true, GL_UNSIGNED_INT (32-bit) if IsShort=false
+    /// - Based on swkotor2.exe: Index buffer system for indexed primitive rendering
+    /// </remarks>
     public class OdysseyIndexBuffer : IIndexBuffer
     {
         private int[] _indices;
         private readonly bool _isShort;
         private uint _bufferId;
         private bool _disposed;
+        private bool _iboCreated;
 
+        private const uint GL_ELEMENT_ARRAY_BUFFER = 0x8893;
+        private const uint GL_STATIC_DRAW = 0x88E4;
+        private const uint GL_DYNAMIC_DRAW = 0x88E8;
+
+        /// <summary>
+        /// Creates a new index buffer with the specified data.
+        /// Matching xoreos: IndexBuffer::initGL() - glGenBuffers, glBufferData
+        /// </summary>
         public OdysseyIndexBuffer(int[] indices, bool isShort)
         {
             _indices = indices;
             _isShort = isShort;
-            // TODO: STUB - Create IBO
+            _bufferId = 0;
+            _iboCreated = false;
+            _disposed = false;
+
+            // Create IBO if data is provided
+            if (indices != null && indices.Length > 0)
+            {
+                CreateIBO();
+            }
+        }
+
+        /// <summary>
+        /// Creates the OpenGL index buffer object.
+        /// Matching xoreos: IndexBuffer::initGL() - glGenBuffers(1, &_ibo), glBufferData(GL_ELEMENT_ARRAY_BUFFER, ...)
+        /// Based on xoreos indexbuffer.cpp: initGL() @ lines 94-106
+        /// </summary>
+        private void CreateIBO()
+        {
+            if (_iboCreated || _bufferId != 0)
+            {
+                return; // Already created
+            }
+
+            // Generate buffer object
+            // Matching xoreos: glGenBuffers(1, &_ibo)
+            uint[] buffers = new uint[1];
+            OdysseyBufferHelpers.glGenBuffers(1, buffers);
+            _bufferId = buffers[0];
+
+            if (_bufferId == 0)
+            {
+                throw new InvalidOperationException("Failed to create OpenGL index buffer object.");
+            }
+
+            // Bind buffer and upload data
+            // Matching xoreos: glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo), glBufferData(...)
+            OdysseyBufferHelpers.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _bufferId);
+
+            // Calculate data size based on index type (16-bit or 32-bit)
+            int indexSize = _isShort ? sizeof(ushort) : sizeof(uint);
+            int dataSize = _indices.Length * indexSize;
+
+            // Convert indices to appropriate format (ushort[] or uint[])
+            // Pin the array and pass pointer directly to glBufferData
+            // Matching xoreos: glBufferData(GL_ELEMENT_ARRAY_BUFFER, _count * _size, _data, _hint)
+            if (_isShort)
+            {
+                // Convert int[] to ushort[] for 16-bit indices
+                ushort[] shortIndices = new ushort[_indices.Length];
+                for (int i = 0; i < _indices.Length; i++)
+                {
+                    shortIndices[i] = (ushort)_indices[i];
+                }
+
+                GCHandle handle = GCHandle.Alloc(shortIndices, GCHandleType.Pinned);
+                try
+                {
+                    IntPtr dataPtr = handle.AddrOfPinnedObject();
+                    // Upload data to GPU directly from pinned array
+                    OdysseyBufferHelpers.glBufferData(GL_ELEMENT_ARRAY_BUFFER, dataSize, dataPtr, GL_STATIC_DRAW);
+                }
+                finally
+                {
+                    handle.Free();
+                }
+            }
+            else
+            {
+                // Convert int[] to uint[] for 32-bit indices
+                uint[] uintIndices = new uint[_indices.Length];
+                for (int i = 0; i < _indices.Length; i++)
+                {
+                    uintIndices[i] = (uint)_indices[i];
+                }
+
+                GCHandle handle = GCHandle.Alloc(uintIndices, GCHandleType.Pinned);
+                try
+                {
+                    IntPtr dataPtr = handle.AddrOfPinnedObject();
+                    // Upload data to GPU directly from pinned array
+                    OdysseyBufferHelpers.glBufferData(GL_ELEMENT_ARRAY_BUFFER, dataSize, dataPtr, GL_STATIC_DRAW);
+                }
+                finally
+                {
+                    handle.Free();
+                }
+            }
+
+            // Unbind buffer
+            // Matching xoreos: glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
+            OdysseyBufferHelpers.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+            _iboCreated = true;
         }
 
         public int IndexCount => _indices != null ? _indices.Length : 0;
         public bool IsShort => _isShort;
         public IntPtr NativeHandle => new IntPtr(_bufferId);
 
+        /// <summary>
+        /// Sets index data in the buffer.
+        /// Matching xoreos: IndexBuffer::updateGL() - glBufferData or glBufferSubData
+        /// Based on xoreos indexbuffer.cpp: updateGL() @ lines 108-114
+        /// </summary>
         public void SetData(int[] indices)
         {
+            if (indices == null)
+            {
+                throw new ArgumentNullException(nameof(indices));
+            }
+
             _indices = indices;
-            // TODO: STUB - Update IBO data
+
+            // Update IBO if it was already created
+            if (_iboCreated && _bufferId != 0)
+            {
+                UpdateIBO();
+            }
+            else if (indices.Length > 0)
+            {
+                // Create IBO if it doesn't exist yet
+                CreateIBO();
+            }
+        }
+
+        /// <summary>
+        /// Updates the OpenGL index buffer object with new data.
+        /// Matching xoreos: IndexBuffer::updateGL() - glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo), glBufferData(...)
+        /// Based on xoreos indexbuffer.cpp: updateGL() @ lines 108-114
+        /// </summary>
+        private void UpdateIBO()
+        {
+            if (!_iboCreated || _bufferId == 0 || _indices == null || _indices.Length == 0)
+            {
+                return;
+            }
+
+            // Bind buffer
+            // Matching xoreos: glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo)
+            OdysseyBufferHelpers.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _bufferId);
+
+            // Calculate data size based on index type (16-bit or 32-bit)
+            int indexSize = _isShort ? sizeof(ushort) : sizeof(uint);
+            int dataSize = _indices.Length * indexSize;
+
+            // Convert indices to appropriate format (ushort[] or uint[])
+            // Pin the array and pass pointer directly to glBufferData
+            // Matching xoreos: glBufferData(GL_ELEMENT_ARRAY_BUFFER, _count * _size, _data, _hint)
+            if (_isShort)
+            {
+                // Convert int[] to ushort[] for 16-bit indices
+                ushort[] shortIndices = new ushort[_indices.Length];
+                for (int i = 0; i < _indices.Length; i++)
+                {
+                    shortIndices[i] = (ushort)_indices[i];
+                }
+
+                GCHandle handle = GCHandle.Alloc(shortIndices, GCHandleType.Pinned);
+                try
+                {
+                    IntPtr dataPtr = handle.AddrOfPinnedObject();
+                    // Upload data to GPU directly from pinned array
+                    // Using glBufferData for full buffer update (replaces entire buffer)
+                    OdysseyBufferHelpers.glBufferData(GL_ELEMENT_ARRAY_BUFFER, dataSize, dataPtr, GL_STATIC_DRAW);
+                }
+                finally
+                {
+                    handle.Free();
+                }
+            }
+            else
+            {
+                // Convert int[] to uint[] for 32-bit indices
+                uint[] uintIndices = new uint[_indices.Length];
+                for (int i = 0; i < _indices.Length; i++)
+                {
+                    uintIndices[i] = (uint)_indices[i];
+                }
+
+                GCHandle handle = GCHandle.Alloc(uintIndices, GCHandleType.Pinned);
+                try
+                {
+                    IntPtr dataPtr = handle.AddrOfPinnedObject();
+                    // Upload data to GPU directly from pinned array
+                    // Using glBufferData for full buffer update (replaces entire buffer)
+                    OdysseyBufferHelpers.glBufferData(GL_ELEMENT_ARRAY_BUFFER, dataSize, dataPtr, GL_STATIC_DRAW);
+                }
+                finally
+                {
+                    handle.Free();
+                }
+            }
+
+            // Unbind buffer
+            // Matching xoreos: glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
+            OdysseyBufferHelpers.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         }
 
         public void GetData(int[] indices)
@@ -497,11 +701,26 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             }
         }
 
+        /// <summary>
+        /// Disposes the index buffer and releases OpenGL resources.
+        /// Matching xoreos: IndexBuffer::destroyGL() - glDeleteBuffers(1, &_ibo)
+        /// Based on xoreos indexbuffer.cpp: destroyGL() @ lines 116-121
+        /// </summary>
         public void Dispose()
         {
             if (!_disposed)
             {
-                // TODO: STUB - Delete IBO
+                // Delete IBO if it was created
+                // Matching xoreos: glDeleteBuffers(1, &_ibo)
+                if (_iboCreated && _bufferId != 0)
+                {
+                    uint[] buffers = new uint[1] { _bufferId };
+                    OdysseyBufferHelpers.glDeleteBuffers(1, buffers);
+                    _bufferId = 0;
+                    _iboCreated = false;
+                }
+
+                _indices = null;
                 _disposed = true;
             }
         }
@@ -918,6 +1137,12 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
 
         [DllImport("opengl32.dll", EntryPoint = "glPopMatrix")]
         private static extern void glPopMatrix();
+
+        [DllImport("opengl32.dll", EntryPoint = "glEnable")]
+        private static extern void glEnable(uint cap);
+
+        [DllImport("opengl32.dll", EntryPoint = "glDisable")]
+        private static extern void glDisable(uint cap);
 
         [DllImport("opengl32.dll", EntryPoint = "glColor4f")]
         private static extern void glColor4f(float red, float green, float blue, float alpha);
