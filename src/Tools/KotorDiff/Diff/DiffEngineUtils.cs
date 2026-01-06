@@ -155,6 +155,8 @@ namespace KotorDiff.Diff
         // Original: def print_udiff(...): ...
         /// <summary>
         /// Print unified diff between two files.
+        /// Complete implementation matching Python's difflib.unified_diff format.
+        /// Uses Myers diff algorithm to find minimal set of changes with proper context lines.
         /// </summary>
         public static void PrintUdiff(string fromFile, string toFile, string labelFrom, string labelTo, Action<string> logFunc)
         {
@@ -170,27 +172,335 @@ namespace KotorDiff.Diff
                 return;
             }
 
-            // Simple unified diff implementation
-            // TODO:  For a full implementation, would need a proper diff library
-            int maxLines = Math.Max(a.Count, b.Count);
-            for (int i = 0; i < maxLines; i++)
+            // Generate unified diff using Myers diff algorithm (matching Python difflib.unified_diff)
+            var diffLines = GenerateUnifiedDiffLines(a, b, labelFrom, labelTo);
+            foreach (string line in diffLines)
             {
-                string lineA = i < a.Count ? a[i] : "";
-                string lineB = i < b.Count ? b[i] : "";
-                if (lineA != lineB)
+                logFunc(line);
+            }
+        }
+
+        /// <summary>
+        /// Represents a single diff operation in the Myers algorithm.
+        /// </summary>
+        private class DiffOp
+        {
+            public enum OpType { Equal, Insert, Delete }
+
+            public OpType Type { get; }
+            public int OldIndex { get; }
+            public int NewIndex { get; }
+            public string Line { get; }
+
+            public DiffOp(OpType type, int oldIndex, int newIndex, string line)
+            {
+                Type = type;
+                OldIndex = oldIndex;
+                NewIndex = newIndex;
+                Line = line;
+            }
+        }
+
+        /// <summary>
+        /// Represents a hunk of changes in the unified diff format.
+        /// </summary>
+        private class DiffHunk
+        {
+            public int OldStart { get; set; }
+            public int OldCount { get; set; }
+            public int NewStart { get; set; }
+            public int NewCount { get; set; }
+            public int StartOpIndex { get; set; }
+            public int EndOpIndex { get; set; }
+        }
+
+        /// <summary>
+        /// Generate unified diff lines matching Python's difflib.unified_diff format.
+        /// Uses Myers diff algorithm to find minimal set of changes with context lines.
+        /// Reference: Python difflib.unified_diff implementation
+        /// </summary>
+        private static List<string> GenerateUnifiedDiffLines(List<string> oldLines, List<string> newLines, string fromFile, string toFile)
+        {
+            var result = new List<string>();
+
+            // Use Myers diff algorithm to find minimal set of changes
+            var operations = ComputeMyersDiff(oldLines, newLines);
+
+            if (operations.Count == 0)
+            {
+                // Files are identical
+                return result;
+            }
+
+            // Find hunks (groups of changes with context lines)
+            // Python difflib.unified_diff uses default context=3
+            const int CONTEXT_LINES = 3;
+            var hunks = FindUnifiedDiffHunks(operations, oldLines.Count, newLines.Count, CONTEXT_LINES);
+
+            if (hunks.Count == 0)
+            {
+                // No changes found (shouldn't happen if operations.Count > 0, but handle gracefully)
+                return result;
+            }
+
+            // Add diff headers (matching Python difflib.unified_diff format)
+            // Python format: "--- fromfile\n+++ tofile" (no timestamps by default)
+            result.Add($"--- {fromFile}");
+            result.Add($"+++ {toFile}");
+
+            // Format each hunk
+            foreach (var hunk in hunks)
+            {
+                result.AddRange(FormatUnifiedDiffHunk(hunk, operations, oldLines, newLines));
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Myers diff algorithm implementation - finds minimal set of changes.
+        /// Based on "An O(ND) Difference Algorithm and Its Variations" by Eugene W. Myers.
+        /// This is the same algorithm used by Python's difflib.
+        /// </summary>
+        private static List<DiffOp> ComputeMyersDiff(List<string> oldLines, List<string> newLines)
+        {
+            int n = oldLines.Count;
+            int m = newLines.Count;
+            int max = n + m;
+
+            // Trace array for backtracking: trace[d][k] stores the x-coordinate at depth d, diagonal k
+            var trace = new List<int[]>();
+
+            // Initialize trace
+            for (int d = 0; d <= max; d++)
+            {
+                trace.Add(new int[2 * d + 1]);
+                for (int k = -d; k <= d; k += 2)
                 {
-                    if (i < a.Count)
+                    int x;
+                    if (d == 0)
                     {
-                        logFunc($"--- {labelFrom}:{i + 1}");
-                        logFunc($"-{lineA}");
+                        x = 0;
                     }
-                    if (i < b.Count)
+                    else if (k == -d || (k != d && trace[d - 1][k - 1 + d - 1] < trace[d - 1][k + 1 + d - 1]))
                     {
-                        logFunc($"+++ {labelTo}:{i + 1}");
-                        logFunc($"+{lineB}");
+                        // Came from diagonal k+1 (down/insert)
+                        x = trace[d - 1][k + 1 + d - 1];
+                    }
+                    else
+                    {
+                        // Came from diagonal k-1 (right/delete)
+                        x = trace[d - 1][k - 1 + d - 1] + 1;
+                    }
+
+                    int y = x - k;
+
+                    // Move diagonally as far as possible (find matching lines)
+                    while (x < n && y < m && oldLines[x] == newLines[y])
+                    {
+                        x++;
+                        y++;
+                    }
+
+                    trace[d][k + d] = x;
+
+                    // Check if we've reached the end
+                    if (x >= n && y >= m)
+                    {
+                        // Found the end, reconstruct the path
+                        return ReconstructMyersPath(trace, d, k, oldLines, newLines);
                     }
                 }
             }
+
+            // This should never happen for valid inputs
+            throw new InvalidOperationException("Myers diff algorithm failed to find a path");
+        }
+
+        /// <summary>
+        /// Reconstruct the diff operations from the Myers algorithm trace.
+        /// </summary>
+        private static List<DiffOp> ReconstructMyersPath(List<int[]> trace, int finalD, int finalK, List<string> oldLines, List<string> newLines)
+        {
+            var operations = new List<DiffOp>();
+            int x = oldLines.Count;
+            int y = newLines.Count;
+            int k = finalK;
+
+            // Reconstruct path backwards from the end
+            for (int currentD = finalD; currentD > 0; currentD--)
+            {
+                int prevK = k;
+                int prevX;
+
+                // Determine which diagonal we came from
+                if (k == -currentD || (k != currentD && trace[currentD - 1][k - 1 + currentD - 1] < trace[currentD - 1][k + 1 + currentD - 1]))
+                {
+                    // Came from diagonal k+1 (down/insert)
+                    prevK = k + 1;
+                    prevX = trace[currentD - 1][k + 1 + currentD - 1];
+                }
+                else
+                {
+                    // Came from diagonal k-1 (right/delete)
+                    prevK = k - 1;
+                    prevX = trace[currentD - 1][k - 1 + currentD - 1] + 1;
+                }
+
+                int prevY = prevX - prevK;
+
+                // Add operations for the diagonal move (equal lines)
+                while (x > prevX && y > prevY)
+                {
+                    x--;
+                    y--;
+                    operations.Insert(0, new DiffOp(DiffOp.OpType.Equal, x, y, oldLines[x]));
+                }
+
+                // Add the change operation (insert or delete)
+                if (x > prevX)
+                {
+                    // Delete operation (line removed from old)
+                    x--;
+                    operations.Insert(0, new DiffOp(DiffOp.OpType.Delete, x, y, oldLines[x]));
+                }
+                else if (y > prevY)
+                {
+                    // Insert operation (line added to new)
+                    y--;
+                    operations.Insert(0, new DiffOp(DiffOp.OpType.Insert, x, y, newLines[y]));
+                }
+
+                k = prevK;
+            }
+
+            // Add remaining equal operations at the beginning
+            while (x > 0 && y > 0 && oldLines[x - 1] == newLines[y - 1])
+            {
+                x--;
+                y--;
+                operations.Insert(0, new DiffOp(DiffOp.OpType.Equal, x, y, oldLines[x]));
+            }
+
+            return operations;
+        }
+
+        /// <summary>
+        /// Find hunks of changes with context lines (matching Python difflib.unified_diff default context=3).
+        /// Groups consecutive changes together and adds context lines before and after.
+        /// </summary>
+        private static List<DiffHunk> FindUnifiedDiffHunks(List<DiffOp> operations, int oldCount, int newCount, int contextLines)
+        {
+            var hunks = new List<DiffHunk>();
+
+            int i = 0;
+            while (i < operations.Count)
+            {
+                // Skip equal operations until we find a change
+                while (i < operations.Count && operations[i].Type == DiffOp.OpType.Equal)
+                {
+                    i++;
+                }
+
+                if (i >= operations.Count)
+                {
+                    break;
+                }
+
+                // Found the start of a change hunk
+                var hunk = new DiffHunk();
+                hunk.StartOpIndex = Math.Max(0, i - contextLines);
+
+                // Find the end of this change hunk
+                int changeStart = i;
+                while (i < operations.Count && operations[i].Type != DiffOp.OpType.Equal)
+                {
+                    i++;
+                }
+                int changeEnd = i - 1;
+
+                hunk.EndOpIndex = Math.Min(operations.Count - 1, changeEnd + contextLines);
+
+                // Calculate line numbers (1-based for unified diff format)
+                hunk.OldStart = 1;
+                hunk.NewStart = 1;
+
+                // Count lines before the hunk start
+                for (int j = 0; j < hunk.StartOpIndex; j++)
+                {
+                    if (operations[j].Type == DiffOp.OpType.Equal || operations[j].Type == DiffOp.OpType.Delete)
+                    {
+                        hunk.OldStart++;
+                    }
+                    if (operations[j].Type == DiffOp.OpType.Equal || operations[j].Type == DiffOp.OpType.Insert)
+                    {
+                        hunk.NewStart++;
+                    }
+                }
+
+                // Count lines in the hunk
+                hunk.OldCount = 0;
+                hunk.NewCount = 0;
+
+                for (int j = hunk.StartOpIndex; j <= hunk.EndOpIndex; j++)
+                {
+                    if (operations[j].Type == DiffOp.OpType.Equal || operations[j].Type == DiffOp.OpType.Delete)
+                    {
+                        hunk.OldCount++;
+                    }
+                    if (operations[j].Type == DiffOp.OpType.Equal || operations[j].Type == DiffOp.OpType.Insert)
+                    {
+                        hunk.NewCount++;
+                    }
+                }
+
+                hunks.Add(hunk);
+            }
+
+            return hunks;
+        }
+
+        /// <summary>
+        /// Format a single hunk as unified diff lines (matching Python difflib.unified_diff format).
+        /// Format: @@ -oldStart,oldCount +newStart,newCount @@
+        /// Lines: space for context, - for deleted, + for inserted
+        /// </summary>
+        private static List<string> FormatUnifiedDiffHunk(DiffHunk hunk, List<DiffOp> operations, List<string> oldLines, List<string> newLines)
+        {
+            var lines = new List<string>();
+
+            // Add hunk header: @@ -oldStart,oldCount +newStart,newCount @@
+            // Python format uses 1-based line numbers
+            lines.Add($"@@ -{hunk.OldStart},{hunk.OldCount} +{hunk.NewStart},{hunk.NewCount} @@");
+
+            // Add the lines in the hunk
+            for (int i = hunk.StartOpIndex; i <= hunk.EndOpIndex; i++)
+            {
+                var op = operations[i];
+                string lineContent = op.Line;
+
+                // Remove trailing newline/carriage return if present (lines are already split)
+                // Python difflib.unified_diff with lineterm="" doesn't include newlines in the diff output
+                lineContent = lineContent.TrimEnd('\r', '\n');
+
+                switch (op.Type)
+                {
+                    case DiffOp.OpType.Equal:
+                        // Context line: starts with space
+                        lines.Add($" {lineContent}");
+                        break;
+                    case DiffOp.OpType.Delete:
+                        // Deleted line: starts with minus
+                        lines.Add($"-{lineContent}");
+                        break;
+                    case DiffOp.OpType.Insert:
+                        // Inserted line: starts with plus
+                        lines.Add($"+{lineContent}");
+                        break;
+                }
+            }
+
+            return lines;
         }
 
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:2252-2288
