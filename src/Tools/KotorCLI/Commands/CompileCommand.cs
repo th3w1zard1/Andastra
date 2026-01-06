@@ -26,11 +26,12 @@ namespace KotorCLI.Commands
         public static void AddToRootCommand(RootCommand rootCommand)
         {
             var compileCommand = new Command("compile", "Compile all nss sources for target");
-            var targetsArgument = new Argument<string[]>("targets", () => Array.Empty<string>(), "Targets to compile (use 'all' for all targets)");
+            var targetsArgument = new Argument<string[]>("targets");
+            targetsArgument.Description = "Targets to compile (use 'all' for all targets)";
             compileCommand.Add(targetsArgument);
             var cleanOption = new Option<bool>("--clean", "Clear the cache before compiling");
             compileCommand.Options.Add(cleanOption);
-            var fileOption = new Option<string[]>(new[] { "-f", "--file" }, "Compile specific file(s)");
+            var fileOption = new Option<string[]>("--file", "Compile specific file(s)");
             compileCommand.Options.Add(fileOption);
             var skipCompileOption = new Option<string[]>("--skipCompile", "Don't compile specific file(s)");
             compileCommand.Options.Add(skipCompileOption);

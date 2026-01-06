@@ -46,7 +46,7 @@ namespace KotorCLI.Commands
             rootCommand.Add(unpackCommand);
         }
 
-        private static int Execute(string targetName, string unpackFile, bool removeDeleted, ILogger logger)
+        internal static int Execute(string targetName, string unpackFile, bool removeDeleted, ILogger logger)
         {
             var configPath = ConfigFileFinder.FindConfigFile();
             if (configPath == null)

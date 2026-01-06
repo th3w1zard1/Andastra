@@ -18,10 +18,9 @@ namespace KotorCLI.Commands
             var decompileInput = new Argument<string>("input");
             decompileInput.Description = "Input NCS file";
             decompileCmd.Add(decompileInput);
-            var decompileOutput = new Option<string>(new[] { "-o", "--output" }, "Output NSS file");
+            var decompileOutput = new Option<string>("--output", "Output NSS file");
             decompileCmd.Options.Add(decompileOutput);
-            var gameOption = new Option<string>(new[] { "-g", "--game" }, "Target game (k1 or k2). Defaults to k2.");
-            gameOption.SetDefaultValue("k2");
+            var gameOption = new Option<string>("--game", "Target game (k1 or k2). Defaults to k2.");
             decompileCmd.Options.Add(gameOption);
             decompileCmd.SetAction(parseResult =>
             {
@@ -40,10 +39,10 @@ namespace KotorCLI.Commands
                     }
 
                     // Determine game type
-                    BioWareGame gameType = BioWareGame.KOTOR; // Default to KOTOR
+                    BioWareGame gameType = BioWareGame.K1; // Default to K1
                     if (string.Equals(game, "k1", StringComparison.OrdinalIgnoreCase))
                     {
-                        gameType = BioWareGame.KOTOR;
+                        gameType = BioWareGame.K1;
                     }
                     else if (string.Equals(game, "k2", StringComparison.OrdinalIgnoreCase) ||
                              string.Equals(game, "tsl", StringComparison.OrdinalIgnoreCase))
@@ -105,7 +104,7 @@ namespace KotorCLI.Commands
             var disassembleInput = new Argument<string>("input");
             disassembleInput.Description = "Input NCS file";
             disassembleCmd.Add(disassembleInput);
-            var disassembleOutput = new Option<string>(new[] { "-o", "--output" }, "Output text file");
+            var disassembleOutput = new Option<string>("--output", "Output text file");
             disassembleCmd.Options.Add(disassembleOutput);
             disassembleCmd.SetAction(parseResult =>
             {
@@ -121,9 +120,9 @@ namespace KotorCLI.Commands
             var assembleInput = new Argument<string>("input");
             assembleInput.Description = "Input NSS file";
             assembleCmd.Add(assembleInput);
-            var assembleOutput = new Option<string>(new[] { "-o", "--output" }, "Output NCS file");
+            var assembleOutput = new Option<string>("--output", "Output NCS file");
             assembleCmd.Options.Add(assembleOutput);
-            var includeOption = new Option<string[]>(new[] { "-I", "--include" }, "Include directory for #include files");
+            var includeOption = new Option<string[]>("--include", "Include directory for #include files");
             assembleCmd.Options.Add(includeOption);
             var debugOption = new Option<bool>("--debug", "Enable debug output");
             assembleCmd.Options.Add(debugOption);

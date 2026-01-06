@@ -17,7 +17,7 @@ namespace KotorCLI.Commands
             var textureInput = new Argument<string>("input");
             textureInput.Description = "Input texture file (TPC or TGA)";
             textureCmd.Add(textureInput);
-            var textureOutput = new Option<string>(new[] { "-o", "--output" }, "Output texture file");
+            var textureOutput = new Option<string>("--output", "Output texture file");
             textureCmd.Options.Add(textureOutput);
             var txiOption = new Option<string>("--txi", "TXI file path (for TPC↔TGA conversion)");
             textureCmd.Options.Add(txiOption);
@@ -36,9 +36,9 @@ namespace KotorCLI.Commands
             var soundInput = new Argument<string>("input");
             soundInput.Description = "Input WAV file";
             soundCmd.Add(soundInput);
-            var soundOutput = new Option<string>(new[] { "-o", "--output" }, "Output WAV file");
+            var soundOutput = new Option<string>("--output", "Output WAV file");
             soundCmd.Options.Add(soundOutput);
-            var forceOverwrite = new Option<bool>(new[] { "-f", "--force" }, "Force overwrite output file if it exists");
+            var forceOverwrite = new Option<bool>("--force", "Force overwrite output file if it exists");
             soundCmd.Options.Add(forceOverwrite);
             soundCmd.SetAction(parseResult =>
             {
@@ -170,7 +170,7 @@ namespace KotorCLI.Commands
             var modelInput = new Argument<string>("input");
             modelInput.Description = "Input MDL file";
             modelCmd.Add(modelInput);
-            var modelOutput = new Option<string>(new[] { "-o", "--output" }, "Output MDL file");
+            var modelOutput = new Option<string>("--output", "Output MDL file");
             modelCmd.Options.Add(modelOutput);
             var toAsciiOption = new Option<bool>("--to-ascii", "Convert to ASCII format");
             modelCmd.Options.Add(toAsciiOption);

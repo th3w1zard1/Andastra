@@ -21,7 +21,8 @@ namespace KotorCLI.Commands
         public static void AddToRootCommand(RootCommand rootCommand)
         {
             var packCommand = new Command("pack", "Convert, compile, and pack all sources for target");
-            var targetsArgument = new Argument<string[]>("targets", () => Array.Empty<string>(), "Targets to pack (use 'all' for all targets)");
+            var targetsArgument = new Argument<string[]>("targets");
+            targetsArgument.Description = "Targets to pack (use 'all' for all targets)";
             packCommand.Add(targetsArgument);
             var cleanOption = new Option<bool>("--clean", "Clear the cache before packing");
             packCommand.Options.Add(cleanOption);

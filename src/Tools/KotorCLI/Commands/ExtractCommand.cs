@@ -33,7 +33,7 @@ namespace KotorCLI.Commands
             var fileOption = new Option<string>("--file", "Archive file to extract");
             fileOption.Required = true;
             extractCommand.Options.Add(fileOption);
-            var outputOption = new Option<string>(new[] { "-o", "--output" }, "Output directory (default: archive_name)");
+            var outputOption = new Option<string>("--output", "Output directory (default: archive_name)");
             extractCommand.Options.Add(outputOption);
             var filterOption = new Option<string>("--filter", "Filter resources by name pattern (supports wildcards)");
             extractCommand.Options.Add(filterOption);

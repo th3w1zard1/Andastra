@@ -40,7 +40,7 @@ namespace KotorCLI.Commands
             var inputArg = new Argument<string>("input");
             inputArg.Description = "Input GFF file";
             cmd.Add(inputArg);
-            var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output JSON file");
+            var outputOpt = new Option<string>("--output", "Output JSON file");
             cmd.Options.Add(outputOpt);
             cmd.SetAction(parseResult =>
             {
@@ -78,7 +78,7 @@ namespace KotorCLI.Commands
             var inputArg = new Argument<string>("input");
             inputArg.Description = "Input JSON file";
             cmd.Add(inputArg);
-            var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output GFF file");
+            var outputOpt = new Option<string>("--output", "Output GFF file");
             cmd.Options.Add(outputOpt);
             cmd.SetAction(parseResult =>
             {
@@ -97,7 +97,7 @@ namespace KotorCLI.Commands
             var inputArg = new Argument<string>("input");
             inputArg.Description = "Input GFF file";
             cmd.Add(inputArg);
-            var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output XML file");
+            var outputOpt = new Option<string>("--output", "Output XML file");
             cmd.Options.Add(outputOpt);
             cmd.SetAction(parseResult =>
             {
@@ -129,7 +129,7 @@ namespace KotorCLI.Commands
             var inputArg = new Argument<string>("input");
             inputArg.Description = "Input XML file";
             cmd.Add(inputArg);
-            var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output GFF file");
+            var outputOpt = new Option<string>("--output", "Output GFF file");
             cmd.Options.Add(outputOpt);
             cmd.SetAction(parseResult =>
             {
@@ -161,7 +161,7 @@ namespace KotorCLI.Commands
             var inputArg = new Argument<string>("input");
             inputArg.Description = "Input TLK file";
             cmd.Add(inputArg);
-            var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output XML file");
+            var outputOpt = new Option<string>("--output", "Output XML file");
             cmd.Options.Add(outputOpt);
             cmd.SetAction(parseResult =>
             {
@@ -180,7 +180,7 @@ namespace KotorCLI.Commands
             var inputArg = new Argument<string>("input");
             inputArg.Description = "Input XML file";
             cmd.Add(inputArg);
-            var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output TLK file");
+            var outputOpt = new Option<string>("--output", "Output TLK file");
             cmd.Options.Add(outputOpt);
             cmd.SetAction(parseResult =>
             {
@@ -199,7 +199,7 @@ namespace KotorCLI.Commands
             var inputArg = new Argument<string>("input");
             inputArg.Description = "Input SSF file";
             cmd.Add(inputArg);
-            var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output XML file");
+            var outputOpt = new Option<string>("--output", "Output XML file");
             cmd.Options.Add(outputOpt);
             cmd.SetAction(parseResult =>
             {
@@ -218,7 +218,7 @@ namespace KotorCLI.Commands
             var inputArg = new Argument<string>("input");
             inputArg.Description = "Input XML file";
             cmd.Add(inputArg);
-            var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output SSF file");
+            var outputOpt = new Option<string>("--output", "Output SSF file");
             cmd.Options.Add(outputOpt);
             cmd.SetAction(parseResult =>
             {
@@ -256,16 +256,15 @@ namespace KotorCLI.Commands
             var inputArg = new Argument<string>("input");
             inputArg.Description = "Input 2DA file";
             cmd.Add(inputArg);
-            var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output CSV file");
+            var outputOpt = new Option<string>("--output", "Output CSV file");
             cmd.Options.Add(outputOpt);
-            var delimiterOpt = new Option<string>(new[] { "-d", "--delimiter" }, "CSV delimiter");
-            delimiterOpt.SetDefaultValue(",");
+            var delimiterOpt = new Option<string>("--delimiter", "CSV delimiter");
             cmd.Options.Add(delimiterOpt);
             cmd.SetAction(parseResult =>
             {
                 var input = parseResult.GetValue(inputArg);
                 var output = parseResult.GetValue(outputOpt);
-                var delimiter = parseResult.GetValue(delimiterOpt);
+                var delimiter = parseResult.GetValue(delimiterOpt) ?? ",";
                 var logger = new StandardLogger();
                 try
                 {
@@ -292,16 +291,15 @@ namespace KotorCLI.Commands
             var inputArg = new Argument<string>("input");
             inputArg.Description = "Input CSV file";
             cmd.Add(inputArg);
-            var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output 2DA file");
+            var outputOpt = new Option<string>("--output", "Output 2DA file");
             cmd.Options.Add(outputOpt);
-            var delimiterOpt = new Option<string>(new[] { "-d", "--delimiter" }, "CSV delimiter");
-            delimiterOpt.SetDefaultValue(",");
+            var delimiterOpt = new Option<string>("--delimiter", "CSV delimiter");
             cmd.Options.Add(delimiterOpt);
             cmd.SetAction(parseResult =>
             {
                 var input = parseResult.GetValue(inputArg);
                 var output = parseResult.GetValue(outputOpt);
-                var delimiter = parseResult.GetValue(delimiterOpt);
+                var delimiter = parseResult.GetValue(delimiterOpt) ?? ",";
                 var logger = new StandardLogger();
                 try
                 {

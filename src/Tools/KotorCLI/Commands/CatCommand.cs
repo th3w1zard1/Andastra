@@ -18,7 +18,7 @@ namespace KotorCLI.Commands
             var resourceArgument = new Argument<string>("resource");
             resourceArgument.Description = "Resource reference name";
             catCommand.Add(resourceArgument);
-            var typeOption = new Option<string>(new[] { "-t", "--type" }, "Resource type extension (optional, will try to detect)");
+            var typeOption = new Option<string>("--type", "Resource type extension (optional, will try to detect)");
             catCommand.Options.Add(typeOption);
             
             catCommand.SetAction(parseResult =>

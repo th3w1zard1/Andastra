@@ -51,6 +51,7 @@ namespace KotorCLI.Commands
             try
             {
                 var config = new KotorCLIConfig(configPath);
+                var rootDir = Path.GetDirectoryName(configPath);
                 var allTargets = config.GetTargets();
 
                 if (allTargets.Count == 0)
@@ -60,7 +61,7 @@ namespace KotorCLI.Commands
                 }
 
                 var targetsToShow = targets.Length > 0
-                    ? allTargets.Where(t => targets.Contains(t.GetValueOrDefault("name")?.ToString() ?? "")).ToList()
+                    ? allTargets.Where(t => targets.Contains(GetTomlValue<string>(t, "name") ?? "")).ToList()
                     : allTargets;
 
                 if (targetsToShow.Count == 0)

@@ -20,7 +20,6 @@ namespace KotorCLI.Commands
         {
             var installCommand = new Command("install", "Convert, compile, pack, and install target");
             var targetsArgument = new Argument<string[]>("targets");
-            targetsArgument.SetDefaultValue(Array.Empty<string>());
             targetsArgument.Description = "Targets to install (use 'all' for all targets)";
             installCommand.Add(targetsArgument);
             var installDirOption = new Option<string>("--installDir", "The location of the KOTOR user directory");

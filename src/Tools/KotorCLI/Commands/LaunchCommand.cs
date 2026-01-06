@@ -19,7 +19,8 @@ namespace KotorCLI.Commands
             foreach (string alias in new[] { "launch", "serve", "play", "test" })
             {
                 var launchCommand = new Command(alias, "Convert, compile, pack, install, and launch target in-game");
-                var targetsArgument = new Argument<string[]>("targets", () => Array.Empty<string>(), "Target to launch");
+                var targetsArgument = new Argument<string[]>("targets");
+                targetsArgument.Description = "Target to launch";
                 launchCommand.Add(targetsArgument);
                 var gameBinOption = new Option<string>("--gameBin", "Path to the swkotor binary file");
                 launchCommand.Options.Add(gameBinOption);

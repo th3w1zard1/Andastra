@@ -130,7 +130,7 @@ namespace KotorCLI.Commands
 
                 try
                 {
-                    var gff = GFFAuto.ReadGff(filePath);
+                    var gff = GFFAuto.ReadGff(filePath, 0, null, null);
 
                     // Basic structure counts
                         stats.StructCount = gff.Structs.Count;
@@ -1236,7 +1236,7 @@ namespace KotorCLI.Commands
             var file2Arg = new Argument<string>("file2");
             file2Arg.Description = "Second file";
             diffCmd.Add(file2Arg);
-            var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output diff file");
+            var outputOpt = new Option<string>("--output", "Output diff file");
             diffCmd.Options.Add(outputOpt);
             diffCmd.SetAction(parseResult =>
             {
@@ -1258,7 +1258,7 @@ namespace KotorCLI.Commands
             grepCmd.Add(patternArg);
             var caseSensitiveOption = new Option<bool>("--case-sensitive", "Case-sensitive search");
             grepCmd.Options.Add(caseSensitiveOption);
-            var lineNumbersOption = new Option<bool>(new[] { "-n", "--line-numbers" }, "Show line numbers");
+            var lineNumbersOption = new Option<bool>("--line-numbers", "Show line numbers");
             grepCmd.Options.Add(lineNumbersOption);
             grepCmd.SetAction(parseResult =>
             {
@@ -1304,7 +1304,7 @@ namespace KotorCLI.Commands
             var validateFileArg = new Argument<string>("file");
             validateFileArg.Description = "File to validate";
             validateCmd.Add(validateFileArg);
-            var verboseOpt = new Option<bool>(new[] { "-v", "--verbose" }, "Show detailed validation information");
+            var verboseOpt = new Option<bool>("--verbose", "Show detailed validation information");
             validateCmd.Options.Add(verboseOpt);
             validateCmd.SetAction(parseResult =>
             {
@@ -1396,13 +1396,13 @@ namespace KotorCLI.Commands
             var sourceArg = new Argument<string>("source");
             sourceArg.Description = "Source GFF file (fields to merge)";
             mergeCmd.Add(sourceArg);
-            var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output GFF file (default: overwrite target)");
-            mergeCmd.Options.Add(outputOpt);
+            var mergeOutputOpt = new Option<string>("--output", "Output GFF file (default: overwrite target)");
+            mergeCmd.Options.Add(mergeOutputOpt);
             mergeCmd.SetAction(parseResult =>
             {
                 var target = parseResult.GetValue(targetArg);
                 var source = parseResult.GetValue(sourceArg);
-                var output = parseResult.GetValue(outputOpt);
+                var output = parseResult.GetValue(mergeOutputOpt);
                 var logger = new StandardLogger();
                 logger.Info("TODO: STUB - merge not yet implemented");
                 Environment.Exit(0);

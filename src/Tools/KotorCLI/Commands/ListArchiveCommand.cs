@@ -12,11 +12,10 @@ namespace KotorCLI.Commands
         public static void AddToRootCommand(RootCommand rootCommand)
         {
             var listArchiveCommand = new Command("list-archive", "List contents of archive files (KEY/BIF, RIM, ERF, etc.)");
-            listArchiveCommand.AddAlias("ls-archive");
             var fileOption = new Option<string>("--file", "Archive file to list");
             fileOption.Required = true;
             listArchiveCommand.Options.Add(fileOption);
-            var verboseOption = new Option<bool>(new[] { "-v", "--verbose" }, "Show detailed resource information");
+            var verboseOption = new Option<bool>("--verbose", "Show detailed resource information");
             listArchiveCommand.Options.Add(verboseOption);
             var filterOption = new Option<string>("--filter", "Filter resources by name pattern (supports wildcards)");
             listArchiveCommand.Options.Add(filterOption);
