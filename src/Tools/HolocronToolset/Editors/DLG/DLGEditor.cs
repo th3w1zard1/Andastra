@@ -3028,7 +3028,7 @@ namespace HolocronToolset.Editors.DLG
 
             var node = item.Link.Node;
             string nodeType = node is DLGEntry ? "Entry" : "Reply";
-            string text = node.Text?.GetString(0, Andastra.Parsing.Common.Language.Gender.Male) ?? "";
+            string text = node.Text?.GetString(0, Gender.Male) ?? "";
             if (string.IsNullOrEmpty(text))
             {
                 text = "<empty>";
@@ -4614,12 +4614,12 @@ namespace HolocronToolset.Editors.DLG
                             {
                                 // TODO: STUB - Note: Accessing _substrings would require reflection or public API
                                 // TODO: STUB - For now, check if text exists (simplified)
-                                return node.Text.GetString(0, Andastra.Parsing.Common.Language.Gender.Male) != null;
+                                return node.Text.GetString(0, Gender.Male) != null;
                             }
                         }
                         return false;
                     }
-                    return node.Text != null && !string.IsNullOrEmpty(node.Text.GetString(0, Andastra.Parsing.Common.Language.Gender.Male));
+                    return node.Text != null && !string.IsNullOrEmpty(node.Text.GetString(0, Gender.Male));
                 }
 
                 return false;
