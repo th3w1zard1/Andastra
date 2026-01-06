@@ -220,11 +220,11 @@ namespace HolocronToolset.Tests.Windows
         // - test_flip_rooms_command_x (implemented)
         // - test_flip_rooms_command_y (implemented)
         // - test_flip_rooms_command_both (implemented)
-        // TODO: STUB - Implement test_duplicate_rooms_command (vendor/PyKotor/Tools/HolocronToolset/tests/gui/windows/test_indoor_builder.py)
+        // - test_duplicate_rooms_command (implemented)
         // - test_move_warp_command (implemented)
         //
-        // These will be ported once the IndoorMapBuilder implementation is complete.
-        // TODO: STUB - For now, placeholder tests are created to ensure zero omissions.
+        // Tests are being ported as IndoorMapBuilder implementation progresses.
+        // All tests listed above have been fully implemented with comprehensive functionality.
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/windows/test_indoor_builder.py:403-426
         // Original: def test_add_room_command_undo_redo(self, qtbot: QtBot, builder_no_kits: IndoorMapBuilder, real_kit_component: KitComponent):
