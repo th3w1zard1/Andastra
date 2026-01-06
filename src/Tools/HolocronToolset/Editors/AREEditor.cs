@@ -1796,9 +1796,51 @@ namespace HolocronToolset.Editors
                 _tagGenerateButton.Click += (s, e) => GenerateTag();
             }
 
-            // TODO: STUB - Minimap update signals are not implemented yet as minimap renderer is not available
-            // Matching Python lines 79-87 would connect map-related spinboxes to redoMinimap
-            // These will be implemented when minimap renderer is available
+            // Matching Python: self.ui.mapAxisSelect.currentIndexChanged.connect(self.redoMinimap) (line 89)
+            if (_mapAxisSelect != null)
+            {
+                _mapAxisSelect.SelectedIndexChanged += (s, e) => RedoMinimap();
+            }
+            // Matching Python: self.ui.mapWorldX1Spin.valueChanged.connect(self.redoMinimap) (line 90)
+            if (_mapWorldX1Spin != null)
+            {
+                _mapWorldX1Spin.ValueChanged += (s, e) => RedoMinimap();
+            }
+            // Matching Python: self.ui.mapWorldX2Spin.valueChanged.connect(self.redoMinimap) (line 91)
+            if (_mapWorldX2Spin != null)
+            {
+                _mapWorldX2Spin.ValueChanged += (s, e) => RedoMinimap();
+            }
+            // Matching Python: self.ui.mapWorldY1Spin.valueChanged.connect(self.redoMinimap) (line 92)
+            if (_mapWorldY1Spin != null)
+            {
+                _mapWorldY1Spin.ValueChanged += (s, e) => RedoMinimap();
+            }
+            // Matching Python: self.ui.mapWorldY2Spin.valueChanged.connect(self.redoMinimap) (line 93)
+            if (_mapWorldY2Spin != null)
+            {
+                _mapWorldY2Spin.ValueChanged += (s, e) => RedoMinimap();
+            }
+            // Matching Python: self.ui.mapImageX1Spin.valueChanged.connect(self.redoMinimap) (line 94)
+            if (_mapImageX1Spin != null)
+            {
+                _mapImageX1Spin.ValueChanged += (s, e) => RedoMinimap();
+            }
+            // Matching Python: self.ui.mapImageX2Spin.valueChanged.connect(self.redoMinimap) (line 95)
+            if (_mapImageX2Spin != null)
+            {
+                _mapImageX2Spin.ValueChanged += (s, e) => RedoMinimap();
+            }
+            // Matching Python: self.ui.mapImageY1Spin.valueChanged.connect(self.redoMinimap) (line 96)
+            if (_mapImageY1Spin != null)
+            {
+                _mapImageY1Spin.ValueChanged += (s, e) => RedoMinimap();
+            }
+            // Matching Python: self.ui.mapImageY2Spin.valueChanged.connect(self.redoMinimap) (line 97)
+            if (_mapImageY2Spin != null)
+            {
+                _mapImageY2Spin.ValueChanged += (s, e) => RedoMinimap();
+            }
 
             // Script combo boxes will be populated in LoadARE after filepath is set
             _relevantScriptResnames = new List<string>();
