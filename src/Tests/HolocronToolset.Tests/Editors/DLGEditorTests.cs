@@ -2814,14 +2814,75 @@ namespace HolocronToolset.Tests.Editors
             editor.Close();
         }
 
-        // TODO: STUB - Implement test_dlg_editor_add_animation_programmatically (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1612-1638)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1612-1638
         // Original: def test_dlg_editor_add_animation_programmatically(qtbot, installation: HTInstallation): Test adding animation programmatically
         [Fact]
         public void TestDlgEditorAddAnimationProgrammatically()
         {
-            // TODO: STUB - Implement add animation programmatically test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1612-1638
-            throw new NotImplementedException("TestDlgEditorAddAnimationProgrammatically: Add animation programmatically test not yet implemented");
+            // Get installation if available
+            var installation = CreateTestInstallation();
+
+            // Matching Python: editor = DLGEditor(None, installation)
+            var editor = new DLGEditor(null, installation);
+            editor.Show();
+            
+            // Matching Python: editor.new()
+            editor.New();
+            
+            // Matching Python: # Create node and select it
+            // Matching Python: editor.model.add_root_node()
+            DLGStandardItem rootItem = editor.Model.AddRootNode();
+            rootItem.Should().NotBeNull("Root item should be created");
+            
+            // Matching Python: root_item = editor.model.item(0, 0)
+            // Get the root item from model (should be the same as what AddRootNode returned)
+            DLGStandardItem rootItemFromModel = editor.Model.Item(0, 0);
+            rootItemFromModel.Should().NotBeNull("Root item should be accessible from model");
+            rootItemFromModel.Should().Be(rootItem, "Root item from model should match the created item");
+            
+            // Matching Python: editor.ui.dialogTree.setCurrentIndex(root_item.index())
+            // Set the selected item in the dialog tree
+            editor.DialogTree.SelectedItem = rootItem;
+            
+            // Matching Python: # Add animation to node
+            // Matching Python: anim = DLGAnimation()
+            // Matching Python: anim.animation_id = 1
+            // Matching Python: anim.participant = "PLAYER"
+            var anim = new DLGAnimation
+            {
+                AnimationId = 1,
+                Participant = "PLAYER"
+            };
+            
+            // Matching Python: root_item.link.node.animations.append(anim)
+            rootItem.Link.Should().NotBeNull("Root item should have a link");
+            rootItem.Link.Node.Should().NotBeNull("Root item link should have a node");
+            rootItem.Link.Node.Animations.Add(anim);
+            
+            // Matching Python: editor.refresh_anim_list()
+            editor.RefreshAnimList();
+            
+            // Matching Python: # Verify animation is in list
+            // Matching Python: assert editor.ui.animsList.count() == 1
+            editor.AnimsList.Should().NotBeNull("AnimsList should exist");
+            editor.AnimsList.Items.Count.Should().Be(1, "AnimsList should contain exactly one animation");
+            
+            // Matching Python: # Build and verify
+            // Matching Python: data, _ = editor.build()
+            var (data, _) = editor.Build();
+            data.Should().NotBeNull("Built DLG data should not be null");
+            
+            // Matching Python: dlg = read_dlg(data)
+            DLGType dlg = DLGHelper.ReadDlg(data);
+            dlg.Should().NotBeNull("Read DLG should not be null");
+            
+            // Matching Python: assert len(dlg.starters[0].node.animations) == 1
+            dlg.Starters.Should().NotBeEmpty("DLG should have at least one starter");
+            dlg.Starters[0].Should().NotBeNull("First starter should not be null");
+            dlg.Starters[0].Node.Should().NotBeNull("First starter node should not be null");
+            dlg.Starters[0].Node.Animations.Should().HaveCount(1, "First starter node should have exactly one animation");
+            dlg.Starters[0].Node.Animations[0].AnimationId.Should().Be(1, "Animation ID should be 1");
+            dlg.Starters[0].Node.Animations[0].Participant.Should().Be("PLAYER", "Animation participant should be PLAYER");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1640-1665
