@@ -1985,14 +1985,31 @@ namespace HolocronToolset.Tests.Editors
                 trapSelect.SetSelectedIndex(1);
             }
 
-            // Save and verify all (only fields that work)
+            // Save and verify all
+            // Matching Python: data, _ = editor.build()
             var (data, _) = editor.Build();
+            // Matching Python: modified_utt = read_utt(data)
             var modifiedUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
 
-            // Note: Checkbox and NumericUpDown fields will fail due to known issue
-            // TrapType may also fail if ComboBox2DA SetSelectedIndex doesn't work correctly
-            // TODO: STUB - For now, just verify the test runs without crashing
-            modifiedUtt.Should().NotBeNull("Modified UTT should not be null");
+            // Matching Python: assert modified_utt.is_trap
+            modifiedUtt.IsTrap.Should().BeTrue("IsTrap should be true after setting isTrapCheckbox to true");
+            // Matching Python: assert modified_utt.trap_once
+            modifiedUtt.TrapOnce.Should().BeTrue("TrapOnce should be true after setting activateOnceCheckbox to true");
+            // Matching Python: assert modified_utt.trap_detectable
+            modifiedUtt.TrapDetectable.Should().BeTrue("TrapDetectable should be true after setting detectableCheckbox to true");
+            // Matching Python: assert modified_utt.trap_detect_dc == 25
+            modifiedUtt.TrapDetectDc.Should().Be(25, "TrapDetectDc should be 25 after setting detectDcSpin to 25");
+            // Matching Python: assert modified_utt.trap_disarmable
+            modifiedUtt.TrapDisarmable.Should().BeTrue("TrapDisarmable should be true after setting disarmableCheckbox to true");
+            // Matching Python: assert modified_utt.trap_disarm_dc == 30
+            modifiedUtt.TrapDisarmDc.Should().Be(30, "TrapDisarmDc should be 30 after setting disarmDcSpin to 30");
+            
+            // Verify trap_type if trapSelect was set
+            if (trapSelect != null && trapSelect.Items.Count > 0)
+            {
+                // Matching Python: trap_type should be set to the selected index (1 in this case)
+                modifiedUtt.TrapType.Should().Be(1, "TrapType should be 1 after setting trapSelect to index 1");
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utt_editor.py:789-821
