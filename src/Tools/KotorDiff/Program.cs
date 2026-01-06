@@ -2,6 +2,7 @@
 // Original: def main(): ...
 using System;
 using System.IO;
+using Avalonia;
 using KotorDiff.Cli;
 
 namespace KotorDiff
@@ -44,10 +45,20 @@ namespace KotorDiff
                 }
                 else
                 {
-                    // TODO: STUB - GUI mode not implemented yet - fall back to CLI
-                    Console.WriteLine("[Warning] GUI not available, cannot run in GUI mode without command-line arguments.");
-                    Console.WriteLine("[Info] Use --help to see CLI options");
-                    return 0;
+                    // GUI mode - launch Avalonia application
+                    // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/__main__.py:108-120
+                    // Original: from kotordiff.gui import KotorDiffApp; app = KotorDiffApp(); app.root.mainloop()
+                    try
+                    {
+                        BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+                        return 0;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.Error.WriteLine($"[Warning] GUI not available: {ex.GetType().Name}: {ex.Message}");
+                        Console.WriteLine("[Info] Use --help to see CLI options");
+                        return 0;
+                    }
                 }
             }
             catch (Exception e)
@@ -57,6 +68,15 @@ namespace KotorDiff
                 return 1;
             }
         }
+
+        // Build Avalonia application for GUI mode
+        // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/__main__.py:108-120
+        // Original: app = KotorDiffApp(); app.root.mainloop()
+        public static AppBuilder BuildAvaloniaApp()
+            => AppBuilder.Configure<App>()
+                .UsePlatformDetect()
+                .WithInterFont()
+                .LogToTrace();
     }
 }
 
