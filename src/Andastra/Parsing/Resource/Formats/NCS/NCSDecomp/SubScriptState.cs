@@ -1445,13 +1445,15 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                     // CRITICAL: Never wrap AConditionalExp, ABinaryExp, or AUnaryExp as they're needed by JZ/JNZ and binary operations
                     // AUnaryExp might be the result of NEGI and will be used by EQUALII, so NEVER wrap it, even if it's the only child
                     // This check must come first to ensure these are never wrapped
+                    // CRITICAL FIX: AUnaryExp from NEGI is ALWAYS an operand for EQUALII, so NEVER wrap it, regardless of child count
                     bool isControlStructureExpression = typeof(AConditionalExp).IsInstanceOfType(last) || typeof(ABinaryExp).IsInstanceOfType(last) || typeof(AUnaryExp).IsInstanceOfType(last);
                     // Also don't wrap AConst (constants) if there are multiple expressions, as they might be operands
                     // for binary operations (e.g., EQUALII) that haven't processed yet
                     // Also don't wrap AConst if it's the only child but might be used by a binary operation (conservative approach)
                     bool mightBeOperand = typeof(AConst).IsInstanceOfType(last) && this.current.Size() >= 2;
-                    // Additional safeguard: if last child is AUnaryExp and there are other children, it's definitely an operand
-                    bool isUnaryExpOperand = typeof(AUnaryExp).IsInstanceOfType(last) && this.current.Size() >= 2;
+                    // Additional safeguard: if last child is AUnaryExp, it's ALWAYS an operand (never wrap it)
+                    // This is critical because AUnaryExp from NEGI will be used by EQUALII
+                    bool isUnaryExpOperand = typeof(AUnaryExp).IsInstanceOfType(last);
                     if (typeof(AExpression).IsInstanceOfType(last) && !typeof(ScriptNode.AActionExp).IsInstanceOfType(last)
                           && !typeof(AModifyExp).IsInstanceOfType(last) && !typeof(AUnaryModExp).IsInstanceOfType(last)
                           && !typeof(AReturnStatement).IsInstanceOfType(last) && !isControlStructureExpression
