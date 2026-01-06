@@ -1106,17 +1106,83 @@ namespace HolocronToolset.Windows
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1439-1455
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1443-1455
         // Original: def open_module_designer(self):
         private void OpenModuleDesigner()
         {
+            // Matching Python: assert self.active is not None, "No installation loaded."
             if (_active == null)
             {
                 return;
             }
 
-            // TODO: STUB - Module designer will be implemented when available
-            System.Console.WriteLine("TODO: STUB - Module Designer not yet implemented");
+            // Matching Python: selected_module: Path | None = None
+            string selectedModulePath = null;
+
+            // Matching Python: try: combo_data = self.ui.modulesWidget.ui.sectionCombo.currentData(Qt.ItemDataRole.UserRole)
+            // Matching Python: except Exception: combo_data = None
+            try
+            {
+                if (_modulesWidget?.Ui?.SectionCombo != null && _modulesWidget.Ui.SectionCombo.SelectedItem != null)
+                {
+                    // Get the selected module filename from the section combo
+                    string moduleFilename = _modulesWidget.Ui.SectionCombo.SelectedItem.ToString();
+                    if (!string.IsNullOrEmpty(moduleFilename))
+                    {
+                        // Matching Python: selected_module = self.active.module_path() / Path(str(combo_data))
+                        string modulePath = _active.ModulePath();
+                        selectedModulePath = System.IO.Path.Combine(modulePath, moduleFilename);
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // If we can't get the selected module, continue without it (designer will open empty)
+                selectedModulePath = null;
+            }
+
+            // Matching Python: try: designer_window = ModuleDesigner(None, self.active, mod_filepath=selected_module)
+            // Matching Python: except TypeError as exc: ... designer_window = ModuleDesigner(None, self.active)
+            ModuleDesignerWindow designerWindow = null;
+            try
+            {
+                // Try to create designer with module path
+                if (!string.IsNullOrEmpty(selectedModulePath))
+                {
+                    designerWindow = new ModuleDesignerWindow(this, _active, selectedModulePath);
+                }
+                else
+                {
+                    // Create designer without module path - user can open module via dialog
+                    designerWindow = new ModuleDesignerWindow(this, _active, null);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Fallback: create designer without module path if constructor fails
+                // Matching Python: RobustLogger().warning(f"ModuleDesigner signature mismatch: {exc}. Falling back without module path.")
+                System.Console.WriteLine($"ModuleDesigner creation failed: {ex.Message}. Falling back without module path.");
+                designerWindow = new ModuleDesignerWindow(this, _active, null);
+                
+                // If we had a selected module, open it after a short delay
+                // Matching Python: if selected_module is not None: QTimer.singleShot(33, lambda: designer_window.open_module(selected_module))
+                if (!string.IsNullOrEmpty(selectedModulePath))
+                {
+                    // Use Avalonia's dispatcher to defer opening the module
+                    // This matches Python's QTimer.singleShot(33, ...) behavior
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        designerWindow.OpenModule(selectedModulePath);
+                    }, Avalonia.Threading.DispatcherPriority.Background);
+                }
+            }
+
+            // Show the designer window
+            // Matching Python: designer_window.show()
+            if (designerWindow != null)
+            {
+                designerWindow.Show();
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:2166-2177
