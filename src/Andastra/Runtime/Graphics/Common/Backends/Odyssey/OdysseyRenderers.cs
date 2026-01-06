@@ -1,10 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Numerics;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 using Andastra.Parsing.Formats.MDLData;
+using Andastra.Parsing.Formats.WAV;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
+using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Graphics;
@@ -209,24 +215,12 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 // Set view and projection matrices (typically set once per frame, but we set per-entity for flexibility)
                 odysseyEffect.View = viewMatrix;
                 odysseyEffect.Projection = projectionMatrix;
-                
+
                 // Set opacity from renderable component for fade-in/fade-out effects
                 // Based on swkotor2.exe: FadeTime @ 0x007c60ec (fade duration), alpha blending for entity rendering
                 // Opacity is updated by AppearAnimationFadeSystem for appear animations
                 // Opacity is updated by ActionDestroyObject for destroy animations
                 odysseyEffect.Alpha = opacity;
-                
-                // Enable texture if mesh has texture
-                if (!string.IsNullOrEmpty(mesh.TextureName))
-                {
-                    odysseyEffect.TextureEnabled = true;
-                    // TODO: Load and bind texture from mesh.TextureName
-                    // For now, texture loading is handled elsewhere
-                }
-                else
-                {
-                    odysseyEffect.TextureEnabled = false;
-                }
             }
 
             // Render all meshes
@@ -235,6 +229,21 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 if (mesh.VertexBuffer == null || mesh.IndexBuffer == null)
                 {
                     continue;
+                }
+
+                // Enable texture if mesh has texture
+                if (effect is OdysseyBasicEffect odysseyEffectForMesh)
+                {
+                    if (!string.IsNullOrEmpty(mesh.TextureName))
+                    {
+                        odysseyEffectForMesh.TextureEnabled = true;
+                        // TODO: Load and bind texture from mesh.TextureName
+                        // For now, texture loading is handled elsewhere
+                    }
+                    else
+                    {
+                        odysseyEffectForMesh.TextureEnabled = false;
+                    }
                 }
 
                 // Combine mesh transform with entity transform
@@ -247,15 +256,15 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 // Apply view/projection matrices and opacity via OpenGL state
                 // Based on swkotor2.exe: glDrawElements with proper matrix setup
                 // Based on xoreos: graphics.cpp renderWorld() @ lines 1059-1081
-                if (effect is OdysseyBasicEffect odysseyEffectForMesh)
+                if (effect is OdysseyBasicEffect odysseyEffectForMesh2)
                 {
                     // Set world matrix for this mesh
-                    odysseyEffectForMesh.World = finalWorld;
-                    
+                    odysseyEffectForMesh2.World = finalWorld;
+
                     // Apply effect (sets matrices and opacity via OpenGL state)
                     // Note: OpenGL fixed-function pipeline uses glMatrixMode and glMultMatrixf
                     // The Apply() method handles projection, view, and world matrix setup
-                    odysseyEffectForMesh.Apply();
+                    odysseyEffectForMesh2.Apply();
                 }
 
                 // Draw indexed primitives
@@ -798,33 +807,329 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
     /// Odyssey voice player implementation.
     /// Plays voice-over dialogue audio.
     /// </summary>
-    public class OdysseyVoicePlayer
+    /// <remarks>
+    /// Odyssey Voice Player:
+    /// - Based on reverse engineering of swkotor.exe and swkotor2.exe
+    /// - Voice playback: Original engine uses Miles Sound System (MSS) or DirectSound
+    /// - Voice files: Stored as WAV resources, referenced by ResRef (e.g., "n_darthmalak01")
+    /// - This implementation: Uses Windows API PlaySound for simple playback (can be extended with OpenAL)
+    /// - Based on swkotor2.exe: Voice-over playback functions @ various addresses
+    /// - Voice directories: "STREAMVOICE" @ 0x007c69dc, "HD0:STREAMVOICE" @ 0x007c771c
+    /// - Voice settings: "Voiceover Volume" @ 0x007c83cc, "Number 3D Voices" @ 0x007c7258
+    /// </remarks>
+    public class OdysseyVoicePlayer : IDisposable
     {
         private readonly object _resourceProvider;
         private bool _isPlaying;
+        private float _volume = 1.0f;
+        private string _currentVoiceResRef;
+        private CancellationTokenSource _playbackCancellation;
+        private readonly object _playbackLock = new object();
 
         public OdysseyVoicePlayer(object resourceProvider)
         {
             _resourceProvider = resourceProvider;
         }
 
+        /// <summary>
+        /// Plays a voice-over audio file by ResRef.
+        /// Matching PyKotor and StrideVoicePlayer pattern: Load WAV, parse, play.
+        /// Based on swkotor2.exe: Voice-over playback system
+        /// </summary>
+        /// <param name="voiceResRef">The voice resource reference (e.g., "n_darthmalak01").</param>
         public void Play(string voiceResRef)
         {
-            _isPlaying = true;
-            // TODO: STUB - Play voice audio
+            if (string.IsNullOrEmpty(voiceResRef))
+            {
+                return;
+            }
+
+            lock (_playbackLock)
+            {
+                // Stop any currently playing voice
+                Stop();
+
+                _currentVoiceResRef = voiceResRef;
+                _isPlaying = true;
+                _playbackCancellation = new CancellationTokenSource();
+
+                // Play voice asynchronously to avoid blocking
+                Task.Run(() => PlayVoiceAsync(voiceResRef, _playbackCancellation.Token));
+            }
         }
 
+        /// <summary>
+        /// Asynchronously plays voice audio.
+        /// </summary>
+        private void PlayVoiceAsync(string voiceResRef, CancellationToken cancellationToken)
+        {
+            try
+            {
+                // Get resource provider
+                IGameResourceProvider resourceProvider = _resourceProvider as IGameResourceProvider;
+                if (resourceProvider == null)
+                {
+                    Console.WriteLine($"[OdysseyVoicePlayer] Resource provider is not IGameResourceProvider");
+                    lock (_playbackLock)
+                    {
+                        _isPlaying = false;
+                    }
+                    return;
+                }
+
+                // Load WAV file from resource provider
+                // Matching StrideVoicePlayer: GetResourceBytes(new ResourceIdentifier(voiceResRef, ResourceType.WAV))
+                var resourceId = new ResourceIdentifier(voiceResRef, ResourceType.WAV);
+                byte[] wavData = resourceProvider.GetResourceBytes(resourceId);
+                
+                if (wavData == null || wavData.Length == 0)
+                {
+                    Console.WriteLine($"[OdysseyVoicePlayer] Voice-over not found: {voiceResRef}");
+                    lock (_playbackLock)
+                    {
+                        _isPlaying = false;
+                    }
+                    return;
+                }
+
+                // Parse WAV file to get format information
+                // Matching StrideVoicePlayer: WAVAuto.ReadWav(wavData)
+                WAV wavFile = WAVAuto.ReadWav(wavData);
+                if (wavFile == null || wavFile.Data == null || wavFile.Data.Length == 0)
+                {
+                    Console.WriteLine($"[OdysseyVoicePlayer] Failed to parse WAV file: {voiceResRef}");
+                    lock (_playbackLock)
+                    {
+                        _isPlaying = false;
+                    }
+                    return;
+                }
+
+                // Check cancellation
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    lock (_playbackLock)
+                    {
+                        _isPlaying = false;
+                    }
+                    return;
+                }
+
+                // Play audio using Windows API PlaySound
+                // Based on swkotor2.exe: Voice playback uses DirectSound/MSS, but we use PlaySound for simplicity
+                // Note: PlaySound is Windows-only; for cross-platform, consider OpenAL or NAudio
+                PlayWavAudio(wavData, wavFile, cancellationToken);
+
+                // Calculate duration for logging
+                float duration = 0.0f;
+                if (wavFile.SampleRate > 0 && wavFile.Channels > 0 && wavFile.BitsPerSample > 0)
+                {
+                    duration = (float)wavFile.Data.Length / (wavFile.SampleRate * wavFile.Channels * (wavFile.BitsPerSample / 8));
+                }
+
+                Console.WriteLine($"[OdysseyVoicePlayer] Playing voice-over: {voiceResRef} (duration: {duration:F2}s, format: {wavFile.SampleRate}Hz, {wavFile.Channels}ch, {wavFile.BitsPerSample}bit)");
+
+                // Wait for playback to complete (PlaySound is synchronous)
+                // In a real implementation, this would be handled by the audio system
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    // PlaySound blocks until playback completes or is cancelled
+                    // For async playback, we would use a different API (OpenAL, DirectSound, etc.)
+                }
+
+                lock (_playbackLock)
+                {
+                    _isPlaying = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[OdysseyVoicePlayer] Error playing voice-over {voiceResRef}: {ex.Message}");
+                lock (_playbackLock)
+                {
+                    _isPlaying = false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Plays WAV audio data using Windows API PlaySound.
+        /// Based on swkotor2.exe: Voice playback system
+        /// Note: This is a Windows-only implementation. For cross-platform, use OpenAL or NAudio.
+        /// </summary>
+        private void PlayWavAudio(byte[] wavData, WAV wavFile, CancellationToken cancellationToken)
+        {
+            // Windows API PlaySound implementation
+            // Based on swkotor2.exe: Voice playback uses DirectSound/MSS
+            // This implementation uses PlaySound for simplicity (can be extended with OpenAL)
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                try
+                {
+                    // Write WAV data to temporary file for PlaySound
+                    // PlaySound can play from memory, but requires proper WAV format
+                    string tempFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".wav");
+                    File.WriteAllBytes(tempFile, wavData);
+
+                    try
+                    {
+                        // Play sound asynchronously (SND_ASYNC flag)
+                        // SND_FILENAME: Play from file
+                        // SND_ASYNC: Play asynchronously (non-blocking)
+                        // SND_NODEFAULT: Don't play default sound if file not found
+                        uint flags = SND_FILENAME | SND_ASYNC | SND_NODEFAULT;
+                        
+                        // Apply volume if supported (PlaySound has limited volume control)
+                        // Volume is applied via waveOutSetVolume or mixer APIs in a full implementation
+                        bool success = PlaySound(tempFile, IntPtr.Zero, flags);
+                        
+                        if (!success)
+                        {
+                            Console.WriteLine($"[OdysseyVoicePlayer] PlaySound failed for: {_currentVoiceResRef}");
+                        }
+
+                        // Wait for playback to complete or cancellation
+                        // PlaySound with SND_ASYNC returns immediately, so we need to wait
+                        // In a real implementation, we would use waveOut APIs or OpenAL for proper control
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            // Estimate duration and wait
+                            float duration = 0.0f;
+                            if (wavFile.SampleRate > 0 && wavFile.Channels > 0 && wavFile.BitsPerSample > 0)
+                            {
+                                duration = (float)wavFile.Data.Length / (wavFile.SampleRate * wavFile.Channels * (wavFile.BitsPerSample / 8));
+                            }
+                            
+                            if (duration > 0)
+                            {
+                                // Wait for playback to complete (with cancellation support)
+                                int waitTime = (int)(duration * 1000); // Convert to milliseconds
+                                int elapsed = 0;
+                                while (elapsed < waitTime && !cancellationToken.IsCancellationRequested)
+                                {
+                                    Thread.Sleep(100); // Check every 100ms
+                                    elapsed += 100;
+                                }
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        // Clean up temporary file
+                        try
+                        {
+                            if (File.Exists(tempFile))
+                            {
+                                File.Delete(tempFile);
+                            }
+                        }
+                        catch
+                        {
+                            // Ignore cleanup errors
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[OdysseyVoicePlayer] Error in PlayWavAudio: {ex.Message}");
+                }
+            }
+            else
+            {
+                // Non-Windows platform: Log that playback is not supported
+                // For cross-platform, implement OpenAL or NAudio
+                Console.WriteLine($"[OdysseyVoicePlayer] Voice playback not implemented for non-Windows platforms. Voice: {_currentVoiceResRef}");
+                Console.WriteLine($"[OdysseyVoicePlayer] For cross-platform support, implement OpenAL or NAudio integration.");
+            }
+        }
+
+        /// <summary>
+        /// Stops the currently playing voice-over.
+        /// Based on swkotor2.exe: Voice stop functionality
+        /// </summary>
         public void Stop()
         {
-            _isPlaying = false;
-            // TODO: STUB - Stop voice
+            lock (_playbackLock)
+            {
+                if (_playbackCancellation != null)
+                {
+                    _playbackCancellation.Cancel();
+                    _playbackCancellation.Dispose();
+                    _playbackCancellation = null;
+                }
+
+                // Stop PlaySound playback
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    try
+                    {
+                        // Stop any currently playing sound
+                        PlaySound(null, IntPtr.Zero, SND_PURGE);
+                    }
+                    catch
+                    {
+                        // Ignore errors
+                    }
+                }
+
+                _isPlaying = false;
+                _currentVoiceResRef = null;
+            }
         }
 
+        /// <summary>
+        /// Sets the voice volume.
+        /// Based on swkotor2.exe: "Voiceover Volume" @ 0x007c83cc
+        /// Note: PlaySound has limited volume control; for full volume control, use OpenAL or DirectSound.
+        /// </summary>
+        /// <param name="volume">Volume (0.0 to 1.0).</param>
         public void SetVolume(float volume)
         {
-            // TODO: STUB - Set voice volume
+            lock (_playbackLock)
+            {
+                _volume = Math.Max(0.0f, Math.Min(1.0f, volume));
+                
+                // PlaySound doesn't support per-instance volume control
+                // For full volume control, we would need to use waveOutSetVolume or mixer APIs
+                // This is a placeholder for future OpenAL/DirectSound integration
+                Console.WriteLine($"[OdysseyVoicePlayer] Volume set to {_volume:F2} (PlaySound has limited volume control)");
+            }
         }
 
-        public bool IsPlaying => _isPlaying;
+        /// <summary>
+        /// Gets whether voice-over is currently playing.
+        /// </summary>
+        public bool IsPlaying
+        {
+            get
+            {
+                lock (_playbackLock)
+                {
+                    return _isPlaying;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Disposes resources.
+        /// </summary>
+        public void Dispose()
+        {
+            Stop();
+        }
+
+        #region Windows API P/Invoke for PlaySound
+        // Windows API PlaySound for voice playback
+        // Based on swkotor2.exe: Voice playback uses DirectSound/MSS
+        // This is a simple implementation using PlaySound; for full features, use OpenAL or DirectSound
+        [DllImport("winmm.dll", EntryPoint = "PlaySound", SetLastError = true, CharSet = CharSet.Unicode)]
+        private static extern bool PlaySound(string pszSound, IntPtr hmod, uint fdwSound);
+
+        // PlaySound flags
+        private const uint SND_FILENAME = 0x00020000;
+        private const uint SND_ASYNC = 0x0001;
+        private const uint SND_NODEFAULT = 0x0002;
+        private const uint SND_PURGE = 0x0040;
+        #endregion
     }
 }
