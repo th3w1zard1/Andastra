@@ -1,9 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Reflection;
 using Andastra.Parsing.Formats.MDLData;
+using Andastra.Parsing.Installation;
+using Andastra.Parsing.Resource;
 using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Graphics;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
 {
@@ -105,27 +110,408 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
     {
         private readonly OdysseyGraphicsDevice _device;
         private readonly object _gameDataManager;
-        private readonly object _installation;
+        private readonly Installation _installation;
+        private readonly Dictionary<string, EntityModelCache> _modelCache;
+        
+        // Vertex structure for entity rendering
+        private struct VertexPositionNormalTexture
+        {
+            public Vector3 Position;
+            public Vector3 Normal;
+            public Vector2 TexCoord;
+        }
+        
+        // Cached model data
+        private class EntityModelCache
+        {
+            public List<MeshRenderData> Meshes { get; set; }
+            public string ModelName { get; set; }
+        }
+        
+        // Mesh render data
+        private class MeshRenderData
+        {
+            public IVertexBuffer VertexBuffer { get; set; }
+            public IIndexBuffer IndexBuffer { get; set; }
+            public int IndexCount { get; set; }
+            public Matrix4x4 WorldTransform { get; set; }
+            public string TextureName { get; set; }
+        }
         
         public OdysseyEntityModelRenderer(OdysseyGraphicsDevice device, object gameDataManager = null, object installation = null)
         {
             _device = device;
             _gameDataManager = gameDataManager;
-            _installation = installation;
+            _installation = installation as Installation;
+            _modelCache = new Dictionary<string, EntityModelCache>(StringComparer.OrdinalIgnoreCase);
         }
         
-        public void RenderEntity(IEntity entity, Matrix4x4 viewMatrix, Matrix4x4 projectionMatrix)
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/renderer/model.py:103-141
+        // Original: def paintGL(self): - entity rendering in OpenGL scene
+        // Based on swkotor2.exe: FUN_005261b0 @ 0x005261b0 (entity model rendering)
+        public void RenderEntity([NotNull] IEntity entity, Matrix4x4 viewMatrix, Matrix4x4 projectionMatrix)
         {
             if (entity == null)
             {
                 return;
             }
             
-            // TODO: STUB - Implement entity rendering
-            // This would:
-            // 1. Get entity model from entity.Model or similar
-            // 2. Apply entity transform, view, and projection matrices
-            // 3. Render each mesh part with appropriate textures
+            // Check visibility
+            IRenderableComponent renderable = entity.GetComponent<IRenderableComponent>();
+            if (renderable != null && !renderable.Visible)
+            {
+                return;
+            }
+            
+            // Resolve model ResRef
+            string modelResRef = ResolveEntityModel(entity);
+            if (string.IsNullOrEmpty(modelResRef))
+            {
+                return;
+            }
+            
+            // Get or load model
+            EntityModelCache modelCache = GetOrLoadModel(modelResRef);
+            if (modelCache == null || modelCache.Meshes == null || modelCache.Meshes.Count == 0)
+            {
+                return;
+            }
+            
+            // Get entity transform
+            ITransformComponent transform = entity.GetComponent<ITransformComponent>();
+            if (transform == null)
+            {
+                return;
+            }
+            
+            // Build world matrix from entity transform
+            // Y-up system: facing is rotation around Y axis
+            Matrix4x4 rotation = Matrix4x4.CreateRotationY(transform.Facing);
+            Matrix4x4 translation = Matrix4x4.CreateTranslation(
+                transform.Position.X,
+                transform.Position.Y,
+                transform.Position.Z
+            );
+            Matrix4x4 entityWorldMatrix = Matrix4x4.Multiply(rotation, translation);
+            
+            // Get opacity from renderable component
+            float opacity = 1.0f;
+            if (renderable != null)
+            {
+                opacity = renderable.Opacity;
+            }
+            
+            // Render all meshes
+            foreach (MeshRenderData mesh in modelCache.Meshes)
+            {
+                if (mesh.VertexBuffer == null || mesh.IndexBuffer == null)
+                {
+                    continue;
+                }
+                
+                // Combine mesh transform with entity transform
+                Matrix4x4 finalWorld = Matrix4x4.Multiply(mesh.WorldTransform, entityWorldMatrix);
+                
+                // Set vertex and index buffers
+                _device.SetVertexBuffer(mesh.VertexBuffer);
+                _device.SetIndexBuffer(mesh.IndexBuffer);
+                
+                // TODO: Apply view/projection matrices and opacity via OpenGL state
+                // For now, basic rendering is set up - full shader/material system would go here
+                // Based on swkotor2.exe: glDrawElements with proper matrix setup
+                
+                // Draw indexed primitives
+                int primitiveCount = mesh.IndexCount / 3; // Triangles
+                if (primitiveCount > 0)
+                {
+                    _device.DrawIndexedPrimitives(
+                        PrimitiveType.TriangleList,
+                        0, // baseVertex
+                        0, // minVertexIndex
+                        mesh.VertexBuffer.VertexCount, // numVertices
+                        0, // startIndex
+                        primitiveCount
+                    );
+                }
+            }
+        }
+        
+        // Resolves model ResRef from entity using ModelResolver (matching MonoGame/Stride pattern)
+        [CanBeNull]
+        private string ResolveEntityModel([NotNull] IEntity entity)
+        {
+            // Check renderable component first
+            IRenderableComponent renderable = entity.GetComponent<IRenderableComponent>();
+            if (renderable != null && !string.IsNullOrEmpty(renderable.ModelResRef))
+            {
+                return renderable.ModelResRef;
+            }
+            
+            // Resolve model from appearance using reflection to avoid circular dependency
+            // ModelResolver is in Andastra.Runtime.Engines.Odyssey.Systems namespace
+            if (_gameDataManager != null)
+            {
+                try
+                {
+                    Type modelResolverType = Type.GetType("Andastra.Runtime.Engines.Odyssey.Systems.ModelResolver, Andastra.Runtime.Games.Odyssey");
+                    if (modelResolverType != null)
+                    {
+                        MethodInfo resolveMethod = modelResolverType.GetMethod("ResolveEntityModel", BindingFlags.Public | BindingFlags.Static);
+                        if (resolveMethod != null)
+                        {
+                            object result = resolveMethod.Invoke(null, new object[] { _gameDataManager, entity });
+                            return result as string;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("[OdysseyEntityModelRenderer] Error resolving model: " + ex.Message);
+                }
+            }
+            
+            return null;
+        }
+        
+        // Gets or loads model from cache
+        [CanBeNull]
+        private EntityModelCache GetOrLoadModel([NotNull] string modelResRef)
+        {
+            // Check cache
+            if (_modelCache.TryGetValue(modelResRef, out EntityModelCache cached))
+            {
+                return cached;
+            }
+            
+            // Load MDL model
+            MDL mdl = LoadMDLModel(modelResRef);
+            if (mdl == null)
+            {
+                return null;
+            }
+            
+            // Convert MDL to renderable meshes
+            EntityModelCache modelCache = ConvertMDLToCache(mdl, modelResRef);
+            if (modelCache != null && modelCache.Meshes.Count > 0)
+            {
+                _modelCache[modelResRef] = modelCache;
+            }
+            
+            return modelCache;
+        }
+        
+        // Loads MDL model from installation
+        [CanBeNull]
+        private MDL LoadMDLModel([NotNull] string modelResRef)
+        {
+            if (string.IsNullOrEmpty(modelResRef) || _installation == null)
+            {
+                return null;
+            }
+            
+            try
+            {
+                ResourceResult result = _installation.Resources.LookupResource(modelResRef, ResourceType.MDL);
+                if (result == null || result.Data == null)
+                {
+                    return null;
+                }
+                
+                // Use Andastra.Parsing MDL parser
+                return Andastra.Parsing.Formats.MDL.MDLAuto.ReadMdl(result.Data);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[OdysseyEntityModelRenderer] Error loading MDL " + modelResRef + ": " + ex.Message);
+                return null;
+            }
+        }
+        
+        // Converts MDL to cached renderable meshes (matching MonoGame/Stride converter pattern)
+        [CanBeNull]
+        private EntityModelCache ConvertMDLToCache([NotNull] MDL mdl, [NotNull] string modelResRef)
+        {
+            if (mdl == null)
+            {
+                return null;
+            }
+            
+            var result = new EntityModelCache
+            {
+                ModelName = mdl.Name ?? modelResRef,
+                Meshes = new List<MeshRenderData>()
+            };
+            
+            // Traverse node hierarchy and convert meshes
+            if (mdl.Root != null)
+            {
+                ConvertNodeHierarchy(mdl.Root, Matrix4x4.Identity, result.Meshes);
+            }
+            
+            Console.WriteLine("[OdysseyEntityModelRenderer] Converted model: " + result.ModelName +
+                " with " + result.Meshes.Count + " mesh parts");
+            
+            return result;
+        }
+        
+        // Converts MDL node hierarchy to renderable meshes
+        private void ConvertNodeHierarchy([NotNull] MDLNode node, Matrix4x4 parentTransform, [NotNull] List<MeshRenderData> meshes)
+        {
+            if (node == null)
+            {
+                return;
+            }
+            
+            // Calculate local transform
+            Matrix4x4 localTransform = CalculateNodeTransform(node);
+            Matrix4x4 worldTransform = Matrix4x4.Multiply(localTransform, parentTransform);
+            
+            // Convert mesh if present
+            if (node.Mesh != null)
+            {
+                MeshRenderData meshData = ConvertMesh(node.Mesh, worldTransform);
+                if (meshData != null)
+                {
+                    meshes.Add(meshData);
+                }
+            }
+            
+            // Process children
+            if (node.Children != null)
+            {
+                foreach (MDLNode child in node.Children)
+                {
+                    ConvertNodeHierarchy(child, worldTransform, meshes);
+                }
+            }
+        }
+        
+        // Calculates transform matrix for MDL node
+        private Matrix4x4 CalculateNodeTransform([NotNull] MDLNode node)
+        {
+            // Create rotation from quaternion
+            System.Numerics.Quaternion rotation;
+            if (node.Orientation != null && 
+                (node.Orientation.X != 0 || node.Orientation.Y != 0 || node.Orientation.Z != 0 || node.Orientation.W != 0))
+            {
+                rotation = new System.Numerics.Quaternion(
+                    node.Orientation.X,
+                    node.Orientation.Y,
+                    node.Orientation.Z,
+                    node.Orientation.W
+                );
+            }
+            else
+            {
+                rotation = System.Numerics.Quaternion.Identity;
+            }
+            
+            // Create translation
+            Vector3 translation = Vector3.Zero;
+            if (node.Position != null)
+            {
+                translation = new Vector3(
+                    node.Position.X,
+                    node.Position.Y,
+                    node.Position.Z
+                );
+            }
+            
+            // Create rotation matrix from quaternion
+            Matrix4x4 rotationMatrix = Matrix4x4.CreateFromQuaternion(rotation);
+            Matrix4x4 translationMatrix = Matrix4x4.CreateTranslation(translation);
+            
+            // Combine: Translation * Rotation (MDL uses this order)
+            return Matrix4x4.Multiply(translationMatrix, rotationMatrix);
+        }
+        
+        // Converts MDL mesh to renderable mesh data
+        [CanBeNull]
+        private MeshRenderData ConvertMesh([NotNull] MDLMesh mesh, Matrix4x4 worldTransform)
+        {
+            if (mesh.Vertices == null || mesh.Vertices.Count == 0)
+            {
+                return null;
+            }
+            
+            if (mesh.Faces == null || mesh.Faces.Count == 0)
+            {
+                return null;
+            }
+            
+            // Build vertex array
+            var vertices = new VertexPositionNormalTexture[mesh.Vertices.Count];
+            for (int i = 0; i < mesh.Vertices.Count; i++)
+            {
+                Vector3 pos = new Vector3(mesh.Vertices[i].X, mesh.Vertices[i].Y, mesh.Vertices[i].Z);
+                Vector3 normal = Vector3.UnitY; // Default to up if no normal
+                Vector2 texCoord = Vector2.Zero;
+                
+                if (mesh.Normals != null && i < mesh.Normals.Count)
+                {
+                    normal = new Vector3(mesh.Normals[i].X, mesh.Normals[i].Y, mesh.Normals[i].Z);
+                }
+                
+                if (mesh.UV1 != null && i < mesh.UV1.Count)
+                {
+                    texCoord = new Vector2(mesh.UV1[i].X, mesh.UV1[i].Y);
+                }
+                
+                vertices[i] = new VertexPositionNormalTexture
+                {
+                    Position = pos,
+                    Normal = normal,
+                    TexCoord = texCoord
+                };
+            }
+            
+            // Build index array
+            var indices = new int[mesh.Faces.Count * 3];
+            for (int i = 0; i < mesh.Faces.Count; i++)
+            {
+                indices[i * 3 + 0] = mesh.Faces[i].V1;
+                indices[i * 3 + 1] = mesh.Faces[i].V2;
+                indices[i * 3 + 2] = mesh.Faces[i].V3;
+            }
+            
+            // Create GPU buffers
+            IVertexBuffer vertexBuffer = _device.CreateVertexBuffer(vertices);
+            IIndexBuffer indexBuffer = _device.CreateIndexBuffer(indices, true); // Use 16-bit indices
+            
+            // Get texture name
+            string textureName = null;
+            if (!string.IsNullOrEmpty(mesh.Texture1) &&
+                mesh.Texture1.ToLowerInvariant() != "null" &&
+                mesh.Texture1.ToLowerInvariant() != "none")
+            {
+                textureName = mesh.Texture1.ToLowerInvariant();
+            }
+            
+            return new MeshRenderData
+            {
+                VertexBuffer = vertexBuffer,
+                IndexBuffer = indexBuffer,
+                IndexCount = indices.Length,
+                WorldTransform = worldTransform,
+                TextureName = textureName
+            };
+        }
+        
+        // Clears the model cache
+        public void ClearCache()
+        {
+            foreach (EntityModelCache cache in _modelCache.Values)
+            {
+                if (cache != null && cache.Meshes != null)
+                {
+                    foreach (MeshRenderData mesh in cache.Meshes)
+                    {
+                        mesh.VertexBuffer?.Dispose();
+                        mesh.IndexBuffer?.Dispose();
+                    }
+                }
+            }
+            _modelCache.Clear();
         }
     }
     
