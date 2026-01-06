@@ -3429,7 +3429,7 @@ namespace HolocronToolset.Tests.Editors
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1692-1713
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1767-1789
         // Original: def test_utc_editor_preview_updates(qtbot, installation: HTInstallation, test_files_dir: Path): Test preview updates.
         [Fact]
         public void TestUtcEditorPreviewUpdates()
@@ -3446,20 +3446,72 @@ namespace HolocronToolset.Tests.Editors
             byte[] originalData = System.IO.File.ReadAllBytes(utcFile);
             editor.Load(utcFile, "p_hk47", ResourceType.UTC, originalData);
 
+            // Get original UTC for comparison
+            var originalGff = GFF.FromBytes(originalData);
+            var originalUtc = UTCHelpers.ConstructUtc(originalGff);
+
             // Change appearance and alignment - preview should update
             var appearanceSelect = GetAppearanceSelect(editor);
             var alignmentSlider = GetAlignmentSlider(editor);
 
-            if (appearanceSelect.Items != null && appearanceSelect.Items.Count > 1)
-            {
-                appearanceSelect.SelectedIndex = 1;
-            }
-            alignmentSlider.Value = 50;
-
-            // TODO: STUB - Note: Preview update testing would require UI automation framework
-            // TODO: STUB - For now, we verify the fields can be changed
             appearanceSelect.Should().NotBeNull("Appearance select should exist");
             alignmentSlider.Should().NotBeNull("Alignment slider should exist");
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1780-1783
+            // Original: if editor.ui.appearanceSelect.count() > 1: editor.ui.appearanceSelect.setCurrentIndex(1)
+            // Original: assert editor.ui.appearanceSelect.receivers(editor.ui.appearanceSelect.currentIndexChanged) > 0
+            if (appearanceSelect.Items != null && appearanceSelect.Items.Count > 1)
+            {
+                int newAppearanceIndex = 1;
+                appearanceSelect.SelectedIndex = newAppearanceIndex;
+
+                // Verify appearance change is saved to UTC file
+                var (data, _) = editor.Build();
+                data.Should().NotBeNull("Build should return valid data");
+                var gff = GFF.FromBytes(data);
+                var utc = UTCHelpers.ConstructUtc(gff);
+                utc.AppearanceId.Should().Be(newAppearanceIndex, $"Appearance ID should be {newAppearanceIndex} after change");
+
+                // Verify appearance persists through load/save cycle
+                editor.Load(utcFile, "p_hk47", ResourceType.UTC, data);
+                var appearanceSelectReloaded = GetAppearanceSelect(editor);
+                appearanceSelectReloaded.SelectedIndex.Should().Be(newAppearanceIndex, "Appearance should persist through load/save cycle");
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1786-1788
+            // Original: editor.ui.alignmentSlider.setValue(25)
+            // Original: assert editor.ui.alignmentSlider.receivers(editor.ui.alignmentSlider.valueChanged) > 0
+            double newAlignmentValue = 25.0;
+            alignmentSlider.Value = newAlignmentValue;
+
+            // Verify alignment change is saved to UTC file
+            var (data2, _) = editor.Build();
+            data2.Should().NotBeNull("Build should return valid data");
+            var gff2 = GFF.FromBytes(data2);
+            var utc2 = UTCHelpers.ConstructUtc(gff2);
+            utc2.Alignment.Should().Be((int)newAlignmentValue, $"Alignment should be {newAlignmentValue} after change");
+
+            // Verify alignment persists through load/save cycle
+            editor.Load(utcFile, "p_hk47", ResourceType.UTC, data2);
+            var alignmentSliderReloaded = GetAlignmentSlider(editor);
+            Math.Abs(alignmentSliderReloaded.Value - newAlignmentValue).Should().BeLessThan(0.001, "Alignment should persist through load/save cycle");
+
+            // Test combined appearance and alignment changes
+            if (appearanceSelect.Items != null && appearanceSelect.Items.Count > 2)
+            {
+                int combinedAppearanceIndex = 2;
+                double combinedAlignmentValue = 75.0;
+                appearanceSelect.SelectedIndex = combinedAppearanceIndex;
+                alignmentSlider.Value = combinedAlignmentValue;
+
+                // Verify both changes are saved together
+                var (data3, _) = editor.Build();
+                data3.Should().NotBeNull("Build should return valid data");
+                var gff3 = GFF.FromBytes(data3);
+                var utc3 = UTCHelpers.ConstructUtc(gff3);
+                utc3.AppearanceId.Should().Be(combinedAppearanceIndex, $"Appearance ID should be {combinedAppearanceIndex} after combined change");
+                utc3.Alignment.Should().Be((int)combinedAlignmentValue, $"Alignment should be {combinedAlignmentValue} after combined change");
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1715-1745
