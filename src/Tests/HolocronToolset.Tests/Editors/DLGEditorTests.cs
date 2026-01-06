@@ -1797,26 +1797,28 @@ namespace HolocronToolset.Tests.Editors
             }
         }
 
-        // TODO: STUB - Implement test_dlg_editor_copy_paste_real (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1255-1290)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1255-1290
         // Original: def test_dlg_editor_copy_paste_real(qtbot, installation: HTInstallation): Test copy/paste with real data
         [Fact]
         public async System.Threading.Tasks.Task TestDlgEditorCopyPasteReal()
         {
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1255-1290
-            var installation = CreateTestInstallation();
-
             // Matching Python: editor = DLGEditor(None, installation)
+            var installation = CreateTestInstallation();
             var editor = new DLGEditor(null, installation);
 
             // Matching Python: editor.new()
             editor.New();
 
             // Matching Python: editor.model.add_root_node()
+            // Matching Python: root_item = editor.model.item(0, 0)
+            // Matching Python: assert isinstance(root_item, DLGStandardItem)
             var rootItem = editor.Model.AddRootNode();
             rootItem.Should().NotBeNull("Root item should be created");
             rootItem.Link.Should().NotBeNull("Root item should have a link");
+            rootItem.Should().BeOfType<DLGStandardItem>("Root item should be DLGStandardItem");
 
             // Matching Python: Set some data
+            // Matching Python: editor.ui.dialogTree.setCurrentIndex(root_item.index())
             // Matching Python: editor.ui.speakerEdit.setText("TestSpeaker")
             if (editor.SpeakerEdit != null)
             {
@@ -1826,6 +1828,7 @@ namespace HolocronToolset.Tests.Editors
             // Matching Python: Test text editing via UI dialog
             // Matching Python: set_text_via_ui_dialog(qtbot, editor, root_item, "Test Text")
             // For C# test, we'll directly set the text on the node instead of using UI dialog
+            // This is equivalent to the UI dialog setting the text
             if (rootItem.Link?.Node != null)
             {
                 rootItem.Link.Node.Text = LocalizedString.FromEnglish("Test Text");
@@ -1834,6 +1837,7 @@ namespace HolocronToolset.Tests.Editors
             // Matching Python: editor.on_node_update()
             editor.OnNodeUpdate();
 
+            // Matching Python: Copy using real method (on model)
             // Matching Python: editor.model.copy_link_and_node(root_item.link)
             await editor.Model.CopyLinkAndNode(rootItem.Link, editor);
 
