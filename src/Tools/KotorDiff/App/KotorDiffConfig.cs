@@ -21,6 +21,8 @@ namespace KotorDiff.AppCore
         public List<string> Filters { get; set; }
         public bool LoggingEnabled { get; set; } = true;
         public bool UseIncrementalWriter { get; set; } = false;
+        public bool Verbose { get; set; } = false;
+        public bool Debug { get; set; } = false;
     }
 }
 

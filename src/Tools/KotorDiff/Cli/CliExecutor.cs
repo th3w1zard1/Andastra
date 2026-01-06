@@ -30,7 +30,11 @@ namespace KotorDiff.Cli
                 }
             }
 
-            Console.WriteLine($"KotorDiff version 1.0.0");
+            bool isVerbose = cmdlineArgs.Verbose || cmdlineArgs.Debug;
+            if (isVerbose)
+            {
+                Console.WriteLine($"KotorDiff version 1.0.0");
+            }
 
             // Gather all path inputs
             var rawPathInputs = new List<string>();
@@ -78,15 +82,21 @@ namespace KotorDiff.Cli
                     // Matching Python: installation = Installation(path_obj)
                     var installation = new Andastra.Parsing.Installation.Installation(pathStr);
                     resolvedPaths.Add(installation);
-                    Console.WriteLine($"[DEBUG] Loaded Installation for: {pathStr}");
+                    if (isVerbose)
+                    {
+                        Console.WriteLine($"[DEBUG] Loaded Installation for: {pathStr}");
+                    }
                 }
                 catch (Exception e)
                 {
                     // Fall back to Path object (for folders/files)
                     // Matching Python: resolved_paths.append(path_obj)
                     resolvedPaths.Add(pathStr);
-                    Console.WriteLine($"[DEBUG] Using Path (not Installation) for: {pathStr}");
-                    Console.WriteLine($"[DEBUG] Installation load failed: {e.GetType().Name}: {e.Message}");
+                    if (isVerbose)
+                    {
+                        Console.WriteLine($"[DEBUG] Using Path (not Installation) for: {pathStr}");
+                        Console.WriteLine($"[DEBUG] Installation load failed: {e.GetType().Name}: {e.Message}");
+                    }
                 }
             }
 
@@ -103,7 +113,9 @@ namespace KotorDiff.Cli
                 CompareHashes = cmdlineArgs.CompareHashes,
                 UseProfiler = cmdlineArgs.UseProfiler,
                 Filters = cmdlineArgs.Filter,
-                LoggingEnabled = cmdlineArgs.Logging
+                LoggingEnabled = cmdlineArgs.Logging,
+                Verbose = cmdlineArgs.Verbose || cmdlineArgs.Debug,
+                Debug = cmdlineArgs.Debug
             };
 
             // Run the application

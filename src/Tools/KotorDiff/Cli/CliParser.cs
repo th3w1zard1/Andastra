@@ -101,11 +101,57 @@ namespace KotorDiff.Cli
                 {
                     result.Gui = true;
                 }
+                else if (arg == "--verbose" || arg == "-v")
+                {
+                    result.Verbose = true;
+                }
+                else if (arg == "--debug")
+                {
+                    result.Debug = true;
+                }
                 else if (arg == "--help" || arg == "-h")
                 {
                     PrintHelp();
                     Environment.Exit(0);
                 }
+            }
+
+            // Handle positional arguments (first two non-flag args become path1 and path2)
+            var positionalArgs = new List<string>();
+            for (int i = 0; i < args.Length; i++)
+            {
+                string arg = args[i];
+                // Skip flags and their values
+                if (arg.StartsWith("--") || arg.StartsWith("-"))
+                {
+                    // Skip the flag value if it exists
+                    if (i + 1 < args.Length && !args[i + 1].StartsWith("--") && !args[i + 1].StartsWith("-"))
+                    {
+                        // Check if this flag takes a value
+                        if (arg == "--path1" || arg == "--path2" || arg == "--path3" || arg == "--path" ||
+                            arg == "--tslpatchdata" || arg == "--ini" || arg == "--output-log" ||
+                            arg == "--log-level" || arg == "--output-mode" || arg == "--compare-hashes" ||
+                            arg == "--filter" || arg == "--logging" || arg == "--use-profiler")
+                        {
+                            i++; // Skip the value
+                        }
+                    }
+                }
+                else
+                {
+                    // This is a positional argument
+                    positionalArgs.Add(CliUtils.NormalizePathArg(arg));
+                }
+            }
+
+            // Assign positional arguments to path1 and path2 if not already set
+            if (string.IsNullOrEmpty(result.Path1) && positionalArgs.Count > 0)
+            {
+                result.Path1 = positionalArgs[0];
+            }
+            if (string.IsNullOrEmpty(result.Path2) && positionalArgs.Count > 1)
+            {
+                result.Path2 = positionalArgs[1];
             }
 
             return result;
@@ -153,6 +199,10 @@ namespace KotorDiff.Cli
             Console.WriteLine("GUI/Console options:");
             Console.WriteLine("  --console             Show console window even in GUI mode");
             Console.WriteLine("  --gui                 Force GUI mode even with paths provided");
+            Console.WriteLine();
+            Console.WriteLine("Verbosity options:");
+            Console.WriteLine("  --verbose, -v          Show verbose output (tslpatchdata, install messages, etc.)");
+            Console.WriteLine("  --debug                Show debug output");
         }
     }
 
@@ -174,6 +224,8 @@ namespace KotorDiff.Cli
         public bool UseProfiler { get; set; }
         public bool Console { get; set; }
         public bool Gui { get; set; }
+        public bool Verbose { get; set; }
+        public bool Debug { get; set; }
     }
 }
 

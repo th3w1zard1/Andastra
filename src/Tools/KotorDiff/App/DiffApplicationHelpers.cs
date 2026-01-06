@@ -161,10 +161,7 @@ namespace KotorDiff.AppCore
                 throw new InvalidOperationException("Global config config is None - must call run_application first");
             }
 
-            Action<string> logFunc = (msg) =>
-            {
-                LogOutput(msg);
-            };
+            Action<string> logFunc = CreateConditionalLogFunc();
 
             return DiffEngine.DiffData(
                 data1,
@@ -192,28 +189,36 @@ namespace KotorDiff.AppCore
                 return (null, 1);
             }
 
+            bool isVerbose = GlobalConfig.Instance.Config?.Verbose == true || GlobalConfig.Instance.Config?.Debug == true;
+
             // Use the new n-way implementation for all cases
-            LogOutput($"[INFO] N-way comparison with {filesAndFoldersAndInstallations.Count} paths");
+            if (isVerbose)
+            {
+                LogOutput($"[INFO] N-way comparison with {filesAndFoldersAndInstallations.Count} paths");
+            }
             bool? comparison = RunDifferFromArgs(
                 filesAndFoldersAndInstallations,
                 filters: filters,
                 incrementalWriter: incrementalWriter);
 
-            // Format output
-            if (comparison == true)
+            // Format output - only show verbose messages if verbose flag is set
+            if (isVerbose)
             {
-                LogOutput("\n[IDENTICAL] All paths are identical", separatorAbove: true);
-                return (comparison, 0);
-            }
-            if (comparison == false)
-            {
-                LogOutput("\n[DIFFERENT] Differences found between paths", separatorAbove: true);
-                return (comparison, 1);
+                if (comparison == true)
+                {
+                    LogOutput("\n[IDENTICAL] All paths are identical", separatorAbove: true);
+                }
+                else if (comparison == false)
+                {
+                    LogOutput("\n[DIFFERENT] Differences found between paths", separatorAbove: true);
+                }
+                else
+                {
+                    LogOutput("\n[ERROR] Comparison failed or returned None", separatorAbove: true);
+                }
             }
 
-            // Error case
-            LogOutput("\n[ERROR] Comparison failed or returned None", separatorAbove: true);
-            return (comparison, 1);
+            return (comparison, comparison == true ? 0 : (comparison == false ? 1 : 1));
         }
 
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/application.py:499-543
@@ -234,10 +239,7 @@ namespace KotorDiff.AppCore
             // Extract config values once for type safety
             bool compareHashesEnabled = GlobalConfig.Instance.Config.CompareHashes;
 
-            Action<string> logFuncWrapper = (msg) =>
-            {
-                LogOutput(msg);
-            };
+            Action<string> logFuncWrapper = CreateConditionalLogFunc();
 
             // Call the n-way implementation directly
             return DiffEngine.RunDifferFromArgsImpl(
@@ -259,6 +261,79 @@ namespace KotorDiff.AppCore
             return DiffEngineUtils.GetModuleRoot(filename);
         }
 
+        /// <summary>
+        /// Create a conditional log function that only outputs verbose messages (tslpatchdata, INSTALL, etc.)
+        /// when verbose flag is set OR when TslPatchDataPath is configured.
+        /// </summary>
+        private static Action<string> CreateConditionalLogFunc()
+        {
+            if (GlobalConfig.Instance.Config == null)
+            {
+                return LogOutput;
+            }
+
+            bool isVerbose = GlobalConfig.Instance.Config.Verbose || GlobalConfig.Instance.Config.Debug;
+            bool hasTslPatchData = GlobalConfig.Instance.Config.TslPatchDataPath != null;
+            bool shouldShowVerbose = isVerbose || hasTslPatchData;
+
+            return (msg) =>
+            {
+                // Always show non-verbose messages
+                if (!IsVerboseMessage(msg))
+                {
+                    LogOutput(msg);
+                    return;
+                }
+
+                // Only show verbose messages if verbose flag is set or tslpatchdata is being generated
+                if (shouldShowVerbose)
+                {
+                    LogOutput(msg);
+                }
+            };
+        }
+
+        /// <summary>
+        /// Check if a message is a verbose message that should be suppressed by default.
+        /// </summary>
+        private static bool IsVerboseMessage(string msg)
+        {
+            if (string.IsNullOrEmpty(msg))
+            {
+                return false;
+            }
+
+            string msgLower = msg.ToLowerInvariant();
+            
+            // Verbose messages include:
+            // - tslpatchdata messages
+            // - [INSTALL] messages
+            // - Progress messages
+            // - Debug messages
+            // - Detailed processing information
+            return msg.Contains("[INSTALL]") ||
+                   msg.Contains("tslpatchdata") ||
+                   msg.Contains("Processing TLK") ||
+                   msg.Contains("TLK processing complete") ||
+                   msg.Contains("Found") && msg.Contains("total modifications") ||
+                   msg.Contains("Applied filters") ||
+                   msg.Contains("Filtered to") ||
+                   msg.Contains("Comparing") && msg.Contains("resources") ||
+                   msg.Contains("Progress:") ||
+                   msg.Contains("[DEBUG]") ||
+                   msg.Contains("Winning installation") ||
+                   msg.Contains("Processing resource:") ||
+                   msg.Contains("Destination:") ||
+                   msg.Contains("Filename:") ||
+                   msg.Contains("File will be copied") ||
+                   msg.Contains("Will use installed file") ||
+                   msg.Contains("append.tlk") ||
+                   msg.Contains("replace.tlk") ||
+                   msg.StartsWith("  |--") ||
+                   msg.StartsWith("  +--") ||
+                   (msg.StartsWith("  ") && (msg.Contains("Source") || msg.Contains("Missing") || msg.Contains("→")));
+        }
+
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/application.py:204-211
         // Original: def _setup_logging(config: DiffConfig) -> None: ...
         /// <summary>
@@ -276,6 +351,12 @@ namespace KotorDiff.AppCore
         /// </summary>
         public static void LogConfiguration(KotorDiffConfig config)
         {
+            bool isVerbose = config.Verbose || config.Debug;
+            if (!isVerbose)
+            {
+                return; // Suppress configuration output unless verbose
+            }
+
             LogOutput("");
             LogOutput("Configuration:");
             LogOutput($"  Mode: {config.Paths.Count}-way comparison");
@@ -330,10 +411,56 @@ namespace KotorDiff.AppCore
         {
             if (config.Paths.Count >= 2)
             {
-                string matchText = comparison == true ? " MATCHES " : " DOES NOT MATCH ";
-                LogOutput($"Comparison of {config.Paths.Count} paths: {matchText}");
+                // Get path strings for display
+                string path1Str = GetPathDisplayString(config.Paths[0]);
+                string path2Str = config.Paths.Count > 1 ? GetPathDisplayString(config.Paths[1]) : "";
+                
+                string matchText = comparison == true ? "DOES MATCH" : "DOES NOT MATCH";
+                
+                if (config.Paths.Count == 2)
+                {
+                    LogOutput($"{path1Str} {matchText} {path2Str}");
+                }
+                else
+                {
+                    string matchText2 = comparison == true ? " MATCHES " : " DOES NOT MATCH ";
+                    LogOutput($"Comparison of {config.Paths.Count} paths: {matchText2}");
+                }
             }
             return comparison == true ? 0 : (comparison == false ? 2 : 3);
+        }
+
+        /// <summary>
+        /// Get display string for a path object.
+        /// </summary>
+        private static string GetPathDisplayString(object path)
+        {
+            if (path == null)
+            {
+                return "null";
+            }
+
+            if (path is Installation installation)
+            {
+                return installation.Path;
+            }
+
+            if (path is string pathStr)
+            {
+                return pathStr;
+            }
+
+            if (path is FileInfo fileInfo)
+            {
+                return fileInfo.FullName;
+            }
+
+            if (path is DirectoryInfo dirInfo)
+            {
+                return dirInfo.FullName;
+            }
+
+            return path.ToString();
         }
 
         // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/app.py:417-499
