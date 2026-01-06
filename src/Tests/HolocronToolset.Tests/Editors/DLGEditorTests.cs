@@ -2776,14 +2776,46 @@ namespace HolocronToolset.Tests.Editors
             editor.AnimsList.Items.Count.Should().Be(0, "Animation list should be empty after removing animation");
         }
 
-        // TODO: STUB - Implement test_dlg_editor_multiple_animations (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1667-1691)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1667-1691
         // Original: def test_dlg_editor_multiple_animations(qtbot, installation: HTInstallation): Test multiple animations
         [Fact]
         public void TestDlgEditorMultipleAnimations()
         {
-            // TODO: STUB - Implement multiple animations test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1667-1691
-            throw new NotImplementedException("TestDlgEditorMultipleAnimations: Multiple animations test not yet implemented");
+            // Get installation if available
+            var installation = CreateTestInstallation();
+
+            // Matching PyKotor: editor = DLGEditor(None, installation)
+            var editor = new DLGEditor(null, installation);
+            editor.Show();
+
+            // Matching PyKotor: editor.new()
+            editor.New();
+
+            // Matching PyKotor: editor.model.add_root_node()
+            editor.Model.AddRootNode();
+            // Matching PyKotor: root_item = editor.model.item(0, 0)
+            var rootItem = editor.Model.Item(0, 0);
+            // Matching PyKotor: editor.ui.dialogTree.setCurrentIndex(root_item.index())
+            editor.Model.SelectedIndex = 0;
+
+            // Add multiple animations
+            // Matching PyKotor: for i in range(3):
+            // Matching PyKotor:     anim = DLGAnimation()
+            // Matching PyKotor:     anim.animation_id = i
+            // Matching PyKotor:     anim.participant = f"PARTICIPANT_{i}"
+            // Matching PyKotor:     root_item.link.node.animations.append(anim)
+            for (int i = 0; i < 3; i++)
+            {
+                var anim = new DLGAnimation();
+                anim.AnimationId = i;
+                anim.Participant = $"PARTICIPANT_{i}";
+                rootItem.Link.Node.Animations.Add(anim);
+            }
+
+            // Matching PyKotor: editor.refresh_anim_list()
+            editor.RefreshAnimList();
+            // Matching PyKotor: assert editor.ui.animsList.count() == 3
+            editor.AnimsList.Items.Count.Should().Be(3, "Animation list should have 3 items after adding 3 animations");
         }
 
         // Original: def test_dlg_editor_load_and_save_preserves_data(qtbot, installation: HTInstallation, test_files_dir: Path): Test load and save preserves data
