@@ -16,8 +16,7 @@
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
     <!-- Build only latest .NET (net9.0) for Debug to speed up development builds (unless TargetFramework is explicitly set) -->
     <TargetFrameworks Condition="'$(OS)' == 'Windows_NT'">net9.0</TargetFrameworks>
-    <OutputType Condition="'$(OS)' == 'Windows_NT'">WinExe</OutputType>
-    <OutputType Condition="'$(OS)' != 'Windows_NT'">Exe</OutputType>
+    <OutputType>Library</OutputType>
     <!-- Disable analyzers in Debug builds for faster compilation -->
     <EnableNETAnalyzers>false</EnableNETAnalyzers>
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
@@ -93,7 +92,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Andastra\Andastra.csproj" />
+    <ProjectReference Include="..\..\Andastra\Parsing\Andastra.Parsing.csproj" />
   </ItemGroup>
 
   <ItemGroup>
