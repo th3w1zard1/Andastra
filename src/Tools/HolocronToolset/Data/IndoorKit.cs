@@ -18,6 +18,7 @@ using Newtonsoft.Json.Linq;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using Vector3 = System.Numerics.Vector3;
 
 namespace HolocronToolset.Data
@@ -1144,7 +1145,7 @@ namespace HolocronToolset.Data
             if (vertices.Count == 0)
             {
                 // Empty walkmesh - return blank image matching kit.py minimum size
-                return new WriteableBitmap(new PixelSize(256, 256), new Vector(96, 96), PixelFormat.Rgba8888);
+                return new WriteableBitmap(new PixelSize(256, 256), new Vector2(96, 96), PixelFormat.Rgba8888);
             }
 
             // Calculate bounding box (same as kit.py)
@@ -1171,7 +1172,7 @@ namespace HolocronToolset.Data
 
             // Create a WriteableBitmap with the calculated dimensions
             // For now, create a black image. Full walkmesh rendering will be implemented later.
-            var bitmap = new WriteableBitmap(new PixelSize(width, height), new Vector(96, 96), PixelFormat.Rgba8888);
+            var bitmap = new WriteableBitmap(new PixelSize(width, height), new Vector2(96, 96), PixelFormat.Rgba8888);
 
             // TODO: STUB - Basic image creation implemented, but actual walkmesh rendering
             // (drawing faces with white/gray colors and mirroring) will be implemented
