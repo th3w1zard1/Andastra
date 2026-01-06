@@ -509,14 +509,17 @@ namespace Andastra.Runtime.Tooling
                 // Create mocked execution environment
                 Console.WriteLine("Creating mocked execution environment...");
 
-                // TODO:  Create mock world
+                // Create mock world for script execution environment
                 var world = new MockWorld();
 
-                // TODO:  Create mock entity (caller)
+                // Create mock entity (caller) - represents the object executing the script
                 var caller = new MockEntity("SCRIPT_CALLER");
                 world.RegisterEntity(caller);
 
-                // TODO:  Create mock engine API
+                // Create mock engine API - provides NWScript function implementations for script execution
+                // MockEngineApi extends BaseEngineApi with comprehensive function implementations
+                // Based on swkotor2.exe: Engine API function dispatch system
+                // Provides implementations for common NWScript functions used in script testing
                 var engineApi = new MockEngineApi();
 
                 // Create script globals
