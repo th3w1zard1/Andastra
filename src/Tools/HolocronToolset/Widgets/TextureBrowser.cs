@@ -11,6 +11,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
+using HolocronToolset.Dialogs;
 
 namespace HolocronToolset.Widgets
 {
@@ -336,16 +337,24 @@ namespace HolocronToolset.Widgets
         }
 
         /// <summary>
-        /// Handles texture double-tap (for potential actions like preview or use).
+        /// Handles texture double-tap (opens texture preview dialog).
+        /// Matching PyKotor concept: double-click to preview texture.
         /// </summary>
         private void OnTextureDoubleTapped(object sender, TappedEventArgs e)
         {
             if (_textureList?.SelectedItem is string textureName)
             {
-                // Double-tap could trigger texture preview or usage
-                // TODO: STUB - For now, just ensure it's selected
+                // Ensure texture is selected
                 SelectedTexture = textureName;
                 TextureSelected?.Invoke(this, textureName);
+
+                // Open texture preview dialog
+                string texturePath = GetTexturePath(textureName);
+                var previewDialog = new TexturePreviewDialog(
+                    this.FindAncestorOfType<Window>(),
+                    textureName,
+                    texturePath);
+                previewDialog.Show();
             }
         }
     }
