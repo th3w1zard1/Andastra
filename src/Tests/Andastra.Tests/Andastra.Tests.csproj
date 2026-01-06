@@ -124,6 +124,8 @@
       <MissingDlls Include="$(NuGetPackageRoot)\lzma-sdk\22.1.1\lib\netstandard2.0\SevenZip.dll" />
       <MissingDlls Include="$(NuGetPackageRoot)\sharpcompress\0.43.0\lib\net8.0\SharpCompress.dll" />
       <MissingDlls Include="$(NuGetPackageRoot)\sly\3.7.7\lib\net8.0\sly.dll" />
+      <MissingDlls Include="$(NuGetPackageRoot)\microsoft.extensions.dependencyinjection.abstractions\10.0.1\lib\net9.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll" />
+      <MissingDlls Include="$(NuGetPackageRoot)\microsoft.extensions.logging.abstractions\10.0.1\lib\net9.0\Microsoft.Extensions.Logging.Abstractions.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(MissingDlls)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" Condition="Exists('%(MissingDlls.Identity)')" />
   </Target>
