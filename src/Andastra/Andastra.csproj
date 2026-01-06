@@ -13,6 +13,7 @@
     <!-- MonoGame Content Pipeline -->
     <MonoGamePlatform>DesktopGL</MonoGamePlatform>
     <MonoGameProfile>HiDef</MonoGameProfile>
+    <AutoRestoreMGCBTool>true</AutoRestoreMGCBTool>
   </PropertyGroup>
 
   <!-- Debug Configuration: Optimized for faster development builds -->
@@ -106,9 +107,35 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <!-- Check for MonoGame Content Builder tool availability before building -->
+  <Target Name="CheckMonoGameContentBuilderTool" BeforeTargets="BeforeBuild">
+    <Exec Command="dotnet mgcb --version" 
+          ContinueOnError="true" 
+          IgnoreExitCode="true" 
+          StandardOutputImportance="low" 
+          StandardErrorImportance="low"
+          EchoOff="true">
+      <Output TaskParameter="ExitCode" PropertyName="_MgcbToolCheckExitCode" />
+    </Exec>
+    <PropertyGroup Condition="'$(_MgcbToolCheckExitCode)' != '0' AND '$(SkipMonoGameContentPipeline)' == ''">
+      <SkipMonoGameContentPipeline>true</SkipMonoGameContentPipeline>
+    </PropertyGroup>
+    <Warning Condition="'$(_MgcbToolCheckExitCode)' != '0' AND '$(SkipMonoGameContentPipeline)' != 'true'">
+      MonoGame Content Builder tool (dotnet-mgcb) not available. Setting SkipMonoGameContentPipeline=true. Install with: dotnet tool install -g dotnet-mgcb
+    </Warning>
+  </Target>
+  
   <ItemGroup Condition="'$(SkipMonoGameContentPipeline)' != 'true'">
     <MonoGameContentReference Include="Game\Content.mgcb" />
   </ItemGroup>
+  
+  <!-- Override MonoGame content builder to prevent hard failure if tool is missing -->
+  <Target Name="BuildMonoGameContent" 
+          Condition="'$(SkipMonoGameContentPipeline)' != 'true'"
+          AfterTargets="ResolveProjectReferences"
+          BeforeTargets="CoreBuild">
+    <!-- This target is intentionally left empty - MonoGame.Content.Builder.Task will handle it -->
+  </Target>
 
   <!-- Explicitly override Run target to prevent auto-execution during build -->
   <!-- This ensures that dotnet build NEVER runs the application -->
