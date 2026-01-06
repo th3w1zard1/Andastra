@@ -329,15 +329,29 @@ namespace HolocronToolset.Tests.Editors
             var originalGff = GFF.FromBytes(originalData);
             UTP originalUtp = UTPHelpers.ConstructUtp(originalGff);
 
-            // Modify tag - need to access private field via reflection or make it accessible
-            // TODO: STUB - For now, we'll test via Build() which reads from UI
-            // TODO:  This is a simplified test - full implementation would manipulate UI directly
+            // Matching Python line 66: editor.ui.tagEdit.setText("modified_tag")
+            // Modify tag via UI directly
+            editor.TagEdit.Should().NotBeNull("TagEdit should be initialized");
+            editor.TagEdit.Text = "modified_tag";
+
+            // Matching Python lines 69-72: Save and verify
+            // data, _ = editor.build()
+            // modified_utp = read_utp(data)
+            // assert modified_utp.tag == "modified_tag"
+            // assert modified_utp.tag != original_utp.tag
             var (data, _) = editor.Build();
             var modifiedGff = GFF.FromBytes(data);
             UTP modifiedUtp = UTPHelpers.ConstructUtp(modifiedGff);
 
-            // Verify tag can be read back
-            modifiedUtp.Tag.Should().NotBeNull();
+            // Verify tag was modified
+            modifiedUtp.Tag.Should().Be("modified_tag", "Tag should be set to modified_tag");
+            modifiedUtp.Tag.Should().NotBe(originalUtp.Tag, "Tag should be different from original");
+
+            // Matching Python lines 74-76: Load back and verify
+            // editor.load(utp_file, "ebcont001", ResourceType.UTP, data)
+            // assert editor.ui.tagEdit.text() == "modified_tag"
+            editor.Load(testData.Item1, "ebcont001", ResourceType.UTP, data);
+            editor.TagEdit.Text.Should().Be("modified_tag", "TagEdit should show modified_tag after reload");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utp_editor.py:101-123

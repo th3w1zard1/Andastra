@@ -78,6 +78,13 @@ namespace HolocronToolset.Editors
         // UI Controls - Comments
         private TextBox _commentsEdit;
 
+        // Matching PyKotor implementation: Expose UI controls for testing
+        // Original: editor.ui.tagEdit, editor.ui.resrefEdit, etc.
+        public TextBox TagEdit => _tagEdit;
+        public Button TagGenerateBtn => _tagGenerateBtn;
+        public TextBox ResrefEdit => _resrefEdit;
+        public Button ResrefGenerateBtn => _resrefGenerateBtn;
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:39-84
         // Original: def __init__(self, parent, installation):
         public UTPEditor(Window parent = null, HTInstallation installation = null)
