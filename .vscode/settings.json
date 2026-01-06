@@ -3,5 +3,17 @@
   "dotnet.defaultSolution": "Andastra.sln",
   "files.autoSaveWorkspaceFilesOnly": true,
   "files.autoSaveWhenNoErrors": false,
-  "files.autoSave": "onFocusChange"
+  "files.autoSave": "onFocusChange",
+  "dotrush.roslyn.projectOrSolutionFiles": [
+    "g:\\GitHub\\Andastra\\Andastra.sln"
+  ],
+  "files.exclude": {
+    "**/.history/**": true
+  },
+  "search.exclude": {
+    "**/.history/**": true
+  },
+  "files.watcherExclude": {
+    "**/.history/**": true
+  }
 }
