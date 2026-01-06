@@ -5,6 +5,7 @@
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     <GenerateGlobalUsings>false</GenerateGlobalUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
@@ -69,6 +70,14 @@
     <UseRidGraph>true</UseRidGraph>
     <UseSharedCompilation>true</UseSharedCompilation>
     <WarningLevel>0</WarningLevel>
+  </PropertyGroup>
+
+  <!-- RuntimeIdentifiers -->
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
+    <RuntimeIdentifiers>win7-x86;win7-x64;win10-x86;win10-x64</RuntimeIdentifiers>
+  </PropertyGroup>
+  <PropertyGroup Condition="!$(TargetFramework.StartsWith('net4'))">
+    <RuntimeIdentifiers>win-x86;win-x64;win-arm64;linux-x64;linux-arm64;osx-x64;osx-arm64</RuntimeIdentifiers>
   </PropertyGroup>
 
   <ItemGroup>
