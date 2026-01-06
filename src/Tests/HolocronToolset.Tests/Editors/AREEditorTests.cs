@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
@@ -3147,14 +3148,86 @@ namespace HolocronToolset.Tests.Editors
             modifiedAre.OnUserDefined.ToString().Should().Be("test_on_user");
         }
 
-        // TODO: STUB - Implement test_are_editor_manipulate_comments (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1039-1070)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1039-1070
         // Original: def test_are_editor_manipulate_comments(qtbot: QtBot, installation: HTInstallation, test_files_dir: Path): Test manipulating comments field.
         [Fact]
         public void TestAreEditorManipulateComments()
         {
-            // TODO: STUB - Implement comments field manipulation test (empty, single line, multi-line, special chars, very long)
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1039-1070
-            throw new NotImplementedException("TestAreEditorManipulateComments: Comments field manipulation test not yet implemented");
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            // Try to find an ARE file
+            string areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            if (!System.IO.File.Exists(areFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            }
+
+            if (!System.IO.File.Exists(areFile))
+            {
+                // Skip if no ARE files available for testing (matching Python pytest.skip behavior)
+                return;
+            }
+
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            // Matching Python: editor = AREEditor(None, installation)
+            var editor = new AREEditor(null, installation);
+
+            // Matching Python: original_data = are_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(areFile);
+
+            // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, original_data)
+            editor.Load(areFile, "tat001", ResourceType.ARE, originalData);
+
+            // Matching Python: test_comments = ["", "Test comment", "Multi\nline\ncomment", "Comment with special chars !@#$%^&*()", "Very long comment " * 100]
+            string[] testComments = {
+                "",
+                "Test comment",
+                "Multi\nline\ncomment",
+                "Comment with special chars !@#$%^&*()",
+                string.Join("", Enumerable.Repeat("Very long comment ", 100))
+            };
+
+            // Matching Python: for comment in test_comments:
+            foreach (string comment in testComments)
+            {
+                // Matching Python: editor.ui.commentsEdit.setPlainText(comment)
+                editor.CommentsEdit.Should().NotBeNull("CommentsEdit should be initialized");
+                editor.CommentsEdit.Text = comment;
+
+                // Matching Python: data, _ = editor.build()
+                var (data, _) = editor.Build();
+
+                // Matching Python: modified_are = read_are(data)
+                var modifiedAre = AREHelpers.ReadAre(data);
+
+                // Matching Python: assert modified_are.comment == comment
+                modifiedAre.Comment.Should().Be(comment, $"Comment should be '{comment}' after build");
+
+                // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, data)
+                editor.Load(areFile, "tat001", ResourceType.ARE, data);
+
+                // Matching Python: assert editor.ui.commentsEdit.toPlainText() == comment
+                editor.CommentsEdit.Text.Should().Be(comment, $"Comment should be '{comment}' after reload");
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1076-1113
@@ -4159,13 +4232,13 @@ namespace HolocronToolset.Tests.Editors
             modifiedAre.ShadowOpacity.Should().Be((byte)0);
         }
 
-        // TODO: STUB - Implement test_are_editor_maximum_values (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1366-1397)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1366-1397
         // Original: def test_are_editor_maximum_values(qtbot: QtBot, installation: HTInstallation, test_files_dir: Path): Test setting all fields to maximum values.
         [Fact]
         public void TestAreEditorMaximumValues()
         {
-            // Test setting all numeric fields to their maximum values to ensure proper handling of edge cases
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1366-1397
+            // Test setting all fields to maximum values to ensure proper handling of edge cases
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1366-1397
 
             string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
             if (string.IsNullOrEmpty(k1Path))
@@ -4184,180 +4257,128 @@ namespace HolocronToolset.Tests.Editors
                 return; // Skip if no installation available
             }
 
+            // Get test files directory (matching Python test_files_dir parameter)
             string testFilesDir = System.IO.Path.Combine(
                 System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
-                "..", "..", "..", "TestFiles"
-            );
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
 
-            // Create a temporary directory for test files if it doesn't exist
-            if (!System.IO.Directory.Exists(testFilesDir))
+            // Try alternative location if first doesn't exist
+            string areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            if (!System.IO.File.Exists(areFile))
             {
-                System.IO.Directory.CreateDirectory(testFilesDir);
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            }
+
+            // Matching PyKotor: if not are_file.exists(): pytest.skip("tat001.are not found")
+            if (!System.IO.File.Exists(areFile))
+            {
+                return; // Skip if tat001.are not found
             }
 
             // Create editor instance
+            // Matching PyKotor: editor = AREEditor(None, installation)
             var editor = new AREEditor(null, installation);
 
-            // Create a new ARE file for testing
-            editor.New();
-            ARE originalAre = editor.Are;
+            // Matching PyKotor: original_data = are_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(areFile);
 
-            // Set all numeric fields to their maximum values
-            // Alpha Test: Maximum = 255
+            // Matching PyKotor: editor.load(are_file, "tat001", ResourceType.ARE, original_data)
+            editor.Load(areFile, "tat001", ResourceType.ARE, originalData);
+
+            // Set all to maximums (matching PyKotor implementation)
+            // Matching PyKotor: editor.ui.tagEdit.setText("x" * 32)  # Max tag length
+            if (editor.TagEdit != null)
+            {
+                editor.TagEdit.Text = new string('x', 32); // Max tag length (32 characters)
+            }
+
+            // Matching PyKotor: editor.ui.alphaTestSpin.setValue(255)
             if (editor.AlphaTestSpin != null)
             {
                 editor.AlphaTestSpin.Value = 255;
             }
 
-            // Stealth XP Max: Maximum = int.MaxValue
+            // Matching PyKotor: editor.ui.stealthMaxSpin.setValue(9999)
             if (editor.StealthMaxSpin != null)
             {
-                editor.StealthMaxSpin.Value = int.MaxValue;
+                editor.StealthMaxSpin.Value = 9999;
             }
 
-            // Stealth XP Loss: Maximum = int.MaxValue
+            // Matching PyKotor: editor.ui.stealthLossSpin.setValue(9999)
             if (editor.StealthLossSpin != null)
             {
-                editor.StealthLossSpin.Value = int.MaxValue;
+                editor.StealthLossSpin.Value = 9999;
             }
 
-            // Map Zoom: Maximum = int.MaxValue
+            // Matching PyKotor: editor.ui.mapZoomSpin.setValue(100)
             if (editor.MapZoomSpin != null)
             {
-                editor.MapZoomSpin.Value = int.MaxValue;
+                editor.MapZoomSpin.Value = 100;
             }
 
-            // Map Res X: Maximum = int.MaxValue
+            // Matching PyKotor: editor.ui.mapResXSpin.setValue(4096)
             if (editor.MapResXSpin != null)
             {
-                editor.MapResXSpin.Value = int.MaxValue;
+                editor.MapResXSpin.Value = 4096;
             }
 
-            // Map Image coordinates: Maximum = 1.0M
-            if (editor.MapImageX1Spin != null)
-            {
-                editor.MapImageX1Spin.Value = 1.0M;
-            }
-            if (editor.MapImageY1Spin != null)
-            {
-                editor.MapImageY1Spin.Value = 1.0M;
-            }
-            if (editor.MapImageX2Spin != null)
-            {
-                editor.MapImageX2Spin.Value = 1.0M;
-            }
-            if (editor.MapImageY2Spin != null)
-            {
-                editor.MapImageY2Spin.Value = 1.0M;
-            }
-
-            // Map World coordinates: Maximum = decimal.MaxValue
-            if (editor.MapWorldX1Spin != null)
-            {
-                editor.MapWorldX1Spin.Value = decimal.MaxValue;
-            }
-            if (editor.MapWorldY1Spin != null)
-            {
-                editor.MapWorldY1Spin.Value = decimal.MaxValue;
-            }
-            if (editor.MapWorldX2Spin != null)
-            {
-                editor.MapWorldX2Spin.Value = decimal.MaxValue;
-            }
-            if (editor.MapWorldY2Spin != null)
-            {
-                editor.MapWorldY2Spin.Value = decimal.MaxValue;
-            }
-
-            // Fog Near/Far: Maximum = decimal.MaxValue
+            // Matching PyKotor: editor.ui.fogNearSpin.setValue(1000.0)
             if (editor.FogNearSpin != null)
             {
-                editor.FogNearSpin.Value = decimal.MaxValue;
-            }
-            if (editor.FogFarSpin != null)
-            {
-                editor.FogFarSpin.Value = decimal.MaxValue;
+                editor.FogNearSpin.Value = 1000.0M;
             }
 
-            // Shadow Opacity: Maximum = 255
+            // Matching PyKotor: editor.ui.fogFarSpin.setValue(10000.0)
+            if (editor.FogFarSpin != null)
+            {
+                editor.FogFarSpin.Value = 10000.0M;
+            }
+
+            // Matching PyKotor: editor.ui.shadowsSpin.setValue(255)
             if (editor.ShadowsSpin != null)
             {
                 editor.ShadowsSpin.Value = 255;
             }
 
-            // Grass Density/Size: Maximum = decimal.MaxValue
+            // Matching PyKotor: editor.ui.grassDensitySpin.setValue(10.0)
             if (editor.GrassDensitySpin != null)
             {
-                editor.GrassDensitySpin.Value = decimal.MaxValue;
+                editor.GrassDensitySpin.Value = 10.0M;
             }
+
+            // Matching PyKotor: editor.ui.grassSizeSpin.setValue(10.0)
             if (editor.GrassSizeSpin != null)
             {
-                editor.GrassSizeSpin.Value = decimal.MaxValue;
+                editor.GrassSizeSpin.Value = 10.0M;
             }
 
-            // Grass Probabilities: Maximum = 1.0M
-            if (editor.GrassProbLLSpin != null)
-            {
-                editor.GrassProbLLSpin.Value = 1.0M;
-            }
-            if (editor.GrassProbLRSpin != null)
-            {
-                editor.GrassProbLRSpin.Value = 1.0M;
-            }
-            if (editor.GrassProbULSpin != null)
-            {
-                editor.GrassProbULSpin.Value = 1.0M;
-            }
-            if (editor.GrassProbURSpin != null)
-            {
-                editor.GrassProbURSpin.Value = 1.0M;
-            }
+            // Save and verify (matching PyKotor implementation)
+            // Matching PyKotor: data, _ = editor.build()
+            var (data, _) = editor.Build();
+            data.Should().NotBeNull();
+            data.Length.Should().BeGreaterThan(0);
 
-            // Dirt Formulas: Maximum = decimal.MaxValue
-            if (editor.DirtFormula1Spin != null)
-            {
-                editor.DirtFormula1Spin.Value = decimal.MaxValue;
-            }
-            if (editor.DirtFormula2Spin != null)
-            {
-                editor.DirtFormula2Spin.Value = decimal.MaxValue;
-            }
-            if (editor.DirtFormula3Spin != null)
-            {
-                editor.DirtFormula3Spin.Value = decimal.MaxValue;
-            }
+            // Matching PyKotor: modified_are = read_are(data)
+            // Read ARE from built data to verify values
+            ARE modifiedAre = AREHelpers.ReadAre(data);
+            modifiedAre.Should().NotBeNull();
 
-            // Dirt Functions: Maximum = int.MaxValue
-            if (editor.DirtFunction1Spin != null)
-            {
-                editor.DirtFunction1Spin.Value = int.MaxValue;
-            }
-            if (editor.DirtFunction2Spin != null)
-            {
-                editor.DirtFunction2Spin.Value = int.MaxValue;
-            }
-            if (editor.DirtFunction3Spin != null)
-            {
-                editor.DirtFunction3Spin.Value = int.MaxValue;
-            }
+            // Matching PyKotor: assert modified_are.alpha_test == 255
+            // Verify alpha_test field (AlphaTest in ARE structure)
+            // Note: AlphaTest is stored as float in ARE, but UI uses byte (0-255)
+            // Engine uses float for AlphaTest (swkotor.exe: 0x00508c50, swkotor2.exe: 0x004e3ff0)
+            modifiedAre.AlphaTest.Should().BeApproximately(255.0f, 0.001f, "alpha_test should be 255");
 
-            // Dirt Sizes: Maximum = decimal.MaxValue
-            if (editor.DirtSize1Spin != null)
-            {
-                editor.DirtSize1Spin.Value = decimal.MaxValue;
-            }
-            if (editor.DirtSize2Spin != null)
-            {
-                editor.DirtSize2Spin.Value = decimal.MaxValue;
-            }
-            if (editor.DirtSize3Spin != null)
-            {
-                editor.DirtSize3Spin.Value = decimal.MaxValue;
-            }
+            // Matching PyKotor: assert modified_are.stealth_xp_max == 9999
+            // Verify stealth_xp_max field (StealthXpMax in ARE structure)
+            modifiedAre.StealthXpMax.Should().Be(9999, "stealth_xp_max should be 9999");
 
-            // Build the ARE object from UI controls to update the ARE object with maximum values
-            var (data, dataExt) = editor.Build();
-            ARE modifiedAre = editor.Are;
+            // Matching PyKotor: assert modified_are.shadow_opacity == 255
+            // Verify shadow_opacity field (ShadowOpacity in ARE structure)
+            modifiedAre.ShadowOpacity.Should().Be(255, "shadow_opacity should be 255");
 
             // Check that all values were set to maximum values in the ARE object
             // Note: Some fields may not have direct ARE object counterparts, so we verify UI values
