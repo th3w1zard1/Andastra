@@ -2,12 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using Andastra.Parsing.Formats.NCS;
-using Andastra.Parsing.Formats.NCS.NCSDecomp;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
 using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
-using AST = Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
 
 namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
 {
