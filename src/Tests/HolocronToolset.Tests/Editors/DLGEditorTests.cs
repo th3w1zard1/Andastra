@@ -1552,14 +1552,109 @@ namespace HolocronToolset.Tests.Editors
             }
         }
 
-        // TODO: STUB - Implement test_dlg_editor_node_widget_build_verification (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1105-1163)
+        // Matching PyKotor implementation at vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1105-1163
         // Original: def test_dlg_editor_node_widget_build_verification(qtbot, installation: HTInstallation): Verify node widget build
+        /// <summary>
+        /// Test that ALL node widget values are correctly saved in build().
+        /// Matching PyKotor implementation at vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1105-1163
+        /// </summary>
         [Fact]
         public void TestDlgEditorNodeWidgetBuildVerification()
         {
-            // TODO: STUB - Implement node widget build verification test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1105-1163
-            throw new NotImplementedException("TestDlgEditorNodeWidgetBuildVerification: Node widget build verification test not yet implemented");
+            // Matching PyKotor: editor = DLGEditor(None, installation)
+            var installation = CreateTestInstallation();
+            var editor = new DLGEditor(null, installation);
+            editor.New();
+
+            // Matching PyKotor: editor.model.add_root_node()
+            editor.Model.AddRootNode();
+            // Matching PyKotor: root_item = editor.model.item(0, 0)
+            var rootItem = editor.Model.Item(0, 0);
+            rootItem.Should().NotBeNull();
+            rootItem.Should().BeOfType<DLGStandardItem>();
+
+            // Matching PyKotor: editor.ui.dialogTree.setCurrentIndex(root_item.index())
+            editor.Model.SelectedIndex = 0;
+
+            // Matching PyKotor: editor.ui.speakerEdit.setText("TestSpeaker")
+            editor.SpeakerEdit.Text = "TestSpeaker";
+            // Matching PyKotor: editor.ui.listenerEdit.setText("PLAYER")
+            editor.ListenerEdit.Text = "PLAYER";
+            // Matching PyKotor: editor.ui.script1ResrefEdit.set_combo_box_text("k_test")
+            editor.Script1ResrefEdit.Text = "k_test";
+            // Matching PyKotor: editor.ui.script1Param1Spin.setValue(42)
+            editor.Script1Param1Spin.Value = 42;
+            // Matching PyKotor: editor.ui.condition1ResrefEdit.set_combo_box_text("c_test")
+            editor.Condition1ResrefEdit.Text = "c_test";
+            // Matching PyKotor: editor.ui.condition1NotCheckbox.setChecked(True)
+            editor.Condition1NotCheckbox.IsChecked = true;
+            // Matching PyKotor: editor.ui.questEdit.setText("my_quest")
+            editor.QuestEdit.Text = "my_quest";
+            // Matching PyKotor: editor.ui.questEntrySpin.setValue(5)
+            editor.QuestEntrySpin.Value = 5;
+            // Matching PyKotor: editor.ui.plotXpSpin.setValue(75)
+            editor.PlotXpSpin.Value = 75;
+            // Matching PyKotor: editor.ui.commentsEdit.setPlainText("Test comment")
+            editor.CommentsEdit.Text = "Test comment";
+            // Matching PyKotor: editor.ui.delaySpin.setValue(500)
+            editor.DelaySpin.Value = 500;
+            // Matching PyKotor: editor.ui.waitFlagSpin.setValue(2)
+            editor.WaitFlagSpin.Value = 2;
+            // Matching PyKotor: editor.ui.fadeTypeSpin.setValue(1)
+            editor.FadeTypeSpin.Value = 1;
+            // Matching PyKotor: editor.on_node_update()
+            editor.OnNodeUpdate();
+
+            // Matching PyKotor: set_text_via_ui_dialog(qtbot, editor, root_item, "Test Entry Text")
+            // For C# test, we set text directly on the node since we can't easily simulate UI dialog interaction
+            // The Python test uses a helper that opens LocalizedStringDialog, sets stringref to -1, sets text, and accepts
+            // We achieve the same result by creating a LocalizedString with stringref -1 and setting the text data
+            rootItem.Link.Node.Text = LocalizedString.FromEnglish("Test Entry Text");
+
+            // Matching PyKotor: data, _ = editor.build()
+            var (savedData, _) = editor.Build();
+            // Matching PyKotor: dlg = read_dlg(data)
+            DLG savedDlg = DLGHelper.ReadDlg(savedData);
+
+            // Matching PyKotor: assert len(dlg.starters) == 1
+            savedDlg.Starters.Count.Should().Be(1, "Should have exactly one starter");
+            // Matching PyKotor: assert isinstance(dlg.starters[0].node, DLGEntry)
+            savedDlg.Starters[0].Node.Should().BeOfType<DLGEntry>("Starter node should be a DLGEntry");
+
+            // Matching PyKotor: node = dlg.starters[0].node
+            var node = savedDlg.Starters[0].Node;
+            // Matching PyKotor: link = dlg.starters[0]
+            var link = savedDlg.Starters[0];
+
+            // Matching PyKotor: assert node.speaker == "TestSpeaker"
+            node.Speaker.Should().Be("TestSpeaker", "Speaker should match");
+            // Matching PyKotor: assert node.listener == "PLAYER"
+            node.Listener.Should().Be("PLAYER", "Listener should match");
+            // Matching PyKotor: assert str(node.script1) == "k_test"
+            node.Script1.ToString().Should().Be("k_test", "Script1 resref should match");
+            // Matching PyKotor: assert node.script1_param1 == 42
+            node.Script1Param1.Should().Be(42, "Script1Param1 should match");
+            // Matching PyKotor: assert str(link.active1) == "c_test"
+            link.Active1.ToString().Should().Be("c_test", "Condition1 resref should match");
+            // Matching PyKotor: assert link.active1_not
+            link.Active1Not.Should().BeTrue("Condition1Not should be true");
+            // Matching PyKotor: assert node.quest == "my_quest"
+            node.Quest.Should().Be("my_quest", "Quest should match");
+            // Matching PyKotor: assert node.quest_entry == 5
+            node.QuestEntry.Should().Be(5, "QuestEntry should match");
+            // Matching PyKotor: assert node.plot_xp_percentage == 75
+            node.PlotXpPercentage.Should().Be(75.0f, "PlotXpPercentage should match");
+            // Matching PyKotor: assert node.comment == "Test comment"
+            node.Comment.Should().Be("Test comment", "Comment should match");
+            // Matching PyKotor: assert node.delay == 500
+            node.Delay.Should().Be(500, "Delay should match");
+            // Matching PyKotor: assert node.wait_flags == 2
+            node.WaitFlags.Should().Be(2, "WaitFlags should match");
+            // Matching PyKotor: assert node.fade_type == 1
+            node.FadeType.Should().Be(1, "FadeType should match");
+            // Matching PyKotor: assert node.text.get(0) == "Test Entry Text"
+            // Python's get(0) gets the text for Language 0 (ENGLISH), Gender 0 (MALE)
+            node.Text.Get(Language.English, Gender.Male).Should().Be("Test Entry Text", "Node text should match");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1165-1200
