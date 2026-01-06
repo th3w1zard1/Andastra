@@ -880,7 +880,9 @@ namespace HolocronToolset.Editors.DLG
             }
 
             // Matching PyKotor: self._check_clipboard_for_json_node()
-            CheckClipboardForJsonNode();
+            // Note: Avalonia clipboard access is async, so we call it asynchronously
+            // The clipboard check runs in the background; menu items will be enabled/disabled based on _copy state
+            _ = CheckClipboardForJsonNodeAsync();
 
             // Matching PyKotor: not_an_orphan: bool = source_widget is not self.orphaned_nodes_list
             bool notAnOrphan = sourceWidget != _orphanedNodesList;
@@ -1211,7 +1213,7 @@ namespace HolocronToolset.Editors.DLG
         /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1465-1478
         /// Original: def _check_clipboard_for_json_node(self):
         /// </summary>
-        private void CheckClipboardForJsonNode()
+        private async System.Threading.Tasks.Task CheckClipboardForJsonNodeAsync()
         {
             try
             {
@@ -1221,17 +1223,33 @@ namespace HolocronToolset.Editors.DLG
                     return;
                 }
 
-                // TODO:  Note: Avalonia clipboard access is async, but we'll use a synchronous approach for now
-                // TODO:  In a full implementation, we might need to make this async or use a different approach
-                // TODO: STUB - For now, we'll just try to get the clipboard text if possible
                 // Matching PyKotor: clipboard_text: str = cb.text()
+                // Avalonia clipboard access is async, so we use GetTextAsync
+                string clipboardText = await topLevel.Clipboard.GetTextAsync();
+                if (string.IsNullOrEmpty(clipboardText))
+                {
+                    return;
+                }
+
                 // Matching PyKotor: node_data: dict[str | int, Any] = json.loads(clipboard_text)
                 // Matching PyKotor: if isinstance(node_data, dict) and "type" in node_data: self._copy = DLGLink.from_dict(node_data)
-                // TODO:  This is a simplified implementation - in a full implementation, we'd need async clipboard access
+                Dictionary<string, object> nodeData = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(clipboardText);
+                if (nodeData != null && nodeData.ContainsKey("type"))
+                {
+                    // Parse the JSON data into a DLGLink
+                    // Matching PyKotor: self._copy = DLGLink.from_dict(node_data)
+                    Dictionary<string, object> nodeMap = new Dictionary<string, object>();
+                    _copy = DLGLink.FromDict(nodeData, nodeMap);
+                }
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                // Matching PyKotor: except json.JSONDecodeError: ...
+                // Silently ignore JSON decode errors (clipboard doesn't contain valid JSON)
             }
             catch (Exception)
             {
-                // Matching PyKotor: except json.JSONDecodeError: ... except Exception: self._logger.exception("Invalid JSON node on clipboard.")
+                // Matching PyKotor: except Exception: self._logger.exception("Invalid JSON node on clipboard.")
                 // Silently ignore clipboard errors
             }
         }
