@@ -42,20 +42,30 @@ namespace HolocronToolset.Dialogs
 
         public void UpdateProgress(string statusText)
         {
-            UpdateProgress(statusText, _completedItems);
+            // Read _completedItems atomically to avoid race conditions
+            int currentCount = Volatile.Read(ref _completedItems);
+            UpdateProgress(statusText, currentCount);
         }
 
+        /// <summary>
+        /// Updates the progress UI with the specified status text and completed item count.
+        /// Thread-safe: UI updates are marshaled to the UI thread.
+        /// Note: This method does NOT modify _completedItems - it only updates the UI display.
+        /// </summary>
+        /// <param name="statusText">Status text to display.</param>
+        /// <param name="completedItems">Number of completed items to display.</param>
         public void UpdateProgress(string statusText, int completedItems)
         {
-            _completedItems = completedItems;
+            // Do NOT write back to _completedItems - this would cause race conditions
+            // The field is only modified via Interlocked.Increment in IncrementProgress
             Dispatcher.UIThread.Post(() =>
             {
                 _statusText.Text = statusText;
-                Title = $"Extracting Resources... ({_completedItems}/{_totalItems})";
+                Title = $"Extracting Resources... ({completedItems}/{_totalItems})";
 
                 if (_totalItems > 0)
                 {
-                    double progressPercent = (double)_completedItems / _totalItems * 100;
+                    double progressPercent = (double)completedItems / _totalItems * 100;
                     _progressBar.Value = progressPercent;
                     _progressText.Text = $"{(int)progressPercent}%";
                 }
@@ -64,19 +74,22 @@ namespace HolocronToolset.Dialogs
 
         /// <summary>
         /// Increments the progress counter and updates the UI.
-        /// Thread-safe: all UI updates are marshaled to the UI thread.
+        /// Thread-safe: counter increment is atomic, and all UI updates are marshaled to the UI thread.
+        /// The _completedItems field is only modified via Interlocked.Increment to ensure thread-safety.
         /// </summary>
         /// <param name="statusText">Optional status text to display. If null, preserves current status text.</param>
         public void IncrementProgress(string statusText = null)
         {
             // Increment counter atomically (thread-safe)
             int newCount = Interlocked.Increment(ref _completedItems);
-            
+
             // Marshal UI update to UI thread
+            // Use the captured newCount value - do NOT read _completedItems again
             Dispatcher.UIThread.Post(() =>
             {
                 // Use provided status text, or preserve current status text if not provided
                 string textToUse = statusText ?? _statusText?.Text ?? $"Extracted {newCount}/{_totalItems} resources";
+                // Pass newCount directly - UpdateProgress will NOT write back to _completedItems
                 UpdateProgress(textToUse, newCount);
             }, DispatcherPriority.Normal);
         }
