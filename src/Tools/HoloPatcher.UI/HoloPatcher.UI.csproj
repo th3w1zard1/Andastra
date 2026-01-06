@@ -1,33 +1,22 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Core Project Settings -->
   <PropertyGroup>
-    <TargetFrameworks>net9.0</TargetFrameworks>
+    <TargetFramework>net9.0</TargetFramework>
     <LangVersion>7.3</LangVersion>
     <Nullable>disable</Nullable>
     <OutputType>Library</OutputType>
     <Platforms>x86;x64;arm64</Platforms>
-  </PropertyGroup>
-
-  <!-- Build Configuration -->
-  <PropertyGroup>
+    
+    <!-- Build Configuration -->
     <AllowEditAndContinue>false</AllowEditAndContinue>
-    <AllowOptimize>true</AllowOptimize>
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
-    <DebugSymbols>false</DebugSymbols>
-    <DebugType>None</DebugType>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
-    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
-    <Optimize>true</Optimize>
-    <RemoveIntegerChecks>false</RemoveIntegerChecks>
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
-  </PropertyGroup>
-
-  <!-- Package Metadata -->
-  <PropertyGroup>
+    
+    <!-- Package Metadata -->
     <Version>2.0.0-alpha1</Version>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.0.0.0</FileVersion>
@@ -45,50 +34,43 @@
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <GeneratePackageOnBuild Condition="'$(Configuration)' == 'Release'">true</GeneratePackageOnBuild>
-  </PropertyGroup>
-
-  <!-- Avalonia Configuration -->
-  <PropertyGroup>
+    
+    <!-- Avalonia Configuration -->
     <AvaloniaCopyWin32Dll>false</AvaloniaCopyWin32Dll>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <NoWin32Manifest>true</NoWin32Manifest>
   </PropertyGroup>
 
-  <!-- Project Capabilities -->
   <ItemGroup>
     <ProjectCapability Include="Avalonia" />
     <TrimmerRootAssembly Include="Avalonia.Themes.Fluent" />
   </ItemGroup>
 
-  <!-- Avalonia Package References -->
   <ItemGroup>
+    <!-- Avalonia Core -->
     <PackageReference Include="Avalonia" Version="11.3.10" />
-    <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.1.5" />
     <PackageReference Include="Avalonia.Desktop" Version="11.3.10" />
-    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.3.10" />
-    <PackageReference Include="Avalonia.LinuxFramebuffer" Version="11.3.10" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.9" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.10" />
-  </ItemGroup>
-
-  <!-- MVVM & UI Framework Package References -->
-  <ItemGroup>
+    <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.1.5" />
+    <PackageReference Include="Avalonia.LinuxFramebuffer" Version="11.3.10" />
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.3.10" />
+    
+    <!-- MVVM & Reactive -->
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-    <PackageReference Include="DialogHost.Avalonia" Version="0.10.2" />
-    <PackageReference Include="MessageBox.Avalonia" Version="3.3.1" />
     <PackageReference Include="ReactiveUI" Version="22.3.1" />
     <PackageReference Include="System.Reactive" Version="6.1.0" />
-  </ItemGroup>
-
-  <!-- Microsoft Package References -->
-  <ItemGroup>
+    
+    <!-- UI Components -->
+    <PackageReference Include="DialogHost.Avalonia" Version="0.10.2" />
+    <PackageReference Include="MessageBox.Avalonia" Version="3.3.1" />
+    
+    <!-- Microsoft Extensions -->
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.1" />
-  </ItemGroup>
-
-  <!-- Third-Party Package References -->
-  <ItemGroup>
+    
+    <!-- Third-Party Libraries -->
     <PackageReference Include="DocumentFormat.OpenXml" Version="3.3.0" />
     <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
     <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
@@ -98,7 +80,6 @@
     <PackageReference Include="System.Drawing.Common" Version="10.0.1" />
   </ItemGroup>
 
-  <!-- Project References -->
   <ItemGroup>
     <ProjectReference Include="..\..\Andastra\Andastra.csproj" />
     <ProjectReference Include="..\..\AvRichTextBox\AvRichTextBox.csproj" />
