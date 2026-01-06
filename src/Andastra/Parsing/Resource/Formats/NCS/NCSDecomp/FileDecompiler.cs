@@ -4364,7 +4364,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                         {
                             mainpass.AssertStack();
                         }
-                        catch (Exception e)
+                        catch (Exception _)
                         {
                             Debug("Could not assert stack, continuing anyway.");
                         }
@@ -5398,7 +5398,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                         {
                             mainpass.AssertStack();
                         }
-                        catch (Exception e)
+                        catch (Exception _)
                         {
                             Debug("Could not assert stack, continuing anyway.");
                         }
