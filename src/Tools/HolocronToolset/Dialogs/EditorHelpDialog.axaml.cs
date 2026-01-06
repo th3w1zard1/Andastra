@@ -172,10 +172,40 @@ namespace HolocronToolset.Dialogs
             }
         }
 
+        // Test override for wiki path (allows mocking in tests)
+        // Matching PyKotor: monkeypatch.get_wiki_path in tests
+        // This is set to non-null only during tests to override the wiki path resolution
+        private static string _testWikiPathOverride = null;
+
+        /// <summary>
+        /// Sets a test override for the wiki path. Used only in unit tests.
+        /// Matching PyKotor: monkeypatch.get_wiki_path in test_editor_help_dialog_load_existing_file
+        /// </summary>
+        /// <param name="wikiPath">The wiki path to use for testing, or null to clear the override.</param>
+        internal static void SetTestWikiPathOverride(string wikiPath)
+        {
+            _testWikiPathOverride = wikiPath;
+        }
+
+        /// <summary>
+        /// Gets the test override wiki path if set, otherwise null.
+        /// </summary>
+        internal static string GetTestWikiPathOverride()
+        {
+            return _testWikiPathOverride;
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/editor_help.py:19-43
         // Original: def get_wiki_path() -> Path:
         public static string GetWikiPath()
         {
+            // Check for test override first (allows mocking in tests)
+            // Matching PyKotor: with patch("toolset.gui.dialogs.editor_help.get_wiki_path", return_value=wiki_dir):
+            if (_testWikiPathOverride != null)
+            {
+                return _testWikiPathOverride;
+            }
+
             // Check if frozen (EXE mode)
             // When frozen, wiki should be bundled in the same directory as the executable
             string exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;

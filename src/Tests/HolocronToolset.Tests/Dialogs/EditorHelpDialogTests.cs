@@ -83,17 +83,33 @@ namespace HolocronToolset.Tests.Dialogs
                 string testFile = Path.Combine(wikiDir, "test.md");
                 File.WriteAllText(testFile, "# Test Document\n\nThis is a test.");
 
-                // TODO:  Mock get_wiki_path to return our test wiki
-                // TODO:  Note: We can't easily mock static methods in C#, so we'll test with actual path
-                // For this test, we'll use the actual GetWikiPath and create the file there if possible
-                var dialog = new EditorHelpDialog(null, "test.md");
-                dialog.Show();
+                // Mock get_wiki_path to return our test wiki
+                // Matching PyKotor: with patch("toolset.gui.dialogs.editor_help.get_wiki_path", return_value=wiki_dir):
+                string originalOverride = EditorHelpDialog.GetTestWikiPathOverride();
+                try
+                {
+                    EditorHelpDialog.SetTestWikiPathOverride(wikiDir);
+                    var dialog = new EditorHelpDialog(null, "test.md");
+                    dialog.Show();
 
-                // Check that content was loaded (may be error if file doesn't exist, which is acceptable)
-                dialog.TextBrowser.Should().NotBeNull();
-                dialog.TextBrowser.Text.Should().NotBeNullOrEmpty();
+                    // Check that HTML was rendered (matching PyKotor: assert "Test Document" in html or "test" in html.lower())
+                    dialog.TextBrowser.Should().NotBeNull();
+                    string text = dialog.TextBrowser.Text ?? "";
+                    text.Should().NotBeNullOrEmpty("Dialog should load content from test wiki file");
+                    
+                    // Verify content contains expected text (case-insensitive check)
+                    string textLower = text.ToLowerInvariant();
+                    bool containsTestDocument = textLower.Contains("test document") || textLower.Contains("test");
+                    containsTestDocument.Should().BeTrue(
+                        $"Dialog content should contain 'Test Document' or 'test', but got: {text.Substring(0, Math.Min(100, text.Length))}...");
 
-                dialog.Close();
+                    dialog.Close();
+                }
+                finally
+                {
+                    // Restore original override (or clear if it was null)
+                    EditorHelpDialog.SetTestWikiPathOverride(originalOverride);
+                }
             }
             finally
             {
@@ -109,16 +125,44 @@ namespace HolocronToolset.Tests.Dialogs
         [Fact]
         public void TestEditorHelpDialogLoadNonexistentFile()
         {
-            var dialog = new EditorHelpDialog(null, "nonexistent.md");
-            dialog.Show();
+            // Create a test wiki directory (but don't create the file)
+            string tempDir = Path.GetTempPath();
+            string wikiDir = Path.Combine(tempDir, "test_wiki_" + Guid.NewGuid().ToString("N").Substring(0, 8));
+            Directory.CreateDirectory(wikiDir);
+            try
+            {
+                // Mock get_wiki_path to return our test wiki
+                // Matching PyKotor: with patch("toolset.gui.dialogs.editor_help.get_wiki_path", return_value=wiki_dir):
+                string originalOverride = EditorHelpDialog.GetTestWikiPathOverride();
+                try
+                {
+                    EditorHelpDialog.SetTestWikiPathOverride(wikiDir);
+                    var dialog = new EditorHelpDialog(null, "nonexistent.md");
+                    dialog.Show();
 
-            // Check that error message is shown
-            dialog.TextBrowser.Should().NotBeNull();
-            dialog.TextBrowser.Text.Should().NotBeNullOrEmpty();
-            // Should contain error message or "not found"
-            dialog.TextBrowser.Text.ToLower().Should().ContainAny("not found", "error", "nonexistent");
+                    // Check that error message is shown
+                    dialog.TextBrowser.Should().NotBeNull();
+                    dialog.TextBrowser.Text.Should().NotBeNullOrEmpty();
+                    // Should contain error message or "not found"
+                    string textLower = (dialog.TextBrowser.Text ?? "").ToLower();
+                    textLower.Should().ContainAny("not found", "error", "nonexistent",
+                        $"Dialog should show error message for nonexistent file, but got: {dialog.TextBrowser.Text?.Substring(0, Math.Min(100, dialog.TextBrowser.Text.Length ?? 0))}...");
 
-            dialog.Close();
+                    dialog.Close();
+                }
+                finally
+                {
+                    // Restore original override (or clear if it was null)
+                    EditorHelpDialog.SetTestWikiPathOverride(originalOverride);
+                }
+            }
+            finally
+            {
+                if (Directory.Exists(wikiDir))
+                {
+                    Directory.Delete(wikiDir, true);
+                }
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/test_editor_help.py:183-193
