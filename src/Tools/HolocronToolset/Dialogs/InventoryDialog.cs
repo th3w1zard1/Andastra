@@ -323,18 +323,32 @@ namespace HolocronToolset.Dialogs
 
                     rowItems.Add(rowItem);
                 }
-                catch (FileNotFoundException)
+                catch (FileNotFoundException ex)
                 {
                     // Matching PyKotor: RobustLogger().error(f"{item.resref}.uti did not exist in the installation", exc_info=True)
-                    // TODO: STUB - For now, we'll skip items that don't exist
-                    // TODO:  In a full implementation, this would log an error
+                    // Log error with exception information (matching exc_info=True in PyKotor)
+                    string resrefStr = item.ResRef?.ToString() ?? "unknown";
+                    System.Console.WriteLine($"[ERROR] {resrefStr}.uti did not exist in the installation");
+                    System.Console.WriteLine($"[ERROR] Exception details: {ex.GetType().Name}: {ex.Message}");
+                    if (ex.StackTrace != null)
+                    {
+                        System.Console.WriteLine($"[ERROR] Stack trace: {ex.StackTrace}");
+                    }
+                    // Skip items that don't exist (matching PyKotor behavior - continues after logging)
                     continue;
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     // Matching PyKotor: RobustLogger().error(f"{item.resref}.uti is corrupted", exc_info=True)
-                    // TODO: STUB - For now, we'll skip corrupted items
-                    // TODO:  In a full implementation, this would log an error
+                    // Log error with exception information (matching exc_info=True in PyKotor)
+                    string resrefStr = item.ResRef?.ToString() ?? "unknown";
+                    System.Console.WriteLine($"[ERROR] {resrefStr}.uti is corrupted");
+                    System.Console.WriteLine($"[ERROR] Exception details: {ex.GetType().Name}: {ex.Message}");
+                    if (ex.StackTrace != null)
+                    {
+                        System.Console.WriteLine($"[ERROR] Stack trace: {ex.StackTrace}");
+                    }
+                    // Skip corrupted items (matching PyKotor behavior - continues after logging)
                     continue;
                 }
             }

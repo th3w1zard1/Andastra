@@ -500,6 +500,9 @@ namespace HolocronToolset.Editors.DLG
             // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
             _dialogTree = new TreeView();
             _dialogTree.SelectionChanged += (s, e) => OnSelectionChanged();
+            // Matching PyKotor implementation: tree view calls back to editor's keyPressEvent with is_tree_view_call=True
+            // This ensures key events are handled correctly when the tree view has focus
+            _dialogTree.KeyDown += (s, e) => OnKeyDownFromTreeView(e);
 
             // Setup context menu for dialog tree
             SetupDialogTreeContextMenu();
@@ -2936,6 +2939,15 @@ namespace HolocronToolset.Editors.DLG
             return $"{nodeType}: {text}";
         }
 
+        /// <summary>
+        /// Handles key press events from the dialog tree view.
+        /// Matching PyKotor implementation: tree view calls back to editor's keyPressEvent with is_tree_view_call=True
+        /// </summary>
+        private void OnKeyDownFromTreeView(KeyEventArgs e)
+        {
+            HandleKeyDown(e, isTreeViewCall: true);
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2021-2138
         // Original: def keyPressEvent(self, event: QKeyEvent, *, is_tree_view_call: bool = False):
         /// <summary>
@@ -2945,21 +2957,47 @@ namespace HolocronToolset.Editors.DLG
         protected override void OnKeyDown(KeyEventArgs e)
         {
             base.OnKeyDown(e);
+            HandleKeyDown(e, isTreeViewCall: false);
+        }
 
+        /// <summary>
+        /// Internal key handling method that implements the full PyKotor keyPressEvent logic.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2021-2138
+        /// </summary>
+        /// <param name="e">The key event arguments.</param>
+        /// <param name="isTreeViewCall">True if this call originated from the tree view's key handler.</param>
+        private void HandleKeyDown(KeyEventArgs e, bool isTreeViewCall)
+        {
             Key key = e.Key;
             // Avalonia doesn't have IsRepeat property - track manually via _keysDown
             bool isAutoRepeat = _keysDown.Contains(key);
 
             // Matching PyKotor implementation: if not is_tree_view_call: check focus
-            // TODO: STUB - For now, we handle all key events at the window level
-            // TODO:  In a full implementation, we would check if dialogTree has focus
+            // Original: if not is_tree_view_call: if not self.ui.dialogTree.hasFocus(): super().keyPressEvent(event); return
+            if (!isTreeViewCall)
+            {
+                // If dialog tree doesn't have focus, let parent handle the event
+                if (_dialogTree == null || !_dialogTree.IsFocused)
+                {
+                    // Don't handle the event - let it propagate to parent
+                    return;
+                }
+                // If dialog tree has focus, the tree view's key handler will call us back with isTreeViewCall=true
+                // This prevents double handling of the same event
+                return;
+            }
+
+            // Matching PyKotor implementation: selected_index = self.ui.dialogTree.currentIndex()
+            // Get the selected item from the tree view
+            DLGStandardItem selectedItem = GetSelectedItemFromTreeView();
 
             // Matching PyKotor implementation: if not selected_index.isValid(): return
-            // TODO: STUB - For now, we'll handle keys even without selection (for Insert key to add root node)
-
             // Matching PyKotor implementation: if selected_item is None: handle Insert key
-            if (_model.SelectedIndex < 0)
+            // Original: selected_item: DLGStandardItem | None = self.model.itemFromIndex(selected_index)
+            // Original: if selected_item is None: if key == Qt.Key.Key_Insert: self.model.add_root_node(); return
+            if (selectedItem == null)
             {
+                // If no valid selection but tree has focus, allow Insert key to add root node
                 if (key == Key.Insert)
                 {
                     // Matching PyKotor implementation: self.model.add_root_node()
@@ -2976,7 +3014,7 @@ namespace HolocronToolset.Editors.DLG
                 if (key == Key.Up || key == Key.Down)
                 {
                     _keysDown.Add(key);
-                    HandleShiftItemKeybind(key);
+                    HandleShiftItemKeybind(selectedItem, key);
                 }
                 e.Handled = true;
                 return; // Ignore auto-repeat events and prevent multiple executions on single key
@@ -3067,8 +3105,8 @@ namespace HolocronToolset.Editors.DLG
             // Matching PyKotor implementation: self.keys_down.add(key)
             _keysDown.Add(key);
 
-            // Matching PyKotor implementation: self._handle_shift_item_keybind(...)
-            HandleShiftItemKeybind(key);
+            // Matching PyKotor implementation: self._handle_shift_item_keybind(selected_index, selected_item, key)
+            HandleShiftItemKeybind(selectedItem, key);
 
             // Matching PyKotor implementation: handle modifier key combinations
             if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
@@ -3181,33 +3219,55 @@ namespace HolocronToolset.Editors.DLG
         /// Handles shift+arrow key combinations for moving items.
         /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1985-2019
         /// </summary>
-        private void HandleShiftItemKeybind(Key key)
+        /// <param name="selectedItem">The currently selected DLGStandardItem.</param>
+        /// <param name="key">The key that was pressed.</param>
+        private void HandleShiftItemKeybind(DLGStandardItem selectedItem, Key key)
         {
-            if (_model.SelectedIndex < 0)
+            if (selectedItem == null || selectedItem.Link == null)
             {
                 return;
             }
 
             // Matching PyKotor implementation: handle Shift+Up/Down combinations
-            // Note: Shift check is done in caller (OnKeyDown), this method is only called when Shift is held
-            if (key == Key.Up)
+            // Note: The method checks keys_down set to determine if Shift is held
+            // Original: if self.keys_down in ({Qt.Key.Key_Shift, Qt.Key.Key_Up}, {Qt.Key.Key_Shift, Qt.Key.Key_Up, Qt.Key.Key_Alt}):
+            if (key == Key.Up && (_keysDown.Contains(Key.LeftShift) || _keysDown.Contains(Key.RightShift)))
             {
                 // Matching PyKotor implementation: shift_item(selected_item, -1, no_selection_update=True)
-                if (_model.SelectedIndex > 0)
+                // Get current index from model
+                int currentIndex = _model.SelectedIndex;
+                if (currentIndex > 0)
                 {
-                    _model.MoveStarter(_model.SelectedIndex, _model.SelectedIndex - 1);
-                    _model.SelectedIndex = _model.SelectedIndex - 1;
+                    _model.MoveStarter(currentIndex, currentIndex - 1);
+                    _model.SelectedIndex = currentIndex - 1;
+                    // Update tree view selection to match
+                    var rootItems = _model.GetRootItems();
+                    if (currentIndex - 1 >= 0 && currentIndex - 1 < rootItems.Count)
+                    {
+                        SelectTreeItem(rootItems[currentIndex - 1]);
+                    }
                 }
             }
-            else if (key == Key.Down)
+            else if (key == Key.Down && (_keysDown.Contains(Key.LeftShift) || _keysDown.Contains(Key.RightShift)))
             {
                 // Matching PyKotor implementation: shift_item(selected_item, 1, no_selection_update=True)
-                if (_model.SelectedIndex < _model.RowCount - 1)
+                int currentIndex = _model.SelectedIndex;
+                if (currentIndex >= 0 && currentIndex < _model.RowCount - 1)
                 {
-                    _model.MoveStarter(_model.SelectedIndex, _model.SelectedIndex + 1);
-                    _model.SelectedIndex = _model.SelectedIndex + 1;
+                    _model.MoveStarter(currentIndex, currentIndex + 1);
+                    _model.SelectedIndex = currentIndex + 1;
+                    // Update tree view selection to match
+                    var rootItems = _model.GetRootItems();
+                    if (currentIndex + 1 >= 0 && currentIndex + 1 < rootItems.Count)
+                    {
+                        SelectTreeItem(rootItems[currentIndex + 1]);
+                    }
                 }
             }
+            // Matching PyKotor implementation: handle arrow keys for scrolling (even without Shift)
+            // Original: elif above_index.isValid() and key == Qt.Key.Key_Up and not self.ui.dialogTree.visualRect(above_index).contains(view_port.rect()):
+            // Note: Avalonia TreeView doesn't have direct indexAbove/indexBelow methods, so we handle scrolling via selection changes
+            // The tree view will automatically scroll to show the selected item
         }
 
         // Helper methods for key press actions - these will be fully implemented as the UI is completed
@@ -3472,6 +3532,38 @@ namespace HolocronToolset.Editors.DLG
         /// Gets selected indexes from a TreeView.
         /// Helper method to extract DLGStandardItem objects from TreeView selection.
         /// </summary>
+        /// <summary>
+        /// Gets the selected DLGStandardItem from the dialog tree view.
+        /// Matching PyKotor implementation: self.model.itemFromIndex(selected_index)
+        /// </summary>
+        /// <returns>The selected DLGStandardItem, or null if no valid selection.</returns>
+        private DLGStandardItem GetSelectedItemFromTreeView()
+        {
+            if (_dialogTree == null)
+            {
+                return null;
+            }
+
+            // Get selected item from tree view
+            var selectedItem = _dialogTree.SelectedItem;
+            if (selectedItem == null)
+            {
+                return null;
+            }
+
+            // Extract DLGStandardItem from TreeViewItem.Tag or return directly if it's already a DLGStandardItem
+            if (selectedItem is TreeViewItem treeItem && treeItem.Tag is DLGStandardItem dlgItem)
+            {
+                return dlgItem;
+            }
+            else if (selectedItem is DLGStandardItem dlgItemDirect)
+            {
+                return dlgItemDirect;
+            }
+
+            return null;
+        }
+
         private List<object> GetSelectedIndexesFromTreeView(TreeView treeView)
         {
             var indexes = new List<object>();
