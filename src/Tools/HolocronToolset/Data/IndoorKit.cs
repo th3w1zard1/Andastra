@@ -15,7 +15,6 @@ using Avalonia;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Vector3 = System.Numerics.Vector3;
-using Quaternion = System.Numerics.Quaternion;
 
 namespace HolocronToolset.Data
 {
@@ -1328,8 +1327,8 @@ namespace HolocronToolset.Data
 
                 // Convert quaternion orientation to rotation angle (yaw in degrees)
                 // Doors rotate around the Y-axis, so we extract the yaw from the quaternion
-                // Convert Vector4 to Andastra.Utility.Geometry.Quaternion
-                Andastra.Utility.Geometry.Quaternion quaternion = new Andastra.Utility.Geometry.Quaternion(
+                // Convert Vector4 to Quaternion
+                Quaternion quaternion = new Quaternion(
                     doorhook.Orientation.X,
                     doorhook.Orientation.Y,
                     doorhook.Orientation.Z,
@@ -1857,3 +1856,10 @@ namespace HolocronToolset.Data
                 if (int.TryParse(currentNum.ToString(), out int num))
                 {
                     nums.Add(num);
+                }
+            }
+            return nums;
+        }
+    }
+}
+
