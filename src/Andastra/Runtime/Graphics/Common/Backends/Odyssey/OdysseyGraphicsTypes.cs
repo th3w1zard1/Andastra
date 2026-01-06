@@ -141,6 +141,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
     /// <summary>
     /// Odyssey depth-stencil buffer implementation.
     /// Uses OpenGL renderbuffer.
+    /// Based on swkotor.exe/swkotor2.exe: Depth-stencil buffer creation for z-buffering and stencil operations
+    /// Matching reone Renderbuffer implementation: glGenRenderbuffers -> glBindRenderbuffer -> glRenderbufferStorage
     /// </summary>
     public class OdysseyDepthStencilBuffer : IDepthStencilBuffer
     {
@@ -149,22 +151,80 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         private uint _renderbufferId;
         private bool _disposed;
 
+        #region OpenGL P/Invoke for Renderbuffers
+
+        [System.Runtime.InteropServices.DllImport("opengl32.dll", EntryPoint = "glGenRenderbuffers")]
+        private static extern void glGenRenderbuffers(int n, uint[] renderbuffers);
+
+        [System.Runtime.InteropServices.DllImport("opengl32.dll", EntryPoint = "glBindRenderbuffer")]
+        private static extern void glBindRenderbuffer(uint target, uint renderbuffer);
+
+        [System.Runtime.InteropServices.DllImport("opengl32.dll", EntryPoint = "glRenderbufferStorage")]
+        private static extern void glRenderbufferStorage(uint target, uint internalformat, int width, int height);
+
+        [System.Runtime.InteropServices.DllImport("opengl32.dll", EntryPoint = "glDeleteRenderbuffers")]
+        private static extern void glDeleteRenderbuffers(int n, uint[] renderbuffers);
+
+        // OpenGL renderbuffer constants
+        private const uint GL_RENDERBUFFER = 0x8D41;
+        private const uint GL_DEPTH24_STENCIL8 = 0x88F0;
+
+        #endregion
+
+        /// <summary>
+        /// Creates a new depth-stencil buffer.
+        /// Based on swkotor.exe/swkotor2.exe: Depth-stencil buffer initialization
+        /// Matching reone Renderbuffer::init(): glGenRenderbuffers -> glBindRenderbuffer -> glRenderbufferStorage
+        /// </summary>
+        /// <param name="width">Buffer width.</param>
+        /// <param name="height">Buffer height.</param>
         public OdysseyDepthStencilBuffer(int width, int height)
         {
+            if (width <= 0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(width), "Width must be greater than zero.");
+            }
+            if (height <= 0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(height), "Height must be greater than zero.");
+            }
+
             _width = width;
             _height = height;
-            // TODO: STUB - Create renderbuffer
+
+            // Matching reone Renderbuffer::init(): glGenRenderbuffers(1, &_nameGL)
+            uint[] renderbufferIds = new uint[1];
+            glGenRenderbuffers(1, renderbufferIds);
+            _renderbufferId = renderbufferIds[0];
+
+            // Matching reone Renderbuffer::bind(): glBindRenderbuffer(GL_RENDERBUFFER, _nameGL)
+            glBindRenderbuffer(GL_RENDERBUFFER, _renderbufferId);
+
+            // Matching reone Renderbuffer::refresh(): glRenderbufferStorage(GL_RENDERBUFFER, format, width, height)
+            // Using GL_DEPTH24_STENCIL8 (0x88F0) for 24-bit depth and 8-bit stencil
+            // This matches the original game's depth-stencil buffer format
+            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
         }
 
         public int Width => _width;
         public int Height => _height;
         public IntPtr NativeHandle => new IntPtr(_renderbufferId);
 
+        /// <summary>
+        /// Disposes the depth-stencil buffer.
+        /// Matching reone Renderbuffer::deinit(): glDeleteRenderbuffers(1, &_nameGL)
+        /// </summary>
         public void Dispose()
         {
             if (!_disposed)
             {
-                // TODO: STUB - Delete renderbuffer
+                // Matching reone Renderbuffer::deinit(): glDeleteRenderbuffers(1, &_nameGL)
+                if (_renderbufferId != 0)
+                {
+                    uint[] renderbufferIds = new uint[] { _renderbufferId };
+                    glDeleteRenderbuffers(1, renderbufferIds);
+                    _renderbufferId = 0;
+                }
                 _disposed = true;
             }
         }
