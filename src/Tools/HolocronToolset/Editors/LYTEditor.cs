@@ -19,6 +19,7 @@ using TPCAuto = Andastra.Parsing.Formats.TPC.TPCAuto;
 using TPC = Andastra.Parsing.Formats.TPC.TPC;
 using TPCTextureFormat = Andastra.Parsing.Formats.TPC.TPCTextureFormat;
 using HolocronToolset.Widgets;
+using HolocronToolset.Editors.LYT;
 
 namespace HolocronToolset.Editors
 {
@@ -32,6 +33,7 @@ namespace HolocronToolset.Editors
         private Dictionary<string, string> _importedModels = new Dictionary<string, string>(); // Maps model name (ResRef) to MDL file path
         private ModelBrowser _modelBrowser; // Model browser widget for displaying imported models
         private TextureBrowser _textureBrowser; // Texture browser widget for displaying imported textures
+        private LYTGraphicsScene _graphicsScene; // Graphics scene for rendering LYT layout elements
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:32-73
         // Original: def __init__(self, parent, installation):
@@ -77,10 +79,36 @@ namespace HolocronToolset.Editors
         private void SetupUI()
         {
             // UI setup - will be implemented when XAML is available
+            // Initialize graphics scene
+            InitializeGraphicsScene();
             // Initialize model browser widget
             InitializeModelBrowser();
             // Initialize texture browser widget
             InitializeTextureBrowser();
+        }
+
+        /// <summary>
+        /// Initializes the graphics scene for rendering LYT layout elements.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:50-52
+        /// Original: self.scene: QGraphicsScene = QGraphicsScene()
+        /// </summary>
+        private void InitializeGraphicsScene()
+        {
+            try
+            {
+                // Try to find graphics scene from XAML if available
+                _graphicsScene = this.FindControl<LYTGraphicsScene>("graphicsScene");
+            }
+            catch
+            {
+                // Graphics scene not found in XAML - will create programmatically if needed
+            }
+
+            // Create graphics scene if not found from XAML
+            if (_graphicsScene == null)
+            {
+                _graphicsScene = new LYTGraphicsScene();
+            }
         }
 
         /// <summary>
@@ -325,7 +353,17 @@ namespace HolocronToolset.Editors
         // Original: def update_zoom(self, value: int):
         public void UpdateZoom(int value)
         {
-            // Zoom functionality - will be implemented when graphics view is available
+            if (_graphicsScene == null)
+            {
+                InitializeGraphicsScene();
+            }
+
+            if (_graphicsScene != null)
+            {
+                // Convert value (0-100) to zoom level (0.1-10.0)
+                double zoomLevel = value / 100.0;
+                _graphicsScene.ZoomLevel = zoomLevel;
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:220-229
@@ -343,8 +381,90 @@ namespace HolocronToolset.Editors
             // Update room connections based on door hooks
             UpdateRoomConnections();
 
-            // Scene update - will be implemented when graphics scene is available
-            // TODO: STUB - For now, we ensure LYT data is consistent and valid
+            // Update graphics scene to render all LYT elements
+            UpdateGraphicsScene();
+        }
+
+        /// <summary>
+        /// Updates the graphics scene to render all LYT layout elements.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:225-234
+        /// Original: 
+        ///     self.scene.clear()
+        ///     for room in self._lyt.rooms:
+        ///         self.scene.addItem(RoomItem(room, self))
+        ///     for track in self._lyt.tracks:
+        ///         self.scene.addItem(TrackItem(track, self))
+        ///     for obstacle in self._lyt.obstacles:
+        ///         self.scene.addItem(ObstacleItem(obstacle, self))
+        ///     for doorhook in self._lyt.doorhooks:
+        ///         self.scene.addItem(DoorHookItem(doorhook, self))
+        /// </summary>
+        private void UpdateGraphicsScene()
+        {
+            if (_graphicsScene == null)
+            {
+                InitializeGraphicsScene();
+            }
+
+            if (_graphicsScene == null)
+            {
+                return;
+            }
+
+            // Clear existing items
+            _graphicsScene.Clear();
+
+            // Add room items
+            if (_lyt.Rooms != null)
+            {
+                foreach (var room in _lyt.Rooms)
+                {
+                    if (room != null)
+                    {
+                        var roomItem = new RoomItem(_graphicsScene, room);
+                        _graphicsScene.AddItem(roomItem);
+                    }
+                }
+            }
+
+            // Add track items
+            if (_lyt.Tracks != null)
+            {
+                foreach (var track in _lyt.Tracks)
+                {
+                    if (track != null)
+                    {
+                        var trackItem = new TrackItem(_graphicsScene, track);
+                        _graphicsScene.AddItem(trackItem);
+                    }
+                }
+            }
+
+            // Add obstacle items
+            if (_lyt.Obstacles != null)
+            {
+                foreach (var obstacle in _lyt.Obstacles)
+                {
+                    if (obstacle != null)
+                    {
+                        var obstacleItem = new ObstacleItem(_graphicsScene, obstacle);
+                        _graphicsScene.AddItem(obstacleItem);
+                    }
+                }
+            }
+
+            // Add door hook items
+            if (_lyt.DoorHooks != null)
+            {
+                foreach (var doorHook in _lyt.DoorHooks)
+                {
+                    if (doorHook != null)
+                    {
+                        var doorHookItem = new DoorHookItem(_graphicsScene, doorHook);
+                        _graphicsScene.AddItem(doorHookItem);
+                    }
+                }
+            }
         }
 
         /// <summary>
