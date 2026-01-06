@@ -690,7 +690,7 @@ namespace Andastra.Parsing.Resource.Generics.DLG
         /// <param name="data">The dictionary data</param>
         /// <param name="nodeMap">Optional map to track deserialized nodes and handle references</param>
         /// <returns>A DLGReply instance</returns>
-        public static DLGReply FromDict(Dictionary<string, object> data, Dictionary<string, object> nodeMap = null)
+        public static new DLGReply FromDict(Dictionary<string, object> data, Dictionary<string, object> nodeMap = null)
         {
             DLGNode node = DLGNode.FromDict(data, nodeMap);
             if (node is DLGReply reply)
@@ -729,7 +729,7 @@ namespace Andastra.Parsing.Resource.Generics.DLG
         /// <param name="data">The dictionary data</param>
         /// <param name="nodeMap">Optional map to track deserialized nodes and handle references</param>
         /// <returns>A DLGEntry instance</returns>
-        public static DLGEntry FromDict(Dictionary<string, object> data, Dictionary<string, object> nodeMap = null)
+        public static new DLGEntry FromDict(Dictionary<string, object> data, Dictionary<string, object> nodeMap = null)
         {
             DLGNode node = DLGNode.FromDict(data, nodeMap);
             if (node is DLGEntry entry)

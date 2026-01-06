@@ -1835,14 +1835,14 @@ namespace Andastra.Parsing.Common
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1787-1794
         // Original: def resname(self) -> str:
-        public string GetResName()
+        public override string GetResName()
         {
             return ResName;
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1796-1803
         // Original: def restype(self) -> ResourceType:
-        public ResourceType GetResType()
+        public override ResourceType GetResType()
         {
             return ResType;
         }

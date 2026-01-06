@@ -213,7 +213,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode
             _id = id;
         }
 
-        public virtual void Close()
+        public override void Close()
         {
             if (_params != null)
             {

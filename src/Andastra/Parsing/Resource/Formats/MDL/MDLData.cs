@@ -698,7 +698,7 @@ namespace Andastra.Parsing.Formats.MDLData
         public float Displacement { get; set; }
         public float Tightness { get; set; }
         public float Period { get; set; }
-        public Vector3 Constraints { get; set; }
+        public new Vector3 Constraints { get; set; }
 
         public MDLDangly()
             : base()

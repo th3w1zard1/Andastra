@@ -172,7 +172,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode
             return buff.ToString();
         }
 
-        public void Close()
+        public override void Close()
         {
             if (_cases != null)
             {

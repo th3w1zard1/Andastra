@@ -30,7 +30,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode
             return _theConst != null ? _theConst.ToString() : "";
         }
 
-        public virtual void Close()
+        public override void Close()
         {
             if (_theConst != null)
             {

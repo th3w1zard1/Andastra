@@ -144,7 +144,7 @@ namespace Andastra.Parsing.Resource.Generics.GUI
     {
         public float Value { get; set; }
         public float MinValue { get; set; }
-        public float MaxValue { get; set; } = 100.0f;
+        public new float MaxValue { get; set; } = 100.0f;
         public string Direction { get; set; } = "horizontal";
 
         public GUISlider() : base()
@@ -161,7 +161,7 @@ namespace Andastra.Parsing.Resource.Generics.GUI
     {
         public ResRef BackgroundTexture { get; set; }
         public ResRef BorderTexture { get; set; }
-        public float Alpha { get; set; } = 1.0f;
+        public new float Alpha { get; set; } = 1.0f;
 
         public GUIPanel() : base()
         {
@@ -177,8 +177,8 @@ namespace Andastra.Parsing.Resource.Generics.GUI
     {
         public GUIProtoItem ProtoItem { get; set; }
         public GUIScrollbar ScrollBar { get; set; }
-        public int Padding { get; set; } = 5;
-        public bool Looping { get; set; } = true;
+        public new int Padding { get; set; } = 5;
+        public new bool Looping { get; set; } = true;
 
         public GUIListBox() : base()
         {
@@ -192,7 +192,7 @@ namespace Andastra.Parsing.Resource.Generics.GUI
     [PublicAPI]
     public class GUICheckBox : GUIControl
     {
-        public int? IsSelected { get; set; }
+        public new int? IsSelected { get; set; }
 
         public GUICheckBox() : base()
         {
@@ -220,12 +220,12 @@ namespace Andastra.Parsing.Resource.Generics.GUI
     [PublicAPI]
     public class GUIProgressBar : GUIControl
     {
-        public float MaxValue { get; set; } = 100.0f;
-        public int CurrentValue { get; set; }
+        public new float MaxValue { get; set; } = 100.0f;
+        public new int CurrentValue { get; set; }
         public ResRef ProgressFillTexture { get; set; } = ResRef.FromBlank();
         public GUIBorder ProgressBorder { get; set; }
-        public int StartFromLeft { get; set; } = 1;
-        public float? Progress { get; set; }
+        public new int StartFromLeft { get; set; } = 1;
+        public new float? Progress { get; set; }
 
         public GUIProgressBar() : base()
         {

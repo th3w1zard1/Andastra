@@ -778,7 +778,7 @@ namespace Andastra.Parsing.Common
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/stream.py:56-75
         // Original: @classmethod def to_bytearray(cls, data: bytearray | None = None) -> BinaryWriterBytearray:
-        public static BinaryWriterBytearray ToByteArray(byte[] data = null)
+        public static new BinaryWriterBytearray ToByteArray(byte[] data = null)
         {
             if (data != null && !(data is byte[]))
             {
@@ -789,7 +789,7 @@ namespace Andastra.Parsing.Common
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/stream.py:78-82
         // Original: @classmethod def to_file(cls, path: str | os.PathLike) -> BinaryWriterFile:
-        public static BinaryWriterFile ToFile(string path)
+        public static new BinaryWriterFile ToFile(string path)
         {
             return new BinaryWriterFile(path);
         }

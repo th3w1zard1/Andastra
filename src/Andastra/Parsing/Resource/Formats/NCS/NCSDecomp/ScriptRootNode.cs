@@ -195,7 +195,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ScriptRootNode.java:123-133
         // Original: @Override public void close() { super.close(); Iterator<ScriptNode> it = this.children.iterator(); while (it.hasNext()) { it.next().close(); } this.children = null; }
-        public virtual void Close()
+        public override void Close()
         {
             base.Close();
             System.Collections.Generic.IEnumerator<ScriptNode> it = this.children.GetEnumerator();

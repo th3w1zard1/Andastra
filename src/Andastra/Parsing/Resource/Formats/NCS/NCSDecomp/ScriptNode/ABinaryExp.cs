@@ -76,7 +76,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode
             return ExpressionFormatter.Format(this);
         }
 
-        public virtual void Close()
+        public override void Close()
         {
             if (_left != null)
             {

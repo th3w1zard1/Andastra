@@ -47,7 +47,7 @@ namespace Andastra.Parsing.Resource.Generics.GUI
         public int Alignment { get; set; }
         public bool Horizontal { get; set; }
         public int VisibleValue { get; set; }
-        public int? CurrentValue { get; set; }
+        public new int? CurrentValue { get; set; }
         public GUIScrollbarThumb GuiThumb { get; set; }
         public GUIScrollbarDir GuiDirection { get; set; }
 
