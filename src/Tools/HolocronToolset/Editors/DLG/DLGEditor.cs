@@ -1842,7 +1842,7 @@ namespace HolocronToolset.Editors.DLG
                 if (newAnim != null)
                 {
                     selectedItem.Link.Node.Animations.Add(newAnim);
-                    UpdateAnimationsList();
+                    RefreshAnimList();
                     OnNodeUpdate();
                 }
             }
@@ -1863,7 +1863,7 @@ namespace HolocronToolset.Editors.DLG
             if (_animsList.SelectedItem is ListBoxItem item && item.Tag is DLGAnimation anim)
             {
                 selectedItem.Link.Node.Animations.Remove(anim);
-                UpdateAnimationsList();
+                RefreshAnimList();
                 OnNodeUpdate();
             }
         }
@@ -1887,7 +1887,7 @@ namespace HolocronToolset.Editors.DLG
                 if (result)
                 {
                     // Animation is updated in-place by the dialog
-                    UpdateAnimationsList();
+                    RefreshAnimList();
                     OnNodeUpdate();
                 }
             }
