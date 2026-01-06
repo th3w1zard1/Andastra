@@ -30,14 +30,14 @@ namespace KotorCLI.Commands
             unpackCommand.Options.Add(fileOption);
             var removeDeletedOption = new Option<bool>("--removeDeleted", "Remove source files not present in the file being unpacked");
             unpackCommand.Options.Add(removeDeletedOption);
-            
+
             unpackCommand.SetAction(parseResult =>
             {
                 var target = parseResult.GetValue(targetArgument);
                 var file = parseResult.GetValue(fileArgument);
                 var fileOpt = parseResult.GetValue(fileOption);
                 var removeDeleted = parseResult.GetValue(removeDeletedOption);
-                
+
                 var logger = new StandardLogger();
                 var exitCode = Execute(target, fileOpt ?? file, removeDeleted, logger);
                 Environment.Exit(exitCode);

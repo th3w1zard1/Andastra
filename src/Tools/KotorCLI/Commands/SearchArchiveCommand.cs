@@ -22,14 +22,14 @@ namespace KotorCLI.Commands
             searchArchiveCommand.Options.Add(caseSensitiveOption);
             var searchContentOption = new Option<bool>("--content", "Search in resource content (not just names)");
             searchArchiveCommand.Options.Add(searchContentOption);
-            
+
             searchArchiveCommand.SetAction(parseResult =>
             {
                 var file = parseResult.GetValue(fileOption);
                 var pattern = parseResult.GetValue(patternArgument);
                 var caseSensitive = parseResult.GetValue(caseSensitiveOption);
                 var searchContent = parseResult.GetValue(searchContentOption);
-                
+
                 var logger = new StandardLogger();
                 var exitCode = Execute(file, pattern, caseSensitive, searchContent, logger);
                 Environment.Exit(exitCode);
@@ -43,14 +43,14 @@ namespace KotorCLI.Commands
             logger.Info("Search-archive command not yet fully implemented");
             logger.Info($"Would search: {file}");
             logger.Info($"Pattern: {pattern}");
-            
+
             // TODO: Implement search-archive logic
             // This requires:
             // - Detecting archive type (ERF, RIM, KEY/BIF)
             // - Reading archive
             // - Searching resource names (and optionally content) for pattern
             // - Returning matching resources
-            
+
             return 0;
         }
     }

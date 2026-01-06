@@ -20,13 +20,13 @@ namespace KotorCLI.Commands
             catCommand.Add(resourceArgument);
             var typeOption = new Option<string>("--type", "Resource type extension (optional, will try to detect)");
             catCommand.Options.Add(typeOption);
-            
+
             catCommand.SetAction(parseResult =>
             {
                 var archive = parseResult.GetValue(archiveArgument);
                 var resource = parseResult.GetValue(resourceArgument);
                 var type = parseResult.GetValue(typeOption);
-                
+
                 var logger = new StandardLogger();
                 var exitCode = Execute(archive, resource, type, logger);
                 Environment.Exit(exitCode);
@@ -39,14 +39,14 @@ namespace KotorCLI.Commands
         {
             logger.Info("Cat command not yet fully implemented");
             logger.Info($"Would display resource: {resource} from {archive}");
-            
+
             // TODO: Implement cat logic
             // This requires:
             // - Detecting archive type (ERF, RIM)
             // - Reading archive
             // - Finding resource by name (and type if specified)
             // - Outputting resource content to stdout
-            
+
             return 0;
         }
     }

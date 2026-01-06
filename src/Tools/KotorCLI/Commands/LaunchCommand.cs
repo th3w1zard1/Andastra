@@ -26,13 +26,13 @@ namespace KotorCLI.Commands
                 launchCommand.Options.Add(gameBinOption);
                 var installDirOption = new Option<string>("--installDir", "The location of the KOTOR user directory");
                 launchCommand.Options.Add(installDirOption);
-                
+
                 launchCommand.SetAction(parseResult =>
                 {
                     var targets = parseResult.GetValue(targetsArgument) ?? Array.Empty<string>();
                     var gameBin = parseResult.GetValue(gameBinOption);
                     var installDir = parseResult.GetValue(installDirOption);
-                    
+
                     var logger = new StandardLogger();
                     var exitCode = Execute(targets, gameBin, installDir, logger);
                     Environment.Exit(exitCode);
@@ -49,13 +49,13 @@ namespace KotorCLI.Commands
             logger.Info("  1. Call install command");
             logger.Info("  2. Launch KOTOR game executable (swkotor.exe or swkotor2.exe)");
             logger.Info("  3. Pass appropriate command-line arguments to load the module");
-            
+
             // TODO: Implement full launch logic
             // This requires:
             // - Calling install command logic
             // - Finding game executable (swkotor.exe or swkotor2.exe)
             // - Launching game with module parameter
-            
+
             return 0;
         }
     }

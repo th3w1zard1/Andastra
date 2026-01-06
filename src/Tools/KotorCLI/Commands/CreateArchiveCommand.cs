@@ -35,14 +35,14 @@ namespace KotorCLI.Commands
             createArchiveCommand.Options.Add(typeOption);
             var filterOption = new Option<string>("--filter", "Filter files by pattern (supports wildcards)");
             createArchiveCommand.Options.Add(filterOption);
-            
+
             createArchiveCommand.SetAction(parseResult =>
             {
                 var directory = parseResult.GetValue(directoryOption);
                 var output = parseResult.GetValue(outputOption);
                 var type = parseResult.GetValue(typeOption);
                 var filter = parseResult.GetValue(filterOption);
-                
+
                 var logger = new StandardLogger();
                 var exitCode = Execute(directory, output, type, filter, logger);
                 Environment.Exit(exitCode);
@@ -78,7 +78,7 @@ namespace KotorCLI.Commands
                 }
 
                 // Create appropriate archive
-                if (archiveType == "erf" || archiveType == ".erf" || archiveType == "hak" || archiveType == ".hak" || 
+                if (archiveType == "erf" || archiveType == ".erf" || archiveType == "hak" || archiveType == ".hak" ||
                     archiveType == "mod" || archiveType == ".mod" || archiveType == "sav" || archiveType == ".sav")
                 {
                     string erfType = archiveType.TrimStart('.').ToUpperInvariant();

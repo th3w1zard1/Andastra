@@ -28,14 +28,14 @@ namespace KotorCLI.Commands
             installCommand.Options.Add(noPackOption);
             var cleanOption = new Option<bool>("--clean", "Clear the cache before packing");
             installCommand.Options.Add(cleanOption);
-            
+
             installCommand.SetAction(parseResult =>
             {
                 var targets = parseResult.GetValue(targetsArgument) ?? Array.Empty<string>();
                 var installDir = parseResult.GetValue(installDirOption);
                 var noPack = parseResult.GetValue(noPackOption);
                 var clean = parseResult.GetValue(cleanOption);
-                
+
                 var logger = new StandardLogger();
                 var exitCode = Execute(targets, installDir, noPack, clean, logger);
                 Environment.Exit(exitCode);

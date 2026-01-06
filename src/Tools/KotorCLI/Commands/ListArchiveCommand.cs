@@ -19,13 +19,13 @@ namespace KotorCLI.Commands
             listArchiveCommand.Options.Add(verboseOption);
             var filterOption = new Option<string>("--filter", "Filter resources by name pattern (supports wildcards)");
             listArchiveCommand.Options.Add(filterOption);
-            
+
             listArchiveCommand.SetAction(parseResult =>
             {
                 var file = parseResult.GetValue(fileOption);
                 var verbose = parseResult.GetValue(verboseOption);
                 var filter = parseResult.GetValue(filterOption);
-                
+
                 var logger = new StandardLogger();
                 var exitCode = Execute(file, verbose, filter, logger);
                 Environment.Exit(exitCode);
@@ -38,14 +38,14 @@ namespace KotorCLI.Commands
         {
             logger.Info("List-archive command not yet fully implemented");
             logger.Info($"Would list: {file}");
-            
+
             // TODO: Implement list-archive logic
             // This requires:
             // - Detecting archive type (ERF, RIM, KEY/BIF)
             // - Reading archive
             // - Listing resources (with details if verbose)
             // - Applying filter if specified
-            
+
             return 0;
         }
     }
