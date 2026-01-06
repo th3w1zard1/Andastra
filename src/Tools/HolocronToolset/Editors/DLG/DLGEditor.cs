@@ -2789,7 +2789,8 @@ namespace HolocronToolset.Editors.DLG
                     else
                     {
                         // Fallback to basic case (dialogTree)
-                        EditText(e, null, _dialogTree);
+                        var selectedIndexes = GetSelectedIndexesFromTreeView(_dialogTree);
+                        EditText(e, selectedIndexes, _dialogTree);
                     }
                     e.Handled = true;
                     return;
