@@ -789,19 +789,52 @@ namespace HolocronToolset.Editors.DLG
 
             // Initialize animation UI controls
             // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui:966-992
-            _animsList = new ListBox();
-            _addAnimButton = new Button { Content = "Add Animation" };
-            _removeAnimButton = new Button { Content = "Remove Animation" };
-            _editAnimButton = new Button { Content = "Edit Animation" };
+            // Original: QListWidget animsList, QPushButton addAnimButton, removeAnimButton, editAnimButton
+            _animsList = new ListBox
+            {
+                Height = 150,
+                Margin = new Thickness(0, 5, 0, 5)
+            };
+            
+            _addAnimButton = new Button { Content = "Add" };
+            _addAnimButton.Click += (s, e) => OnAddAnimClicked();
+            
+            _removeAnimButton = new Button { Content = "Remove" };
+            _removeAnimButton.Click += (s, e) => OnRemoveAnimClicked();
+            
+            _editAnimButton = new Button { Content = "Edit" };
+            _editAnimButton.Click += (s, e) => OnEditAnimClicked();
 
-            // TODO:  Add animation controls to UI (basic layout for now)
-            var animPanel = new StackPanel();
+            // Matching PyKotor UI layout: verticalLayout_anims with label, list, buttons
+            var animPanel = new StackPanel
+            {
+                Margin = new Thickness(0, 10, 0, 0),
+                Spacing = 5
+            };
+            
+            // Add label matching PyKotor: curAnimsLabel "Current Animations"
+            var animLabel = new TextBlock
+            {
+                Text = "Current Animations",
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                Margin = new Thickness(0, 0, 0, 5)
+            };
+            animPanel.Children.Add(animLabel);
+            
             animPanel.Children.Add(_animsList);
-            var buttonPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal };
+            
+            // Button panel matching PyKotor: horizontalLayout_animsButtons
+            var buttonPanel = new StackPanel
+            {
+                Orientation = Avalonia.Layout.Orientation.Horizontal,
+                Spacing = 5,
+                Margin = new Thickness(0, 5, 0, 0)
+            };
             buttonPanel.Children.Add(_addAnimButton);
             buttonPanel.Children.Add(_removeAnimButton);
             buttonPanel.Children.Add(_editAnimButton);
             animPanel.Children.Add(buttonPanel);
+            
             panel.Children.Add(animPanel);
         }
 

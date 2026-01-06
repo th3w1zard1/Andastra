@@ -19,6 +19,7 @@ namespace HolocronToolset.Dialogs.Edit
         private TextBox _participantEdit;
         private Button _okButton;
         private Button _cancelButton;
+        private bool _dialogResult = false;
 
         // Public parameterless constructor for XAML
         public DialogAnimationDialog() : this(null, null, null)
@@ -67,9 +68,17 @@ namespace HolocronToolset.Dialogs.Edit
             var participantLabel = new TextBlock { Text = "Participant:" };
             _participantEdit = new TextBox();
             var okButton = new Button { Content = "OK" };
-            okButton.Click += (s, e) => Close();
+            okButton.Click += (s, e) =>
+            {
+                _dialogResult = true;
+                Close();
+            };
             var cancelButton = new Button { Content = "Cancel" };
-            cancelButton.Click += (s, e) => Close();
+            cancelButton.Click += (s, e) =>
+            {
+                _dialogResult = false;
+                Close();
+            };
 
             panel.Children.Add(animationLabel);
             panel.Children.Add(_animationSelect);
@@ -90,11 +99,19 @@ namespace HolocronToolset.Dialogs.Edit
 
             if (_okButton != null)
             {
-                _okButton.Click += (s, e) => Close();
+                _okButton.Click += (s, e) =>
+                {
+                    _dialogResult = true;
+                    Close();
+                };
             }
             if (_cancelButton != null)
             {
-                _cancelButton.Click += (s, e) => Close();
+                _cancelButton.Click += (s, e) =>
+                {
+                    _dialogResult = false;
+                    Close();
+                };
             }
         }
 
@@ -153,6 +170,30 @@ namespace HolocronToolset.Dialogs.Edit
                 animation.Participant = _participantEdit.Text ?? "";
             }
             return animation;
+        }
+
+        /// <summary>
+        /// Shows the dialog modally and returns true if OK was clicked, false if Cancel was clicked or the dialog was closed.
+        /// Matching PyKotor QDialog.exec() behavior.
+        /// </summary>
+        /// <param name="parent">The parent window for the dialog.</param>
+        /// <returns>True if OK was clicked, false otherwise.</returns>
+        public new bool ShowDialog(Window parent = null)
+        {
+            _dialogResult = false;
+            if (parent != null)
+            {
+                var task = base.ShowDialog<bool>(parent);
+                task.Wait();
+                return task.Result;
+            }
+            else
+            {
+                Show();
+                // For non-modal case, we can't wait, so return false
+                // This shouldn't happen in normal usage
+                return false;
+            }
         }
     }
 }
