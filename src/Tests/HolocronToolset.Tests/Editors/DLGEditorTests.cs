@@ -815,7 +815,51 @@ namespace HolocronToolset.Tests.Editors
             editor.OnNodeUpdate();
             rootItem.Link.Node.Script2.ToString().Should().Be("test_script2");
 
-            // TODO: Test script2Param spins (not exposed as public properties)
+            // Test script2Param spins
+            // Matching PyKotor implementation: Test script2Param1Spin, script2Param2Spin, script2Param3Spin, script2Param4Spin, script2Param5Spin
+            editor.Script2Param1Spin.Should().NotBeNull("Script2Param1Spin should exist");
+            editor.Script2Param2Spin.Should().NotBeNull("Script2Param2Spin should exist");
+            editor.Script2Param3Spin.Should().NotBeNull("Script2Param3Spin should exist");
+            editor.Script2Param4Spin.Should().NotBeNull("Script2Param4Spin should exist");
+            editor.Script2Param5Spin.Should().NotBeNull("Script2Param5Spin should exist");
+
+            // Test script2Param1Spin
+            editor.Script2Param1Spin.Value = 100;
+            editor.OnNodeUpdate();
+            rootItem.Link.Node.Script2Param1.Should().Be(100, "Script2Param1 should be set to 100");
+
+            // Test script2Param2Spin
+            editor.Script2Param2Spin.Value = 200;
+            editor.OnNodeUpdate();
+            rootItem.Link.Node.Script2Param2.Should().Be(200, "Script2Param2 should be set to 200");
+
+            // Test script2Param3Spin
+            editor.Script2Param3Spin.Value = 300;
+            editor.OnNodeUpdate();
+            rootItem.Link.Node.Script2Param3.Should().Be(300, "Script2Param3 should be set to 300");
+
+            // Test script2Param4Spin
+            editor.Script2Param4Spin.Value = 400;
+            editor.OnNodeUpdate();
+            rootItem.Link.Node.Script2Param4.Should().Be(400, "Script2Param4 should be set to 400");
+
+            // Test script2Param5Spin
+            editor.Script2Param5Spin.Value = 500;
+            editor.OnNodeUpdate();
+            rootItem.Link.Node.Script2Param5.Should().Be(500, "Script2Param5 should be set to 500");
+
+            // Test loading script2Param values from node
+            rootItem.Link.Node.Script2Param1 = 111;
+            rootItem.Link.Node.Script2Param2 = 222;
+            rootItem.Link.Node.Script2Param3 = 333;
+            rootItem.Link.Node.Script2Param4 = 444;
+            rootItem.Link.Node.Script2Param5 = 555;
+            editor.LoadItem(rootItem);
+            editor.Script2Param1Spin.Value.Should().Be(111, "Script2Param1Spin should load value 111 from node");
+            editor.Script2Param2Spin.Value.Should().Be(222, "Script2Param2Spin should load value 222 from node");
+            editor.Script2Param3Spin.Value.Should().Be(333, "Script2Param3Spin should load value 333 from node");
+            editor.Script2Param4Spin.Value.Should().Be(444, "Script2Param4Spin should load value 444 from node");
+            editor.Script2Param5Spin.Value.Should().Be(555, "Script2Param5Spin should load value 555 from node");
 
             // Test condition1ResrefEdit - ComboBox
             editor.Condition1ResrefEdit.Text = "test_cond1";

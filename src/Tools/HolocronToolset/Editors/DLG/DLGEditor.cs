@@ -171,6 +171,11 @@ namespace HolocronToolset.Editors.DLG
         private ComboBox _script2ResrefEdit;
         private NumericUpDown _script1Param1Spin;
         private StackPanel _script1Param1Panel;
+        private NumericUpDown _script2Param1Spin;
+        private NumericUpDown _script2Param2Spin;
+        private NumericUpDown _script2Param3Spin;
+        private NumericUpDown _script2Param4Spin;
+        private NumericUpDown _script2Param5Spin;
         private NumericUpDown _waitFlagSpin;
         private NumericUpDown _fadeTypeSpin;
         private ComboBox _soundComboBox;
@@ -605,6 +610,39 @@ namespace HolocronToolset.Editors.DLG
             _script1Param1Panel.Children.Add(new TextBlock { Text = "Script1 Param1 (K2 only):" });
             _script1Param1Panel.Children.Add(_script1Param1Spin);
             panel.Children.Add(_script1Param1Panel);
+
+            // Initialize script2 parameter widgets (K2-specific)
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
+            // Original: QSpinBox script2Param1Spin, script2Param2Spin, script2Param3Spin, script2Param4Spin, script2Param5Spin
+            // K2-specific: ActionParam1b, ActionParam2b, ActionParam3b, ActionParam4b, ActionParam5b fields only exist in KotOR 2 (swkotor2.exe: 0x005ea880)
+            // Aurora (NWN) and Eclipse (DA/ME) use base DLG format without K2 extensions
+            _script2Param1Spin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = 0 };
+            _script2Param1Spin.ValueChanged += (s, e) => OnNodeUpdate();
+
+            _script2Param2Spin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = 0 };
+            _script2Param2Spin.ValueChanged += (s, e) => OnNodeUpdate();
+
+            _script2Param3Spin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = 0 };
+            _script2Param3Spin.ValueChanged += (s, e) => OnNodeUpdate();
+
+            _script2Param4Spin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = 0 };
+            _script2Param4Spin.ValueChanged += (s, e) => OnNodeUpdate();
+
+            _script2Param5Spin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = 0 };
+            _script2Param5Spin.ValueChanged += (s, e) => OnNodeUpdate();
+
+            var script2ParamPanel = new StackPanel();
+            script2ParamPanel.Children.Add(new TextBlock { Text = "Script2 Param1 (K2 only):" });
+            script2ParamPanel.Children.Add(_script2Param1Spin);
+            script2ParamPanel.Children.Add(new TextBlock { Text = "Script2 Param2 (K2 only):" });
+            script2ParamPanel.Children.Add(_script2Param2Spin);
+            script2ParamPanel.Children.Add(new TextBlock { Text = "Script2 Param3 (K2 only):" });
+            script2ParamPanel.Children.Add(_script2Param3Spin);
+            script2ParamPanel.Children.Add(new TextBlock { Text = "Script2 Param4 (K2 only):" });
+            script2ParamPanel.Children.Add(_script2Param4Spin);
+            script2ParamPanel.Children.Add(new TextBlock { Text = "Script2 Param5 (K2 only):" });
+            script2ParamPanel.Children.Add(_script2Param5Spin);
+            panel.Children.Add(script2ParamPanel);
 
             // Initialize node timing widgets
             // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
@@ -1984,6 +2022,14 @@ namespace HolocronToolset.Editors.DLG
         // Matching PyKotor implementation: editor.ui.script1Param1Spin
         public NumericUpDown Script1Param1Spin => _script1Param1Spin;
 
+        // Expose script2 parameter widgets for testing
+        // Matching PyKotor implementation: editor.ui.script2Param1Spin, script2Param2Spin, etc.
+        public NumericUpDown Script2Param1Spin => _script2Param1Spin;
+        public NumericUpDown Script2Param2Spin => _script2Param2Spin;
+        public NumericUpDown Script2Param3Spin => _script2Param3Spin;
+        public NumericUpDown Script2Param4Spin => _script2Param4Spin;
+        public NumericUpDown Script2Param5Spin => _script2Param5Spin;
+
         // Expose sound widget for testing
         // Matching PyKotor implementation: editor.ui.soundComboBox
         public ComboBox SoundComboBox => _soundComboBox;
@@ -2094,6 +2140,26 @@ namespace HolocronToolset.Editors.DLG
                 if (_script1Param1Spin != null)
                 {
                     _script1Param1Spin.Value = 0;
+                }
+                if (_script2Param1Spin != null)
+                {
+                    _script2Param1Spin.Value = 0;
+                }
+                if (_script2Param2Spin != null)
+                {
+                    _script2Param2Spin.Value = 0;
+                }
+                if (_script2Param3Spin != null)
+                {
+                    _script2Param3Spin.Value = 0;
+                }
+                if (_script2Param4Spin != null)
+                {
+                    _script2Param4Spin.Value = 0;
+                }
+                if (_script2Param5Spin != null)
+                {
+                    _script2Param5Spin.Value = 0;
                 }
                 if (_speakerEdit != null)
                 {
@@ -2298,6 +2364,30 @@ namespace HolocronToolset.Editors.DLG
             if (_script1Param1Spin != null && node != null)
             {
                 _script1Param1Spin.Value = node.Script1Param1;
+            }
+
+            // Load script2 params (K2-specific)
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py
+            // Original: self.ui.script2Param1Spin.setValue(item.link.node.script2_param1), etc.
+            if (_script2Param1Spin != null && node != null)
+            {
+                _script2Param1Spin.Value = node.Script2Param1;
+            }
+            if (_script2Param2Spin != null && node != null)
+            {
+                _script2Param2Spin.Value = node.Script2Param2;
+            }
+            if (_script2Param3Spin != null && node != null)
+            {
+                _script2Param3Spin.Value = node.Script2Param3;
+            }
+            if (_script2Param4Spin != null && node != null)
+            {
+                _script2Param4Spin.Value = node.Script2Param4;
+            }
+            if (_script2Param5Spin != null && node != null)
+            {
+                _script2Param5Spin.Value = node.Script2Param5;
             }
 
             // Load delay, wait flags, and fade type from node
@@ -2552,6 +2642,30 @@ namespace HolocronToolset.Editors.DLG
             if (_script1Param1Spin != null && node != null)
             {
                 node.Script1Param1 = _script1Param1Spin.Value.HasValue ? (int)_script1Param1Spin.Value.Value : 0;
+            }
+
+            // Update script2 params (K2-specific)
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py
+            // Original: item.link.node.script2_param1 = self.ui.script2Param1Spin.value(), etc.
+            if (_script2Param1Spin != null && node != null)
+            {
+                node.Script2Param1 = _script2Param1Spin.Value.HasValue ? (int)_script2Param1Spin.Value.Value : 0;
+            }
+            if (_script2Param2Spin != null && node != null)
+            {
+                node.Script2Param2 = _script2Param2Spin.Value.HasValue ? (int)_script2Param2Spin.Value.Value : 0;
+            }
+            if (_script2Param3Spin != null && node != null)
+            {
+                node.Script2Param3 = _script2Param3Spin.Value.HasValue ? (int)_script2Param3Spin.Value.Value : 0;
+            }
+            if (_script2Param4Spin != null && node != null)
+            {
+                node.Script2Param4 = _script2Param4Spin.Value.HasValue ? (int)_script2Param4Spin.Value.Value : 0;
+            }
+            if (_script2Param5Spin != null && node != null)
+            {
+                node.Script2Param5 = _script2Param5Spin.Value.HasValue ? (int)_script2Param5Spin.Value.Value : 0;
             }
 
             // Update delay, wait flags, and fade type in node
