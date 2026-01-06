@@ -121,13 +121,9 @@ namespace KotorCLI.Commands
             var assembleInput = new Argument<string>("input");
             assembleInput.Description = "Input NSS file";
             assembleCmd.Add(assembleInput);
-            var assembleOutput = new Option<string>("--output");
-            assembleOutput.AddAlias("-o");
-            assembleOutput.Description = "Output NCS file";
+            var assembleOutput = new Option<string>(new[] { "-o", "--output" }, "Output NCS file");
             assembleCmd.Options.Add(assembleOutput);
-            var includeOption = new Option<string[]>("--include");
-            includeOption.AddAlias("-I");
-            includeOption.Description = "Include directory for #include files";
+            var includeOption = new Option<string[]>(new[] { "-I", "--include" }, "Include directory for #include files");
             assembleCmd.Options.Add(includeOption);
             var debugOption = new Option<bool>("--debug", "Enable debug output");
             assembleCmd.Options.Add(debugOption);

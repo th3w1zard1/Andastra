@@ -7,7 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace KotorDiff.Application
+namespace KotorDiff.AppCore
 {
     /// <summary>
     /// Simple profiler that mimics Python's cProfile functionality.

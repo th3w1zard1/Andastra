@@ -17,7 +17,7 @@ using Tuple = System.Tuple;
 using SystemTextEncoding = System.Text.Encoding;
 using Game = Andastra.Parsing.Common.BioWareGame;
 
-namespace KotorDiff.Application
+namespace KotorDiff.AppCore
 {
     /// <summary>
     /// Helper functions for diff application operations.

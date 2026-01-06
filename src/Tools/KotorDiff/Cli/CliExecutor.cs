@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using Andastra.Parsing.Installation;
 using KotorDiff;
-using KotorDiff.Application;
+using KotorDiff.AppCore;
 
 namespace KotorDiff.Cli
 {
@@ -109,7 +109,7 @@ namespace KotorDiff.Cli
             // Run the application
             // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/cli.py:218
             // Original: exit_code: int = run_application(config); sys.exit(exit_code)
-            int exitCode = KotorDiff.Application.AppRunner.RunApplication(config);
+            int exitCode = KotorDiff.AppCore.AppRunner.RunApplication(config);
             Environment.Exit(exitCode);
         }
     }

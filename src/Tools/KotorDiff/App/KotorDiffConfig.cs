@@ -3,7 +3,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace KotorDiff.Application
+namespace KotorDiff.AppCore
 {
     // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/app.py:43-58
     // Original: @dataclass class KotorDiffConfig: ...

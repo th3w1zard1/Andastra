@@ -8,7 +8,7 @@ namespace KotorDiff
 {
     // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/__main__.py
     // Original: class KotorDiffApp(ThemedApp): ... app.root.mainloop()
-    public partial class App : Application
+    public partial class App : Avalonia.Controls.Application
     {
         public override void Initialize()
         {

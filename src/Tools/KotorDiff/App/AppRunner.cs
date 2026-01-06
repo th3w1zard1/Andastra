@@ -2,7 +2,7 @@
 // Original: def run_application(config: KotorDiffConfig) -> int: ...
 using System;
 
-namespace KotorDiff.Application
+namespace KotorDiff.AppCore
 {
     /// <summary>
     /// Main application runner for KotorDiff.

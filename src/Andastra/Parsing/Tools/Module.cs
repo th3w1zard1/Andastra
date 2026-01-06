@@ -9,7 +9,6 @@ using Andastra.Parsing.Formats.RIM;
 using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Formats.VIS;
 using Andastra.Parsing.Installation;
-using Andastra.Parsing.Logger;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Formats.LYT;
 using Andastra.Parsing.Resource.Generics;
