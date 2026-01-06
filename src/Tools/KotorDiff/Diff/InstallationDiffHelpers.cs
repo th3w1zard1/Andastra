@@ -247,10 +247,26 @@ namespace KotorDiff.Diff
                 }
 
                 PatcherModifications modifications;
+                Dictionary<int, int> strrefMappings = null;
                 if (result is ValueTuple<PatcherModifications, Dictionary<int, int>> tuple)
                 {
                     modifications = tuple.Item1;
-                    // TODO:  Ignore strref_mappings for now
+                    strrefMappings = tuple.Item2;
+
+                    // Store strref_mappings in writer metadata for TLK modifications
+                    // This enables StrRef reference finding and linking patches
+                    // Based on PyKotor implementation: vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:1547-1576
+                    // Matching Resolution/InstallationDiffHelpers.cs implementation for consistency
+                    if (incrementalWriter != null && strrefMappings != null && strrefMappings.Count > 0)
+                    {
+                        // Only store strref_mappings for TLK modifications
+                        // Other modification types (2DA, GFF, SSF) don't use strref_mappings
+                        if (modifications is Andastra.Parsing.Mods.TLK.ModificationsTLK modTlk)
+                        {
+                            incrementalWriter.SetTlkMetadata(modTlk, "strref_mappings", strrefMappings);
+                            logFunc($"  |-- StrRef mappings: {strrefMappings.Count} mappings stored for linking patches");
+                        }
+                    }
                 }
                 else if (result is PatcherModifications mods)
                 {
