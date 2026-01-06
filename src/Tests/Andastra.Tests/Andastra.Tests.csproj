@@ -100,4 +100,9 @@
     <PackageReference Include="Moq" Version="4.20.72" />
     <PackageReference Include="Xunit" Version="2.6.3" />
   </ItemGroup>
+
+  <!-- Exclude Runtime tests - they require Andastra.csproj, not Andastra.Parsing.csproj -->
+  <ItemGroup>
+    <Compile Remove="Runtime/**" />
+  </ItemGroup>
 </Project>
