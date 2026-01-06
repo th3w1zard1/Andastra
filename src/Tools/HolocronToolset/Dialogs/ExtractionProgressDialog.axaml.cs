@@ -62,13 +62,22 @@ namespace HolocronToolset.Dialogs
             }, DispatcherPriority.Normal);
         }
 
-        public void IncrementProgress()
+        /// <summary>
+        /// Increments the progress counter and updates the UI.
+        /// Thread-safe: all UI updates are marshaled to the UI thread.
+        /// </summary>
+        /// <param name="statusText">Optional status text to display. If null, preserves current status text.</param>
+        public void IncrementProgress(string statusText = null)
         {
-            _completedItems++;
-            // Safely read current status text from UI thread to avoid cross-thread access
+            // Increment counter atomically (thread-safe)
+            int newCount = Interlocked.Increment(ref _completedItems);
+            
+            // Marshal UI update to UI thread
             Dispatcher.UIThread.Post(() =>
             {
-                UpdateProgress(_statusText.Text);
+                // Use provided status text, or preserve current status text if not provided
+                string textToUse = statusText ?? _statusText?.Text ?? $"Extracted {newCount}/{_totalItems} resources";
+                UpdateProgress(textToUse, newCount);
             }, DispatcherPriority.Normal);
         }
 
