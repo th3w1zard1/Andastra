@@ -1722,7 +1722,52 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             }
             if (left == null)
             {
-                left = this.RemoveLastExp(false);
+                // For conditional operations, if left operand is null, search all children for AVarRef
+                // This handles cases where AVarRef is not the last child (e.g., if AUnaryExp was added after it)
+                if (NodeUtils.IsConditionalOp(node) && this.current.HasChildren())
+                {
+                    List<ScriptNode.ScriptNode> children = this.current.GetChildren();
+                    // Search backwards for AVarRef which should be the left operand
+                    for (int i = children.Count - 1; i >= 0; i--)
+                    {
+                        ScriptNode.ScriptNode child = children[i];
+                        if (typeof(AVarRef).IsInstanceOfType(child))
+                        {
+                            Error($"DEBUG TransformBinary: Found AVarRef at index {i} for left operand (searching all children)");
+                            // Remove all children after this one
+                            while (this.current.HasChildren() && this.current.GetLastChild() != child)
+                            {
+                                this.current.RemoveLastChild();
+                            }
+                            left = (AVarRef)this.current.RemoveLastChild();
+                            left.Parent(null);
+                            break;
+                        }
+                        else if (typeof(ScriptNode.AExpressionStatement).IsInstanceOfType(child))
+                        {
+                            ScriptNode.AExpressionStatement expStmt = (ScriptNode.AExpressionStatement)child;
+                            ScriptNode.AExpression innerExp = expStmt.GetExp();
+                            if (innerExp != null && typeof(AVarRef).IsInstanceOfType(innerExp))
+                            {
+                                Error($"DEBUG TransformBinary: Found AVarRef in AExpressionStatement at index {i} for left operand (searching all children)");
+                                // Remove all children after this one
+                                while (this.current.HasChildren() && this.current.GetLastChild() != child)
+                                {
+                                    this.current.RemoveLastChild();
+                                }
+                                this.current.RemoveLastChild();
+                                innerExp.Parent(null);
+                                left = (AVarRef)innerExp;
+                                break;
+                            }
+                        }
+                    }
+                }
+                // If still not found, try the standard approach
+                if (left == null)
+                {
+                    left = this.RemoveLastExp(false);
+                }
             }
 
             // Debug logging for conditional operations
