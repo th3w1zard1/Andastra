@@ -4,7 +4,6 @@ using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using HolocronToolset.Data;
-using Andastra.Parsing.Logger;
 using DuplicateRoomsCommand = HolocronToolset.Windows.DuplicateRoomsCommand;
 
 namespace HolocronToolset.Windows
@@ -668,7 +667,7 @@ namespace HolocronToolset.Windows
                 if (!moduleKit.EnsureLoaded())
                 {
                     // Matching Python lines 651-653: Warning logged if no components found
-                    new RobustLogger().Warning($"No components found for module '{moduleRoot}'");
+                    new Andastra.Parsing.Logger.RobustLogger().Warning($"No components found for module '{moduleRoot}'");
                     return;
                 }
 
@@ -690,7 +689,7 @@ namespace HolocronToolset.Windows
                 // Matching Python lines 664-667: Exception handling
                 // Original: except Exception:
                 // Original:     RobustLogger().exception(f"Failed to load module '{module_root}'")
-                new RobustLogger().Exception($"Failed to load module '{moduleRoot}': {ex.Message}");
+                new Andastra.Parsing.Logger.RobustLogger().Exception($"Failed to load module '{moduleRoot}': {ex.Message}");
             }
         }
 
