@@ -289,32 +289,47 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             }
             // Heuristic 4: Single SAVEBP but no entry stub pattern after it
             // Some include files have globals initialization followed by functions without a main() entry stub
+            // CRITICAL: This heuristic must be very conservative - regular scripts can have RETN instructions
+            // in their main function, so we should only mark as include file if there are MULTIPLE function-like
+            // patterns (multiple SAVEBP-RETN sequences) or if the code structure clearly indicates include file
             else if (savebpIndex >= 0 && allSavebpIndices.Count == 1)
             {
                 int entryStubCheck = savebpIndex + 1;
                 bool hasEntryStub = HasEntryStubPattern(instructions, entryStubCheck, ncs);
 
-                // If there's no entry stub after SAVEBP, check if there are function-like patterns
+                // If there's no entry stub after SAVEBP, check if there are MULTIPLE function-like patterns
                 // (SAVEBP followed by code that ends with RETN, but no JSR+RETN entry stub)
+                // Include files typically have MULTIPLE functions, not just one
                 if (!hasEntryStub)
                 {
-                    // Check if there are RETN instructions after SAVEBP that suggest function boundaries
-                    // Include files typically have functions that end with RETN but no entry stub
+                    // Check if there are MULTIPLE RETN instructions after SAVEBP that suggest multiple function boundaries
+                    // Include files typically have multiple functions that end with RETN but no entry stub
+                    // Regular scripts have a main function that may have RETN, but it's usually just one function
                     int retnCountAfterSavebp = 0;
+                    int jsrCountAfterSavebp = 0;
                     for (int i = entryStubCheck; i < instructions.Count && i < entryStubCheck + 100; i++)
                     {
                         if (instructions[i].InsType == NCSInstructionType.RETN)
                         {
                             retnCountAfterSavebp++;
                         }
+                        if (instructions[i].InsType == NCSInstructionType.JSR)
+                        {
+                            jsrCountAfterSavebp++;
+                        }
                     }
 
-                    // If we find RETN instructions but no entry stub, it's likely an include file
-                    // with functions that don't have a main() entry point
-                    if (retnCountAfterSavebp > 0)
+                    // Only mark as include file if there are MULTIPLE RETN instructions (suggesting multiple functions)
+                    // AND no JSR instructions (which would indicate a main function calling subroutines)
+                    // A single RETN after SAVEBP is likely just the end of a main function, not an include file
+                    if (retnCountAfterSavebp >= 2 && jsrCountAfterSavebp == 0)
                     {
                         isIncludeFile = true;
-                        Debug($"DEBUG NcsToAstConverter: Single SAVEBP, NO entry stub, but {retnCountAfterSavebp} RETN found after SAVEBP - detected as INCLUDE FILE");
+                        Debug($"DEBUG NcsToAstConverter: Single SAVEBP, NO entry stub, but {retnCountAfterSavebp} RETN and {jsrCountAfterSavebp} JSR found after SAVEBP - detected as INCLUDE FILE");
+                    }
+                    else
+                    {
+                        Debug($"DEBUG NcsToAstConverter: Single SAVEBP, NO entry stub, but only {retnCountAfterSavebp} RETN and {jsrCountAfterSavebp} JSR found after SAVEBP - treating as NORMAL SCRIPT (not include file)");
                     }
                 }
             }
@@ -3273,23 +3288,18 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             // Check if RESTOREBP is followed by MOVSP+RETN+RETN pattern
             // Pattern must be at the END of the file (within last 4 instructions: RESTOREBP, MOVSP, RETN, RETN)
             int patternStart = restorebpIndex + 1;
-            if (patternStart + 2 < instructions.Count)
+            if (patternStart + 2 >= instructions.Count)
+                return false;
+            // Check for MOVSP, RETN, RETN pattern after RESTOREBP
+            if (instructions[patternStart].InsType != NCSInstructionType.MOVSP ||
+                instructions[patternStart + 1].InsType != NCSInstructionType.RETN ||
+                instructions[patternStart + 2].InsType != NCSInstructionType.RETN)
             {
-                // Check for MOVSP, RETN, RETN pattern after RESTOREBP
-                if (instructions[patternStart].InsType == NCSInstructionType.MOVSP &&
-                    instructions[patternStart + 1].InsType == NCSInstructionType.RETN &&
-                    instructions[patternStart + 2].InsType == NCSInstructionType.RETN)
-                {
-                    // Verify this pattern is at the end of the file
-                    // The last instruction should be the second RETN
-                    if (patternStart + 2 == instructions.Count - 1)
-                    {
-                        return true;
-                    }
-                }
+                return false;
             }
-
-            return false;
+            // Verify this pattern is at the end of the file
+            // The last instruction should be the second RETN
+            return patternStart + 2 == instructions.Count - 1;
         }
 
         // swkotor2.exe: 0x004eb750 - Detect if code after entry stub is cleanup code or real main code
