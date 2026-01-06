@@ -76,6 +76,25 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         [DllImport("opengl32.dll", EntryPoint = "glDrawElements")]
         private static extern void glDrawElements(uint mode, int count, uint type, IntPtr indices);
         
+        // Vertex Buffer Object (VBO) functions
+        [DllImport("opengl32.dll", EntryPoint = "glGenBuffers")]
+        private static extern void glGenBuffers(int n, uint[] buffers);
+        
+        [DllImport("opengl32.dll", EntryPoint = "glBindBuffer")]
+        private static extern void glBindBuffer(uint target, uint buffer);
+        
+        [DllImport("opengl32.dll", EntryPoint = "glBufferData")]
+        private static extern void glBufferData(uint target, int size, IntPtr data, uint usage);
+        
+        [DllImport("opengl32.dll", EntryPoint = "glBufferSubData")]
+        private static extern void glBufferSubData(uint target, int offset, int size, IntPtr data);
+        
+        [DllImport("opengl32.dll", EntryPoint = "glGetBufferSubData")]
+        private static extern void glGetBufferSubData(uint target, int offset, int size, IntPtr data);
+        
+        [DllImport("opengl32.dll", EntryPoint = "glDeleteBuffers")]
+        private static extern void glDeleteBuffers(int n, uint[] buffers);
+        
         // OpenGL constants
         private const uint GL_COLOR_BUFFER_BIT = 0x00004000;
         private const uint GL_DEPTH_BUFFER_BIT = 0x00000100;
@@ -95,6 +114,13 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         private const uint GL_STENCIL_TEST = 0x0B90;
         private const uint GL_BLEND = 0x0BE2;
         private const uint GL_CULL_FACE = 0x0B44;
+        
+        // Buffer object constants
+        private const uint GL_ARRAY_BUFFER = 0x8892;
+        private const uint GL_ELEMENT_ARRAY_BUFFER = 0x8893;
+        private const uint GL_STATIC_DRAW = 0x88E4;
+        private const uint GL_DYNAMIC_DRAW = 0x88E8;
+        private const uint GL_STREAM_DRAW = 0x88E0;
         
         #endregion
         
@@ -265,10 +291,22 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         
         /// <summary>
         /// Sets the vertex buffer for rendering.
+        /// Based on swkotor.exe/swkotor2.exe: glBindBuffer(GL_ARRAY_BUFFER, vbo)
         /// </summary>
         public void SetVertexBuffer(IVertexBuffer vertexBuffer)
         {
-            // TODO: STUB - Bind VBO for rendering
+            if (vertexBuffer == null)
+            {
+                // Unbind VBO
+                glBindBuffer(GL_ARRAY_BUFFER, 0);
+                return;
+            }
+            
+            // Bind the VBO
+            // Matching xoreos: glBindBuffer(GL_ARRAY_BUFFER, _vbo)
+            // Matching PyKotor: glBindBuffer(GL_ARRAY_BUFFER, self._vbo)
+            uint vboId = (uint)vertexBuffer.NativeHandle.ToInt32();
+            glBindBuffer(GL_ARRAY_BUFFER, vboId);
         }
         
         /// <summary>

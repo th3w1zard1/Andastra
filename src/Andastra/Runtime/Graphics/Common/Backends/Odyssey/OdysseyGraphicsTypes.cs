@@ -16,34 +16,34 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         private readonly int _height;
         private byte[] _data;
         private bool _disposed;
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glDeleteTextures")]
         private static extern void glDeleteTextures(int n, uint[] textures);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glBindTexture")]
         private static extern void glBindTexture(uint target, uint texture);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glTexImage2D")]
         private static extern void glTexImage2D(uint target, int level, int internalformat, int width, int height, int border, uint format, uint type, IntPtr pixels);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glGetTexImage")]
         private static extern void glGetTexImage(uint target, int level, uint format, uint type, IntPtr pixels);
-        
+
         private const uint GL_TEXTURE_2D = 0x0DE1;
         private const uint GL_RGBA = 0x1908;
         private const uint GL_UNSIGNED_BYTE = 0x1401;
-        
+
         public OdysseyTexture2D(uint textureId, int width, int height)
         {
             _textureId = textureId;
             _width = width;
             _height = height;
         }
-        
+
         public int Width => _width;
         public int Height => _height;
         public IntPtr NativeHandle => new IntPtr(_textureId);
-        
+
         public void SetData(byte[] data)
         {
             _data = data;
@@ -62,18 +62,18 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 }
             }
         }
-        
+
         public byte[] GetData()
         {
             if (_data != null)
             {
                 return _data;
             }
-            
+
             // Read from GPU
             int size = _width * _height * 4;
             byte[] data = new byte[size];
-            
+
             glBindTexture(GL_TEXTURE_2D, _textureId);
             IntPtr dataPtr = Marshal.AllocHGlobal(size);
             try
@@ -85,10 +85,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             {
                 Marshal.FreeHGlobal(dataPtr);
             }
-            
+
             return data;
         }
-        
+
         public void Dispose()
         {
             if (!_disposed)
@@ -99,7 +99,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             }
         }
     }
-    
+
     /// <summary>
     /// Odyssey render target implementation.
     /// Uses OpenGL framebuffer objects (FBO).
@@ -112,20 +112,20 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         private OdysseyTexture2D _colorTexture;
         private OdysseyDepthStencilBuffer _depthStencilBuffer;
         private bool _disposed;
-        
+
         public OdysseyRenderTarget(int width, int height)
         {
             _width = width;
             _height = height;
             // TODO: STUB - Create FBO and attachments
         }
-        
+
         public int Width => _width;
         public int Height => _height;
         public ITexture2D ColorTexture => _colorTexture;
         public IDepthStencilBuffer DepthStencilBuffer => _depthStencilBuffer;
         public IntPtr NativeHandle => new IntPtr(_framebufferId);
-        
+
         public void Dispose()
         {
             if (!_disposed)
@@ -137,7 +137,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             }
         }
     }
-    
+
     /// <summary>
     /// Odyssey depth-stencil buffer implementation.
     /// Uses OpenGL renderbuffer.
@@ -148,18 +148,18 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         private readonly int _height;
         private uint _renderbufferId;
         private bool _disposed;
-        
+
         public OdysseyDepthStencilBuffer(int width, int height)
         {
             _width = width;
             _height = height;
             // TODO: STUB - Create renderbuffer
         }
-        
+
         public int Width => _width;
         public int Height => _height;
         public IntPtr NativeHandle => new IntPtr(_renderbufferId);
-        
+
         public void Dispose()
         {
             if (!_disposed)
@@ -169,49 +169,273 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             }
         }
     }
-    
+
     /// <summary>
     /// Odyssey vertex buffer implementation.
     /// Uses OpenGL vertex buffer objects (VBO).
+    /// Based on xoreos VertexBuffer and PyKotor Mesh VBO implementation.
     /// </summary>
+    /// <remarks>
+    /// OpenGL VBO Implementation:
+    /// - Based on reverse engineering of swkotor.exe and swkotor2.exe
+    /// - Original game: Uses DirectX vertex buffers, but OpenGL backend uses VBOs
+    /// - xoreos: Uses glGenBuffers, glBufferData, glBindBuffer for VBO management
+    /// - PyKotor: Uses glGenBuffers(1, &vbo), glBufferData(GL_ARRAY_BUFFER, ...) for VBO creation
+    /// - Matching xoreos vertexbuffer.cpp: initGL(), updateGL(), destroyGL()
+    /// - Matching PyKotor mesh.py: glGenBuffers(1), glBufferData(GL_ARRAY_BUFFER, ...)
+    /// </remarks>
     public class OdysseyVertexBuffer<T> : IVertexBuffer where T : struct
     {
         private T[] _data;
         private uint _bufferId;
         private int _vertexStride;
         private bool _disposed;
-        
+        private bool _vboCreated;
+
+        #region OpenGL P/Invoke
+
+        [DllImport("opengl32.dll", EntryPoint = "glGenBuffers")]
+        private static extern void glGenBuffers(int n, uint[] buffers);
+
+        [DllImport("opengl32.dll", EntryPoint = "glBindBuffer")]
+        private static extern void glBindBuffer(uint target, uint buffer);
+
+        [DllImport("opengl32.dll", EntryPoint = "glBufferData")]
+        private static extern void glBufferData(uint target, int size, IntPtr data, uint usage);
+
+        [DllImport("opengl32.dll", EntryPoint = "glBufferSubData")]
+        private static extern void glBufferSubData(uint target, int offset, int size, IntPtr data);
+
+        [DllImport("opengl32.dll", EntryPoint = "glGetBufferSubData")]
+        private static extern void glGetBufferSubData(uint target, int offset, int size, IntPtr data);
+
+        [DllImport("opengl32.dll", EntryPoint = "glDeleteBuffers")]
+        private static extern void glDeleteBuffers(int n, uint[] buffers);
+
+        private const uint GL_ARRAY_BUFFER = 0x8892;
+        private const uint GL_STATIC_DRAW = 0x88E4;
+        private const uint GL_DYNAMIC_DRAW = 0x88E8;
+
+        #endregion
+
+        /// <summary>
+        /// Creates a new vertex buffer with the specified data.
+        /// Matching xoreos: VertexBuffer::initGL() - glGenBuffers, glBufferData
+        /// Matching PyKotor: glGenBuffers(1, &vbo), glBufferData(GL_ARRAY_BUFFER, ...)
+        /// </summary>
         public OdysseyVertexBuffer(T[] data)
         {
             _data = data;
             _vertexStride = Marshal.SizeOf(typeof(T));
-            // TODO: STUB - Create VBO
+            _bufferId = 0;
+            _vboCreated = false;
+            _disposed = false;
+
+            // Create VBO if data is provided
+            if (data != null && data.Length > 0)
+            {
+                CreateVBO();
+            }
         }
-        
+
+        /// <summary>
+        /// Creates the OpenGL vertex buffer object.
+        /// Matching xoreos: VertexBuffer::initGL() - glGenBuffers(1, &_vbo), glBufferData(...)
+        /// Matching PyKotor: glGenBuffers(1, &vbo), glBufferData(GL_ARRAY_BUFFER, len(vertex_data), ...)
+        /// </summary>
+        private void CreateVBO()
+        {
+            if (_vboCreated || _bufferId != 0)
+            {
+                return; // Already created
+            }
+
+            // Generate buffer object
+            // Matching xoreos: glGenBuffers(1, &_vbo)
+            // Matching PyKotor: glGenBuffers(1, &vbo)
+            uint[] buffers = new uint[1];
+            glGenBuffers(1, buffers);
+            _bufferId = buffers[0];
+
+            if (_bufferId == 0)
+            {
+                throw new InvalidOperationException("Failed to create OpenGL vertex buffer object.");
+            }
+
+            // Bind buffer and upload data
+            // Matching xoreos: glBindBuffer(GL_ARRAY_BUFFER, _vbo), glBufferData(...)
+            // Matching PyKotor: glBindBuffer(GL_ARRAY_BUFFER, vbo), glBufferData(GL_ARRAY_BUFFER, ...)
+            glBindBuffer(GL_ARRAY_BUFFER, _bufferId);
+
+            int dataSize = _data.Length * _vertexStride;
+            IntPtr dataPtr = IntPtr.Zero;
+
+            try
+            {
+                // Allocate unmanaged memory and copy data
+                dataPtr = Marshal.AllocHGlobal(dataSize);
+                GCHandle handle = GCHandle.Alloc(_data, GCHandleType.Pinned);
+                try
+                {
+                    IntPtr sourcePtr = handle.AddrOfPinnedObject();
+                    // Copy data from pinned array to unmanaged memory
+                    // Matching xoreos: memcpy(_data, ...) - using Marshal.Copy for C# 7.3 compatibility
+                    Marshal.Copy(sourcePtr, new byte[dataSize], 0, dataSize);
+                    // Actually, we need to copy directly - use IntPtr operations
+                    byte[] tempBuffer = new byte[dataSize];
+                    Marshal.Copy(sourcePtr, tempBuffer, 0, dataSize);
+                    Marshal.Copy(tempBuffer, 0, dataPtr, dataSize);
+                }
+                finally
+                {
+                    handle.Free();
+                }
+
+                // Upload data to GPU
+                // Matching xoreos: glBufferData(GL_ARRAY_BUFFER, _count * _size, _data, _hint)
+                // Matching PyKotor: glBufferData(GL_ARRAY_BUFFER, len(vertex_data), vertex_data_mv, GL_STATIC_DRAW)
+                glBufferData(GL_ARRAY_BUFFER, dataSize, dataPtr, GL_STATIC_DRAW);
+            }
+            finally
+            {
+                if (dataPtr != IntPtr.Zero)
+                {
+                    Marshal.FreeHGlobal(dataPtr);
+                }
+                // Unbind buffer
+                glBindBuffer(GL_ARRAY_BUFFER, 0);
+            }
+
+            _vboCreated = true;
+        }
+
         public int VertexCount => _data != null ? _data.Length : 0;
         public int VertexStride => _vertexStride;
         public IntPtr NativeHandle => new IntPtr(_bufferId);
-        
+
+        /// <summary>
+        /// Sets vertex data in the buffer.
+        /// Matching xoreos: VertexBuffer::updateGL() - glBufferData or glBufferSubData
+        /// </summary>
         public void SetData<TData>(TData[] data) where TData : struct
         {
-            // TODO: STUB - Update VBO data
+            if (data == null)
+            {
+                throw new ArgumentNullException(nameof(data));
+            }
+
+            // Update local data
+            if (typeof(TData) == typeof(T))
+            {
+                _data = data as T[];
+            }
+            else
+            {
+                throw new ArgumentException($"Data type {typeof(TData).Name} does not match buffer type {typeof(T).Name}.", nameof(data));
+            }
+
+            // Update VBO if it exists
+            if (_vboCreated && _bufferId != 0)
+            {
+                glBindBuffer(GL_ARRAY_BUFFER, _bufferId);
+
+                int dataSize = _data.Length * _vertexStride;
+                IntPtr dataPtr = IntPtr.Zero;
+
+                try
+                {
+                    // Allocate unmanaged memory and copy data
+                    dataPtr = Marshal.AllocHGlobal(dataSize);
+                    GCHandle handle = GCHandle.Alloc(_data, GCHandleType.Pinned);
+                    try
+                    {
+                        IntPtr sourcePtr = handle.AddrOfPinnedObject();
+                        // Copy data from pinned array to unmanaged memory
+                        // Matching xoreos: memcpy(_data, ...) - using Marshal.Copy for C# 7.3 compatibility
+                        byte[] tempBuffer = new byte[dataSize];
+                        Marshal.Copy(sourcePtr, tempBuffer, 0, dataSize);
+                        Marshal.Copy(tempBuffer, 0, dataPtr, dataSize);
+                    }
+                    finally
+                    {
+                        handle.Free();
+                    }
+
+                    // Update buffer data
+                    // Matching xoreos: glBufferData(GL_ARRAY_BUFFER, _count * _size, _data, _hint)
+                    glBufferData(GL_ARRAY_BUFFER, dataSize, dataPtr, GL_STATIC_DRAW);
+                }
+                finally
+                {
+                    if (dataPtr != IntPtr.Zero)
+                    {
+                        Marshal.FreeHGlobal(dataPtr);
+                    }
+                    // Unbind buffer
+                    glBindBuffer(GL_ARRAY_BUFFER, 0);
+                }
+            }
+            else
+            {
+                // Create VBO if it doesn't exist
+                CreateVBO();
+            }
         }
-        
+
+        /// <summary>
+        /// Gets vertex data from the buffer.
+        /// Matching xoreos: Reads from _data (CPU-side copy)
+        /// </summary>
         public void GetData<TData>(TData[] data) where TData : struct
         {
-            // TODO: STUB - Read VBO data
+            if (data == null)
+            {
+                throw new ArgumentNullException(nameof(data));
+            }
+
+            if (typeof(TData) != typeof(T))
+            {
+                throw new ArgumentException($"Data type {typeof(TData).Name} does not match buffer type {typeof(T).Name}.", nameof(data));
+            }
+
+            if (data.Length < VertexCount)
+            {
+                throw new ArgumentException("Data array is too small.", nameof(data));
+            }
+
+            // Copy from local data (CPU-side copy)
+            // For GPU-side read, we would use glGetBufferSubData, but xoreos uses CPU-side _data
+            if (_data != null)
+            {
+                Array.Copy(_data, data, Math.Min(_data.Length, data.Length));
+            }
         }
-        
+
+        /// <summary>
+        /// Disposes the vertex buffer and releases OpenGL resources.
+        /// Matching xoreos: VertexBuffer::destroyGL() - glDeleteBuffers(1, &_vbo)
+        /// Matching PyKotor: glDeleteBuffers(1, &vbo)
+        /// </summary>
         public void Dispose()
         {
             if (!_disposed)
             {
-                // TODO: STUB - Delete VBO
+                // Delete VBO
+                // Matching xoreos: glDeleteBuffers(1, &_vbo)
+                // Matching PyKotor: glDeleteBuffers(1, &vbo)
+                if (_bufferId != 0)
+                {
+                    uint[] buffers = new uint[] { _bufferId };
+                    glDeleteBuffers(1, buffers);
+                    _bufferId = 0;
+                }
+
+                _data = null;
                 _disposed = true;
             }
         }
     }
-    
+
     /// <summary>
     /// Odyssey index buffer implementation.
     /// Uses OpenGL index buffer objects (IBO/EBO).
@@ -222,24 +446,24 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         private readonly bool _isShort;
         private uint _bufferId;
         private bool _disposed;
-        
+
         public OdysseyIndexBuffer(int[] indices, bool isShort)
         {
             _indices = indices;
             _isShort = isShort;
             // TODO: STUB - Create IBO
         }
-        
+
         public int IndexCount => _indices != null ? _indices.Length : 0;
         public bool IsShort => _isShort;
         public IntPtr NativeHandle => new IntPtr(_bufferId);
-        
+
         public void SetData(int[] indices)
         {
             _indices = indices;
             // TODO: STUB - Update IBO data
         }
-        
+
         public void GetData(int[] indices)
         {
             if (_indices != null && indices != null)
@@ -247,7 +471,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 Array.Copy(_indices, indices, Math.Min(_indices.Length, indices.Length));
             }
         }
-        
+
         public void Dispose()
         {
             if (!_disposed)
@@ -257,7 +481,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             }
         }
     }
-    
+
     /// <summary>
     /// Odyssey sprite batch implementation.
     /// Uses immediate mode OpenGL for 2D rendering.
@@ -272,75 +496,75 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         private int _savedMatrixMode;
         private float[] _savedProjectionMatrix = new float[16];
         private float[] _savedModelviewMatrix = new float[16];
-        
+
         #region OpenGL P/Invoke for Sprite Rendering
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glPushAttrib")]
         private static extern void glPushAttrib(uint mask);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glPopAttrib")]
         private static extern void glPopAttrib();
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glPushMatrix")]
         private static extern void glPushMatrix();
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glPopMatrix")]
         private static extern void glPopMatrix();
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glMatrixMode")]
         private static extern void glMatrixMode(uint mode);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glLoadIdentity")]
         private static extern void glLoadIdentity();
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glOrtho")]
         private static extern void glOrtho(double left, double right, double bottom, double top, double zNear, double zFar);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glTranslatef")]
         private static extern void glTranslatef(float x, float y, float z);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glRotatef")]
         private static extern void glRotatef(float angle, float x, float y, float z);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glScalef")]
         private static extern void glScalef(float x, float y, float z);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glEnable")]
         private static extern void glEnable(uint cap);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glDisable")]
         private static extern void glDisable(uint cap);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glBlendFunc")]
         private static extern void glBlendFunc(uint sfactor, uint dfactor);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glColor4f")]
         private static extern void glColor4f(float red, float green, float blue, float alpha);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glBindTexture")]
         private static extern void glBindTexture(uint target, uint texture);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glBegin")]
         private static extern void glBegin(uint mode);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glEnd")]
         private static extern void glEnd();
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glTexCoord2f")]
         private static extern void glTexCoord2f(float s, float t);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glVertex2f")]
         private static extern void glVertex2f(float x, float y);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glGetIntegerv")]
         private static extern void glGetIntegerv(uint pname, int[] data);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glGetFloatv")]
         private static extern void glGetFloatv(uint pname, float[] data);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glLoadMatrixf")]
         private static extern void glLoadMatrixf([MarshalAs(UnmanagedType.LPArray)] float[] m);
-        
+
         // OpenGL constants
         private const uint GL_PROJECTION = 0x1701;
         private const uint GL_MODELVIEW = 0x1700;
@@ -358,14 +582,14 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         private const uint GL_VIEWPORT = 0x0BA2;
         private const uint GL_PROJECTION_MATRIX = 0x0BA3;
         private const uint GL_MODELVIEW_MATRIX = 0x0BA6;
-        
+
         #endregion
-        
+
         public OdysseySpriteBatch(OdysseyGraphicsDevice device)
         {
             _device = device;
         }
-        
+
         /// <summary>
         /// Begins sprite batch rendering.
         /// Sets up 2D orthographic projection and saves OpenGL state.
@@ -375,36 +599,36 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         {
             _inBatch = true;
             _currentBlendState = blendState ?? BlendState.Default;
-            
+
             // Save OpenGL state
             // Based on xoreos: guiquad.cpp render() saves state with glPushAttrib
             glPushAttrib(GL_COLOR_BUFFER_BIT | GL_TEXTURE_BIT | GL_ENABLE_BIT | GL_TRANSFORM_BIT);
             glPushMatrix();
-            
+
             // Save current matrix mode and matrices
             int[] matrixMode = new int[1];
             glGetIntegerv(0x0BA0, matrixMode); // GL_MATRIX_MODE
             _savedMatrixMode = matrixMode[0];
-            
+
             glGetFloatv(GL_PROJECTION_MATRIX, _savedProjectionMatrix);
             glGetFloatv(GL_MODELVIEW_MATRIX, _savedModelviewMatrix);
-            
+
             // Get viewport dimensions
             int[] viewport = new int[4];
             glGetIntegerv(GL_VIEWPORT, viewport);
             int viewportWidth = viewport[2];
             int viewportHeight = viewport[3];
-            
+
             // Setup 2D orthographic projection
             // Based on xoreos: graphics.cpp ortho() @ lines 577-609
             // Orthographic projection: left=0, right=width, bottom=0, top=height, zNear=-1, zFar=1
             glMatrixMode(GL_PROJECTION);
             glLoadIdentity();
             glOrtho(0.0, viewportWidth, viewportHeight, 0.0, -1.0, 1.0); // Note: Y is flipped for screen coordinates
-            
+
             glMatrixMode(GL_MODELVIEW);
             glLoadIdentity();
-            
+
             // Setup blending
             if (_currentBlendState.AlphaBlend)
             {
@@ -422,11 +646,11 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             {
                 glDisable(GL_BLEND);
             }
-            
+
             // Enable texturing
             glEnable(GL_TEXTURE_2D);
         }
-        
+
         /// <summary>
         /// Ends sprite batch rendering.
         /// Restores previous OpenGL state.
@@ -434,26 +658,26 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         public void End()
         {
             if (!_inBatch) return;
-            
+
             // Restore color to white
             glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-            
+
             // Restore matrices
             glMatrixMode(GL_PROJECTION);
             glLoadMatrixf(_savedProjectionMatrix);
-            
+
             glMatrixMode(GL_MODELVIEW);
             glLoadMatrixf(_savedModelviewMatrix);
-            
+
             glMatrixMode((uint)_savedMatrixMode);
-            
+
             // Restore OpenGL state
             glPopMatrix();
             glPopAttrib();
-            
+
             _inBatch = false;
         }
-        
+
         /// <summary>
         /// Draws a texture at the specified position.
         /// Based on xoreos: guiquad.cpp render() @ lines 322-331
@@ -461,7 +685,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         public void Draw(ITexture2D texture, Vector2 position, Color color)
         {
             if (!_inBatch || texture == null) return;
-            
+
             Rectangle destinationRect = new Rectangle
             {
                 X = (int)position.X,
@@ -469,27 +693,27 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 Width = texture.Width,
                 Height = texture.Height
             };
-            
+
             Draw(texture, destinationRect, null, color, 0.0f, Vector2.Zero, SpriteEffects.None, 0.0f);
         }
-        
+
         /// <summary>
         /// Draws a texture with destination rectangle.
         /// </summary>
         public void Draw(ITexture2D texture, Rectangle destinationRectangle, Color color)
         {
             if (!_inBatch || texture == null) return;
-            
+
             Draw(texture, destinationRectangle, null, color, 0.0f, Vector2.Zero, SpriteEffects.None, 0.0f);
         }
-        
+
         /// <summary>
         /// Draws a texture with source rectangle.
         /// </summary>
         public void Draw(ITexture2D texture, Vector2 position, Rectangle? sourceRectangle, Color color)
         {
             if (!_inBatch || texture == null) return;
-            
+
             Rectangle destinationRect = new Rectangle
             {
                 X = (int)position.X,
@@ -497,10 +721,10 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 Width = sourceRectangle.HasValue ? sourceRectangle.Value.Width : texture.Width,
                 Height = sourceRectangle.HasValue ? sourceRectangle.Value.Height : texture.Height
             };
-            
+
             Draw(texture, destinationRect, sourceRectangle, color, 0.0f, Vector2.Zero, SpriteEffects.None, 0.0f);
         }
-        
+
         /// <summary>
         /// Draws a texture with full parameters (rotation, origin, effects, layer depth).
         /// Based on xoreos: guiquad.cpp render() @ lines 274-344
@@ -508,17 +732,17 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         public void Draw(ITexture2D texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color, float rotation, Vector2 origin, SpriteEffects effects, float layerDepth)
         {
             if (!_inBatch || texture == null) return;
-            
+
             // Bind texture
             if (texture is OdysseyTexture2D odysseyTexture)
             {
                 glBindTexture(GL_TEXTURE_2D, (uint)odysseyTexture.NativeHandle.ToInt64());
             }
-            
+
             // Set color with alpha
             float alpha = color.A / 255.0f;
             glColor4f(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, alpha);
-            
+
             // Calculate texture coordinates
             float texLeft, texTop, texRight, texBottom;
             if (sourceRectangle.HasValue)
@@ -536,7 +760,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 texRight = 1.0f;
                 texBottom = 1.0f;
             }
-            
+
             // Apply sprite effects (flip texture coordinates)
             if ((effects & SpriteEffects.FlipHorizontally) != 0)
             {
@@ -550,55 +774,55 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 texTop = texBottom;
                 texBottom = temp;
             }
-            
+
             // Calculate vertex positions
             float x1 = destinationRectangle.X;
             float y1 = destinationRectangle.Y;
             float x2 = destinationRectangle.X + destinationRectangle.Width;
             float y2 = destinationRectangle.Y + destinationRectangle.Height;
-            
+
             // Apply rotation if needed
             // Based on xoreos: guiquad.cpp render() @ lines 314-318
             if (rotation != 0.0f)
             {
                 float centerX = x1 + destinationRectangle.Width * (origin.X / (float)destinationRectangle.Width);
                 float centerY = y1 + destinationRectangle.Height * (origin.Y / (float)destinationRectangle.Height);
-                
+
                 glPushMatrix();
                 glTranslatef(centerX, centerY, 0.0f);
                 glRotatef(rotation * (180.0f / (float)System.Math.PI), 0.0f, 0.0f, 1.0f);
                 glTranslatef(-centerX, -centerY, 0.0f);
             }
-            
+
             // Draw quad using immediate mode
             // Based on xoreos: guiquad.cpp render() @ lines 322-331
             glBegin(GL_QUADS);
-            
+
             // Top-left
             glTexCoord2f(texLeft, texTop);
             glVertex2f(x1, y1);
-            
+
             // Top-right
             glTexCoord2f(texRight, texTop);
             glVertex2f(x2, y1);
-            
+
             // Bottom-right
             glTexCoord2f(texRight, texBottom);
             glVertex2f(x2, y2);
-            
+
             // Bottom-left
             glTexCoord2f(texLeft, texBottom);
             glVertex2f(x1, y2);
-            
+
             glEnd();
-            
+
             // Restore matrix if rotation was applied
             if (rotation != 0.0f)
             {
                 glPopMatrix();
             }
         }
-        
+
         /// <summary>
         /// Draws text using a sprite font.
         /// TODO: STUB - Draw text using sprite font (requires font rendering implementation)
@@ -609,13 +833,13 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             // TODO: STUB - Draw text using sprite font
             // This requires font texture atlas and character mapping implementation
         }
-        
+
         public void Dispose()
         {
             // Nothing to dispose
         }
     }
-    
+
     /// <summary>
     /// Odyssey basic effect implementation.
     /// Uses OpenGL fixed-function pipeline or ARB shaders.
@@ -649,36 +873,36 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         private Vector3 _fogColor = Vector3.One;
         private float _fogStart = 0.0f;
         private float _fogEnd = 1.0f;
-        
+
         #region OpenGL P/Invoke for Matrix Operations
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glMatrixMode")]
         private static extern void glMatrixMode(uint mode);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glLoadIdentity")]
         private static extern void glLoadIdentity();
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glLoadMatrixf")]
         private static extern void glLoadMatrixf([MarshalAs(UnmanagedType.LPArray)] float[] m);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glMultMatrixf")]
         private static extern void glMultMatrixf([MarshalAs(UnmanagedType.LPArray)] float[] m);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glPushMatrix")]
         private static extern void glPushMatrix();
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glPopMatrix")]
         private static extern void glPopMatrix();
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glColor4f")]
         private static extern void glColor4f(float red, float green, float blue, float alpha);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glBlendFunc")]
         private static extern void glBlendFunc(uint sfactor, uint dfactor);
-        
+
         [DllImport("opengl32.dll", EntryPoint = "glBindTexture")]
         private static extern void glBindTexture(uint target, uint texture);
-        
+
         // OpenGL constants
         private const uint GL_PROJECTION = 0x1701;
         private const uint GL_MODELVIEW = 0x1700;
@@ -688,17 +912,17 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         private const uint GL_ONE_MINUS_SRC_ALPHA = 0x0303;
         private const uint GL_ONE = 0x0001;
         private const uint GL_ZERO = 0x0000;
-        
+
         #endregion
-        
+
         public OdysseyBasicEffect(OdysseyGraphicsDevice device)
         {
             _device = device;
         }
-        
+
         public IEffectTechnique CurrentTechnique => new OdysseyEffectTechnique("Default");
         public IEffectTechnique[] Techniques => new IEffectTechnique[] { CurrentTechnique };
-        
+
         public Matrix4x4 World { get { return _world; } set { _world = value; } }
         public Matrix4x4 View { get { return _view; } set { _view = value; } }
         public Matrix4x4 Projection { get { return _projection; } set { _projection = value; } }
@@ -716,13 +940,13 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         public Vector3 FogColor { get { return _fogColor; } set { _fogColor = value; } }
         public float FogStart { get { return _fogStart; } set { _fogStart = value; } }
         public float FogEnd { get { return _fogEnd; } set { _fogEnd = value; } }
-        
+
         /// <summary>
         /// Applies the effect to OpenGL state.
         /// Sets projection, view, and world matrices, and applies opacity via color/blending.
         /// Based on swkotor2.exe: glDrawElements with proper matrix setup
         /// Based on xoreos: graphics.cpp renderWorld() @ lines 1059-1081
-        /// 
+        ///
         /// Note: In OpenGL fixed-function pipeline:
         /// - Projection matrix is typically set once per frame
         /// - View matrix is typically set once per frame
@@ -737,21 +961,21 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             glLoadIdentity();
             float[] projectionArray = MatrixToFloatArray(_projection);
             glMultMatrixf(projectionArray);
-            
+
             // Apply view and world matrices to MODELVIEW
             // Based on xoreos: glMatrixMode(GL_MODELVIEW); glLoadIdentity(); then apply view transform
             glMatrixMode(GL_MODELVIEW);
             glLoadIdentity();
-            
+
             // Apply view matrix (camera transform)
             float[] viewArray = MatrixToFloatArray(_view);
             glMultMatrixf(viewArray);
-            
+
             // Apply world matrix (object transform)
             // Note: Caller should use glPushMatrix() before Apply() and glPopMatrix() after drawing
             float[] worldArray = MatrixToFloatArray(_world);
             glMultMatrixf(worldArray);
-            
+
             // Apply opacity via color and blending
             // Based on swkotor2.exe: FadeTime @ 0x007c60ec (fade duration), alpha blending for entity rendering
             // Opacity is updated by AppearAnimationFadeSystem for appear animations
@@ -762,7 +986,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 // Based on xoreos: guiquad.cpp render() @ lines 274-297 (alpha blending)
                 glEnable(GL_BLEND);
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                
+
                 // Set color with alpha for vertex color modulation
                 // glColor4f applies a color multiplier to all vertices
                 glColor4f(_diffuseColor.X, _diffuseColor.Y, _diffuseColor.Z, _alpha);
@@ -773,7 +997,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 glDisable(GL_BLEND);
                 glColor4f(_diffuseColor.X, _diffuseColor.Y, _diffuseColor.Z, 1.0f);
             }
-            
+
             // Apply texture if enabled
             if (_textureEnabled && _texture != null)
             {
@@ -787,7 +1011,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 glBindTexture(GL_TEXTURE_2D, 0);
             }
         }
-        
+
         /// <summary>
         /// Converts System.Numerics.Matrix4x4 to OpenGL column-major float array.
         /// OpenGL matrices are column-major, System.Numerics uses row-major.
@@ -798,58 +1022,58 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             // System.Numerics.Matrix4x4 is row-major, OpenGL expects column-major
             // We need to transpose the matrix for OpenGL
             float[] array = new float[16];
-            
+
             // Transpose: row i, column j becomes column i, row j
             array[0] = matrix.M11; array[4] = matrix.M12; array[8] = matrix.M13; array[12] = matrix.M14;
             array[1] = matrix.M21; array[5] = matrix.M22; array[9] = matrix.M23; array[13] = matrix.M24;
             array[2] = matrix.M31; array[6] = matrix.M32; array[10] = matrix.M33; array[14] = matrix.M34;
             array[3] = matrix.M41; array[7] = matrix.M42; array[11] = matrix.M43; array[15] = matrix.M44;
-            
+
             return array;
         }
-        
+
         public void Dispose()
         {
             // Nothing to dispose
         }
     }
-    
+
     /// <summary>
     /// Odyssey effect technique implementation.
     /// </summary>
     public class OdysseyEffectTechnique : IEffectTechnique
     {
         private readonly string _name;
-        
+
         public OdysseyEffectTechnique(string name)
         {
             _name = name;
         }
-        
+
         public string Name => _name;
         public IEffectPass[] Passes => new IEffectPass[] { new OdysseyEffectPass("Pass0") };
     }
-    
+
     /// <summary>
     /// Odyssey effect pass implementation.
     /// </summary>
     public class OdysseyEffectPass : IEffectPass
     {
         private readonly string _name;
-        
+
         public OdysseyEffectPass(string name)
         {
             _name = name;
         }
-        
+
         public string Name => _name;
-        
+
         public void Apply()
         {
             // TODO: STUB - Apply effect pass
         }
     }
-    
+
     /// <summary>
     /// Odyssey rasterizer state implementation.
     /// </summary>
@@ -862,13 +1086,13 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         public float SlopeScaleDepthBias { get; set; }
         public bool ScissorTestEnabled { get; set; }
         public bool MultiSampleAntiAlias { get; set; }
-        
+
         public void Dispose()
         {
             // Nothing to dispose
         }
     }
-    
+
     /// <summary>
     /// Odyssey depth-stencil state implementation.
     /// </summary>
@@ -886,17 +1110,17 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         public int ReferenceStencil { get; set; }
         public int StencilMask { get; set; } = int.MaxValue;
         public int StencilWriteMask { get; set; } = int.MaxValue;
-        
+
         // Legacy properties for backwards compatibility
         public bool DepthEnabled { get { return DepthBufferEnable; } set { DepthBufferEnable = value; } }
         public bool StencilEnabled { get { return StencilEnable; } set { StencilEnable = value; } }
-        
+
         public void Dispose()
         {
             // Nothing to dispose
         }
     }
-    
+
     /// <summary>
     /// Odyssey blend state implementation.
     /// </summary>
@@ -915,16 +1139,16 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         public bool BlendEnable { get; set; }
         public Color BlendFactor { get; set; } = Color.White;
         public int MultiSampleMask { get; set; } = -1;
-        
+
         // Legacy property for backwards compatibility
         public bool BlendEnabled { get { return BlendEnable; } set { BlendEnable = value; } }
-        
+
         public void Dispose()
         {
             // Nothing to dispose
         }
     }
-    
+
     /// <summary>
     /// Odyssey sampler state implementation.
     /// </summary>
@@ -937,7 +1161,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         public int MaxAnisotropy { get; set; } = 1;
         public int MaxMipLevel { get; set; }
         public float MipMapLevelOfDetailBias { get; set; }
-        
+
         public void Dispose()
         {
             // Nothing to dispose
