@@ -2,10 +2,10 @@
   "version": 1,
   "isRoot": true,
   "tools": {
-    "dotnet-cleanup": {
-      "version": "0.6.1",
+    "dotnet-mgcb": {
+      "version": "3.8.4.1",
       "commands": [
-        "cleanup"
+        "mgcb"
       ],
       "rollForward": false
     }

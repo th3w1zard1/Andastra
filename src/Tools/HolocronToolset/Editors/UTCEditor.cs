@@ -218,7 +218,7 @@ namespace HolocronToolset.Editors
             _portraitSelect.SelectionChanged += (s, e) => PortraitChanged();
             basicPanel.Children.Add(portraitLabel);
             basicPanel.Children.Add(_portraitSelect);
-            
+
             // Portrait Picture
             _portraitPicture = new Image
             {
@@ -513,7 +513,7 @@ namespace HolocronToolset.Editors
         {
             // Matching PyKotor: comments = self.ui.comments.toPlainText()
             string comments = _commentsEdit?.Text ?? "";
-            
+
             // Matching PyKotor: if comments: setTabText("Comments *") else: setTabText("Comments")
             if (_commentsExpander != null)
             {
@@ -823,7 +823,7 @@ namespace HolocronToolset.Editors
                 // Matching PyKotor: self._update_comments_tab_title() after loading comments
                 UpdateCommentsTabTitle();
             }
-            
+
             // Update portrait preview after loading all data
             PortraitChanged();
         }
@@ -1148,7 +1148,7 @@ namespace HolocronToolset.Editors
             }
 
             int index = _portraitSelect?.SelectedIndex ?? 0;
-            
+
             // Matching Python: if index == 0, create blank image
             if (index == 0)
             {
@@ -1190,7 +1190,7 @@ namespace HolocronToolset.Editors
                 }
                 _portraitPicture.Source = blankBitmap;
             }
-            
+
             // Set tooltip
             ToolTip.SetTip(_portraitPicture, GeneratePortraitTooltip());
         }
@@ -1199,7 +1199,7 @@ namespace HolocronToolset.Editors
         // Original: def _build_pixmap(self, index: int) -> QPixmap:
         /// <summary>
         /// Builds a portrait bitmap based on character alignment.
-        /// 
+        ///
         /// Builds the portrait bitmap by:
         ///     1. Getting the character's alignment value
         ///     2. Looking up the character's portrait reference in the portraits 2DA based on alignment
@@ -1455,7 +1455,7 @@ namespace HolocronToolset.Editors
                     ButtonEnum.YesNo,
                     MsBox.Avalonia.Enums.Icon.Question);
                 var result = createDialog.ShowAsync().GetAwaiter().GetResult();
-                
+
                 if (result == ButtonResult.Yes)
                 {
                     // Create blank DLG file in override folder
@@ -1521,7 +1521,7 @@ namespace HolocronToolset.Editors
             // Load capsules to search
             // Matching PyKotor: capsules_to_search based on filepath type
             List<Andastra.Parsing.Formats.Capsule.Capsule> capsulesToSearch = new List<Andastra.Parsing.Formats.Capsule.Capsule>();
-            
+
             if (_filepath != null)
             {
                 if (Andastra.Parsing.Tools.FileHelpers.IsSavFile(_filepath))

@@ -125,14 +125,14 @@ namespace HolocronToolset.Dialogs
                 {
                     byte[] tpcData = File.ReadAllBytes(texturePath);
                     TPC tpc = TPCAuto.ReadTpc(tpcData);
-                    
+
                     if (tpc != null && tpc.Layers != null && tpc.Layers.Count > 0 &&
                         tpc.Layers[0].Mipmaps != null && tpc.Layers[0].Mipmaps.Count > 0)
                     {
                         // Convert TPC mipmap to Avalonia bitmap
                         var mipmap = tpc.Layers[0].Mipmaps[0];
                         bitmap = HolocronToolset.Data.HTInstallation.ConvertTpcMipmapToAvaloniaBitmap(mipmap);
-                        
+
                         if (bitmap != null)
                         {
                             _textureInfoLabel.Text = $"Format: TPC | Size: {mipmap.Width}x{mipmap.Height} | " +
@@ -148,7 +148,7 @@ namespace HolocronToolset.Dialogs
                     {
                         bitmap = new Bitmap(fileStream);
                     }
-                    
+
                     if (bitmap != null)
                     {
                         _textureInfoLabel.Text = $"Format: {extension.ToUpperInvariant().Substring(1)} | " +

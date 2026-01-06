@@ -93,7 +93,7 @@ namespace HolocronToolset.Dialogs
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
             };
             _okButton = new Button { Content = "OK" };
-            _okButton.Click += (sender, e) => 
+            _okButton.Click += (sender, e) =>
             {
                 Accept();
                 DialogResult = true;
@@ -682,7 +682,7 @@ namespace HolocronToolset.Dialogs
     public class InventoryDialogUi
     {
         public DataGrid ContentsTable { get; set; }
-        
+
         // Matching PyKotor implementation: self.ui.standardEquipmentTab and self.ui.naturalEquipmentTab
         // Original: QWidget standardEquipmentTab, naturalEquipmentTab (from inventory.ui)
         // These tabs contain DropFrame widgets for each equipment slot

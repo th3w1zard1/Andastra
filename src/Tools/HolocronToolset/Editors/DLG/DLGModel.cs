@@ -269,27 +269,181 @@ namespace HolocronToolset.Editors.DLG
         }
 
         /// <summary>
+        /// Counts the number of references to a node in the UI tree model.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:1065-1070
+        /// Original: def count_item_refs(self, link: DLGLink) -> int:
+        /// </summary>
+        /// <param name="link">The link to count references for.</param>
+        /// <returns>The number of references to the node.</returns>
+        public int CountItemRefs(DLGLink link)
+        {
+            if (link?.Node == null)
+            {
+                return 0;
+            }
+
+            if (_nodeToItems.TryGetValue(link.Node, out List<DLGStandardItem> items))
+            {
+                return items.Count;
+            }
+
+            return 0;
+        }
+
+        /// <summary>
+        /// Checks if an item is a copy (has multiple items referencing the same node).
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:1214-1220
+        /// Original: def is_copy(self, item: DLGStandardItem) -> bool:
+        /// </summary>
+        /// <param name="item">The item to check.</param>
+        /// <returns>True if the item is a copy (multiple items reference the same node), false otherwise.</returns>
+        private bool IsCopy(DLGStandardItem item)
+        {
+            if (item?.Link?.Node == null)
+            {
+                return false;
+            }
+
+            // An item is a copy if there are multiple items referencing the same node
+            if (_nodeToItems.TryGetValue(item.Link.Node, out List<DLGStandardItem> items))
+            {
+                return items.Count > 1;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Updates the display text for an item.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:1072-1098
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:1072-1212
         /// Original: def update_item_display_text(self, item: DLGStandardItem, *, update_copies: bool = True)
         /// </summary>
         /// <param name="item">The DLGStandardItem to update.</param>
-        public void UpdateItemDisplayText(DLGStandardItem item)
+        /// <param name="updateCopies">If true, also updates all copies of this item.</param>
+        public void UpdateItemDisplayText(DLGStandardItem item, bool updateCopies = true)
         {
-            if (item == null || item.Link == null)
+            if (item == null || item.Link == null || _editor == null)
             {
                 return;
             }
 
-            // Matching PyKotor implementation: Refresh the item text and formatting based on the node data
-            // The actual display update happens when we rebuild the tree view
-            // TODO: STUB - For now, we'll trigger a tree view update to reflect the changes
-            // In a more optimized implementation, we would update just the specific tree view item's header
+            var link = item.Link;
+            var node = link.Node;
+            if (node == null)
+            {
+                return;
+            }
 
-            // Update the tree view to reflect changes
+            // Determine color and prefix based on node type and whether it's a copy
+            // Matching PyKotor: color: QColor = QColor("#646464"), prefix: Literal["E", "R", "N"] = "N"
+            string color = "#646464";
+            string prefix = "N";
+            string extraNodeInfo = "";
+
+            bool isCopy = IsCopy(item);
+            if (node is DLGEntry)
+            {
+                color = isCopy ? "#D25A5A" : "#FF0000";
+                prefix = "E";
+            }
+            else if (node is DLGReply)
+            {
+                color = isCopy ? "#5A5AD2" : "#0000FF";
+                prefix = "R";
+                extraNodeInfo = " This means the player will not see this reply as a choice, and will (continue) to next entry.";
+            }
+
+            // Get text from node
+            // Matching PyKotor: text: str = str(item.link.node.text) if self.editor._installation is None else self.editor._installation.string(item.link.node.text, "")
+            string text;
+            if (_editor.Installation == null)
+            {
+                text = node.Text?.ToString() ?? "";
+            }
+            else
+            {
+                text = _editor.Installation.String(node.Text, "") ?? "";
+            }
+
+            // Format display text based on node state
+            // Matching PyKotor: if not item.link.node.links: display_text = f"{text} <span style='color:{end_dialog_color};'><b>[End Dialog]</b></span>"
+            string displayText;
+            string tooltipText = null;
+            if (node.Links == null || node.Links.Count == 0)
+            {
+                string endDialogColor = "#FF7F50";
+                displayText = $"{text} <span style='color:{endDialogColor};'><b>[End Dialog]</b></span>";
+            }
+            else if (string.IsNullOrEmpty(text) || string.IsNullOrWhiteSpace(text))
+            {
+                // Matching PyKotor: if item.link.node.text.stringref == -1: display_text = "(continue)"
+                if (node.Text?.StringRef == -1)
+                {
+                    displayText = "(continue)";
+                    tooltipText = $"<i>No text set.{extraNodeInfo}<br><br>" +
+                        "Change this behavior by:<br>" +
+                        "- <i>Right-click and select '<b>Edit Text</b>'</i><br>" +
+                        "- <i>Double-click to edit text</i>";
+                }
+                else
+                {
+                    displayText = $"(invalid strref: {node.Text?.StringRef ?? -1})";
+                    tooltipText = $"StrRef {node.Text?.StringRef ?? -1} not found in TLK.<br><br>" +
+                        "Fix this issue by:<br>" +
+                        "- <i>Right-click and select '<b>Edit Text</b>'</i><br>" +
+                        "- <i>Double-click to edit text</i>";
+                }
+            }
+            else
+            {
+                displayText = text;
+            }
+
+            // Build list prefix with node index
+            // Matching PyKotor: list_prefix: str = f"<b>{prefix}{item.link.node.list_index}:</b> "
+            string listPrefix = $"<b>{prefix}{node.ListIndex}:</b> ";
+
+            // Get text size (default to 9pt if not available)
+            // Matching PyKotor: font-size:{self.tree_view.get_text_size()}pt
+            int textSize = 9; // Default text size
+
+            // Build formatted display text with HTML
+            // Matching PyKotor: item.setData(f'<span style="color:{color.name()}; font-size:{self.tree_view.get_text_size()}pt;">{list_prefix}{display_text}</span>', Qt.ItemDataRole.DisplayRole)
+            string formattedText = $"<span style=\"color:{color}; font-size:{textSize}pt;\">{listPrefix}{displayText}</span>";
+
+            // Update the tree view item's header if editor is available
             if (_editor != null)
             {
-                _editor.UpdateTreeView();
+                _editor.UpdateTreeViewItemHeader(item, formattedText, tooltipText);
+            }
+
+            // Check for various properties to determine icons (matching Python implementation)
+            // Matching PyKotor: has_conditional, has_script, has_animation, has_sound, has_voice, is_plot_or_quest_related
+            bool hasConditional = (link.Active1 != null && !link.Active1.IsBlank()) || (link.Active2 != null && !link.Active2.IsBlank());
+            bool hasScript = (node.Script1 != null && !node.Script1.IsBlank()) || (node.Script2 != null && !node.Script2.IsBlank());
+            bool hasAnimation = (node.CameraAnim.HasValue && node.CameraAnim.Value != -1) || (node.Animations != null && node.Animations.Count > 0);
+            bool hasSound = node.Sound != null && !node.Sound.IsBlank() && node.SoundExists != 0;
+            bool hasVoice = node.VoResRef != null && !node.VoResRef.IsBlank();
+            bool isPlotOrQuestRelated = node.PlotIndex != -1 || (node.QuestEntry.HasValue && node.QuestEntry.Value != 0) || !string.IsNullOrEmpty(node.Quest);
+
+            // Note: Icon display is handled by the tree view implementation
+            // In Python, icons are set via item.setData(icon_data, ICONS_DATA_ROLE)
+            // In Avalonia, we would need to implement custom TreeViewItem templates to show icons
+            // For now, we focus on updating the text display
+
+            // Update copies if requested
+            // Matching PyKotor: if not update_copies: return, items: list[DLGStandardItem] = self.node_to_items[item.link.node]
+            if (updateCopies && _nodeToItems.TryGetValue(node, out List<DLGStandardItem> items))
+            {
+                foreach (var copiedItem in items)
+                {
+                    if (copiedItem == item)
+                    {
+                        continue;
+                    }
+                    // Recursively update copies without updating their copies to avoid infinite loops
+                    UpdateItemDisplayText(copiedItem, updateCopies: false);
+                }
             }
         }
 

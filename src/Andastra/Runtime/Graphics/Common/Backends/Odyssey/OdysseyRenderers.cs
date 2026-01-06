@@ -881,7 +881,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 // Matching StrideVoicePlayer: GetResourceBytes(new ResourceIdentifier(voiceResRef, ResourceType.WAV))
                 var resourceId = new ResourceIdentifier(voiceResRef, ResourceType.WAV);
                 byte[] wavData = resourceProvider.GetResourceBytes(resourceId);
-                
+
                 if (wavData == null || wavData.Length == 0)
                 {
                     Console.WriteLine($"[OdysseyVoicePlayer] Voice-over not found: {voiceResRef}");
@@ -978,11 +978,11 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                         // SND_ASYNC: Play asynchronously (non-blocking)
                         // SND_NODEFAULT: Don't play default sound if file not found
                         uint flags = SND_FILENAME | SND_ASYNC | SND_NODEFAULT;
-                        
+
                         // Apply volume if supported (PlaySound has limited volume control)
                         // Volume is applied via waveOutSetVolume or mixer APIs in a full implementation
                         bool success = PlaySound(tempFile, IntPtr.Zero, flags);
-                        
+
                         if (!success)
                         {
                             Console.WriteLine($"[OdysseyVoicePlayer] PlaySound failed for: {_currentVoiceResRef}");
@@ -999,7 +999,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                             {
                                 duration = (float)wavFile.Data.Length / (wavFile.SampleRate * wavFile.Channels * (wavFile.BitsPerSample / 8));
                             }
-                            
+
                             if (duration > 0)
                             {
                                 // Wait for playback to complete (with cancellation support)
@@ -1088,7 +1088,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             lock (_playbackLock)
             {
                 _volume = Math.Max(0.0f, Math.Min(1.0f, volume));
-                
+
                 // PlaySound doesn't support per-instance volume control
                 // For full volume control, we would need to use waveOutSetVolume or mixer APIs
                 // This is a placeholder for future OpenAL/DirectSound integration

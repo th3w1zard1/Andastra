@@ -25,14 +25,14 @@ namespace KotorCLI.Commands
             keyPackCommand.Options.Add(bifDirOption);
             var filterOption = new Option<string>("--filter", "Filter BIF files by pattern (supports wildcards)");
             keyPackCommand.Options.Add(filterOption);
-            
+
             keyPackCommand.SetAction(parseResult =>
             {
                 var directory = parseResult.GetValue(directoryOption);
                 var output = parseResult.GetValue(outputOption);
                 var bifDir = parseResult.GetValue(bifDirOption);
                 var filter = parseResult.GetValue(filterOption);
-                
+
                 var logger = new StandardLogger();
                 var exitCode = Execute(directory, output, bifDir, filter, logger);
                 Environment.Exit(exitCode);

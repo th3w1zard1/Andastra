@@ -187,13 +187,13 @@ namespace HolocronToolset.Widgets.Settings
             if (fontDialog.DialogResult && fontDialog.SelectedFont != null)
             {
                 var selectedFont = fontDialog.SelectedFont;
-                
+
                 // Save font as string (format: "Family|Size|Style|Weight")
                 // Matching PyKotor: self.settings.settings.setValue("GlobalFont", font.toString())
                 string fontStringToSave = $"{selectedFont.FamilyName ?? "Arial"}|{selectedFont.Size}|" +
                     $"{(selectedFont.IsItalic ? "Italic" : "Normal")}|" +
                     $"{(selectedFont.IsBold ? "700" : "400")}";
-                
+
                 _settings.GlobalFont = fontStringToSave;
 
                 // Update the label
@@ -212,7 +212,7 @@ namespace HolocronToolset.Widgets.Settings
         {
             // Populate environment variables from settings
             PopulateEnvironmentVariables();
-            
+
             // Populate miscellaneous settings
             // This will be implemented when settings are fully available
         }

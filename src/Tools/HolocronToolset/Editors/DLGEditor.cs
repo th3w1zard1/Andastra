@@ -2931,6 +2931,50 @@ namespace HolocronToolset.Editors
         }
 
         /// <summary>
+        /// Updates a specific tree view item's header without rebuilding the entire tree.
+        /// This is an optimized version that only updates the specified item.
+        /// Matching PyKotor implementation: Updates item.setData() for DisplayRole
+        /// </summary>
+        /// <param name="item">The DLGStandardItem to update.</param>
+        /// <param name="formattedText">The formatted HTML text to display.</param>
+        /// <param name="tooltipText">Optional tooltip text to display.</param>
+        public void UpdateTreeViewItemHeader(DLGStandardItem item, string formattedText, string tooltipText = null)
+        {
+            if (_dialogTree == null || item == null || string.IsNullOrEmpty(formattedText))
+            {
+                return;
+            }
+
+            // Find the corresponding TreeViewItem
+            TreeViewItem treeItem = FindTreeViewItem(_dialogTree.ItemsSource as System.Collections.IEnumerable, item);
+            if (treeItem != null)
+            {
+                // Update the header with formatted text
+                // Note: Avalonia TreeViewItem.Header can accept string or object
+                // For HTML formatting, we'll use a TextBlock with Inlines or just set the text
+                // Since Avalonia doesn't natively support HTML in TreeViewItem headers,
+                // we'll strip HTML tags for now and use plain text
+                // In a full implementation, we would use a custom DataTemplate with TextBlock and Inlines
+                string plainText = System.Text.RegularExpressions.Regex.Replace(formattedText, "<.*?>", "");
+                treeItem.Header = plainText;
+
+                // Set tooltip if provided
+                if (!string.IsNullOrEmpty(tooltipText))
+                {
+                    // Strip HTML from tooltip for plain text display
+                    string plainTooltip = System.Text.RegularExpressions.Regex.Replace(tooltipText, "<.*?>", "");
+                    treeItem.ToolTip = plainTooltip;
+                }
+            }
+            else
+            {
+                // If item not found in tree, fall back to full tree update
+                // This can happen if the tree hasn't been built yet or the item was removed
+                UpdateTreeView();
+            }
+        }
+
+        /// <summary>
         /// Selects the specified DLGStandardItem in the tree view.
         /// </summary>
         /// <param name="item">The DLGStandardItem to select.</param>

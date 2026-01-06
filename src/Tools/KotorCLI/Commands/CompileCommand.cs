@@ -49,7 +49,7 @@ namespace KotorCLI.Commands
             rootCommand.Add(compileCommand);
         }
 
-        private static int Execute(string[] targetNames, bool clean, string[] files, string[] skipCompile, ILogger logger)
+        internal static int Execute(string[] targetNames, bool clean, string[] files, string[] skipCompile, ILogger logger)
         {
             // Load configuration
             var configPath = ConfigFileFinder.FindConfigFile();
