@@ -204,8 +204,8 @@ namespace Andastra.Parsing.Formats.SSF
             }
             else if (format == ResourceType.SSF_XML)
             {
-                // TODO: STUB - SSFXMLWriter not yet implemented
-                throw new NotImplementedException("SSF XML writing not yet implemented");
+                var writer = new SSFXMLWriter(ssf);
+                return writer.Write();
             }
             else
             {
