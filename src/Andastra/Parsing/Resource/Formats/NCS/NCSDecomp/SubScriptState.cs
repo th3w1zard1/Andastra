@@ -1748,7 +1748,9 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             // But for conditional operations, if right was extracted, we need to make sure
             // we get the left operand correctly
             AExpression left = null;
-            if (right != null && NodeUtils.IsConditionalOp(node))
+            // CRITICAL: For conditional operations, ALWAYS try to find the left operand
+            // even if right is null, because we might be able to find both operands
+            if (NodeUtils.IsConditionalOp(node))
             {
                 // For conditional operations, if we extracted right, try to get left from remaining children
                 // The left operand should be the last remaining child (or second-to-last if right is still there)
@@ -1790,6 +1792,11 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                             }
                         }
                     }
+                }
+                // If left is still null after searching when right was found, try RemoveLastExp
+                if (left == null && right != null)
+                {
+                    left = this.RemoveLastExp(false);
                 }
             }
             if (left == null)
