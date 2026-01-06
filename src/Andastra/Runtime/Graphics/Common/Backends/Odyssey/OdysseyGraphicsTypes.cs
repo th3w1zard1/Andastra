@@ -268,40 +268,20 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             glBindBuffer(GL_ARRAY_BUFFER, _bufferId);
 
             int dataSize = _data.Length * _vertexStride;
-            IntPtr dataPtr = IntPtr.Zero;
 
+            // Pin the array and pass pointer directly to glBufferData
+            // Matching xoreos: glBufferData(GL_ARRAY_BUFFER, _count * _size, _data, _hint)
+            // Matching PyKotor: glBufferData(GL_ARRAY_BUFFER, len(vertex_data), vertex_data_mv, GL_STATIC_DRAW)
+            GCHandle handle = GCHandle.Alloc(_data, GCHandleType.Pinned);
             try
             {
-                // Allocate unmanaged memory and copy data
-                dataPtr = Marshal.AllocHGlobal(dataSize);
-                GCHandle handle = GCHandle.Alloc(_data, GCHandleType.Pinned);
-                try
-                {
-                    IntPtr sourcePtr = handle.AddrOfPinnedObject();
-                    // Copy data from pinned array to unmanaged memory
-                    // Matching xoreos: memcpy(_data, ...) - using Marshal.Copy for C# 7.3 compatibility
-                    Marshal.Copy(sourcePtr, new byte[dataSize], 0, dataSize);
-                    // Actually, we need to copy directly - use IntPtr operations
-                    byte[] tempBuffer = new byte[dataSize];
-                    Marshal.Copy(sourcePtr, tempBuffer, 0, dataSize);
-                    Marshal.Copy(tempBuffer, 0, dataPtr, dataSize);
-                }
-                finally
-                {
-                    handle.Free();
-                }
-
-                // Upload data to GPU
-                // Matching xoreos: glBufferData(GL_ARRAY_BUFFER, _count * _size, _data, _hint)
-                // Matching PyKotor: glBufferData(GL_ARRAY_BUFFER, len(vertex_data), vertex_data_mv, GL_STATIC_DRAW)
+                IntPtr dataPtr = handle.AddrOfPinnedObject();
+                // Upload data to GPU directly from pinned array
                 glBufferData(GL_ARRAY_BUFFER, dataSize, dataPtr, GL_STATIC_DRAW);
             }
             finally
             {
-                if (dataPtr != IntPtr.Zero)
-                {
-                    Marshal.FreeHGlobal(dataPtr);
-                }
+                handle.Free();
                 // Unbind buffer
                 glBindBuffer(GL_ARRAY_BUFFER, 0);
             }
@@ -340,37 +320,19 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 glBindBuffer(GL_ARRAY_BUFFER, _bufferId);
 
                 int dataSize = _data.Length * _vertexStride;
-                IntPtr dataPtr = IntPtr.Zero;
 
+                // Pin the array and pass pointer directly to glBufferData
+                // Matching xoreos: glBufferData(GL_ARRAY_BUFFER, _count * _size, _data, _hint)
+                GCHandle handle = GCHandle.Alloc(_data, GCHandleType.Pinned);
                 try
                 {
-                    // Allocate unmanaged memory and copy data
-                    dataPtr = Marshal.AllocHGlobal(dataSize);
-                    GCHandle handle = GCHandle.Alloc(_data, GCHandleType.Pinned);
-                    try
-                    {
-                        IntPtr sourcePtr = handle.AddrOfPinnedObject();
-                        // Copy data from pinned array to unmanaged memory
-                        // Matching xoreos: memcpy(_data, ...) - using Marshal.Copy for C# 7.3 compatibility
-                        byte[] tempBuffer = new byte[dataSize];
-                        Marshal.Copy(sourcePtr, tempBuffer, 0, dataSize);
-                        Marshal.Copy(tempBuffer, 0, dataPtr, dataSize);
-                    }
-                    finally
-                    {
-                        handle.Free();
-                    }
-
-                    // Update buffer data
-                    // Matching xoreos: glBufferData(GL_ARRAY_BUFFER, _count * _size, _data, _hint)
+                    IntPtr dataPtr = handle.AddrOfPinnedObject();
+                    // Update buffer data directly from pinned array
                     glBufferData(GL_ARRAY_BUFFER, dataSize, dataPtr, GL_STATIC_DRAW);
                 }
                 finally
                 {
-                    if (dataPtr != IntPtr.Zero)
-                    {
-                        Marshal.FreeHGlobal(dataPtr);
-                    }
+                    handle.Free();
                     // Unbind buffer
                     glBindBuffer(GL_ARRAY_BUFFER, 0);
                 }
