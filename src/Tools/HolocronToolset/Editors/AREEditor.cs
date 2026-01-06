@@ -545,6 +545,10 @@ namespace HolocronToolset.Editors
         public TextBox GrassTextureEdit => _grassTextureEdit;
         public NumericUpDown GrassDensitySpin => _grassDensitySpin;
         public NumericUpDown GrassSizeSpin => _grassSizeSpin;
+        public NumericUpDown GrassProbLLSpin => _grassProbLLSpin;
+        public NumericUpDown GrassProbLRSpin => _grassProbLRSpin;
+        public NumericUpDown GrassProbULSpin => _grassProbULSpin;
+        public NumericUpDown GrassProbURSpin => _grassProbURSpin;
         public NumericUpDown DirtFormula1Spin => _dirtFormula1Spin;
         public NumericUpDown DirtFormula2Spin => _dirtFormula2Spin;
         public NumericUpDown DirtFormula3Spin => _dirtFormula3Spin;
@@ -1754,6 +1758,17 @@ namespace HolocronToolset.Editors
             {
                 _tagEdit.Text = string.IsNullOrEmpty(_resname) ? "newarea" : _resname;
             }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:408-411
+        // Original: def redoMinimap(self):
+        // TODO: STUB - Minimap renderer is not yet available, so this is a placeholder
+        // When minimap renderer is implemented, this should call: minimapRenderer.set_minimap(are, _minimap)
+        private void RedoMinimap()
+        {
+            // Matching Python: if self._minimap: are: ARE = self._buildARE(); self.ui.minimapRenderer.set_minimap(are, self._minimap)
+            // For now, this is a no-op until minimap renderer is available
+            // The method exists to allow event handlers to be connected without errors
         }
 
         // Helper method to load default camera styles as fallback
