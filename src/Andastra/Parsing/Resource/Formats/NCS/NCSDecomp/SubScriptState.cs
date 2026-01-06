@@ -1605,7 +1605,39 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             // For the left operand, we need to get it from the remaining children
             // If we already extracted right from children, it's already removed
             // Otherwise, RemoveLastExp will handle it
-            AExpression left = this.RemoveLastExp(false);
+            // But for conditional operations, if right was extracted, we need to make sure
+            // we get the left operand correctly
+            AExpression left = null;
+            if (right != null && NodeUtils.IsConditionalOp(node))
+            {
+                // For conditional operations, if we extracted right, try to get left from remaining children
+                // The left operand should be the last remaining child (or second-to-last if right is still there)
+                if (this.current.HasChildren())
+                {
+                    List<ScriptNode.ScriptNode> children = this.current.GetChildren();
+                    // Look for AVarRef which should be the left operand
+                    for (int i = children.Count - 1; i >= 0; i--)
+                    {
+                        ScriptNode.ScriptNode child = children[i];
+                        if (typeof(AVarRef).IsInstanceOfType(child))
+                        {
+                            Error($"DEBUG TransformBinary: Found AVarRef at index {i} for left operand");
+                            // Remove all children after this one
+                            while (this.current.HasChildren() && this.current.GetLastChild() != child)
+                            {
+                                this.current.RemoveLastChild();
+                            }
+                            left = (AVarRef)this.current.RemoveLastChild();
+                            left.Parent(null);
+                            break;
+                        }
+                    }
+                }
+            }
+            if (left == null)
+            {
+                left = this.RemoveLastExp(false);
+            }
 
             // Debug logging for conditional operations
             if (NodeUtils.IsConditionalOp(node))
