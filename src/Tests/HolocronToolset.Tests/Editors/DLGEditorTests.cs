@@ -3620,14 +3620,34 @@ namespace HolocronToolset.Tests.Editors
             editor.PinnedItemsList.Should().NotBeNull("Pinned items list should be initialized");
         }
 
-        // TODO: STUB - Implement test_dlg_editor_left_dock_widget (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2210-2224)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2210-2224
         // Original: def test_dlg_editor_left_dock_widget(qtbot, installation: HTInstallation): Test left dock widget
         [Fact]
         public void TestDlgEditorLeftDockWidget()
         {
-            // TODO: STUB - Implement left dock widget test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2210-2224
-            throw new NotImplementedException("TestDlgEditorLeftDockWidget: Left dock widget test not yet implemented");
+            var installation = CreateTestInstallation();
+            var editor = new DLGEditor(null, installation);
+
+            // Matching PyKotor implementation: assert hasattr(editor, 'left_dock_widget')
+            // In C#, we check if the property exists using reflection
+            var editorType = typeof(DLGEditor);
+            var leftDockWidgetProperty = editorType.GetProperty("LeftDockWidget");
+            leftDockWidgetProperty.Should().NotBeNull("LeftDockWidget property should exist");
+
+            // Matching PyKotor implementation: assert editor.left_dock_widget is not None
+            editor.LeftDockWidget.Should().NotBeNull("leftDockWidget should be initialized");
+
+            // Matching PyKotor implementation: assert hasattr(editor, 'orphaned_nodes_list')
+            var orphanedNodesListProperty = editorType.GetProperty("OrphanedNodesList");
+            orphanedNodesListProperty.Should().NotBeNull("OrphanedNodesList property should exist");
+
+            // Matching PyKotor implementation: assert hasattr(editor, 'pinned_items_list')
+            var pinnedItemsListProperty = editorType.GetProperty("PinnedItemsList");
+            pinnedItemsListProperty.Should().NotBeNull("PinnedItemsList property should exist");
+
+            // Verify the lists are not null (implicitly checked by the properties existing)
+            editor.OrphanedNodesList.Should().NotBeNull("orphanedNodesList should be initialized");
+            editor.PinnedItemsList.Should().NotBeNull("pinnedItemsList should be initialized");
         }
 
         // Matching PyKotor implementation at vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2226-2241
