@@ -11,6 +11,7 @@ using Andastra.Parsing.Formats.WAV;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using Andastra.Runtime.Content.Interfaces;
+using Andastra.Runtime.Core.Audio;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Graphics;
@@ -758,7 +759,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
 
     /// <summary>
     /// Odyssey music player implementation.
-    /// Plays background music using streaming audio.
+    /// Plays background music using Windows waveOut APIs with looping support.
     /// </summary>
     /// <remarks>
     /// Odyssey Music Player:
@@ -769,97 +770,300 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
     /// - Based on swkotor2.exe: Music playback functions @ various addresses
     /// - Music directories: "STREAMMUSIC" @ 0x007c69dc, "HD0:STREAMMUSIC" @ 0x007c771c
     /// - Music settings: "Music Volume" @ 0x007c83cc, "Music Enabled" @ 0x007c7258
+    /// - This implementation: Uses Windows waveOut APIs for music playback with looping and volume control
+    /// - swkotor2.exe: Music playback system uses MSS streaming with looping support
     /// </remarks>
-    public class OdysseyMusicPlayer
+    public class OdysseyMusicPlayer : IMusicPlayer
     {
         private readonly object _resourceProvider;
         private string _currentTrack;
         private bool _isPlaying;
+        private bool _isPaused;
         private float _volume = 1.0f; // Default volume (0.0 to 1.0)
-        private readonly object _volumeLock = new object(); // Thread-safe volume access
+        private readonly object _playbackLock = new object(); // Thread-safe playback access
+        private IntPtr _waveOutHandle = IntPtr.Zero;
+        private WAVHeader _currentWavHeader;
+        private byte[] _currentPcmData;
+        private Thread _playbackThread;
+        private CancellationTokenSource _playbackCancellation;
+        private bool _shouldLoop = true; // Music always loops
+        private bool _disposed;
 
         public OdysseyMusicPlayer(object resourceProvider)
         {
-            _resourceProvider = resourceProvider;
+            _resourceProvider = resourceProvider ?? throw new ArgumentNullException(nameof(resourceProvider));
         }
 
         /// <summary>
-        /// Plays background music by ResRef.
+        /// Gets whether music is currently playing.
+        /// </summary>
+        public bool IsPlaying
+        {
+            get
+            {
+                lock (_playbackLock)
+                {
+                    return _isPlaying && !_isPaused && _waveOutHandle != IntPtr.Zero;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the music volume (0.0f to 1.0f).
+        /// Based on swkotor2.exe: "Music Volume" @ 0x007c83cc
+        /// </summary>
+        public float Volume
+        {
+            get
+            {
+                lock (_playbackLock)
+                {
+                    return _volume;
+                }
+            }
+            set
+            {
+                SetVolume(value);
+            }
+        }
+
+        /// <summary>
+        /// Plays a music file by ResRef. Music loops continuously until stopped.
         /// Based on swkotor2.exe: Music playback system
         /// </summary>
-        /// <param name="musicResRef">The music resource reference (e.g., "mus_theme").</param>
+        /// <param name="musicResRef">The ResRef of the music file (e.g., "mus_theme_cult").</param>
+        /// <param name="volume">Volume level (0.0f to 1.0f, default 1.0f).</param>
+        /// <returns>True if music started playing successfully, false otherwise.</returns>
         /// <remarks>
         /// Music Playback Implementation:
-        /// - When fully implemented, this will load and play music from the resource provider
-        /// - Volume will be applied from the stored _volume value
+        /// - Loads WAV file from resource provider using musicResRef
+        /// - Uses Windows waveOut APIs for streaming music playback
+        /// - Music loops automatically until Stop() is called
+        /// - Volume is applied immediately when playback starts
         /// - Original engine uses Miles Sound System (MSS) for streaming music
-        /// - Music files are typically WAV or MP3 format, stored in STREAMMUSIC directory
+        /// - Music files are typically WAV format, stored in STREAMMUSIC directory
+        /// - Based on swkotor.exe FUN_005f9af0: Music playback function
         /// </remarks>
-        public void Play(string musicResRef)
+        public bool Play(string musicResRef, float volume = 1.0f)
         {
             if (string.IsNullOrEmpty(musicResRef))
             {
-                return;
+                return false;
             }
 
-            lock (_volumeLock)
+            // If same music is already playing, just adjust volume
+            lock (_playbackLock)
             {
-                _currentTrack = musicResRef;
-                _isPlaying = true;
-                
-                // Apply stored volume when music playback starts
-                // When music playback is fully implemented, this will set the stream volume
-                ApplyVolumeToCurrentPlayback();
+                if (_currentTrack == musicResRef && _isPlaying && !_isPaused && _waveOutHandle != IntPtr.Zero)
+                {
+                    Volume = volume;
+                    return true;
+                }
+
+                // Stop current music if playing
+                StopInternal();
             }
 
-            // TODO: STUB - Play background music
-            // When implemented, this will:
-            // 1. Load music file from resource provider using musicResRef
-            // 2. Create audio stream (MSS, DirectSound, OpenAL, etc.)
-            // 3. Set stream volume to _volume
-            // 4. Start playback
-            // 5. Handle looping if music should loop
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Console.WriteLine($"[OdysseyMusicPlayer] Music playback not implemented for non-Windows platforms. Music: {musicResRef}");
+                Console.WriteLine($"[OdysseyMusicPlayer] For cross-platform support, implement OpenAL or NAudio integration.");
+                return false;
+            }
+
+            try
+            {
+                // Get resource provider
+                IGameResourceProvider resourceProvider = _resourceProvider as IGameResourceProvider;
+                if (resourceProvider == null)
+                {
+                    Console.WriteLine($"[OdysseyMusicPlayer] Resource provider is not IGameResourceProvider");
+                    return false;
+                }
+
+                // Load WAV resource
+                var resourceId = new ResourceIdentifier(musicResRef, ResourceType.WAV);
+                byte[] wavData = resourceProvider.GetResourceBytesAsync(resourceId, CancellationToken.None).GetAwaiter().GetResult();
+                if (wavData == null || wavData.Length == 0)
+                {
+                    Console.WriteLine($"[OdysseyMusicPlayer] Music not found: {musicResRef}");
+                    return false;
+                }
+
+                // Parse WAV file to get format information
+                WAV wavFile = WAVAuto.ReadWav(wavData);
+                if (wavFile == null || wavFile.Data == null || wavFile.Data.Length == 0)
+                {
+                    Console.WriteLine($"[OdysseyMusicPlayer] Failed to parse WAV file: {musicResRef}");
+                    return false;
+                }
+
+                lock (_playbackLock)
+                {
+                    // Store WAV data for playback
+                    _currentTrack = musicResRef;
+                    _currentPcmData = wavFile.Data;
+                    _currentWavHeader = new WAVHeader
+                    {
+                        SampleRate = wavFile.SampleRate,
+                        Channels = wavFile.Channels,
+                        BitsPerSample = wavFile.BitsPerSample,
+                        DataSize = wavFile.Data.Length
+                    };
+
+                    // Set volume
+                    _volume = Math.Max(0.0f, Math.Min(1.0f, volume));
+
+                    // Start playback thread
+                    _playbackCancellation = new CancellationTokenSource();
+                    _isPlaying = true;
+                    _isPaused = false;
+                    _playbackThread = new Thread(() => PlayMusicLoop(_playbackCancellation.Token))
+                    {
+                        IsBackground = true,
+                        Name = $"OdysseyMusicPlayer-{musicResRef}"
+                    };
+                    _playbackThread.Start();
+
+                    Console.WriteLine($"[OdysseyMusicPlayer] Playing music: {musicResRef} (looping, volume: {_volume:F2}, format: {_currentWavHeader.SampleRate}Hz, {_currentWavHeader.Channels}ch, {_currentWavHeader.BitsPerSample}bit)");
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[OdysseyMusicPlayer] Exception playing music {musicResRef}: {ex.Message}");
+                Console.WriteLine($"[OdysseyMusicPlayer] Stack trace: {ex.StackTrace}");
+                lock (_playbackLock)
+                {
+                    StopInternal();
+                }
+                return false;
+            }
         }
 
+        /// <summary>
+        /// Stops music playback.
+        /// Based on swkotor2.exe: Music stop functionality
+        /// </summary>
         public void Stop()
         {
-            _isPlaying = false;
-            // TODO: STUB - Stop music
+            lock (_playbackLock)
+            {
+                StopInternal();
+            }
         }
 
+        /// <summary>
+        /// Internal stop method (must be called with lock held).
+        /// </summary>
+        private void StopInternal()
+        {
+            if (_playbackCancellation != null)
+            {
+                _playbackCancellation.Cancel();
+                _playbackCancellation.Dispose();
+                _playbackCancellation = null;
+            }
+
+            if (_waveOutHandle != IntPtr.Zero)
+            {
+                try
+                {
+                    waveOutReset(_waveOutHandle);
+                    waveOutClose(_waveOutHandle);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[OdysseyMusicPlayer] Error closing waveOut: {ex.Message}");
+                }
+                _waveOutHandle = IntPtr.Zero;
+            }
+
+            if (_playbackThread != null)
+            {
+                // Wait for thread to finish (with timeout)
+                if (!_playbackThread.Join(1000))
+                {
+                    Console.WriteLine("[OdysseyMusicPlayer] Playback thread did not terminate in time");
+                }
+                _playbackThread = null;
+            }
+
+            _isPlaying = false;
+            _isPaused = false;
+            _currentTrack = null;
+            _currentPcmData = null;
+        }
+
+        /// <summary>
+        /// Pauses music playback (can be resumed with Resume()).
+        /// Based on swkotor2.exe: Music pause functionality
+        /// </summary>
         public void Pause()
         {
-            // TODO: STUB - Pause music
+            lock (_playbackLock)
+            {
+                if (_isPlaying && !_isPaused && _waveOutHandle != IntPtr.Zero)
+                {
+                    try
+                    {
+                        waveOutPause(_waveOutHandle);
+                        _isPaused = true;
+                        Console.WriteLine($"[OdysseyMusicPlayer] Music paused: {_currentTrack}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[OdysseyMusicPlayer] Error pausing music: {ex.Message}");
+                    }
+                }
+            }
         }
 
+        /// <summary>
+        /// Resumes paused music playback.
+        /// Based on swkotor2.exe: Music resume functionality
+        /// </summary>
         public void Resume()
         {
-            // TODO: STUB - Resume music
+            lock (_playbackLock)
+            {
+                if (_isPlaying && _isPaused && _waveOutHandle != IntPtr.Zero)
+                {
+                    try
+                    {
+                        waveOutRestart(_waveOutHandle);
+                        _isPaused = false;
+                        Console.WriteLine($"[OdysseyMusicPlayer] Music resumed: {_currentTrack}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[OdysseyMusicPlayer] Error resuming music: {ex.Message}");
+                    }
+                }
+            }
         }
 
         /// <summary>
         /// Sets the music volume.
         /// Based on swkotor2.exe: "Music Volume" @ 0x007c83cc
-        /// Volume is clamped to 0.0-1.0 range and stored for use when music is played.
+        /// Volume is clamped to 0.0-1.0 range and applied immediately to active playback.
         /// </summary>
         /// <param name="volume">Volume (0.0 to 1.0). Values outside this range are clamped.</param>
         /// <remarks>
         /// Music Volume Implementation:
-        /// - Volume is stored and will be applied when music playback is implemented
-        /// - For full volume control, music playback system needs to support volume setting
+        /// - Volume is stored and applied immediately to active playback
+        /// - Uses Windows waveOutSetVolume API for volume control
         /// - Original engine uses Miles Sound System (MSS) which supports per-stream volume
-        /// - This implementation stores volume for future use when Play() is fully implemented
+        /// - Volume is applied to the waveOut device for the current music stream
         /// </remarks>
         public void SetVolume(float volume)
         {
-            lock (_volumeLock)
+            lock (_playbackLock)
             {
                 // Clamp volume to valid range (0.0 to 1.0)
                 _volume = Math.Max(0.0f, Math.Min(1.0f, volume));
 
-                // Apply volume to currently playing music if available
-                // When music playback is fully implemented, this will update the active stream
-                // For now, we store the volume for use when Play() is called
+                // Apply volume to currently playing music
                 ApplyVolumeToCurrentPlayback();
 
                 Console.WriteLine($"[OdysseyMusicPlayer] Music volume set to {_volume:F2} ({(int)(_volume * 100)}%)");
@@ -872,7 +1076,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         /// <returns>Current volume (0.0 to 1.0).</returns>
         public float GetVolume()
         {
-            lock (_volumeLock)
+            lock (_playbackLock)
             {
                 return _volume;
             }
@@ -881,49 +1085,300 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         /// <summary>
         /// Applies the current volume setting to any active music playback.
         /// This method is called when volume changes and when music starts playing.
-        /// When music playback is fully implemented, this will update the audio stream volume.
+        /// Uses Windows waveOutSetVolume API to set the volume for the waveOut device.
+        /// Based on swkotor2.exe: Music volume control system
         /// </summary>
         private void ApplyVolumeToCurrentPlayback()
         {
-            // When music playback is fully implemented, this will:
-            // 1. Check if music is currently playing
-            // 2. Update the audio stream volume to _volume
-            // 3. For Miles Sound System (MSS): Use AIL_set_stream_volume() or equivalent
-            // 4. For DirectSound: Use IDirectSoundBuffer8::SetVolume()
-            // 5. For OpenAL: Use alSourcef(source, AL_GAIN, volume)
-            // 6. For cross-platform: Use audio library's volume control API
-
-            if (_isPlaying && !string.IsNullOrEmpty(_currentTrack))
+            if (_isPlaying && !string.IsNullOrEmpty(_currentTrack) && _waveOutHandle != IntPtr.Zero)
             {
-                // TODO: When music playback is implemented, apply volume here
-                // Example for future implementation:
-                // if (_musicStream != null)
-                // {
-                //     _musicStream.Volume = _volume;
-                // }
+                try
+                {
+                    // Convert volume (0.0-1.0) to Windows volume format (0x0000-0xFFFF)
+                    // Windows volume is a DWORD where low word is left channel, high word is right channel
+                    // For stereo, we set both channels to the same volume
+                    ushort volumeValue = (ushort)(_volume * 0xFFFF);
+                    uint windowsVolume = (uint)(volumeValue | (volumeValue << 16)); // Left and right channels
+
+                    // Set volume for the waveOut device
+                    // waveOutSetVolume sets the volume for the entire waveOut device
+                    // This affects all audio played through this device
+                    int result = waveOutSetVolume(_waveOutHandle, windowsVolume);
+                    if (result != MMSYSERR_NOERROR)
+                    {
+                        Console.WriteLine($"[OdysseyMusicPlayer] Failed to set volume: error code {result}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[OdysseyMusicPlayer] Error applying volume: {ex.Message}");
+                }
             }
         }
 
-        public bool IsPlaying => _isPlaying;
-        public string CurrentTrack => _currentTrack;
-        
         /// <summary>
-        /// Gets the current music volume (property accessor).
+        /// Main playback loop that plays music with looping support.
+        /// Uses Windows waveOut APIs to stream PCM audio data.
+        /// Based on swkotor2.exe: Music streaming and looping system
         /// </summary>
-        public float Volume
+        private void PlayMusicLoop(CancellationToken cancellationToken)
+        {
+            if (_currentPcmData == null || _currentPcmData.Length == 0 || _currentWavHeader.DataSize == 0)
+            {
+                Console.WriteLine("[OdysseyMusicPlayer] No PCM data to play");
+                lock (_playbackLock)
+                {
+                    _isPlaying = false;
+                }
+                return;
+            }
+
+            try
+            {
+                // Prepare WAVEFORMATEX structure
+                WAVEFORMATEX waveFormat = new WAVEFORMATEX
+                {
+                    wFormatTag = 1, // WAVE_FORMAT_PCM
+                    nChannels = (ushort)_currentWavHeader.Channels,
+                    nSamplesPerSec = (uint)_currentWavHeader.SampleRate,
+                    wBitsPerSample = (ushort)_currentWavHeader.BitsPerSample,
+                    nBlockAlign = (ushort)(_currentWavHeader.Channels * (_currentWavHeader.BitsPerSample / 8)),
+                    nAvgBytesPerSec = (uint)(_currentWavHeader.SampleRate * _currentWavHeader.Channels * (_currentWavHeader.BitsPerSample / 8)),
+                    cbSize = 0
+                };
+
+                // Open waveOut device
+                IntPtr waveOutHandle = IntPtr.Zero;
+                int result = waveOutOpen(out waveOutHandle, WAVE_MAPPER, ref waveFormat, IntPtr.Zero, IntPtr.Zero, CALLBACK_NULL);
+                if (result != MMSYSERR_NOERROR)
+                {
+                    Console.WriteLine($"[OdysseyMusicPlayer] Failed to open waveOut device: error code {result}");
+                    lock (_playbackLock)
+                    {
+                        _isPlaying = false;
+                    }
+                    return;
+                }
+
+                lock (_playbackLock)
+                {
+                    _waveOutHandle = waveOutHandle;
+                }
+
+                // Apply initial volume
+                ApplyVolumeToCurrentPlayback();
+
+                // Play music in a loop until cancelled
+                int bufferSize = 65536; // 64KB buffer size for smooth playback
+                int position = 0;
+
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    // Calculate how much data to send
+                    int remainingBytes = _currentPcmData.Length - position;
+                    int bytesToSend = Math.Min(bufferSize, remainingBytes);
+
+                    if (bytesToSend == 0)
+                    {
+                        // Reached end of track - loop back to beginning
+                        if (_shouldLoop)
+                        {
+                            position = 0;
+                            bytesToSend = Math.Min(bufferSize, _currentPcmData.Length);
+                        }
+                        else
+                        {
+                            // No looping, stop playback
+                            break;
+                        }
+                    }
+
+                    // Allocate buffer for waveOut
+                    WAVEHDR waveHeader = new WAVEHDR
+                    {
+                        lpData = Marshal.AllocHGlobal(bytesToSend),
+                        dwBufferLength = (uint)bytesToSend,
+                        dwFlags = 0,
+                        dwLoops = 0
+                    };
+
+                    // Copy PCM data to buffer
+                    Marshal.Copy(_currentPcmData, position, waveHeader.lpData, bytesToSend);
+
+                    // Prepare header
+                    result = waveOutPrepareHeader(_waveOutHandle, ref waveHeader, Marshal.SizeOf(typeof(WAVEHDR)));
+                    if (result != MMSYSERR_NOERROR)
+                    {
+                        Console.WriteLine($"[OdysseyMusicPlayer] Failed to prepare wave header: error code {result}");
+                        Marshal.FreeHGlobal(waveHeader.lpData);
+                        break;
+                    }
+
+                    // Write data to waveOut
+                    result = waveOutWrite(_waveOutHandle, ref waveHeader, Marshal.SizeOf(typeof(WAVEHDR)));
+                    if (result != MMSYSERR_NOERROR)
+                    {
+                        Console.WriteLine($"[OdysseyMusicPlayer] Failed to write wave data: error code {result}");
+                        waveOutUnprepareHeader(_waveOutHandle, ref waveHeader, Marshal.SizeOf(typeof(WAVEHDR)));
+                        Marshal.FreeHGlobal(waveHeader.lpData);
+                        break;
+                    }
+
+                    // Wait for buffer to complete (with cancellation support)
+                    while ((waveHeader.dwFlags & WHDR_DONE) == 0 && !cancellationToken.IsCancellationRequested)
+                    {
+                        Thread.Sleep(10); // Check every 10ms
+                    }
+
+                    // Unprepare header and free buffer
+                    waveOutUnprepareHeader(_waveOutHandle, ref waveHeader, Marshal.SizeOf(typeof(WAVEHDR)));
+                    Marshal.FreeHGlobal(waveHeader.lpData);
+
+                    // Advance position
+                    position += bytesToSend;
+                    if (position >= _currentPcmData.Length)
+                    {
+                        position = 0; // Loop back to beginning
+                    }
+                }
+
+                // Clean up
+                lock (_playbackLock)
+                {
+                    if (_waveOutHandle != IntPtr.Zero)
+                    {
+                        waveOutReset(_waveOutHandle);
+                        waveOutClose(_waveOutHandle);
+                        _waveOutHandle = IntPtr.Zero;
+                    }
+                    _isPlaying = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[OdysseyMusicPlayer] Error in playback loop: {ex.Message}");
+                Console.WriteLine($"[OdysseyMusicPlayer] Stack trace: {ex.StackTrace}");
+                lock (_playbackLock)
+                {
+                    if (_waveOutHandle != IntPtr.Zero)
+                    {
+                        try
+                        {
+                            waveOutReset(_waveOutHandle);
+                            waveOutClose(_waveOutHandle);
+                        }
+                        catch { }
+                        _waveOutHandle = IntPtr.Zero;
+                    }
+                    _isPlaying = false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the current music track ResRef.
+        /// </summary>
+        public string CurrentTrack
         {
             get
             {
-                lock (_volumeLock)
+                lock (_playbackLock)
                 {
-                    return _volume;
+                    return _currentTrack;
                 }
             }
-            set
+        }
+
+        /// <summary>
+        /// Disposes resources and stops any playing music.
+        /// </summary>
+        public void Dispose()
+        {
+            if (!_disposed)
             {
-                SetVolume(value);
+                Stop();
+                _disposed = true;
             }
         }
+
+        #region WAV Header Structure
+        /// <summary>
+        /// WAV file header information extracted from parsed WAV file.
+        /// </summary>
+        private struct WAVHeader
+        {
+            public int SampleRate;
+            public int Channels;
+            public int BitsPerSample;
+            public int DataSize;
+        }
+        #endregion
+
+        #region Windows waveOut API P/Invoke
+        // Windows waveOut API for music playback with looping and volume control
+        // Based on swkotor2.exe: Music playback uses Miles Sound System (MSS), but we use waveOut for Windows compatibility
+        // For cross-platform support, consider OpenAL or NAudio
+
+        [DllImport("winmm.dll", EntryPoint = "waveOutOpen", SetLastError = true)]
+        private static extern int waveOutOpen(out IntPtr phwo, int uDeviceID, ref WAVEFORMATEX pwfx, IntPtr dwCallback, IntPtr dwInstance, int fdwOpen);
+
+        [DllImport("winmm.dll", EntryPoint = "waveOutClose", SetLastError = true)]
+        private static extern int waveOutClose(IntPtr hwo);
+
+        [DllImport("winmm.dll", EntryPoint = "waveOutPrepareHeader", SetLastError = true)]
+        private static extern int waveOutPrepareHeader(IntPtr hwo, ref WAVEHDR pwh, int cbwh);
+
+        [DllImport("winmm.dll", EntryPoint = "waveOutUnprepareHeader", SetLastError = true)]
+        private static extern int waveOutUnprepareHeader(IntPtr hwo, ref WAVEHDR pwh, int cbwh);
+
+        [DllImport("winmm.dll", EntryPoint = "waveOutWrite", SetLastError = true)]
+        private static extern int waveOutWrite(IntPtr hwo, ref WAVEHDR pwh, int cbwh);
+
+        [DllImport("winmm.dll", EntryPoint = "waveOutPause", SetLastError = true)]
+        private static extern int waveOutPause(IntPtr hwo);
+
+        [DllImport("winmm.dll", EntryPoint = "waveOutRestart", SetLastError = true)]
+        private static extern int waveOutRestart(IntPtr hwo);
+
+        [DllImport("winmm.dll", EntryPoint = "waveOutReset", SetLastError = true)]
+        private static extern int waveOutReset(IntPtr hwo);
+
+        [DllImport("winmm.dll", EntryPoint = "waveOutSetVolume", SetLastError = true)]
+        private static extern int waveOutSetVolume(IntPtr hwo, uint dwVolume);
+
+        // WaveOut constants
+        private const int WAVE_MAPPER = -1;
+        private const int CALLBACK_NULL = 0x00000000;
+        private const int MMSYSERR_NOERROR = 0;
+        private const uint WHDR_DONE = 0x00000001;
+
+        // WAVEFORMATEX structure for waveOut
+        [StructLayout(LayoutKind.Sequential)]
+        private struct WAVEFORMATEX
+        {
+            public ushort wFormatTag;
+            public ushort nChannels;
+            public uint nSamplesPerSec;
+            public uint nAvgBytesPerSec;
+            public ushort nBlockAlign;
+            public ushort wBitsPerSample;
+            public ushort cbSize;
+        }
+
+        // WAVEHDR structure for waveOut buffers
+        [StructLayout(LayoutKind.Sequential)]
+        private struct WAVEHDR
+        {
+            public IntPtr lpData;
+            public uint dwBufferLength;
+            public uint dwBytesRecorded;
+            public IntPtr dwUser;
+            public uint dwFlags;
+            public uint dwLoops;
+            public IntPtr lpNext;
+            public IntPtr reserved;
+        }
+        #endregion
     }
 
     /// <summary>
