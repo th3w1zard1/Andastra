@@ -2883,6 +2883,8 @@ namespace HolocronToolset.Tests.Editors
             dlg.Starters[0].Node.Animations.Should().HaveCount(1, "First starter node should have exactly one animation");
             dlg.Starters[0].Node.Animations[0].AnimationId.Should().Be(1, "Animation ID should be 1");
             dlg.Starters[0].Node.Animations[0].Participant.Should().Be("PLAYER", "Animation participant should be PLAYER");
+
+            editor.Close();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1640-1665
