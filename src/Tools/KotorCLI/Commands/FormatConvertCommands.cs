@@ -258,7 +258,8 @@ namespace KotorCLI.Commands
             cmd.Add(inputArg);
             var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output CSV file");
             cmd.Options.Add(outputOpt);
-            var delimiterOpt = new Option<string>("--delimiter", () => ",", "CSV delimiter");
+            var delimiterOpt = new Option<string>(new[] { "-d", "--delimiter" }, "CSV delimiter");
+            delimiterOpt.SetDefaultValue(",");
             cmd.Options.Add(delimiterOpt);
             cmd.SetAction(parseResult =>
             {
@@ -291,10 +292,9 @@ namespace KotorCLI.Commands
             var inputArg = new Argument<string>("input");
             inputArg.Description = "Input CSV file";
             cmd.Add(inputArg);
-            var outputOpt = new Option<string>("--output", "Output 2DA file");
-            outputOpt.AddAlias("-o");
+            var outputOpt = new Option<string>(new[] { "-o", "--output" }, "Output 2DA file");
             cmd.Options.Add(outputOpt);
-            var delimiterOpt = new Option<string>("--delimiter", "CSV delimiter");
+            var delimiterOpt = new Option<string>(new[] { "-d", "--delimiter" }, "CSV delimiter");
             delimiterOpt.SetDefaultValue(",");
             cmd.Options.Add(delimiterOpt);
             cmd.SetAction(parseResult =>
