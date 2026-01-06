@@ -1702,8 +1702,8 @@ namespace HolocronToolset.Editors
                 }
 
                 string text = $"{name} ({anim.Participant})";
-                var item = new ListBoxItem { Content = text, Tag = anim };
-                _animsList.Items.Add(item);
+                var animItem = new ListBoxItem { Content = text, Tag = anim };
+                _animsList.Items.Add(animItem);
             }
         }
 
