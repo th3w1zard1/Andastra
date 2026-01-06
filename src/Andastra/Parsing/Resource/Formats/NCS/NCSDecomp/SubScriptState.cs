@@ -1592,17 +1592,6 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             // For the left operand, we need to get it from the remaining children
             // If we already extracted right from children, it's already removed
             // Otherwise, RemoveLastExp will handle it
-            // But first, if right was extracted directly from children, make sure it's removed
-            if (right != null && this.current.HasChildren())
-            {
-                ScriptNode.ScriptNode lastChild = this.current.GetLastChild();
-                // If the last child is the right operand we just extracted, remove it
-                if (lastChild == right || (typeof(ScriptNode.AExpressionStatement).IsInstanceOfType(lastChild) && ((ScriptNode.AExpressionStatement)lastChild).GetExp() == right))
-                {
-                    this.current.RemoveLastChild();
-                    right.Parent(null);
-                }
-            }
             AExpression left = this.RemoveLastExp(false);
 
             // Debug logging for conditional operations
@@ -1683,28 +1672,45 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                 }
                 if (right == null)
                 {
-                    Error("DEBUG TransformBinary: right operand is null, checking if last child is AUnaryExp");
-                    // If right operand is null, check if the last child is an AUnaryExp that should be used
+                    Error("DEBUG TransformBinary: right operand is null, searching all children for AUnaryExp");
+                    // If right operand is null, search all children for AUnaryExp
                     // This handles cases where the unary expression wasn't found by RemoveLastExp
                     if (this.current.HasChildren())
                     {
-                        ScriptNode.ScriptNode lastChild = this.current.GetLastChild();
-                        if (typeof(AUnaryExp).IsInstanceOfType(lastChild))
+                        List<ScriptNode.ScriptNode> children = this.current.GetChildren();
+                        // Search backwards through children to find AUnaryExp
+                        for (int i = children.Count - 1; i >= 0; i--)
                         {
-                            Error("DEBUG TransformBinary: Found AUnaryExp as last child, using as right operand");
-                            right = (AExpression)this.current.RemoveLastChild();
-                            right.Parent(null);
-                        }
-                        else if (typeof(ScriptNode.AExpressionStatement).IsInstanceOfType(lastChild))
-                        {
-                            ScriptNode.AExpressionStatement expStmt = (ScriptNode.AExpressionStatement)lastChild;
-                            ScriptNode.AExpression innerExp = expStmt.GetExp();
-                            if (innerExp != null && typeof(AUnaryExp).IsInstanceOfType(innerExp))
+                            ScriptNode.ScriptNode child = children[i];
+                            if (typeof(AUnaryExp).IsInstanceOfType(child))
                             {
-                                Error("DEBUG TransformBinary: Found AUnaryExp in AExpressionStatement, extracting as right operand");
-                                this.current.RemoveLastChild();
-                                innerExp.Parent(null);
-                                right = innerExp;
+                                Error($"DEBUG TransformBinary: Found AUnaryExp at index {i}, using as right operand");
+                                // Remove all children from this index onwards
+                                while (this.current.HasChildren() && this.current.GetLastChild() != child)
+                                {
+                                    this.current.RemoveLastChild();
+                                }
+                                right = (AExpression)this.current.RemoveLastChild();
+                                right.Parent(null);
+                                break;
+                            }
+                            else if (typeof(ScriptNode.AExpressionStatement).IsInstanceOfType(child))
+                            {
+                                ScriptNode.AExpressionStatement expStmt = (ScriptNode.AExpressionStatement)child;
+                                ScriptNode.AExpression innerExp = expStmt.GetExp();
+                                if (innerExp != null && typeof(AUnaryExp).IsInstanceOfType(innerExp))
+                                {
+                                    Error($"DEBUG TransformBinary: Found AUnaryExp in AExpressionStatement at index {i}, extracting as right operand");
+                                    // Remove all children from this index onwards
+                                    while (this.current.HasChildren() && this.current.GetLastChild() != child)
+                                    {
+                                        this.current.RemoveLastChild();
+                                    }
+                                    this.current.RemoveLastChild();
+                                    innerExp.Parent(null);
+                                    right = innerExp;
+                                    break;
+                                }
                             }
                         }
                     }
