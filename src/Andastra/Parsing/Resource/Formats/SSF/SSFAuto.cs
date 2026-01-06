@@ -48,12 +48,21 @@ namespace Andastra.Parsing.Formats.SSF
                 }
                 else if (source is Stream stream)
                 {
+                    // Seek to offset and read 4 bytes for format detection
                     stream.Seek(offset, SeekOrigin.Begin);
                     firstBytes = new byte[4];
                     int bytesRead = stream.Read(firstBytes, 0, 4);
                     if (bytesRead < 4)
                     {
                         return ResourceType.INVALID;
+                    }
+                    
+                    // Restore stream position to offset so ReadSsf can read from the beginning
+                    // This is critical: ReadSsf will create SSFBinaryReader which uses CopyTo
+                    // from the current position, so we must restore to the start of the data
+                    if (stream.CanSeek)
+                    {
+                        stream.Position = offset;
                     }
                 }
                 else
@@ -167,8 +176,8 @@ namespace Andastra.Parsing.Formats.SSF
             }
             else if (fileFormat == ResourceType.SSF_XML)
             {
-                // TODO: STUB - SSFXMLWriter not yet implemented
-                throw new NotImplementedException("SSF XML writing not yet implemented");
+                var writer = new SSFXMLWriter(ssf);
+                writer.Write(target);
             }
             else
             {
