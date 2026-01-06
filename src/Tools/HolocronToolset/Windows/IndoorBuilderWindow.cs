@@ -632,20 +632,52 @@ namespace HolocronToolset.Windows
 
         // Matching PyKotor implementation - gridSizeSpin widget
         // Original: self.ui.gridSizeSpin (QDoubleSpinBox)
+        // Matching PyKotor UI file: Tools/HolocronToolset/src/ui/windows/indoor_builder.ui:355-368
+        // Original: <widget class="QDoubleSpinBox" name="gridSizeSpin">
+        // Original:   <property name="minimum"><double>0.5</double></property>
+        // Original:   <property name="maximum"><double>10.0</double></property>
+        // Original:   <property name="singleStep"><double>0.5</double></property>
+        // Original:   <property name="value"><double>1.0</double></property>
+        // Grid size spinbox minimum property (matching UI file: minimum = 0.5)
+        private const decimal GridSizeSpinMinimum = 0.5m;
+        public decimal GridSizeSpinMinimumValue
+        {
+            get { return GridSizeSpinMinimum; }
+        }
+
+        // Grid size spinbox maximum property (matching UI file: maximum = 10.0)
+        private const decimal GridSizeSpinMaximum = 10.0m;
+        public decimal GridSizeSpinMaximumValue
+        {
+            get { return GridSizeSpinMaximum; }
+        }
+
         // Grid size spinbox value property (decimal for NumericUpDown compatibility)
+        // Values are clamped to min/max range to match QDoubleSpinBox behavior
         private decimal _gridSizeSpinValue = 1.0m; // DEFAULT_GRID_SIZE = 1.0
         public decimal GridSizeSpinValue
         {
             get { return _gridSizeSpinValue; }
             set
             {
-                if (_gridSizeSpinValue != value)
+                // Clamp value to min/max range (matching QDoubleSpinBox behavior)
+                decimal clampedValue = value;
+                if (clampedValue < GridSizeSpinMinimum)
                 {
-                    _gridSizeSpinValue = value;
+                    clampedValue = GridSizeSpinMinimum;
+                }
+                else if (clampedValue > GridSizeSpinMaximum)
+                {
+                    clampedValue = GridSizeSpinMaximum;
+                }
+
+                if (_gridSizeSpinValue != clampedValue)
+                {
+                    _gridSizeSpinValue = clampedValue;
                     // Trigger value changed event if signals are not blocked
                     if (!BlockSpinboxSignals && GridSizeSpinValueChanged != null)
                     {
-                        GridSizeSpinValueChanged((double)value);
+                        GridSizeSpinValueChanged((double)clampedValue);
                     }
                 }
             }
@@ -743,9 +775,26 @@ namespace HolocronToolset.Windows
         // Matching PyKotor implementation - setValue method
         // Original: self.ui.gridSizeSpin.setValue(value)
         // Method to set grid size spinbox value programmatically (for testing and initialization)
+        // Values are automatically clamped to min/max range (matching QDoubleSpinBox behavior)
         public void SetGridSizeSpinValue(double value)
         {
             GridSizeSpinValue = (decimal)value;
+        }
+
+        // Matching PyKotor implementation - gridSizeSpin widget accessor
+        // Original: self.ui.gridSizeSpin (QDoubleSpinBox)
+        // Property to access spinbox for testing (matches Python API: builder.ui.gridSizeSpin.value(), builder.ui.gridSizeSpin.minimum(), builder.ui.gridSizeSpin.maximum())
+        private GridSizeSpinboxWrapper _gridSizeSpin;
+        public GridSizeSpinboxWrapper GridSizeSpin
+        {
+            get
+            {
+                if (_gridSizeSpin == null)
+                {
+                    _gridSizeSpin = new GridSizeSpinboxWrapper(this);
+                }
+                return _gridSizeSpin;
+            }
         }
 
         // Matching PyKotor implementation - setValue method
@@ -790,6 +839,47 @@ namespace HolocronToolset.Windows
         public bool IsChecked()
         {
             return _ui.SnapToHooksCheckChecked;
+        }
+    }
+
+    // Matching PyKotor implementation - gridSizeSpin widget wrapper for API compatibility
+    // Original: self.ui.gridSizeSpin (QDoubleSpinBox)
+    // Wrapper class to match Python API where spinbox has setValue, value, minimum, and maximum methods
+    public class GridSizeSpinboxWrapper
+    {
+        private readonly IndoorBuilderWindowUi _ui;
+
+        public GridSizeSpinboxWrapper(IndoorBuilderWindowUi ui)
+        {
+            _ui = ui;
+        }
+
+        // Matching PyKotor implementation - setValue method
+        // Original: self.ui.gridSizeSpin.setValue(value)
+        public void SetValue(double value)
+        {
+            _ui.SetGridSizeSpinValue(value);
+        }
+
+        // Matching PyKotor implementation - value method
+        // Original: self.ui.gridSizeSpin.value()
+        public double Value()
+        {
+            return (double)_ui.GridSizeSpinValue;
+        }
+
+        // Matching PyKotor implementation - minimum method
+        // Original: self.ui.gridSizeSpin.minimum()
+        public double Minimum()
+        {
+            return (double)_ui.GridSizeSpinMinimumValue;
+        }
+
+        // Matching PyKotor implementation - maximum method
+        // Original: self.ui.gridSizeSpin.maximum()
+        public double Maximum()
+        {
+            return (double)_ui.GridSizeSpinMaximumValue;
         }
     }
 
