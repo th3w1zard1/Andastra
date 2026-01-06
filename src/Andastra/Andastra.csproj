@@ -120,7 +120,7 @@
     <PropertyGroup Condition="'$(_MgcbToolCheckExitCode)' != '0' AND '$(SkipMonoGameContentPipeline)' == ''">
       <SkipMonoGameContentPipeline>true</SkipMonoGameContentPipeline>
     </PropertyGroup>
-    <Message Condition="'$(_MgcbToolCheckExitCode)' != '0' AND '$(SkipMonoGameContentPipeline)' != 'true'" Importance="high" Text="MonoGame Content Builder tool (dotnet-mgcb) not available. Setting SkipMonoGameContentPipeline=true. Install with: dotnet tool install -g dotnet-mgcb" />
+    <Message Condition="'$(_MgcbToolCheckExitCode)' != '0'" Importance="high" Text="MonoGame Content Builder tool (dotnet-mgcb) not available. Setting SkipMonoGameContentPipeline=true. Install with: dotnet tool install -g dotnet-mgcb" />
   </Target>
   
   <ItemGroup Condition="'$(SkipMonoGameContentPipeline)' != 'true'">
