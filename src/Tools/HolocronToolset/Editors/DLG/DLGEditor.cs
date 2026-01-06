@@ -21,6 +21,7 @@ using HolocronToolset.Editors.Actions;
 using Avalonia.Platform.Storage;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
+using Avalonia.
 
 namespace HolocronToolset.Editors.DLG
 {
@@ -797,13 +798,13 @@ namespace HolocronToolset.Editors.DLG
                 Height = 150,
                 Margin = new Thickness(0, 5, 0, 5)
             };
-            
+
             _addAnimButton = new Button { Content = "Add" };
             _addAnimButton.Click += (s, e) => OnAddAnimClicked();
-            
+
             _removeAnimButton = new Button { Content = "Remove" };
             _removeAnimButton.Click += (s, e) => OnRemoveAnimClicked();
-            
+
             _editAnimButton = new Button { Content = "Edit" };
             _editAnimButton.Click += (s, e) => OnEditAnimClicked();
 
@@ -813,7 +814,7 @@ namespace HolocronToolset.Editors.DLG
                 Margin = new Thickness(0, 10, 0, 0),
                 Spacing = 5
             };
-            
+
             // Add label matching PyKotor: curAnimsLabel "Current Animations"
             var animLabel = new TextBlock
             {
@@ -822,9 +823,9 @@ namespace HolocronToolset.Editors.DLG
                 Margin = new Thickness(0, 0, 0, 5)
             };
             animPanel.Children.Add(animLabel);
-            
+
             animPanel.Children.Add(_animsList);
-            
+
             // Button panel matching PyKotor: horizontalLayout_animsButtons
             var buttonPanel = new StackPanel
             {
@@ -836,7 +837,7 @@ namespace HolocronToolset.Editors.DLG
             buttonPanel.Children.Add(_removeAnimButton);
             buttonPanel.Children.Add(_editAnimButton);
             animPanel.Children.Add(buttonPanel);
-            
+
             panel.Children.Add(animPanel);
         }
 
@@ -941,7 +942,7 @@ namespace HolocronToolset.Editors.DLG
                 // Determine source widget and get selected indexes
                 Control sourceWidgetForEdit = sourceWidget ?? _dialogTree;
                 List<object> indexes = null;
-                
+
                 if (sourceWidgetForEdit == _dialogTree)
                 {
                     indexes = GetSelectedIndexesFromTreeView(_dialogTree);
@@ -950,7 +951,7 @@ namespace HolocronToolset.Editors.DLG
                 {
                     indexes = GetSelectedIndexesFromListWidget(listWidget);
                 }
-                
+
                 EditText(null, indexes, sourceWidgetForEdit);
             };
             menuItems.Add(editTextItem);
@@ -1693,6 +1694,86 @@ namespace HolocronToolset.Editors.DLG
             }
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2759-2781
+        // Original: def refresh_anim_list(self): ... Refreshes the animations list
+        /// <summary>
+        /// Refreshes the animations list based on the currently selected node.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2759-2781
+        /// Original: def refresh_anim_list(self): ... self.ui.animsList.clear() ... for anim in item.link.node.animations: ...
+        /// </summary>
+        public void RefreshAnimList()
+        {
+            if (_animsList == null)
+            {
+                return;
+            }
+
+            // Matching PyKotor: self.ui.animsList.clear()
+            _animsList.Items.Clear();
+
+            // Get animations 2DA for name lookup
+            // Matching PyKotor: animations_2da: TwoDA | None = self._installation.ht_get_cache_2da(HTInstallation.TwoDA_DIALOG_ANIMS)
+            TwoDA animations2da = null;
+            if (_installation != null)
+            {
+                animations2da = _installation.HtGetCache2DA(HTInstallation.TwoDADialogAnims);
+            }
+
+            if (animations2da == null)
+            {
+                // Matching PyKotor: RobustLogger().error(f"refreshAnimList: {HTInstallation.TwoDA_DIALOG_ANIMS}.2da not found, the Animation List will not function!!")
+                System.Console.WriteLine($"RefreshAnimList: {HTInstallation.TwoDADialogAnims}.2da not found, the Animation List will not function!!");
+                return;
+            }
+
+            // Get selected item from dialog tree
+            // Matching PyKotor: for index in self.ui.dialogTree.selectedIndexes():
+            var selectedItem = _dialogTree?.SelectedItem;
+            if (selectedItem == null)
+            {
+                return;
+            }
+
+            // Get DLGStandardItem from selected item
+            DLGStandardItem dlgItem = null;
+            if (selectedItem is TreeViewItem treeItem && treeItem.Tag is DLGStandardItem dlgItemFromTag)
+            {
+                dlgItem = dlgItemFromTag;
+            }
+            else if (selectedItem is DLGStandardItem dlgItemDirect)
+            {
+                dlgItem = dlgItemDirect;
+            }
+
+            if (dlgItem?.Link == null || dlgItem.Link.Node == null)
+            {
+                return;
+            }
+
+            // Matching PyKotor: for anim in item.link.node.animations:
+            // Original: name: str = str(anim.animation_id)
+            // Original: if animations_2da.get_height() > anim.animation_id: name = animations_2da.get_cell(anim.animation_id, "name")
+            // Original: text: str = f"{name} ({anim.participant})"
+            // Original: anim_item = QListWidgetItem(text)
+            // Original: anim_item.setData(Qt.ItemDataRole.UserRole, anim)
+            // Original: self.ui.animsList.addItem(anim_item)
+            foreach (DLGAnimation anim in dlgItem.Link.Node.Animations)
+            {
+                string name = anim.AnimationId.ToString();
+                if (animations2da.RowCount > anim.AnimationId)
+                {
+                    var nameColumn = animations2da.GetColumn("name");
+                    if (nameColumn != null && anim.AnimationId < nameColumn.Count)
+                    {
+                        name = nameColumn[anim.AnimationId] ?? anim.AnimationId.ToString();
+                    }
+                }
+                string text = $"{name} ({anim.Participant})";
+                var item = new ListBoxItem { Content = text, Tag = anim };
+                _animsList.Items.Add(item);
+            }
+        }
+
         // Properties for tests
         public DLGType CoreDlg => _coreDlg;
         public DLGModel Model => _model;
@@ -2264,6 +2345,10 @@ namespace HolocronToolset.Editors.DLG
                 _expressionSelect.SelectedIndex = Math.Min(Math.Max(node.FacialId, 0), _expressionSelect.Items.Count - 1);
             }
 
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2508
+            // Original: self.refresh_anim_list()
+            RefreshAnimList();
+
             // Original: self.ui.nodeIdSpin.setValue(item.link.node.node_id)
             if (_nodeIdSpin != null && node != null)
             {
@@ -2761,7 +2846,7 @@ namespace HolocronToolset.Editors.DLG
                     // Original: elif self.orphaned_nodes_list.hasFocus(): self.edit_text(event, self.orphaned_nodes_list.selectedIndexes(), self.orphaned_nodes_list)
                     // Original: elif self.pinned_items_list.hasFocus(): self.edit_text(event, self.pinned_items_list.selectedIndexes(), self.pinned_items_list)
                     // Original: elif self.find_bar.hasFocus() or self.find_input.hasFocus(): self.handle_find()
-                    
+
                     // Check which widget has focus and call edit_text with appropriate parameters
                     if (_dialogTree != null && _dialogTree.IsFocused)
                     {
@@ -3052,7 +3137,7 @@ namespace HolocronToolset.Editors.DLG
                         indexes = GetSelectedIndexesFromListWidget(listWidget);
                     }
                 }
-                
+
                 // If still no indexes, try to get from dialogTree as fallback
                 if (indexes == null || indexes.Count == 0)
                 {
@@ -3062,7 +3147,7 @@ namespace HolocronToolset.Editors.DLG
                     }
                 }
             }
-            
+
             // Matching PyKotor: if not indexes: self.blink_window(); return
             if (indexes == null || indexes.Count == 0)
             {
@@ -3085,7 +3170,7 @@ namespace HolocronToolset.Editors.DLG
             foreach (var indexObj in indexes)
             {
                 DLGStandardItem item = null;
-                
+
                 // Determine the model and item based on source widget
                 // Matching PyKotor: model_to_use: DLGListWidget | QAbstractItemModel | None = source_widget if isinstance(source_widget, DLGListWidget) else index.model()
                 if (sourceWidget is DLGListWidget listWidget)
@@ -3120,7 +3205,7 @@ namespace HolocronToolset.Editors.DLG
                         item = selectedDlgItemDirect;
                     }
                 }
-                
+
                 // Matching PyKotor implementation: if item is None: continue
                 if (item == null)
                 {
@@ -3225,7 +3310,7 @@ namespace HolocronToolset.Editors.DLG
                 }
             } // End of foreach loop
         }
-        
+
         /// <summary>
         /// Gets selected indexes from a TreeView.
         /// Helper method to extract DLGStandardItem objects from TreeView selection.
@@ -3237,7 +3322,7 @@ namespace HolocronToolset.Editors.DLG
             {
                 return indexes;
             }
-            
+
             // Get selected item from tree view
             var selectedItem = treeView.SelectedItem;
             if (selectedItem != null)
@@ -3255,10 +3340,10 @@ namespace HolocronToolset.Editors.DLG
                     indexes.Add(selectedItem);
                 }
             }
-            
+
             return indexes;
         }
-        
+
         /// <summary>
         /// Gets selected indexes from a DLGListWidget.
         /// Helper method to extract DLGStandardItem objects from DLGListWidget selection.
@@ -3270,7 +3355,7 @@ namespace HolocronToolset.Editors.DLG
             {
                 return indexes;
             }
-            
+
             // Get selected items from list widget
             // Matching PyKotor: selectedIndexes() returns list of QModelIndex
             // In Avalonia, we get selected items directly
@@ -3293,7 +3378,7 @@ namespace HolocronToolset.Editors.DLG
                     }
                 }
             }
-            
+
             return indexes;
         }
 
