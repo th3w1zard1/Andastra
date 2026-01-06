@@ -1560,14 +1560,26 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
         {
             string opName = NodeUtils.GetOp(node);
             int nodePos = this.nodedata != null ? this.nodedata.TryGetPos(node) : -1;
-            Error($"DEBUG TransformBinary: START - op={opName}, pos={nodePos}, state={this.state}, current={this.current.GetType().Name}, hasChildren={this.current.HasChildren()}");
+            bool isConditional = NodeUtils.IsConditionalOp(node);
+            Error($"DEBUG TransformBinary: START - op={opName}, pos={nodePos}, state={this.state}, isConditional={isConditional}, current={this.current.GetType().Name}, hasChildren={this.current.HasChildren()}");
             if (this.current.HasChildren())
             {
                 List<ScriptNode.ScriptNode> children = this.current.GetChildren();
                 Error($"DEBUG TransformBinary: Current has {children.Count} children:");
                 for (int i = children.Count - 1; i >= 0 && i >= children.Count - 5; i--)
                 {
-                    Error($"DEBUG TransformBinary:   child[{i}]={children[i].GetType().Name}");
+                    ScriptNode.ScriptNode child = children[i];
+                    string childType = child.GetType().Name;
+                    if (typeof(ScriptNode.AExpressionStatement).IsInstanceOfType(child))
+                    {
+                        ScriptNode.AExpressionStatement expStmt = (ScriptNode.AExpressionStatement)child;
+                        ScriptNode.AExpression innerExp = expStmt.GetExp();
+                        if (innerExp != null)
+                        {
+                            childType += $" containing {innerExp.GetType().Name}";
+                        }
+                    }
+                    Error($"DEBUG TransformBinary:   child[{i}]={childType}");
                 }
             }
             this.CheckStart(node);
@@ -1982,6 +1994,45 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             exp.Stackentry(this.stack.Get(1));
             this.current.AddChild((ScriptNode.ScriptNode)exp);
             Error($"DEBUG TransformBinary: END - Added {exp.GetType().Name} to children. Current now has {this.current.Size()} children");
+            
+            // CRITICAL: After creating AConditionalExp, ensure no AUnaryExp remains in children
+            // This prevents AUnaryExp from being output as a standalone statement
+            if (NodeUtils.IsConditionalOp(node) && this.current.HasChildren())
+            {
+                List<ScriptNode.ScriptNode> children = this.current.GetChildren();
+                for (int i = children.Count - 1; i >= 0; i--)
+                {
+                    ScriptNode.ScriptNode child = children[i];
+                    if (typeof(AUnaryExp).IsInstanceOfType(child))
+                    {
+                        Error($"DEBUG TransformBinary: WARNING - Found AUnaryExp at index {i} after creating AConditionalExp, removing it");
+                        // Remove all children after this one
+                        while (this.current.HasChildren() && this.current.GetLastChild() != child)
+                        {
+                            this.current.RemoveLastChild();
+                        }
+                        this.current.RemoveLastChild();
+                        break;
+                    }
+                    else if (typeof(ScriptNode.AExpressionStatement).IsInstanceOfType(child))
+                    {
+                        ScriptNode.AExpressionStatement expStmt = (ScriptNode.AExpressionStatement)child;
+                        ScriptNode.AExpression innerExp = expStmt.GetExp();
+                        if (innerExp != null && typeof(AUnaryExp).IsInstanceOfType(innerExp))
+                        {
+                            Error($"DEBUG TransformBinary: WARNING - Found AUnaryExp in AExpressionStatement at index {i} after creating AConditionalExp, removing it");
+                            // Remove all children after this one
+                            while (this.current.HasChildren() && this.current.GetLastChild() != child)
+                            {
+                                this.current.RemoveLastChild();
+                            }
+                            this.current.RemoveLastChild();
+                            break;
+                        }
+                    }
+                }
+            }
+            
             // Ensure AConditionalExp is not immediately wrapped by subsequent MOVSP
             // by marking that we just created a conditional expression
             this.CheckEnd(node);
