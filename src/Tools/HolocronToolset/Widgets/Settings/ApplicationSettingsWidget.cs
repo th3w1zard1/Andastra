@@ -199,9 +199,10 @@ namespace HolocronToolset.Widgets.Settings
                 // Update the label
                 UpdateFontLabel();
 
-                // Note: In Avalonia, there's no direct Application.setFont() like Qt's QApplication.setFont()
-                // TODO:  Fonts are typically applied via styles/resources. For now, we save the preference
-                // and it can be applied on application restart or via style system if needed.
+                // Apply the font globally to the application
+                // Matching PyKotor: QApplication.setFont(font) applies globally to all widgets
+                // In Avalonia, we apply fonts via styles to achieve the same effect
+                HolocronToolset.Utils.FontApplicationHelper.ApplyGlobalFont(fontStringToSave);
             }
         }
 

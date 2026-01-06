@@ -120,34 +120,10 @@ namespace HolocronToolset.NET
                                 }
                             }
 
-                            // Apply font to Application.Current.Resources
-                            // In Avalonia, fonts are typically applied via styles/resources
-                            if (Application.Current != null)
-                            {
-                                // Set default font family and size in application resources
-                                // This will be used as the default for all controls
-                                if (!Application.Current.Resources.ContainsKey("DefaultFontFamily"))
-                                {
-                                    Application.Current.Resources.Add("DefaultFontFamily", fontFamily);
-                                }
-                                else
-                                {
-                                    Application.Current.Resources["DefaultFontFamily"] = fontFamily;
-                                }
-
-                                if (!Application.Current.Resources.ContainsKey("DefaultFontSize"))
-                                {
-                                    Application.Current.Resources.Add("DefaultFontSize", size);
-                                }
-                                else
-                                {
-                                    Application.Current.Resources["DefaultFontSize"] = size;
-                                }
-
-                                // Note: In PyKotor/Qt, QApplication.setFont() applies globally
-                                // In Avalonia, fonts are typically applied via styles or per-control
-                                // TODO: STUB - For now, we store the font preference in resources for use by styles
-                            }
+                            // Apply font globally using FontApplicationHelper
+                            // Matching PyKotor: QApplication.setFont(font) applies globally to all widgets
+                            // In Avalonia, we apply fonts via styles to achieve the same effect
+                            HolocronToolset.Utils.FontApplicationHelper.ApplyGlobalFont(fontString);
                         }
                     }
                 }
