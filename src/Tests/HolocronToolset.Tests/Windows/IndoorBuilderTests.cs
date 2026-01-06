@@ -441,7 +441,6 @@ namespace HolocronToolset.Tests.Windows
         // NOTE: The Python file has 246 test functions across 56 test classes (7098 lines).
         // To ensure zero omissions per user requirements, ALL 246 tests must be ported with
         // full implementations (no skips/todos/placeholders). Many require full IndoorMapBuilder
-        // TODO: STUB - Implementation which is currently a stub, so tests will fail until implementation is complete.
         //
         // Strategy (per user requirement of zero omissions):
         // 1. Port all 246 tests with full test method implementations
@@ -449,9 +448,9 @@ namespace HolocronToolset.Tests.Windows
         // 3. Fix implementations to make tests pass
         // 4. Continue until all 246 tests are ported and passing
         //
-        // Remaining test classes (56 total):
+        // Test class progress (56 total):
         // - TestIndoorBuilderInitialization (3 tests) - PORTED (3/3) ✓
-        // - TestUndoRedoCommands (12 tests) - IN PROGRESS (3/12)
+        // - TestUndoRedoCommands (12 tests) - IN PROGRESS (4/12) - TestMoveRoomsCommandSingle is fully implemented ✓
         // - TestComplexUndoRedoSequences (3 tests) - NEEDS PORTING (0/3)
         // - TestRoomSelection (7 tests) - NEEDS PORTING (0/7)
         // - TestMenuActions (10 tests) - NEEDS PORTING (0/10)
@@ -5621,14 +5620,14 @@ namespace HolocronToolset.Tests.Windows
                     // Matching PyKotor: assert image.format() == QImage.Format.Format_RGB888
                     // Verify image exists and is not null
                     image.Should().NotBeNull("Component image should not be null");
-                    
+
                     // Verify image is a valid Avalonia bitmap type
                     if (image is Avalonia.Media.Imaging.Bitmap bitmap)
                     {
                         // Verify image has valid dimensions
                         bitmap.PixelSize.Width.Should().BeGreaterThan(0, "Image should have positive width");
                         bitmap.PixelSize.Height.Should().BeGreaterThan(0, "Image should have positive height");
-                        
+
                         // Verify image format is RGB-like (not using alpha channel)
                         // Matching PyKotor: Format_RGB888 is 24-bit RGB without alpha
                         // In Avalonia, we check if the image is effectively RGB888 by:
@@ -5639,7 +5638,7 @@ namespace HolocronToolset.Tests.Windows
                             // Verify format is RGB-like (Rgba8888 is acceptable if all alpha values are 255)
                             // Matching PyKotor: Format_RGB888 means no alpha channel is used
                             var format = writeableBitmap.Format;
-                            
+
                             // Check if format is RGB-like (Rgba8888 with opaque alpha, or ideally Rgb888)
                             // Note: Avalonia doesn't have a direct RGB888 format, but Rgba8888 with all alpha=255 is equivalent
                             // We verify this by checking a sample of pixels to ensure alpha is always 255
@@ -5654,11 +5653,11 @@ namespace HolocronToolset.Tests.Windows
                             bitmap.PixelSize.Width.Should().BeGreaterThan(0);
                             bitmap.PixelSize.Height.Should().BeGreaterThan(0);
                         }
-                        
+
                         // Matching PyKotor: print(f"Component '{component.name}' image format: {image.format()} (correct: RGB888)")
                         // Note: Component name logging would be done here if component.Name is available
                     }
-                    
+
                     return; // Found a component with image, test passes
                 }
             }
@@ -5701,23 +5700,23 @@ namespace HolocronToolset.Tests.Windows
                     // Matching PyKotor: assert not image.isNull(), assert image.width() > 0, assert image.height() > 0
                     // Verify image is valid and has correct dimensions
                     image.Should().NotBeNull("Component image should not be null");
-                    
+
                     if (image is Avalonia.Media.Imaging.Bitmap bitmap)
                     {
                         // Verify image has valid dimensions
                         bitmap.PixelSize.Width.Should().BeGreaterThan(0, "Image should have positive width");
                         bitmap.PixelSize.Height.Should().BeGreaterThan(0, "Image should have positive height");
-                        
+
                         // Matching PyKotor: Verify image has pixel data (mirroring shouldn't corrupt it)
                         // Check a few pixels to ensure image is valid
                         // Matching PyKotor: has_pixel_data check - verify image has some non-black pixels
                         bool hasPixelData = VerifyImageHasPixelData(bitmap);
                         hasPixelData.Should().BeTrue("Image should have pixel data (walkmesh faces)");
-                        
+
                         // Matching PyKotor: print(f"Component '{component.name}' image is valid and properly formatted (mirroring applied)")
                         // Note: Component name logging would be done here if component.Name is available
                     }
-                    
+
                     return; // Found a component with image, test passes
                 }
             }
@@ -5762,20 +5761,20 @@ namespace HolocronToolset.Tests.Windows
                     // Matching PyKotor: assert image.width() >= MIN_SIZE, assert image.height() >= MIN_SIZE
                     // Images must be at least 256x256 (same as kit.py)
                     image.Should().NotBeNull("Component image should not be null");
-                    
+
                     if (image is Avalonia.Media.Imaging.Bitmap bitmap)
                     {
                         // Verify image dimensions meet minimum size requirement
                         // Matching PyKotor: assert image.width() >= MIN_SIZE, f"Image width {image.width()} must be >= {MIN_SIZE}"
-                        bitmap.PixelSize.Width.Should().BeGreaterOrEqual(MIN_SIZE, 
+                        bitmap.PixelSize.Width.Should().BeGreaterOrEqual(MIN_SIZE,
                             $"Image width {bitmap.PixelSize.Width} must be >= {MIN_SIZE}");
-                        bitmap.PixelSize.Height.Should().BeGreaterOrEqual(MIN_SIZE, 
+                        bitmap.PixelSize.Height.Should().BeGreaterOrEqual(MIN_SIZE,
                             $"Image height {bitmap.PixelSize.Height} must be >= {MIN_SIZE}");
-                        
+
                         // Matching PyKotor: print(f"Component '{component.name}' image size: {image.width()}x{image.height()} (min: {MIN_SIZE}x{MIN_SIZE})")
                         // Note: Component name logging would be done here if component.Name is available
                     }
-                    
+
                     return; // Found a component with image, test passes
                 }
             }
@@ -8936,7 +8935,7 @@ namespace HolocronToolset.Tests.Windows
                 // Matching PyKotor: Format_RGB888 is 24-bit RGB (3 bytes per pixel, no alpha)
                 // In Avalonia, Rgba8888 with all alpha=255 is equivalent to RGB888
                 var format = bitmap.Format;
-                
+
                 // Rgba8888 format is acceptable if all alpha values are 255 (fully opaque)
                 // This is effectively RGB888 since the alpha channel is not used
                 if (format == PixelFormat.Rgba8888)
@@ -8947,12 +8946,12 @@ namespace HolocronToolset.Tests.Windows
                     {
                         int width = lockedBitmap.Size.Width;
                         int height = lockedBitmap.Size.Height;
-                        
+
                         if (width <= 0 || height <= 0)
                         {
                             return false;
                         }
-                        
+
                         // Sample pixels to verify alpha is always 255 (opaque)
                         // Matching PyKotor: We verify format, not individual pixel values
                         // But we check a sample to ensure alpha channel is not used
@@ -8960,28 +8959,28 @@ namespace HolocronToolset.Tests.Windows
                         {
                             byte* pixelPtr = (byte*)lockedBitmap.Address;
                             int rowStride = lockedBitmap.RowBytes;
-                            
+
                             // Sample up to 100 pixels (or all pixels if image is small)
                             int sampleCount = Math.Min(100, width * height);
                             int step = Math.Max(1, (width * height) / sampleCount);
-                            
+
                             for (int i = 0; i < sampleCount; i++)
                             {
                                 int pixelIndex = i * step;
                                 int y = pixelIndex / width;
                                 int x = pixelIndex % width;
-                                
+
                                 if (y >= height)
                                 {
                                     break;
                                 }
-                                
+
                                 // Calculate byte offset for this pixel (RGBA format, 4 bytes per pixel)
                                 int byteOffset = (y * rowStride) + (x * 4);
-                                
+
                                 // Check alpha channel (4th byte, index 3)
                                 byte alpha = pixelPtr[byteOffset + 3];
-                                
+
                                 // If any alpha value is not 255, the image is not effectively RGB888
                                 if (alpha != 255)
                                 {
@@ -8989,7 +8988,7 @@ namespace HolocronToolset.Tests.Windows
                                 }
                             }
                         }
-                        
+
                         // All sampled pixels have alpha=255, so image is effectively RGB888
                         return true;
                     }
@@ -9030,12 +9029,12 @@ namespace HolocronToolset.Tests.Windows
                     {
                         int width = lockedBitmap.Size.Width;
                         int height = lockedBitmap.Size.Height;
-                        
+
                         if (width <= 0 || height <= 0)
                         {
                             return false;
                         }
-                        
+
                         // Matching PyKotor: Check a few pixels to ensure image is valid
                         // Sample pixels to verify image has non-black pixel data
                         unsafe
@@ -9043,20 +9042,20 @@ namespace HolocronToolset.Tests.Windows
                             byte* pixelPtr = (byte*)lockedBitmap.Address;
                             int rowStride = lockedBitmap.RowBytes;
                             var format = writeableBitmap.Format;
-                            
+
                             // Sample up to 10 pixels per row, up to 10 rows (matching PyKotor sampling pattern)
                             int sampleRows = Math.Min(10, height);
                             int sampleCols = Math.Min(10, width);
                             int rowStep = Math.Max(1, height / sampleRows);
                             int colStep = Math.Max(1, width / sampleCols);
-                            
+
                             for (int y = 0; y < height; y += rowStep)
                             {
                                 for (int x = 0; x < width; x += colStep)
                                 {
                                     // Calculate byte offset for this pixel
                                     int byteOffset = (y * rowStride) + (x * GetBytesPerPixel(format));
-                                    
+
                                     // Check if pixel is non-black
                                     // For RGBA format, check if any RGB channel is non-zero
                                     if (format == PixelFormat.Rgba8888)
@@ -9064,7 +9063,7 @@ namespace HolocronToolset.Tests.Windows
                                         byte r = pixelPtr[byteOffset];
                                         byte g = pixelPtr[byteOffset + 1];
                                         byte b = pixelPtr[byteOffset + 2];
-                                        
+
                                         // If any RGB channel is non-zero, pixel is not black
                                         if (r != 0 || g != 0 || b != 0)
                                         {
@@ -9076,7 +9075,7 @@ namespace HolocronToolset.Tests.Windows
                                         byte b = pixelPtr[byteOffset];
                                         byte g = pixelPtr[byteOffset + 1];
                                         byte r = pixelPtr[byteOffset + 2];
-                                        
+
                                         // If any RGB channel is non-zero, pixel is not black
                                         if (r != 0 || g != 0 || b != 0)
                                         {
@@ -9098,7 +9097,7 @@ namespace HolocronToolset.Tests.Windows
                                 }
                             }
                         }
-                        
+
                         // All sampled pixels were black/zero - image may be empty or invalid
                         return false;
                     }
