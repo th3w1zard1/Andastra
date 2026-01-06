@@ -314,43 +314,43 @@ namespace HolocronToolset.Editors
             // This matches PyKotor behavior where UI elements are found by name after XAML loading
 
             // Basic controls
-            _nameEdit = this.FindName("NameEdit") as TextBox ?? this.FindName("nameEdit") as TextBox;
-            _nameEditBtn = this.FindName("NameEditBtn") as Button ?? this.FindName("nameEditBtn") as Button;
-            _tagEdit = this.FindName("TagEdit") as TextBox ?? this.FindName("tagEdit") as TextBox;
-            _tagGenerateBtn = this.FindName("TagGenerateBtn") as Button ?? this.FindName("tagGenerateBtn") as Button;
-            _resrefEdit = this.FindName("ResrefEdit") as TextBox ?? this.FindName("resrefEdit") as TextBox;
-            _resrefGenerateBtn = this.FindName("ResrefGenerateBtn") as Button ?? this.FindName("resrefGenerateBtn") as Button;
-            _appearanceSelect = this.FindName("AppearanceSelect") as ComboBox ?? this.FindName("appearanceSelect") as ComboBox;
-            _conversationEdit = this.FindName("ConversationEdit") as TextBox ?? this.FindName("conversationEdit") as TextBox;
-            _conversationModifyBtn = this.FindName("ConversationModifyBtn") as Button ?? this.FindName("conversationModifyBtn") as Button;
-            _inventoryBtn = this.FindName("InventoryBtn") as Button ?? this.FindName("inventoryBtn") as Button;
-            _inventoryCountLabel = this.FindName("InventoryCountLabel") as TextBlock ?? this.FindName("inventoryCountLabel") as TextBlock;
+            _nameEdit = this.FindControl<TextBox>("NameEdit") ?? this.FindControl<TextBox>("nameEdit");
+            _nameEditBtn = this.FindControl<Button>("NameEditBtn") ?? this.FindControl<Button>("nameEditBtn");
+            _tagEdit = this.FindControl<TextBox>("TagEdit") ?? this.FindControl<TextBox>("tagEdit");
+            _tagGenerateBtn = this.FindControl<Button>("TagGenerateBtn") ?? this.FindControl<Button>("tagGenerateBtn");
+            _resrefEdit = this.FindControl<TextBox>("ResrefEdit") ?? this.FindControl<TextBox>("resrefEdit");
+            _resrefGenerateBtn = this.FindControl<Button>("ResrefGenerateBtn") ?? this.FindControl<Button>("resrefGenerateBtn");
+            _appearanceSelect = this.FindControl<ComboBox>("AppearanceSelect") ?? this.FindControl<ComboBox>("appearanceSelect");
+            _conversationEdit = this.FindControl<TextBox>("ConversationEdit") ?? this.FindControl<TextBox>("conversationEdit");
+            _conversationModifyBtn = this.FindControl<Button>("ConversationModifyBtn") ?? this.FindControl<Button>("conversationModifyBtn");
+            _inventoryBtn = this.FindControl<Button>("InventoryBtn") ?? this.FindControl<Button>("inventoryBtn");
+            _inventoryCountLabel = this.FindControl<TextBlock>("InventoryCountLabel") ?? this.FindControl<TextBlock>("inventoryCountLabel");
 
             // Advanced controls
-            _hasInventoryCheckbox = this.FindName("HasInventoryCheckbox") as CheckBox ?? this.FindName("hasInventoryCheckbox") as CheckBox;
-            _partyInteractCheckbox = this.FindName("PartyInteractCheckbox") as CheckBox ?? this.FindName("partyInteractCheckbox") as CheckBox;
-            _useableCheckbox = this.FindName("UseableCheckbox") as CheckBox ?? this.FindName("useableCheckbox") as CheckBox;
-            _min1HpCheckbox = this.FindName("Min1HpCheckbox") as CheckBox ?? this.FindName("min1HpCheckbox") as CheckBox;
-            _plotCheckbox = this.FindName("PlotCheckbox") as CheckBox ?? this.FindName("plotCheckbox") as CheckBox;
-            _staticCheckbox = this.FindName("StaticCheckbox") as CheckBox ?? this.FindName("staticCheckbox") as CheckBox;
-            _notBlastableCheckbox = this.FindName("NotBlastableCheckbox") as CheckBox ?? this.FindName("notBlastableCheckbox") as CheckBox;
-            _factionSelect = this.FindName("FactionSelect") as ComboBox ?? this.FindName("factionSelect") as ComboBox;
-            _animationStateSpin = this.FindName("AnimationStateSpin") as NumericUpDown ?? this.FindName("animationStateSpin") as NumericUpDown;
-            _currentHpSpin = this.FindName("CurrentHpSpin") as NumericUpDown ?? this.FindName("currentHpSpin") as NumericUpDown;
-            _maxHpSpin = this.FindName("MaxHpSpin") as NumericUpDown ?? this.FindName("maxHpSpin") as NumericUpDown;
-            _hardnessSpin = this.FindName("HardnessSpin") as NumericUpDown ?? this.FindName("hardnessSpin") as NumericUpDown;
-            _fortitudeSpin = this.FindName("FortitudeSpin") as NumericUpDown ?? this.FindName("fortitudeSpin") as NumericUpDown;
-            _reflexSpin = this.FindName("ReflexSpin") as NumericUpDown ?? this.FindName("reflexSpin") as NumericUpDown;
-            _willSpin = this.FindName("WillSpin") as NumericUpDown ?? this.FindName("willSpin") as NumericUpDown;
+            _hasInventoryCheckbox = this.FindControl<CheckBox>("HasInventoryCheckbox") ?? this.FindControl<CheckBox>("hasInventoryCheckbox");
+            _partyInteractCheckbox = this.FindControl<CheckBox>("PartyInteractCheckbox") ?? this.FindControl<CheckBox>("partyInteractCheckbox");
+            _useableCheckbox = this.FindControl<CheckBox>("UseableCheckbox") ?? this.FindControl<CheckBox>("useableCheckbox");
+            _min1HpCheckbox = this.FindControl<CheckBox>("Min1HpCheckbox") ?? this.FindControl<CheckBox>("min1HpCheckbox");
+            _plotCheckbox = this.FindControl<CheckBox>("PlotCheckbox") ?? this.FindControl<CheckBox>("plotCheckbox");
+            _staticCheckbox = this.FindControl<CheckBox>("StaticCheckbox") ?? this.FindControl<CheckBox>("staticCheckbox");
+            _notBlastableCheckbox = this.FindControl<CheckBox>("NotBlastableCheckbox") ?? this.FindControl<CheckBox>("notBlastableCheckbox");
+            _factionSelect = this.FindControl<ComboBox>("FactionSelect") ?? this.FindControl<ComboBox>("factionSelect");
+            _animationStateSpin = this.FindControl<NumericUpDown>("AnimationStateSpin") ?? this.FindControl<NumericUpDown>("animationStateSpin");
+            _currentHpSpin = this.FindControl<NumericUpDown>("CurrentHpSpin") ?? this.FindControl<NumericUpDown>("currentHpSpin");
+            _maxHpSpin = this.FindControl<NumericUpDown>("MaxHpSpin") ?? this.FindControl<NumericUpDown>("maxHpSpin");
+            _hardnessSpin = this.FindControl<NumericUpDown>("HardnessSpin") ?? this.FindControl<NumericUpDown>("hardnessSpin");
+            _fortitudeSpin = this.FindControl<NumericUpDown>("FortitudeSpin") ?? this.FindControl<NumericUpDown>("fortitudeSpin");
+            _reflexSpin = this.FindControl<NumericUpDown>("ReflexSpin") ?? this.FindControl<NumericUpDown>("reflexSpin");
+            _willSpin = this.FindControl<NumericUpDown>("WillSpin") ?? this.FindControl<NumericUpDown>("willSpin");
 
             // Lock controls
-            _needKeyCheckbox = this.FindName("NeedKeyCheckbox") as CheckBox ?? this.FindName("needKeyCheckbox") as CheckBox;
-            _removeKeyCheckbox = this.FindName("RemoveKeyCheckbox") as CheckBox ?? this.FindName("removeKeyCheckbox") as CheckBox;
-            _keyEdit = this.FindName("KeyEdit") as TextBox ?? this.FindName("keyEdit") as TextBox;
-            _lockedCheckbox = this.FindName("LockedCheckbox") as CheckBox ?? this.FindName("lockedCheckbox") as CheckBox;
-            _openLockSpin = this.FindName("OpenLockSpin") as NumericUpDown ?? this.FindName("openLockSpin") as NumericUpDown;
-            _difficultySpin = this.FindName("DifficultySpin") as NumericUpDown ?? this.FindName("difficultySpin") as NumericUpDown;
-            _difficultyModSpin = this.FindName("DifficultyModSpin") as NumericUpDown ?? this.FindName("difficultyModSpin") as NumericUpDown;
+            _needKeyCheckbox = this.FindControl<CheckBox>("NeedKeyCheckbox") ?? this.FindControl<CheckBox>("needKeyCheckbox");
+            _removeKeyCheckbox = this.FindControl<CheckBox>("RemoveKeyCheckbox") ?? this.FindControl<CheckBox>("removeKeyCheckbox");
+            _keyEdit = this.FindControl<TextBox>("KeyEdit") ?? this.FindControl<TextBox>("keyEdit");
+            _lockedCheckbox = this.FindControl<CheckBox>("LockedCheckbox") ?? this.FindControl<CheckBox>("lockedCheckbox");
+            _openLockSpin = this.FindControl<NumericUpDown>("OpenLockSpin") ?? this.FindControl<NumericUpDown>("openLockSpin");
+            _difficultySpin = this.FindControl<NumericUpDown>("DifficultySpin") ?? this.FindControl<NumericUpDown>("difficultySpin");
+            _difficultyModSpin = this.FindControl<NumericUpDown>("DifficultyModSpin") ?? this.FindControl<NumericUpDown>("difficultyModSpin");
 
             // Script controls - find by name pattern
             string[] scriptNames = { "OnClosed", "OnDamaged", "OnDeath", "OnEndDialog", "OnOpenFailed",
@@ -358,7 +358,7 @@ namespace HolocronToolset.Editors
 
             foreach (string scriptName in scriptNames)
             {
-                var scriptEdit = this.FindName(scriptName + "Edit") as TextBox ?? this.FindName(scriptName.ToLower() + "Edit") as TextBox;
+                var scriptEdit = this.FindControl<TextBox>(scriptName + "Edit") ?? this.FindControl<TextBox>(scriptName.ToLower() + "Edit");
                 if (scriptEdit != null)
                 {
                     _scriptFields[scriptName] = scriptEdit;
@@ -366,7 +366,7 @@ namespace HolocronToolset.Editors
             }
 
             // Comments control
-            _commentsEdit = this.FindName("CommentsEdit") as TextBox ?? this.FindName("commentsEdit") as TextBox;
+            _commentsEdit = this.FindControl<TextBox>("CommentsEdit") ?? this.FindControl<TextBox>("commentsEdit");
 
             // Set up event handlers for controls that were found from XAML
             if (_nameEditBtn != null)
@@ -568,15 +568,19 @@ namespace HolocronToolset.Editors
             }
 
             // Try NCS first, then NSS
-            var search = _installation.Resource(resname, ResourceType.NCS);
-            if (search == null)
-            {
-                search = _installation.Resource(resname, ResourceType.NSS);
-            }
+            var search = _installation.Resource(resname, ResourceType.NCS)
+                         ?? _installation.Resource(resname, ResourceType.NSS);
 
             if (search != null)
             {
-                WindowUtils.OpenResourceEditor(search.FilePath, search.ResName, search.ResType, search.Data, _installation, this);
+                WindowUtils.OpenResourceEditor(
+                    search.FilePath,
+                    search.ResName,
+                    search.ResType,
+                    search.Data,
+                    _installation,
+                    this
+                );
             }
         }
 
@@ -773,7 +777,7 @@ namespace HolocronToolset.Editors
             utp.Comment = _commentsEdit?.Text ?? "";
 
             // Matching Python: gff: GFF = dismantle_utp(utp); write_gff(gff, data)
-            Game game = _installation?.Game ?? Game.K2;
+            BioWareGame game = _installation?.Game ?? BioWareGame.K2;
             var gff = UTPHelpers.DismantleUtp(utp, game);
             byte[] data = GFFAuto.BytesGff(gff, ResourceType.UTP);
             return Tuple.Create(data, new byte[0]);
@@ -783,7 +787,7 @@ namespace HolocronToolset.Editors
         private static UTP CopyUtp(UTP source)
         {
             // Use Dismantle/Construct pattern for reliable deep copy (matching Python deepcopy behavior)
-            Game game = Game.K2; // Default game for serialization
+            BioWareGame game = BioWareGame.K2; // Default game for serialization
             var gff = UTPHelpers.DismantleUtp(source, game);
             return UTPHelpers.ConstructUtp(gff);
         }
