@@ -134,6 +134,9 @@
           BeforeTargets="CoreBuild">
     <!-- This target is intentionally left empty - MonoGame.Content.Builder.Task will handle it -->
   </Target>
+  
+  <!-- Skip RunContentBuilder target when SkipMonoGameContentPipeline is true -->
+  <Target Name="RunContentBuilder" Condition="'$(SkipMonoGameContentPipeline)' == 'true'" />
 
   <!-- Explicitly override Run target to prevent auto-execution during build -->
   <!-- This ensures that dotnet build NEVER runs the application -->
