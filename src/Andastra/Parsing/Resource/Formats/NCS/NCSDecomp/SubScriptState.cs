@@ -1013,8 +1013,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                 Variable retVar = this.stack.Size() >= 1 ? (Variable)this.stack.Get(1) : new Variable(new UtilsType((byte)0));
                 AVarDecl decl;
                 // Check if variable is already declared to prevent duplicates
-                object existingDecl;
-                decl = this.vardecs.TryGetValue(retVar, out existingDecl) ? (AVarDecl)existingDecl : null;
+                decl = this.vardecs.TryGetValue(retVar, out object existingDecl) ? (AVarDecl)existingDecl : null;
                 if (decl == null)
                 {
                     // Also check if last child is a matching AVarDecl
@@ -1315,20 +1314,31 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                         // (e.g., GetGlobalNumber("X") == value, or function calls in binary operations).
                         // In assignment context, function calls should remain as part of the expression tree
                         // until the full expression is built (e.g., by EQUAL, ADD, etc. operations).
-                        expr = (AExpression)this.RemoveLastExp(true);
-                        Error("DEBUG transformMoveSp: removed expression=" +
-                              (expr != null ? expr.GetType().Name : "null"));
-                        // Don't extract function calls as statements in assignment context
-                        // They're almost always part of a larger expression being built.
-                        // In assignment context (state == 1), function calls should remain as part of the expression tree
-                        // until the full expression is built (e.g., by EQUAL, ADD, etc. operations).
-                        if (typeof(ScriptNode.AActionExp).IsInstanceOfType(expr))
+                        // ALSO: Don't extract AUnaryExp, ABinaryExp, or AConditionalExp as statements in assignment context
+                        // as they're likely operands for binary operations (e.g., EQUALII) that need to extract them
+                        if (typeof(AUnaryExp).IsInstanceOfType(last) || typeof(ABinaryExp).IsInstanceOfType(last) || typeof(AConditionalExp).IsInstanceOfType(last))
                         {
-                            // Put the function call back - it's part of a larger expression
-                            // Function calls in assignment context are almost never standalone statements
-                            Error("DEBUG transformMoveSp: function call, putting back");
-                            this.current.AddChild((ScriptNode.ScriptNode)expr);
+                            // These are likely operands for binary operations - don't extract as statements
+                            Error("DEBUG transformMoveSp: AUnaryExp/ABinaryExp/AConditionalExp, NOT extracting as statement (likely operand)");
                             expr = null; // Don't extract as statement
+                        }
+                        else
+                        {
+                            expr = (AExpression)this.RemoveLastExp(true);
+                            Error("DEBUG transformMoveSp: removed expression=" +
+                                  (expr != null ? expr.GetType().Name : "null"));
+                            // Don't extract function calls as statements in assignment context
+                            // They're almost always part of a larger expression being built.
+                            // In assignment context (state == 1), function calls should remain as part of the expression tree
+                            // until the full expression is built (e.g., by EQUAL, ADD, etc. operations).
+                            if (typeof(ScriptNode.AActionExp).IsInstanceOfType(expr))
+                            {
+                                // Put the function call back - it's part of a larger expression
+                                // Function calls in assignment context are almost never standalone statements
+                                Error("DEBUG transformMoveSp: function call, putting back");
+                                this.current.AddChild((ScriptNode.ScriptNode)expr);
+                                expr = null; // Don't extract as statement
+                            }
                         }
                     }
                     else if (typeof(AExpressionStatement).IsInstanceOfType(last))
@@ -1487,7 +1497,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             // Use forceOneOnly=false for both to allow extraction from AExpressionStatement if needed
             AExpression right = this.RemoveLastExp(false);
             AExpression left = this.RemoveLastExp(false);
-            
+
             // Debug logging for conditional operations
             if (NodeUtils.IsConditionalOp(node))
             {
@@ -1507,7 +1517,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                     }
                 }
             }
-            
+
             AExpression exp;
             if (NodeUtils.IsArithmeticOp(node))
             {
@@ -2101,11 +2111,11 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                     // Only use this special handling if the last child is NOT a unary/binary expression
                     // (those are likely operands for a comparison, not assignments)
                     // Also skip if the last child is wrapped in an AExpressionStatement (those are standalone statements, not operands)
-                    bool isOperandExpression = typeof(AUnaryExp).IsInstanceOfType(last) 
+                    bool isOperandExpression = typeof(AUnaryExp).IsInstanceOfType(last)
                         || typeof(ABinaryExp).IsInstanceOfType(last)
                         || typeof(AConditionalExp).IsInstanceOfType(last)
                         || typeof(ScriptNode.AExpressionStatement).IsInstanceOfType(last);
-                    
+
                     if (!isOperandExpression)
                     {
                         ScriptNode.AExpression exp = this.RemoveLastExp(false);
@@ -2118,7 +2128,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                     }
                 }
             }
-            
+
             // Check if AVarRef has a following AVarDecl with the same variable (for assignments like "int1 = GetRunScriptVar()")
             if (!forceOneOnly
                 && typeof(AVarRef).IsInstanceOfType(anode)
@@ -2139,7 +2149,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                     return exp;
                 }
             }
-            
+
             // Return the AVarRef we found (put back any AExpressionStatement nodes we found)
             if (typeof(AVarRef).IsInstanceOfType(anode))
             {

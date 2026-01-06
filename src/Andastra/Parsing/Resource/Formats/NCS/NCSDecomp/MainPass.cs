@@ -172,8 +172,10 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
         // Original: @Override public void outACopyTopSpCommand(ACopyTopSpCommand node) { if (!this.skipdeadcode) { this.withRecovery(node, () -> { ... }); } else { this.state.transformDeadCode(node); } }
         public override void OutACopyTopSpCommand(ACopyTopSpCommand node)
         {
+            int pos = this.nodedata.TryGetPos(node);
             if (!this.skipdeadcode)
             {
+                Debug($"DEBUG MainPass.OutACopyTopSpCommand: Processing CPTOPSP at pos {pos}, skipdeadcode=false");
                 this.WithRecovery(node, () =>
                 {
                     VarStruct varstruct = null;
@@ -184,6 +186,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                         varstruct = this.stack.Structify(loc - copy + 1, copy, this.subdata);
                     }
 
+                    Debug($"DEBUG MainPass.OutACopyTopSpCommand: Calling TransformCopyTopSp, copy={copy}, loc={loc}");
                     this.state.TransformCopyTopSp(node);
                     if (copy > 1)
                     {
@@ -201,6 +204,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             }
             else
             {
+                Debug($"DEBUG MainPass.OutACopyTopSpCommand: SKIPPING CPTOPSP at pos {pos} (dead code)");
                 this.state.TransformDeadCode(node);
             }
         }
@@ -371,8 +375,11 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
         // Original: @Override public void outABinaryCommand(ABinaryCommand node) { if (!this.skipdeadcode) { this.withRecovery(node, () -> { ... }); } else { this.state.transformDeadCode(node); } }
         public override void OutABinaryCommand(ABinaryCommand node)
         {
+            int pos = this.nodedata.TryGetPos(node);
+            string opName = NodeUtils.GetOp(node);
             if (!this.skipdeadcode)
             {
+                Debug($"DEBUG MainPass.OutABinaryCommand: Processing binary op {opName} at pos {pos}, skipdeadcode=false");
                 this.WithRecovery(node, () =>
                 {
                     int sizep1;
@@ -409,6 +416,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                         resulttype = new UtilsType((byte)3);
                     }
 
+                    Debug($"DEBUG MainPass.OutABinaryCommand: Calling TransformBinary for {opName}, sizep1={sizep1}, sizep2={sizep2}");
                     for (int i = 0; i < sizep1 + sizep2; i++)
                     {
                         this.RemoveFromStack();
@@ -425,6 +433,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             }
             else
             {
+                Debug($"DEBUG MainPass.OutABinaryCommand: SKIPPING binary op {opName} at pos {pos} (dead code)");
                 this.state.TransformDeadCode(node);
             }
         }
