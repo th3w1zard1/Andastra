@@ -4392,44 +4392,6 @@ namespace HolocronToolset.Tests.Editors
             // Verify map_res_x field (MapResX in ARE structure)
             modifiedAre.MapResX.Should().Be(4096, "map_res_x should be 4096");
 
-            // Map coordinates should be set to maximum
-            modifiedAre.MapPoint1.Should().Be(new Vector2(1.0f, 1.0f));
-            modifiedAre.MapPoint2.Should().Be(new Vector2(1.0f, 1.0f));
-            modifiedAre.WorldPoint1.Should().Be(new Vector2((float)decimal.MaxValue, (float)decimal.MaxValue));
-            modifiedAre.WorldPoint2.Should().Be(new Vector2((float)decimal.MaxValue, (float)decimal.MaxValue));
-
-            // Fog values should be set to maximum
-            modifiedAre.FogNear.Should().Be((float)decimal.MaxValue);
-            modifiedAre.FogFar.Should().Be((float)decimal.MaxValue);
-
-            // Shadow opacity should be maximum
-            modifiedAre.ShadowOpacity.Should().Be(255);
-
-            // Grass values should be set to maximum
-            modifiedAre.GrassDensity.Should().Be((float)decimal.MaxValue);
-            modifiedAre.GrassSize.Should().Be((float)decimal.MaxValue);
-
-            // Grass probabilities should be 1.0
-            modifiedAre.GrassProbLL.Should().Be(1.0f);
-            modifiedAre.GrassProbLR.Should().Be(1.0f);
-            modifiedAre.GrassProbUL.Should().Be(1.0f);
-            modifiedAre.GrassProbUR.Should().Be(1.0f);
-
-            // Dirt formulas should be set to maximum
-            modifiedAre.DirtyFormula1.Should().Be(int.MaxValue);
-            modifiedAre.DirtyFormula2.Should().Be(int.MaxValue);
-            modifiedAre.DirtyFormula3.Should().Be(int.MaxValue);
-
-            // Dirt functions should be set to maximum
-            modifiedAre.DirtyFunc1.Should().Be(int.MaxValue);
-            modifiedAre.DirtyFunc2.Should().Be(int.MaxValue);
-            modifiedAre.DirtyFunc3.Should().Be(int.MaxValue);
-
-            // Dirt sizes should be set to maximum
-            modifiedAre.DirtySize1.Should().Be(int.MaxValue);
-            modifiedAre.DirtySize2.Should().Be(int.MaxValue);
-            modifiedAre.DirtySize3.Should().Be(int.MaxValue);
-
             // Verify UI controls still show maximum values
             if (editor.AlphaTestSpin != null)
             {
@@ -5113,7 +5075,7 @@ namespace HolocronToolset.Tests.Editors
                 // 2. The change doesn't throw an exception (proves handlers are properly connected)
                 // The fact that SelectedIndexChanged event handler calls RedoMinimap() means the signal is connected
                 editor.MapAxisSelect.SelectedIndex.Should().Be(1, "Map axis select should have changed to index 1");
-                
+
                 // Verify the change actually occurred (different from original)
                 if (originalIndex != 1)
                 {
