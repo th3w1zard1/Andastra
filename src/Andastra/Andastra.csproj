@@ -14,6 +14,8 @@
     <MonoGamePlatform>DesktopGL</MonoGamePlatform>
     <MonoGameProfile>HiDef</MonoGameProfile>
     <AutoRestoreMGCBTool>true</AutoRestoreMGCBTool>
+    <!-- Disable Avalonia resource scanning since this project doesn't use Avalonia UI -->
+    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
 
   <!-- Debug Configuration: Optimized for faster development builds -->
@@ -109,10 +111,10 @@
   </ItemGroup>
   <!-- Check for MonoGame Content Builder tool availability before building -->
   <Target Name="CheckMonoGameContentBuilderTool" BeforeTargets="BeforeBuild">
-    <Exec Command="dotnet mgcb --version" 
-          ContinueOnError="true" 
-          IgnoreExitCode="true" 
-          StandardOutputImportance="low" 
+    <Exec Command="dotnet mgcb --version"
+          ContinueOnError="true"
+          IgnoreExitCode="true"
+          StandardOutputImportance="low"
           StandardErrorImportance="low"
           EchoOff="true">
       <Output TaskParameter="ExitCode" PropertyName="_MgcbToolCheckExitCode" />
@@ -151,6 +153,11 @@
   <ItemGroup>
     <Compile Remove="Utility\obj\**" />
     <None Remove="Utility\obj\**" />
+  </ItemGroup>
+
+  <!-- Explicitly exclude .axaml files from Avalonia resource scanning -->
+  <ItemGroup>
+    <AvaloniaResource Remove="**\*.axaml" />
   </ItemGroup>
 
   <!-- Clean up Utility obj folder that gets incorrectly created -->
