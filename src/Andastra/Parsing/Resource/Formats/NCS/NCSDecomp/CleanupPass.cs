@@ -59,8 +59,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             }
             finally
             {
-                ACodeBlock block = null;
-                List<ScriptNode.ScriptNode> children = null;
+                // Matching original Java: ACodeBlock block = null; List<ScriptNode> children = null;
+                // In C#, variables are scoped to the try block, so no explicit null assignment needed
             }
         }
 
@@ -186,16 +186,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             }
             finally
             {
-                List<ScriptNode.ScriptNode> children = null;
-                ListIterator it = null;
-                ScriptNode.ScriptNode node1x = null;
-                Variable var = null;
-                VarStruct structx = null;
-                AVarDecl structdecx = null;
-                ScriptNode.ScriptNode node2 = null;
-                AModifyExp modexp = null;
-                AExpressionStatement expstm = null;
-                ASwitchCase acase = null;
+                // Matching original Java: variables are scoped to the try block, so no explicit cleanup needed in C#
             }
         }
 
