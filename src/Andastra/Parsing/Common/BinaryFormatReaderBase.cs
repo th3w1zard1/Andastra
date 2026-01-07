@@ -3,7 +3,7 @@ using System.Text;
 using Andastra.Parsing.Common;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing
+namespace Andastra.Parsing.Common
 {
 
     /// <summary>

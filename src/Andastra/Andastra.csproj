@@ -104,7 +104,7 @@
     <ProjectReference Include="Parsing\Resource\Andastra.Parsing.Resource.csproj" />
     <ProjectReference Include="Parsing\Installation\Andastra.Parsing.Installation.csproj" />
     <ProjectReference Include="Parsing\Merge\Andastra.Parsing.Merge.csproj" />
-    <!-- <ProjectReference Include="Utility\Andastra.Utility.csproj" /> -->
+    <ProjectReference Include="Utility\Andastra.Utility.csproj" />
     <PackageReference Include="ini-parser-netstandard" Version="2.5.3" />
   </ItemGroup>
   <ItemGroup>

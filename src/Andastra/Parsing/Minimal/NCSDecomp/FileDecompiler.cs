@@ -1040,26 +1040,6 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
         {
             // TODO: STUB - Implementation temporarily disabled due to syntax errors
             return SUCCESS;
-        }
-            {
-                using (var reader = new NCSBinaryReader(file.GetAbsolutePath()))
-                {
-                    originalNcs = reader.Load();
-                }
-
-                if (originalNcs == null)
-                {
-                    return FAILURE;
-                }
-
-                originalBytes = NCSAuto.BytesNcs(originalNcs);
-                data.SetOriginalByteCode(BytesToHexString(originalBytes, 0, originalBytes.Length));
-            }
-            catch (Exception ex)
-            {
-                Debug("Failed to read original NCS: " + ex.Message);
-                return FAILURE;
-            }
 
             // Get nwscript.nss path for function definitions to enable compilation validation
             // Try both K1 and TSL nwscript files to ensure we have function definitions

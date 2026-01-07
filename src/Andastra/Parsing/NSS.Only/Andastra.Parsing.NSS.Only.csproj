@@ -13,5 +13,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Andastra.Core.csproj" />
     <ProjectReference Include="..\..\Utility\Andastra.Utility.csproj" />
+    <ProjectReference Include="..\Common\Andastra.Parsing.Common.csproj" />
   </ItemGroup>
 </Project>

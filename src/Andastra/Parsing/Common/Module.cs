@@ -567,7 +567,7 @@ namespace Andastra.Parsing.Common
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:379-416
         // Original: def __init__(self, filename_or_root: str, installation: Installation, *, use_dot_mod: bool = True):
-        // public Module(string filenameOrRoot, Installation.Installation installation, bool useDotMod = true)
+        public Module(string filenameOrRoot, Installation.Installation installation, bool useDotMod = true)
         {
             if (filenameOrRoot == null)
             {
