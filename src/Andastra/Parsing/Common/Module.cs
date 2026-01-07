@@ -2,20 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Andastra.Parsing.Extract;
-using Andastra.Parsing.Extract.Capsule;
-using Andastra.Parsing.Formats.Capsule;
-using Andastra.Parsing.Formats.ERF;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.MDLData;
-using Andastra.Parsing.Formats.RIM;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Generics;
-using Andastra.Parsing.Resource.Generics.ARE;
-using Andastra.Parsing.Resource.Generics.DLG;
-using Andastra.Parsing.Tools;
-using Andastra.Parsing.Logger;
 using JetBrains.Annotations;
 
 namespace Andastra.Parsing.Common
@@ -1382,7 +1368,7 @@ namespace Andastra.Parsing.Common
             // Load loadscreens.2da from installation
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1656-1664
             // Original: loadscreens_result = self._installation.resource("loadscreens", ResourceType.TwoDA, [SearchLocation.OVERRIDE, SearchLocation.CHITIN])
-            // Installation.ResourceResult loadscreensResult = _installation.Resources.LookupResource(
+            Installation.ResourceResult loadscreensResult = _installation.Resources.LookupResource(
                 "loadscreens",
                 ResourceType.TwoDA,
                 new[] { SearchLocation.OVERRIDE, SearchLocation.CHITIN }

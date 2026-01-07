@@ -1038,9 +1038,6 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
 
         private int CompileAndCompare(NcsFile file, string code, Utils.FileScriptData data)
         {
-            // TODO: STUB - Implementation temporarily disabled due to syntax errors
-            return SUCCESS;
-
             // Get nwscript.nss path for function definitions to enable compilation validation
             // Try both K1 and TSL nwscript files to ensure we have function definitions
             string nwscriptPath = null;

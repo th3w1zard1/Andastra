@@ -58,6 +58,21 @@
   </ItemGroup>
 
 
+  <Target Name="EnsureEditorConfigFile" BeforeTargets="CoreCompile">
+    <WriteLinesToFile
+        File="$(IntermediateOutputPath)Andastra.Utility.GeneratedMSBuildEditorConfig.editorconfig"
+        Lines="is_global = true"
+        Overwrite="true" />
+    <WriteLinesToFile
+        File="$(IntermediateOutputPath)Andastra.Utility.GeneratedMSBuildEditorConfig.editorconfig"
+        Lines="build_property.RootNamespace = Andastra.Utility"
+        Overwrite="false" />
+    <WriteLinesToFile
+        File="$(IntermediateOutputPath)Andastra.Utility.GeneratedMSBuildEditorConfig.editorconfig"
+        Lines="build_property.ProjectDir = $(ProjectDir)"
+        Overwrite="false" />
+  </Target>
+
   <Target Name="RemoveGeneratedEditorConfigFromCompile" BeforeTargets="BeforeBuild;Build;CoreCompile;Compile">
     <ItemGroup>
       <Compile Remove="**\*.GeneratedMSBuildEditorConfig.editorconfig" />
