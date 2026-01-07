@@ -13,5 +13,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Andastra.Core.csproj" />
     <ProjectReference Include="..\..\Utility\Andastra.Utility.csproj" />
+    <ProjectReference Include="..\Resource\Andastra.Parsing.Resource.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
   </ItemGroup>
 </Project>

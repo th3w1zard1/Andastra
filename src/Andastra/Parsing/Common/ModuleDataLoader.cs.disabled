@@ -1,19 +1,15 @@
 using System.Collections.Generic;
 using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Generics;
-using Andastra.Parsing.Tools;
 
 namespace Andastra.Parsing.Common
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module_loader.py (backend-agnostic loader)
     public static class ModuleDataSearch
     {
-        public static readonly SearchLocation[] SearchOrder2DA = {
-            SearchLocation.OVERRIDE,
-            SearchLocation.CHITIN,
+        // TODO: Search locations when circular dependency is resolved
+        public static readonly string[] SearchOrder2DA = {
+            "OVERRIDE",
+            "CHITIN",
         };
     }
 
@@ -23,6 +19,12 @@ namespace Andastra.Parsing.Common
     public interface IModuleResource<T>
     {
         T Resource();
+    }
+
+    // Basic ModuleResource stub to avoid circular dependencies
+    public class ModuleResource
+    {
+        public bool IsActive() => true;
     }
 
     public interface IModule
@@ -39,39 +41,18 @@ namespace Andastra.Parsing.Common
     /// </summary>
     public class ModuleDataLoader
     {
-        private readonly Installation.Installation _installation;
+        private readonly object _installation; // TODO: Fix type when circular dependency is resolved
 
-        public TwoDA TableDoors { get; private set; } = new TwoDA();
-        public TwoDA TablePlaceables { get; private set; } = new TwoDA();
-        public TwoDA TableCreatures { get; private set; } = new TwoDA();
-        public TwoDA TableHeads { get; private set; } = new TwoDA();
-        public TwoDA TableBaseItems { get; private set; } = new TwoDA();
+        public object TableDoors { get; private set; } = new object(); // TODO: TwoDA when circular dependency resolved
+        public object TablePlaceables { get; private set; } = new object();
+        public object TableCreatures { get; private set; } = new object();
+        public object TableHeads { get; private set; } = new object();
+        public object TableBaseItems { get; private set; } = new object();
 
-        public ModuleDataLoader(Installation.Installation installation)
+        public ModuleDataLoader(object installation) // TODO: Fix when circular dependency is resolved
         {
             _installation = installation;
-            Load2daTables();
-        }
-
-        private void Load2daTables()
-        {
-            TableDoors = Load2da("genericdoors");
-            TablePlaceables = Load2da("placeables");
-            TableCreatures = Load2da("appearance");
-            TableHeads = Load2da("heads");
-            TableBaseItems = Load2da("baseitems");
-        }
-
-        private TwoDA Load2da(string name)
-        {
-            Installation.ResourceResult res = _installation.Resources.LookupResource(name, ResourceType.TwoDA, ModuleDataSearch.SearchOrder2DA);
-            if (res == null)
-            {
-                return new TwoDA();
-            }
-
-            var reader = new TwoDABinaryReader(res.Data);
-            return reader.Load();
+            // TODO: Load 2DA tables when circular dependency is resolved
         }
 
         public (object git, object lyt) GetModuleResources(IModule module)

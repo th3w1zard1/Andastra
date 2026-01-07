@@ -6611,6 +6611,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 }
             }
         }
+        }
 
         private static string BytesToHexString(byte[] bytes, int start, int end)
         {
