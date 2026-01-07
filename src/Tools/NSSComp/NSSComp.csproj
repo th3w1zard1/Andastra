@@ -9,6 +9,8 @@
     <AssemblyName>nsscomp</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Andastra\Andastra.csproj" />
+    <ProjectReference Include="..\..\Andastra\Tooling.Minimal\Andastra.Tooling.Minimal.csproj" />
+    <ProjectReference Include="..\..\Andastra\Parsing\NSS.Only\Andastra.Parsing.NSS.Only.csproj" />
+    <ProjectReference Include="..\..\Andastra\Parsing\Minimal\Andastra.Parsing.Minimal.csproj" />
   </ItemGroup>
 </Project>

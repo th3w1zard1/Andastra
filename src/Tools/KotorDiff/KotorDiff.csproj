@@ -9,12 +9,13 @@
     <StartupObject>KotorDiff.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Andastra\Andastra.csproj" />
-    <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
+    <ProjectReference Include="..\..\Andastra\Parsing\Minimal\Andastra.Parsing.Minimal.csproj" />
+    <ProjectReference Include="..\..\Andastra\Parsing\GFF.Only\Andastra.Parsing.GFF.Only.csproj" />
+    <ProjectReference Include="..\..\Andastra\Parsing\TwoDA.Only\Andastra.Parsing.TwoDA.Only.csproj" />
+    <ProjectReference Include="..\..\Andastra\Parsing\TLK.Only\Andastra.Parsing.TLK.Only.csproj" />
+    <ProjectReference Include="..\..\Andastra\Graphics\Andastra.Graphics.csproj" />
+    <ProjectReference Include="..\..\Andastra\UI\Andastra.UI.csproj" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
-    <PackageReference Include="Avalonia" Version="11.3.10" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.3.10" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.10" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="App.axaml.cs">

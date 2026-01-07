@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Andastra.Parsing;
-using Andastra.Parsing.Common;
+using Andastra.Core.Common;
 using JetBrains.Annotations;
 
 namespace Andastra.Parsing.Resource.Generics.DLG

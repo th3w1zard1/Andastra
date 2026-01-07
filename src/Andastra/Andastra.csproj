@@ -80,33 +80,32 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="11.3.10" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.3.10" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.10" />
-    <PackageReference Include="Avalonia.Diagnostics" Version="11.3.10" />
-    <PackageReference Include="Myra" Version="1.5.10" />
-    <PackageReference Include="ini-parser-netstandard" Version="2.5.3" />
-    <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
-    <PackageReference Include="LZMA-SDK" Version="22.1.1" />
-    <PackageReference Include="SharpCompress" Version="0.43.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="sly" Version="3.7.7" />
-    <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.4.1" />
-    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
-    <PackageReference Include="Stride.Audio" Version="4.2.1.2487" />
-    <PackageReference Include="Stride.Engine" Version="4.2.1.2487" />
-    <PackageReference Include="Stride.Graphics" Version="4.2.1.2487" />
-    <PackageReference Include="Stride.Input" Version="4.2.1.2487" />
-    <PackageReference Include="System.Collections.Immutable" Version="10.0.1" />
-    <PackageReference Include="System.Diagnostics.EventLog" Version="10.0.1" />
-    <PackageReference Include="System.Drawing.Common" Version="10.0.1" />
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="10.0.1" />
-    <PackageReference Include="System.Text.Json" Version="10.0.1" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="Parsing\Andastra.Parsing.csproj" />
+    <ProjectReference Include="Graphics\Andastra.Graphics.csproj" />
+    <ProjectReference Include="UI\Andastra.UI.csproj" />
+    <ProjectReference Include="Game\Andastra.Game.csproj" />
+    <ProjectReference Include="Parsing\Minimal\Andastra.Parsing.Minimal.csproj" />
+    <ProjectReference Include="Parsing\Common\Andastra.Parsing.Common.csproj" />
+    <ProjectReference Include="Parsing\Core\Andastra.Parsing.Core.csproj" />
+    <ProjectReference Include="Parsing\GFF.Only\Andastra.Parsing.GFF.Only.csproj" />
+    <ProjectReference Include="Parsing\TwoDA.Only\Andastra.Parsing.TwoDA.Only.csproj" />
+    <ProjectReference Include="Parsing\TLK.Only\Andastra.Parsing.TLK.Only.csproj" />
+    <ProjectReference Include="Parsing\ERF.Only\Andastra.Parsing.ERF.Only.csproj" />
+    <ProjectReference Include="Parsing\NSS.Only\Andastra.Parsing.NSS.Only.csproj" />
+    <ProjectReference Include="Parsing\LYT.Only\Andastra.Parsing.LYT.Only.csproj" />
+    <ProjectReference Include="Parsing\SSF.Only\Andastra.Parsing.SSF.Only.csproj" />
+    <ProjectReference Include="Parsing\TSLPatcher.Only\Andastra.Parsing.TSLPatcher.Only.csproj" />
+    <ProjectReference Include="Parsing\WAV.Only\Andastra.Parsing.WAV.Only.csproj" />
+    <ProjectReference Include="Parsing\NCS.Only\Andastra.Parsing.NCS.Only.csproj" />
+    <ProjectReference Include="Parsing\VIS.Only\Andastra.Parsing.VIS.Only.csproj" />
+    <ProjectReference Include="Parsing\Common\Andastra.Parsing.Common.csproj" />
+    <ProjectReference Include="Parsing\Extract\Andastra.Parsing.Extract.csproj" />
+    <ProjectReference Include="Parsing\Tools\Andastra.Parsing.Tools.csproj" />
+    <ProjectReference Include="Parsing\TSLPatcher\Andastra.Parsing.TSLPatcher.csproj" />
+    <ProjectReference Include="Parsing\Resource\Andastra.Parsing.Resource.csproj" />
+    <ProjectReference Include="Parsing\Installation\Andastra.Parsing.Installation.csproj" />
+    <ProjectReference Include="Parsing\Merge\Andastra.Parsing.Merge.csproj" />
     <ProjectReference Include="Utility\Andastra.Utility.csproj" />
+    <PackageReference Include="ini-parser-netstandard" Version="2.5.3" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\**\*.xnb">
@@ -144,18 +143,6 @@
   <Target Name="Run" Condition="'$(MSBuildTargets)' == 'Build' OR '$(MSBuildTargets)' == ''">
     <Message Text="Run target disabled during Build. Use 'dotnet run' explicitly to execute the application." Importance="high" />
   </Target>
-
-  <!-- Exclude Utility obj folder from compilation -->
-  <ItemGroup>
-    <Compile Remove="Utility\obj\**" />
-    <None Remove="Utility\obj\**" />
-  </ItemGroup>
-
-  <!-- Exclude Parsing directory - it has its own project (Andastra.Parsing.csproj) -->
-  <ItemGroup>
-    <Compile Remove="Parsing\**" />
-    <None Remove="Parsing\**" />
-  </ItemGroup>
 
   <!-- Explicitly exclude .axaml files from Avalonia resource scanning -->
   <ItemGroup>

@@ -427,7 +427,7 @@ namespace Andastra.Parsing.Formats.NCS
                         Console.Error.WriteLine($"DEBUG NCSBinaryReader: Successfully parsed ACTION instruction at offset {instructionOffset}");
                     }
                 }
-                catch (ArgumentException e)
+                catch (ArgumentException _)
                 {
                     // Unknown bytecode/qualifier combination - the bytecode exists but this specific
                     // combination with the qualifier is not recognized

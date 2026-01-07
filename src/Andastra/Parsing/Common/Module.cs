@@ -554,7 +554,7 @@ namespace Andastra.Parsing.Common
     {
         private readonly Dictionary<ResourceIdentifier, ModuleResource> _resources = new Dictionary<ResourceIdentifier, ModuleResource>();
         private bool _dotMod;
-        private readonly Installation.Installation _installation;
+        // private readonly Installation.Installation _installation;
         private readonly string _root;
         private ResRef _cachedModId;
         private readonly Dictionary<string, ModulePieceResource> _capsules = new Dictionary<string, ModulePieceResource>();
@@ -562,12 +562,12 @@ namespace Andastra.Parsing.Common
 
         public Dictionary<ResourceIdentifier, ModuleResource> Resources => _resources;
         public bool DotMod => _dotMod;
-        public Installation.Installation Installation => _installation;
+        // public Installation.Installation Installation => _installation;
         public string Root => _root;
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:379-416
         // Original: def __init__(self, filename_or_root: str, installation: Installation, *, use_dot_mod: bool = True):
-        public Module(string filenameOrRoot, Installation.Installation installation, bool useDotMod = true)
+        // public Module(string filenameOrRoot, Installation.Installation installation, bool useDotMod = true)
         {
             if (filenameOrRoot == null)
             {
@@ -585,7 +585,7 @@ namespace Andastra.Parsing.Common
 
             // Build all capsules relevant to this root in the provided installation
             // Use ModuleFileDiscovery to match exact swkotor.exe/swkotor2.exe behavior
-            string modulesPath = Andastra.Parsing.Installation.Installation.GetModulesPath(_installation.Path);
+            // string modulesPath = Andastra.Parsing.Installation.Installation.GetModulesPath(_installation.Path);
             Andastra.Parsing.Installation.ModuleFileGroup fileGroup =
                 Andastra.Parsing.Installation.ModuleFileDiscovery.DiscoverModuleFiles(modulesPath, _root, _installation.Game);
 
@@ -1382,7 +1382,7 @@ namespace Andastra.Parsing.Common
             // Load loadscreens.2da from installation
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1656-1664
             // Original: loadscreens_result = self._installation.resource("loadscreens", ResourceType.TwoDA, [SearchLocation.OVERRIDE, SearchLocation.CHITIN])
-            Installation.ResourceResult loadscreensResult = _installation.Resources.LookupResource(
+            // Installation.ResourceResult loadscreensResult = _installation.Resources.LookupResource(
                 "loadscreens",
                 ResourceType.TwoDA,
                 new[] { SearchLocation.OVERRIDE, SearchLocation.CHITIN }
@@ -1601,34 +1601,6 @@ namespace Andastra.Parsing.Common
             }
         }
 
-        private void ProcessCoreResources(string displayName)
-        {
-            foreach (FileResource resource in _installation.CoreResources())
-            {
-                if (_resources.ContainsKey(resource.Identifier) || _gitSearch.Contains(resource.Identifier))
-                {
-                    new Andastra.Parsing.Logger.RobustLogger().Info(string.Format("Found chitin/core location '{0}' for resource '{1}' for module '{2}'",
-                        resource.FilePath, resource.Identifier, displayName));
-                    AddLocations(resource.ResName, resource.ResType, new[] { resource.FilePath });
-                }
-            }
-        }
-
-        private void ProcessOverrideResources(string displayName)
-        {
-            foreach (string directory in _installation.OverrideList())
-            {
-                foreach (FileResource resource in _installation.OverrideResources(directory))
-                {
-                    if (!_resources.ContainsKey(resource.Identifier) && !_gitSearch.Contains(resource.Identifier))
-                    {
-                        continue;
-                    }
-                    new Andastra.Parsing.Logger.RobustLogger().Info(string.Format("Found override location '{0}' for module '{1}'", resource.FilePath, displayName));
-                    AddLocations(resource.ResName, resource.ResType, new[] { resource.FilePath });
-                }
-            }
-        }
 
         private void ProcessModelTextures(string displayName)
         {
@@ -1773,7 +1745,7 @@ namespace Andastra.Parsing.Common
     /// </summary>
     public sealed class ModuleResource<T> : ModuleResource
     {
-        private readonly Installation.Installation _installation;
+        // private readonly Installation.Installation _installation;
         private string _active;
         private T _resourceObj;
         private bool _resourceLoadAttempted; // Track if we've attempted to load (for caching when conversion not implemented)
