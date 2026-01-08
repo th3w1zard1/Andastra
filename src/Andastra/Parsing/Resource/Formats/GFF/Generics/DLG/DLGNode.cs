@@ -390,7 +390,14 @@ namespace Andastra.Parsing.Resource.Generics.DLG
 
             if (FadeColor != null)
             {
-                data["fade_color"] = new Dictionary<string, object> { { "value", FadeColor.ToBgrInteger() }, { "py_type", "Color" } };
+                // Convert System.Drawing.Color to Andastra.Parsing.Common.ParsingColor to use ToBgrInteger()
+                Andastra.Parsing.Common.ParsingColor parsingColor = new Andastra.Parsing.Common.ParsingColor(
+                    FadeColor.R / 255f,
+                    FadeColor.G / 255f,
+                    FadeColor.B / 255f,
+                    FadeColor.A / 255f
+                );
+                data["fade_color"] = new Dictionary<string, object> { { "value", parsingColor.ToBgrInteger() }, { "py_type", "Color" } };
             }
             else
             {
@@ -527,7 +534,15 @@ namespace Andastra.Parsing.Resource.Generics.DLG
                     {
                         if (actualValue != null && int.TryParse(actualValue.ToString(), out int bgrInt))
                         {
-                            prop.SetValue(node, Color.FromBgrInteger(bgrInt));
+                            // Convert from Andastra.Parsing.Common.ParsingColor to System.Drawing.Color
+                            Andastra.Parsing.Common.ParsingColor parsingColor = Andastra.Parsing.Common.ParsingColor.FromBgrInteger(bgrInt);
+                            Color drawingColor = System.Drawing.Color.FromArgb(
+                                (int)(parsingColor.A * 255),
+                                (int)(parsingColor.R * 255),
+                                (int)(parsingColor.G * 255),
+                                (int)(parsingColor.B * 255)
+                            );
+                            prop.SetValue(node, drawingColor);
                         }
                     }
                     else if (pyType == "LocalizedString")

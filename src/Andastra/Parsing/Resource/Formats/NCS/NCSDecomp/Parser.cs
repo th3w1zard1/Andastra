@@ -40,7 +40,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Parser
         public Parser(Andastra.Parsing.Formats.NCS.NCSDecomp.Lexer.Lexer lexer)
         {
             this.ignoredTokens = new AnalysisAdapter();
-            this.stack = new LinkedList<object>().ListIterator();
+            this.stack = LinkedListExtensions.ListIterator(new LinkedList<object>());
             this.converter = new TokenIndex();
             this.action = new int[2];
             this.lexer = lexer;

@@ -748,7 +748,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 // Log the exception details for debugging while allowing decompiler to continue
                 int nodePos = this.nodedata.TryGetPos(node);
                 Error("Decompiler recovery triggered at position " + (nodePos >= 0 ? nodePos.ToString() : "unknown") + ": " + e.Message);
-                e.PrintStackTrace(JavaSystem.@err);
+                JavaExtensions.PrintStackTrace(e, JavaSystem.@err);
                 this.stack = stackSnapshot;
                 this.state.SetStack(this.stack);
                 this.backupstack = backupSnapshot;

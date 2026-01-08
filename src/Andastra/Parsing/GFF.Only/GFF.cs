@@ -153,7 +153,10 @@ namespace Andastra.Parsing.Formats.GFF
             }
             comparisonResult = comparisonResult ?? new GFFComparisonResult();
             Dictionary<string, HashSet<object>> ignoreValues = null;
-            return Root.Compare(other.Root, logFunc, path ?? "GFFRoot", ignoreDefaultChanges, ignoreValues, comparisonResult);
+            // Root is Resource project's GFFStruct (since GFF.Only uses Resource types)
+            // But we need to use GFF.Only's GFFComparisonResult, so we'll pass null and ignore the result
+            // TODO: Implement proper conversion between GFF.Only and Resource GFFComparisonResult if needed
+            return Root.Compare(other.Root, logFunc, path ?? "GFFRoot", ignoreDefaultChanges, ignoreValues, null);
         }
     }
 

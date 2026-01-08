@@ -152,14 +152,14 @@ namespace Andastra.Parsing.Resource.Generics.DLG
         // Original: def construct_node(gff_struct: GFFStruct, node: DLGNode):
         private static void ConstructNode(GFFStruct gffStruct, DLGNode node)
         {
-            node.Text = gffStruct.Acquire("Text", LocalizedString.FromInvalid());
+            node.Text = gffStruct.Acquire("Text", Andastra.Core.Common.LocalizedString.FromInvalid());
             node.Listener = gffStruct.Acquire("Listener", string.Empty);
-            node.VoResRef = gffStruct.Acquire("VO_ResRef", ResRef.FromBlank());
-            node.Script1 = gffStruct.Acquire("Script", ResRef.FromBlank());
+            node.VoResRef = gffStruct.Acquire("VO_ResRef", Andastra.Core.Common.ResRef.FromBlank());
+            node.Script1 = gffStruct.Acquire("Script", Andastra.Core.Common.ResRef.FromBlank());
             uint delay = gffStruct.Acquire("Delay", (uint)0);
             node.Delay = delay == 0xFFFFFFFF ? -1 : (int)delay;
             node.Comment = gffStruct.Acquire("Comment", string.Empty);
-            node.Sound = gffStruct.Acquire("Sound", ResRef.FromBlank());
+            node.Sound = ConvertResRefFromParsing(gffStruct.Acquire("Sound", Andastra.Parsing.Common.ResRef.FromBlank()));
             node.Quest = gffStruct.Acquire("Quest", string.Empty);
             node.PlotIndex = gffStruct.Acquire("PlotIndex", -1);
             node.PlotXpPercentage = gffStruct.Acquire("PlotXPPercentage", 0.0f);
@@ -196,7 +196,7 @@ namespace Andastra.Parsing.Resource.Generics.DLG
             node.Script2Param5 = gffStruct.Acquire("ActionParam5b", 0);
             node.Script1Param6 = gffStruct.Acquire("ActionParamStrA", string.Empty);
             node.Script2Param6 = gffStruct.Acquire("ActionParamStrB", string.Empty);
-            node.Script2 = gffStruct.Acquire("Script2", ResRef.FromBlank());
+            node.Script2 = ConvertResRefFromParsing(gffStruct.Acquire("Script2", Andastra.Parsing.Common.ResRef.FromBlank()));
             node.AlienRaceNode = gffStruct.Acquire("AlienRaceNode", 0);
             node.EmotionId = gffStruct.Acquire("Emotion", 0);
             node.FacialId = gffStruct.Acquire("FacialAnim", 0);
@@ -246,7 +246,11 @@ namespace Andastra.Parsing.Resource.Generics.DLG
             {
                 var fadeColorVec = gffStruct.Acquire("FadeColor", new Vector3(0, 0, 0));
                 ParsingColor fadeColor = ParsingColor.FromBgrVector3(fadeColorVec);
-                node.FadeColor = new Color(fadeColor);
+                node.FadeColor = System.Drawing.Color.FromArgb(
+                    (int)(fadeColor.A * 255),
+                    (int)(fadeColor.R * 255),
+                    (int)(fadeColor.G * 255),
+                    (int)(fadeColor.B * 255));
             }
         }
 
@@ -394,13 +398,13 @@ namespace Andastra.Parsing.Resource.Generics.DLG
         // Original: def dismantle_node(gff_struct: GFFStruct, node: DLGNode, nodes: list[DLGNode], list_name: str, game: Game):
         private static void DismantleNode(GFFStruct gffStruct, DLGNode node, List<DLGEntry> allEntries, List<DLGReply> allReplies, string listName, BioWareGame game)
         {
-            gffStruct.SetLocString("Text", node.Text);
+            gffStruct.SetLocString("Text", ConvertLocalizedString(node.Text));
             gffStruct.SetString("Listener", node.Listener);
-            gffStruct.SetResRef("VO_ResRef", node.VoResRef);
-            gffStruct.SetResRef("Script", node.Script1);
+            gffStruct.SetResRef("VO_ResRef", ConvertResRef(node.VoResRef));
+            gffStruct.SetResRef("Script", ConvertResRef(node.Script1));
             gffStruct.SetUInt32("Delay", node.Delay == -1 ? 0xFFFFFFFF : (uint)node.Delay);
             gffStruct.SetString("Comment", node.Comment);
-            gffStruct.SetResRef("Sound", node.Sound);
+            gffStruct.SetResRef("Sound", ConvertResRef(node.Sound));
             gffStruct.SetString("Quest", node.Quest);
             gffStruct.SetInt32("PlotIndex", node.PlotIndex);
             if (node.PlotXpPercentage != 0.0f)
@@ -473,7 +477,8 @@ namespace Andastra.Parsing.Resource.Generics.DLG
             }
             if (node.FadeColor != null)
             {
-                gffStruct.SetVector3("FadeColor", node.FadeColor.ToBgrVector3());
+                Andastra.Parsing.Common.ParsingColor parsingColor = ConvertColorToParsing(node.FadeColor);
+                gffStruct.SetVector3("FadeColor", parsingColor.ToBgrVector3());
             }
 
             // K2-specific node fields - only write for K2
@@ -495,7 +500,7 @@ namespace Andastra.Parsing.Resource.Generics.DLG
                 gffStruct.SetInt32("ActionParam5b", node.Script2Param5);
                 gffStruct.SetString("ActionParamStrA", node.Script1Param6);
                 gffStruct.SetString("ActionParamStrB", node.Script2Param6);
-                gffStruct.SetResRef("Script2", node.Script2);
+                gffStruct.SetResRef("Script2", ConvertResRef(node.Script2));
                 gffStruct.SetInt32("AlienRaceNode", node.AlienRaceNode);
                 gffStruct.SetInt32("Emotion", node.EmotionId);
                 gffStruct.SetInt32("FacialAnim", node.FacialId);
@@ -753,15 +758,15 @@ namespace Andastra.Parsing.Resource.Generics.DLG
                 CameraEffect = dlgEntry.CameraEffect,
                 Delay = dlgEntry.Delay,
                 FadeType = dlgEntry.FadeType,
-                FadeColor = dlgEntry.FadeColor,
+                FadeColor = new Andastra.Parsing.Common.Color(ConvertColor(dlgEntry.FadeColor)),
                 FadeDelay = dlgEntry.FadeDelay,
                 FadeLength = dlgEntry.FadeLength,
-                Text = dlgEntry.Text,
-                Script1 = dlgEntry.Script1,
-                Script2 = dlgEntry.Script2,
-                Sound = dlgEntry.Sound,
+                Text = ConvertLocalizedStringToParsing(dlgEntry.Text),
+                Script1 = ConvertResRefToParsing(dlgEntry.Script1),
+                Script2 = ConvertResRefToParsing(dlgEntry.Script2),
+                Sound = ConvertResRefToParsing(dlgEntry.Sound),
                 SoundExists = dlgEntry.SoundExists,
-                VoResRef = dlgEntry.VoResRef,
+                VoResRef = ConvertResRefToParsing(dlgEntry.VoResRef),
                 WaitFlags = dlgEntry.WaitFlags,
                 Script1Param1 = dlgEntry.Script1Param1,
                 Script1Param2 = dlgEntry.Script1Param2,
@@ -816,15 +821,15 @@ namespace Andastra.Parsing.Resource.Generics.DLG
                 CameraEffect = dlgReply.CameraEffect,
                 Delay = dlgReply.Delay,
                 FadeType = dlgReply.FadeType,
-                FadeColor = dlgReply.FadeColor,
+                FadeColor = new Andastra.Parsing.Common.Color(ConvertColor(dlgReply.FadeColor)),
                 FadeDelay = dlgReply.FadeDelay,
                 FadeLength = dlgReply.FadeLength,
-                Text = dlgReply.Text,
-                Script1 = dlgReply.Script1,
-                Script2 = dlgReply.Script2,
-                Sound = dlgReply.Sound,
+                Text = ConvertLocalizedStringToParsing(dlgReply.Text),
+                Script1 = ConvertResRefToParsing(dlgReply.Script1),
+                Script2 = ConvertResRefToParsing(dlgReply.Script2),
+                Sound = ConvertResRefToParsing(dlgReply.Sound),
                 SoundExists = dlgReply.SoundExists,
-                VoResRef = dlgReply.VoResRef,
+                VoResRef = ConvertResRefToParsing(dlgReply.VoResRef),
                 WaitFlags = dlgReply.WaitFlags,
                 Script1Param1 = dlgReply.Script1Param1,
                 Script1Param2 = dlgReply.Script1Param2,
@@ -890,6 +895,101 @@ namespace Andastra.Parsing.Resource.Generics.DLG
                 IsChild = dlgLink.IsChild,
                 Comment = dlgLink.Comment
             };
+        }
+
+        // Conversion methods for converting from Core.Common types to Parsing.Common types
+        private static Andastra.Parsing.Common.ResRef ConvertResRef(Andastra.Core.Common.ResRef coreResRef)
+        {
+            if (coreResRef == null)
+            {
+                return Andastra.Parsing.Common.ResRef.FromBlank();
+            }
+            return new Andastra.Parsing.Common.ResRef(coreResRef.ToString());
+        }
+
+        // Conversion methods for converting from Parsing.Common types to Core.Common types
+        private static Andastra.Core.Common.ResRef ConvertResRefFromParsing(Andastra.Parsing.Common.ResRef parsingResRef)
+        {
+            if (parsingResRef == null)
+            {
+                return Andastra.Core.Common.ResRef.FromBlank();
+            }
+            return new Andastra.Core.Common.ResRef(parsingResRef.ToString());
+        }
+
+        private static Andastra.Parsing.Common.LocalizedString ConvertLocalizedString(Andastra.Core.Common.LocalizedString coreLocalizedString)
+        {
+            if (coreLocalizedString == null)
+            {
+                return Andastra.Parsing.Common.LocalizedString.FromInvalid();
+            }
+            var result = new Andastra.Parsing.Common.LocalizedString(coreLocalizedString.StringRef);
+            // Copy all language/gender combinations
+            foreach (Andastra.Core.Common.Language lang in System.Enum.GetValues(typeof(Andastra.Core.Common.Language)))
+            {
+                foreach (Andastra.Core.Common.Gender gender in System.Enum.GetValues(typeof(Andastra.Core.Common.Gender)))
+                {
+                    string text = coreLocalizedString.Get(lang, gender);
+                    if (!string.IsNullOrEmpty(text))
+                    {
+                        result.SetData((Andastra.Parsing.Common.Language)(int)lang, (Andastra.Parsing.Common.Gender)(int)gender, text);
+                    }
+                }
+            }
+            return result;
+        }
+
+        // Conversion methods for Color
+        private static Andastra.Parsing.Common.ParsingColor ConvertColorToParsing(System.Drawing.Color drawingColor)
+        {
+            return new Andastra.Parsing.Common.ParsingColor(
+                drawingColor.R / 255f,
+                drawingColor.G / 255f,
+                drawingColor.B / 255f,
+                drawingColor.A / 255f
+            );
+        }
+
+        // Conversion methods for converting from Core.Common types to Parsing.Common types (for CNVEntry)
+        private static Andastra.Parsing.Common.ParsingColor ConvertColor(System.Drawing.Color drawingColor)
+        {
+            return new Andastra.Parsing.Common.ParsingColor(
+                drawingColor.R / 255f,
+                drawingColor.G / 255f,
+                drawingColor.B / 255f,
+                drawingColor.A / 255f
+            );
+        }
+
+        private static Andastra.Parsing.Common.ResRef ConvertResRefToParsing(Andastra.Core.Common.ResRef coreResRef)
+        {
+            if (coreResRef == null)
+            {
+                return Andastra.Parsing.Common.ResRef.FromBlank();
+            }
+            return new Andastra.Parsing.Common.ResRef(coreResRef.ToString());
+        }
+
+        private static Andastra.Parsing.Common.LocalizedString ConvertLocalizedStringToParsing(Andastra.Core.Common.LocalizedString coreLocalizedString)
+        {
+            if (coreLocalizedString == null)
+            {
+                return Andastra.Parsing.Common.LocalizedString.FromInvalid();
+            }
+            var result = new Andastra.Parsing.Common.LocalizedString(coreLocalizedString.StringRef);
+            // Copy all language/gender combinations
+            foreach (Andastra.Core.Common.Language lang in System.Enum.GetValues(typeof(Andastra.Core.Common.Language)))
+            {
+                foreach (Andastra.Core.Common.Gender gender in System.Enum.GetValues(typeof(Andastra.Core.Common.Gender)))
+                {
+                    string text = coreLocalizedString.Get(lang, gender);
+                    if (!string.IsNullOrEmpty(text))
+                    {
+                        result.SetData((Andastra.Parsing.Common.Language)(int)lang, (Andastra.Parsing.Common.Gender)(int)gender, text);
+                    }
+                }
+            }
+            return result;
         }
     }
 }

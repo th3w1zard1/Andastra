@@ -52,12 +52,12 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 }
                 catch (FileNotFoundException var2)
                 {
-                    var2.PrintStackTrace();
+                    JavaExtensions.PrintStackTrace(var2);
                     JavaSystem.Exit(1);
                 }
                 catch (IOException var3)
                 {
-                    var3.PrintStackTrace();
+                    JavaExtensions.PrintStackTrace(var3);
                     JavaSystem.Exit(1);
                 }
                 Reset();
@@ -93,7 +93,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             }
             catch (Exception ex)
             {
-                ex.PrintStackTrace();
+                JavaExtensions.PrintStackTrace(ex);
             }
         }
 

@@ -33,7 +33,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
         {
             if (this.types != null)
             {
-                IEnumerator<object> it = this.types.Iterator();
+                IEnumerator<object> it = CollectionExtensions.Iterator(this.types);
 
                 while (it.HasNext())
                 {

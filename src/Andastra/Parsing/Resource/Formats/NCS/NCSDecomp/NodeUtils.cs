@@ -794,7 +794,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             }
 
             int searchPos = nodedata.GetPos(node);
-            ListIterator it = ((ACommandBlock)up).GetCmd().ListIterator();
+            ListIterator it = LinkedListExtensions.ListIterator(((ACommandBlock)up).GetCmd());
             while (it.HasNext())
             {
                 if (nodedata.GetPos((Node)it.Next()) == searchPos)

@@ -396,7 +396,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     // This ensures the decompiler always produces output, even when critical errors occur
                     // The stub includes detailed error information, file metadata, extracted bytecode information, and function stubs
                     Debug("Critical error during decompilation, creating comprehensive fallback stub: " + e.Message);
-                    e.PrintStackTrace(JavaSystem.@out);
+                    JavaExtensions.PrintStackTrace(e, JavaSystem.@out);
                     data = new Utils.FileScriptData();
 
                     // Try to extract information from the NCS file even if decompilation failed
@@ -662,7 +662,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     {
                         Debug("[NCSDecomp]   Caused by: " + e.InnerException.GetType().Name + " - " + e.InnerException.Message);
                     }
-                    e.PrintStackTrace(JavaSystem.@out);
+                    JavaExtensions.PrintStackTrace(e, JavaSystem.@out);
                 }
             }
             else
@@ -685,7 +685,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 {
                     Debug("[NCSDecomp]   Caused by: " + e.InnerException.GetType().Name + " - " + e.InnerException.Message);
                 }
-                e.PrintStackTrace(JavaSystem.@out);
+                JavaExtensions.PrintStackTrace(e, JavaSystem.@out);
                 Debug("[NCSDecomp] Showing decompiled source anyway (validation failed)");
                 return PARTIAL_COMPILE;
             }
@@ -774,7 +774,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             catch (Exception e)
             {
                 Error("DEBUG captureBytecodeFromNcs: Error capturing bytecode: " + e.Message);
-                e.PrintStackTrace(JavaSystem.@err);
+                    JavaExtensions.PrintStackTrace(e, JavaSystem.@err);
                 return false;
             }
         }
@@ -881,7 +881,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             catch (Exception genEx)
             {
                 Debug("WARNING: GenerateCode() threw exception: " + genEx.GetType().Name + " - " + genEx.Message);
-                genEx.PrintStackTrace(JavaSystem.@out);
+                JavaExtensions.PrintStackTrace(genEx, JavaSystem.@out);
                 // Try to get code anyway, in case it was partially generated
                 try
                 {
@@ -1281,7 +1281,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 {
                     Debug("[NCSDecomp]   Caused by: " + e.InnerException.GetType().Name + " - " + e.InnerException.Message);
                 }
-                e.PrintStackTrace(JavaSystem.@out);
+                JavaExtensions.PrintStackTrace(e, JavaSystem.@out);
                 return null;
             }
         }
@@ -1411,7 +1411,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 {
                     Debug("[NCSDecomp]   Caused by: " + e.InnerException.GetType().Name + " - " + e.InnerException.Message);
                 }
-                e.PrintStackTrace(JavaSystem.@out);
+                JavaExtensions.PrintStackTrace(e, JavaSystem.@out);
                 return null;
             }
         }
@@ -3573,7 +3573,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             {
                 Debug($"DEBUG DecompileNcs: DecompileNcsObjectFromFile threw EXCEPTION: {e.GetType().Name}: {e.Message}");
                 Debug("DecompileNcsObjectFromFile failed, falling back to old decoder/parser path: " + e.Message);
-                e.PrintStackTrace(JavaSystem.@out);
+                JavaExtensions.PrintStackTrace(e, JavaSystem.@out);
                 try
                 {
                     Debug($"DEBUG DecompileNcs: Falling back to old path (DecompileNcsOldPath)");
@@ -4013,7 +4013,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 catch (Exception e)
                 {
                     Debug("DEBUG splitOffSubroutines: ERROR - " + e.Message);
-                    e.PrintStackTrace(JavaSystem.@out);
+                    JavaExtensions.PrintStackTrace(e, JavaSystem.@out);
                     Debug("Error splitting subroutines, attempting to continue: " + e.Message);
                     // Try to get main sub at least
                     try
@@ -4284,7 +4284,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     {
                         Debug("DEBUG decompileNcs: ERROR processing subroutine " + subCount + " - " + e.Message);
                         Debug("Error while processing subroutine: " + e);
-                        e.PrintStackTrace(JavaSystem.@out);
+                        JavaExtensions.PrintStackTrace(e, JavaSystem.@out);
                         // Try to add partial subroutine state even if processing failed
                         try
                         {
@@ -4510,7 +4510,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             {
                 // Try to salvage partial results before giving up
                 Debug("Error during decompilation: " + e.Message);
-                e.PrintStackTrace(JavaSystem.@out);
+                JavaExtensions.PrintStackTrace(e, JavaSystem.@out);
 
                 // Always return a FileScriptData, even if it's just a minimal stub
                 // Based on NCSDecomp implementation: Always return a comprehensive fallback stub instead of null
@@ -4964,7 +4964,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 catch (Exception loadEx)
                 {
                     Debug("TRACE DecompileNcsObject: LoadActions() threw exception: " + loadEx.GetType().Name + ": " + loadEx.Message);
-                    loadEx.PrintStackTrace(JavaSystem.@out);
+                    JavaExtensions.PrintStackTrace(loadEx, JavaSystem.@out);
                     return null;
                 }
             }
@@ -5017,7 +5017,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 catch (Exception e)
                 {
                     Debug("Error in SetPositions, continuing with partial positions: " + e.Message);
-                    e.PrintStackTrace(JavaSystem.@out);
+                    JavaExtensions.PrintStackTrace(e, JavaSystem.@out);
                     // Continue - some nodes might not have positions, but we'll try to recover
                 }
 
@@ -5072,7 +5072,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     {
                         Debug("Stack trace: " + splitEx.StackTrace);
                     }
-                    splitEx.PrintStackTrace(JavaSystem.@out);
+                    JavaExtensions.PrintStackTrace(splitEx, JavaSystem.@out);
                     // Try to continue - maybe we can still get a main subroutine
                 }
                 ast = null;
@@ -5312,7 +5312,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     {
                         Debug("DEBUG decompileNcs: ERROR processing subroutine " + subCount + " - " + e.Message);
                         Debug("Error while processing subroutine: " + e);
-                        e.PrintStackTrace(JavaSystem.@out);
+                        JavaExtensions.PrintStackTrace(e, JavaSystem.@out);
                         // Try to add partial subroutine state even if processing failed
                         try
                         {
@@ -5524,11 +5524,11 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 {
                     Debug("Stack trace: " + e.StackTrace);
                 }
-                e.PrintStackTrace(JavaSystem.@out);
+                JavaExtensions.PrintStackTrace(e, JavaSystem.@out);
                 if (e.InnerException != null)
                 {
                     Debug("Inner exception: " + e.InnerException.GetType().Name + ": " + e.InnerException.Message);
-                    e.InnerException.PrintStackTrace(JavaSystem.@out);
+                    JavaExtensions.PrintStackTrace(e.InnerException, JavaSystem.@out);
                 }
                 // Return null to allow DecompileNcs to fall back to old decoder/parser path
                 return null;
@@ -5589,7 +5589,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             // Original: public void close() { ... it.next().close(); ... }
             public virtual void Close()
             {
-                IEnumerator<object> it = this.subs.Iterator();
+                IEnumerator<object> it = CollectionExtensions.Iterator(this.subs);
                 while (it.HasNext())
                 {
                     ((SubScriptState)it.Next()).Close();
@@ -6479,7 +6479,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 }
                 catch (IOException ioe)
                 {
-                    ioe.PrintStackTrace();
+                    JavaExtensions.PrintStackTrace(ioe);
                 }
             }
         }

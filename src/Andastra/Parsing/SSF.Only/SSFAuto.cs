@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Resource;
 using JetBrains.Annotations;
 

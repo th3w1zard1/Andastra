@@ -775,15 +775,23 @@ namespace NSSComp
                 }
 
                 // Compile
+                // TODO: nwscriptPath parameter not supported in current CompileNss signature
+                // The nwscriptPath would need to be added to libraryLookup if needed
+                if (args.NwscriptPath != null && !string.IsNullOrEmpty(args.NwscriptPath))
+                {
+                    string nwscriptDir = System.IO.Path.GetDirectoryName(args.NwscriptPath);
+                    if (!string.IsNullOrEmpty(nwscriptDir) && (libraryLookup == null || !libraryLookup.Contains(nwscriptDir)))
+                    {
+                        libraryLookup = libraryLookup ?? new List<string>();
+                        libraryLookup.Add(nwscriptDir);
+                    }
+                }
                 NCS ncs = NCSAuto.CompileNss(
                     source,
                     game,
-                    library,
                     optimizers,
                     libraryLookup,
-                    null,
-                    args.Debug,
-                    args.NwscriptPath);
+                    args.Debug);
 
                 // Ensure output directory exists
                 string outputDir = Path.GetDirectoryName(args.OutputFile);

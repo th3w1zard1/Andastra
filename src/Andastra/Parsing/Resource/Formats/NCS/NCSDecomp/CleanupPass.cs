@@ -71,7 +71,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             try
             {
                 List<ScriptNode.ScriptNode> children = rootnode.GetChildren();
-                ListIterator it = children.ListIterator();
+                ListIterator it = LinkedListExtensions.ListIterator(children);
 
                 while (it.HasNext())
                 {

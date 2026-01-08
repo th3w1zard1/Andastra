@@ -266,14 +266,14 @@ namespace Andastra.Parsing.Resource.Generics.DLG.IO
             // Only set if non-empty (empty string means not set for new files)
             if (!string.IsNullOrEmpty(meta.Sound))
             {
-                dlgNode.Sound = new ResRef(meta.Sound);
+                dlgNode.Sound = new Andastra.Core.Common.ResRef(meta.Sound);
             }
 
             // vo_resref is a ResRef, stored as string in metadata
             // Only set if non-empty (empty string means not set for new files)
             if (!string.IsNullOrEmpty(meta.VoResref))
             {
-                dlgNode.VoResRef = new ResRef(meta.VoResref);
+                dlgNode.VoResRef = new Andastra.Core.Common.ResRef(meta.VoResref);
             }
 
             if (dlgNode is DLGEntry entry && !string.IsNullOrEmpty(meta.Speaker))

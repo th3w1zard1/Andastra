@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using Andastra.Core.Common;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
@@ -51,12 +52,12 @@ namespace Andastra.Parsing.Resource.Generics.CNV
 
             // Conversation metadata
             cnv.WordCount = root.Acquire("NumWords", 0);
-            cnv.OnAbort = root.Acquire("EndConverAbort", ResRef.FromBlank());
-            cnv.OnEnd = root.Acquire("EndConversation", ResRef.FromBlank());
+            cnv.OnAbort = root.Acquire("EndConverAbort", Andastra.Parsing.Common.ResRef.FromBlank());
+            cnv.OnEnd = root.Acquire("EndConversation", Andastra.Parsing.Common.ResRef.FromBlank());
             cnv.Skippable = root.Acquire("Skippable", (byte)0) != 0;
-            cnv.AmbientTrack = root.Acquire("AmbientTrack", ResRef.FromBlank());
+            cnv.AmbientTrack = root.Acquire("AmbientTrack", Andastra.Parsing.Common.ResRef.FromBlank());
             cnv.AnimatedCut = root.Acquire("AnimatedCut", 0);
-            cnv.CameraModel = root.Acquire("CameraModel", ResRef.FromBlank());
+            cnv.CameraModel = root.Acquire("CameraModel", Andastra.Parsing.Common.ResRef.FromBlank());
             cnv.ComputerType = (CNVComputerType)root.Acquire("ComputerType", (uint)0);
             cnv.ConversationType = (CNVConversationType)root.Acquire("ConversationType", (uint)0);
             cnv.OldHitCheck = root.Acquire("OldHitCheck", (byte)0) != 0;
@@ -73,7 +74,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
             {
                 var stunt = new CNVStunt();
                 stunt.Participant = stuntStruct.Acquire("Participant", string.Empty);
-                stunt.StuntModel = stuntStruct.Acquire("StuntModel", ResRef.FromBlank());
+                stunt.StuntModel = stuntStruct.Acquire("StuntModel", Andastra.Parsing.Common.ResRef.FromBlank());
                 cnv.Stunts.Add(stunt);
             }
 
@@ -150,14 +151,14 @@ namespace Andastra.Parsing.Resource.Generics.CNV
         // Original: def construct_node(gff_struct: GFFStruct, node: CNVNode):
         private static void ConstructNode(GFFStruct gffStruct, CNVNode node)
         {
-            node.Text = gffStruct.Acquire("Text", LocalizedString.FromInvalid());
+            node.Text = gffStruct.Acquire("Text", Andastra.Parsing.Common.LocalizedString.FromInvalid());
             node.Listener = gffStruct.Acquire("Listener", string.Empty);
-            node.VoResRef = gffStruct.Acquire("VO_ResRef", ResRef.FromBlank());
-            node.Script1 = gffStruct.Acquire("Script", ResRef.FromBlank());
+            node.VoResRef = gffStruct.Acquire("VO_ResRef", Andastra.Parsing.Common.ResRef.FromBlank());
+            node.Script1 = gffStruct.Acquire("Script", Andastra.Parsing.Common.ResRef.FromBlank());
             uint delay = gffStruct.Acquire("Delay", (uint)0);
             node.Delay = delay == 0xFFFFFFFF ? -1 : (int)delay;
             node.Comment = gffStruct.Acquire("Comment", string.Empty);
-            node.Sound = gffStruct.Acquire("Sound", ResRef.FromBlank());
+            node.Sound = gffStruct.Acquire("Sound", Andastra.Parsing.Common.ResRef.FromBlank());
             node.Quest = gffStruct.Acquire("Quest", string.Empty);
             node.PlotIndex = gffStruct.Acquire("PlotIndex", -1);
             node.PlotXpPercentage = gffStruct.Acquire("PlotXPPercentage", 0.0f);
@@ -195,7 +196,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
             node.Script2Param5 = gffStruct.Acquire("ActionParam5b", 0);
             node.Script1Param6 = gffStruct.Acquire("ActionParamStrA", string.Empty);
             node.Script2Param6 = gffStruct.Acquire("ActionParamStrB", string.Empty);
-            node.Script2 = gffStruct.Acquire("Script2", ResRef.FromBlank());
+            node.Script2 = gffStruct.Acquire("Script2", Andastra.Parsing.Common.ResRef.FromBlank());
             node.EmotionId = gffStruct.Acquire("Emotion", 0);
             node.FacialId = gffStruct.Acquire("FacialAnim", 0);
             node.NodeId = gffStruct.Acquire("NodeID", 0);
@@ -249,8 +250,8 @@ namespace Andastra.Parsing.Resource.Generics.CNV
         // Original: def construct_link(gff_struct: GFFStruct, link: CNVLink):
         private static void ConstructLink(GFFStruct gffStruct, CNVLink link)
         {
-            link.Active1 = gffStruct.Acquire("Active", ResRef.FromBlank());
-            link.Active2 = gffStruct.Acquire("Active2", ResRef.FromBlank());
+            link.Active1 = gffStruct.Acquire("Active", Andastra.Parsing.Common.ResRef.FromBlank());
+            link.Active2 = gffStruct.Acquire("Active2", Andastra.Parsing.Common.ResRef.FromBlank());
             link.Logic = gffStruct.Acquire("Logic", (byte)0) != 0;
             link.Active1Not = gffStruct.Acquire("Not", (byte)0) != 0;
             link.Active2Not = gffStruct.Acquire("Not2", (byte)0) != 0;
@@ -283,7 +284,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
         /// - Writes conversation tree to GFF root struct
         /// - Handles Eclipse Engine conversation format
         /// </remarks>
-        public static GFF DismantleCnv(CNV cnv, BioWareGame game)
+        public static GFF DismantleCnv(CNV cnv, Andastra.Parsing.Common.BioWareGame game)
         {
             // Validate game type - CNV format is only used by Eclipse Engine
             if (!game.IsEclipse())
@@ -390,7 +391,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
 
         // Matching pattern from DLGHelper.DismantleNode
         // Original: def dismantle_node(gff_struct: GFFStruct, node: CNVNode, nodes: list[CNVNode], list_name: str, game: Game):
-        private static void DismantleNode(GFFStruct gffStruct, CNVNode node, List<CNVEntry> allEntries, List<CNVReply> allReplies, string listName, BioWareGame game)
+        private static void DismantleNode(GFFStruct gffStruct, CNVNode node, List<CNVEntry> allEntries, List<CNVReply> allReplies, string listName, Andastra.Parsing.Common.BioWareGame game)
         {
             gffStruct.SetLocString("Text", node.Text);
             gffStruct.SetString("Listener", node.Listener);
@@ -517,7 +518,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
 
         // Matching pattern from DLGHelper.DismantleLink
         // Original: def dismantle_link(gff_struct: GFFStruct, link: CNVLink, game: Game, list_name: str):
-        private static void DismantleLink(GFFStruct gffStruct, CNVLink link, BioWareGame game, string listName)
+        private static void DismantleLink(GFFStruct gffStruct, CNVLink link, Andastra.Parsing.Common.BioWareGame game, string listName)
         {
             if (listName == "StartingList")
             {
@@ -578,7 +579,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
         /// <param name="game">The game type (must be Eclipse engine).</param>
         /// <param name="fileFormat">File format (default: CNV, must be CNV or GFF).</param>
         /// <returns>Byte array containing CNV file data.</returns>
-        public static byte[] BytesCnv(CNV cnv, BioWareGame game, ResourceType fileFormat = null)
+        public static byte[] BytesCnv(CNV cnv, Andastra.Parsing.Common.BioWareGame game, ResourceType fileFormat = null)
         {
             if (fileFormat == null)
             {
@@ -721,15 +722,15 @@ namespace Andastra.Parsing.Resource.Generics.CNV
                 CameraEffect = cnvEntry.CameraEffect,
                 Delay = cnvEntry.Delay,
                 FadeType = cnvEntry.FadeType,
-                FadeColor = cnvEntry.FadeColor,
+                FadeColor = ConvertColor(cnvEntry.FadeColor),
                 FadeDelay = cnvEntry.FadeDelay,
                 FadeLength = cnvEntry.FadeLength,
-                Text = cnvEntry.Text,
-                Script1 = cnvEntry.Script1,
-                Script2 = cnvEntry.Script2,
-                Sound = cnvEntry.Sound,
+                Text = ConvertLocalizedString(cnvEntry.Text),
+                Script1 = ConvertResRef(cnvEntry.Script1),
+                Script2 = ConvertResRef(cnvEntry.Script2),
+                Sound = ConvertResRef(cnvEntry.Sound),
                 SoundExists = cnvEntry.SoundExists,
-                VoResRef = cnvEntry.VoResRef,
+                VoResRef = ConvertResRef(cnvEntry.VoResRef),
                 WaitFlags = cnvEntry.WaitFlags,
                 Script1Param1 = cnvEntry.Script1Param1,
                 Script1Param2 = cnvEntry.Script1Param2,
@@ -784,15 +785,18 @@ namespace Andastra.Parsing.Resource.Generics.CNV
                 CameraEffect = cnvReply.CameraEffect,
                 Delay = cnvReply.Delay,
                 FadeType = cnvReply.FadeType,
-                FadeColor = cnvReply.FadeColor,
+                FadeColor = System.Drawing.Color.FromArgb(
+                    (int)(cnvReply.FadeColor.R * 255),
+                    (int)(cnvReply.FadeColor.G * 255),
+                    (int)(cnvReply.FadeColor.B * 255)),
                 FadeDelay = cnvReply.FadeDelay,
                 FadeLength = cnvReply.FadeLength,
-                Text = cnvReply.Text,
-                Script1 = cnvReply.Script1,
-                Script2 = cnvReply.Script2,
-                Sound = cnvReply.Sound,
+                Text = ConvertLocalizedString(cnvReply.Text),
+                Script1 = ConvertResRef(cnvReply.Script1),
+                Script2 = ConvertResRef(cnvReply.Script2),
+                Sound = ConvertResRef(cnvReply.Sound),
                 SoundExists = cnvReply.SoundExists,
-                VoResRef = cnvReply.VoResRef,
+                VoResRef = ConvertResRef(cnvReply.VoResRef),
                 WaitFlags = cnvReply.WaitFlags,
                 Script1Param1 = cnvReply.Script1Param1,
                 Script1Param2 = cnvReply.Script1Param2,
@@ -858,6 +862,54 @@ namespace Andastra.Parsing.Resource.Generics.CNV
                 IsChild = cnvLink.IsChild,
                 Comment = cnvLink.Comment
             };
+        }
+
+        // Helper methods to convert between Andastra.Parsing.Common and Andastra.Core.Common types
+        private static System.Drawing.Color ConvertColor(Andastra.Parsing.Common.Color color)
+        {
+            if (color == null)
+            {
+                return System.Drawing.Color.Black;
+            }
+            return System.Drawing.Color.FromArgb(
+                (int)(color.A * 255),
+                (int)(color.R * 255),
+                (int)(color.G * 255),
+                (int)(color.B * 255));
+        }
+
+        private static Andastra.Core.Common.ResRef ConvertResRef(Andastra.Parsing.Common.ResRef resRef)
+        {
+            if (resRef == null)
+            {
+                return Andastra.Core.Common.ResRef.FromBlank();
+            }
+            return new Andastra.Core.Common.ResRef(resRef.ToString());
+        }
+
+        private static Andastra.Core.Common.LocalizedString ConvertLocalizedString(Andastra.Parsing.Common.LocalizedString localizedString)
+        {
+            if (localizedString == null)
+            {
+                return Andastra.Core.Common.LocalizedString.FromInvalid();
+            }
+            var result = new Andastra.Core.Common.LocalizedString(localizedString.StringRef);
+            // Copy all language/gender combinations
+            foreach (var lang in System.Enum.GetValues(typeof(Andastra.Parsing.Common.Language)))
+            {
+                foreach (var gender in System.Enum.GetValues(typeof(Andastra.Parsing.Common.Gender)))
+                {
+                    string text = localizedString.Get((Andastra.Parsing.Common.Language)lang, (Andastra.Parsing.Common.Gender)gender);
+                    if (!string.IsNullOrEmpty(text))
+                    {
+                        // Convert Language and Gender enums
+                        Andastra.Core.Common.Language coreLang = (Andastra.Core.Common.Language)(int)lang;
+                        Andastra.Core.Common.Gender coreGender = (Andastra.Core.Common.Gender)(int)gender;
+                        result.SetData(coreLang, coreGender, text);
+                    }
+                }
+            }
+            return result;
         }
     }
 }

@@ -890,8 +890,8 @@ namespace Andastra.Parsing.Resource.Generics.DLG.IO
                 }
 
                 // Set text - restore all language/gender combinations from custom metadata
-                node.Text = new LocalizedString(-1);
-                node.Text.SetData(Language.English, Gender.Male, passage.Text);
+                node.Text = new Andastra.Core.Common.LocalizedString(-1);
+                node.Text.SetData(Andastra.Core.Common.Language.English, Andastra.Core.Common.Gender.Male, passage.Text);
 
                 // Restore additional language variants from custom metadata
                 foreach (var kvp in passage.Metadata.Custom)
@@ -910,9 +910,9 @@ namespace Andastra.Parsing.Resource.Generics.DLG.IO
                                 if (int.TryParse(parts[2], out int genderVal))
                                 {
                                     // Try to find matching Language enum
-                                    if (Enum.TryParse<Language>(langName, true, out Language lang))
+                                    if (Enum.TryParse<Andastra.Core.Common.Language>(langName, true, out Andastra.Core.Common.Language lang))
                                     {
-                                        node.Text.SetData(lang, (Gender)genderVal, value);
+                                        node.Text.SetData(lang, (Andastra.Core.Common.Gender)genderVal, value);
                                     }
                                 }
                             }
@@ -1050,7 +1050,7 @@ namespace Andastra.Parsing.Resource.Generics.DLG.IO
                 }
 
                 // Get primary text (English, Male) for main passage text
-                string primaryText = node.Text?.GetString(Language.English, Gender.Male) ?? "";
+                string primaryText = node.Text?.GetString(Andastra.Core.Common.Language.English, Andastra.Core.Common.Gender.Male) ?? "";
 
                 var passage = new TwinePassage
                 {

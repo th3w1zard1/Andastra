@@ -228,7 +228,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             catch (Exception e)
             {
                 Debug("[INFO] RegistrySpoofer: Failed to restore registry key: " + e.Message);
-                e.PrintStackTrace();
+                JavaExtensions.PrintStackTrace(e);
                 // Don't throw - we've done our best to restore, but log the error
             }
             finally
@@ -802,7 +802,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             catch (Exception e)
             {
                 Debug("[INFO] RegistrySpoofer: Exception during elevated registry write: " + e.Message);
-                e.PrintStackTrace();
+                JavaExtensions.PrintStackTrace(e);
                 return false;
             }
         }
@@ -952,7 +952,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             catch (Exception e)
             {
                 Debug("[INFO] RegistrySpoofer: WARNING - Failed to create required file structure: " + e.Message);
-                e.PrintStackTrace();
+                JavaExtensions.PrintStackTrace(e);
                 // Don't throw - this is not critical enough to fail the whole operation
             }
         }

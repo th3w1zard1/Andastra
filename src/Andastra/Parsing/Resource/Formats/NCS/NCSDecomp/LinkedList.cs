@@ -134,7 +134,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
 
         public virtual ListIterator ListIterator(int index)
         {
-            return _list.ListIterator(index);
+            return LinkedListExtensions.ListIterator(_list, index);
         }
 
         public virtual ListIterator ListIterator()

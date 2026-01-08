@@ -14,4 +14,7 @@
     <ProjectReference Include="..\..\Core\Andastra.Core.csproj" />
     <ProjectReference Include="..\..\Utility\Andastra.Utility.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Module.cs" />
+  </ItemGroup>
 </Project>
